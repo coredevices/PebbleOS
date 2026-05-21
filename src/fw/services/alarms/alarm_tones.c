@@ -13,18 +13,80 @@
 // MIDI: C4=60, D4=62, E4=64, F4=65, G4=67, A4=69, B4=71,
 //       C5=72, D5=74, E5=76, F5=77, G5=79, A5=81, C6=84.
 
-// Reveille — a short bugle motif using square waves for clarity over a small mono speaker.
+// Reveille — beat-for-beat with the Reveille vibe score
 static const SpeakerNote s_reveille[] = {
-  NOTE(67, SpeakerWaveformSquare, 200),  // G4
-  NOTE(72, SpeakerWaveformSquare, 200),  // C5
-  NOTE(76, SpeakerWaveformSquare, 200),  // E5
-  NOTE(79, SpeakerWaveformSquare, 400),  // G5
-  NOTE(76, SpeakerWaveformSquare, 200),  // E5
-  NOTE(72, SpeakerWaveformSquare, 400),  // C5
-  NOTE(0,  SpeakerWaveformSquare, 150),  // rest
-  NOTE(67, SpeakerWaveformSquare, 200),  // G4
-  NOTE(72, SpeakerWaveformSquare, 200),  // C5
-  NOTE(76, SpeakerWaveformSquare, 600),  // E5
+  // note_1, _
+  NOTE(67, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  // note_6, _, note_10, note_6, note_1, _, note_10, _
+  NOTE(72, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(72, SpeakerWaveformSquare, 120),
+  NOTE(67, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  // (repeat)
+  NOTE(72, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(72, SpeakerWaveformSquare, 120),
+  NOTE(67, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  // note_6, _, note_10, note_6, note_1, _, note_6, _
+  NOTE(72, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(72, SpeakerWaveformSquare, 120),
+  NOTE(67, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(72, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  // note_10_ (held), _, _, note_6, _, note_1, _
+  NOTE(76, SpeakerWaveformSquare, 240), NOTE(0,  SpeakerWaveformSquare, 240),
+  NOTE(72, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(67, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  // note_6, _, note_10, note_6, note_1, _, note_10, _
+  NOTE(72, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(72, SpeakerWaveformSquare, 120),
+  NOTE(67, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  // (repeat)
+  NOTE(72, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(72, SpeakerWaveformSquare, 120),
+  NOTE(67, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  // note_6, _, note_10, note_6, note_1, _, note_1, _
+  NOTE(72, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(72, SpeakerWaveformSquare, 120),
+  NOTE(67, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(67, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  // note_6___ (long held), _, _, note_10, _
+  NOTE(72, SpeakerWaveformSquare, 480), NOTE(0,  SpeakerWaveformSquare, 240),
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  // note_10 × 4
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  // note_13_ (apex G5), _, _, note_10, _, note_10, _
+  NOTE(79, SpeakerWaveformSquare, 240), NOTE(0,  SpeakerWaveformSquare, 240),
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  // note_10, _, note_6, _, note_10, _, note_6, _
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(72, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(72, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  // note_10___ (long E5), _, _, note_10, _
+  NOTE(76, SpeakerWaveformSquare, 480), NOTE(0,  SpeakerWaveformSquare, 240),
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  // note_10 × 4
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  // note_13_ (apex G5), _, _, note_10, _, note_10, _
+  NOTE(79, SpeakerWaveformSquare, 240), NOTE(0,  SpeakerWaveformSquare, 240),
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  // note_6, _, note_10, note_6, note_1, _, note_1, _
+  NOTE(72, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(76, SpeakerWaveformSquare, 120), NOTE(72, SpeakerWaveformSquare, 120),
+  NOTE(67, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  NOTE(67, SpeakerWaveformSquare, 120), NOTE(0,  SpeakerWaveformSquare, 120),
+  // note_6___ (final C5), then the 480ms of trailing rests inside the score.
+  NOTE(72, SpeakerWaveformSquare, 480), NOTE(0,  SpeakerWaveformSquare, 480),
 };
 
 // Beacon — alternating C5/G5 squares, six cycles. Insistent and unambiguous.
