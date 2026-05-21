@@ -64,27 +64,6 @@ def get_qemu_machine(ctx):
     else:
         return 'unknown'
 
-@conf
-def add_platform_defines(ctx, env):
-    if ctx.is_qemu_emery():
-        platform = 'QEMU_EMERY'
-    elif ctx.is_qemu_flint():
-        platform = 'QEMU_FLINT'
-    elif ctx.is_qemu_gabbro():
-        platform = 'QEMU_GABBRO'
-    elif ctx.is_asterix():
-        platform = 'ASTERIX'
-    elif ctx.is_obelix():
-        platform = 'OBELIX'
-    elif ctx.is_getafix():
-        platform = 'GETAFIX'
-    else:
-        ctx.fatal('No platform specified for {}!'.format(ctx.options.board))
-
-    defines = ['BOARD_{}=1'.format(ctx.options.board.upper()),
-               'PLATFORM_{}=1'.format(platform)]
-    env.append_value('DEFINES', defines)
-
 # Build
 
 def configure(ctx):

@@ -204,8 +204,6 @@ Or re-configure with the --relax_toolchain_restrictions option. """
 
     conf.env.append_value("CFLAGS", c_warnings)
 
-    conf.add_platform_defines(conf.env)
-
     conf.env.ASFLAGS = ["-xassembler-with-cpp", "-c"]
     conf.env.AS_TGT_F = "-o"
 
