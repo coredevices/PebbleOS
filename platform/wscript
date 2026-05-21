@@ -82,8 +82,7 @@ def add_platform_defines(ctx, env):
         ctx.fatal('No platform specified for {}!'.format(ctx.options.board))
 
     defines = ['BOARD_{}=1'.format(ctx.options.board.upper()),
-               'PLATFORM_{}=1'.format(platform),
-               'MIN_SDK_VERSION={}'.format(env.MIN_SDK_VERSION)]
+               'PLATFORM_{}=1'.format(platform)]
     env.append_value('DEFINES', defines)
 
 # Build
