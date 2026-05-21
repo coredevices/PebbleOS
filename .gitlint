@@ -4,9 +4,16 @@ ignore-merge-commits=false
 ignore-fixup-commits=false
 ignore-fixup-amend-commits=false
 ignore-squash-commits=false
+regex-style-search=true
 
 [title-match-regex]
-regex=[a-z0-9/]+: .*
+# Format: "area: description" where area is either:
+# - A path with at least one / (e.g., fw/drivers/hrm, third_party/nonfree)
+# - One of the known short areas: ci, treewide, platform, sdk, tools, resources,
+#   docs, waftools, settings, libc, tests, notifications, build, wscript, fw,
+#   third_party, ancs, compositor, console, kernel, health
+# Conventional commit types like feat:, fix:, chore: are NOT allowed.
+regex=^([a-z0-9_]+/[a-z0-9_/]*|ci|treewide|platform|sdk|tools|resources|docs|waftools|settings|libc|tests|notifications|build|wscript|fw|third_party|ancs|compositor|console|kernel|health|gitlint|readme|requirements|python_libs|pbl-tool|pbl|moddable|libutil|iconography|gitignore|capabilities|asterix|activity|accel): .*
 
 [title-max-length]
 line-length=100
