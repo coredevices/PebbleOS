@@ -1,5 +1,4 @@
 from waflib.Configure import ConfigurationContext, conf
-from platform_capabilities import get_capability_dict
 
 @conf
 def get_board(ctx):
@@ -93,20 +92,6 @@ def get_qemu_spi_flash_args(ctx, spi_flash_path):
         return None
 
 @conf
-def capabilities_dict(ctx):
-    board = ctx.get_board()
-    # capabilities will never be None. An exception is raised if it fails.
-    capabilities = get_capability_dict(ctx, board)
-    return capabilities
-
-
-@conf
-def capability(ctx, capability_str):
-    capabilities = ctx.capabilities_dict()
-    return capabilities[capability_str]
-
-
-@conf
 def add_platform_defines(ctx, env):
     if ctx.is_qemu_emery():
         platform = 'QEMU_EMERY'
@@ -127,9 +112,6 @@ def add_platform_defines(ctx, env):
                'PLATFORM_{}=1'.format(platform),
                'MIN_SDK_VERSION={}'.format(env.MIN_SDK_VERSION)]
     env.append_value('DEFINES', defines)
-
-    for cap, val in ctx.capabilities_dict().items():
-        env.append_value('DEFINES', "CAPABILITY_%s=%s" % (cap, int(val)))
 
 # Build
 

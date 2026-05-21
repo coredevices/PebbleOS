@@ -118,7 +118,7 @@ static void prv_intensity_menu_push(SettingsBacklightData *data) {
       true /* icons_enabled */, s_intensity_labels, data);
 }
 
-#if CAPABILITY_HAS_ORIENTATION_MANAGER
+#ifdef CONFIG_ORIENTATION_MANAGER
 // Orientation Settings
 /////////////////////////////
 static const char *s_display_orientation_labels[] = {
@@ -220,7 +220,7 @@ static void prv_touch_wake_menu_push(SettingsBacklightData *data) {
 
 // Legacy App Mode Settings (Obelix only)
 /////////////////////////////
-#if CAPABILITY_HAS_APP_SCALING
+#ifdef CONFIG_APP_SCALING
 static const char *s_legacy_app_mode_labels[] = {
     i18n_noop("Centered"),
     i18n_noop("Scaled (Nearest)"),
@@ -255,7 +255,7 @@ enum SettingsBacklightItem {
   SettingsBacklightTouchWake,
 #endif
   SettingsBacklightAmbientSensor,
-#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+#ifdef CONFIG_DYNAMIC_BACKLIGHT
   SettingsBacklightDynamicIntensity,
 #endif
   SettingsBacklightIntensity,
@@ -308,7 +308,7 @@ static void prv_backlight_select_click_cb(SettingsCallbacks *context, uint16_t r
     case SettingsBacklightAmbientSensor:
       light_toggle_ambient_sensor_enabled();
       break;
-#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+#ifdef CONFIG_DYNAMIC_BACKLIGHT
     case SettingsBacklightDynamicIntensity:
       light_toggle_dynamic_intensity_enabled();
       break;
@@ -335,7 +335,7 @@ static void prv_backlight_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
     case SettingsBacklightMode:
       title = i18n_noop("Backlight");
       if (backlight_is_enabled()) {
-#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+#ifdef CONFIG_DYNAMIC_BACKLIGHT
         if (backlight_is_dynamic_intensity_enabled()) {
           uint8_t current_percent = light_get_current_brightness_percent();
           snprintf(data->backlight_percent_buffer, sizeof(data->backlight_percent_buffer),
@@ -372,14 +372,14 @@ static void prv_backlight_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
         subtitle = i18n_noop("Off");
       }
       break;
-#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+#ifdef CONFIG_DYNAMIC_BACKLIGHT
     case SettingsBacklightDynamicIntensity:
       title = i18n_noop("Dynamic Backlight");
       subtitle = backlight_is_dynamic_intensity_enabled() ? i18n_noop("On") : i18n_noop("Off");
       break;
 #endif
     case SettingsBacklightIntensity:
-#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+#ifdef CONFIG_DYNAMIC_BACKLIGHT
       title = backlight_is_dynamic_intensity_enabled() ? i18n_noop("Max Intensity")
                                                        : i18n_noop("Intensity");
 #else
@@ -469,14 +469,14 @@ static void prv_backlight_submenu_push(void) {
 
 enum SettingsDisplayItem {
   SettingsDisplayLanguage,
-#if CAPABILITY_HAS_ORIENTATION_MANAGER
+#ifdef CONFIG_ORIENTATION_MANAGER
   SettingsDisplayOrientation,
 #endif
 #ifdef CONFIG_TOUCH
   SettingsDisplayTouch,
 #endif
   SettingsDisplayBacklight,
-#if CAPABILITY_HAS_APP_SCALING
+#ifdef CONFIG_APP_SCALING
   SettingsDisplayLegacyAppMode,
 #endif
   NumSettingsDisplayItems
@@ -487,7 +487,7 @@ static void prv_display_select_click_cb(SettingsCallbacks *context, uint16_t row
     case SettingsDisplayLanguage:
       prv_language_menu_push((SettingsDisplayData *)context);
       break;
-#if CAPABILITY_HAS_ORIENTATION_MANAGER
+#ifdef CONFIG_ORIENTATION_MANAGER
     case SettingsDisplayOrientation:
       prv_display_orientation_menu_push((SettingsDisplayData*)context);
       break;
@@ -500,7 +500,7 @@ static void prv_display_select_click_cb(SettingsCallbacks *context, uint16_t row
     case SettingsDisplayBacklight:
       prv_backlight_submenu_push();
       break;
-#if CAPABILITY_HAS_APP_SCALING
+#ifdef CONFIG_APP_SCALING
     case SettingsDisplayLegacyAppMode:
       prv_legacy_app_mode_menu_push((SettingsDisplayData*)context);
       break;
@@ -522,7 +522,7 @@ static void prv_display_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       title = i18n_noop("Language");
       subtitle = i18n_get_lang_name();
       break;
-#if CAPABILITY_HAS_ORIENTATION_MANAGER
+#ifdef CONFIG_ORIENTATION_MANAGER
     case SettingsDisplayOrientation:
       title = i18n_noop("Orientation");
       subtitle = s_display_orientation_labels[prv_display_orientation_get_selection_index()];
@@ -537,7 +537,7 @@ static void prv_display_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
     case SettingsDisplayBacklight:
       title = i18n_noop("Backlight");
       break;
-#if CAPABILITY_HAS_APP_SCALING
+#ifdef CONFIG_APP_SCALING
     case SettingsDisplayLegacyAppMode:
       title = i18n_noop("Legacy Apps");
       subtitle = (shell_prefs_get_legacy_app_render_mode() >= LegacyAppRenderMode_ScalingNearest) ?

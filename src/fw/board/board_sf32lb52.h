@@ -114,7 +114,7 @@ typedef struct {
   //ambient light config
   uint32_t ambient_light_dark_threshold;
   uint32_t ambient_k_delta_threshold;
-#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+#ifdef CONFIG_DYNAMIC_BACKLIGHT
   //dynamic backlight thresholds
   uint32_t dynamic_backlight_min_threshold;
 #endif

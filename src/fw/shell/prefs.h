@@ -104,7 +104,7 @@ void backlight_set_touch_wake(BacklightTouchWake wake);
 bool touch_is_globally_enabled(void);
 void touch_set_globally_enabled(bool enable);
 
-#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+#ifdef CONFIG_DYNAMIC_BACKLIGHT
 // Dynamic backlight intensity based on ambient light sensor
 bool backlight_is_dynamic_intensity_enabled(void);
 void backlight_set_dynamic_intensity_enabled(bool enable);
@@ -187,7 +187,7 @@ void shell_prefs_set_vibe_log_info_enabled(bool enabled);
 bool shell_prefs_get_settings_dbs_compacted_v1(void);
 void shell_prefs_set_settings_dbs_compacted_v1(bool done);
 
-#if CAPABILITY_HAS_APP_SCALING
+#ifdef CONFIG_APP_SCALING
 // Legacy app rendering mode - whether to use bezel or scaling for legacy apps
 typedef enum LegacyAppRenderMode {
   LegacyAppRenderMode_Bezel = 0,    // Center with black bezel (original behavior)
@@ -200,7 +200,7 @@ LegacyAppRenderMode shell_prefs_get_legacy_app_render_mode(void);
 void shell_prefs_set_legacy_app_render_mode(LegacyAppRenderMode mode);
 #endif
 
-#if CAPABILITY_HAS_ORIENTATION_MANAGER
+#ifdef CONFIG_ORIENTATION_MANAGER
 bool display_orientation_is_left(void);
 void display_orientation_set_left(bool left);
 #endif

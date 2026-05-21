@@ -210,7 +210,7 @@ static size_t prv_get_app_segment_size(const PebbleProcessMd *app_md) {
     case ProcessAppSDKType_Legacy3x:
       return APP_RAM_3X_SIZE;
     case ProcessAppSDKType_4x:
-#if CAPABILITY_HAS_MODDABLE_XS
+#ifdef CONFIG_MODDABLE_XS
       if (app_md->is_moddable_app) {
         return APP_RAM_4X_SIZE - (APP_STACK_JS_SIZE - APP_STACK_NORMAL_SIZE);
       }
@@ -224,7 +224,7 @@ static size_t prv_get_app_segment_size(const PebbleProcessMd *app_md) {
 }
 
 static size_t prv_get_app_stack_size(const PebbleProcessMd *app_md) {
-#if CAPABILITY_HAS_MODDABLE_XS
+#ifdef CONFIG_MODDABLE_XS
   if (app_md->is_moddable_app) {
     return APP_STACK_JS_SIZE;
   }

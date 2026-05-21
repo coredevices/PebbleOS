@@ -26,7 +26,7 @@
 #include "pbl/services/hrm/hrm_manager.h"
 #include "pbl/services/i18n/i18n.h"
 #include "resource/resource_ids.auto.h"
-#if CAPABILITY_HAS_ORIENTATION_MANAGER
+#ifdef CONFIG_ORIENTATION_MANAGER
 #include "pbl/services/orientation_manager.h"
 #endif
 #include "pbl/services/bluetooth/ble_hrm.h"
@@ -91,7 +91,7 @@ static bool s_touch_enabled = true;
 #define PREF_KEY_MOTION_SENSITIVITY "motionSensitivity"
 static uint8_t s_motion_sensitivity = 55; // Default to Medium
 
-#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+#ifdef CONFIG_DYNAMIC_BACKLIGHT
 #define PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY "lightDynamicIntensity"
 static bool s_backlight_dynamic_intensity_enabled = true;
 
@@ -99,7 +99,7 @@ static bool s_backlight_dynamic_intensity_enabled = true;
 static uint32_t s_dynamic_backlight_min_threshold = 0; // default set from board config in shell_prefs_init()
 #endif
 
-#if CAPABILITY_HAS_ORIENTATION_MANAGER
+#ifdef CONFIG_ORIENTATION_MANAGER
 #define PREF_KEY_DISPLAY_ORIENTATION_LEFT_HANDED "displayOrientationLeftHanded"
 static bool s_display_orientation_left = false;
 #endif 
@@ -230,7 +230,7 @@ static uint16_t s_timeline_peek_before_time_m =
 #define PREF_KEY_ACCEL_SHAKE_LOG_INFO "accelShakeLogInfo"
 #define PREF_KEY_VIBE_LOG_INFO "vibeLogInfo"
 #define PREF_KEY_SETTINGS_DBS_COMPACTED_V1 "settingsDbsCompactedV1"
-#if CAPABILITY_HAS_APP_SCALING
+#ifdef CONFIG_APP_SCALING
 #define PREF_KEY_LEGACY_APP_RENDER_MODE "legacyAppRenderMode"
 #endif
 static uint8_t s_power_mode = PowerMode_HighPerformance;
@@ -238,11 +238,11 @@ static bool s_coredump_on_request_enabled = false;
 static bool s_accel_shake_log_info_enabled = false;
 static bool s_vibe_log_info_enabled = false;
 static bool s_settings_dbs_compacted_v1 = false;
-#if CAPABILITY_HAS_APP_SCALING
+#ifdef CONFIG_APP_SCALING
 static uint8_t s_legacy_app_render_mode = 1; // Default to scaled mode
 #endif
 
-#if CAPABILITY_HAS_THEMING
+#ifdef CONFIG_THEMING
 #define PREF_KEY_THEME_HIGHLIGHT_COLOR "themeHighlightColor"
 
 static GColor s_theme_highlight_color = GColorVividCerulean;
@@ -370,7 +370,7 @@ static bool prv_set_s_touch_enabled(bool *enabled) {
   return true;
 }
 
-#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+#ifdef CONFIG_DYNAMIC_BACKLIGHT
 static bool prv_set_s_backlight_dynamic_intensity_enabled(bool *enabled) {
   s_backlight_dynamic_intensity_enabled = *enabled;
   return true;
@@ -397,7 +397,7 @@ static bool prv_set_s_motion_sensitivity(uint8_t *sensitivity) {
   
   // Update accelerometer sensitivity in accel_manager
   // This applies the setting to the hardware
-  #if CAPABILITY_HAS_ACCEL_SENSITIVITY
+  #ifdef CONFIG_ACCEL_SENSITIVITY
   accel_manager_update_sensitivity(*sensitivity);
   #endif
   
@@ -420,7 +420,7 @@ static bool prv_set_s_backlight_ambient_threshold(uint32_t *threshold) {
   return true;
 }
 
-#if CAPABILITY_HAS_ORIENTATION_MANAGER
+#ifdef CONFIG_ORIENTATION_MANAGER
 static bool prv_set_s_display_orientation_left(bool *left) {
   s_display_orientation_left = *left;
   orientation_handle_prefs_changed();
@@ -682,7 +682,7 @@ static bool prv_set_s_settings_dbs_compacted_v1(bool *done) {
   return true;
 }
 
-#if CAPABILITY_HAS_APP_SCALING
+#ifdef CONFIG_APP_SCALING
 static bool prv_set_s_legacy_app_render_mode(uint8_t *mode) {
   if (*mode >= LegacyAppRenderModeCount) {
     return false;  // Invalid value
@@ -692,7 +692,7 @@ static bool prv_set_s_legacy_app_render_mode(uint8_t *mode) {
 }
 #endif
 
-#if CAPABILITY_HAS_THEMING
+#ifdef CONFIG_THEMING
 // Valid theme colors (unified scheme)
 // Must match s_color_definitions in settings_themes.h
 static bool prv_is_valid_theme_color(GColor color) {
@@ -814,7 +814,7 @@ void shell_prefs_init(void) {
   s_backlight_intensity = 25U; // Medium
 #endif
   s_backlight_ambient_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
-#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+#ifdef CONFIG_DYNAMIC_BACKLIGHT
   s_dynamic_backlight_min_threshold = BOARD_CONFIG.dynamic_backlight_min_threshold;
 #endif
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
@@ -853,7 +853,7 @@ void shell_prefs_init(void) {
   prefs_sync_init();
 
   // Update accelerometer sensitivity with the loaded value
-#if CAPABILITY_HAS_ACCEL_SENSITIVITY
+#ifdef CONFIG_ACCEL_SENSITIVITY
   accel_manager_update_sensitivity(s_motion_sensitivity);
 #endif
 
@@ -1168,7 +1168,7 @@ void touch_set_globally_enabled(bool enable) {
   prv_pref_set(PREF_KEY_TOUCH_ENABLED, &enable, sizeof(enable));
 }
 
-#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+#ifdef CONFIG_DYNAMIC_BACKLIGHT
 bool backlight_is_dynamic_intensity_enabled(void) {
   return s_backlight_dynamic_intensity_enabled;
 }
@@ -1207,7 +1207,7 @@ void backlight_set_ambient_threshold(uint32_t threshold) {
   ambient_light_set_dark_threshold(threshold);
 }
 
-#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+#ifdef CONFIG_DYNAMIC_BACKLIGHT
 uint32_t backlight_get_dynamic_min_threshold(void) {
   return s_dynamic_backlight_min_threshold;
 }
@@ -1224,7 +1224,7 @@ void backlight_set_dynamic_min_threshold(uint32_t threshold) {
 
 #endif
 
-#if CAPABILITY_HAS_ORIENTATION_MANAGER
+#ifdef CONFIG_ORIENTATION_MANAGER
 bool display_orientation_is_left(void) {
   return s_display_orientation_left;
 }
@@ -1827,7 +1827,7 @@ void shell_prefs_set_settings_dbs_compacted_v1(bool done) {
   prv_pref_set(PREF_KEY_SETTINGS_DBS_COMPACTED_V1, &done, sizeof(done));
 }
 
-#if CAPABILITY_HAS_APP_SCALING
+#ifdef CONFIG_APP_SCALING
 LegacyAppRenderMode shell_prefs_get_legacy_app_render_mode(void) {
   return (LegacyAppRenderMode)s_legacy_app_render_mode;
 }
@@ -1839,7 +1839,7 @@ void shell_prefs_set_legacy_app_render_mode(LegacyAppRenderMode mode) {
 #endif
 
 GColor shell_prefs_get_theme_highlight_color(void) {
-#if CAPABILITY_HAS_THEMING
+#ifdef CONFIG_THEMING
   return s_theme_highlight_color;
 #else
   return PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack);
@@ -1847,7 +1847,7 @@ GColor shell_prefs_get_theme_highlight_color(void) {
 }
 
 void shell_prefs_set_theme_highlight_color(GColor color) {
-#if CAPABILITY_HAS_THEMING
+#ifdef CONFIG_THEMING
   prv_pref_set(PREF_KEY_THEME_HIGHLIGHT_COLOR, &color, sizeof(GColor));
 #endif
 }

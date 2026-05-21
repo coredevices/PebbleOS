@@ -29,7 +29,7 @@ _Static_assert(sizeof(PreferredContentSize) == sizeof(s_content_size),
                "sizeof(PreferredContentSize) grew, pref needs to be migrated!");
 #endif
 
-#if CAPABILITY_HAS_APP_SCALING
+#ifdef CONFIG_APP_SCALING
 #define PREF_KEY_LEGACY_APP_RENDER_MODE "legacyAppRenderMode"
 static uint8_t s_legacy_app_render_mode = 1; // Default to scaled mode
 #endif
@@ -294,7 +294,7 @@ void shell_prefs_set_theme_highlight_color(GColor color) {
   // Not used in SDK shell
 }
 
-#if CAPABILITY_HAS_APP_SCALING
+#ifdef CONFIG_APP_SCALING
 LegacyAppRenderMode shell_prefs_get_legacy_app_render_mode(void) {
   return (LegacyAppRenderMode)s_legacy_app_render_mode;
 }
