@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig SPEAKER
+    bool "Speaker"
+    help
+      Speaker (audio output) Drivers
+
+if SPEAKER
+
+config SPEAKER_DA7212
+    bool "Dialog DA7212 codec (nRF5 I2S)"
+    help
+      Support for the Dialog DA7212 audio codec driven over nRF5 I2S.
+
+config SPEAKER_SF32LB
+    bool "SiFli SF32LB AUDEC"
+    help
+      Support for the SiFli SF32LB audio codec / DAC speaker output.
+
+config SPEAKER_QEMU
+    bool "QEMU audio"
+    help
+      QEMU audio device backing the speaker for emulated builds.
+
+endif # SPEAKER

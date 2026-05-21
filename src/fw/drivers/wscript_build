@@ -2,7 +2,6 @@ bld.env.DRIVERS = []
 
 if bld.env.CONFIG_QEMU:
     bld.env.DRIVERS.extend([
-        'driver_audio',
         'driver_button',
         'driver_mcu',
         'driver_mpu',
@@ -34,7 +33,6 @@ if bld.env.CONFIG_QEMU:
 
 elif bld.is_asterix():
     bld.env.DRIVERS.extend([
-        'driver_audio',
         'driver_button',
         'driver_mcu',
         'driver_mpu',
@@ -56,7 +54,6 @@ elif bld.is_obelix():
         'driver_qspi',
         'driver_rc10k',
         'driver_task_watchdog',
-        'driver_audio',
     ])
 
 elif bld.is_getafix():
@@ -73,7 +70,7 @@ elif bld.is_getafix():
     ])
 ## ----------
 
-if bld.env.CONFIG_QEMU:
+if bld.env.CONFIG_SPEAKER_QEMU:
     bld.objects(
         name='driver_audio',
         source=[
@@ -85,7 +82,7 @@ if bld.env.CONFIG_QEMU:
             'pbl_includes',
         ],
     )
-elif bld.is_obelix():
+elif bld.env.CONFIG_SPEAKER_SF32LB:
     bld.objects(
         name='driver_audio',
         source=[
@@ -99,7 +96,7 @@ elif bld.is_obelix():
             'hal_sifli',
         ],
     )
-elif bld.is_asterix():
+elif bld.env.CONFIG_SPEAKER_DA7212:
     bld.objects(
         name='driver_audio',
         source=[
@@ -114,6 +111,9 @@ elif bld.is_asterix():
             'hal_nordic',
         ],
     )
+
+if bld.env.CONFIG_SPEAKER:
+    bld.env.DRIVERS.append('driver_audio')
 
 if bld.env.CONFIG_AMBIENT_LIGHT:
     bld.recurse('ambient')

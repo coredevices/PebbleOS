@@ -21,7 +21,7 @@
 #include <string.h>
 
 typedef enum VibeSettingsRow {
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
   VibeSettingsRow_MuteSpeaker = 0,
   VibeSettingsRow_Notifications,
 #else
@@ -55,7 +55,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
 
   VibeClient client = VibeClient_Notifications;
   switch (row) {
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
     case VibeSettingsRow_MuteSpeaker: {
       title = i18n_noop("Mute Speaker");
       subtitle = alerts_preferences_get_speaker_muted() ? i18n_noop("On") : i18n_noop("Off");
@@ -117,7 +117,7 @@ static void prv_selection_changed_cb(SettingsCallbacks *context, uint16_t new_ro
   vibes_cancel();
   VibeScore *score;
   switch (new_row) {
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
     case VibeSettingsRow_MuteSpeaker: {
       // No vibe preview — this row toggles a non-vibe setting.
       return;
@@ -165,7 +165,7 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
 
   VibeClient client;
   switch (row) {
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
     case VibeSettingsRow_MuteSpeaker: {
       const bool new_muted = !alerts_preferences_get_speaker_muted();
       alerts_preferences_set_speaker_muted(new_muted);
@@ -261,7 +261,7 @@ static Window *prv_init(void) {
 
 const SettingsModuleMetadata *settings_vibe_patterns_get_info(void) {
   static const SettingsModuleMetadata s_module_info = {
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
     .name = i18n_noop("Sounds & Haptics"),
 #else
     .name = i18n_noop("Vibrations"),

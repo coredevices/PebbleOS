@@ -52,7 +52,7 @@
 // Adjust here if the target ever changes.
 #define DISCHARGE_TARGET_PERCENT 65
 
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
 static const int16_t sine_wave_4k[] = {
   0, 32767, 0, -32768, 0, 32767, 0, -32768,
   0, 32767, 0, -32768, 0, 32767, 0, -32768,
@@ -83,7 +83,7 @@ typedef enum {
 #else
   ComponentBacklight,
 #endif
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
   ComponentAudio,
 #endif
   ComponentALS,
@@ -113,7 +113,7 @@ typedef struct {
 
   char fail_reason[64];
 
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
   bool audio_playing;
 #endif
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
@@ -121,7 +121,7 @@ typedef struct {
 #endif
 } AppData;
 
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
 static void prv_audio_trans_handler(uint32_t *free_size) {
   uint32_t available_size = *free_size;
   while (available_size > sizeof(sine_wave_4k)) {
@@ -154,7 +154,7 @@ static void prv_cleanup_component(AppData *data) {
     light_enable(false);
   }
 #endif
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
   if (data->audio_playing) {
     audio_stop(AUDIO);
     data->audio_playing = false;
@@ -284,7 +284,7 @@ static void prv_run_component_display(AppData *data) {
       comp_name = "Backlight";
       break;
 #endif
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
     case ComponentAudio:
       comp_name = "Audio";
       if (!data->audio_playing) {
@@ -607,7 +607,7 @@ static void prv_handle_init(void) {
   AppData *data = app_malloc_check(sizeof(AppData));
   *data = (AppData){
     .state = AgingStateWaitPlug,
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
     .audio_playing = false,
 #endif
   };
