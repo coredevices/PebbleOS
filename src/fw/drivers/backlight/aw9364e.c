@@ -48,3 +48,6 @@ void backlight_set_brightness(uint8_t brightness) {
     delay_us(i == 0U ? AW9364E_TON_US : AW9364E_THI_US);
   }
 }
+
+void backlight_refresh(void) {
+}
