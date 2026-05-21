@@ -46,11 +46,11 @@
 #define BATTERY_MIN_VALID_VOLTAGE_MV 3300
 
 static const struct battery_model prv_battery_model = {
-#if PLATFORM_ASTERIX
+#ifdef CONFIG_BOARD_FAMILY_ASTERIX
 #include "battery_asterix.inc"
-#elif PLATFORM_OBELIX
+#elif defined(CONFIG_BOARD_FAMILY_OBELIX)
 #include "battery_obelix.inc"
-#elif PLATFORM_GETAFIX
+#elif defined(CONFIG_BOARD_FAMILY_GETAFIX)
 #include "battery_getafix.inc"
 #else
 #error "Battery model not defined for this platform"

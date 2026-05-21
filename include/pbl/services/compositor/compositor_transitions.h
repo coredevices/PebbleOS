@@ -8,7 +8,7 @@
 #include "default/compositor_slide_transitions.h"
 #include "default/compositor_shutter_transitions.h"
 #include "legacy/compositor_app_slide_transitions.h"
-#if PLATFORM_ASTERIX
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
 # include "legacy/compositor_modal_slide_transitions.h"
 #else
 # include "default/compositor_modal_transitions.h"

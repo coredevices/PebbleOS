@@ -23,15 +23,15 @@ typedef enum {
 #ifdef CONFIG_MAG
   MfgTestId_Mag,
 #endif
-#if PLATFORM_ASTERIX || PLATFORM_OBELIX
+#if defined(CONFIG_BOARD_FAMILY_ASTERIX) || defined(CONFIG_BOARD_FAMILY_OBELIX)
   MfgTestId_Speaker,
 #endif
-#if PLATFORM_ASTERIX || PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if defined(CONFIG_BOARD_FAMILY_ASTERIX) || defined(CONFIG_BOARD_FAMILY_OBELIX) || defined(CONFIG_BOARD_FAMILY_GETAFIX)
   MfgTestId_Mic,
 #endif
   MfgTestId_ALS,
   MfgTestId_Vibration,
-#if PLATFORM_OBELIX && defined(MANUFACTURING_FW)
+#if defined(CONFIG_BOARD_FAMILY_OBELIX) && defined(MANUFACTURING_FW)
   MfgTestId_HrmCtrLeakage,
 #endif
   MfgTestId_ProgramColor,

@@ -396,7 +396,6 @@ def add_clar_test(
         "-include" + board_path + "/displays/display_" + display_header + ".h"
     )
     platform_defines += [
-        "PLATFORM_" + platform.upper(),
         'PLATFORM_NAME="%s"' % platform,
     ] + ["CONFIG_SCREEN_COLOR_DEPTH_BITS=%d" % bitdepth]
 
@@ -422,13 +421,18 @@ def add_clar_test(
     if platform in test_sdk_platform:
         platform_defines.append(test_sdk_platform[platform])
 
-    # Production code (e.g. framebuffer.c, gbitmap.c) selects round-display
-    # behaviour from the board-level PLATFORM_<BOARD> defines (PLATFORM_GETAFIX,
-    # PLATFORM_QEMU_GABBRO). Tests run under the SDK-level PLATFORM_GABBRO;
-    # alias one of those board defines so the round-display code paths fire
-    # identically.
-    if platform == "gabbro":
-        platform_defines.append("PLATFORM_GETAFIX=1")
+    # Map the test platform to its CONFIG_BOARD_FAMILY_*. Tests don't load a
+    # board defconfig, so inject the family symbol the production code expects.
+    # Gabbro tests simulate the round-display Getafix HW family (the gabbro SDK
+    # platform's closest real-board analog), so they get CONFIG_BOARD_FAMILY_GETAFIX
+    # alongside CONFIG_PLATFORM_GABBRO above.
+    test_board_family = {
+        "asterix": "CONFIG_BOARD_FAMILY_ASTERIX=1",
+        "obelix": "CONFIG_BOARD_FAMILY_OBELIX=1",
+        "gabbro": "CONFIG_BOARD_FAMILY_GETAFIX=1",
+    }
+    if platform in test_board_family:
+        platform_defines.append(test_board_family[platform])
 
     if sources_ant_glob is not None:
         platform_sources_ant_glob = sources_ant_glob

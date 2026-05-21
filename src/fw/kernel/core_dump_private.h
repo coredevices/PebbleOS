@@ -13,15 +13,15 @@
 
 // Size of RAM
 // TODO: Do we have an equate for the total size of RAM somewhere else?
-#if PLATFORM_QEMU_EMERY || PLATFORM_QEMU_GABBRO
+#if defined(CONFIG_BOARD_QEMU_EMERY) || defined(CONFIG_BOARD_QEMU_GABBRO)
 #define COREDUMP_RAM_SIZE (276 * 1024)
-#elif PLATFORM_QEMU_FLINT
+#elif defined(CONFIG_BOARD_QEMU_FLINT)
 #define COREDUMP_RAM_SIZE (256 * 1024)
-#elif PLATFORM_OBELIX || PLATFORM_GETAFIX
+#elif defined(CONFIG_BOARD_FAMILY_OBELIX) || defined(CONFIG_BOARD_FAMILY_GETAFIX)
 // Main RAM on SF32LB52 extends to _heap_end (0x20045000).
 // Thread stacks can be allocated above the 256KB mark.
 #define COREDUMP_RAM_SIZE (276 * 1024)
-#elif PLATFORM_ASTERIX
+#elif defined(CONFIG_BOARD_FAMILY_ASTERIX)
 #define COREDUMP_RAM_SIZE (256 * 1024)
 #endif
 

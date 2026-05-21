@@ -4,7 +4,7 @@
 
 #include "board/board.h"
 
-#if PLATFORM_OBELIX
+#ifdef CONFIG_BOARD_FAMILY_OBELIX
 #define RESET_PIN_CTRLBY_NPM1300          1
 #endif
 

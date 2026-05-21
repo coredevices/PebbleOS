@@ -271,7 +271,7 @@ bool pmic_init(void) {
   s_debounce_charger_timer = new_timer_create();
 
   // TODO(NPM1300): This needs to be configurable at board level
-#if PLATFORM_ASTERIX
+#ifdef CONFIG_BOARD_FAMILY_ASTERIX
   // Anomaly 27: set BUCK1/BUCK2 to SW control with workaround
   ok &= prv_buck_set_sw_ctrl(PmicRegisters_BUCK_BUCK1NORMVOUT,
                               PmicRegisters_BUCK_BUCK1VOUTSTATUS,
@@ -298,7 +298,7 @@ bool pmic_init(void) {
 #endif
 
 // FIXME(OBELIX,GETAFIX): Needs to be configurable at board level
-#if PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if defined(CONFIG_BOARD_FAMILY_OBELIX) || defined(CONFIG_BOARD_FAMILY_GETAFIX)
   // Anomaly 27: set BUCK1 to SW control with workaround, then disable it
   ok &= prv_buck_set_sw_ctrl(PmicRegisters_BUCK_BUCK1NORMVOUT,
                               PmicRegisters_BUCK_BUCK1VOUTSTATUS,
@@ -336,17 +336,17 @@ bool pmic_init(void) {
   ok &= prv_write_register(PmicRegisters_BCHARGER_TASKRELEASEERROR, 1);
 
   // FIXME: this needs to be configurable at board level
-#if PLATFORM_OBELIX
+#ifdef CONFIG_BOARD_FAMILY_OBELIX
   ok &= prv_write_register(PmicRegisters_ADC_ADCNTCRSEL, PmicRegisters_ADC_ADCNTCRSEL__ADCNTCRSEL_10K);
 
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERM, PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V35);
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERMR, PmicRegisters_BCHARGER_BCHGVTERMR__BCHGVTERMREDUCED_4V00);
-#elif PLATFORM_GETAFIX
+#elif defined(CONFIG_BOARD_FAMILY_GETAFIX)
   ok &= prv_write_register(PmicRegisters_ADC_ADCNTCRSEL, PmicRegisters_ADC_ADCNTCRSEL__ADCNTCRSEL_10K);
 
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERM, PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V45);
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERMR, PmicRegisters_BCHARGER_BCHGVTERMR__BCHGVTERMREDUCED_4V00);
-#elif PLATFORM_ASTERIX
+#elif defined(CONFIG_BOARD_FAMILY_ASTERIX)
   ok &= prv_write_register(PmicRegisters_ADC_ADCNTCRSEL, PmicRegisters_ADC_ADCNTCRSEL__ADCNTCRSEL_10K);
 
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERM, PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V20);
@@ -354,12 +354,12 @@ bool pmic_init(void) {
 #endif
 
   // FIXME: this needs to be configurable at board level
-#if PLATFORM_OBELIX
+#ifdef CONFIG_BOARD_FAMILY_OBELIX
   //3.3V @ LDO2
   ok &= prv_write_register(PmicRegisters_LDSW_LDSW2LDOSEL, PmicRegisters_LDSW_LDSW2LDOSEL__LDO_MODE);
   ok &= prv_write_register(PmicRegisters_LDSW_LDSW2VOUTSEL, PmicRegisters_LDSW_LDSW2VOUTSEL__3V3);
   ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW2CLR, 1);
-#elif PLATFORM_GETAFIX
+#elif defined(CONFIG_BOARD_FAMILY_GETAFIX)
   // LDSW2 (3.3V for PDM)
   ok &= prv_write_register(PmicRegisters_LDSW_LDSW2LDOSEL, PmicRegisters_LDSW_LDSW2LDOSEL__LDSW_MODE);
   ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW2CLR, 1);

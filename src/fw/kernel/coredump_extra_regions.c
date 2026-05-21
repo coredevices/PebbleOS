@@ -28,12 +28,12 @@ const CoredumpExtraRegion *coredump_extra_regions_get(size_t *out_count) {
 // Forward declarations for per-driver registration helpers. Each driver
 // provides this function (under its own platform guard); we call them all
 // here under matching guards.
-#if PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if defined(CONFIG_BOARD_FAMILY_OBELIX) || defined(CONFIG_BOARD_FAMILY_GETAFIX)
 void display_jdi_register_coredump_regions(void);
 #endif
 
 void coredump_extra_regions_init(void) {
-#if PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if defined(CONFIG_BOARD_FAMILY_OBELIX) || defined(CONFIG_BOARD_FAMILY_GETAFIX)
   display_jdi_register_coredump_regions();
 #endif
 }

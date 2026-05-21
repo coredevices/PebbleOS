@@ -31,7 +31,7 @@ static const char* status_text[] = {
   [ChargeStateFail] =        "FAIL - Unplug",
 };
 
-#if defined(PLATFORM_ASTERIX) || defined(PLATFORM_OBELIX) || defined(PLATFORM_GETAFIX)
+#if defined(CONFIG_BOARD_FAMILY_ASTERIX) || defined(CONFIG_BOARD_FAMILY_OBELIX) || defined(CONFIG_BOARD_FAMILY_GETAFIX)
 static const int TEMP_MIN_MC = 15000; // 15.0C
 static const int TEMP_MAX_MC = 35000; // 35.0C
 #else
