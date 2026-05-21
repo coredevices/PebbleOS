@@ -31,7 +31,7 @@ if bld.env.CONFIG_QEMU:
         use=['fw_includes'],
     )
 
-elif bld.is_asterix():
+elif bld.env.CONFIG_BOARD_FAMILY_ASTERIX:
     bld.env.DRIVERS.extend([
         'driver_button',
         'driver_mcu',
@@ -43,7 +43,7 @@ elif bld.is_asterix():
         'driver_task_watchdog',
     ])
 
-elif bld.is_obelix():
+elif bld.env.CONFIG_BOARD_FAMILY_OBELIX:
     bld.env.DRIVERS.extend([
         'driver_button',
         'driver_mcu',
@@ -55,7 +55,7 @@ elif bld.is_obelix():
         'driver_task_watchdog',
     ])
 
-elif bld.is_getafix():
+elif bld.env.CONFIG_BOARD_FAMILY_GETAFIX:
     bld.env.DRIVERS.extend([
         'driver_button',
         'driver_mcu',

@@ -49,7 +49,7 @@ if bld.env.CONFIG_HAL_SIFLI_SF32LB52:
 
 # FIXME(SF32LB52): board-specific settings should not be here
 micro_defines = []
-if bld.is_obelix() or bld.is_getafix():
+if bld.env.CONFIG_BOARD_FAMILY_OBELIX or bld.env.CONFIG_BOARD_FAMILY_GETAFIX:
     micro_defines += ['LXT_DISABLE']
 
 bld.stlib(
