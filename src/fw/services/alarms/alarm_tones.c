@@ -120,19 +120,25 @@ static const SpeakerNote s_chime[] = {
 
 #undef NOTE
 
+// paired_vibe names the vibe score whose beat grid this tone is laid out
+// against. When the user's selected alarm vibe matches paired_vibe, the alarm
+// popup drives both subsystems off the same outer timer to keep them in
+// phase. Set to VibeScoreId_Invalid for tones with no rhythmically aligned
+// vibe — those loop on their own natural cadence.
 static const struct {
   const SpeakerNote *notes;
   uint32_t count;
   const char *name;
+  VibeScoreId paired_vibe;
 } s_tones[ALARM_TONE_COUNT] = {
   [AlarmTone_Reveille] = { s_reveille, sizeof(s_reveille) / sizeof(s_reveille[0]),
-                           i18n_noop("Reveille") },
+                           i18n_noop("Reveille"), VibeScoreId_Reveille },
   [AlarmTone_Beacon]   = { s_beacon,   sizeof(s_beacon)   / sizeof(s_beacon[0]),
-                           i18n_noop("Beacon") },
+                           i18n_noop("Beacon"),   VibeScoreId_Invalid },
   [AlarmTone_Bell]     = { s_bell,     sizeof(s_bell)     / sizeof(s_bell[0]),
-                           i18n_noop("Bell") },
+                           i18n_noop("Bell"),     VibeScoreId_Invalid },
   [AlarmTone_Chime]    = { s_chime,    sizeof(s_chime)    / sizeof(s_chime[0]),
-                           i18n_noop("Chime") },
+                           i18n_noop("Chime"),    VibeScoreId_Invalid },
 };
 
 _Static_assert(AlarmTone_Chime + 1 == ALARM_TONE_COUNT,
@@ -151,4 +157,11 @@ const char *alarm_tones_get_name(AlarmTone tone) {
     tone = AlarmTone_Reveille;
   }
   return s_tones[tone].name;
+}
+
+VibeScoreId alarm_tones_get_paired_vibe(AlarmTone tone) {
+  if ((unsigned)tone >= ALARM_TONE_COUNT) {
+    return VibeScoreId_Invalid;
+  }
+  return s_tones[tone].paired_vibe;
 }
