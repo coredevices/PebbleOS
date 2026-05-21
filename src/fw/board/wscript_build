@@ -1,5 +1,4 @@
-board = bld.get_board()
-if board in ('asterix'):
+if bld.env.CONFIG_BOARD_FAMILY_ASTERIX:
     bld.objects(
         name='board',
         source=[
@@ -11,7 +10,7 @@ if board in ('asterix'):
             'drivers',
         ],
     )
-elif board in ('obelix_dvt', 'obelix_pvt', 'obelix_bb2'):
+elif bld.env.CONFIG_BOARD_FAMILY_OBELIX:
     bld.objects(
         name='board',
         source=[
@@ -23,7 +22,7 @@ elif board in ('obelix_dvt', 'obelix_pvt', 'obelix_bb2'):
             'drivers',
         ],
     )
-elif board in ('getafix_evt', 'getafix_dvt', 'getafix_dvt2'):
+elif bld.env.CONFIG_BOARD_FAMILY_GETAFIX:
     bld.objects(
         name='board',
         source=[
@@ -35,7 +34,7 @@ elif board in ('getafix_evt', 'getafix_dvt', 'getafix_dvt2'):
             'drivers',
         ],
     )
-elif board in ('qemu_emery'):
+elif bld.env.CONFIG_BOARD_QEMU_EMERY:
     bld.objects(
         name='board',
         source=[
@@ -47,7 +46,7 @@ elif board in ('qemu_emery'):
             'drivers',
         ],
     )
-elif board in ('qemu_flint'):
+elif bld.env.CONFIG_BOARD_QEMU_FLINT:
     bld.objects(
         name='board',
         source=[
@@ -59,7 +58,7 @@ elif board in ('qemu_flint'):
             'drivers',
         ],
     )
-elif board in ('qemu_gabbro'):
+elif bld.env.CONFIG_BOARD_QEMU_GABBRO:
     bld.objects(
         name='board',
         source=[
@@ -72,7 +71,6 @@ elif board in ('qemu_gabbro'):
         ],
     )
 else:
-    bld.fatal('src/fw/board/wscript_build: '
-              'Unknown board {}'.format(board))
+    bld.fatal('src/fw/board/wscript_build: Unknown board {}'.format(bld.env.BOARD))
 
 # vim:filetype=python

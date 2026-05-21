@@ -296,8 +296,6 @@ def configure(conf):
     # module in the standard library.
     conf.load('waftools.gettext')
 
-    conf.recurse('platform')
-
     conf.load('kconfig', tooldir='waftools')
 
     # JS engine selection is driven entirely by CONFIG_MODDABLE_XS. Override
@@ -386,15 +384,15 @@ def configure(conf):
 
 
     if bt_board is None:
-        bt_board = conf.get_board()
+        bt_board = conf.env.BOARD
     # Select BT controller based on configuration:
     if conf.env.CONFIG_QEMU:
         conf.env.bt_controller = 'qemu'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_QEMU'])
-    elif conf.is_asterix():
+    elif conf.env.CONFIG_BOARD_FAMILY_ASTERIX:
         conf.env.bt_controller = 'nrf52'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_NRF52'])
-    elif conf.is_obelix() or conf.is_getafix():
+    elif conf.env.CONFIG_BOARD_FAMILY_OBELIX or conf.env.CONFIG_BOARD_FAMILY_GETAFIX:
         conf.env.bt_controller = 'sf32lb52'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_SF32LB52'])
     else:
@@ -503,7 +501,6 @@ def build(bld):
 
     bld.load('file_name_c_define', tooldir='waftools')
 
-    bld.recurse('platform')
     bld.recurse('third_party/nanopb')
     bld.recurse('src/idl')
 
@@ -737,9 +734,6 @@ def _make_bundle(ctx, fw_bin_path, fw_type='normal', board=None, resource_path=N
     # Add a LICENSE.txt file
     b.add_license('LICENSE')
 
-    # make sure ctx.capability is available
-    ctx.recurse('platform', mandatory=False)
-
     if fw_type == 'normal':
         layouts_node = ctx.path.get_bld().find_node('resources/layouts.json.auto')
         if layouts_node is not None:
@@ -874,8 +868,6 @@ class ConsoleCommand(BuildContext):
 
 def console(ctx):
     """Starts miniterm with the serial console."""
-    ctx.recurse('platform', mandatory=False)
-
     # miniterm is not made to be used as a python module, so just shell out:
     if ctx.env.CONFIG_QEMU:
         tty = 'socket://%s' % (ctx.options.qemu_host or 'localhost:12345')
@@ -923,13 +915,11 @@ class QemuLaunchCommand(BuildContext):
 
 def qemu_launch(ctx):
     """Starts up the emulator (qemu) """
-    ctx.recurse('platform', mandatory=False)
-
     qemu_bin = os.getenv("PEBBLE_QEMU_BIN")
     if not qemu_bin or not (os.path.isfile(qemu_bin) and os.access(qemu_bin, os.X_OK)):
         qemu_bin = 'qemu-pebble'
 
-    qemu_machine = ctx.get_qemu_machine()
+    qemu_machine = ctx.env.CONFIG_QEMU_MACHINE
     if not qemu_machine or qemu_machine == 'unknown':
         raise Exception("Board type '{}' not supported by QEMU".format(ctx.env.BOARD))
 
@@ -990,8 +980,6 @@ class Debug(BuildContext):
 
 
 def debug(ctx, fw_elf=None, cfg_file='openocd.cfg', is_ble=False):
-    ctx.recurse('platform', mandatory=False)
-
     if fw_elf is None:
         fw_elf = ctx.get_tintin_fw_node().change_ext('.elf')
 

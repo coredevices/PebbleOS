@@ -17,7 +17,7 @@ if bld.env.CONFIG_HAL_SIFLI:
 if bld.env.bt_controller in ('nrf52', 'sf32lb52'):
     bld.recurse('nimble')
 
-if bld.is_asterix():
+if bld.env.CONFIG_BOARD_FAMILY_ASTERIX:
     bld.recurse('hal_lsm6dso')
 
 bld.recurse('memfault')

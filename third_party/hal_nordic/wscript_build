@@ -35,7 +35,7 @@ micro_includes = [
     'nrfx/templates',
 ]
 
-if bld.is_asterix():
+if bld.env.CONFIG_BOARD_FAMILY_ASTERIX:
     # is there a better way to do this?
     micro_includes += ['../../src/fw/board/boards/board_asterix']
 else:

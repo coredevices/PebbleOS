@@ -44,7 +44,7 @@ def _get_resources_dict(bld):
     common_node = bld.path.find_node(common_path)
     resources_dict = _get_map_dict(bld, common_node)
     resource_nodes.append(common_node)
-    common_platform_path = 'common/' + bld.get_platform_name() + '/resource_map.json'
+    common_platform_path = 'common/' + bld.env.CONFIG_BOARD_FAMILY_NAME + '/resource_map.json'
 
     # handle prf or normal
     is_recovery = (bld.env.VARIANT == 'prf')
@@ -58,7 +58,7 @@ def _get_resources_dict(bld):
     root_path = 'normal/'
     if is_recovery:
         root_path = 'prf/'
-    platform_path = root_path + bld.get_platform_name() + '/resource_map.json'
+    platform_path = root_path + bld.env.CONFIG_BOARD_FAMILY_NAME + '/resource_map.json'
 
     for path in (common_platform_path, platform_path):
         platform_node = bld.path.find_node(path)
