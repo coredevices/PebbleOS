@@ -337,7 +337,7 @@ def configure(conf):
         conf.env.MIN_SDK_VERSION = 2
     elif conf.env.CONFIG_PLATFORM_GABBRO:
         conf.env.PLATFORM_NAME = 'gabbro'
-        conf.env.MIN_SDK_VERSION = 4
+        conf.env.MIN_SDK_VERSION = 3
     else:
         conf.fatal('No platform specified for {}!'.format(conf.options.board))
 
