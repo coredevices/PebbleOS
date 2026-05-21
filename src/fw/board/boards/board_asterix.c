@@ -11,7 +11,7 @@
 #include "drivers/i2c/definitions.h"
 #include "drivers/mic.h"
 #include "drivers/mic/nrf5/pdm_definitions.h"
-#include "drivers/nrf5/audio/audio_definitions.h"
+#include "drivers/speaker/nrf5/da7212_definitions.h"
 #include "drivers/i2c/nrf5.h"
 #include "drivers/uart/nrf5.h"
 #include "drivers/pmic/npm1300.h"

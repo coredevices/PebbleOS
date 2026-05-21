@@ -70,50 +70,8 @@ elif bld.is_getafix():
     ])
 ## ----------
 
-if bld.env.CONFIG_SPEAKER_QEMU:
-    bld.objects(
-        name='driver_audio',
-        source=[
-            'qemu/qemu_audio.c',
-        ],
-        use=[
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-        ],
-    )
-elif bld.env.CONFIG_SPEAKER_SF32LB:
-    bld.objects(
-        name='driver_audio',
-        source=[
-            'sf32lb52/audio/audec.c',
-            'sf32lb52/audio/audio.c',
-        ],
-        use=[
-            'fw_includes',
-            'pbl_includes',
-            'driver_gpio',
-            'hal_sifli',
-        ],
-    )
-elif bld.env.CONFIG_SPEAKER_DA7212:
-    bld.objects(
-        name='driver_audio',
-        source=[
-            'nrf5/audio/audio.c',
-        ],
-        use=[
-            'fw_includes',
-            'pbl_includes',
-            'driver_i2c',
-            'driver_nrf5_hfxo',
-            'freertos',
-            'hal_nordic',
-        ],
-    )
-
 if bld.env.CONFIG_SPEAKER:
-    bld.env.DRIVERS.append('driver_audio')
+    bld.recurse('speaker')
 
 if bld.env.CONFIG_AMBIENT_LIGHT:
     bld.recurse('ambient')

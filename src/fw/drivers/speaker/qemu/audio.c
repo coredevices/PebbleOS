@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/qemu/qemu_audio.h"
+#include "drivers/speaker/qemu/audio.h"
 
 #include "services/system_task.h"
 

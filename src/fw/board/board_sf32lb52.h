@@ -198,7 +198,7 @@ typedef enum {
 #include "drivers/uart/sf32lb.h"
 #include "drivers/display/sf32lb/display_jdi.h"
 #include "drivers/mic/sf32lb52/pdm_definitions.h"
-#include "drivers/sf32lb52/audio/audio_definitions.h"
+#include "drivers/speaker/sf32lb52/audio_definitions.h"
 
 typedef const struct DMARequest DMARequest;
 typedef const struct UARTDevice UARTDevice;
