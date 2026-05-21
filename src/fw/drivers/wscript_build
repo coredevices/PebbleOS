@@ -48,7 +48,6 @@ elif bld.is_obelix():
         'driver_button',
         'driver_mcu',
         'driver_mpu',
-        'driver_otp',
         'driver_periph_config',
         'driver_pwr',
         'driver_qspi',
@@ -61,7 +60,6 @@ elif bld.is_getafix():
         'driver_button',
         'driver_mcu',
         'driver_mpu',
-        'driver_otp',
         'driver_periph_config',
         'driver_pwr',
         'driver_qspi',
@@ -225,17 +223,8 @@ bld.objects(
     ],
 )
 
-if bld.capability('HAS_FLASH_OTP'):
-    bld.objects(
-        name='driver_otp',
-        source=[
-            'otp_flash.c',
-        ],
-        use=[
-            'fw_includes',
-            'driver_flash',
-        ],
-    )
+if bld.env.CONFIG_OTP:
+    bld.recurse('otp')
 
 if bld.env.CONFIG_PMIC:
     bld.recurse('pmic')

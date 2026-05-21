@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig OTP
+    bool "OTP Storage"
+    help
+      One-Time Programmable storage for serial numbers, HW revision, etc.
+
+if OTP
+
+config OTP_FLASH
+    bool "Flash security registers"
+    help
+      OTP backed by SPI NOR flash security registers
+      (e.g. GD25 / GD25LQ family). Driver: otp_flash.c.
+
+endif # OTP
