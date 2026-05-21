@@ -55,7 +55,9 @@ typedef enum {
   //! Indicates to the user that something is loading. May or may not manually revert when complete.
   StatusBarLayerModeLoading = 1,
   //! Custom text with an optional auto-revert to the default mode.
-  StatusBarLayerModeCustomText = 2
+  StatusBarLayerModeCustomText = 2,
+  //! Same as StatusBarLayerModeClock but renders the time using a bold font.
+  StatusBarLayerModeClockBold = 3,
 } StatusBarLayerMode;
 
 //! Values that are used to indicate the different status bar separator modes.

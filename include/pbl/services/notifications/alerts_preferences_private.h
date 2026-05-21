@@ -41,6 +41,16 @@ bool alerts_preferences_get_notification_backlight(void);
 
 void alerts_preferences_set_notification_backlight(bool enable);
 
+typedef enum {
+  NotificationStatusBarStyle_Default = 0,
+  NotificationStatusBarStyle_Bold = 1,
+  NotificationStatusBarStyleCount,
+} NotificationStatusBarStyle;
+
+NotificationStatusBarStyle alerts_preferences_get_notification_status_bar_style(void);
+
+void alerts_preferences_set_notification_status_bar_style(NotificationStatusBarStyle style);
+
 bool alerts_preferences_get_vibrate(void);
 
 void alerts_preferences_set_vibrate(bool enable);
