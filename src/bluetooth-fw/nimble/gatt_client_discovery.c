@@ -46,6 +46,17 @@ typedef struct {
   ListNode *current_characteristic;
 } GATTServiceDiscoveryContext;
 
+// Sets s_discovery_in_progress to false and gives the stop semaphore if a stop has been
+// requested. Called from every callback termination path so that bt_driver_gatt_stop_discovery
+// is always unblocked, even when discovery completes (naturally or via error) after the stop
+// request flag was set but before the next stop-check at the top of a callback runs.
+static void prv_signal_discovery_done(void) {
+  s_discovery_in_progress = false;
+  if (s_stop_discovery_requested) {
+    xSemaphoreGive(s_discovery_stopped);
+  }
+}
+
 static bool prv_descriptor_free_cb(ListNode *node, void *context) {
   kernel_free(node);
   return true;
@@ -319,8 +330,7 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
   BTErrno errno;
 
   if (s_stop_discovery_requested) {
-    xSemaphoreGive(s_discovery_stopped);
-    s_discovery_in_progress = false;
+    prv_signal_discovery_done();
     prv_free_discovery_context(context);
     return BLE_HS_EDONE;
   }
@@ -366,7 +376,7 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
 
         if (context->current_service == NULL) {
           // we're done!
-          s_discovery_in_progress = false;
+          prv_signal_discovery_done();
           prv_convert_service_and_notify_os(conn_handle, context);
         }
       }
@@ -384,7 +394,7 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
         errno = BTErrnoInternalErrorBegin + error->status;
       }
 
-      s_discovery_in_progress = false;
+      prv_signal_discovery_done();
       bt_driver_cb_gatt_client_discovery_complete(context->connection, errno);
       prv_free_discovery_context(context);
       break;
@@ -399,8 +409,7 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
   BTErrno errno;
 
   if (s_stop_discovery_requested) {
-    xSemaphoreGive(s_discovery_stopped);
-    s_discovery_in_progress = false;
+    prv_signal_discovery_done();
     prv_free_discovery_context(context);
     return BLE_HS_EDONE;
   }
@@ -438,7 +447,7 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
           prv_discover_next_dscs(conn_handle, context);
         } else {
           // No characteristics found, discovery complete
-          s_discovery_in_progress = false;
+          prv_signal_discovery_done();
           prv_convert_service_and_notify_os(conn_handle, context);
         }
       }
@@ -456,7 +465,7 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
         errno = BTErrnoInternalErrorBegin + error->status;
       }
 
-      s_discovery_in_progress = false;
+      prv_signal_discovery_done();
       bt_driver_cb_gatt_client_discovery_complete(context->connection, errno);
       prv_free_discovery_context(context);
       break;
@@ -471,8 +480,7 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
   BTErrno errno;
 
   if (s_stop_discovery_requested) {
-    xSemaphoreGive(s_discovery_stopped);
-    s_discovery_in_progress = false;
+    prv_signal_discovery_done();
     prv_free_discovery_context(context);
     return BLE_HS_EDONE;
   }
@@ -503,7 +511,7 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
         prv_discover_next_chrs(conn_handle, context);
       } else {
         // no services found
-        s_discovery_in_progress = false;
+        prv_signal_discovery_done();
         bt_driver_cb_gatt_client_discovery_complete(context->connection, BTErrnoOK);
         prv_free_discovery_context(context);
       }
@@ -520,7 +528,7 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
         errno = BTErrnoInternalErrorBegin + error->status;
       }
 
-      s_discovery_in_progress = false;
+      prv_signal_discovery_done();
       bt_driver_cb_gatt_client_discovery_complete(context->connection, errno);
       prv_free_discovery_context(context);
       break;
@@ -543,13 +551,18 @@ BTErrno bt_driver_gatt_start_discovery_range(const GAPLEConnection *connection,
   context->connection = (GAPLEConnection *)connection;
   context->range = *data;
 
+  // Reset stop flag and mark discovery in progress BEFORE issuing the discovery so that
+  // callbacks (which run on the NimBLE host task) cannot observe stale flags from a prior
+  // stop request and silently abort the freshly-started discovery.
+  s_stop_discovery_requested = false;
+  s_discovery_in_progress = true;
+
   int rc = ble_gattc_disc_all_svcs(conn_handle, prv_find_inc_svc_cb, (void *)context);
   if (rc != 0) {
+    s_discovery_in_progress = false;
+    kernel_free(context);
     return BTErrnoInternalErrorBegin + rc;
   }
-
-  s_discovery_in_progress = true;
-  s_stop_discovery_requested = false;
 
   return BTErrnoOK;
 }
@@ -563,10 +576,22 @@ BTErrno bt_driver_gatt_stop_discovery(GAPLEConnection *connection) {
     return BTErrnoInvalidState;
   }
 
+  // Drain any stale semaphore signal that might have been left by a previous race
+  // (e.g. a callback gave the semaphore but we observed in_progress=false and skipped
+  // the take). This guarantees the take below waits for a fresh give.
+  xSemaphoreTake(s_discovery_stopped, 0);
+
+  // Set the stop request BEFORE checking in_progress. A callback that runs after this
+  // point will observe the flag (either at its top check or via prv_signal_discovery_done
+  // at its termination path) and give the semaphore. Without this ordering, a callback
+  // that completed naturally between our check and our flag set would never give the
+  // semaphore, causing xSemaphoreTake below to block forever and hang KernelBG until
+  // the watchdog resets the watch into PRF.
+  s_stop_discovery_requested = true;
   if (s_discovery_in_progress) {
-    s_stop_discovery_requested = true;
     xSemaphoreTake(s_discovery_stopped, portMAX_DELAY);
   }
+  s_stop_discovery_requested = false;
 
   return BTErrnoOK;
 }
