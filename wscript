@@ -300,9 +300,6 @@ def configure(conf):
 
     conf.load('kconfig', tooldir='waftools')
 
-    if conf.env.CONFIG_QEMU:
-        conf.env.QEMU_CPU = conf.get_qemu_cpu()
-
     # JS engine selection is driven entirely by CONFIG_MODDABLE_XS. Override
     # per-board with `-DCONFIG_MODDABLE_XS=y/n` at configure time.
     if conf.env.CONFIG_MODDABLE_XS:
