@@ -10,7 +10,7 @@
 // handles that notification
 void notify_system_ready_for_communication(void);
 
-#if IS_BIGBOARD
+#ifdef CONFIG_IS_BIGBOARD
 // This sends a notification to infra that we have detected an issue which needs manual
 // intervention to debug. Infra should disable the board to give the team time to grab the board and
 // investigate.
@@ -18,4 +18,4 @@ void notify_system_ready_for_communication(void);
 // Note: To preserve the current state, this routine sets the FORCE_PRF boot bit & then
 // forces a coredump
 NORETURN test_infra_quarantine_board(const char *quarantine_reason);
-#endif /* IS_BIGBOARD */
+#endif /* CONFIG_IS_BIGBOARD */

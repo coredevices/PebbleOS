@@ -7,11 +7,6 @@ def get_board(ctx):
     else:
         return ctx.env.BOARD
 
-@conf
-def is_bigboard(ctx):
-    return '_bb' in ctx.get_board()
-
-
 # Platform specific predicates
 
 @conf

@@ -578,7 +578,7 @@ EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
     if ((image_hdr.magic == CORE_DUMP_MAGIC) && region_hdr.unread
         && ((s_time_stamp - image_hdr.time_stamp) < CORE_DUMP_MIN_AGE_SECONDS)) {
       prv_debug_str("CD: Still fresh");
-      #ifndef IS_BIGBOARD
+      #ifndef CONFIG_IS_BIGBOARD
       prv_reset();
       #else
       prv_debug_str("CD: BigBoard, forcing dump");
