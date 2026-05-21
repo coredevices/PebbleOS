@@ -14,7 +14,6 @@
 master_capability_set = {
     "HAS_SETTINGS_ICONS",
     "HAS_THEMING",
-    "HAS_PBLBOOT",
     "HAS_DYNAMIC_BACKLIGHT",
     "HAS_ACCEL_SENSITIVITY",
     "HAS_APP_SCALING",
@@ -33,7 +32,6 @@ board_capability_dicts = [
     {
         "boards": ["obelix_dvt", "obelix_pvt", "obelix_bb2"],
         "capabilities": {
-            "HAS_PBLBOOT",
             "HAS_DYNAMIC_BACKLIGHT",
             "HAS_ACCEL_SENSITIVITY",
             "HAS_APP_SCALING",
@@ -44,7 +42,6 @@ board_capability_dicts = [
     {
         "boards": ["getafix_evt", "getafix_dvt", "getafix_dvt2"],
         "capabilities": {
-            "HAS_PBLBOOT",
             "HAS_ACCEL_SENSITIVITY",
             "HAS_APP_SCALING",
             "HAS_ORIENTATION_MANAGER",

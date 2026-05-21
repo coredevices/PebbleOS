@@ -358,7 +358,7 @@ static NOINLINE void prv_main_task_init(void) {
   // Do this early before things can screw ith it.
   check_prf_update();
 
-#if CAPABILITY_HAS_PBLBOOT && defined(RECOVERY_FW) && !defined(MANUFACTURING_FW)
+#if defined(CONFIG_PBLBOOT) && defined(RECOVERY_FW) && !defined(MANUFACTURING_FW)
   // Invalidate slot0/1 when booting PRF, so we force main firmware re-install
   firmware_storage_invalidate_firmware_slot(0);
   firmware_storage_invalidate_firmware_slot(1);

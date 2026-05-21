@@ -14,7 +14,7 @@
 #include "flash_region_gd25q256e.h"
 #endif
 
-#if CAPABILITY_HAS_PBLBOOT
+#ifdef CONFIG_PBLBOOT
 // We assume that if we have pblboot, we use the two slots with direct XIP
 #if defined(RECOVERY_FW) && !defined(MANUFACTURING_FW) && !defined(RECOVERY_FW_AS_FW)
 // On recovery we always write to slot 0

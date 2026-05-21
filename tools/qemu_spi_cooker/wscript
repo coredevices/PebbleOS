@@ -43,8 +43,8 @@ def build(bld):
 
     defines = ['UNITTEST', 'DUMA_DISABLED', 'PBL_COLOR', 'PBL_RECT']
     defines.append("PLATFORM_%s" % bld.get_platform_name().upper())
-    if bld.capability('HAS_PBLBOOT'):
-        defines.append('CAPABILITY_HAS_PBLBOOT')
+    if bld.env.CONFIG_PBLBOOT:
+        defines.append('CONFIG_PBLBOOT')
 
     bld.program(source=sources,
                 target=output,

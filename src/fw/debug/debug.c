@@ -189,7 +189,7 @@ void debug_init(McuRebootReason mcu_reboot_reason) {
   version_copy_current_build_id_hex_string(build_id_string, 64);
   PBL_LOG_ALWAYS("BUILD ID: %s", build_id_string);
 
-#if CAPABILITY_HAS_PBLBOOT
+#ifdef CONFIG_PBLBOOT
   PBL_LOG_ALWAYS("Boot slot: %d", TINTIN_METADATA.is_slot_0 ? 0 : 1);
 #endif
 
