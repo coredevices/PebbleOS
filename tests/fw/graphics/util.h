@@ -58,9 +58,13 @@ static const char *namecat(const char* str1, const char* str2){
     printf("filename and filename_xbit %s : %s\n", filename, filename_xbit);
   } else {
 #if !PLATFORM_DEFAULT
-    // Add ~platform to files with unit-tests built for a specific platform
+    // Append platform suffix for non-default platforms
     strcat(filename, "~");
     strcat(filename, PLATFORM_NAME);
+#if defined(__APPLE__)
+    // On macOS, also append -darwin to differentiate local dev fixtures from CI
+    strcat(filename, "-darwin");
+#endif
 #endif
   }
 
