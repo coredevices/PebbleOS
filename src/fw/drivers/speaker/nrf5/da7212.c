@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "audio_definitions.h"
+#include "da7212_definitions.h"
 
 #include "board/board.h"
 #include "drivers/audio.h"

@@ -5,7 +5,7 @@
 
 // UART device for debug serial
 #include "drivers/uart/qemu.h"
-#include "drivers/qemu/qemu_audio.h"
+#include "drivers/speaker/qemu/audio.h"
 #include "drivers/mic/qemu/mic_definitions.h"
 
 static UARTDeviceState s_dbg_uart_state = {};
