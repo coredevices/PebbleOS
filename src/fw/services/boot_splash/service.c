@@ -3,7 +3,7 @@
 
 #include "pbl/services/boot_splash.h"
 
-#if CAPABILITY_HAS_PBLBOOT || CONFIG_QEMU
+#if defined(CONFIG_PBLBOOT) || defined(CONFIG_QEMU)
 
 #include "board/display.h"
 #include "board/splash.h"

@@ -85,7 +85,7 @@ def configure(conf):
     if conf.options.prf_as_firmware:
         conf.env.append_value('DEFINES', 'RECOVERY_FW_AS_FW')
 
-    if conf.capability('HAS_PBLBOOT'):
+    if conf.env.CONFIG_PBLBOOT:
         conf.env.SLOT = conf.options.slot
         conf.env.append_value('DEFINES', f'FIRMWARE_SLOT_{conf.options.slot}')
     else:
@@ -347,7 +347,7 @@ def _link_firmware(bld, sources):
         else:
             extra_args = ''
 
-        if bld.capability('HAS_PBLBOOT'):
+        if bld.env.CONFIG_PBLBOOT:
             nohdr_hex_node = elf_node.change_ext('.nohdr.hex')
             bld(rule=waftools.objcopy.objcopy_hex, source=elf_node, target=nohdr_hex_node, extra_args=extra_args)
             hex_node = elf_node.change_ext('.hex')

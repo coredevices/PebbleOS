@@ -8,6 +8,14 @@ config RELEASE
       features like Memfault crash reporting that should only run on
       shipping firmware.
 
+config PBLBOOT
+    bool "PBLBOOT bootloader"
+    help
+      Build for the PBLBOOT bootloader: prepend the PBLBOOT image
+      header to the firmware binary and assume a two-slot flash
+      layout with direct XIP. Disable for boards whose SoC bootloader
+      consumes a raw image and uses a single firmware slot.
+
 choice
     prompt "SDK platform"
 config PLATFORM_EMERY

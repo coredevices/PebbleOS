@@ -11,7 +11,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#if !CAPABILITY_HAS_PBLBOOT
+#ifndef CONFIG_PBLBOOT
 typedef struct PACKED FirmwareDescription {
   uint32_t description_length;
   uint32_t firmware_length;

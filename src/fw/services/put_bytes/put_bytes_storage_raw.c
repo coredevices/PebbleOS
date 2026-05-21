@@ -27,7 +27,7 @@ typedef struct MemoryLayout {
 
 static const MemoryLayout* prv_get_layout_for_type(PutBytesObjectType object_type) {
   static const MemoryLayout layouts[] = {
-#if !CAPABILITY_HAS_PBLBOOT
+#ifndef CONFIG_PBLBOOT
     { FLASH_REGION_FIRMWARE_DEST_BEGIN,
       FLASH_REGION_FIRMWARE_DEST_END, sizeof(FirmwareDescription) },
     { FLASH_REGION_FIRMWARE_DEST_BEGIN,

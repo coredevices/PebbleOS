@@ -31,7 +31,7 @@ const FirmwareMetadata TINTIN_METADATA SECTION(".pbl_fw_version") = {
 
   .is_recovery_firmware = FIRMWARE_METADATA_IS_RECOVERY_FIRMWARE,
   .is_ble_firmware = false,
-#if CAPABILITY_HAS_PBLBOOT
+#ifdef CONFIG_PBLBOOT
   .is_dual_slot = true,
 #else
   .is_dual_slot = false,
@@ -58,7 +58,7 @@ bool version_copy_running_fw_metadata(FirmwareMetadata *out_metadata) {
 
 static bool prv_version_copy_flash_fw_metadata(FirmwareMetadata *out_metadata,
                                                uint32_t flash_address, bool check_crc) {
-#if !CAPABILITY_HAS_PBLBOOT
+#ifndef CONFIG_PBLBOOT
   FirmwareDescription firmware_description =
       firmware_storage_read_firmware_description(flash_address);
 
@@ -114,7 +114,7 @@ bool version_copy_recovery_fw_version(char* dest, const int dest_len_bytes) {
 }
 
 bool version_is_prf_installed(void) {
-#if !CAPABILITY_HAS_PBLBOOT
+#ifndef CONFIG_PBLBOOT
   FirmwareDescription firmware_description =
       firmware_storage_read_firmware_description(FLASH_REGION_SAFE_FIRMWARE_BEGIN);
 
