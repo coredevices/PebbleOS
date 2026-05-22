@@ -291,7 +291,7 @@ static void prv_status_bar_style_menu_push(SettingsNotificationsData *data) {
     .select = prv_status_bar_style_menu_select,
   };
   /// Status bar title for the Notification Status Bar Style settings screen
-  const char *title = i18n_noop("Status Bar");
+  const char *title = i18n_noop("Clock Style");
   settings_option_menu_push(
       title, OptionMenuContentType_SingleLine, index, &callbacks,
       ARRAY_LENGTH(s_status_bar_style_labels), true /* icons_enabled */,
