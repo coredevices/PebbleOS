@@ -12,6 +12,7 @@
 #include "kernel/util/delay.h"
 #include "kernel/util/stop.h"
 #include "kernel/coredump_extra_regions.h"
+#include "drivers/rtc.h"
 #include "mcu/cache.h"
 #include "os/mutex.h"
 #include "pbl/services/new_timer/new_timer.h"
@@ -65,6 +66,29 @@ static volatile bool s_eof_observed;
 // any C code in this image — without it, the compiler eliminates the stores.
 static volatile uint32_t s_lcdc_pre_crash_regs[DISPLAY_LCDC_REG_DUMP_BYTES / sizeof(uint32_t)];
 
+// Ring buffer of recent LCDC interrupts, recorded by display_jdi_irq_handler
+#define DISPLAY_IRQ_LOG_ENTRIES 32
+
+typedef struct {
+  uint32_t timestamp;     // rtc_get_ticks() low 32 bits
+  uint32_t irq_before;    // LCD_IF.IRQ as the HAL handler will read it
+  uint32_t irq_after;     // LCD_IF.IRQ after the HAL handler cleared bits
+  uint32_t jdi_par_ctrl;  // LCD_IF.JDI_PAR_CTRL before the handler (INT_LINE_NUM)
+  uint32_t status;        // LCD_IF.STATUS before the handler
+  uint32_t flags;         // bit0: EOF callback fired; bit1: s_updating at entry
+} DisplayIrqLogEntry;
+
+typedef struct {
+  uint32_t write_count;   // total IRQs logged; newest = (write_count-1) % N
+  DisplayIrqLogEntry entries[DISPLAY_IRQ_LOG_ENTRIES];
+} DisplayIrqLog;
+
+static volatile DisplayIrqLog s_lcdc_irq_log;
+
+// Set by HAL_LCDC_SendLayerDataCpltCbk (the EOF callback) so the IRQ logger can
+// record, per interrupt, whether the HAL reached the completion path.
+static volatile bool s_lcdc_eof_cb_fired;
+
 // Called from coredump_extra_regions_init() in main.c boot path so the
 // snapshot buffer rides in Memfault coredumps. The default Memfault
 // reconstruction only forwards thread stacks + log buffers; without this
@@ -74,6 +98,9 @@ void display_jdi_register_coredump_regions(void) {
   coredump_extra_regions_register("lcdc_pre_crash_regs",
                                   (const void *)s_lcdc_pre_crash_regs,
                                   sizeof(s_lcdc_pre_crash_regs));
+  coredump_extra_regions_register("lcdc_irq_log",
+                                  (const void *)&s_lcdc_irq_log,
+                                  sizeof(s_lcdc_irq_log));
 }
 
 #ifndef CONFIG_RELEASE
@@ -258,11 +285,33 @@ static void prv_display_update_terminate(void *data) {
 
 void display_jdi_irq_handler(DisplayJDIDevice *disp) {
   DisplayJDIState *state = DISPLAY->state;
+  LCD_IF_TypeDef *regs = state->hlcdc.Instance;
+
+  // Snapshot LCDC state before/after the HAL handler into the ring buffer so a
+  // coredump shows the interrupt interleaving behind the lost-EOF wedge.
+  volatile DisplayIrqLogEntry *entry =
+      &s_lcdc_irq_log.entries[s_lcdc_irq_log.write_count % DISPLAY_IRQ_LOG_ENTRIES];
+  entry->timestamp = (uint32_t)rtc_get_ticks();
+  entry->irq_before = regs->IRQ;
+  entry->jdi_par_ctrl = regs->JDI_PAR_CTRL;
+  entry->status = regs->STATUS;
+  entry->flags = s_updating ? 0x2u : 0x0u;
+
+  s_lcdc_eof_cb_fired = false;
   HAL_LCDC_IRQHandler(&state->hlcdc);
+
+  entry->irq_after = regs->IRQ;
+  if (s_lcdc_eof_cb_fired) {
+    entry->flags |= 0x1u;
+  }
+  s_lcdc_irq_log.write_count++;
 }
 
 void HAL_LCDC_SendLayerDataCpltCbk(LCDC_HandleTypeDef *lcdc) {
   portBASE_TYPE woken = pdFALSE;
+
+  // Tell the IRQ logger the HAL reached the completion path for this interrupt.
+  s_lcdc_eof_cb_fired = true;
 
 #ifndef CONFIG_RELEASE
   if (s_test_drop_next_complete && s_updating) {
