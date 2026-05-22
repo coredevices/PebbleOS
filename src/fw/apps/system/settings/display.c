@@ -540,8 +540,7 @@ static void prv_display_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
 #if CAPABILITY_HAS_APP_SCALING
     case SettingsDisplayLegacyAppMode:
       title = i18n_noop("Legacy Apps");
-      subtitle = (shell_prefs_get_legacy_app_render_mode() >= LegacyAppRenderMode_ScalingNearest) ?
-                 i18n_noop("Scaled") : i18n_noop("Centered");
+      subtitle = s_legacy_app_mode_labels[shell_prefs_get_legacy_app_render_mode()];
       break;
 #endif
     default:
