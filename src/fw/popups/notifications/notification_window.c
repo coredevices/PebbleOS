@@ -72,7 +72,7 @@ static const unsigned int QUICK_DND_HOLD_MS = 800;
 
 T_STATIC NotificationWindowData s_notification_window_data;
 
-static bool s_in_use = false;
+T_STATIC bool s_in_use = false;
 PebbleMutex *s_notification_window_mutex;
 
 static bool prv_should_provide_action_menu_for_item(NotificationWindowData *data,
@@ -337,7 +337,8 @@ static void prv_hide_peek_layer(void *context) {
 
   // get the frame of the swap_layer and set its destination
   const GRect *swap_frame = &data->swap_layer.layer.frame;
-  int16_t swap_frame_animation_dy = STATUS_BAR_LAYER_HEIGHT - swap_frame->origin.y;
+  const int16_t status_bar_height = data->status_layer.layer.frame.size.h;
+  int16_t swap_frame_animation_dy = status_bar_height - swap_frame->origin.y;
 
   // duration of animation of both peek layer and swap layer moving up to the top
   int16_t peek_frame_animation_dy = swap_frame_animation_dy;
@@ -362,7 +363,7 @@ static void prv_hide_peek_layer(void *context) {
   PeekLayer *peek_layer = data->peek_layer;
   GRect frame = peek_layer->layer.frame;
   frame.origin.x = (frame.size.w / 2) - (NOTIFICATION_TINY_RESOURCE_SIZE.w / 2);
-  frame.origin.y = CARD_ICON_UPPER_PADDING + STATUS_BAR_LAYER_HEIGHT;
+  frame.origin.y = CARD_ICON_UPPER_PADDING + status_bar_height;
   frame.size = NOTIFICATION_TINY_RESOURCE_SIZE;
 
   const bool align_in_frame = true;
@@ -1224,6 +1225,18 @@ static void prv_dnd_status_changed(bool dnd_is_active) {
 // Notification Window API
 ///////////////////////////
 
+static StatusBarLayerMode prv_status_bar_mode_for_style(NotificationStatusBarStyle style) {
+  switch (style) {
+    case NotificationStatusBarStyle_Bold:
+      return StatusBarLayerModeClockBold;
+    case NotificationStatusBarStyle_LargeBold:
+      return StatusBarLayerModeClockLargeBold;
+    case NotificationStatusBarStyle_Default:
+    default:
+      return StatusBarLayerModeClock;
+  }
+}
+
 static void prv_init_notification_window(bool is_modal) {
   NotificationWindowData *data = &s_notification_window_data;
 
@@ -1264,8 +1277,21 @@ static void prv_init_notification_window(bool is_modal) {
   Layer *root_layer = window_get_root_layer(window);
   const GRect *window_frame = &root_layer->frame;
 
+  // Configure the status bar first so its (possibly taller) height drives the
+  // layout below it. The selected notification status-bar style maps to a
+  // StatusBarLayerMode; status_bar_layer_set_mode resizes the bar to match.
+  StatusBarLayer *status_layer = &data->status_layer;
+  status_bar_layer_init(status_layer);
+  status_bar_layer_set_colors(status_layer, PBL_IF_RECT_ELSE(GColorBlack, GColorClear),
+                              PBL_IF_RECT_ELSE(GColorWhite, GColorBlack));
+  status_bar_layer_set_separator_mode(status_layer, StatusBarLayerSeparatorModeNone);
+  status_bar_layer_set_mode(
+      status_layer,
+      prv_status_bar_mode_for_style(alerts_preferences_get_notification_status_bar_style()));
+  const int16_t status_bar_height = status_layer->layer.frame.size.h;
+
   // prepare the swap layer frame using notification_layout values including the status bar
-  const GRect swap_frame = GRect(0, STATUS_BAR_LAYER_HEIGHT, window_frame->size.w,
+  const GRect swap_frame = GRect(0, status_bar_height, window_frame->size.w,
                                  LAYOUT_HEIGHT + LAYOUT_ARROW_HEIGHT);
 
   SwapLayer *swap_layer = &data->swap_layer;
@@ -1283,14 +1309,7 @@ static void prv_init_notification_window(bool is_modal) {
   swap_layer_set_click_config_onto_window(swap_layer, window);
   layer_add_child(root_layer, swap_layer_get_layer(swap_layer));
 
-  StatusBarLayer *status_layer = &data->status_layer;
-  status_bar_layer_init(status_layer);
-  status_bar_layer_set_colors(status_layer, PBL_IF_RECT_ELSE(GColorBlack, GColorClear),
-                              PBL_IF_RECT_ELSE(GColorWhite, GColorBlack));
-  status_bar_layer_set_separator_mode(status_layer, StatusBarLayerSeparatorModeNone);
-  if (alerts_preferences_get_notification_status_bar_style() == NotificationStatusBarStyle_Bold) {
-    status_layer->config.mode = StatusBarLayerModeClockBold;
-  }
+  // Add the status bar after the swap layer so it renders on top.
   layer_add_child(root_layer, (Layer *)status_layer);
 
   // bubble on right for action button
