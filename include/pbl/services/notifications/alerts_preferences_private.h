@@ -44,6 +44,7 @@ void alerts_preferences_set_notification_backlight(bool enable);
 typedef enum {
   NotificationStatusBarStyle_Default = 0,
   NotificationStatusBarStyle_Bold = 1,
+  NotificationStatusBarStyle_LargeBold = 2,
   NotificationStatusBarStyleCount,
 } NotificationStatusBarStyle;
 
