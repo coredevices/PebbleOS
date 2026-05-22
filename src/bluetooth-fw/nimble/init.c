@@ -144,10 +144,33 @@ bool bt_driver_start(BTDriverConfig *config) {
     }
   }
 
-  if (s_driver_state == DriverStateStarted || ble_hs_is_enabled()) {
-    PBL_LOG_D_WRN(LOG_DOMAIN_BT, "NimBLE host already enabled; skipping start");
-    s_driver_state = DriverStateStarted;
+  if (s_driver_state == DriverStateStarted) {
+    PBL_LOG_D_WRN(LOG_DOMAIN_BT, "Driver already started; skipping start");
     return true;
+  }
+
+  if (ble_hs_is_enabled()) {
+    // State mismatch: stop NimBLE so the fresh-start path re-runs
+    // ble_hs_util_ensure_addr.
+    PBL_LOG_D_WRN(LOG_DOMAIN_BT, "NimBLE host enabled but driver state is %u; resyncing",
+                  (unsigned)s_driver_state);
+    s_driver_state = DriverStateStopping;
+    (void)xSemaphoreTake(s_host_stopped, 0);
+    rc = ble_hs_stop(&s_listener, prv_ble_hs_stop_cb, NULL);
+    if (rc == BLE_HS_EALREADY) {
+      s_driver_state = DriverStateStopped;
+    } else if (rc != 0) {
+      PBL_LOG_D_ERR(LOG_DOMAIN_BT, "Failed to stop NimBLE host for resync: 0x%04x", (uint16_t)rc);
+      return false;
+    } else {
+      f_rc = xSemaphoreTake(s_host_stopped, milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms));
+      if (f_rc != pdTRUE) {
+        // Leave state as STOPPING; the next start attempt will retry the wait.
+        PBL_LOG_D_ERR(LOG_DOMAIN_BT, "NimBLE host stop timed out during resync");
+        return false;
+      }
+      s_driver_state = DriverStateStopped;
+    }
   }
 
   if (s_driver_state != DriverStateStopped) {
