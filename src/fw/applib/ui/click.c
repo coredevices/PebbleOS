@@ -365,12 +365,22 @@ void click_manager_clear(ClickManager* click_manager) {
   }
 }
 
+static void prv_fire_long_release_if_held(ClickRecognizer *recognizer) {
+  if (recognizer->is_button_down &&
+      recognizer->hold_timer == NULL &&
+      recognizer->config.long_click.release_handler != NULL) {
+    prv_dispatch_event(recognizer, ClickHandlerOffsetLongRelease, false /* needs_reset */);
+  }
+}
+
 void click_recognizer_reset(ClickRecognizer *recognizer) {
+  prv_fire_long_release_if_held(recognizer);
   prv_click_reset(recognizer);
 }
 
 void click_manager_reset(ClickManager* click_manager) {
   for (unsigned int button_id = 0; button_id < NUM_BUTTONS; button_id++) {
+    prv_fire_long_release_if_held(&click_manager->recognizers[button_id]);
     prv_click_reset(&click_manager->recognizers[button_id]);
   }
 }
