@@ -266,8 +266,9 @@ static void prv_vibe_delay_menu_push(SettingsNotificationsData *data) {
 ////////////////////////
 
 static const char *s_status_bar_style_labels[] = {
-  [NotificationStatusBarStyle_Default] = i18n_noop("Default"),
-  [NotificationStatusBarStyle_Bold]    = i18n_noop("Bold"),
+  [NotificationStatusBarStyle_Default]   = i18n_noop("Default"),
+  [NotificationStatusBarStyle_Bold]      = i18n_noop("Bold"),
+  [NotificationStatusBarStyle_LargeBold] = i18n_noop("Big & Bold"),
 };
 
 _Static_assert(ARRAY_LENGTH(s_status_bar_style_labels) == NotificationStatusBarStyleCount, "");
