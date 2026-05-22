@@ -46,8 +46,6 @@
 #define CARD_MARGIN PBL_IF_ROUND_ELSE(12, 10)
 // All paddings relate to padding above the object unless othersize noted
 #define CARD_BOTTOM_PADDING 18
-// The y-position of a layout frame when its banner is peeking
-#define BANNER_PEEK_STATIC_Y (DISP_ROWS - STATUS_BAR_LAYER_HEIGHT)
 #define BOTTOM_BANNER_CIRCLE_RADIUS 8
 
 static void prv_card_render(NotificationLayout *layout, GContext *ctx, bool render);
@@ -401,30 +399,43 @@ static CONST_FUNC int32_t prv_interpolate_linear(int32_t out_min, int32_t out_ma
   return out_min + (out_max - out_min) * (progress - in_min) / (in_max - in_min);
 }
 
+// Effective notification status bar height: taller when the "Big & Bold" clock
+// style is selected, otherwise the default. The content top is pushed down by
+// this amount, so the banner clip math must match it.
+static int16_t prv_notif_status_bar_height(void) {
+  return (alerts_preferences_get_notification_status_bar_style() ==
+          NotificationStatusBarStyle_LargeBold)
+             ? STATUS_BAR_LAYER_LARGE_BOLD_HEIGHT
+             : STATUS_BAR_LAYER_HEIGHT;
+}
+
 static void prv_draw_banner_round(NotificationLayout *notification_layout, GContext *ctx,
                                   const GRect *const notification_layout_frame,
                                   LayoutColors colors) {
   // We use DISP_ROWS and DISP_COLS instead of the layer's frame or bounds because the
   // notification layout's frame is not the same size as the display
   const int32_t half_screen_width = DISP_COLS / 2;
+  const int16_t status_bar_height = prv_notif_status_bar_height();
+  // The y-position of a layout frame when its banner is peeking
+  const int32_t banner_peek_static_y = DISP_ROWS - status_bar_height;
   graphics_context_set_fill_color(ctx, colors.bg_color);
   const int32_t saved_clip_box_size_h = ctx->draw_state.clip_box.size.h;
   const int32_t saved_clip_box_origin_y = ctx->draw_state.clip_box.origin.y;
   ctx->draw_state.clip_box.origin.y =
-      MAX(ctx->draw_state.clip_box.origin.y - STATUS_BAR_LAYER_HEIGHT, 0);
+      MAX(ctx->draw_state.clip_box.origin.y - status_bar_height, 0);
   ctx->draw_state.clip_box.size.h = DISP_ROWS;
   grect_clip(&ctx->draw_state.clip_box, &DISP_FRAME);
 
   const int32_t banner_movement_raw_offset =
-      CLIP(BANNER_PEEK_STATIC_Y - notification_layout_frame->origin.y,
-           0, BANNER_PEEK_STATIC_Y);
+      CLIP(banner_peek_static_y - notification_layout_frame->origin.y,
+           0, banner_peek_static_y);
   const int32_t banner_radius = prv_interpolate_linear(BOTTOM_BANNER_CIRCLE_RADIUS,
                                                        BANNER_CIRCLE_RADIUS,
-                                                       0, BANNER_PEEK_STATIC_Y,
+                                                       0, banner_peek_static_y,
                                                        banner_movement_raw_offset);
   const int32_t banner_diameter = banner_radius * 2;
   const int32_t banner_center_y = prv_interpolate_linear(0, LAYOUT_TOP_BANNER_ORIGIN_Y,
-                                                         0, BANNER_PEEK_STATIC_Y,
+                                                         0, banner_peek_static_y,
                                                          banner_movement_raw_offset);
   const GRect banner_frame = GRect(half_screen_width - banner_radius,
                                    banner_center_y - banner_radius,

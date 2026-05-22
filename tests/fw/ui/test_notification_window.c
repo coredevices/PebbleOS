@@ -20,7 +20,7 @@
 #include "stubs_action_menu.h"
 #include "stubs_alarm_layout.h"
 #include "stubs_alerts.h"
-#include "stubs_alerts_preferences.h"
+// stubs_alerts_preferences.h intentionally omitted; see local replacements below
 #include "stubs_analytics.h"
 #include "stubs_ancs_filtering.h"
 #include "stubs_app_install_manager.h"
@@ -86,6 +86,38 @@
 #include "stubs_weather_layout.h"
 #include "stubs_window_manager.h"
 #include "stubs_window_stack.h"
+
+#include "pbl/services/notifications/alerts_preferences_private.h"
+
+// Local replacements for stubs_alerts_preferences.h so the notification status
+// bar style is settable per test (a strong override cannot share a TU with the
+// header's WEAK definition).
+static NotificationStatusBarStyle s_notification_status_bar_style =
+    NotificationStatusBarStyle_Default;
+
+NotificationStatusBarStyle alerts_preferences_get_notification_status_bar_style(void) {
+  return s_notification_status_bar_style;
+}
+
+VibeScoreId alerts_preferences_get_vibe_score_for_client(VibeClient client) {
+  return VibeScoreId_Invalid;
+}
+
+VibeIntensity alerts_preferences_get_vibe_intensity(void) {
+  return VibeIntensityLow;
+}
+
+bool alerts_preferences_get_notification_alternative_design(void) {
+  return false;
+}
+
+DndNotificationMode alerts_preferences_dnd_get_show_notifications(void) {
+  return DndNotificationModeShow;
+}
+
+bool alerts_preferences_get_notification_vibe_delay(void) {
+  return false;
+}
 
 int16_t interpolate_int16(int32_t normalized, int16_t from, int16_t to) {
   return to;
@@ -287,12 +319,21 @@ bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) {
   return true;
 }
 
+extern NotificationWindowData s_notification_window_data;
+extern bool s_in_use;
+
 void test_notification_window__initialize(void) {
   fake_app_state_init();
   load_system_resources_fixture();
 
   attribute_list_destroy_list(&s_test_data.statics.attr_list);
   s_test_data = (NotificationWindowTestData) {};
+  s_notification_status_bar_style = NotificationStatusBarStyle_Default;
+  // Reset the notification window so each test gets a fresh prv_init_notification_window
+  // call with the correct status-bar style.  Without this, s_in_use=true from a previous
+  // test (e.g. big_bold setting LargeBold mode) would prevent re-initialization and leave
+  // both the status-bar mode and swap-layer frame stale.
+  s_in_use = false;
 }
 
 void test_notification_window__cleanup(void) {
@@ -448,5 +489,21 @@ void test_notification_window__body_icon(void) {
     .background_color = GColorIslamicGreen,
   };
   prv_prepare_canvas_and_render_notification_windows(0 /* num_down_scrolls */);
+  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
+}
+
+void test_notification_window__big_bold(void) {
+  s_notification_status_bar_style = NotificationStatusBarStyle_LargeBold;
+  s_test_data = (NotificationWindowTestData) {
+    .icon_id = TIMELINE_RESOURCE_NOTIFICATION_FACEBOOK_MESSENGER,
+    .title = "Henry Levak",
+    .body = "Nu, Shara. Where are my designs, blat?",
+    .show_notification_timestamp = true,
+    .timestamp = "Just now",
+    .background_color = GColorPictonBlue,
+  };
+  const unsigned int num_down_scrolls =
+      PBL_IF_RECT_ELSE((PreferredContentSizeDefault < PreferredContentSizeLarge) ? 1 : 0, 0);
+  prv_prepare_canvas_and_render_notification_windows(num_down_scrolls);
   FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
 }
