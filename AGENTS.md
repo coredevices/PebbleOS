@@ -21,6 +21,7 @@ PebbleOS is the operating system running on Pebble smartwatches.
 - ruff for Python code
 - Keep code comments short and concise. Extended descriptions can be kept in
   the Git commit message.
+- Do not put references to issues in the code, only add those to the Git commit message.
 
 ## Logging
 
