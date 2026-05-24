@@ -725,6 +725,11 @@
       "id": -32,
       "enum": "TIMELINE_FULL",
       "md_fn": "timeline_full_get_app_info"
+    },
+    {
+      "id": -100,
+      "enum": "NOTIFICATIONS_CLEAR_HISTORY",
+      "md_fn": "notifications_clear_history_app_get_info"
     }
   ],
   "resource_apps": [
