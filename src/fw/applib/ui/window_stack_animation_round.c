@@ -23,10 +23,11 @@
 // Window transition implementations
 //////////////////////////////////////
 
-static uint16_t prv_window_distance_from_screen_bounds(const Window *window) {
+static uint16_t prv_window_distance_from_screen_bounds(const Window *window, GContext *ctx) {
   const GPoint origin = window->layer.frame.origin;
-  return MAX(distance_to_mod_boundary(origin.x, DISP_COLS),
-             distance_to_mod_boundary(origin.y, DISP_ROWS));
+  const GSize fb_size = graphics_context_get_framebuffer_size(ctx);
+  return MAX(distance_to_mod_boundary(origin.x, fb_size.w),
+             distance_to_mod_boundary(origin.y, fb_size.h));
 }
 
 static void prv_window_transition_render(WindowTransitioningContext *context, GContext *ctx) {
@@ -44,7 +45,7 @@ static void prv_window_transition_render(WindowTransitioningContext *context, GC
     window_render(window_to, ctx);
 
     // cover whole movement with a ring that distracts from the simple movement
-    uint16_t gap_to_cover = prv_window_distance_from_screen_bounds(window_to);
+    uint16_t gap_to_cover = prv_window_distance_from_screen_bounds(window_to, ctx);
     compositor_port_hole_transition_draw_outer_ring(ctx, gap_to_cover, GColorBlack);
   }
 }
@@ -93,10 +94,13 @@ static void prv_window_transition_animation_update(Animation *animation,
   if (window_to) {
     const GPoint factor = prv_displacement_from(direction);
 
+    const GSize fb_size =
+        graphics_context_get_framebuffer_size(graphics_context_get_current_context());
+
     // in the video for S4 with 180px I measured 80px
     // this expression tries express this in a future-proof manner in case we will have round
     // displays with a different resolution
-    const int16_t offset_value = DISP_COLS * 80 / 180;
+    const int16_t offset_value = fb_size.w * 80 / 180;
     const GPoint offset = GPoint(factor.x * offset_value, factor.y * offset_value);
 
     const AnimationProgress half_time = ANIMATION_NORMALIZED_MAX / 2;
@@ -106,7 +110,7 @@ static void prv_window_transition_animation_update(Animation *animation,
 
     // does a movement of the first pixels, a cut, and then a movement of the last pixels
     if (first_half) {
-      from = GPoint(factor.x * DISP_COLS, factor.y * DISP_ROWS);
+      from = GPoint(factor.x * fb_size.w, factor.y * fb_size.h);
       to = gpoint_sub(from, offset);
     } else {
       to = GPointZero;
