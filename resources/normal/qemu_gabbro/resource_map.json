@@ -91,6 +91,46 @@
       "builtin": true
     },
     {
+      "type": "png",
+      "name": "MULTIWATCH_BACKGROUND_20MM_BLACK",
+      "file": "normal/getafix/images/multiwatch_bg_20mm_black.png"
+    },
+    {
+      "type": "png",
+      "name": "MULTIWATCH_TIMEZONE_20MM_BLACK",
+      "file": "normal/getafix/images/multiwatch_tz_20mm_black.png"
+    },
+    {
+      "type": "png",
+      "name": "MULTIWATCH_BACKGROUND_20MM_SILVER",
+      "file": "normal/getafix/images/multiwatch_bg_20mm_silver.png"
+    },
+    {
+      "type": "png",
+      "name": "MULTIWATCH_TIMEZONE_20MM_SILVER",
+      "file": "normal/getafix/images/multiwatch_tz_20mm_silver.png"
+    },
+    {
+      "type": "png",
+      "name": "MULTIWATCH_BACKGROUND_14MM_SILVER",
+      "file": "normal/getafix/images/multiwatch_bg_14mm_silver.png"
+    },
+    {
+      "type": "png",
+      "name": "MULTIWATCH_TIMEZONE_14MM_SILVER",
+      "file": "normal/getafix/images/multiwatch_tz_14mm_silver.png"
+    },
+    {
+      "type": "png",
+      "name": "MULTIWATCH_BACKGROUND_14MM_ROSE_GOLD",
+      "file": "normal/getafix/images/multiwatch_bg_14mm_rosegold.png"
+    },
+    {
+      "type": "png",
+      "name": "MULTIWATCH_TIMEZONE_14MM_ROSE_GOLD",
+      "file": "normal/getafix/images/multiwatch_tz_14mm_rosegold.png"
+    },
+    {
       "type": "pdc",
       "name": "TIMER_APP_FACE_ICON",
       "file": "normal/snowy/images/launcher_app_face_timer_icon.svg"
