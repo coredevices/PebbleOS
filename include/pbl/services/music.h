@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "util/attributes.h"
+
 #define MUSIC_BUFFER_LENGTH 64
 
 typedef enum {
@@ -36,6 +38,23 @@ typedef enum {
 
   NumMusicCommand,
 } MusicCommand;
+
+
+// Music App Preferences Struct, for storing to prefs
+typedef struct PACKED MusicAppPreferences {
+  bool show_volume_controls;
+  bool show_progress_bar;
+  bool prioritize_when_playing;
+  uint8_t long_press_vibe_strength;
+} MusicAppPreferences;
+
+#define MUSIC_APP_DEFAULT_PREFERENCES { \
+  .show_volume_controls = true, \
+  .show_progress_bar = true, \
+  .prioritize_when_playing = true, \
+  .long_press_vibe_strength = 100, \
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Interface to Music app

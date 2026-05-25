@@ -157,7 +157,7 @@ void shell_event_loop_handle_event(PebbleEvent *e) {
       return;
 
     case PEBBLE_MEDIA_EVENT:
-      if (e->media.playback_state == MusicPlayStatePlaying) {
+      if (e->media.playback_state == MusicPlayStatePlaying && music_app_prefs_get_prioritize_when_playing_enabled()) {
         app_install_mark_prioritized(APP_ID_MUSIC, true /* can_expire */);
       }
       return;

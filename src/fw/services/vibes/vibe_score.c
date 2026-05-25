@@ -30,6 +30,20 @@ static unsigned int prv_vibe_score_get_pattern_length(GenericAttribute *pattern_
   return pattern_attribute->length / sizeof(VibeNoteIndex);
 }
 
+static uint8_t prv_scale_note_strength(uint8_t note_strength, uint8_t percentage) {
+    if (percentage == 100) {
+        return note_strength;
+    }
+
+    uint16_t scaled = (uint16_t) note_strength * (uint16_t) percentage;
+
+    if (scaled > 100 * 100) {
+        return 100;
+    } else {
+        return ((scaled + (100 - 1)) / 100);
+    }
+}
+
 static bool prv_vibe_score_resource_is_valid(ResAppNum app_num, uint32_t resource_id,
                                              uint32_t expected_signature, uint32_t *data_size) {
   // Load file signature, and check that it matches the expected_signature
@@ -185,7 +199,7 @@ unsigned int vibe_score_get_repeat_delay_ms(VibeScore *score) {
   return 0;
 }
 
-void vibe_score_do_vibe(VibeScore *score) {
+void vibe_score_do_vibe_with_strength(VibeScore *score, uint8_t strength_percentage) {
   PBL_ASSERTN(score);
   GenericAttribute *notes_attribute = generic_attribute_find_attribute(&score->attr_list,
                                                                        VibeAttributeId_Notes,
@@ -204,7 +218,7 @@ void vibe_score_do_vibe(VibeScore *score) {
     VibeNote *note = &note_list[pattern_list[i]];
     total_duration_ms += note->vibe_duration_ms + note->brake_duration_ms;
     if (note->vibe_duration_ms > 0) {
-      sys_vibe_pattern_enqueue_step_raw(note->vibe_duration_ms, note->strength);
+      sys_vibe_pattern_enqueue_step_raw(note->vibe_duration_ms, prv_scale_note_strength(note->strength, strength_percentage));
     }
     if (note->brake_duration_ms > 0) {
       sys_vibe_pattern_enqueue_step_raw(note->brake_duration_ms, vibe_get_braking_strength());
@@ -214,6 +228,10 @@ void vibe_score_do_vibe(VibeScore *score) {
   PBL_LOG_INFO("vibe_score: do_vibe, %u notes, %ums total, repeat_delay=%ums",
                pattern_length, total_duration_ms, repeat_delay);
   sys_vibe_pattern_trigger_start();
+}
+
+void vibe_score_do_vibe(VibeScore *score) {
+    vibe_score_do_vibe_with_strength(score, 100);
 }
 
 VibeScore *vibe_score_create_with_resource(uint32_t resource_id) {

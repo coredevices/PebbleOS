@@ -109,8 +109,7 @@ static const char *s_syncable_settings[] = {
   "workerId",
 
   // Music preferences
-  "musicShowVolumeControls",
-  "musicShowProgressBar",
+  "musicAppPreferences",
 };
 
 static const size_t s_num_syncable_settings = ARRAY_LENGTH(s_syncable_settings);

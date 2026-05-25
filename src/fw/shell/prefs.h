@@ -221,8 +221,7 @@ typedef enum MenuScrollVibeBehavior {
 MenuScrollVibeBehavior shell_prefs_get_menu_scroll_vibe_behavior(void);
 void shell_prefs_set_menu_scroll_vibe_behavior(MenuScrollVibeBehavior behavior);
 
-bool shell_prefs_get_music_show_volume_controls(void);
-void shell_prefs_set_music_show_volume_controls(bool enable);
-
-bool shell_prefs_get_music_show_progress_bar(void);
-void shell_prefs_set_music_show_progress_bar(bool enable);
+bool music_app_prefs_get_show_volume_controls_enabled(void);
+bool music_app_prefs_get_show_progress_bar_enabled(void);
+bool music_app_prefs_get_prioritize_when_playing_enabled(void);
+uint8_t music_app_prefs_get_long_press_vibe_strength(void);
