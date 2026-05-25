@@ -25,6 +25,12 @@
 #define COREDUMP_RAM_SIZE (256 * 1024)
 #endif
 
+// LCPU (BLE coprocessor) RAM, in the LPSYS domain outside main RAM.
+#if defined(CONFIG_SOC_SF32LB52)
+#define COREDUMP_LCPU_RAM_START (0x20400000)
+#define COREDUMP_LCPU_RAM_SIZE (24 * 1024)
+#endif
+
 // Max number of core dump images we can fit in our allocated space
 #define CORE_DUMP_FLASH_START   FLASH_REGION_CD_BEGIN
 #define CORE_DUMP_FLASH_END     FLASH_REGION_CD_END
