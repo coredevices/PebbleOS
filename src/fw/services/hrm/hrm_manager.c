@@ -129,6 +129,11 @@ T_STATIC uint32_t prv_num_system_task_events_queued(void) {
       &s_manager_state.system_task_event_buffer);
   return avail_bytes / sizeof(PebbleHRMEvent);
 }
+
+// Used by unit tests
+T_STATIC uint32_t prv_get_dropped_events_count(void) {
+  return s_manager_state.dropped_events;
+}
 #endif
 
 static void prv_handle_accel_data(void * data) {
@@ -506,7 +511,10 @@ void hrm_manager_new_data_cb(const HRMData *data) {
         kernel_bg_features_sent |= feature;
       }
       prv_populate_hrm_event(&hrm_event, feature, data);
-      PBL_ASSERTN(prv_event_put(state, &hrm_event));
+      if (!prv_event_put(state, &hrm_event)) {
+        // Consumer queue full (e.g. app not draining events); drop instead of panicking.
+        ++s_manager_state.dropped_events;
+      }
     }
 
     // If this is an app subscription, see if we need to send an "expiring" event. We check
@@ -516,8 +524,12 @@ void hrm_manager_new_data_cb(const HRMData *data) {
         .event_type = HRMEvent_SubscriptionExpiring,
         .expiring.session_ref = state->session_ref,
       };
-      PBL_ASSERTN(prv_event_put(state, &hrm_event));
-      state->sent_expiration_event = true;
+      if (prv_event_put(state, &hrm_event)) {
+        state->sent_expiration_event = true;
+      } else {
+        // Retry on the next sample rather than panicking.
+        ++s_manager_state.dropped_events;
+      }
     }
 
     if (state->expire_utc && (utc_now >= state->expire_utc)) {
