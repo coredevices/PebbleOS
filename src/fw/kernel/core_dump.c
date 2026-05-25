@@ -107,6 +107,9 @@ static const MemoryRegion MEMORY_REGIONS_DUMP[] = {
 #if CONFIG_SOC_NRF52 || CONFIG_SOC_SF32LB52 || CONFIG_QEMU
   { .start = (void *)0x20000000, .length = COREDUMP_RAM_SIZE },
 #endif
+#if defined(CONFIG_SOC_SF32LB52)
+  { .start = (void *)COREDUMP_LCPU_RAM_START, .length = COREDUMP_LCPU_RAM_SIZE },
+#endif
   { .start = (void *)&NVIC->ISER, .length = sizeof(NVIC->ISER) },  // Enabled interrupts
   { .start = (void *)&NVIC->ISPR, .length = sizeof(NVIC->ISPR) },  // Pending interrupts
   { .start = (void *)&NVIC->IABR, .length = sizeof(NVIC->IABR) },  // Active interrupts
