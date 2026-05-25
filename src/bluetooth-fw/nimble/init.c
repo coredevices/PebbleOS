@@ -28,8 +28,7 @@ static const uint32_t s_bt_stack_start_stop_timeout_ms = 3000;
 extern void pebble_pairing_service_init(void);
 extern void nimble_discover_init(void);
 #ifdef BT_CONTROLLER_SF32LB52
-extern void ble_transport_ll_deinit(void);
-extern void ble_transport_ll_reinit(void);
+extern void ble_transport_ll_wake_lcpu(void);
 #endif
 
 #if NIMBLE_CFG_CONTROLLER
@@ -63,8 +62,10 @@ static void prv_sync_cb(void) {
 static void prv_reset_cb(int reason) {
   PBL_LOG_D_WRN(LOG_DOMAIN_BT, "NimBLE host reset (reason: 0x%04x)", (uint16_t)reason);
 #ifdef BT_CONTROLLER_SF32LB52
-  ble_transport_ll_deinit();
-  ble_transport_ll_reinit();
+  // Controller stopped answering HCI. Keep the LCPU reachable and crash so the
+  // coredump captures LCPU RAM; the reboot cold-recovers the controller.
+  ble_transport_ll_wake_lcpu();
+  PBL_CROAK("NimBLE host reset 0x%04x; captured LCPU RAM", (uint16_t)reason);
 #endif
 }
 
