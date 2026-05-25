@@ -14,7 +14,8 @@ struct GAPLEConnection;
 
 #define MAX_ATT_WRITE_PAYLOAD_SIZE (ATT_MAX_SUPPORTED_MTU - 3)
 #define GATT_CLIENT_SUBSCRIPTIONS_BUFFER_SIZE \
-  ((MAX_ATT_WRITE_PAYLOAD_SIZE + sizeof(GATTBufferedNotificationHeader)) * 4)
+  ((MAX_ATT_WRITE_PAYLOAD_SIZE + sizeof(GATTBufferedNotificationHeader)) * \
+   CONFIG_BLE_GATT_SUBSCRIPTION_DEPTH)
 
 //! Data structure representing a subscription of a specific client for
 //! noticications or indications of a GATT characteristic for a specific

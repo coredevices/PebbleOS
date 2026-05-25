@@ -5,3 +5,20 @@ config SERVICE_BLUETOOTH
     bool "Bluetooth"
     help
       Core Bluetooth service (pairing, bonding, local id, ...).
+
+config BLE_GATT_NOTIF_WRITE_TIMEOUT_MS
+    int "GATT notification handoff timeout (ms)"
+    default 5 if SOC_SF32LB52
+    default 100
+    help
+      Max time the BT host task blocks for the client to drain the per-client
+      GATT subscription buffer before dropping a notification. Must stay below
+      the HCI transport's tolerance for a stalled host.
+
+config BLE_GATT_SUBSCRIPTION_DEPTH
+    int "GATT subscription buffer depth (notifications)"
+    default 8 if SOC_SF32LB52
+    default 4
+    help
+      Per-client GATT subscription buffer depth, in max-size notifications.
+      Deeper absorbs notification bursts (fewer drops) at the cost of RAM.

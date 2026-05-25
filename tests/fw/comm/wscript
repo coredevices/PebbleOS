@@ -80,7 +80,9 @@ def build(bld):
                            "tests/fakes/fake_GATTAPI_test_vectors.c "
                            "tests/fakes/fake_queue.c "
                            "tests/fakes/fake_rtc.c ",
-        test_sources_ant_glob = "test_gatt_client_subscriptions.c")
+        test_sources_ant_glob = "test_gatt_client_subscriptions.c",
+        defines=['CONFIG_BLE_GATT_NOTIF_WRITE_TIMEOUT_MS=100',
+                 'CONFIG_BLE_GATT_SUBSCRIPTION_DEPTH=4'])
 
     clar(bld,
         sources_ant_glob = "src/fw/util/rand/rand.c "
