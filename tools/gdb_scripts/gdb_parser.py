@@ -355,7 +355,6 @@ class TaskTimer(Recognizer):
         timer_manager_ref = get_static_variable("s_task_timer_manager")
         timer_manager = gdb.parse_and_eval(timer_manager_ref)
         max_timer_id = int(timer_manager["next_id"]) - 1
-        max_timer_id = int() - 1
         return 1 <= timer["id"] <= max_timer_id
 
 
