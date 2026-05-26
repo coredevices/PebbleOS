@@ -503,8 +503,8 @@ const BoardConfigPower BOARD_CONFIG_POWER = {
 
 const BoardConfig BOARD_CONFIG = {
   .backlight_on_percent = 25,
-  .ambient_light_dark_threshold = 2000,
-  .ambient_k_delta_threshold = 200,
+  .ambient_light_dark_threshold = 150,
+  .ambient_k_delta_threshold = 25,
 };
 
 const BoardConfigButton BOARD_CONFIG_BUTTON = {
