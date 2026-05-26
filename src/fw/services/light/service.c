@@ -148,33 +148,15 @@ static uint8_t prv_backlight_get_intensity(void) {
   }
   
 #if defined(CONFIG_DYNAMIC_BACKLIGHT) && !defined(RECOVERY_FW)
-  // Dynamic backlight: linear ramp from dim_intensity at dynamic_min_threshold
-  // up to 100% at ambient_light_dark_threshold, then clamped to user_max. This
-  // keeps the slope independent of the user's brightness preference, so a user
-  // who caps their max at e.g. 60% still hits that cap partway up the ALS range
-  // rather than only at the brightest end. prv_light_allowed() rejects wakes
-  // above dark_threshold; paths that bypass it (app-driven force-on,
-  // ambient-sensor pref off) sensibly land at user_max here.
+  // Dynamic backlight: dim in utter darkness, otherwise user max. The
+  // bright-outdoor case is already filtered upstream by prv_light_allowed()
+  // for ambient-sensor-enabled wakes; the few paths that bypass that gate
+  // (app-driven force-on, ambient-sensor pref off) sensibly land at max here.
   if (backlight_is_dynamic_intensity_enabled()) {
     const uint8_t dim_intensity = 10;
-    const uint8_t user_max = backlight_get_intensity();
-    const uint32_t als = prv_get_als_level();
-    const uint32_t dim_threshold = backlight_get_dynamic_min_threshold();
-    const uint32_t max_threshold = ambient_light_get_dark_threshold();
-
-    if (user_max <= dim_intensity || max_threshold <= dim_threshold) {
-      return user_max;
-    }
-    if (als <= dim_threshold) {
+    if (prv_get_als_level() <= backlight_get_dynamic_min_threshold()) {
       return dim_intensity;
     }
-    if (als >= max_threshold) {
-      return user_max;
-    }
-    const uint32_t ramped =
-        dim_intensity +
-        ((100 - dim_intensity) * (als - dim_threshold)) / (max_threshold - dim_threshold);
-    return (ramped > user_max) ? user_max : (uint8_t)ramped;
   }
 #endif
   
