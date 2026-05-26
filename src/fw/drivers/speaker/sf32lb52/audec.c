@@ -286,10 +286,8 @@ bool audec_init(AudioDevice* audio_device) {
     AudioDeviceState* state = audio_device->state;
     AUDCODEC_HandleTypeDef *haudcodec = &state->audcodec;
     haudcodec->Instance = hwp_audcodec;
-    haudcodec->hdma[HAL_AUDCODEC_DAC_CH0] = malloc(sizeof(DMA_HandleTypeDef));
-
-    PBL_ASSERT(haudcodec->hdma[HAL_AUDCODEC_DAC_CH0], "allocated mem error");
-    memset(haudcodec->hdma[HAL_AUDCODEC_DAC_CH0], 0, sizeof(DMA_HandleTypeDef));
+    memset(&state->dac_dma_handle, 0, sizeof(state->dac_dma_handle));
+    haudcodec->hdma[HAL_AUDCODEC_DAC_CH0] = &state->dac_dma_handle;
 
     haudcodec->hdma[HAL_AUDCODEC_DAC_CH0]->Instance = audio_device->audec_dma_channel;
     haudcodec->hdma[HAL_AUDCODEC_DAC_CH0]->Init.Request = audio_device->audec_dma_request;
