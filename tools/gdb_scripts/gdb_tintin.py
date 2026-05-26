@@ -44,7 +44,8 @@ import struct
 from collections import defaultdict, OrderedDict, namedtuple, Counter
 
 # Enable importing of other .py files in the same folder:
-sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.expanduser(__file__))))
+_SCRIPT_DIR = os.path.abspath(os.path.dirname(os.path.expanduser(__file__)))
+sys.path.insert(0, _SCRIPT_DIR)
 
 import gdb_utils
 import gdb_parser
@@ -602,9 +603,8 @@ def _load_applib_types_by_size():
     Used to suggest candidate types for unknown blocks of a given size.
     Returns an empty dict if the JSON can't be located or parsed.
     """
-    script_dir = os.path.dirname(os.path.abspath(__file__))
     json_path = os.path.join(
-        script_dir, "..", "..", "src", "fw", "applib", "applib_malloc.json"
+        _SCRIPT_DIR, "..", "..", "src", "fw", "applib", "applib_malloc.json"
     )
     try:
         with open(json_path) as f:
