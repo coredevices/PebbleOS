@@ -35,7 +35,7 @@ static uint8_t prv_scale_note_strength(uint8_t note_strength, uint8_t percentage
         return note_strength;
     }
 
-    uint16_t scaled = (uint16_t) note_strength * (uint16_t) percentage;
+    const uint16_t scaled = (uint16_t) note_strength * (uint16_t) percentage;
 
     if (scaled > 100 * 100) {
         return 100;
