@@ -31,24 +31,6 @@ void ambient_light_init(void);
  */
 uint32_t ambient_light_get_light_level(void);
 
-//! Refcounted "I will want ALS readings soon" hint; bookkeeping lives in
-//! ambient_light_common.c and reaches the driver via
-//! ambient_light_driver_set_state().
-void ambient_light_prime(void);
-void ambient_light_release(void);
-
-//! Refcounted "stop sampling right now" gate (e.g. backlight bleed-through).
-//! Physical sampling is on iff prime > 0 && suspend == 0.
-void ambient_light_suspend(void);
-void ambient_light_resume(void);
-
-//! Init the refcount framework. Called from the per-chip ambient_light_init().
-void ambient_light_common_init(void);
-
-//! Driver hook. `active` = prime > 0; `sampling` = active && suspend == 0.
-//! No-op for drivers without a sampling gate.
-void ambient_light_driver_set_state(bool active, bool sampling);
-
 //! get the threshold between light and dark
 uint32_t ambient_light_get_dark_threshold(void);
 

@@ -6,10 +6,8 @@
 #include "drivers/ambient_light.h"
 #include "drivers/i2c.h"
 #include "drivers/periph_config.h"
-#include "drivers/rtc.h"
 #include "kernel/util/sleep.h"
 #include "mfg/mfg_info.h"
-#include "os/mutex.h"
 #include "system/logging.h"
 #include "system/passert.h"
 
@@ -59,10 +57,10 @@
 #define W1160_ALSCTRL_DATA_FORMAT12 (0<<2)   /* 1:12bit 0:16bit */
 #define W1160_DATA_GC_LVL           (15<<4)  /* gc lelvel 15 */
 #define W1160_SAT_GC_CONFIG         (0x0A)
-#define W1160_SLOW_IT_CONFIG1       (0x03)   /* 99ms ((0x3E7+1) * 99us) */
-#define W1160_SLOW_IT_CONFIG2       (0xE7)
-#define W1160_SLOW_ST_CONFIG1       (0x07)   /* 200ms ((0x7CF+1) * 100us) */
-#define W1160_SLOW_ST_CONFIG2       (0xCF)
+#define W1160_SLOW_IT_CONFIG1       (0x00)   /* 16.830ms */
+#define W1160_SLOW_IT_CONFIG2       (0xA9)
+#define W1160_SLOW_ST_CONFIG1       (0x03)   /* 480ms */
+#define W1160_SLOW_ST_CONFIG2       (0xFF)
 #define W1160_SAMPLING_EN           (1<<1)   /* 1:en 0:dis */
 #define W1160_SAMPLING_DIS          (0<<1)   /* 1:en 0:dis */
 #define W1160_CHIP_ID               (0xE5)
@@ -78,18 +76,6 @@
 static bool s_initialized;
 static uint32_t s_sensor_light_dark_threshold;
 
-// DATA_ALS reads zero while SAMPLING_EN=0, so we cache the last known-good
-// value. Cache is served during suspend windows and invalidated when the
-// active window drops (so the next unprimed read does a fresh one-shot
-// instead of returning a stale value from an earlier primed window).
-#define W1160_SETTLE_AFTER_ENABLE_MS (W1160_ALS_POLL_TIMEOUT_MS)
-static PebbleMutex *s_state_mutex;
-static bool s_active;
-static bool s_sampling_active;
-static RtcTicks s_sampling_started_ticks;
-static uint16_t s_cached_value;
-static bool s_cache_valid;
-
 static bool prv_read_register(uint8_t register_address, uint8_t *result) {
   i2c_use(I2C_W1160);
   bool rv = i2c_read_register_block(I2C_W1160, register_address, 1, result);
@@ -104,23 +90,10 @@ static bool prv_write_register(uint8_t register_address, uint8_t datum) {
   return rv;
 }
 
-static bool prv_read_data_register(uint16_t *als_out) {
-  uint8_t hi, lo;
-  if (!prv_read_register(W1160_DATA1_ALS_REG, &hi)) {
-    return false;
-  }
-  if (!prv_read_register(W1160_DATA2_ALS_REG, &lo)) {
-    return false;
-  }
-  *als_out = (((uint16_t)hi) << 8) | lo;
-  return true;
-}
-
 void ambient_light_init(void) {
   uint8_t chip_id;
   bool rv;
 
-  s_state_mutex = mutex_create();
   s_sensor_light_dark_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
 
   psleep(W1160_POR_WAIT_TIME);
@@ -149,125 +122,61 @@ void ambient_light_init(void) {
 
   PBL_ASSERT(rv, "Failed to initialize W1160");
 
-  ambient_light_common_init();
   s_initialized = true;
 }
 
-// Block-poll FLG_ALS_DR, then read DATA_ALS. Caller must have SAMPLING_EN=1.
-static bool prv_read_data_polled(uint16_t *als_out) {
-  uint8_t flag;
-  uint32_t elapsed = 0;
-  while (true) {
-    if (!prv_read_register(W1160_FLAG1_REG, &flag)) {
-      PBL_LOG_ERR("Could not read W1160 FLAG1");
-      return false;
-    }
-    if (flag & W1160_FLG_ALS_DR) {
-      break;
-    }
-    if (elapsed >= W1160_ALS_POLL_TIMEOUT_MS) {
-      PBL_LOG_ERR("W1160 ALS data-ready timeout");
-      return false;
-    }
-    psleep(W1160_ALS_POLL_DELAY_MS);
-    elapsed += W1160_ALS_POLL_DELAY_MS;
-  }
-  return prv_read_data_register(als_out);
-}
-
-// True if SAMPLING_EN has been on long enough for DATA_ALS to hold a real
-// sample. Caller holds s_state_mutex and has checked s_sampling_active.
-static bool prv_sampling_has_settled_locked(void) {
-  const RtcTicks now = rtc_get_ticks();
-  const RtcTicks elapsed = now - s_sampling_started_ticks;
-  return elapsed >= ((RtcTicks)W1160_SETTLE_AFTER_ENABLE_MS * RTC_TICKS_HZ / 1000U);
-}
-
 uint32_t ambient_light_get_light_level(void) {
+  uint8_t result[2] = {0};
+  uint16_t als;
+  bool rv;
+
   if (!s_initialized) {
     return 0UL;
   }
 
-  mutex_lock(s_state_mutex);
-
-  if (s_active) {
-    if (s_sampling_active && prv_sampling_has_settled_locked()) {
-      uint16_t als = 0;
-      bool ok = prv_read_data_register(&als);
-      if (ok) {
-        s_cached_value = als;
-        s_cache_valid = true;
-      }
-      mutex_unlock(s_state_mutex);
-      return ok ? als : 0UL;
-    }
-
-    if (s_cache_valid) {
-      uint16_t cached = s_cached_value;
-      mutex_unlock(s_state_mutex);
-      return cached;
-    }
-
-    if (!s_sampling_active) {
-      mutex_unlock(s_state_mutex);
-      return 0UL;
-    }
-    uint16_t als = 0;
-    bool ok = prv_read_data_polled(&als);
-    if (ok) {
-      s_cached_value = als;
-      s_cache_valid = true;
-    }
-    mutex_unlock(s_state_mutex);
-    return ok ? als : 0UL;
-  }
-
-  // Unprimed one-shot: enable, poll, read, disable.
-  if (!prv_write_register(W1160_STATE_REG, W1160_SAMPLING_EN)) {
+  rv = prv_write_register(W1160_STATE_REG, W1160_SAMPLING_EN);
+  if (!rv) {
     PBL_LOG_ERR("Could not enable W1160 sampling");
-    mutex_unlock(s_state_mutex);
     return 0UL;
   }
 
-  uint16_t als = 0;
-  bool ok = prv_read_data_polled(&als);
-  if (ok) {
-    s_cached_value = als;
-    s_cache_valid = true;
-  }
-
-  if (!prv_write_register(W1160_STATE_REG, W1160_SAMPLING_DIS)) {
-    PBL_LOG_ERR("Could not disable W1160 sampling");
-    mutex_unlock(s_state_mutex);
-    return 0UL;
-  }
-
-  mutex_unlock(s_state_mutex);
-  return ok ? als : 0UL;
-}
-
-void ambient_light_driver_set_state(bool active, bool sampling) {
-  if (!s_initialized) {
-    return;
-  }
-  mutex_lock(s_state_mutex);
-  if (sampling != s_sampling_active) {
-    const uint8_t reg = sampling ? W1160_SAMPLING_EN : W1160_SAMPLING_DIS;
-    if (prv_write_register(W1160_STATE_REG, reg)) {
-      s_sampling_active = sampling;
-      if (sampling) {
-        s_sampling_started_ticks = rtc_get_ticks();
-      }
-    } else {
-      PBL_LOG_ERR("Could not write W1160 STATE_REG");
+  uint32_t elapsed = 0;
+  do {
+    rv = prv_read_register(W1160_FLAG1_REG, &result[0]);
+    if (!rv) {
+      PBL_LOG_ERR("Could not read W1160 FLAG1");
+      goto disable_and_fail;
     }
+    if ((result[0] & W1160_FLG_ALS_DR) == 0U) {
+      if (elapsed >= W1160_ALS_POLL_TIMEOUT_MS) {
+        PBL_LOG_ERR("W1160 ALS data-ready timeout");
+        goto disable_and_fail;
+      }
+      psleep(W1160_ALS_POLL_DELAY_MS);
+      elapsed += W1160_ALS_POLL_DELAY_MS;
+    }
+  } while ((result[0] & W1160_FLG_ALS_DR) == 0U);
+
+  rv = prv_read_register(W1160_DATA1_ALS_REG, &result[1]);
+  rv &= prv_read_register(W1160_DATA2_ALS_REG, &result[0]);
+  if (!rv) {
+    PBL_LOG_ERR("Could not obtain W1160 data");
+    goto disable_and_fail;
   }
-  if (s_active && !active) {
-    // Window closed: drop the cache so the next unprimed read is fresh.
-    s_cache_valid = false;
+
+  rv = prv_write_register(W1160_STATE_REG, W1160_SAMPLING_DIS);
+  if (!rv) {
+    PBL_LOG_ERR("Could not disable W1160 sampling");
+    return 0UL;
   }
-  s_active = active;
-  mutex_unlock(s_state_mutex);
+
+  als = (((uint16_t)(result[1])) << 8) | result[0];
+
+  return als;
+
+disable_and_fail:
+  (void)prv_write_register(W1160_STATE_REG, W1160_SAMPLING_DIS);
+  return 0UL;
 }
 
 void command_als_read(void) {
