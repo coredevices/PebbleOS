@@ -17,6 +17,7 @@
 #   > ln -s ~/Projects/pebble/tintin/tools/gdb_tintin.py
 
 import collections
+import json
 import os
 import sys
 
@@ -595,6 +596,32 @@ class StackStats(gdb.Command):
 StackStats()
 
 
+def _load_applib_types_by_size():
+    """Load applib_malloc.json and return {size_3x: [type_name, ...]}.
+
+    Used to suggest candidate types for unknown blocks of a given size.
+    Returns an empty dict if the JSON can't be located or parsed.
+    """
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    json_path = os.path.join(
+        script_dir, "..", "..", "src", "fw", "applib", "applib_malloc.json"
+    )
+    try:
+        with open(json_path) as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+    by_size = {}
+    for t in data.get("types", []):
+        name = t.get("name")
+        size = t.get("size_3x")
+        if not name or not size:
+            continue
+        by_size.setdefault(size, []).append(name)
+    return by_size
+
+
 class HeapParser(gdb.Command):
     """Try to figure out what structures are allocated on the heap"""
 
@@ -704,6 +731,23 @@ class HeapParser(gdb.Command):
                     desc = "{info.filename}:{info.line}".format(info=info)
                 print("Addr: {}  Bytes: {:<8} {}".format(block.data, block.size, desc))
             print("Note: Most unknowns in the kernel heap are from applib_malloc.")
+        if data["Unknown"]:
+            print("~" * 60)
+            print("Unknown size distribution (candidates from applib_malloc.json):")
+            types_by_size = _load_applib_types_by_size()
+            by_size = defaultdict(list)
+            for block in data["Unknown"]:
+                by_size[int(block.size)].append(block)
+            for size in sorted(by_size):
+                blocks = by_size[size]
+                candidates = types_by_size.get(size, [])
+                cand_str = ", ".join(candidates) if candidates else "-"
+                print(
+                    "  {:>5} B x {:>3} ({:>6} B total) : {}".format(
+                        size, len(blocks), size * len(blocks), cand_str
+                    )
+                )
+
         if len(data["Unknown"]) > 20:
             print(
                 "Warning: High amount of unknown blocks. Consider adding another parser."
