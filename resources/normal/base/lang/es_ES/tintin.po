@@ -421,7 +421,7 @@ msgstr "TIEMPO EN ZONAS"
 
 #: ../src/fw/apps/system/health/hr_summary_card.c:116
 msgid "BPM"
-msgstr "LAT/MIN"
+msgstr "PPM"
 
 #. / HRM disabled
 #: ../src/fw/apps/system/health/hr_summary_card.c:160
