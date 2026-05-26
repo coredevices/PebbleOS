@@ -9,6 +9,7 @@
 #include "shell/prefs_private.h"
 #include "shell/system_theme.h"
 
+#include "apps/system_app_ids.h"
 #include "apps/system/timeline/timeline.h"
 #include "apps/system/toggle/quiet_time.h"
 #include "board/board.h"
@@ -700,6 +701,9 @@ static bool prv_set_s_music_show_progress_bar(bool *enabled) {
 
 static bool prv_set_s_music_prioritize_when_playing(bool *enabled) {
   s_music_prioritize_when_playing = *enabled;
+  if (!s_music_prioritize_when_playing) {
+    app_install_unmark_prioritized(APP_ID_MUSIC);
+  }
   return true;
 }
 
