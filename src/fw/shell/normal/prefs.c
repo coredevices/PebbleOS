@@ -254,12 +254,15 @@ static GColor s_theme_highlight_color = GColorVividCerulean;
 static bool s_menu_scroll_wrap_around = false;
 static MenuScrollVibeBehavior s_menu_scroll_vibe_behavior = MenuScrollNoVibe;
 
-#define PREF_KEY_MUSIC_SHOW_VOLUME_CONTROLS_DEPRECATED "musicShowVolumeControls"
-#define PREF_KEY_MUSIC_SHOW_PROGRESS_BAR_DEPRECATED "musicShowProgressBar"
+#define PREF_KEY_MUSIC_SHOW_VOLUME_CONTROLS "musicShowVolumeControls"
+#define PREF_KEY_MUSIC_SHOW_PROGRESS_BAR "musicShowProgressBar"
+#define PREF_KEY_MUSIC_PRIORITIZE_WHEN_PLAYING "musicPrioritizeWhenPlaying"
+#define PREF_KEY_MUSIC_LONG_PRESS_VIBE_INTENSITY "musicLongPressVibeIntensity"
 
-#define PREF_KEY_MUSIC_APP_PREFERENCES "musicAppPreferences"
-
-static MusicAppPreferences s_music_app_preferences = MUSIC_APP_DEFAULT_PREFERENCES;
+static bool s_music_show_volume_controls = true;
+static bool s_music_show_progress_bar = true;
+static bool s_music_prioritize_when_playing = true;
+static uint8_t s_music_long_press_vibe_intensity = 100;
 
 // ============================================================================================
 // Handlers for each pref that validate the new setting and store the new value in our globals.
@@ -685,12 +688,26 @@ static bool prv_set_s_settings_dbs_compacted_v1(bool *done) {
   return true;
 }
 
-static bool prv_set_s_music_app_preferences(MusicAppPreferences *new_settings) {
-  if (new_settings->long_press_vibe_strength > 100) {
+static bool prv_set_s_music_show_volume_controls(bool *enabled) {
+  s_music_show_volume_controls = *enabled;
+  return true;
+}
+
+static bool prv_set_s_music_show_progress_bar(bool *enabled) {
+  s_music_show_progress_bar = *enabled;
+  return true;
+}
+
+static bool prv_set_s_music_prioritize_when_playing(bool *enabled) {
+  s_music_prioritize_when_playing = *enabled;
+  return true;
+}
+
+static bool prv_set_s_music_long_press_vibe_intensity(uint8_t *intensity) {
+  if (*intensity > 100) {
     return false;
   }
-
-  s_music_app_preferences = *new_settings;
+  s_music_long_press_vibe_intensity = *intensity;
   return true;
 }
 
@@ -807,43 +824,6 @@ static void prv_convert_deprecated_backlight_behaviour_key(SettingsFile *file) {
   }
 }
 
-static void prv_convert_deprecated_music_app_preferences(SettingsFile *file) {
-  // if present, convert deprecated volume controls/progress bar controls to the new music app prefs struct
-  bool volume_controls_file_exists = settings_file_exists(file, PREF_KEY_MUSIC_SHOW_VOLUME_CONTROLS_DEPRECATED,
-                           sizeof(PREF_KEY_MUSIC_SHOW_VOLUME_CONTROLS_DEPRECATED));
-  bool progress_bar_file_exists = settings_file_exists(file, PREF_KEY_MUSIC_SHOW_PROGRESS_BAR_DEPRECATED,
-                           sizeof(PREF_KEY_MUSIC_SHOW_PROGRESS_BAR_DEPRECATED));
-  if (volume_controls_file_exists || progress_bar_file_exists) {
-    bool temp;
-
-    MusicAppPreferences new_preferences = MUSIC_APP_DEFAULT_PREFERENCES;
-
-    if (volume_controls_file_exists) {
-        settings_file_get(file, PREF_KEY_MUSIC_SHOW_VOLUME_CONTROLS_DEPRECATED,
-                          sizeof(PREF_KEY_MUSIC_SHOW_VOLUME_CONTROLS_DEPRECATED),
-                          &temp, sizeof(temp));
-
-        new_preferences.show_volume_controls = temp;
-
-        settings_file_delete(file, PREF_KEY_MUSIC_SHOW_VOLUME_CONTROLS_DEPRECATED,
-                             sizeof(PREF_KEY_MUSIC_SHOW_VOLUME_CONTROLS_DEPRECATED));
-    }
-
-    if (progress_bar_file_exists) {
-        settings_file_get(file, PREF_KEY_MUSIC_SHOW_PROGRESS_BAR_DEPRECATED,
-                          sizeof(PREF_KEY_MUSIC_SHOW_PROGRESS_BAR_DEPRECATED),
-                          &temp, sizeof(temp));
-
-        new_preferences.show_progress_bar = temp;
-
-        settings_file_delete(file, PREF_KEY_MUSIC_SHOW_PROGRESS_BAR_DEPRECATED,
-                             sizeof(PREF_KEY_MUSIC_SHOW_PROGRESS_BAR_DEPRECATED));
-    }
-
-    settings_file_set(file, PREF_KEY_MUSIC_APP_PREFERENCES,
-                      sizeof(PREF_KEY_MUSIC_APP_PREFERENCES), &new_preferences, sizeof(new_preferences));
-  }
-}
 
 // ------------------------------------------------------------------------------------
 void shell_prefs_init(void) {
@@ -871,7 +851,6 @@ void shell_prefs_init(void) {
   }
 
   prv_convert_deprecated_backlight_behaviour_key(&file);
-  prv_convert_deprecated_music_app_preferences(&file);
 
   // Init state for each pref from our backing store
   uint32_t num_entries = ARRAY_LENGTH(s_prefs_table);
@@ -1868,19 +1847,19 @@ void shell_prefs_set_settings_dbs_compacted_v1(bool done) {
 }
 
 bool music_app_prefs_get_show_volume_controls_enabled(void) {
-  return s_music_app_preferences.show_volume_controls;
+  return s_music_show_volume_controls;
 }
 
 bool music_app_prefs_get_show_progress_bar_enabled(void) {
-  return s_music_app_preferences.show_progress_bar;
+  return s_music_show_progress_bar;
 }
 
 bool music_app_prefs_get_prioritize_when_playing_enabled(void) {
-  return s_music_app_preferences.prioritize_when_playing;
+  return s_music_prioritize_when_playing;
 }
 
-uint8_t music_app_prefs_get_long_press_vibe_strength(void) {
-  return s_music_app_preferences.long_press_vibe_strength;
+uint8_t music_app_prefs_get_long_press_vibe_intensity(void) {
+  return s_music_long_press_vibe_intensity;
 }
 
 #ifdef CONFIG_APP_SCALING

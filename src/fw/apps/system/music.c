@@ -266,7 +266,7 @@ static void prv_trigger_cassette_icon_switch(GBitmap *bitmap, bool animated);
 static void prv_update_cassette_icon(MusicAppData *data, bool animated);
 
 static void prv_do_haptic_feedback_vibe(MusicAppData *data) {
-  vibe_score_do_vibe_with_strength(data->score, music_app_prefs_get_long_press_vibe_strength());
+  vibe_score_do_vibe_with_strength(data->score, music_app_prefs_get_long_press_vibe_intensity());
 }
 
 static void prv_handle_volume_icon_timer(void *context) {
