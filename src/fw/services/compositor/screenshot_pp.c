@@ -144,6 +144,7 @@ void screenshot_send_next_chunk(void* raw_state) {
     PBL_LOG_WRN("Screenshot aborted, OOM.");
     prv_send_error_response(session, SCREENSHOT_OOM_ERROR);
     prv_finish(state);
+    return;
   }
   uint32_t len = prv_framebuffer_next_chunk(&state->framebuffer, max_buf_len, buffer);
   session_len += len;
