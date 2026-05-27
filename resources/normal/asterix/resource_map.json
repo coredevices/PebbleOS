@@ -44,7 +44,8 @@
     {
       "type": "raw",
       "name": "GENERIC_CONFIRMATION_LARGE",
-      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Generic_confirmation.pdc"
+      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Generic_confirmation.pdc",
+      "builtin": true
     },
     {
       "type": "raw",
