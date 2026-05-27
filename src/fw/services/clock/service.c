@@ -43,6 +43,11 @@ static const uint16_t protocol_time_endpoint_id = 11;
 
 static RegularTimerInfo s_dst_checker;
 
+#ifndef RECOVERY_FW
+// Armed on the first timer tick, after init has settled.
+static bool s_hourly_chime_armed;
+#endif
+
 static time_t prv_migrate_local_time_to_UTC(time_t local_time) {
   return time_local_to_utc(local_time);
 }
@@ -386,20 +391,21 @@ void clock_protocol_msg_callback(CommSession *session, const uint8_t* data, unsi
 }
 
 // TODO: Using a regular timer is pretty gross...
-static void prv_watch_dst(void* user) {
+T_STATIC void prv_watch_dst(void* user) {
   const bool was_dst = (bool)user;
   const bool is_dst = time_get_isdst(rtc_get_time());
   
 #ifndef RECOVERY_FW
-  if (alerts_should_vibrate_for_type(AlertOther)) {
-    if (time_utc_to_local(rtc_get_time()) % 3600 == 0) {
-      uint32_t vibe_id = vibe_score_info_get_resource_id(
-          alerts_preferences_get_vibe_score_for_client(VibeClient_Hourly)); 
-      VibeScore *score = vibe_score_create_with_resource_system(0, vibe_id);
-      if (score) {
-        vibe_score_do_vibe(score);
-        vibe_score_destroy(score);
-      }
+  if (!s_hourly_chime_armed) {
+    s_hourly_chime_armed = true;
+  } else if (alerts_should_vibrate_for_type(AlertOther) &&
+             (time_utc_to_local(rtc_get_time()) % SECONDS_PER_HOUR == 0)) {
+    uint32_t vibe_id = vibe_score_info_get_resource_id(
+        alerts_preferences_get_vibe_score_for_client(VibeClient_Hourly));
+    VibeScore *score = vibe_score_create_with_resource_system(0, vibe_id);
+    if (score) {
+      vibe_score_do_vibe(score);
+      vibe_score_destroy(score);
     }
   }
 #endif
@@ -438,6 +444,9 @@ void clock_init(void) {
     .cb = prv_watch_dst,
     .cb_data = (void*)time_get_isdst(rtc_get_time()),
   };
+#ifndef RECOVERY_FW
+  s_hourly_chime_armed = false;
+#endif
   regular_timer_add_seconds_callback(&s_dst_checker);
 }
 

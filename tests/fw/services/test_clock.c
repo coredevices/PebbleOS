@@ -4,8 +4,10 @@
 #include "clar.h"
 
 #include "pbl/services/clock.h"
+#include "pbl/services/notifications/alerts.h"
 #include "pbl/services/timezone_database.h"
 #include "pbl/services/filesystem/pfs.h"
+#include "pbl/services/vibes/vibe_score.h"
 #include "resource/resource_ids.auto.h"
 #include "resource/resource.h"
 #include "resource/resource_version.auto.h"
@@ -23,10 +25,8 @@
 
 // Stubs
 ////////////////////////////////////
-#include "stubs_alerts.h"
 #include "stubs_alerts_preferences.h"
 #include "stubs_analytics.h"
-#include "stubs_vibe_score.h"
 #include "stubs_vibe_score_info.h"
 #include "stubs_hexdump.h"
 #include "stubs_language_ui.h"
@@ -57,6 +57,25 @@ void test_clock__initialize(void) {
 }
 
 extern void prv_update_time_info_and_generate_event(time_t *t, TimezoneInfo *tz_info);
+extern void prv_watch_dst(void *user);
+
+// Hourly chime instrumentation
+//////////////////////////////
+static bool s_should_vibrate;
+static int s_vibe_create_count;
+
+bool alerts_should_vibrate_for_type(AlertType type) {
+  return s_should_vibrate;
+}
+
+VibeScore *vibe_score_create_with_resource_system(ResAppNum app_num, uint32_t resource_id) {
+  s_vibe_create_count++;
+  return NULL;
+}
+
+void vibe_score_do_vibe(VibeScore *score) {}
+
+void vibe_score_destroy(VibeScore *score) {}
 
 static void prv_clock_reset(int32_t gmtoff) {
   TimezoneInfo tzinfo = {{0}};
@@ -117,6 +136,68 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
 
 // Tests
 ///////////////////////////
+
+// FIRM-2072: on first boot after an OTA the RTC is snapped to a timestamp that
+// is exactly on the hour, and the per-second DST timer is registered before
+// resource_init() runs. The chime must not touch the (uninitialized) resource
+// subsystem on that first tick.
+void test_clock__hourly_chime_skips_first_tick_after_boot(void) {
+  s_prefs_24h_style = false;
+  fake_rtc_init(0, 0);
+  rtc_timezone_clear();
+  rtc_set_time(1262304000);  // 2010-01-01 00:00:00 UTC, divisible by 3600
+  clock_init();
+
+  s_should_vibrate = true;
+  s_vibe_create_count = 0;
+
+  // First tick after boot: must not create a vibe score even though we are
+  // exactly on the hour.
+  prv_watch_dst((void *)false);
+  cl_assert_equal_i(s_vibe_create_count, 0);
+
+  // A later tick still on the hour chimes normally.
+  prv_watch_dst((void *)false);
+  cl_assert_equal_i(s_vibe_create_count, 1);
+}
+
+void test_clock__hourly_chime_only_on_the_hour(void) {
+  s_prefs_24h_style = false;
+  fake_rtc_init(0, 0);
+  rtc_timezone_clear();
+  rtc_set_time(1262304000);
+  clock_init();
+
+  s_should_vibrate = true;
+  s_vibe_create_count = 0;
+
+  prv_watch_dst((void *)false);  // arm
+  cl_assert_equal_i(s_vibe_create_count, 0);
+
+  rtc_set_time(1262304000 + 42);  // not on the hour
+  prv_watch_dst((void *)false);
+  cl_assert_equal_i(s_vibe_create_count, 0);
+
+  rtc_set_time(1262304000 + SECONDS_PER_HOUR);  // top of the hour
+  prv_watch_dst((void *)false);
+  cl_assert_equal_i(s_vibe_create_count, 1);
+}
+
+void test_clock__hourly_chime_respects_vibrate_setting(void) {
+  s_prefs_24h_style = false;
+  fake_rtc_init(0, 0);
+  rtc_timezone_clear();
+  rtc_set_time(1262304000);
+  clock_init();
+
+  s_should_vibrate = false;
+  s_vibe_create_count = 0;
+
+  prv_watch_dst((void *)false);  // arm
+  prv_watch_dst((void *)false);  // on the hour but vibing disabled
+  cl_assert_equal_i(s_vibe_create_count, 0);
+}
+
 void test_clock__basic_no_timezone_set_time(void) {
   s_prefs_24h_style = false;
   fake_rtc_init(0, 0);
