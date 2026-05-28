@@ -618,10 +618,6 @@ void property_animation_update_gpoint(PropertyAnimation *property_animation,
 void property_animation_update_grect(PropertyAnimation *property_animation,
                                      const uint32_t distance_normalized);
 
-//! @internal
-//! GTransform is not exported, so don't include it in tintin. When GTransform will become exported,
-//! remove this from here, property_animation_update_gtransform and property_animation_create.
-#if !defined(PLATFORM_TINTIN)
 //! Default update callback for a property animations to update a property of type GTransform.
 //! Assign this function to the `.base.update` callback field of your
 //! PropertyAnimationImplementation, in combination with a `.getter` and `.setter` accessors of
@@ -635,7 +631,6 @@ void property_animation_update_grect(PropertyAnimation *property_animation,
 //! when the animation is being run.
 void property_animation_update_gtransform(PropertyAnimation *property_animation,
                                           const uint32_t distance_normalized);
-#endif
 
 //! Default update callback for a property animations to update a property of type GColor8.
 //! Assign this function to the `.base.update` callback field of your

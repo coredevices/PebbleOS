@@ -539,11 +539,7 @@ void graphics_draw_circle(GContext* ctx, GPoint p, uint16_t radius) {
   }
 }
 
-#if defined(PLATFORM_TINTIN)
-NOINLINE // Save space on tintin
-#else
-ALWAYS_INLINE // Optimize for speed on other platforms
-#endif
+ALWAYS_INLINE
 static void prv_fill_horizontal_line(GContext *ctx, GPoint p, int16_t width) {
   graphics_fill_rect(ctx, &(GRect) { .origin = p, .size = { width, 1 } });
 }

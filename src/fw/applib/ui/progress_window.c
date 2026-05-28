@@ -72,7 +72,6 @@ static void prv_animation_stopped_failure(Animation *animation, bool finished, v
 }
 
 static void prv_schedule_progress_success_animation(ProgressWindow *data) {
-#if !PLATFORM_TINTIN
   GRect beg = data->progress_layer.layer.bounds;
   GRect mid = beg;
   GRect end = beg;
@@ -112,11 +111,6 @@ static void prv_schedule_progress_success_animation(ProgressWindow *data) {
 
   data->result_animation = animation;
   animation_schedule(animation);
-#else
-  // Don't animate to a dot on old platforms, just finish immediately.
-  static const bool success = true;
-  prv_finished(data, success);
-#endif
 }
 
 static void prv_schedule_progress_failure_animation(ProgressWindow *data, uint32_t timeline_res_id,
@@ -137,7 +131,6 @@ static void prv_schedule_progress_failure_animation(ProgressWindow *data, uint32
     data->is_peek_layer_used = true;
   }
 
-#if !PLATFORM_TINTIN
   // Animate the progress bar out, by shrinking it's width from it's current size down to 0.
   // When this completes, prv_animation_stopped_failure will show the peek layer.
   GRect *start = &data->progress_layer.layer.frame;
@@ -158,11 +151,6 @@ static void prv_schedule_progress_failure_animation(ProgressWindow *data, uint32
 
   data->result_animation = animation;
   animation_schedule(animation);
-
-#else
-  // Don't animate, just show the peek layer immediately.
-  prv_show_peek_layer(data);
-#endif
 }
 
 ////////////////////////////
