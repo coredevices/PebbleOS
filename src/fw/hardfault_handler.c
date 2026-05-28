@@ -132,9 +132,18 @@ void fault_handler_dump(char buffer[80], unsigned int *stacked_args) {
 }
 
 static void hard_fault_handler_c(unsigned int* hardfault_args) {
-  // Log the lr instead of the pc. We frequently crash due to PC being madness. While the lr may be a little further
-  // than the actual crash, it should give us enough context.
-  const unsigned int stacked_lr = ((unsigned long) hardfault_args[5]);
+  // Prefer LR (PC is often madness on a hardfault). Fall back through PC,
+  // BFAR, MMFAR so Memfault always has a non-zero address to fingerprint on.
+  unsigned int stacked_lr = ((unsigned long) hardfault_args[5]);
+  if (stacked_lr == 0) {
+    stacked_lr = ((unsigned long) hardfault_args[6]);
+  }
+  if (stacked_lr == 0 && (SCB->CFSR & (1 << 15))) {  // BFARVALID
+    stacked_lr = SCB->BFAR;
+  }
+  if (stacked_lr == 0 && (SCB->CFSR & (1 << 7))) {  // MMFARVALID
+    stacked_lr = SCB->MMFAR;
+  }
   RebootReason reason = { .code = RebootReasonCode_HardFault, .extra = { .value = stacked_lr } };
   reboot_reason_set(&reason);
 

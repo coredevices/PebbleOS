@@ -218,7 +218,15 @@ DEFINE_SYSCALL(NORETURN, sys_app_fault, uint32_t stashed_lr) {
 static void hardware_fault_landing_zone(void) {
   prv_log_app_lr_and_pc_system_task(&s_current_app_crash_info);
 
-  prv_kill_user_process(0);
+  // Pass the original LR/PC down so a Worker hardfault gets a real address
+  // when it routes to kernel_fault.
+  uintptr_t lr = 0;
+  if (s_current_app_crash_info.lr_known && s_current_app_crash_info.lr != 0) {
+    lr = s_current_app_crash_info.lr;
+  } else if (s_current_app_crash_info.pc_known && s_current_app_crash_info.pc != 0) {
+    lr = s_current_app_crash_info.pc;
+  }
+  prv_kill_user_process(lr);
 }
 
 static void prv_return_to_landing_zone(uintptr_t stacked_pc, uintptr_t stacked_lr, unsigned int* stacked_args) {
@@ -279,7 +287,7 @@ static void attempt_handle_generic_fault(unsigned int* stacked_args) {
 
   if (mcu_state_is_thread_privileged()) {
     // We're hosed! We can't recover so just reboot everything.
-    kernel_fault(RebootReasonCode_HardFault, stacked_lr);
+    kernel_fault(RebootReasonCode_HardFault, stacked_lr ? stacked_lr : stacked_pc);
     return;
   }
 
