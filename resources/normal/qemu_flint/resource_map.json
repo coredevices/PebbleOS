@@ -76,7 +76,7 @@
     {
       "type": "pbi",
       "name": "MENU_ICON_TICTOC_WATCH",
-      "file": "normal/tintin/images/menu_icon_simplicity_watch.png"
+      "file": "normal/base/images/menu_icon_simplicity_watch.png"
     },
     {
       "type": "pbi8",
