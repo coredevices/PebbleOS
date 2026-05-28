@@ -5,8 +5,6 @@
 
 #include <stdint.h>
 
-#define PLATFORM_TINTIN 1
-
 typedef struct {
   const uint8_t backlight_on_percent; // percent of max possible brightness
 } BoardConfig;
