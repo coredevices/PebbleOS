@@ -18,13 +18,18 @@
 #include "services/common/light.h"
 #include "system/logging.h"
 
+#define CHARGE_TARGET_PERCENT 100
+#define DRAIN_TARGET_PERCENT 70
+
 typedef enum {
-  DischargeStateWaitUnplug = 0,
+  DischargeStateChargeTo100 = 0,
+  DischargeStateDrainTo70,
   DischargeStateDischarging,
 } DischargeTestState;
 
 static const char *status_text[] = {
-    [DischargeStateWaitUnplug] = "Unplug Watch",
+    [DischargeStateChargeTo100] = "Charge to 100%",
+    [DischargeStateDrainTo70] = "Drain to 70%",
     [DischargeStateDischarging] = "Discharging",
 };
 
@@ -58,8 +63,28 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
   charge_state = battery_get_charge_state();
 
   switch (data->test_state) {
-    case DischargeStateWaitUnplug:
+    case DischargeStateChargeTo100:
       if (!charge_state.is_plugged) {
+        sniprintf(data->details_string, sizeof(data->details_string),
+                  "Plug charger\n%" PRIu8 "%%", charge_state.charge_percent);
+      } else if (charge_state.charge_percent < CHARGE_TARGET_PERCENT) {
+        sniprintf(data->details_string, sizeof(data->details_string),
+                  "Charging\n%" PRIu8 "%%", charge_state.charge_percent);
+      } else {
+        data->test_state = DischargeStateDrainTo70;
+      }
+      break;
+
+    case DischargeStateDrainTo70:
+      if (charge_state.is_plugged) {
+        light_enable(false);
+        sniprintf(data->details_string, sizeof(data->details_string),
+                  "Unplug to drain\n%" PRIu8 "%%", charge_state.charge_percent);
+      } else if (charge_state.charge_percent > DRAIN_TARGET_PERCENT) {
+        light_enable(true);
+        sniprintf(data->details_string, sizeof(data->details_string),
+                  "Draining\n%" PRIu8 "%%", charge_state.charge_percent);
+      } else {
         // Disable sources of power consumption to minimize impact on discharge test results
         light_enable(false);
         serial_console_set_rx_enabled(false);
@@ -67,8 +92,6 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
 
         data->test_state = DischargeStateDischarging;
         data->elapsed_seconds = 0;
-      } else {
-        sniprintf(data->details_string, sizeof(data->details_string), "Unplug charger\nto begin test");
       }
       break;
 
@@ -123,7 +146,7 @@ static void app_init(void) {
   app_state_set_user_data(data);
 
   *data = (AppData){
-      .test_state = DischargeStateWaitUnplug,
+      .test_state = DischargeStateChargeTo100,
       .initial_voltage_mv = 0,
       .initial_percent = 0,
       .elapsed_seconds = 0,
