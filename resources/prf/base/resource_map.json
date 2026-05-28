@@ -17,16 +17,6 @@
       "file": "prf/base/images/Pebble-PRF_low_power_charging.svg"
     },
     {
-      "type": "png",
-      "name": "TEST_IMAGE_PINWHEEL",
-      "file": "prf/base/images/pinwheel-144x168.png"
-    },
-    {
-      "type": "png",
-      "name": "TEST_IMAGE_VEGGIES",
-      "file": "prf/base/images/veggies-144x168.png"
-    },
-    {
       "type": "font",
       "name": "GOTHIC_24_BOLD",
       "file": "normal/base/pbf/GOTHIC_24_BOLD.pbf"
