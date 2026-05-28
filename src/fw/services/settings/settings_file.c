@@ -68,15 +68,23 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags,
   }
 
   if (memcmp(&file_hdr.magic, SETTINGS_FILE_MAGIC, sizeof(file_hdr.magic)) != 0) {
-    PBL_LOG_ERR("Attempted to open %s, not a settings file.", name);
-    pfs_close_and_remove(fd);
-    return E_INVALID_OPERATION;
+    PBL_LOG_ERR("Attempted to open %s, not a settings file. Removing and recreating.", name);
+    status_t rv = pfs_close_and_remove(fd);
+    if (rv < 0) {
+      PBL_LOG_ERR("Could not remove corrupt settings file %s: %"PRId32, name, rv);
+      return rv;
+    }
+    return prv_open(file, name, flags, max_used_space, alloc_used_space, min_alloc_used_space);
   }
 
   if (file_hdr.version > SETTINGS_FILE_VERSION) {
     PBL_LOG_WRN("Unrecognized version %d for file %s, removing...",
             file_hdr.version, name);
-    pfs_close_and_remove(fd);
+    status_t rv = pfs_close_and_remove(fd);
+    if (rv < 0) {
+      PBL_LOG_ERR("Could not remove old-version settings file %s: %"PRId32, name, rv);
+      return rv;
+    }
     return prv_open(file, name, flags, max_used_space, alloc_used_space, min_alloc_used_space);
   }
 
