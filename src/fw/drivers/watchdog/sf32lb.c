@@ -12,6 +12,8 @@ static WDT_HandleTypeDef hwdt = {
     .Instance = hwp_wdt1,
 };
 
+static McuRebootReason s_cached_reset_flag;
+
 void watchdog_init(void) {
   // On PebbleOS, we use RC32K as WDT clock source.
   hwdt.Init.Reload = 32000 * WDT_TIMEOUT_S;
@@ -45,7 +47,7 @@ McuRebootReason watchdog_clear_reset_flag(void) {
   pm_power_on_mode_t boot = SystemPowerOnModeGet();
   HAL_PMU_CLEAR_WSR(0xFFFFFFFF);
 
-  McuRebootReason mcu_reboot_reason = {
+  s_cached_reset_flag = (McuRebootReason){
       .brown_out_reset = 0,
       .pin_reset = (((wsr & PMUC_WSR_PIN0) != 0) || ((wsr & PMUC_WSR_PIN1) != 0)),
       .power_on_reset = (boot & PM_COLD_BOOT) != 0,
@@ -55,5 +57,9 @@ McuRebootReason watchdog_clear_reset_flag(void) {
       .low_power_manager_reset = 0,
   };
 
-  return mcu_reboot_reason;
+  return s_cached_reset_flag;
+}
+
+McuRebootReason watchdog_get_reset_flag(void) {
+  return s_cached_reset_flag;
 }
