@@ -60,6 +60,9 @@ static const struct battery_model prv_battery_model = {
 static PreciseBatteryChargeState s_last_battery_charge_state;
 static TimerID s_periodic_timer_id = TIMER_INVALID_ID;
 
+static volatile bool s_update_pending = false;
+static volatile bool s_pending_force_update = false;
+
 static BatteryChargeStatus s_last_chg_status;
 static uint64_t prv_ref_time;
 static int32_t s_last_voltage_mv;
@@ -296,7 +299,9 @@ static void prv_update_state(void *force_update) {
   float pct;
   int ret;
 
-  update = force_update != NULL;
+  s_update_pending = false;
+  update = (force_update != NULL) || s_pending_force_update;
+  s_pending_force_update = false;
 
   ret = battery_get_constants(&constants);
   if (ret < 0) {
@@ -410,14 +415,26 @@ static void prv_update_state(void *force_update) {
   }
 }
 
+static void prv_enqueue_update(bool force) {
+  if (force) {
+    s_pending_force_update = true;
+  }
+  if (s_update_pending) {
+    return;
+  }
+  if (system_task_add_callback(prv_update_state, NULL)) {
+    s_update_pending = true;
+  }
+}
+
 static void prv_update_callback(void *data) {
   new_timer_stop(s_periodic_timer_id);
-  system_task_add_callback(prv_update_state, data);
+  prv_enqueue_update(data != NULL);
 }
 
 static void prv_callback_from_regular_timer(void *data) {
   // no need to stop the new_timer here, since this came from the regular_timer
-  system_task_add_callback(prv_update_state, data);
+  prv_enqueue_update(false);
 }
 
 static void prv_schedule_update(uint32_t delay, bool force_update) {
