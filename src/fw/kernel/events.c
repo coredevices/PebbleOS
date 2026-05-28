@@ -240,8 +240,8 @@ void event_deinit(PebbleEvent* event) {
 }
 
 void event_put(PebbleEvent* event) {
-  register uintptr_t lr __asm("lr");
-  uintptr_t saved_lr = lr;
+  // Caller LR; more reliable than reading lr register from a deeper helper.
+  uintptr_t saved_lr = (uintptr_t)__builtin_return_address(0);
   // If we are posting from the KernelMain task, use the dedicated s_from_kernel_event_queue queue for that
   // See comments above where s_from_kernel_event_queue is declared.
   if (pebble_task_get_current() == PebbleTask_KernelMain) {
@@ -252,15 +252,13 @@ void event_put(PebbleEvent* event) {
 }
 
 bool event_put_isr(PebbleEvent* event) {
-  register uintptr_t lr __asm("lr");
-  uintptr_t saved_lr = lr;
+  uintptr_t saved_lr = (uintptr_t)__builtin_return_address(0);
 
   return prv_event_put_isr(s_kernel_event_queue, "kernel", saved_lr, event);
 }
 
 void event_put_from_process(PebbleTask task, PebbleEvent* event) {
-  register uintptr_t lr __asm("lr");
-  uintptr_t saved_lr = lr;
+  uintptr_t saved_lr = (uintptr_t)__builtin_return_address(0);
 
   QueueHandle_t queue = event_get_to_kernel_queue(task);
   prv_event_put(queue, "from app", saved_lr, event);
