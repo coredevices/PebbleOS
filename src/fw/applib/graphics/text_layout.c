@@ -1027,7 +1027,7 @@ T_STATIC NOINLINE MOCKABLE void prv_debug_perimeter(GContext *ctx, const GRangeH
   // PBL-23045 Eventually remove perimeter debugging
   // Draw a red horizontal line to show the range of the current lines perimeter
   if (app_state_get_text_perimeter_debugging_enabled()) {
-#if !defined(UNITTEST) && !defined(PLATFORM_TINTIN)
+#if !defined(UNITTEST)
     const Fixed_S16_3 fixed_x1 = (Fixed_S16_3) {
       .integer = h_range->origin_x,
     };

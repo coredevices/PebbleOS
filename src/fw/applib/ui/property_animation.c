@@ -157,7 +157,6 @@ void property_animation_update_grect(PropertyAnimation *property_animation_h,
 
 
 // -----------------------------------------------------------------------------------------
-#if !defined(PLATFORM_TINTIN)
 void property_animation_update_gtransform(PropertyAnimation *property_animation_h,
                                           const uint32_t distance_normalized) {
   PBL_ASSERTN(!animation_private_using_legacy_2(NULL));
@@ -201,7 +200,6 @@ void property_animation_update_gtransform(PropertyAnimation *property_animation_
 
   setter(property_animation->subject, result);
 }
-#endif
 
 
 // -----------------------------------------------------------------------------------------
@@ -299,7 +297,6 @@ static void prv_init(PropertyAnimationPrivate *property_animation,
       property_animation->values.from.grect = from_value ? *((GRect*)from_value)
                                             : implementation->accessors.getter.grect(subject);
 
-#if !PLATFORM_TINTIN
     } else if (property_animation->animation.implementation->update
                == (AnimationUpdateImplementation)property_animation_update_gtransform) {
       // NOTE: We are not exposing the GTransform in the public SDK, so the setter and getter
@@ -311,7 +308,6 @@ static void prv_init(PropertyAnimationPrivate *property_animation,
                                           : getter(subject);
       property_animation->values.from.gtransform = from_value ? *((GTransform*)from_value)
                                             : getter(subject);
-#endif
 
     } else if (property_animation->animation.implementation->update
                == (AnimationUpdateImplementation)property_animation_update_gcolor8) {

@@ -417,14 +417,10 @@ static Animation* prv_create_bump_settle_animation(SelectionLayer *selection_lay
 }
 
 static void prv_run_value_change_animation(SelectionLayer *selection_layer) {
-#if !PLATFORM_TINTIN
   Animation *bump_text = prv_create_bump_text_animation(selection_layer);
   Animation *bump_settle = prv_create_bump_settle_animation(selection_layer);
   selection_layer->value_change_animation = animation_sequence_create(bump_text, bump_settle, NULL);
   animation_schedule(selection_layer->value_change_animation);
-#else
-  prv_update_cell_value(selection_layer, selection_layer->bump_is_upwards);
-#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -508,17 +504,12 @@ static Animation* prv_create_slide_settle_animation(SelectionLayer *selection_la
 }
 
 static void prv_run_slide_animation(SelectionLayer *selection_layer) {
-#if !PLATFORM_TINTIN
   Animation *over_animation = prv_create_slide_animation(selection_layer);
   Animation *settle_animation = prv_create_slide_settle_animation(selection_layer);
   selection_layer->next_cell_animation =
       animation_sequence_create(over_animation, settle_animation, NULL);
 
   animation_schedule(selection_layer->next_cell_animation);
-#else
-  selection_layer->selected_cell_idx++;
-  layer_mark_dirty(&selection_layer->layer);
-#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
