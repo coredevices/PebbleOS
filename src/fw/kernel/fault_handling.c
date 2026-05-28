@@ -264,13 +264,17 @@ static void prv_return_to_landing_zone(uintptr_t stacked_pc, uintptr_t stacked_l
   // Now return to hardware_fault_landing_zone...
 }
 
-static void attempt_handle_stack_overflow(unsigned int* stacked_args) {
+static void attempt_handle_stack_overflow(unsigned int* stacked_args, uintptr_t fault_pc) {
   PebbleTask task = pebble_task_get_current();
   PBL_LOG_SYNC_ERR("Stack overflow [task: %s]", pebble_task_get_name(task));
 
   if (mcu_state_is_thread_privileged()) {
     // We're hosed! We can't recover so just reboot everything.
-    RebootReason reason = { .code = RebootReasonCode_StackOverflow, .data8[0] = task };
+    RebootReason reason = {
+      .code = RebootReasonCode_StackOverflow,
+      .data8[0] = task,
+      .extra = { .value = fault_pc },
+    };
     reboot_reason_set(&reason);
     reset_due_to_software_failure();
     return;
@@ -344,13 +348,23 @@ static void mem_manage_handler_c(unsigned int* stacked_args, unsigned int lr) {
     // the cfsr.
     fault_handler_dump_cfsr(buffer);
 
+    // Read user PC before moving SP up; only safe if MMSTKERR is clear
+    // (frame was pushed). Otherwise fall back to MMFAR.
+    uintptr_t fault_pc = 0;
+    if (!(mmfsr & (1 << 4)) /* MMSTKERR */) {
+      fault_pc = (uintptr_t)stacked_args[6];
+    }
+    if (fault_pc == 0) {
+      fault_pc = SCB->MMFAR;
+    }
+
     stacked_args += 256;     // Should be enough to get above the guard region and execute hardware_fault_landing_zone
     if (lr & 0x04) {
       __set_PSP((uint32_t)stacked_args);
     } else {
       __set_MSP((uint32_t)stacked_args);
     }
-    attempt_handle_stack_overflow(stacked_args);
+    attempt_handle_stack_overflow(stacked_args, fault_pc);
 
   } else {
     prv_save_debug_registers(stacked_args);
@@ -413,13 +427,14 @@ static void usagefault_handler_c(unsigned int* stacked_args, unsigned int lr) {
   if (cfsr & SCB_CFSR_STKOF_Msk) {
     SCB->CFSR = SCB_CFSR_STKOF_Msk;  // Clear by writing 1
 
+    // No exception frame stacked on STKOF, so no PC available.
     stacked_args += 256;  // Back up SP to give landing zone room (see mem_manage_handler_c)
     if (lr & 0x04) {
       __set_PSP((uint32_t)stacked_args);
     } else {
       __set_MSP((uint32_t)stacked_args);
     }
-    attempt_handle_stack_overflow(stacked_args);
+    attempt_handle_stack_overflow(stacked_args, 0);
     return;
   }
 

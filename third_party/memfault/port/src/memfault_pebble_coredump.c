@@ -543,6 +543,7 @@ void memfault_pebble_coredump_reconstruct(void) {
     case RebootReasonCode_HardFault:
     case RebootReasonCode_LauncherPanic:
     case RebootReasonCode_WorkerHardFault:
+    case RebootReasonCode_StackOverflow:
       real_pc = reason.extra.value;
       break;
     case RebootReasonCode_OutOfMemory:
