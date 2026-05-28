@@ -93,7 +93,6 @@ def options(opt):
     opt.load('pebble_arm_gcc', tooldir='waftools')
     opt.load('show_configure', tooldir='waftools')
     opt.load('kconfig', tooldir='waftools')
-    opt.recurse('applib-targets')
     opt.recurse('tests')
     opt.recurse('src/bluetooth-fw')
     opt.recurse('src/fw')
@@ -467,8 +466,6 @@ def configure(conf):
             source = conf.path.get_bld().make_node(filename)
             os.symlink(source.path_from(conf.path), filename)
 
-    conf.recurse('applib-targets')
-
     Logs.pprint('CYAN', 'Configuring stored apps environment')
     conf.setenv('stored_apps', base_env)
     conf.recurse('stored_apps')
@@ -496,7 +493,7 @@ def build(bld):
     # FIXME: remove include/pbl once all modules use prefix
     bld(export_includes=['include', 'include/pbl'], name='pbl_includes')
 
-    if bld.variant in ('test', 'applib'):
+    if bld.variant == 'test':
         bld.set_env(bld.all_envs['local'])
 
     bld.load('file_name_c_define', tooldir='waftools')
@@ -515,21 +512,13 @@ def build(bld):
         bld.recurse('tools')
         return
 
-    if bld.variant in ('', 'applib'):
+    if bld.variant == '':
         # Dependency for SDK
         bld.recurse('third_party/moddable')
 
     if bld.variant == '' and bld.env.VARIANT != 'prf':
         # sdk generation
         bld.recurse('sdk')
-
-    if bld.variant == 'applib':
-        bld.recurse('resources')
-        bld.recurse('src/libutil')
-        bld.recurse('src/fw')
-        bld.recurse('third_party/nanopb')
-        bld.recurse('applib-targets')
-        return
 
     if bld.options.onlysdk:
         # stop here, sdk generation is done
@@ -569,11 +558,6 @@ def build(bld):
         bld.add_post_fun(size_resources)
         if 'PBL_LOGS_HASHED' in bld.env.DEFINES:
             bld.add_post_fun(merge_loghash_dicts)
-
-
-class build_applib(BuildContext):
-    cmd = 'build_applib'
-    variant = 'applib'
 
 
 def merge_loghash_dicts(bld):

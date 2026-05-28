@@ -65,24 +65,17 @@ def build(bld):
     else:
         excludes.append('touch_service.c')
 
-    if bld.variant == 'applib':
-        sources = bld.path.ant_glob('graphics/**/*.c', excl=excludes)
-        sources.extend(bld.path.ant_glob('fonts/*.c', excl=excludes))
-        sources.append('ui/layer.c')
-        sources.append('ui/window.c')
-    else:
-        sources = bld.path.ant_glob('**/*.c', excl=excludes)
-        sources.extend(_autogen_applib_sources(bld))
-        # extract strings for i18n
-        bld.gettext(source=sources, target='applib.pot')
+    sources = bld.path.ant_glob('**/*.c', excl=excludes)
+    sources.extend(_autogen_applib_sources(bld))
+    # extract strings for i18n
+    bld.gettext(source=sources, target='applib.pot')
 
     bld(export_includes=['.'], name='applib_includes')
 
     # Build the stlib
     bld.stlib(source=sources,
               target='applib',
-              use=['target_includes',
-                   'libbtutil_includes',
+              use=['libbtutil_includes',
                    'fw_includes',
                    'upng',
                    'qr_code_generator',
