@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config TASK_TIMER_POOL_SIZE
+    int "TaskTimer slab pool size"
+    default 192
+    help
+      Number of TaskTimer slots reserved in .kernel_bss

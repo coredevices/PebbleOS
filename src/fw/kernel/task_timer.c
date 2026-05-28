@@ -5,7 +5,6 @@
 #include "task_timer_manager.h"
 
 #include "kernel/pebble_tasks.h"
-#include "kernel/pbl_malloc.h"
 #include "os/mutex.h"
 #include "os/tick.h"
 #include "system/logging.h"
@@ -45,6 +44,44 @@ typedef struct TaskTimer {
   //! callback
   bool defer_delete:1;
 } TaskTimer;
+
+// TaskTimer slab pool. Avoids fragmenting the kernel heap with heavy
+// create/delete churn. Exhaustion is fatal — size CONFIG_TASK_TIMER_POOL_SIZE
+// above the observed peak.
+static TaskTimer s_task_timer_pool[CONFIG_TASK_TIMER_POOL_SIZE];
+static TaskTimer *s_task_timer_pool_free_head;
+static PebbleMutex *s_task_timer_pool_mutex;
+
+static void prv_pool_init(void) {
+  if (s_task_timer_pool_mutex) {
+    return;
+  }
+  for (size_t i = 0; i < CONFIG_TASK_TIMER_POOL_SIZE - 1; i++) {
+    s_task_timer_pool[i].list_node.next = &s_task_timer_pool[i + 1].list_node;
+  }
+  s_task_timer_pool[CONFIG_TASK_TIMER_POOL_SIZE - 1].list_node.next = NULL;
+  s_task_timer_pool_free_head = &s_task_timer_pool[0];
+  s_task_timer_pool_mutex = mutex_create();
+}
+
+static TaskTimer *prv_timer_alloc(void) {
+  TaskTimer *timer = NULL;
+  mutex_lock(s_task_timer_pool_mutex);
+  if (s_task_timer_pool_free_head) {
+    timer = s_task_timer_pool_free_head;
+    s_task_timer_pool_free_head = (TaskTimer *)timer->list_node.next;
+  }
+  mutex_unlock(s_task_timer_pool_mutex);
+  PBL_ASSERTN(timer);
+  return timer;
+}
+
+static void prv_timer_free(TaskTimer *timer) {
+  mutex_lock(s_task_timer_pool_mutex);
+  timer->list_node.next = (ListNode *)s_task_timer_pool_free_head;
+  s_task_timer_pool_free_head = timer;
+  mutex_unlock(s_task_timer_pool_mutex);
+}
 
 // ------------------------------------------------------------------------------------
 // Comparator function for list_sorted_add
@@ -87,10 +124,7 @@ static TaskTimer* prv_find_timer(TaskTimerManager *manager, TaskTimerID timer_id
 // ---------------------------------------------------------------------------------------
 // Create a new timer
 TaskTimerID task_timer_create(TaskTimerManager *manager) {
-  TaskTimer *timer = kernel_malloc(sizeof(TaskTimer));
-  if (!timer) {
-    return TASK_TIMER_INVALID_ID;
-  }
+  TaskTimer *timer = prv_timer_alloc();
 
   // Grab lock on timer structures, create a unique ID for this timer and put it into our idle
   // timers list
@@ -251,12 +285,13 @@ void task_timer_delete(TaskTimerManager *manager, TaskTimerID timer_id) {
     PBL_ASSERTN(list_contains(manager->idle_timers, &timer->list_node));
     list_remove(&timer->list_node, &manager->idle_timers /* &head */, NULL /* &tail */);
     mutex_unlock(manager->mutex);
-    kernel_free(timer);
+    prv_timer_free(timer);
   }
 }
 
 
 void task_timer_manager_init(TaskTimerManager *manager, SemaphoreHandle_t semaphore) {
+  prv_pool_init();
   *manager = (TaskTimerManager) {
     .mutex = mutex_create(),
     // Initialize next id to be a number that's theoretically unique per-task
@@ -342,7 +377,7 @@ TickType_t task_timer_manager_execute_expired_timers(TaskTimerManager *manager) 
       list_remove(&next_timer->list_node, &manager->idle_timers /* &head */, NULL /* &tail */);
       mutex_unlock(manager->mutex);
 
-      kernel_free(next_timer);
+      prv_timer_free(next_timer);
 
     } else {
       mutex_unlock(manager->mutex);

@@ -4,6 +4,7 @@
 rsource "soc/Kconfig"
 rsource "apps/Kconfig"
 rsource "drivers/Kconfig"
+rsource "kernel/Kconfig"
 rsource "services/Kconfig"
 
 menu "Software Features"
