@@ -1916,6 +1916,8 @@ void pbl_analytics_external_collect_settings(void) {
 #endif
   PBL_ANALYTICS_SET_UNSIGNED(settings_power_mode, shell_prefs_get_power_mode());
   PBL_ANALYTICS_SET_UNSIGNED(settings_motion_sensitivity, shell_prefs_get_motion_sensitivity());
+  PBL_ANALYTICS_SET_UNSIGNED(settings_backlight_intensity_pct, backlight_get_intensity());
+  PBL_ANALYTICS_SET_UNSIGNED(settings_backlight_timeout_s, backlight_get_timeout_ms() / 1000);
 }
 
 bool shell_prefs_get_music_show_volume_controls(void) {
