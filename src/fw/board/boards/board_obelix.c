@@ -554,6 +554,7 @@ const Npm1300Config NPM1300_CONFIG = {
   .dischg_limit_ma = 200,
   .term_current_pct = 10,
   .thermistor_beta = 3380,
+  .ntc_hot_celsius = 45,
   .vbus_current_lim0 = 500,
   .vbus_current_startup = 500,
 };
