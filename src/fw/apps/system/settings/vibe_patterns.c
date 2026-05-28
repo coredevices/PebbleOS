@@ -169,7 +169,7 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
     case VibeSettingsRow_MuteSpeaker: {
       const bool new_muted = !alerts_preferences_get_speaker_muted();
       alerts_preferences_set_speaker_muted(new_muted);
-      speaker_service_handle_mute_state_changed();
+      speaker_service_handle_audio_prefs_changed();
       settings_menu_mark_dirty(SettingsMenuItemVibrations);
       return;
     }
