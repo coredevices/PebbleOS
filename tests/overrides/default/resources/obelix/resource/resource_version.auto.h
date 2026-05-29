@@ -9,6 +9,6 @@
 //
 
 static const ResourceVersion SYSTEM_RESOURCE_VERSION = {
-  .crc = 1534721933,
+  .crc = 1753553765,
   .timestamp = 0
 };
