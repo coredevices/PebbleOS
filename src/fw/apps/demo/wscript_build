@@ -34,6 +34,8 @@ if bld.env.CONFIG_DEMO_APP_FLASH_DIAGNOSTIC:
     bld.recurse('flash_diagnostic')
 if bld.env.CONFIG_DEMO_APP_FLASH_PROF:
     bld.recurse('flash_prof')
+if bld.env.CONFIG_DEMO_APP_FONT_TEST:
+    bld.recurse('font_test')
 if bld.env.CONFIG_DEMO_APP_FS_RESOURCES:
     bld.recurse('fs_resources')
 if bld.env.CONFIG_DEMO_APP_FW_UPDATE_PROGRESS_SIM:

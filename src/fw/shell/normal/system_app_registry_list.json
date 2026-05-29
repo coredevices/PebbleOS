@@ -431,6 +431,14 @@
       ]
     },
     {
+      "id": -100,
+      "enum": "FONT_TEST",
+      "md_fn": "font_test_app_get_info",
+      "ifdefs": [
+        "CONFIG_DEMO_APP_FONT_TEST"
+      ]
+    },
+    {
       "id": -64,
       "enum": "KINO_LAYER",
       "md_fn": "kino_layer_demo_get_info",
