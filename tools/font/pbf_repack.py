@@ -32,13 +32,12 @@ def image_to_bitmap(img_path, expected_width=None, expected_height=None):
     width, height = img.size
     pixels = img.load()
 
-    # Build bitlist - PBF uses inverted polarity: 1 = background, 0 = glyph
+    # PBF format: 1 = glyph (drawn as text_color), 0 = background (untouched).
+    # PIL mode '1': 0 = black, 255 = white. Black pixels in the PNG are the glyph.
     bitlist = []
     for y in range(height):
         for x in range(width):
-            # In mode '1': 0 = black, 255 = white
-            # PBF format: 0 = glyph (black), 1 = background (white)
-            bitlist.append(0 if pixels[x, y] == 0 else 1)
+            bitlist.append(1 if pixels[x, y] == 0 else 0)
 
     return bitlist, width, height
 
