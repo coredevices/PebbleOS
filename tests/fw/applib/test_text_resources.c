@@ -286,10 +286,12 @@ void test_text_resources__test_glyph_decompression(void) {
   // To do this, simply copy the GOTHIC_18 stanza in resource/normal/base/resource_map.json, change
   // the name to include _COMPRESSED, and add the field: "compress": "RLE4". Rebuild, and run
   // ./tools/update_system_pbpack.sh
-  uint32_t gothic_18_compressed_handle = RESOURCE_ID_GOTHIC_18_COMPRESSED; // Read source to fix
+  // GOTHIC_18_COMPRESSED isn't in the regular pbpack; it has to be added by hand (see comment
+  // above) and the resource_ids.auto.h override updated to give it a real ID. When it's absent
+  // the symbol isn't defined, so skip the decompression coverage entirely.
+#ifdef RESOURCE_ID_GOTHIC_18_COMPRESSED
+  uint32_t gothic_18_compressed_handle = RESOURCE_ID_GOTHIC_18_COMPRESSED;
   if (gothic_18_compressed_handle == INVALID_RESOURCE) {
-    // Compressed-font fixture isn't present in this platform's pbpack; the
-    // glyph-decompression coverage requires manual addition (see comment above).
     return;
   }
   cl_assert(text_resources_init_font(0, gothic_18_compressed_handle, 0, &font_info_compressed));
@@ -317,4 +319,5 @@ void test_text_resources__test_glyph_decompression(void) {
       cl_assert_equal_m(glyph->data, glyph_buffer, glyph_size);
     }
   }
+#endif
 }
