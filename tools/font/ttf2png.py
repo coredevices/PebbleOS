@@ -85,15 +85,21 @@ def parse_glyph_list(glyph_str):
 
 
 def bitmap_to_image(bitmap, width, rows):
-    """Convert a FreeType mono bitmap to a 1-bit PIL Image."""
-    img = Image.new("1", (width, rows), 0)
+    """Convert a FreeType mono bitmap to a 1-bit PIL Image.
+
+    PIL mode '1': 0 = black, 255 = white. We emit black glyph pixels on a
+    white background so pbf_repack (which treats black PNG pixels as the
+    glyph) round-trips cleanly to the PBF polarity used by the firmware
+    renderer (bit=1 = drawn as text_color).
+    """
+    img = Image.new("1", (width, rows), 1)  # white background
     pixels = img.load()
     for y in range(rows):
         for x in range(width):
             byte_index = y * bitmap.pitch + (x >> 3)
             bit_index = 7 - (x & 7)
             if bitmap.buffer[byte_index] & (1 << bit_index):
-                pixels[x, y] = 1
+                pixels[x, y] = 0  # black glyph pixel
     return img
 
 
