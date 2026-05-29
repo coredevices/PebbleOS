@@ -40,7 +40,7 @@ static void prv_set_distance(char *buffer, size_t buffer_size, int32_t current_d
   }
 
   const int conversion_factor = health_util_get_distance_factor();
-  const char *units_string = health_util_get_distance_string(i18n_noop("MI"), i18n_noop("KM"));
+  const char *units_string = health_util_get_distance_string(i18n_noop("mi"), i18n_noop("km"));
 
   char distance_buffer[HEALTH_WHOLE_AND_DECIMAL_LENGTH];
   health_util_format_whole_and_decimal(distance_buffer, HEALTH_WHOLE_AND_DECIMAL_LENGTH,

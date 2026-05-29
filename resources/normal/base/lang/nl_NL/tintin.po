@@ -324,15 +324,15 @@ msgstr "Mislukt"
 #: ../src/fw/apps/system/workout/active.c:274
 #: ../src/fw/apps/system/workout/active.c:333
 #: ../src/fw/services/activity/activity_insights.c:1601
-msgid "MI"
-msgstr "MI"
+msgid "mi"
+msgstr "mi"
 
 #: ../src/fw/apps/system/health/activity_detail_card.c:43
 #: ../src/fw/apps/system/workout/active.c:274
 #: ../src/fw/apps/system/workout/active.c:334
 #: ../src/fw/services/activity/activity_insights.c:1601
-msgid "KM"
-msgstr "KM"
+msgid "km"
+msgstr "km"
 
 #: ../src/fw/apps/system/health/activity_detail_card.c:56
 #: ../src/fw/apps/system/health/sleep_detail_card.c:67
@@ -2340,16 +2340,16 @@ msgid "%d:%d"
 msgstr "%d:%d"
 
 #: ../src/fw/services/activity/health_util.c:98
-msgid "H"
-msgstr "H"
+msgid "h"
+msgstr "h"
 
 #: ../src/fw/services/activity/health_util.c:104
 msgid " "
 msgstr " "
 
 #: ../src/fw/services/activity/health_util.c:114
-msgid "M"
-msgstr "M"
+msgid "min"
+msgstr "min"
 
 #: ../src/fw/services/activity/health_util.c:133
 #, c-format
@@ -3386,12 +3386,6 @@ msgstr "Listening"
 
 #~ msgid "min/km"
 #~ msgstr "min/km"
-
-#~ msgid "mi"
-#~ msgstr "mi"
-
-#~ msgid "km"
-#~ msgstr "km"
 
 #~ msgid "You just updated your Pebble to version %s!"
 #~ msgstr "Je hebt je Pebble bijgewerkt naar versie %s!"
