@@ -294,7 +294,7 @@ int32_t music_get_playback_rate_percent(void) {
   return playback_rate_percent;
 }
 
-uint8_t music_get_volume_percent(void) {
+uint8_t music_service_get_volume_percent(void) {
   mutex_lock_recursive(s_music_ctx.mutex);
   int32_t player_volume_percent = s_music_ctx.player_volume_percent;
   mutex_unlock_recursive(s_music_ctx.mutex);

@@ -117,7 +117,7 @@ static void prv_receive_and_assert_volume_info(bool expect_is_handled) {
     cl_assert_equal_i(e.type, PEBBLE_MEDIA_EVENT);
     cl_assert_equal_i(e.media.type, PebbleMediaEventTypeVolumeChanged);
 
-    cl_assert_equal_i(music_get_volume_percent(), 0x33);
+    cl_assert_equal_i(music_service_get_volume_percent(), 0x33);
 
   } else {
     cl_assert_equal_i(e.type, PEBBLE_NULL_EVENT);
