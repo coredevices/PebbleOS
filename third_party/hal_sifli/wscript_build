@@ -66,5 +66,7 @@ bld.stlib(
         '-Wno-unused-but-set-variable',
         '-Wno-sign-compare',
         '-Wno-type-limits',
+        '-Wno-unused-but-set-variable',
+        '-Wno-maybe-uninitialized',
     ],
 )
