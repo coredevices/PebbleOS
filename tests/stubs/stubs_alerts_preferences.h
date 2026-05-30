@@ -22,6 +22,10 @@ DndNotificationMode WEAK alerts_preferences_dnd_get_show_notifications(void) {
   return DndNotificationModeShow;
 }
 
+bool WEAK alerts_preferences_dnd_get_auto_dismiss(void) {
+  return false;
+}
+
 bool WEAK alerts_preferences_get_notification_vibe_delay(void) {
   return false;
 }
