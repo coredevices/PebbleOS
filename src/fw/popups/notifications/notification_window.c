@@ -559,8 +559,9 @@ cleanup:
 
 static bool prv_should_pop_due_to_inactivity(void) {
   // If not a modal, then we are in the notification history app and the pop timer makes no sense
-  // If in DND mode we want to keep the notifications on the screen
-  return s_in_use && s_notification_window_data.is_modal && !do_not_disturb_is_active();
+  // If in DND mode we keep notifications on screen unless the user opted into auto-dismiss
+  return s_in_use && s_notification_window_data.is_modal &&
+         (!do_not_disturb_is_active() || alerts_preferences_dnd_get_auto_dismiss());
 }
 
 static void prv_pop_timer_callback(void *data) {

@@ -109,35 +109,6 @@ static const char *prv_get_dnd_mask_subtitle(void *i18n_key) {
   return title;
 }
 
-static const DndNotificationMode s_dnd_notification_mode_cycle[] = {
-  DndNotificationModeShow,
-  DndNotificationModeHide,
-};
-
-static DndNotificationMode prv_cycle_dnd_notification_mode(void) {
-  DndNotificationMode mode = alerts_preferences_dnd_get_show_notifications();
-  int index = 0;
-  for (size_t i = 0; i < ARRAY_LENGTH(s_dnd_notification_mode_cycle); i++) {
-    if (s_dnd_notification_mode_cycle[i] == mode) {
-      index = i;
-      break;
-    }
-  }
-  mode = s_dnd_notification_mode_cycle[(index + 1) % ARRAY_LENGTH(s_dnd_notification_mode_cycle)];
-  alerts_preferences_dnd_set_show_notifications(mode);
-  return mode;
-}
-
-static const char *prv_get_dnd_notifications_enable(void *i18n_key) {
-  switch (alerts_preferences_dnd_get_show_notifications()) {
-    case DndNotificationModeShow:
-      return i18n_get("Show", i18n_key);
-    case DndNotificationModeHide:
-      return i18n_get("Hide", i18n_key);
-    default:
-      return "???";
-  }
-}
 
 static void prv_get_dnd_time(DoNotDisturbScheduleType type, char *time_string, const uint8_t len) {
   DoNotDisturbSchedule schedule;
@@ -357,6 +328,28 @@ static void prv_schedule_submenu_push(void) {
   app_window_stack_push(window, true /* animated */);
 }
 
+static const char *prv_get_dnd_notifications_subtitle(void *i18n_key) {
+  if (alerts_preferences_dnd_get_show_notifications() == DndNotificationModeHide) {
+    return i18n_get("Off", i18n_key);
+  }
+  if (alerts_preferences_dnd_get_auto_dismiss()) {
+    return i18n_get("On - Auto Dismiss", i18n_key);
+  }
+  return i18n_get("On - Persistent", i18n_key);
+}
+
+static void prv_cycle_dnd_notifications(void) {
+  if (alerts_preferences_dnd_get_show_notifications() == DndNotificationModeHide) {
+    alerts_preferences_dnd_set_show_notifications(DndNotificationModeShow);
+    alerts_preferences_dnd_set_auto_dismiss(false);
+  } else if (!alerts_preferences_dnd_get_auto_dismiss()) {
+    alerts_preferences_dnd_set_auto_dismiss(true);
+  } else {
+    alerts_preferences_dnd_set_show_notifications(DndNotificationModeHide);
+    alerts_preferences_dnd_set_auto_dismiss(false);
+  }
+}
+
 ///////////////////////////////
 // Backlight sub-menu (touch boards)
 ///////////////////////////////
@@ -453,7 +446,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       break;
     case QuietTimeItemNotifications:
       title = i18n_get("Notifications", data);
-      subtitle = prv_get_dnd_notifications_enable(data);
+      subtitle = prv_get_dnd_notifications_subtitle(data);
       break;
 #ifdef CONFIG_TOUCH
     case QuietTimeItemBacklight:
@@ -491,7 +484,7 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       prv_cycle_dnd_mask();
       break;
     case QuietTimeItemNotifications:
-      prv_cycle_dnd_notification_mode();
+      prv_cycle_dnd_notifications();
       break;
 #ifdef CONFIG_TOUCH
     case QuietTimeItemBacklight:
