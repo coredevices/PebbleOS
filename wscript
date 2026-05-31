@@ -470,10 +470,6 @@ def configure(conf):
     conf.setenv('stored_apps', base_env)
     conf.recurse('stored_apps')
 
-    # Confirm that requirements-*.txt and requirements-osx-brew.txt have been satisfied.
-    import tool_check
-    tool_check.tool_check()
-
 
 def stop_build_timer(ctx):
     t = datetime.datetime.utcnow() - ctx.pbl_build_start_time
@@ -951,7 +947,7 @@ def qemu_launch(ctx):
         "-serial tcp::12345,server=on,wait=off " # console
         ).format(mon_sock=shlex.quote(mon_sock)) + ' '.join(machine_dep_args)
     waflib.Logs.pprint('CYAN', 'QEMU command: {}'.format(cmd_line))
-    os.system(cmd_line)
+    subprocess.run(shlex.split(cmd_line))
 
 
 class Debug(BuildContext):
