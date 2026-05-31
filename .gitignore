@@ -67,3 +67,8 @@ artifacts/
 .claude/settings.local.json
 .envrc
 .direnv
+
+pebbleos-sdk
+
+.pixi/*
+!.pixi/config.toml

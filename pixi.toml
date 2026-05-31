@@ -1,0 +1,138 @@
+[workspace]
+name = "PebbleOS"
+channels = ["conda-forge"]
+platforms = ["osx-arm64", "linux-64"]
+
+[activation.env]
+PEBBLEOS_SDK_ROOT = "$PIXI_PROJECT_ROOT/pebbleos-sdk"
+PATH = "$PIXI_PROJECT_ROOT/pebbleos-sdk/arm-none-eabi/bin:$PIXI_PROJECT_ROOT/pebbleos-sdk/qemu/bin:$PIXI_PROJECT_ROOT/pebbleos-sdk/sftool:$PATH"
+
+#
+# Tasks
+#
+
+[tasks.download-sdk]
+cmd = "curl -LsSf https://github.com/coredevices/PebbleOS-SDK/releases/latest/download/pebbleos-sdk-installer.sh | sh -s -- --prefix $PIXI_PROJECT_ROOT/pebbleos-sdk --force"
+description = "Download and install the PebbleOS SDK"
+outputs = ["pebbleos-sdk/.sdk-info"]
+
+[tasks.waf-configure]
+args = [
+    { arg = "board", default = "qemu_emery", choices = [
+        "qemu_emery",   # QEMU: Pebble Time 2
+        "qemu_flint",   # QEMU: Pebble 2 Duo
+        "qemu_gabbro",  # QEMU: Pebble Round 2
+        "asterix",      # (Core Devices) Pebble 2 Duo
+        "obelix_dvt",   # (Core Devices) Pebble Time 2 DVT
+        "obelix_pvt",   # (Core Devices) Pebble Time 2 PVT
+        "getafix_evt",  # (Core Devices) Pebble Round 2 EVT
+        "getafix_dvt",  # (Core Devices) Pebble Round 2 DVT
+        "getafix_dvt2", # (Core Devices) Pebble Round 2 DVT2
+    ] },
+    { arg = "variant", default = "normal", choices = [
+        "normal", # main firmware 
+        "prf",    # recovery firmware
+    ] },
+    { arg = "mode", default = "debug", choices = ["debug", "release"] },
+]
+cmd = "./waf configure --board {{ board }} --variant {{ variant }}{% if mode == 'release' %} -DCONFIG_RELEASE=y{% endif %}"
+description = "Configure the firmware build for a target board"
+depends-on = ["download-sdk"]
+
+[tasks.waf-build]
+cmd = "./waf build"
+description = "Build the firmware"
+
+[tasks.waf-bundle]
+cmd = "./waf bundle"
+description = "Bundle firmware into a .pbz file for Bluetooth sideloading via Pebble app"
+
+[tasks.waf-qemu]
+# qemu-pebble links against homebrew paths; redirect dyld to pixi environment instead
+cmd = "DYLD_LIBRARY_PATH=$CONDA_PREFIX/lib:$DYLD_LIBRARY_PATH ./waf qemu"
+description = "Run the firmware in the QEMU emulator"
+
+[tasks.emulator-pebble-2-duo]
+description = "Configure, build, and run Pebble 2 Duo (qemu_flint) in QEMU"
+depends-on = [
+    { task = "waf-configure", args = [
+        { board = "qemu_flint" },
+    ] },
+    "waf-build",
+    "waf-qemu",
+]
+
+[tasks.emulator-pebble-time-2]
+description = "Configure, build, and run Pebble Time 2 (qemu_emery) in QEMU"
+depends-on = [
+    { task = "waf-configure", args = [
+        { board = "qemu_emery" },
+    ] },
+    "waf-build",
+    "waf-qemu",
+]
+
+[tasks.emulator-pebble-round-2]
+description = "Configure, build, and run Pebble Round 2 (qemu_gabbro) in QEMU"
+depends-on = [
+    { task = "waf-configure", args = [
+        { board = "qemu_gabbro" },
+    ] },
+    "waf-build",
+    "waf-qemu",
+]
+
+#
+# Dependencies
+#
+
+[dependencies]
+freetype = ">=2.14.3,<3"
+gettext = ">=0.25.1,<0.26"
+llvm = ">=22.1.6,<23"
+cmake = ">=4.3.3,<5"
+lcov = ">=1.16,<2"
+nodejs = ">=26.2.0,<26.3"
+librsvg = ">=2.62.2,<3"
+pillow = ">=12.2.0,<13"
+freetype-py = ">=2.5.1,<3"
+ply = ">=3.11,<4"
+pyusb = "==1.3.1"
+pyserial = ">=3.5,<4"
+sh = ">=2.2.2,<3"
+pypng = ">=0.20220715.0,<0.20220716"
+pexpect = ">=4.9.0,<5"
+"svg.path" = ">=7.0,<8"
+requests = ">=2.34.2,<3"
+gitpython = ">=3.1.50,<4"
+pyelftools = ">=0.33,<0.34"
+pycryptodome = ">=3.23.0,<4"
+mock = ">=5.2.0,<6"
+nose = ">=1.3.7,<2"
+boto = ">=2.49.0,<3"
+prompt_toolkit = ">=3.0.52,<4"
+bitarray = ">=3.8.0,<4"
+pep8 = ">=1.7.1,<2"
+polib = ">=1.2.0,<2"
+intelhex = ">=2.1,<3"
+grpcio-tools = ">=1.80.0,<2"
+protobuf = ">=6.33.5,<7"
+certifi = ">=2026.5.20,<2027"
+libclang = ">=22.1.6,<23"
+packaging = ">=26.2,<27"
+pathlib = ">=1.0.1,<2"
+python = ">=3.14.5,<3.15"
+curl = ">=8.20.0,<9"
+clang = ">=22.1.6,<23"
+python-clang = ">=22.1.6,<23"
+
+[pypi-dependencies]
+cobs = "==1.0.0"
+enum34 = ">=1.1.10, <2"
+nanopb = ">=0.4.9.1, <0.5"
+kconfiglib = ">=14.1.0, <15"
+libpebble2 = ">=0.0.16"
+
+pebble-commander = { path = "python_libs/pebble-commander", editable = true }
+pebble-pulse2 = { path = "python_libs/pulse2", editable = true }
+pebble-loghash = { path = "python_libs/pebble-loghash", editable = true }
