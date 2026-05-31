@@ -1,7 +1,0 @@
-freetype
-gettext
-llvm
-cmake
-lcov
-node
-librsvg
