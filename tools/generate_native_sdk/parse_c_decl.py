@@ -107,7 +107,7 @@ def is_node_kind_a_type_decl(kind):
 
 
 def get_node_spelling(node):
-    return clang.cindex.conf.lib.clang_getCursorSpelling(node)
+    return node.spelling
 
 
 def get_comment_range(node):
