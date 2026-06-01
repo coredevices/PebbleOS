@@ -27,6 +27,16 @@ PebbleRecursiveMutex *s_resource_mutex = NULL;
 
 static CachedResource *s_resource_list = NULL;
 
+// Last-resolved app resource; invalidated in resource_init_app().
+typedef struct {
+  bool valid;
+  ResAppNum app_num;
+  uint32_t id;
+  ResourceStoreEntry entry;
+} AppResourceCache;
+
+static AppResourceCache s_app_resource_cache;
+
 static bool prv_resource_filter(ListNode *found_node, void *data) {
   CachedResource *resource = (CachedResource *)found_node;
   uint32_t resource_id = (uint32_t)data;
@@ -50,7 +60,24 @@ static void prv_get_resource(ResAppNum app_num, uint32_t id, ResourceStoreEntry 
     return;
   }
 
+  // App resource resolution re-reads the PFS manifest + table every call (costly
+  // on the glyph hot path). Cache the last one; it holds offsets, so it survives
+  // GC.
+  if (app_num != SYSTEM_APP && s_app_resource_cache.valid &&
+      s_app_resource_cache.app_num == app_num && s_app_resource_cache.id == id) {
+    *entry = s_app_resource_cache.entry;
+    mutex_unlock_recursive(s_resource_mutex);
+    return;
+  }
+
   resource_storage_get_resource(app_num, id, entry);
+
+  if (app_num != SYSTEM_APP && entry->id >= 1) {
+    s_app_resource_cache = (AppResourceCache){
+      .valid = true, .app_num = app_num, .id = id, .entry = *entry,
+    };
+  }
+
   mutex_unlock_recursive(s_resource_mutex);
 }
 
@@ -58,6 +85,8 @@ static void prv_get_resource(ResAppNum app_num, uint32_t id, ResourceStoreEntry 
 bool resource_init_app(ResAppNum app_num, const ResourceVersion *expected_version) {
   // resource_id is ignored in this case, so we set it to 0
   mutex_lock_recursive(s_resource_mutex);
+  // Drop the cache: a reused app slot must not serve a stale entry.
+  s_app_resource_cache.valid = false;
   bool rv = resource_storage_check(app_num, 0, expected_version);
   mutex_unlock_recursive(s_resource_mutex);
   return rv;
