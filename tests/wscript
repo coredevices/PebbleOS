@@ -379,7 +379,8 @@ def build(bld):
         bld.env.append_value('CFLAGS', '-fprofile-arcs')
         bld.env.append_value('CFLAGS', '-ftest-coverage')
         bld.env.append_value('LINKFLAGS', '--coverage')
-    test_wscript_dirs = [os.path.dirname(f.abspath()) for f in bld.path.ant_glob('**/wscript')]
+    test_wscript_dirs = sorted({os.path.dirname(f.abspath())
+                                for f in bld.path.ant_glob(['**/wscript', '**/wscript_build'])})
     for dir in test_wscript_dirs:
         bld.recurse(dir)
     if bld.options.coverage:

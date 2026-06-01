@@ -1,0 +1,22 @@
+import waftools
+
+sources = bld.path.ant_glob('**/*.c')
+
+
+def build_lib(target, env, platform_uses):
+    # Build the directory using firmware environment
+    bld.stlib(source=sources,
+              target=target,
+              includes=['.', 'include'],
+              use=['pblibc_includes',
+                   'libutil_includes'] + platform_uses,
+              env=env.derive())
+
+
+bld(export_includes=['include'], name='libos_includes')
+
+# Skip building sources for local builds, like unit tests.
+if bld.env not in (bld.all_envs['local'],):
+    build_lib('libos', bld.env, ['fw_includes', 'freertos'])
+
+# vim:filetype=python

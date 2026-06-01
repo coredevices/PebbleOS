@@ -1,0 +1,14 @@
+from waftools.pebble_test import clar
+
+clar(ctx,
+    sources_ant_glob = (
+        " src/fw/flash_region/flash_region.c"
+        " src/fw/applib/pbl_std/pbl_std.c"
+        " src/fw/applib/pbl_std/strftime.c"
+        " src/fw/applib/pbl_std/timelocal.c"
+        " tests/fakes/fake_rtc.c"
+        " tests/fakes/fake_spi_flash.c"
+    ),
+    test_sources_ant_glob = "test_strftime.c",
+    override_includes=['dummy_board'],
+    add_includes = ["src/libc"])

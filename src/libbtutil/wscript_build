@@ -1,0 +1,17 @@
+import waftools
+
+sources = bld.path.ant_glob('**/*.c')
+
+def build_libutil(target, env):
+    # Build the libbtutil directory using firmware environment
+    bld.stlib(source=sources,
+              target=target,
+              includes=['.', 'include/btutil'],
+              use=['pblibc_includes', 'libutil_includes', 'pbl_includes'],
+              env=env.derive())
+
+bld(export_includes=['include'], name='libbtutil_includes')
+
+build_libutil('libbtutil', bld.env)
+
+# vim:filetype=python
