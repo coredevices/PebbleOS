@@ -15,7 +15,7 @@
 #define MANUFACTURER_LEN  (18) // sizeof("Pebble Technology")
 #define SERIAL_NUMBER_LEN (13) // MFG_SERIAL_NUMBER_SIZE + 1
 #define FW_REVISION_LEN   (32) // FW_METADATA_VERSION_TAG_BYTES)
-#define SW_REVISION_LEN   (6)  // Fmt: xx.xx\0
+#define SW_REVISION_LEN   (8)  // Fmt: xx.xxx\0
 
 typedef struct PACKED DisInfo {
   char model_number[MODEL_NUMBER_LEN];
