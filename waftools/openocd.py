@@ -6,9 +6,28 @@ import pexpect
 import re
 import string
 import sys
-import waflib
 
-from waflib import Logs
+try:
+    import waflib
+    from waflib import Logs
+except ImportError:
+    # Allow reuse outside the waf runtime (e.g. the ./pbl dev CLI). Only the
+    # configure-time helpers (write_cfg/get_flavor/...) need the real waflib;
+    # the operational daemon()/run_command() just need logging.
+    waflib = None
+
+    class Logs:
+        @staticmethod
+        def info(msg, *args):
+            print(msg % args if args else msg)
+
+        @staticmethod
+        def warn(msg, *args):
+            print(msg % args if args else msg)
+
+        @staticmethod
+        def error(msg, *args):
+            print(msg % args if args else msg)
 
 
 JTAG_OPTIONS = {

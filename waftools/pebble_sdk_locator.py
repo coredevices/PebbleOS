@@ -16,7 +16,18 @@ import shlex
 import subprocess
 from pathlib import Path
 
-from waflib import Logs
+try:
+    from waflib import Logs
+except ImportError:
+    # Allow reuse outside the waf runtime (e.g. the ./pbl dev CLI).
+    class Logs:
+        @staticmethod
+        def warn(msg, *args):
+            print(msg % args if args else msg)
+
+        @staticmethod
+        def pprint(color, msg):
+            print(msg)
 
 
 _VERSION_DIR_RE = re.compile(r"^pebbleos-sdk-(\d+)\.(\d+)\.(\d+)$")

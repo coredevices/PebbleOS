@@ -1,6 +1,6 @@
 # Configuration Options
 
-When configuring the build (`./waf configure ...`) there are several options you can enable or tune.
+When configuring the build (`./pbl configure ...`) there are several options you can enable or tune.
 Below you will find a list of the most relevant ones.
 
 ## Choosing your target

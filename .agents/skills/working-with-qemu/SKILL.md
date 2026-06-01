@@ -10,8 +10,8 @@ PebbleOS can run under a custom QEMU version shipped with the PebbleOS SDK.
 ## Configure & build
 
 ```sh
-./waf configure --board $BOARD
-./waf build
+./pbl configure --board $BOARD
+./pbl build
 ```
 
 where `$BOARD` is any of the `qemu_*` boards:
@@ -25,7 +25,7 @@ QEMU boards target a specific platform, e.g. `qemu_emery` targets the Emery plat
 ## Launch
 
 ```sh
-./waf qemu
+./pbl qemu
 ```
 
 The launched QEMU exposes:
@@ -39,7 +39,7 @@ UART1 output is also captured to `build/uart1.log`.
 ## Console
 
 ```sh
-./waf console
+./pbl console
 ```
 
 Requires QEMU to be running.
@@ -48,8 +48,8 @@ Uses the TCP serial port to connect to the QEMU console, and provides a prompt f
 ## Screenshot
 
 ```sh
-./waf screenshot # defaults to build/screenshot.png
-./waf screenshot --screenshot-output /tmp/foo.png
+./pbl screenshot # defaults to build/screenshot.png
+./pbl screenshot --screenshot-output /tmp/foo.png
 ```
 
 Requires QEMU to be running.
