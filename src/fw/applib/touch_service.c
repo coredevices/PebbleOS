@@ -78,6 +78,44 @@ bool touch_service_is_enabled(void) {
   return sys_touch_service_is_enabled();
 }
 
+static void prv_handle_gesture_event(PebbleEvent *e, void *context) {
+  TouchServiceState *state = prv_get_state();
+  if (state->gesture_handler && e->type == PEBBLE_GESTURE_EVENT) {
+    state->gesture_handler(&e->gesture.event, state->gesture_context);
+  }
+}
+
+void gesture_service_subscribe(GestureServiceHandler handler, void *context) {
+  TouchServiceState *state = prv_get_state();
+  if (!state) {
+    return;
+  }
+  state->gesture_handler = handler;
+  state->gesture_context = context;
+
+  state->gesture_event_info = (EventServiceInfo) {
+    .type = PEBBLE_GESTURE_EVENT,
+    .handler = prv_handle_gesture_event,
+  };
+  if (!state->gesture_subscribed) {
+    event_service_client_subscribe(&state->gesture_event_info);
+    state->gesture_subscribed = true;
+  }
+}
+
+void gesture_service_unsubscribe(void) {
+  TouchServiceState *state = prv_get_state();
+  if (!state) {
+    return;
+  }
+  if (state->gesture_subscribed) {
+    event_service_client_unsubscribe(&state->gesture_event_info);
+    state->gesture_subscribed = false;
+  }
+  state->gesture_handler = NULL;
+  state->gesture_context = NULL;
+}
+
 void touch_service_state_init(TouchServiceState *state) {
   *state = (TouchServiceState){ 0 };
 }

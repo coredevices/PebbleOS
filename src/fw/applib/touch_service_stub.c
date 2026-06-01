@@ -21,3 +21,11 @@ void touch_service_unsubscribe(void) {
 bool touch_service_is_enabled(void) {
   return false;
 }
+
+void gesture_service_subscribe(GestureServiceHandler handler, void *context) {
+  (void)handler;
+  (void)context;
+}
+
+void gesture_service_unsubscribe(void) {
+}

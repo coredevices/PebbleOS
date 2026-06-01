@@ -16,6 +16,10 @@ typedef enum TouchState {
 typedef enum TouchGesture {
   TouchGesture_Tap,
   TouchGesture_DoubleTap,
+  TouchGesture_SwipeUp,
+  TouchGesture_SwipeDown,
+  TouchGesture_SwipeLeft,
+  TouchGesture_SwipeRight,
 } TouchGesture;
 
 void touch_init(void);

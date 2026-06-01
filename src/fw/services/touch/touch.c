@@ -192,10 +192,27 @@ void touch_handle_update(TouchState touch_state, int16_t x, int16_t y) {
   mutex_unlock(s_touch_mutex);
 }
 
+// Mirror a swipe direction when the display is rotated 180°. Up↔Down and
+// Left↔Right swap so subscribers see directions in the rotated frame, matching
+// the rotated coordinates emitted by prv_apply_rotation().
+static TouchGesture prv_rotate_gesture(TouchGesture gesture) {
+  if (!s_rotated) {
+    return gesture;
+  }
+  switch (gesture) {
+    case TouchGesture_SwipeUp:    return TouchGesture_SwipeDown;
+    case TouchGesture_SwipeDown:  return TouchGesture_SwipeUp;
+    case TouchGesture_SwipeLeft:  return TouchGesture_SwipeRight;
+    case TouchGesture_SwipeRight: return TouchGesture_SwipeLeft;
+    default:                      return gesture;
+  }
+}
+
 void touch_handle_gesture(TouchGesture gesture, int16_t x, int16_t y) {
   mutex_lock(s_touch_mutex);
 
   prv_apply_rotation(&x, &y);
+  gesture = prv_rotate_gesture(gesture);
 
   TOUCH_DEBUG("Gesture: %d @ (%" PRId16 ", %" PRId16 ")", gesture, x, y);
 
@@ -207,6 +224,18 @@ void touch_handle_gesture(TouchGesture gesture, int16_t x, int16_t y) {
     case TouchGesture_DoubleTap:
       PBL_ANALYTICS_ADD(gesture_double_tap_count, 1);
       prv_put_gesture_event(GestureEvent_DoubleTap, x, y);
+      break;
+    case TouchGesture_SwipeUp:
+      prv_put_gesture_event(GestureEvent_SwipeUp, x, y);
+      break;
+    case TouchGesture_SwipeDown:
+      prv_put_gesture_event(GestureEvent_SwipeDown, x, y);
+      break;
+    case TouchGesture_SwipeLeft:
+      prv_put_gesture_event(GestureEvent_SwipeLeft, x, y);
+      break;
+    case TouchGesture_SwipeRight:
+      prv_put_gesture_event(GestureEvent_SwipeRight, x, y);
       break;
     default:
       break;

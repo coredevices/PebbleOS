@@ -16,6 +16,10 @@ typedef struct TouchServiceState {
   void *raw_context;
   EventServiceInfo raw_event_info;
   bool raw_subscribed;
+  GestureServiceHandler gesture_handler;
+  void *gesture_context;
+  EventServiceInfo gesture_event_info;
+  bool gesture_subscribed;
 } TouchServiceState;
 
 //! Initialize the state struct to a quiescent state.

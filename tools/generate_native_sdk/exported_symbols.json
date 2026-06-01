@@ -4,7 +4,7 @@
               "You should also make sure you are obeying our API design guidelines:",
               "https://pebbletechnology.atlassian.net/wiki/display/DEV/SDK+API+Design+Guidelines"
             ],
-  "revision" : "101",
+  "revision" : "102",
   "version" : "2.0",
   "files": [
     "fw/drivers/ambient_light.h",
@@ -57,6 +57,7 @@
     "fw/applib/tick_timer_service.h",
     "fw/applib/touch_service.h",
     "include/pbl/services/touch/touch_event.h",
+    "include/pbl/services/touch/gesture_event.h",
     "fw/applib/pbl_std/pbl_std.h",
     "fw/applib/pbl_std/locale.h",
     "fw/applib/persist.h",
@@ -608,6 +609,26 @@
                   "type": "function",
                   "name": "touch_service_is_enabled",
                   "addedRevision": "95"
+                }, {
+                  "type": "type",
+                  "name": "GestureEventType",
+                  "addedRevision": "102"
+                }, {
+                  "type": "type",
+                  "name": "GestureEvent",
+                  "addedRevision": "102"
+                }, {
+                  "type": "type",
+                  "name": "GestureServiceHandler",
+                  "addedRevision": "102"
+                }, {
+                  "type": "function",
+                  "name": "gesture_service_subscribe",
+                  "addedRevision": "102"
+                }, {
+                  "type": "function",
+                  "name": "gesture_service_unsubscribe",
+                  "addedRevision": "102"
                 }
               ]
             }, {

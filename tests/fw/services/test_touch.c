@@ -6,6 +6,7 @@
 #include "kernel/events.h"
 #include "kernel/pebble_tasks.h"
 #include "pbl/services/event_service.h"
+#include "pbl/services/touch/gesture_event.h"
 #include "pbl/services/touch/touch.h"
 #include "pbl/services/touch/touch_event.h"
 
@@ -69,6 +70,14 @@ static void prv_assert_touch_event(TouchEventType type, int16_t x, int16_t y) {
   cl_assert_equal_i(event.touch.event.type, type);
   cl_assert_equal_i(event.touch.event.x, x);
   cl_assert_equal_i(event.touch.event.y, y);
+}
+
+static void prv_assert_gesture_event(GestureEventType type, int16_t x, int16_t y) {
+  PebbleEvent event = fake_event_get_last();
+  cl_assert_equal_i(event.type, PEBBLE_GESTURE_EVENT);
+  cl_assert_equal_i(event.gesture.event.type, type);
+  cl_assert_equal_i(event.gesture.event.x, x);
+  cl_assert_equal_i(event.gesture.event.y, y);
 }
 
 // tests
@@ -244,6 +253,72 @@ void test_touch__global_disable_powers_down_sensor(void) {
   cl_assert_equal_i(s_touch_sensor_enable_count, 2);
 
   s_remove_subscriber_cb(PebbleTask_App);
+}
+
+void test_touch__gesture_tap(void) {
+  touch_handle_gesture(TouchGesture_Tap, 30, 40);
+  cl_assert_equal_i(fake_event_get_count(), 1);
+  prv_assert_gesture_event(GestureEvent_Tap, 30, 40);
+}
+
+void test_touch__gesture_double_tap(void) {
+  touch_handle_gesture(TouchGesture_DoubleTap, 12, 80);
+  cl_assert_equal_i(fake_event_get_count(), 1);
+  prv_assert_gesture_event(GestureEvent_DoubleTap, 12, 80);
+}
+
+void test_touch__gesture_swipes(void) {
+  touch_handle_gesture(TouchGesture_SwipeUp, 1, 2);
+  prv_assert_gesture_event(GestureEvent_SwipeUp, 1, 2);
+
+  touch_handle_gesture(TouchGesture_SwipeDown, 3, 4);
+  prv_assert_gesture_event(GestureEvent_SwipeDown, 3, 4);
+
+  touch_handle_gesture(TouchGesture_SwipeLeft, 5, 6);
+  prv_assert_gesture_event(GestureEvent_SwipeLeft, 5, 6);
+
+  touch_handle_gesture(TouchGesture_SwipeRight, 7, 8);
+  prv_assert_gesture_event(GestureEvent_SwipeRight, 7, 8);
+
+  cl_assert_equal_i(fake_event_get_count(), 4);
+}
+
+void test_touch__gesture_rotation_mirrors_swipes(void) {
+  touch_set_rotated(true);
+
+  // Coordinates are mirrored in the rotated frame; swipe directions flip pairwise.
+  const int16_t x_rot = (DISP_COLS - 1) - 10;
+  const int16_t y_rot = (DISP_ROWS - 1) - 20;
+
+  touch_handle_gesture(TouchGesture_SwipeUp, 10, 20);
+  prv_assert_gesture_event(GestureEvent_SwipeDown, x_rot, y_rot);
+
+  touch_handle_gesture(TouchGesture_SwipeDown, 10, 20);
+  prv_assert_gesture_event(GestureEvent_SwipeUp, x_rot, y_rot);
+
+  touch_handle_gesture(TouchGesture_SwipeLeft, 10, 20);
+  prv_assert_gesture_event(GestureEvent_SwipeRight, x_rot, y_rot);
+
+  touch_handle_gesture(TouchGesture_SwipeRight, 10, 20);
+  prv_assert_gesture_event(GestureEvent_SwipeLeft, x_rot, y_rot);
+
+  touch_set_rotated(false);
+}
+
+void test_touch__gesture_rotation_taps_keep_type(void) {
+  // Taps don't have a direction, so rotation only flips coordinates.
+  touch_set_rotated(true);
+
+  const int16_t x_rot = (DISP_COLS - 1) - 5;
+  const int16_t y_rot = (DISP_ROWS - 1) - 7;
+
+  touch_handle_gesture(TouchGesture_Tap, 5, 7);
+  prv_assert_gesture_event(GestureEvent_Tap, x_rot, y_rot);
+
+  touch_handle_gesture(TouchGesture_DoubleTap, 5, 7);
+  prv_assert_gesture_event(GestureEvent_DoubleTap, x_rot, y_rot);
+
+  touch_set_rotated(false);
 }
 
 void test_touch__subscribe_while_disabled_keeps_sensor_off(void) {
