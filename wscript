@@ -94,7 +94,6 @@ def options(opt):
     opt.load('show_configure', tooldir='waftools')
     opt.load('kconfig', tooldir='waftools')
     opt.recurse('tests')
-    opt.recurse('src/bluetooth-fw')
     opt.recurse('src/fw')
     opt.recurse('src/idl')
     opt.recurse('sdk')
@@ -304,8 +303,6 @@ def configure(conf):
     else:
         conf.env.JS_ENGINE = 'none'
 
-    bt_board = None
-
     if not conf.options.runner:
         conf.env.RUNNER = RUNNERS.get(conf.options.board, [None])[0]
     else:
@@ -380,24 +377,6 @@ def configure(conf):
     base_env = conf.env
 
     handle_configure_options(conf)
-
-
-    if bt_board is None:
-        bt_board = conf.env.BOARD
-    # Select BT controller based on configuration:
-    if conf.env.CONFIG_QEMU:
-        conf.env.bt_controller = 'qemu'
-        conf.env.append_value('DEFINES', ['BT_CONTROLLER_QEMU'])
-    elif conf.env.CONFIG_BOARD_FAMILY_ASTERIX:
-        conf.env.bt_controller = 'nrf52'
-        conf.env.append_value('DEFINES', ['BT_CONTROLLER_NRF52'])
-    elif conf.env.CONFIG_BOARD_FAMILY_OBELIX or conf.env.CONFIG_BOARD_FAMILY_GETAFIX:
-        conf.env.bt_controller = 'sf32lb52'
-        conf.env.append_value('DEFINES', ['BT_CONTROLLER_SF32LB52'])
-    else:
-        conf.env.bt_controller = 'stub'
-
-    conf.recurse('src/bluetooth-fw')
 
     Logs.pprint('CYAN', 'Configuring arm_firmware environment')
     conf.setenv('', base_env)
