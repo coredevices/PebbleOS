@@ -22,19 +22,39 @@ static void click_config_provider(void *context) {
 }
 
 static char *get_launch_reason_str(void) {
+  static char s_buffer[64];
   switch (launch_reason()) {
   case APP_LAUNCH_SYSTEM:
     return "SYSTEM";
   case APP_LAUNCH_USER:
-    return "USER";
+  case APP_LAUNCH_QUICK_LAUNCH: {
+    const char *reason = (launch_reason() == APP_LAUNCH_USER) ? "USER" : "QUICK LAUNCH";
+    const char *btn_str = "UNKNOWN";
+    switch (launch_button()) {
+      case BUTTON_ID_BACK: btn_str = "BACK"; break;
+      case BUTTON_ID_UP: btn_str = "UP"; break;
+      case BUTTON_ID_SELECT: btn_str = "SELECT"; break;
+      case BUTTON_ID_DOWN: btn_str = "DOWN"; break;
+      default: break;
+    }
+    const char *action_str = "";
+    if (launch_reason() == APP_LAUNCH_QUICK_LAUNCH) {
+      switch (launch_get_quick_launch_action()) {
+        case APP_QUICK_LAUNCH_ACTION_HOLD: action_str = " [HOLD]"; break;
+        case APP_QUICK_LAUNCH_ACTION_TAP: action_str = " [TAP]"; break;
+        case APP_QUICK_LAUNCH_ACTION_COMBO: action_str = " [COMBO]"; break;
+        default: break;
+      }
+    }
+    snprintf(s_buffer, sizeof(s_buffer), "%s (%s)%s", reason, btn_str, action_str);
+    return s_buffer;
+  }
   case APP_LAUNCH_PHONE:
     return "PHONE";
   case APP_LAUNCH_WAKEUP:
     return "WAKEUP";
   case APP_LAUNCH_WORKER:
     return "WORKER";
-  case APP_LAUNCH_QUICK_LAUNCH:
-    return "QUICK LAUNCH";
   case APP_LAUNCH_TIMELINE_ACTION:
     return "TIMELINE ACTION";
   }
