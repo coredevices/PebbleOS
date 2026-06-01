@@ -23,7 +23,7 @@
 
 #include "nimble_store.h"
 
-static const uint32_t s_bt_stack_start_stop_timeout_ms = 3000;
+static const uint32_t s_bt_stack_start_stop_timeout_ms = 10000;
 
 extern void pebble_pairing_service_init(void);
 extern void nimble_discover_init(void);
@@ -205,8 +205,11 @@ bool bt_driver_start(BTDriverConfig *config) {
   ble_hs_sched_start();
   f_rc = xSemaphoreTake(s_host_started, milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms));
   if (f_rc != pdTRUE) {
-    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "Host synchronization timed out");
-    goto err;
+#ifdef BT_CONTROLLER_SF32LB52
+    // Keep the LCPU reachable so the coredump captures its RAM.
+    ble_transport_ll_wake_lcpu();
+#endif
+    PBL_CROAK("NimBLE host start timed out");
   }
 
   rc = ble_hs_util_ensure_addr(0);
