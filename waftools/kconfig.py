@@ -191,6 +191,8 @@ class menuconfig(BuildContext):
 
     def execute(self):
         self.restore()
+        if not self.all_envs:
+            self.load_envs()
         srcdir = self.srcnode.abspath()
         blddir = self.bldnode.abspath()
 
