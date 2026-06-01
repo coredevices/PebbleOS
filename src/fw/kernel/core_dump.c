@@ -107,13 +107,17 @@ static const MemoryRegion MEMORY_REGIONS_DUMP[] = {
 #if CONFIG_SOC_NRF52 || CONFIG_SOC_SF32LB52 || CONFIG_QEMU
   { .start = (void *)0x20000000, .length = COREDUMP_RAM_SIZE },
 #endif
-#if defined(CONFIG_SOC_SF32LB52)
-  { .start = (void *)COREDUMP_LCPU_RAM_START, .length = COREDUMP_LCPU_RAM_SIZE },
-#endif
   { .start = (void *)&NVIC->ISER, .length = sizeof(NVIC->ISER) },  // Enabled interrupts
   { .start = (void *)&NVIC->ISPR, .length = sizeof(NVIC->ISPR) },  // Pending interrupts
   { .start = (void *)&NVIC->IABR, .length = sizeof(NVIC->IABR) },  // Active interrupts
 };
+
+#if defined(CONFIG_SOC_SF32LB52)
+// LCPU RAM is dumped last and only when its domain is up; see prv_dump_lcpu_ram().
+static const MemoryRegion LCPU_MEMORY_REGION = {
+  .start = (void *)COREDUMP_LCPU_RAM_START, .length = COREDUMP_LCPU_RAM_SIZE,
+};
+#endif
 
 // -------------------------------------------------------------------------------------------------
 // Flash driver dual-API.
@@ -442,6 +446,18 @@ static void prv_write_memory_regions(const MemoryRegion *regions, unsigned int c
   }
 }
 
+#if defined(CONFIG_SOC_SF32LB52)
+// LCPU RAM lives in the LPSYS domain; reading it while that domain is powered
+// down hangs/faults. LP_ACTIVE reports whether it is reachable.
+static void prv_dump_lcpu_ram(uint32_t flash_base) {
+  if (hwp_hpsys_aon->ISSR & HPSYS_AON_ISSR_LP_ACTIVE) {
+    prv_write_memory_regions(&LCPU_MEMORY_REGION, 1, flash_base);
+  } else {
+    prv_debug_str("CD: LCPU domain off, skipping LCPU RAM");
+  }
+}
+#endif
+
 // Write the Core Dump Image Header
 // Returns number of bytes written @ flash_addr
 static uint32_t prv_write_image_header(uint32_t flash_addr, uint8_t core_number,
@@ -658,6 +674,11 @@ EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
     }
     prvTaskInfoCallback(&task_info, NULL);
   }
+
+#if defined(CONFIG_SOC_SF32LB52)
+  // Last: its read can hang/fault, so do it after the essential chunks are saved.
+  prv_dump_lcpu_ram(flash_base);
+#endif
 
   // Write out chunk terminator
   chunk_hdr.key = CORE_DUMP_CHUNK_KEY_TERMINATOR;
