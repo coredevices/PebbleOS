@@ -11,6 +11,7 @@
 #include "pbl/services/data_logging/data_logging_service.h"
 #include "system/logging.h"
 #include "system/passert.h"
+#include "util/attributes.h"
 #include "util/build_id.h"
 #include "util/math.h"
 #include "util/size.h"
@@ -19,7 +20,7 @@
 #define NATIVE_HEARTBEAT_RECORD_VERSION 1
 
 /* Heartbeat record logged to DLS */
-__attribute__((packed)) struct native_heartbeat_record {
+struct PACKED native_heartbeat_record {
   uint8_t version;
   uint64_t timestamp;
   uint8_t build_id[BUILD_ID_EXPECTED_LEN];
@@ -41,6 +42,26 @@ __attribute__((packed)) struct native_heartbeat_record {
 #undef PBL_ANALYTICS_METRIC_DEFINE_TIMER
 #undef PBL_ANALYTICS_METRIC_DEFINE_STRING
 };
+
+/* The record is logged as a raw byte blob, so it must have no padding. */
+_Static_assert(
+    sizeof(struct native_heartbeat_record) ==
+        sizeof(uint8_t) + sizeof(uint64_t) + BUILD_ID_EXPECTED_LEN
+#define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key) +sizeof(uint32_t)
+#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key) +sizeof(int32_t)
+#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(key, scale) +sizeof(uint32_t) + sizeof(uint16_t)
+#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale) +sizeof(int32_t) + sizeof(uint16_t)
+#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key) +sizeof(uint32_t)
+#define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len) +((len) + 1)
+#include "pbl/services/analytics/analytics.def"
+#undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
+#undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED
+#undef PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED
+#undef PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED
+#undef PBL_ANALYTICS_METRIC_DEFINE_TIMER
+#undef PBL_ANALYTICS_METRIC_DEFINE_STRING
+    ,
+    "native_heartbeat_record must be packed (no padding)");
 
 /* Type-specific internal index enums (dense, no gaps) */
 
