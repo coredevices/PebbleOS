@@ -115,11 +115,6 @@ def options(opt):
     opt.add_option('--flash-log-level', default='info', choices=['error', 'warn', 'info', 'debug', 'debug_verbose'],
        help='Default flash log level')
 
-    opt.add_option('--lang',
-                   action='store',
-                   default='en_US',
-                   help='Which language to package (isocode)')
-
     opt.add_option('--compile_commands', action='store_true', help='Create a clang compile_commands.json')
     opt.add_option('--onlysdk', action='store_true', help="only build the sdk")
     opt.add_option('--no-link', action='store_true',
@@ -744,31 +739,6 @@ def _check_firmware_image_size(ctx, path):
 
     return ('%d / %d bytes used (%d free)' %
             (firmware_size, max_firmware_size, (max_firmware_size - firmware_size)))
-
-
-def make_lang(ctx):
-    """generate translation files and update existing ones"""
-    ctx.recurse('resources/normal/base/lang')
-
-
-class PackLangCommand(BuildContext):
-    cmd = 'pack_lang'
-    fun = 'pack_lang'
-
-
-def pack_lang(ctx):
-    """generates pbpack for langs"""
-    ctx.recurse('resources/normal/base/lang')
-
-
-class PackAllLangsCommand(BuildContext):
-    cmd = 'pack_all_langs'
-    fun = 'pack_all_langs'
-
-
-def pack_all_langs(ctx):
-    """generates pbpack for all langs"""
-    ctx.recurse('resources/normal/base/lang')
 
 
 # Tool build commands
