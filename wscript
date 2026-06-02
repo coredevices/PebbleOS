@@ -92,8 +92,6 @@ def options(opt):
                    choices=waftools.openocd.JTAG_OPTIONS.keys(),
                    help='Which JTAG programmer we are using '
                         '(bb2 (default), olimex, ev2, etc)')
-    opt.add_option('--internal_sdk_build', action='store_true',
-                   help='Build the internal version of the SDK')
     opt.add_option('--nosleep', action='store_true',
                    help='Disable sleep and stop mode (to use JTAG+GDB)')
     opt.add_option('--nostop', action='store_true',
@@ -207,10 +205,6 @@ def handle_configure_options(conf):
         if not conf.options.nostop:
             print("Enable --nostop for accurate profiling.")
             conf.env.append_value('DEFINES', 'PBL_NOSTOP')
-
-    conf.env.INTERNAL_SDK_BUILD = bool(conf.options.internal_sdk_build)
-    if conf.env.INTERNAL_SDK_BUILD:
-        print("Internal SDK enabled")
 
     if conf.options.lto:
         print("Turning on LTO.")
