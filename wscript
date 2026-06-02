@@ -31,7 +31,10 @@ sys.path.append(os.path.join(waf_dir, 'waftools'))
 import waftools.gitinfo
 import waftools.ldscript
 import waftools.openocd
+import waftools.pebble_sdk_gcc as pebble_sdk_gcc
 from waftools.pebble_sdk_locator import activate_sdk
+
+from pebble_sdk_version import set_env_sdk_version
 
 # Prefer an installed PebbleOS SDK's binaries (toolchain, QEMU, sftool) when
 # present. Done at import time so it applies to every waf invocation.
@@ -370,7 +373,9 @@ def configure(conf):
 
     Logs.pprint('CYAN', 'Configuring stored apps environment')
     conf.setenv('stored_apps', base_env)
-    conf.recurse('stored_apps')
+    process_info = conf.path.find_node('src/fw/process_management/pebble_process_info.h')
+    set_env_sdk_version(conf, process_info)
+    pebble_sdk_gcc.configure(conf)
 
     # Confirm that requirements-*.txt and requirements-osx-brew.txt have been satisfied.
     import tool_check
