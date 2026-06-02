@@ -70,7 +70,6 @@ def options(opt):
     opt.load('kconfig', tooldir='waftools')
     opt.recurse('tests')
     opt.recurse('src/fw')
-    opt.recurse('sdk')
     opt.add_option('--board', action='store',
                    choices=[ 'asterix',
                              'obelix_dvt',
@@ -288,7 +287,6 @@ def configure(conf):
 
     conf.load('protoc')
     conf.recurse('src/fw')
-    conf.recurse('sdk')
 
     if conf.env.RUNNER == 'openocd':
         waftools.openocd.write_cfg(conf)
