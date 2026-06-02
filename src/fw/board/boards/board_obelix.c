@@ -572,7 +572,7 @@ const BoardConfigPower BOARD_CONFIG_POWER = {
     .gpio_pin = 26,
   },
   .low_power_threshold = 4U,
-  .battery_capacity_hours = 370U,
+  .battery_capacity_hours = 400U,
 };
 
 const BoardConfig BOARD_CONFIG = {
