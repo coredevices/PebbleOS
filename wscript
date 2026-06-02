@@ -71,8 +71,24 @@ def options(opt):
     opt.load('pebble_arm_gcc', tooldir='waftools')
     opt.load('show_configure', tooldir='waftools')
     opt.load('kconfig', tooldir='waftools')
-    opt.recurse('tests')
     opt.recurse('src/fw')
+
+    gr = opt.add_option_group('test options')
+    gr.add_option('-D', '--debug_test', action='store_true',
+        help='Execute tests within GDB. Use alongside -M.')
+    gr.add_option('-M', '--match', dest='regex', default=None, action='store',
+        help='Run regex match tests. Example: ./waf test -M "test.*resource.*"')
+    gr.add_option('-L', '--list_tests', dest='list_tests', action='store_true',
+        help='List all test names. Usually used in conjunction with -M. Example: '
+             './waf test -M test_animation -L')
+    gr.add_option('-T', '--test_name', dest='test_name', default=None, action='store',
+        help='Run only the given test name. Usually used in conjunction with -M. Example: '
+             './waf test -M test_animation -T unschedule')
+    gr.add_option('-C', '--coverage', dest='coverage', action='store_true', help='Generate gcov test coverage data and use lcov to generate HTML report')
+    gr.add_option('--show_output', action='store_true', help='show test output')
+    gr.add_option('--no_run', action='store_true', help='Do not run the tests, just build them')
+    gr.add_option('--no_images', action='store_true', help='skip generation of test images, '
+                  'which are only required for some tests and can slow down build times')
     opt.add_option('--board', action='store',
                    choices=[ 'asterix',
                              'obelix_dvt',
