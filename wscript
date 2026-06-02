@@ -131,10 +131,6 @@ def options(opt):
     opt.add_option('--profiler', action='store_true', help='Enable the profiler.')
     opt.add_option('--profile_interrupts', action='store_true',
                    help='Enable profiling of all interrupts.')
-    opt.add_option('--voice_debug', action='store_true',
-                   help='Enable all voice logging.')
-    opt.add_option('--voice_codec_tests', action='store_true',
-                   help='Enable voice codec tests. Enables the profiler')
     opt.add_option('--no_sandbox', action='store_true',
                    help='Disable the MPU for 3rd party apps.')
     opt.add_option('--malloc_instrumentation', action='store_true',
@@ -158,14 +154,6 @@ def handle_configure_options(conf):
 
     if conf.options.performance_tests:
         conf.env.PERFORMANCE_TESTS = True
-
-    if conf.options.voice_debug:
-        conf.env.VOICE_DEBUG = True
-
-    if conf.options.voice_codec_tests:
-        conf.env.VOICE_CODEC_TESTS = True
-        conf.env.append_value('DEFINES', 'VOICE_CODEC_TESTS')
-        conf.options.profiler = True
 
     if conf.options.nosleep:
         conf.env.append_value('DEFINES', 'PBL_NOSLEEP')
@@ -219,9 +207,6 @@ def handle_configure_options(conf):
         if not conf.options.nostop:
             print("Enable --nostop for accurate profiling.")
             conf.env.append_value('DEFINES', 'PBL_NOSTOP')
-
-    if conf.options.voice_debug:
-        conf.env.append_value('DEFINES', 'VOICE_DEBUG')
 
     conf.env.INTERNAL_SDK_BUILD = bool(conf.options.internal_sdk_build)
     if conf.env.INTERNAL_SDK_BUILD:

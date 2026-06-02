@@ -128,11 +128,7 @@ int pbl_log_get_bin_format(char* buffer, int buffer_len, const uint8_t log_level
 #define LOG_DOMAIN_ACTIVITY           0
 #define LOG_DOMAIN_ACTIVITY_INSIGHTS  0
 #define LOG_DOMAIN_PROTOBUF           0
-#if defined(VOICE_DEBUG)
-#define LOG_DOMAIN_VOICE              1
-#else
 #define LOG_DOMAIN_VOICE              0
-#endif
 
 #define LOG_DOMAIN_BLOBDB             0
 
