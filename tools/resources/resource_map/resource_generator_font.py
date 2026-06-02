@@ -6,7 +6,7 @@ from resources.resource_map.resource_generator import ResourceGenerator
 
 from font.fontgen import Font, MAX_GLYPHS_EXTENDED, MAX_GLYPHS
 
-from pebble_sdk_platform import pebble_platforms, maybe_import_internal
+from pebble_sdk_platform import pebble_platforms
 
 from threading import Lock
 
@@ -24,8 +24,6 @@ class FontResourceGenerator(ResourceGenerator):
 
     @staticmethod
     def definitions_from_dict(bld, definition_dict, resource_source_path):
-        maybe_import_internal(bld.env)
-
         definitions = ResourceGenerator.definitions_from_dict(
             bld, definition_dict, resource_source_path
         )

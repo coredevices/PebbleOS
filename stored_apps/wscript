@@ -9,7 +9,7 @@ import waftools.pebble_sdk_gcc as pebble_sdk_gcc
 from resources.types.resource_definition import ResourceDefinition
 from resources.types.resource_object import ResourceObject
 
-from pebble_sdk_platform import pebble_platforms, maybe_import_internal
+from pebble_sdk_platform import pebble_platforms
 from pebble_sdk_version import set_env_sdk_version
 
 import generate_appinfo
@@ -62,8 +62,6 @@ def build_app(bld, app_name):
     app_elf_file = bld.path.get_bld().make_node('%s/pebble-app.elf' % (app_name))
 
     stored_apps_env = bld.all_envs['stored_apps']
-
-    maybe_import_internal(bld.env)
 
     # Fetch platform-specific defines and add them to CFLAGS
     platform_name = stored_apps_env['PLATFORM_NAME']

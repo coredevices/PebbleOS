@@ -25,7 +25,7 @@ import exports
 # When this file is called by waf using `python generate_pebble_native_sdk_files.py ...`, we
 # need to append the parent directory to the system PATH because relative imports won't work
 try:
-    from ..pebble_sdk_platform import pebble_platforms, maybe_import_internal
+    from ..pebble_sdk_platform import pebble_platforms
 except ImportError:
     os.sys.path.append(path.dirname(path.dirname(__file__)))
     from pebble_sdk_platform import pebble_platforms

@@ -1,8 +1,6 @@
-from tools.pebble_sdk_platform import pebble_platforms, maybe_import_internal
+from tools.pebble_sdk_platform import pebble_platforms
 
 def configure(conf):
-    maybe_import_internal(conf.env)
-
     platform = pebble_platforms[conf.env.PLATFORM_NAME]
     define = 'MAX_FONT_GLYPH_SIZE={}'.format(platform['MAX_FONT_GLYPH_SIZE'])
     conf.env.append_value('DEFINES', [define])

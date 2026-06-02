@@ -253,18 +253,3 @@ pebble_platforms = {
     "aplite": aplite_platform,
     "gabbro": gabbro_platform,
 }
-
-
-# When this function is called from the firmware build, INTERNAL_SDK_BUILD will always
-# have some value. If it's true, import internal; otherwise don't.
-# If INTERNAL_SDK_BUILD doesn't exist at all, then we're in an SDK build and can assume
-# that we should use the file if it exists, so try importing unconditionally.
-def maybe_import_internal(env):
-    if "INTERNAL_SDK_BUILD" in env:
-        if env.INTERNAL_SDK_BUILD:
-            import pebble_sdk_platform_internal
-    else:
-        try:
-            import pebble_sdk_platform_internal
-        except ImportError:
-            pass
