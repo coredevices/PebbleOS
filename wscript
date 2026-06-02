@@ -70,7 +70,6 @@ def options(opt):
     opt.load('kconfig', tooldir='waftools')
     opt.recurse('tests')
     opt.recurse('src/fw')
-    opt.recurse('src/idl')
     opt.recurse('sdk')
     opt.add_option('--board', action='store',
                    choices=[ 'asterix',
@@ -287,7 +286,7 @@ def configure(conf):
                       errmsg="Unable to locate the Node command. "
                              "Please check your Node installation and try again.")
 
-    conf.recurse('src/idl')
+    conf.load('protoc')
     conf.recurse('src/fw')
     conf.recurse('sdk')
 
