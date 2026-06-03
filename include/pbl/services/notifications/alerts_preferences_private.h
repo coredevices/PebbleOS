@@ -306,6 +306,12 @@ void alerts_preferences_dnd_set_smart_enabled(bool enable);
  *
  * Must be paired with alerts_preferences_unlock().
  */
+void alerts_preferences_qt_get_schedule(int index, QuietTimeScheduleConfig *out);
+
+void alerts_preferences_qt_set_schedule(int index, const QuietTimeScheduleConfig *config);
+
+int alerts_preferences_qt_get_num_active(void);
+
 void alerts_preferences_lock(void);
 
 /**
