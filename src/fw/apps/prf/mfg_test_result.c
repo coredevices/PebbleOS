@@ -3,6 +3,8 @@
 
 #include "apps/prf/mfg_test_result.h"
 
+#include <string.h>
+
 #ifdef MANUFACTURING_FW
 #include "drivers/flash.h"
 #include "flash_region/flash_region.h"
@@ -131,4 +133,17 @@ bool mfg_test_result_was_reported(void) {
   bool reported = s_result_reported;
   s_result_reported = false;
   return reported;
+}
+
+void mfg_test_result_reset(void) {
+  memset(s_results, 0, sizeof(s_results));
+  s_result_reported = false;
+
+#ifdef MANUFACTURING_FW
+  if (!flash_subsector_is_erased(FLASH_REGION_MFG_RESULTS_BEGIN)) {
+    flash_erase_subsector_blocking(FLASH_REGION_MFG_RESULTS_BEGIN);
+  }
+  s_record_count = 0;
+  s_loaded = true;
+#endif
 }

@@ -12,6 +12,7 @@
 #include "apps/prf/mfg_test_aging.h"
 #include "apps/prf/mfg_info_qr.h"
 #include "apps/prf/mfg_test_menu.h"
+#include "apps/prf/mfg_test_result.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/standby.h"
@@ -107,6 +108,39 @@ static void prv_select_load_prf(int index, void *context) {
 
   app_confirmation_dialog_push(confirmation_dialog);
 }
+
+static void prv_reset_results_confirmed(ClickRecognizerRef recognizer, void *context) {
+  ConfirmationDialog *confirmation_dialog = (ConfirmationDialog *)context;
+  confirmation_dialog_pop(confirmation_dialog);
+
+  bool confirmed = (click_recognizer_get_button_id(recognizer) == BUTTON_ID_UP);
+  if (confirmed) {
+    mfg_test_result_reset();
+  }
+}
+
+static void prv_reset_results_click_config(void *context) {
+  window_single_click_subscribe(BUTTON_ID_UP, prv_reset_results_confirmed);
+  window_single_click_subscribe(BUTTON_ID_DOWN, prv_reset_results_confirmed);
+  window_single_click_subscribe(BUTTON_ID_BACK, prv_reset_results_confirmed);
+}
+
+static void prv_select_reset_results(int index, void *context) {
+  ConfirmationDialog *confirmation_dialog = confirmation_dialog_create("Reset Results");
+  Dialog *dialog = confirmation_dialog_get_dialog(confirmation_dialog);
+
+  dialog_set_text(dialog, "Reset MFG results?\n\nThis action cannot be undone!");
+  dialog_set_background_color(dialog, GColorOrange);
+  dialog_set_text_color(dialog, GColorWhite);
+
+  confirmation_dialog_set_click_config_provider(confirmation_dialog,
+                                                prv_reset_results_click_config);
+
+  ActionBarLayer *action_bar = confirmation_dialog_get_action_bar(confirmation_dialog);
+  action_bar_layer_set_context(action_bar, confirmation_dialog);
+
+  app_confirmation_dialog_push(confirmation_dialog);
+}
 #endif
 
 static void prv_update_device_info_subtitle(MfgMenuAppData *data, uint8_t charge_percent) {
@@ -135,6 +169,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
     { .title = "Shutdown",          .callback = prv_select_shutdown },
     { .title = "Reset",             .callback = prv_select_reset },
 #ifdef MANUFACTURING_FW
+    { .title = "Reset Results",     .callback = prv_select_reset_results },
     { .title = "Load PRF",          .callback = prv_select_load_prf },
 #endif
   };

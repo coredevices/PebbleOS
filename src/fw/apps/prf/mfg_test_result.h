@@ -61,3 +61,7 @@ const MfgTestResult *mfg_test_result_get(MfgTestId test);
 //! Returns true once, then resets. Used by the test menu to detect test
 //! completion vs user backing out.
 bool mfg_test_result_was_reported(void);
+
+//! Clear all stored results. In manufacturing firmware this also erases the
+//! MFG_RESULTS flash region.
+void mfg_test_result_reset(void);
