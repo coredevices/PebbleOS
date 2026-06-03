@@ -76,6 +76,9 @@ static bool s_do_not_disturb_manually_enabled = false;
 #define PREF_KEY_DND_SMART_ENABLED "dndSmartEnabled"
 static bool s_do_not_disturb_smart_dnd_enabled = false;
 
+#define PREF_KEY_QT_SCHEDULE_FMT "qtSchedule%d"
+static QuietTimeScheduleConfig s_qt_schedule[MAX_QUIET_TIME_SCHEDULES];
+
 #define PREF_KEY_FIRST_USE_COMPLETE "firstUseComplete"
 static uint32_t s_first_use_complete = 0;
 
@@ -170,6 +173,55 @@ static void prv_migrate_legacy_dnd_schedule(SettingsFile *file) {
     DELETE_PREF(PREF_KEY_LEGACY_DND_SCHEDULE_ENABLED);
 #undef DELETE_PREF
   }
+}
+
+static void prv_migrate_qt_schedules(SettingsFile *file) {
+  char key_buf[24];
+  snprintf(key_buf, sizeof(key_buf), PREF_KEY_QT_SCHEDULE_FMT, 0);
+  if (settings_file_exists(file, key_buf, strlen(key_buf))) {
+    return;
+  }
+
+#define SET_QT_PREF_ALREADY_OPEN(index) \
+  do { \
+    snprintf(key_buf, sizeof(key_buf), PREF_KEY_QT_SCHEDULE_FMT, index); \
+    settings_file_set(file, key_buf, strlen(key_buf), \
+                      &s_qt_schedule[index], sizeof(QuietTimeScheduleConfig)); \
+  } while (0)
+
+  if (s_dnd_schedule[WeekdaySchedule].schedule.from_hour != 0 ||
+      s_dnd_schedule[WeekdaySchedule].schedule.to_hour != 0 ||
+      s_dnd_schedule[WeekdaySchedule].enabled) {
+    s_qt_schedule[0] = (QuietTimeScheduleConfig){
+      .is_used = true,
+      .kind = QT_KIND_WEEKDAYS,
+      .from_hour = s_dnd_schedule[WeekdaySchedule].schedule.from_hour,
+      .from_minute = s_dnd_schedule[WeekdaySchedule].schedule.from_minute,
+      .to_hour = s_dnd_schedule[WeekdaySchedule].schedule.to_hour,
+      .to_minute = s_dnd_schedule[WeekdaySchedule].schedule.to_minute,
+      .enabled = s_dnd_schedule[WeekdaySchedule].enabled,
+    };
+    memset(s_qt_schedule[0].scheduled_days, 0, sizeof(s_qt_schedule[0].scheduled_days));
+    SET_QT_PREF_ALREADY_OPEN(0);
+  }
+
+  if (s_dnd_schedule[WeekendSchedule].schedule.from_hour != 0 ||
+      s_dnd_schedule[WeekendSchedule].schedule.to_hour != 0 ||
+      s_dnd_schedule[WeekendSchedule].enabled) {
+    s_qt_schedule[1] = (QuietTimeScheduleConfig){
+      .is_used = true,
+      .kind = QT_KIND_WEEKENDS,
+      .from_hour = s_dnd_schedule[WeekendSchedule].schedule.from_hour,
+      .from_minute = s_dnd_schedule[WeekendSchedule].schedule.from_minute,
+      .to_hour = s_dnd_schedule[WeekendSchedule].schedule.to_hour,
+      .to_minute = s_dnd_schedule[WeekendSchedule].schedule.to_minute,
+      .enabled = s_dnd_schedule[WeekendSchedule].enabled,
+    };
+    memset(s_qt_schedule[1].scheduled_days, 0, sizeof(s_qt_schedule[1].scheduled_days));
+    SET_QT_PREF_ALREADY_OPEN(1);
+  }
+
+#undef SET_QT_PREF_ALREADY_OPEN
 }
 
 static void prv_migrate_legacy_first_use_settings(SettingsFile *file) {
@@ -336,6 +388,16 @@ void alerts_preferences_init(void) {
                s_dnd_schedule[WeekendSchedule].schedule);
   RESTORE_PREF(s_dnd_schedule_keys[WeekendSchedule].enabled_pref_key,
                s_dnd_schedule[WeekendSchedule].enabled);
+
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    char qt_key[24];
+    snprintf(qt_key, sizeof(qt_key), PREF_KEY_QT_SCHEDULE_FMT, i);
+    __typeof__(s_qt_schedule[i]) _tmp;
+    if (settings_file_get(&file, qt_key, strlen(qt_key), &_tmp, sizeof(_tmp)) == S_SUCCESS) {
+      s_qt_schedule[i] = _tmp;
+    }
+  }
+
   RESTORE_PREF(PREF_KEY_FIRST_USE_COMPLETE, s_first_use_complete);
   RESTORE_PREF(PREF_KEY_NOTIF_WINDOW_TIMEOUT, s_notif_window_timeout_ms);
   RESTORE_PREF(PREF_KEY_NOTIF_DESIGN_STYLE, s_notification_alternative_design);
@@ -345,6 +407,7 @@ void alerts_preferences_init(void) {
 #undef RESTORE_PREF
 
   prv_migrate_legacy_dnd_schedule(&file);
+  prv_migrate_qt_schedules(&file);
 
   const VibeScoreId orig_vibe_score_notifications = s_vibe_score_notifications;
   const VibeScoreId orig_vibe_score_incoming_calls = s_vibe_score_incoming_calls;
@@ -610,6 +673,35 @@ void alerts_preferences_dnd_set_schedule_enabled(DoNotDisturbScheduleType type, 
   SET_PREF(s_dnd_schedule_keys[type].enabled_pref_key, s_dnd_schedule[type].enabled);
 }
 
+static void prv_set_qt_pref(int index, const QuietTimeScheduleConfig *config) {
+  char key_buf[24];
+  snprintf(key_buf, sizeof(key_buf), PREF_KEY_QT_SCHEDULE_FMT, index);
+  s_qt_schedule[index] = *config;
+  prv_set_pref(key_buf, strlen(key_buf), config, sizeof(QuietTimeScheduleConfig));
+}
+
+void alerts_preferences_qt_get_schedule(int index, QuietTimeScheduleConfig *out) {
+  if (index >= 0 && index < MAX_QUIET_TIME_SCHEDULES) {
+    *out = s_qt_schedule[index];
+  }
+}
+
+void alerts_preferences_qt_set_schedule(int index, const QuietTimeScheduleConfig *config) {
+  if (index >= 0 && index < MAX_QUIET_TIME_SCHEDULES) {
+    prv_set_qt_pref(index, config);
+  }
+}
+
+int alerts_preferences_qt_get_num_active(void) {
+  int count = 0;
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    if (s_qt_schedule[i].is_used) {
+      count++;
+    }
+  }
+  return count;
+}
+
 bool alerts_preferences_check_and_set_first_use_complete(FirstUseSource source) {
   if (s_first_use_complete & (1 << source)) {
     return true;
@@ -699,6 +791,107 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
   RELOAD_IF_MATCH(PREF_KEY_DND_MUTE_SPEAKER, s_dnd_mute_speaker);
   RELOAD_IF_MATCH(PREF_KEY_SPEAKER_MUTED, s_speaker_muted);
   RELOAD_IF_MATCH(PREF_KEY_SPEAKER_VOLUME, s_speaker_volume);
+
+  // Check QT schedule keys
+  {
+    char qt_key[24];
+    for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+      snprintf(qt_key, sizeof(qt_key), PREF_KEY_QT_SCHEDULE_FMT, i);
+      size_t qt_key_len = strlen(qt_key);
+      if ((key_len == (int)qt_key_len || key_len == (int)(qt_key_len + 1)) &&
+          memcmp(key, qt_key, qt_key_len) == 0) {
+        QuietTimeScheduleConfig _tmp;
+        if (settings_file_get(&file, key, key_len, &_tmp, sizeof(_tmp)) == S_SUCCESS) {
+          s_qt_schedule[i] = _tmp;
+          matched_key = qt_key;
+        }
+        goto done;
+      }
+    }
+  }
+
+  // Check legacy DND schedule keys - re-migrate to new format if pushed by old phone
+  {
+    bool legacy_updated = false;
+
+    if ((key_len == (int)strlen(s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key) ||
+         key_len == (int)(strlen(s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key) + 1)) &&
+        memcmp(key, s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key,
+               strlen(s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key)) == 0) {
+      __typeof__(s_dnd_schedule[WeekdaySchedule].schedule) _tmp;
+      if (settings_file_get(&file, key, key_len, &_tmp, sizeof(_tmp)) == S_SUCCESS) {
+        s_dnd_schedule[WeekdaySchedule].schedule = _tmp;
+        matched_key = s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key;
+        legacy_updated = true;
+      }
+      goto legacy_done;
+    }
+    if ((key_len == (int)strlen(s_dnd_schedule_keys[WeekdaySchedule].enabled_pref_key) ||
+         key_len == (int)(strlen(s_dnd_schedule_keys[WeekdaySchedule].enabled_pref_key) + 1)) &&
+        memcmp(key, s_dnd_schedule_keys[WeekdaySchedule].enabled_pref_key,
+               strlen(s_dnd_schedule_keys[WeekdaySchedule].enabled_pref_key)) == 0) {
+      __typeof__(s_dnd_schedule[WeekdaySchedule].enabled) _tmp;
+      if (settings_file_get(&file, key, key_len, &_tmp, sizeof(_tmp)) == S_SUCCESS) {
+        s_dnd_schedule[WeekdaySchedule].enabled = _tmp;
+        matched_key = s_dnd_schedule_keys[WeekdaySchedule].enabled_pref_key;
+        legacy_updated = true;
+      }
+      goto legacy_done;
+    }
+    if ((key_len == (int)strlen(s_dnd_schedule_keys[WeekendSchedule].schedule_pref_key) ||
+         key_len == (int)(strlen(s_dnd_schedule_keys[WeekendSchedule].schedule_pref_key) + 1)) &&
+        memcmp(key, s_dnd_schedule_keys[WeekendSchedule].schedule_pref_key,
+               strlen(s_dnd_schedule_keys[WeekendSchedule].schedule_pref_key)) == 0) {
+      __typeof__(s_dnd_schedule[WeekendSchedule].schedule) _tmp;
+      if (settings_file_get(&file, key, key_len, &_tmp, sizeof(_tmp)) == S_SUCCESS) {
+        s_dnd_schedule[WeekendSchedule].schedule = _tmp;
+        matched_key = s_dnd_schedule_keys[WeekendSchedule].schedule_pref_key;
+        legacy_updated = true;
+      }
+      goto legacy_done;
+    }
+    if ((key_len == (int)strlen(s_dnd_schedule_keys[WeekendSchedule].enabled_pref_key) ||
+         key_len == (int)(strlen(s_dnd_schedule_keys[WeekendSchedule].enabled_pref_key) + 1)) &&
+        memcmp(key, s_dnd_schedule_keys[WeekendSchedule].enabled_pref_key,
+               strlen(s_dnd_schedule_keys[WeekendSchedule].enabled_pref_key)) == 0) {
+      __typeof__(s_dnd_schedule[WeekendSchedule].enabled) _tmp;
+      if (settings_file_get(&file, key, key_len, &_tmp, sizeof(_tmp)) == S_SUCCESS) {
+        s_dnd_schedule[WeekendSchedule].enabled = _tmp;
+        matched_key = s_dnd_schedule_keys[WeekendSchedule].enabled_pref_key;
+        legacy_updated = true;
+      }
+      goto legacy_done;
+    }
+
+legacy_done:
+    if (legacy_updated) {
+      s_qt_schedule[0] = (QuietTimeScheduleConfig){
+        .is_used = true,
+        .kind = QT_KIND_WEEKDAYS,
+        .from_hour = s_dnd_schedule[WeekdaySchedule].schedule.from_hour,
+        .from_minute = s_dnd_schedule[WeekdaySchedule].schedule.from_minute,
+        .to_hour = s_dnd_schedule[WeekdaySchedule].schedule.to_hour,
+        .to_minute = s_dnd_schedule[WeekdaySchedule].schedule.to_minute,
+        .enabled = s_dnd_schedule[WeekdaySchedule].enabled,
+      };
+      memset(s_qt_schedule[0].scheduled_days, 0, sizeof(s_qt_schedule[0].scheduled_days));
+      s_qt_schedule[1] = (QuietTimeScheduleConfig){
+        .is_used = true,
+        .kind = QT_KIND_WEEKENDS,
+        .from_hour = s_dnd_schedule[WeekendSchedule].schedule.from_hour,
+        .from_minute = s_dnd_schedule[WeekendSchedule].schedule.from_minute,
+        .to_hour = s_dnd_schedule[WeekendSchedule].schedule.to_hour,
+        .to_minute = s_dnd_schedule[WeekendSchedule].schedule.to_minute,
+        .enabled = s_dnd_schedule[WeekendSchedule].enabled,
+      };
+      memset(s_qt_schedule[1].scheduled_days, 0, sizeof(s_qt_schedule[1].scheduled_days));
+
+      settings_file_set(&file, "qtSchedule0", strlen("qtSchedule0"),
+                        &s_qt_schedule[0], sizeof(QuietTimeScheduleConfig));
+      settings_file_set(&file, "qtSchedule1", strlen("qtSchedule1"),
+                        &s_qt_schedule[1], sizeof(QuietTimeScheduleConfig));
+    }
+  }
 
 #undef RELOAD_IF_MATCH
 
