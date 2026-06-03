@@ -81,18 +81,18 @@ static bool s_charger_enabled;
 static uint32_t s_save_counter;
 
 #ifdef MANUFACTURING_FW
-// In manufacturing firmware, use dedicated MFG_STATE flash region
+// In manufacturing firmware, use dedicated MFG_BATTERY_STATE flash region
 static void prv_erase_state(void) {
-  flash_erase_subsector_blocking(FLASH_REGION_MFG_STATE_BEGIN);
+  flash_erase_subsector_blocking(FLASH_REGION_MFG_BATTERY_STATE_BEGIN);
   PBL_LOG_DBG("Fuel gauge state erased");
 }
 
 static bool prv_load_state(void *state, size_t size) {
-  if (size > (FLASH_REGION_MFG_STATE_END - FLASH_REGION_MFG_STATE_BEGIN)) {
+  if (size > (FLASH_REGION_MFG_BATTERY_STATE_END - FLASH_REGION_MFG_BATTERY_STATE_BEGIN)) {
     return false;
   }
 
-  flash_read_bytes(state, FLASH_REGION_MFG_STATE_BEGIN, size);
+  flash_read_bytes(state, FLASH_REGION_MFG_BATTERY_STATE_BEGIN, size);
 
   // Check if the flash region contains valid data (not all 0xFF)
   uint8_t *bytes = (uint8_t *)state;
@@ -121,13 +121,13 @@ static void prv_save_state(void) {
     return;
   }
 
-  if (sizeof(buf) > (FLASH_REGION_MFG_STATE_END - FLASH_REGION_MFG_STATE_BEGIN)) {
-    PBL_LOG_ERR("Fuel gauge state too large for MFG_STATE region");
+  if (sizeof(buf) > (FLASH_REGION_MFG_BATTERY_STATE_END - FLASH_REGION_MFG_BATTERY_STATE_BEGIN)) {
+    PBL_LOG_ERR("Fuel gauge state too large for MFG_BATTERY_STATE region");
     return;
   }
 
-  flash_erase_subsector_blocking(FLASH_REGION_MFG_STATE_BEGIN);
-  flash_write_bytes(buf, FLASH_REGION_MFG_STATE_BEGIN, sizeof(buf));
+  flash_erase_subsector_blocking(FLASH_REGION_MFG_BATTERY_STATE_BEGIN);
+  flash_write_bytes(buf, FLASH_REGION_MFG_BATTERY_STATE_BEGIN, sizeof(buf));
 
   PBL_LOG_DBG("Fuel gauge state saved");
 }
