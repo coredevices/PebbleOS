@@ -31,3 +31,10 @@ int8_t vibe_get_braking_strength(void);
 //! @retval S_SUCCESS indicating success or failure of calibration.
 //! @retval error Code indicating failure of calibration.
 status_t vibe_calibrate(void);
+
+//! Return the driver-specific calibration value computed by the last
+//! successful vibe_calibrate(), for persisting to non-volatile storage.
+uint8_t vibe_get_calibration(void);
+
+//! Apply a previously stored calibration value to the driver.
+void vibe_apply_calibration(uint8_t cali);

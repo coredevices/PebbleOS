@@ -45,6 +45,13 @@ status_t vibe_calibrate(void) {
   return E_INVALID_OPERATION;
 }
 
+uint8_t vibe_get_calibration(void) {
+  return 0xFF;
+}
+
+void vibe_apply_calibration(uint8_t cali) {
+}
+
 void command_vibe_ctl(const char *arg) {
   int strength = atoi(arg);
 
