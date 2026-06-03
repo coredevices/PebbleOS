@@ -674,3 +674,314 @@ void test_do_not_disturb__toggle_manually_enabled(void) {
   active = do_not_disturb_is_active();
   cl_assert(active == false);
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//! Quiet Time multi-schedule tests
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+void test_do_not_disturb__qt_create_delete_schedule(void) {
+  QuietTimeScheduleConfig config = {
+    .kind = QT_KIND_WEEKDAYS,
+    .from_hour = 23,
+    .from_minute = 0,
+    .to_hour = 7,
+    .to_minute = 0,
+    .enabled = true,
+  };
+  memset(config.scheduled_days, 0, sizeof(config.scheduled_days));
+
+  int idx = quiet_time_create_schedule(&config);
+  cl_assert(idx >= 0);
+  cl_assert(idx < MAX_QUIET_TIME_SCHEDULES);
+
+  QuietTimeScheduleConfig retrieved;
+  quiet_time_get_schedule(idx, &retrieved);
+  cl_assert(retrieved.is_used == true);
+  cl_assert(retrieved.kind == QT_KIND_WEEKDAYS);
+  cl_assert(retrieved.from_hour == 23);
+  cl_assert(retrieved.to_hour == 7);
+  cl_assert(retrieved.enabled == true);
+
+  quiet_time_delete_schedule(idx);
+  quiet_time_get_schedule(idx, &retrieved);
+  cl_assert(retrieved.is_used == false);
+}
+
+void test_do_not_disturb__qt_create_rejects_empty_custom(void) {
+  QuietTimeScheduleConfig config = {
+    .kind = QT_KIND_CUSTOM,
+    .from_hour = 22,
+    .from_minute = 0,
+    .to_hour = 6,
+    .to_minute = 0,
+    .enabled = true,
+  };
+  memset(config.scheduled_days, 0, sizeof(config.scheduled_days));
+
+  int idx = quiet_time_create_schedule(&config);
+  cl_assert(idx == -1);
+}
+
+void test_do_not_disturb__qt_create_custom_with_days(void) {
+  QuietTimeScheduleConfig config = {
+    .kind = QT_KIND_CUSTOM,
+    .from_hour = 22,
+    .from_minute = 0,
+    .to_hour = 6,
+    .to_minute = 0,
+    .enabled = true,
+  };
+  memset(config.scheduled_days, 0, sizeof(config.scheduled_days));
+  config.scheduled_days[Monday] = true;
+  config.scheduled_days[Wednesday] = true;
+  config.scheduled_days[Friday] = true;
+
+  int idx = quiet_time_create_schedule(&config);
+  cl_assert(idx >= 0);
+
+  QuietTimeScheduleConfig retrieved;
+  quiet_time_get_schedule(idx, &retrieved);
+  cl_assert(retrieved.kind == QT_KIND_CUSTOM);
+  cl_assert(retrieved.scheduled_days[Monday] == true);
+  cl_assert(retrieved.scheduled_days[Wednesday] == true);
+  cl_assert(retrieved.scheduled_days[Friday] == true);
+  cl_assert(retrieved.scheduled_days[Sunday] == false);
+  cl_assert(retrieved.scheduled_days[Saturday] == false);
+
+  quiet_time_delete_schedule(idx);
+}
+
+void test_do_not_disturb__qt_scheduled_days_derivation(void) {
+  bool days[DAYS_PER_WEEK];
+
+  QuietTimeScheduleConfig config_everyday = { .kind = QT_KIND_EVERYDAY };
+  quiet_time_get_scheduled_days(&config_everyday, days);
+  for (int i = 0; i < DAYS_PER_WEEK; i++) {
+    cl_assert(days[i] == true);
+  }
+
+  QuietTimeScheduleConfig config_weekdays = { .kind = QT_KIND_WEEKDAYS };
+  quiet_time_get_scheduled_days(&config_weekdays, days);
+  cl_assert(days[Sunday] == false);
+  cl_assert(days[Monday] == true);
+  cl_assert(days[Saturday] == false);
+  cl_assert(days[Friday] == true);
+
+  QuietTimeScheduleConfig config_weekends = { .kind = QT_KIND_WEEKENDS };
+  quiet_time_get_scheduled_days(&config_weekends, days);
+  cl_assert(days[Sunday] == true);
+  cl_assert(days[Monday] == false);
+  cl_assert(days[Saturday] == true);
+  cl_assert(days[Friday] == false);
+}
+
+void test_do_not_disturb__qt_display_strings(void) {
+  const char *str;
+
+  str = quiet_time_get_string_for_kind(QT_KIND_EVERYDAY);
+  cl_assert_equal_s(str, "Every Day");
+
+  str = quiet_time_get_string_for_kind(QT_KIND_WEEKDAYS);
+  cl_assert_equal_s(str, "Weekdays");
+
+  str = quiet_time_get_string_for_kind(QT_KIND_WEEKENDS);
+  cl_assert_equal_s(str, "Weekends");
+
+  str = quiet_time_get_string_for_kind(QT_KIND_CUSTOM);
+  cl_assert_equal_s(str, "Custom");
+
+  char buf[28];
+  bool days[DAYS_PER_WEEK] = {false};
+  days[Monday] = true;
+  days[Wednesday] = true;
+  days[Friday] = true;
+  quiet_time_get_string_for_custom(days, buf, sizeof(buf));
+  cl_assert_equal_s(buf, "Mon,Wed,Fri");
+
+  bool single_day[DAYS_PER_WEEK] = {false};
+  single_day[Tuesday] = true;
+  quiet_time_get_string_for_custom(single_day, buf, sizeof(buf));
+  cl_assert_equal_s(buf, "Tuesdays");
+}
+
+void test_do_not_disturb__qt_multi_schedule_active(void) {
+  bool active;
+
+  // Clean slate
+  do_not_disturb_set_manually_enabled(false);
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    quiet_time_delete_schedule(i);
+  }
+
+  // Weekday schedule: 23:00 - 07:00
+  QuietTimeScheduleConfig weekday_config = {
+    .kind = QT_KIND_WEEKDAYS,
+    .from_hour = 23,
+    .from_minute = 0,
+    .to_hour = 7,
+    .to_minute = 0,
+    .enabled = true,
+  };
+  memset(weekday_config.scheduled_days, 0, sizeof(weekday_config.scheduled_days));
+  int weekday_idx = quiet_time_create_schedule(&weekday_config);
+  cl_assert(weekday_idx >= 0);
+  quiet_time_set_schedule_enabled(weekday_idx, true);
+
+  // Set time to Thursday 8:30 - outside weekday schedule
+  rtc_set_time(s_thursday_01_00);
+  do_not_disturb_handle_clock_change();
+  active = do_not_disturb_is_active();
+  cl_assert(active == false);
+
+  // Set time to Thursday 01:30 - inside weekday schedule (23:00 - 07:00)
+  rtc_set_time(1426125000); // Thursday 01:30
+  do_not_disturb_handle_clock_change();
+  active = do_not_disturb_is_active();
+  cl_assert(active == true);
+
+  // Add weekend schedule: 01:00 - 09:00
+  QuietTimeScheduleConfig weekend_config = {
+    .kind = QT_KIND_WEEKENDS,
+    .from_hour = 1,
+    .from_minute = 0,
+    .to_hour = 9,
+    .to_minute = 0,
+    .enabled = true,
+  };
+  memset(weekend_config.scheduled_days, 0, sizeof(weekend_config.scheduled_days));
+  int weekend_idx = quiet_time_create_schedule(&weekend_config);
+  cl_assert(weekend_idx >= 0);
+  quiet_time_set_schedule_enabled(weekend_idx, true);
+
+  // Still Thursday 01:30 - inside weekday schedule
+  do_not_disturb_handle_clock_change();
+  active = do_not_disturb_is_active();
+  cl_assert(active == true);
+
+  // Disable weekday schedule
+  quiet_time_set_schedule_enabled(weekday_idx, false);
+  do_not_disturb_handle_clock_change();
+  active = do_not_disturb_is_active();
+  cl_assert(active == false); // Thursday, weekday disabled, weekend doesn't apply
+
+  // Clean up
+  quiet_time_delete_schedule(weekday_idx);
+  quiet_time_delete_schedule(weekend_idx);
+}
+
+void test_do_not_disturb__qt_migration_from_legacy(void) {
+  // Set up legacy weekday schedule
+  DoNotDisturbSchedule legacy_schedule = {
+    .from_hour = 22,
+    .from_minute = 0,
+    .to_hour = 6,
+    .to_minute = 0,
+  };
+  do_not_disturb_set_schedule(WeekdaySchedule, &legacy_schedule);
+  do_not_disturb_set_schedule_enabled(WeekdaySchedule, true);
+
+  // Verify the QT schedule was synced
+  QuietTimeScheduleConfig qt_config;
+  quiet_time_get_schedule(0, &qt_config);
+  cl_assert(qt_config.kind == QT_KIND_WEEKDAYS);
+  cl_assert(qt_config.from_hour == 22);
+  cl_assert(qt_config.from_minute == 0);
+  cl_assert(qt_config.to_hour == 6);
+  cl_assert(qt_config.to_minute == 0);
+  cl_assert(qt_config.enabled == true);
+
+  // Set up legacy weekend schedule
+  DoNotDisturbSchedule weekend_schedule = {
+    .from_hour = 0,
+    .from_minute = 0,
+    .to_hour = 10,
+    .to_minute = 0,
+  };
+  do_not_disturb_set_schedule(WeekendSchedule, &weekend_schedule);
+  do_not_disturb_set_schedule_enabled(WeekendSchedule, true);
+
+  // Verify the QT schedule was synced
+  quiet_time_get_schedule(1, &qt_config);
+  cl_assert(qt_config.kind == QT_KIND_WEEKENDS);
+  cl_assert(qt_config.from_hour == 0);
+  cl_assert(qt_config.to_hour == 10);
+  cl_assert(qt_config.enabled == true);
+
+  // Clean up
+  do_not_disturb_set_schedule_enabled(WeekdaySchedule, false);
+  do_not_disturb_set_schedule_enabled(WeekendSchedule, false);
+}
+
+void test_do_not_disturb__qt_create_finds_unused_slot(void) {
+  // Fill slots 0-1, leave slot 2 empty (is_used == false)
+  QuietTimeScheduleConfig config0 = {
+    .kind = QT_KIND_WEEKDAYS,
+    .from_hour = 23,
+    .from_minute = 0,
+    .to_hour = 7,
+    .to_minute = 0,
+    .enabled = true,
+  };
+  memset(config0.scheduled_days, 0, sizeof(config0.scheduled_days));
+  quiet_time_set_schedule(0, &config0);
+
+  QuietTimeScheduleConfig config1 = {
+    .kind = QT_KIND_WEEKENDS,
+    .from_hour = 1,
+    .from_minute = 0,
+    .to_hour = 9,
+    .to_minute = 0,
+    .enabled = true,
+  };
+  memset(config1.scheduled_days, 0, sizeof(config1.scheduled_days));
+  quiet_time_set_schedule(1, &config1);
+
+  // Creating a new schedule should land in slot 2
+  QuietTimeScheduleConfig new_config = {
+    .kind = QT_KIND_EVERYDAY,
+    .from_hour = 22,
+    .from_minute = 0,
+    .to_hour = 6,
+    .to_minute = 0,
+    .enabled = true,
+  };
+  int idx = quiet_time_create_schedule(&new_config);
+  cl_assert(idx == 2);
+
+  // Clean up
+  quiet_time_delete_schedule(0);
+  quiet_time_delete_schedule(1);
+  quiet_time_delete_schedule(2);
+}
+
+void test_do_not_disturb__qt_create_returns_full_when_no_slots(void) {
+  // Fill all slots
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    QuietTimeScheduleConfig config = {
+      .kind = QT_KIND_EVERYDAY,
+      .from_hour = 22,
+      .from_minute = 0,
+      .to_hour = 6,
+      .to_minute = 0,
+      .enabled = true,
+    };
+    quiet_time_set_schedule(i, &config);
+  }
+
+  // Should return -1 since all slots are full
+  QuietTimeScheduleConfig overflow = {
+    .kind = QT_KIND_EVERYDAY,
+    .from_hour = 10,
+    .from_minute = 0,
+    .to_hour = 14,
+    .to_minute = 0,
+    .enabled = true,
+  };
+  int idx = quiet_time_create_schedule(&overflow);
+  cl_assert(idx == -1);
+
+  // Clean up
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    quiet_time_delete_schedule(i);
+  }
+}
