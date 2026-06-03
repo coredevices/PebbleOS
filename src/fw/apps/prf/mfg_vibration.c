@@ -17,6 +17,7 @@
 
 #define VIBE_COUNT 5
 #define FAIL_DISPLAY_S 3
+#define MAX_CALIBRATION_ATTEMPTS 3
 
 typedef enum {
   STATE_CALIBRATE,
@@ -33,6 +34,7 @@ typedef struct {
 
   int wait;
   int vibe_count;
+  int cali_attempts;
   VibeTestState state;
 } AppData;
 
@@ -79,6 +81,9 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
     } else if (status == E_INVALID_OPERATION) {
       text_layer_set_text(&data->status, "CALIBRATION SKIPPED");
       data->state = STATE_WAITING;
+    } else if (++data->cali_attempts < MAX_CALIBRATION_ATTEMPTS) {
+      text_layer_set_text(&data->status, "CALIBRATION RETRY");
+      // Stay in STATE_CALIBRATE to retry on the next tick.
     } else {
       text_layer_set_text(&data->status, "CALIBRATION FAILED");
       mfg_test_result_report(MfgTestId_Vibration, false, 0);
