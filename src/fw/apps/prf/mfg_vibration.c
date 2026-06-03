@@ -73,6 +73,7 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
   if (data->state == STATE_CALIBRATE) {
     status_t status = vibe_calibrate();
     if (status == S_SUCCESS) {
+      mfg_info_set_vibe_cali(vibe_get_calibration());
       text_layer_set_text(&data->status, "CALIBRATED");
       data->state = STATE_WAITING;
     } else if (status == E_INVALID_OPERATION) {

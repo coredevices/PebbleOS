@@ -468,6 +468,23 @@ status_t vibe_calibrate(void) {
   return S_SUCCESS;
 }
 
+uint8_t vibe_get_calibration(void) {
+  return s_trim_lra;
+}
+
+void vibe_apply_calibration(uint8_t cali) {
+  if (!s_initialized) {
+    return;
+  }
+
+  s_trim_lra = cali & 0x3F;
+  if (!prv_modify_reg(AW862XX_REG_TRIMCFG3, AW862XX_TRIMCFG3_TRIM_LRA_MASK, s_trim_lra)) {
+    PBL_LOG_ERR("AW86225: failed to apply stored calibration");
+    return;
+  }
+  PBL_LOG_DBG("AW86225: applied stored calibration trim=0x%02x", s_trim_lra);
+}
+
 void command_vibe_ctl(const char *arg) {
   if (!strcmp(arg, "cal")) {
     status_t rc = vibe_calibrate();
