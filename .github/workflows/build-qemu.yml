@@ -14,7 +14,7 @@ jobs:
     outputs:
       should-build: ${{ github.event_name == 'push' || steps.filter.outputs.src == 'true' }}
     steps:
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         if: github.event_name == 'pull_request'
         id: filter
         with:
@@ -49,7 +49,7 @@ jobs:
         run: git config --system --add safe.directory "${GITHUB_WORKSPACE}" 
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           submodules: true
@@ -71,7 +71,7 @@ jobs:
         run: ./waf build qemu_image_micro qemu_image_spi
 
       - name: Store
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: firmware-${{ matrix.board }}-qemu
           path: |
