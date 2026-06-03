@@ -6,6 +6,7 @@
 #include "applib/app.h"
 #include "applib/event_service_client.h"
 #include "applib/app_timer.h"
+#include "applib/accel_service.h"
 #include "applib/fonts/fonts.h"
 #include "applib/preferred_content_size.h"
 #include "applib/tick_timer_service.h"
@@ -196,6 +197,7 @@ static const uint32_t VOLUME_REPEAT_INTERVAL_MS = 400;
 static const uint32_t ACTION_BAR_TIMEOUT_MS = 2000;
 static const uint32_t VOLUME_ICON_TIMEOUT_MS = 2000;
 
+
 typedef struct {
   Window window;
   BitmapLayer bitmap_layer;
@@ -258,12 +260,20 @@ typedef struct {
   MusicNoMusicWindow *no_music_window;
 
   VibeScore *score;
+  bool temporarily_show_progress;
+  AppTimer *temporarily_show_progress_timer;
 } MusicAppData;
 
 static void prv_set_action_bar_state(MusicAppData *data, enum ActionBarState state);
 
 static void prv_trigger_cassette_icon_switch(GBitmap *bitmap, bool animated);
 static void prv_update_cassette_icon(MusicAppData *data, bool animated);
+
+
+// Add these two:
+static void prv_update_layout(MusicAppData *data);
+static void prv_set_pos_update_timer(MusicAppData *data, MusicPlayState playstate);
+
 
 static void prv_do_haptic_feedback_vibe(MusicAppData *data) {
   vibe_score_do_vibe(data->score);
@@ -470,6 +480,27 @@ static void prv_trigger_cassette_icon_switch(GBitmap *new_bitmap, bool animated)
 
 static void prv_skipping_click_config_provider(void *data);
 static void prv_volume_click_config_provider(void *data);
+static void prv_disable_progress(void *context) {
+  MusicAppData *data = context;
+  data->temporarily_show_progress = false;
+  data->temporarily_show_progress_timer = NULL;
+  prv_update_layout(data);
+  prv_update_track_progress(data);
+  prv_set_pos_update_timer(data, music_get_playback_state());
+}
+
+static void prv_show_progress_bar_temporarily(AccelAxisType axis, int32_t direction) {
+  MusicAppData *data = app_state_get_user_data();
+  data->temporarily_show_progress = true;
+  if (data->temporarily_show_progress_timer) {
+    app_timer_reschedule(data->temporarily_show_progress_timer, 5000);
+  } else {
+    data->temporarily_show_progress_timer = app_timer_register(5000, prv_disable_progress, data);
+  }
+  prv_update_layout(data);
+  prv_update_track_progress(data);
+  prv_set_pos_update_timer(data, music_get_playback_state());
+}
 
 static void prv_update_cassette_icon(MusicAppData *data, bool animated) {
   if (music_get_playback_state() == MusicPlayStatePaused) {
@@ -664,7 +695,7 @@ static void prv_volume_click_config_provider(void *context) {
 }
 
 static void prv_update_layout(MusicAppData *data) {
-  const bool show_progress_bar = shell_prefs_get_music_show_progress_bar();
+  const bool show_progress_bar = shell_prefs_get_music_show_progress_bar() || data->temporarily_show_progress;
   bool hide_layer = !show_progress_bar || !music_is_progress_reporting_supported();
   layer_set_hidden(&data->track_pos_bar.layer, hide_layer);
   layer_set_hidden(&data->position_text_layer.layer, hide_layer);
@@ -738,7 +769,7 @@ static void prv_pop_no_music_window(MusicAppData *data) {
 }
 
 static void prv_update_now_playing(MusicAppData *data) {
-  const bool show_progress_bar = shell_prefs_get_music_show_progress_bar();
+  const bool show_progress_bar = shell_prefs_get_music_show_progress_bar() || data->temporarily_show_progress;
   layer_set_hidden((Layer *)&data->track_pos_bar,
                    !show_progress_bar || !music_is_progress_reporting_supported());
 
@@ -784,8 +815,11 @@ static void prv_update_track_progress(MusicAppData *data) {
   if (data->pause_track_pos_updates) {
     return;
   }
-  if (!shell_prefs_get_music_show_progress_bar()) {
+
+  if (!data->temporarily_show_progress){
+  if (!shell_prefs_get_music_show_progress_bar()){
     return;
+  }
   }
   if (!music_is_progress_reporting_supported()) {
     progress_layer_set_progress(&data->track_pos_bar, 0);
@@ -815,7 +849,7 @@ static void prv_handle_tick_time(struct tm *time, TimeUnits units_changed) {
 }
 
 static void prv_set_pos_update_timer(MusicAppData* data, MusicPlayState playstate) {
-  if (!music_is_progress_reporting_supported() || !shell_prefs_get_music_show_progress_bar()) {
+  if (!music_is_progress_reporting_supported() || (!shell_prefs_get_music_show_progress_bar() && !data->temporarily_show_progress)) {
     tick_timer_service_unsubscribe();
     return;
   }
@@ -1002,13 +1036,20 @@ static void prv_handle_init(void) {
   music_request_low_latency_for_period(5000);
 
   prv_set_pos_update_timer(data, music_get_playback_state());
+  if (music_is_progress_reporting_supported()) {
+    accel_tap_service_subscribe(prv_show_progress_bar_temporarily);
+  }
 }
 
 static void prv_handle_deinit(void) {
   tick_timer_service_unsubscribe();
+  accel_tap_service_unsubscribe();
   music_request_reduced_latency(false);
 
   MusicAppData *data = app_state_get_user_data();
+  if (data->temporarily_show_progress_timer) {
+    app_timer_cancel(data->temporarily_show_progress_timer);
+  }
   i18n_free_all(data);
 }
 
