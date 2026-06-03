@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
-from pebble_sdk_platform import pebble_platforms, maybe_import_internal
+from pebble_sdk_platform import pebble_platforms
 
 import os
 import os.path
@@ -11,8 +11,6 @@ __author__ = "katharine"
 
 
 def find_most_specific_filename(bld, env, root_node, general_filename):
-    maybe_import_internal(env)
-
     if "~" in general_filename:
         bld.fatal("Generic resource filenames cannot contain a tilde (~).")
 

@@ -30,7 +30,7 @@ jobs:
         run: git config --system --add safe.directory "${GITHUB_WORKSPACE}"
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           submodules: true
@@ -68,15 +68,15 @@ jobs:
           echo "BUILD_ID=$(readelf -n build/src/fw/tintin_fw.elf | sed -n -e 's/^.*Build ID: //p')" >> "$GITHUB_OUTPUT"
 
       - name: Upload PRF log hash dictionary
-        uses: Noelware/s3-action@2.3.1
-        with:
-          access-key-id: ${{ secrets.LOG_HASH_BUCKET_KEY_ID }}
-          secret-key: ${{ secrets.LOG_HASH_BUCKET_SECRET }}
-          endpoint: ${{ vars.LOG_HASH_BUCKET_ENDPOINT }}
-          bucket: ${{ vars.LOG_HASH_BUCKET_NAME }}
-          files: |
-            build/src/fw/tintin_fw_loghash_dict.json
-          path-format: ${{ steps.prf_build_id.outputs.BUILD_ID }}-${{ github.sha }}-prf.json
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.LOG_HASH_BUCKET_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.LOG_HASH_BUCKET_SECRET }}
+          AWS_DEFAULT_REGION: us-east-1
+        run: |
+          pip install awscli
+          aws s3 cp build/src/fw/tintin_fw_loghash_dict.json \
+            "s3://${{ vars.LOG_HASH_BUCKET_NAME }}/${{ steps.prf_build_id.outputs.BUILD_ID }}-${{ github.sha }}-prf.json" \
+            --endpoint-url "${{ vars.LOG_HASH_BUCKET_ENDPOINT }}"
 
       - name: Configure PRF MFG
         run: ./waf configure --board ${{ matrix.board }} --variant=prf --mfg --nohash -DCONFIG_RELEASE=y
@@ -92,7 +92,7 @@ jobs:
           cp build/src/fw/tintin_fw.elf artifacts/prf_mfg_${{ matrix.board }}_${{github.ref_name}}.elf
 
       - name: Store
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: artifacts-prf-${{ matrix.board }}
           path: artifacts
@@ -125,7 +125,7 @@ jobs:
         run: git config --system --add safe.directory "${GITHUB_WORKSPACE}"
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           submodules: true
@@ -179,19 +179,19 @@ jobs:
           echo "BUILD_ID=$(readelf -n build/src/fw/tintin_fw.elf | sed -n -e 's/^.*Build ID: //p')" >> "$GITHUB_OUTPUT"
 
       - name: Upload log hash dictionary
-        uses: Noelware/s3-action@2.3.1
         if: ${{ github.repository == 'coredevices/PebbleOS' }}
-        with:
-          access-key-id: ${{ secrets.LOG_HASH_BUCKET_KEY_ID }}
-          secret-key: ${{ secrets.LOG_HASH_BUCKET_SECRET }}
-          endpoint: ${{ vars.LOG_HASH_BUCKET_ENDPOINT }}
-          bucket: ${{ vars.LOG_HASH_BUCKET_NAME }}
-          files: |
-            build/src/fw/tintin_fw_loghash_dict.json
-          path-format: ${{ steps.build_id.outputs.BUILD_ID }}-${{ github.sha }}-normal.json
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.LOG_HASH_BUCKET_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.LOG_HASH_BUCKET_SECRET }}
+          AWS_DEFAULT_REGION: us-east-1
+        run: |
+          pip install awscli
+          aws s3 cp build/src/fw/tintin_fw_loghash_dict.json \
+            "s3://${{ vars.LOG_HASH_BUCKET_NAME }}/${{ steps.build_id.outputs.BUILD_ID }}-${{ github.sha }}-normal.json" \
+            --endpoint-url "${{ vars.LOG_HASH_BUCKET_ENDPOINT }}"
 
       - name: Store
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: artifacts-${{ matrix.board }}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}
           path: artifacts
@@ -218,10 +218,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
 
       - name: Display artifacts
         run: ls -R
@@ -239,7 +239,7 @@ jobs:
           done
 
       - name: Create release
-        uses: softprops/action-gh-release@v2.2.2
+        uses: softprops/action-gh-release@v3.0.0
         with:
           files: artifacts-*/*
 

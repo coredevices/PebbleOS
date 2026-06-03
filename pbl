@@ -5,9 +5,9 @@
 """PebbleOS developer CLI.
 
 Hosts the operational commands (flash, qemu, console, debug, screenshot,
-openocd, reset, bork, image_*) that used to live in the root ``wscript`` but
-are not build steps, and provides thin pass-through wrappers for the everyday
-``./waf`` commands so there is a single entry point.
+openocd, reset, bork, image_*, make_lang, pack_lang, pack_all_langs) that used
+to live in the root ``wscript``but are not build steps, and provides thin 
+pass-through wrappers for the everyday ``./waf`` commands so there is a single entry point.
 
 Build state is read directly from the configured build dir
 (``build/c4che/_cache.py``); no waf process is spawned for operational
@@ -19,11 +19,13 @@ import importlib.util
 import os
 import platform
 import shlex
+import string
 import subprocess
 import sys
 
 REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
 BUILD_DIR = os.path.join(REPO_ROOT, "build")
+LANG_DIR_REL = "resources/normal/base/lang"
 
 # Commands forwarded verbatim to ./waf (no build env / waflib needed).
 WAF_PASSTHROUGH = ("configure", "build", "bundle", "clean", "test", "waf")
@@ -459,6 +461,219 @@ def cmd_image_recovery(env, shim, options):
         _fatal("Imaging failed")
 
 
+# --- Language pack commands ---
+
+# Template for a new language's lang_map.json (only the strings entry is
+# populated; fonts are added by hand once the language needs extended glyphs).
+FILE_LANG_MAP = string.Template("""
+{
+    "strings": {
+        "lang": "${lang}",
+        "name": "STRINGS",
+        "file": "tintin.po"
+    },
+    "fonts": [{
+        "name": "GOTHIC_14_EXTENDED",
+        "file": ""
+    }, {
+        "name": "GOTHIC_14_BOLD_EXTENDED",
+        "file": ""
+    }, {
+        "name": "GOTHIC_18_EXTENDED",
+        "file": ""
+    }, {
+        "name": "GOTHIC_18_BOLD_EXTENDED",
+        "file": ""
+    }, {
+        "name": "GOTHIC_24_EXTENDED",
+        "file": ""
+    }, {
+        "name": "GOTHIC_24_BOLD_EXTENDED",
+        "file": ""
+    }, {
+        "name": "GOTHIC_28_EXTENDED",
+        "file": ""
+    }, {
+        "name": "GOTHIC_28_BOLD_EXTENDED",
+        "file": ""
+    }, {
+        "name": "BITHAM_18_LIGHT_SUBSET_EXTENDED",
+        "file": ""
+    }, {
+        "name": "BITHAM_30_BLACK_EXTENDED",
+        "file": ""
+    }, {
+        "name": "BITHAM_34_LIGHT_SUBSET_EXTENDED",
+        "file": ""
+    }, {
+        "name": "BITHAM_34_MEDIUM_NUMBERS_EXTENDED",
+        "file": ""
+    }, {
+        "name": "BITHAM_42_BOLD_EXTENDED",
+        "file": ""
+    }, {
+        "name": "BITHAM_42_LIGHT_EXTENDED",
+        "file": ""
+    }, {
+        "name": "BITHAM_42_MEDIUM_NUMBERS_EXTENDED",
+        "file": ""
+    }, {
+        "name": "ROBOTO_CONDENSED_21_EXTENDED",
+        "file": ""
+    }, {
+        "name": "ROBOTO_BOLD_SUBSET_49_EXTENDED",
+        "file": ""
+    }, {
+        "name": "DROID_SERIF_28_BOLD_EXTENDED",
+        "file": ""
+    }],
+    "images": []
+}
+""")
+
+
+def _ensure_lang_imports():
+    """Put tools/ on sys.path so the reused resource/font modules resolve.
+    Inserted ahead of REPO_ROOT so 'resources' binds to tools/resources rather
+    than the firmware resources/ namespace dir."""
+    tools = os.path.join(REPO_ROOT, "tools")
+    if tools not in sys.path:
+        sys.path.insert(0, tools)
+
+
+def _pack_lang_code(env, lang_code):
+    import json
+    from collections import OrderedDict
+
+    import pbpack
+    from resources.resource_map.resource_generator_font import FontResourceGenerator
+
+    lang_path = os.path.join(REPO_ROOT, LANG_DIR_REL, lang_code)
+    build_path = os.path.join(BUILD_DIR, LANG_DIR_REL, lang_code)
+
+    with open(os.path.join(lang_path, "lang_map.json")) as f:
+        resource_map = json.load(f)
+
+    resource_data = OrderedDict()
+
+    if not os.path.exists(build_path):
+        os.makedirs(build_path)
+
+    # The "strings" entry, if any, holds the compiled .mo translation catalog.
+    strings = resource_map["strings"]
+    name = strings["name"]
+    ui_codepoints_path = None
+
+    if strings["file"] == "":
+        resource_data[name] = b""
+    else:
+        po_path = os.path.join(lang_path, strings["file"])
+
+        # Warn (don't fail) if the catalog still has untranslated strings.
+        if subprocess.check_output(["msgattrib", "--untranslated", po_path]) != b"":
+            _pprint("RED", "Warning: This PO file contains untranslated strings!")
+
+        mo_path = os.path.join(build_path, strings["file"] + "." + name + ".mo")
+        os.system("msgfmt -c -v -o {} {}".format(mo_path, po_path))
+        _pprint("CYAN", "Created mo at {}".format(mo_path))
+
+        with open(mo_path, "rb") as f:
+            resource_data[name] = f.read()
+
+        ui_codepoints_path = os.path.join(build_path, "codepoints.json")
+        os.system("{} ./tools/generate_codepoint_requirements.py {} --output={}".format(
+            sys.executable, po_path, ui_codepoints_path))
+
+    # Build a resource for each font entry, reusing the normal resource build's
+    # font generator.
+    for entry in resource_map["fonts"]:
+        name = entry["name"]
+
+        if "alias" in entry:
+            # Aliases reuse another resource's bytes; the pbpack dedups them.
+            _pprint("CYAN", "Aliasing {} to {}".format(entry["alias"], name))
+            resource_data[name] = resource_data[entry["alias"]]
+        elif entry["file"] == "":
+            _pprint("CYAN", "Building empty resource {}".format(name))
+            resource_data[name] = b""
+        else:
+            _pprint("CYAN", "Building font resource {}".format(name))
+
+            # Make the entry look like a normal resource_map.json font entry.
+            entry["type"] = "font"
+            d = FontResourceGenerator.font_definition_from_dict(env, entry)
+
+            if d.character_list is None:
+                # Default to the codepoints the UI needs unless overridden.
+                d.character_list = ui_codepoints_path
+            else:
+                d.character_list = os.path.join(lang_path, d.character_list)
+
+            font_path = os.path.join(lang_path, entry["file"])
+            resource_data[name] = FontResourceGenerator.build_font_data(font_path, d)
+
+    lp = pbpack.ResourcePack(False)
+    for r in resource_data.values():
+        lp.add_resource(r)
+
+    language_pack = os.path.join(build_path, lang_code + ".pbl")
+    with open(language_pack, "wb+") as lp_file:
+        lp.serialize(lp_file)
+
+    _pprint("CYAN", "Created language pack at {}".format(language_pack))
+
+
+def cmd_make_lang(env, shim, options):
+    """Generate a new language's translation files and update existing ones."""
+    import polib
+
+    _ensure_lang_imports()
+
+    lang_code = options.lang
+    lang_path = os.path.join(REPO_ROOT, LANG_DIR_REL, lang_code)
+    pot_path = os.path.join(REPO_ROOT, "build/src/fw/tintin.pot")
+    if not os.path.exists(pot_path):
+        _fatal("Error: could not find tintin.pot. Please run ./pbl build first")
+
+    po_path = os.path.join(lang_path, "tintin.po")
+    msginit_cmd = ["msginit", "-l", lang_code, "--no-translator", "-i", pot_path]
+    if not os.path.exists(lang_path):
+        # New language: create the folder and seed lang_map.json from template.
+        os.mkdir(lang_path)
+        with open(os.path.join(lang_path, "lang_map.json"), "w") as f:
+            f.write(FILE_LANG_MAP.substitute({"lang": lang_code}))
+
+    if not os.path.exists(po_path):
+        msginit_cmd += ["-o", po_path]
+        subprocess.call(msginit_cmd)
+    else:
+        # Preserve the existing header, regenerate, then merge in new strings.
+        po_file_header = str(polib.pofile(po_path).metadata_as_entry())
+        with open(po_path, "w") as po_file:
+            po_file.write(po_file_header)
+
+        import tempfile
+        new_po_file = tempfile.NamedTemporaryFile(delete=True)
+        msginit_cmd += ["-o", new_po_file.name]
+        subprocess.call(msginit_cmd)
+        subprocess.call(["msgmerge", "--lang=" + lang_code, "--update",
+                         po_path, new_po_file.name])
+
+
+def cmd_pack_lang(env, shim, options):
+    """Generate the language pack (pbpack) for a single language."""
+    _ensure_lang_imports()
+    _pack_lang_code(env, options.lang)
+
+
+def cmd_pack_all_langs(env, shim, options):
+    """Generate language packs (pbpacks) for every language."""
+    _ensure_lang_imports()
+    lang_root = os.path.join(REPO_ROOT, LANG_DIR_REL)
+    for lang_code in sorted(next(os.walk(lang_root))[1]):
+        _pack_lang_code(env, lang_code)
+
+
 OPERATIONAL = {
     "flash": cmd_flash,
     "console": cmd_console,
@@ -470,6 +685,9 @@ OPERATIONAL = {
     "bork": cmd_bork,
     "image_resources": cmd_image_resources,
     "image_recovery": cmd_image_recovery,
+    "make_lang": cmd_make_lang,
+    "pack_lang": cmd_pack_lang,
+    "pack_all_langs": cmd_pack_all_langs,
 }
 
 
@@ -525,6 +743,15 @@ def build_parser():
     p.add_argument("--file", help="Recovery binary to flash (defaults to built firmware)")
     p.add_argument("--force-pulse", action="store_true",
                    help="Force PULSE-based flashing even on SF32LB52")
+
+    p = sub.add_parser("make_lang",
+                       help="Generate/update a language's translation files")
+    p.add_argument("--lang", default="en_US", help="Language to package (isocode)")
+
+    p = sub.add_parser("pack_lang", help="Generate the pbpack for one language")
+    p.add_argument("--lang", default="en_US", help="Language to package (isocode)")
+
+    sub.add_parser("pack_all_langs", help="Generate pbpacks for all languages")
 
     # ./waf pass-through wrappers.
     for name in WAF_PASSTHROUGH:

@@ -1,30 +1,16 @@
-import os
-import time
-
-import waflib
-import waflib.Tools
 import waftools.objcopy as objcopy
 import waftools.pebble_sdk_gcc as pebble_sdk_gcc
 
 from resources.types.resource_definition import ResourceDefinition
 from resources.types.resource_object import ResourceObject
 
-from pebble_sdk_platform import pebble_platforms, maybe_import_internal
-from pebble_sdk_version import set_env_sdk_version
+from pebble_sdk_platform import pebble_platforms
 
 import generate_appinfo
 
 #
 # Make each of the apps within the stored_apps directory
 #
-
-
-# -----------------------------------------------------------------------------------
-def configure(conf):
-    process_info = conf.path.parent.find_node('src/fw/process_management/pebble_process_info.h')
-    set_env_sdk_version(conf, process_info)
-    pebble_sdk_gcc.configure(conf)
-    conf.env.append_value('DEFINES', 'RELEASE')
 
 
 # -----------------------------------------------------------------------------------
@@ -62,8 +48,6 @@ def build_app(bld, app_name):
     app_elf_file = bld.path.get_bld().make_node('%s/pebble-app.elf' % (app_name))
 
     stored_apps_env = bld.all_envs['stored_apps']
-
-    maybe_import_internal(bld.env)
 
     # Fetch platform-specific defines and add them to CFLAGS
     platform_name = stored_apps_env['PLATFORM_NAME']
@@ -120,16 +104,14 @@ def build_app(bld, app_name):
 
 
 # -----------------------------------------------------------------------------------
-def build(bld):
-    # When you add a new stored app, you must also do the following to include it into the
-    # system resources and register it with the launcher:
-    #  1.) Add a raw resource entry with a  name  of "STORED_APP_<appname>" to
-    #      resources/normal/resource_map.json.
-    #      The "file" field should be set to normal/raw/app_<appname>.bin
-    #  2.) Add a new entry to the INIT_STORED_APPS array in system_app_registry.h
-    apps = bld.path.ant_glob('*', dir=True, src=False)
-    for app in apps:
-        build_app(bld, app.name)
-
+# When you add a new stored app, you must also do the following to include it into the
+# system resources and register it with the launcher:
+#  1.) Add a raw resource entry with a  name  of "STORED_APP_<appname>" to
+#      resources/normal/resource_map.json.
+#      The "file" field should be set to normal/raw/app_<appname>.bin
+#  2.) Add a new entry to the INIT_STORED_APPS array in system_app_registry.h
+apps = bld.path.ant_glob('*', dir=True, src=False)
+for app in apps:
+    build_app(bld, app.name)
 
 # vim:filetype=python

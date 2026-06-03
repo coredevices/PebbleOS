@@ -31,7 +31,10 @@ sys.path.append(os.path.join(waf_dir, 'waftools'))
 import waftools.gitinfo
 import waftools.ldscript
 import waftools.openocd
+import waftools.pebble_sdk_gcc as pebble_sdk_gcc
 from waftools.pebble_sdk_locator import activate_sdk
+
+from pebble_sdk_version import set_env_sdk_version
 
 # Prefer an installed PebbleOS SDK's binaries (toolchain, QEMU, sftool) when
 # present. Done at import time so it applies to every waf invocation.
@@ -68,10 +71,24 @@ def options(opt):
     opt.load('pebble_arm_gcc', tooldir='waftools')
     opt.load('show_configure', tooldir='waftools')
     opt.load('kconfig', tooldir='waftools')
-    opt.recurse('tests')
     opt.recurse('src/fw')
-    opt.recurse('src/idl')
-    opt.recurse('sdk')
+
+    gr = opt.add_option_group('test options')
+    gr.add_option('-D', '--debug_test', action='store_true',
+        help='Execute tests within GDB. Use alongside -M.')
+    gr.add_option('-M', '--match', dest='regex', default=None, action='store',
+        help='Run regex match tests. Example: ./waf test -M "test.*resource.*"')
+    gr.add_option('-L', '--list_tests', dest='list_tests', action='store_true',
+        help='List all test names. Usually used in conjunction with -M. Example: '
+             './waf test -M test_animation -L')
+    gr.add_option('-T', '--test_name', dest='test_name', default=None, action='store',
+        help='Run only the given test name. Usually used in conjunction with -M. Example: '
+             './waf test -M test_animation -T unschedule')
+    gr.add_option('-C', '--coverage', dest='coverage', action='store_true', help='Generate gcov test coverage data and use lcov to generate HTML report')
+    gr.add_option('--show_output', action='store_true', help='show test output')
+    gr.add_option('--no_run', action='store_true', help='Do not run the tests, just build them')
+    gr.add_option('--no_images', action='store_true', help='skip generation of test images, '
+                  'which are only required for some tests and can slow down build times')
     opt.add_option('--board', action='store',
                    choices=[ 'asterix',
                              'obelix_dvt',
@@ -92,8 +109,6 @@ def options(opt):
                    choices=waftools.openocd.JTAG_OPTIONS.keys(),
                    help='Which JTAG programmer we are using '
                         '(bb2 (default), olimex, ev2, etc)')
-    opt.add_option('--internal_sdk_build', action='store_true',
-                   help='Build the internal version of the SDK')
     opt.add_option('--nosleep', action='store_true',
                    help='Disable sleep and stop mode (to use JTAG+GDB)')
     opt.add_option('--nostop', action='store_true',
@@ -117,11 +132,6 @@ def options(opt):
     opt.add_option('--flash-log-level', default='info', choices=['error', 'warn', 'info', 'debug', 'debug_verbose'],
        help='Default flash log level')
 
-    opt.add_option('--lang',
-                   action='store',
-                   default='en_US',
-                   help='Which language to package (isocode)')
-
     opt.add_option('--compile_commands', action='store_true', help='Create a clang compile_commands.json')
     opt.add_option('--onlysdk', action='store_true', help="only build the sdk")
     opt.add_option('--no-link', action='store_true',
@@ -131,10 +141,6 @@ def options(opt):
     opt.add_option('--profiler', action='store_true', help='Enable the profiler.')
     opt.add_option('--profile_interrupts', action='store_true',
                    help='Enable profiling of all interrupts.')
-    opt.add_option('--voice_debug', action='store_true',
-                   help='Enable all voice logging.')
-    opt.add_option('--voice_codec_tests', action='store_true',
-                   help='Enable voice codec tests. Enables the profiler')
     opt.add_option('--no_sandbox', action='store_true',
                    help='Disable the MPU for 3rd party apps.')
     opt.add_option('--malloc_instrumentation', action='store_true',
@@ -158,14 +164,6 @@ def handle_configure_options(conf):
 
     if conf.options.performance_tests:
         conf.env.PERFORMANCE_TESTS = True
-
-    if conf.options.voice_debug:
-        conf.env.VOICE_DEBUG = True
-
-    if conf.options.voice_codec_tests:
-        conf.env.VOICE_CODEC_TESTS = True
-        conf.env.append_value('DEFINES', 'VOICE_CODEC_TESTS')
-        conf.options.profiler = True
 
     if conf.options.nosleep:
         conf.env.append_value('DEFINES', 'PBL_NOSLEEP')
@@ -219,13 +217,6 @@ def handle_configure_options(conf):
         if not conf.options.nostop:
             print("Enable --nostop for accurate profiling.")
             conf.env.append_value('DEFINES', 'PBL_NOSTOP')
-
-    if conf.options.voice_debug:
-        conf.env.append_value('DEFINES', 'VOICE_DEBUG')
-
-    conf.env.INTERNAL_SDK_BUILD = bool(conf.options.internal_sdk_build)
-    if conf.env.INTERNAL_SDK_BUILD:
-        print("Internal SDK enabled")
 
     if conf.options.lto:
         print("Turning on LTO.")
@@ -313,9 +304,8 @@ def configure(conf):
                       errmsg="Unable to locate the Node command. "
                              "Please check your Node installation and try again.")
 
-    conf.recurse('src/idl')
+    conf.load('protoc')
     conf.recurse('src/fw')
-    conf.recurse('sdk')
 
     if conf.env.RUNNER == 'openocd':
         waftools.openocd.write_cfg(conf)
@@ -399,7 +389,9 @@ def configure(conf):
 
     Logs.pprint('CYAN', 'Configuring stored apps environment')
     conf.setenv('stored_apps', base_env)
-    conf.recurse('stored_apps')
+    process_info = conf.path.find_node('src/fw/process_management/pebble_process_info.h')
+    set_env_sdk_version(conf, process_info)
+    pebble_sdk_gcc.configure(conf)
 
     # Confirm that requirements-*.txt and requirements-osx-brew.txt have been satisfied.
     import tool_check
@@ -765,31 +757,6 @@ def _check_firmware_image_size(ctx, path):
 
     return ('%d / %d bytes used (%d free)' %
             (firmware_size, max_firmware_size, (max_firmware_size - firmware_size)))
-
-
-def make_lang(ctx):
-    """generate translation files and update existing ones"""
-    ctx.recurse('resources/normal/base/lang')
-
-
-class PackLangCommand(BuildContext):
-    cmd = 'pack_lang'
-    fun = 'pack_lang'
-
-
-def pack_lang(ctx):
-    """generates pbpack for langs"""
-    ctx.recurse('resources/normal/base/lang')
-
-
-class PackAllLangsCommand(BuildContext):
-    cmd = 'pack_all_langs'
-    fun = 'pack_all_langs'
-
-
-def pack_all_langs(ctx):
-    """generates pbpack for all langs"""
-    ctx.recurse('resources/normal/base/lang')
 
 
 # Tool build commands
