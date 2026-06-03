@@ -29,7 +29,7 @@ void gh3026_reset_pin_ctrl(uint8_t pin_level) {
 #ifdef HRM_USE_GH3X2X
 
 #define GH3X2X_LOG_ENABLE 0
-#define GH3X2X_FIFO_WATERMARK_CONFIG 80
+#define GH3X2X_FIFO_WATERMARK_CONFIG 800
 #define GH3X2X_HR_SAMPLING_RATE 25
 
 static volatile uint32_t s_hrm_int_flag = false;
@@ -283,7 +283,7 @@ void gh3x2x_rawdata_notify(uint32_t *p_rawdata, uint32_t data_count) {
       for (idx=0; idx<HRM_PPG_CH_NUM; ++idx) {
         p_factory->ppg_array[idx][p_factory->wpos] = *p_rawdata++;
       }
-      
+
       p_factory->wpos++;
       if (p_factory->count < HRM_PPG_FACTORY_TEST_FIFO_LEN) {
         p_factory->count++;
@@ -307,7 +307,7 @@ void gh3x2x_rawdata_notify(uint32_t *p_rawdata, uint32_t data_count) {
     // calcu avr for each channel
     ppg_avg[idx] = total[idx] / p_factory->count;
   }
-  
+
   //let keep the factory test data report 2hz
   static int cnt = 0;
   if (cnt++ % 25) return;
@@ -321,7 +321,7 @@ void gh3x2x_rawdata_notify(uint32_t *p_rawdata, uint32_t data_count) {
     }
     hrm_manager_new_data_cb(&hrm_data);
   } else if (mode == GH3X2X_FUNCTION_TEST2) {
-    hrm_data.features = HRMFeature_Leakage; 
+    hrm_data.features = HRMFeature_Leakage;
     // calcu leakage: result = (ppg_avg-(2^23))*1800*1000/(20*100*2*(2^23));
     for (i=0; i<HRM_PPG_CH_NUM; ++i) {
       p_factory->result[i] = ((double)(ppg_avg[i] - (1<<23)) * 450) / (1<<23);
@@ -329,7 +329,7 @@ void gh3x2x_rawdata_notify(uint32_t *p_rawdata, uint32_t data_count) {
     }
     hrm_manager_new_data_cb(&hrm_data);
   } else {
-    
+
     ;
   }
 #endif
