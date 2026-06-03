@@ -67,14 +67,11 @@ jobs:
         run: |
           echo "BUILD_ID=$(readelf -n build/src/fw/tintin_fw.elf | sed -n -e 's/^.*Build ID: //p')" >> "$GITHUB_OUTPUT"
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v6
-        with:
-          aws-access-key-id: ${{ secrets.LOG_HASH_BUCKET_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.LOG_HASH_BUCKET_SECRET }}
-          aws-region: us-east-1
-
       - name: Upload PRF log hash dictionary
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.LOG_HASH_BUCKET_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.LOG_HASH_BUCKET_SECRET }}
+          AWS_DEFAULT_REGION: us-east-1
         run: |
           pip install awscli
           aws s3 cp build/src/fw/tintin_fw_loghash_dict.json \
@@ -181,16 +178,12 @@ jobs:
         run: |
           echo "BUILD_ID=$(readelf -n build/src/fw/tintin_fw.elf | sed -n -e 's/^.*Build ID: //p')" >> "$GITHUB_OUTPUT"
 
-      - name: Configure AWS credentials
-        if: ${{ github.repository == 'coredevices/PebbleOS' }}
-        uses: aws-actions/configure-aws-credentials@v6
-        with:
-          aws-access-key-id: ${{ secrets.LOG_HASH_BUCKET_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.LOG_HASH_BUCKET_SECRET }}
-          aws-region: us-east-1
-
       - name: Upload log hash dictionary
         if: ${{ github.repository == 'coredevices/PebbleOS' }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.LOG_HASH_BUCKET_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.LOG_HASH_BUCKET_SECRET }}
+          AWS_DEFAULT_REGION: us-east-1
         run: |
           pip install awscli
           aws s3 cp build/src/fw/tintin_fw_loghash_dict.json \
