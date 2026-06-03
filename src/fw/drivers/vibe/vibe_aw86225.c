@@ -73,6 +73,7 @@
 #define AW862XX_RTPCFG1_ADDRH_MASK                      (~(0x0F<<0))
 #define AW862XX_GLBRD5_STATE_MASK                       (0x0F)
 #define AW862XX_GLBRD5_STATE_STANDBY                    (0x00)
+#define AW862XX_TRIMCFG3_TRIM_LRA_MASK                  (~(0x3F))
 #define AW862XX_SYSCTRL1_RAMINIT_MASK                   (~(1<<3))
 #define AW862XX_SYSCTRL1_RAMINIT_ON                     (1<<3)
 #define AW862XX_SYSCTRL1_RAMINIT_OFF                    (0<<3)
@@ -330,7 +331,7 @@ void vibe_init(void) {
 
   ret &= prv_load_ram_waveform();
   if (s_trim_lra != AW862XX_TRIM_LRA_INVALID) {
-    ret &= prv_write_register(AW862XX_REG_TRIMCFG3, s_trim_lra);
+    ret &= prv_modify_reg(AW862XX_REG_TRIMCFG3, AW862XX_TRIMCFG3_TRIM_LRA_MASK, s_trim_lra);
   }
   ret &= prv_config_ram_loop_mode();
 
@@ -410,6 +411,9 @@ status_t vibe_calibrate(void) {
     return E_INVALID_OPERATION;
   }
 
+  // Measure F0 with a neutral trim.
+  prv_modify_reg(AW862XX_REG_TRIMCFG3, AW862XX_TRIMCFG3_TRIM_LRA_MASK, 0);
+
   f0 = prv_f0_detection();
   if (f0 < 0) {
     PBL_LOG_ERR("AW86225: F0 detection failed");
@@ -432,7 +436,7 @@ status_t vibe_calibrate(void) {
     return E_ERROR;
   }
 
-  f0_cali_step = 10000 * ((int)f0 - (int)AW86225->lra_frequency_hz) /
+  f0_cali_step = 100000 * ((int)f0 - (int)AW86225->lra_frequency_hz) /
                  ((int)AW86225->lra_frequency_hz * AW862XX_F0_CALI_LSB_PERMYRIAD);
   if (f0_cali_step >= 0) {
     if (f0_cali_step % 10 >= 5) {
@@ -455,11 +459,11 @@ status_t vibe_calibrate(void) {
     f0_cali_lra = (char)f0_cali_step + 32;
   }
 
-  prv_write_register(0x5A, f0_cali_lra & 0x3F);
   s_trim_lra = f0_cali_lra & 0x3F;
+  prv_modify_reg(AW862XX_REG_TRIMCFG3, AW862XX_TRIMCFG3_TRIM_LRA_MASK, s_trim_lra);
   s_drive_frequency_hz = f0;
   prv_config_cont_mode(AW862XX_CONTCFG8_DRV1_TIME, AW862XX_CONTCFG9_DRV2_TIME_MAX);
-  PBL_LOG_DBG("AW86225: F0 cali measured %d Hz, trim=0x%02x", f0, f0_cali_lra & 0x3F);
+  PBL_LOG_DBG("AW86225: F0 cali measured %d Hz, trim=0x%02x", f0, s_trim_lra);
 
   return S_SUCCESS;
 }
