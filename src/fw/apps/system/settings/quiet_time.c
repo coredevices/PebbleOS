@@ -369,11 +369,14 @@ static void prv_schedule_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
   bool can_add = (active_schedules < MAX_QUIET_TIME_SCHEDULES);
 
   const char *title = NULL;
+  bool title_needs_i18n = true;
   char *subtitle = NULL;
   const uint8_t buffer_length = 80;
+  char title_buf[buffer_length];
 
   if (row == 0) {
     title = i18n_get("Calendar Aware", data);
+    title_needs_i18n = false;
     subtitle = app_malloc_check(buffer_length);
     strncpy(subtitle, do_not_disturb_is_smart_dnd_enabled() ?
               i18n_ctx_get("QuietTime", "Enabled", data) :
@@ -381,7 +384,23 @@ static void prv_schedule_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
   } else if (row <= (uint16_t)active_schedules) {
     int idx = row - 1;
     QuietTimeScheduleConfig *config = &data->schedules[idx];
-    title = quiet_time_get_string_for_kind(config->kind);
+    if (config->kind == QT_KIND_CUSTOM) {
+      // "Custom: Mon,Wed,Fri" — show day list in title (i18n'd, no per-call alloc)
+      i18n_get_with_buffer(quiet_time_get_string_for_kind(QT_KIND_CUSTOM),
+                           title_buf, sizeof(title_buf));
+      size_t used = strlen(title_buf);
+      if (used + 2 < sizeof(title_buf)) {
+        title_buf[used++] = ':';
+        title_buf[used++] = ' ';
+        title_buf[used] = '\0';
+      }
+      quiet_time_get_string_for_custom(config->scheduled_days,
+                                       title_buf + used, sizeof(title_buf) - used);
+      title = title_buf;
+      title_needs_i18n = false;
+    } else {
+      title = quiet_time_get_string_for_kind(config->kind);
+    }
     subtitle = app_malloc_check(buffer_length);
     if (config->enabled) {
       prv_get_qt_time(config, subtitle, buffer_length);
@@ -390,12 +409,14 @@ static void prv_schedule_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
     }
   } else if (can_add && row == (uint16_t)(active_schedules + 1)) {
     title = i18n_get("+ Add Schedule", data);
+    title_needs_i18n = false;
     subtitle = NULL;
   } else {
     WTF;
   }
 
-  menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), subtitle, NULL);
+  const char *display_title = title_needs_i18n ? i18n_get(title, data) : title;
+  menu_cell_basic_draw(ctx, cell_layer, display_title, subtitle, NULL);
   if (subtitle) {
     app_free(subtitle);
   }

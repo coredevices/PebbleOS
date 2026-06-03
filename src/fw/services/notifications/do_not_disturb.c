@@ -410,6 +410,7 @@ void quiet_time_get_schedule(int index, QuietTimeScheduleConfig *out) {
 }
 
 void quiet_time_set_schedule(int index, const QuietTimeScheduleConfig *config) {
+  if (index < 0 || index >= MAX_QUIET_TIME_SCHEDULES) return;
   QuietTimeScheduleConfig stored = *config;
   stored.is_used = true;
   alerts_preferences_qt_set_schedule(index, &stored);
@@ -469,42 +470,58 @@ const char *quiet_time_get_string_for_kind(QuietTimeKind kind) {
 }
 
 void quiet_time_get_string_for_custom(const bool *scheduled_days, char *buffer, size_t buf_len) {
-  static const char *day_strings[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-  static const char *full_day_strings[] = {"Sundays", "Mondays", "Tuesdays", "Wednesdays",
-                                           "Thursdays", "Fridays", "Saturdays"};
+  static const char * const day_strings[] = {
+    i18n_noop("Sun"), i18n_noop("Mon"), i18n_noop("Tue"), i18n_noop("Wed"),
+    i18n_noop("Thu"), i18n_noop("Fri"), i18n_noop("Sat"),
+  };
+  static const char * const full_day_strings[] = {
+    i18n_noop("Sundays"), i18n_noop("Mondays"), i18n_noop("Tuesdays"), i18n_noop("Wednesdays"),
+    i18n_noop("Thursdays"), i18n_noop("Fridays"), i18n_noop("Saturdays"),
+  };
+
+  PBL_ASSERTN(buffer != NULL);
+  PBL_ASSERTN(buf_len > 0);
+  buffer[0] = '\0';
 
   int num_days = 0;
+  int last_day_idx = 0;
   for (int i = 0; i < DAYS_PER_WEEK; i++) {
-    if (scheduled_days[i]) num_days++;
+    if (scheduled_days[i]) {
+      num_days++;
+      last_day_idx = i;
+    }
   }
 
   if (num_days == 0) {
-    buffer[0] = '\0';
     return;
   }
 
   if (num_days == 1) {
-    for (int i = 0; i < DAYS_PER_WEEK; i++) {
-      if (scheduled_days[i]) {
-        strncpy(buffer, full_day_strings[i], buf_len);
-        return;
-      }
-    }
+    i18n_get_with_buffer(full_day_strings[last_day_idx], buffer, buf_len);
+    return;
   }
 
+  // Monday-first ordering: skip Sunday (index 0) and iterate Mon..Sat, then Sun.
   size_t pos = 0;
   for (int idx = 1; idx <= DAYS_PER_WEEK; idx++) {
     int i = idx % DAYS_PER_WEEK;
-    if (scheduled_days[i]) {
-      if (pos > 0 && pos < buf_len - 1) {
-        buffer[pos++] = ',';
-      }
-      size_t day_len = strlen(day_strings[i]);
-      if (pos + day_len < buf_len - 1) {
-        memcpy(buffer + pos, day_strings[i], day_len);
-        pos += day_len;
-      }
+    if (!scheduled_days[i]) {
+      continue;
     }
+    if (pos > 0) {
+      if (pos + 1 >= buf_len) {
+        break;
+      }
+      buffer[pos++] = ',';
+    }
+    char day_buf[12];
+    i18n_get_with_buffer(day_strings[i], day_buf, sizeof(day_buf));
+    size_t day_len = strlen(day_buf);
+    if (pos + day_len >= buf_len) {
+      break;
+    }
+    memcpy(buffer + pos, day_buf, day_len);
+    pos += day_len;
   }
   buffer[pos] = '\0';
 }
