@@ -447,14 +447,14 @@ static void prv_write_memory_regions(const MemoryRegion *regions, unsigned int c
 }
 
 #if defined(CONFIG_SOC_SF32LB52)
-// LCPU RAM lives in the LPSYS domain; reading it while that domain is powered
-// down hangs/faults. LP_ACTIVE reports whether it is reachable.
+// Wake the LCPU so its LPSYS RAM is reachable, letting BLE crashes (e.g. NimBLE
+// host asserts) capture the controller RAM. HAL_HPAON_WakeCore busy-waits for
+// the LCPU to ack; if it is fully powered down this blocks until the watchdog
+// reboots us, costing only this dump. We reset right after, so the wake request
+// is never balanced.
 static void prv_dump_lcpu_ram(uint32_t flash_base) {
-  if (hwp_hpsys_aon->ISSR & HPSYS_AON_ISSR_LP_ACTIVE) {
-    prv_write_memory_regions(&LCPU_MEMORY_REGION, 1, flash_base);
-  } else {
-    prv_debug_str("CD: LCPU domain off, skipping LCPU RAM");
-  }
+  HAL_HPAON_WakeCore(CORE_ID_LCPU);
+  prv_write_memory_regions(&LCPU_MEMORY_REGION, 1, flash_base);
 }
 #endif
 
