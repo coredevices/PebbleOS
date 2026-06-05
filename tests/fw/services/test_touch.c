@@ -261,3 +261,39 @@ void test_touch__subscribe_while_disabled_keeps_sensor_off(void) {
 
   s_remove_subscriber_cb(PebbleTask_App);
 }
+
+void test_touch__global_disable_drops_gestures(void) {
+  // Gestures (tap/double-tap) must honor the kill switch too, not just the
+  // finger up/down updates.
+  touch_service_set_globally_enabled(false);
+
+  touch_handle_gesture(TouchGesture_Tap, 10, 20);
+  cl_assert_equal_i(fake_event_get_count(), 0);
+
+  touch_handle_gesture(TouchGesture_DoubleTap, 30, 40);
+  cl_assert_equal_i(fake_event_get_count(), 0);
+
+  touch_service_set_globally_enabled(true);
+}
+
+void test_touch__gestures_delivered_when_enabled(void) {
+  touch_handle_gesture(TouchGesture_Tap, 10, 20);
+  cl_assert_equal_i(fake_event_get_count(), 1);
+
+  PebbleEvent event = fake_event_get_last();
+  cl_assert_equal_i(event.type, PEBBLE_GESTURE_EVENT);
+  cl_assert_equal_i(event.gesture.event.type, GestureEvent_Tap);
+}
+
+void test_touch__global_disable_sleeps_unsubscribed_sensor(void) {
+  // The driver can re-arm the sensor outside the service's subscriber
+  // bookkeeping (e.g. its I2C error-recovery path). Disabling globally must
+  // still put the chip to sleep, even when s_subscriber_count is 0.
+  s_touch_sensor_enabled = true;
+
+  touch_service_set_globally_enabled(false);
+  cl_assert(!s_touch_sensor_enabled);
+  cl_assert(s_touch_sensor_disable_count >= 1);
+
+  touch_service_set_globally_enabled(true);
+}
