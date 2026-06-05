@@ -81,12 +81,10 @@ void touch_service_set_globally_enabled(bool enabled) {
     return;
   }
   s_globally_enabled = enabled;
-  const bool has_subscribers = s_subscriber_count > 0;
+  const bool sensor_enabled = enabled && (s_subscriber_count > 0);
   mutex_unlock(s_touch_mutex);
 
-  if (has_subscribers) {
-    touch_sensor_set_enabled(enabled);
-  }
+  touch_sensor_set_enabled(sensor_enabled);
   if (!enabled) {
     // Avoid delivering stale position on re-enable.
     touch_reset();
@@ -194,6 +192,11 @@ void touch_handle_update(TouchState touch_state, int16_t x, int16_t y) {
 
 void touch_handle_gesture(TouchGesture gesture, int16_t x, int16_t y) {
   mutex_lock(s_touch_mutex);
+
+  if (!s_globally_enabled) {
+    mutex_unlock(s_touch_mutex);
+    return;
+  }
 
   prv_apply_rotation(&x, &y);
 
