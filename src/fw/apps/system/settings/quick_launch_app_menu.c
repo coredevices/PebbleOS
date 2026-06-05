@@ -28,6 +28,7 @@ typedef struct {
   AppMenuDataSource data_source;
   ButtonId button;
   bool is_tap;
+  bool is_combo;
   int16_t selected;
   OptionMenu *option_menu;
 } QuickLaunchAppMenuData;
@@ -105,7 +106,18 @@ static void prv_menu_select(OptionMenu *option_menu, int selection, void *contex
     if (data->is_tap) {
       quick_launch_single_click_set_app(data->button, INSTALL_ID_INVALID);
       quick_launch_single_click_set_enabled(data->button, false);
-    } else {
+    }
+    else if(data->is_combo){
+      if(data->button == BUTTON_ID_BACK){
+        quick_launch_combo_back_up_set_app(INSTALL_ID_INVALID);
+        quick_launch_combo_back_up_set_enabled(false);
+      }
+      else if(data->button == BUTTON_ID_DOWN){
+        quick_launch_combo_up_down_set_app(INSTALL_ID_INVALID);
+        quick_launch_combo_up_down_set_enabled(false);
+      }
+    }
+    else {
       quick_launch_set_app(data->button, INSTALL_ID_INVALID);
       quick_launch_set_enabled(data->button, false);
     }
@@ -115,7 +127,17 @@ static void prv_menu_select(OptionMenu *option_menu, int selection, void *contex
         app_menu_data_source_get_node_at_index(&data->data_source, selection - NUM_CUSTOM_CELLS);
     if (data->is_tap) {
       quick_launch_single_click_set_app(data->button, app_menu_node->install_id);
-    } else {
+    }
+    else if(data->is_combo){
+      if(data->button == BUTTON_ID_BACK){
+        quick_launch_combo_back_up_set_app(app_menu_node->install_id);
+      }
+      else if(data->button == BUTTON_ID_DOWN){
+        quick_launch_combo_up_down_set_app(app_menu_node->install_id);
+      }
+
+    }
+    else {
       quick_launch_set_app(data->button, app_menu_node->install_id);
     }
     app_window_stack_pop(true);
@@ -136,11 +158,21 @@ static void prv_menu_unload(OptionMenu *option_menu, void *context) {
   app_free(data);
 }
 
-void quick_launch_app_menu_window_push(ButtonId button, bool is_tap) {
+static AppInstallId  prv_get_combo_app(ButtonId button){
+  switch(button){
+    case BUTTON_ID_BACK:
+      return quick_launch_combo_back_up_get_app();
+    case BUTTON_ID_DOWN:
+      return quick_launch_combo_up_down_get_app();
+    default:
+      return INSTALL_ID_INVALID;
+  }
+}
+void quick_launch_app_menu_window_push(ButtonId button, bool is_tap, bool is_combo) {
   QuickLaunchAppMenuData *data = app_zalloc_check(sizeof(*data));
   data->button = button;
   data->is_tap = is_tap;
-
+  data->is_combo = is_combo;
   OptionMenu *option_menu = option_menu_create();
   data->option_menu = option_menu;
 
@@ -150,7 +182,7 @@ void quick_launch_app_menu_window_push(ButtonId button, bool is_tap) {
   }, data);
 
   const AppInstallId install_id = is_tap ? quick_launch_single_click_get_app(button)
-                                          : quick_launch_get_app(button);
+                                          : (is_combo ? prv_get_combo_app(button): quick_launch_get_app(button));
   const int app_index = app_menu_data_source_get_index_of_app_with_install_id(&data->data_source,
                                                                               install_id);
 
