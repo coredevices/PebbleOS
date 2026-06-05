@@ -5,6 +5,7 @@
 #include <comm/ble/gap_le_connection.h>
 #include <host/ble_gap.h>
 #include <host/ble_gatt.h>
+#include <host/ble_store.h>
 #include <host/ble_uuid.h>
 #include <os/os_mbuf.h>
 #include <system/logging.h>
@@ -26,10 +27,20 @@ static int pebble_pairing_service_get_connectivity_status(
     return -1;
   }
 
+  struct ble_store_key_sec key_sec = {
+    .peer_addr = desc.peer_id_addr,
+  };
+  struct ble_store_value_sec value_sec;
+  bool is_bonded = (ble_store_read_peer_sec(&key_sec, &value_sec) == 0);
+
+  int bond_count = 0;
+  ble_store_util_count(BLE_STORE_OBJ_TYPE_PEER_SEC, &bond_count);
+
   memset(status, 0, sizeof(*status));
   status->ble_is_connected = true;
-  status->ble_is_bonded = desc.sec_state.bonded;
+  status->ble_is_bonded = is_bonded;
   status->ble_is_encrypted = desc.sec_state.encrypted;
+  status->has_bonded_gateway = (bond_count > 0);
   status->supports_pinning_without_security_request = true;
 
   return 0;
