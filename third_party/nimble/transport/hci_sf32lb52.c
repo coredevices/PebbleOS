@@ -336,12 +336,6 @@ void ble_transport_ll_init(void) {
   PBL_ASSERTN(s_hci_task_handle);
 }
 
-// Hold the LP active request (no cancel) so LPSYS RAM stays reachable from the
-// HCPU while the coredump runs after a crash on host reset.
-void ble_transport_ll_wake_lcpu(void) {
-  HAL_HPAON_WakeCore(CORE_ID_LCPU);
-}
-
 void ble_transport_ll_deinit(void) {
   NVIC_DisableIRQ(LCPU2HCPU_IRQn);
   ipc_queue_close(s_ipc_port);
