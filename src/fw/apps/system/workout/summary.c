@@ -5,6 +5,7 @@
 #include "countdown.h"
 #include "selection.h"
 #include "utils.h"
+#include "util/size.h"
 
 #include "applib/app.h"
 #include "applib/ui/action_menu_hierarchy.h"
@@ -30,8 +31,9 @@ typedef struct WorkoutSummaryWindow {
   StatusBarLayer status_layer;
   Layer base_layer;
 
+  GBitmap *action_bar_up;
+  GBitmap *action_bar_down;
   GBitmap *action_bar_start;
-  GBitmap *action_bar_more;
 
   ActivitySessionType activity_type;
 
@@ -55,6 +57,40 @@ static KinoReel* prv_get_icon_for_activity(ActivitySessionType type) {
     default:
       return kino_reel_create_with_resource(RESOURCE_ID_WORKOUT_APP_RUN);
   }
+}
+
+static const ActivitySessionType s_supported_workout_types[] = {
+  ActivitySessionType_Run,
+  ActivitySessionType_Walk,
+  ActivitySessionType_Open,
+};
+
+static ActivitySessionType prv_get_adjacent_workout_type(ActivitySessionType activity_type,
+                                                         const int offset) {
+  const int count = ARRAY_LENGTH(s_supported_workout_types);
+  int start_index = 0;
+
+  for (int i = 0; i < count; i++) {
+    if (s_supported_workout_types[i] == activity_type) {
+      start_index = i;
+      break;
+    }
+  }
+
+  for (int i = 0; i < count; i++) {
+    const int step = ((i + 1) * offset);
+    int next_index = (start_index + step) % count;
+    if (next_index < 0) {
+      next_index += count;
+    }
+    const ActivitySessionType next_type = s_supported_workout_types[next_index];
+    if (workout_service_is_workout_type_supported(next_type)) {
+      return next_type;
+    }
+  }
+
+  // If no supported workout type is available, keep the current selection.
+  return activity_type;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -94,22 +130,38 @@ static void prv_base_layer_update_proc(struct Layer *layer, GContext *ctx) {
 
 static void prv_up_click_handler(ClickRecognizerRef recognizer, void *context) {
   WorkoutSummaryWindow *summary_window = context;
+  const ActivitySessionType next_type =
+      prv_get_adjacent_workout_type(summary_window->activity_type, +1);
+  workout_summary_update_activity_type(summary_window, next_type);
+  if (summary_window->select_workout_cb) {
+    summary_window->select_workout_cb(next_type);
+  }
+}
+
+static void prv_down_click_handler(ClickRecognizerRef recognizer, void *context) {
+  WorkoutSummaryWindow *summary_window = context;
+  const ActivitySessionType next_type =
+      prv_get_adjacent_workout_type(summary_window->activity_type, -1);
+  workout_summary_update_activity_type(summary_window, next_type);
+  if (summary_window->select_workout_cb) {
+    summary_window->select_workout_cb(next_type);
+  }
+}
+
+static void prv_select_click_handler(ClickRecognizerRef recognizer, void *context) {
+  WorkoutSummaryWindow *summary_window = context;
 
   workout_countdown_start(summary_window->activity_type, summary_window->start_workout_cb);
 
   window_stack_remove(&summary_window->window, false);
 }
 
-static void prv_down_click_handler(ClickRecognizerRef recognizer, void *context) {
-  WorkoutSummaryWindow *summary_window = context;
-
-  workout_selection_push(summary_window->select_workout_cb);
-}
-
 static void prv_click_config_provider(void *context) {
   window_set_click_context(BUTTON_ID_UP, context);
+  window_set_click_context(BUTTON_ID_SELECT, context);
   window_set_click_context(BUTTON_ID_DOWN, context);
   window_single_click_subscribe(BUTTON_ID_UP, prv_up_click_handler);
+  window_single_click_subscribe(BUTTON_ID_SELECT, prv_select_click_handler);
   window_single_click_subscribe(BUTTON_ID_DOWN, prv_down_click_handler);
 }
 
@@ -117,7 +169,8 @@ static void prv_window_unload_handler(Window *window) {
   WorkoutSummaryWindow *summary_window = window_get_user_data(window);
   if (summary_window) {
     kino_reel_destroy(summary_window->icon);
-    gbitmap_destroy(summary_window->action_bar_more);
+    gbitmap_destroy(summary_window->action_bar_down);
+    gbitmap_destroy(summary_window->action_bar_up);
     gbitmap_destroy(summary_window->action_bar_start);
     action_bar_layer_deinit(&summary_window->action_bar);
     status_bar_layer_deinit(&summary_window->status_layer);
@@ -171,13 +224,13 @@ WorkoutSummaryWindow *workout_summary_window_create(ActivitySessionType activity
   action_bar_layer_set_click_config_provider(action_bar, prv_click_config_provider);
   action_bar_layer_add_to_window(action_bar, window);
 
-  summary_window->action_bar_start =
-      gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_START);
-  summary_window->action_bar_more =
-      gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_MORE);
+  summary_window->action_bar_up = gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_UP);
+  summary_window->action_bar_down = gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_DOWN);
+  summary_window->action_bar_start = gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_START);
 
-  action_bar_layer_set_icon(action_bar, BUTTON_ID_UP, summary_window->action_bar_start);
-  action_bar_layer_set_icon(action_bar, BUTTON_ID_DOWN, summary_window->action_bar_more);
+  action_bar_layer_set_icon(action_bar, BUTTON_ID_UP, summary_window->action_bar_up);
+  action_bar_layer_set_icon(action_bar, BUTTON_ID_SELECT, summary_window->action_bar_start);
+  action_bar_layer_set_icon(action_bar, BUTTON_ID_DOWN, summary_window->action_bar_down);
 
   workout_summary_update_activity_type(summary_window, activity_type);
 
@@ -190,7 +243,15 @@ void workout_summary_window_push(WorkoutSummaryWindow *summary_window) {
 
 void workout_summary_update_activity_type(WorkoutSummaryWindow *summary_window,
                                           ActivitySessionType activity_type) {
+  if ((summary_window->activity_type == activity_type) && summary_window->icon) {
+    return;
+  }
+
   summary_window->activity_type = activity_type;
+  if (summary_window->icon) {
+    kino_reel_destroy(summary_window->icon);
+  }
   summary_window->icon = prv_get_icon_for_activity(activity_type);
   summary_window->name = workout_utils_get_name_for_activity(activity_type);
+  layer_mark_dirty(&summary_window->base_layer);
 }
