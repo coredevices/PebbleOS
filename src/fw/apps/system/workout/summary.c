@@ -102,20 +102,18 @@ static void prv_render_activity_type(GContext *ctx, Layer *layer, KinoReel *icon
   const GTextOverflowMode overflow_mode = GTextOverflowModeWordWrap;
   const GTextAlignment alignment = GTextAlignmentCenter;
   const int16_t rl_margin = PBL_IF_RECT_ELSE(4, 16);
+#if defined(CONFIG_BOARD_QEMU_EMERY)
+  const int16_t emery_icon_x_nudge = -1;
+#else
+  const int16_t emery_icon_x_nudge = 0;
+#endif
 
   GRect drawing_rect = grect_inset(layer->bounds, GEdgeInsets(0, rl_margin));
 
   const GSize icon_size = kino_reel_get_size(icon);
   const int icon_x = drawing_rect.origin.x + PBL_IF_RECT_ELSE(0, (rl_margin / 2))
                    + (drawing_rect.size.w / 2) - (icon_size.w / 2)
-                   + PBL_PLATFORM_SWITCH(PBL_PLATFORM_TYPE_CURRENT,
-                                         /*aplite*/ 0,
-                                         /*basalt*/ 0,
-                                         /*chalk*/ 0,
-                                         /*diorite*/ 0,
-                                         /*emery*/ -1,
-                                         /*flint*/ 0,
-                                         /*gabbro*/ 0);
+                   + emery_icon_x_nudge;
   const int icon_y = PBL_IF_RECT_ELSE(45, 49);
   kino_reel_draw(icon, ctx, GPoint(icon_x, icon_y));
 
