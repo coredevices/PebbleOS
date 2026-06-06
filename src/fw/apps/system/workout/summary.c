@@ -226,7 +226,7 @@ WorkoutSummaryWindow *workout_summary_window_create(ActivitySessionType activity
 
   summary_window->action_bar_up = gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_UP);
   summary_window->action_bar_down = gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_DOWN);
-  summary_window->action_bar_start = gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_CHECK);
+  summary_window->action_bar_start = gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_START);
 
   action_bar_layer_set_icon(action_bar, BUTTON_ID_UP, summary_window->action_bar_up);
   action_bar_layer_set_icon(action_bar, BUTTON_ID_SELECT, summary_window->action_bar_start);
