@@ -27,9 +27,6 @@ static const uint32_t s_bt_stack_start_stop_timeout_ms = 10000;
 
 extern void pebble_pairing_service_init(void);
 extern void nimble_discover_init(void);
-#ifdef CONFIG_SOC_SF32LB52
-extern void ble_transport_ll_wake_lcpu(void);
-#endif
 
 #if NIMBLE_CFG_CONTROLLER
 static TaskHandle_t s_ll_task_handle;
@@ -60,9 +57,8 @@ static void prv_sync_cb(void) {
 static void prv_reset_cb(int reason) {
   PBL_LOG_D_WRN(LOG_DOMAIN_BT, "NimBLE host reset (reason: 0x%04x)", (uint16_t)reason);
 #ifdef CONFIG_SOC_SF32LB52
-  // Controller stopped answering HCI. Keep the LCPU reachable and crash so the
-  // coredump captures LCPU RAM; the reboot cold-recovers the controller.
-  ble_transport_ll_wake_lcpu();
+  // Controller stopped answering HCI. Crash so the coredump captures LCPU RAM
+  // (core_dump wakes the LCPU itself); the reboot cold-recovers the controller.
   PBL_CROAK("NimBLE host reset 0x%04x; captured LCPU RAM", (uint16_t)reason);
 #endif
 }
@@ -155,10 +151,7 @@ bool bt_driver_start(BTDriverConfig *config) {
   ble_hs_sched_start();
   f_rc = xSemaphoreTake(s_host_started, milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms));
   if (f_rc != pdTRUE) {
-#ifdef CONFIG_SOC_SF32LB52
-    // Keep the LCPU reachable so the coredump captures its RAM.
-    ble_transport_ll_wake_lcpu();
-#endif
+    // core_dump wakes the LCPU itself, so its RAM is captured here too.
     PBL_CROAK("NimBLE host start timed out");
   }
 
