@@ -12,6 +12,7 @@ config SOC_NRF52
 
 config SOC_SF32LB52
     bool "SiFli SF32LB52"
+    select HAS_HIBERNATE
 
 config SOC_QEMU
     bool "QEMU emulated"
@@ -53,3 +54,16 @@ config MPU_TYPE_ARMV8M
 config MPU_TYPE_ARMV7M
     bool
     default y if !MPU_TYPE_ARMV8M
+
+config HAS_HIBERNATE
+    bool
+    help
+      Platform supports deep hibernate mode for standby. SoCs that
+      provide this capability should select this symbol.
+
+config HIBERNATE
+    bool "Enable hibernate mode"
+    depends on HAS_HIBERNATE
+    help
+      Use deep hibernate mode when entering standby. This provides
+      better power savings.

@@ -6,6 +6,7 @@ bld.objects(
     source=[
         'init.c',
         'freertos.c',
+        'soc_power.c',
     ],
     use=[
         'fw_includes',
