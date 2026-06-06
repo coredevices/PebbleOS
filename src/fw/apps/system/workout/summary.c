@@ -102,6 +102,8 @@ static void prv_render_activity_type(GContext *ctx, Layer *layer, KinoReel *icon
   const GTextOverflowMode overflow_mode = GTextOverflowModeWordWrap;
   const GTextAlignment alignment = GTextAlignmentCenter;
   const int16_t rl_margin = PBL_IF_RECT_ELSE(4, 16);
+  // qemu_emery renders these workout icons one pixel to the right compared to flint.
+  // Apply a board-specific nudge so Workout/Run/Walk remain visually centered.
 #if defined(CONFIG_BOARD_QEMU_EMERY)
   const int16_t emery_icon_x_nudge = -1;
 #else
