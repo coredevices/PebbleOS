@@ -1598,7 +1598,7 @@ static const char* prv_get_intro_str_for_activity(ActivitySession *session) {
 
 // ------------------------------------------------------------------------------------------------
 static const char *prv_get_distance_unit(void *i18n_owner) {
-  return health_util_get_distance_string(i18n_get("MI", i18n_owner), i18n_get("KM", i18n_owner));
+  return health_util_get_distance_string(i18n_get("mi", i18n_owner), i18n_get("km", i18n_owner));
 }
 
 static void prv_add_metric_duration_info(StringList *headings, int headings_buf_size,

@@ -580,6 +580,9 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
                   CharVisitorCallback char_visitor_cb) {
   PBL_ASSERTN(char_visitor_cb);
 
+  // Render pre-loads glyph bitmaps below; measure must not, or the deep flash load overflows.
+  const bool is_render = (char_visitor_cb != update_dimensions_char_visitor_cb);
+
   // We used to check that the line height was <= the container height here - no longer required,
   // as the vertical overflow is handled during layout.
 
@@ -885,6 +888,12 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
     };
     cursor.origin.x += walked_width_px;
 
+    if (is_render && !codepoint_is_zero_width(current_codepoint) &&
+        !codepoint_is_unicode_space(current_codepoint)) {
+      // Pre-load here so the deeper render_glyph() is a cache hit, not a deep flash read.
+      text_resources_get_glyph(&ctx->font_cache, current_codepoint, text_box_params->font);
+    }
+
     char_visitor_cb(ctx, text_box_params, line, cursor, current_codepoint);
 
     walked_width_px += next_glyph_width_px;
@@ -941,6 +950,9 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
     };
     cursor.origin.x += walked_width_px;
     if (char_visitor_cb) {
+      if (is_render) {
+        text_resources_get_glyph(&ctx->font_cache, line->suffix_codepoint, text_box_params->font);
+      }
       char_visitor_cb(ctx, text_box_params, line, cursor, line->suffix_codepoint);
     }
   }
@@ -1027,7 +1039,7 @@ T_STATIC NOINLINE MOCKABLE void prv_debug_perimeter(GContext *ctx, const GRangeH
   // PBL-23045 Eventually remove perimeter debugging
   // Draw a red horizontal line to show the range of the current lines perimeter
   if (app_state_get_text_perimeter_debugging_enabled()) {
-#if !defined(UNITTEST) && !defined(PLATFORM_TINTIN)
+#if !defined(UNITTEST)
     const Fixed_S16_3 fixed_x1 = (Fixed_S16_3) {
       .integer = h_range->origin_x,
     };

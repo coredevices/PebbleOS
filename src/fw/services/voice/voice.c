@@ -66,20 +66,6 @@ static void prv_send_event(VoiceEventType event_type, VoiceStatus status,
                            PebbleVoiceServiceEventData *data);
 static void prv_session_result_timeout(void * data);
 
-#if defined(VOICE_DEBUG)
-// printf implemented here because the ADT Speex debug library calls printf for logging
-int printf(const char *template, ...) {
-  va_list args;
-  va_start(args, template);
-  char s[100];
-  vsnprintf(s, sizeof(s), template, args);
-  VOICE_LOG("%s", s);
-
-  va_end(args);
-  return 0;
-}
-#endif
-
 static void prv_audio_data_handler(int16_t *samples, size_t sample_count, void *context) {
   if (!voice_speex_is_initialized()) {
     VOICE_LOG("Speex not initialized, dropping audio data");

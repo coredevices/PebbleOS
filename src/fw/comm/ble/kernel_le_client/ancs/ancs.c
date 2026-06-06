@@ -879,12 +879,17 @@ void ancs_handle_service_discovered(BLECharacteristic *characteristics) {
   memcpy(s_ancs_client->characteristics, characteristics,
          sizeof(BLECharacteristic) * NumANCSCharacteristic);
 
-  // Subscribe to Data, then to Notification characteristics:
+  // Subscribe to Data, then to Notification characteristics. Reject the service
+  // if subscribing fails instead of asserting (e.g. a "fake ANCS" without CCCD).
   for (int c = ANCSCharacteristicData; c >= ANCSCharacteristicNotification; --c) {
     const BTErrno e = gatt_client_subscriptions_subscribe(characteristics[c],
                                                           BLESubscriptionNotifications,
                                                           GAPLEClientKernel);
-    PBL_ASSERTN(e == BTErrnoOK);
+    if (e != BTErrnoOK) {
+      PBL_LOG_WRN("Failed to subscribe ANCS charx %d (err=%d), ignoring service", c, e);
+      ancs_invalidate_all_references();
+      return;
+    }
   }
 }
 

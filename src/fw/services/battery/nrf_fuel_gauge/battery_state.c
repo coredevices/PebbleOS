@@ -60,6 +60,9 @@ static const struct battery_model prv_battery_model = {
 static PreciseBatteryChargeState s_last_battery_charge_state;
 static TimerID s_periodic_timer_id = TIMER_INVALID_ID;
 
+static volatile bool s_update_pending = false;
+static volatile bool s_pending_force_update = false;
+
 static BatteryChargeStatus s_last_chg_status;
 static uint64_t prv_ref_time;
 static int32_t s_last_voltage_mv;
@@ -78,18 +81,18 @@ static bool s_charger_enabled;
 static uint32_t s_save_counter;
 
 #ifdef MANUFACTURING_FW
-// In manufacturing firmware, use dedicated MFG_STATE flash region
+// In manufacturing firmware, use dedicated MFG_BATTERY_STATE flash region
 static void prv_erase_state(void) {
-  flash_erase_subsector_blocking(FLASH_REGION_MFG_STATE_BEGIN);
+  flash_erase_subsector_blocking(FLASH_REGION_MFG_BATTERY_STATE_BEGIN);
   PBL_LOG_DBG("Fuel gauge state erased");
 }
 
 static bool prv_load_state(void *state, size_t size) {
-  if (size > (FLASH_REGION_MFG_STATE_END - FLASH_REGION_MFG_STATE_BEGIN)) {
+  if (size > (FLASH_REGION_MFG_BATTERY_STATE_END - FLASH_REGION_MFG_BATTERY_STATE_BEGIN)) {
     return false;
   }
 
-  flash_read_bytes(state, FLASH_REGION_MFG_STATE_BEGIN, size);
+  flash_read_bytes(state, FLASH_REGION_MFG_BATTERY_STATE_BEGIN, size);
 
   // Check if the flash region contains valid data (not all 0xFF)
   uint8_t *bytes = (uint8_t *)state;
@@ -118,13 +121,13 @@ static void prv_save_state(void) {
     return;
   }
 
-  if (sizeof(buf) > (FLASH_REGION_MFG_STATE_END - FLASH_REGION_MFG_STATE_BEGIN)) {
-    PBL_LOG_ERR("Fuel gauge state too large for MFG_STATE region");
+  if (sizeof(buf) > (FLASH_REGION_MFG_BATTERY_STATE_END - FLASH_REGION_MFG_BATTERY_STATE_BEGIN)) {
+    PBL_LOG_ERR("Fuel gauge state too large for MFG_BATTERY_STATE region");
     return;
   }
 
-  flash_erase_subsector_blocking(FLASH_REGION_MFG_STATE_BEGIN);
-  flash_write_bytes(buf, FLASH_REGION_MFG_STATE_BEGIN, sizeof(buf));
+  flash_erase_subsector_blocking(FLASH_REGION_MFG_BATTERY_STATE_BEGIN);
+  flash_write_bytes(buf, FLASH_REGION_MFG_BATTERY_STATE_BEGIN, sizeof(buf));
 
   PBL_LOG_DBG("Fuel gauge state saved");
 }
@@ -296,7 +299,9 @@ static void prv_update_state(void *force_update) {
   float pct;
   int ret;
 
-  update = force_update != NULL;
+  s_update_pending = false;
+  update = (force_update != NULL) || s_pending_force_update;
+  s_pending_force_update = false;
 
   ret = battery_get_constants(&constants);
   if (ret < 0) {
@@ -410,14 +415,26 @@ static void prv_update_state(void *force_update) {
   }
 }
 
+static void prv_enqueue_update(bool force) {
+  if (force) {
+    s_pending_force_update = true;
+  }
+  if (s_update_pending) {
+    return;
+  }
+  if (system_task_add_callback(prv_update_state, NULL)) {
+    s_update_pending = true;
+  }
+}
+
 static void prv_update_callback(void *data) {
   new_timer_stop(s_periodic_timer_id);
-  system_task_add_callback(prv_update_state, data);
+  prv_enqueue_update(data != NULL);
 }
 
 static void prv_callback_from_regular_timer(void *data) {
   // no need to stop the new_timer here, since this came from the regular_timer
-  system_task_add_callback(prv_update_state, data);
+  prv_enqueue_update(false);
 }
 
 static void prv_schedule_update(uint32_t delay, bool force_update) {

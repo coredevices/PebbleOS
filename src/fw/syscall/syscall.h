@@ -255,6 +255,7 @@ time_t sys_wakeup_query(WakeupId wakeup_id);
 AppLaunchReason sys_process_get_launch_reason(void);
 ButtonId sys_process_get_launch_button(void);
 uint32_t sys_process_get_launch_args(void);
+AppQuickLaunchAction sys_process_get_quick_launch_action(void);
 AppExitReason sys_process_get_exit_reason(void);
 void sys_process_set_exit_reason(AppExitReason exit_reason);
 void sys_process_get_wakeup_info(WakeupInfo *info);

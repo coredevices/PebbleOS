@@ -19,7 +19,6 @@
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 
-#include "resource/resource_ids.auto.h"
 #include "system/logging.h"
 #include "system/passert.h"
 
@@ -27,9 +26,6 @@
 #include "applib/event_service_client.h"
 #include "applib/graphics/gtypes.h"
 #include "applib/ui/app_window_stack.h"
-#include "applib/ui/bitmap_layer.h"
-#include "applib/ui/kino/kino_layer.h"
-#include "applib/ui/kino/kino_reel.h"
 #include "applib/ui/layer.h"
 #include "applib/ui/qr_code.h"
 #include "applib/ui/text_layer.h"
@@ -43,7 +39,6 @@
 #include "pbl/services/bluetooth/local_id.h"
 #include "pbl/services/bluetooth/pairability.h"
 #include "pbl/services/comm_session/session.h"
-#include "pbl/services/shared_prf_storage/shared_prf_storage.h"
 
 #include "git_version.auto.h"
 
@@ -52,20 +47,13 @@
 #include <stdbool.h>
 
 #define QR_URL_BUFFER_SIZE 72
-#define URL_BUFFER_SIZE 32
 #define NAME_BUFFER_SIZE (BT_DEVICE_NAME_BUFFER_SIZE + 2)
 
 typedef struct RecoveryFUAppData {
   Window launch_app_window;
 
-#if defined(CONFIG_BOARD_FAMILY_ASTERIX) || defined(CONFIG_BOARD_FAMILY_OBELIX) || defined(CONFIG_BOARD_FAMILY_GETAFIX)
   QRCode qr_code;
   char qr_url_buffer[QR_URL_BUFFER_SIZE];
-#else
-  KinoLayer kino_layer;
-  TextLayer url_text_layer;
-  char url_text_buffer[URL_BUFFER_SIZE];
-#endif
   bool is_showing_version;
   TextLayer name_text_layer;
   char name_text_buffer[NAME_BUFFER_SIZE];
@@ -89,9 +77,7 @@ typedef struct RecoveryFUAppData {
   GettingStartedButtonComboState button_combo_state;
 } RecoveryFUAppData;
 
-#if defined(CONFIG_BOARD_FAMILY_ASTERIX) || defined(CONFIG_BOARD_FAMILY_OBELIX) || defined(CONFIG_BOARD_FAMILY_GETAFIX)
 static const char *s_qr_url_fmt = "https://qr.repebble.com/?sn=%s&model=%s";
-#endif
 
 // Unfortunately, the event_service_client_subscribe doesn't take a void *context...
 static RecoveryFUAppData *s_fu_app_data;
@@ -158,72 +144,6 @@ static void prv_click_configure(void* context) {
 ////////////////////////////////////////////////////////////
 // Windows
 
-#if !defined(CONFIG_BOARD_FAMILY_ASTERIX) && !defined(CONFIG_BOARD_FAMILY_OBELIX) && !defined(CONFIG_BOARD_FAMILY_GETAFIX)
-static void prv_update_background_image_and_url_text(RecoveryFUAppData *data) {
-  uint32_t icon_res_id;
-  const char *url_string;
-  GColor background;
-  GRect kino_area;
-  int16_t icon_x_offset;
-  int16_t icon_y_offset;
-  int16_t text_y_offset;
-
-  // Have we gone through first use before? If not, show first use UI. Otherwise show recovery UI.
-  const bool first_use_is_complete = shared_prf_storage_get_getting_started_complete();
-
-  // Pick the right layout for the screen
-  if (first_use_is_complete || data->has_pebble_mobile_app_connected) {
-    // If first use was completed, it means we're in recovery mode.
-    icon_res_id = RESOURCE_ID_LAUNCH_APP;
-    icon_x_offset = PBL_IF_RECT_ELSE(49, 67);
-    icon_y_offset = 28;
-    text_y_offset = 124;
-  } else {
-    icon_res_id = RESOURCE_ID_MOBILE_APP_ICON;
-    icon_x_offset = PBL_IF_RECT_ELSE(49, 67);
-    icon_y_offset = 38;
-    text_y_offset = 90;
-  }
-
-  if (first_use_is_complete) {
-#if PBL_BW
-    // Override the icon to use the fullscreen version
-    icon_res_id = RESOURCE_ID_LAUNCH_APP;
-    icon_x_offset = 0;
-    icon_y_offset = 0;
-
-    url_string = ""; // URL is baked into the background image
-    background = GColorWhite;
-#else
-    url_string = "pebble.com/sos";
-    background = PBL_IF_COLOR_ELSE(GColorRed, GColorWhite);;
-#endif
-  } else {
-    url_string = "pebble.com/app";
-    background = PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite);
-  }
-
-  // Create the icon
-  KinoReel *icon_reel = kino_reel_create_with_resource(icon_res_id);
-  if (!icon_reel) {
-    PBL_CROAK("Couldn't create kino reel");
-  }
-
-  // Position the icon
-  kino_area = GRect(icon_x_offset, icon_y_offset, data->launch_app_window.layer.bounds.size.w,
-                    data->launch_app_window.layer.bounds.size.h);
-  layer_set_frame((Layer *) &data->kino_layer, &kino_area);
-  kino_layer_set_alignment(&data->kino_layer, GAlignTopLeft);
-  window_set_background_color(&data->launch_app_window, background);
-
-  kino_layer_set_reel(&data->kino_layer, icon_reel, /* take_ownership */ true);
-
-  // Configure the url text layer
-  data->url_text_layer.layer.frame.origin.y = text_y_offset;
-  text_layer_set_text(&data->url_text_layer, url_string);
-}
-#endif
-
 static void prv_update_name_text(RecoveryFUAppData *data) {
   const GAPLEConnection *gap_conn = gap_le_connection_any();
 
@@ -251,48 +171,11 @@ static void prv_update_name_text(RecoveryFUAppData *data) {
     }
   }
   text_layer_set_text(&data->name_text_layer, data->name_text_buffer);
-
-#if !defined(CONFIG_BOARD_FAMILY_ASTERIX) && !defined(CONFIG_BOARD_FAMILY_OBELIX) && !defined(CONFIG_BOARD_FAMILY_GETAFIX)
-  // Set the name font
-  const bool first_use_is_complete = shared_prf_storage_get_getting_started_complete();
-  const char *name_font_key;
-  if (first_use_is_complete || data->has_pebble_mobile_app_connected || data->is_showing_version) {
-    name_font_key = FONT_KEY_GOTHIC_14;
-  } else {
-    name_font_key = FONT_KEY_GOTHIC_24;
-  }
-  text_layer_set_font(&data->name_text_layer, fonts_get_system_font(name_font_key));
-
-  // Update the size of the name text layer based on the new content.
-
-  // First set the text layer to be the width of the entire window and only a single line of text
-  // high.
-  layer_set_frame(&data->name_text_layer.layer,
-                  &(GRect) { { 0, 0 }, { data->launch_app_window.layer.frame.size.w, 26 } });
-
-  // Ask the text layer for a content size based on the frame we just set. If there's no text,
-  // hide the layer by setting the size to zero.
-  GSize content_size = { 0, 0 };
-  if (strlen(data->name_text_layer.text)) {
-    content_size = text_layer_get_content_size(app_state_get_graphics_context(),
-                                               &data->name_text_layer);
-    content_size.w += 4;
-    content_size.h += 4;
-  }
-
-  // Actually set the frame centered on the screen and just below the url_text_layer.
-  const int16_t window_width = data->launch_app_window.layer.frame.size.w;
-  const int16_t text_x_offset = (window_width - content_size.w) / 2;
-  const int16_t text_y_offset = 22;
-  const GRect frame = { { text_x_offset, text_y_offset }, content_size };
-  layer_set_frame(&data->name_text_layer.layer, &frame);
-#endif
 }
 
 static void prv_window_load(Window* window) {
   struct RecoveryFUAppData *data = (struct RecoveryFUAppData*) window_get_user_data(window);
 
-#if defined(CONFIG_BOARD_FAMILY_ASTERIX) || defined(CONFIG_BOARD_FAMILY_OBELIX) || defined(CONFIG_BOARD_FAMILY_GETAFIX)
   char serial_number[MFG_SERIAL_NUMBER_SIZE + 1];
   char model_name[MFG_INFO_MODEL_STRING_LENGTH];
 
@@ -339,35 +222,6 @@ static void prv_window_load(Window* window) {
   data->is_showing_version = false;
 
   prv_update_name_text(data);
-#else
-  KinoLayer *kino_layer = &data->kino_layer;
-  kino_layer_init(kino_layer, &window->layer.bounds);
-  layer_add_child(&window->layer, &kino_layer->layer);
-
-  const char *url_font_key = FONT_KEY_GOTHIC_18_BOLD;
-  const GColor name_bg_color = GColorWhite;
-  const char *name_font_key = FONT_KEY_GOTHIC_14;
-
-  TextLayer* url_text_layer = &data->url_text_layer;
-  text_layer_init_with_parameters(url_text_layer,
-                                  &GRect(0, 124, window->layer.bounds.size.w, 64),
-                                  NULL, fonts_get_system_font(url_font_key),
-                                  GColorBlack, GColorClear, GTextAlignmentCenter,
-                                  GTextOverflowModeTrailingEllipsis);
-  layer_add_child(&window->layer, &url_text_layer->layer);
-
-  TextLayer* name_text_layer = &data->name_text_layer;
-  text_layer_init_with_parameters(name_text_layer,
-                                  &data->launch_app_window.layer.frame,
-                                  NULL, fonts_get_system_font(name_font_key),
-                                  GColorBlack, name_bg_color, GTextAlignmentCenter,
-                                  GTextOverflowModeTrailingEllipsis);
-  layer_add_child(&url_text_layer->layer, &name_text_layer->layer);
-  data->is_showing_version = false;
-
-  prv_update_background_image_and_url_text(data);
-  prv_update_name_text(data);
-#endif
 }
 
 static void prv_push_window(struct RecoveryFUAppData* data) {
@@ -418,9 +272,6 @@ static void prv_pebble_mobile_app_event_handler(PebbleEvent *event, void *contex
     s_fu_app_data->has_pebble_mobile_app_connected = true;
     gap_le_device_name_request_all();
   }
-#if !defined(CONFIG_BOARD_FAMILY_ASTERIX) && !defined(CONFIG_BOARD_FAMILY_OBELIX) && !defined(CONFIG_BOARD_FAMILY_GETAFIX)
-  prv_update_background_image_and_url_text(s_fu_app_data);
-#endif
   prv_update_name_text(s_fu_app_data);
 }
 
@@ -491,10 +342,6 @@ static void handle_deinit(void) {
   RecoveryFUAppData *data = app_state_get_user_data();
 
   getting_started_button_combo_deinit(&data->button_combo_state);
-
-#if !defined(CONFIG_BOARD_FAMILY_ASTERIX) && !defined(CONFIG_BOARD_FAMILY_OBELIX) && !defined(CONFIG_BOARD_FAMILY_GETAFIX)
-  kino_layer_deinit(&data->kino_layer);
-#endif
 
   event_service_client_unsubscribe(&data->pebble_mobile_app_event_info);
   event_service_client_unsubscribe(&data->bt_connection_event_info);

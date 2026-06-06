@@ -508,18 +508,55 @@ uint16_t prv_scale_coordinate(const uint32_t scale_factor, uint16_t val) {
   return val_fixed >> 16;  // Get integer part
 }
 
+#if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED && !RECOVERY_FW
+static TimelinePeekUnsupportedFaceMode prv_get_unsupported_face_mode_for_timeline_peek(void) {
+  const TimelinePeekUnsupportedFaceMode mode =
+      timeline_peek_prefs_get_unsupported_face_mode();
+  const PebbleProcessMd *app_md = app_manager_get_current_app_md();
+  if (mode == TimelinePeekUnsupportedFaceMode_None || !app_md ||
+      app_md->process_type != ProcessTypeWatchface) {
+    return TimelinePeekUnsupportedFaceMode_None;
+  }
+
+  UnobstructedAreaState *unobstructed_state = app_state_get_unobstructed_area_state();
+  if (unobstructed_area_service_is_subscribed(unobstructed_state) ||
+      unobstructed_area_service_has_requested_area(unobstructed_state)) {
+    return TimelinePeekUnsupportedFaceMode_None;
+  }
+
+  const int16_t obstruction_y = timeline_peek_get_origin_y();
+  return ((obstruction_y > 0) && (obstruction_y < DISP_ROWS)) ?
+      mode : TimelinePeekUnsupportedFaceMode_None;
+}
+#endif
+
 void compositor_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_to_origin) {
   compositor_scaled_app_fb_copy_offset(update_rect, copy_relative_to_origin, 0 /* offset_y */);
 }
 
-void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_relative_to_origin, int16_t offset_y) {
+void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_relative_to_origin,
+                                          int16_t offset_y) {
   GBitmap src_bitmap = compositor_get_app_framebuffer_as_bitmap();
   GBitmap dst_bitmap = compositor_get_framebuffer_as_bitmap();
 
-  if (prv_app_framebuffer_matches_display()) {
+#if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED && !RECOVERY_FW
+  const TimelinePeekUnsupportedFaceMode unsupported_face_mode =
+      prv_get_unsupported_face_mode_for_timeline_peek();
+  const bool squish_watchface_for_peek =
+      (unsupported_face_mode == TimelinePeekUnsupportedFaceMode_SquishUp);
+  const bool shift_watchface_for_peek =
+      (unsupported_face_mode == TimelinePeekUnsupportedFaceMode_ShiftUp);
+#else
+  const bool squish_watchface_for_peek = false;
+  const bool shift_watchface_for_peek = false;
+#endif
+
+  if (prv_app_framebuffer_matches_display() && !squish_watchface_for_peek &&
+      !shift_watchface_for_peek) {
     GBitmap sub_bitmap;
     gbitmap_init_as_sub_bitmap(&sub_bitmap, &src_bitmap, update_rect);
-    bitblt_bitmap_into_bitmap(&dst_bitmap, &sub_bitmap, update_rect.origin, GCompOpAssign, GColorWhite);
+    bitblt_bitmap_into_bitmap(&dst_bitmap, &sub_bitmap, update_rect.origin, GCompOpAssign,
+                              GColorWhite);
     return;
   }
 
@@ -532,20 +569,58 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
   const int16_t disp_height = dst_bitmap.bounds.size.h;
   // Check if we should use scaling mode for legacy apps
   const LegacyAppRenderMode render_mode = shell_prefs_get_legacy_app_render_mode();
-  if (render_mode >= LegacyAppRenderMode_ScalingNearest) {
+  const bool should_scale_app =
+      (render_mode >= LegacyAppRenderMode_ScalingNearest) || squish_watchface_for_peek ||
+      (shift_watchface_for_peek && prv_app_framebuffer_matches_display());
+  if (should_scale_app) {
     const bool bilinear = (render_mode == LegacyAppRenderMode_ScalingBilinear);
+    const bool shift_scaled_watchface_for_peek =
+        shift_watchface_for_peek && !squish_watchface_for_peek;
+    const GRect scale_to = squish_watchface_for_peek
+        ? GRect(0, 0, disp_width, timeline_peek_get_origin_y())
+        : GRect(0, 0, disp_width, disp_height);
+
+    if (shift_scaled_watchface_for_peek) {
+      int16_t first_row = CLIP(update_rect.origin.y, 0, DISP_ROWS - 1);
+      int16_t last_row = CLIP(update_rect.origin.y + update_rect.size.h, first_row, DISP_ROWS);
+      for (int16_t y = first_row; y < last_row; y++) {
+        GBitmapDataRowInfo dst_row_info = gbitmap_get_data_row_info(&dst_bitmap, y);
+        const int16_t start_x = MAX(update_rect.origin.x, dst_row_info.min_x);
+        const int16_t end_x = MIN(update_rect.origin.x + update_rect.size.w,
+                                  dst_row_info.max_x + 1);
+        memset(&dst_row_info.data[start_x], GColorBlack.argb, end_x - start_x);
+      }
+    }
 
     // Calculate scaling factors using fixed-point arithmetic (16.16 format)
     // This gives us sub-pixel precision for better scaling
-    const uint32_t scale_x = ((uint32_t)app_width << 16) / disp_width;
-    const uint32_t scale_y = ((uint32_t)app_height << 16) / disp_height;
+    const uint32_t scale_x = ((uint32_t)app_width << 16) / scale_to.size.w;
+    const uint32_t scale_y = ((uint32_t)app_height << 16) / scale_to.size.h;
+    const int16_t app_shift_y = timeline_peek_get_origin_y() - scale_to.size.h;
 
     for (int16_t dst_y = 0; dst_y < update_rect.size.h; dst_y++) {
       const int16_t dst_y_offset = dst_y + update_rect.origin.y + offset_y;
       if (dst_y_offset < 0 || dst_y_offset >= disp_height) continue;
+      if ((squish_watchface_for_peek &&
+           (dst_y_offset < scale_to.origin.y ||
+            dst_y_offset >= scale_to.origin.y + scale_to.size.h)) ||
+          (shift_scaled_watchface_for_peek &&
+           (dst_y_offset >= timeline_peek_get_origin_y()))) {
+        continue;
+      }
 
-      const uint16_t dst_y_coord = copy_relative_to_origin ?
-          CLIP(dst_y_offset, 0, disp_height - 1) : dst_y;
+      uint16_t dst_y_coord;
+      if (squish_watchface_for_peek) {
+        dst_y_coord = dst_y_offset - scale_to.origin.y;
+      } else if (shift_scaled_watchface_for_peek) {
+        const int16_t shifted_y = dst_y_offset - app_shift_y;
+        if (shifted_y < 0 || shifted_y >= scale_to.size.h) {
+          continue;
+        }
+        dst_y_coord = shifted_y;
+      } else {
+        dst_y_coord = copy_relative_to_origin ? CLIP(dst_y_offset, 0, disp_height - 1) : dst_y;
+      }
       const uint32_t src_y_fixed = (uint32_t)dst_y_coord * scale_y;
       const int16_t src_y = src_y_fixed >> 16;
 
@@ -573,9 +648,15 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
         if (dst_x_offset < dst_row_info.min_x || dst_x_offset > dst_row_info.max_x) {
           continue;
         }
+        if (squish_watchface_for_peek &&
+            (dst_x_offset < scale_to.origin.x ||
+             dst_x_offset >= scale_to.origin.x + scale_to.size.w)) {
+          continue;
+        }
 
-        const uint16_t dst_x_coord = copy_relative_to_origin ?
-            CLIP(dst_x_offset, 0, disp_width - 1) : dst_x;
+        const uint16_t dst_x_coord = squish_watchface_for_peek
+            ? (dst_x_offset - scale_to.origin.x)
+            : copy_relative_to_origin ? CLIP(dst_x_offset, 0, disp_width - 1) : dst_x;
         const uint32_t src_x_fixed = (uint32_t)dst_x_coord * scale_x;
         const int16_t src_x = src_x_fixed >> 16;
 
@@ -627,6 +708,36 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
           dst_line[dst_x_offset] = result;
         }
       }
+    }
+  } else if (shift_watchface_for_peek) {
+    const int16_t app_offset_x = (disp_width - app_width) / 2;
+    const int16_t app_offset_y = timeline_peek_get_origin_y() - app_height;
+    const GRect shifted_region = GRect(app_offset_x, app_offset_y, app_width, app_height);
+    const GRect unobstructed_region = GRect(0, 0, disp_width, timeline_peek_get_origin_y());
+
+    int16_t first_row = CLIP(update_rect.origin.y, 0, DISP_ROWS - 1);
+    int16_t last_row = CLIP(update_rect.origin.y + update_rect.size.h, first_row, DISP_ROWS);
+    for (int16_t y = first_row; y < last_row; y++) {
+      GBitmapDataRowInfo dst_row_info = gbitmap_get_data_row_info(&dst_bitmap, y);
+      const int16_t start_x = MAX(update_rect.origin.x, dst_row_info.min_x);
+      const int16_t end_x = MIN(update_rect.origin.x + update_rect.size.w, dst_row_info.max_x + 1);
+      memset(&dst_row_info.data[start_x], GColorBlack.argb, end_x - start_x);
+    }
+
+    GRect clipped_update_region = update_rect;
+    grect_clip(&clipped_update_region, &unobstructed_region);
+    grect_clip(&clipped_update_region, &shifted_region);
+    if (clipped_update_region.size.w > 0 && clipped_update_region.size.h > 0) {
+      GBitmap sub_bitmap;
+      const GRect src_rect = GRect(
+        clipped_update_region.origin.x - app_offset_x,
+        clipped_update_region.origin.y - app_offset_y + offset_y,
+        clipped_update_region.size.w,
+        clipped_update_region.size.h
+      );
+      gbitmap_init_as_sub_bitmap(&sub_bitmap, &src_bitmap, src_rect);
+      bitblt_bitmap_into_bitmap(&dst_bitmap, &sub_bitmap, clipped_update_region.origin,
+                                GCompOpAssign, GColorWhite);
     }
   } else
 #endif

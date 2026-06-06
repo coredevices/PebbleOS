@@ -75,3 +75,14 @@ bool mfg_info_get_test_result(MfgTest test);
 void mfg_info_write_als_result(uint32_t reading);
 
 uint32_t mfg_info_get_als_result(void);
+
+//! Value returned by mfg_info_get_vibe_cali() when the unit has not been
+//! calibrated.
+#define MFG_INFO_VIBE_CALI_INVALID 0xFF
+
+//! Get the stored vibration motor calibration (driver-specific trim value).
+//! @return the stored value, or MFG_INFO_VIBE_CALI_INVALID if not calibrated.
+uint8_t mfg_info_get_vibe_cali(void);
+
+//! Store the vibration motor calibration (driver-specific trim value).
+void mfg_info_set_vibe_cali(uint8_t cali);

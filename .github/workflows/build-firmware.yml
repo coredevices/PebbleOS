@@ -14,7 +14,7 @@ jobs:
     outputs:
       should-build: ${{ github.event_name == 'push' || steps.filter.outputs.src == 'true' }}
     steps:
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         if: github.event_name == 'pull_request'
         id: filter
         with:
@@ -55,7 +55,7 @@ jobs:
         run: git config --system --add safe.directory "${GITHUB_WORKSPACE}"
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           submodules: true
@@ -80,7 +80,7 @@ jobs:
         run: ./waf bundle
 
       - name: Store
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: firmware-${{ matrix.board }}
           path: |
@@ -94,16 +94,16 @@ jobs:
           echo "BUILD_ID=$(readelf -n build/src/fw/tintin_fw.elf | sed -n -e 's/^.*Build ID: //p')" >> "$GITHUB_OUTPUT"
 
       - name: Upload log hash dictionary
-        uses: Noelware/s3-action@2.3.1
         if: ${{ github.event_name == 'push' && github.repository == 'coredevices/PebbleOS' }}
-        with:
-          access-key-id: ${{ secrets.LOG_HASH_BUCKET_KEY_ID }}
-          secret-key: ${{ secrets.LOG_HASH_BUCKET_SECRET }}
-          endpoint: ${{ vars.LOG_HASH_BUCKET_ENDPOINT }}
-          bucket: ${{ vars.LOG_HASH_BUCKET_NAME }}
-          files: |
-            build/src/fw/tintin_fw_loghash_dict.json
-          path-format: ${{ steps.build_id.outputs.BUILD_ID }}-${{ github.sha }}-normal.json
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.LOG_HASH_BUCKET_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.LOG_HASH_BUCKET_SECRET }}
+          AWS_DEFAULT_REGION: us-east-1
+        run: |
+          pip install awscli
+          aws s3 cp build/src/fw/tintin_fw_loghash_dict.json \
+            "s3://${{ vars.LOG_HASH_BUCKET_NAME }}/${{ steps.build_id.outputs.BUILD_ID }}-${{ github.sha }}-normal.json" \
+            --endpoint-url "${{ vars.LOG_HASH_BUCKET_ENDPOINT }}"
 
   build-firmware-status:
     needs: [changes-firmware, build-firmware]

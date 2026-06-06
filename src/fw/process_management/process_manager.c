@@ -712,6 +712,14 @@ DEFINE_SYSCALL(uint32_t, sys_process_get_launch_args, void) {
 }
 
 // -------------------------------------------------------------------------------------------
+DEFINE_SYSCALL(AppQuickLaunchAction, sys_process_get_quick_launch_action, void) {
+  if (sys_process_get_launch_reason() != APP_LAUNCH_QUICK_LAUNCH) {
+    return APP_QUICK_LAUNCH_ACTION_NONE;
+  }
+  return (AppQuickLaunchAction)(uintptr_t) process_manager_get_current_process_args();
+}
+
+// -------------------------------------------------------------------------------------------
 DEFINE_SYSCALL(AppExitReason, sys_process_get_exit_reason, void) {
   return prv_get_context()->exit_reason;
 }

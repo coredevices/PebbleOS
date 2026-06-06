@@ -218,6 +218,7 @@ static void prv_vibe_kernel_main_cb(void *callback_context) {
   if (s_alarm_popup_data) {
     if (s_alarm_popup_data->vibe_count < s_alarm_popup_data->max_vibes) {
       s_alarm_popup_data->vibe_count++;
+      vibes_cancel();
       vibe_score_do_vibe(s_alarm_popup_data->vibe_score);
 #ifdef CONFIG_SPEAKER
       if (s_alarm_popup_data->sound_active &&

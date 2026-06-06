@@ -120,16 +120,13 @@ void system_task_watchdog_feed(void) {
   task_watchdog_bit_set(PebbleTask_KernelBackground);
 }
 
-static void handle_system_task_send_failure(SystemTaskEventCallback cb) {
-  register uintptr_t lr __asm("lr");
-  uintptr_t saved_lr = lr;
-
+static void handle_system_task_send_failure(SystemTaskEventCallback cb, uintptr_t caller_lr) {
   PBL_LOG_ERR("System task queue full. Dropped cb: %p, current cb: %p", cb, s_current_cb);
 
   RebootReason reason = {
     .code = RebootReasonCode_EventQueueFull,
     .event_queue = {
-      .push_lr = (uint32_t) saved_lr,
+      .push_lr = (uint32_t) caller_lr,
       .current_event = (uint32_t) s_current_cb,
       .dropped_event = (uint32_t) cb
     }
@@ -140,6 +137,8 @@ static void handle_system_task_send_failure(SystemTaskEventCallback cb) {
 }
 
 bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data, bool* should_context_switch) {
+  // Capture caller LR at entry; reading from a deeper helper is unreliable.
+  uintptr_t caller_lr = (uintptr_t)__builtin_return_address(0);
   if (!prv_is_accepting_callbacks()) {
     return false;
   }
@@ -151,7 +150,7 @@ bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data, b
   signed portBASE_TYPE tmp;
   bool success = (xQueueSendToBackFromISR(s_system_task_queue, &event, &tmp) == pdTRUE);
   if (!success) {
-    handle_system_task_send_failure(cb);
+    handle_system_task_send_failure(cb, caller_lr);
   }
 
   *should_context_switch = (tmp == pdTRUE);
@@ -160,6 +159,7 @@ bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data, b
 }
 
 bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
+  uintptr_t caller_lr = (uintptr_t)__builtin_return_address(0);
   if (!prv_is_accepting_callbacks()) {
     return false;
   }
@@ -179,7 +179,7 @@ bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
     // we want to fall through to the handle_system_task_send_failure and not just get killed by the watchdog.
     bool success = (xQueueSendToBack(s_system_task_queue, &event, milliseconds_to_ticks(3000)) == pdTRUE);
     if (!success) {
-      handle_system_task_send_failure(cb);
+      handle_system_task_send_failure(cb, caller_lr);
     }
   }
 

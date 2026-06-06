@@ -19,8 +19,10 @@ bool watchdog_check_reset_flag(void) {
   return 0;
 }
 
+static McuRebootReason s_cached_reset_flag;
+
 McuRebootReason watchdog_clear_reset_flag(void) {
-  McuRebootReason mcu_reboot_reason = {
+  s_cached_reset_flag = (McuRebootReason){
     .brown_out_reset = 0,
     .pin_reset = 0,
     .power_on_reset = 1,
@@ -30,5 +32,9 @@ McuRebootReason watchdog_clear_reset_flag(void) {
     .low_power_manager_reset = 0,
   };
 
-  return mcu_reboot_reason;
+  return s_cached_reset_flag;
+}
+
+McuRebootReason watchdog_get_reset_flag(void) {
+  return s_cached_reset_flag;
 }

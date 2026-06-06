@@ -108,6 +108,27 @@ static void prv_log_stuck_task(RebootReason *reboot_reason, PebbleTask task) {
   reboot_reason->watchdog.stuck_task_lr = (uint32_t)current_lr;
 }
 
+// TCB-only variant of prv_log_failed_message; no logging or FreeRTOS calls
+// so it's safe from above configMAX_SYSCALL_INTERRUPT_PRIORITY.
+static void prv_capture_stuck_task_info(RebootReason *reboot_reason) {
+  const PebbleTask tasks_in_reverse_priority[] = {
+    PebbleTask_KernelBackground,
+    PebbleTask_KernelMain,
+    PebbleTask_PULSE,
+    PebbleTask_NewTimers
+  };
+
+  for (unsigned int i = 0; i < ARRAY_LENGTH(tasks_in_reverse_priority); ++i) {
+    const uint8_t task_index = tasks_in_reverse_priority[i];
+    const PebbleTaskBitset task_mask = (1 << task_index);
+    if ((s_watchdog_mask & task_mask) && !(s_watchdog_bits & task_mask)) {
+      TaskHandle_t *task_handle = pebble_task_get_handle_for_task(task_index);
+      reboot_reason->watchdog.stuck_task_pc = (uint32_t)ulTaskDebugGetStackedPC(task_handle);
+      reboot_reason->watchdog.stuck_task_lr = (uint32_t)ulTaskDebugGetStackedLR(task_handle);
+    }
+  }
+}
+
 static void prv_log_failed_message(RebootReason *reboot_reason) {
   PBL_LOG_SYNC_WRN("Watchdog feed failed, last feed %dms ago, current status 0x%"PRIx16" mask 0x%"PRIx16,
       (s_ticks_since_successful_feed * 1000) / TIMER_INTERRUPT_HZ,
@@ -366,6 +387,11 @@ static void prv_task_watchdog_feed(void) {
     // an ISR or low priority interrupts are disabled, so coredump now
     if (s_ticks_since_successful_feed >= WATCHDOG_COREDUMP_TICK_CNT) {
 #if !defined(NO_WATCHDOG)
+      // Low-pri handler didn't run; capture stuck_task_pc/lr ourselves so
+      // Memfault has a real PC to fingerprint on.
+      prv_capture_stuck_task_info(&reboot_reason);
+      reboot_reason_clear();
+      reboot_reason_set(&reboot_reason);
       reset_due_to_software_failure();
 #endif
     }

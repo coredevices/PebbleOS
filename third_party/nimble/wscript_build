@@ -56,7 +56,7 @@ nimble_use =[
     'freertos',
 ]
 
-if bld.env.bt_controller == 'nrf52':
+if bld.env.CONFIG_SOC_NRF52:
     nimble_sources += bld.path.ant_glob([
         'mynewt-nimble/nimble/controller/src/*.c',
         'mynewt-nimble/nimble/drivers/nrf5x/src/*.c',
@@ -82,7 +82,7 @@ if bld.env.bt_controller == 'nrf52':
 
     nimble_use.append('hal_nordic')
 
-elif bld.env.bt_controller == 'sf32lb52':
+elif bld.env.CONFIG_SOC_SF32LB52:
     nimble_sources += [
         'transport/hci_sf32lb52.c',
         '../nonfree/pebbleos-nonfree/sf32lb52/lcpu_52x.c',

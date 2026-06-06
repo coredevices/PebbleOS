@@ -14,3 +14,6 @@ void watchdog_feed(void);
 
 bool watchdog_check_reset_flag(void);
 McuRebootReason watchdog_clear_reset_flag(void);
+
+//! Returns the cached value from the most recent watchdog_clear_reset_flag().
+McuRebootReason watchdog_get_reset_flag(void);

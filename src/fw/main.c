@@ -245,6 +245,11 @@ static void init_drivers(void) {
   flash_enable_write_protection();
   flash_prf_set_protection(true);
 
+  uint8_t vibe_cali = mfg_info_get_vibe_cali();
+  if (vibe_cali != MFG_INFO_VIBE_CALI_INVALID) {
+    vibe_apply_calibration(vibe_cali);
+  }
+
 #ifdef CONFIG_MIC
   mic_init(MIC);
 #endif

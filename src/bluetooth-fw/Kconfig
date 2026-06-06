@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menu "Bluetooth"
+
+choice BT_FW
+    prompt "Bluetooth backend"
+    default BT_FW_STUB
+    help
+      Which Bluetooth backend implementation to build. The default is
+      derived from the SoC (see each src/fw/soc/<soc>/Kconfig.defconfig);
+      the stub is the fallback when no SoC default applies.
+
+config BT_FW_NIMBLE
+    bool "NimBLE"
+
+config BT_FW_QEMU
+    bool "QEMU transport"
+
+config BT_FW_STUB
+    bool "Stub (no backend)"
+
+endchoice
+
+config GH3X2X_TUNING_SERVICE_ENABLED
+    bool "GH3X2X tuning service"
+    depends on HRM_GH3X2X
+    help
+      Build the GH3X2X heart-rate sensor tuning GATT service, used to
+      tune the sensor over BLE. Off by default.
+
+endmenu

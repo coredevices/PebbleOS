@@ -20,7 +20,7 @@
 #include <stdio.h>
 
 T_STATIC const char *iOS_NOTIF_PREF_DB_FILE_NAME = "iosnotifprefdb";
-T_STATIC const int iOS_NOTIF_PREF_MAX_SIZE = KiBYTES(10);
+T_STATIC const int iOS_NOTIF_PREF_MAX_SIZE = KiBYTES(32);
 
 
 typedef struct PACKED {

@@ -112,6 +112,13 @@ static const MemoryRegion MEMORY_REGIONS_DUMP[] = {
   { .start = (void *)&NVIC->IABR, .length = sizeof(NVIC->IABR) },  // Active interrupts
 };
 
+#if defined(CONFIG_SOC_SF32LB52)
+// LCPU RAM is dumped last and only when its domain is up; see prv_dump_lcpu_ram().
+static const MemoryRegion LCPU_MEMORY_REGION = {
+  .start = (void *)COREDUMP_LCPU_RAM_START, .length = COREDUMP_LCPU_RAM_SIZE,
+};
+#endif
+
 // -------------------------------------------------------------------------------------------------
 // Flash driver dual-API.
 static bool s_use_cd_flash_driver = true;
@@ -439,6 +446,18 @@ static void prv_write_memory_regions(const MemoryRegion *regions, unsigned int c
   }
 }
 
+#if defined(CONFIG_SOC_SF32LB52)
+// Wake the LCPU so its LPSYS RAM is reachable, letting BLE crashes (e.g. NimBLE
+// host asserts) capture the controller RAM. HAL_HPAON_WakeCore busy-waits for
+// the LCPU to ack; if it is fully powered down this blocks until the watchdog
+// reboots us, costing only this dump. We reset right after, so the wake request
+// is never balanced.
+static void prv_dump_lcpu_ram(uint32_t flash_base) {
+  HAL_HPAON_WakeCore(CORE_ID_LCPU);
+  prv_write_memory_regions(&LCPU_MEMORY_REGION, 1, flash_base);
+}
+#endif
+
 // Write the Core Dump Image Header
 // Returns number of bytes written @ flash_addr
 static uint32_t prv_write_image_header(uint32_t flash_addr, uint8_t core_number,
@@ -655,6 +674,11 @@ EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
     }
     prvTaskInfoCallback(&task_info, NULL);
   }
+
+#if defined(CONFIG_SOC_SF32LB52)
+  // Last: its read can hang/fault, so do it after the essential chunks are saved.
+  prv_dump_lcpu_ram(flash_base);
+#endif
 
   // Write out chunk terminator
   chunk_hdr.key = CORE_DUMP_CHUNK_KEY_TERMINATOR;

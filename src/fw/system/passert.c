@@ -160,6 +160,6 @@ NORETURN app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info) {
 }
 
 NORETURN app_error_handler_bare(uint32_t error_code) {
-  app_error_fault_handler(error_code, 0, 0);
+  app_error_fault_handler(error_code, (uint32_t)__builtin_return_address(0), 0);
 }
 #endif

@@ -13,7 +13,7 @@ Before attempting to flash, check the documentation for each {doc}`board <../boa
 You can flash the built firmware by running:
 
 ```shell
-./waf flash
+./pbl flash
 ```
 
 In some cases, you may have to specify the `--tty $SERIAL_ADAPTER` option where `$SERIAL_ADAPTER` is the path for your serial adapter, e.g. `/dev/ttyACM0`, `/dev/tty.usbmodem1102`, etc.
@@ -23,14 +23,14 @@ Some boards support direct resource programming by passing the `--resources` opt
 The alternative is to flash while the firmware is running via the serial port using:
 
 ```shell
-./waf image_resources --tty $SERIAL_ADAPTER
+./pbl image_resources --tty $SERIAL_ADAPTER
 ```
 
 When both firmware and resources are flashed, you should observe the watch booting into the main application.
 You can also see the logs by opening the console:
 
 ```shell
-./waf console --tty $SERIAL_ADAPTER
+./pbl console --tty $SERIAL_ADAPTER
 ```
 
 Try sending `help` to get a list of available console commands.

@@ -114,48 +114,7 @@ static uint32_t s_als_cached_level;
 static RtcTicks s_als_cached_ticks;  // 0 = invalid
 #define ALS_CACHE_TTL_TICKS (RTC_TICKS_HZ)  // 1 second
 
-//! Event-gated continuous ALS:
-//!
-//! Wake-related entry points call prv_als_prime_for_interaction(), which (if
-//! not already primed) takes a single ambient_light_prime() refcount and
-//! starts a release timer for ALS_PRIME_HOLDOFF_MS. Each subsequent wake-y
-//! call rearms the timer. When it eventually fires, we drop the prime so the
-//! sensor goes back to idle.
-//!
-//! While primed, the W1160 runs in continuous mode: ALS reads collapse to a
-//! plain register read once one IT has elapsed, and the cache hits more often
-//! because reads are cheap enough that callers don't gate on them. The
-//! holdoff is sized to cover typical multi-wake patterns ("raise wrist, lower,
-//! raise again a few seconds later") so we keep sampling across them rather
-//! than re-paying the first-IT wait per wake.
-static TimerID s_als_prime_release_timer_id;
-static bool s_als_primed;
-#define ALS_PRIME_HOLDOFF_MS (5000)
-
 static void prv_change_state(BacklightState new_state);
-
-//! Timer callback: holdoff expired, drop the prime so the W1160 stops
-//! integrating in the background. Runs on the new_timer task.
-static void prv_als_prime_release_callback(void *data) {
-  mutex_lock(s_mutex);
-  if (s_als_primed) {
-    s_als_primed = false;
-    ambient_light_release();
-  }
-  mutex_unlock(s_mutex);
-}
-
-//! Open or extend an "interaction window" during which the W1160 is held in
-//! continuous-sampling mode. Call from any wake-event-y entry point before
-//! consulting ALS. Caller must hold s_mutex.
-static void prv_als_prime_for_interaction(void) {
-  if (!s_als_primed) {
-    s_als_primed = true;
-    ambient_light_prime();
-  }
-  new_timer_start(s_als_prime_release_timer_id, ALS_PRIME_HOLDOFF_MS,
-                  prv_als_prime_release_callback, NULL, 0 /* flags */);
-}
 
 static uint32_t prv_get_als_level(void) {
   RtcTicks now = rtc_get_ticks();
@@ -189,33 +148,15 @@ static uint8_t prv_backlight_get_intensity(void) {
   }
   
 #if defined(CONFIG_DYNAMIC_BACKLIGHT) && !defined(RECOVERY_FW)
-  // Dynamic backlight: linear ramp from dim_intensity at dynamic_min_threshold
-  // up to 100% at ambient_light_dark_threshold, then clamped to user_max. This
-  // keeps the slope independent of the user's brightness preference, so a user
-  // who caps their max at e.g. 60% still hits that cap partway up the ALS range
-  // rather than only at the brightest end. prv_light_allowed() rejects wakes
-  // above dark_threshold; paths that bypass it (app-driven force-on,
-  // ambient-sensor pref off) sensibly land at user_max here.
+  // Dynamic backlight: dim in utter darkness, otherwise user max. The
+  // bright-outdoor case is already filtered upstream by prv_light_allowed()
+  // for ambient-sensor-enabled wakes; the few paths that bypass that gate
+  // (app-driven force-on, ambient-sensor pref off) sensibly land at max here.
   if (backlight_is_dynamic_intensity_enabled()) {
     const uint8_t dim_intensity = 10;
-    const uint8_t user_max = backlight_get_intensity();
-    const uint32_t als = prv_get_als_level();
-    const uint32_t dim_threshold = backlight_get_dynamic_min_threshold();
-    const uint32_t max_threshold = ambient_light_get_dark_threshold();
-
-    if (user_max <= dim_intensity || max_threshold <= dim_threshold) {
-      return user_max;
-    }
-    if (als <= dim_threshold) {
+    if (prv_get_als_level() <= backlight_get_dynamic_min_threshold()) {
       return dim_intensity;
     }
-    if (als >= max_threshold) {
-      return user_max;
-    }
-    const uint32_t ramped =
-        dim_intensity +
-        ((100 - dim_intensity) * (als - dim_threshold)) / (max_threshold - dim_threshold);
-    return (ramped > user_max) ? user_max : (uint8_t)ramped;
   }
 #endif
   
@@ -260,15 +201,6 @@ static void prv_change_brightness(uint8_t new_brightness) {
   // Scale the 0-100% to the maximum value allowed in hardware
   uint8_t scaled_brightness = (new_brightness * (uint16_t)BOARD_CONFIG.backlight_on_percent) / 100U;
 
-  // Bleed-through gate around backlight 0↔on edges: while the LED is
-  // illuminating the cover glass, the W1160 photodiode would latch
-  // contaminated readings even though our cache pins to the pre-on value.
-  // Suspending stops integration entirely, so the chip preserves the last
-  // clean DATA_ALS until we resume. No-op while not primed (driver
-  // composes suspend with the prime refcount).
-  const bool turning_on = (s_current_brightness == 0U) && (new_brightness > 0U);
-  const bool turning_off = (s_current_brightness > 0U) && (new_brightness == 0U);
-
   if (new_brightness == 0U) {
     PBL_ANALYTICS_TIMER_STOP(backlight_on_time_ms);
   } else {
@@ -277,13 +209,7 @@ static void prv_change_brightness(uint8_t new_brightness) {
 
   prv_update_intensity_analytics(scaled_brightness);
 
-  if (turning_on) {
-    ambient_light_suspend();
-  }
   backlight_set_brightness(scaled_brightness);
-  if (turning_off) {
-    ambient_light_resume();
-  }
   s_current_brightness = new_brightness;
 
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
@@ -386,6 +312,7 @@ static bool prv_light_allowed(void) {
 void light_init(void) {
   s_light_state = LIGHT_STATE_OFF;
   s_current_brightness = 0;
+  s_timer_id = new_timer_create();
   s_num_buttons_down = 0;
   s_user_controlled_state = false;
   s_fade_start_intensity = 0;
@@ -400,13 +327,6 @@ void light_init(void) {
 
   s_als_cached_level = 0;
   s_als_cached_ticks = 0;
-
-  // Create the ALS release timer before the fade timer so existing tests that
-  // pluck the most-recently-created idle timer (test_light.c:149) still pick
-  // up s_timer_id.
-  s_als_prime_release_timer_id = new_timer_create();
-  s_als_primed = false;
-  s_timer_id = new_timer_create();
 }
 
 void light_button_pressed(void) {
@@ -417,8 +337,6 @@ void light_button_pressed(void) {
     PBL_LOG_ERR("More buttons were pressed than have been released.");
     s_num_buttons_down = 0;
   }
-
-  prv_als_prime_for_interaction();
 
   // set the state to be on; releasing buttons will start the timer counting down
   if (prv_light_allowed()) {
@@ -455,8 +373,6 @@ void light_enable_interaction(void) {
     mutex_unlock(s_mutex);
     return;
   }
-
-  prv_als_prime_for_interaction();
 
   if (prv_light_allowed()) {
     prv_change_state(LIGHT_STATE_ON_TIMED);
@@ -495,7 +411,6 @@ void light_enable_respect_settings(bool enable) {
   s_user_controlled_state = enable;
 
   if (enable) {
-    prv_als_prime_for_interaction();
     if (prv_light_allowed()) {
       prv_change_state(LIGHT_STATE_ON);
     }
@@ -579,7 +494,6 @@ static void prv_light_reset_to_timed_mode(void) {
 
   if (s_user_controlled_state) {
     s_user_controlled_state = false;
-    prv_als_prime_for_interaction();
     if (prv_light_allowed()) {
       prv_change_state(LIGHT_STATE_ON_TIMED);
     }

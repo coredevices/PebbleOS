@@ -31,3 +31,7 @@ int8_t text_resources_get_glyph_height(FontCache* font_cache, Codepoint codepoin
   return 10;
 }
 
+const GlyphData *text_resources_get_glyph(FontCache* font_cache, Codepoint codepoint, FontInfo* fontinfo) {
+  return NULL;
+}
+

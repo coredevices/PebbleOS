@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+if SOC_SF32LB52
+
+config MMAP_RESOURCES
+    default y
+
+choice BT_FW
+    default BT_FW_NIMBLE
+endchoice
+
+endif # SOC_SF32LB52

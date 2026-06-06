@@ -56,6 +56,7 @@ PebblePhoneCaller* phone_call_util_create_caller(const char *number, const char 
 ///////////////////////////////////////////////////////////
 
 #include "fake_events.h"
+#include "fake_gatt_client_subscriptions.h"
 #include "fake_kernel_services_notifications.h"
 #include "fake_new_timer.h"
 #include "fake_notification_storage.h"
@@ -289,6 +290,7 @@ void test_ancs__initialize(void) {
   fake_kernel_services_notifications_reset();
   fake_notification_storage_reset();
   fake_event_init();
+  fake_gatt_client_subscriptions_set_subscribe_return_value(BTErrnoOK);
 
   ancs_create();
   ancs_handle_service_discovered(s_characteristics);
@@ -299,6 +301,20 @@ void test_ancs__cleanup(void) {
   cl_assert_equal_i(regular_timer_seconds_count(), 0);
   cl_assert_equal_i(regular_timer_minutes_count(), 0);
   regular_timer_deinit();
+}
+
+// A "fake ANCS": some phones advertise a GATT service matching the ANCS UUIDs
+// whose characteristics can't be subscribed to (e.g. missing CCCD). Subscribing
+// fails; we must reject the service instead of asserting (which crash-loops the
+// watch into recovery).
+void test_ancs__should_fail_soft_on_subscribe_failure(void) {
+  cl_assert(ancs_can_handle_characteristic(s_characteristics[ANCSCharacteristicData]));
+
+  fake_gatt_client_subscriptions_set_subscribe_return_value(BTErrnoInvalidParameter);
+  ancs_handle_service_discovered(s_characteristics);
+
+  // ANCS is left disconnected rather than crashing:
+  cl_assert(!ancs_can_handle_characteristic(s_characteristics[ANCSCharacteristicData]));
 }
 
 // Janky black box smoke-test to exercise the ANCS message re-assembly state

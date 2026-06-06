@@ -1,5 +1,8 @@
 mainmenu "PebbleOS Configuration"
 
+# Per-SoC symbol defaults; loaded first so they take precedence.
+osource "src/fw/soc/*/Kconfig.defconfig"
+
 config RELEASE
     bool "Release build"
     help

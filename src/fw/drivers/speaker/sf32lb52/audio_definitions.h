@@ -27,6 +27,7 @@ typedef enum AUDIO_PLL_STATE_TAG
 
 typedef struct AudioState {
   AUDCODEC_HandleTypeDef audcodec;
+  DMA_HandleTypeDef dac_dma_handle;
   AUDPRC_HandleTypeDef audprc;
   uint32_t slot_valid;
   uint8_t *queue_buf[HAL_AUDPRC_INSTANC_CNT];

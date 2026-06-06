@@ -69,14 +69,21 @@ void applib_resource_munmap_or_free(void *bytes) {
 }
 
 
+// Mmapped resources are direct pointers into never-freed flash: nothing to
+// refcount or release, callers must just not free() them.
+static bool prv_resource_is_mmapped(const void *bytes) {
+  return resource_storage_builtin_bytes_are_readonly(bytes) ||
+         resource_storage_flash_bytes_are_readonly(bytes);
+}
+
 bool applib_resource_track_mmapped(const void *bytes) {
-  return resource_storage_builtin_bytes_are_readonly(bytes);
+  return prv_resource_is_mmapped(bytes);
 }
 
 bool applib_resource_is_mmapped(const void *bytes) {
-  return resource_storage_builtin_bytes_are_readonly(bytes);
+  return prv_resource_is_mmapped(bytes);
 }
 
 bool applib_resource_munmap(const void *bytes) {
-  return resource_storage_builtin_bytes_are_readonly(bytes);
+  return prv_resource_is_mmapped(bytes);
 }

@@ -54,7 +54,11 @@ static void prv_schedule_ad_job(void) {
   // central is only doing a scan request if the Service UUID matches with their
   // interests, to save radio time / battery life we keep the advertisement part
   // as "small" as possible (21 bytes currently).
-  ble_ad_set_flags(ad, GAP_LE_AD_FLAGS_GEN_DISCOVERABLE_MASK);
+  // Advertise "BR/EDR Not Supported" alongside General Discoverable: these are
+  // BLE-only watches, so dual-mode hosts must connect over LE instead of attempting
+  // a classic page (which would time out).
+  ble_ad_set_flags(ad, GAP_LE_AD_FLAGS_GEN_DISCOVERABLE_MASK |
+                       GAP_LE_AD_FLAGS_BR_EDR_NOT_SUPPORTED_MASK);
 
   // *DO NOT* use pebble_bt_uuid_expand() here!
   // ble_ad_set_service_uuids() will be "smart" and include only the 16-bit UUID, but only if the

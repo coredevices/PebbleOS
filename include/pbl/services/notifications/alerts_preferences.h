@@ -4,6 +4,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "alerts_private.h"
 
@@ -61,6 +62,14 @@ void alerts_preferences_set_speaker_muted(bool muted);
 
 //! @return Whether the speaker is always-on muted
 bool alerts_preferences_get_speaker_muted(void);
+
+//! Set the system-wide speaker volume cap. Per-playback volumes are scaled
+//! by this value before being applied to the audio hardware.
+//! @param volume Volume cap, 0-100. Values outside the range are clamped.
+void alerts_preferences_set_speaker_volume(uint8_t volume);
+
+//! @return The system-wide speaker volume cap (0-100). Defaults to 100.
+uint8_t alerts_preferences_get_speaker_volume(void);
 
 //! Checks whether a given "first use" dialog has been shown and sets it as complete
 //! @param source The "first use" bit to check

@@ -1,3 +1,4 @@
+#include "drivers/watchdog.h"
 #include "system/reboot_reason.h"
 #include "memfault/ports/reboot_reason.h"
 
@@ -65,13 +66,41 @@ static eMemfaultRebootReason prv_pbl_reboot_to_mflt_reboot(RebootReasonCode reas
   return kMfltRebootReason_Unknown;
 }
 
+// Used when the RTC backup register holding the firmware RebootReason was
+// cleared (hardware reset path). Most-specific cause first.
+static eMemfaultRebootReason prv_mcu_reboot_to_mflt_reboot(McuRebootReason mcu) {
+  if (mcu.brown_out_reset) {
+    return kMfltRebootReason_BrownOutReset;
+  }
+  if (mcu.independent_watchdog_reset || mcu.window_watchdog_reset) {
+    return kMfltRebootReason_HardwareWatchdog;
+  }
+  if (mcu.pin_reset) {
+    return kMfltRebootReason_PinReset;
+  }
+  if (mcu.low_power_manager_reset) {
+    return kMfltRebootReason_DeepSleep;
+  }
+  if (mcu.power_on_reset) {
+    return kMfltRebootReason_PowerOnReset;
+  }
+  if (mcu.software_reset) {
+    return kMfltRebootReason_SoftwareReset;
+  }
+  return kMfltRebootReason_Unknown;
+}
+
 void memfault_reboot_reason_get(sResetBootupInfo *reset_info) {
   // TODO: currently reboot_reason_get() is not implemented on the NRF5
   // platform, see reboot_reason.c
   RebootReason reason = { RebootReasonCode_Unknown, 0 };
   reboot_reason_get(&reason);
+  eMemfaultRebootReason mflt_reason = prv_pbl_reboot_to_mflt_reboot(reason.code);
+  if (mflt_reason == kMfltRebootReason_Unknown) {
+    mflt_reason = prv_mcu_reboot_to_mflt_reboot(watchdog_get_reset_flag());
+  }
   *reset_info = (sResetBootupInfo){
     .reset_reason_reg = reason.code,
-    .reset_reason = prv_pbl_reboot_to_mflt_reboot(reason.code),
+    .reset_reason = mflt_reason,
   };
 }

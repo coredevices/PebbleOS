@@ -14,3 +14,7 @@ AppLaunchReason app_launch_reason(void) {
 uint32_t app_launch_get_args(void) {
   return sys_process_get_launch_args();
 }
+
+AppQuickLaunchAction app_launch_get_quick_launch_action(void) {
+  return sys_process_get_quick_launch_action();
+}

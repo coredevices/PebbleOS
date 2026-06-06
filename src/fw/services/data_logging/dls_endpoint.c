@@ -330,7 +330,9 @@ static void prv_dls_endpoint_handle_ack(uint8_t session_id) {
       break;
     case DataLoggingSessionCommStateOpening:
       update_session_state(session, DataLoggingSessionCommStateIdle, true /*reschedule*/);
-      break;
+      mutex_unlock(s_endpoint_data.mutex);
+      dls_private_send_session(session, true);
+      return;
     case DataLoggingSessionCommStateSending:
       session->comm.nack_count = 0;
       update_session_state(session, DataLoggingSessionCommStateIdle, true /*reschedule*/);

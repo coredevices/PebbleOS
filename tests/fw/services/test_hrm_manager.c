@@ -43,6 +43,7 @@ extern uint32_t prv_num_system_task_events_queued(void);
 extern TimerID prv_get_timer_id(void);
 extern bool prv_can_turn_sensor_on(void);
 extern void prv_charger_event_cb(PebbleEvent *e);
+extern uint32_t prv_get_dropped_events_count(void);
 
 
 // -----------------------------------------------------------------------------
@@ -63,10 +64,14 @@ bool hrm_is_enabled(HRMDevice *dev) { return s_hrm_state.enabled; }
 
 static const QueueHandle_t FAKE_APP_QUEUE = (QueueHandle_t) 1337;
 static uint32_t s_event_count;
+static bool s_queue_full;
 static PebbleEvent s_events_received[16];
 signed portBASE_TYPE xQueueGenericSend(QueueHandle_t xQueue, const void * const pvItemToQueue,
                                        TickType_t xTicksToWait, portBASE_TYPE xCopyPosition) {
   cl_assert_equal_i((intptr_t) xQueue, (intptr_t) FAKE_APP_QUEUE);
+  if (s_queue_full) {
+    return pdFALSE;
+  }
   if (s_event_count < ARRAY_LENGTH(s_events_received)) {
     s_events_received[s_event_count] = *((PebbleEvent *)pvItemToQueue);
   }
@@ -153,6 +158,7 @@ void test_hrm_manager__initialize(void) {
 
   s_activity_prefs_heart_rate_is_enabled = true;
   s_event_count = 0;
+  s_queue_full = false;
   s_num_cb_events_1 = 0;
   s_num_cb_events_2 = 0;
   memset(&s_hrm_state, 0, sizeof(s_hrm_state));
@@ -744,6 +750,34 @@ void test_hrm_manager__can_turn_sensor_on(void) {
   cl_assert(prv_can_turn_sensor_on());
   fake_system_task_callbacks_invoke_pending();
   cl_assert(hrm_is_enabled(HRM));
+}
+
+// A full app event queue (app not draining events fast enough) must not panic the firmware.
+// The HRM sample is dropped and counted, and delivery resumes once the queue drains.
+void test_hrm_manager__app_queue_full_drops_without_panic(void) {
+  stub_pebble_tasks_set_current(PebbleTask_App);
+
+  AppInstallId app_id = 1;
+  const uint16_t expire_s = SECONDS_PER_MINUTE;
+  HRMSessionRef session_ref = sys_hrm_manager_app_subscribe(app_id, 1, expire_s, HRMFeature_BPM);
+
+  // App is not draining its event queue.
+  s_queue_full = true;
+
+  // Must not panic; the event is dropped (not delivered) and counted.
+  prv_fake_send_new_data();
+  cl_assert_equal_i(s_event_count, 0);
+  cl_assert_equal_i(prv_get_dropped_events_count(), 1);
+
+  // Subscription survives and delivery resumes once the queue drains.
+  s_queue_full = false;
+  prv_fake_send_new_data();
+  cl_assert_equal_i(s_event_count, 1);
+  cl_assert_equal_i(s_events_received[0].type, PEBBLE_HRM_EVENT);
+  cl_assert_equal_i(s_events_received[0].hrm.event_type, HRMEvent_BPM);
+  cl_assert_equal_i(prv_get_dropped_events_count(), 1);
+
+  sys_hrm_manager_unsubscribe(session_ref);
 }
 
 // Test that OffWrist quality is delivered immediately without delay

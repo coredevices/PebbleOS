@@ -4,6 +4,7 @@
 rsource "soc/Kconfig"
 rsource "apps/Kconfig"
 rsource "drivers/Kconfig"
+rsource "kernel/Kconfig"
 rsource "services/Kconfig"
 
 menu "Software Features"
@@ -48,5 +49,11 @@ config MODDABLE_XS
     help
       Build Moddable XS support for running JavaScript apps. PRF
       variant builds force this off regardless of the board default.
+
+config MMAP_RESOURCES
+    bool "Memory-mapped (zero-copy) resource reads"
+    help
+      Serve read-only system resources as direct pointers into
+      memory-mapped flash instead of copying them out.
 
 endmenu

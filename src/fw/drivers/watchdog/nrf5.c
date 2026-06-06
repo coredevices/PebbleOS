@@ -30,11 +30,13 @@ bool watchdog_check_reset_flag(void) {
   return (nrfx_reset_reason_get() & NRFX_RESET_REASON_DOG_MASK) != 0;
 }
 
+static McuRebootReason s_cached_reset_flag;
+
 McuRebootReason watchdog_clear_reset_flag(void) {
   uint32_t reason = nrfx_reset_reason_get();
   nrfx_reset_reason_clear(0xFFFFFFFF);
 
-  McuRebootReason mcu_reboot_reason = {
+  s_cached_reset_flag = (McuRebootReason){
     .brown_out_reset = 0,
     .pin_reset = (reason & NRFX_RESET_REASON_RESETPIN_MASK) != 0,
     .power_on_reset = (reason & NRFX_RESET_REASON_VBUS_MASK) != 0,
@@ -44,5 +46,9 @@ McuRebootReason watchdog_clear_reset_flag(void) {
     .low_power_manager_reset = 0,
   };
 
-  return mcu_reboot_reason;
+  return s_cached_reset_flag;
+}
+
+McuRebootReason watchdog_get_reset_flag(void) {
+  return s_cached_reset_flag;
 }

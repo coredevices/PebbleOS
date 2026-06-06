@@ -157,13 +157,15 @@ def extract_pbf(pbf_path, output_dir):
             filepath = os.path.join(glyphs_dir, filename)
 
             if width > 0 and height > 0 and bitlist:
-                img = Image.new("1", (width, height), 0)  # 1-bit image, white bg
+                # PBF format: 1 = glyph (drawn as text_color), 0 = background.
+                # PIL mode '1': 0 = black, 255 = white. Write glyph bits as black.
+                img = Image.new("1", (width, height), 1)  # white background
                 pixels = img.load()
                 for y in range(height):
                     for x in range(width):
                         idx = y * width + x
                         if idx < len(bitlist) and bitlist[idx]:
-                            pixels[x, y] = 1  # Black pixel
+                            pixels[x, y] = 0  # black glyph pixel
                 img.save(filepath)
 
             glyphs.append(

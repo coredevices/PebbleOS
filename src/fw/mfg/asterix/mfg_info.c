@@ -12,6 +12,7 @@ typedef struct {
 
   uint32_t color;
   char model[MFG_INFO_MODEL_STRING_LENGTH]; //!< Null terminated model string
+  uint8_t vibe_cali; //!< Vibration motor trim, MFG_INFO_VIBE_CALI_INVALID if unset
 } MfgData;
 
 static void prv_update_struct(const MfgData *data) {
@@ -30,6 +31,7 @@ static MfgData prv_fetch_struct(void) {
       result.color = WATCH_INFO_COLOR_COREDEVICES_P2D_BLACK;
       strncpy(result.model, "asterix", sizeof(result.model));
       result.model[MFG_INFO_MODEL_STRING_LENGTH - 1] = '\0';
+      result.vibe_cali = MFG_INFO_VIBE_CALI_INVALID;
   }
 
   return result;
@@ -54,6 +56,16 @@ void mfg_info_set_model(const char* model) {
   MfgData data = prv_fetch_struct();
   strncpy(data.model, model, sizeof(data.model));
   data.model[MFG_INFO_MODEL_STRING_LENGTH - 1] = '\0';
+  prv_update_struct(&data);
+}
+
+uint8_t mfg_info_get_vibe_cali(void) {
+  return prv_fetch_struct().vibe_cali;
+}
+
+void mfg_info_set_vibe_cali(uint8_t cali) {
+  MfgData data = prv_fetch_struct();
+  data.vibe_cali = cali;
   prv_update_struct(&data);
 }
 

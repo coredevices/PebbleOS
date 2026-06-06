@@ -70,6 +70,8 @@ typedef enum {
   PmicRegisters_BCHARGER_BCHGITERMSEL = 0x030F,
   PmicRegisters_BCHARGER_BCHGITERMSEL__SEL10 = 0U,
   PmicRegisters_BCHARGER_BCHGITERMSEL__SEL20 = 1U,
+  PmicRegisters_BCHARGER_NTCHOT = 0x0316U,
+  PmicRegisters_BCHARGER_NTCHOTLSB = 0x0317U,
   PmicRegisters_BCHARGER_BCHGCHARGESTATUS = 0x0334,
   PmicRegisters_BCHARGER_BCHGCHARGESTATUS__COMPLETED = 2,
   PmicRegisters_BCHARGER_BCHGCHARGESTATUS__TRICKLECHARGE = 4,
@@ -163,6 +165,14 @@ typedef enum {
 #define NPM1300_VBUS_CURRENT_DIVISOR 100U
 
 static bool dischg_limit_ma_set(uint32_t dischg_limit_ma);
+
+static uint16_t prv_ntc_threshold_code(uint8_t celsius) {
+  // Ref: PS v1.1 Section 6.2.5: K_NTCTEMP = round(1024 * R_T / (R_T + R_B))
+  float t_k = (float)celsius + 273.15f;
+  float exponent = (float)NPM1300_CONFIG.thermistor_beta *
+                   ((1.f / 298.15f) - (1.f / t_k));
+  return (uint16_t)((1024.0f / (1.0f + exp(exponent))) + 0.5f);
+}
 
 void battery_init(void) {
 }
@@ -352,6 +362,12 @@ bool pmic_init(void) {
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERM, PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V20);
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERMR, PmicRegisters_BCHARGER_BCHGVTERMR__BCHGVTERMREDUCED_4V00);
 #endif
+
+  {
+    uint16_t code = prv_ntc_threshold_code(NPM1300_CONFIG.ntc_hot_celsius);
+    ok &= prv_write_register(PmicRegisters_BCHARGER_NTCHOT, (uint8_t)(code >> 2));
+    ok &= prv_write_register(PmicRegisters_BCHARGER_NTCHOTLSB, (uint8_t)(code & 0x3U));
+  }
 
   // FIXME: this needs to be configurable at board level
 #ifdef CONFIG_BOARD_FAMILY_OBELIX

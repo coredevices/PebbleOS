@@ -3,6 +3,7 @@
 
 #include "kernel/coredump_extra_regions.h"
 
+#include "kernel/core_dump_private.h"
 #include "system/logging.h"
 
 static CoredumpExtraRegion s_regions[COREDUMP_EXTRA_REGIONS_MAX];
@@ -35,5 +36,9 @@ void display_jdi_register_coredump_regions(void);
 void coredump_extra_regions_init(void) {
 #if defined(CONFIG_BOARD_FAMILY_OBELIX) || defined(CONFIG_BOARD_FAMILY_GETAFIX)
   display_jdi_register_coredump_regions();
+#endif
+#if defined(CONFIG_SOC_SF32LB52)
+  coredump_extra_regions_register("lcpu_ram", (const void *)COREDUMP_LCPU_RAM_START,
+                                  COREDUMP_LCPU_RAM_SIZE);
 #endif
 }

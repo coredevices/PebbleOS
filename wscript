@@ -1,16 +1,12 @@
-import json
 import os
 import re
-import shlex
 import subprocess
 import sys
-import pexpect
-import zipfile
 import datetime
 import time
 
 import waflib
-from waflib import Node, Logs
+from waflib import Logs
 from waflib.Build import BuildContext
 
 
@@ -35,9 +31,10 @@ sys.path.append(os.path.join(waf_dir, 'waftools'))
 import waftools.gitinfo
 import waftools.ldscript
 import waftools.openocd
-import waftools.sftool
-import waftools.nrfutil
+import waftools.pebble_sdk_gcc as pebble_sdk_gcc
 from waftools.pebble_sdk_locator import activate_sdk
+
+from pebble_sdk_version import set_env_sdk_version
 
 # Prefer an installed PebbleOS SDK's binaries (toolchain, QEMU, sftool) when
 # present. Done at import time so it applies to every waf invocation.
@@ -55,14 +52,6 @@ RUNNERS = {
     'getafix_dvt2': ['sftool'],
 }
 
-# QEMU SDL decorations per board. The first entry is used as the default.
-QEMU_DECORATIONS = {
-    'qemu_emery': ['pt2-br', 'pt2-sb'],
-    'qemu_flint': ['p2d-bk', 'p2d-wh'],
-    'qemu_gabbro': ['pr2-bk20', 'pr2-gd14'],
-}
-
-QEMU_DECORATION_CHOICES = sorted({d for ds in QEMU_DECORATIONS.values() for d in ds}) + ['none']
 
 def truncate(msg):
     if msg is None:
@@ -78,27 +67,28 @@ def truncate(msg):
     return msg
 
 
-def run_arm_gdb(ctx, elf_node, cmd_str="", target_server_port=3333):
-    from tools.gdb_driver import find_gdb_path
-    arm_none_eabi_path = find_gdb_path()
-    if arm_none_eabi_path is None:
-        ctx.fatal("pebble-gdb not found!")
-    os.system('{} {} {} --ex="target remote :{}"'.format(
-                arm_none_eabi_path, elf_node.path_from(ctx.path),
-                cmd_str, target_server_port)
-              )
-
-
 def options(opt):
     opt.load('pebble_arm_gcc', tooldir='waftools')
     opt.load('show_configure', tooldir='waftools')
     opt.load('kconfig', tooldir='waftools')
-    opt.recurse('applib-targets')
-    opt.recurse('tests')
-    opt.recurse('src/bluetooth-fw')
     opt.recurse('src/fw')
-    opt.recurse('src/idl')
-    opt.recurse('sdk')
+
+    gr = opt.add_option_group('test options')
+    gr.add_option('-D', '--debug_test', action='store_true',
+        help='Execute tests within GDB. Use alongside -M.')
+    gr.add_option('-M', '--match', dest='regex', default=None, action='store',
+        help='Run regex match tests. Example: ./waf test -M "test.*resource.*"')
+    gr.add_option('-L', '--list_tests', dest='list_tests', action='store_true',
+        help='List all test names. Usually used in conjunction with -M. Example: '
+             './waf test -M test_animation -L')
+    gr.add_option('-T', '--test_name', dest='test_name', default=None, action='store',
+        help='Run only the given test name. Usually used in conjunction with -M. Example: '
+             './waf test -M test_animation -T unschedule')
+    gr.add_option('-C', '--coverage', dest='coverage', action='store_true', help='Generate gcov test coverage data and use lcov to generate HTML report')
+    gr.add_option('--show_output', action='store_true', help='show test output')
+    gr.add_option('--no_run', action='store_true', help='Do not run the tests, just build them')
+    gr.add_option('--no_images', action='store_true', help='skip generation of test images, '
+                  'which are only required for some tests and can slow down build times')
     opt.add_option('--board', action='store',
                    choices=[ 'asterix',
                              'obelix_dvt',
@@ -119,8 +109,6 @@ def options(opt):
                    choices=waftools.openocd.JTAG_OPTIONS.keys(),
                    help='Which JTAG programmer we are using '
                         '(bb2 (default), olimex, ev2, etc)')
-    opt.add_option('--internal_sdk_build', action='store_true',
-                   help='Build the internal version of the SDK')
     opt.add_option('--nosleep', action='store_true',
                    help='Disable sleep and stop mode (to use JTAG+GDB)')
     opt.add_option('--nostop', action='store_true',
@@ -144,33 +132,8 @@ def options(opt):
     opt.add_option('--flash-log-level', default='info', choices=['error', 'warn', 'info', 'debug', 'debug_verbose'],
        help='Default flash log level')
 
-    opt.add_option('--lang',
-                   action='store',
-                   default='en_US',
-                   help='Which language to package (isocode)')
-
     opt.add_option('--compile_commands', action='store_true', help='Create a clang compile_commands.json')
-    opt.add_option('--file', action='store', help='Specify a file to use with the flash command')
-    opt.add_option('--resources', action='store_true', help='Also flash system resources alongside the firmware')
-    opt.add_option('--keep-flash-image', action='store_true',
-                   help='Keep the existing QEMU SPI flash image instead of rebuilding it')
-    opt.add_option('--tty',
-        help='Selects a tty to use for serial imaging. Must be specified for all image commands')
-    opt.add_option('--baudrate', action='store', type=int, help='Optional: specifies the baudrate to run the targetted uart at')
     opt.add_option('--onlysdk', action='store_true', help="only build the sdk")
-    opt.add_option('--qemu_host', default='localhost:12345',
-        help='host:port for the emulator console connection')
-    opt.add_option('--qemu-decoration', action='store', default=None,
-        choices=QEMU_DECORATION_CHOICES,
-        help='SDL decoration to use for QEMU. Defaults to the per-board '
-             'default (emery: pt2-br, flint: p2d-bk, gabbro: pr2-bk20). '
-             'Pass "none" to disable decorations.')
-    opt.add_option('--reconnect', action='store_true',
-        help='Wrap `console` in a keep-alive driver that waits for the '
-             'transport to come up and reconnects if it drops')
-    opt.add_option('--screenshot-output', default=None,
-        help='Output path for `./waf screenshot` (must end in .png). '
-             'Defaults to build/screenshot.png')
     opt.add_option('--no-link', action='store_true',
                    help='Do not link the final firmware binary. This is used for static analysis')
     opt.add_option('--noprompt', action='store_true',
@@ -178,10 +141,6 @@ def options(opt):
     opt.add_option('--profiler', action='store_true', help='Enable the profiler.')
     opt.add_option('--profile_interrupts', action='store_true',
                    help='Enable profiling of all interrupts.')
-    opt.add_option('--voice_debug', action='store_true',
-                   help='Enable all voice logging.')
-    opt.add_option('--voice_codec_tests', action='store_true',
-                   help='Enable voice codec tests. Enables the profiler')
     opt.add_option('--no_sandbox', action='store_true',
                    help='Disable the MPU for 3rd party apps.')
     opt.add_option('--malloc_instrumentation', action='store_true',
@@ -193,9 +152,6 @@ def options(opt):
     opt.add_option('--no-pulse-everywhere',
                    action='store_true',
                    help='Disables PULSE everywhere, uses legacy logs and prompt')
-    opt.add_option('--force-pulse',
-                   action='store_true',
-                   help='Force PULSE-based flashing even on SF32LB52 (default: sftool)')
 
 def handle_configure_options(conf):
     if conf.options.noprompt:
@@ -208,14 +164,6 @@ def handle_configure_options(conf):
 
     if conf.options.performance_tests:
         conf.env.PERFORMANCE_TESTS = True
-
-    if conf.options.voice_debug:
-        conf.env.VOICE_DEBUG = True
-
-    if conf.options.voice_codec_tests:
-        conf.env.VOICE_CODEC_TESTS = True
-        conf.env.append_value('DEFINES', 'VOICE_CODEC_TESTS')
-        conf.options.profiler = True
 
     if conf.options.nosleep:
         conf.env.append_value('DEFINES', 'PBL_NOSLEEP')
@@ -270,13 +218,6 @@ def handle_configure_options(conf):
             print("Enable --nostop for accurate profiling.")
             conf.env.append_value('DEFINES', 'PBL_NOSTOP')
 
-    if conf.options.voice_debug:
-        conf.env.append_value('DEFINES', 'VOICE_DEBUG')
-
-    conf.env.INTERNAL_SDK_BUILD = bool(conf.options.internal_sdk_build)
-    if conf.env.INTERNAL_SDK_BUILD:
-        print("Internal SDK enabled")
-
     if conf.options.lto:
         print("Turning on LTO.")
 
@@ -304,8 +245,6 @@ def configure(conf):
         conf.env.JS_ENGINE = 'moddable'
     else:
         conf.env.JS_ENGINE = 'none'
-
-    bt_board = None
 
     if not conf.options.runner:
         conf.env.RUNNER = RUNNERS.get(conf.options.board, [None])[0]
@@ -365,9 +304,8 @@ def configure(conf):
                       errmsg="Unable to locate the Node command. "
                              "Please check your Node installation and try again.")
 
-    conf.recurse('src/idl')
+    conf.load('protoc')
     conf.recurse('src/fw')
-    conf.recurse('sdk')
 
     if conf.env.RUNNER == 'openocd':
         waftools.openocd.write_cfg(conf)
@@ -381,24 +319,6 @@ def configure(conf):
     base_env = conf.env
 
     handle_configure_options(conf)
-
-
-    if bt_board is None:
-        bt_board = conf.env.BOARD
-    # Select BT controller based on configuration:
-    if conf.env.CONFIG_QEMU:
-        conf.env.bt_controller = 'qemu'
-        conf.env.append_value('DEFINES', ['BT_CONTROLLER_QEMU'])
-    elif conf.env.CONFIG_BOARD_FAMILY_ASTERIX:
-        conf.env.bt_controller = 'nrf52'
-        conf.env.append_value('DEFINES', ['BT_CONTROLLER_NRF52'])
-    elif conf.env.CONFIG_BOARD_FAMILY_OBELIX or conf.env.CONFIG_BOARD_FAMILY_GETAFIX:
-        conf.env.bt_controller = 'sf32lb52'
-        conf.env.append_value('DEFINES', ['BT_CONTROLLER_SF32LB52'])
-    else:
-        conf.env.bt_controller = 'stub'
-
-    conf.recurse('src/bluetooth-fw')
 
     Logs.pprint('CYAN', 'Configuring arm_firmware environment')
     conf.setenv('', base_env)
@@ -467,11 +387,11 @@ def configure(conf):
             source = conf.path.get_bld().make_node(filename)
             os.symlink(source.path_from(conf.path), filename)
 
-    conf.recurse('applib-targets')
-
     Logs.pprint('CYAN', 'Configuring stored apps environment')
     conf.setenv('stored_apps', base_env)
-    conf.recurse('stored_apps')
+    process_info = conf.path.find_node('src/fw/process_management/pebble_process_info.h')
+    set_env_sdk_version(conf, process_info)
+    pebble_sdk_gcc.configure(conf)
 
     # Confirm that requirements-*.txt and requirements-osx-brew.txt have been satisfied.
     import tool_check
@@ -496,7 +416,7 @@ def build(bld):
     # FIXME: remove include/pbl once all modules use prefix
     bld(export_includes=['include', 'include/pbl'], name='pbl_includes')
 
-    if bld.variant in ('test', 'applib'):
+    if bld.variant == 'test':
         bld.set_env(bld.all_envs['local'])
 
     bld.load('file_name_c_define', tooldir='waftools')
@@ -515,21 +435,13 @@ def build(bld):
         bld.recurse('tools')
         return
 
-    if bld.variant in ('', 'applib'):
+    if bld.variant == '':
         # Dependency for SDK
         bld.recurse('third_party/moddable')
 
     if bld.variant == '' and bld.env.VARIANT != 'prf':
         # sdk generation
         bld.recurse('sdk')
-
-    if bld.variant == 'applib':
-        bld.recurse('resources')
-        bld.recurse('src/libutil')
-        bld.recurse('src/fw')
-        bld.recurse('third_party/nanopb')
-        bld.recurse('applib-targets')
-        return
 
     if bld.options.onlysdk:
         # stop here, sdk generation is done
@@ -569,11 +481,6 @@ def build(bld):
         bld.add_post_fun(size_resources)
         if 'PBL_LOGS_HASHED' in bld.env.DEFINES:
             bld.add_post_fun(merge_loghash_dicts)
-
-
-class build_applib(BuildContext):
-    cmd = 'build_applib'
-    variant = 'applib'
 
 
 def merge_loghash_dicts(bld):
@@ -754,53 +661,15 @@ class BundleCommand(BuildContext):
 def bundle(ctx):
     """bundles a firmware"""
 
-    if ctx.env.CONFIG_QEMU:
-        bundle_qemu(ctx)
-    elif ctx.env.VARIANT == 'prf':
+    if ctx.env.VARIANT == 'prf':
         _make_bundle(ctx, ctx.get_tintin_fw_node().path_from(ctx.path), fw_type='recovery')
     else:
         _make_bundle(ctx, ctx.get_tintin_fw_node().path_from(ctx.path),
                      resource_path=ctx.get_pbpack_node().path_from(ctx.path))
 
 
-class BundleQEMUCommand(BuildContext):
-    cmd = 'bundle_qemu'
-    fun = 'bundle_qemu'
-
-
-def bundle_qemu(ctx):
-    """bundle QEMU images together into a "fake" PBZ"""
-
-    qemu_image_micro(ctx)
-    qemu_image_spi(ctx)
-
-    b = _make_bundle(ctx, ctx.get_tintin_fw_node().path_from(ctx.path),
-                     resource_path=ctx.get_pbpack_node().path_from(ctx.path),
-                     write=False, board='qemu_{}'.format(ctx.env.BOARD))
-
-    version_string, _, _ = _get_version_info(ctx)
-    qemu_pbz = ctx.get_pbz_node('qemu', ctx.env.BOARD, version_string)
-    out_file = qemu_pbz.path_from(ctx.path)
-
-    with zipfile.ZipFile(out_file, 'w', compression=zipfile.ZIP_DEFLATED) as pbz_file:
-        pbz_file.writestr('manifest.json', json.dumps(b.bundle_manifest))
-
-        files = [ctx.get_tintin_fw_node(),
-                 ctx.get_pbpack_node(),
-                 'qemu_micro_flash.bin',
-                 'qemu_spi_flash.bin']
-        if 'PBL_LOGS_HASHED' in ctx.env.DEFINES:
-            files.append(LOGHASH_OUT_PATH)
-
-        for fitem in files:
-            if isinstance(fitem, Node.Node):
-                fnode = fitem
-            else:
-                fnode = ctx.path.get_bld().make_node(fitem)
-            img_path = fnode.path_from(ctx.path)
-            pbz_file.write(img_path, os.path.basename(img_path))
-
-    waflib.Logs.pprint('CYAN', 'Writing bundle to: %s' % out_file)
+# QEMU flash image commands
+#################################################
 
 class QemuImageMicroCommand(BuildContext):
     cmd = 'qemu_image_micro'
@@ -813,28 +682,19 @@ class QemuImageSpiCommand(BuildContext):
 
 
 def qemu_image_micro(ctx):
-    fw_hex = ctx.get_tintin_fw_node().change_ext('.hex')
-    _create_qemu_image_micro(ctx, fw_hex.path_from(ctx.path))
-
-
-def _create_qemu_image_micro(ctx, path_to_firmware_hex):
     """creates the micro-flash image for qemu"""
     from intelhex import IntelHex
 
+    fw_hex = ctx.get_tintin_fw_node().change_ext('.hex')
     micro_flash_node = ctx.path.get_bld().make_node('qemu_micro_flash.bin')
     micro_flash_path = micro_flash_node.path_from(ctx.path)
-    waflib.Logs.pprint('CYAN', 'Writing micro flash image to {}'.format(micro_flash_path))
+    Logs.pprint('CYAN', 'Writing micro flash image to {}'.format(micro_flash_path))
 
-    img = IntelHex(path_to_firmware_hex)
+    img = IntelHex(fw_hex.path_from(ctx.path))
     img.padding = 0xff
     flash_end = ((img.maxaddr() + 511) // 512) * 512
-    img.tobinfile(micro_flash_path, start=0x00000000, end=flash_end-1)
+    img.tobinfile(micro_flash_path, start=0x00000000, end=flash_end - 1)
 
-def _create_spi_flash_image(ctx, name):
-    spi_flash_node = ctx.path.get_bld().make_node(name)
-    spi_flash_path = spi_flash_node.path_from(ctx.path)
-    waflib.Logs.pprint('CYAN', 'Writing SPI flash image to {}'.format(spi_flash_path))
-    return spi_flash_path
 
 def qemu_image_spi(ctx):
     """creates a SPI flash image for qemu"""
@@ -846,9 +706,11 @@ def qemu_image_spi(ctx):
         resources_begin = 0x280000
         image_size = 0x400000
 
-    spi_flash_path = _create_spi_flash_image(ctx, 'qemu_spi_flash.bin')
+    spi_flash_node = ctx.path.get_bld().make_node('qemu_spi_flash.bin')
+    spi_flash_path = spi_flash_node.path_from(ctx.path)
+    Logs.pprint('CYAN', 'Writing SPI flash image to {}'.format(spi_flash_path))
     with open(spi_flash_path, 'wb') as qemu_spi_img_file:
-        # Pad the first section before system resources with FF's'
+        # Pad the first section before system resources with FF's
         qemu_spi_img_file.write(bytes([0xff]) * resources_begin)
 
         # Write system resources:
@@ -859,255 +721,6 @@ def qemu_image_spi(ctx):
         # Pad with 0xFF up to image size
         tail_padding_size = image_size - resources_begin - len(res_img)
         qemu_spi_img_file.write(bytes([0xff]) * tail_padding_size)
-
-
-class ConsoleCommand(BuildContext):
-    cmd = 'console'
-    fun = 'console'
-
-
-def console(ctx):
-    """Starts miniterm with the serial console."""
-    # miniterm is not made to be used as a python module, so just shell out:
-    if ctx.env.CONFIG_QEMU:
-        tty = 'socket://%s' % (ctx.options.qemu_host or 'localhost:12345')
-    else:
-        tty = ctx.options.tty
-        if not tty:
-            waflib.Logs.pprint('RED', 'Error: --tty not specified')
-            return
-
-    if _is_pulse_everywhere(ctx):
-        inner = "python ./tools/pulse_console.py -t %s" % tty
-    elif ctx.env.CONFIG_QEMU:
-        inner = "python ./tools/log_hashing/miniterm_co.py %s" % tty
-    else:
-        baudrate = ctx.options.baudrate or 230400
-        # NOTE: force RTS to be de-asserted, as on some boards (e.g.
-        # pblprog-sifli) RTS is used to reset the board SoC. On some OS and/or
-        # drivers, RTS may activate automatically, as soon as the port is
-        # opened. There may be a glitch on RTS when rts is set differently from
-        # their default value.
-        inner = "python ./tools/log_hashing/miniterm_co.py %s %d --rts 0" % (tty, baudrate)
-
-    if ctx.options.reconnect:
-        os.system("python ./tools/console_keepalive.py -t %s -- %s" % (tty, inner))
-    else:
-        os.system(inner)
-
-
-def qemu(ctx):
-    # Make sure the micro-flash image is up to date. By default, we always rebuild the
-    # SPI flash image. Pass --keep-flash-image to continue with the stored apps, etc.
-    # you had before.
-    from waflib import Context, Options
-    spi_flash = os.path.join(Context.out_dir, 'qemu_spi_flash.bin')
-    pre_cmds = ['qemu_image_micro']
-    if not ctx.options.keep_flash_image or not os.path.isfile(spi_flash):
-        pre_cmds.append('qemu_image_spi')
-    Options.commands = pre_cmds + ['qemu_launch'] + Options.commands
-
-
-class QemuLaunchCommand(BuildContext):
-    cmd = 'qemu_launch'
-    fun = 'qemu_launch'
-
-
-def qemu_launch(ctx):
-    """Starts up the emulator (qemu) """
-    qemu_bin = os.getenv("PEBBLE_QEMU_BIN")
-    if not qemu_bin or not (os.path.isfile(qemu_bin) and os.access(qemu_bin, os.X_OK)):
-        qemu_bin = 'qemu-pebble'
-
-    qemu_machine = ctx.env.CONFIG_QEMU_MACHINE
-    if not qemu_machine or qemu_machine == 'unknown':
-        raise Exception("Board type '{}' not supported by QEMU".format(ctx.env.BOARD))
-
-    qemu_micro_flash = ctx.path.get_bld().make_node('qemu_micro_flash.bin')
-    qemu_spi_flash = ctx.path.get_bld().make_node('qemu_spi_flash.bin')
-    spi_flash_args = ['-drive', 'if=mtd,format=raw,file={}'.format(qemu_spi_flash.path_from(ctx.path))]
-    if not spi_flash_args:
-        raise Exception("External flash type for '{}' not specified".format(ctx.env.BOARD))
-
-    # Generic QEMU machines: load firmware as kernel (ELF for proper vector table handling)
-    fw_elf = ctx.get_tintin_fw_node().change_ext('.elf')
-    has_audio = ctx.env.CONFIG_PLATFORM_EMERY or ctx.env.CONFIG_PLATFORM_FLINT
-    if has_audio:
-        import platform
-        audio_driver = 'coreaudio' if platform.system() == 'Darwin' else 'sdl'
-        machine_dep_args = ['-machine', '%s,audiodev=snd0' % qemu_machine,
-                            '-audiodev', '%s,id=snd0' % audio_driver,
-                            '-kernel', fw_elf.path_from(ctx.path)] + spi_flash_args
-    else:
-        machine_dep_args = ['-machine', qemu_machine,
-                            '-kernel', fw_elf.path_from(ctx.path)] + spi_flash_args
-
-    # Always keep the host cursor visible over the emulator window.
-    decoration = ctx.options.qemu_decoration
-    if decoration is None:
-        decoration = QEMU_DECORATIONS.get(ctx.env.BOARD, [None])[0]
-    if decoration and decoration != 'none':
-        display_type = 'sdl,decoration=%s' % decoration
-    else:
-        display_type = 'sdl'
-    machine_dep_args.extend(['-display', '%s,show-cursor=on' % display_type])
-
-    mon_sock = ctx.path.get_bld().make_node('qemu-mon.sock').abspath()
-    if os.path.exists(mon_sock):
-        os.unlink(mon_sock)
-
-    cmd_line = (
-        shlex.quote(qemu_bin) + " "
-        "-rtc base=localtime "
-        "-monitor stdio "
-        "-monitor unix:{mon_sock},server=on,wait=off "
-        "-s "
-        "-serial file:uart1.log "
-        "-serial tcp::12344,server=on,wait=off " # pebble-tool
-        "-serial tcp::12345,server=on,wait=off " # console
-        ).format(mon_sock=shlex.quote(mon_sock)) + ' '.join(machine_dep_args)
-    waflib.Logs.pprint('CYAN', 'QEMU command: {}'.format(cmd_line))
-    os.system(cmd_line)
-
-
-class Debug(BuildContext):
-    """ Starts GDB and attaches to the target. For openocd-based boards, it
-        also starts openocd (if not already running). For QEMU targets, it
-        starts the gdb proxy and connects through it.
-    """
-    cmd = 'debug'
-    fun = 'debug'
-
-
-def debug(ctx, fw_elf=None, cfg_file='openocd.cfg', is_ble=False):
-    if fw_elf is None:
-        fw_elf = ctx.get_tintin_fw_node().change_ext('.elf')
-
-    if ctx.env.CONFIG_QEMU:
-        cmd_line = "python ./tools/qemu/qemu_gdb_proxy.py --port=1233 --target=localhost:1234"
-        proc = pexpect.spawn(cmd_line, logfile=sys.stdout, encoding='utf-8')
-        proc.expect(["Connected to target", pexpect.TIMEOUT], timeout=10)
-        run_arm_gdb(ctx, fw_elf, target_server_port=1233)
-        return
-
-    if ctx.env.RUNNER != 'openocd':
-        ctx.fatal('debug only supported with openocd runner')
-
-    with waftools.openocd.daemon(ctx, cfg_file,
-                                 use_swd=(is_ble or 'swd' in ctx.env.OPENOCD_JTAG)):
-        run_arm_gdb(ctx, fw_elf, cmd_str='--init-command=".gdbinit"')
-
-
-class Screenshot(BuildContext):
-    """ Captures a PNG screenshot of the running QEMU display via the QEMU
-        monitor socket. Requires `./waf qemu` to already be running.
-    """
-    cmd = 'screenshot'
-    fun = 'screenshot'
-
-
-def screenshot(ctx):
-    import socket
-
-    sock_path = ctx.path.get_bld().make_node('qemu-mon.sock').abspath()
-    if not os.path.exists(sock_path):
-        ctx.fatal("QEMU monitor socket not found at {} -- is './waf qemu' "
-                  "running?".format(sock_path))
-
-    out_path = ctx.options.screenshot_output
-    if not out_path:
-        out_path = ctx.path.get_bld().make_node('screenshot.png').abspath()
-    if not out_path.lower().endswith('.png'):
-        ctx.fatal('--screenshot-output must end with .png')
-
-    if os.path.exists(out_path):
-        os.unlink(out_path)
-
-    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
-        sock.settimeout(5)
-        sock.connect(sock_path)
-
-        def read_until_prompt():
-            buf = b''
-            while b'(qemu) ' not in buf:
-                chunk = sock.recv(4096)
-                if not chunk:
-                    break
-                buf += chunk
-            return buf
-
-        read_until_prompt()
-        sock.sendall('screendump {} -f png\n'.format(out_path).encode())
-        response = read_until_prompt().decode(errors='replace')
-
-    if not os.path.exists(out_path) or os.path.getsize(out_path) == 0:
-        ctx.fatal('QEMU did not write screenshot to {}\nMonitor response:\n{}'
-                  .format(out_path, response))
-
-    waflib.Logs.pprint('CYAN', 'Wrote screenshot to {}'.format(out_path))
-
-
-def openocd(ctx):
-    """ Starts openocd and leaves it running. It will reset the board to
-        increase the chances of attaching succesfully. """
-    waftools.openocd.run_command(ctx, 'init; reset', shutdown=False)
-
-
-# Image commands
-#################################################
-
-class ImageResources(BuildContext):
-    """flashes resources"""
-    cmd = 'image_resources'
-    fun = 'image_resources'
-
-
-def _is_pulse_everywhere(ctx):
-    return "PULSE_EVERYWHERE=1" in ctx.env["DEFINES"]
-
-
-def _get_pulse_flash_tool(ctx):
-    if ctx.env.CONFIG_SOC_SF32LB52 and not ctx.options.force_pulse:
-        return "sftool_flash_imaging"
-    if _is_pulse_everywhere(ctx) or ctx.options.force_pulse:
-        return "pulse_flash_imaging"
-    return "pulse_legacy_flash_imaging"
-
-
-def image_resources(ctx):
-    tty = ctx.options.tty
-    if tty is None:
-        waflib.Logs.pprint('RED', 'Error: --tty not specified')
-        return
-
-    pbpack_path = ctx.get_pbpack_node().abspath()
-    tool_name = _get_pulse_flash_tool(ctx)
-    waflib.Logs.pprint('CYAN', 'Writing pbpack "%s" to tty %s' % (pbpack_path, tty))
-
-    ret = os.system("python ./tools/%s.py -t %s -p resources %s" % (tool_name, tty, pbpack_path))
-    if ret != 0:
-        ctx.fatal('Imaging failed')
-
-
-class ImageRecovery(BuildContext):
-    """flashes recovery firmware"""
-    cmd = 'image_recovery'
-    fun = 'image_recovery'
-
-
-def image_recovery(ctx):
-    tty = ctx.options.tty
-    if tty is None:
-        waflib.Logs.pprint('RED', 'Error: --tty not specified')
-        return
-
-    tool_name = _get_pulse_flash_tool(ctx)
-    recovery_bin_path = ctx.options.file or ctx.get_tintin_fw_node().path_from(ctx.path)
-    waflib.Logs.pprint('CYAN', 'Writing recovery bin "%s" to tty %s' % (recovery_bin_path, tty))
-
-    ret = os.system("python ./tools/%s.py -t %s -p firmware %s" % (tool_name, tty, recovery_bin_path))
-    if ret != 0:
-        ctx.fatal('Imaging failed')
 
 
 # Flash commands
@@ -1144,90 +757,6 @@ def _check_firmware_image_size(ctx, path):
 
     return ('%d / %d bytes used (%d free)' %
             (firmware_size, max_firmware_size, (max_firmware_size - firmware_size)))
-
-
-class FlashCommand(BuildContext):
-    """flashes firmware"""
-    cmd = 'flash'
-    fun = 'flash'
-
-
-def flash(ctx):
-    fw_bin = ctx.get_tintin_fw_node()
-    _check_firmware_image_size(ctx, fw_bin.path_from(ctx.path))
-
-    hex_path = fw_bin.change_ext('.hex').path_from(ctx.path)
-
-    flash_resources = ctx.options.resources and ctx.env.VARIANT != 'prf'
-    if flash_resources and ctx.env.RUNNER != 'sftool':
-        ctx.fatal("--resources is only supported on the sftool runner")
-
-    if ctx.env.RUNNER == 'openocd':
-        waftools.openocd.run_command(ctx, 'init; reset halt; '
-                                    'program {} reset;'.format(hex_path),
-                                    expect=["Programming Finished", "Programming Finished", "shutdown"],
-                                    enforce_expect=True)
-    elif ctx.env.RUNNER == 'sftool':
-        files = [hex_path]
-        if flash_resources:
-            pbpack_path = ctx.get_pbpack_node().path_from(ctx.path)
-            files.append('{}@0x12620000'.format(pbpack_path))
-        waftools.sftool.write_flash(ctx, *files)
-    elif ctx.env.RUNNER == 'nrfutil':
-        waftools.nrfutil.program(ctx, hex_path)
-        waftools.nrfutil.reset(ctx)
-    else:
-        ctx.fatal("Unsupported operation on: {}".format(ctx.env.RUNNER))
-
-
-class ResetDevice(BuildContext):
-    cmd = 'reset'
-    fun = 'reset'
-
-def reset(ctx):
-    """resets a connected device"""
-    if ctx.env.RUNNER == 'openocd':
-        waftools.openocd.run_command(ctx, 'init; reset;', expect=["found"])
-    else:
-        ctx.fatal("Unsupported operation on: {}".format(ctx.env.RUNNER))
-
-
-def bork(ctx):
-    """resets and wipes a connected a device"""
-    if ctx.env.RUNNER == 'openocd':
-        waftools.openocd.run_command(ctx, 'init; reset halt;', ignore_fail=True)
-        waftools.openocd.run_command(ctx, 'init; flash erase_sector 0 0 1;', ignore_fail=True)
-    elif ctx.env.RUNNER == 'sftool':
-        waftools.sftool.erase_flash(ctx)
-    elif ctx.env.RUNNER == 'nrfutil':
-        waftools.nrfutil.erase(ctx)
-    else:
-        ctx.fatal("Unsupported operation on: {}".format(ctx.env.RUNNER))
-
-
-def make_lang(ctx):
-    """generate translation files and update existing ones"""
-    ctx.recurse('resources/normal/base/lang')
-
-
-class PackLangCommand(BuildContext):
-    cmd = 'pack_lang'
-    fun = 'pack_lang'
-
-
-def pack_lang(ctx):
-    """generates pbpack for langs"""
-    ctx.recurse('resources/normal/base/lang')
-
-
-class PackAllLangsCommand(BuildContext):
-    cmd = 'pack_all_langs'
-    fun = 'pack_all_langs'
-
-
-def pack_all_langs(ctx):
-    """generates pbpack for all langs"""
-    ctx.recurse('resources/normal/base/lang')
 
 
 # Tool build commands

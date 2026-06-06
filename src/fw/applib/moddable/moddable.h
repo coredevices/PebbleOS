@@ -11,6 +11,11 @@
 //! @see ModdableCreationRecord
 #define kModdableCreationFlagLogInstrumentation  (1 << 0)
 
+//! Flag to enable XS debugging using xsbug.
+//! Should be used in combination with pebble build --debug
+//! @see ModdableCreationRecord
+#define kModdableCreationFlagDebug  (1 << 1)
+
 //! Configuration record for creating a Moddable XS virtual machine.
 //! Used with moddable_createMachine() to customize the JS runtime.
 //! Set recordSize to sizeof(ModdableCreationRecord) for version compatibility.

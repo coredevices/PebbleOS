@@ -554,6 +554,7 @@ const Npm1300Config NPM1300_CONFIG = {
   .dischg_limit_ma = 200,
   .term_current_pct = 10,
   .thermistor_beta = 3380,
+  .ntc_hot_celsius = 45,
   .vbus_current_lim0 = 500,
   .vbus_current_startup = 500,
 };
@@ -571,13 +572,13 @@ const BoardConfigPower BOARD_CONFIG_POWER = {
     .gpio_pin = 26,
   },
   .low_power_threshold = 4U,
-  .battery_capacity_hours = 370U,
+  .battery_capacity_hours = 400U,
 };
 
 const BoardConfig BOARD_CONFIG = {
   .backlight_on_percent = 45,
-  .ambient_light_dark_threshold = 1400,
-  .ambient_k_delta_threshold = 200,
+  .ambient_light_dark_threshold = 150,
+  .ambient_k_delta_threshold = 25,
   .dynamic_backlight_min_threshold = 5,
   .backlight_default_color = BACKLIGHT_COLOR_WARM_WHITE,
 };

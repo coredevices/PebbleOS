@@ -35,15 +35,15 @@ PebbleOS is the operating system running on Pebble smartwatches.
 
 ## Firmware development
 
-- Configure: `./waf configure --board BOARD_NAME`
+- Configure: `./pbl configure --board BOARD_NAME`
 
-  - Board names can be obtained from `./waf --help`
+  - Board names can be obtained from `./pbl --help`
   - `-DCONFIG_RELEASE=y` enables release mode
   - `--mfg` enables manufacturing mode
   - `--variant=normal|prf` selects build variant (default: normal)
 
-- Build firmware: `./waf build`
-- Run tests: `./waf test`
+- Build firmware: `./pbl build`
+- Run tests: `./pbl test`
 
 ## Adding a new SDK function
 

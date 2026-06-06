@@ -568,7 +568,13 @@ void ams_handle_service_discovered(BLECharacteristic *characteristics) {
   const BTErrno e = gatt_client_subscriptions_subscribe(entity_update_characteristic,
                                                         BLESubscriptionNotifications,
                                                         GAPLEClientKernel);
-  PBL_ASSERTN(e == BTErrnoOK);
+  // Reject the service if subscribing fails instead of asserting (e.g. a "fake
+  // AMS" without CCCD).
+  if (e != BTErrnoOK) {
+    PBL_LOG_WRN("Failed to subscribe AMS (err=%d), ignoring service", e);
+    ams_invalidate_all_references();
+    return;
+  }
 }
 
 bool ams_can_handle_characteristic(BLECharacteristic characteristic) {

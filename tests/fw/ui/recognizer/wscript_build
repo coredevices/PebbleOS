@@ -1,0 +1,17 @@
+from waftools.pebble_test import clar
+
+clar(ctx,
+    sources_ant_glob = " src/fw/applib/ui/recognizer/recognizer.c" \
+                       " tests/fw/ui/recognizer/test_recognizer_impl.c",
+    test_sources_ant_glob = "test_recognizer.c")
+
+clar(ctx,
+    sources_ant_glob = " src/fw/applib/graphics/gtypes.c" \
+                       " src/fw/applib/ui/layer.c" \
+                       " src/fw/applib/ui/recognizer/recognizer.c" \
+                       " src/fw/applib/ui/recognizer/recognizer_manager.c" \
+                       " tests/fw/ui/recognizer/test_recognizer_impl.c",
+    defines = ['CONFIG_TOUCH'],
+    test_sources_ant_glob = "test_recognizer_manager.c")
+
+# vim:filetype=python

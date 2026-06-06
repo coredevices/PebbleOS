@@ -265,14 +265,20 @@ static void prv_process_pending_messages(void* context) {
   uint8_t id;
   rv = prv_read_data(CST816_GESTURE_ID, &id, 1, 1);
   if (!rv) {
-    PBL_LOG_ERR("Failed to read gesture ID, dropping event");
+    PBL_LOG_ERR("Failed to read gesture ID, trying to recover");
+    touch_handle_update(TouchState_FingerUp, 0, 0);
+    exti_disable(CST816->int_exti);
+    touch_sensor_set_enabled(true);
     return;
   }
 
   uint8_t data[CST816_TOUCH_DATA_SIZE] = {0};
   rv = prv_read_data(CST816_TOUCH_DATA_REG, data, CST816_TOUCH_DATA_SIZE, 1);
   if (!rv) {
-    PBL_LOG_ERR("Failed to read touch data, dropping event");
+    PBL_LOG_ERR("Failed to read touch data, trying to recover");
+    touch_handle_update(TouchState_FingerUp, 0, 0);
+    exti_disable(CST816->int_exti);
+    touch_sensor_set_enabled(true);
     return;
   }
 

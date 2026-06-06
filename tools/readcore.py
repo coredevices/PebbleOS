@@ -75,7 +75,18 @@ _CoreDumpChunk = cs.Struct(
     cs.Embedded(
         cs.Union(
             "payload",
-            cs.Bytes("raw", lambda ctx: ctx.size),
+            # The terminator chunk has no payload. Its `size` field is
+            # unreliable: a core dump read straight out of erased flash ends in
+            # 0xFF padding, so the terminator's size reads back as 0xFFFFFFFF
+            # rather than the 0 the firmware wrote. Force a zero-length payload
+            # for the terminator so we don't try to read 4 GiB of nonexistent
+            # data.
+            cs.Bytes(
+                "raw",
+                lambda ctx: (
+                    0 if ctx.key == _CoreDumpChunkKey.TERMINATOR.value else ctx.size
+                ),
+            ),
             cs.If(lambda ctx: ctx.key == _CoreDumpChunkKey.RAM.value, cs.Pass),
             cs.If(
                 lambda ctx: ctx.key == _CoreDumpChunkKey.THREAD.value,

@@ -16,6 +16,8 @@ import waftools.ldscript
 import waftools.objcopy
 import waftools.pblboot
 
+from tools.pebble_sdk_platform import pebble_platforms
+
 
 @feature("c")
 @before_method('apply_link')
@@ -73,7 +75,10 @@ def options(opt):
 
 def configure(conf):
     conf.load('binary_header')
-    conf.recurse('applib')
+
+    platform = pebble_platforms[conf.env.PLATFORM_NAME]
+    define = 'MAX_FONT_GLYPH_SIZE={}'.format(platform['MAX_FONT_GLYPH_SIZE'])
+    conf.env.append_value('DEFINES', [define])
 
     if conf.options.sdkshell:
         conf.env.NORMAL_SHELL = 'sdk'
@@ -604,15 +609,6 @@ def build(bld):
                          'applib/vendor/tinflate'],
         use=fw_includes_use,
         name='fw_includes')
-
-    if bld.variant == 'applib':
-        bld.set_env(bld.all_envs['local'])
-        bld.env.DEFINES.extend(['UNITTEST', 'CONFIG_SCREEN_COLOR_DEPTH_BITS=8',
-                                'DISP_COLS=144', 'DISP_ROWS=168',
-                                'DISPLAY_FRAMEBUFFER_BYTES=%d' % (144 * 168),
-                                'PBL_COLOR', 'PBL_RECT'])
-        bld.recurse('applib')
-        return
 
     # Truncate the commit to fit in our versions struct. This may cause an ambiguous commit
     # hash, but it's better than killing the build because the commit doesn't fit.

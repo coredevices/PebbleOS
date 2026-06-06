@@ -14,8 +14,8 @@ The QEMU binary ships with the [PebbleOS SDK](https://github.com/coredevices/Peb
 The steps here are similar that of real hardware:
 
 ```shell
-./waf configure --board=$BOARD
-./waf build
+./pbl configure --board=$BOARD
+./pbl build
 ```
 
 where `$BOARD` is one of the dedicated QEMU boards (`qemu_emery`,
@@ -26,13 +26,13 @@ where `$BOARD` is one of the dedicated QEMU boards (`qemu_emery`,
 You can launch QEMU with the built image using:
 
 ```shell
-./waf qemu
+./pbl qemu
 ```
 
 The flash image is rebuilt by default on every launch. To keep the existing flash image (e.g. to preserve stored apps), pass `--keep-flash-image`:
 
 ```shell
-./waf qemu --keep-flash-image
+./pbl qemu --keep-flash-image
 ```
 
 ## Console
@@ -40,7 +40,7 @@ The flash image is rebuilt by default on every launch. To keep the existing flas
 You can launch a console using:
 
 ```shell
-./waf console
+./pbl console
 ```
 
 ## Debug
@@ -48,5 +48,5 @@ You can launch a console using:
 You can debug with GDB using:
 
 ```shell
-./waf debug
+./pbl debug
 ```

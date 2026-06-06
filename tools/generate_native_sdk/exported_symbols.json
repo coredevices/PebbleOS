@@ -4,7 +4,7 @@
               "You should also make sure you are obeying our API design guidelines:",
               "https://pebbletechnology.atlassian.net/wiki/display/DEV/SDK+API+Design+Guidelines"
             ],
-  "revision" : "101",
+  "revision" : "103",
   "version" : "2.0",
   "files": [
     "fw/drivers/ambient_light.h",
@@ -50,6 +50,7 @@
     "fw/applib/app_wakeup.h",
     "fw/applib/app_exit_reason.h",
     "fw/applib/app_launch_reason.h",
+    "fw/applib/app_launch_button.h",
     "fw/applib/cpu_cache.h",
     "fw/applib/health_service.h",
     "fw/applib/moddable/moddable.h",
@@ -1567,6 +1568,10 @@
               "name": "kModdableCreationFlagLogInstrumentation",
               "addedRevision": "92"
             }, {
+              "type": "define",
+              "name": "kModdableCreationFlagDebug",
+              "addedRevision": "103"
+            }, {
               "type": "type",
               "name": "ModdableCreationRecord",
               "addedRevision": "90"
@@ -1832,6 +1837,9 @@
               "type": "type",
               "name": "AppLaunchReason"
             }, {
+              "type": "type",
+              "name": "AppQuickLaunchAction"
+            }, {
               "type": "function",
               "name": "launch_reason",
               "implName": "app_launch_reason",
@@ -1841,6 +1849,16 @@
               "name": "launch_get_args",
               "implName": "app_launch_get_args",
               "addedRevision": "38"
+            }, {
+              "type": "function",
+              "name": "launch_button",
+              "implName": "app_launch_button",
+              "addedRevision": "102"
+            }, {
+              "type": "function",
+              "name": "launch_get_quick_launch_action",
+              "implName": "app_launch_get_quick_launch_action",
+              "addedRevision": "102"
             }
           ]
         },

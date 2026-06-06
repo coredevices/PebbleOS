@@ -30,6 +30,21 @@
 //! The fixed height of the status bar, including separator height
 #define STATUS_BAR_LAYER_HEIGHT _STATUS_BAR_LAYER_HEIGHT(PBL_PLATFORM_TYPE_CURRENT)
 
+//! The height of the status bar when rendering the "Big & Bold" clock, including
+//! separator height, for all platforms.
+#define _STATUS_BAR_LAYER_LARGE_BOLD_HEIGHT(plat) PBL_PLATFORM_SWITCH(plat, \
+  /*aplite*/ 20, \
+  /*basalt*/ 20, \
+  /*chalk*/ 24, /* already tall enough; only the font grows */ \
+  /*diorite*/ 20, \
+  /*emery*/ 26, \
+  /*flint*/ 20, \
+  /*gabbro*/ 26)
+
+//! The "Big & Bold" status bar height for the current platform.
+#define STATUS_BAR_LAYER_LARGE_BOLD_HEIGHT \
+  _STATUS_BAR_LAYER_LARGE_BOLD_HEIGHT(PBL_PLATFORM_TYPE_CURRENT)
+
 //! The min width of the status bar
 #define STATUS_BAR_LAYER_MIN_WIDTH 35
 //! The distance from info_text to right edge of the status bar
@@ -58,6 +73,9 @@ typedef enum {
   StatusBarLayerModeCustomText = 2,
   //! Same as StatusBarLayerModeClock but renders the time using a bold font.
   StatusBarLayerModeClockBold = 3,
+  //! Same as StatusBarLayerModeClock but renders the time using a larger bold
+  //! font in a taller bar (the notification "Big & Bold" style).
+  StatusBarLayerModeClockLargeBold = 4,
 } StatusBarLayerMode;
 
 //! Values that are used to indicate the different status bar separator modes.
@@ -212,6 +230,11 @@ void status_bar_layer_reset_info(StatusBarLayer *status_bar_layer);
 //! @param mode Determines the separator mode
 void status_bar_layer_set_separator_mode(StatusBarLayer *status_bar_layer,
                                          StatusBarLayerSeparatorMode mode);
+
+//! Sets the mode, resizing the layer frame/bounds when the new mode has a different bar height.
+//! @param status_bar_layer The StatusBarLayer to configure
+//! @param mode The StatusBarLayerMode to set
+void status_bar_layer_set_mode(StatusBarLayer *status_bar_layer, StatusBarLayerMode mode);
 
 //! Gets the mode of the StatusBarLayer separator
 //! @param status_bar_layer The StatusBarLayer of which to get the separator mode

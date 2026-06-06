@@ -29,10 +29,6 @@
 #include "FreeRTOS.h"
 #include "semphr.h"
 
-//! Time to wait/block for when the buffer is full and needs to be drained by the client.
-//! Note that bt_lock() is held while waiting, so this has to be rather small.
-#define GATT_CLIENT_SUBSCRIPTIONS_WRITE_TIMEOUT_MS (100)
-
 // TODO:
 // - Intercept "manual" CCCD writes from the app, error for now? or translate to
 //   ble_client_subscribe calls?
@@ -229,7 +225,7 @@ void gatt_client_subscriptions_handle_server_notification(GAPLEConnection *conne
 
     // If we do not hold the bt_lock() at this point it's safe to block for a little bit waiting
     // for notifications to be consumed
-    uint32_t write_timeout = bt_lock_is_held() ? 0 : GATT_CLIENT_SUBSCRIPTIONS_WRITE_TIMEOUT_MS;
+    uint32_t write_timeout = bt_lock_is_held() ? 0 : CONFIG_BLE_GATT_NOTIF_WRITE_TIMEOUT_MS;
     bool consumed = prv_wait_until_write_space_available(buffer, (sizeof(header) + length),
                                                          write_timeout);
 

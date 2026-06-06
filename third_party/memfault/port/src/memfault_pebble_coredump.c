@@ -543,19 +543,24 @@ void memfault_pebble_coredump_reconstruct(void) {
     case RebootReasonCode_HardFault:
     case RebootReasonCode_LauncherPanic:
     case RebootReasonCode_WorkerHardFault:
+    case RebootReasonCode_StackOverflow:
       real_pc = reason.extra.value;
       break;
     case RebootReasonCode_OutOfMemory:
       real_pc = reason.heap_data.heap_alloc_lr;
+      // Per-heap bucketing if no LR.
+      if (real_pc == 0) real_pc = reason.heap_data.heap_ptr;
       break;
     case RebootReasonCode_Watchdog:
       real_pc = reason.watchdog.stuck_task_pc;
-      if (real_pc == 0) {
-        real_pc = reason.watchdog.stuck_task_lr;
-      }
+      if (real_pc == 0) real_pc = reason.watchdog.stuck_task_lr;
+      if (real_pc == 0) real_pc = reason.watchdog.stuck_task_callback;
       break;
     case RebootReasonCode_EventQueueFull:
       real_pc = reason.event_queue.push_lr;
+      // Dropped callback's address is the buggy code.
+      if (real_pc == 0) real_pc = reason.event_queue.dropped_event;
+      if (real_pc == 0) real_pc = reason.event_queue.current_event;
       break;
     default:
       break;

@@ -118,16 +118,12 @@ static Animation* prv_create_content_in_animation(ActionMenuData *data,
   Animation *content_in = property_animation_get_animation(prop_anim);
   animation_set_duration(content_in, IN_OUT_ANIMATION_DURATION);
 
-#if !defined(PLATFORM_TINTIN)
   // animate the dots
   Animation *crumbs_anim = crumbs_layer_get_animation(&data->crumbs_layer);
   animation_set_duration(crumbs_anim, IN_OUT_ANIMATION_DURATION);
   // combine the two
   Animation *spawn_anim = animation_spawn_create(content_in, crumbs_anim, NULL);
   return spawn_anim;
-#else
-  return content_in;
-#endif
 }
 
 static Animation* prv_create_content_out_animation(ActionMenuData *data,

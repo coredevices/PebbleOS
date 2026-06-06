@@ -1,0 +1,12 @@
+from waftools.pebble_test import clar
+
+clar(ctx,
+    sources_ant_glob =
+        " src/fw/kernel/pulse_logging.c",
+    test_sources_ant_glob="test_pulse_logging.c")
+
+clar(ctx,
+    sources_ant_glob =
+        " src/fw/kernel/util/interval_timer.c"
+        " tests/fakes/fake_rtc.c",
+    test_sources_ant_glob="test_interval_timer.c")

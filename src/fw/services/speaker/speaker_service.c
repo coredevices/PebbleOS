@@ -101,7 +101,11 @@ static bool prv_is_speaker_muted(void) {
 }
 
 static uint8_t prv_effective_volume(uint8_t vol) {
-  return prv_is_speaker_muted() ? 0 : vol;
+  if (prv_is_speaker_muted()) {
+    return 0;
+  }
+  const uint8_t cap = alerts_preferences_get_speaker_volume();
+  return (uint32_t)vol * cap / 100;
 }
 
 static void prv_update_volume_analytics(uint8_t new_volume_pct) {
@@ -705,7 +709,7 @@ bool speaker_service_is_muted(void) {
   return prv_is_speaker_muted();
 }
 
-void speaker_service_handle_mute_state_changed(void) {
+void speaker_service_handle_audio_prefs_changed(void) {
   mutex_lock(s_lock);
   if (s_state.state == SpeakerStateIdle) {
     mutex_unlock(s_lock);
@@ -808,6 +812,6 @@ void speaker_service_register_finish(PebbleTask task) {}
 void pbl_analytics_external_collect_speaker_stats(void) {}
 
 bool speaker_service_is_muted(void) { return false; }
-void speaker_service_handle_mute_state_changed(void) {}
+void speaker_service_handle_audio_prefs_changed(void) {}
 
 #endif // CONFIG_SPEAKER
