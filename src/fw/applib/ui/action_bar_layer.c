@@ -51,6 +51,18 @@ static int prv_press_animation_offset(void) {
                              /*gabbro*/ 4);
 }
 
+static int prv_horizontal_icon_nudge(void) {
+  const PlatformType platform = process_manager_current_platform();
+  return PBL_PLATFORM_SWITCH(platform,
+                             /*aplite*/ 0,
+                             /*basalt*/ 0,
+                             /*chalk*/ 0,
+                             /*diorite*/ 0,
+                             /*emery*/ -1,
+                             /*flint*/ 0,
+                             /*gabbro*/ 0);
+}
+
 // TODO: Once PBL-16032 is implemented, use that instead.
 static int64_t prv_get_precise_time(void) {
   time_t seconds;
@@ -209,6 +221,7 @@ void action_bar_update_proc(ActionBarLayer *action_bar, GContext* ctx) {
       GRect icon_rect = icon->bounds;
       const bool clip = true;
       grect_align(&icon_rect, &rect, GAlignCenter, clip);
+      icon_rect.origin.x += prv_horizontal_icon_nudge();
 #if PBL_ROUND
       // Offset needed because the new curvature of the action bar makes the icons look off-center
       const int32_t icon_horizontal_offset = -2;
