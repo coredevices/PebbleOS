@@ -417,10 +417,10 @@ def render_header(colors):
 //! @param alpha Alpha value from 0 - 255
 //! @return GColor created from the RGBA values
 #define GColorFromRGBA(red, green, blue, alpha) ((GColor8){ \\
-  .a = (uint8_t)(alpha) >> 6, \\
-  .r = (uint8_t)(red) >> 6, \\
-  .g = (uint8_t)(green) >> 6, \\
   .b = (uint8_t)(blue) >> 6, \\
+  .g = (uint8_t)(green) >> 6, \\
+  .r = (uint8_t)(red) >> 6, \\
+  .a = (uint8_t)(alpha) >> 6, \\
   })
 
 //! Convert RGB to GColor.
