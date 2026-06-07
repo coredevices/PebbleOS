@@ -44,6 +44,11 @@
 #define stat(...)   _Static_assert(0, "stat() is not supported")
 
 // List of unsupported memory calls
+
+// alloca() happens to be defined as a macro in the libc implementation
+// used in the SDK. #undef is a no-op if there's no such macro.
+#undef alloca
+
 #define alloca(...)   _Static_assert(0, "alloca() is not supported")
 #define mmap(...)     _Static_assert(0, "mmap() is not supported")
 #define brk(...)      _Static_assert(0, "brk() is not supported")
