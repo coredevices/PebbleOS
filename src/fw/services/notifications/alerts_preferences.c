@@ -14,6 +14,7 @@
 #include "os/mutex.h"
 #include "util/bitset.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #define FILE_NAME "notifpref"

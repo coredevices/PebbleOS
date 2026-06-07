@@ -64,6 +64,16 @@ enum QuietTimeItem {
   QuietTimeItem_Count,
 };
 
+#ifdef CONFIG_TOUCH
+enum QuietTimeBacklightItem {
+  QuietTimeBacklightItemMotion,
+  QuietTimeBacklightItemTouch,
+  QuietTimeBacklightItem_Count,
+};
+#endif
+
+static void prv_change_days_callback(DayPickerResult result, void *context);
+
 static const AlertMask s_dnd_mask_cycle[] = {
   AlertMaskAllOff,
   AlertMaskPhoneCalls,
