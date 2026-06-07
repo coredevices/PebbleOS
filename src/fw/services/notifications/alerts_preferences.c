@@ -13,6 +13,7 @@
 #include "pbl/util/math.h"
 #include "pbl/kernel/mutex.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #define FILE_NAME "notifpref"
