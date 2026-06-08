@@ -173,8 +173,8 @@ static void prv_swap_timeline(void *data) {
   const bool is_future = (s_app_data->timeline_model.direction == TimelineIterDirectionFuture);
   const bool to_timeline = true;
   const CompositorTransition *transition = PBL_IF_RECT_ELSE(
-      compositor_slide_transition_timeline_get(is_future, to_timeline, timeline_model_is_empty()),
-      compositor_dot_transition_timeline_get(is_future, to_timeline));
+      compositor_slide_transition_timeline_get(!is_future, to_timeline, timeline_model_is_empty()),
+      compositor_dot_transition_timeline_get(!is_future, to_timeline));
   static TimelineArgs args = (TimelineArgs) {
     .force_full = true
   };
