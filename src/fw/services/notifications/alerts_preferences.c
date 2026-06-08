@@ -3,11 +3,11 @@
 
 #include "pbl/services/notifications/alerts_preferences.h"
 #include "pbl/services/notifications/alerts_preferences_private.h"
+#include "pbl/services/notifications/do_not_disturb.h"
 
 #include "drivers/rtc.h"
 #include "popups/notifications/notification_window.h"
 #include "pbl/services/analytics/analytics.h"
-#include "pbl/services/notifications/do_not_disturb.h"
 #include "pbl/services/settings/settings_file.h"
 #include "pbl/services/vibes/vibe_intensity.h"
 #include "system/passert.h"
@@ -899,6 +899,14 @@ legacy_done:
 done:
   settings_file_close(&file);
   mutex_unlock(s_mutex);
+
+  // Phone-originated Manual/Smart writes need a DND state refresh;
+  // other DND prefs are read on-demand by their consumers.
+  if (matched_key &&
+      (strcmp(matched_key, PREF_KEY_DND_MANUALLY_ENABLED) == 0 ||
+       strcmp(matched_key, PREF_KEY_DND_SMART_ENABLED) == 0)) {
+    do_not_disturb_refresh_active_state();
+  }
 
   // Notify UI that a preference changed so it can refresh
   if (matched_key) {

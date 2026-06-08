@@ -92,6 +92,9 @@ static void prv_toggle_smart_dnd(void *e_dialog) {
   prv_do_update();
 }
 
+//! Re-evaluate active DND state and post PEBBLE_DO_NOT_DISTURB_EVENT if it changed.
+void do_not_disturb_refresh_active_state(void) { prv_do_update(); }
+
 static void prv_toggle_manual_dnd_from_action_menu(void *e_dialog) {
   do_not_disturb_toggle_push(ActionTogglePrompt_NoPrompt, false /* set_exit_reason */);
 }
