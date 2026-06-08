@@ -188,10 +188,13 @@ static void prv_swap_timeline(void *data) {
       .common.transition = transition,
     });
   } else {
-    Uuid full_uuid = TIMELINE_FULL_UUID_INIT;
+    Uuid app_uuid;
+    sys_get_app_uuid(&app_uuid);
+    const Uuid target_uuid = uuid_equal(&app_uuid, &(Uuid)TIMELINE_FULL_UUID_INIT) ?
+        (Uuid)TIMELINE_UUID_INIT : (Uuid)TIMELINE_FULL_UUID_INIT;
     args.direction = TimelineIterDirectionFuture;
     app_manager_put_launch_app_event(&(AppLaunchEventConfig) {
-      .id = app_install_get_id_for_uuid((const Uuid *)(&full_uuid)),
+      .id = app_install_get_id_for_uuid((const Uuid *)&target_uuid),
       .common.args = (const void *)&args,
       .common.transition = transition,
     });
