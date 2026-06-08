@@ -40,6 +40,11 @@ typedef struct {
   TimeRangeSelectionWindowData schedule_window;
   ActionMenuConfig action_menu;
   int selected_schedule_index;
+
+  GBitmap plus_icon;
+  uint32_t current_plus_icon_resource_id;
+  bool can_add_schedule;
+  bool show_limit_reached_text;
 } SettingsQuietTimeScheduleData;
 
 #ifdef CONFIG_TOUCH
@@ -50,6 +55,7 @@ typedef struct {
 
 enum QuietTimeItem {
   QuietTimeItemManual,
+  QuietTimeItemSmartDnd,
   QuietTimeItemSchedule,
   QuietTimeItemInterruptions,
   QuietTimeItemNotifications,
@@ -139,6 +145,10 @@ static const char *prv_get_dnd_notifications_enable(void *i18n_key) {
   }
 }
 
+static const char *prv_get_smart_dnd_subtitle(void *i18n_key) {
+  return i18n_get(do_not_disturb_is_smart_dnd_enabled() ? "On" : "Off", i18n_key);
+}
+
 static void prv_get_qt_time(const QuietTimeScheduleConfig *config, char *time_string,
                              const uint8_t len) {
   clock_format_time(time_string, len, config->from_hour, config->from_minute, true);
@@ -156,6 +166,12 @@ static void prv_reload_schedules(SettingsQuietTimeScheduleData *data) {
       data->num_schedules++;
     }
   }
+  data->can_add_schedule = (data->num_schedules < MAX_QUIET_TIME_SCHEDULES);
+}
+
+static void prv_schedule_refresh(SettingsQuietTimeScheduleData *data) {
+  prv_reload_schedules(data);
+  settings_menu_reload_data(SettingsMenuItemQuietTime);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -174,14 +190,17 @@ static void prv_toggle_scheduled_dnd(ActionMenu *action_menu,
                                      const ActionMenuItem *item,
                                      void *context) {
   int index = (int)(uintptr_t)item->action_data;
+  SettingsQuietTimeScheduleData *data = context;
   QuietTimeScheduleConfig config;
   quiet_time_get_schedule(index, &config);
   config.enabled = !config.enabled;
   quiet_time_set_schedule_enabled(index, config.enabled);
+  prv_schedule_refresh(data);
 }
 
 static void prv_complete_schedule(TimeRangeSelectionWindowData *schedule_window, void *data) {
-  int index = (int)(uintptr_t)data;
+  SettingsQuietTimeScheduleData *qt_data = (SettingsQuietTimeScheduleData *)data;
+  int index = qt_data->selected_schedule_index;
   QuietTimeScheduleConfig config;
   quiet_time_get_schedule(index, &config);
 
@@ -198,6 +217,8 @@ static void prv_complete_schedule(TimeRangeSelectionWindowData *schedule_window,
 
   quiet_time_set_schedule(index, &config);
 
+  prv_schedule_refresh(qt_data);
+
   const bool animated = true;
   app_window_stack_remove(&schedule_window->window, animated);
 }
@@ -207,8 +228,9 @@ static void prv_time_range_select_window_push(int index,
   QuietTimeScheduleConfig config;
   quiet_time_get_schedule(index, &config);
   TimeRangeSelectionWindowData *schedule_window = &data->schedule_window;
+  data->selected_schedule_index = index;
   time_range_selection_window_init(schedule_window, GColorCobaltBlue,
-                                   prv_complete_schedule, (void*)(uintptr_t)index);
+                                   prv_complete_schedule, data);
 
   schedule_window->from.hour = config.from_hour;
   schedule_window->from.minute = config.from_minute;
@@ -221,9 +243,10 @@ static void prv_dnd_set_schedule(ActionMenu *action_menu,
                                 const ActionMenuItem *item,
                                 void *context) {
   int index = (int)(uintptr_t)item->action_data;
-  quiet_time_set_schedule_enabled(index, true);
   SettingsQuietTimeScheduleData *data = context;
+  quiet_time_set_schedule_enabled(index, true);
   data->selected_schedule_index = index;
+  prv_schedule_refresh(data);
   prv_time_range_select_window_push(index, data);
 }
 
@@ -231,7 +254,9 @@ static void prv_dnd_delete_schedule(ActionMenu *action_menu,
                                      const ActionMenuItem *item,
                                      void *context) {
   int index = (int)(uintptr_t)item->action_data;
+  SettingsQuietTimeScheduleData *data = context;
   quiet_time_delete_schedule(index);
+  prv_schedule_refresh(data);
 }
 
 static void prv_dnd_change_days(ActionMenu *action_menu,
@@ -303,7 +328,7 @@ static void prv_scheduled_dnd_menu_push(int index,
   };
 
   level->items[DNDMenuItemChangeSchedule] = (ActionMenuItem) {
-    .label = i18n_get("Change Schedule", &data->action_menu),
+    .label = i18n_get("Change Time", &data->action_menu),
     .perform_action = prv_dnd_set_schedule,
     .action_data = (void*)(uintptr_t)index,
   };
@@ -343,6 +368,7 @@ static void prv_add_day_picker_callback(DayPickerResult result, void *context) {
   int index = quiet_time_create_schedule(&config);
   if (index >= 0) {
     quiet_time_set_schedule_enabled(index, true);
+    prv_schedule_refresh(data);
     prv_time_range_select_window_push(index, data);
   }
 }
@@ -360,6 +386,7 @@ static void prv_change_days_callback(DayPickerResult result, void *context) {
     memset(config.scheduled_days, 0, sizeof(config.scheduled_days));
   }
   quiet_time_set_schedule(index, &config);
+  prv_schedule_refresh(data);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -368,6 +395,7 @@ static void prv_change_days_callback(DayPickerResult result, void *context) {
 
 static void prv_schedule_deinit_cb(SettingsCallbacks *context) {
   SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *) context;
+  gbitmap_deinit(&data->plus_icon);
   i18n_free_all(data);
   app_free(data);
 }
@@ -375,75 +403,95 @@ static void prv_schedule_deinit_cb(SettingsCallbacks *context) {
 static void prv_schedule_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
                                      const Layer *cell_layer, uint16_t row, bool selected) {
   SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *) context;
-  int active_schedules = data->num_schedules;
-  bool can_add = (active_schedules < MAX_QUIET_TIME_SCHEDULES);
 
-  const char *title = NULL;
-  bool title_needs_i18n = true;
-  char *subtitle = NULL;
-  const uint8_t buffer_length = 80;
-  char title_buf[buffer_length];
-
+  // Row 0: the "+ Add Schedule" cell, mirroring the Alarms list.
   if (row == 0) {
-    title = i18n_get("Calendar Aware", data);
-    title_needs_i18n = false;
-    subtitle = app_malloc_check(buffer_length);
-    strncpy(subtitle, do_not_disturb_is_smart_dnd_enabled() ?
-              i18n_ctx_get("QuietTime", "Enabled", data) :
-              i18n_ctx_get("QuietTime", "Disabled", data), buffer_length);
-  } else if (row <= (uint16_t)active_schedules) {
-    int idx = row - 1;
-    QuietTimeScheduleConfig *config = &data->schedules[idx];
-    if (config->kind == QT_KIND_CUSTOM) {
-      // "Custom: Mon,Wed,Fri" — show day list in title (i18n'd, no per-call alloc)
-      i18n_get_with_buffer(quiet_time_get_string_for_kind(QT_KIND_CUSTOM),
-                           title_buf, sizeof(title_buf));
-      size_t used = strlen(title_buf);
-      if (used + 2 < sizeof(title_buf)) {
-        title_buf[used++] = ':';
-        title_buf[used++] = ' ';
-        title_buf[used] = '\0';
+    GRect box;
+    uint32_t new_bitmap_resource = RESOURCE_ID_PLUS_ICON_BLACK;
+
+    if (!data->can_add_schedule) { // schedule limit reached
+      if (menu_cell_layer_is_highlighted(cell_layer)) {
+        if (data->show_limit_reached_text) {
+          const GFont font =
+              system_theme_get_font_for_default_size(TextStyleFont_MenuCellSubtitle);
+
+          box = GRect(0, 0, cell_layer->bounds.size.w, fonts_get_font_height(font));
+
+          const char *text = i18n_get("Limit reached.", data);
+          box.size = graphics_text_layout_get_max_used_size(ctx, text, font, box,
+                                                            GTextOverflowModeTrailingEllipsis,
+                                                            GTextAlignmentCenter, NULL);
+          grect_align(&box, &cell_layer->bounds, GAlignCenter, true /* clip */);
+          box.origin.y -= fonts_get_font_cap_offset(font);
+
+          graphics_draw_text(ctx, text, font, box,
+                             GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+          return;
+        } else { // "+" cell highlighted
+          new_bitmap_resource = RESOURCE_ID_PLUS_ICON_DOTTED;
+        }
+      } else { // "+" cell not highlighted
+        graphics_context_set_tint_color(ctx, GColorLightGray);
       }
-      quiet_time_get_string_for_custom(config->scheduled_days,
-                                       title_buf + used, sizeof(title_buf) - used);
-      title = title_buf;
-      title_needs_i18n = false;
-    } else {
-      title = quiet_time_get_string_for_kind(config->kind);
     }
-    subtitle = app_malloc_check(buffer_length);
-    if (config->enabled) {
-      prv_get_qt_time(config, subtitle, buffer_length);
-    } else {
-      strncpy(subtitle, i18n_ctx_get("QuietTime", "Disabled", data), buffer_length);
+
+    if (new_bitmap_resource != data->current_plus_icon_resource_id) {
+      data->current_plus_icon_resource_id = new_bitmap_resource;
+      gbitmap_deinit(&data->plus_icon);
+      gbitmap_init_with_resource(&data->plus_icon, data->current_plus_icon_resource_id);
     }
-  } else if (can_add && row == (uint16_t)(active_schedules + 1)) {
-    title = i18n_get("+ Add Schedule", data);
-    title_needs_i18n = false;
-    subtitle = NULL;
-  } else {
-    WTF;
+
+    box.origin = GPoint((cell_layer->bounds.size.w - data->plus_icon.bounds.size.w) / 2,
+                        (cell_layer->bounds.size.h - data->plus_icon.bounds.size.h) / 2);
+    box.size = data->plus_icon.bounds.size;
+    graphics_context_set_compositing_mode(ctx, GCompOpTint);
+    graphics_draw_bitmap_in_rect(ctx, &data->plus_icon, &box);
+    return;
   }
 
-  const char *display_title = title_needs_i18n ? i18n_get(title, data) : title;
-  menu_cell_basic_draw(ctx, cell_layer, display_title, subtitle, NULL);
-  if (subtitle) {
-    app_free(subtitle);
+  // Rows 1..N: each scheduled quiet-time entry, alarm-style.
+  int idx = row - 1;
+  QuietTimeScheduleConfig *config = &data->schedules[idx];
+
+  // Title: time range, e.g. "10:00 PM - 6:00 AM".
+  const uint8_t buffer_length = 32;
+  char title_buf[buffer_length];
+  prv_get_qt_time(config, title_buf, buffer_length);
+
+  // Subtitle: kind ("Weekday", "Weekend") or comma-separated custom day list.
+  const size_t day_text_length = 32;
+  char day_text[day_text_length];
+  memset(day_text, 0, sizeof(day_text));
+  const char *subtitle;
+  if (config->kind == QT_KIND_CUSTOM) {
+    quiet_time_get_string_for_custom(config->scheduled_days, day_text, sizeof(day_text));
+    subtitle = day_text;
+  } else {
+    subtitle = quiet_time_get_string_for_kind(config->kind);
   }
+
+  // Value: ON / OFF, right-aligned.
+  const char *value = config->enabled ? i18n_get("ON", data) : i18n_get("OFF", data);
+
+  MenuCellLayerConfig cell_config = {
+    .title = title_buf,
+    .subtitle = subtitle,
+    .value = value,
+    .overflow_mode = GTextOverflowModeTrailingEllipsis,
+    .horizontal_inset = PBL_IF_ROUND_ELSE(-6, 0),
+  };
+  menu_cell_layer_draw(ctx, cell_layer, &cell_config);
 }
 
 static void prv_schedule_select_click_cb(SettingsCallbacks *context, uint16_t row) {
   SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *) context;
-  int active_schedules = data->num_schedules;
-  bool can_add = (active_schedules < MAX_QUIET_TIME_SCHEDULES);
 
   if (row == 0) {
-    do_not_disturb_toggle_smart_dnd();
-  } else if (row <= (uint16_t)active_schedules) {
-    int idx = row - 1;
-    data->selected_schedule_index = idx;
-    prv_scheduled_dnd_menu_push(idx, data);
-  } else if (can_add && row == (uint16_t)(active_schedules + 1)) {
+    if (!data->can_add_schedule) {
+      data->show_limit_reached_text = true;
+      settings_menu_reload_data(SettingsMenuItemQuietTime);
+      return;
+    }
     DayPickerResult initial = {.kind = DayPickerKindEveryday};
     memset(initial.custom_days, 0, sizeof(initial.custom_days));
     DayPickerConfig config = {
@@ -452,15 +500,18 @@ static void prv_schedule_select_click_cb(SettingsCallbacks *context, uint16_t ro
       .allow_once = false,
     };
     day_picker_push(config, prv_add_day_picker_callback, data);
+  } else {
+    int idx = row - 1;
+    data->selected_schedule_index = idx;
+    prv_scheduled_dnd_menu_push(idx, data);
   }
   settings_menu_reload_data(SettingsMenuItemQuietTime);
 }
 
 static uint16_t prv_schedule_num_rows_cb(SettingsCallbacks *context) {
   SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *) context;
-  int active_schedules = data->num_schedules;
-  bool can_add = (active_schedules < MAX_QUIET_TIME_SCHEDULES);
-  return 1 + active_schedules + (can_add ? 1 : 0);
+  // Row 0 is the "+" cell, then one row per active schedule.
+  return 1 + data->num_schedules;
 }
 
 static void prv_schedule_submenu_push(void) {
@@ -567,6 +618,10 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       subtitle = do_not_disturb_is_manually_enabled() ?
                      i18n_get("On", data) : i18n_get("Off", data);
       break;
+    case QuietTimeItemSmartDnd:
+      title = i18n_get("Calendar Aware", data);
+      subtitle = prv_get_smart_dnd_subtitle(data);
+      break;
     case QuietTimeItemSchedule:
       title = i18n_get("Schedule", data);
       break;
@@ -606,6 +661,9 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
   switch (row) {
     case QuietTimeItemManual:
       do_not_disturb_toggle_manually_enabled(ManualDNDFirstUseSourceSettingsMenu);
+      break;
+    case QuietTimeItemSmartDnd:
+      do_not_disturb_toggle_smart_dnd();
       break;
     case QuietTimeItemSchedule:
       prv_schedule_submenu_push();
