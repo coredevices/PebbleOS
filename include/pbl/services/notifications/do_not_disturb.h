@@ -87,6 +87,9 @@ bool do_not_disturb_is_smart_dnd_enabled(void);
 
 void do_not_disturb_toggle_smart_dnd(void);
 
+//! Re-evaluate active DND state and post PEBBLE_DO_NOT_DISTURB_EVENT if it changed.
+void do_not_disturb_refresh_active_state(void);
+
 void do_not_disturb_get_schedule(DoNotDisturbScheduleType type, DoNotDisturbSchedule *schedule_out);
 
 void do_not_disturb_set_schedule(DoNotDisturbScheduleType type, DoNotDisturbSchedule *schedule);

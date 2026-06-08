@@ -5,6 +5,8 @@
 
 #include "applib/ui/action_toggle.h"
 #include "kernel/events.h"
+#include "pbl/services/blob_db/api.h"
+#include "pbl/services/blob_db/api_types.h"
 #include "resource/resource.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/system_task.h"
@@ -48,6 +50,7 @@
 #define PREF_KEY_DND_MANUALLY_ENABLED "dndManuallyEnabled"
 
 static int s_num_dnd_events_put = 0;
+static int s_num_pref_change_events_put = 0;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Fakes
@@ -58,7 +61,10 @@ bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
 }
 
 void event_put(PebbleEvent* event) {
-  s_num_dnd_events_put++;
+  // Count DND and pref events separately; the receive path posts both,
+  // the local setter path only the DND event.
+  if (event->type == PEBBLE_DO_NOT_DISTURB_EVENT) s_num_dnd_events_put++;
+  else if (event->type == PEBBLE_PREF_CHANGE_EVENT) s_num_pref_change_events_put++;
 }
 
 // Thursday, March 12, 2015, 00:00 UTC
@@ -147,6 +153,7 @@ void test_do_not_disturb__initialize(void) {
 
   s_event_ongoing = false;
   s_num_dnd_events_put = 0;
+  s_num_pref_change_events_put = 0;
 }
 
 void test_do_not_disturb__cleanup(void) {
@@ -985,3 +992,97 @@ void test_do_not_disturb__qt_create_returns_full_when_no_slots(void) {
     quiet_time_delete_schedule(i);
   }
 }
+
+//! Phone-originated receive-path tests.
+
+static void prv_simulate_phone_write(const char *key, const void *value, size_t value_len) {
+  // Mirror the real blob DB write path: write to settings_file, then
+  // dispatch the receive event.
+  SettingsFile file;
+  cl_must_pass(settings_file_open(&file, "notifpref", 1024));
+  cl_must_pass(settings_file_set(&file, key, strlen(key), value, value_len));
+  settings_file_close(&file);
+
+  PebbleBlobDBEvent event = {
+    .db_id = BlobDBIdSettings,
+    .type = BlobDBEventTypeInsert,
+    .key = (uint8_t *)key,
+    .key_len = (int)strlen(key),
+  };
+  alerts_preferences_handle_blob_db_event(&event);
+}
+
+void test_do_not_disturb__phone_manually_enabled_recomputes_active_state(void) {
+  cl_assert(do_not_disturb_is_active() == false);
+  cl_assert(do_not_disturb_is_manually_enabled() == false);
+  cl_assert_equal_i(s_num_dnd_events_put, 0);
+  cl_assert_equal_i(s_num_pref_change_events_put, 0);
+
+  // Phone toggles Manual ON.
+  const bool enabled = true;
+  prv_simulate_phone_write("dndManuallyEnabled", &enabled, sizeof(enabled));
+
+  cl_assert(do_not_disturb_is_manually_enabled() == true);
+  // Active state is recomputed and a DND event posted.
+  cl_assert(do_not_disturb_is_active() == true);
+  cl_assert_equal_i(s_num_dnd_events_put, 1);
+  cl_assert_equal_i(s_num_pref_change_events_put, 1);
+  prv_assert_manually_dnd_setting_val(true);
+
+  // Phone toggles Manual OFF.
+  const bool disabled = false;
+  prv_simulate_phone_write("dndManuallyEnabled", &disabled, sizeof(disabled));
+
+  cl_assert(do_not_disturb_is_manually_enabled() == false);
+  cl_assert(do_not_disturb_is_active() == false);
+  cl_assert_equal_i(s_num_dnd_events_put, 2);
+  cl_assert_equal_i(s_num_pref_change_events_put, 2);
+  prv_assert_manually_dnd_setting_val(false);
+}
+
+void test_do_not_disturb__phone_smart_enabled_recomputes_active_state(void) {
+  calendar_init();
+  cl_assert(do_not_disturb_is_smart_dnd_enabled() == false);
+  cl_assert(do_not_disturb_is_active() == false);
+  cl_assert_equal_i(s_num_dnd_events_put, 0);
+  cl_assert_equal_i(s_num_pref_change_events_put, 0);
+
+  // Phone toggles Smart ON; no calendar event so no DND event yet.
+  const bool enabled = true;
+  prv_simulate_phone_write("dndSmartEnabled", &enabled, sizeof(enabled));
+
+  cl_assert(do_not_disturb_is_smart_dnd_enabled() == true);
+  cl_assert(do_not_disturb_is_active() == false);
+  cl_assert_equal_i(s_num_dnd_events_put, 0);
+  cl_assert_equal_i(s_num_pref_change_events_put, 1);
+
+  // Calendar event starts; refresh posts a DND event.
+  s_event_ongoing = true;
+  cl_assert(do_not_disturb_is_active() == true);
+  do_not_disturb_refresh_active_state();
+  cl_assert_equal_i(s_num_dnd_events_put, 1);
+
+  s_event_ongoing = false;
+  do_not_disturb_refresh_active_state();
+  cl_assert(do_not_disturb_is_active() == false);
+  cl_assert_equal_i(s_num_dnd_events_put, 2);
+
+  // Phone toggles Smart OFF.
+  const bool disabled = false;
+  prv_simulate_phone_write("dndSmartEnabled", &disabled, sizeof(disabled));
+  cl_assert(do_not_disturb_is_smart_dnd_enabled() == false);
+  cl_assert(do_not_disturb_is_active() == false);
+  cl_assert_equal_i(s_num_dnd_events_put, 2);
+  cl_assert_equal_i(s_num_pref_change_events_put, 2);
+}
+
+//! Refresh is a no-op when the active state didn't change.
+void test_do_not_disturb__refresh_active_state_noop_when_unchanged(void) {
+  cl_assert(do_not_disturb_is_active() == false);
+  cl_assert_equal_i(s_num_dnd_events_put, 0);
+
+  do_not_disturb_refresh_active_state();
+  cl_assert(do_not_disturb_is_active() == false);
+  cl_assert_equal_i(s_num_dnd_events_put, 0);
+}
+
