@@ -135,6 +135,9 @@ void do_not_disturb_toggle_smart_dnd(void);
  * @param type Schedule to get.
  * @param[out] schedule_out Schedule.
  */
+//! Re-evaluate active DND state and post PEBBLE_DO_NOT_DISTURB_EVENT if it changed.
+void do_not_disturb_refresh_active_state(void);
+
 void do_not_disturb_get_schedule(DoNotDisturbScheduleType type, DoNotDisturbSchedule *schedule_out);
 
 /**
