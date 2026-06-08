@@ -3,9 +3,11 @@
 
 #include "pbl/services/notifications/alerts_preferences.h"
 #include "pbl/services/notifications/alerts_preferences_private.h"
+#include "pbl/services/notifications/do_not_disturb.h"
 
 #include <pbl/drivers/rtc.h>
-#include "pbl/services/notifications/do_not_disturb.h"
+#include "popups/notifications/notification_window.h"
+#include "pbl/services/analytics/analytics.h"
 #include "pbl/services/settings/settings_file.h"
 #include "pbl/services/vibes/vibe_intensity.h"
 #include "system/passert.h"
