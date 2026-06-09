@@ -313,12 +313,15 @@ void settings_blob_db_init(void) {
     return;
   }
 
-  // Register callback to sync settings immediately when they change
   settings_file_set_change_callback(prv_settings_change_callback);
 
   s_initialized = true;
   PBL_LOG_DBG("Settings BlobDB initialized (%u whitelisted settings)",
               (unsigned int)s_num_syncable_settings);
+}
+
+void settings_blob_db_reset_for_test(void) {
+  s_initialized = false;
 }
 
 status_t settings_blob_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
@@ -778,11 +781,14 @@ status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
   settings_file_each(&file, prv_get_timestamp_callback, &ctx);
 
   if (ctx.found && ctx.last_modified > timestamp) {
-    // Watch data is newer - reject the insert
+    // Watch data is newer - reject the insert and push the watch's value back to
+    // the phone so its UI refreshes. Otherwise the phone treats the DataStale
+    // response as success and keeps showing its (stale) local value.
     settings_file_close(&file);
     prv_unlock_for_file(is_notif_pref);
-    PBL_LOG_DBG("Rejecting stale data: watch=%lu phone=%lu", (unsigned long)ctx.last_modified,
-                (unsigned long)timestamp);
+    PBL_LOG_DBG("Rejecting stale data: watch=%lu phone=%lu",
+            (unsigned long)ctx.last_modified, (unsigned long)timestamp);
+    blob_db_sync_record(BlobDBIdSettings, key, key_len, ctx.last_modified);
     return E_INVALID_OPERATION;
   }
 

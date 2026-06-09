@@ -23,6 +23,8 @@
  */
 void settings_blob_db_init(void);
 
+void settings_blob_db_reset_for_test(void);
+
 /**
  * @brief Insert or replace a record in the settings database.
  *
