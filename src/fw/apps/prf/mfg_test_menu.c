@@ -70,7 +70,7 @@ static const MfgTestMenuEntry s_all_entries[] = {
 #endif
   { "ALS",           MfgTestId_ALS,           mfg_als_app_get_info,       SF | FI },
   { "Vibration",     MfgTestId_Vibration,     mfg_vibration_app_get_info, SF | FI },
-#if defined(CONFIG_BOARD_FAMILY_OBELIX) && defined(MANUFACTURING_FW)
+#if defined(CONFIG_BOARD_FAMILY_OBELIX) && defined(CONFIG_MFG)
   { "HRM CTR/L",     MfgTestId_HrmCtrLeakage, mfg_hrm_ctr_leakage_obelix_app_get_info, SF | FI },
 #endif
   { "Charge",        MfgTestId_Charge,        mfg_charge_app_get_info,         SF | FI },

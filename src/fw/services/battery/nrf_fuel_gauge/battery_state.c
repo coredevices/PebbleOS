@@ -21,14 +21,14 @@
 #include "pbl/services/settings/settings_file.h"
 #endif
 
-#ifdef MANUFACTURING_FW
+#ifdef CONFIG_MFG
 #include "drivers/flash.h"
 #include "flash_region/flash_region.h"
 #endif
 
 #include "nrf_fuel_gauge.h"
 
-#if !defined(RECOVERY_FW) || defined(MANUFACTURING_FW)
+#if !defined(RECOVERY_FW) || defined(CONFIG_MFG)
 #define FUEL_GAUGE_STATEFUL 1
 #else
 #define FUEL_GAUGE_STATEFUL 0
@@ -80,7 +80,7 @@ static bool s_charger_enabled;
 
 static uint32_t s_save_counter;
 
-#ifdef MANUFACTURING_FW
+#ifdef CONFIG_MFG
 // In manufacturing firmware, use dedicated MFG_BATTERY_STATE flash region
 static void prv_erase_state(void) {
   flash_erase_subsector_blocking(FLASH_REGION_MFG_BATTERY_STATE_BEGIN);
@@ -211,7 +211,7 @@ static void prv_save_state(void) {
     PBL_LOG_DBG("Fuel gauge state saved");
   }
 }
-#endif // MANUFACTURING_FW
+#endif // CONFIG_MFG
 #endif // FUEL_GAUGE_STATEFUL
 
 static void prv_schedule_update(uint32_t delay, bool force_update);

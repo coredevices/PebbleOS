@@ -118,7 +118,7 @@ def _generate_memory_layout(bld):
         slot_size = 3072 * 1024
         resources_size = 2048 * 1024
         prf_size = 576 * 1024
-        if bld.env.VARIANT == 'prf' and not (bld.env.IS_MFG or bld.env.PRF_AS_FIRMWARE):
+        if bld.env.VARIANT == 'prf' and not (bld.env.CONFIG_MFG or bld.env.PRF_AS_FIRMWARE):
             offset_size = ptable_size + bootloader_size + 2 * slot_size + 2 * resources_size
             fw_max_size = prf_size
         else:
@@ -132,7 +132,7 @@ def _generate_memory_layout(bld):
         # Bootloader
         offset_size = 32 * 1024
         flash_size = 1024 * 1024
-        if bld.env.CONFIG_BOARD_FAMILY_ASTERIX and bld.env.VARIANT == 'prf' and not bld.env.IS_MFG:
+        if bld.env.CONFIG_BOARD_FAMILY_ASTERIX and bld.env.VARIANT == 'prf' and not bld.env.CONFIG_MFG:
             fw_max_size = flash_size // 2
         else:
             fw_max_size = flash_size
@@ -447,7 +447,7 @@ def _build_recovery(bld):
             'apps/prf/mfg_mic_obelix.c',
         ])
 
-    if not bld.env.CONFIG_BOARD_FAMILY_OBELIX or not bld.env.IS_MFG:
+    if not bld.env.CONFIG_BOARD_FAMILY_OBELIX or not bld.env.CONFIG_MFG:
         excludes.extend([
             'apps/prf/mfg_hrm_ctr_leakage_obelix.c',
         ])

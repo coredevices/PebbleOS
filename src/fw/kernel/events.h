@@ -626,7 +626,7 @@ typedef struct HRMSpO2Data { // 2 bytes
   HRMQuality quality:8;
 } HRMSpO2Data;
 
-#ifdef MANUFACTURING_FW
+#ifdef CONFIG_MFG
 typedef struct HRMCTRData { // 6 bytes
   double ctr[6];
 } HRMCTRData;
@@ -644,7 +644,7 @@ typedef enum HRMEventType {
   HRMEvent_BPM = 0,
   HRMEvent_HRV,
   HRMEvent_SpO2,
-#ifdef MANUFACTURING_FW
+#ifdef CONFIG_MFG
   HRMEvent_CTR,
   HRMEvent_Leakage,
 #endif
@@ -657,7 +657,7 @@ typedef struct PACKED PebbleHRMEvent { // 5 bytes
     HRMBPMData bpm;
     HRMHRVData hrv;
     HRMSpO2Data spo2;
-#ifdef MANUFACTURING_FW
+#ifdef CONFIG_MFG
     HRMCTRData* ctr;
     HRMLeakageData* leakage;
 #endif

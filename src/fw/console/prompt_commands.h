@@ -376,11 +376,11 @@ static const Command s_prompt_commands[] = {
   { "serial write", command_serial_write, 1 },
   { "hwver write", command_hwver_write, 1 },
   { "pcbaserial write", command_pcba_serial_write, 1 },
-#if MANUFACTURING_FW
+#ifdef CONFIG_MFG
   { "color write", command_color_write, 1 },
   { "rtcfreq write", command_rtcfreq_write, 1 },
   { "model write", command_model_write, 1 },
-#endif // MANUFACTURING_FW
+#endif // CONFIG_MFG
 
   { "bt status", command_bt_status, 0 },
 
@@ -408,7 +408,7 @@ static const Command s_prompt_commands[] = {
 
   //{ "pmic rails", command_pmic_rails, 0},
 
-#if MANUFACTURING_FW
+#ifdef CONFIG_MFG
   { "disp", command_display_set, 1},
 #endif
 #endif // RECOVERY_FW

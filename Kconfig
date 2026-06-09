@@ -11,6 +11,13 @@ config RELEASE
       features like Memfault crash reporting that should only run on
       shipping firmware.
 
+config MFG
+    bool "Manufacturing firmware"
+    help
+      Enable manufacturing-only functionality in the PRF build. PRF
+      and MFG firmwares are mostly the same, so MFG builds also
+      define the recovery-firmware symbols.
+
 config PBLBOOT
     bool "PBLBOOT bootloader"
     help
