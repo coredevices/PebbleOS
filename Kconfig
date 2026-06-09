@@ -26,6 +26,42 @@ config PBLBOOT
       layout with direct XIP. Disable for boards whose SoC bootloader
       consumes a raw image and uses a single firmware slot.
 
+menu "Compiler options"
+
+config LTO
+    bool "Link-time optimization"
+
+choice
+    prompt "Optimization level"
+    default SIZE_OPTIMIZATIONS
+
+config SIZE_OPTIMIZATIONS
+    bool "Optimize for size (-Os)"
+
+config DEBUG_OPTIMIZATIONS
+    bool "Optimize for debugging (-Og)"
+
+config NO_OPTIMIZATIONS
+    bool "No optimizations (-O0)"
+    help
+      Previously known as "fat firmware". Requires 1M of onboard
+      flash.
+
+endchoice
+
+config COMPILER_SAVE_TEMPS
+    bool "Save compiler temporaries"
+    help
+      Save *.i and *.s files during compilation.
+
+config DEBUG_INFO
+    bool "Debug information"
+    default y
+    help
+      Compile with -g3 debug information.
+
+endmenu
+
 config IS_BIGBOARD
     bool "Bigboard variant"
     help
