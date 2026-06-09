@@ -118,9 +118,6 @@ def options(opt):
                    help='Build variant: normal (default) or prf (recovery firmware)')
 
 def handle_configure_options(conf):
-    if conf.options.lto:
-        print("Turning on LTO.")
-
     if conf.options.no_link:
         conf.env.NO_LINK = True
         print("Not linking firmware")
