@@ -512,17 +512,15 @@ void quiet_time_get_string_for_custom(const bool *scheduled_days, char *buffer, 
     if (!scheduled_days[i]) {
       continue;
     }
-    if (pos > 0) {
-      if (pos + 1 >= buf_len) {
-        break;
-      }
-      buffer[pos++] = ',';
-    }
     char day_buf[12];
     i18n_get_with_buffer(day_strings[i], day_buf, sizeof(day_buf));
     size_t day_len = strlen(day_buf);
-    if (pos + day_len >= buf_len) {
+    size_t needed = day_len + (pos > 0 ? 1 : 0);
+    if (pos + needed >= buf_len) {
       break;
+    }
+    if (pos > 0) {
+      buffer[pos++] = ',';
     }
     memcpy(buffer + pos, day_buf, day_len);
     pos += day_len;
