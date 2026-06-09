@@ -467,7 +467,7 @@ static void prv_schedule_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
     quiet_time_get_string_for_custom(config->scheduled_days, day_text, sizeof(day_text));
     subtitle = day_text;
   } else {
-    subtitle = quiet_time_get_string_for_kind(config->kind);
+    subtitle = i18n_get(quiet_time_get_string_for_kind(config->kind), data);
   }
 
   // Value: ON / OFF, right-aligned.
