@@ -189,6 +189,24 @@ USED uint64_t syscall_stack_restore_target(void) {
   return 0;
 }
 
+// Peak unused bytes on a syscall stack: scan the zeroed .bss from the base to
+// the first written word (the high-water). For sizing during validation.
+static uint16_t prv_syscall_stack_free_bytes(const StackType_t *stack) {
+  uint32_t i = 0;
+  while (i < SYSCALL_STACK_WORDS && stack[i] == 0) {
+    i++;
+  }
+  return (uint16_t)(i * sizeof(StackType_t));
+}
+
+uint16_t syscall_app_stack_free_bytes(void) {
+  return prv_syscall_stack_free_bytes(s_app_syscall_stack);
+}
+
+uint16_t syscall_worker_stack_free_bytes(void) {
+  return prv_syscall_stack_free_bytes(s_worker_syscall_stack);
+}
+
 // Drop privilege and return to the task. If the syscall ran on a dedicated
 // stack, restore PSP/PSPLIM to the task stack first (while still privileged).
 EXTERNALLY_VISIBLE void NAKED_FUNC USED prv_drop_privilege(void) {
@@ -216,6 +234,9 @@ EXTERNALLY_VISIBLE void NAKED_FUNC USED prv_drop_privilege(void) {
   );
 }
 #else
+uint16_t syscall_app_stack_free_bytes(void) { return 0xFFFF; }
+uint16_t syscall_worker_stack_free_bytes(void) { return 0xFFFF; }
+
 // Drop privileges and return to the address stored in thread local storage
 // Has to preserve r0 and r1 so the syscall's return value is passed through
 EXTERNALLY_VISIBLE void NAKED_FUNC USED prv_drop_privilege(void) {

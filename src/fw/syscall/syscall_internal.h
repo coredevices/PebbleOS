@@ -42,6 +42,11 @@ void syscall_assert_userspace_buffer(const void* buf, size_t num_bytes);
 // Used to implement DEFINE_SYSCALL
 void syscall_internal_maybe_skip_privilege(void);
 
+//! Unused bytes on the App/Worker syscall stacks (for sizing). Returns 0xFFFF
+//! when SYSCALL_PRIVILEGED_STACK is disabled.
+uint16_t syscall_app_stack_free_bytes(void);
+uint16_t syscall_worker_stack_free_bytes(void);
+
 // Test overrides.
 // TODO: really implement privilege escalation in unit tests. See PBL-9688
 #if defined(UNITTEST)
