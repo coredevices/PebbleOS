@@ -1121,7 +1121,7 @@ void command_display_drop_complete(void) {
 #ifndef CONFIG_SOC_SF32LB52
 // Simply parks the chip permanently in stop mode in whatever state it's currently in. This can be
 // pretty handy when trying to profile power of the chip under certains states
-// NOTE: If you did not configure with `--nowatchdog`, the HW watchdog will reboot you in ~8s
+// NOTE: If you did not configure with CONFIG_NO_WATCHDOG=y, the HW watchdog will reboot you in ~8s
 void command_enter_stop(void) {
   dbgserial_putstr("Entering stop mode indefinitely ... reboot your board to get out!!");
   __disable_irq();
