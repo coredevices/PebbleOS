@@ -15,6 +15,8 @@
 //! Initialize the settings BlobDB
 void settings_blob_db_init(void);
 
+void settings_blob_db_reset_for_test(void);
+
 //! Insert/update a setting
 status_t settings_blob_db_insert(const uint8_t *key, int key_len,
                                  const uint8_t *val, int val_len);
