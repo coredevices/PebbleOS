@@ -58,6 +58,20 @@ config MMAP_RESOURCES
 
 endmenu
 
+choice
+    prompt "Shell"
+    default SHELL_NORMAL
+
+config SHELL_NORMAL
+    bool "Normal shell"
+
+config SHELL_SDK
+    bool "SDK shell"
+    help
+      Use the SDK shell instead of the normal shell.
+
+endchoice
+
 menu "Logging"
 
 config LOG

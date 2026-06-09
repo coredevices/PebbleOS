@@ -90,7 +90,7 @@
 static const uint32_t FORCE_QUIT_HOLD_MS = 1500;
 static int s_back_hold_timer = TIMER_INVALID_ID;
 
-#ifndef SHELL_SDK
+#ifndef CONFIG_SHELL_SDK
 static const uint32_t BACK_QUICKPRESS_INTERVAL_TICKS = 300;
 static const int BACK_QUICKPRESS_COREDUMP_PRESSES = 10;
 static RtcTicks s_back_quickpress_last = 0;
@@ -195,7 +195,7 @@ static void launcher_handle_button_event(PebbleEvent* e) {
       PBL_ASSERTN(success);
     }
     
-#ifndef SHELL_SDK
+#ifndef CONFIG_SHELL_SDK
     // 10 quick-presses of the back button triggers a manual coredump, if
     // that feature is enabled in system settings.
     if (button_id == BUTTON_ID_BACK) {
@@ -210,7 +210,7 @@ static void launcher_handle_button_event(PebbleEvent* e) {
         core_dump_reset(true /* is_forced */);
       }
     }
-#endif // !SHELL_SDK
+#endif // !defined(CONFIG_SHELL_SDK)
 
     light_button_pressed();
   } else if (e->type == PEBBLE_BUTTON_UP_EVENT) {
@@ -360,7 +360,7 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
         process_manager_launch_process(&(ProcessLaunchConfig) {
           .id = e->launch_app.id,
           .common = common,
-#if SHELL_SDK
+#ifdef CONFIG_SHELL_SDK
           // Dev iteration: when the phone sends AppRunStateStart (typically
           // `pebble install` over pypkjs), force-kill the current app instead
           // of waiting up to 3s for graceful deinit.  Misbehaving third-party

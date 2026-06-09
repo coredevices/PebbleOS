@@ -109,8 +109,6 @@ def options(opt):
                    choices=waftools.openocd.JTAG_OPTIONS.keys(),
                    help='Which JTAG programmer we are using '
                         '(bb2 (default), olimex, ev2, etc)')
-    opt.add_option('--sdkshell', action='store_true',
-                   help='Use the sdk shell instead of the normal shell')
     opt.add_option('--compile_commands', action='store_true', help='Create a clang compile_commands.json')
     opt.add_option('--onlysdk', action='store_true', help="only build the sdk")
     opt.add_option('--no-link', action='store_true',

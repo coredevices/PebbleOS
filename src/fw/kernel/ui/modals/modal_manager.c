@@ -234,19 +234,19 @@ static void prv_handle_modal_to_app_transition_visible(void) {
 }
 
 static void prv_handle_app_to_modal_transition_hidden_and_unfocused(void) {
-#if !RECOVERY_FW && !SHELL_SDK
+#if !RECOVERY_FW && !defined(CONFIG_SHELL_SDK)
   app_idle_timeout_pause();
 #endif
 }
 
 static void prv_handle_modal_to_app_transition_hidden_and_unfocused(void) {
-#if !RECOVERY_FW && !SHELL_SDK
+#if !RECOVERY_FW && !defined(CONFIG_SHELL_SDK)
   app_idle_timeout_resume();
 #endif
 }
 
 static void prv_handle_app_to_modal_transition_focus(void) {
-#if !RECOVERY_FW && !SHELL_SDK
+#if !RECOVERY_FW && !defined(CONFIG_SHELL_SDK)
   watchface_reset_click_manager();
 #endif
 

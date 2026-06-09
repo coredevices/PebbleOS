@@ -269,7 +269,7 @@ status_t app_cache_free_up_space(uint32_t bytes_needed) {
     EachEvictData evict_data = (EachEvictData) {
       .bytes_needed = bytes_needed,
       .do_not_evict = {
-#if !SHELL_SDK
+#ifndef CONFIG_SHELL_SDK
         quick_launch_get_app(BUTTON_ID_UP),
         quick_launch_get_app(BUTTON_ID_SELECT),
         quick_launch_get_app(BUTTON_ID_DOWN),
