@@ -260,7 +260,8 @@ static void prv_set_schedule_mode_timer() {
 
   if (currently_active != s_data.is_in_schedule_period) {
     if (currently_active && do_not_disturb_is_manually_enabled()) {
-      do_not_disturb_set_manually_enabled(false);
+      alerts_preferences_dnd_set_manually_enabled(false);
+      s_data.manually_override_dnd = false;
     }
     if (!currently_active && s_data.manually_override_dnd) {
       s_data.manually_override_dnd = false;

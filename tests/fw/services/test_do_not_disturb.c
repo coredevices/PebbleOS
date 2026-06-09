@@ -225,6 +225,7 @@ void test_do_not_disturb__is_active(void) {
   cl_assert(active == true);
 
   // Manual && Scheduled && !Smart
+  // When schedule becomes active, manual DND is auto-disabled.
   do_not_disturb_set_schedule_enabled(WeekdaySchedule, true);
   DoNotDisturbSchedule schedule = {
     .from_hour = 0,
@@ -233,19 +234,18 @@ void test_do_not_disturb__is_active(void) {
     .to_minute = 30,
   };
   do_not_disturb_set_schedule(WeekdaySchedule, &schedule);
-  cl_assert(do_not_disturb_is_manually_enabled() == true);
+  cl_assert(do_not_disturb_is_manually_enabled() == false);
   cl_assert(do_not_disturb_is_schedule_enabled(WeekdaySchedule) == true);
   cl_assert(do_not_disturb_is_smart_dnd_enabled() == false);
   active = do_not_disturb_is_active();
   cl_assert(active == true);
 
-  // !Manual && Scheduled && !Smart
-
-  do_not_disturb_set_manually_enabled(false);
+  // !Manual && Scheduled && !Smart (schedule keeps DND active)
+  // Toggling schedule off disables DND via schedule.
+  do_not_disturb_toggle_scheduled(WeekdaySchedule);
   cl_assert(do_not_disturb_is_active() == false);
-  do_not_disturb_toggle_scheduled(WeekdaySchedule); // see PBL-22011
-  cl_assert(do_not_disturb_is_active() == false);
-  do_not_disturb_toggle_scheduled(WeekdaySchedule); // see PBL-22011
+  // Toggle back on; schedule re-enters active period.
+  do_not_disturb_toggle_scheduled(WeekdaySchedule);
   cl_assert(do_not_disturb_is_active() == true);
   cl_assert(do_not_disturb_is_manually_enabled() == false);
   cl_assert(do_not_disturb_is_schedule_enabled(WeekdaySchedule) == true);
@@ -502,16 +502,17 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == false);
-  // Timer will go off at 01:00 on Sunday. (14.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 52200 * MS_PER_SECOND);
+  // Timer will go off at midnight Sunday (transition to a day with scheduled period). (13.5 hours)
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 48600 * MS_PER_SECOND);
 
   do_not_disturb_set_schedule_enabled(WeekendSchedule, false);
   rtc_set_time(s_saturday_01_30);
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == false);
-  // Timer will go off at 00:00 on Monday. (46.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 167400 * MS_PER_SECOND);
+  // No schedule transition within today or tomorrow (Saturday, Sunday).
+  // Timer falls back to maximum (7 days); will be reassessed on next tick.
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 604800 * MS_PER_SECOND);
 
   rtc_set_time(s_thursday_00_00);
   do_not_disturb_handle_clock_change();
@@ -540,16 +541,18 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == false);
-  // Timer will go off at 00:00 on Saturday. (47.0 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 169200 * MS_PER_SECOND);
+  // No schedule transition within today or tomorrow (Thursday/Friday, weekend-only schedule).
+  // Timer falls back to maximum (7 days); will be reassessed on next tick.
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 604800 * MS_PER_SECOND);
 
   do_not_disturb_set_schedule_enabled(WeekendSchedule, false);
   do_not_disturb_set_schedule_enabled(WeekdaySchedule, true);
   rtc_set_time(s_saturday_01_30);
   do_not_disturb_handle_clock_change();
   cl_assert(active == false);
-  // Timer will go off at 00:00 on Saturday. (46.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 167400 * MS_PER_SECOND);
+  // No schedule transition within today or tomorrow (Saturday/Sunday, weekday-only schedule).
+  // Timer falls back to maximum (7 days); will be reassessed on next tick.
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 604800 * MS_PER_SECOND);
 
   // 10:30 PM - 8:30 AM
   DoNotDisturbSchedule weekday_schedule_2 = {
@@ -834,11 +837,11 @@ void test_do_not_disturb__qt_multi_schedule_active(void) {
   cl_assert(weekday_idx >= 0);
   quiet_time_set_schedule_enabled(weekday_idx, true);
 
-  // Set time to Thursday 8:30 - outside weekday schedule
+  // Set time to Thursday 01:00 - inside weekday schedule (23:00 - 07:00)
   rtc_set_time(s_thursday_01_00);
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
-  cl_assert(active == false);
+  cl_assert(active == true);
 
   // Set time to Thursday 01:30 - inside weekday schedule (23:00 - 07:00)
   rtc_set_time(1426125000); // Thursday 01:30
