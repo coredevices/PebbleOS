@@ -101,6 +101,13 @@ bool shell_prefs_get_stationary_enabled(void) {
   return false;
 }
 
+bool shell_prefs_get_charge_limit_enabled(void) {
+  return false;
+}
+
+void shell_prefs_set_charge_limit_enabled(bool enabled) {
+}
+
 bool shell_prefs_get_language_english(void) {
   return true;
 }
