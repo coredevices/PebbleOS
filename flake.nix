@@ -53,6 +53,12 @@
               pixman
               zlib
               stdenv.cc.cc.lib
+              SDL2
+              libpng
+              alsa-lib
+              libpulseaudio
+              # sftool host binary
+              systemd
             ]);
 
             dontConfigure = true;
