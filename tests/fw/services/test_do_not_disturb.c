@@ -812,6 +812,21 @@ void test_do_not_disturb__qt_display_strings(void) {
   single_day[Tuesday] = true;
   quiet_time_get_string_for_custom(single_day, buf, sizeof(buf));
   cl_assert_equal_s(buf, "Tuesdays");
+
+  // Single day truncation: buffer too small for full day name
+  char small_buf[4];
+  quiet_time_get_string_for_custom(single_day, small_buf, sizeof(small_buf));
+  cl_assert_equal_s(small_buf, "Tue");
+  cl_assert_equal_s(small_buf + 3, "");
+
+  // Multi-day truncation: no trailing comma when content is cut
+  bool many_days[DAYS_PER_WEEK] = {false};
+  many_days[Monday] = true;
+  many_days[Wednesday] = true;
+  many_days[Friday] = true;
+  char tiny_buf[8];
+  quiet_time_get_string_for_custom(many_days, tiny_buf, sizeof(tiny_buf));
+  cl_assert_equal_s(tiny_buf, "Mon,Wed");
 }
 
 void test_do_not_disturb__qt_multi_schedule_active(void) {
