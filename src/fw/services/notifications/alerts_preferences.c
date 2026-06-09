@@ -78,6 +78,9 @@ static bool s_do_not_disturb_manually_enabled = false;
 static bool s_do_not_disturb_smart_dnd_enabled = false;
 
 #define PREF_KEY_QT_SCHEDULE_FMT "qtSchedule%d"
+static const char *const s_qt_schedule_keys[MAX_QUIET_TIME_SCHEDULES] = {
+  "qtSchedule0", "qtSchedule1", "qtSchedule2", "qtSchedule3", "qtSchedule4",
+};
 static QuietTimeScheduleConfig s_qt_schedule[MAX_QUIET_TIME_SCHEDULES];
 
 #define PREF_KEY_FIRST_USE_COMPLETE "firstUseComplete"
@@ -794,20 +797,17 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
   RELOAD_IF_MATCH(PREF_KEY_SPEAKER_VOLUME, s_speaker_volume);
 
   // Check QT schedule keys
-  {
-    char qt_key[24];
-    for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
-      snprintf(qt_key, sizeof(qt_key), PREF_KEY_QT_SCHEDULE_FMT, i);
-      size_t qt_key_len = strlen(qt_key);
-      if ((key_len == (int)qt_key_len || key_len == (int)(qt_key_len + 1)) &&
-          memcmp(key, qt_key, qt_key_len) == 0) {
-        QuietTimeScheduleConfig _tmp;
-        if (settings_file_get(&file, key, key_len, &_tmp, sizeof(_tmp)) == S_SUCCESS) {
-          s_qt_schedule[i] = _tmp;
-          matched_key = qt_key;
-        }
-        goto done;
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    const char *qt_key = s_qt_schedule_keys[i];
+    size_t qt_key_len = strlen(qt_key);
+    if ((key_len == (int)qt_key_len || key_len == (int)(qt_key_len + 1)) &&
+        memcmp(key, qt_key, qt_key_len) == 0) {
+      QuietTimeScheduleConfig _tmp;
+      if (settings_file_get(&file, key, key_len, &_tmp, sizeof(_tmp)) == S_SUCCESS) {
+        s_qt_schedule[i] = _tmp;
+        matched_key = qt_key;
       }
+      goto done;
     }
   }
 
