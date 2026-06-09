@@ -20,7 +20,7 @@ void hexdump_using_prompt(int level, const char *src_filename, int src_line_numb
 void hexdump_using_pbllog(int level, const char *src_filename, int src_line_number,
                          const char *line_buffer);
 
-#ifdef PBL_LOG_ENABLED
+#ifdef CONFIG_LOG
 #define PBL_HEXDUMP_D_SERIAL(level, data, length)        \
   hexdump_log_src(__FILE_NAME__, __LINE__, level, data, length, hexdump_using_serial)
 #define PBL_HEXDUMP_D_PROMPT(level, data, length)        \

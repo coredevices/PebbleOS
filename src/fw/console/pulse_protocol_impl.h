@@ -18,7 +18,7 @@ typedef enum {
 //! Retrieve the buffer to fill the frame.
 //!
 //! @param protocol protocol number
-#if PULSE_EVERYWHERE
+#ifdef CONFIG_PULSE_EVERYWHERE
 void *pulse_best_effort_send_begin(uint16_t protocol);
 #else
 void *pulse_best_effort_send_begin(uint8_t protocol);
@@ -47,7 +47,7 @@ void pulse_reliable_send_cancel(void *buf);
 
 size_t pulse_reliable_max_send_size(void);
 
-#if !PULSE_EVERYWHERE
+#ifndef CONFIG_PULSE_EVERYWHERE
 // PULSEv1 has no equivalent to the PUSH protocol.
 #define pulse_push_send_begin pulse_best_effort_send_begin
 #define pulse_push_send pulse_best_effort_send

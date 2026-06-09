@@ -325,7 +325,7 @@ void prompt_command_finish(void) {
 // PULSE infrastructure
 /////////////////////////////////////////////////////////////////
 
-#if !PULSE_EVERYWHERE
+#ifndef CONFIG_PULSE_EVERYWHERE
 static uint16_t s_latest_cookie = UINT16_MAX;
 
 typedef struct __attribute__((__packed__)) PromptCommand {
@@ -342,7 +342,7 @@ typedef struct __attribute__((__packed__)) PromptResponseContents {
 
 static void pulse_send_message(const int message_type, const char *response) {
   size_t response_length = 0;
-#if PULSE_EVERYWHERE
+#ifdef CONFIG_PULSE_EVERYWHERE
   PromptResponseContents *contents = pulse_reliable_send_begin(
       PULSE2_RELIABLE_PROMPT_PROTOCOL);
   if (!contents) {
@@ -370,7 +370,7 @@ static void pulse_send_message(const int message_type, const char *response) {
   if (response_length > 0) {
     strncpy(contents->message, response, response_length);
   }
-#if PULSE_EVERYWHERE
+#ifdef CONFIG_PULSE_EVERYWHERE
   pulse_reliable_send(contents, total_size);
 #else
   pulse_best_effort_send(contents, total_size);
@@ -382,7 +382,7 @@ static void prv_pulse_done_command(void) {
   s_executing_command = ExecutingCommandNone;
 }
 
-#if PULSE_EVERYWHERE
+#ifdef CONFIG_PULSE_EVERYWHERE
 
 void pulse2_prompt_packet_handler(void *packet, size_t length) {
   if (prompt_command_is_executing()) {

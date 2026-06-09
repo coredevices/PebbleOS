@@ -58,6 +58,73 @@ config MMAP_RESOURCES
 
 endmenu
 
+menu "Logging"
+
+config LOG
+    bool "Logging"
+    default y
+    help
+      Build the PBL_LOG macros. Disable to save space.
+
+config LOG_HASHED
+    bool "Hashed logs"
+    default y
+    depends on LOG && !QEMU
+    help
+      Replace log format strings with hashes to save space. Disable
+      for human-readable logs.
+
+choice
+    prompt "Default log level"
+    default DEFAULT_LOG_LEVEL_DEBUG
+
+config DEFAULT_LOG_LEVEL_ERROR
+    bool "Error"
+
+config DEFAULT_LOG_LEVEL_WARNING
+    bool "Warning"
+
+config DEFAULT_LOG_LEVEL_INFO
+    bool "Info"
+
+config DEFAULT_LOG_LEVEL_DEBUG
+    bool "Debug"
+
+config DEFAULT_LOG_LEVEL_DEBUG_VERBOSE
+    bool "Debug verbose"
+
+endchoice
+
+choice
+    prompt "Flash log level"
+    default FLASH_LOG_LEVEL_INFO
+
+config FLASH_LOG_LEVEL_ERROR
+    bool "Error"
+
+config FLASH_LOG_LEVEL_WARNING
+    bool "Warning"
+
+config FLASH_LOG_LEVEL_INFO
+    bool "Info"
+
+config FLASH_LOG_LEVEL_DEBUG
+    bool "Debug"
+
+config FLASH_LOG_LEVEL_DEBUG_VERBOSE
+    bool "Debug verbose"
+
+endchoice
+
+config PULSE_EVERYWHERE
+    bool "PULSE everywhere"
+    default y if !RELEASE || MFG
+    help
+      Use the PULSE protocol for logs and the prompt. Disable to fall
+      back to legacy logs and prompt.
+
+endmenu
+
 menu "Debug & instrumentation"
 
 config NOSLEEP

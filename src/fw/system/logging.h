@@ -56,11 +56,35 @@ int pbl_log_get_bin_format(char* buffer, int buffer_len, const uint8_t log_level
 #define LOG_LEVEL_DEBUG 200
 #define LOG_LEVEL_DEBUG_VERBOSE 255
 
-#ifdef PBL_LOGS_HASHED
+#if defined(CONFIG_DEFAULT_LOG_LEVEL_ERROR)
+  #define DEFAULT_LOG_LEVEL LOG_LEVEL_ERROR
+#elif defined(CONFIG_DEFAULT_LOG_LEVEL_WARNING)
+  #define DEFAULT_LOG_LEVEL LOG_LEVEL_WARNING
+#elif defined(CONFIG_DEFAULT_LOG_LEVEL_INFO)
+  #define DEFAULT_LOG_LEVEL LOG_LEVEL_INFO
+#elif defined(CONFIG_DEFAULT_LOG_LEVEL_DEBUG_VERBOSE)
+  #define DEFAULT_LOG_LEVEL LOG_LEVEL_DEBUG_VERBOSE
+#else
+  #define DEFAULT_LOG_LEVEL LOG_LEVEL_DEBUG
+#endif
+
+#if defined(CONFIG_FLASH_LOG_LEVEL_ERROR)
+  #define FLASH_LOG_LEVEL LOG_LEVEL_ERROR
+#elif defined(CONFIG_FLASH_LOG_LEVEL_WARNING)
+  #define FLASH_LOG_LEVEL LOG_LEVEL_WARNING
+#elif defined(CONFIG_FLASH_LOG_LEVEL_DEBUG)
+  #define FLASH_LOG_LEVEL LOG_LEVEL_DEBUG
+#elif defined(CONFIG_FLASH_LOG_LEVEL_DEBUG_VERBOSE)
+  #define FLASH_LOG_LEVEL LOG_LEVEL_DEBUG_VERBOSE
+#else
+  #define FLASH_LOG_LEVEL LOG_LEVEL_INFO
+#endif
+
+#ifdef CONFIG_LOG_HASHED
   #include <logging/log_hashing.h>
 #endif
 
-#if MEMFAULT && defined(PBL_LOGS_HASHED) && __has_include("memfault/core/log.h")
+#if MEMFAULT && defined(CONFIG_LOG_HASHED) && __has_include("memfault/core/log.h")
   #include "memfault/core/log.h"
   #include "mcu/privilege.h"
 
@@ -175,8 +199,8 @@ int pbl_log_get_bin_format(char* buffer, int buffer_len, const uint8_t log_level
 
 
 // Internal implementation macros (use level-named macros below instead)
-#ifdef PBL_LOG_ENABLED
-  #ifdef PBL_LOGS_HASHED
+#ifdef CONFIG_LOG
+  #ifdef CONFIG_LOG_HASHED
     #define PBL_LOG_COLOR_D(domain, level, color, fmt, ...)                       \
       do { \
         if (PBL_SHOULD_LOG(level)) { \
@@ -210,10 +234,10 @@ int pbl_log_get_bin_format(char* buffer, int buffer_len, const uint8_t log_level
         } \
       } while (0)
   #endif
-#else // !PBL_LOG_ENABLED
+#else // !CONFIG_LOG
   #define PBL_LOG_COLOR_D(domain, level, color, fmt, ...)
   #define PBL_LOG_COLOR_D_SYNC(domain, level, color, fmt, ...)
-#endif // PBL_LOG_ENABLED
+#endif // CONFIG_LOG
 
 // Level-named domain macros (async)
 #define PBL_LOG_D_ALWAYS(domain, fmt, ...) \
@@ -271,7 +295,7 @@ int pbl_log_get_bin_format(char* buffer, int buffer_len, const uint8_t log_level
 #define PBL_LOG_SYNC_VERBOSE(fmt, ...) \
   PBL_LOG_D_SYNC_VERBOSE(DEFAULT_LOG_DOMAIN, fmt, ## __VA_ARGS__)
 
-#ifdef PBL_LOG_ENABLED
+#ifdef CONFIG_LOG
   #define RETURN_STATUS_D(d, st) \
     do { \
       if (FAILED(st)) { \
@@ -282,11 +306,11 @@ int pbl_log_get_bin_format(char* buffer, int buffer_len, const uint8_t log_level
 
     #define RETURN_STATUS_UP_D(d, st) \
       return ((st) != E_INVALID_ARGUMENT ? (st) : E_INTERNAL)
-#else // PBL_LOG_ENABLED
+#else // CONFIG_LOG
   #define RETURN_STATUS_D(d, st) return (st)
   #define RETURN_STATUS_UP_D(d, st) \
     return ((st) == E_INVALID_ARGUMENT ? E_INTERNAL : (st))
-#endif // PBL_LOG_ENABLED
+#endif // CONFIG_LOG
 
 #define RETURN_STATUS(s) RETURN_STATUS_D(DEFAULT_LOG_DOMAIN, s)
 #define RETURN_STATUS_UP(s) RETURN_STATUS_UP_D(DEFAULT_LOG_DOMAIN, s)

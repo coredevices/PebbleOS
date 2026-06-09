@@ -368,7 +368,7 @@ def _link_firmware(bld, sources):
             bld(rule=waftools.objcopy.objcopy_bin, source=elf_node, target=bin_node)
 
         # Create the log_strings .elf and check the format specifier rules
-        if 'PBL_LOGS_HASHED' in bld.env.DEFINES:
+        if bld.env.CONFIG_LOG_HASHED:
             fw_loghash_node = bld.path.get_bld().make_node('tintin_fw_loghash_dict.json')
             bld(rule=waftools.generate_log_strings_json.wafrule,
                 source=elf_node, target=fw_loghash_node)

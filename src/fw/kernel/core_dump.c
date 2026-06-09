@@ -162,7 +162,7 @@ static void prv_debug_str(const char* msg) {
 // NOTE: We are explicitly avoiding use of vsniprintf and cohorts to reduce our stack
 // requirements
 static void prv_debug_str_str(const char* msg, const char* s) {
-#if PULSE_EVERYWHERE
+#ifdef CONFIG_PULSE_EVERYWHERE
   void *ctx = pulse_logging_log_sync_begin(LOG_LEVEL_ALWAYS, __FILE_NAME__, 0);
   pulse_logging_log_sync_append(ctx, msg);
   pulse_logging_log_sync_append(ctx, s);
@@ -192,7 +192,7 @@ static void prv_debug_str_int(const char* msg, uint32_t i, int base) {
     itoa(i, buffer, base);
   }
 
-#if PULSE_EVERYWHERE
+#ifdef CONFIG_PULSE_EVERYWHERE
   void *ctx = pulse_logging_log_sync_begin(LOG_LEVEL_ALWAYS, __FILE_NAME__, 0);
   pulse_logging_log_sync_append(ctx, msg);
   pulse_logging_log_sync_append(ctx, buffer);
