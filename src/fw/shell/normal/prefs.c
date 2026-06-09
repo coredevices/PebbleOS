@@ -109,6 +109,9 @@ static uint32_t s_backlight_ambient_threshold = 0; // default set from board con
 #define PREF_KEY_STATIONARY "stationaryMode"
 static bool s_stationary_mode_enabled = true;
 
+#define PREF_KEY_CHARGE_LIMIT_ENABLED "chargeLimitEnabled"
+static bool s_charge_limit_enabled = false;
+
 #define PREF_KEY_DEFAULT_WORKER "workerId"
 static Uuid s_default_worker = UUID_INVALID_INIT;
 
@@ -427,6 +430,11 @@ static bool prv_set_s_display_orientation_left(bool *left) {
 
 static bool prv_set_s_stationary_mode_enabled(bool *enabled) {
   s_stationary_mode_enabled = *enabled;
+  return true;
+}
+
+static bool prv_set_s_charge_limit_enabled(bool *enabled) {
+  s_charge_limit_enabled = *enabled;
   return true;
 }
 
@@ -1231,6 +1239,14 @@ bool shell_prefs_get_stationary_enabled(void) {
 
 void shell_prefs_set_stationary_enabled(bool enabled) {
   prv_pref_set(PREF_KEY_STATIONARY, &enabled, sizeof(enabled));
+}
+
+bool shell_prefs_get_charge_limit_enabled(void) {
+  return s_charge_limit_enabled;
+}
+
+void shell_prefs_set_charge_limit_enabled(bool enabled) {
+  prv_pref_set(PREF_KEY_CHARGE_LIMIT_ENABLED, &enabled, sizeof(enabled));
 }
 
 AppInstallId worker_preferences_get_default_worker(void) {
