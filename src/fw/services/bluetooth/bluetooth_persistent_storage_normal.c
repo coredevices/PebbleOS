@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
+#include "comm/ble/kernel_le_client/multi_phone.h"
 #include "pbl/services/bluetooth/bluetooth_persistent_storage_debug.h"
 
 #include "comm/ble/gap_le_connect.h"
@@ -680,7 +681,7 @@ static void prv_prune_stale_ble_bondings(void) {
   };
   prv_file_each(prv_find_most_recent_ble_bonding_itr, &itr_data);
 
-  if (itr_data.ble_count <= 1 || itr_data.key_out == BT_BONDING_ID_INVALID) {
+  if (itr_data.ble_count <= MAX_PHONE_CONNECTIONS || itr_data.key_out == BT_BONDING_ID_INVALID) {
     return;
   }
 
@@ -770,10 +771,8 @@ BTBondingID bt_persistent_storage_store_ble_pairing(const SMPairingInfo *new_pai
 
   prv_call_ble_bonding_change_handlers(key, op);
 
-  // We only support a single BLE pairing at a time. Drop any previous BLE bonding so that
-  // re-pairing with a different phone (or merging a PRF pairing) replaces the old one instead of
-  // leaving it behind and forcing the user to forget it manually.
-  prv_delete_other_ble_bondings(key);
+  // Drop excess BLE bondings so the DB never exceeds MAX_PHONE_CONNECTIONS entries.
+  prv_prune_stale_ble_bondings();
 
   return key;
 }
@@ -1066,6 +1065,33 @@ BTBondingID bt_persistent_storage_get_ble_ancs_bonding(void) {
   prv_file_each(prv_get_first_ancs_bonding_itr, &first_ancs_supported_bonding_found);
 
   return first_ancs_supported_bonding_found;
+}
+
+typedef struct {
+  BTBondingID *out;
+  int max_count;
+  int count;
+} AllAncsItrData;
+
+static bool prv_collect_all_ancs_bondings_itr(SettingsFile *file, SettingsRecordInfo *info,
+                                               void *context) {
+  if (info->val_len == 0 || info->key_len != sizeof(BTBondingID)) return true;
+  AllAncsItrData *data = context;
+  if (data->count >= data->max_count) return false;
+  BTBondingID key;
+  info->get_key(file, (uint8_t *)&key, info->key_len);
+  BtPersistBondingData stored_data;
+  info->get_val(file, (uint8_t *)&stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
+  if (stored_data.type == BtPersistBondingTypeBLE && stored_data.ble_data.supports_ancs) {
+    data->out[data->count++] = key;
+  }
+  return true;
+}
+
+int bt_persistent_storage_get_all_ble_ancs_bondings(BTBondingID *out, int max_count) {
+  AllAncsItrData data = { .out = out, .max_count = max_count, .count = 0 };
+  prv_file_each(prv_collect_all_ancs_bondings_itr, &data);
+  return data.count;
 }
 
 bool bt_persistent_storage_is_ble_ancs_bonding(BTBondingID bonding) {
