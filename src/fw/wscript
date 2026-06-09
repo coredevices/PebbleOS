@@ -480,7 +480,7 @@ def _build_recovery(bld):
 
 
 
-    if bld.env.DISABLE_PROMPT:
+    if not bld.env.CONFIG_PROMPT:
         sources = [ x for x in sources if not x.abspath().endswith('console/prompt.c') ]
         sources = [ x for x in sources if not x.abspath().endswith('console/prompt_commands.c') ]
 
@@ -578,7 +578,7 @@ def _build_normal(bld):
     sources.append(bld.path.get_bld().make_node('resource/timeline_resource_table.auto.c'))
     sources.append(bld.path.get_bld().make_node('builtin_resources.auto.c'))
 
-    if bld.env.DISABLE_PROMPT:
+    if not bld.env.CONFIG_PROMPT:
         sources = [ x for x in sources if not x.abspath().endswith('console/prompt.c') ]
         sources = [ x for x in sources if not x.abspath().endswith('console/prompt_commands.c') ]
 

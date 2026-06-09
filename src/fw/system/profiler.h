@@ -21,7 +21,7 @@
 
 #include "util/list.h"
 
-#if PROFILER
+#ifdef CONFIG_PROFILER
 #include <cmsis_core.h>
 #endif
 
@@ -42,7 +42,7 @@ typedef struct {
 
 extern Profiler g_profiler;
 
-#if !defined(PROFILER)
+#if !defined(CONFIG_PROFILER)
 
 #define PROFILER_NODE(name)
 #define PROFILER_INIT
@@ -97,7 +97,7 @@ extern Profiler g_profiler;
 #define PROFILER_NODE_GET_COUNT(node) \
   profiler_node_get_count(&g_profiler_node_##node)
 
-#endif // PROFILER
+#endif // CONFIG_PROFILER
 
 void profiler_init(void);
 void profiler_print_stats(void);

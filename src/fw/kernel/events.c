@@ -182,7 +182,7 @@ static bool prv_event_put_isr(QueueHandle_t queue, const char* queue_type, uintp
   if (!xQueueSendToBackFromISR(queue, event, &should_context_switch)) {
     prv_log_event_put_failure(queue_type, saved_lr, event);
 
-#ifdef NO_WATCHDOG
+#ifdef CONFIG_NO_WATCHDOG
     while (1);
 #endif
 

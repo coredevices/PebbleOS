@@ -33,7 +33,7 @@ static char* prv_strdup(Heap *heap, const char* s, uintptr_t lr) {
 
 // task_* functions that map to other heaps depending on the current task
 ///////////////////////////////////////////////////////////
-#if defined(MALLOC_INSTRUMENTATION)
+#if defined(CONFIG_MALLOC_INSTRUMENTATION)
 void *task_malloc_with_pc(size_t bytes, uintptr_t client_pc) {
   return heap_malloc(task_heap_get_for_current_task(), bytes, client_pc);
 }
@@ -59,7 +59,7 @@ void *task_malloc_check(size_t bytes) {
   return mem;
 }
 
-#if defined(MALLOC_INSTRUMENTATION)
+#if defined(CONFIG_MALLOC_INSTRUMENTATION)
 void task_free_with_pc(void *ptr, uintptr_t client_pc) {
   heap_free(task_heap_get_for_current_task(), ptr, client_pc);
 }

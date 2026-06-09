@@ -69,7 +69,7 @@ Heap* kernel_heap_get(void) {
 
 // Serial Commands
 ///////////////////////////////////////////////////////////
-#ifdef MALLOC_INSTRUMENTATION
+#ifdef CONFIG_MALLOC_INSTRUMENTATION
 void command_dump_malloc_kernel(void) {
   heap_dump_malloc_instrumentation_to_dbgserial(&s_kernel_heap);
 }
