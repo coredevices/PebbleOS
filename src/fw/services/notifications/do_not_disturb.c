@@ -244,10 +244,19 @@ static void prv_set_schedule_mode_timer() {
     quiet_time_get_scheduled_days(&s_qt_schedule_cache[i], days);
 
     if (days[time.tm_wday]) {
+      int from = s_qt_schedule_cache[i].from_hour * 60 + s_qt_schedule_cache[i].from_minute;
+      int to = s_qt_schedule_cache[i].to_hour * 60 + s_qt_schedule_cache[i].to_minute;
+      // Align with prv_is_time_in_range: same-from/to means a 1-minute window
+      if (from == to) {
+        to = (to + 1) % (24 * 60);
+        if (to == 0) {
+          to = 1;
+        }
+      }
       time_t s = time_util_get_seconds_until_daily_time(&time,
                    s_qt_schedule_cache[i].from_hour, s_qt_schedule_cache[i].from_minute);
       time_t e = time_util_get_seconds_until_daily_time(&time,
-                   s_qt_schedule_cache[i].to_hour, s_qt_schedule_cache[i].to_minute);
+                   to / 60, to % 60);
       earliest_transition = MIN(earliest_transition, MIN(s, e));
     }
 
