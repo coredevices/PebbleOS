@@ -34,6 +34,9 @@ void do_not_disturb_init(void) {
   return;
 }
 
+void do_not_disturb_refresh_active_state(void) {
+}
+
 void vibe_intensity_init(void) {
   return;
 }
