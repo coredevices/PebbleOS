@@ -1,0 +1,3 @@
+# Blocked author email domains, one per line.
+# Lines starting with '#' and blank lines are ignored.
+users.noreply.github.com
