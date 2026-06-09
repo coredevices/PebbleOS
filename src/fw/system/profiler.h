@@ -6,7 +6,7 @@
 /* Setting up a profiler node:
  *  1. Create a new profiler node by adding it to profiler_list.h.
  *  2. Place PROFILER_NODE_START(<node>) and PROFILER_NODE_STOP(<node>) as desired.
- *  3. Make sure you are building with the "--profiler" configure option.
+ *  3. Make sure you are building with CONFIG_PROFILER=y.
  *
  * Starting the profiler:
  *  The prompt commands "profiler start" and "profiler stop" can be used to toggle it from the
