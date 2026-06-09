@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "pbl/services/battery/battery_charge_limit.h"
 #include "pbl/services/battery/battery_monitor.h"
 #include "pbl/services/battery/battery_state.h"
 #include "pbl/services/battery/battery_curve.h"
@@ -55,6 +56,10 @@ bool firmware_update_is_in_progress(void) {
 }
 
 void battery_force_charge_enable(bool is_charging) { }
+
+void battery_charge_limit_init(void) { }
+
+void battery_charge_limit_evaluate(PreciseBatteryChargeState state) { }
 
 bool stop_mode_is_allowed(void) {
   return s_stop_mode_allowed;
