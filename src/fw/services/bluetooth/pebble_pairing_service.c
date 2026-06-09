@@ -19,7 +19,7 @@ static void prv_convert_pps_request_params(const PebblePairingServiceConnParamSe
   params_out->connection_interval_min_1_25ms = min_1_25ms;
   params_out->connection_interval_max_1_25ms =
       min_1_25ms + pps_params_in->interval_max_delta_1_25ms;
-#if RECOVERY_FW
+#ifdef CONFIG_RECOVERY_FW
   if (pps_params_in->slave_latency_events != 0) {
     PBL_LOG_DBG("Overriding requested slave latency with 0 because PRF");
   }

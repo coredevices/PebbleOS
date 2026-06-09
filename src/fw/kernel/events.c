@@ -443,7 +443,7 @@ BaseType_t event_queue_cleanup_and_reset(QueueHandle_t queue) {
     PBL_ASSERTN(xQueueReceive(queue, &event, 0) != pdFAIL);
     // event service does some book-keeping about events, notify it that we're dropping these.
     sys_event_service_cleanup(&event);
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
     // app outbox service messages need to be cleaned up:
     app_outbox_service_cleanup_event(&event);
 #endif

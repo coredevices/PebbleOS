@@ -9,7 +9,7 @@
 #include "util/math.h"
 
 // Don't allow PRF updating when we're in PRF
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
 static void prv_do_update(void) {
   PBL_LOG_INFO("Updating PRF!");
   flash_prf_set_protection(false);
@@ -72,7 +72,7 @@ void check_prf_update(void) {
 
   boot_bit_clear(BOOT_BIT_NEW_PRF_AVAILABLE);
 
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
   prv_do_update();
 #endif
 }

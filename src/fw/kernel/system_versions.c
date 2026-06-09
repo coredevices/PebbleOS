@@ -146,7 +146,7 @@ static void prv_send_watch_versions(CommSession *session) {
   resource_version_to_network_endian(&versions_msg.system_resources_version);
 
   versions_msg.is_unfaithful = bt_persistent_storage_is_unfaithful();
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
   versions_msg.activity_insights_version = hton16(activity_insights_settings_get_version());
 #endif
 

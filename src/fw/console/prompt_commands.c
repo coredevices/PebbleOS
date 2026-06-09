@@ -458,7 +458,7 @@ void command_flash_sec_info(void) {
   }
 }
 
-#ifdef RECOVERY_FW
+#ifdef CONFIG_RECOVERY_FW
 void command_flash_sec_lock(const char *address_str, const char *password) {
   if (strcmp(password, "l0ckm3f0r3v3r") == 0) {
     uint32_t address = strtoul(address_str, NULL, 0);
@@ -468,7 +468,7 @@ void command_flash_sec_lock(const char *address_str, const char *password) {
     prompt_send_response("FAIL: Invalid password");
   }
 }
-#endif // RECOVERY_FW
+#endif // CONFIG_RECOVERY_FW
 #endif // CONFIG_OTP_FLASH
 
 #include "util/rand.h"
@@ -1140,7 +1140,7 @@ void command_enter_stop(void) {
 }
 #endif
 
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
 // Create a bunch of fragmentation in the filesystem by creating a large number
 // of files and only deleting a small number of them
 void command_litter_filesystem(const char *s_number, const char *s_size) {

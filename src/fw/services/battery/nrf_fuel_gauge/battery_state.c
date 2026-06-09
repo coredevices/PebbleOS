@@ -17,7 +17,7 @@
 #include "system/passert.h"
 #include "util/ratio.h"
 
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
 #include "pbl/services/settings/settings_file.h"
 #endif
 
@@ -28,7 +28,7 @@
 
 #include "nrf_fuel_gauge.h"
 
-#if !defined(RECOVERY_FW) || defined(CONFIG_MFG)
+#if !defined(CONFIG_RECOVERY_FW) || defined(CONFIG_MFG)
 #define FUEL_GAUGE_STATEFUL 1
 #else
 #define FUEL_GAUGE_STATEFUL 0

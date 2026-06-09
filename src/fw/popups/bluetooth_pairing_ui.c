@@ -54,7 +54,7 @@ typedef struct BTPairingUIData {
   // The info text layers store show the text that prompts the user to pair
   TextLayer info_text_layer;
   char info_text_layer_buffer[MAX_PAIR_STR_LEN];
-#ifdef RECOVERY_FW
+#ifdef CONFIG_RECOVERY_FW
   GRect pair_text_area;
   GRect above_pair_text_area;
   TextLayer info_text_layer2;
@@ -77,7 +77,7 @@ static BTPairingUIData *s_data_ptr = NULL;
 
 static void prv_handle_pairing_complete(bool success);
 
-#ifdef RECOVERY_FW  // PRF -- animate through a few hard-coded text strings for "Pair?"
+#ifdef CONFIG_RECOVERY_FW  // PRF -- animate through a few hard-coded text strings for "Pair?"
 
 static void prv_animate_info_text(BTPairingUIData *data);
 

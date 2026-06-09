@@ -219,7 +219,7 @@ NOINLINE void app_state_init(void) {
   unobstructed_area_service_init(app_state_get_unobstructed_area_state(),
                                  s_app_state_ptr->initial_obstruction_origin_y);
 
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
   app_glance_service_init_glance(app_state_get_glance());
 #endif
 

@@ -91,7 +91,7 @@ void bluetooth_persistent_storage_debug_dump_root_keys(SM128BitKey *irk, SM128Bi
 
 extern void bluetooth_persistent_storage_dump_contents(void);
 void command_gapdb_dump(void) {
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
   bluetooth_persistent_storage_dump_contents();
 #endif
   shared_prf_storage_dump_contents();

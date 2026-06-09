@@ -67,7 +67,7 @@ static void prv_comm_start(void) {
   // Heap allocated to reduce stack usage
   BTDriverConfig *config = kernel_zalloc_check(sizeof(BTDriverConfig));
   dis_get_info(&config->dis_info);
-#if defined(CONFIG_HRM) && !defined(RECOVERY_FW)
+#if defined(CONFIG_HRM) && !defined(CONFIG_RECOVERY_FW)
   config->is_hrm_supported_and_enabled = ble_hrm_is_supported_and_enabled();
   PBL_LOG_INFO("BLE HRM sharing prefs: is_enabled=%u",
           config->is_hrm_supported_and_enabled);
@@ -84,7 +84,7 @@ static void prv_comm_start(void) {
     bt_local_addr_init();
     gap_le_init();
     bt_local_id_configure_driver();
-#if defined(CONFIG_HRM) && !defined(RECOVERY_FW)
+#if defined(CONFIG_HRM) && !defined(CONFIG_RECOVERY_FW)
     ble_hrm_init();
 #endif
     ble_bas_init();
@@ -103,7 +103,7 @@ static void prv_comm_stop(void) {
   }
   stop_mode_disable(InhibitorCommMode);
   ble_bas_deinit();
-#if defined(CONFIG_HRM) && !defined(RECOVERY_FW)
+#if defined(CONFIG_HRM) && !defined(CONFIG_RECOVERY_FW)
   ble_hrm_deinit();
 #endif
   gap_le_deinit();

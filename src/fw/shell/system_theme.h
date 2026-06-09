@@ -17,7 +17,7 @@ typedef enum TextStyleFont {
   //! a notification belongs to, or who sent a message. It is smaller than the body copy when
   //! readable, but always bold.
   TextStyleFont_Header,
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
   //! Title is for prominent text that is usually the title or name of the content, giving context
   //! for the user such as the subject line of an email. It is comparable to the body, but
   //! always bold.
@@ -39,7 +39,7 @@ typedef enum TextStyleFont {
   TextStyleFont_MenuCellTitle,
   //! For subtitles of menu cells that provide auxiliary information about an item of a list.
   TextStyleFont_MenuCellSubtitle,
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
   //! Time Header Numbers is used specially by Timeline to display content time in extra bold e.g.
   //! 4:06 AM. It is comparable to the title.
   TextStyleFont_TimeHeaderNumbers,

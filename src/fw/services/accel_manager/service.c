@@ -413,7 +413,7 @@ void accel_manager_init(void) {
 
   // Apply saved motion sensitivity preference for Asterix/Obelix
   // Only available in normal shell (not PRF)
-  #if defined(CONFIG_ACCEL_SENSITIVITY) && !defined(RECOVERY_FW)
+  #if defined(CONFIG_ACCEL_SENSITIVITY) && !defined(CONFIG_RECOVERY_FW)
   extern uint8_t shell_prefs_get_motion_sensitivity(void);
   uint8_t saved_sensitivity = shell_prefs_get_motion_sensitivity();
   accel_manager_update_sensitivity(saved_sensitivity);
@@ -786,7 +786,7 @@ void accel_cb_shake_detected(IMUCoordinateAxis axis, int32_t direction) {
     return;
   }
 
-#if !defined(RECOVERY_FW)
+#if !defined(CONFIG_RECOVERY_FW)
   extern bool shell_prefs_get_accel_shake_log_info_enabled(void);
   if (shell_prefs_get_accel_shake_log_info_enabled()) {
     PBL_LOG_INFO("Shake detected; axis=%d, direction=%" PRId32, axis, direction);
