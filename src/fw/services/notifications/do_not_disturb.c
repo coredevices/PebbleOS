@@ -251,10 +251,14 @@ static void prv_set_schedule_mode_timer() {
       earliest_transition = MIN(earliest_transition, MIN(s, e));
     }
 
-    int tomorrow = (time.tm_wday + 1) % DAYS_PER_WEEK;
-    if (days[tomorrow]) {
-      time_t midnight = time_util_get_seconds_until_daily_time(&time, 0, 0);
-      earliest_transition = MIN(earliest_transition, midnight);
+    // Find the next scheduled day: check tomorrow first, then days 2..6 ahead
+    time_t midnight = time_util_get_seconds_until_daily_time(&time, 0, 0);
+    for (int d = 1; d < DAYS_PER_WEEK; d++) {
+      int future_day = (time.tm_wday + d) % DAYS_PER_WEEK;
+      if (days[future_day]) {
+        earliest_transition = MIN(earliest_transition, midnight + (d - 1) * SECONDS_PER_DAY);
+        break;
+      }
     }
   }
 

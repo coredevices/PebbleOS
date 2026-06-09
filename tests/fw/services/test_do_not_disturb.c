@@ -510,9 +510,9 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == false);
-  // No schedule transition within today or tomorrow (Saturday, Sunday).
-  // Timer falls back to maximum (7 days); will be reassessed on next tick.
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 604800 * MS_PER_SECOND);
+  // Weekday-only schedule on Saturday: next scheduled day is Monday (d=2).
+  // Timer fires at Sunday midnight + 1 day = Monday 00:00.
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 167400 * MS_PER_SECOND);
 
   rtc_set_time(s_thursday_00_00);
   do_not_disturb_handle_clock_change();
@@ -541,18 +541,18 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == false);
-  // No schedule transition within today or tomorrow (Thursday/Friday, weekend-only schedule).
-  // Timer falls back to maximum (7 days); will be reassessed on next tick.
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 604800 * MS_PER_SECOND);
+  // Weekend-only schedule on Thursday: next scheduled day is Saturday (d=2).
+  // Timer fires at Friday midnight + 1 day = Saturday 00:00.
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 169200 * MS_PER_SECOND);
 
   do_not_disturb_set_schedule_enabled(WeekendSchedule, false);
   do_not_disturb_set_schedule_enabled(WeekdaySchedule, true);
   rtc_set_time(s_saturday_01_30);
   do_not_disturb_handle_clock_change();
   cl_assert(active == false);
-  // No schedule transition within today or tomorrow (Saturday/Sunday, weekday-only schedule).
-  // Timer falls back to maximum (7 days); will be reassessed on next tick.
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 604800 * MS_PER_SECOND);
+  // Weekday-only schedule on Saturday: next scheduled day is Monday (d=2).
+  // Timer fires at Sunday midnight + 1 day = Monday 00:00.
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 167400 * MS_PER_SECOND);
 
   // 10:30 PM - 8:30 AM
   DoNotDisturbSchedule weekday_schedule_2 = {
