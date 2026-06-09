@@ -111,15 +111,6 @@ def options(opt):
                         '(bb2 (default), olimex, ev2, etc)')
     opt.add_option('--sdkshell', action='store_true',
                    help='Use the sdk shell instead of the normal shell')
-    opt.add_option('--nolog', action='store_true',
-                   help='Disable PBL_LOG macros to save space')
-    opt.add_option('--nohash', action='store_true',
-                   help='Disable log hashing and make the logs human readable')
-    opt.add_option('--log-level', default='debug', choices=['error', 'warn', 'info', 'debug', 'debug_verbose'],
-       help='Default global log level')
-    opt.add_option('--flash-log-level', default='info', choices=['error', 'warn', 'info', 'debug', 'debug_verbose'],
-       help='Default flash log level')
-
     opt.add_option('--compile_commands', action='store_true', help='Create a clang compile_commands.json')
     opt.add_option('--onlysdk', action='store_true', help="only build the sdk")
     opt.add_option('--no-link', action='store_true',
@@ -127,30 +118,14 @@ def options(opt):
     opt.add_option('--variant', action='store', default='normal',
                    choices=['normal', 'prf'],
                    help='Build variant: normal (default) or prf (recovery firmware)')
-    opt.add_option('--no-pulse-everywhere',
-                   action='store_true',
-                   help='Disables PULSE everywhere, uses legacy logs and prompt')
 
 def handle_configure_options(conf):
-    print(f"Log level: {conf.options.log_level.upper()}")
-    conf.env.append_value('DEFINES', f'DEFAULT_LOG_LEVEL=LOG_LEVEL_{conf.options.log_level.upper()}')
-
-    conf.env.append_value('DEFINES', f'FLASH_LOG_LEVEL=LOG_LEVEL_{conf.options.flash_log_level.upper()}')
-
-    if not conf.options.nolog:
-        conf.env.append_value('DEFINES', 'PBL_LOG_ENABLED')
-        if not conf.options.nohash and not conf.env.CONFIG_QEMU:
-            conf.env.append_value('DEFINES', 'PBL_LOGS_HASHED')
-
     if conf.options.lto:
         print("Turning on LTO.")
 
     if conf.options.no_link:
         conf.env.NO_LINK = True
         print("Not linking firmware")
-
-    if not conf.options.no_pulse_everywhere and (not conf.env.CONFIG_RELEASE or conf.env.CONFIG_MFG):
-        conf.env.append_value('DEFINES', 'PULSE_EVERYWHERE=1')
 
 def configure(conf):
     if not conf.options.board:
@@ -295,7 +270,7 @@ def configure(conf):
     conf.env.append_value('DEFINES', 'CLAR_FIXTURE_PATH="' +
                                      conf.path.make_node('tests/fixtures/').abspath() + '"')
 
-    conf.env.append_value('DEFINES', 'PBL_LOG_ENABLED')
+    conf.env.append_value('DEFINES', 'CONFIG_LOG=1')
 
     if conf.options.compile_commands:
         conf.load('clang_compilation_database', tooldir='waftools')
@@ -397,7 +372,7 @@ def build(bld):
     if not bld.env.NO_LINK:
         bld.add_post_fun(size_fw)
         bld.add_post_fun(size_resources)
-        if 'PBL_LOGS_HASHED' in bld.env.DEFINES:
+        if bld.env.CONFIG_LOG_HASHED:
             bld.add_post_fun(merge_loghash_dicts)
 
 
@@ -552,7 +527,7 @@ def _make_bundle(ctx, fw_bin_path, fw_type='normal', board=None, resource_path=N
 
     if resource_path is not None:
         b.add_resources(resource_path, version_ts)
-    if not ctx.env.CONFIG_RELEASE and 'PBL_LOGS_HASHED' in ctx.env.DEFINES:
+    if not ctx.env.CONFIG_RELEASE and ctx.env.CONFIG_LOG_HASHED:
         loghash_dict = ctx.path.get_bld().make_node(LOGHASH_OUT_PATH).abspath()
         b.add_loghash(loghash_dict)
 

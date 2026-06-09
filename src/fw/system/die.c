@@ -17,7 +17,7 @@
 #endif
 
 void prepare_for_software_failure(void) {
-#if PULSE_EVERYWHERE
+#ifdef CONFIG_PULSE_EVERYWHERE
   pulse_logging_log_buffer_flush();
 #endif
 

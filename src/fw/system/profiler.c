@@ -22,7 +22,7 @@
 #include <bf0_hal.h>
 #endif
 
-#if PULSE_EVERYWHERE
+#ifdef CONFIG_PULSE_EVERYWHERE
 #define PROF_LOG(buf, sz, fmt, ...) \
   do {                                        \
     snprintf(buf, sz, fmt, ## __VA_ARGS__); \

@@ -133,7 +133,7 @@ static time_t prv_ticks_to_time(RtcTicks ticks) {
 }
 
 void rtc_set_time(time_t time) {
-#ifdef PBL_LOG_ENABLED
+#ifdef CONFIG_LOG
   char buffer[TIME_STRING_BUFFER_SIZE];
   PBL_LOG_INFO("Setting time to %lu <%s>", time, time_t_to_string(buffer, time));
 #endif
