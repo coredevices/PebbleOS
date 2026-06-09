@@ -271,9 +271,13 @@ static void prv_set_schedule_mode_timer() {
 
   if (currently_active != s_data.is_in_schedule_period) {
     if (currently_active && do_not_disturb_is_manually_enabled()) {
+      alerts_preferences_dnd_set_manually_enabled(false);
+      s_data.manually_override_dnd = false;
+    } else if (!currently_active && s_data.is_in_schedule_period &&
+               do_not_disturb_is_manually_enabled()) {
+      // Coming out of scheduled DND with manual DND on, turning it off.
       do_not_disturb_set_manually_enabled(false);
-    }
-    if (!currently_active && s_data.manually_override_dnd) {
+    } else if (!currently_active && s_data.manually_override_dnd) {
       s_data.manually_override_dnd = false;
     }
     s_data.is_in_schedule_period = currently_active;
