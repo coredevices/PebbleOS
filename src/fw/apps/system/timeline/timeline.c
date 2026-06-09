@@ -149,7 +149,7 @@ static bool prv_set_state(TimelineAppData *data, TimelineAppState next_state) {
 T_STATIC void prv_init_peek_layer(TimelineAppData *data);
 
 static void prv_launch_watchface(void *data) {
-#ifdef SHELL_SDK
+#ifdef CONFIG_SHELL_SDK
   // FIXME: We don't want to show off our unfinished animations in the sdkshell
   watchface_launch_default(NULL);
 #else

@@ -80,11 +80,7 @@ def configure(conf):
     define = 'MAX_FONT_GLYPH_SIZE={}'.format(platform['MAX_FONT_GLYPH_SIZE'])
     conf.env.append_value('DEFINES', [define])
 
-    if conf.options.sdkshell:
-        conf.env.NORMAL_SHELL = 'sdk'
-        conf.env.append_value('DEFINES', ['SHELL_SDK'])
-    else:
-        conf.env.NORMAL_SHELL = 'normal'
+    conf.env.NORMAL_SHELL = 'sdk' if conf.env.CONFIG_SHELL_SDK else 'normal'
 
     conf.env.PRF_AS_FIRMWARE = conf.options.prf_as_firmware
     if conf.options.prf_as_firmware:

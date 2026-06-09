@@ -389,7 +389,7 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
   system_app_state_machine_register_app_launch(s_app_task_context.install_id);
 
   // Track per-watchface usage metrics
-#if !RECOVERY_FW && !SHELL_SDK
+#if !RECOVERY_FW && !defined(CONFIG_SHELL_SDK)
   if (app_md->process_type == ProcessTypeWatchface) {
     PBL_ANALYTICS_TIMER_START(watchface_time_ms);
     PBL_ANALYTICS_SET_STRING(watchface_name, process_metadata_get_name(app_md));
@@ -633,7 +633,7 @@ static bool prv_app_switch(bool gracefully) {
 // ---------------------------------------------------------------------------------------------
 void app_manager_start_first_app(void) {
   const PebbleProcessMd* app_md = system_app_state_machine_system_start();
-#if SHELL_SDK
+#ifdef CONFIG_SHELL_SDK
   // SDK shell's system_start returns the default watchface (a flash app) when one is set.
   // If an install crashed partway through PutBytes, BlobDB has the entry and
   // watchface_default_install_id already points at it, but the on-flash PBL_APP is

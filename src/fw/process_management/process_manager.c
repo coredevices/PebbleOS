@@ -383,7 +383,7 @@ bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully)
 
   // If already safe to kill, we're done
   if (context->safe_to_kill) {
-#if !RECOVERY_FW && !SHELL_SDK
+#if !RECOVERY_FW && !defined(CONFIG_SHELL_SDK)
     // Stop per-watchface time tracking if this was a watchface
     if (context->app_md->process_type == ProcessTypeWatchface) {
       PBL_ANALYTICS_TIMER_STOP(watchface_time_ms);
@@ -423,7 +423,7 @@ bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully)
     if (prv_force_stop_task_if_unprivileged(context)) {
       PBL_LOG_DBG("Got it");
 
-#if !RECOVERY_FW && !SHELL_SDK
+#if !RECOVERY_FW && !defined(CONFIG_SHELL_SDK)
       // Stop per-watchface time tracking if this was a watchface
       if (context->app_md->process_type == ProcessTypeWatchface) {
         PBL_ANALYTICS_TIMER_STOP(watchface_time_ms);
