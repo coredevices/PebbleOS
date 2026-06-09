@@ -345,7 +345,7 @@ static void prv_system_task_hrm_handler(void *context) {
           continue;
         }
         break;
-#ifdef MANUFACTURING_FW
+#ifdef CONFIG_MFG
       case HRMEvent_CTR:
         if (!(state->features & HRMFeature_CTR)) {
           continue;
@@ -408,7 +408,7 @@ static void prv_populate_hrm_event(PebbleHRMEvent *event, HRMFeature feature, co
         },
       };
       break;
-#ifdef MANUFACTURING_FW
+#ifdef CONFIG_MFG
     case HRMFeature_CTR:
     {
       HRMCTRData *ctr_data = kernel_zalloc_check(sizeof(HRMCTRData));

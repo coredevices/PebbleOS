@@ -127,7 +127,6 @@ def options(opt):
     opt.add_option('--variant', action='store', default='normal',
                    choices=['normal', 'prf'],
                    help='Build variant: normal (default) or prf (recovery firmware)')
-    opt.add_option('--mfg', action='store_true', help='Enable specific MFG-only options in the PRF build')
     opt.add_option('--no-pulse-everywhere',
                    action='store_true',
                    help='Disables PULSE everywhere, uses legacy logs and prompt')
@@ -150,7 +149,7 @@ def handle_configure_options(conf):
         conf.env.NO_LINK = True
         print("Not linking firmware")
 
-    if not conf.options.no_pulse_everywhere and (not conf.env.CONFIG_RELEASE or conf.options.mfg):
+    if not conf.options.no_pulse_everywhere and (not conf.env.CONFIG_RELEASE or conf.env.CONFIG_MFG):
         conf.env.append_value('DEFINES', 'PULSE_EVERYWHERE=1')
 
 def configure(conf):
@@ -218,12 +217,6 @@ def configure(conf):
     if conf.env.JS_ENGINE == 'none' and conf.env.CONFIG_MODDABLE_XS:
         conf.env.append_value('CFLAGS', ['-UCONFIG_MODDABLE_XS'])
         conf.env.CONFIG_MODDABLE_XS = None
-
-    if conf.options.mfg:
-        # Note that for the most part PRF and MFG firmwares are the same, so for MFG PRF builds
-        # both MANUFACTURING_FW and RECOVERY_FW will be defined.
-        conf.env.IS_MFG = True
-        conf.env.append_value('DEFINES', ['MANUFACTURING_FW'])
 
     conf.find_program('node nodejs', var='NODE',
                       errmsg="Unable to locate the Node command. "
@@ -660,13 +653,13 @@ def _check_firmware_image_size(ctx, path):
     firmware_size = os.path.getsize(path)
     # Determine flash and bootloader size so we can calculate the max firmware size
     if ctx.env.CONFIG_SOC_NRF52:
-        if ctx.env.VARIANT == 'prf' and not ctx.env.IS_MFG:
+        if ctx.env.VARIANT == 'prf' and not ctx.env.CONFIG_MFG:
             max_firmware_size = 512 * BYTES_PER_K
         else:
             # 1024k of flash and 32k bootloader
             max_firmware_size = (1024 - 32) * BYTES_PER_K
     elif ctx.env.CONFIG_SOC_SF32LB52:
-        if ctx.env.VARIANT == 'prf' and not ctx.env.IS_MFG:
+        if ctx.env.VARIANT == 'prf' and not ctx.env.CONFIG_MFG:
             max_firmware_size = 576 * BYTES_PER_K
         else:
             # 3072k of flash

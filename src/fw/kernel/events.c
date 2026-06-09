@@ -359,7 +359,7 @@ void **event_get_buffer(PebbleEvent *event) {
         return (void **)(&event->bluetooth.le.gatt_client_service.info);
       }
       break;
-#ifdef MANUFACTURING_FW
+#ifdef CONFIG_MFG
     case PEBBLE_HRM_EVENT:
       if (event->hrm.event_type == HRMEvent_CTR) {
         return (void **)(&event->hrm.ctr);

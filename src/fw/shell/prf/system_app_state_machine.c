@@ -16,7 +16,7 @@ const PebbleProcessMd* system_app_state_machine_system_start(void) {
     return panic_app_get_app_info();
   }
 
-#ifdef MANUFACTURING_FW
+#ifdef CONFIG_MFG
   mfg_enter_mfg_mode();
   return mfg_menu_app_get_info();
 #endif

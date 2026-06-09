@@ -68,7 +68,7 @@ static void prv_fixup_firmware_metadata(FirmwareMetadata *fw_metadata) {
 static void prv_fixup_running_firmware_metadata(FirmwareMetadata *fw_metadata) {
   prv_fixup_firmware_metadata(fw_metadata);
 
-#ifdef MANUFACTURING_FW
+#ifdef CONFIG_MFG
   // Lie to the phone and force this to say we're not a MFG firmware. If we tell the phone app
   // that we're a MFG firmware it will get mad at us and try to update us out of this mode. We
   // want to stay in this mode to collect logs and core dumps at the factory.
@@ -167,7 +167,7 @@ void system_version_protocol_msg_callback(CommSession *session, const uint8_t* d
 }
 
 void command_version_info(void) {
-#ifdef MANUFACTURING_FW
+#ifdef CONFIG_MFG
   prompt_send_response("MANUFACTURING FW");
 #endif
 

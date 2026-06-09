@@ -31,7 +31,7 @@ typedef enum {
 #endif
   MfgTestId_ALS,
   MfgTestId_Vibration,
-#if defined(CONFIG_BOARD_FAMILY_OBELIX) && defined(MANUFACTURING_FW)
+#if defined(CONFIG_BOARD_FAMILY_OBELIX) && defined(CONFIG_MFG)
   MfgTestId_HrmCtrLeakage,
 #endif
   MfgTestId_ProgramColor,

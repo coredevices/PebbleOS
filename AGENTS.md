@@ -39,7 +39,7 @@ PebbleOS is the operating system running on Pebble smartwatches.
 
   - Board names can be obtained from `./pbl --help`
   - `-DCONFIG_RELEASE=y` enables release mode
-  - `--mfg` enables manufacturing mode
+  - `-DCONFIG_MFG=y` enables manufacturing mode
   - `--variant=normal|prf` selects build variant (default: normal)
 
 - Build firmware: `./pbl build`
