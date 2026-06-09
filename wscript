@@ -109,18 +109,6 @@ def options(opt):
                    choices=waftools.openocd.JTAG_OPTIONS.keys(),
                    help='Which JTAG programmer we are using '
                         '(bb2 (default), olimex, ev2, etc)')
-    opt.add_option('--nosleep', action='store_true',
-                   help='Disable sleep and stop mode (to use JTAG+GDB)')
-    opt.add_option('--nostop', action='store_true',
-                   help='Disable stop mode (to use JTAG+GDB)')
-    opt.add_option('--nowatch', action='store_true',
-                   help='Disable the watchface idle timeout')
-    opt.add_option('--nowatchdog', action='store_true',
-                   help='Disable automatic reboots when watchdog fires')
-    opt.add_option('--performance_tests', action='store_true',
-                   help='Enables instrumentation for performance testing (off by default)')
-    opt.add_option('--ui_debug', action='store_true',
-                   help='Enable window dump & layer nudge CLI cmd (off by default)')
     opt.add_option('--sdkshell', action='store_true',
                    help='Use the sdk shell instead of the normal shell')
     opt.add_option('--nolog', action='store_true',
@@ -136,15 +124,6 @@ def options(opt):
     opt.add_option('--onlysdk', action='store_true', help="only build the sdk")
     opt.add_option('--no-link', action='store_true',
                    help='Do not link the final firmware binary. This is used for static analysis')
-    opt.add_option('--noprompt', action='store_true',
-                   help='Disable the serial console to save space')
-    opt.add_option('--profiler', action='store_true', help='Enable the profiler.')
-    opt.add_option('--profile_interrupts', action='store_true',
-                   help='Enable profiling of all interrupts.')
-    opt.add_option('--no_sandbox', action='store_true',
-                   help='Disable the MPU for 3rd party apps.')
-    opt.add_option('--malloc_instrumentation', action='store_true',
-                   help='Enables malloc instrumentation')
     opt.add_option('--variant', action='store', default='normal',
                    choices=['normal', 'prf'],
                    help='Build variant: normal (default) or prf (recovery firmware)')
@@ -154,69 +133,15 @@ def options(opt):
                    help='Disables PULSE everywhere, uses legacy logs and prompt')
 
 def handle_configure_options(conf):
-    if conf.options.noprompt:
-        conf.env.append_value('DEFINES', 'DISABLE_PROMPT')
-        conf.env.DISABLE_PROMPT = True
-
-    if conf.options.malloc_instrumentation:
-        conf.env.append_value('DEFINES', 'MALLOC_INSTRUMENTATION')
-        print("Enabling malloc instrumentation")
-
-    if conf.options.performance_tests:
-        conf.env.PERFORMANCE_TESTS = True
-
-    if conf.options.nosleep:
-        conf.env.append_value('DEFINES', 'PBL_NOSLEEP')
-        print("Sleep/stop mode disabled")
-
-    if conf.options.nostop:
-        conf.env.append_value('DEFINES', 'PBL_NOSTOP')
-        print("Stop mode disabled")
-
-    if conf.options.nowatch:
-        conf.env.append_value('DEFINES', 'NO_WATCH_TIMEOUT')
-        print("Watch watchdog disabled")
-
-    if conf.options.nowatchdog:
-        conf.env.append_value('DEFINES', 'NO_WATCHDOG')
-        conf.env.NO_WATCHDOG = True
-        print("Watchdog reboot disabled")
-
-    if conf.options.performance_tests:
-        conf.env.append_value('DEFINES', 'PERFORMANCE_TESTS')
-        conf.options.profiler = True
-        print("Instrumentation and apps for performance measurement enabled (enables profiler)")
-
     print(f"Log level: {conf.options.log_level.upper()}")
     conf.env.append_value('DEFINES', f'DEFAULT_LOG_LEVEL=LOG_LEVEL_{conf.options.log_level.upper()}')
 
     conf.env.append_value('DEFINES', f'FLASH_LOG_LEVEL=LOG_LEVEL_{conf.options.flash_log_level.upper()}')
 
-    if conf.options.ui_debug:
-        conf.env.append_value('DEFINES', 'UI_DEBUG')
-
-    if conf.options.no_sandbox:
-        print("Sandbox disabled")
-    else:
-        conf.env.append_value('DEFINES', 'APP_SANDBOX')
-
     if not conf.options.nolog:
         conf.env.append_value('DEFINES', 'PBL_LOG_ENABLED')
         if not conf.options.nohash and not conf.env.CONFIG_QEMU:
             conf.env.append_value('DEFINES', 'PBL_LOGS_HASHED')
-
-    if conf.options.profile_interrupts:
-        conf.env.append_value('DEFINES', 'PROFILE_INTERRUPTS')
-        if not conf.options.profiler:
-            # Can't profile interrupts without the profiler enabled
-            print("Enabling profiler")
-            conf.options.profiler = True
-
-    if conf.options.profiler:
-        conf.env.append_value('DEFINES', 'PROFILER')
-        if not conf.options.nostop:
-            print("Enable --nostop for accurate profiling.")
-            conf.env.append_value('DEFINES', 'PBL_NOSTOP')
 
     if conf.options.lto:
         print("Turning on LTO.")

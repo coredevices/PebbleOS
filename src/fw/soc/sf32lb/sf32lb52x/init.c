@@ -47,7 +47,7 @@ void soc_early_init(void) {
 
   HAL_PMU_LpCLockSelect(PMU_LPCLK_RC32);
 
-#ifndef NO_WATCHDOG
+#ifndef CONFIG_NO_WATCHDOG
   watchdog_init();
   watchdog_start();
 #endif

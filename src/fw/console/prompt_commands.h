@@ -478,11 +478,11 @@ static const Command s_prompt_commands[] = {
   */
   { "croak", command_croak, 0 },
 
-#ifdef MALLOC_INSTRUMENTATION
+#ifdef CONFIG_MALLOC_INSTRUMENTATION
   { "dump malloc kernel", command_dump_malloc_kernel, 0 },
   { "dump malloc app", command_dump_malloc_app, 0 },
   { "dump malloc worker", command_dump_malloc_worker, 0 },
-#endif /* MALLOC_INSTRUMENTATION */
+#endif /* CONFIG_MALLOC_INSTRUMENTATION */
 
   /*
   { "read word", command_read_word, 1 },
@@ -490,7 +490,7 @@ static const Command s_prompt_commands[] = {
   { "remote os", command_get_connected_os, 0 },
   */
 
-#ifdef UI_DEBUG
+#ifdef CONFIG_UI_DEBUG
   { "window dump", command_dump_window, 0 },
   { "layer nudge", command_layer_nudge, 1 },
 #endif
@@ -582,7 +582,7 @@ static const Command s_prompt_commands[] = {
 
   { "runlevel", command_set_runlevel, 1 },
 
-#if defined(PROFILER)
+#if defined(CONFIG_PROFILER)
   { "profiler start", command_profiler_start, 0 },
   { "profiler stop", command_profiler_stop, 0 },
   { "profiler stats", command_profiler_stats, 0 },
@@ -609,7 +609,7 @@ static const Command s_prompt_commands[] = {
   { "dump notif_pref_db", command_dump_notif_pref_db, 0 },
 #endif
 
-#if PERFORMANCE_TESTS
+#ifdef CONFIG_PERFORMANCE_TESTS
   { "perftest all line", command_perftest_line_all, 0 },
   { "perftest all text", command_perftest_text_all, 0 },
   { "perftest line", command_perftest_line, 2 },

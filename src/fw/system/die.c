@@ -12,7 +12,7 @@
 
 #include <cmsis_core.h>
 
-#if defined(NO_WATCHDOG)
+#if defined(CONFIG_NO_WATCHDOG)
 #include "FreeRTOS.h"
 #endif
 
@@ -29,7 +29,7 @@ void prepare_for_software_failure(void) {
 NORETURN reset_due_to_software_failure(void) {
   prepare_for_software_failure();
 
-#if defined(NO_WATCHDOG)
+#if defined(CONFIG_NO_WATCHDOG)
   // Don't reset right away, leave it in a state we can inspect
 
   __disable_irq();

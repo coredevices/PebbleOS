@@ -1272,7 +1272,7 @@ void command_mflt_device_info(void) {
 }
 #endif  // MEMFAULT
 
-#if PERFORMANCE_TESTS
+#ifdef CONFIG_PERFORMANCE_TESTS
 // for task_watchdog_bit_set_all
 #include "drivers/task_watchdog.h"
 // For taskYIELD()

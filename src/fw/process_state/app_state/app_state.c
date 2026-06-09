@@ -456,7 +456,7 @@ void app_state_set_current_timeline_item_action_source(TimelineItemActionSource 
 
 // Serial Commands
 ///////////////////////////////////////////////////////////
-#ifdef MALLOC_INSTRUMENTATION
+#ifdef CONFIG_MALLOC_INSTRUMENTATION
 void command_dump_malloc_app(void) {
   heap_dump_malloc_instrumentation_to_dbgserial(app_state_get_heap());
 }
