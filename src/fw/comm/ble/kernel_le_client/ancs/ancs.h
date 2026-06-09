@@ -4,6 +4,7 @@
 #pragma once
 
 #include "applib/bluetooth/ble_client.h"
+#include "comm/ble/kernel_le_client/multi_phone.h"
 
 //! @file ancs.h Module implementing an ANCS client.
 //! See http://bit.ly/ancs-spec for Apple's documentation of ANCS
@@ -32,17 +33,23 @@ typedef enum {
   ANCSCharacteristicInvalid = NumANCSCharacteristic,
 } ANCSCharacteristic;
 
-//! Creates the ANCS client.
+//! Creates the ANCS client for the given phone slot.
 //! Must only be called from KernelMain!
-void ancs_create(void);
+void ancs_create(PhoneSlot slot);
 
 //! Updates the BLECharacteristic references, in case new ones have been obtained after a
 //! re-discovery of the remote services.
 //! @param characteristics Matrix of characteristics references of the ANCS service(s)
+//! @param slot            Phone slot (0..MAX_PHONE_CONNECTIONS-1) owning this service
 //! @note This module only uses the first service instance, any others will be ignored.
 //! Must only be called from KernelMain!
-void ancs_handle_service_discovered(BLECharacteristic *characteristics);
+void ancs_handle_service_discovered(BLECharacteristic *characteristics, PhoneSlot slot);
 
+//! Invalidates all ANCS characteristic references for a given phone slot.
+void ancs_invalidate_all_references_for_slot(PhoneSlot slot);
+
+//! Invalidates all ANCS characteristic references across all slots.
+//! Legacy wrapper kept for callers that don't yet carry slot context.
 void ancs_invalidate_all_references(void);
 
 void ancs_handle_service_removed(BLECharacteristic *characteristics, uint8_t num_characteristics);
@@ -68,9 +75,9 @@ void ancs_handle_subscribe(BLECharacteristic characteristic,
 void ancs_handle_read_or_notification(BLECharacteristic characteristic, const uint8_t *value,
                                       size_t value_length, BLEGATTError error);
 
-//! Destroys the ANCS client.
+//! Destroys the ANCS client for the given phone slot.
 //! Must only be called from KernelMain!
-void ancs_destroy(void);
+void ancs_destroy(PhoneSlot slot);
 
 //! This function is safe to call from any task.
 void ancs_perform_action(uint32_t notification_uid, uint8_t action_id);
