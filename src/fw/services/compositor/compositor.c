@@ -508,7 +508,7 @@ uint16_t prv_scale_coordinate(const uint32_t scale_factor, uint16_t val) {
   return val_fixed >> 16;  // Get integer part
 }
 
-#if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED && !RECOVERY_FW
+#if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED && !defined(CONFIG_RECOVERY_FW)
 static TimelinePeekUnsupportedFaceMode prv_get_unsupported_face_mode_for_timeline_peek(void) {
   const TimelinePeekUnsupportedFaceMode mode =
       timeline_peek_prefs_get_unsupported_face_mode();
@@ -539,7 +539,7 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
   GBitmap src_bitmap = compositor_get_app_framebuffer_as_bitmap();
   GBitmap dst_bitmap = compositor_get_framebuffer_as_bitmap();
 
-#if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED && !RECOVERY_FW
+#if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED && !defined(CONFIG_RECOVERY_FW)
   const TimelinePeekUnsupportedFaceMode unsupported_face_mode =
       prv_get_unsupported_face_mode_for_timeline_peek();
   const bool squish_watchface_for_peek =
@@ -564,7 +564,7 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
   const int16_t app_width = src_bitmap.bounds.size.w;
   const int16_t app_height = src_bitmap.bounds.size.h;
 
-#if defined(CONFIG_APP_SCALING) && !defined(RECOVERY_FW)
+#if defined(CONFIG_APP_SCALING) && !defined(CONFIG_RECOVERY_FW)
   const int16_t disp_width = dst_bitmap.bounds.size.w;
   const int16_t disp_height = dst_bitmap.bounds.size.h;
   // Check if we should use scaling mode for legacy apps

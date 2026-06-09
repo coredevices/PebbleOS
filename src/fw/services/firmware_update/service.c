@@ -12,7 +12,7 @@
 #include "process_management/app_manager.h"
 #include "pbl/services/battery/battery_monitor.h"
 #include "pbl/services/system_task.h"
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
 #include "pbl/services/powermode_service.h"
 #endif
 #include "pbl/services/runlevel.h"
@@ -186,7 +186,7 @@ static FirmwareUpdateStatus prv_firmware_update_start(PebbleSystemMessageEvent *
       .restart = true,
     });
     put_bytes_expect_init(FIRMWARE_TIMEOUT_MS);
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
     powermode_service_request_hp();
 #endif
     result = FirmwareUpdateRunning;
@@ -217,7 +217,7 @@ static void prv_firmware_update_finish(bool failed) {
   }
 
   s_update_status = failed ? FirmwareUpdateFailed : FirmwareUpdateStopped;
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
   powermode_service_release_hp();
 #endif
 

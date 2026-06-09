@@ -180,7 +180,7 @@ void battery_monitor_handle_state_change_event(PreciseBatteryChargeState state) 
 #else
   bool critical = (state.charge_percent == 0) && !state.is_charging;
 
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
   const uint32_t LOW_POWER_PERCENT = ratio32_from_percent(BOARD_CONFIG_POWER.low_power_threshold);
 
   bool low_power = !state.is_charging && (state.charge_percent <= LOW_POWER_PERCENT);

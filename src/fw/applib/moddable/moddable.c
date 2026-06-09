@@ -9,7 +9,7 @@
 
 #include <stddef.h>
 
-#if defined(CONFIG_MODDABLE_XS) && !defined(RECOVERY_FW)
+#if defined(CONFIG_MODDABLE_XS) && !defined(CONFIG_RECOVERY_FW)
 #include "xsmc.h"
 #include "xsHost.h"
 #include "xsHosts.h"

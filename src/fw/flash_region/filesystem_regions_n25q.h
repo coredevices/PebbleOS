@@ -8,7 +8,7 @@
 //! Flash regions used for the filesystem used by the serial flash chip that we're using in
 //! Tintin/Bianca. Only included by core/flash_region/filesystem_regions.c
 
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
 #define FILE_SYSTEM_REGIONS(MACRO_OPERATOR)                                               \
   MACRO_OPERATOR(FLASH_REGION_FILESYSTEM_BEGIN, FLASH_REGION_FILESYSTEM_END)              \
   MACRO_OPERATOR(FLASH_REGION_FILESYSTEM_2_BEGIN, FLASH_REGION_FILESYSTEM_2_END)          \

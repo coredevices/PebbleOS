@@ -279,7 +279,7 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
 
     case PEBBLE_ACCEL_SHAKE_EVENT:
       if (backlight_is_motion_enabled()) {
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
         const bool dnd_suppresses_backlight = do_not_disturb_is_active() &&
                                              !alerts_preferences_dnd_get_motion_backlight();
         if (!dnd_suppresses_backlight)
@@ -298,7 +298,7 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
       if (!touch_has_app_subscribers()) {
         return;
       }
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
       const bool dnd_suppresses_backlight = do_not_disturb_is_active() &&
                                            !alerts_preferences_dnd_get_touch_backlight();
       if (dnd_suppresses_backlight) {
@@ -337,7 +337,7 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
           break;
       }
       if (wake_on_gesture) {
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
         const bool dnd_suppresses_backlight = do_not_disturb_is_active() &&
                                              !alerts_preferences_dnd_get_touch_backlight();
         if (!dnd_suppresses_backlight)
@@ -423,7 +423,7 @@ static NOINLINE void prv_extended_event_handler(PebbleEvent* e) {
     case PEBBLE_PUT_BYTES_EVENT:
       // TODO: inform the other things interested in put_bytes (apps?)
       firmware_update_pb_event_handler(&e->put_bytes);
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
       app_fetch_put_bytes_event_handler(&e->put_bytes);
 #endif
       return;
@@ -440,7 +440,7 @@ static NOINLINE void prv_extended_event_handler(PebbleEvent* e) {
 
     case PEBBLE_SET_TIME_EVENT:
     {
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
       PebbleSetTimeEvent *set_time_info = &e->set_time_info;
 
       // The phone and watch time may be out of sync by a second or two (since
@@ -477,7 +477,7 @@ static NOINLINE void prv_extended_event_handler(PebbleEvent* e) {
       PebbleCommSessionEvent *comm_session_event = &e->bluetooth.comm_session_event;
       debounced_connection_service_handle_event(comm_session_event);
       put_bytes_handle_comm_session_event(comm_session_event);
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
       if (comm_session_event->is_system) {
         // tell the phone which app is running
         const Uuid *running_uuid = &app_manager_get_current_app_md()->uuid;
@@ -555,12 +555,12 @@ static NOINLINE void prv_launcher_main_loop_init(void) {
   light_button_pressed();
   light_button_released();
 
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
   i18n_set_resource(shell_prefs_get_language_resource_id());
 #endif
   app_manager_start_first_app();
 
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
   // Launch the default worker. If any of the buttons are down, or we hit 2 strikes already,
   // skip this. This insures that we don't enter PRF for a bad worker.
   if (launcher_panic_get_current_error()) {

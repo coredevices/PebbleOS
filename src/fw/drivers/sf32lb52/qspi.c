@@ -378,7 +378,7 @@ const FlashSecurityRegisters *qspi_flash_security_registers_info(QSPIFlash *dev)
   return &dev->state->part->sec_registers;
 }
 
-#ifdef RECOVERY_FW
+#ifdef CONFIG_RECOVERY_FW
 status_t qspi_flash_lock_security_register(QSPIFlash *dev, uint32_t addr) {
   FLASH_HandleTypeDef *hflash = &dev->qspi->state->ctx.handle;
   int res;
@@ -393,4 +393,4 @@ status_t qspi_flash_lock_security_register(QSPIFlash *dev, uint32_t addr) {
 
   return S_SUCCESS;
 }
-#endif // RECOVERY_FW
+#endif // CONFIG_RECOVERY_FW

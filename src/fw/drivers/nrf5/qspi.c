@@ -749,7 +749,7 @@ const FlashSecurityRegisters *qspi_flash_security_registers_info(QSPIFlash *dev)
   return &part->sec_registers;
 }
 
-#ifdef RECOVERY_FW
+#ifdef CONFIG_RECOVERY_FW
 status_t qspi_flash_lock_security_register(QSPIFlash *dev, uint32_t addr) {
   uint8_t sr[2];
   status_t res;
@@ -768,7 +768,7 @@ status_t qspi_flash_lock_security_register(QSPIFlash *dev, uint32_t addr) {
 
   return 0;
 }
-#endif  // RECOVERY_FW
+#endif  // CONFIG_RECOVERY_FW
 
 status_t qspi_flash_write_protection_enable(QSPIFlash *dev) {
   return S_NO_ACTION_REQUIRED;

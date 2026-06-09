@@ -114,7 +114,7 @@ static void print_splash_screen(void)
 
 #if defined(CONFIG_MFG)
   PBL_LOG_ALWAYS("PebbleOS - MANUFACTURING MODE");
-#elif defined(RECOVERY_FW)
+#elif defined(CONFIG_RECOVERY_FW)
   PBL_LOG_ALWAYS("PebbleOS - RECOVERY MODE");
 #else
   PBL_LOG_ALWAYS("PebbleOS");
@@ -179,7 +179,7 @@ int main(void) {
 
   rtc_init();
 
-#ifdef RECOVERY_FW
+#ifdef CONFIG_RECOVERY_FW
   boot_bit_clear(BOOT_BIT_RECOVERY_START_IN_PROGRESS);
 #endif
 
@@ -363,7 +363,7 @@ static NOINLINE void prv_main_task_init(void) {
   // Do this early before things can screw ith it.
   check_prf_update();
 
-#if defined(CONFIG_PBLBOOT) && defined(RECOVERY_FW) && !defined(CONFIG_MFG)
+#if defined(CONFIG_PBLBOOT) && defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_MFG)
   // Invalidate slot0/1 when booting PRF, so we force main firmware re-install
   firmware_storage_invalidate_firmware_slot(0);
   firmware_storage_invalidate_firmware_slot(1);

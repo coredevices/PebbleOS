@@ -177,7 +177,6 @@ def configure(conf):
 
     conf.env.VARIANT = conf.options.variant
     if conf.env.VARIANT == 'prf':
-        conf.env.append_value('DEFINES', ['RECOVERY_FW'])
         conf.env.JS_ENGINE = 'none'
 
     # PRF variant forces JS_ENGINE='none' above. If the board's defconfig had

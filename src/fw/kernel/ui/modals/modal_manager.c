@@ -57,7 +57,7 @@ static ModalProperty s_current_modal_properties = ModalPropertyDefault;
 // Used to decide the compositor transition after a modal is already removed from the stack
 static ModalPriority s_last_highest_modal_priority = ModalPriorityInvalid;
 
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
 static bool s_powermode_hp_requested;
 static TimerID s_powermode_release_timer;
 
@@ -117,7 +117,7 @@ void modal_manager_init(void) {
 
   click_manager_init(&s_modal_window_click_manager);
 
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
   s_powermode_release_timer = new_timer_create();
 #endif
 }
@@ -194,7 +194,7 @@ static const CompositorTransition *prv_get_compositor_transition(bool modal_is_d
   return is_top_discreet ? NULL : compositor_modal_transition_to_modal_get(modal_is_destination);
 }
 
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
 static void prv_powermode_release_cb(void *data) {
   (void)data;
   if (s_powermode_hp_requested) {
@@ -205,7 +205,7 @@ static void prv_powermode_release_cb(void *data) {
 #endif
 
 static void prv_handle_app_to_modal_transition_powermode(void) {
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
   new_timer_stop(s_powermode_release_timer);
   if (!s_powermode_hp_requested) {
     powermode_service_request_hp();
@@ -215,7 +215,7 @@ static void prv_handle_app_to_modal_transition_powermode(void) {
 }
 
 static void prv_handle_modal_to_app_transition_powermode(void) {
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
   if (s_powermode_hp_requested) {
     new_timer_start(s_powermode_release_timer, POWERMODE_MODAL_RELEASE_DELAY_MS,
                     prv_powermode_release_cb, NULL, 0);
@@ -234,19 +234,19 @@ static void prv_handle_modal_to_app_transition_visible(void) {
 }
 
 static void prv_handle_app_to_modal_transition_hidden_and_unfocused(void) {
-#if !RECOVERY_FW && !defined(CONFIG_SHELL_SDK)
+#if !defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_SHELL_SDK)
   app_idle_timeout_pause();
 #endif
 }
 
 static void prv_handle_modal_to_app_transition_hidden_and_unfocused(void) {
-#if !RECOVERY_FW && !defined(CONFIG_SHELL_SDK)
+#if !defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_SHELL_SDK)
   app_idle_timeout_resume();
 #endif
 }
 
 static void prv_handle_app_to_modal_transition_focus(void) {
-#if !RECOVERY_FW && !defined(CONFIG_SHELL_SDK)
+#if !defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_SHELL_SDK)
   watchface_reset_click_manager();
 #endif
 

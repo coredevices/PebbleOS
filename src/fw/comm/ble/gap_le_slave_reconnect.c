@@ -153,7 +153,7 @@ void gap_le_slave_reconnect_stop(void) {
 
 // -----------------------------------------------------------------------------
 void gap_le_slave_reconnect_start(void) {
-#if RECOVERY_FW
+#ifdef CONFIG_RECOVERY_FW
   return; // Only use discoverable packet for PRF
 #endif
   bt_lock();

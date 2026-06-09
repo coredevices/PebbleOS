@@ -454,7 +454,7 @@ void bt_driver_handle_le_connection_complete_event(const BleConnectionCompleteEv
         bluetooth_analytics_handle_no_intent_for_connection();
       }
 
-#if RECOVERY_FW
+#ifdef CONFIG_RECOVERY_FW
       // In PRF, stick to shortest connection interval indefinitely:
       conn_mgr_set_ble_conn_response_time(connection, BtConsumerPRF,
                                           ResponseTimeMin, MAX_PERIOD_RUN_FOREVER);
@@ -493,7 +493,7 @@ void bt_driver_handle_le_disconnection_complete_event(const BleDisconnectionComp
     case HciStatusCode_Success: {
       // Disconnection! Update our records:
       GAPLEConnection *connection = gap_le_connection_by_device(&event->peer_address);
-#if defined(CONFIG_HRM) && !defined(RECOVERY_FW)
+#if defined(CONFIG_HRM) && !defined(CONFIG_RECOVERY_FW)
       ble_hrm_handle_disconnection(connection);
 #endif
       const bool local_is_master = connection->local_is_master;

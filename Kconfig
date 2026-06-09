@@ -11,6 +11,12 @@ config RELEASE
       features like Memfault crash reporting that should only run on
       shipping firmware.
 
+config RECOVERY_FW
+    bool "Recovery firmware (PRF)"
+    help
+      Build the recovery firmware variant. Set via prj_prf.conf when
+      configuring with --variant=prf; do not set manually.
+
 config MFG
     bool "Manufacturing firmware"
     help

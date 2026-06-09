@@ -42,7 +42,7 @@ static bool s_saved_corr_present = false;
 static int16_t s_saved_corr[3] = { 0 };
 
 static int32_t s_last_heading = -1; // the last heading we found
-#ifdef RECOVERY_FW
+#ifdef CONFIG_RECOVERY_FW
 static MagData s_last_mag_sample = { 0 };
 #endif
 
@@ -262,7 +262,7 @@ void ecompass_service_handle(void) {
     return;
   }
 
-#ifdef RECOVERY_FW
+#ifdef CONFIG_RECOVERY_FW
   s_last_mag_sample = mag_data;
 #endif
 
@@ -380,7 +380,7 @@ DEFINE_SYSCALL(void, sys_ecompass_get_last_heading, CompassHeadingData *data) {
 //////////////////////////////////////////////////////////////////////////////////
 // Recovery firmware commands
 
-#ifdef RECOVERY_FW
+#ifdef CONFIG_RECOVERY_FW
 static void prv_ecompass_start_callback(void *context) {
   s_accel_session = accel_session_create();
   accel_session_raw_data_subscribe(s_accel_session, ACCEL_SAMPLING_25HZ, 5,
@@ -416,4 +416,4 @@ void command_compass_peek(void) {
   prompt_send_response_fmt(buffer, sizeof(buffer), "Mx=%d, My=%d, Mz=%d",
       s_last_mag_sample.x, s_last_mag_sample.y, s_last_mag_sample.z);
 }
-#endif // RECOVERY_FW
+#endif // CONFIG_RECOVERY_FW

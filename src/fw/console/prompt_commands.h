@@ -85,9 +85,9 @@ extern void command_flash_sec_write(const char *, const char *);
 extern void command_flash_sec_erase(const char *);
 extern void command_flash_sec_wipe(void);
 extern void command_flash_sec_info(void);
-#if defined(RECOVERY_FW)
+#if defined(CONFIG_RECOVERY_FW)
 extern void command_flash_sec_lock(const char *, const char *);
-#endif // RECOVERY_FW
+#endif // CONFIG_RECOVERY_FW
 #endif // CONFIG_OTP_FLASH
 
 extern void command_get_time(void);
@@ -306,7 +306,7 @@ static const Command s_prompt_commands[] = {
   { "reset", command_reset, 0 },
   { "crash", command_crash, 0 },
   { "hard crash", command_hard_crash, 0 },
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
   { "factory reset fast", command_factory_reset_fast, 0 },
 #endif
   { "factory reset", command_factory_reset, 0 },
@@ -331,7 +331,7 @@ static const Command s_prompt_commands[] = {
   { "enter stop", command_enter_stop, 0},
 #endif
 #endif
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
   { "app list", command_app_list, 0 },
   { "app launch", command_app_launch, 1 },
   { "app remove", command_app_remove, 1 },
@@ -341,7 +341,7 @@ static const Command s_prompt_commands[] = {
 
   { "erase flash", command_erase_flash, 2 },
   { "crc flash", command_crc_flash, 2 },
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
   { "temp read",  command_temperature_read, 0 },
   { "als read", command_als_read, 0},
 #ifndef CONFIG_RELEASE
@@ -353,7 +353,7 @@ static const Command s_prompt_commands[] = {
   // Following commands are used for manufacturing. We use a PRF firmware for manufacturing, so
   // we can only include these commands when we're building for PRF. Some of the commands are
   // specific to snowy manufacturing as well
-#ifdef RECOVERY_FW
+#ifdef CONFIG_RECOVERY_FW
   { "info", command_version_info, 0 },
 
   { "enter mfg", command_enter_mfg, 0 },
@@ -411,7 +411,7 @@ static const Command s_prompt_commands[] = {
 #ifdef CONFIG_MFG
   { "disp", command_display_set, 1},
 #endif
-#endif // RECOVERY_FW
+#endif // CONFIG_RECOVERY_FW
 
 #ifdef CONFIG_HRM
   { "hrm read", command_hrm_read, 0},
@@ -510,7 +510,7 @@ static const Command s_prompt_commands[] = {
 
   { "flash unprotect", command_flash_unprotect, 0 },
 
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
   { "worker launch", command_worker_launch, 1 },
   { "worker kill", command_worker_kill, 0},
 #endif
@@ -534,7 +534,7 @@ static const Command s_prompt_commands[] = {
   //{ "bt active exit", command_bt_active_exit, 0 },
 
 
-#if !defined(RECOVERY_FW)
+#if !defined(CONFIG_RECOVERY_FW)
   { "get active app metadata", command_get_active_app_metadata, 0 },
 #endif
 //  { "boot bits get", command_boot_bits_get, 0 },
@@ -545,11 +545,11 @@ static const Command s_prompt_commands[] = {
 
 //  { "animations_l2", command_legacy2_animations_info, 0 },
 
-// #if !defined(RECOVERY_FW)
+// #if !defined(CONFIG_RECOVERY_FW)
 //  { "sim panic", command_sim_panic, 1 },
 // #endif
 
-#if !defined(RECOVERY_FW)
+#if !defined(CONFIG_RECOVERY_FW)
   { "alarm", command_alarm, 0 },
 
   //{ "now playing", command_print_now_playing, 0 },
@@ -559,11 +559,11 @@ static const Command s_prompt_commands[] = {
   { "dls wipe", command_dls_erase_all, 0 },
   { "dls send", command_dls_send_all, 0 },
 
-#endif // !RECOVERY_FW
+#endif // !defined(CONFIG_RECOVERY_FW)
 
   { "dump mpu", memory_layout_dump_mpu_regions_to_dbgserial, 0 },
 
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
   {"pfs format", pfs_command_fs_format, 1},
   {"pfs ls", pfs_command_fs_ls, 0},
   // {"pfs cat", pfs_command_cat, 2},
@@ -593,9 +593,9 @@ static const Command s_prompt_commands[] = {
   // Removing it will save ~2400 bytes but it is super useful for BT bringup debug!
   { "gapdb dump", command_gapdb_dump, 0 },
   { "sprf nuke", command_bt_sprf_nuke, 0 },
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
   { "sprf sync", command_force_shared_prf_flush, 0},
-#endif // !RECOVERY_FW
+#endif // !defined(CONFIG_RECOVERY_FW)
 #endif
 
 #if 0
@@ -605,7 +605,7 @@ static const Command s_prompt_commands[] = {
 #endif
 
   { "waste time", command_waste_time, 2 },
-#if !defined(RECOVERY_FW)
+#if !defined(CONFIG_RECOVERY_FW)
   { "dump notif_pref_db", command_dump_notif_pref_db, 0 },
 #endif
 

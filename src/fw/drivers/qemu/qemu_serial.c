@@ -127,7 +127,7 @@ static void prv_timeline_peek_msg_callback(const uint8_t *data, uint32_t len) {
   }
 
   PBL_LOG_DBG("Got timeline peek msg: enabled: %d", hdr->enabled);
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
   timeline_peek_set_enabled(hdr->enabled);
 #endif
 }
@@ -141,7 +141,7 @@ static void prv_content_size_msg_callback(const uint8_t *data, uint32_t len) {
   }
 
   PBL_LOG_DBG("Got content size msg: size: %d", hdr->size);
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
   system_theme_set_content_size(hdr->size);
 
   // Exit out of any currently running app so we force the UI to update to the new content size

@@ -154,7 +154,7 @@ void bt_driver_cb_gatt_service_changed_server_subscribe(
       }
 
       // PRF will always send a "Service Changed" indication:
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
       if (s_service_changed_indications_left <= 0) {
         goto unlock;
       }

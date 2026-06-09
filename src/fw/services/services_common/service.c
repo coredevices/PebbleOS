@@ -42,7 +42,7 @@ void services_common_init(void) {
   bt_persistent_storage_init();
 
   comm_default_kernel_sender_init();
-#if !defined(RECOVERY_FW)
+#if !defined(CONFIG_RECOVERY_FW)
   comm_session_app_session_capabilities_init();
 #endif
   comm_session_init();
@@ -75,7 +75,7 @@ static struct ServiceRunLevelSetting s_runlevel_settings[] = {
     .set_enable_fn = bt_ctl_set_enabled,
     .enable_mask = R_FirmwareUpdate | R_Normal,
   },
-#if defined(CONFIG_TOUCH) && defined(RECOVERY_FW)
+#if defined(CONFIG_TOUCH) && defined(CONFIG_RECOVERY_FW)
   // Only keep touch enabled on recovery (and so manufacturing as well)
   // Once supported in main firmware, this should be removed.
   {

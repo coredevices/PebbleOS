@@ -102,7 +102,7 @@ void bt_local_addr_init(void) {
     bt_local_addr_pause_cycling();
     s_cycling_paused_due_to_dependent_bondings = true;
   } else {
-#if RECOVERY_FW
+#ifdef CONFIG_RECOVERY_FW
     PBL_LOG_INFO("Pausing address cycling because PRF!");
     bt_local_addr_pause_cycling();
 #else

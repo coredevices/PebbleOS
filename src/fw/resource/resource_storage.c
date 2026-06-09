@@ -269,7 +269,7 @@ ResourceCallbackHandle resource_watch(ResAppNum app_num, uint32_t resource_id,
 }
 
 void resource_unwatch(ResourceCallbackHandle cb_handle) {
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
   // TODO: Support unwatching not-files.
   g_file_impl.unwatch(cb_handle);
 #endif

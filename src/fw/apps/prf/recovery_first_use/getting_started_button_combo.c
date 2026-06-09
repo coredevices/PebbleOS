@@ -39,7 +39,7 @@ static void prv_down_cb(void *data) {
   system_task_add_callback(prv_factory_reset, NULL);
 }
 
-#ifdef RECOVERY_FW
+#ifdef CONFIG_RECOVERY_FW
 static void prv_mfg_mode_cb(void *data) {
   mfg_enter_mfg_mode_and_launch_app();
 }
@@ -63,7 +63,7 @@ static void prv_update_state(GettingStartedButtonComboState *state) {
   } BUTTON_COMBOS[] = {
     { (1 << BUTTON_ID_SELECT), state->select_callback },
     { (1 << BUTTON_ID_DOWN), prv_down_cb },
-#ifdef RECOVERY_FW
+#ifdef CONFIG_RECOVERY_FW
     { (1 << BUTTON_ID_UP) | (1 << BUTTON_ID_SELECT), prv_mfg_mode_cb },
 #endif
   };

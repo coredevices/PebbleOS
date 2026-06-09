@@ -222,7 +222,7 @@ static void prv_expandable_dialog_load(Window *window) {
 
   if (show_action_bar) {
     // Icons for up and down on the action bar.
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
     expandable_dialog->up_icon = gbitmap_create_with_resource_system(SYSTEM_APP,
         RESOURCE_ID_ACTION_BAR_ICON_UP);
     expandable_dialog->down_icon = gbitmap_create_with_resource_system(SYSTEM_APP,

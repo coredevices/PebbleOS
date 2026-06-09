@@ -1,7 +1,7 @@
 // This order is significant.
 // The first implementation that matches the resource/store query gets it.
 
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
   RESOURCE_IMPL(g_app_file_impl)
   RESOURCE_IMPL(g_builtin_impl)
   RESOURCE_IMPL(g_file_impl)

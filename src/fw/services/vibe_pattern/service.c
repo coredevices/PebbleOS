@@ -363,7 +363,7 @@ DEFINE_SYSCALL(void, sys_vibe_pattern_trigger_start, void) {
     return;
   }
 
-#if !defined(RECOVERY_FW)
+#if !defined(CONFIG_RECOVERY_FW)
   {
     unsigned int step_count = 0;
     uint32_t total_duration_ms = 0;
