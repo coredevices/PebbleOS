@@ -136,7 +136,10 @@ typedef enum {
 
 // FIXME AS: APP ID max length determined by looking through installed apps on iOS. Not sure what actual maximum is
 #define APP_ID_MAX_LENGTH (60)
-#define TITLE_MAX_LENGTH (40)
+// Long enough that notification filtering rules can match text near the end
+// of verbose titles (e.g. Discord's "Sender (#channel · Server Name)").
+// Must fit FetchedAttribute.max_length (uint8_t).
+#define TITLE_MAX_LENGTH (128)
 #define SUBTITLE_MAX_LENGTH (40)
 #define MESSAGE_MAX_LENGTH (200)
 #define MESSAGE_SIZE_MAX_LENGTH (3)
