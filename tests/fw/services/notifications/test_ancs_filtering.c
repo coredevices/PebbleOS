@@ -430,7 +430,7 @@ void test_ancs_filtering__matches_text_rule_body_case_insensitive(void) {
     },
   };
 
-  cl_assert(ancs_filtering_matches_rules(&prefs, s_title_attr, body_attr));
+  cl_assert(ancs_filtering_matches_rules(&prefs, s_title_attr, NULL, body_attr));
 }
 
 void test_ancs_filtering__matches_text_rule_title_case_sensitive(void) {
@@ -455,7 +455,7 @@ void test_ancs_filtering__matches_text_rule_title_case_sensitive(void) {
     },
   };
 
-  cl_assert(ancs_filtering_matches_rules(&prefs, s_title_attr, NULL));
+  cl_assert(ancs_filtering_matches_rules(&prefs, s_title_attr, NULL, NULL));
 }
 
 void test_ancs_filtering__does_not_match_regex_rule(void) {
@@ -480,5 +480,40 @@ void test_ancs_filtering__does_not_match_regex_rule(void) {
     },
   };
 
-  cl_assert(!ancs_filtering_matches_rules(&prefs, s_title_attr, NULL));
+  cl_assert(!ancs_filtering_matches_rules(&prefs, s_title_attr, NULL, NULL));
+}
+
+void test_ancs_filtering__matches_text_rule_title_via_subtitle(void) {
+  static uint8_t subtitle_data[] = {
+    0x02,                                                            // id
+    0x0B, 0x00,                                                      // length
+    'S', 'o', 'm', 'e', ' ', 'S', 'e', 'r', 'v', 'e', 'r'           // Value
+  };
+  ANCSAttribute *subtitle_attr = (ANCSAttribute *)&subtitle_data;
+
+  struct {
+    StringList list;
+    char data[11];
+  } filtering_rules = {
+    .list = {
+      .serialized_byte_length = 11,
+    },
+    // count=1, type=text, field=title, case=insensitive, pattern="server\0"
+    .data = { 0x01, 0x00, 0x01, 0x00, 's', 'e', 'r', 'v', 'e', 'r', '\0' },
+  };
+
+  iOSNotifPrefs prefs = {
+    .attr_list = {
+      .num_attributes = 1,
+      .attributes = (Attribute[]) {
+        { .id = AttributeIdNotificationFilteringRules, .string_list = &filtering_rules.list },
+      },
+    },
+  };
+
+  // "server" is in the subtitle, not the title: a title rule must match it.
+  cl_assert(ancs_filtering_matches_rules(&prefs, s_title_attr, subtitle_attr, NULL));
+  // A body rule must not consider the subtitle.
+  filtering_rules.data[2] = 0x02;
+  cl_assert(!ancs_filtering_matches_rules(&prefs, s_title_attr, subtitle_attr, NULL));
 }

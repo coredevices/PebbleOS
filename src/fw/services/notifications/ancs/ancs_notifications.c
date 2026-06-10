@@ -234,6 +234,7 @@ static bool prv_should_ignore_notification(uint32_t uid,
   const ANCSAttribute *app_id = notif_attributes[FetchedNotifAttributeIndexAppID];
   const ANCSAttribute *message = notif_attributes[FetchedNotifAttributeIndexMessage];
   const ANCSAttribute *title = notif_attributes[FetchedNotifAttributeIndexTitle];
+  const ANCSAttribute *subtitle = notif_attributes[FetchedNotifAttributeIndexSubtitle];
   const ANCSAttribute *negative_action =
       notif_attributes[FetchedNotifAttributeIndexNegativeActionLabel];
 
@@ -245,7 +246,7 @@ static bool prv_should_ignore_notification(uint32_t uid,
     return true;
   }
 
-  if (ancs_filtering_matches_rules(app_notif_prefs, title, message)) {
+  if (ancs_filtering_matches_rules(app_notif_prefs, title, subtitle, message)) {
     char app_id_buffer[app_id->length + 1];
     pstring_pstring16_to_string(&app_id->pstr, app_id_buffer);
 

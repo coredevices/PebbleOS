@@ -72,9 +72,21 @@ static bool prv_match_contains(const char *haystack, size_t haystack_len, const 
   return false;
 }
 
+static char *prv_attr_to_cstring(const ANCSAttribute *attr, size_t *len_out) {
+  if (!attr || (attr->length == 0)) {
+    *len_out = 0;
+    return NULL;
+  }
+  char *str = kernel_zalloc_check(attr->length + 1);
+  pstring_pstring16_to_string(&attr->pstr, str);
+  *len_out = strlen(str);
+  return str;
+}
+
 static bool prv_match_rule(uint8_t match_type, uint8_t match_field, bool case_sensitive,
                            const char *pattern, size_t pattern_len, const char *title,
-                           size_t title_len, const char *body, size_t body_len) {
+                           size_t title_len, const char *subtitle, size_t subtitle_len,
+                           const char *body, size_t body_len) {
   if (match_type == FilteringMatchTypeRegex) {
     // Regex support is not available in firmware at the moment.
     return false;
@@ -85,12 +97,17 @@ static bool prv_match_rule(uint8_t match_type, uint8_t match_field, bool case_se
   const bool match_body =
       ((match_field == FilteringMatchFieldBody) || (match_field == FilteringMatchFieldAny));
 
-  return ((match_title && prv_match_contains(title, title_len, pattern, pattern_len, case_sensitive))
+  // The subtitle is displayed as part of the title line, so title rules cover
+  // both attributes.
+  return ((match_title &&
+           (prv_match_contains(title, title_len, pattern, pattern_len, case_sensitive) ||
+            prv_match_contains(subtitle, subtitle_len, pattern, pattern_len, case_sensitive)))
       || (match_body && prv_match_contains(body, body_len, pattern, pattern_len, case_sensitive)));
 }
 
 bool ancs_filtering_matches_rules(const iOSNotifPrefs *app_notif_prefs,
                                   const ANCSAttribute *title_attr,
+                                  const ANCSAttribute *subtitle_attr,
                                   const ANCSAttribute *body_attr) {
   if (!app_notif_prefs) {
     return false;
@@ -102,25 +119,17 @@ bool ancs_filtering_matches_rules(const iOSNotifPrefs *app_notif_prefs,
     return false;
   }
 
-  const char *title = "";
   size_t title_len = 0;
-  char *allocated_title = NULL;
-  if (title_attr && (title_attr->length > 0)) {
-    allocated_title = kernel_zalloc_check(title_attr->length + 1);
-    pstring_pstring16_to_string(&title_attr->pstr, allocated_title);
-    title = allocated_title;
-    title_len = strlen(title);
-  }
+  char *allocated_title = prv_attr_to_cstring(title_attr, &title_len);
+  const char *title = allocated_title ? allocated_title : "";
 
-  const char *body = "";
+  size_t subtitle_len = 0;
+  char *allocated_subtitle = prv_attr_to_cstring(subtitle_attr, &subtitle_len);
+  const char *subtitle = allocated_subtitle ? allocated_subtitle : "";
+
   size_t body_len = 0;
-  char *allocated_body = NULL;
-  if (body_attr && (body_attr->length > 0)) {
-    allocated_body = kernel_zalloc_check(body_attr->length + 1);
-    pstring_pstring16_to_string(&body_attr->pstr, allocated_body);
-    body = allocated_body;
-    body_len = strlen(body);
-  }
+  char *allocated_body = prv_attr_to_cstring(body_attr, &body_len);
+  const char *body = allocated_body ? allocated_body : "";
 
   const FilteringRulesSerialized *serialized_rules = (const FilteringRulesSerialized *)rules->data;
   size_t remaining = rules->serialized_byte_length - 1;
@@ -144,7 +153,8 @@ bool ancs_filtering_matches_rules(const iOSNotifPrefs *app_notif_prefs,
 
     const size_t pattern_len = (size_t)(terminator - pattern);
     matched = prv_match_rule(rule->match_type, rule->match_field, (rule->case_sensitive != 0),
-                             pattern, pattern_len, title, title_len, body, body_len);
+                             pattern, pattern_len, title, title_len, subtitle, subtitle_len,
+                             body, body_len);
 
     cursor = (const uint8_t *)(terminator + 1);
     remaining -= (pattern_len + 1);
@@ -155,6 +165,7 @@ bool ancs_filtering_matches_rules(const iOSNotifPrefs *app_notif_prefs,
   }
 
   kernel_free(allocated_body);
+  kernel_free(allocated_subtitle);
   kernel_free(allocated_title);
   return matched;
 }
