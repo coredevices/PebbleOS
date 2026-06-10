@@ -274,8 +274,6 @@ bld.env.CFLAGS.append('-Wno-tautological-compare')
 bld.env.BROKEN_TESTS = [
     'test_graphics_draw_text_flow.c',
     'test_perimeter.c',
-    'test_ancs_pebble_actions.c',
-    'test_timeline_actions.c',
     'test_bluetooth_persistent_storage_prf.c',
     'test_session.c',
     'test_session_receive_router.c',
