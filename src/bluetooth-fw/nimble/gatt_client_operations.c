@@ -6,6 +6,21 @@
 #include <bluetooth/gatt.h>
 
 #include <host/ble_gatt.h>
+#include <host/ble_hs.h>
+
+// NimBLE reports ATT-layer failures as BLE_HS_ERR_ATT_BASE + the ATT error
+// code. GATT clients match responses against spec-level BLEGATTError values
+// (e.g. ANCS treats ATT Invalid Parameter 0xA2 as an expected reply), so hand
+// ATT errors back raw; everything else stays in the BTErrno internal range.
+static BLEGATTError prv_gatt_error_code(uint16_t status) {
+  if (status == 0) {
+    return BLEGATTErrorSuccess;
+  }
+  if ((status > BLE_HS_ERR_ATT_BASE) && (status <= BLE_HS_ERR_ATT_BASE + UINT8_MAX)) {
+    return (BLEGATTError)(status - BLE_HS_ERR_ATT_BASE);
+  }
+  return (BLEGATTError)(BTErrnoInternalErrorBegin + status);
+}
 
 static int prv_gatt_write_event_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
                                    struct ble_gatt_attr *attr, void *arg) {
@@ -17,7 +32,7 @@ static int prv_gatt_write_event_cb(uint16_t conn_handle, const struct ble_gatt_e
   GattClientOpWriteReponse resp = {
       .hdr = {
           .type = GattClientOpResponseWrite,
-          .error_code = error->status == 0 ? 0 : BTErrnoInternalErrorBegin + error->status,
+          .error_code = prv_gatt_error_code(error->status),
           .context = arg,
       }};
   bt_driver_cb_gatt_client_operations_handle_response(&resp.hdr);
@@ -35,7 +50,7 @@ static int prv_gatt_read_event_cb(uint16_t conn_handle, const struct ble_gatt_er
       .hdr =
           {
               .type = GattClientOpResponseRead,
-              .error_code = error->status == 0 ? 0 : BTErrnoInternalErrorBegin + error->status,
+              .error_code = prv_gatt_error_code(error->status),
               .context = arg,
           },
       .value = attr->om->om_data,
