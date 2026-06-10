@@ -30,6 +30,10 @@ typedef struct AudioDeviceState {
   bool callback_pending;
   uint8_t buf_idx;
 
+  // Requested volume in percent, cached so it can be applied whenever the
+  // codec is (re)powered.
+  uint8_t volume;
+
   int16_t *i2s_bufs[NRF5_AUDIO_I2S_BUF_COUNT];
 
   uint8_t *circ_buffer_storage;

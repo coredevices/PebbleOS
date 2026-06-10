@@ -68,6 +68,9 @@ static void prv_idle_shutdown(void *data);
 
 // DAC_R_GAIN value corresponding to 0 dB per DA7212 datasheet.
 #define DA7212_DAC_R_GAIN_0DB        0x6f
+// Attenuation span, in 0.75 dB DAC_R_GAIN steps, that volume 1..100 maps
+// onto (64 steps = 48 dB).
+#define DA7212_DAC_GAIN_VOL_RANGE_STEPS 64
 
 #define I2S_BUF_SAMPLES_STEREO       (NRF5_AUDIO_I2S_BUF_SAMPLES_MONO * 2)
 #define I2S_BUF_SIZE_BYTES           (I2S_BUF_SAMPLES_STEREO * sizeof(int16_t))
@@ -95,6 +98,27 @@ static uint8_t prv_codec_read(AudioDevice *dev, uint8_t reg) {
   i2c_release(dev->codec);
   PBL_ASSERTN(ok);
   return value;
+}
+
+// DAC_R_GAIN is 0.75 dB per step with 0x6F = 0 dB. Volume 100 maps to 0 dB
+// (codes above 0x6F amplify and can clip full-scale samples); lower volumes
+// attenuate linearly in dB, which tracks perceived loudness better than
+// scaling the register code linearly.
+static uint8_t prv_volume_to_dac_gain(uint8_t volume) {
+  return DA7212_DAC_R_GAIN_0DB -
+         (uint8_t)(((100 - volume) * DA7212_DAC_GAIN_VOL_RANGE_STEPS) / 100);
+}
+
+// Push the cached volume to the codec: soft-mute at 0, otherwise the mapped
+// DAC gain with soft-mute cleared.
+static void prv_apply_volume(AudioDevice *dev) {
+  AudioDeviceState *state = dev->state;
+  if (state->volume == 0) {
+    prv_codec_write(dev, DA7212_DAC_FILTERS5, 0x80);
+    return;
+  }
+  prv_codec_write(dev, DA7212_DAC_R_GAIN, prv_volume_to_dac_gain(state->volume));
+  prv_codec_write(dev, DA7212_DAC_FILTERS5, 0x00);
 }
 
 // Bring the DA7212 out of standby, lock its PLL and configure the DAC/LINE
@@ -143,7 +167,6 @@ static void prv_codec_prepare(AudioDevice *dev) {
   prv_codec_write(dev, DA7212_DIG_ROUTING_DAI, 0x32);
   prv_codec_write(dev, DA7212_DIG_ROUTING_DAC, 0xba);
 
-  prv_codec_write(dev, DA7212_DAC_R_GAIN, DA7212_DAC_R_GAIN_0DB);
   prv_codec_write(dev, DA7212_DAC_R_CTRL, 0x80);
   prv_codec_write(dev, DA7212_MIXOUT_R_SELECT, 0x08);
   // amp + mix enable, softmix off (softmix slow-ramps each routing change).
@@ -154,8 +177,9 @@ static void prv_codec_prepare(AudioDevice *dev) {
 
   prv_codec_write(dev, DA7212_SYSTEM_MODES_OUTPUT, 0x89);
 
-  // Clear soft mute now that the path is up (DAI still disabled).
-  prv_codec_write(dev, DA7212_DAC_FILTERS5, 0x00);
+  // Apply the cached volume (gain + soft-mute state) now that the path is up
+  // (DAI still disabled).
+  prv_apply_volume(dev);
 }
 
 // Enable the DA7212 DAI as I2S master. This is the point at which BCLK/WCLK
@@ -331,6 +355,7 @@ void audio_init(AudioDevice *audio_device) {
   // still in use and would be leaked / clobbered.
   if (s_pwr_state == AudioPwrCold) {
     memset(state, 0, sizeof(*state));
+    state->volume = 100;
   }
 }
 
@@ -456,25 +481,20 @@ uint32_t audio_write(AudioDevice *audio_device, void *write_buf, uint32_t size) 
 void audio_set_volume(AudioDevice *audio_device, int volume) {
   PBL_ASSERTN(audio_device);
   AudioDeviceState *state = audio_device->state;
-  if (!state->is_running) {
+
+  state->volume = (uint8_t)MIN(MAX(volume, 0), 100);
+
+  if (s_pwr_state == AudioPwrCold) {
+    // Codec is powered down (or audio_init hasn't run yet);
+    // prv_codec_prepare() applies the cached value on the next start.
     return;
   }
 
-  if (volume <= 0) {
-    prv_codec_write(audio_device, DA7212_DAC_FILTERS5, 0x80);
-    return;
+  mutex_lock(s_audio_mutex);
+  if (s_pwr_state != AudioPwrCold) {
+    prv_apply_volume(audio_device);
   }
-  if (volume > 100) {
-    volume = 100;
-  }
-
-  // Map 1..100 onto the DAC_R_GAIN range 0x01..0x7F.
-  uint8_t gain = (uint8_t)((volume * 0x7F) / 100);
-  if (gain == 0) {
-    gain = 1;
-  }
-  prv_codec_write(audio_device, DA7212_DAC_R_GAIN, gain);
-  prv_codec_write(audio_device, DA7212_DAC_FILTERS5, 0x00);
+  mutex_unlock(s_audio_mutex);
 }
 
 void audio_stop(AudioDevice *audio_device) {
