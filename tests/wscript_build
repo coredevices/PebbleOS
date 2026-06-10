@@ -272,9 +272,10 @@ bld.env.CFLAGS.append('-Wno-tautological-compare')
 
 # Any test in this list won't be compiled
 bld.env.BROKEN_TESTS = [
+    'test_compositor.c',
+    'test_battery_monitor.c',
     'test_graphics_draw_text_flow.c',
     'test_bluetooth_persistent_storage_prf.c',
-    'test_compositor.c',
     'test_gap_le_advert.c',
     'test_bt_conn_mgr.c',
     'test_gatt_client_accessors.c',
@@ -288,15 +289,11 @@ bld.env.BROKEN_TESTS = [
     'test_ppogatt.c',
     'test_activity_insights.c',
     'test_app_menu_data_source.c',
-    'test_battery_monitor.c',
-    'test_battery_ui_fsm.c',
     'test_emoji_fonts.c',
     'test_kickstart.c',
     'test_pfs.c',
-    'test_system_theme.c',
     'test_timeline_peek_event.c',
     'test_timezone_database.c',
-    'test_wakeup.c',
     'test_blob_db2_endpoint.c'
 ]
 
