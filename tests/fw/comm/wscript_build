@@ -16,13 +16,9 @@ clar(bld,
 
 clar(bld,
     sources_ant_glob = "src/fw/comm/ble/gap_le_advert.c "
-                       "src/fw/comm/ble/gap_le_connection.c "
                        "src/fw/services/regular_timer/service.c "
-                       "src/fw/comm/internals/bt_conn_mgr.c "
-                       "tests/fakes/fake_GAPAPI.c "
-                       "tests/fakes/fake_rtc.c "
-                       "tests/fakes/fake_HCIAPI.c "
-                       "tests/fakes/fake_gap_le_connect_params.c ",
+                       "tests/fakes/fake_bt_driver_advert.c "
+                       "tests/fakes/fake_rtc.c ",
     test_sources_ant_glob = "test_gap_le_advert.c",
     override_includes=['dummy_board'])
 
