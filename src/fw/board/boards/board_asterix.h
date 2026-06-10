@@ -1,6 +1,7 @@
 #pragma once
 
 #include "drivers/backlight/pwm.h"
+#include "drivers/imu/lsm6dso/lsm6dso.h"
 #include "drivers/pmic/npm1300.h"
 #include "pbl/services/imu/units.h"
 #include "util/size.h"

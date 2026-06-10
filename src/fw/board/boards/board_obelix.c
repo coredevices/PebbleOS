@@ -401,7 +401,38 @@ static const I2CSlavePort s_i2c_lsm6dso = {
     .address = 0x6a,
 };
 
-I2CSlavePort *const I2C_LSM6DSO = &s_i2c_lsm6dso;
+I2CSlavePort *const I2C_LSM6D = &s_i2c_lsm6dso;
+
+// The LSM6DSO serves as the gyroscope; the LIS2DW12 above remains the
+// accelerometer. Axis mapping mirrors the LIS2DW12 configuration so both
+// sensors report in the same board frame.
+static const Lsm6dsoGyroConfig s_lsm6dso_gyro_config = {
+#ifdef CONFIG_IS_BIGBOARD
+    .axis_map = {
+        [AXIS_X] = 0,
+        [AXIS_Y] = 1,
+        [AXIS_Z] = 2,
+    },
+    .axis_dir = {
+        [AXIS_X] = -1,
+        [AXIS_Y] = -1,
+        [AXIS_Z] = 1,
+    },
+#else
+    .axis_map = {
+        [AXIS_X] = 1,
+        [AXIS_Y] = 0,
+        [AXIS_Z] = 2,
+    },
+    .axis_dir = {
+        [AXIS_X] = -1,
+        [AXIS_Y] = 1,
+        [AXIS_Z] = -1,
+    },
+#endif
+};
+
+const Lsm6dsoGyroConfig *const LSM6DSO_GYRO = &s_lsm6dso_gyro_config;
 
 static const I2CSlavePort s_i2c_mmc5603nj = {
     .bus = &s_i2c_bus_2,
