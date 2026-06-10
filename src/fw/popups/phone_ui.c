@@ -55,6 +55,9 @@
 #define CALL_END_DELAY_MS 5000
 #define OUTGOING_CALL_DELAY_MS 5000
 #define MISSED_CALL_DELAY_MS 180000
+// Phones stop ringing well within this window (carriers give up after at most
+// ~60s). Past it, assume we missed the call-ended event and stop vibing.
+#define MAX_RING_DURATION_S 90
 
 #define NAME_BUFFER_LENGTH 32
 #define CALL_STATUS_BUFFER_LENGTH 32
@@ -163,6 +166,7 @@ typedef struct {
   time_t call_start_time;
   VibeScore *vibe_score;
   RegularTimerInfo ring_timer;
+  time_t ring_start_time;
   bool show_ongoing_call_ui;
 
   // Incoming call reply data
@@ -436,12 +440,22 @@ static void prv_window_update_proc(Layer *layer, GContext *ctx) {
 //! Ring functionality
 static void prv_ring(void *unused) {
   PBL_LOG_DBG("RING");
+  if (!s_phone_ui_data) {
+    // There is a mutex-related issue that can appear where the timer callback will execute after
+    // phone_ui cancels the timer and frees the vibe_score / s_phone_ui_data. Thus, bail early
+    // if we detect this bad state.
+    // See PBL-35548
+    return;
+  }
+  if ((rtc_get_time() - s_phone_ui_data->ring_start_time) > MAX_RING_DURATION_S) {
+    // The call-ended event never arrived (e.g. an ANCS removal lost across a
+    // re-subscription); don't vibe until the user dismisses the window.
+    PBL_LOG_WRN("Still ringing after %ds; stopping the vibe loop", MAX_RING_DURATION_S);
+    regular_timer_remove_callback(&s_phone_ui_data->ring_timer);
+    return;
+  }
   if (alerts_should_vibrate_for_type(AlertPhoneCall)) {
-    if (!s_phone_ui_data || !s_phone_ui_data->vibe_score) {
-      // There is a mutex-related issue that can appear where the timer callback will execute after
-      // phone_ui cancels the timer and frees the vibe_score / s_phone_ui_data. Thus, bail early
-      // if we detect this bad state.
-      // See PBL-35548
+    if (!s_phone_ui_data->vibe_score) {
       return;
     }
     vibe_score_do_vibe(s_phone_ui_data->vibe_score);
@@ -456,6 +470,7 @@ static void prv_start_ringing(void) {
   s_phone_ui_data->ring_timer = (const RegularTimerInfo) {
     .cb = prv_ring,
   };
+  s_phone_ui_data->ring_start_time = rtc_get_time();
   unsigned int vibe_repeat_interval_sec;
   s_phone_ui_data->vibe_score = vibe_client_get_score(VibeClient_PhoneCalls);
   if (!s_phone_ui_data->vibe_score) {
