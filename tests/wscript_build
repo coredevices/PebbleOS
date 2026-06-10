@@ -276,7 +276,6 @@ bld.env.BROKEN_TESTS = [
     'test_battery_monitor.c',
     'test_graphics_draw_text_flow.c',
     'test_bluetooth_persistent_storage_prf.c',
-    'test_gap_le_advert.c',
     'test_bt_conn_mgr.c',
     'test_gatt_client_accessors.c',
     'test_gatt_client_discovery.c',
