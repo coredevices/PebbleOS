@@ -219,6 +219,38 @@ void test_text_resources__extended_font(void) {
   cl_assert_equal_m(chinese_wildcard_bytes, glyph->data, glyph_size_bytes);
 }
 
+void test_text_resources__extension_miss_falls_back_to_base(void) {
+  // ﬁ (U+FB01) is not latin-classified, so with an extension installed it is
+  // routed to the extension font. The chinese pbpack does not contain it but
+  // the base font does: the lookup must fall back to the base font glyph
+  // instead of degrading to the wildcard.
+  const Codepoint LATIN_SMALL_LIGATURE_FI = 0xFB01;
+  static uint8_t base_bytes[64];
+
+  // reference: the glyph as served by the base font alone
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_18, 0, &s_font_info));
+  const GlyphData *glyph = text_resources_get_glyph(&s_font_cache, LATIN_SMALL_LIGATURE_FI,
+                                                    &s_font_info);
+  cl_assert(glyph != NULL);
+  const GlyphHeaderData base_header = glyph->header;
+  const uint8_t base_size_bytes = glyph_get_size_bytes(glyph);
+  cl_assert(base_size_bytes <= sizeof(base_bytes));
+  memcpy(base_bytes, glyph->data, base_size_bytes);
+  // sanity: the base font really has it (a wildcard would be 7px wide)
+  cl_assert(base_header.width_px != 7);
+
+  // same lookup with the extension installed must yield the same glyph
+  memset(&s_font_info, 0, sizeof(s_font_info));
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_18, RESOURCE_ID_GOTHIC_18_EXTENDED,
+                                     &s_font_info));
+  cl_assert(s_font_info.extended);
+  glyph = text_resources_get_glyph(&s_font_cache, LATIN_SMALL_LIGATURE_FI, &s_font_info);
+  cl_assert(glyph != NULL);
+  cl_assert_equal_i(glyph->header.width_px, base_header.width_px);
+  cl_assert_equal_i(glyph->header.height_px, base_header.height_px);
+  cl_assert_equal_m(base_bytes, glyph->data, base_size_bytes);
+}
+
 void test_text_resources__test_emoji_font(void) {
   const uint8_t phone_bytes[] = {0xfe, 0x81, 0x81, 0x3c, 0x66, 0x42, 0xc3, 0xe7, 0xff, 0x00, 0x00, 0x00};
 
