@@ -12,8 +12,6 @@
 #define MAX_ARABIC_CODEPOINT 0x06FF
 #define MIN_HEBREW_CODEPOINT 0x0590
 #define MAX_HEBREW_CODEPOINT 0x05FF
-#define MIN_SOFTBANK_EMOJI_CODEPOINT 0xE000
-#define MAX_SOFTBANK_EMOJI_CODEPOINT 0xE537
 #define MIN_UNIFIED_EMOJI_CODEPOINT 0x1F300
 #define MAX_UNIFIED_EMOJI_CODEPOINT 0x1FAFF
 #define MIN_SYMBOLS_CODEPOINT 0x2000
@@ -180,10 +178,8 @@ bool codepoint_is_emoji(const Codepoint codepoint) {
   if (found) {
     return true;
   } else {
-    return ((codepoint >= MIN_SOFTBANK_EMOJI_CODEPOINT &&
-             codepoint <= MAX_SOFTBANK_EMOJI_CODEPOINT) ||
-            (codepoint >= MIN_UNIFIED_EMOJI_CODEPOINT &&
-             codepoint <= MAX_UNIFIED_EMOJI_CODEPOINT));
+    return (codepoint >= MIN_UNIFIED_EMOJI_CODEPOINT &&
+            codepoint <= MAX_UNIFIED_EMOJI_CODEPOINT);
   }
 }
 
