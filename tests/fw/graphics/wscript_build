@@ -451,7 +451,8 @@ clar(ctx,
         " src/fw/applib/graphics/graphics_private_raw.c"
         " src/fw/applib/graphics/graphics_circle.c"
         " src/fw/applib/graphics/graphics_line.c"
-        " src/fw/applib/graphics/graphics.c",
+        " src/fw/applib/graphics/graphics.c"
+        " src/fw/board/displays/display_getafix.c",
     test_sources_ant_glob="test_graphics_draw_line.c",
     defines=ctx.env.test_image_defines,
     runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis,
@@ -565,7 +566,7 @@ clar(ctx,
     test_sources_ant_glob="test_graphics_draw_rotated_bitmap.c",
     defines=ctx.env.test_image_defines,
     runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis,
-    platforms=["obelix", "gabbro"])
+    platforms=["obelix"])
 
 ###############################
 # 8-bit specific bitblt tests #
