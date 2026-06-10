@@ -18,6 +18,7 @@
 #include "pbl/services/comm_session/session.h"
 #include "pbl/services/cron.h"
 #include "pbl/services/firmware_update.h"
+#include "pbl/services/gyro_manager.h"
 #include "pbl/services/hrm/hrm_manager.h"
 #include "pbl/services/light.h"
 #include "pbl/services/poll_remote.h"
@@ -34,6 +35,9 @@ void services_common_init(void) {
   put_bytes_init();
   poll_remote_init();
   accel_manager_init();
+#ifdef CONFIG_SERVICE_GYRO_MANAGER
+  gyro_manager_init();
+#endif
   light_init();
 
   cron_service_init();

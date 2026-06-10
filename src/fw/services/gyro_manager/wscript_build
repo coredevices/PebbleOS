@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Dave Bortz
+# SPDX-License-Identifier: Apache-2.0
+
+bld.stlib(
+    use=['fw_includes', 'services_analytics'],
+    source=['service.c'],
+    target='services_gyro_manager',
+)
+bld.env.SERVICES.append('services_gyro_manager')
