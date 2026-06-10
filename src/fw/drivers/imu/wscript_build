@@ -23,6 +23,33 @@ if accel_sources:
     )
     bld.env.DRIVERS.append('driver_accel')
 
+# Gyroscope
+
+gyro_sources = []
+gyro_use = ['fw_includes', 'pbl_includes']
+
+if bld.env.CONFIG_GYRO_LSM6DSO:
+    gyro_sources.append('lsm6dso/lsm6dso_gyro.c')
+    gyro_use.append('hal_lsm6dso')
+
+if gyro_sources:
+    bld.objects(
+        name='driver_gyro',
+        source=gyro_sources,
+        use=gyro_use,
+    )
+    bld.env.DRIVERS.append('driver_gyro')
+
+# LSM6DSO shared core (the accelerometer and gyroscope halves share one chip)
+
+if bld.env.CONFIG_ACCEL_LSM6DSO or bld.env.CONFIG_GYRO_LSM6DSO:
+    bld.objects(
+        name='driver_lsm6dso_core',
+        source=['lsm6dso/lsm6dso_core.c'],
+        use=['fw_includes', 'pbl_includes', 'hal_lsm6dso'],
+    )
+    bld.env.DRIVERS.append('driver_lsm6dso_core')
+
 # Magnetometer
 
 mag_sources = []
