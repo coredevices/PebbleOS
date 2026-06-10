@@ -3,8 +3,10 @@
 
 #include "clar.h"
 
+#include "applib/ui/vibes.h"
 #include "applib/ui/window_private.h"
-#include "apps/system/launcher/default/launcher_menu_layer.h"
+#include "apps/system/launcher/default/menu_layer.h"
+#include "shell/prefs.h"
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/app_glances/app_glance_service.h"
 #include "pbl/services/blob_db/app_glance_db.h"
@@ -223,6 +225,16 @@ GColor shell_prefs_get_theme_highlight_color(void) {
 bool alerts_preferences_get_notification_alternative_design(void) {
   return false;
 }
+
+MenuScrollVibeBehavior shell_prefs_get_menu_scroll_vibe_behavior(void) {
+  return MenuScrollNoVibe;
+}
+
+bool shell_prefs_get_menu_scroll_wrap_around_enable(void) {
+  return false;
+}
+
+void vibes_enqueue_custom_pattern(VibePattern pattern) {}
 
 // We can't include stubs_process_manager.h because it conflicts with the two helper includes below
 void process_manager_send_callback_event_to_process(PebbleTask task, void (*callback)(void *),
