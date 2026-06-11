@@ -31,13 +31,14 @@ LOG_LEVEL_INFO = 100
 LOG_LEVEL_DEBUG = 200
 LOG_LEVEL_DEBUG_VERBOSE = 255
 
+# Zephyr-style severity tags; ALWAYS logs carry no tag
 level_strings_map = {
-    LOG_LEVEL_ALWAYS: "*",
-    LOG_LEVEL_ERROR: "E",
-    LOG_LEVEL_WARNING: "W",
-    LOG_LEVEL_INFO: "I",
-    LOG_LEVEL_DEBUG: "D",
-    LOG_LEVEL_DEBUG_VERBOSE: "V",
+    LOG_LEVEL_ALWAYS: "",
+    LOG_LEVEL_ERROR: "err",
+    LOG_LEVEL_WARNING: "wrn",
+    LOG_LEVEL_INFO: "inf",
+    LOG_LEVEL_DEBUG: "dbg",
+    LOG_LEVEL_DEBUG_VERBOSE: "vrb",
 }
 
 # Location of the core number in the message hash
@@ -82,19 +83,24 @@ def dehash_line(line, log_dict):
     if not line_dict:
         return line
 
+    # Zephyr-like format: [timestamp] <lvl> task source: msg. Messages from a
+    # log module already carry a "module: " prefix in formatted_msg; others get
+    # their file:line as the source.
     output = []
-    if "date" not in line_dict and "re_level" in line_dict:
-        output.append(line_dict["re_level"])
+
+    timestamp = " ".join(line_dict[key] for key in ("date", "time") if key in line_dict)
+    if timestamp:
+        output.append("[{}]".format(timestamp))
+
+    if "date" not in line_dict and line_dict.get("re_level"):
+        output.append("<{}>".format(line_dict["re_level"]))
+
     if "task" in line_dict:
         output.append(line_dict["task"])
-    if "date" in line_dict:
-        output.append(line_dict["date"])
-    if "time" in line_dict:
-        output.append(line_dict["time"])
 
-    if "file" in line_dict and "line" in line_dict:
+    if "module" not in line_dict and "file" in line_dict and "line" in line_dict:
         filename = os.path.basename(line_dict["file"])
-        output.append("{}:{}>".format(filename, line_dict["line"]))
+        output.append("{}:{}:".format(filename, line_dict["line"]))
 
     output.append(line_dict["formatted_msg"])
 
