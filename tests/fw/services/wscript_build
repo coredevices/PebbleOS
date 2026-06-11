@@ -461,6 +461,24 @@ clar(ctx,
 
 clar(ctx,
      sources_ant_glob=(
+         "src/bluetooth-fw/nimble/hrm_service.c"
+     ),
+     test_sources_ant_glob="bluetooth/test_nimble_hrm_service.c",
+     add_includes=[
+         "third_party/nimble/port/include/qemu",
+         "third_party/nimble/mynewt-nimble/nimble/include",
+         "third_party/nimble/mynewt-nimble/nimble/host/include",
+         "third_party/nimble/mynewt-nimble/porting/nimble/include",
+         "third_party/nimble/mynewt-nimble/porting/npl/freertos/include",
+         "src/bluetooth-fw/nimble",
+     ],
+     defines=[
+         "FREERTOS=1",
+         "PEBBLEOS",
+     ])
+
+clar(ctx,
+     sources_ant_glob=(
          " src/fw/services/app_glances/app_glance_service.c"
          " src/fw/services/blob_db/app_glance_db.c"
          " src/fw/services/timeline/attribute.c"

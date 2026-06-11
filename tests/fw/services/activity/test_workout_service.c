@@ -279,6 +279,25 @@ void test_workout_service__workouts_control_ble_hrm_mode_when_enabled(void) {
 }
 
 // ---------------------------------------------------------------------------------------
+void test_workout_service__unsupported_workouts_do_not_control_ble_hrm_mode(void) {
+  const ActivitySessionType types[] = {
+    ActivitySessionType_None,
+    ActivitySessionType_Sleep,
+    ActivitySessionType_RestfulSleep,
+    ActivitySessionType_Nap,
+    ActivitySessionType_RestfulNap,
+  };
+
+  for (unsigned int i = 0; i < ARRAY_LENGTH(types); i++) {
+    cl_assert_equal_b(false, workout_service_is_workout_type_supported(types[i]));
+    cl_assert_equal_b(false, workout_service_start_workout(types[i]));
+  }
+
+  cl_assert_equal_i(0, s_ble_hrm_workout_mode_call_count);
+  cl_assert_equal_b(false, s_ble_hrm_workout_mode_enabled);
+}
+
+// ---------------------------------------------------------------------------------------
 void test_workout_service__workouts_do_not_enable_ble_hrm_mode_when_disabled(void) {
   s_ble_hrm_workout_sharing_enabled = false;
 

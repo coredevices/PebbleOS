@@ -486,6 +486,7 @@ void test_ble_hrm__handle_hrm_event(void) {
 void test_ble_hrm__handle_activity_pref_hrm_changes(void) {
   cl_assert_equal_b(true, s_bt_driver_hrm_service_is_enabled);
   cl_assert_equal_i(0, s_bt_driver_hrm_service_enable_call_count);
+  s_activity_prefs_heart_rate_is_enabled = false;
   ble_hrm_handle_activity_prefs_heart_rate_is_enabled(false);
   cl_assert_equal_i(1, s_bt_driver_hrm_service_enable_call_count);
   cl_assert_equal_b(false, s_bt_driver_hrm_service_is_enabled);
@@ -531,6 +532,49 @@ void test_ble_hrm__workout_mode_shares_without_permission_prompt(void) {
   cl_assert_equal_b(false, ble_hrm_is_sharing());
   prv_assert_event_service_subscribed(false);
   prv_assert_last_disconnected(s_device_a);
+}
+
+void test_ble_hrm__workout_mode_ignores_duplicate_transitions(void) {
+  s_activity_prefs_heart_rate_is_enabled = false;
+  s_bt_driver_hrm_service_is_enabled = false;
+
+  ble_hrm_set_workout_mode(true);
+  ble_hrm_set_workout_mode(true);
+
+  cl_assert_equal_i(1, s_gap_le_slave_reconnect_hrm_start_call_count);
+  cl_assert_equal_i(0, s_gap_le_slave_reconnect_hrm_stop_call_count);
+  cl_assert_equal_i(1, s_bt_driver_hrm_service_enable_call_count);
+  cl_assert_equal_b(true, s_bt_driver_hrm_service_is_enabled);
+
+  ble_hrm_set_workout_mode(false);
+  ble_hrm_set_workout_mode(false);
+
+  cl_assert_equal_i(1, s_gap_le_slave_reconnect_hrm_start_call_count);
+  cl_assert_equal_i(1, s_gap_le_slave_reconnect_hrm_stop_call_count);
+  cl_assert_equal_i(2, s_bt_driver_hrm_service_enable_call_count);
+  cl_assert_equal_b(false, s_bt_driver_hrm_service_is_enabled);
+}
+
+void test_ble_hrm__activity_pref_off_keeps_service_enabled_during_workout_mode(void) {
+  s_activity_prefs_heart_rate_is_enabled = true;
+  s_bt_driver_hrm_service_is_enabled = true;
+
+  ble_hrm_set_workout_mode(true);
+  cl_assert_equal_b(true, s_bt_driver_hrm_service_is_enabled);
+
+  s_activity_prefs_heart_rate_is_enabled = false;
+  ble_hrm_handle_activity_prefs_heart_rate_is_enabled(false);
+  cl_assert_equal_i(2, s_bt_driver_hrm_service_enable_call_count);
+  cl_assert_equal_b(true, s_bt_driver_hrm_service_is_enabled);
+
+  bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
+  cl_assert_equal_p(NULL, s_last_sharing_request);
+  cl_assert_equal_b(true, ble_hrm_is_sharing_to_connection(&s_conn_a));
+  prv_assert_event_service_subscribed(true);
+
+  ble_hrm_set_workout_mode(false);
+  cl_assert_equal_b(false, s_bt_driver_hrm_service_is_enabled);
+  prv_assert_event_service_subscribed(false);
 }
 
 void test_ble_hrm__popup_after_long_continuous_use(void) {
