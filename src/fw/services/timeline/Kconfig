@@ -5,3 +5,11 @@ config SERVICE_TIMELINE
     bool "Timeline"
     help
       Timeline service and layouts.
+
+if SERVICE_TIMELINE
+
+module = SERVICE_TIMELINE
+module-str = Timeline
+source "src/fw/Kconfig.template.log_level"
+
+endif

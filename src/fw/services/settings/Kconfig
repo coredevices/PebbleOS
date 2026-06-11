@@ -5,3 +5,11 @@ config SERVICE_SETTINGS
     bool "Settings"
     help
       Settings-file storage service.
+
+if SERVICE_SETTINGS
+
+module = SERVICE_SETTINGS
+module-str = Settings
+source "src/fw/Kconfig.template.log_level"
+
+endif

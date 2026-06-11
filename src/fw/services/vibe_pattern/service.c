@@ -26,6 +26,8 @@
 #include <inttypes.h>
 #include <stddef.h>
 
+PBL_LOG_MODULE_DEFINE(service_vibe_pattern, CONFIG_SERVICE_VIBE_PATTERN_LOG_LEVEL);
+
 typedef struct {
   ListNode list_node;
   uint64_t time_start;

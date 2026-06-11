@@ -5,3 +5,11 @@ config SERVICE_NOTIFICATIONS
     bool "Notifications"
     help
       Notifications, alerts and ANCS.
+
+if SERVICE_NOTIFICATIONS
+
+module = SERVICE_NOTIFICATIONS
+module-str = Notifications
+source "src/fw/Kconfig.template.log_level"
+
+endif

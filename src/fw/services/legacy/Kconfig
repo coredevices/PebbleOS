@@ -5,3 +5,11 @@ config SERVICE_LEGACY
     bool "Legacy persist map"
     help
       Legacy persist-map support.
+
+if SERVICE_LEGACY
+
+module = SERVICE_LEGACY
+module-str = Legacy persist map
+source "src/fw/Kconfig.template.log_level"
+
+endif

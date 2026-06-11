@@ -18,6 +18,8 @@
 #include "system/status_codes.h"
 #include "util/time/time.h"
 
+PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
+
 typedef struct TimelineEventState {
   const TimelineEventImpl *impl;
   SerializedTimelineItemHeader *filter_header;

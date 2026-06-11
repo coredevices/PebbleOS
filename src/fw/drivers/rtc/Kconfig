@@ -23,4 +23,8 @@ config RTC_QEMU
     help
       Support for the QEMU RTC peripheral.
 
+module = DRIVER_RTC
+module-str = RTC
+source "src/fw/Kconfig.template.log_level"
+
 endif # RTC

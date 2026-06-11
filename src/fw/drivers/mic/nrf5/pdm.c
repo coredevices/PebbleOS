@@ -23,6 +23,8 @@
 #include "hal/nrf_clock.h"
 #include "nrfx_pdm.h"
 
+PBL_LOG_MODULE_DEFINE(driver_mic_nrf5, CONFIG_DRIVER_MIC_LOG_LEVEL);
+
 static void prv_pdm_event_handler(nrfx_pdm_evt_t const *p_evt);
 static void prv_dispatch_samples_system_task(void *data);
 static bool prv_allocate_buffers(MicDeviceState *state);

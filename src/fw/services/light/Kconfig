@@ -5,3 +5,11 @@ config SERVICE_LIGHT
     bool "Light"
     help
       Backlight control service.
+
+if SERVICE_LIGHT
+
+module = SERVICE_LIGHT
+module-str = Light
+source "src/fw/Kconfig.template.log_level"
+
+endif

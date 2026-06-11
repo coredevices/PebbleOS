@@ -19,6 +19,8 @@
 #include <string.h>
 #include <inttypes.h>
 
+PBL_LOG_MODULE_DECLARE(service_voice, CONFIG_SERVICE_VOICE_LOG_LEVEL);
+
 // External Speex mode declarations
 extern const SpeexMode speex_wb_mode;
 

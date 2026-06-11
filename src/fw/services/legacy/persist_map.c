@@ -14,6 +14,8 @@
 #include "util/attributes.h"
 #include "util/math.h"
 
+PBL_LOG_MODULE_DEFINE(service_legacy, CONFIG_SERVICE_LEGACY_LOG_LEVEL);
+
 typedef struct PACKED {
   uint16_t version;
 } PersistMapHeader;

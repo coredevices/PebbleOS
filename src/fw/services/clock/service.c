@@ -34,6 +34,8 @@
 
 #include <stdio.h>
 
+PBL_LOG_MODULE_DEFINE(service_clock, CONFIG_SERVICE_CLOCK_LOG_LEVEL);
+
 // NOTE: There are CONFIG_RECOVERY_FW ifdefs in this file because PRF does not have
 // timezone support
 

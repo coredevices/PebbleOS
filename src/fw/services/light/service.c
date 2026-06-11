@@ -26,6 +26,8 @@
 
 #include <stdlib.h>
 
+PBL_LOG_MODULE_DEFINE(service_light, CONFIG_SERVICE_LIGHT_LOG_LEVEL);
+
 typedef enum {
   LIGHT_STATE_ON = 1,           // backlight on, no timeouts
   LIGHT_STATE_ON_TIMED = 2,     // backlight on, will start fading after a period

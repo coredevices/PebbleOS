@@ -28,6 +28,8 @@
 
 #include "nrf_fuel_gauge.h"
 
+PBL_LOG_MODULE_DECLARE(service_battery, CONFIG_SERVICE_BATTERY_LOG_LEVEL);
+
 #if !defined(CONFIG_RECOVERY_FW) || defined(CONFIG_MFG)
 #define FUEL_GAUGE_STATEFUL 1
 #else

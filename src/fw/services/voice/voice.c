@@ -26,6 +26,8 @@
 
 #include <string.h>
 
+PBL_LOG_MODULE_DEFINE(service_voice, CONFIG_SERVICE_VOICE_LOG_LEVEL);
+
 #define SPEEX_BITSTREAM_VERSION (4)
 
 #define TIMEOUT_SESSION_SETUP (8000)

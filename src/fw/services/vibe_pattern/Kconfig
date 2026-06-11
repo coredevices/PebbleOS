@@ -5,3 +5,11 @@ config SERVICE_VIBE_PATTERN
     bool "Vibe pattern"
     help
       Vibration pattern playback service.
+
+if SERVICE_VIBE_PATTERN
+
+module = SERVICE_VIBE_PATTERN
+module-str = Vibe pattern
+source "src/fw/Kconfig.template.log_level"
+
+endif

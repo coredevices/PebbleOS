@@ -5,3 +5,11 @@ config SERVICE_APP_CACHE
     bool "App cache"
     help
       On-flash app cache.
+
+if SERVICE_APP_CACHE
+
+module = SERVICE_APP_CACHE
+module-str = App cache
+source "src/fw/Kconfig.template.log_level"
+
+endif

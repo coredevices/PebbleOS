@@ -18,6 +18,8 @@
 #include "pbl/services/system_task.h"
 #include "FreeRTOS.h"
 
+PBL_LOG_MODULE_DEFINE(driver_mic_sf32lb, CONFIG_DRIVER_MIC_LOG_LEVEL);
+
 // HACK alert, we need proper regulator abstraction
 #if defined(CONFIG_BOARD_FAMILY_OBELIX) || defined(CONFIG_BOARD_FAMILY_GETAFIX)
 #define PDM_POWER_NPM1300_LDO2 1
