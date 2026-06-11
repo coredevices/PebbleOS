@@ -25,6 +25,8 @@
 #include "pbl/services/activity/activity_insights.h"
 #include "pbl/services/activity/activity_private.h"
 
+PBL_LOG_MODULE_DECLARE(activity, CONFIG_ACTIVITY_LOG_LEVEL);
+
 
 // ---------------------------------------------------------------------------------------
 // Storage converters. These convert metrics from their storage type (ActivityScalarStore,
