@@ -42,6 +42,8 @@ Pebble App roject.
 
 #include "pbl/services/activity/kraepelin/kraepelin_algorithm.h"
 
+PBL_LOG_MODULE_DECLARE(activity, CONFIG_ACTIVITY_LOG_LEVEL);
+
 #define KALG_LOG_DEBUG(fmt, args...) \
         PBL_LOG_D_DBG(LOG_DOMAIN_ACTIVITY, fmt, ## args)
 
