@@ -49,6 +49,11 @@ if bld.env.CONFIG_MAG:
 else:
     excludes.append('compass_service.c')
 
+if bld.env.CONFIG_GYRO:
+    excludes.append('gyro_service_stub.c')
+else:
+    excludes.append('gyro_service.c')
+
 if bld.env.CONFIG_TOUCH:
     excludes.append('touch_service_stub.c')
 else:

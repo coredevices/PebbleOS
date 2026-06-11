@@ -4,7 +4,7 @@
               "You should also make sure you are obeying our API design guidelines:",
               "https://pebbletechnology.atlassian.net/wiki/display/DEV/SDK+API+Design+Guidelines"
             ],
-  "revision" : "103",
+  "revision" : "104",
   "version" : "2.0",
   "files": [
     "fw/drivers/ambient_light.h",
@@ -17,6 +17,7 @@
     "libutil/includes/util/trig.h",
     "fw/util/time/time.h",
     "fw/applib/accel_service.h",
+    "fw/applib/gyro_service.h",
     "fw/applib/app.h",
     "fw/applib/app_comm.h",
     "fw/applib/app_focus_service.h",
@@ -84,6 +85,7 @@
     "fw/applib/graphics/gpath.h",
     "fw/applib/graphics/text.h",
     "include/pbl/services/accel_manager_types.h",
+    "include/pbl/services/gyro_manager_types.h",
     "include/pbl/services/battery/battery_state.h",
     "include/pbl/services/clock.h",
     "include/pbl/services/ecompass.h",
@@ -552,6 +554,56 @@
                       "type": "function",
                       "name": "compass_service_peek",
                       "addedRevision": "18"
+                  }
+              ]
+            }, {
+              "type": "group",
+              "name": "GyroscopeService",
+              "exports": [
+                  {
+                      "type": "type",
+                      "name": "GyroSamplingRate",
+                      "addedRevision": "104"
+                  }, {
+                      "type": "type",
+                      "name": "GyroRawData",
+                      "addedRevision": "104"
+                  }, {
+                      "type": "type",
+                      "name": "GyroData",
+                      "addedRevision": "104"
+                  }, {
+                      "type": "type",
+                      "name": "GyroDataHandler",
+                      "addedRevision": "104"
+                  }, {
+                      "type": "type",
+                      "name": "GyroRawDataHandler",
+                      "addedRevision": "104"
+                  }, {
+                      "type": "function",
+                      "name": "gyro_data_service_subscribe",
+                      "addedRevision": "104"
+                  }, {
+                      "type": "function",
+                      "name": "gyro_raw_data_service_subscribe",
+                      "addedRevision": "104"
+                  }, {
+                      "type": "function",
+                      "name": "gyro_data_service_unsubscribe",
+                      "addedRevision": "104"
+                  }, {
+                      "type": "function",
+                      "name": "gyro_service_set_sampling_rate",
+                      "addedRevision": "104"
+                  }, {
+                      "type": "function",
+                      "name": "gyro_service_set_samples_per_update",
+                      "addedRevision": "104"
+                  }, {
+                      "type": "function",
+                      "name": "gyro_service_peek",
+                      "addedRevision": "104"
                   }
               ]
             }, {

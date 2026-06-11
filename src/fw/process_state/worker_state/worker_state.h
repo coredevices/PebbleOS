@@ -6,6 +6,7 @@
 #include "applib/event_service_client.h"
 #include "kernel/logging_private.h"
 #include "applib/accel_service_private.h"
+#include "applib/gyro_service_private.h"
 #include "applib/compass_service_private.h"
 #include "applib/plugin_service_private.h"
 #include "applib/backlight_service.h"
@@ -38,6 +39,10 @@ void worker_state_deinit(void);
 Heap *worker_state_get_heap(void);
 
 AccelServiceState *worker_state_get_accel_state(void);
+
+#ifdef CONFIG_GYRO
+GyroServiceState *worker_state_get_gyro_state(void);
+#endif
 
 CompassServiceConfig **worker_state_get_compass_config(void);
 
