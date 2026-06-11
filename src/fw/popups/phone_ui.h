@@ -8,8 +8,8 @@
 
 #include <stdbool.h>
 
-void phone_ui_handle_incoming_call(PebblePhoneCaller *caller, bool can_answer,
-                                   bool show_ongoing_call_ui, PhoneCallSource source);
+void phone_ui_handle_incoming_call(PebblePhoneCaller *caller, bool show_ongoing_call_ui,
+                                   PhoneCallSource source);
 
 void phone_ui_handle_outgoing_call(PebblePhoneCaller *caller);
 
