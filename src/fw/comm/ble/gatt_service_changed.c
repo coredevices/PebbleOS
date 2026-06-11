@@ -121,6 +121,30 @@ void gatt_service_changed_server_cleanup_by_connection(GAPLEConnection *connecti
 }
 
 static void prv_send_service_changed_indication(void *ctx) {
+  GAPLEConnection *connection = (GAPLEConnection *)ctx;
+
+  uint32_t connection_id;
+  bt_lock();
+  {
+    // The connection may have been torn down between the timer firing and this
+    // callback running, leaving a dangling pointer. Bail if it is no longer live.
+    if (!connection || !gap_le_connection_is_valid(connection)) {
+      bt_unlock();
+      return;
+    }
+    connection->gatt_service_changed_indication_timer = TIMER_INVALID_ID;
+    connection_id = connection->gatt_connection_id;
+  }
+  bt_unlock();
+
+  // Invalidate the remote's entire attribute cache so it rediscovers all of our
+  // services (see "2.5.2 Attribute Caching" in the BT Core Specification). This
+  // mirrors what the client side treats as a "rediscover everything" request.
+  const ATTHandleRange range = {
+      .start = 0x0001,
+      .end = 0xFFFF,
+  };
+  bt_driver_gatt_send_changed_indication(connection_id, &range);
 }
 
 static void prv_send_indication_timer_cb(void *ctx) {
