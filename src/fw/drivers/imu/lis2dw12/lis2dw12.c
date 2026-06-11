@@ -15,6 +15,8 @@
 #include "kernel/util/sleep.h"
 #include "util/math.h"
 
+PBL_LOG_MODULE_DEFINE(lis2dw12, CONFIG_IMU_LOG_LEVEL);
+
 // Implementation notes:
 //
 // - Peeking returns the last FIFO sample when sampling is active, otherwise
