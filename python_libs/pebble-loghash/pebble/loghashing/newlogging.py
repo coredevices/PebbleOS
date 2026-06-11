@@ -22,7 +22,7 @@ from pebble.loghashing.constants import (
 hex_digits = set(string.hexdigits)
 
 LOG_DICT_KEY_VERSION = "new_logging_version"
-NEW_LOGGING_VERSION = "NL0101"
+NEW_LOGGING_VERSION = "NL0102"
 
 LOG_LEVEL_ALWAYS = 0
 LOG_LEVEL_ERROR = 1
@@ -215,6 +215,10 @@ def parse_message(msg, log_dict):
         output_msg = safe_output_msg % tuple(arg_list)
     except (TypeError, ValueError, UnicodeDecodeError) as e:
         output_msg = msg + " ----> ERROR: " + str(e)
+
+    # Prefix the message with the log module name, if any
+    if "module" in output_dict:
+        output_msg = "{}: {}".format(output_dict["module"], output_msg)
 
     # Add the formatted msg to the copy of our line dict
     output_dict["formatted_msg"] = output_msg
