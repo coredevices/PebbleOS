@@ -45,7 +45,7 @@ static void prv_tap_msg_callback(const uint8_t *data, uint32_t len) {
     return;
   }
 
-  QEMU_LOG_DEBUG("Got tap msg: axis: %d, direction: %d", hdr->axis, hdr->direction);
+  PBL_LOG_DBG("Got tap msg: axis: %d, direction: %d", hdr->axis, hdr->direction);
   PebbleEvent e = {
     .type = PEBBLE_ACCEL_SHAKE_EVENT,
     .accel_tap = {
@@ -67,7 +67,7 @@ static void prv_bluetooth_connection_msg_callback(const uint8_t *data, uint32_t 
     return;
   }
 
-  QEMU_LOG_DEBUG("Got bluetooth connection msg: connected:%d", hdr->connected);
+  PBL_LOG_DBG("Got bluetooth connection msg: connected:%d", hdr->connected);
   bool current_status = qemu_transport_is_connected();
   bool new_status = (hdr->connected != 0);
 
@@ -89,7 +89,7 @@ static void prv_compass_msg_callback(const uint8_t *data, uint32_t len) {
     return;
   }
 
-  QEMU_LOG_DEBUG("Got compass msg: magnetic_heading: %"PRId32", calib_status:%u",
+  PBL_LOG_DBG("Got compass msg: magnetic_heading: %"PRId32", calib_status:%u",
         ntohl(hdr->magnetic_heading), hdr->calib_status);
   PebbleEvent e = {
     .type = PEBBLE_COMPASS_DATA_EVENT,
@@ -294,8 +294,8 @@ static bool prv_uart_irq_handler(UARTDevice *dev, uint8_t byte, const UARTRXErro
 
 // -----------------------------------------------------------------------------------------
 static void prv_send(const uint8_t *data, uint32_t len) {
-  QEMU_LOG_DEBUG("Sending data:");
-  QEMU_HEXDUMP(data, len);
+  PBL_LOG_VERBOSE("Sending data:");
+  PBL_HEXDUMP(LOG_LEVEL_DEBUG_VERBOSE, data, len);
 
   while (len--) {
     uart_write_byte(QEMU_UART, *data++);
