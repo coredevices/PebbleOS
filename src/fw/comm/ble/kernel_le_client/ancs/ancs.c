@@ -7,7 +7,6 @@
 #include "ancs_util.h"
 #include "ancs_definition.h"
 
-#include "comm/ble/ble_log.h"
 #include "comm/ble/gatt_client_subscriptions.h"
 #include "comm/ble/gatt_client_operations.h"
 #include "comm/ble/kernel_le_client/dis/dis.h"
@@ -30,6 +29,8 @@
 #include "util/size.h"
 
 #include <string.h>
+
+PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
 // -----------------------------------------------------------------------------
 // Static function prototypes
@@ -612,7 +613,7 @@ static void prv_reassemble_ds_notification(uint32_t length, const uint8_t *data)
 
   if (!is_complete) {
     // Keep waiting
-    BLE_LOG_DEBUG("Incomplete response. Waiting for another DS notification.");
+    PBL_LOG_DBG("Incomplete response. Waiting for another DS notification.");
     return;
   }
 
@@ -864,7 +865,7 @@ void ancs_handle_service_removed(BLECharacteristic *characteristics, uint8_t num
 }
 
 void ancs_handle_service_discovered(BLECharacteristic *characteristics) {
-  BLE_LOG_DEBUG("In ANCS service discovery CB");
+  PBL_LOG_DBG("In ANCS service discovery CB");
   PBL_ASSERTN(characteristics); // should only be called if we found something!
 
   // Pause while re-subscribing, it will be resumed when re-subscribed:
@@ -923,13 +924,13 @@ static void prv_handle_ns_notification(uint32_t length, const uint8_t *notificat
   NSNotification* nsnotification = (NSNotification*) notification;
   ANCSProperty properties = ANCSProperty_None;
 
-  BLE_LOG_VERBOSE("NSNotification: ");
-  BLE_LOG_VERBOSE("> EventID: %d", nsnotification->event_id);
-  BLE_LOG_VERBOSE("> EventFlags: <%d>", nsnotification->event_flags);
-  BLE_LOG_VERBOSE("> CategoryID: <%d>", nsnotification->category_id);
-  BLE_LOG_VERBOSE("> CategoryCount: <%d>", nsnotification->category_count);
-  BLE_LOG_VERBOSE("> NotificationUID: <%"PRIu32">", nsnotification->uid);
-  BLE_HEXDUMP_VERBOSE((uint8_t *)nsnotification, sizeof(NSNotification));
+  PBL_LOG_VERBOSE("NSNotification: ");
+  PBL_LOG_VERBOSE("> EventID: %d", nsnotification->event_id);
+  PBL_LOG_VERBOSE("> EventFlags: <%d>", nsnotification->event_flags);
+  PBL_LOG_VERBOSE("> CategoryID: <%d>", nsnotification->category_id);
+  PBL_LOG_VERBOSE("> CategoryCount: <%d>", nsnotification->category_count);
+  PBL_LOG_VERBOSE("> NotificationUID: <%"PRIu32">", nsnotification->uid);
+  PBL_HEXDUMP(LOG_LEVEL_DEBUG_VERBOSE, (uint8_t *)nsnotification, sizeof(NSNotification));
 
   // Handle the CategoryID
   if (nsnotification->category_id == CategoryIDMissedCall) {
@@ -958,19 +959,19 @@ static void prv_handle_ns_notification(uint32_t length, const uint8_t *notificat
       // we got in the past 2 hours. To get past this ignore notifications for the first couple
       // seconds after connecting
       if (s_just_connected && (nsnotification->event_flags & EventFlagPreExisting)) {
-        BLE_LOG_DEBUG("Ignoring notification because we just connected and PreExisting");
+        PBL_LOG_DBG("Ignoring notification because we just connected and PreExisting");
       } else {
-        BLE_LOG_DEBUG("Added ANCS notification!");
+        PBL_LOG_DBG("Added ANCS notification!");
         prv_notif_queue_push_attr_request(nsnotification->uid, properties);
       }
 
       break;
     case EventIDNotificationModified:
-      BLE_LOG_DEBUG("Modified ANCS notification!");
+      PBL_LOG_DBG("Modified ANCS notification!");
       prv_notif_queue_push_attr_request(nsnotification->uid, properties);
       break;
     case EventIDNotificationRemoved:
-      BLE_LOG_DEBUG("Removed ANCS notification");
+      PBL_LOG_DBG("Removed ANCS notification");
       ancs_notifications_handle_notification_removed(nsnotification->uid, properties);
       break;
   }
@@ -1037,7 +1038,7 @@ void ancs_handle_write_response(BLECharacteristic characteristic, BLEGATTError e
     return;
   }
 
-  BLE_LOG_DEBUG("Got ACK for Control Point write");
+  PBL_LOG_DBG("Got ACK for Control Point write");
 
   if (s_ancs_client->queue && (s_ancs_client->queue->op == NotificationQueueOpPerformAction)) {
     // The action was successful
@@ -1049,11 +1050,11 @@ static bool prv_write_control_point_request(const CPDSMessage *cmd, size_t size)
   const BLECharacteristic cp = s_ancs_client->characteristics[ANCSCharacteristicControl];
   const BTErrno error = gatt_client_op_write(cp, (const uint8_t *) cmd, size, GAPLEClientKernel);
 
-  BLE_LOG_DEBUG("Writing to control point:");
+  PBL_LOG_DBG("Writing to control point:");
   PBL_HEXDUMP(LOG_LEVEL_DEBUG, (const uint8_t *) cmd, size);
 
   if (error != BTErrnoOK) {
-    BLE_LOG_DEBUG("Control point write error: %d", error);
+    PBL_LOG_DBG("Control point write error: %d", error);
     return false;
   }
 
@@ -1071,7 +1072,7 @@ static void prv_perform_action(uint32_t notification_uid, ActionId action_id) {
     .action_id = action_id,
   };
 
-  BLE_LOG_DEBUG("Taking action <%u> upon UID: %"PRIu32, action_id,
+  PBL_LOG_DBG("Taking action <%u> upon UID: %"PRIu32, action_id,
       notification_uid);
 
   const bool success = prv_write_control_point_request((const CPDSMessage *) &action_msg,

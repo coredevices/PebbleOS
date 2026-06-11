@@ -9,7 +9,7 @@
 #include "gap_le_advert.h"
 #include "gap_le_connect.h"
 
-#include "comm/ble/ble_log.h"
+#include "system/logging.h"
 #include "comm/bt_lock.h"
 
 #include "kernel/event_loop.h"

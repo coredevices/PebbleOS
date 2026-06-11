@@ -8,7 +8,6 @@
 
 #include "applib/bluetooth/ble_ad_parse.h"
 
-#include "comm/ble/ble_log.h"
 #include "comm/bt_lock.h"
 
 #include "git_version.auto.h"
