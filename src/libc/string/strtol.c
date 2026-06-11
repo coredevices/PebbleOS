@@ -5,12 +5,12 @@
 // Implements:
 //   long int strtol(const char *nptr, char **endptr, int base);
 
-#include <ctype.h>
 #include <string.h>
 #include <stdint.h>
 #include <limits.h>
 #include <stdbool.h>
 #include <pblibc_private.h>
+#include <ctype.h>
 
 intmax_t strtoX_core(const char * restrict nptr, char ** restrict endptr, int base, bool do_errors,
                      intmax_t max, intmax_t min) {
