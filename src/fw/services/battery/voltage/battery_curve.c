@@ -63,12 +63,29 @@ static const uint8_t NUM_CHARGE_POINTS = ARRAY_LENGTH(charge_curve);
 
 static int s_battery_compensation_values[BATTERY_CURVE_COMPENSATE_COUNT];
 
+// The 100% discharge voltage at boot, captured lazily before the first runtime
+// adjustment so tests can restore the curve. 0 means "not yet captured".
+static uint16_t s_discharge_full_voltage_default;
+
 // Shifts the 100% reference on the discharge curve, as long as it
 // doesn't drop below the next highest point.
 void battery_curve_set_full_voltage(uint16_t voltage) {
+  if (s_discharge_full_voltage_default == 0) {
+    s_discharge_full_voltage_default = discharge_curve[NUM_DISCHARGE_POINTS-1].voltage;
+  }
   voltage = MAX(voltage, discharge_curve[NUM_DISCHARGE_POINTS-2].voltage + 1);
   discharge_curve[NUM_DISCHARGE_POINTS-1].voltage = voltage;
 }
+
+#if UNITTEST
+// Restores curve state mutated by battery_curve_set_full_voltage() so tests
+// run in isolation. Not built into production firmware (tests only).
+void battery_curve_reset_for_tests(void) {
+  if (s_discharge_full_voltage_default != 0) {
+    discharge_curve[NUM_DISCHARGE_POINTS-1].voltage = s_discharge_full_voltage_default;
+  }
+}
+#endif
 
 static uint32_t prv_lookup_percent_by_voltage(
     int battery_mv, bool is_charging, uint32_t scaling_factor) {
