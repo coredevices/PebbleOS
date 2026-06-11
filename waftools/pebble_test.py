@@ -255,6 +255,172 @@ def get_bitdepth_for_platform(bld, platform):
         bld.fatal("Unknown platform {}".format(platform))
 
 
+def _add_freestanding_clar_test(
+    bld,
+    test_name,
+    test_source,
+    test_dir,
+    test_bin,
+    sources_ant_glob,
+    platform_product_sources,
+    add_includes,
+    defines,
+    test_libs,
+    use,
+    runtime_deps,
+):
+    """Build a single clar test in freestanding mode.
+
+    Compiled with -nostdinc; only pblibc headers and the compiler's built-in
+    include directory are in scope.  The clar harness is generated with
+    --report-to=freestanding, which selects sandbox-free modules.
+
+    The host-boundary shim (tests/freestanding/shim.c) provides malloc, free,
+    calloc, realloc, strdup, abort, printf/fprintf, strcasecmp, qsort, and
+    freestanding_write.  It is linked via use=['freestanding_shim'].
+    """
+
+    def _generate_freestanding_harness(task):
+        bld = task.generator.bld
+        clar_dir = task.generator.env.CLAR_DIR
+        test_src_file = task.inputs[0].abspath()
+        test_bld_dir = task.outputs[0].get_bld().parent.abspath()
+
+        cmd = (
+            "python {clar_dir}/clar.py"
+            " --file={src}"
+            " --clar-path={clar_dir}"
+            " --report-to=freestanding"
+            " {bld_dir}"
+        ).format(
+            clar_dir=clar_dir,
+            src=test_src_file,
+            bld_dir=test_bld_dir,
+        )
+        task.generator.bld.exec_command(cmd)
+
+    clar_harness = test_dir.make_node("clar_main.c")
+
+    bld(
+        name="generate_clar_harness",
+        rule=_generate_freestanding_harness,
+        source=test_source,
+        target=[clar_harness, test_dir.make_node("clar.h")],
+    )
+
+    # Include paths for freestanding builds.
+    #
+    # pblibc headers and the compiler built-in directory are injected as
+    # -isystem so that #include_next chains (e.g. pblibc/setjmp.h →
+    # compiler builtin setjmp.h) resolve correctly under -nostdinc.
+    # The generated test directory (clar.h, test source) and tests/test_includes
+    # are regular -I paths because they are project headers, not system headers.
+    # any add_includes are also regular -I paths (they contain pblibc source
+    # includes that are project-level).
+    srcnode = bld.srcnode.abspath()
+    pblibc_inc = os.path.join(srcnode, "src/libc/include")
+    compiler_builtins_inc = bld.env.COMPILER_BUILTINS_INCLUDE
+    test_includes_inc = os.path.join(srcnode, "tests/test_includes")
+
+    # Regular -I includes (project headers): generated dir and test_includes.
+    freestanding_includes = [
+        test_dir.abspath(),
+        test_includes_inc,
+    ]
+    if add_includes is not None:
+        for inc in add_includes:
+            freestanding_includes.append(os.path.join(srcnode, inc))
+
+    # -isystem includes: pblibc, compiler builtins, then the platform SDK
+    # headers (last resort).
+    #
+    # Order is significant:
+    #   1. pblibc — project's own libc headers (highest precedence)
+    #   2. compiler built-in dir — stddef.h, stdint.h, float.h, stdarg.h
+    #   3. platform SDK usr/include — provides setjmp.h, assert.h and any
+    #      other POSIX headers that pblibc delegates via #include_next
+    #
+    # Only pblibc and compiler-builtin headers are used by the product code
+    # under test.  The SDK headers are a fallback for the clar harness only
+    # (setjmp.h, assert.h).  They are injected last so that pblibc headers
+    # take precedence for everything pblibc covers.
+    import subprocess as _sp
+    import sys as _sys
+    platform_sdk_inc = None
+    if _sys.platform == 'darwin':
+        try:
+            sdk = _sp.check_output(
+                ['xcrun', '--show-sdk-path'], stderr=_sp.DEVNULL
+            ).decode().strip()
+            candidate = os.path.join(sdk, 'usr', 'include')
+            if os.path.isdir(candidate):
+                platform_sdk_inc = candidate
+        except Exception:
+            pass
+    else:
+        # On Linux, pblibc/setjmp.h uses #include_next <setjmp.h> for non-ARM
+        # hosts; the system headers provide it.  Add /usr/include as a last-
+        # resort -isystem so #include_next chains resolve, while keeping
+        # pblibc headers at higher precedence for everything pblibc covers.
+        candidate = '/usr/include'
+        if os.path.isfile(os.path.join(candidate, 'setjmp.h')):
+            platform_sdk_inc = candidate
+
+    freestanding_cflags = [
+        "-nostdinc",
+        "-isystem", pblibc_inc,
+        "-isystem", compiler_builtins_inc,
+        "-DCLAR_FREESTANDING=1",
+    ]
+    if platform_sdk_inc:
+        freestanding_cflags += ["-isystem", platform_sdk_inc]
+
+    freestanding_defines = list(defines)
+
+    if sources_ant_glob is not None:
+        sources_list = Utils.to_list(sources_ant_glob)
+        for s in sources_list:
+            node = bld.srcnode.find_node(s)
+            if node is None:
+                raise Errors.WafError(
+                    'Error: Source file "%s" not found for "%s"' % (s, test_name)
+                )
+            if node not in platform_product_sources:
+                platform_product_sources.append(node)
+            else:
+                raise Errors.WafError(
+                    'Error: Duplicate source file "%s" found for "%s"'
+                    % (s, test_name)
+                )
+
+    program_sources = [test_source, clar_harness]
+    program_sources.extend(
+        build_product_source_files(
+            bld,
+            test_dir,
+            freestanding_includes,
+            freestanding_defines,
+            freestanding_cflags,
+            platform_product_sources,
+        )
+    )
+
+    freestanding_use = list(use) if use else []
+    freestanding_use.append("freestanding_shim")
+
+    bld.program(
+        source=program_sources,
+        target=test_bin,
+        features="pebble_test",
+        includes=freestanding_includes,
+        lib=test_libs,
+        defines=freestanding_defines,
+        cflags=freestanding_cflags,
+        use=freestanding_use,
+        runtime_deps=runtime_deps,
+    )
+
+
 def add_clar_test(
     bld,
     test_name,
@@ -268,6 +434,7 @@ def add_clar_test(
     runtime_deps,
     platform,
     use,
+    freestanding=False,
 ):
 
     if bld.options.regex:
@@ -299,6 +466,27 @@ def add_clar_test(
         test_dir = bld.path.get_bld().make_node(test_name + "_" + platform)
         test_bin = test_dir.make_node("runme_" + platform)
         platform_defines.append("PLATFORM_DEFAULT=0")
+
+    if freestanding:
+        # ---- freestanding path ---------------------------------------------
+        # Compiled with -nostdinc; only pblibc headers and the compiler's
+        # built-in include directory are in scope.  No DUMA, no display
+        # force-include, no firmware src includes.
+        _add_freestanding_clar_test(
+            bld=bld,
+            test_name=test_name,
+            test_source=test_source,
+            test_dir=test_dir,
+            test_bin=test_bin,
+            sources_ant_glob=sources_ant_glob,
+            platform_product_sources=platform_product_sources,
+            add_includes=add_includes,
+            defines=defines + platform_defines,
+            test_libs=list(test_libs),
+            use=use,
+            runtime_deps=runtime_deps,
+        )
+        return
 
     def _generate_clar_harness(task):
         bld = task.generator.bld
@@ -494,6 +682,7 @@ def clar(
     runtime_deps=None,
     platforms=None,
     use=None,
+    freestanding=False,
 ):
 
     if test_sources_ant_glob is None and not test_sources:
@@ -563,4 +752,5 @@ def clar(
             runtime_deps,
             platform,
             use,
+            freestanding=freestanding,
         )

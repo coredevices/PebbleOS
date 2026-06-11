@@ -1,19 +1,25 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <assert.h>
+#ifndef CLAR_FREESTANDING
+# include <assert.h>
+#endif
 #include <setjmp.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <strings.h>
+#ifndef CLAR_FREESTANDING
+# include <strings.h>
+#endif
 #include <math.h>
 #include <stdarg.h>
 #include <unistd.h>
 
+#ifndef CLAR_FREESTANDING
 /* required for sandboxing */
-#include <sys/types.h>
-#include <sys/stat.h>
+# include <sys/types.h>
+# include <sys/stat.h>
+#endif
 
 #ifdef _WIN32
 # include <windows.h>
@@ -39,6 +45,15 @@
 #   define snprint_eq snprintf
 # endif
   typedef struct _stat STAT_T;
+#elif defined(CLAR_FREESTANDING)
+
+# define _MAIN_CC
+# define snprint_eq snprintf
+
+/* Forward-declare POSIX functions missing from pblibc headers.
+ * The definitions live in tests/freestanding/shim.c or in
+ * clar_io_freestanding.c (both linked into the final binary). */
+int strcasecmp(const char *s1, const char *s2);
 #else
 
 # ifdef UNITTEST_DEBUG
@@ -703,7 +718,9 @@ void clar__assert_equal_m(
     hex_dump("m1:", m1, n);
     hex_dump("m2:", m2, n);
 
+#ifndef CLAR_FREESTANDING
     fflush(stdout);
+#endif
     clar__assert(0, file, line, err, buf, should_abort);
   }
 }
