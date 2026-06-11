@@ -87,9 +87,13 @@ float modff(float x, float *iptr);
 
 double nearbyint(double x);
 
+double pow(double x, double y);
+
 double round(double d);
 
 float roundf(float x);
+
+double scalbn(double x, int n);
 
 double sin(double x);
 
