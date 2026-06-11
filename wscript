@@ -248,7 +248,8 @@ def configure(conf):
                         '-gdwarf-4',
                         '-O0',
                         '-fdata-sections',
-                        '-ffunction-sections' ]
+                        '-ffunction-sections',
+                        '-fno-common' ]
 
     # Reset LINKFLAGS so firmware-specific flags (e.g. --undefined=HAL_GetTick)
     # don't leak into the host test environment.
