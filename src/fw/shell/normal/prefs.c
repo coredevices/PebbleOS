@@ -214,7 +214,7 @@ static uint8_t s_alarms_app_opened = 0;
 static ActivityHRMSettings s_activity_hrm_preferences = ACTIVITY_HRM_DEFAULT_PREFERENCES;
 
 #define PREF_KEY_ACTIVITY_BLE_HRM_WORKOUT_SHARING "bleHrmWorkoutSharing"
-static bool s_activity_ble_hrm_workout_sharing_enabled = true;
+static bool s_activity_ble_hrm_workout_sharing_enabled = false;
 
 #define PREF_KEY_ACTIVITY_HEART_RATE_PREFERENCES "heartRatePreferences"
 static HeartRatePreferences s_activity_hr_preferences = ACTIVITY_HEART_RATE_DEFAULT_PREFERENCES;
