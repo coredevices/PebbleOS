@@ -82,6 +82,27 @@ if bld.env.CONFIG_SOC_NRF52:
 
     nimble_use.append('hal_nordic')
 
+elif bld.env.CONFIG_SOC_QEMU:
+    nimble_sources += bld.path.ant_glob([
+        'mynewt-nimble/nimble/controller/src/*.c',
+        'mynewt-nimble/nimble/drivers/native/src/*.c',
+        'port/src/qemu_hal_timer.c',
+    ])
+
+    nimble_includes = [
+        'port/include/qemu',
+        'mynewt-nimble/nimble/controller/include',
+        'mynewt-nimble/nimble/drivers/native/include',
+    ] + nimble_includes
+
+    nimble_env.append_value('DEFINES', [
+        'FREERTOS=1',
+        'PEBBLEOS',
+        'NIMBLE_CFG_CONTROLLER=1',
+    ])
+
+    nimble_export_defines.append('NIMBLE_CFG_CONTROLLER=1')
+
 elif bld.env.CONFIG_SOC_SF32LB52:
     nimble_sources += [
         'transport/hci_sf32lb52.c',

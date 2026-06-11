@@ -19,10 +19,6 @@
 
 #include <btutil/bt_uuid.h>
 
-#if defined(CONFIG_QEMU) && defined(CONFIG_HRM)
-#include <bluetooth/qemu_hrm_bridge.h>
-#endif
-
 //! Reference to the reconnection advertising job.
 //! bt_lock() needs to be taken before accessing this variable.
 static GAPLEAdvertisingJobRef s_reconnect_advert_job;
@@ -138,10 +134,6 @@ static void prv_evaluate(ReconnectType prev_type) {
   } else {
     prv_unschedule_adv_if_needed();
   }
-
-#if defined(CONFIG_QEMU) && defined(CONFIG_HRM)
-  bt_driver_qemu_hrm_bridge_set_advertising_enabled(cur_type == ReconnectType_BleHrm);
-#endif
 }
 
 static void prv_set_and_evaluate(bool *val, bool new_value) {

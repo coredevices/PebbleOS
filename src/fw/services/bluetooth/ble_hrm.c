@@ -77,8 +77,7 @@ static bool prv_permission_allows_sharing_now(HrmSharingPermission permission) {
 }
 
 bool ble_hrm_is_supported_and_enabled(void) {
-  return (prv_hw_and_sw_supports_hrm() &&
-          (activity_prefs_heart_rate_is_enabled() || s_ble_hrm_workout_mode));
+  return (prv_hw_and_sw_supports_hrm() && activity_prefs_heart_rate_is_enabled());
 }
 
 static void prv_reset_subscriptions(void);

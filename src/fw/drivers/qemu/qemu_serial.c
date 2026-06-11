@@ -23,7 +23,6 @@
 
 #include "FreeRTOS.h"
 
-#include <bluetooth/qemu_hrm_bridge.h>
 #include <bluetooth/qemu_transport.h>
 
 #include <stdarg.h>
@@ -166,7 +165,6 @@ static const QemuMessageHandler s_qemu_endpoints[] = {
   { QemuProtocol_TimeFormat, prv_time_format_msg_callback },
   { QemuProtocol_TimelinePeek, prv_timeline_peek_msg_callback },
   { QemuProtocol_ContentSize, prv_content_size_msg_callback },
-  { QemuProtocol_BLEHrmBridge, bt_driver_qemu_hrm_bridge_handle_packet },
   // Button messages are handled by QEMU directly
 };
 

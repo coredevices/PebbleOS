@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+syscfg.vals:
+    MCU_TIMER_POLLER_PRIO: 1
+    MCU_UART_POLLER_PRIO: 2
+    NATIVE_SOCKETS_PRIO: 3
+    OS_CPUTIME_TIMER_NUM: 5
+    BLE_SM_IO_CAP: 'BLE_HS_IO_DISPLAY_YESNO'
+    BLE_SM_SC_ONLY: 1
+    BLE_SM_LEGACY: 0
+    BLE_SM_MITM: 1
+    BLE_SM_LVL: 4

@@ -510,7 +510,7 @@ void test_ble_hrm__workout_mode_shares_without_permission_prompt(void) {
   cl_assert_equal_i(1, s_gap_le_slave_reconnect_hrm_start_call_count);
   cl_assert_equal_i(1, s_bt_driver_hrm_service_enable_call_count);
   cl_assert_equal_b(true, s_bt_driver_hrm_service_is_enabled);
-  cl_assert_equal_b(true, ble_hrm_is_supported_and_enabled());
+  cl_assert_equal_b(false, ble_hrm_is_supported_and_enabled());
 
   bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
   cl_assert_equal_p(NULL, s_last_sharing_request);
