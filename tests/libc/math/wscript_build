@@ -10,7 +10,7 @@ clar(ctx,
      sources_ant_glob = "src/libc/math/log.c",
      test_sources_ant_glob = "test_log.c",
      add_includes = ["src/libc"],
-     test_libs=['m'])
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob = "src/libc/math/pow.c" \
@@ -18,10 +18,10 @@ clar(ctx,
                         " src/libc/math/sqrt.c",
      test_sources_ant_glob = "test_pow.c",
      add_includes = ["src/libc"],
-     test_libs=['m'])
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob = "src/libc/math/round.c",
      test_sources_ant_glob = "test_round.c",
      add_includes = ["src/libc"],
-     test_libs=['m'])
+     freestanding=True)
