@@ -5,8 +5,6 @@
 
 #include "stubs_bluetooth_pairing_ui.h"
 #include "stubs_events.h"
-#include "stubs_HCIAPI.h"
-#include "stubs_L2CAPAPI.h"
 #include "stubs_hexdump.h"
 #include "stubs_queue.h"
 
