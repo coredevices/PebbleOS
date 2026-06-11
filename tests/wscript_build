@@ -272,12 +272,12 @@ bld.env.CFLAGS.append('-Wno-tautological-compare')
 
 # Any test in this list won't be compiled
 bld.env.BROKEN_TESTS = [
-    'test_battery_monitor.c',
+    # Crash (round-display segfault) and build (rect/round, platform) issues are
+    # fixed; remaining failures are missing gabbro golden .pbi images that need
+    # visual review before regeneration. Keep quarantined until goldens land.
     'test_graphics_draw_text_flow.c',
-    'test_app_menu_data_source.c',
     'test_gatt_service_changed_server.c',
     'test_gap_le_connect.c',
-    'test_timezone_database.c',
 ]
 
 # Don't run the python tool tests because they exercise a lot of old python2 code that still needs to be updated
