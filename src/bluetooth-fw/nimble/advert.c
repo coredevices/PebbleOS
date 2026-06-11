@@ -6,6 +6,7 @@
 #include <bluetooth/bonding_sync.h>
 #include <bluetooth/bt_driver_advert.h>
 #include <bluetooth/gatt.h>
+#include <bluetooth/hrm_service.h>
 #include <bluetooth/pairing_confirm.h>
 #include <comm/bt_lock.h>
 #include <host/ble_gap.h>
@@ -254,6 +255,9 @@ static void prv_handle_subscription_event(struct ble_gap_event *event) {
             event->subscribe.conn_handle, event->subscribe.attr_handle,
             event->subscribe.prev_notify, event->subscribe.cur_notify,
             event->subscribe.prev_indicate, event->subscribe.cur_indicate);
+  bt_driver_hrm_service_handle_subscription(event->subscribe.conn_handle,
+                                            event->subscribe.attr_handle,
+                                            event->subscribe.cur_notify);
 }
 
 static void prv_handle_notification_rx_event(struct ble_gap_event *event) {
