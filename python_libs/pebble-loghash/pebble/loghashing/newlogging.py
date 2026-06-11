@@ -95,7 +95,8 @@ def dehash_line(line, log_dict):
     if "date" not in line_dict and line_dict.get("re_level"):
         output.append("<{}>".format(line_dict["re_level"]))
 
-    if "task" in line_dict:
+    # "-" means the task prefix is disabled (CONFIG_LOG_TASK_PREFIX)
+    if line_dict.get("task", "-") != "-":
         output.append(line_dict["task"])
 
     if "module" not in line_dict and "file" in line_dict and "line" in line_dict:
