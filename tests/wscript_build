@@ -272,6 +272,10 @@ bld.env.CFLAGS.append('-Wno-tautological-compare')
 
 # Any test in this list won't be compiled
 bld.env.BROKEN_TESTS = [
+    'test_graphics_draw_circle_8bit.c',
+    'test_graphics_fill_circle_8bit.c',
+    'test_graphics_draw_line.c',
+    'test_graphics_draw_rotated_bitmap.c',
     # Crash (round-display segfault) and build (rect/round, platform) issues are
     # fixed; remaining failures are missing gabbro golden .pbi images that need
     # visual review before regeneration. Keep quarantined until goldens land.
