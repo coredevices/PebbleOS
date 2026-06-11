@@ -130,6 +130,13 @@ config FLASH_LOG_LEVEL_DEBUG_VERBOSE
 
 endchoice
 
+config LOG_TASK_PREFIX
+    bool "Task prefix"
+    depends on LOG
+    help
+      Prefix log messages with the originating task identifier char
+      (uppercase when logged from privileged mode).
+
 config PULSE_EVERYWHERE
     bool "PULSE everywhere"
     default y if !RELEASE || MFG
