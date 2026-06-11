@@ -1053,8 +1053,8 @@ static bool prv_check_popups_are_blocked(void) {
 //!
 //! API for updating / creating the phone UI
 //!
-void phone_ui_handle_incoming_call(PebblePhoneCaller *caller, bool can_answer,
-                                   bool show_ongoing_call_ui, PhoneCallSource source) {
+void phone_ui_handle_incoming_call(PebblePhoneCaller *caller, bool show_ongoing_call_ui,
+                                   PhoneCallSource source) {
   if (prv_check_popups_are_blocked()) {
     return;
   }
@@ -1078,12 +1078,9 @@ void phone_ui_handle_incoming_call(PebblePhoneCaller *caller, bool can_answer,
     can_reply = prv_load_sms_reply_action(caller->number, source);
   }
 
-  uint8_t actions = PhoneCallActions_Decline;
+  uint8_t actions = PhoneCallActions_Decline | PhoneCallActions_Answer;
   if (can_reply) {
     actions |= PhoneCallActions_Reply;
-  }
-  if (can_answer) {
-    actions |= PhoneCallActions_Answer;
   }
   prv_action_bar_setup(actions);
 
