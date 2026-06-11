@@ -47,7 +47,7 @@ def update_lcov(bld):
         except waflib.Errors.WafError as e:
             print(e.stdout, '\n', e.stderr)
             bld.fatal("Error running `genhtml`")
-        index_html = os.path.join(lcov_html_directory, 'index.html')
+        index_html = os.path.join(lcov_html_directory, 'index_html')
         print("Updated coverage report at %s" % index_html)
 
 def convert_png_to_pbi(task):
@@ -272,8 +272,6 @@ bld.env.CFLAGS.append('-Wno-tautological-compare')
 
 # Any test in this list won't be compiled
 bld.env.BROKEN_TESTS = [
-    'test_floor.c',
-    'test_pow.c',
     'test_graphics_draw_circle_8bit.c',
     'test_graphics_fill_circle_8bit.c',
     'test_graphics_draw_line.c',
