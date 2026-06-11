@@ -140,19 +140,15 @@ int pbl_log_get_bin_format(char* buffer, int buffer_len, const uint8_t log_level
 #define LOG_COLOR_FOR_DEBUG   LOG_COLOR_GREY
 #define LOG_COLOR_FOR_VERBOSE LOG_COLOR_GREY
 
-#define LOG_DOMAIN_BT                 1
 #define LOG_DOMAIN_MISC               1
 #define LOG_DOMAIN_FS                 1
 #define LOG_DOMAIN_COMM               1
-#define LOG_DOMAIN_ACCEL              0
 #define LOG_DOMAIN_TEXT               0
-#define LOG_DOMAIN_QEMU_COMM          0
 #define LOG_DOMAIN_ANIMATION          0
 #define LOG_DOMAIN_ANALYTICS          0
 #define LOG_DOMAIN_ACTIVITY           0
 #define LOG_DOMAIN_ACTIVITY_INSIGHTS  0
 #define LOG_DOMAIN_PROTOBUF           0
-#define LOG_DOMAIN_VOICE              0
 
 #define LOG_DOMAIN_BLOBDB             0
 
@@ -170,14 +166,6 @@ int pbl_log_get_bin_format(char* buffer, int buffer_len, const uint8_t log_level
 
 #ifndef LOG_DOMAIN_DATA_LOGGING
   #define LOG_DOMAIN_DATA_LOGGING     0
-#endif
-
-#ifdef LOG_DOMAIN_ALL // Turn on all domains that are off by default
-  #define LOG_DOMAIN_BT
-#endif
-
-#ifndef LOG_DOMAIN_TOUCH
-  #define LOG_DOMAIN_TOUCH            0
 #endif
 
 #ifndef LOG_DOMAIN_I2C
