@@ -90,7 +90,7 @@ config LOG_HASHED
 
 choice
     prompt "Default log level"
-    default DEFAULT_LOG_LEVEL_DEBUG
+    default DEFAULT_LOG_LEVEL_INFO
 
 config DEFAULT_LOG_LEVEL_ERROR
     bool "Error"
