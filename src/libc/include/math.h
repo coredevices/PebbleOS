@@ -9,6 +9,7 @@
 #endif
 
 #define INFINITY   ((double)(_HUGE_ENUF * _HUGE_ENUF))
+#define HUGE_VAL   INFINITY
 #define NAN        ((double)(INFINITY * 0.0F))
 
 #define INFINITY_F ((float)INFINITY)
