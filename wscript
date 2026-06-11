@@ -249,7 +249,9 @@ def configure(conf):
                         '-O0',
                         '-fdata-sections',
                         '-ffunction-sections',
-                        '-fno-common' ]
+                        '-fno-common',
+                        '-ffp-contract=off',
+                        '-fexcess-precision=standard' ]
 
     # Reset LINKFLAGS so firmware-specific flags (e.g. --undefined=HAL_GetTick)
     # don't leak into the host test environment.
