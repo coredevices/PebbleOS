@@ -280,8 +280,6 @@ bld.env.BROKEN_TESTS = [
     'test_gap_le_connect.c',
     'test_activity_insights.c',
     'test_app_menu_data_source.c',
-    'test_emoji_fonts.c',
-    'test_kickstart.c',
     'test_pfs.c',
     'test_timeline_peek_event.c',
     'test_timezone_database.c',
