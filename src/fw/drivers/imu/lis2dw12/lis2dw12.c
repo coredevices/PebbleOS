@@ -15,7 +15,7 @@
 #include "kernel/util/sleep.h"
 #include "util/math.h"
 
-PBL_LOG_MODULE_DEFINE(lis2dw12, CONFIG_IMU_LOG_LEVEL);
+PBL_LOG_MODULE_DEFINE(driver_accel_lis2dw12, CONFIG_DRIVER_IMU_LOG_LEVEL);
 
 // Implementation notes:
 //

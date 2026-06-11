@@ -17,6 +17,8 @@
 
 #include "cst816_fw.h"
 
+PBL_LOG_MODULE_DEFINE(driver_touch_cst816, CONFIG_DRIVER_TOUCH_LOG_LEVEL);
+
 #define CST816_RESET_CYCLE_TIME       10  /* ms */
 #define CST816_POR_DELAY_TIME         110 /* ms */
 #define CST816_REG_WR_DELAY_TIME      2   /* ms */ 

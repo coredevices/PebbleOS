@@ -13,6 +13,8 @@
 #include "util/math.h"
 #include "util/size.h"
 
+PBL_LOG_MODULE_DECLARE(service_filesystem, CONFIG_SERVICE_FILESYSTEM_LOG_LEVEL);
+
 //! Flash translation operation
 typedef enum {
   FTLRead,

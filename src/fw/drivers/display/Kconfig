@@ -23,4 +23,8 @@ config DISPLAY_QEMU
     help
       Support for the QEMU framebuffer display peripheral.
 
+module = DRIVER_DISPLAY
+module-str = Display
+source "src/fw/Kconfig.template.log_level"
+
 endif # DISPLAY

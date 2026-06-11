@@ -10,6 +10,8 @@
 #include "system/logging.h"
 #include "util/math.h"
 
+PBL_LOG_MODULE_DEFINE(service_cron, CONFIG_SERVICE_CRON_LOG_LEVEL);
+
 //! Don't let users modify the list while callbacks are occurring.
 static PebbleMutex *s_list_mutex = NULL;
 

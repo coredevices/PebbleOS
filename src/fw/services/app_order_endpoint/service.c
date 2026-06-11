@@ -13,6 +13,8 @@
 #include <stdbool.h>
 #include <string.h>
 
+PBL_LOG_MODULE_DEFINE(service_app_order_endpoint, CONFIG_SERVICE_APP_ORDER_ENDPOINT_LOG_LEVEL);
+
 //! @file app_order_endpoint.c
 //! App Order Endpoint
 //!

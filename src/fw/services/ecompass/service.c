@@ -21,6 +21,8 @@
 
 #include "system/rtc_registers.h"
 
+PBL_LOG_MODULE_DEFINE(service_ecompass, CONFIG_SERVICE_ECOMPASS_LOG_LEVEL);
+
 // Duration (in minutes) to run high-frequency sampling during compass calibration.
 // Defaults to 2 minutes, but some platforms (e.g., Asterix) require longer.
 #ifdef CONFIG_BOARD_FAMILY_ASTERIX

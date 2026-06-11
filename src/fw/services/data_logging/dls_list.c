@@ -17,6 +17,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+PBL_LOG_MODULE_DECLARE(service_data_logging, CONFIG_SERVICE_DATA_LOGGING_LOG_LEVEL);
+
 static DataLoggingSession *s_logging_sessions;
 static PebbleRecursiveMutex * s_list_mutex;
 

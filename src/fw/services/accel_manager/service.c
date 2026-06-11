@@ -26,6 +26,8 @@
 
 #include <inttypes.h>
 
+PBL_LOG_MODULE_DEFINE(service_accel_manager, CONFIG_SERVICE_ACCEL_MANAGER_LOG_LEVEL);
+
 // We use this as an argument to indicate a lookup of the current task
 #define PEBBLE_TASK_CURRENT PebbleTask_Unknown
 

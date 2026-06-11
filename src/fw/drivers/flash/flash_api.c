@@ -25,6 +25,8 @@
 #include "FreeRTOS.h"
 #include "semphr.h"
 
+PBL_LOG_MODULE_DEFINE(driver_flash, CONFIG_DRIVER_FLASH_LOG_LEVEL);
+
 #define MAX_ERASE_RETRIES (3)
 
 static PebbleMutex *s_flash_lock;

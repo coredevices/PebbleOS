@@ -18,4 +18,8 @@ config RNG_STUB
     help
       Stub RNG implementation.
 
+module = DRIVER_RNG
+module-str = Random Number Generator
+source "src/fw/Kconfig.template.log_level"
+
 endif # RNG

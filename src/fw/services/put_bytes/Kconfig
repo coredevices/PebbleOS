@@ -5,3 +5,11 @@ config SERVICE_PUT_BYTES
     bool "Put bytes"
     help
       put_bytes endpoint (incoming binary transfer).
+
+if SERVICE_PUT_BYTES
+
+module = SERVICE_PUT_BYTES
+module-str = Put bytes
+source "src/fw/Kconfig.template.log_level"
+
+endif

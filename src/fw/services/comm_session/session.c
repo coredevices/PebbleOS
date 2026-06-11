@@ -31,6 +31,8 @@
 #include <stdint.h>
 #include <string.h>
 
+PBL_LOG_MODULE_DEFINE(service_comm_session, CONFIG_SERVICE_COMM_SESSION_LOG_LEVEL);
+
 // -------------------------------------------------------------------------------------------------
 // Static variables
 

@@ -17,6 +17,8 @@
 #include "pbl/services/notifications/ancs/ancs_phone_call.h"
 #include "system/logging.h"
 
+PBL_LOG_MODULE_DEFINE(service_phone_call, CONFIG_SERVICE_PHONE_CALL_LOG_LEVEL);
+
 //! This service is a little confusing, but generally here is how the phone calls work:
 //! On Android:
 //! - The watch gets PP messages (parsed in phone_pp.c), which come in as events happen.

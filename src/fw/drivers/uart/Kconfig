@@ -23,4 +23,8 @@ config UART_QEMU
     help
       Support for the QEMU simple UART peripheral.
 
+module = DRIVER_UART
+module-str = UART
+source "src/fw/Kconfig.template.log_level"
+
 endif # UART

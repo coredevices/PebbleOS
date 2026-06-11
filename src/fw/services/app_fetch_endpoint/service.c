@@ -20,6 +20,8 @@
 #include "util/math.h"
 #include "util/uuid.h"
 
+PBL_LOG_MODULE_DEFINE(service_app_fetch_endpoint, CONFIG_SERVICE_APP_FETCH_ENDPOINT_LOG_LEVEL);
+
 //! Used for keeping track of binaries that are loaded through put_bytes
 typedef struct {
   AppInstallId app_id;

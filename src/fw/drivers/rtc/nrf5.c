@@ -30,6 +30,8 @@
 #include <stdio.h>
 #include <string.h>
 
+PBL_LOG_MODULE_DEFINE(driver_rtc_nrf5, CONFIG_DRIVER_RTC_LOG_LEVEL);
+
 //! The type of a raw reading from the RTC (masked to 0xFFFFFF).
 typedef uint32_t RtcIntervalTicks;
 

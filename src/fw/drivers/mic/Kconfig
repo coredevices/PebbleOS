@@ -26,4 +26,8 @@ config MIC_QEMU
       `pebble transcribe`, which ignores audio frames and replies with
       a canned transcription on a timer.
 
+module = DRIVER_MIC
+module-str = Microphone
+source "src/fw/Kconfig.template.log_level"
+
 endif # MIC

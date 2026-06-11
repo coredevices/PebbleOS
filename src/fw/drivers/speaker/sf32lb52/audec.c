@@ -10,6 +10,8 @@
 #include "pbl/services/system_task.h"
 #include "kernel/util/stop.h"
 
+PBL_LOG_MODULE_DEFINE(driver_speaker_sf32lb, CONFIG_DRIVER_SPEAKER_LOG_LEVEL);
+
 //AVDD 3V3 for obelix
 #define BSP_AVDD_V18_ENABLE     0
 #if BSP_AVDD_V18_ENABLE

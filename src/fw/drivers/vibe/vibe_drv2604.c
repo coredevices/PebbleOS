@@ -21,6 +21,8 @@
 
 #include <string.h>
 
+PBL_LOG_MODULE_DEFINE(driver_vibe_drv2604, CONFIG_DRIVER_VIBE_LOG_LEVEL);
+
 /* XXX: tune RATED_VOLTAGE? / OD_CLAMP? */
 
 #define DRV2604_STATUS        0x00

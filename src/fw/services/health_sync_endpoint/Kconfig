@@ -5,3 +5,11 @@ config SERVICE_HEALTH_SYNC_ENDPOINT
     bool "Health sync endpoint"
     help
       Health data sync endpoint.
+
+if SERVICE_HEALTH_SYNC_ENDPOINT
+
+module = SERVICE_HEALTH_SYNC_ENDPOINT
+module-str = Health sync endpoint
+source "src/fw/Kconfig.template.log_level"
+
+endif

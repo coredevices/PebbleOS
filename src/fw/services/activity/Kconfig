@@ -8,7 +8,7 @@ config SERVICE_ACTIVITY
 
 if SERVICE_ACTIVITY
 
-module = ACTIVITY
+module = SERVICE_ACTIVITY
 module-str = Activity
 source "src/fw/Kconfig.template.log_level"
 

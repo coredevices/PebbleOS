@@ -5,3 +5,11 @@ config SERVICE_COMPOSITOR
     bool "Compositor"
     help
       UI compositor and window transitions.
+
+if SERVICE_COMPOSITOR
+
+module = SERVICE_COMPOSITOR
+module-str = Compositor
+source "src/fw/Kconfig.template.log_level"
+
+endif

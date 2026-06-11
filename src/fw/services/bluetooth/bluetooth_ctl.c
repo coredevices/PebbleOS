@@ -26,6 +26,8 @@
 #include "pbl/services/bluetooth/ble_hrm.h"
 #include "system/logging.h"
 
+PBL_LOG_MODULE_DEFINE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
+
 static bool s_comm_initialized = false;
 static bool s_comm_airplane_mode_on = false;
 static bool s_comm_enabled = false;

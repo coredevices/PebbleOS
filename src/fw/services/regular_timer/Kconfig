@@ -5,3 +5,11 @@ config SERVICE_REGULAR_TIMER
     bool "Regular timer"
     help
       Periodic timer service (seconds/minutes ticks).
+
+if SERVICE_REGULAR_TIMER
+
+module = SERVICE_REGULAR_TIMER
+module-str = Regular timer
+source "src/fw/Kconfig.template.log_level"
+
+endif

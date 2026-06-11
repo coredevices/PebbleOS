@@ -16,6 +16,7 @@
 #include "pbl/services/activity/activity.h"
 #include "syscall/syscall_internal.h"
 #include "system/hexdump.h"
+#include "system/logging.h"
 #include "system/passert.h"
 #include "util/attributes.h"
 #include "util/math.h"
@@ -25,6 +26,8 @@
 #include "queue.h"
 
 #include <stddef.h>
+
+PBL_LOG_MODULE_DEFINE(service_hrm, CONFIG_SERVICE_HRM_LOG_LEVEL);
 
 #define HRM_DEBUG 0
 

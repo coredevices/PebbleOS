@@ -197,7 +197,7 @@ int pbl_log_get_bin_format(char* buffer, int buffer_len, const uint8_t log_level
 
 // Per-module compile-time log level and name. PBL_LOG_MODULE_DEFINE /
 // PBL_LOG_MODULE_DECLARE override these tentative definitions, e.g.
-// PBL_LOG_MODULE_DEFINE(activity, CONFIG_ACTIVITY_LOG_LEVEL) (see
+// PBL_LOG_MODULE_DEFINE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL) (see
 // Kconfig.template.log_level); level 0 selects DEFAULT_LOG_LEVEL.
 __attribute__((unused)) static const uint8_t _pbl_log_module_level;
 __attribute__((unused)) static const char *const _pbl_log_module_name;

@@ -10,6 +10,8 @@
 #include "system/logging.h"
 #include "system/passert.h"
 
+PBL_LOG_MODULE_DEFINE(driver_vibe_aw8623x, CONFIG_DRIVER_VIBE_LOG_LEVEL);
+
 #define AW8623X_PLAYCFG3 0x08U
 #define AW8623X_PLAYCFG3_BRK_EN (1U << 2U)
 #define AW8623X_PLAYCFG3_PLAY_MODE_CONT (2U << 0U)

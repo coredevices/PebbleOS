@@ -11,6 +11,8 @@
 
 #include <string.h>
 
+PBL_LOG_MODULE_DEFINE(service_poll_remote, CONFIG_SERVICE_POLL_REMOTE_LOG_LEVEL);
+
 /*
  * Private
  */

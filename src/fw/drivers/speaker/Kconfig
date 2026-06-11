@@ -23,4 +23,8 @@ config SPEAKER_QEMU
     help
       QEMU audio device backing the speaker for emulated builds.
 
+module = DRIVER_SPEAKER
+module-str = Speaker
+source "src/fw/Kconfig.template.log_level"
+
 endif # SPEAKER

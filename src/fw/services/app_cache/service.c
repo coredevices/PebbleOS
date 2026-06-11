@@ -25,6 +25,8 @@
 #include "util/time/time.h"
 #include "util/units.h"
 
+PBL_LOG_MODULE_DEFINE(service_app_cache, CONFIG_SERVICE_APP_CACHE_LOG_LEVEL);
+
 //! @file app_cache.c
 //! App Cache
 

@@ -5,3 +5,11 @@ config SERVICE_TICK_TIMER
     bool "Tick timer"
     help
       Tick-timer service (wall-clock tick events).
+
+if SERVICE_TICK_TIMER
+
+module = SERVICE_TICK_TIMER
+module-str = Tick timer
+source "src/fw/Kconfig.template.log_level"
+
+endif

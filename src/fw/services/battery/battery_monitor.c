@@ -14,6 +14,8 @@
 
 #include <stdint.h>
 
+PBL_LOG_MODULE_DEFINE(service_battery, CONFIG_SERVICE_BATTERY_LOG_LEVEL);
+
 // State machine stuff
 
 typedef void (*Action)(void);

@@ -23,4 +23,8 @@ config EXTI_QEMU
     help
       Support for the QEMU external interrupt peripheral.
 
+module = DRIVER_EXTI
+module-str = External Interrupt
+source "src/fw/Kconfig.template.log_level"
+
 endif # EXTI

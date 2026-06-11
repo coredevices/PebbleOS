@@ -44,7 +44,7 @@
 #include "pbl/services/activity/activity_insights.h"
 #include "pbl/services/activity/activity_private.h"
 
-PBL_LOG_MODULE_DEFINE(activity, CONFIG_ACTIVITY_LOG_LEVEL);
+PBL_LOG_MODULE_DEFINE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
 // Our globals
 static ActivityState s_activity_state;

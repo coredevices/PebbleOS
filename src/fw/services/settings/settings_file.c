@@ -15,6 +15,8 @@
 #include <string.h>
 #include <time.h>
 
+PBL_LOG_MODULE_DEFINE(service_settings, CONFIG_SERVICE_SETTINGS_LOG_LEVEL);
+
 // Callback for settings changes (used by settings_sync)
 static SettingsFileChangeCallback s_change_callback = NULL;
 
