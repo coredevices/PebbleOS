@@ -4,7 +4,7 @@ clar(ctx,
      sources_ant_glob = "src/libc/math/floor.c",
      test_sources_ant_glob = "test_floor.c",
      add_includes = ["src/libc"],
-     test_libs=['m'])
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob = "src/libc/math/log.c",
