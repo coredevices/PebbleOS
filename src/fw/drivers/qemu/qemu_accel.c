@@ -53,9 +53,7 @@
 
 #include <string.h>
 
-
-#define ACCEL_LOG_DEBUG(fmt, args...) PBL_LOG_D_DBG(LOG_DOMAIN_ACCEL, fmt, ## args)
-
+PBL_LOG_MODULE_DECLARE(imu, CONFIG_DRIVER_IMU_LOG_LEVEL);
 
 static bool s_initialized;
 static PebbleMutex * s_accel_mutex;
@@ -120,7 +118,7 @@ static void prv_timer_cb(void *data) {
   if (s_num_fifo_samples > 0) {
     AccelDriverSample sample;
     prv_construct_driver_sample(&sample);
-    ACCEL_LOG_DEBUG("Accel sample to manager: %d, %d, %d", sample.x, sample.y, sample.z);
+    PBL_LOG_VERBOSE("Accel sample to manager: %d, %d, %d", sample.x, sample.y, sample.z);
     accel_cb_new_sample(&sample);
   }
 
@@ -155,7 +153,7 @@ void qemu_accel_msg_callack(const uint8_t *data, uint32_t len) {
     PBL_LOG_ERR("Invalid packet received");
     return;
   }
-  ACCEL_LOG_DEBUG("Got accel msg from host: num samples: %d", hdr->num_samples);
+  PBL_LOG_VERBOSE("Got accel msg from host: num samples: %d", hdr->num_samples);
 
   // Copy the received samples into the s_rcv_buffer
 #if QEMU_ACCEL_RCV_BUFFER_SAMPLES < 256
@@ -171,7 +169,7 @@ void qemu_accel_msg_callack(const uint8_t *data, uint32_t len) {
       s_rcv_buffer[i].x = ntohs(hdr->samples[i].x);
       s_rcv_buffer[i].y = ntohs(hdr->samples[i].y);
       s_rcv_buffer[i].z = ntohs(hdr->samples[i].z);
-      ACCEL_LOG_DEBUG("  x,y,z from host: %d, %d, %d", s_rcv_buffer[i].x,
+      PBL_LOG_VERBOSE("  x,y,z from host: %d, %d, %d", s_rcv_buffer[i].x,
                       s_rcv_buffer[i].y, s_rcv_buffer[i].z);
     }
 

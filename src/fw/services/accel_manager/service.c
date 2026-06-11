@@ -333,7 +333,7 @@ static void prv_dispatch_data(bool post_event) {
       // Notify the subscriber that data is available
       state->event_posted = prv_call_data_callback(state);
 
-      ACCEL_LOG_DEBUG("full set of %d samples for session %p", state->num_samples, state);
+      PBL_LOG_VERBOSE("full set of %d samples for session %p", state->num_samples, state);
 
       if (!state->event_posted) {
         PBL_LOG_INFO("Failed to post accel event to task: 0x%x", (int) state->task);
