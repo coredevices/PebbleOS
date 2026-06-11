@@ -187,12 +187,12 @@ def _check_firmware_image_size(env, path):
     BYTES_PER_K = 1024
     firmware_size = os.path.getsize(path)
     if env.CONFIG_SOC_NRF52:
-        if env.VARIANT == "prf" and not env.IS_MFG:
+        if env.VARIANT == "prf" and not env.CONFIG_MFG:
             max_firmware_size = 512 * BYTES_PER_K
         else:
             max_firmware_size = (1024 - 32) * BYTES_PER_K
     elif env.CONFIG_SOC_SF32LB52:
-        if env.VARIANT == "prf" and not env.IS_MFG:
+        if env.VARIANT == "prf" and not env.CONFIG_MFG:
             max_firmware_size = 576 * BYTES_PER_K
         else:
             max_firmware_size = 3072 * BYTES_PER_K
@@ -211,7 +211,7 @@ def _check_firmware_image_size(env, path):
 
 
 def _is_pulse_everywhere(env):
-    return "PULSE_EVERYWHERE=1" in env["DEFINES"]
+    return bool(env.CONFIG_PULSE_EVERYWHERE)
 
 
 def _get_pulse_flash_tool(env, options):
