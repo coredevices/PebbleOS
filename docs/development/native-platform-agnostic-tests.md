@@ -93,6 +93,35 @@ include firmware headers that expect pblibc's symbols, and they compile against
 a host libc that provides its own versions of those symbols. The shim bridges
 the gap, but it is fragile and must be maintained as pblibc's symbol set grows.
 
+## Status: freestanding compilation has landed
+
+The migration described below is now implemented for the libc test groups. A
+host-boundary shim (`tests/freestanding/shim.c`) provides the handful of
+host-OS primitives pblibc does not (`malloc`/`free`, `abort`, `exit`, and a
+`write(2)`-backed console writer for clar), and is the only translation unit
+that sees the host libc. A `freestanding=True` option on the `clar()` waf
+helper compiles a test with `-nostdinc -isystem <pblibc> -isystem <compiler
+builtins>` (the builtin path is discovered at configure time, never hardcoded),
+drops the firmware include tree and the `m`/`pthread` libs, and routes clar
+through a sandbox-free `vsnprintf`+`write` print back-end. The fenv question was
+resolved by deletion: `fesetround(FE_TONEAREST)` was a no-op given the
+power-on default and the determinism flags, so it and `<fenv.h>` were removed.
+
+Eighteen libc suites now compile freestanding: the math (floor, log, pow,
+round), string, and printf groups. `test_ctype` and `test_strftime` stay hosted
+on purpose, the former because it uses the host ctype as its oracle.
+
+The `pblibc_private.h` rename shim is now retired for these tests. Its rename
+block is gated on `!defined(CLAR_FREESTANDING)`, which the freestanding group
+defines, so under `-nostdinc` the tests and the pblibc implementation sources
+both use the real symbol names (there is no host libc to collide with). For
+this to work pblibc's own headers must declare everything the tests call, so
+`<math.h>` gained the `pow` and `scalbn` declarations it was missing. The
+hosted group keeps the rename shim, which it still needs.
+
+What remains: a transitive-include sweep of the wider non-libc `tests/` tree and
+migrating any libc tests beyond math/string/printf.
+
 ## Next step: freestanding compilation against pblibc
 
 The proper fix is to compile host unit tests under `-nostdinc`, with the
