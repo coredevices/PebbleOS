@@ -163,11 +163,17 @@ for platform in ['obelix']:
                 override_includes=['dummy_board'],
                 platforms=[platform])
 
+# This test exercises round-display text flow (perimeter_for_display_round), so
+# it must build for a round platform. gabbro is the round test platform, which
+# maps to the getafix display: pull in display_getafix.c for the round
+# per-row data extent tables (g_gbitmap_data_row_infos et al.).
 clar(ctx,
-    sources_ant_glob=templated_graphics_draw_text_sources_ant_glob.format(depth_dir="8_bit"),
+    sources_ant_glob=templated_graphics_draw_text_sources_ant_glob.format(depth_dir="8_bit")
+                     + " src/fw/board/displays/display_getafix.c",
     test_sources_ant_glob='test_graphics_draw_text_flow.c',
     defines = ctx.env.test_image_defines,
-    override_includes=['dummy_board'])
+    override_includes=['dummy_board'],
+    platforms=['gabbro'])
 
 
 # All tests that are bit-depth agnostic should follow.

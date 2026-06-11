@@ -275,7 +275,6 @@ bld.env.BROKEN_TESTS = [
     # Crash (round-display segfault) and build (rect/round, platform) issues are
     # fixed; remaining failures are missing gabbro golden .pbi images that need
     # visual review before regeneration. Keep quarantined until goldens land.
-    'test_graphics_draw_text_flow.c',
     'test_gatt_service_changed_server.c',
     'test_gap_le_connect.c',
 ]
