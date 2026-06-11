@@ -6,3 +6,9 @@ config BOARD_FAMILY_NAME
 
 config QEMU_MACHINE
     default "pebble-emery"
+
+config HRM
+    default y
+
+config HRM_STUB
+    default y

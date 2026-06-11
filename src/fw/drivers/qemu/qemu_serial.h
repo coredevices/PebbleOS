@@ -25,6 +25,7 @@ typedef enum {
   QemuProtocol_TimeFormat = 9,
   QemuProtocol_TimelinePeek = 10,
   QemuProtocol_ContentSize = 11,
+  QemuProtocol_BLEHrmBridge = 12,
 } QemuProtocol;
 
 
@@ -112,6 +113,42 @@ typedef struct PACKED {
 _Static_assert(sizeof(PreferredContentSize) == sizeof(((QemuProtocolContentSizeHeader *)0)->size),
                "sizeof(PreferredContentSize) grew, need to update QemuContentSize in libpebble2 !");
 #endif
+
+// QemuProtocol_BLEHrmBridge
+typedef enum {
+  QemuBLEHrmBridgeMessage_HostReady = 1,
+  QemuBLEHrmBridgeMessage_ServiceState = 2,
+  QemuBLEHrmBridgeMessage_Measurement = 3,
+  QemuBLEHrmBridgeMessage_Subscription = 4,
+  QemuBLEHrmBridgeMessage_HostSample = 5,
+} QemuBLEHrmBridgeMessage;
+
+typedef struct PACKED {
+  uint8_t message;
+  uint8_t version;
+} QemuProtocolBLEHrmBridgeHeader;
+
+typedef struct PACKED {
+  QemuProtocolBLEHrmBridgeHeader header;
+  uint8_t enabled;
+} QemuProtocolBLEHrmBridgeServiceState;
+
+typedef struct PACKED {
+  QemuProtocolBLEHrmBridgeHeader header;
+  uint16_t bpm;
+  uint8_t is_on_wrist;
+} QemuProtocolBLEHrmBridgeMeasurement;
+
+typedef struct PACKED {
+  QemuProtocolBLEHrmBridgeHeader header;
+  uint8_t is_subscribed;
+} QemuProtocolBLEHrmBridgeSubscription;
+
+typedef struct PACKED {
+  QemuProtocolBLEHrmBridgeHeader header;
+  uint16_t bpm;
+  uint8_t is_on_wrist;
+} QemuProtocolBLEHrmBridgeHostSample;
 
 // ---------------------------------------------------------------------------------------
 // API

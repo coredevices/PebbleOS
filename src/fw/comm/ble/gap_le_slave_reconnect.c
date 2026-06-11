@@ -19,6 +19,10 @@
 
 #include <btutil/bt_uuid.h>
 
+#if defined(CONFIG_QEMU) && defined(CONFIG_HRM)
+#include <bluetooth/qemu_hrm_bridge.h>
+#endif
+
 //! Reference to the reconnection advertising job.
 //! bt_lock() needs to be taken before accessing this variable.
 static GAPLEAdvertisingJobRef s_reconnect_advert_job;
@@ -134,6 +138,10 @@ static void prv_evaluate(ReconnectType prev_type) {
   } else {
     prv_unschedule_adv_if_needed();
   }
+
+#if defined(CONFIG_QEMU) && defined(CONFIG_HRM)
+  bt_driver_qemu_hrm_bridge_set_advertising_enabled(cur_type == ReconnectType_BleHrm);
+#endif
 }
 
 static void prv_set_and_evaluate(bool *val, bool new_value) {
@@ -194,14 +202,19 @@ static void prv_hrm_reconnect_timeout_timer_callback(void *data) {
   launcher_task_add_callback(prv_hrm_reconnect_timeout_kernel_main_callback, NULL);
 }
 
-// -----------------------------------------------------------------------------
-void gap_le_slave_reconnect_hrm_restart(void) {
+static void prv_hrm_reconnect_timer_stop(void) {
+  if (regular_timer_is_scheduled(&s_hrm_reconnect_timer)) {
+    regular_timer_remove_callback(&s_hrm_reconnect_timer);
+  }
+}
+
+static void prv_hrm_reconnect_start(bool use_timeout) {
   bt_lock();
   {
     prv_set_and_evaluate(&s_is_hrm_reconnection_enabled, true);
 
-    // Always restart the timer:
-    if (!regular_timer_is_scheduled(&s_hrm_reconnect_timer)) {
+    prv_hrm_reconnect_timer_stop();
+    if (use_timeout) {
       s_hrm_reconnect_timer = (RegularTimerInfo) {
         .cb = prv_hrm_reconnect_timeout_timer_callback,
       };
@@ -212,14 +225,22 @@ void gap_le_slave_reconnect_hrm_restart(void) {
 }
 
 // -----------------------------------------------------------------------------
+void gap_le_slave_reconnect_hrm_start(void) {
+  prv_hrm_reconnect_start(false);
+}
+
+// -----------------------------------------------------------------------------
+void gap_le_slave_reconnect_hrm_restart(void) {
+  prv_hrm_reconnect_start(true);
+}
+
+// -----------------------------------------------------------------------------
 void gap_le_slave_reconnect_hrm_stop(void) {
   bt_lock();
   {
     prv_set_and_evaluate(&s_is_hrm_reconnection_enabled, false);
 
-    if (regular_timer_is_scheduled(&s_hrm_reconnect_timer)) {
-      regular_timer_remove_callback(&s_hrm_reconnect_timer);
-    }
+    prv_hrm_reconnect_timer_stop();
   }
   bt_unlock();
 }

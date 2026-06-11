@@ -8,6 +8,7 @@
 #include "drivers/speaker/qemu/audio.h"
 #include "drivers/backlight.h"
 #include "drivers/mic/qemu/mic_definitions.h"
+#include "drivers/hrm/stub.h"
 
 static UARTDeviceState s_dbg_uart_state = {};
 
@@ -88,6 +89,13 @@ static MicDevice MIC_DEVICE = {
   .channels = 1,
 };
 MicDevice * const MIC = &MIC_DEVICE;
+
+// HRM stub device
+static HRMDeviceState s_hrm_state;
+static HRMDevice s_hrm = {
+  .state = &s_hrm_state,
+};
+HRMDevice * const HRM = &s_hrm;
 
 // IRQ handler trampolines
 IRQ_MAP(UART2, uart_irq_handler, DBG_UART);

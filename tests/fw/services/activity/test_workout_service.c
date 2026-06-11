@@ -8,6 +8,7 @@
 #include "pbl/services/activity/workout_service.h"
 #include "pbl/services/hrm/hrm_manager.h"
 #include "process_management/app_install_types.h"
+#include "util/size.h"
 #include "util/time/time.h"
 #include "util/units.h"
 
@@ -120,6 +121,21 @@ void workout_utils_send_abandoned_workout_notification() {
   s_abandoned_workout_notification_sent = true;
 }
 
+static bool s_ble_hrm_workout_mode_enabled;
+static int s_ble_hrm_workout_mode_call_count;
+void ble_hrm_set_workout_mode(bool enabled) {
+  if (s_ble_hrm_workout_mode_enabled == enabled) {
+    return;
+  }
+  s_ble_hrm_workout_mode_enabled = enabled;
+  s_ble_hrm_workout_mode_call_count++;
+}
+
+static bool s_ble_hrm_workout_sharing_enabled;
+bool activity_prefs_ble_hrm_workout_sharing_is_enabled(void) {
+  return s_ble_hrm_workout_sharing_enabled;
+}
+
 // ---------------------------------------------------------------------------------------
 static void prv_inc_steps_and_put_event(int steps) {
   s_total_step_count += steps;
@@ -167,6 +183,9 @@ void test_workout_service__initialize(void) {
   s_hrm_expiration = 0;
   s_hrm_subscribed = false;
   s_abandoned_workout_notification_sent = false;
+  s_ble_hrm_workout_mode_enabled = false;
+  s_ble_hrm_workout_mode_call_count = 0;
+  s_ble_hrm_workout_sharing_enabled = true;
 
   const bool assert_all_unlocked = true;
   fake_mutex_reset(assert_all_unlocked);
@@ -236,6 +255,66 @@ void test_workout_service__basic(void) {
   cl_assert(workout_service_stop_workout());
   cl_assert(!workout_service_get_current_workout_info(&steps, &duration_s, &distance_m,
                                                       &bpm, &hr_zone));
+}
+
+// ---------------------------------------------------------------------------------------
+void test_workout_service__workouts_control_ble_hrm_mode_when_enabled(void) {
+  const ActivitySessionType types[] = {
+    ActivitySessionType_Run,
+    ActivitySessionType_Walk,
+    ActivitySessionType_Open,
+  };
+
+  for (unsigned int i = 0; i < ARRAY_LENGTH(types); i++) {
+    cl_assert(workout_service_start_workout(types[i]));
+
+    cl_assert_equal_i((int)(i * 2 + 1), s_ble_hrm_workout_mode_call_count);
+    cl_assert_equal_b(true, s_ble_hrm_workout_mode_enabled);
+
+    cl_assert(workout_service_stop_workout());
+
+    cl_assert_equal_i((int)(i * 2 + 2), s_ble_hrm_workout_mode_call_count);
+    cl_assert_equal_b(false, s_ble_hrm_workout_mode_enabled);
+  }
+}
+
+// ---------------------------------------------------------------------------------------
+void test_workout_service__workouts_do_not_enable_ble_hrm_mode_when_disabled(void) {
+  s_ble_hrm_workout_sharing_enabled = false;
+
+  cl_assert(workout_service_start_workout(ActivitySessionType_Run));
+  cl_assert(workout_service_stop_workout());
+
+  cl_assert(workout_service_start_workout(ActivitySessionType_Walk));
+  cl_assert(workout_service_stop_workout());
+
+  cl_assert_equal_i(0, s_ble_hrm_workout_mode_call_count);
+  cl_assert_equal_b(false, s_ble_hrm_workout_mode_enabled);
+}
+
+// ---------------------------------------------------------------------------------------
+void test_workout_service__active_workout_applies_ble_hrm_setting_changes(void) {
+  cl_assert(workout_service_start_workout(ActivitySessionType_Run));
+
+  cl_assert_equal_i(1, s_ble_hrm_workout_mode_call_count);
+  cl_assert_equal_b(true, s_ble_hrm_workout_mode_enabled);
+
+  s_ble_hrm_workout_sharing_enabled = false;
+  workout_service_handle_ble_hrm_workout_sharing_prefs_changed();
+
+  cl_assert_equal_i(2, s_ble_hrm_workout_mode_call_count);
+  cl_assert_equal_b(false, s_ble_hrm_workout_mode_enabled);
+
+  s_ble_hrm_workout_sharing_enabled = true;
+  workout_service_handle_ble_hrm_workout_sharing_prefs_changed();
+
+  cl_assert_equal_i(3, s_ble_hrm_workout_mode_call_count);
+  cl_assert_equal_b(true, s_ble_hrm_workout_mode_enabled);
+
+  cl_assert(workout_service_stop_workout());
+
+  cl_assert_equal_i(4, s_ble_hrm_workout_mode_call_count);
+  cl_assert_equal_b(false, s_ble_hrm_workout_mode_enabled);
 }
 
 // ---------------------------------------------------------------------------------------

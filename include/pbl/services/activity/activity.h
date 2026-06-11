@@ -424,6 +424,12 @@ bool activity_prefs_hrm_activity_tracking_is_enabled(void);
 
 //! Enable or disable HR tracking during detected activities (walk/run)
 void activity_prefs_set_hrm_activity_tracking_enabled(bool enabled);
+
+//! Return true if BLE HRM sharing during workouts is enabled
+bool activity_prefs_ble_hrm_workout_sharing_is_enabled(void);
+
+//! Enable or disable BLE HRM sharing during workouts
+void activity_prefs_set_ble_hrm_workout_sharing_enabled(bool enabled);
 #endif
 
 //! Get the current and (optionally) historical values for a given metric. The caller passes

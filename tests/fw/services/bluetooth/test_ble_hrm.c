@@ -26,10 +26,17 @@
 #include "stubs_logging.h"
 #include "stubs_passert.h"
 
+static int s_gap_le_slave_reconnect_hrm_start_call_count;
+void gap_le_slave_reconnect_hrm_start(void) {
+  ++s_gap_le_slave_reconnect_hrm_start_call_count;
+}
+
 void gap_le_slave_reconnect_hrm_restart(void) {
 }
 
+static int s_gap_le_slave_reconnect_hrm_stop_call_count;
 void gap_le_slave_reconnect_hrm_stop(void) {
+  ++s_gap_le_slave_reconnect_hrm_stop_call_count;
 }
 
 static bool s_activity_prefs_heart_rate_is_enabled;
@@ -192,6 +199,8 @@ void test_ble_hrm__initialize(void) {
   s_bt_driver_hrm_service_handle_measurement_call_count = 0;
   s_ble_hrm_push_sharing_request_window_call_count = 0;
   s_ble_hrm_push_reminder_popup_call_count = 0;
+  s_gap_le_slave_reconnect_hrm_start_call_count = 0;
+  s_gap_le_slave_reconnect_hrm_stop_call_count = 0;
   s_last_session_ref = ~0;
   s_next_session_ref = 1234;
   s_last_disconnected = (BTDeviceInternal) {};
@@ -491,6 +500,37 @@ void test_ble_hrm__handle_activity_pref_hrm_changes(void) {
   ble_hrm_handle_activity_prefs_heart_rate_is_enabled(true);
   cl_assert_equal_i(3, s_bt_driver_hrm_service_enable_call_count);
   cl_assert_equal_b(true, s_bt_driver_hrm_service_is_enabled);
+}
+
+void test_ble_hrm__workout_mode_shares_without_permission_prompt(void) {
+  s_activity_prefs_heart_rate_is_enabled = false;
+  s_bt_driver_hrm_service_is_enabled = false;
+
+  ble_hrm_set_workout_mode(true);
+  cl_assert_equal_i(1, s_gap_le_slave_reconnect_hrm_start_call_count);
+  cl_assert_equal_i(1, s_bt_driver_hrm_service_enable_call_count);
+  cl_assert_equal_b(true, s_bt_driver_hrm_service_is_enabled);
+  cl_assert_equal_b(true, ble_hrm_is_supported_and_enabled());
+
+  bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
+  cl_assert_equal_p(NULL, s_last_sharing_request);
+  cl_assert_equal_b(true, ble_hrm_is_sharing_to_connection(&s_conn_a));
+  cl_assert_equal_b(true, ble_hrm_is_sharing());
+  prv_assert_event_service_subscribed(true);
+
+  prv_put_and_assert_hrm_event(HRMEvent_BPM, 80, HRMQuality_Excellent,
+                               true /* expect bt driver cb */, true /* expected_is_on_wrist */);
+  cl_assert_equal_i(1, s_last_num_permitted_devices);
+  cl_assert_equal_m(&s_last_permitted_devices[0], s_device_a, sizeof(*s_device_a));
+
+  ble_hrm_set_workout_mode(false);
+  cl_assert_equal_i(1, s_gap_le_slave_reconnect_hrm_stop_call_count);
+  cl_assert_equal_i(2, s_bt_driver_hrm_service_enable_call_count);
+  cl_assert_equal_b(false, s_bt_driver_hrm_service_is_enabled);
+  cl_assert_equal_b(false, ble_hrm_is_sharing_to_connection(&s_conn_a));
+  cl_assert_equal_b(false, ble_hrm_is_sharing());
+  prv_assert_event_service_subscribed(false);
+  prv_assert_last_disconnected(s_device_a);
 }
 
 void test_ble_hrm__popup_after_long_continuous_use(void) {

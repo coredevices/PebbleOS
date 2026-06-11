@@ -37,6 +37,7 @@ typedef struct BLEHRMSharingRequest {
 
 static bool s_ble_hrm_is_inited;
 static int s_ble_hrm_subscription_count;
+static bool s_ble_hrm_workout_mode;
 static RegularTimerInfo s_ble_hrm_timer;
 static struct {
   EventServiceInfo service_info;
@@ -64,9 +65,20 @@ static bool prv_hw_and_sw_supports_hrm(void) {
           sys_hrm_manager_is_hrm_present());
 }
 
+static bool prv_permission_allows_sharing(HrmSharingPermission permission, bool workout_mode) {
+  if (workout_mode) {
+    return (permission != HrmSharingPermission_Declined);
+  }
+  return (activity_prefs_heart_rate_is_enabled() && permission == HrmSharingPermission_Granted);
+}
+
+static bool prv_permission_allows_sharing_now(HrmSharingPermission permission) {
+  return prv_permission_allows_sharing(permission, s_ble_hrm_workout_mode);
+}
+
 bool ble_hrm_is_supported_and_enabled(void) {
   return (prv_hw_and_sw_supports_hrm() &&
-          activity_prefs_heart_rate_is_enabled());
+          (activity_prefs_heart_rate_is_enabled() || s_ble_hrm_workout_mode));
 }
 
 static void prv_reset_subscriptions(void);
@@ -118,15 +130,16 @@ void ble_hrm_handle_activity_prefs_heart_rate_is_enabled(bool is_enabled) {
   }
   PBL_LOG_INFO("BLE HRM sharing prefs updated: is_enabled=%u", is_enabled);
 
-  if (!is_enabled) {
+  if (!is_enabled && !s_ble_hrm_workout_mode) {
     prv_reset_subscriptions();
   }
-  bt_driver_hrm_service_enable(is_enabled);
+  bt_driver_hrm_service_enable(is_enabled || s_ble_hrm_workout_mode);
 }
 
 static bool prv_is_sharing(const GAPLEConnection *const connection) {
+  const HrmSharingPermission permission = prv_get_permission_by_device(&connection->device);
   return (connection->hrm_service_is_subscribed &&
-          (prv_get_permission_by_device(&connection->device) == HrmSharingPermission_Granted));
+          prv_permission_allows_sharing_now(permission));
 }
 
 bool ble_hrm_is_sharing_to_connection(const GAPLEConnection *const connection) {
@@ -368,12 +381,16 @@ static void prv_update_subscription(GAPLEConnection *connection, bool is_subscri
         prv_get_permission_by_device(&connection->device);
     switch (current_permission) {
       case HrmSharingPermission_Unknown:
-        prv_request_sharing_permission(connection);
+        if (!s_ble_hrm_workout_mode) {
+          prv_request_sharing_permission(connection);
+        }
         break;
       case HrmSharingPermission_Granted:
-        // Stop advertising the with the HR service in the adv payload.
-        // Note: we're assuming this is the only device we were advertising for.
-        gap_le_slave_reconnect_hrm_stop();
+        if (!s_ble_hrm_workout_mode) {
+          // Stop advertising the with the HR service in the adv payload.
+          // Note: we're assuming this is the only device we were advertising for.
+          gap_le_slave_reconnect_hrm_stop();
+        }
         break;
       default:
         break;
@@ -435,7 +452,11 @@ void ble_hrm_handle_disconnection(GAPLEConnection *connection) {
     // Certain phone apps require the HR device to advertise with the HR service in the adv payload
     // in order to make reconnection work, regardless of whether the Pebble mobile app already takes
     // care of reconnecting... Therefore, advertise with the HR service for up to 60 seconds:
-    gap_le_slave_reconnect_hrm_restart();
+    if (s_ble_hrm_workout_mode) {
+      gap_le_slave_reconnect_hrm_start();
+    } else {
+      gap_le_slave_reconnect_hrm_restart();
+    }
   }
   prv_update_subscription(connection, false /* is_subscribed */);
 
@@ -457,6 +478,61 @@ void ble_hrm_deinit(void) {
 // For unit testing
 RegularTimerInfo *ble_hrm_timer(void) {
   return &s_ble_hrm_timer;
+}
+
+static bool prv_is_sharing_with_workout_mode(const GAPLEConnection *connection, bool workout_mode) {
+  const HrmSharingPermission permission = prv_get_permission_by_device(&connection->device);
+  return (connection->hrm_service_is_subscribed &&
+          prv_permission_allows_sharing(permission, workout_mode));
+}
+
+static void prv_workout_mode_update_connection_cb(GAPLEConnection *connection, void *data) {
+  const bool previous_workout_mode = *(bool *)data;
+  const bool prev_is_sharing = prv_is_sharing_with_workout_mode(connection, previous_workout_mode);
+  prv_update_is_sharing(connection, prev_is_sharing);
+
+  if (!s_ble_hrm_workout_mode &&
+      connection->hrm_service_is_subscribed &&
+      !prv_permission_allows_sharing_now(prv_get_permission_by_device(&connection->device))) {
+    prv_disconnect_to_kill_subscription(connection);
+  }
+}
+
+void ble_hrm_set_workout_mode(bool enabled) {
+  if (!prv_hw_and_sw_supports_hrm()) {
+    return;
+  }
+
+  PBL_LOG_INFO("BLE HRM workout mode: enabled=%u", enabled);
+
+  bt_lock();
+
+  if (enabled == s_ble_hrm_workout_mode) {
+    bt_unlock();
+    return;
+  }
+
+  const bool previous_workout_mode = s_ble_hrm_workout_mode;
+  s_ble_hrm_workout_mode = enabled;
+  gap_le_connection_for_each(prv_workout_mode_update_connection_cb, (void *)&previous_workout_mode);
+
+  if (enabled) {
+    // Start persistent HRM advertising so external devices can discover us for the full workout.
+    gap_le_slave_reconnect_hrm_start();
+
+    // Enable the HRM service
+    bt_driver_hrm_service_enable(true);
+  } else {
+    // Stop advertising the HRM service
+    gap_le_slave_reconnect_hrm_stop();
+
+    // If regular HRM sharing is disabled and no sharing is active, disable the HRM service
+    if (!activity_prefs_heart_rate_is_enabled() && s_ble_hrm_subscription_count == 0) {
+      bt_driver_hrm_service_enable(false);
+    }
+  }
+
+  bt_unlock();
 }
 
 #endif

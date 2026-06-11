@@ -26,6 +26,9 @@ void gap_le_slave_reconnect_start(void);
 
 #ifdef CONFIG_HRM
 
+//! Start advertising with a payload containing the Heart Rate Service UUID until explicitly stopped.
+void gap_le_slave_reconnect_hrm_start(void);
+
 //! Start advertising for reconnection using a payload containing the Heart Rate Service UUID.
 //! It will automatically stop after 60 seconds, in case gap_le_slave_reconnect_hrm_stop() is not
 //! called sooner.
