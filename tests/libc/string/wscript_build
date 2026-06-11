@@ -3,33 +3,41 @@ from waftools.pebble_test import clar
 clar(ctx,
      sources_ant_glob = "src/libc/string/memcmp.c",
      test_sources_ant_glob = "test_memcmp.c",
-     add_includes = ["src/libc"])
+     add_includes = ["src/libc"],
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob = "src/libc/string/memcpy.c",
      test_sources_ant_glob = "test_memcpy.c",
-     add_includes = ["src/libc"])
+     add_includes = ["src/libc"],
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob = "src/libc/string/memset.c",
      test_sources_ant_glob = "test_memset.c",
-     add_includes = ["src/libc"])
+     add_includes = ["src/libc"],
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob = "src/libc/string/memchr.c",
      test_sources_ant_glob = "test_memchr.c",
-     add_includes = ["src/libc"])
+     add_includes = ["src/libc"],
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob = "src/libc/string/atoi.c" \
-                        " src/libc/string/strtol.c",
+                        " src/libc/string/strtol.c" \
+                        " src/libc/ctype_ptr.c",
      test_sources_ant_glob = "test_atoi.c",
-     add_includes = ["src/libc"])
+     add_includes = ["src/libc"],
+     freestanding=True)
 
 clar(ctx,
-     sources_ant_glob = "src/libc/string/strtol.c",
+     sources_ant_glob = "src/libc/string/strtol.c" \
+                        " src/libc/ctype_ptr.c",
      test_sources_ant_glob = "test_strtol.c",
-     add_includes = ["src/libc"])
+     add_includes = ["src/libc"],
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob = "src/libc/string/strcat.c" \
@@ -38,12 +46,14 @@ clar(ctx,
                         " src/libc/string/memset.c" \
                         " src/libc/string/strcpy.c",
      test_sources_ant_glob = "test_strcat.c",
-     add_includes = ["src/libc"])
+     add_includes = ["src/libc"],
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob = "src/libc/string/strlen.c",
      test_sources_ant_glob = "test_strlen.c",
-     add_includes = ["src/libc"])
+     add_includes = ["src/libc"],
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob = "src/libc/string/strlen.c" \
@@ -51,26 +61,30 @@ clar(ctx,
                         " src/libc/string/memset.c" \
                         " src/libc/string/strcpy.c",
      test_sources_ant_glob = "test_strcpy.c",
-     add_includes = ["src/libc"])
+     add_includes = ["src/libc"],
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob = "src/libc/string/strlen.c" \
                         " src/libc/string/memcmp.c" \
                         " src/libc/string/strcmp.c",
      test_sources_ant_glob = "test_strcmp.c",
-     add_includes = ["src/libc"])
+     add_includes = ["src/libc"],
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob = "src/libc/string/strlen.c" \
                         " src/libc/string/memchr.c" \
                         " src/libc/string/strchr.c",
      test_sources_ant_glob = "test_strchr.c",
-     add_includes = ["src/libc"])
+     add_includes = ["src/libc"],
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob = "src/libc/string/strspn.c",
      test_sources_ant_glob = "test_strspn.c",
-     add_includes = ["src/libc"])
+     add_includes = ["src/libc"],
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob = "src/libc/string/strlen.c" \
@@ -78,7 +92,8 @@ clar(ctx,
                         " src/libc/string/strstr.c" \
                         " src/libc/string/strcmp.c",
      test_sources_ant_glob = "test_strstr.c",
-     add_includes = ["src/libc"])
+     add_includes = ["src/libc"],
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob = "src/libc/ctype_ptr.c",
