@@ -225,6 +225,18 @@ status_t settings_file_rewrite_filtered(
   PBL_LOG_INFO("FIRM-1649: settings_file_rewrite_filtered start file=%s",
                file->name);
 
+  // One reusable buffer for key+val per record; sized for the worst case.
+  // Avoids two malloc/free pairs per record over what can be thousands of
+  // records on a large persist file.
+  uint8_t *kv_buf = kernel_malloc(SETTINGS_KEY_MAX_LEN + SETTINGS_VAL_MAX_LEN);
+  char *name = kernel_strdup(file->name);
+  if (!kv_buf || !name) {
+    PBL_LOG_ERR("Could not allocate buffers to compact settings file %s", file->name);
+    kernel_free(kv_buf);
+    kernel_free(name);
+    return E_OUT_OF_MEMORY;
+  }
+
   // A 1 MiB grow can take many seconds of pure flash erase + write time. Pause
   // the task watchdog rather than letting it trip and kick App Throttling.
   task_watchdog_pause(60);
@@ -236,16 +248,13 @@ status_t settings_file_rewrite_filtered(
   if (status < 0) {
     PBL_LOG_ERR("Could not open temporary file to compact settings file. Error %"PRIi32".",
             status);
+    kernel_free(kv_buf);
+    kernel_free(name);
     task_watchdog_resume();
     return status;
   }
 
   settings_raw_iter_begin(&new_file.iter);
-
-  // One reusable buffer for key+val per record; sized for the worst case.
-  // Avoids two malloc/free pairs per record over what can be thousands of
-  // records on a large persist file.
-  uint8_t *kv_buf = kernel_malloc(SETTINGS_KEY_MAX_LEN + SETTINGS_VAL_MAX_LEN);
 
   for (settings_raw_iter_begin(&file->iter); !settings_raw_iter_end(&file->iter);
       settings_raw_iter_next(&file->iter)) {
@@ -288,7 +297,6 @@ status_t settings_file_rewrite_filtered(
   // Before the close succeeds, if we reboot, we will just end up reading the
   // old file. After the close suceeds, we will end up reading the new
   // (compacted) file.
-  char *name = kernel_strdup(new_file.name);
   int alloc_used_space = new_file.alloc_used_space;
   int min_alloc_used_space = new_file.min_alloc_used_space;
   settings_file_close(&new_file);
@@ -700,12 +708,18 @@ static bool prv_rewrite_cb(SettingsFile *file, SettingsRecordInfo *info,
 }
 status_t settings_file_rewrite(SettingsFile *file,
                                SettingsFileRewriteCallback cb, void *context) {
+  char *name = kernel_strdup(file->name);
+  if (!name) {
+    PBL_LOG_ERR("Could not allocate name to rewrite settings file %s", file->name);
+    return E_OUT_OF_MEMORY;
+  }
   SettingsFile new_file;
   status_t status = prv_open(&new_file, file->name,
                              OP_FLAG_OVERWRITE | OP_FLAG_READ,
                              file->max_used_space, file->alloc_used_space,
                              file->min_alloc_used_space);
   if (status < 0) {
+    kernel_free(name);
     return status;
   }
   RewriteCbContext cb_ctx = (RewriteCbContext) {
@@ -719,7 +733,6 @@ status_t settings_file_rewrite(SettingsFile *file,
   // Before the close succeeds, if we reboot, we will just end up reading the
   // old file. After the close suceeds, we will end up reading the new
   // (compacted) file.
-  char *name = kernel_strdup(new_file.name);
   int alloc_used_space = new_file.alloc_used_space;
   int min_alloc_used_space = new_file.min_alloc_used_space;
   settings_file_close(&new_file);
