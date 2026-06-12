@@ -105,6 +105,11 @@ void test_gap_le_slave_reconnect__hrm_advertises_heart_rate_service(void) {
   cl_assert_equal_i(
       flags, GAP_LE_AD_FLAGS_GEN_DISCOVERABLE_MASK | GAP_LE_AD_FLAGS_BR_EDR_NOT_SUPPORTED_MASK);
 
+  gap_le_set_advertising_disabled();
+  gap_le_advert_handle_connect_as_slave();
+  cl_assert_equal_b(true, gap_le_is_advertising_enabled());
+  gap_le_assert_advertising_interval(GAPLEAdvertisingInterval_Short);
+
   Scan_Response_Data_t scan_resp_data_out;
   cl_assert_equal_i(0, gap_le_get_scan_response_data(&scan_resp_data_out));
 

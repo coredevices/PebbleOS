@@ -126,7 +126,9 @@ static void prv_evaluate(ReconnectType prev_type) {
 
     s_reconnect_advert_job = gap_le_advert_schedule(
         ad, advert_terms, sizeof(advert_terms) / sizeof(GAPLEAdvertisingJobTerm),
-        prv_advert_job_unscheduled_callback, NULL, GAPLEAdvertisingJobTagReconnection);
+        prv_advert_job_unscheduled_callback, NULL,
+        use_hrm_payload ? GAPLEAdvertisingJobTagHrmReconnection :
+                          GAPLEAdvertisingJobTagReconnection);
 
     if (use_hrm_payload) {
       ble_ad_destroy(ad);
