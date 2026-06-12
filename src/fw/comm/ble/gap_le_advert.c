@@ -96,7 +96,7 @@ static RegularTimerInfo s_cycle_regular_timer;
 
 static bool s_is_advertising;
 
-static bool s_is_connected;
+static uint8_t s_slave_connection_count;
 
 //! Cache of the last advertising transmission power in dBm. A cache is kept in
 //! case the API call fails, for example because Bluetooth is disabled.
@@ -133,8 +133,48 @@ static const char * prv_string_for_debug_tag(GAPLEAdvertisingJobTag tag) {
   switch (tag) {
     case GAPLEAdvertisingJobTagDiscovery: return "DIS";
     case GAPLEAdvertisingJobTagReconnection: return "RCN";
+    case GAPLEAdvertisingJobTagHrmReconnection: return "HRM";
     default: return "?";
   }
+}
+
+static bool prv_can_air_job_while_connected(const GAPLEAdvertisingJob *job) {
+  return (job && job->tag == GAPLEAdvertisingJobTagHrmReconnection);
+}
+
+static bool prv_has_slave_connection(void) {
+  return (s_slave_connection_count > 0);
+}
+
+static bool prv_can_air_job(const GAPLEAdvertisingJob *job) {
+  return (job && (!prv_has_slave_connection() || prv_can_air_job_while_connected(job)));
+}
+
+static GAPLEAdvertisingJob *prv_pick_next_job(void) {
+  if (!s_jobs) {
+    return NULL;
+  }
+
+  if (!prv_has_slave_connection()) {
+    return s_jobs;
+  }
+
+  ListNode *node = &s_jobs->node;
+  while (node) {
+    GAPLEAdvertisingJob *job = (GAPLEAdvertisingJob *)node;
+    if (prv_can_air_job_while_connected(job)) {
+      return job;
+    }
+
+    node = node->next;
+    if (node == &s_jobs->node) {
+      break;
+    }
+  }
+
+  // Keep a stable current job marker for callers that inspect the job list,
+  // even though no scheduled job is allowed to advertise while connected.
+  return s_jobs;
 }
 
 // -----------------------------------------------------------------------------
@@ -253,15 +293,17 @@ static void prv_cycle_timer_callback(void *unused) {
       goto unlock;
     }
 
-    if (s_is_connected) {
-      // Don't do anything if connected
+    if (prv_has_slave_connection() && !prv_can_air_job_while_connected(s_current)) {
+      prv_perform_next_job(false);
       goto unlock;
     }
 
     GAPLEAdvertisingJob *job = s_current;
 
-    // Set to next job (round-robin)
-    s_jobs = (GAPLEAdvertisingJob *) job->node.next;
+    if (!prv_has_slave_connection()) {
+      // Set to next job (round-robin)
+      s_jobs = (GAPLEAdvertisingJob *) job->node.next;
+    }
 
     prv_increment_elapsed_time_for_job(&job, &force_update);
 
@@ -300,13 +342,15 @@ static void prv_timer_stop(void) {
 //! connectability mode has changed.
 static void prv_perform_next_job(bool force_refresh) {
   // Pick the next job:
-  GAPLEAdvertisingJob *next = s_jobs;
+  GAPLEAdvertisingJob *next = prv_pick_next_job();
+  const bool can_air_next = prv_can_air_job(next);
 
   // s_is_dangling is checked here, in case the next job happens to have been allocated at the
   // same address as the old s_current:
   const bool is_same_job = (next == s_current);
 
-  if (is_same_job && !force_refresh && s_is_advertising) {
+  if (is_same_job && !force_refresh &&
+      ((can_air_next && s_is_advertising) || (!can_air_next && !s_is_advertising))) {
     // No change in job to give air time, keep going.
     return;
   }
@@ -334,6 +378,12 @@ static void prv_perform_next_job(bool force_refresh) {
     if (!s_current) {
       // No current job, start timer:
       prv_timer_start();
+    }
+
+    if (!can_air_next) {
+      PBL_LOG_DBG("Skip Ad job %s while connected", prv_string_for_debug_tag(next->tag));
+      s_current = next;
+      return;
     }
 
     if (s_current_ad_data != &next->payload) {
@@ -548,6 +598,7 @@ void gap_le_advert_init(void) {
     };
 
     s_is_advertising = false;
+    s_slave_connection_count = 0;
     s_gap_le_advert_is_initialized = true;
   }
 unlock:
@@ -584,11 +635,14 @@ void gap_le_advert_handle_connect_as_slave(void) {
     //
     // We don't instantly cycle the advertisements because our LE client
     // handler (kernel_le_client.c) will unschedule jobs accordingly and we
-    // want to avoid unnecessary refreshes of the advertising state
+    // want to avoid unnecessary refreshes of the advertising state. HRM
+    // reconnect advertising is an exception; cycle computers need to see it
+    // while the phone link remains up.
     s_is_advertising = false;
     prv_analytics_stop_timers();
 
-    s_is_connected = true;
+    ++s_slave_connection_count;
+    prv_perform_next_job(true /* force refresh, connectability mode changed */);
   }
 unlock:
   bt_unlock();
@@ -602,7 +656,9 @@ void gap_le_advert_handle_disconnect_as_slave(void) {
       goto unlock;
     }
 
-    s_is_connected = false;
+    if (s_slave_connection_count > 0) {
+      --s_slave_connection_count;
+    }
 
     // Call prv_perform_next_job() to trigger refreshing the configuration of
     // the controller: it can advertise connectable packets again.
@@ -626,7 +682,7 @@ void bt_driver_handle_host_resynced(void) {
     s_current_ad_data = NULL;
     s_is_advertising = false;
 
-    if (s_current && !s_is_connected) {
+    if (s_jobs) {
       prv_perform_next_job(true /* force refresh */);
     }
   }

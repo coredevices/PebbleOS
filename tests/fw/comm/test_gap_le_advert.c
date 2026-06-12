@@ -73,10 +73,6 @@ void test_gap_le_advert__initialize(void) {
   s_unscheduled_job = NULL;
   s_unscheduled_completed = false;
 
-  // This bypasses the work-around for the CC2564 advertising bug, that pauses the round-robinning
-  // through scheduled advertisment jobs:
-  s_is_connected_as_slave = true;
-
   regular_timer_init();
   gap_le_advert_init();
 
@@ -620,7 +616,6 @@ void test_gap_le_advert__continue_after_slave_connection(void) {
 
   // Simulate stopping advertising because of inbound connection:
   gap_le_set_advertising_disabled();
-  s_is_connected_as_slave = true;
 
   // Call the connection handler:
   gap_le_advert_handle_connect_as_slave();
@@ -638,6 +633,109 @@ void test_gap_le_advert__continue_after_slave_connection(void) {
   cl_assert_equal_b(gap_le_is_advertising_enabled(), true);
 
   free(ad);
+}
+
+void test_gap_le_advert__hrm_reconnection_continues_after_slave_connection(void) {
+  BLEAdData *ad = create_ad("hrm", NULL);
+  GAPLEAdvertisingJobTerm advert_terms[] = {
+    {
+      .interval = GAPLEAdvertisingInterval_Short,
+      .duration_secs = 2,
+    },
+    {
+      .interval = GAPLEAdvertisingInterval_Long,
+      .duration_secs = GAPLE_ADVERTISING_DURATION_INFINITE,
+    },
+  };
+  GAPLEAdvertisingJobRef job;
+  job = gap_le_advert_schedule(
+      ad, advert_terms, sizeof(advert_terms) / sizeof(GAPLEAdvertisingJobTerm),
+      unscheduled_callback, s_unscheduled_cb_data, GAPLEAdvertisingJobTagHrmReconnection);
+  cl_assert(job);
+  cl_assert_equal_b(gap_le_is_advertising_enabled(), true);
+  assert_ad_data("hrm");
+  gap_le_assert_advertising_interval(GAPLEAdvertisingInterval_Short);
+
+  gap_le_set_advertising_disabled();
+  gap_le_advert_handle_connect_as_slave();
+
+  cl_assert_equal_b(gap_le_is_advertising_enabled(), true);
+  assert_ad_data("hrm");
+  gap_le_assert_advertising_interval(GAPLEAdvertisingInterval_Short);
+
+  regular_timer_fire_seconds(2);
+  cl_assert_equal_b(gap_le_is_advertising_enabled(), true);
+  assert_ad_data("hrm");
+  gap_le_assert_advertising_interval(GAPLEAdvertisingInterval_Long);
+
+  free(ad);
+}
+
+void test_gap_le_advert__only_hrm_reconnection_advertises_while_connected(void) {
+  GAPLEAdvertisingJobTerm advert_term = {
+    .interval = GAPLEAdvertisingInterval_Short,
+    .duration_secs = GAPLE_ADVERTISING_DURATION_INFINITE,
+  };
+
+  BLEAdData *normal_ad = create_ad("normal", NULL);
+  GAPLEAdvertisingJobRef normal_job;
+  normal_job = gap_le_advert_schedule(
+      normal_ad, &advert_term, sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm),
+      unscheduled_callback, s_unscheduled_cb_data, GAPLEAdvertisingJobTagReconnection);
+  cl_assert(normal_job);
+  cl_assert_equal_b(gap_le_is_advertising_enabled(), true);
+  assert_ad_data("normal");
+
+  gap_le_set_advertising_disabled();
+  gap_le_advert_handle_connect_as_slave();
+  cl_assert_equal_b(gap_le_is_advertising_enabled(), false);
+
+  BLEAdData *hrm_ad = create_ad("hrm", NULL);
+  GAPLEAdvertisingJobRef hrm_job;
+  hrm_job = gap_le_advert_schedule(
+      hrm_ad, &advert_term, sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm),
+      unscheduled_callback, s_unscheduled_cb_data, GAPLEAdvertisingJobTagHrmReconnection);
+  cl_assert(hrm_job);
+  cl_assert_equal_b(gap_le_is_advertising_enabled(), true);
+  assert_ad_data("hrm");
+
+  gap_le_advert_unschedule(hrm_job);
+  cl_assert_equal_b(gap_le_is_advertising_enabled(), false);
+
+  gap_le_advert_handle_disconnect_as_slave();
+  cl_assert_equal_b(gap_le_is_advertising_enabled(), true);
+  assert_ad_data("normal");
+
+  free(normal_ad);
+  free(hrm_ad);
+}
+
+void test_gap_le_advert__non_hrm_waits_until_all_slave_connections_disconnect(void) {
+  GAPLEAdvertisingJobTerm advert_term = {
+    .interval = GAPLEAdvertisingInterval_Short,
+    .duration_secs = GAPLE_ADVERTISING_DURATION_INFINITE,
+  };
+
+  BLEAdData *normal_ad = create_ad("normal", NULL);
+  GAPLEAdvertisingJobRef normal_job;
+  normal_job = gap_le_advert_schedule(
+      normal_ad, &advert_term, sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm),
+      unscheduled_callback, s_unscheduled_cb_data, GAPLEAdvertisingJobTagReconnection);
+  cl_assert(normal_job);
+
+  gap_le_set_advertising_disabled();
+  gap_le_advert_handle_connect_as_slave();
+  cl_assert_equal_b(gap_le_is_advertising_enabled(), false);
+
+  gap_le_advert_handle_connect_as_slave();
+  gap_le_advert_handle_disconnect_as_slave();
+  cl_assert_equal_b(gap_le_is_advertising_enabled(), false);
+
+  gap_le_advert_handle_disconnect_as_slave();
+  cl_assert_equal_b(gap_le_is_advertising_enabled(), true);
+  assert_ad_data("normal");
+
+  free(normal_ad);
 }
 
 void test_gap_le_advert__unschedule_job_types(void) {
