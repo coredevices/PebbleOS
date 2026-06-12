@@ -122,6 +122,54 @@ config PLATFORM_GABBRO
 endchoice
 
 choice
+    prompt "Emulated watch color"
+    depends on QEMU
+    help
+      Watch color reported by manufacturing info on the emulator.
+
+config QEMU_WATCH_COLOR_PR2_BLACK_20
+    bool "Black (20mm)"
+    depends on PLATFORM_GABBRO
+
+config QEMU_WATCH_COLOR_PR2_SILVER_14
+    bool "Silver (14mm)"
+    depends on PLATFORM_GABBRO
+
+config QEMU_WATCH_COLOR_PR2_SILVER_20
+    bool "Silver (20mm)"
+    depends on PLATFORM_GABBRO
+
+config QEMU_WATCH_COLOR_PR2_GOLD_14
+    bool "Gold (14mm)"
+    depends on PLATFORM_GABBRO
+
+config QEMU_WATCH_COLOR_PT2_BLACK_GREY
+    bool "Black/Grey"
+    depends on PLATFORM_EMERY
+
+config QEMU_WATCH_COLOR_PT2_BLACK_RED
+    bool "Black/Red"
+    depends on PLATFORM_EMERY
+
+config QEMU_WATCH_COLOR_PT2_SILVER_BLUE
+    bool "Silver/Blue"
+    depends on PLATFORM_EMERY
+
+config QEMU_WATCH_COLOR_PT2_SILVER_GREY
+    bool "Silver/Grey"
+    depends on PLATFORM_EMERY
+
+config QEMU_WATCH_COLOR_P2D_BLACK
+    bool "Black"
+    depends on PLATFORM_FLINT
+
+config QEMU_WATCH_COLOR_P2D_WHITE
+    bool "White"
+    depends on PLATFORM_FLINT
+
+endchoice
+
+choice
     prompt "Screen color depth"
 
 config SCREEN_COLOR_DEPTH_BITS_1
