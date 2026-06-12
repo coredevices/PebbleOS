@@ -1,12 +1,17 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+soc_sources = [
+    'init.c',
+    'freertos.c',
+]
+
+if bld.env.CONFIG_HIBERNATE:
+    soc_sources.append('hibernate.c')
+
 bld.objects(
     name='soc',
-    source=[
-        'init.c',
-        'freertos.c',
-    ],
+    source=soc_sources,
     use=[
         'fw_includes',
         'fw_services',

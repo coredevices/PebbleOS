@@ -18,6 +18,13 @@ config SOC_QEMU
 
 endchoice
 
+config HIBERNATE
+    bool "Enable hibernate mode"
+    default y if BOARD_FAMILY_OBELIX
+    help
+      Use deep hibernate mode when entering standby. This provides
+      the lowest power consumption but requires platform support.
+
 config SOC
     string
     default "NRF52" if SOC_NRF52

@@ -12,9 +12,19 @@
 #include "system/reset.h"
 #include "system/passert.h"
 
+#ifdef CONFIG_HIBERNATE
+extern void enter_hibernate(void);
+#endif
+
 #ifdef CONFIG_PMIC
 static NORETURN prv_enter_standby(void) {
   pmic_power_off();
+
+  PBL_CROAK("We were not shut down!");
+}
+#elif defined(CONFIG_HIBERNATE)
+static NORETURN prv_enter_standby(void) {
+  enter_hibernate();
 
   PBL_CROAK("We were not shut down!");
 }
