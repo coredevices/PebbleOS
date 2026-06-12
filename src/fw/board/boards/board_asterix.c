@@ -185,6 +185,23 @@ static const I2CSlavePort I2C_SLAVE_LSM6D = {
 
 I2CSlavePort *const I2C_LSM6D = &I2C_SLAVE_LSM6D;
 
+// Gyroscope half of the LSM6DSO. Axis mapping mirrors BOARD_CONFIG_ACCEL so
+// both halves report in the same board frame.
+static const Lsm6dsoGyroConfig s_lsm6dso_gyro_config = {
+    .axis_map = {
+        [AXIS_X] = 1,
+        [AXIS_Y] = 0,
+        [AXIS_Z] = 2,
+    },
+    .axis_dir = {
+        [AXIS_X] = 1,
+        [AXIS_Y] = 1,
+        [AXIS_Z] = 1,
+    },
+};
+
+const Lsm6dsoGyroConfig *const LSM6DSO_GYRO = &s_lsm6dso_gyro_config;
+
 IRQ_MAP_NRFX(I2S, nrfx_i2s_0_irq_handler);
 
 IRQ_MAP_NRFX(PDM, NRFX_PDM_INST_HANDLER_GET(0));

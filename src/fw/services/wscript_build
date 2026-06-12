@@ -64,6 +64,8 @@ if bld.env.CONFIG_SERVICE_FIRMWARE_UPDATE:
     bld.recurse('firmware_update')
 if bld.env.CONFIG_SERVICE_GET_BYTES:
     bld.recurse('get_bytes')
+if bld.env.CONFIG_SERVICE_GYRO_MANAGER:
+    bld.recurse('gyro_manager')
 if bld.env.CONFIG_SERVICE_HEALTH_SYNC_ENDPOINT:
     bld.recurse('health_sync_endpoint')
 if bld.env.CONFIG_SERVICE_HRM:

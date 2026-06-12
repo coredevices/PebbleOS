@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Dave Bortz
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_GYRO_MANAGER
+    bool "Gyroscope manager"
+    depends on GYRO
+    default GYRO
+    help
+      Gyroscope data subscription manager.
+
+if SERVICE_GYRO_MANAGER
+
+module = SERVICE_GYRO_MANAGER
+module-str = Gyroscope manager
+source "src/fw/Kconfig.template.log_level"
+
+endif

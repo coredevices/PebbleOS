@@ -59,6 +59,9 @@ extern void command_battery_charge_option(const char*);
 extern void command_print_battery_status(void);
 extern void command_compass_peek(void);
 extern void command_accel_peek(void);
+#ifdef CONFIG_SERVICE_GYRO_MANAGER
+extern void command_gyro_peek(void);
+#endif
 extern void command_accel_num_samples(char *num_samples);
 extern void command_accel_status(void);
 extern void command_accel_softreset(void);
@@ -390,6 +393,9 @@ static const Command s_prompt_commands[] = {
   { "compass peek", command_compass_peek, 0 },
 #endif
   { "accel read", command_accel_peek, 0 },
+#ifdef CONFIG_SERVICE_GYRO_MANAGER
+  { "gyro read", command_gyro_peek, 0 },
+#endif
 
   { "als read", command_als_read, 0},
 

@@ -4,6 +4,7 @@
 #pragma once
 
 #include "applib/accel_service_private.h"
+#include "applib/gyro_service_private.h"
 #include "applib/app_focus_service.h"
 #include "applib/app_inbox.h"
 #include "applib/app_message/app_message_internal.h"
@@ -108,6 +109,10 @@ GContext* app_state_get_graphics_context(void);
 EventServiceInfo* app_state_get_event_service_state(void);
 
 AccelServiceState* app_state_get_accel_state(void);
+
+#ifdef CONFIG_GYRO
+GyroServiceState* app_state_get_gyro_state(void);
+#endif
 
 CompassServiceConfig **app_state_get_compass_config(void);
 

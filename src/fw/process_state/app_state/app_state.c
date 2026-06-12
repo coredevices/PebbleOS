@@ -61,6 +61,10 @@ typedef struct {
 
   AccelServiceState accel_state;
 
+#ifdef CONFIG_GYRO
+  GyroServiceState gyro_state;
+#endif
+
   CompassServiceConfig *compass_config;
 
   PluginServiceState plugin_service_state;
@@ -198,6 +202,10 @@ NOINLINE void app_state_init(void) {
 
   accel_service_state_init(app_state_get_accel_state());
 
+#ifdef CONFIG_GYRO
+  gyro_service_state_init(app_state_get_gyro_state());
+#endif
+
   plugin_service_state_init(app_state_get_plugin_service());
 
   battery_state_service_state_init(app_state_get_battery_state_service_state());
@@ -300,6 +308,12 @@ void* app_state_get_user_data(void) {
 AccelServiceState* app_state_get_accel_state(void) {
   return &s_app_state_ptr->accel_state;
 }
+
+#ifdef CONFIG_GYRO
+GyroServiceState* app_state_get_gyro_state(void) {
+  return &s_app_state_ptr->gyro_state;
+}
+#endif
 
 CompassServiceConfig **app_state_get_compass_config(void) {
   return &s_app_state_ptr->compass_config;

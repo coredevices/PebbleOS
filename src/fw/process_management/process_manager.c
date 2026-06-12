@@ -8,6 +8,7 @@
 
 #include "applib/app_logging.h"
 #include "applib/accel_service_private.h"
+#include "applib/gyro_service_private.h"
 #include "applib/platform.h"
 #include "applib/ui/dialogs/dialog.h"
 #include "applib/ui/dialogs/expandable_dialog.h"
@@ -535,6 +536,9 @@ void process_manager_process_cleanup(PebbleTask task) {
   // Shutdown services that may be running. Do this before we destory the task and clear the queue
   // just in case other services are still in flight.
   accel_service_cleanup_task_session(task);
+#ifdef CONFIG_GYRO
+  gyro_service_cleanup_task_session(task);
+#endif
   animation_service_cleanup(task);
   persist_service_client_close(&context->app_md->uuid);
   event_reset_from_process_queue(task);

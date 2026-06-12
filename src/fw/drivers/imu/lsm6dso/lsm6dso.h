@@ -43,3 +43,14 @@ void lsm6dso_power_down(void);
 
 //! Retrieve a snapshot of sensor diagnostics for telemetry.
 void lsm6dso_get_diagnostics(Lsm6dsoDiagnostics *diagnostics);
+
+//! Board configuration for the LSM6DSO gyroscope (CONFIG_GYRO_LSM6DSO).
+//! Maps board axes (indexed by IMUCoordinateAxis) to hardware axes, mirroring
+//! the accelerometer's axes_offsets/axes_inverts configuration.
+typedef struct {
+  uint8_t axis_map[3];
+  int8_t axis_dir[3];
+} Lsm6dsoGyroConfig;
+
+//! Provided by the board when CONFIG_GYRO_LSM6DSO is enabled.
+extern const Lsm6dsoGyroConfig *const LSM6DSO_GYRO;

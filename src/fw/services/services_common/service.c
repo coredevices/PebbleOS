@@ -18,6 +18,7 @@
 #include "pbl/services/comm_session/session.h"
 #include "pbl/services/cron.h"
 #include "pbl/services/firmware_update.h"
+#include "pbl/services/gyro_manager.h"
 #include "pbl/services/hrm/hrm_manager.h"
 #include "pbl/services/light.h"
 #include "pbl/services/poll_remote.h"
@@ -34,6 +35,9 @@ void services_common_init(void) {
   put_bytes_init();
   poll_remote_init();
   accel_manager_init();
+#ifdef CONFIG_SERVICE_GYRO_MANAGER
+  gyro_manager_init();
+#endif
   light_init();
 
   cron_service_init();
@@ -63,6 +67,12 @@ static struct ServiceRunLevelSetting s_runlevel_settings[] = {
     .set_enable_fn = accel_manager_enable,
     .enable_mask = R_Stationary | R_FirmwareUpdate | R_Normal,
   },
+#ifdef CONFIG_SERVICE_GYRO_MANAGER
+  {
+    .set_enable_fn = gyro_manager_enable,
+    .enable_mask = R_Normal,
+  },
+#endif
   {
     .set_enable_fn = light_allow,
     .enable_mask = R_LowPower | R_FirmwareUpdate | R_Normal,

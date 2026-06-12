@@ -29,6 +29,17 @@ config ACCEL_LSM6DSO
 
 endchoice
 
+config GYRO
+    bool
+
+config GYRO_LSM6DSO
+    bool "ST LSM6DSO gyroscope"
+    select GYRO
+    help
+      Support for the gyroscope in the ST LSM6DSO IMU. Can be enabled
+      together with ACCEL_LSM6DSO (one chip serving both roles) or on its
+      own when a different chip provides the accelerometer.
+
 menuconfig MAG
     bool "Magnetometer"
     help
