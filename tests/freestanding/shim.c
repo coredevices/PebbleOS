@@ -30,6 +30,17 @@
 #include <string.h>
 #include <unistd.h>
 
+/* Platform allocation-size query — needed for a free-compatible realloc. */
+#if defined(__APPLE__)
+#  include <malloc/malloc.h>
+#  define _host_malloc_size(p) malloc_size(p)
+#elif defined(__linux__)
+#  include <malloc.h>
+#  define _host_malloc_size(p) malloc_usable_size(p)
+#else
+#  error "Unsupported platform: cannot determine allocation size for realloc"
+#endif
+
 /* ---- output helper ------------------------------------------------------- */
 
 /*
@@ -67,56 +78,29 @@ void *calloc(size_t nmemb, size_t size) {
 }
 
 /*
- * realloc — size-header implementation.
+ * realloc — malloc/memcpy/free implementation using the platform allocator's
+ * own size query so that all pointers are fully compatible with bare free().
  *
- * realloc needs to know the old allocation's size to copy the right number
- * of bytes.  We achieve this by storing a size_t header immediately before
- * the user pointer:
- *
- *   [ size_t bytes_pad_to_align | user data ... ]
- *   ^                              ^
- *   raw malloc'd block             returned to caller
- *
- * This is safe because the ONLY caller of realloc in the clar harness is
- * clar_category_add_to_list, which:
- *   - first call: passes NULL (we treat as malloc)
- *   - subsequent calls: passes the pointer returned by our previous realloc
- *
- * The names array is a global static and is never freed, so there is no
- * mismatch between our size-header pointer and bare free.
+ * The old size-header trick (_REALLOC_ALIGN prefix) broke as soon as product
+ * code called realloc() and then later called free() on the returned pointer,
+ * because free() saw an interior pointer rather than the raw malloc block.
+ * Using malloc_size (macOS) / malloc_usable_size (Linux) avoids the header
+ * entirely: every returned pointer is a plain malloc'd block that free() can
+ * release without any special handling.
  */
-#define _REALLOC_ALIGN \
-  (sizeof(size_t) > sizeof(void *) ? sizeof(size_t) : sizeof(void *))
-
-static void *_realloc_alloc(size_t bytes) {
-  char *raw = malloc(_REALLOC_ALIGN + bytes);
-  if (!raw) return NULL;
-  *(size_t *)(void *)raw = bytes;
-  return raw + _REALLOC_ALIGN;
-}
-
-static void _realloc_free(void *ptr) {
-  free((char *)ptr - _REALLOC_ALIGN);
-}
-
-static size_t _realloc_size(const void *ptr) {
-  const char *raw = (const char *)ptr - _REALLOC_ALIGN;
-  return *(const size_t *)(const void *)raw;
-}
-
 void *realloc(void *ptr, size_t size) {
   if (ptr == NULL) {
-    return _realloc_alloc(size);
+    return malloc(size);
   }
   if (size == 0) {
-    _realloc_free(ptr);
+    free(ptr);
     return NULL;
   }
-  void *new_ptr = _realloc_alloc(size);
+  void *new_ptr = malloc(size);
   if (!new_ptr) return NULL;
-  size_t old_size = _realloc_size(ptr);
+  size_t old_size = _host_malloc_size(ptr);
   memcpy(new_ptr, ptr, old_size < size ? old_size : size);
-  _realloc_free(ptr);
+  free(ptr);
   return new_ptr;
 }
 
