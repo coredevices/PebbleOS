@@ -6,10 +6,11 @@ syscfg.vals:
     MCU_HFCLK_SOURCE: HFINT
     # Values measured to be found _okay_ when doing firmware update related
     # activites. They may need further tuning.
-    MSYS_1_BLOCK_COUNT: 35
+    MSYS_1_BLOCK_COUNT: 50
     MSYS_1_BLOCK_SIZE: 304
     BLE_SM_IO_CAP: 'BLE_HS_IO_DISPLAY_YESNO'
     BLE_SM_SC_ONLY: 1
     BLE_SM_LEGACY: 0
     BLE_SM_MITM: 1
     BLE_SM_LVL: 4
+    BLE_MAX_CONNECTIONS: 2
