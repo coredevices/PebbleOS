@@ -266,7 +266,7 @@ static void prv_trigger_cassette_icon_switch(GBitmap *bitmap, bool animated);
 static void prv_update_cassette_icon(MusicAppData *data, bool animated);
 
 static void prv_do_haptic_feedback_vibe(MusicAppData *data) {
-  vibe_score_do_vibe(data->score);
+  vibe_score_do_vibe_with_strength(data->score, music_app_prefs_get_long_press_vibe_intensity());
 }
 
 static void prv_handle_volume_icon_timer(void *context) {
@@ -486,7 +486,7 @@ static void prv_update_ui_state_skipping(MusicAppData *data, bool animated) {
                                      &data->icon_skip_forward, animated);
   action_bar_layer_set_icon_animated(&data->action_bar, BUTTON_BACKWARD,
                                      &data->icon_skip_backward, animated);
-  const bool show_volume_controls = shell_prefs_get_music_show_volume_controls();
+  const bool show_volume_controls = music_app_prefs_get_show_volume_controls_enabled();
   if (music_get_playback_state() == MusicPlayStatePaused) {
     action_bar_layer_set_icon_animated(&data->action_bar, BUTTON_ID_SELECT, &data->icon_play,
                                        animated);
@@ -571,7 +571,7 @@ static void prv_volume_click_handler(ClickRecognizerRef recognizer, void *contex
 }
 
 static void prv_ellipsis_click_handler(ClickRecognizerRef recognizer, void *context) {
-  if (!shell_prefs_get_music_show_volume_controls()) {
+  if (!music_app_prefs_get_show_volume_controls_enabled()) {
     music_command_send(MusicCommandTogglePlayPause);
     return;
   }
@@ -621,7 +621,7 @@ static void prv_volume_long_click_end_handler(ClickRecognizerRef recognizer, voi
 }
 
 static void prv_play_pause_long_click_start_handler(ClickRecognizerRef recognizer, void *context) {
-  if (!shell_prefs_get_music_show_volume_controls()) {
+  if (!music_app_prefs_get_show_volume_controls_enabled()) {
     return;
   }
 
@@ -637,7 +637,7 @@ static void prv_play_pause_long_click_end_handler(ClickRecognizerRef recognizer,
 static void prv_skipping_click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_UP, prv_skip_click_handler);
   window_single_click_subscribe(BUTTON_ID_DOWN, prv_skip_click_handler);
-  const bool show_volume_controls = shell_prefs_get_music_show_volume_controls();
+  const bool show_volume_controls = music_app_prefs_get_show_volume_controls_enabled();
   if (music_get_playback_state() == MusicPlayStatePaused) {
     window_single_click_subscribe(BUTTON_ID_SELECT, prv_play_pause_click_handler);
   } else if (show_volume_controls) {
@@ -664,7 +664,7 @@ static void prv_volume_click_config_provider(void *context) {
 }
 
 static void prv_update_layout(MusicAppData *data) {
-  const bool show_progress_bar = shell_prefs_get_music_show_progress_bar();
+  const bool show_progress_bar = music_app_prefs_get_show_progress_bar_enabled();
   bool hide_layer = !show_progress_bar || !music_is_progress_reporting_supported();
   layer_set_hidden(&data->track_pos_bar.layer, hide_layer);
   layer_set_hidden(&data->position_text_layer.layer, hide_layer);
@@ -738,7 +738,7 @@ static void prv_pop_no_music_window(MusicAppData *data) {
 }
 
 static void prv_update_now_playing(MusicAppData *data) {
-  const bool show_progress_bar = shell_prefs_get_music_show_progress_bar();
+  const bool show_progress_bar = music_app_prefs_get_show_progress_bar_enabled();
   layer_set_hidden((Layer *)&data->track_pos_bar,
                    !show_progress_bar || !music_is_progress_reporting_supported());
 
@@ -784,7 +784,7 @@ static void prv_update_track_progress(MusicAppData *data) {
   if (data->pause_track_pos_updates) {
     return;
   }
-  if (!shell_prefs_get_music_show_progress_bar()) {
+  if (!music_app_prefs_get_show_progress_bar_enabled()) {
     return;
   }
   if (!music_is_progress_reporting_supported()) {
@@ -815,7 +815,7 @@ static void prv_handle_tick_time(struct tm *time, TimeUnits units_changed) {
 }
 
 static void prv_set_pos_update_timer(MusicAppData* data, MusicPlayState playstate) {
-  if (!music_is_progress_reporting_supported() || !shell_prefs_get_music_show_progress_bar()) {
+  if (!music_is_progress_reporting_supported() || !music_app_prefs_get_show_progress_bar_enabled()) {
     tick_timer_service_unsubscribe();
     return;
   }

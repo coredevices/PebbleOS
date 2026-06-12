@@ -9,6 +9,7 @@
 #include "shell/prefs_private.h"
 #include "shell/system_theme.h"
 
+#include "apps/system_app_ids.h"
 #include "apps/system/timeline/timeline.h"
 #include "apps/system/toggle/quiet_time.h"
 #include "board/board.h"
@@ -255,13 +256,19 @@ static GColor s_theme_highlight_color = GColorVividCerulean;
 
 #define PREF_KEY_MENU_SCROLL_WRAP_AROUND "menuScrollWrapAround"
 #define PREF_KEY_MENU_SCROLL_VIBE_BEHAVIOR "menuScrollVibeBehavior"
-#define PREF_KEY_MUSIC_SHOW_VOLUME_CONTROLS "musicShowVolumeControls"
-#define PREF_KEY_MUSIC_SHOW_PROGRESS_BAR "musicShowProgressBar"
 
 static bool s_menu_scroll_wrap_around = false;
 static MenuScrollVibeBehavior s_menu_scroll_vibe_behavior = MenuScrollNoVibe;
+
+#define PREF_KEY_MUSIC_SHOW_VOLUME_CONTROLS "musicShowVolumeControls"
+#define PREF_KEY_MUSIC_SHOW_PROGRESS_BAR "musicShowProgressBar"
+#define PREF_KEY_MUSIC_PRIORITIZE_WHEN_PLAYING "musicPrioritizeWhenPlaying"
+#define PREF_KEY_MUSIC_LONG_PRESS_VIBE_INTENSITY "musicLongPressVibeIntensity"
+
 static bool s_music_show_volume_controls = true;
 static bool s_music_show_progress_bar = true;
+static bool s_music_prioritize_when_playing = true;
+static uint8_t s_music_long_press_vibe_intensity = 100;
 
 // ============================================================================================
 // Handlers for each pref that validate the new setting and store the new value in our globals.
@@ -697,6 +704,32 @@ static bool prv_set_s_settings_dbs_compacted_v1(bool *done) {
   return true;
 }
 
+static bool prv_set_s_music_show_volume_controls(bool *enabled) {
+  s_music_show_volume_controls = *enabled;
+  return true;
+}
+
+static bool prv_set_s_music_show_progress_bar(bool *enabled) {
+  s_music_show_progress_bar = *enabled;
+  return true;
+}
+
+static bool prv_set_s_music_prioritize_when_playing(bool *enabled) {
+  s_music_prioritize_when_playing = *enabled;
+  if (!s_music_prioritize_when_playing) {
+    app_install_unmark_prioritized(APP_ID_MUSIC);
+  }
+  return true;
+}
+
+static bool prv_set_s_music_long_press_vibe_intensity(uint8_t *intensity) {
+  if (*intensity > 100) {
+    return false;
+  }
+  s_music_long_press_vibe_intensity = *intensity;
+  return true;
+}
+
 #ifdef CONFIG_APP_SCALING
 static bool prv_set_s_legacy_app_render_mode(uint8_t *mode) {
   if (*mode >= LegacyAppRenderModeCount) {
@@ -762,16 +795,6 @@ static bool prv_set_s_menu_scroll_vibe_behavior(MenuScrollVibeBehavior *new_beha
   return true;
 }
 
-static bool prv_set_s_music_show_volume_controls(bool *enabled) {
-  s_music_show_volume_controls = *enabled;
-  return true;
-}
-
-static bool prv_set_s_music_show_progress_bar(bool *enabled) {
-  s_music_show_progress_bar = *enabled;
-  return true;
-}
-  
 // ------------------------------------------------------------------------------------
 // Table of all prefs
 typedef bool (*PrefSetHandler)(const void *value, size_t val_len);
@@ -1853,6 +1876,22 @@ void shell_prefs_set_settings_dbs_compacted_v1(bool done) {
   prv_pref_set(PREF_KEY_SETTINGS_DBS_COMPACTED_V1, &done, sizeof(done));
 }
 
+bool music_app_prefs_get_show_volume_controls_enabled(void) {
+  return s_music_show_volume_controls;
+}
+
+bool music_app_prefs_get_show_progress_bar_enabled(void) {
+  return s_music_show_progress_bar;
+}
+
+bool music_app_prefs_get_prioritize_when_playing_enabled(void) {
+  return s_music_prioritize_when_playing;
+}
+
+uint8_t music_app_prefs_get_long_press_vibe_intensity(void) {
+  return s_music_long_press_vibe_intensity;
+}
+
 #ifdef CONFIG_APP_SCALING
 LegacyAppRenderMode shell_prefs_get_legacy_app_render_mode(void) {
   return (LegacyAppRenderMode)s_legacy_app_render_mode;
@@ -1918,20 +1957,4 @@ void pbl_analytics_external_collect_settings(void) {
   PBL_ANALYTICS_SET_UNSIGNED(settings_motion_sensitivity, shell_prefs_get_motion_sensitivity());
   PBL_ANALYTICS_SET_UNSIGNED(settings_backlight_intensity_pct, backlight_get_intensity());
   PBL_ANALYTICS_SET_UNSIGNED(settings_backlight_timeout_s, backlight_get_timeout_ms() / 1000);
-}
-
-bool shell_prefs_get_music_show_volume_controls(void) {
-  return s_music_show_volume_controls;
-}
-
-void shell_prefs_set_music_show_volume_controls(bool enable) {
-  prv_pref_set(PREF_KEY_MUSIC_SHOW_VOLUME_CONTROLS, &enable, sizeof(enable));
-}
-
-bool shell_prefs_get_music_show_progress_bar(void) {
-  return s_music_show_progress_bar;
-}
-
-void shell_prefs_set_music_show_progress_bar(bool enable) {
-  prv_pref_set(PREF_KEY_MUSIC_SHOW_PROGRESS_BAR, &enable, sizeof(enable));
 }
