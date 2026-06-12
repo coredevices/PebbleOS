@@ -495,7 +495,13 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
       ppogatt_create();
     }
 
-    gap_le_slave_reconnect_stop();
+    int active_count = 0;
+    for (PhoneSlot s = 0; s < MAX_PHONE_CONNECTIONS; s++) {
+      if (s_phone_slots[s].active) active_count++;
+    }
+    if (active_count >= MAX_PHONE_CONNECTIONS) {
+      gap_le_slave_reconnect_stop();
+    }
     gatt_client_discovery_discover_all(&device);
 
   } else {
