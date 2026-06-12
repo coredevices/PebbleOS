@@ -43,9 +43,9 @@ const uint32_t LIGHT_FADE_TIME_MS = 500;
 const uint8_t LIGHT_FADE_STEPS = 20;
 
 // breathing cycle timing
-const uint32_t BREATHE_FADE_TIME_MS = 750;
+const uint32_t BREATHE_FADE_TIME_MS = 500;
 const uint8_t BREATHE_FADE_STEPS = 20;
-const uint32_t BREATHE_HOLD_TIME_MS = 750;
+const uint32_t BREATHE_HOLD_TIME_MS = 500;
 const uint32_t BREATHE_OFF_TIME_MS = 2000;
 
 /*
@@ -160,10 +160,11 @@ static void prv_breathe_timer_callback(void *data) {
     case LIGHT_STATE_BREATHE_FADE_IN:
       s_breathe_step++;
       if (s_breathe_step >= BREATHE_FADE_STEPS) {
+        prv_change_brightness(s_breathe_target_intensity);
         prv_change_state(LIGHT_STATE_BREATHE_HOLD);
       } else {
         uint8_t brightness =
-            (uint8_t)((uint16_t)s_breathe_target_intensity * s_breathe_step / BREATHE_FADE_STEPS);
+            (uint8_t)((uint16_t)s_breathe_target_intensity * s_breathe_step / (BREATHE_FADE_STEPS - 1));
         prv_change_brightness(brightness);
         new_timer_start(s_timer_id, BREATHE_FADE_TIME_MS / BREATHE_FADE_STEPS,
                         prv_breathe_timer_callback, NULL, 0);
@@ -175,11 +176,12 @@ static void prv_breathe_timer_callback(void *data) {
     case LIGHT_STATE_BREATHE_FADE_OUT:
       s_breathe_step++;
       if (s_breathe_step >= BREATHE_FADE_STEPS) {
+        prv_change_brightness(0);
         prv_change_state(LIGHT_STATE_BREATHE_OFF);
       } else {
         uint8_t brightness =
             (uint8_t)((uint16_t)s_breathe_target_intensity *
-                      (BREATHE_FADE_STEPS - s_breathe_step) / BREATHE_FADE_STEPS);
+                      (BREATHE_FADE_STEPS - 1 - s_breathe_step) / (BREATHE_FADE_STEPS - 1));
         prv_change_brightness(brightness);
         new_timer_start(s_timer_id, BREATHE_FADE_TIME_MS / BREATHE_FADE_STEPS,
                         prv_breathe_timer_callback, NULL, 0);
@@ -332,6 +334,7 @@ static void prv_change_state(BacklightState new_state) {
       break;
     case LIGHT_STATE_BREATHE_FADE_OUT:
       s_breathe_step = 0;
+      new_brightness = s_current_brightness;
       new_timer_start(s_timer_id, BREATHE_FADE_TIME_MS / BREATHE_FADE_STEPS,
                       prv_breathe_timer_callback, NULL, 0);
       break;
