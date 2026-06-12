@@ -146,6 +146,7 @@ BatteryChargeState battery_get_charge_state(void) {
 
 // Setup
 ////////////////////////////////////
+
 void test_battery_ui_fsm__initialize(void) {
   prv_set_state(PowerGood);
 
@@ -160,6 +161,8 @@ void test_battery_ui_fsm__initialize(void) {
   s_shutdown_charging = false;
   s_is_charging = false;
 
+  light_enable(false);
+  stub_timer_reset_all();
   charging_set_blink_when_full_enabled(true);
   charging_set_vibe_when_full_enabled(true);
 
@@ -277,7 +280,7 @@ void test_battery_ui_fsm__skip_first_warning_when_next_is_close(void) {
   // If the first warning would fire at a battery level already within
   // BATTERY_WARNING_MIN_HOURS_HEADROOM (3h) of the next threshold, the
   // gray warning is skipped so the user doesn't get contradictory daypart
-  // messages (e.g. "Powered 'til tomorrow" followed by "Powered 'til tonight").
+  // messages (e.g. "Powered 'til tomorrow" followed shortly by "Powered 'til tonight").
   PreciseBatteryChargeState nop = prv_make_state(50, false, false);
   // 14h remaining is within 3h of the 12h red threshold -> gray should be skipped.
   PreciseBatteryChargeState warning_14h =
@@ -303,7 +306,8 @@ void test_battery_ui_fsm__honor_dnd(void) {
                                 battery_curve_get_percent_remaining(18), false, false);
   s_dnd_on = true;
   prv_change_state(charging);
-  cl_assert(s_modal_onscreen && s_modal_charging);
+  cl_assert(s_modal_onscreen);
+  cl_assert(s_modal_charging);
   cl_assert_equal_i(s_vibe_count, 0);
 
   // With DND off, another charging event shouldn't vibe since we didn't update
@@ -315,13 +319,15 @@ void test_battery_ui_fsm__honor_dnd(void) {
   prv_change_state(nop);
 
   prv_change_state(charging);
-  cl_assert(s_modal_onscreen && s_modal_charging);
+  cl_assert(s_modal_onscreen);
+  cl_assert(s_modal_charging);
   cl_assert_equal_i(s_vibe_count, 1);
 
   // Same for warnings
   s_dnd_on = true;
   prv_change_state(warning);
-  cl_assert(s_modal_onscreen && s_modal_percent);
+  cl_assert(s_modal_onscreen);
+  cl_assert(s_modal_percent);
   cl_assert_equal_i(s_vibe_count, 1);
 
   s_dnd_on = false;
@@ -330,23 +336,8 @@ void test_battery_ui_fsm__honor_dnd(void) {
 
   prv_change_state(nop);
   prv_change_state(warning);
-  cl_assert(s_modal_onscreen && s_modal_percent);
-  cl_assert_equal_i(s_vibe_count, 2);
-}
-
-void test_battery_ui_fsm__vibe_on_charge_complete_default(void) {
-  PreciseBatteryChargeState charging = prv_make_state(50, true, true),
-                            fully_charged = prv_make_state(100, false, true);
-
-  s_dnd_on = false;
-  // Charging starts
-  prv_change_state(charging);
-  cl_assert(s_modal_onscreen && s_modal_charging);
-  cl_assert_equal_i(s_vibe_count, 1);
-
-  // Charging completes — vibe fires by default
-  prv_change_state(fully_charged);
-  cl_assert(s_modal_onscreen && !s_modal_charging);
+  cl_assert(s_modal_onscreen);
+  cl_assert(s_modal_percent);
   cl_assert_equal_i(s_vibe_count, 2);
 }
 
@@ -356,12 +347,20 @@ void test_battery_ui_fsm__vibe_on_charge_complete(void) {
                             nop = prv_make_state(50, false, false);
 
   charging_set_vibe_when_full_enabled(true);
+
+  // Charging starts
   prv_change_state(charging);
+  cl_assert(s_modal_onscreen);
+  cl_assert(s_modal_charging);
   cl_assert_equal_i(s_vibe_count, 1);
 
+  // Charging completes — vibe fires
   prv_change_state(fully_charged);
+  cl_assert(s_modal_onscreen);
+  cl_assert(!s_modal_charging);
   cl_assert_equal_i(s_vibe_count, 2);
 
+  // Unplugged — no additional vibe
   prv_change_state(nop);
   cl_assert_equal_i(s_vibe_count, 2);
 }
@@ -374,6 +373,22 @@ void test_battery_ui_fsm__vibe_disabled_on_charge_complete(void) {
   prv_change_state(charging);
   cl_assert_equal_i(s_vibe_count, 1);
 
+  prv_change_state(fully_charged);
+  cl_assert_equal_i(s_vibe_count, 1);
+}
+
+void test_battery_ui_fsm__vibe_on_charge_complete_ignores_dnd(void) {
+  PreciseBatteryChargeState charging = prv_make_state(50, true, true),
+                            fully_charged = prv_make_state(100, false, true);
+
+  charging_set_vibe_when_full_enabled(true);
+  s_dnd_on = true;
+
+  // Charging plugged event respects DND — no vibe
+  prv_change_state(charging);
+  cl_assert_equal_i(s_vibe_count, 0);
+
+  // Fully charged vibe intentionally ignores DND
   prv_change_state(fully_charged);
   cl_assert_equal_i(s_vibe_count, 1);
 }
@@ -408,6 +423,37 @@ void test_battery_ui_fsm__blink_disabled_on_charge_complete(void) {
   prv_change_state(fully_charged);
   cl_assert_equal_b(false, light_is_on());
 
+  prv_change_state(nop);
+  cl_assert_equal_b(false, light_is_on());
+}
+
+void test_battery_ui_fsm__blink_toggle_cycle(void) {
+  PreciseBatteryChargeState charging = prv_make_state(50, true, true),
+                            fully_charged = prv_make_state(100, false, true),
+                            nop = prv_make_state(50, false, false);
+
+  charging_set_blink_when_full_enabled(true);
+
+  prv_change_state(charging);
+  cl_assert_equal_b(false, light_is_on());
+
+  // Entering fully charged turns light on
+  prv_change_state(fully_charged);
+  cl_assert_equal_b(true, light_is_on());
+
+  // First timer tick: light toggles off
+  stub_timer_fire_all();
+  cl_assert_equal_b(false, light_is_on());
+
+  // Second timer tick: light toggles on
+  stub_timer_fire_all();
+  cl_assert_equal_b(true, light_is_on());
+
+  // Third timer tick: light toggles off
+  stub_timer_fire_all();
+  cl_assert_equal_b(false, light_is_on());
+
+  // Leaving fully charged stops blink and turns light off
   prv_change_state(nop);
   cl_assert_equal_b(false, light_is_on());
 }
