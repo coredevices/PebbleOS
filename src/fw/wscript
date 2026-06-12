@@ -169,14 +169,14 @@ def _generate_memory_layout(bld):
     AppRamSize = collections.namedtuple('AppRamSize',
                                         'app_segment runtime_reserved')
     APP_RAM_SIZES = {
-        'aplite': AppRamSize(25952, 6820),
-        'basalt': AppRamSize(66 * 1024, 30 * 1024),
-        'chalk': AppRamSize(66 * 1024, 30 * 1024),
+        'aplite': AppRamSize(28000, 6820),
+        'basalt': AppRamSize(68 * 1024, 30 * 1024),
+        'chalk': AppRamSize(68 * 1024, 30 * 1024),
         # FIXME: The runtime_reserved size could be reduced for diorite
-        'diorite': AppRamSize(66 * 1024, 30 * 1024),
-        'emery': AppRamSize(130 * 1024, 62 * 1024),
-        'flint': AppRamSize(66 * 1024, 30 * 1024),
-        'gabbro': AppRamSize(130 * 1024, 94 * 1024),
+        'diorite': AppRamSize(68 * 1024, 30 * 1024),
+        'emery': AppRamSize(132 * 1024, 62 * 1024),
+        'flint': AppRamSize(68 * 1024, 30 * 1024),
+        'gabbro': AppRamSize(132 * 1024, 94 * 1024),
     }
     APP_UNSUPPORTED = AppRamSize(0, 0)
 

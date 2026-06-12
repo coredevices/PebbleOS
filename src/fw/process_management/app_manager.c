@@ -201,7 +201,7 @@ void prv_dump_start_app_info(const PebbleProcessMd *app_md) {
 }
 
 #define APP_STACK_JS_SIZE (8 * 1024)
-#define APP_STACK_NORMAL_SIZE (2 * 1024)
+#define APP_STACK_NORMAL_SIZE (4 * 1024)
 
 static size_t prv_get_app_segment_size(const PebbleProcessMd *app_md) {
   switch (process_metadata_get_app_sdk_type(app_md)) {
