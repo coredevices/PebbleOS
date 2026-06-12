@@ -14,6 +14,7 @@
 #include <system/passert.h>
 #include <util/math.h>
 
+#include "nimble_pebble_pairing_service.h"
 #include "nimble_type_conversions.h"
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
@@ -120,6 +121,8 @@ static void prv_handle_connection_event(struct ble_gap_event *event) {
 }
 
 static void prv_handle_disconnection_event(struct ble_gap_event *event) {
+  nimble_pebble_pairing_service_handle_disconnect(event->disconnect.conn.conn_handle);
+
   GattDeviceDisconnectionEvent gatt_event;
   nimble_addr_to_pebble_addr(&event->disconnect.conn.peer_id_addr, &gatt_event.dev_address);
   bt_driver_cb_gatt_handle_disconnect(&gatt_event);
