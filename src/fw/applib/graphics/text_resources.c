@@ -606,6 +606,25 @@ static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint
     if (data) {
       return data;
     }
+
+    // The routed font may lack the glyph: a latin codepoint absent from the
+    // base font may be provided by a language pack, and vice versa. Try the
+    // other of base/extension before falling back to the wildcard.
+    if (i == 0 && font_info->extended) {
+      const FontResource *alt_res = NULL;
+      if (font_res == &font_info->base) {
+        alt_res = &font_info->extension;
+      } else if (font_res == &font_info->extension) {
+        alt_res = &font_info->base;
+      }
+      if (alt_res) {
+        prv_check_font_cache(font_cache, alt_res);
+        data = prv_get_glyph_metadata_from_spi(codepoint, font_cache, alt_res, need_bitmap);
+        if (data) {
+          return data;
+        }
+      }
+    }
   }
   PBL_LOG_WRN("failed to load glyph or wildcard");
   return NULL;
