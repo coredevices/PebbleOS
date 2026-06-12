@@ -31,8 +31,10 @@ PBL_LOG_MODULE_DEFINE(lis2dw12, CONFIG_IMU_LOG_LEVEL);
 // - For some reason (needs more investigation), INT1 is sometimes left HIGH
 //   due to FIFO overruns, and without edge change, we cannot detect such
 //   events. To mitigate this, there is a watchdog timer that re-arms FIFO
-//   if no INT1 event is detected within the expected time window based on the
-//   ODR and FIFO threshold.
+//   if no FIFO samples have been read within the expected time window based
+//   on the ODR and FIFO threshold. Sample reads (not INT1 edges) are tracked
+//   because shake/wake-up events share the INT1 pad and would otherwise mask
+//   a dead FIFO stream.
 
 // Time to wait after reset (us)
 #define LIS2DW12_RESET_TIME_US 5
@@ -40,6 +42,14 @@ PBL_LOG_MODULE_DEFINE(lis2dw12, CONFIG_IMU_LOG_LEVEL);
 // DRDY polling parameters for accel_peek single-shot mode
 #define LIS2DW12_DRDY_POLL_DELAY_MS   (5)   /* ms between data-ready polls */
 #define LIS2DW12_DRDY_POLL_TIMEOUT_MS (100) /* max wait (~5x 20ms at 50Hz ODR) */
+
+// FIFO stream is considered stalled after this many FIFO threshold periods
+// without a sample read (>1x to tolerate scheduling jitter)
+#define LIS2DW12_STALL_MARGIN 2U
+
+// Lower bound on the stall threshold so small FIFO batches (short threshold
+// periods) don't trip recovery on normal work-queue latency
+#define LIS2DW12_STALL_MIN_MS 1000U
 
 // Scale range when in 12-bit mode (low-power mode 1)
 #define LIS2DW12_S12_SCALE_RANGE (1U << (12U - 1U))
@@ -236,6 +246,7 @@ static void prv_lis2dw12_read_samples(uint8_t num_samples) {
 
   LIS2DW12->state->last_sample = sample;
   LIS2DW12->state->last_sample_valid = true;
+  LIS2DW12->state->last_fifo_read_tick = rtc_get_ticks();
 }
 
 static bool prv_lis2dw12_enable_fifo(uint8_t num_samples) {
@@ -261,6 +272,8 @@ static bool prv_lis2dw12_enable_fifo(uint8_t num_samples) {
   return true;
 }
 
+static void prv_lis2dw12_recover(void);
+
 static void prv_lis2dw12_int1_work_handler(void) {
   bool ret;
   uint8_t val;
@@ -275,7 +288,7 @@ static void prv_lis2dw12_int1_work_handler(void) {
 
     if ((val & LIS2DW12_FIFO_SAMPLES_FIFO_OVR) != 0U) {
       PBL_LOG_WRN("FIFO overrun detected, re-arming");
-      prv_lis2dw12_enable_fifo(LIS2DW12->state->num_samples);
+      prv_lis2dw12_recover();
       action_taken = true;
     } else if ((val & LIS2DW12_FIFO_SAMPLES_FIFO_FTH) != 0U) {
       uint8_t samples;
@@ -310,7 +323,6 @@ static void prv_lis2dw12_int1_work_handler(void) {
 }
 
 static void prv_lis2dw12_int1_irq_handler(bool *should_context_switch) {
-  LIS2DW12->state->last_int1_tick = rtc_get_ticks();
   accel_offload_work_from_isr(prv_lis2dw12_int1_work_handler, should_context_switch);
 }
 
@@ -407,34 +419,92 @@ static bool prv_configure_int1(bool shake_detection_enabled, bool fifo_enabled) 
   return true;
 }
 
-static void prv_int1_wdt_work_cb(void) {
-  RtcTicks now_tick = rtc_get_ticks();
-  RtcTicks ticks_since_last_int1 = now_tick - LIS2DW12->state->last_int1_tick;
-  uint32_t ms_since_last_int1 = (ticks_since_last_int1 * 1000) / RTC_TICKS_HZ;
+static void prv_lis2dw12_drain_fifo(void) {
+  uint8_t val;
+  uint8_t samples;
 
-  if (ms_since_last_int1 >= LIS2DW12->state->int1_period_ms) {
-    bool ret;
-    uint8_t val;
+  if (!prv_lis2dw12_read(LIS2DW12_FIFO_SAMPLES, &val, 1)) {
+    PBL_LOG_ERR("Could not read FIFO_SAMPLES register");
+    return;
+  }
 
-    PBL_LOG_WRN("INT1 not received in %" PRIu32 " ms", ms_since_last_int1);
-
-    // Re-enable FIFO, and clear any event INT source
-    ret = prv_lis2dw12_enable_fifo(LIS2DW12->state->num_samples);
-    if (!ret) {
-      PBL_LOG_ERR("Failed to re-enable FIFO");
-      return;
-    }
-
-    ret = prv_lis2dw12_read(LIS2DW12_ALL_INT_SRC, &val, 1);
-    if (!ret) {
-      PBL_LOG_ERR("Could not read ALL_INT_SRC register");
-      return;
-    }
+  samples = MIN(LIS2DW12_FIFO_SAMPLES_DIFF_GET(val), LIS2DW12_FIFO_SIZE);
+  if (samples > 0U) {
+    prv_lis2dw12_read_samples(samples);
   }
 }
 
+//! Salvage queued samples and re-assert the full dynamic sensor configuration
+//! (ODR, FIFO mode, INT routing), then clear latched function INT sources.
+static void prv_lis2dw12_recover(void) {
+  uint8_t val;
+
+  LIS2DW12->state->num_recoveries++;
+  PBL_LOG_WRN("Recovering accel stream (count %" PRIu32 ")",
+          LIS2DW12->state->num_recoveries);
+
+  // Quiesce INT routing first so a latched-high pad produces a fresh edge
+  if (!prv_configure_int1(false, false)) {
+    return;
+  }
+
+  prv_lis2dw12_drain_fifo();
+
+  if (!prv_configure_odr(LIS2DW12->state->sampling_interval_us,
+                         LIS2DW12->state->shake_detection_enabled)) {
+    PBL_LOG_ERR("Could not configure ODR");
+    return;
+  }
+
+  if (!prv_lis2dw12_enable_fifo(LIS2DW12->state->num_samples)) {
+    return;
+  }
+
+  if (!prv_configure_int1(LIS2DW12->state->shake_detection_enabled, true)) {
+    return;
+  }
+
+  if (!prv_lis2dw12_read(LIS2DW12_ALL_INT_SRC, &val, 1)) {
+    PBL_LOG_ERR("Could not read ALL_INT_SRC register");
+    return;
+  }
+
+  LIS2DW12->state->last_fifo_read_tick = rtc_get_ticks();
+}
+
+static uint32_t prv_ms_since_last_fifo_read(void) {
+  RtcTicks ticks = rtc_get_ticks() - LIS2DW12->state->last_fifo_read_tick;
+  return (ticks * 1000) / RTC_TICKS_HZ;
+}
+
+static uint32_t prv_stall_threshold_ms(void) {
+  return MAX(LIS2DW12_STALL_MARGIN * LIS2DW12->state->int1_period_ms,
+             LIS2DW12_STALL_MIN_MS);
+}
+
+//! Shared by the INT1 watchdog timer and the accel_peek staleness trigger.
+//! Re-validates staleness at execution time so it is safe against sampling
+//! stopping or healing between schedule and execution.
+static void prv_stall_check_work_cb(void) {
+  uint32_t ms_since_last_read;
+
+  LIS2DW12->state->recovery_pending = false;
+
+  if (LIS2DW12->state->num_samples == 0U) {
+    return;
+  }
+
+  ms_since_last_read = prv_ms_since_last_fifo_read();
+  if (ms_since_last_read < prv_stall_threshold_ms()) {
+    return;
+  }
+
+  PBL_LOG_WRN("FIFO stream stalled for %" PRIu32 " ms", ms_since_last_read);
+  prv_lis2dw12_recover();
+}
+
 static void prv_int1_wdt_cb(void *data) {
-  accel_offload_work(prv_int1_wdt_work_cb);
+  accel_offload_work(prv_stall_check_work_cb);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -597,6 +667,14 @@ void accel_set_num_samples(uint32_t num_samples) {
   // Disable all INT1 before changing FIFO threshold
   prv_configure_int1(false, false);
 
+  // Config change invalidates any queued stall check; re-arm the peek trigger
+  LIS2DW12->state->recovery_pending = false;
+
+  // Salvage queued samples before the bypass write discards them
+  if (LIS2DW12->state->num_samples > 0U) {
+    prv_lis2dw12_drain_fifo();
+  }
+
   if (num_samples == 0U) {
     // Bypass FIFO (disable)
     val = LIS2DW12_FIFO_CTRL_FIFO_MODE_BYPASS;
@@ -606,8 +684,6 @@ void accel_set_num_samples(uint32_t num_samples) {
 
     regular_timer_remove_callback(&LIS2DW12->state->int1_wdt_timer);
   } else {
-    // FIXME: we should ideally drain the FIFO here to not discard existing samples
-
     // Configure FIFO in CONT mode with threshold
     ret = prv_lis2dw12_enable_fifo((uint8_t)num_samples);
     if (!ret) {
@@ -616,7 +692,7 @@ void accel_set_num_samples(uint32_t num_samples) {
     }
 
     LIS2DW12->state->last_sample_valid = false;
-    LIS2DW12->state->last_int1_tick = rtc_get_ticks();
+    LIS2DW12->state->last_fifo_read_tick = rtc_get_ticks();
     LIS2DW12->state->int1_period_ms = (LIS2DW12->state->sampling_interval_us * num_samples) / 1000;
     regular_timer_add_multisecond_callback(&LIS2DW12->state->int1_wdt_timer,
                                            DIVIDE_CEIL(LIS2DW12->state->int1_period_ms, 1000UL));
@@ -649,6 +725,13 @@ int accel_peek(AccelDriverSample *data) {
 
   // If sampling is active, return the last obtained sample
   if (LIS2DW12->state->num_samples > 0U) {
+    // Self-heal: a stalled stream would otherwise freeze peek data forever
+    if (!LIS2DW12->state->recovery_pending &&
+        (prv_ms_since_last_fifo_read() >= prv_stall_threshold_ms())) {
+      LIS2DW12->state->recovery_pending = true;
+      accel_offload_work(prv_stall_check_work_cb);
+    }
+
     if (!LIS2DW12->state->last_sample_valid) {
       return E_ERROR;
     }
