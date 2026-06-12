@@ -11,3 +11,4 @@ syscfg.vals:
     # Increased to prevent ACL mbuf allocation failures during high-throughput
     # operations (e.g. FW upgrade over BLE on iOS).
     BLE_TRANSPORT_ACL_COUNT: 60
+    BLE_MAX_CONNECTIONS: 2

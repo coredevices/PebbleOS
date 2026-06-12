@@ -3,6 +3,7 @@
 
 #include "gap_le_advert.h"
 #include "gap_le_connect.h"
+#include "kernel_le_client/multi_phone.h"
 
 #include <bluetooth/bt_driver_advert.h>
 #include <bluetooth/init.h>
@@ -97,7 +98,7 @@ static RegularTimerInfo s_cycle_regular_timer;
 
 static bool s_is_advertising;
 
-static bool s_is_connected;
+static uint8_t s_slave_connection_count;
 
 //! Cache of the last advertising transmission power in dBm. A cache is kept in
 //! case the API call fails, for example because Bluetooth is disabled.
@@ -254,8 +255,8 @@ static void prv_cycle_timer_callback(void *unused) {
       goto unlock;
     }
 
-    if (s_is_connected) {
-      // Don't do anything if connected
+    if (s_slave_connection_count >= MAX_PHONE_CONNECTIONS) {
+      // All slots full; don't cycle ads
       goto unlock;
     }
 
@@ -589,7 +590,11 @@ void gap_le_advert_handle_connect_as_slave(void) {
     s_is_advertising = false;
     prv_analytics_stop_timers();
 
-    s_is_connected = true;
+    s_slave_connection_count++;
+    if (s_slave_connection_count < MAX_PHONE_CONNECTIONS) {
+      // Still have free slots; resume advertising so the next phone can connect.
+      prv_perform_next_job(true /* force refresh */);
+    }
   }
 unlock:
   bt_unlock();
@@ -603,7 +608,7 @@ void gap_le_advert_handle_disconnect_as_slave(void) {
       goto unlock;
     }
 
-    s_is_connected = false;
+    if (s_slave_connection_count > 0) s_slave_connection_count--;
 
     // Call prv_perform_next_job() to trigger refreshing the configuration of
     // the controller: it can advertise connectable packets again.
@@ -627,7 +632,7 @@ void bt_driver_handle_host_resynced(void) {
     s_current_ad_data = NULL;
     s_is_advertising = false;
 
-    if (s_current && !s_is_connected) {
+    if (s_current && s_slave_connection_count < MAX_PHONE_CONNECTIONS) {
       prv_perform_next_job(true /* force refresh */);
     }
   }
