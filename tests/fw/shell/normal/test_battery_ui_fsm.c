@@ -11,9 +11,13 @@
 #include "kernel/low_power.h"
 #include "kernel/ui/modals/modal_manager.h"
 #include "kernel/util/standby.h"
-#include "process_management/app_manager.h"
 #include "pbl/services/battery/battery_curve.h"
+#include "pbl/services/battery/battery_state.h"
+#include "pbl/services/light.h"
+#include "pbl/services/new_timer/new_timer.h"
+#include "process_management/app_manager.h"
 #include "shell/normal/battery_ui.h"
+#include "shell/prefs.h"
 #include "util/ratio.h"
 
 extern void battery_ui_reset_fsm_for_tests(void);
@@ -24,6 +28,9 @@ extern void battery_ui_reset_fsm_for_tests(void);
 #include "stubs_logging.h"
 #include "stubs_vibe_intensity.h"
 #include "stubs_vibe_pattern.h"
+#include "stubs_light.h"
+#include "stubs_new_timer.h"
+#include "stubs_shell_prefs.h"
 
 typedef enum PowerState {
   PowerGood,
@@ -152,6 +159,9 @@ void test_battery_ui_fsm__initialize(void) {
   s_critical = false;
   s_shutdown_charging = false;
   s_is_charging = false;
+
+  charging_set_blink_when_full_enabled(true);
+  charging_set_vibe_when_full_enabled(true);
 
   battery_ui_reset_fsm_for_tests();
 }
@@ -324,7 +334,7 @@ void test_battery_ui_fsm__honor_dnd(void) {
   cl_assert_equal_i(s_vibe_count, 2);
 }
 
-void test_battery_ui_fsm__no_vibe_complete(void) {
+void test_battery_ui_fsm__vibe_on_charge_complete_default(void) {
   PreciseBatteryChargeState charging = prv_make_state(50, true, true),
                             fully_charged = prv_make_state(100, false, true);
 
@@ -334,8 +344,70 @@ void test_battery_ui_fsm__no_vibe_complete(void) {
   cl_assert(s_modal_onscreen && s_modal_charging);
   cl_assert_equal_i(s_vibe_count, 1);
 
-  // Charging completes
+  // Charging completes — vibe fires by default
   prv_change_state(fully_charged);
   cl_assert(s_modal_onscreen && !s_modal_charging);
+  cl_assert_equal_i(s_vibe_count, 2);
+}
+
+void test_battery_ui_fsm__vibe_on_charge_complete(void) {
+  PreciseBatteryChargeState charging = prv_make_state(50, true, true),
+                            fully_charged = prv_make_state(100, false, true),
+                            nop = prv_make_state(50, false, false);
+
+  charging_set_vibe_when_full_enabled(true);
+  prv_change_state(charging);
   cl_assert_equal_i(s_vibe_count, 1);
+
+  prv_change_state(fully_charged);
+  cl_assert_equal_i(s_vibe_count, 2);
+
+  prv_change_state(nop);
+  cl_assert_equal_i(s_vibe_count, 2);
+}
+
+void test_battery_ui_fsm__vibe_disabled_on_charge_complete(void) {
+  PreciseBatteryChargeState charging = prv_make_state(50, true, true),
+                            fully_charged = prv_make_state(100, false, true);
+
+  charging_set_vibe_when_full_enabled(false);
+  prv_change_state(charging);
+  cl_assert_equal_i(s_vibe_count, 1);
+
+  prv_change_state(fully_charged);
+  cl_assert_equal_i(s_vibe_count, 1);
+}
+
+void test_battery_ui_fsm__blink_on_charge_complete(void) {
+  PreciseBatteryChargeState charging = prv_make_state(50, true, true),
+                            fully_charged = prv_make_state(100, false, true),
+                            nop = prv_make_state(50, false, false);
+
+  charging_set_blink_when_full_enabled(true);
+
+  prv_change_state(charging);
+  cl_assert_equal_b(false, light_is_on());
+
+  prv_change_state(fully_charged);
+  cl_assert_equal_b(true, light_is_on());
+
+  prv_change_state(nop);
+  cl_assert_equal_b(false, light_is_on());
+}
+
+void test_battery_ui_fsm__blink_disabled_on_charge_complete(void) {
+  PreciseBatteryChargeState charging = prv_make_state(50, true, true),
+                            fully_charged = prv_make_state(100, false, true),
+                            nop = prv_make_state(50, false, false);
+
+  charging_set_blink_when_full_enabled(false);
+
+  prv_change_state(charging);
+  cl_assert_equal_b(false, light_is_on());
+
+  prv_change_state(fully_charged);
+  cl_assert_equal_b(false, light_is_on());
+
+  prv_change_state(nop);
+  cl_assert_equal_b(false, light_is_on());
 }

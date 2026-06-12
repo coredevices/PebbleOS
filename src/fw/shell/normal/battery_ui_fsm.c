@@ -11,14 +11,45 @@
 #include "kernel/low_power.h"
 #include "kernel/ui/modals/modal_manager.h"
 #include "kernel/util/standby.h"
-#include "process_management/app_manager.h"
 #include "pbl/services/battery/battery_curve.h"
-#include "pbl/services/vibe_pattern.h"
+#include "pbl/services/light.h"
+#include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/notifications/do_not_disturb.h"
+#include "pbl/services/vibe_pattern.h"
 #include "pbl/services/vibes/vibe_intensity.h"
+#include "process_management/app_manager.h"
+#include "shell/prefs.h"
 #include "shell/normal/watchface.h"
 #include "util/ratio.h"
 #include "util/size.h"
+
+#define CHARGE_BLINK_INTERVAL_MS 2000
+
+static TimerID s_charge_blink_timer;
+static bool s_charge_blink_on;
+
+static void prv_charge_blink_timer_cb(void *data) {
+  s_charge_blink_on = !s_charge_blink_on;
+  light_enable(s_charge_blink_on);
+}
+
+static void prv_start_charge_blink(void) {
+  s_charge_blink_on = true;
+  light_enable(true);
+  s_charge_blink_timer = new_timer_create();
+  new_timer_start(s_charge_blink_timer, CHARGE_BLINK_INTERVAL_MS,
+                  prv_charge_blink_timer_cb, NULL, TIMER_START_FLAG_REPEATING);
+}
+
+static void prv_stop_charge_blink(void) {
+  if (s_charge_blink_timer != TIMER_INVALID_ID) {
+    new_timer_stop(s_charge_blink_timer);
+    new_timer_delete(s_charge_blink_timer);
+    s_charge_blink_timer = TIMER_INVALID_ID;
+  }
+  s_charge_blink_on = false;
+  light_enable(false);
+}
 
 // The Battery UI state machine keeps track of when to notify the user of a
 // change in battery charge state, and when to automatically dismiss the status
@@ -192,10 +223,17 @@ static void prv_dismiss_plugged(void) {
 }
 
 static void prv_display_fully_charged(void *data) {
+  if (charging_vibe_when_full_enabled()) {
+    vibes_short_pulse();
+  }
+  if (charging_blink_when_full_enabled()) {
+    prv_start_charge_blink();
+  }
   battery_ui_display_fully_charged();
 }
 
 static void prv_dismiss_fully_charged(void) {
+  prv_stop_charge_blink();
   battery_ui_dismiss_modal();
 }
 
