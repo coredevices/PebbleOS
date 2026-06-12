@@ -15,6 +15,7 @@
 #include "applib/ui/window_stack.h"
 #include "drivers/rtc.h"
 #include "kernel/events.h"
+#include "kernel/pbl_malloc.h"
 #include "kernel/ui/modals/modal_manager.h"
 #include "process_state/app_state/app_state.h"
 #include "resource/resource_ids.auto.h"
@@ -45,9 +46,12 @@ typedef struct DoNotDisturbData {
 
 static DoNotDisturbData s_data;
 
+static QuietTimeScheduleConfig s_qt_schedule_cache[MAX_QUIET_TIME_SCHEDULES];
+
 static bool prv_is_smart_dnd_active(void);
 static bool prv_is_schedule_active(void);
 static void prv_set_schedule_mode_timer();
+static void prv_reload_qt_schedule_cache(void);
 
 static void prv_update_active_time(bool is_active) {
   if (is_active) {
@@ -73,7 +77,6 @@ static char *prv_bool_to_string(bool active) {
 static void prv_do_update(void) {
   const bool is_active = do_not_disturb_is_active();
   if (is_active == s_data.was_active) {
-    // No change
     return;
   }
   s_data.was_active = is_active;
@@ -88,6 +91,9 @@ static void prv_toggle_smart_dnd(void *e_dialog) {
   s_data.manually_override_dnd = false;
   prv_do_update();
 }
+
+//! Re-evaluate active DND state and post PEBBLE_DO_NOT_DISTURB_EVENT if it changed.
+void do_not_disturb_refresh_active_state(void) { prv_do_update(); }
 
 static void prv_toggle_manual_dnd_from_action_menu(void *e_dialog) {
   do_not_disturb_toggle_push(ActionTogglePrompt_NoPrompt, false /* set_exit_reason */);
@@ -124,14 +130,92 @@ static void prv_push_manual_dnd_first_use_dialog(ManualDNDFirstUseSource source)
   }
 }
 
+static void prv_reload_qt_schedule_cache(void) {
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    alerts_preferences_qt_get_schedule(i, &s_qt_schedule_cache[i]);
+  }
+}
+
+static bool prv_is_any_qt_schedule_enabled(void) {
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    if (s_qt_schedule_cache[i].is_used && s_qt_schedule_cache[i].enabled) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void quiet_time_get_scheduled_days(const QuietTimeScheduleConfig *config, bool out_days[DAYS_PER_WEEK]) {
+  switch (config->kind) {
+    case QT_KIND_EVERYDAY:
+      for (int i = 0; i < DAYS_PER_WEEK; i++) { out_days[i] = true; }
+      break;
+    case QT_KIND_WEEKDAYS:
+      out_days[Sunday] = false;
+      out_days[Monday] = true;
+      out_days[Tuesday] = true;
+      out_days[Wednesday] = true;
+      out_days[Thursday] = true;
+      out_days[Friday] = true;
+      out_days[Saturday] = false;
+      break;
+    case QT_KIND_WEEKENDS:
+      out_days[Sunday] = true;
+      out_days[Monday] = false;
+      out_days[Tuesday] = false;
+      out_days[Wednesday] = false;
+      out_days[Thursday] = false;
+      out_days[Friday] = false;
+      out_days[Saturday] = true;
+      break;
+    case QT_KIND_CUSTOM:
+      memcpy(out_days, config->scheduled_days, DAYS_PER_WEEK);
+      break;
+    default:
+      memset(out_days, 0, DAYS_PER_WEEK);
+      break;
+  }
+}
+
+static bool prv_is_time_in_range(const struct tm *now, const QuietTimeScheduleConfig *schedule) {
+  int now_minutes = now->tm_hour * 60 + now->tm_min;
+  int from_minutes = schedule->from_hour * 60 + schedule->from_minute;
+  int to_minutes = schedule->to_hour * 60 + schedule->to_minute;
+  if (from_minutes == to_minutes) {
+    to_minutes = (to_minutes + 1) % (24 * 60);
+    if (to_minutes == 0) {
+      to_minutes = 1;
+    }
+  }
+  if (from_minutes <= to_minutes) {
+    return (now_minutes >= from_minutes && now_minutes < to_minutes);
+  } else {
+    return (now_minutes >= from_minutes || now_minutes < to_minutes);
+  }
+}
+
+static bool prv_is_any_qt_schedule_active_now(void) {
+  struct tm time;
+  rtc_get_time_tm(&time);
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    if (!s_qt_schedule_cache[i].is_used || !s_qt_schedule_cache[i].enabled) continue;
+    bool days[DAYS_PER_WEEK];
+    quiet_time_get_scheduled_days(&s_qt_schedule_cache[i], days);
+    if (!days[time.tm_wday]) continue;
+    if (prv_is_time_in_range(&time, &s_qt_schedule_cache[i])) return true;
+  }
+  return false;
+}
+
 static void prv_try_update_schedule_mode(void *data) {
   const bool clear_override = (bool) (uintptr_t) data;
   if (clear_override) {
     s_data.manually_override_dnd = false;
   }
 
-  if (do_not_disturb_is_schedule_enabled(WeekdaySchedule) ||
-      do_not_disturb_is_schedule_enabled(WeekendSchedule)) {
+  prv_reload_qt_schedule_cache();
+
+  if (prv_is_any_qt_schedule_enabled()) {
     prv_set_schedule_mode_timer();
   } else {
     new_timer_stop(s_data.update_timer_id);
@@ -148,73 +232,68 @@ static void prv_update_schedule_mode_timer_callback(void* not_used) {
   prv_try_update_schedule_mode_callback(true);
 }
 
-static DoNotDisturbScheduleType prv_current_schedule_type(void) {
-  struct tm time;
-  rtc_get_time_tm(&time);
-  return ((time.tm_wday == Saturday || time.tm_wday == Sunday) ?
-          WeekendSchedule : WeekdaySchedule);
-}
-
-// Updates the timer for scheduled DND check
-// Only enters if at least one of the schedules is enabled
 static void prv_set_schedule_mode_timer() {
   struct tm time;
   rtc_get_time_tm(&time);
+  time_t earliest_transition = SECONDS_PER_DAY * 7;
+  bool currently_active = prv_is_any_qt_schedule_active_now();
 
-  DoNotDisturbScheduleType curr_schedule_type = prv_current_schedule_type();
-  DoNotDisturbSchedule curr_schedule;
-  do_not_disturb_get_schedule(curr_schedule_type, &curr_schedule);
-  bool curr_schedule_enabled = do_not_disturb_is_schedule_enabled(curr_schedule_type);
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    if (!s_qt_schedule_cache[i].is_used || !s_qt_schedule_cache[i].enabled) continue;
+    bool days[DAYS_PER_WEEK];
+    quiet_time_get_scheduled_days(&s_qt_schedule_cache[i], days);
 
-  time_t seconds_until_update;
-  bool is_enable_next;
-  int curr_day = time.tm_wday;
-  if (!curr_schedule_enabled) { // Only next schedule is enabled
-    is_enable_next = true;
-    // Depending on the current schedule, determine the first day index of the next schedule
-    int next_schedule_day = (curr_schedule_type == WeekdaySchedule) ? Saturday : Monday;
-    // Count the number of full days until next schedule (Sunday = 0)
-    int num_full_days = ((next_schedule_day - curr_day + DAYS_PER_WEEK) % DAYS_PER_WEEK) - 1;
-    // Calculate the number of seconds until the start of the next schedule, update then
-    seconds_until_update = time_util_get_seconds_until_daily_time(&time, 0, 0) +
-                           (num_full_days * SECONDS_PER_DAY);
-  } else { // Current schedule is enabled
-    const time_t seconds_until_start = time_util_get_seconds_until_daily_time(
-        &time, curr_schedule.from_hour, curr_schedule.from_minute);
-    const time_t seconds_until_end = time_util_get_seconds_until_daily_time(
-        &time, curr_schedule.to_hour, curr_schedule.to_minute);
-    seconds_until_update = MIN(seconds_until_start, seconds_until_end);
-    is_enable_next = (seconds_until_update == seconds_until_start);
-    // Update at midnight if on the last day of the current schedule
-    if ((curr_day == Sunday) || (curr_day == Friday)) {
-      const time_t seconds_until_midnight = time_util_get_seconds_until_daily_time(&time, 0, 0);
-      seconds_until_update = MIN(seconds_until_update, seconds_until_midnight);
+    if (days[time.tm_wday]) {
+      int from = s_qt_schedule_cache[i].from_hour * 60 + s_qt_schedule_cache[i].from_minute;
+      int to = s_qt_schedule_cache[i].to_hour * 60 + s_qt_schedule_cache[i].to_minute;
+      // Align with prv_is_time_in_range: same-from/to means a 1-minute window
+      if (from == to) {
+        to = (to + 1) % (24 * 60);
+        if (to == 0) {
+          to = 1;
+        }
+      }
+      time_t s = time_util_get_seconds_until_daily_time(&time,
+                   s_qt_schedule_cache[i].from_hour, s_qt_schedule_cache[i].from_minute);
+      time_t e = time_util_get_seconds_until_daily_time(&time,
+                   to / 60, to % 60);
+      earliest_transition = MIN(earliest_transition, MIN(s, e));
+    }
+
+    // Find the next scheduled day: check tomorrow first, then days 2..6 ahead
+    time_t midnight = time_util_get_seconds_until_daily_time(&time, 0, 0);
+    for (int d = 1; d < DAYS_PER_WEEK; d++) {
+      int future_day = (time.tm_wday + d) % DAYS_PER_WEEK;
+      if (days[future_day]) {
+        earliest_transition = MIN(earliest_transition, midnight + (d - 1) * SECONDS_PER_DAY);
+        break;
+      }
     }
   }
 
-  if (s_data.is_in_schedule_period == is_enable_next) {
-    // Coming out of scheduled DND with manual DND on, turning it off
-    if (is_enable_next && do_not_disturb_is_manually_enabled()) {
-      do_not_disturb_set_manually_enabled(false);
+  if (currently_active != s_data.is_in_schedule_period) {
+    if (currently_active && do_not_disturb_is_manually_enabled()) {
+      alerts_preferences_dnd_set_manually_enabled(false);
+      s_data.manually_override_dnd = false;
     }
-    s_data.is_in_schedule_period = !is_enable_next;
+    if (!currently_active && s_data.manually_override_dnd) {
+      s_data.manually_override_dnd = false;
+    }
+    s_data.is_in_schedule_period = currently_active;
   }
 
-  PBL_LOG_INFO("%s scheduled period. %u seconds until update",
-      s_data.is_in_schedule_period ? "In" : "Out of", (unsigned int) seconds_until_update);
+  PBL_ASSERTN(earliest_transition > 0);
 
-  bool success = new_timer_start(s_data.update_timer_id, seconds_until_update * 1000,
+  PBL_LOG_DBG("%s scheduled period. %u seconds until update",
+      s_data.is_in_schedule_period ? "In" : "Out of", (unsigned int) earliest_transition);
+
+  bool success = new_timer_start(s_data.update_timer_id, earliest_transition * 1000,
                                  prv_update_schedule_mode_timer_callback, NULL, 0 /*flags*/);
   PBL_ASSERTN(success);
 }
 
-static bool prv_is_current_schedule_enabled() {
-  return (do_not_disturb_is_schedule_enabled(prv_current_schedule_type()));
-}
-
 static bool prv_is_schedule_active(void) {
-  return (prv_is_current_schedule_enabled() && s_data.is_in_schedule_period &&
-          !s_data.manually_override_dnd);
+  return (s_data.is_in_schedule_period && !s_data.manually_override_dnd);
 }
 
 static bool prv_is_smart_dnd_active(void) {
@@ -245,12 +324,11 @@ bool do_not_disturb_is_manually_enabled(void) {
 }
 
 void do_not_disturb_set_manually_enabled(bool enable) {
-  const bool is_auto_dnd = prv_is_current_schedule_enabled() ||
+  const bool is_auto_dnd = prv_is_any_qt_schedule_enabled() ||
                            do_not_disturb_is_smart_dnd_enabled();
   const bool was_active = do_not_disturb_is_active();
 
   alerts_preferences_dnd_set_manually_enabled(enable);
-  // Turning the manual DND OFF in an active DND mode overrides the automatic mode
   if (!enable && was_active && is_auto_dnd) {
     s_data.manually_override_dnd = true;
   }
@@ -289,6 +367,21 @@ void do_not_disturb_get_schedule(DoNotDisturbScheduleType type,
 
 void do_not_disturb_set_schedule(DoNotDisturbScheduleType type, DoNotDisturbSchedule *schedule) {
   alerts_preferences_dnd_set_schedule(type, schedule);
+  QuietTimeScheduleConfig qt_config;
+  int qt_index = (type == WeekdaySchedule) ? 0 : 1;
+  QuietTimeKind qt_kind = (type == WeekdaySchedule) ? QT_KIND_WEEKDAYS : QT_KIND_WEEKENDS;
+  bool enabled = alerts_preferences_dnd_is_schedule_enabled(type);
+  qt_config = (QuietTimeScheduleConfig){
+    .is_used = true,
+    .kind = qt_kind,
+    .from_hour = schedule->from_hour,
+    .from_minute = schedule->from_minute,
+    .to_hour = schedule->to_hour,
+    .to_minute = schedule->to_minute,
+    .enabled = enabled,
+  };
+  memset(qt_config.scheduled_days, 0, sizeof(qt_config.scheduled_days));
+  alerts_preferences_qt_set_schedule(qt_index, &qt_config);
   prv_try_update_schedule_mode_callback(true);
 }
 
@@ -298,13 +391,154 @@ bool do_not_disturb_is_schedule_enabled(DoNotDisturbScheduleType type) {
 
 void do_not_disturb_set_schedule_enabled(DoNotDisturbScheduleType type, bool scheduled) {
   alerts_preferences_dnd_set_schedule_enabled(type, scheduled);
+  int qt_index = (type == WeekdaySchedule) ? 0 : 1;
+  QuietTimeScheduleConfig qt_config;
+  alerts_preferences_qt_get_schedule(qt_index, &qt_config);
+  qt_config.is_used = true;
+  qt_config.enabled = scheduled;
+  alerts_preferences_qt_set_schedule(qt_index, &qt_config);
   prv_try_update_schedule_mode_callback(true);
 }
 
 void do_not_disturb_toggle_scheduled(DoNotDisturbScheduleType type) {
   alerts_preferences_dnd_set_schedule_enabled(type,
                                               !alerts_preferences_dnd_is_schedule_enabled(type));
+  int qt_index = (type == WeekdaySchedule) ? 0 : 1;
+  QuietTimeScheduleConfig qt_config;
+  alerts_preferences_qt_get_schedule(qt_index, &qt_config);
+  qt_config.is_used = true;
+  qt_config.enabled = !qt_config.enabled;
+  alerts_preferences_qt_set_schedule(qt_index, &qt_config);
   prv_try_update_schedule_mode_callback(true);
+}
+
+//! Quiet Time schedule API
+
+void quiet_time_for_each_schedule(QuietTimeScheduleCallback cb, void *context) {
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    QuietTimeScheduleConfig config;
+    alerts_preferences_qt_get_schedule(i, &config);
+    cb(i, &config, context);
+  }
+}
+
+void quiet_time_get_schedule(int index, QuietTimeScheduleConfig *out) {
+  alerts_preferences_qt_get_schedule(index, out);
+}
+
+void quiet_time_set_schedule(int index, const QuietTimeScheduleConfig *config) {
+  if (index < 0 || index >= MAX_QUIET_TIME_SCHEDULES) return;
+  QuietTimeScheduleConfig stored = *config;
+  stored.is_used = true;
+  alerts_preferences_qt_set_schedule(index, &stored);
+  prv_try_update_schedule_mode_callback(true);
+}
+
+int quiet_time_create_schedule(const QuietTimeScheduleConfig *config) {
+  if (config->kind == QT_KIND_CUSTOM) {
+    bool any_day = false;
+    for (int i = 0; i < DAYS_PER_WEEK; i++) {
+      any_day |= config->scheduled_days[i];
+    }
+    if (!any_day) return -1;
+  }
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    QuietTimeScheduleConfig existing;
+    alerts_preferences_qt_get_schedule(i, &existing);
+    if (!existing.is_used) {
+      QuietTimeScheduleConfig new_config = *config;
+      new_config.is_used = true;
+      alerts_preferences_qt_set_schedule(i, &new_config);
+      prv_try_update_schedule_mode_callback(true);
+      return i;
+    }
+  }
+  return -1;
+}
+
+void quiet_time_delete_schedule(int index) {
+  if (index < 0 || index >= MAX_QUIET_TIME_SCHEDULES) return;
+  QuietTimeScheduleConfig empty = {0};
+  alerts_preferences_qt_set_schedule(index, &empty);
+  prv_try_update_schedule_mode_callback(true);
+}
+
+void quiet_time_set_schedule_enabled(int index, bool enabled) {
+  if (index < 0 || index >= MAX_QUIET_TIME_SCHEDULES) return;
+  QuietTimeScheduleConfig config;
+  alerts_preferences_qt_get_schedule(index, &config);
+  config.enabled = enabled;
+  alerts_preferences_qt_set_schedule(index, &config);
+  prv_try_update_schedule_mode_callback(true);
+}
+
+int quiet_time_get_num_active(void) {
+  return alerts_preferences_qt_get_num_active();
+}
+
+const char *quiet_time_get_string_for_kind(QuietTimeKind kind) {
+  switch (kind) {
+    case QT_KIND_EVERYDAY: return i18n_noop("Every Day");
+    case QT_KIND_WEEKDAYS: return i18n_noop("Weekdays");
+    case QT_KIND_WEEKENDS: return i18n_noop("Weekends");
+    case QT_KIND_CUSTOM: return i18n_noop("Custom");
+    default: return "";
+  }
+}
+
+void quiet_time_get_string_for_custom(const bool *scheduled_days, char *buffer, size_t buf_len) {
+  static const char * const day_strings[] = {
+    i18n_noop("Sun"), i18n_noop("Mon"), i18n_noop("Tue"), i18n_noop("Wed"),
+    i18n_noop("Thu"), i18n_noop("Fri"), i18n_noop("Sat"),
+  };
+  static const char * const full_day_strings[] = {
+    i18n_noop("Sundays"), i18n_noop("Mondays"), i18n_noop("Tuesdays"), i18n_noop("Wednesdays"),
+    i18n_noop("Thursdays"), i18n_noop("Fridays"), i18n_noop("Saturdays"),
+  };
+
+  PBL_ASSERTN(buffer != NULL);
+  PBL_ASSERTN(buf_len > 0);
+  buffer[0] = '\0';
+
+  int num_days = 0;
+  int last_day_idx = 0;
+  for (int i = 0; i < DAYS_PER_WEEK; i++) {
+    if (scheduled_days[i]) {
+      num_days++;
+      last_day_idx = i;
+    }
+  }
+
+  if (num_days == 0) {
+    return;
+  }
+
+  if (num_days == 1) {
+    i18n_get_with_buffer(full_day_strings[last_day_idx], buffer, buf_len);
+    return;
+  }
+
+  // Monday-first ordering: skip Sunday (index 0) and iterate Mon..Sat, then Sun.
+  size_t pos = 0;
+  for (int idx = 1; idx <= DAYS_PER_WEEK; idx++) {
+    int i = idx % DAYS_PER_WEEK;
+    if (!scheduled_days[i]) {
+      continue;
+    }
+    char day_buf[12];
+    i18n_get_with_buffer(day_strings[i], day_buf, sizeof(day_buf));
+    size_t day_len = strlen(day_buf);
+    size_t needed = day_len + (pos > 0 ? 1 : 0);
+    if (pos + needed >= buf_len) {
+      break;
+    }
+    if (pos > 0) {
+      buffer[pos++] = ',';
+    }
+    memcpy(buffer + pos, day_buf, day_len);
+    pos += day_len;
+  }
+  buffer[pos] = '\0';
 }
 
 void do_not_disturb_init(void) {

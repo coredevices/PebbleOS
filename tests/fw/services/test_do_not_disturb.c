@@ -5,6 +5,8 @@
 
 #include "applib/ui/action_toggle.h"
 #include "kernel/events.h"
+#include "pbl/services/blob_db/api.h"
+#include "pbl/services/blob_db/api_types.h"
 #include "resource/resource.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/system_task.h"
@@ -48,6 +50,7 @@
 #define PREF_KEY_DND_MANUALLY_ENABLED "dndManuallyEnabled"
 
 static int s_num_dnd_events_put = 0;
+static int s_num_pref_change_events_put = 0;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Fakes
@@ -58,7 +61,10 @@ bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
 }
 
 void event_put(PebbleEvent* event) {
-  s_num_dnd_events_put++;
+  // Count DND and pref events separately; the receive path posts both,
+  // the local setter path only the DND event.
+  if (event->type == PEBBLE_DO_NOT_DISTURB_EVENT) s_num_dnd_events_put++;
+  else if (event->type == PEBBLE_PREF_CHANGE_EVENT) s_num_pref_change_events_put++;
 }
 
 // Thursday, March 12, 2015, 00:00 UTC
@@ -147,6 +153,7 @@ void test_do_not_disturb__initialize(void) {
 
   s_event_ongoing = false;
   s_num_dnd_events_put = 0;
+  s_num_pref_change_events_put = 0;
 }
 
 void test_do_not_disturb__cleanup(void) {
@@ -218,6 +225,7 @@ void test_do_not_disturb__is_active(void) {
   cl_assert(active == true);
 
   // Manual && Scheduled && !Smart
+  // When schedule becomes active, manual DND is auto-disabled.
   do_not_disturb_set_schedule_enabled(WeekdaySchedule, true);
   DoNotDisturbSchedule schedule = {
     .from_hour = 0,
@@ -226,19 +234,18 @@ void test_do_not_disturb__is_active(void) {
     .to_minute = 30,
   };
   do_not_disturb_set_schedule(WeekdaySchedule, &schedule);
-  cl_assert(do_not_disturb_is_manually_enabled() == true);
+  cl_assert(do_not_disturb_is_manually_enabled() == false);
   cl_assert(do_not_disturb_is_schedule_enabled(WeekdaySchedule) == true);
   cl_assert(do_not_disturb_is_smart_dnd_enabled() == false);
   active = do_not_disturb_is_active();
   cl_assert(active == true);
 
-  // !Manual && Scheduled && !Smart
-
-  do_not_disturb_set_manually_enabled(false);
+  // !Manual && Scheduled && !Smart (schedule keeps DND active)
+  // Toggling schedule off disables DND via schedule.
+  do_not_disturb_toggle_scheduled(WeekdaySchedule);
   cl_assert(do_not_disturb_is_active() == false);
-  do_not_disturb_toggle_scheduled(WeekdaySchedule); // see PBL-22011
-  cl_assert(do_not_disturb_is_active() == false);
-  do_not_disturb_toggle_scheduled(WeekdaySchedule); // see PBL-22011
+  // Toggle back on; schedule re-enters active period.
+  do_not_disturb_toggle_scheduled(WeekdaySchedule);
   cl_assert(do_not_disturb_is_active() == true);
   cl_assert(do_not_disturb_is_manually_enabled() == false);
   cl_assert(do_not_disturb_is_schedule_enabled(WeekdaySchedule) == true);
@@ -495,15 +502,16 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == false);
-  // Timer will go off at 01:00 on Sunday. (14.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 52200 * MS_PER_SECOND);
+  // Timer will go off at midnight Sunday (transition to a day with scheduled period). (13.5 hours)
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 48600 * MS_PER_SECOND);
 
   do_not_disturb_set_schedule_enabled(WeekendSchedule, false);
   rtc_set_time(s_saturday_01_30);
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == false);
-  // Timer will go off at 00:00 on Monday. (46.5 hours)
+  // Weekday-only schedule on Saturday: next scheduled day is Monday (d=2).
+  // Timer fires at Sunday midnight + 1 day = Monday 00:00.
   cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 167400 * MS_PER_SECOND);
 
   rtc_set_time(s_thursday_00_00);
@@ -533,7 +541,8 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == false);
-  // Timer will go off at 00:00 on Saturday. (47.0 hours)
+  // Weekend-only schedule on Thursday: next scheduled day is Saturday (d=2).
+  // Timer fires at Friday midnight + 1 day = Saturday 00:00.
   cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 169200 * MS_PER_SECOND);
 
   do_not_disturb_set_schedule_enabled(WeekendSchedule, false);
@@ -541,7 +550,8 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   rtc_set_time(s_saturday_01_30);
   do_not_disturb_handle_clock_change();
   cl_assert(active == false);
-  // Timer will go off at 00:00 on Saturday. (46.5 hours)
+  // Weekday-only schedule on Saturday: next scheduled day is Monday (d=2).
+  // Timer fires at Sunday midnight + 1 day = Monday 00:00.
   cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 167400 * MS_PER_SECOND);
 
   // 10:30 PM - 8:30 AM
@@ -674,3 +684,423 @@ void test_do_not_disturb__toggle_manually_enabled(void) {
   active = do_not_disturb_is_active();
   cl_assert(active == false);
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//! Quiet Time multi-schedule tests
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+void test_do_not_disturb__qt_create_delete_schedule(void) {
+  QuietTimeScheduleConfig config = {
+    .kind = QT_KIND_WEEKDAYS,
+    .from_hour = 23,
+    .from_minute = 0,
+    .to_hour = 7,
+    .to_minute = 0,
+    .enabled = true,
+  };
+  memset(config.scheduled_days, 0, sizeof(config.scheduled_days));
+
+  int idx = quiet_time_create_schedule(&config);
+  cl_assert(idx >= 0);
+  cl_assert(idx < MAX_QUIET_TIME_SCHEDULES);
+
+  QuietTimeScheduleConfig retrieved;
+  quiet_time_get_schedule(idx, &retrieved);
+  cl_assert(retrieved.is_used == true);
+  cl_assert(retrieved.kind == QT_KIND_WEEKDAYS);
+  cl_assert(retrieved.from_hour == 23);
+  cl_assert(retrieved.to_hour == 7);
+  cl_assert(retrieved.enabled == true);
+
+  quiet_time_delete_schedule(idx);
+  quiet_time_get_schedule(idx, &retrieved);
+  cl_assert(retrieved.is_used == false);
+}
+
+void test_do_not_disturb__qt_create_rejects_empty_custom(void) {
+  QuietTimeScheduleConfig config = {
+    .kind = QT_KIND_CUSTOM,
+    .from_hour = 22,
+    .from_minute = 0,
+    .to_hour = 6,
+    .to_minute = 0,
+    .enabled = true,
+  };
+  memset(config.scheduled_days, 0, sizeof(config.scheduled_days));
+
+  int idx = quiet_time_create_schedule(&config);
+  cl_assert(idx == -1);
+}
+
+void test_do_not_disturb__qt_create_custom_with_days(void) {
+  QuietTimeScheduleConfig config = {
+    .kind = QT_KIND_CUSTOM,
+    .from_hour = 22,
+    .from_minute = 0,
+    .to_hour = 6,
+    .to_minute = 0,
+    .enabled = true,
+  };
+  memset(config.scheduled_days, 0, sizeof(config.scheduled_days));
+  config.scheduled_days[Monday] = true;
+  config.scheduled_days[Wednesday] = true;
+  config.scheduled_days[Friday] = true;
+
+  int idx = quiet_time_create_schedule(&config);
+  cl_assert(idx >= 0);
+
+  QuietTimeScheduleConfig retrieved;
+  quiet_time_get_schedule(idx, &retrieved);
+  cl_assert(retrieved.kind == QT_KIND_CUSTOM);
+  cl_assert(retrieved.scheduled_days[Monday] == true);
+  cl_assert(retrieved.scheduled_days[Wednesday] == true);
+  cl_assert(retrieved.scheduled_days[Friday] == true);
+  cl_assert(retrieved.scheduled_days[Sunday] == false);
+  cl_assert(retrieved.scheduled_days[Saturday] == false);
+
+  quiet_time_delete_schedule(idx);
+}
+
+void test_do_not_disturb__qt_scheduled_days_derivation(void) {
+  bool days[DAYS_PER_WEEK];
+
+  QuietTimeScheduleConfig config_everyday = { .kind = QT_KIND_EVERYDAY };
+  quiet_time_get_scheduled_days(&config_everyday, days);
+  for (int i = 0; i < DAYS_PER_WEEK; i++) {
+    cl_assert(days[i] == true);
+  }
+
+  QuietTimeScheduleConfig config_weekdays = { .kind = QT_KIND_WEEKDAYS };
+  quiet_time_get_scheduled_days(&config_weekdays, days);
+  cl_assert(days[Sunday] == false);
+  cl_assert(days[Monday] == true);
+  cl_assert(days[Saturday] == false);
+  cl_assert(days[Friday] == true);
+
+  QuietTimeScheduleConfig config_weekends = { .kind = QT_KIND_WEEKENDS };
+  quiet_time_get_scheduled_days(&config_weekends, days);
+  cl_assert(days[Sunday] == true);
+  cl_assert(days[Monday] == false);
+  cl_assert(days[Saturday] == true);
+  cl_assert(days[Friday] == false);
+}
+
+void test_do_not_disturb__qt_display_strings(void) {
+  const char *str;
+
+  str = quiet_time_get_string_for_kind(QT_KIND_EVERYDAY);
+  cl_assert_equal_s(str, "Every Day");
+
+  str = quiet_time_get_string_for_kind(QT_KIND_WEEKDAYS);
+  cl_assert_equal_s(str, "Weekdays");
+
+  str = quiet_time_get_string_for_kind(QT_KIND_WEEKENDS);
+  cl_assert_equal_s(str, "Weekends");
+
+  str = quiet_time_get_string_for_kind(QT_KIND_CUSTOM);
+  cl_assert_equal_s(str, "Custom");
+
+  char buf[28];
+  bool days[DAYS_PER_WEEK] = {false};
+  days[Monday] = true;
+  days[Wednesday] = true;
+  days[Friday] = true;
+  quiet_time_get_string_for_custom(days, buf, sizeof(buf));
+  cl_assert_equal_s(buf, "Mon,Wed,Fri");
+
+  bool single_day[DAYS_PER_WEEK] = {false};
+  single_day[Tuesday] = true;
+  quiet_time_get_string_for_custom(single_day, buf, sizeof(buf));
+  cl_assert_equal_s(buf, "Tuesdays");
+
+  // Single day truncation: buffer too small for full day name
+  char small_buf[4];
+  quiet_time_get_string_for_custom(single_day, small_buf, sizeof(small_buf));
+  cl_assert_equal_s(small_buf, "Tue");
+  cl_assert_equal_s(small_buf + 3, "");
+
+  // Multi-day truncation: no trailing comma when content is cut
+  bool many_days[DAYS_PER_WEEK] = {false};
+  many_days[Monday] = true;
+  many_days[Wednesday] = true;
+  many_days[Friday] = true;
+  char tiny_buf[8];
+  quiet_time_get_string_for_custom(many_days, tiny_buf, sizeof(tiny_buf));
+  cl_assert_equal_s(tiny_buf, "Mon,Wed");
+}
+
+void test_do_not_disturb__qt_multi_schedule_active(void) {
+  bool active;
+
+  // Clean slate
+  do_not_disturb_set_manually_enabled(false);
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    quiet_time_delete_schedule(i);
+  }
+
+  // Weekday schedule: 23:00 - 07:00
+  QuietTimeScheduleConfig weekday_config = {
+    .kind = QT_KIND_WEEKDAYS,
+    .from_hour = 23,
+    .from_minute = 0,
+    .to_hour = 7,
+    .to_minute = 0,
+    .enabled = true,
+  };
+  memset(weekday_config.scheduled_days, 0, sizeof(weekday_config.scheduled_days));
+  int weekday_idx = quiet_time_create_schedule(&weekday_config);
+  cl_assert(weekday_idx >= 0);
+  quiet_time_set_schedule_enabled(weekday_idx, true);
+
+  // Set time to Thursday 01:00 - inside weekday schedule (23:00 - 07:00)
+  rtc_set_time(s_thursday_01_00);
+  do_not_disturb_handle_clock_change();
+  active = do_not_disturb_is_active();
+  cl_assert(active == true);
+
+  // Set time to Thursday 01:30 - inside weekday schedule (23:00 - 07:00)
+  rtc_set_time(1426125000); // Thursday 01:30
+  do_not_disturb_handle_clock_change();
+  active = do_not_disturb_is_active();
+  cl_assert(active == true);
+
+  // Add weekend schedule: 01:00 - 09:00
+  QuietTimeScheduleConfig weekend_config = {
+    .kind = QT_KIND_WEEKENDS,
+    .from_hour = 1,
+    .from_minute = 0,
+    .to_hour = 9,
+    .to_minute = 0,
+    .enabled = true,
+  };
+  memset(weekend_config.scheduled_days, 0, sizeof(weekend_config.scheduled_days));
+  int weekend_idx = quiet_time_create_schedule(&weekend_config);
+  cl_assert(weekend_idx >= 0);
+  quiet_time_set_schedule_enabled(weekend_idx, true);
+
+  // Still Thursday 01:30 - inside weekday schedule
+  do_not_disturb_handle_clock_change();
+  active = do_not_disturb_is_active();
+  cl_assert(active == true);
+
+  // Disable weekday schedule
+  quiet_time_set_schedule_enabled(weekday_idx, false);
+  do_not_disturb_handle_clock_change();
+  active = do_not_disturb_is_active();
+  cl_assert(active == false); // Thursday, weekday disabled, weekend doesn't apply
+
+  // Clean up
+  quiet_time_delete_schedule(weekday_idx);
+  quiet_time_delete_schedule(weekend_idx);
+}
+
+void test_do_not_disturb__qt_migration_from_legacy(void) {
+  // Set up legacy weekday schedule
+  DoNotDisturbSchedule legacy_schedule = {
+    .from_hour = 22,
+    .from_minute = 0,
+    .to_hour = 6,
+    .to_minute = 0,
+  };
+  do_not_disturb_set_schedule(WeekdaySchedule, &legacy_schedule);
+  do_not_disturb_set_schedule_enabled(WeekdaySchedule, true);
+
+  // Verify the QT schedule was synced
+  QuietTimeScheduleConfig qt_config;
+  quiet_time_get_schedule(0, &qt_config);
+  cl_assert(qt_config.kind == QT_KIND_WEEKDAYS);
+  cl_assert(qt_config.from_hour == 22);
+  cl_assert(qt_config.from_minute == 0);
+  cl_assert(qt_config.to_hour == 6);
+  cl_assert(qt_config.to_minute == 0);
+  cl_assert(qt_config.enabled == true);
+
+  // Set up legacy weekend schedule
+  DoNotDisturbSchedule weekend_schedule = {
+    .from_hour = 0,
+    .from_minute = 0,
+    .to_hour = 10,
+    .to_minute = 0,
+  };
+  do_not_disturb_set_schedule(WeekendSchedule, &weekend_schedule);
+  do_not_disturb_set_schedule_enabled(WeekendSchedule, true);
+
+  // Verify the QT schedule was synced
+  quiet_time_get_schedule(1, &qt_config);
+  cl_assert(qt_config.kind == QT_KIND_WEEKENDS);
+  cl_assert(qt_config.from_hour == 0);
+  cl_assert(qt_config.to_hour == 10);
+  cl_assert(qt_config.enabled == true);
+
+  // Clean up
+  do_not_disturb_set_schedule_enabled(WeekdaySchedule, false);
+  do_not_disturb_set_schedule_enabled(WeekendSchedule, false);
+}
+
+void test_do_not_disturb__qt_create_finds_unused_slot(void) {
+  // Fill slots 0-1, leave slot 2 empty (is_used == false)
+  QuietTimeScheduleConfig config0 = {
+    .kind = QT_KIND_WEEKDAYS,
+    .from_hour = 23,
+    .from_minute = 0,
+    .to_hour = 7,
+    .to_minute = 0,
+    .enabled = true,
+  };
+  memset(config0.scheduled_days, 0, sizeof(config0.scheduled_days));
+  quiet_time_set_schedule(0, &config0);
+
+  QuietTimeScheduleConfig config1 = {
+    .kind = QT_KIND_WEEKENDS,
+    .from_hour = 1,
+    .from_minute = 0,
+    .to_hour = 9,
+    .to_minute = 0,
+    .enabled = true,
+  };
+  memset(config1.scheduled_days, 0, sizeof(config1.scheduled_days));
+  quiet_time_set_schedule(1, &config1);
+
+  // Creating a new schedule should land in slot 2
+  QuietTimeScheduleConfig new_config = {
+    .kind = QT_KIND_EVERYDAY,
+    .from_hour = 22,
+    .from_minute = 0,
+    .to_hour = 6,
+    .to_minute = 0,
+    .enabled = true,
+  };
+  int idx = quiet_time_create_schedule(&new_config);
+  cl_assert(idx == 2);
+
+  // Clean up
+  quiet_time_delete_schedule(0);
+  quiet_time_delete_schedule(1);
+  quiet_time_delete_schedule(2);
+}
+
+void test_do_not_disturb__qt_create_returns_full_when_no_slots(void) {
+  // Fill all slots
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    QuietTimeScheduleConfig config = {
+      .kind = QT_KIND_EVERYDAY,
+      .from_hour = 22,
+      .from_minute = 0,
+      .to_hour = 6,
+      .to_minute = 0,
+      .enabled = true,
+    };
+    quiet_time_set_schedule(i, &config);
+  }
+
+  // Should return -1 since all slots are full
+  QuietTimeScheduleConfig overflow = {
+    .kind = QT_KIND_EVERYDAY,
+    .from_hour = 10,
+    .from_minute = 0,
+    .to_hour = 14,
+    .to_minute = 0,
+    .enabled = true,
+  };
+  int idx = quiet_time_create_schedule(&overflow);
+  cl_assert(idx == -1);
+
+  // Clean up
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    quiet_time_delete_schedule(i);
+  }
+}
+
+//! Phone-originated receive-path tests.
+
+static void prv_simulate_phone_write(const char *key, const void *value, size_t value_len) {
+  // Mirror the real blob DB write path: write to settings_file, then
+  // dispatch the receive event.
+  SettingsFile file;
+  cl_must_pass(settings_file_open(&file, "notifpref", 1024));
+  cl_must_pass(settings_file_set(&file, key, strlen(key), value, value_len));
+  settings_file_close(&file);
+
+  PebbleBlobDBEvent event = {
+    .db_id = BlobDBIdSettings,
+    .type = BlobDBEventTypeInsert,
+    .key = (uint8_t *)key,
+    .key_len = (int)strlen(key),
+  };
+  alerts_preferences_handle_blob_db_event(&event);
+}
+
+void test_do_not_disturb__phone_manually_enabled_recomputes_active_state(void) {
+  cl_assert(do_not_disturb_is_active() == false);
+  cl_assert(do_not_disturb_is_manually_enabled() == false);
+  cl_assert_equal_i(s_num_dnd_events_put, 0);
+  cl_assert_equal_i(s_num_pref_change_events_put, 0);
+
+  // Phone toggles Manual ON.
+  const bool enabled = true;
+  prv_simulate_phone_write("dndManuallyEnabled", &enabled, sizeof(enabled));
+
+  cl_assert(do_not_disturb_is_manually_enabled() == true);
+  // Active state is recomputed and a DND event posted.
+  cl_assert(do_not_disturb_is_active() == true);
+  cl_assert_equal_i(s_num_dnd_events_put, 1);
+  cl_assert_equal_i(s_num_pref_change_events_put, 1);
+  prv_assert_manually_dnd_setting_val(true);
+
+  // Phone toggles Manual OFF.
+  const bool disabled = false;
+  prv_simulate_phone_write("dndManuallyEnabled", &disabled, sizeof(disabled));
+
+  cl_assert(do_not_disturb_is_manually_enabled() == false);
+  cl_assert(do_not_disturb_is_active() == false);
+  cl_assert_equal_i(s_num_dnd_events_put, 2);
+  cl_assert_equal_i(s_num_pref_change_events_put, 2);
+  prv_assert_manually_dnd_setting_val(false);
+}
+
+void test_do_not_disturb__phone_smart_enabled_recomputes_active_state(void) {
+  calendar_init();
+  cl_assert(do_not_disturb_is_smart_dnd_enabled() == false);
+  cl_assert(do_not_disturb_is_active() == false);
+  cl_assert_equal_i(s_num_dnd_events_put, 0);
+  cl_assert_equal_i(s_num_pref_change_events_put, 0);
+
+  // Phone toggles Smart ON; no calendar event so no DND event yet.
+  const bool enabled = true;
+  prv_simulate_phone_write("dndSmartEnabled", &enabled, sizeof(enabled));
+
+  cl_assert(do_not_disturb_is_smart_dnd_enabled() == true);
+  cl_assert(do_not_disturb_is_active() == false);
+  cl_assert_equal_i(s_num_dnd_events_put, 0);
+  cl_assert_equal_i(s_num_pref_change_events_put, 1);
+
+  // Calendar event starts; refresh posts a DND event.
+  s_event_ongoing = true;
+  cl_assert(do_not_disturb_is_active() == true);
+  do_not_disturb_refresh_active_state();
+  cl_assert_equal_i(s_num_dnd_events_put, 1);
+
+  s_event_ongoing = false;
+  do_not_disturb_refresh_active_state();
+  cl_assert(do_not_disturb_is_active() == false);
+  cl_assert_equal_i(s_num_dnd_events_put, 2);
+
+  // Phone toggles Smart OFF.
+  const bool disabled = false;
+  prv_simulate_phone_write("dndSmartEnabled", &disabled, sizeof(disabled));
+  cl_assert(do_not_disturb_is_smart_dnd_enabled() == false);
+  cl_assert(do_not_disturb_is_active() == false);
+  cl_assert_equal_i(s_num_dnd_events_put, 2);
+  cl_assert_equal_i(s_num_pref_change_events_put, 2);
+}
+
+//! Refresh is a no-op when the active state didn't change.
+void test_do_not_disturb__refresh_active_state_noop_when_unchanged(void) {
+  cl_assert(do_not_disturb_is_active() == false);
+  cl_assert_equal_i(s_num_dnd_events_put, 0);
+
+  do_not_disturb_refresh_active_state();
+  cl_assert(do_not_disturb_is_active() == false);
+  cl_assert_equal_i(s_num_dnd_events_put, 0);
+}
+

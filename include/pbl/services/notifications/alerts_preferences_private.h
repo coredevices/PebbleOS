@@ -82,6 +82,12 @@ bool alerts_preferences_dnd_is_smart_enabled(void);
 
 void alerts_preferences_dnd_set_smart_enabled(bool enable);
 
+void alerts_preferences_qt_get_schedule(int index, QuietTimeScheduleConfig *out);
+
+void alerts_preferences_qt_set_schedule(int index, const QuietTimeScheduleConfig *config);
+
+int alerts_preferences_qt_get_num_active(void);
+
 //! Lock the alerts preferences mutex. Must be paired with alerts_preferences_unlock().
 void alerts_preferences_lock(void);
 

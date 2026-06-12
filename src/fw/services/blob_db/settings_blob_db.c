@@ -131,6 +131,11 @@ static const char *s_syncable_notif_prefs[] = {
   "dndWeekdayScheduleEnabled",
   "dndWeekendSchedule",
   "dndWeekendScheduleEnabled",
+  "qtSchedule0",
+  "qtSchedule1",
+  "qtSchedule2",
+  "qtSchedule3",
+  "qtSchedule4",
   "notifWindowTimeout",
   "notifDesignStyle",
   "notifVibeDelay",
@@ -272,12 +277,15 @@ void settings_blob_db_init(void) {
     return;
   }
 
-  // Register callback to sync settings immediately when they change
   settings_file_set_change_callback(prv_settings_change_callback);
 
   s_initialized = true;
   PBL_LOG_INFO("Settings BlobDB initialized (%u whitelisted settings)",
           (unsigned int) s_num_syncable_settings);
+}
+
+void settings_blob_db_reset_for_test(void) {
+  s_initialized = false;
 }
 
 status_t settings_blob_db_insert(const uint8_t *key, int key_len,
@@ -464,6 +472,29 @@ typedef struct {
   BlobDBDirtyItem *dirty_list_tail;
 } BuildDirtyListContext;
 
+typedef struct {
+  bool found_dirty;
+} IsDirtyContext;
+
+static bool prv_is_dirty_callback(SettingsFile *file, SettingsRecordInfo *info,
+                                   void *context) {
+  IsDirtyContext *ctx = (IsDirtyContext *)context;
+
+  if (!info->dirty) {
+    return true;
+  }
+
+  uint8_t key_buf[SETTINGS_KEY_MAX_LEN];
+  info->get_key(file, key_buf, info->key_len);
+
+  if (prv_is_syncable(key_buf, info->key_len)) {
+    ctx->found_dirty = true;
+    return false;
+  }
+
+  return true;
+}
+
 static bool prv_build_dirty_list_callback(SettingsFile *file,
                                           SettingsRecordInfo *info,
                                           void *context) {
@@ -569,30 +600,6 @@ status_t settings_blob_db_is_dirty(bool *is_dirty_out) {
     return E_INTERNAL;
   }
 
-  // Quick check: iterate and return true on first dirty whitelisted setting
-  typedef struct {
-    bool found_dirty;
-  } IsDirtyContext;
-
-  bool is_dirty_callback(SettingsFile *file, SettingsRecordInfo *info, void *context) {
-    IsDirtyContext *ctx = (IsDirtyContext *)context;
-
-    if (!info->dirty) {
-      return true; // Continue
-    }
-
-    // Check if whitelisted
-    uint8_t key_buf[SETTINGS_KEY_MAX_LEN];
-    info->get_key(file, key_buf, info->key_len);
-
-    if (prv_is_syncable(key_buf, info->key_len)) {
-      ctx->found_dirty = true;
-      return false; // Stop iteration
-    }
-
-    return true; // Continue
-  }
-
   IsDirtyContext ctx = { .found_dirty = false };
 
   // Check shell prefs file
@@ -600,7 +607,7 @@ status_t settings_blob_db_is_dirty(bool *is_dirty_out) {
   SettingsFile file;
   status_t status = settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN);
   if (PASSED(status)) {
-    settings_file_each(&file, is_dirty_callback, &ctx);
+      settings_file_each(&file, prv_is_dirty_callback, &ctx);
     settings_file_close(&file);
   }
   prefs_private_unlock();
@@ -610,7 +617,7 @@ status_t settings_blob_db_is_dirty(bool *is_dirty_out) {
     alerts_preferences_lock();
     status = settings_file_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN);
     if (PASSED(status)) {
-      settings_file_each(&file, is_dirty_callback, &ctx);
+    settings_file_each(&file, prv_is_dirty_callback, &ctx);
       settings_file_close(&file);
     }
     alerts_preferences_unlock();
@@ -739,11 +746,14 @@ status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
   settings_file_each(&file, prv_get_timestamp_callback, &ctx);
 
   if (ctx.found && ctx.last_modified > timestamp) {
-    // Watch data is newer - reject the insert
+    // Watch data is newer - reject the insert and push the watch's value back to
+    // the phone so its UI refreshes. Otherwise the phone treats the DataStale
+    // response as success and keeps showing its (stale) local value.
     settings_file_close(&file);
     prv_unlock_for_file(is_notif_pref);
     PBL_LOG_DBG("Rejecting stale data: watch=%lu phone=%lu",
             (unsigned long)ctx.last_modified, (unsigned long)timestamp);
+    blob_db_sync_record(BlobDBIdSettings, key, key_len, ctx.last_modified);
     return E_INVALID_OPERATION;
   }
 
