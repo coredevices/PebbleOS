@@ -50,6 +50,10 @@ static void prv_ancs_handle_service_discovered_cb(BLECharacteristic *characteris
   ancs_handle_service_discovered(characteristics, s_discovery_slot);
 }
 
+static void prv_ppogatt_handle_service_discovered_cb(BLECharacteristic *characteristics) {
+  ppogatt_handle_service_discovered(characteristics, s_discovery_slot);
+}
+
 static PhoneSlot prv_slot_for_device(const BTDeviceInternal *device) {
   for (PhoneSlot slot = 0; slot < MAX_PHONE_CONNECTIONS; slot++) {
     if (s_phone_slots[slot].active &&
@@ -149,7 +153,7 @@ static const KernelLEClient s_clients[KernelLEClientNum] = {
     .service_uuid = &s_ppogatt_service_uuid,
     .characteristic_uuids = s_ppogatt_characteristic_uuids,
     .num_characteristics = PPoGATTCharacteristicNum,
-    .handle_service_discovered = ppogatt_handle_service_discovered,
+    .handle_service_discovered = prv_ppogatt_handle_service_discovered_cb,
     .handle_service_removed = ppogatt_handle_service_removed,
     .invalidate_all_references = ppogatt_invalidate_all_references,
     .can_handle_characteristic = ppogatt_can_handle_characteristic,
@@ -490,9 +494,9 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
     }
 
     ancs_create(slot);
+    ppogatt_create(slot);
     if (slot == 0) {
       ams_create();
-      ppogatt_create();
     }
 
     int active_count = 0;
@@ -508,13 +512,13 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
     PBL_LOG_DBG("Disconnected from Gateway!");
 
     PhoneSlot slot = prv_slot_for_device(&device);
-    if (slot == 0) {
-      ppogatt_destroy();
-      ams_destroy();
-    }
     if (slot != PHONE_SLOT_INVALID) {
+      ppogatt_destroy(slot);
       ancs_destroy(slot);
       prv_free_slot(slot);
+    }
+    if (slot == 0) {
+      ams_destroy();
     }
     app_launch_handle_disconnection();
     gap_le_slave_reconnect_start();
@@ -598,5 +602,7 @@ void kernel_le_client_deinit(void) {
 
   gap_le_slave_reconnect_stop();
   gap_le_connect_cancel_all(GAPLEClientKernel);
-  ppogatt_destroy();
+  for (PhoneSlot slot = 0; slot < MAX_PHONE_CONNECTIONS; slot++) {
+    ppogatt_destroy(slot);
+  }
 }
