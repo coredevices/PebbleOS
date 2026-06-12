@@ -803,6 +803,30 @@ static void prv_s_main(void) {
   prv_handle_deinit();
 }
 
+// Launch the existing clear-history confirmation flow without opening the list UI.
+static void prv_clear_history_handle_init(void) {
+  // Reuse the existing dialog callbacks, which expect NotificationsData storage.
+  NotificationsData *data = app_zalloc_check(sizeof(NotificationsData));
+
+  app_state_set_user_data(data);
+  prv_settings_clear_history_window_push(data);
+}
+
+static void prv_clear_history_handle_deinit(void) {
+  NotificationsData *data = app_state_get_user_data();
+
+  i18n_free_all(data);
+  app_free(data);
+}
+
+static void prv_clear_history_main(void) {
+  prv_clear_history_handle_init();
+
+  app_event_loop();
+
+  prv_clear_history_handle_deinit();
+}
+
 
 const PebbleProcessMd* notifications_app_get_info() {
   static const PebbleProcessMdSystem s_app_md = {
@@ -816,4 +840,16 @@ const PebbleProcessMd* notifications_app_get_info() {
     .icon_resource_id = RESOURCE_ID_NOTIFICATIONS_APP_GLANCE,
   };
   return (const PebbleProcessMd*) &s_app_md;
+}
+
+const PebbleProcessMd *notifications_clear_history_app_get_info(void) {
+  static const PebbleProcessMdSystem s_app_md = {
+    .common = {
+      .main_func = prv_clear_history_main,
+      .uuid = NOTIFICATIONS_CLEAR_HISTORY_UUID,
+      .visibility = ProcessVisibilityQuickLaunch,
+    },
+    .name = i18n_noop("Clear Notification History"),
+  };
+  return (const PebbleProcessMd *) &s_app_md;
 }
