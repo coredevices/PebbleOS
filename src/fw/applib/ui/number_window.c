@@ -74,7 +74,9 @@ static void click_config_provider(NumberWindow *nf) {
 static GRect prv_get_text_frame(Layer *window_layer) {
   const int16_t x_margin = 5;
   const int16_t label_y_offset = PBL_IF_ROUND_ELSE(40, 16);
+#if PBL_RECT
   const bool action_bar_on_right = action_bar_is_on_right();
+#endif
   const GEdgeInsets insets = PBL_IF_ROUND_ELSE(GEdgeInsets(ACTION_BAR_WIDTH + x_margin),
                                                GEdgeInsets(0,
                                                            action_bar_on_right ?
