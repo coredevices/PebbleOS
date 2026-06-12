@@ -109,7 +109,21 @@ clar(ctx,
      " tests/fixtures/resources/timeline_resource_table.auto.c"
   ),
   test_sources_ant_glob = "test_timeline_resources.c",
-  override_includes=['dummy_board'])
+  add_includes=[
+      "include",
+      "src/fw",
+      "src/libutil/includes",
+      "src/libos/include",
+      "src/fw/applib/vendor/uPNG",
+      "tests/stubs",
+      "tests/overrides/default",
+      "tests/overrides/default/resources/obelix",
+      "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
+      "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
+  ],
+  defines=["CONFIG_PLATFORM_EMERY=1"],
+  use=["libutil"],
+  freestanding=True)
 
 clar(ctx,
   sources_ant_glob = \
