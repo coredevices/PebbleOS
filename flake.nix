@@ -45,6 +45,7 @@
             buildInputs = pkgs.lib.optionals pkgs.stdenv.isLinux (with pkgs; [
               # arm-none-eabi host binaries (matches nixpkgs gcc-arm-embedded)
               ncurses6
+              ncurses5 # aarch64-linux toolchain gdb links ABI-5 ncurses/tinfo
               libxcrypt-legacy
               xz
               zstd
@@ -99,7 +100,8 @@
               protobuf
               python313
             ] ++ lib.optionals stdenv.isLinux [
-              clang_multi
+              # multilib clang (i686 sysroot for -m32 test builds) is x86-only
+              (if stdenv.hostPlatform.isx86_64 then clang_multi else clang)
               gcc
               # Required for Moddable build
               dash
