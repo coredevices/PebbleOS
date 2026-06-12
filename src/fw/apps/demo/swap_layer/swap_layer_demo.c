@@ -132,7 +132,7 @@ static void prv_show_incoming_call(void *data) {
     .number = "+55 408-555-1212",
     .name = "Pankajavalli Balamurugan",
   };
-  phone_ui_handle_incoming_call(&caller, true, false, PhoneCallSource_PP);
+  phone_ui_handle_incoming_call(&caller, false, PhoneCallSource_PP);
 }
 
 static void prv_select_single_click_handler(ClickRecognizerRef recognizer, void *context) {

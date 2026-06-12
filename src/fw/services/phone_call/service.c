@@ -88,11 +88,6 @@ static void prv_cancel_call_watchdog(void) {
   pp_get_phone_state_set_enabled(false);
 }
 
-static bool prv_can_answer(void) {
-  // We can't answer calls with Android
-  return prv_call_is_ancs();
-}
-
 static bool prv_should_show_ongoing_call_ui(void) {
   // We only want to show the ongoing call UI on Android
   return (s_call_source == PhoneCallSource_PP);
@@ -132,7 +127,7 @@ static void prv_handle_incoming_call(const PebblePhoneEvent *event) {
 
   prv_schedule_call_watchdog(600);
 
-  phone_ui_handle_incoming_call(event->caller, prv_can_answer(), prv_should_show_ongoing_call_ui(),
+  phone_ui_handle_incoming_call(event->caller, prv_should_show_ongoing_call_ui(),
                                 s_call_source);
   PBL_ANALYTICS_ADD(phone_call_incoming_count, 1);
   PBL_ANALYTICS_TIMER_START(phone_call_time_ms);
