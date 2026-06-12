@@ -635,16 +635,4 @@ unlock:
   bt_unlock();
 }
 
-GAPLEAdvertisingJobRef gap_le_advert_get_current_job(void) {
-  return s_current;
-}
-
-GAPLEAdvertisingJobRef gap_le_advert_get_jobs(void) {
-  return s_jobs;
-}
-
-GAPLEAdvertisingJobTag gap_le_advert_get_job_tag(GAPLEAdvertisingJobRef job) {
-  return job->tag;
-}
-
 #undef GAP_LE_ADVERT_LOG_LEVEL
