@@ -106,5 +106,12 @@ bool light_is_on(void);
 //! on, the last pre-backlight value is returned.
 uint32_t light_get_ambient_lux(void);
 
+//! Start a breathing cycle: fade in, hold, fade out, off, repeat.
+//! Used for charge-complete notification. Ignores DND and user settings.
+void light_start_charge_breathe(void);
+
+//! Stop the breathing cycle and turn the backlight off.
+void light_stop_charge_breathe(void);
+
 //!   @} // group Light
 //! @} // group UI

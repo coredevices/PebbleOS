@@ -27,6 +27,10 @@ typedef enum {
   LIGHT_STATE_ON_TIMED = 2,     // backlight on, will start fading after a period
   LIGHT_STATE_ON_FADING = 3,    // backlight in the process of fading out
   LIGHT_STATE_OFF = 4,          // backlight off; idle state
+  LIGHT_STATE_BREATHE_FADE_IN = 5,  // breathing: ramping brightness up
+  LIGHT_STATE_BREATHE_HOLD = 6,      // breathing: holding at full brightness
+  LIGHT_STATE_BREATHE_FADE_OUT = 7,  // breathing: ramping brightness down
+  LIGHT_STATE_BREATHE_OFF = 8,       // breathing: off between cycles
 } BacklightState;
 
 // the time duration of a fade out from full intensity
@@ -34,6 +38,12 @@ const uint32_t LIGHT_FADE_TIME_MS = 500;
 // upper bound on fade-out steps
 #define LIGHT_FADE_MAX_STEPS 20U
 const uint8_t LIGHT_FADE_STEPS = LIGHT_FADE_MAX_STEPS;
+
+// breathing cycle timing
+const uint32_t BREATHE_FADE_TIME_MS = 750;
+const uint8_t BREATHE_FADE_STEPS = 20;
+const uint32_t BREATHE_HOLD_TIME_MS = 750;
+const uint32_t BREATHE_OFF_TIME_MS = 2000;
 
 /*
  *              ^
@@ -101,6 +111,10 @@ static uint8_t s_fade_level_idx = 0;
 //! Dwell time per fade rung, paced so a fade from full intensity takes
 //! LIGHT_FADE_TIME_MS
 static uint32_t s_fade_step_ms = 0;
+
+//! Breathing cycle state
+static uint8_t s_breathe_step;
+static uint8_t s_breathe_target_intensity;
 
 //! Mutex to guard all the above state. We have a pattern of taking the lock in the public functions and assuming
 //! it's already taken in the prv_ functions.
@@ -170,6 +184,7 @@ static uint8_t prv_dynamic_mode_floor_intensity(BacklightDynamicMode mode) {
 #endif
 
 static void prv_change_state(BacklightState new_state);
+static void prv_change_brightness(uint8_t new_brightness);
 
 //! Timer callback: holdoff expired, drop the prime so the W1160 stops
 //! integrating in the background. Runs on the new_timer task.
@@ -229,6 +244,46 @@ static bool prv_als_is_light(void) {
 static void light_timer_callback(void *data) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   prv_change_state(LIGHT_STATE_ON_FADING);
+  pbl_mutex_unlock(&s_mutex);
+}
+
+static void prv_breathe_timer_callback(void *data) {
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
+  switch (s_light_state) {
+    case LIGHT_STATE_BREATHE_FADE_IN:
+      s_breathe_step++;
+      if (s_breathe_step >= BREATHE_FADE_STEPS) {
+        prv_change_state(LIGHT_STATE_BREATHE_HOLD);
+      } else {
+        uint8_t brightness =
+            (uint8_t)((uint16_t)s_breathe_target_intensity * s_breathe_step / BREATHE_FADE_STEPS);
+        prv_change_brightness(brightness);
+        new_timer_start(s_timer_id, BREATHE_FADE_TIME_MS / BREATHE_FADE_STEPS,
+                        prv_breathe_timer_callback, NULL, 0);
+      }
+      break;
+    case LIGHT_STATE_BREATHE_HOLD:
+      prv_change_state(LIGHT_STATE_BREATHE_FADE_OUT);
+      break;
+    case LIGHT_STATE_BREATHE_FADE_OUT:
+      s_breathe_step++;
+      if (s_breathe_step >= BREATHE_FADE_STEPS) {
+        prv_change_state(LIGHT_STATE_BREATHE_OFF);
+      } else {
+        uint8_t brightness =
+            (uint8_t)((uint16_t)s_breathe_target_intensity *
+                      (BREATHE_FADE_STEPS - s_breathe_step) / BREATHE_FADE_STEPS);
+        prv_change_brightness(brightness);
+        new_timer_start(s_timer_id, BREATHE_FADE_TIME_MS / BREATHE_FADE_STEPS,
+                        prv_breathe_timer_callback, NULL, 0);
+      }
+      break;
+    case LIGHT_STATE_BREATHE_OFF:
+      prv_change_state(LIGHT_STATE_BREATHE_FADE_IN);
+      break;
+    default:
+      break;
+  }
   pbl_mutex_unlock(&s_mutex);
 }
 
@@ -416,6 +471,28 @@ static void prv_change_state(BacklightState new_state) {
     case LIGHT_STATE_OFF:
       new_brightness = 0;
       new_timer_stop(s_timer_id);
+      break;
+    case LIGHT_STATE_BREATHE_FADE_IN:
+      s_breathe_step = 0;
+      s_breathe_target_intensity = prv_backlight_get_intensity();
+      new_brightness = 0;
+      new_timer_start(s_timer_id, BREATHE_FADE_TIME_MS / BREATHE_FADE_STEPS,
+                      prv_breathe_timer_callback, NULL, 0);
+      break;
+    case LIGHT_STATE_BREATHE_HOLD:
+      new_brightness = s_breathe_target_intensity;
+      new_timer_start(s_timer_id, BREATHE_HOLD_TIME_MS,
+                      prv_breathe_timer_callback, NULL, 0);
+      break;
+    case LIGHT_STATE_BREATHE_FADE_OUT:
+      s_breathe_step = 0;
+      new_timer_start(s_timer_id, BREATHE_FADE_TIME_MS / BREATHE_FADE_STEPS,
+                      prv_breathe_timer_callback, NULL, 0);
+      break;
+    case LIGHT_STATE_BREATHE_OFF:
+      new_brightness = 0;
+      new_timer_start(s_timer_id, BREATHE_OFF_TIME_MS,
+                      prv_breathe_timer_callback, NULL, 0);
       break;
   }
 
@@ -735,6 +812,28 @@ void light_allow(bool allowed) {
     prv_change_state(LIGHT_STATE_OFF);
   }
   s_backlight_allowed = allowed;
+}
+
+void light_start_charge_breathe(void) {
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
+  s_breathe_step = 0;
+  prv_change_state(LIGHT_STATE_BREATHE_FADE_IN);
+  pbl_mutex_unlock(&s_mutex);
+}
+
+void light_stop_charge_breathe(void) {
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
+  switch (s_light_state) {
+    case LIGHT_STATE_BREATHE_FADE_IN:
+    case LIGHT_STATE_BREATHE_HOLD:
+    case LIGHT_STATE_BREATHE_FADE_OUT:
+    case LIGHT_STATE_BREATHE_OFF:
+      prv_change_state(LIGHT_STATE_OFF);
+      break;
+    default:
+      break;
+  }
+  pbl_mutex_unlock(&s_mutex);
 }
 
 DEFINE_SYSCALL(bool, sys_light_is_on, void) {
