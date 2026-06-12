@@ -15,6 +15,7 @@ config UART_NRF5
 
 config UART_SF32LB
     bool "SiFli SF32LB UART Controller"
+    select HAL_SIFLI_UART
     help
       Support for the SiFli SF32LB UART controller.
 
