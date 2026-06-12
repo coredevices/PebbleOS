@@ -72,7 +72,23 @@ clar(ctx,
 clar(ctx,
     sources_ant_glob = \
         " src/fw/services/evented_timer/service.c",
-    test_sources_ant_glob = "test_evented_timer.c")
+    test_sources_ant_glob = "test_evented_timer.c",
+    defines=["CONFIG_PLATFORM_EMERY=1"],
+    add_includes = [
+        "include",
+        "src/fw",
+        "src/libos/include",
+        "src/libutil/includes",
+        "tests/fakes",
+        "tests/stubs",
+        "tests/overrides/default",
+        "tests/overrides/default/resources/obelix",
+        "third_party/freertos",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
+    ],
+    use=["libutil"],
+    freestanding=True)
 
 clar(ctx,
     sources_ant_glob = \
@@ -86,13 +102,36 @@ clar(ctx,
 clar(ctx,
     sources_ant_glob = \
         " src/fw/services/ecompass/correction.c",
-    test_sources_ant_glob = "test_compass_cal.c")
+    test_sources_ant_glob = "test_compass_cal.c",
+    add_includes = [
+        "include",
+        "src/fw",
+        "src/libutil/includes",
+        "tests/stubs",
+    ],
+    freestanding=True)
 
 clar(ctx,
     sources_ant_glob = \
         " src/fw/services/light/service.c",
     test_sources_ant_glob = "test_light.c",
-    override_includes=['dummy_board'])
+    defines=["CONFIG_PLATFORM_EMERY=1"],
+    add_includes = [
+        "tests/overrides/dummy_board",
+        "include",
+        "src/fw",
+        "src/libos/include",
+        "src/libutil/includes",
+        "tests/fakes",
+        "tests/stubs",
+        "tests/overrides/default",
+        "tests/overrides/default/resources/obelix",
+        "third_party/freertos",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
+    ],
+    use=["libutil"],
+    freestanding=True)
 
 clar(ctx,
     sources_ant_glob = \
@@ -101,12 +140,44 @@ clar(ctx,
         " src/fw/services/phone_call/util.c" \
         " src/fw/services/phone_pp/service.c",
     test_sources_ant_glob = "test_phone_pp.c",
-    override_includes=['dummy_board'])
+    defines=["CONFIG_PLATFORM_EMERY=1"],
+    add_includes = [
+        "tests/overrides/dummy_board",
+        "include",
+        "src/fw",
+        "src/libos/include",
+        "src/libutil/includes",
+        "tests/fakes",
+        "tests/stubs",
+        "tests/overrides/default",
+        "tests/overrides/default/resources/obelix",
+        "third_party/freertos",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
+    ],
+    use=["libutil"],
+    freestanding=True)
 
 clar(ctx,
     sources_ant_glob = \
         " src/fw/services/phone_call/service.c",
-    test_sources_ant_glob = "test_phone_call.c",)
+    test_sources_ant_glob = "test_phone_call.c",
+    defines=["CONFIG_PLATFORM_EMERY=1"],
+    add_includes = [
+        "include",
+        "src/fw",
+        "src/libos/include",
+        "src/libutil/includes",
+        "tests/fakes",
+        "tests/stubs",
+        "tests/overrides/default",
+        "tests/overrides/default/resources/obelix",
+        "third_party/freertos",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
+    ],
+    use=["libutil"],
+    freestanding=True)
 
 clar(ctx,
     sources_ant_glob = \
@@ -249,8 +320,25 @@ clar(ctx,
 clar(ctx,
     sources_ant_glob = " ".join([
         " src/fw/services/audio_endpoint/service.c " \
-        " tests/fakes/fake_session.c"]),\
-    test_sources_ant_glob = "test_audio_endpoint.c")
+        " tests/fakes/fake_session.c"]),
+    test_sources_ant_glob = "test_audio_endpoint.c",
+    defines=["CONFIG_PLATFORM_EMERY=1"],
+    add_includes = [
+        "tests/overrides/dummy_board",
+        "include",
+        "src/fw",
+        "src/libos/include",
+        "src/libutil/includes",
+        "tests/fakes",
+        "tests/stubs",
+        "tests/overrides/default",
+        "tests/overrides/default/resources/obelix",
+        "third_party/freertos",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
+    ],
+    use=["libutil"],
+    freestanding=True)
 
 clar(ctx,
     sources_ant_glob = " ".join([
@@ -382,7 +470,23 @@ clar(ctx,
         "  tests/fakes/fake_events.c " \
         ,
     test_sources_ant_glob = "test_accel_manager.c",
-    override_includes=['dummy_board'])
+    defines=["CONFIG_PLATFORM_EMERY=1"],
+    add_includes = [
+        "tests/overrides/dummy_board",
+        "include",
+        "src/fw",
+        "src/libos/include",
+        "src/libutil/includes",
+        "tests/fakes",
+        "tests/stubs",
+        "tests/overrides/default",
+        "tests/overrides/default/resources/obelix",
+        "third_party/freertos",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
+    ],
+    use=["libutil"],
+    freestanding=True)
 
 clar(ctx,
     sources_ant_glob = " ".join([
@@ -457,16 +561,60 @@ clar(ctx,
 clar(ctx,
     sources_ant_glob = "src/fw/services/vibes/vibe_score.c" \
         " src/fw/util/generic_attribute.c",
-    test_sources_ant_glob = "test_vibe_score.c")
+    test_sources_ant_glob = "test_vibe_score.c",
+    defines=["CONFIG_PLATFORM_EMERY=1"],
+    add_includes = [
+        "include",
+        "src/fw",
+        "src/libos/include",
+        "src/libutil/includes",
+        "tests/stubs",
+        "tests/overrides/default",
+        "tests/overrides/default/resources/obelix",
+        "third_party/freertos",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
+    ],
+    freestanding=True)
 
 clar(ctx,
     sources_ant_glob = "src/fw/services/vibes/vibe_score_info.c",
-    test_sources_ant_glob = "test_vibe_score_info.c")
+    test_sources_ant_glob = "test_vibe_score_info.c",
+    defines=["CONFIG_PLATFORM_EMERY=1"],
+    add_includes = [
+        "include",
+        "src/fw",
+        "src/libos/include",
+        "src/libutil/includes",
+        "tests/stubs",
+        "tests/overrides/default/resources/obelix",
+    ],
+    freestanding=True)
 
 clar(ctx,
     sources_ant_glob = "src/fw/services/touch/touch.c" \
         " tests/fakes/fake_events.c",
-    test_sources_ant_glob = "test_touch.c")
+    test_sources_ant_glob = "test_touch.c",
+    defines=[
+        "CONFIG_PLATFORM_EMERY=1",
+        "PBL_DISPLAY_WIDTH=200",
+        "PBL_DISPLAY_HEIGHT=228",
+    ],
+    add_includes = [
+        "include",
+        "src/fw",
+        "src/libos/include",
+        "src/libutil/includes",
+        "tests/fakes",
+        "tests/stubs",
+        "tests/overrides/default",
+        "tests/overrides/default/resources/obelix",
+        "third_party/freertos",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
+    ],
+    use=["libutil"],
+    freestanding=True)
 
 clar(ctx,
     sources_ant_glob = \
@@ -488,6 +636,22 @@ clar(ctx,
          " tests/fakes/fake_settings_file.c"
      ),
      test_sources_ant_glob="test_app_glance_service.c",
-     override_includes=['dummy_board'])
+     defines=["CONFIG_PLATFORM_EMERY=1"],
+     add_includes=[
+         "tests/overrides/dummy_board",
+         "include",
+         "src/fw",
+         "src/libos/include",
+         "src/libutil/includes",
+         "tests/fakes",
+         "tests/stubs",
+         "tests/overrides/default",
+         "tests/overrides/default/resources/obelix",
+         "third_party/freertos",
+         "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
+         "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
+     ],
+     use=["libutil"],
+     freestanding=True)
 
 # vim:filetype=python
