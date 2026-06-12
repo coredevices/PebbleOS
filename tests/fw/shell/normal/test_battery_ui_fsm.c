@@ -11,14 +11,14 @@
 #include "kernel/low_power.h"
 #include "kernel/ui/modals/modal_manager.h"
 #include "kernel/util/standby.h"
+#include "process_management/app_manager.h"
 #include "pbl/services/battery/battery_curve.h"
+#include "shell/normal/battery_ui.h"
+#include "util/ratio.h"
 #include "pbl/services/battery/battery_state.h"
 #include "pbl/services/light.h"
 #include "pbl/services/new_timer/new_timer.h"
-#include "process_management/app_manager.h"
-#include "shell/normal/battery_ui.h"
 #include "shell/prefs.h"
-#include "util/ratio.h"
 
 extern void battery_ui_reset_fsm_for_tests(void);
 
