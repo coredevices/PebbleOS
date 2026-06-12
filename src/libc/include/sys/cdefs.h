@@ -16,6 +16,17 @@
 #define __STRING(x) #x
 
 /*
+ * macOS SDK compat: assert.h selects the safe __assert_rtn() path only when
+ * __DARWIN_UNIX03 is set.  Without it, the fallback __assert() macro uses
+ * __unsafe_forge_null_terminated, which is a clang pointer-safety extension
+ * not available in all build modes.  Define it here so that assert.h always
+ * takes the UNIX03 path under pblibc.
+ */
+#if defined(__APPLE__) && !defined(__DARWIN_UNIX03)
+# define __DARWIN_UNIX03 1
+#endif
+
+/*
  * Compiler attribute shims expected by platform SDK/libc headers when they
  * are pulled in via #include_next chains (e.g. setjmp.h, assert.h).
  *
