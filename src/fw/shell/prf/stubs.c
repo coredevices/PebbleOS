@@ -9,6 +9,7 @@
 
 #include "util/uuid.h"
 #include "board/board.h"
+#include "bluetooth/bluetooth_types.h"
 #include "drivers/backlight.h"
 #include "kernel/events.h"
 #include "popups/crashed_ui.h"
@@ -226,6 +227,10 @@ bool bt_persistent_storage_get_airplane_mode_enabled(void) {
 }
 
 void bt_persistent_storage_set_airplane_mode_enabled(bool *state) {
+}
+
+int bt_persistent_storage_get_all_ble_ancs_bondings(BTBondingID *out, int max_count) {
+  return 0;
 }
 
 uint32_t backlight_get_timeout_ms(void) {
