@@ -362,7 +362,8 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
     prv_start_vibes();
   }
 #ifdef CONFIG_SPEAKER
-  if (have_info) {
+  const bool sound_on = have_info && info.sound_enabled && !speaker_service_is_muted();
+  if (sound_on) {
     prv_start_sound(alarm_id, vibe_on);
   }
 #endif
