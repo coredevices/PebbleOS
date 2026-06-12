@@ -99,10 +99,13 @@ void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
   system_task_add_callback(callback, data);
 }
 
-void ppogatt_create(void) {
+void ppogatt_create(PhoneSlot slot) {
 }
 
-void ppogatt_destroy(void) {
+void ppogatt_destroy(PhoneSlot slot) {
+}
+
+void ppogatt_handle_service_discovered(BLECharacteristic *characteristics, PhoneSlot slot) {
 }
 
 void ppogatt_handle_buffer_empty(void) {
