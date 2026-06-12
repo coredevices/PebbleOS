@@ -3,9 +3,6 @@
 
 #include <bluetooth/gatt.h>
 
-#include <comm/bt_lock.h>
-#include <comm/ble/gap_le_connection.h>
-
 #include <host/ble_gatt.h>
 #include <host/ble_uuid.h>
 #include <os/os_mbuf.h>
@@ -18,22 +15,14 @@ PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
 void bt_driver_gatt_respond_read_subscription(uint32_t transaction_id, uint16_t response_code) {}
 
-void bt_driver_gatt_send_changed_indication(uint32_t connection_id, const ATTHandleRange *data) {
-  // Resolve the NimBLE connection handle for the Pebble GATT connection while
-  // holding bt_lock (the GAPLEConnection is only valid under the lock).
+void bt_driver_gatt_send_changed_indication(const BTDeviceInternal *device,
+                                            const ATTHandleRange *data) {
+  // Resolve the NimBLE connection handle through the NimBLE connection table
+  // (ble_gap_conn_find_by_addr). No bt_lock needed — the device address is a
+  // value copy from the service layer, which held bt_lock when it took the copy.
   uint16_t conn_handle;
-  bool found_conn;
-  bt_lock();
-  {
-    GAPLEConnection *connection = gap_le_connection_by_gatt_id(connection_id);
-    found_conn = (connection != NULL) &&
-                 pebble_device_to_nimble_conn_handle(&connection->device, &conn_handle);
-  }
-  bt_unlock();
-
-  if (!found_conn) {
-    PBL_LOG_ERR("Service Changed: no connection handle for id %" PRIu32,
-            connection_id);
+  if (!pebble_device_to_nimble_conn_handle(device, &conn_handle)) {
+    PBL_LOG_ERR("Service Changed: no connection handle for device");
     return;
   }
 
