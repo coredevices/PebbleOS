@@ -41,7 +41,23 @@ clar(ctx,
         " src/fw/services/cron/service.c" \
         " src/fw/util/time/time.c" \
         " src/fw/util/time/mktime.c",
-    test_sources_ant_glob = "test_cron.c")
+    test_sources_ant_glob = "test_cron.c",
+    defines=["CONFIG_PLATFORM_EMERY=1"],
+    add_includes = [
+        "include",
+        "src/fw",
+        "src/libos/include",
+        "src/libutil/includes",
+        "tests/fakes",
+        "tests/stubs",
+        "tests/overrides/default",
+        "tests/overrides/default/resources/obelix",
+        "third_party/freertos",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
+    ],
+    use=["libutil"],
+    freestanding=True)
 
 clar(ctx,
     sources_ant_glob = \
@@ -67,7 +83,23 @@ clar(ctx,
         " src/fw/util/time/time.c" \
         " third_party/tinymt/TinyMT/tinymt/tinymt32.c",
     test_sources_ant_glob = "test_contacts.c",
-    override_includes=['dummy_board'])
+    defines=["CONFIG_PLATFORM_EMERY=1", "CONFIG_FLASH_QEMU=1"],
+    add_includes = [
+        "include",
+        "src/fw",
+        "src/libos/include",
+        "src/libutil/includes",
+        "tests/fakes",
+        "tests/stubs",
+        "tests/overrides/default",
+        "tests/overrides/default/resources/obelix",
+        "third_party/freertos",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
+        "third_party/tinymt/TinyMT/tinymt",
+    ],
+    use=["libutil"],
+    freestanding=True)
 
 clar(ctx,
     sources_ant_glob = \
@@ -97,7 +129,23 @@ clar(ctx,
         " tests/fakes/fake_rtc.c" \
         " src/fw/services/music/endpoint.c" \
         " src/fw/services/music/service.c",
-    test_sources_ant_glob = "test_music_endpoint.c")
+    test_sources_ant_glob = "test_music_endpoint.c",
+    defines=["CONFIG_PLATFORM_EMERY=1"],
+    add_includes = [
+        "include",
+        "src/fw",
+        "src/libos/include",
+        "src/libutil/includes",
+        "tests/fakes",
+        "tests/stubs",
+        "tests/overrides/default",
+        "tests/overrides/default/resources/obelix",
+        "third_party/freertos",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
+    ],
+    use=["libutil"],
+    freestanding=True)
 
 clar(ctx,
     sources_ant_glob = \
@@ -185,7 +233,23 @@ clar(ctx,
         " tests/fakes/fake_rtc.c" \
         " tests/fakes/fake_session.c" \
         " src/fw/services/debounced_connection_service/service.c",
-    test_sources_ant_glob = "test_debounced_connection_service.c")
+    test_sources_ant_glob = "test_debounced_connection_service.c",
+    defines=["CONFIG_PLATFORM_EMERY=1"],
+    add_includes = [
+        "include",
+        "src/fw",
+        "src/libos/include",
+        "src/libutil/includes",
+        "tests/fakes",
+        "tests/stubs",
+        "tests/overrides/default",
+        "tests/overrides/default/resources/obelix",
+        "third_party/freertos",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
+    ],
+    use=["libutil"],
+    freestanding=True)
 
 clar(ctx,
     sources_ant_glob = \
@@ -198,7 +262,24 @@ clar(ctx,
         " src/fw/services/timeline/attribute.c" \
         " src/fw/util/stringlist.c" \
         " src/fw/util/time/time.c",
-    test_sources_ant_glob = "test_timeline_item.c")
+    test_sources_ant_glob = "test_timeline_item.c",
+    defines=["CONFIG_PLATFORM_EMERY=1"],
+    add_includes = [
+        "include",
+        "src/fw",
+        "src/libos/include",
+        "src/libutil/includes",
+        "tests/fakes",
+        "tests/stubs",
+        "tests/overrides/default",
+        "tests/overrides/default/resources/obelix",
+        "third_party/freertos",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
+        "third_party/tinymt/TinyMT/tinymt",
+    ],
+    use=["libutil"],
+    freestanding=True)
 
 clar(ctx,
     sources_ant_glob = \
@@ -303,7 +384,24 @@ clar(ctx,
         " tests/fixtures/resources/pfs_resource_table.c" \
     ]),
     test_sources_ant_glob = "test_migrate_wakeup.c",
-    override_includes=['dummy_board'])
+    defines=["CONFIG_PLATFORM_EMERY=1", "CONFIG_FLASH_QEMU=1"],
+    add_includes = [
+        "include",
+        "src/fw",
+        "src/fw/applib/vendor/uPNG",
+        "src/libos/include",
+        "src/libutil/includes",
+        "tests/fakes",
+        "tests/stubs",
+        "tests/overrides/default",
+        "tests/overrides/default/resources/obelix",
+        "third_party/freertos",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
+        "third_party/tinymt/TinyMT/tinymt",
+    ],
+    use=["libutil"],
+    freestanding=True)
 
 
 clar(ctx,
@@ -525,7 +623,23 @@ clar(ctx,
         " tests/fakes/fake_rtc.c" \
         " tests/fakes/fake_spi_flash.c",
     test_sources_ant_glob = "test_do_not_disturb.c",
-    override_includes=['dummy_board'])
+    defines=["CONFIG_PLATFORM_EMERY=1", "CONFIG_FLASH_QEMU=1"],
+    add_includes = [
+        "include",
+        "src/fw",
+        "src/fw/applib/vendor/uPNG",
+        "src/libos/include",
+        "src/libutil/includes",
+        "tests/fakes",
+        "tests/stubs",
+        "tests/overrides/default",
+        "tests/overrides/default/resources/obelix",
+        "third_party/freertos",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
+    ],
+    use=["libutil"],
+    freestanding=True)
 
 clar(ctx,
     sources_ant_glob = \
@@ -552,11 +666,42 @@ clar(ctx,
         " src/fw/applib/ui/vibes.c" \
         " tests/fakes/fake_events.c" \
         " tests/fakes/fake_rtc.c",
-    test_sources_ant_glob = "test_vibe.c")
+    test_sources_ant_glob = "test_vibe.c",
+    defines=["CONFIG_PLATFORM_EMERY=1"],
+    add_includes = [
+        "include",
+        "src/fw",
+        "src/libos/include",
+        "src/libutil/includes",
+        "tests/fakes",
+        "tests/stubs",
+        "tests/overrides/default",
+        "tests/overrides/default/resources/obelix",
+        "third_party/freertos",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
+    ],
+    use=["libutil"],
+    freestanding=True)
 
 clar(ctx,
      sources_ant_glob = "src/fw/services/vibes/vibe_intensity.c",
-     test_sources_ant_glob = "test_vibe_intensity.c")
+     test_sources_ant_glob = "test_vibe_intensity.c",
+     defines=["CONFIG_PLATFORM_EMERY=1"],
+     add_includes = [
+         "include",
+         "src/fw",
+         "src/libos/include",
+         "src/libutil/includes",
+         "tests/stubs",
+         "tests/overrides/default",
+         "tests/overrides/default/resources/obelix",
+         "third_party/freertos",
+         "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
+         "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
+     ],
+     use=["libutil"],
+     freestanding=True)
 
 clar(ctx,
     sources_ant_glob = "src/fw/services/vibes/vibe_score.c" \
@@ -624,7 +769,24 @@ clar(ctx,
         "tests/fakes/fake_rtc.c " \
         "tests/fakes/fake_accel_service.c ",
     test_sources_ant_glob = "test_hrm_manager.c",
-    override_includes=['dummy_board'])
+    defines=["CONFIG_PLATFORM_EMERY=1"],
+    add_includes = [
+        "tests/overrides/dummy_board",
+        "include",
+        "include/pbl",
+        "src/fw",
+        "src/libos/include",
+        "src/libutil/includes",
+        "tests/fakes",
+        "tests/stubs",
+        "tests/overrides/default",
+        "tests/overrides/default/resources/obelix",
+        "third_party/freertos",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
+        "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
+    ],
+    use=["libutil"],
+    freestanding=True)
 
 clar(ctx,
      sources_ant_glob=(
