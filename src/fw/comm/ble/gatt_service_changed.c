@@ -123,7 +123,7 @@ void gatt_service_changed_server_cleanup_by_connection(GAPLEConnection *connecti
 static void prv_send_service_changed_indication(void *ctx) {
   GAPLEConnection *connection = (GAPLEConnection *)ctx;
 
-  uint32_t connection_id;
+  BTDeviceInternal device;
   bt_lock();
   {
     // The connection may have been torn down between the timer firing and this
@@ -133,7 +133,10 @@ static void prv_send_service_changed_indication(void *ctx) {
       return;
     }
     connection->gatt_service_changed_indication_timer = TIMER_INVALID_ID;
-    connection_id = connection->gatt_connection_id;
+    // Copy the device address while holding bt_lock — the driver resolves the
+    // NimBLE connection handle through its own connection table, so no bt_lock
+    // is needed in the driver path.
+    device = connection->device;
   }
   bt_unlock();
 
@@ -144,7 +147,7 @@ static void prv_send_service_changed_indication(void *ctx) {
       .start = 0x0001,
       .end = 0xFFFF,
   };
-  bt_driver_gatt_send_changed_indication(connection_id, &range);
+  bt_driver_gatt_send_changed_indication(&device, &range);
 }
 
 static void prv_send_indication_timer_cb(void *ctx) {

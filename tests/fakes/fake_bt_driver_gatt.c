@@ -41,7 +41,7 @@ static GAPLEConnection *s_watchdog_connection;
 // Service Changed indications the firmware has pushed to the controller: a count
 // plus a faithful copy of the last call's arguments.
 static int s_service_changed_indication_count;
-static uint32_t s_service_changed_last_connection_id;
+static BTDeviceInternal s_service_changed_last_device;
 static ATTHandleRange s_service_changed_last_range;
 
 static BTErrno prv_code_to_bterrno(int code) {
@@ -102,9 +102,10 @@ void bt_driver_gatt_respond_read_subscription(uint32_t transaction_id, uint16_t 
   // The response is consumed by the controller; nothing observes it in tests.
 }
 
-void bt_driver_gatt_send_changed_indication(uint32_t connection_id, const ATTHandleRange *data) {
+void bt_driver_gatt_send_changed_indication(const BTDeviceInternal *device,
+                                            const ATTHandleRange *data) {
   ++s_service_changed_indication_count;
-  s_service_changed_last_connection_id = connection_id;
+  s_service_changed_last_device = *device;
   s_service_changed_last_range = *data;
 }
 
@@ -116,8 +117,8 @@ int fake_gatt_get_service_changed_indication_count(void) {
   return s_service_changed_indication_count;
 }
 
-uint32_t fake_gatt_get_service_changed_last_connection_id(void) {
-  return s_service_changed_last_connection_id;
+const BTDeviceInternal *fake_gatt_get_service_changed_last_device(void) {
+  return &s_service_changed_last_device;
 }
 
 ATTHandleRange fake_gatt_get_service_changed_last_range(void) {
@@ -155,7 +156,7 @@ void fake_gatt_init(void) {
   prv_disarm_watchdog();
   s_watchdog_connection = NULL;
   s_service_changed_indication_count = 0;
-  s_service_changed_last_connection_id = 0;
+  s_service_changed_last_device = (BTDeviceInternal){0};
   s_service_changed_last_range = (ATTHandleRange){0};
 }
 
