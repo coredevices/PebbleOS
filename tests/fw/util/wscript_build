@@ -17,7 +17,19 @@ clar(ctx,
      sources_ant_glob = " src/fw/util/time/time.c" \
                         " src/fw/util/time/mktime.c" \
                         " tests/fakes/fake_rtc.c",
-     test_sources_ant_glob = "test_time.c")
+     test_sources_ant_glob = "test_time.c",
+     add_includes = [
+         "tests/overrides/default",
+         "src/fw",
+         "src/libos/include",
+         "src/libutil/includes",
+         "tests/stubs",
+         "tests/fakes",
+         "third_party/freertos",
+         "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
+         "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
+     ],
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob = "src/fw/util/dict.c",

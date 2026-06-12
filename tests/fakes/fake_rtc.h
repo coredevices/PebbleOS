@@ -7,7 +7,9 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#ifndef CLAR_FREESTANDING
 #include <time.h>
+#endif
 
 void fake_rtc_init(RtcTicks initial_ticks, time_t initial_time);
 
