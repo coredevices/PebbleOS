@@ -11,3 +11,12 @@ void PBL_WEAK light_system_color_request(void) {
 }
 void PBL_WEAK light_system_color_release(void) {
 }
+
+static bool s_light_enabled;
+void PBL_WEAK light_enable(bool enable) {
+  s_light_enabled = enable;
+}
+bool PBL_WEAK light_is_on(void) {
+  return s_light_enabled;
+}
+}
