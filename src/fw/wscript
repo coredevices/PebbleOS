@@ -174,9 +174,9 @@ def _generate_memory_layout(bld):
         'chalk': AppRamSize(66 * 1024, 30 * 1024),
         # FIXME: The runtime_reserved size could be reduced for diorite
         'diorite': AppRamSize(66 * 1024, 30 * 1024),
-        'emery': AppRamSize(130 * 1024, 62 * 1024),
+        'emery': AppRamSize(2048 * 1024, 62 * 1024),
         'flint': AppRamSize(66 * 1024, 30 * 1024),
-        'gabbro': AppRamSize(130 * 1024, 94 * 1024),
+        'gabbro': AppRamSize(2048 * 1024, 94 * 1024),
     }
     APP_UNSUPPORTED = AppRamSize(0, 0)
 
@@ -200,40 +200,55 @@ def _generate_memory_layout(bld):
         app_ram_size_2x = APP_RAM_SIZES['aplite']
         app_ram_size_3x = APP_RAM_SIZES['basalt']
         app_ram_size_4x = APP_RAM_SIZES['emery']
+
         # We have 512K of SRAM, last 1K reserved for LCPU IPC
-        total_ram = (0x20000000, (512 - 1) * 1024)
+        sram = (0x20000000, (512 - 1) * 1024)
+        psram = (0x60000000, 16 * 1024 * 1024)
     elif bld.env.CONFIG_PLATFORM_FLINT:
         app_ram_size_2x = APP_RAM_SIZES['aplite']
         app_ram_size_3x = APP_RAM_SIZES['aplite']
         app_ram_size_4x = APP_RAM_SIZES['flint']
+
         retained_size = 256
-        total_ram = (0x20000000 + retained_size, 256 * 1024 - retained_size)
+        sram = (0x20000000 + retained_size, 256 * 1024 - retained_size)
+        psram = None
     elif bld.env.CONFIG_PLATFORM_GABBRO:
         app_ram_size_2x = APP_UNSUPPORTED
         app_ram_size_3x = APP_RAM_SIZES['chalk']
         app_ram_size_4x = APP_RAM_SIZES['gabbro']
+
         # We have 512K of SRAM, last 1K reserved for LCPU IPC
-        total_ram = (0x20000000, (512 - 1) * 1024)
+        sram = (0x20000000, (512 - 1) * 1024)
+        psram = (0x60000000, 16 * 1024 * 1024)
     else:
         bld.fatal("No set of supported SDK platforms defined for this board")
 
     # Allocate RAM from the end to the start. Do the app first, then the worker, then give whatever
     # is left to the kernel.
-    ram_end = sum(total_ram)  # The end of RAM is the start address plus the size.
     all_app_ram_sizes = [app_ram_size_2x, app_ram_size_3x, app_ram_size_4x]
     app_ram_size = max(sum(x) for x in all_app_ram_sizes)
     system_app_segment_size = max(x.app_segment for x in all_app_ram_sizes)
     app_runtime_size = max(x.runtime_reserved for x in all_app_ram_sizes)
     if app_ram_size <= 0 or app_runtime_size <= 0:
         bld.fatal("App RAM is too small!")
-    app_ram = (ram_end - app_ram_size, app_ram_size)
     worker_ram_size = 12 * 1024  # The worker always gets 12k of RAM.
-    worker_ram = (ram_end - app_ram_size - worker_ram_size, worker_ram_size)
-    kernel_ram_size = total_ram[1] - app_ram_size - worker_ram_size
-    kernel_ram = (total_ram[0], kernel_ram_size)
+
+    if psram:
+        kernel_ram = sram
+
+        ram_end = sum(psram)
+        app_ram = (ram_end - app_ram_size, app_ram_size)
+        worker_ram = (ram_end - app_ram_size - worker_ram_size, worker_ram_size)
+    else:
+        ram_end = sum(sram)
+        app_ram = (ram_end - app_ram_size, app_ram_size)
+        worker_ram = (ram_end - app_ram_size - worker_ram_size, worker_ram_size)
+        kernel_ram_size = sram[1] - app_ram_size - worker_ram_size
+        kernel_ram = (sram[0], kernel_ram_size)
+
 
     # As a basic sanity check, make sure we're giving the kernel at least 64k.
-    if kernel_ram_size < 64 * 1024:
+    if kernel_ram[1] < 64 * 1024:
         bld.fatal("Kernel RAM is too small!")
 
     ldscript_result = ldscript_template.get_bld().change_ext('.ld', ext_in='.ld.template')

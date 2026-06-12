@@ -9,6 +9,59 @@
 #define HCPU_FREQ_MHZ 240
 #define PWRKEY_RESET_CNT (32000 * 15)
 
+#define PBL_PSRAM_SIZE_MB 16
+#define PSRAM_MPI1_DIV_OPI 1
+#define PSRAM_MPI1_DIV_QSPI 2
+
+static void prv_psram_init(void) {
+  HAL_RCC_HCPU_EnableDLL2(288000000);
+  HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_FLASH1, RCC_CLK_FLASH_DLL2);
+
+  // PSRAM is powered by VDD_SiP; also enable the 1V8 peripheral LDO
+  HAL_PMU_ConfigPeriLdo(PMU_PERI_LDO_1V8, true, true);
+
+  qspi_configure_t cfg = {
+      .Instance = hwp_qspi1,
+      .base = PSRAM_BASE,
+      .msize = PBL_PSRAM_SIZE_MB,
+  };
+
+  uint16_t div = PSRAM_MPI1_DIV_QSPI;
+  uint32_t pid = (hwp_hpsys_cfg->IDR & HPSYS_CFG_IDR_PID_Msk) >> HPSYS_CFG_IDR_PID_Pos;
+  switch (pid & 7) {
+    case 5:  // BOOT_PSRAM_APS_16P: 16Mb APM QSPI PSRAM
+      cfg.SpiMode = SPI_MODE_PSRAM;
+      break;
+    case 4:  // BOOT_PSRAM_APS_32P: 32Mb APM legacy PSRAM
+      cfg.SpiMode = SPI_MODE_LEGPSRAM;
+      break;
+    case 6:  // BOOT_PSRAM_WINBOND: Winbond HyperBus PSRAM
+      cfg.SpiMode = SPI_MODE_HBPSRAM;
+      break;
+    case 2:  // BOOT_PSRAM_APS_128P: 128Mb (16MB) APM XCELLA OPI PSRAM
+    case 3:  // BOOT_PSRAM_APS_64P:  64Mb APM XCELLA OPI PSRAM
+      cfg.SpiMode = SPI_MODE_OPSRAM;
+      div = PSRAM_MPI1_DIV_OPI;
+      break;
+    default:
+      PBL_CROAK("Unexpected PSRAM PID %lu", pid);
+  }
+
+  static FLASH_HandleTypeDef f_handle;
+  f_handle.wakeup = (SystemPowerOnModeGet() == PM_STANDBY_BOOT) ? 1 : 0;
+  HAL_StatusTypeDef ret = HAL_MPI_PSRAM_Init(&f_handle, &cfg, div);
+  PBL_ASSERTN(ret == HAL_OK);
+
+  // Self-test
+  volatile uint32_t *first = (volatile uint32_t *)PSRAM_BASE;
+  volatile uint32_t *last =
+      (volatile uint32_t *)(PSRAM_BASE + PBL_PSRAM_SIZE_MB * 1024 * 1024 - sizeof(uint32_t));
+  *first = 0xA5A5A5A5U;
+  *last = 0x5A5A5A5AU;
+  __DSB();
+  PBL_ASSERTN(*first == 0xA5A5A5A5U && *last == 0x5A5A5A5AU);
+}
+
 void soc_early_init(void) {
   HAL_StatusTypeDef ret;
   uint32_t bootopt;
@@ -82,24 +135,8 @@ void soc_early_init(void) {
   //set Sifli chipset pwrkey reset time to 15s, so it always use PMIC cold reboot for long press 
   hwp_pmuc->PWRKEY_CNT = PWRKEY_RESET_CNT;
 
-  // Disable 1V8 LDO (feeds PSRAM, we use VDD_SiP to power it)
-  hwp_pmuc->PERI_LDO &= ~(PMUC_PERI_LDO_EN_LDO18_Msk | PMUC_PERI_LDO_LDO18_PD_Msk);
-  hwp_pmuc->PERI_LDO |= PMUC_PERI_LDO_LDO18_PD_Msk;
-
-  // Set all PSRAM pins as analog (low-power)
-  HAL_PIN_Set_Analog(PAD_SA00, 1);
-  HAL_PIN_Set_Analog(PAD_SA01, 1);
-  HAL_PIN_Set_Analog(PAD_SA02, 1);
-  HAL_PIN_Set_Analog(PAD_SA03, 1);
-  HAL_PIN_Set_Analog(PAD_SA04, 1);
-  HAL_PIN_Set_Analog(PAD_SA05, 1);
-  HAL_PIN_Set_Analog(PAD_SA06, 1);
-  HAL_PIN_Set_Analog(PAD_SA07, 1);
-  HAL_PIN_Set_Analog(PAD_SA08, 1);
-  HAL_PIN_Set_Analog(PAD_SA09, 1);
-  HAL_PIN_Set_Analog(PAD_SA10, 1);
-  HAL_PIN_Set_Analog(PAD_SA11, 1);
-  HAL_PIN_Set_Analog(PAD_SA12, 1);
+  // Bring up the MPI-PSRAM (pins SA00..SA12). APP_RAM/WORKER_RAM live there.
+  prv_psram_init();
 
   HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_LP2HP_REQ, AON_PIN_MODE_HIGH);
   HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_LP2HP_IRQ, AON_PIN_MODE_HIGH);
