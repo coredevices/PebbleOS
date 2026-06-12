@@ -87,5 +87,12 @@ uint8_t light_get_current_brightness_percent(void);
 //! fading out). Returns false only when the backlight is fully off.
 bool light_is_on(void);
 
+//! Start a breathing cycle: fade in, hold, fade out, off, repeat.
+//! Used for charge-complete notification. Ignores DND and user settings.
+void light_start_charge_breathe(void);
+
+//! Stop the breathing cycle and turn the backlight off.
+void light_stop_charge_breathe(void);
+
 //!   @} // group Light
 //! @} // group UI

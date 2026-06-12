@@ -16,3 +16,11 @@ void WEAK light_enable(bool enable) {
 bool WEAK light_is_on(void) {
   return s_light_enabled;
 }
+
+static bool s_breathe_active;
+void WEAK light_start_charge_breathe(void) {
+  s_breathe_active = true;
+}
+void WEAK light_stop_charge_breathe(void) {
+  s_breathe_active = false;
+}
