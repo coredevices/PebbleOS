@@ -233,6 +233,42 @@ def configure(conf):
     conf.load('clang')
     conf.load('pebble_test', tooldir='waftools')
 
+    # Discover the compiler's built-in include directory.  This is needed for
+    # freestanding (-nostdinc) test builds that must still reach compiler
+    # intrinsic headers (stddef.h, stdint.h, float.h, …).
+    #
+    # Try -print-resource-dir first (clang); fall back to -print-file-name=include
+    # (GCC).  Either way the result must contain stddef.h.
+    import os as _os
+    cc = conf.env.CC[0]
+    builtin_inc = None
+    try:
+        resource_dir = conf.cmd_and_log(
+            [cc, '-print-resource-dir'], quiet=waflib.Context.BOTH
+        ).strip()
+        candidate = _os.path.join(resource_dir, 'include')
+        if _os.path.isfile(_os.path.join(candidate, 'stddef.h')):
+            builtin_inc = candidate
+    except Exception:
+        pass
+    if builtin_inc is None:
+        try:
+            candidate = conf.cmd_and_log(
+                [cc, '-print-file-name=include'], quiet=waflib.Context.BOTH
+            ).strip()
+            if _os.path.isfile(_os.path.join(candidate, 'stddef.h')):
+                builtin_inc = candidate
+        except Exception:
+            pass
+    if builtin_inc is None:
+        conf.fatal(
+            'Cannot locate compiler built-in include directory containing '
+            'stddef.h.  Tried -print-resource-dir and -print-file-name=include '
+            'with CC=%s.' % cc
+        )
+    conf.env.COMPILER_BUILTINS_INCLUDE = builtin_inc
+    Logs.pprint('CYAN', 'Compiler built-in includes: %s' % builtin_inc)
+
     conf.env.CLAR_DIR = conf.path.make_node('tools/clar/').abspath()
     conf.env.CFLAGS = [ '-std=c11',
                         '-Wall',

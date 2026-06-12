@@ -238,7 +238,13 @@ clar(ctx,
 clar(ctx,
     sources_ant_glob = " ".join([
         "src/fw/services/registry_endpoint/service.c"]),
-    test_sources_ant_glob = "test_registry_endpoint.c")
+    test_sources_ant_glob = "test_registry_endpoint.c",
+    add_includes = [
+        "include",
+        "src/fw",
+        "src/libutil/includes",
+    ],
+    freestanding=True)
 
 clar(ctx,
     sources_ant_glob = " ".join([
@@ -249,7 +255,13 @@ clar(ctx,
 clar(ctx,
     sources_ant_glob = " ".join([
         " src/fw/services/voice/transcription.c"]),
-    test_sources_ant_glob = "test_transcription.c")
+    test_sources_ant_glob = "test_transcription.c",
+    add_includes = [
+        "include",
+        "src/fw",
+        "src/libutil/includes",
+    ],
+    freestanding=True)
 
 clar(ctx,
     sources_ant_glob = " ".join([
@@ -384,7 +396,14 @@ clar(ctx,
 
 clar(ctx,
     sources_ant_glob = 'src/fw/services/filesystem/app_file.c',
-    test_sources_ant_glob = 'test_app_file.c')
+    test_sources_ant_glob = 'test_app_file.c',
+    add_includes = [
+        "include",
+        "src/fw",
+        "src/libutil/includes",
+        "tests/stubs",
+    ],
+    freestanding=True)
 
 clar(ctx,
     sources_ant_glob = \

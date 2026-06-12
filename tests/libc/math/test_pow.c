@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 #include <math.h>
-#include <fenv.h>
 
 #include "clar.h"
 
@@ -24,10 +23,6 @@ static int64_t ulp_diff(double a, double b) {
   union { double value; int64_t bits; } ub = { .value = b };
   int64_t diff = ua.bits - ub.bits;
   return diff < 0 ? -diff : diff;
-}
-
-void test_pow__initialize(void) {
-  fesetround(FE_TONEAREST);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
