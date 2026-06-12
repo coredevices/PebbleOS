@@ -346,13 +346,16 @@ def _add_freestanding_clar_test(
     # take precedence for everything pblibc covers.
     import subprocess as _sp
     import sys as _sys
+
     platform_sdk_inc = None
-    if _sys.platform == 'darwin':
+    if _sys.platform == "darwin":
         try:
-            sdk = _sp.check_output(
-                ['xcrun', '--show-sdk-path'], stderr=_sp.DEVNULL
-            ).decode().strip()
-            candidate = os.path.join(sdk, 'usr', 'include')
+            sdk = (
+                _sp.check_output(["xcrun", "--show-sdk-path"], stderr=_sp.DEVNULL)
+                .decode()
+                .strip()
+            )
+            candidate = os.path.join(sdk, "usr", "include")
             if os.path.isdir(candidate):
                 platform_sdk_inc = candidate
         except Exception:
@@ -362,14 +365,16 @@ def _add_freestanding_clar_test(
         # hosts; the system headers provide it.  Add /usr/include as a last-
         # resort -isystem so #include_next chains resolve, while keeping
         # pblibc headers at higher precedence for everything pblibc covers.
-        candidate = '/usr/include'
-        if os.path.isfile(os.path.join(candidate, 'setjmp.h')):
+        candidate = "/usr/include"
+        if os.path.isfile(os.path.join(candidate, "setjmp.h")):
             platform_sdk_inc = candidate
 
     freestanding_cflags = [
         "-nostdinc",
-        "-isystem", pblibc_inc,
-        "-isystem", compiler_builtins_inc,
+        "-isystem",
+        pblibc_inc,
+        "-isystem",
+        compiler_builtins_inc,
         "-DCLAR_FREESTANDING=1",
     ]
     if platform_sdk_inc:
@@ -389,8 +394,7 @@ def _add_freestanding_clar_test(
                 platform_product_sources.append(node)
             else:
                 raise Errors.WafError(
-                    'Error: Duplicate source file "%s" found for "%s"'
-                    % (s, test_name)
+                    'Error: Duplicate source file "%s" found for "%s"' % (s, test_name)
                 )
 
     program_sources = [test_source, clar_harness]
