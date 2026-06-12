@@ -111,6 +111,12 @@ void backlight_set_touch_wake(BacklightTouchWake wake);
 bool touch_is_globally_enabled(void);
 void touch_set_globally_enabled(bool enable);
 
+bool charging_blink_when_full_enabled(void);
+void charging_set_blink_when_full_enabled(bool enable);
+
+bool charging_vibe_when_full_enabled(void);
+void charging_set_vibe_when_full_enabled(bool enable);
+
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
 // Dynamic backlight intensity based on ambient light sensor
 bool backlight_is_dynamic_intensity_enabled(void);

@@ -16,7 +16,9 @@
 #include "pbl/services/vibe_pattern.h"
 #include "pbl/services/notifications/do_not_disturb.h"
 #include "pbl/services/vibes/vibe_intensity.h"
+#include "pbl/services/light.h"
 #include "shell/normal/watchface.h"
+#include "shell/prefs.h"
 #include "util/ratio.h"
 #include "util/size.h"
 
@@ -192,10 +194,17 @@ static void prv_dismiss_plugged(void) {
 }
 
 static void prv_display_fully_charged(void *data) {
+  if (charging_vibe_when_full_enabled()) {
+    vibes_short_pulse();
+  }
+  if (charging_blink_when_full_enabled()) {
+    light_start_charge_breathe();
+  }
   battery_ui_display_fully_charged();
 }
 
 static void prv_dismiss_fully_charged(void) {
+  light_stop_charge_breathe();
   battery_ui_dismiss_modal();
 }
 
