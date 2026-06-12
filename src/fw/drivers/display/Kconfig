@@ -10,6 +10,7 @@ if DISPLAY
 
 config DISPLAY_JDI_SF32LB
     bool "JDI (SiFli SF32LB)"
+    select HAL_SIFLI_LCD
     help
       Support for JDI display via SiFli SF32LB.
 

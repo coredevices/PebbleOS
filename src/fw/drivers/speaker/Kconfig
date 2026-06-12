@@ -15,6 +15,7 @@ config SPEAKER_DA7212
 
 config SPEAKER_SF32LB
     bool "SiFli SF32LB AUDEC"
+    select HAL_SIFLI_AUDCODEC
     help
       Support for the SiFli SF32LB audio codec / DAC speaker output.
 
