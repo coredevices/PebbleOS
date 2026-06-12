@@ -55,6 +55,14 @@ void alerts_preferences_dnd_set_mute_speaker(bool enable);
 //! @return Whether the speaker is muted while DND is active
 bool alerts_preferences_dnd_get_mute_speaker(void);
 
+//! Set whether notifications should auto-dismiss even when DND is active.
+//! When false (default), notifications stay on screen during DND.
+//! @param enable true to allow auto-dismiss during DND, false to suppress it
+void alerts_preferences_dnd_set_auto_dismiss(bool enable);
+
+//! @return Whether auto-dismiss is allowed while DND is active
+bool alerts_preferences_dnd_get_auto_dismiss(void);
+
 //! Set the always-on speaker mute. When set, the speaker is silenced
 //! regardless of DND state.
 //! @param muted true to mute the speaker, false to allow audio
