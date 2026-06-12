@@ -34,6 +34,28 @@ void i2c_irq_handler(I2CBus *bus) {
   portEND_SWITCHING_ISR(woken);
 }
 
+void i2c_dma_tx_irq_handler(I2CBus *bus) {
+  I2CBusHal *hal = bus->hal;
+  I2C_HandleTypeDef *hdl = &hal->state->hdl;
+
+  if (hdl->State == HAL_I2C_STATE_BUSY_TX) {
+    HAL_DMA_IRQHandler(&hal->state->hdma_tx);
+  } else if (hal->state->hdma_tx.State == HAL_DMA_STATE_BUSY) {
+    HAL_DMA_IRQHandler(&hal->state->hdma_tx);
+  }
+}
+
+void i2c_dma_rx_irq_handler(I2CBus *bus) {
+  I2CBusHal *hal = bus->hal;
+  I2C_HandleTypeDef *hdl = &hal->state->hdl;
+
+  if (hdl->State == HAL_I2C_STATE_BUSY_RX) {
+    HAL_DMA_IRQHandler(&hal->state->hdma_rx);
+  } else if (hal->state->hdma_rx.State == HAL_DMA_STATE_BUSY) {
+    HAL_DMA_IRQHandler(&hal->state->hdma_rx);
+  }
+}
+
 void i2c_hal_init_transfer(I2CBus *bus) {}
 
 void i2c_hal_abort_transfer(I2CBus *bus) {
@@ -59,11 +81,20 @@ void i2c_hal_start_transfer(I2CBus *bus) {
     }
   } else {
     if (transfer->direction == I2CTransferDirection_Read) {
-      ret =
-          HAL_I2C_Master_Receive_IT(hdl, transfer->device_address, transfer->data, transfer->size);
+      if (hal->state->hdma_rx.Instance != NULL) {
+        HAL_DMA_Init(&hal->state->hdma_rx);
+        mpu_dcache_invalidate(transfer->data, transfer->size);
+        ret = HAL_I2C_Master_Receive_DMA(hdl, transfer->device_address, transfer->data, transfer->size);
+      } else {
+        ret = HAL_I2C_Master_Receive_IT(hdl, transfer->device_address, transfer->data, transfer->size);
+      }
     } else {
-      ret =
-          HAL_I2C_Master_Transmit_IT(hdl, transfer->device_address, transfer->data, transfer->size);
+      if (hal->state->hdma_tx.Instance != NULL) {
+        HAL_DMA_Init(&hal->state->hdma_tx);
+        ret = HAL_I2C_Master_Transmit_DMA(hdl, transfer->device_address, transfer->data, transfer->size);
+      } else {
+        ret = HAL_I2C_Master_Transmit_IT(hdl, transfer->device_address, transfer->data, transfer->size);
+      }
     }
   }
 
@@ -108,6 +139,19 @@ void i2c_hal_init(I2CBus *bus) {
   HAL_RCC_EnableModule(hal->module);
   ret = HAL_I2C_Init(hdl);
   PBL_ASSERTN(ret == HAL_OK);
+
+  if (hal->state->hdma_tx.Instance != NULL && hal->state->hdma_rx.Instance != NULL ) {
+    __HAL_LINKDMA(hdl, hdmatx, hal->state->hdma_tx);
+    __HAL_LINKDMA(hdl, hdmarx, hal->state->hdma_rx);
+
+    HAL_I2C_DMA_Init(hdl, &hal->state->dma_rx, &hal->state->dma_tx);
+
+    HAL_NVIC_SetPriority(hal->dma_tx_irqn, hal->dma_irq_priority, 0);
+    NVIC_EnableIRQ(hal->dma_tx_irqn);
+
+    HAL_NVIC_SetPriority(hal->dma_rx_irqn, hal->dma_irq_priority, 0);
+    NVIC_EnableIRQ(hal->dma_rx_irqn);
+  }
 
   HAL_NVIC_SetPriority(hal->irqn, hal->irq_priority, 0);
   NVIC_EnableIRQ(hal->irqn);
