@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "comm/ble/kernel_le_client/ancs/ancs.h"
+#include "comm/ble/kernel_le_client/multi_phone.h"
 
 
 // -------------------------------------------------------------------------------------------------
@@ -20,7 +21,7 @@ void ancs_perform_action(uint32_t notification_uid, uint8_t action_id) {
   return;
 }
 
-void ancs_handle_service_discovered(BLECharacteristic *characteristics) {
+void ancs_handle_service_discovered(BLECharacteristic *characteristics, PhoneSlot slot) {
   return;
 }
 
@@ -33,17 +34,20 @@ void ancs_handle_subscribe(BLECharacteristic subscribed_characteristic,
   return;
 }
 
+void ancs_invalidate_all_references_for_slot(PhoneSlot slot) {
+}
+
 void ancs_invalidate_all_references(void) {
 }
 
 void ancs_handle_service_removed(BLECharacteristic *characteristics, uint8_t num_characteristics) {
 }
 
-void ancs_create(void) {
+void ancs_create(PhoneSlot slot) {
   return;
 }
 
-void ancs_destroy(void) {
+void ancs_destroy(PhoneSlot slot) {
   return;
 }
 
