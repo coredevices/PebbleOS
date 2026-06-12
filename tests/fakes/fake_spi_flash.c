@@ -100,6 +100,7 @@ int32_t fake_spi_flash_find_next_write(int32_t offset) {
   return E_DOES_NOT_EXIST;
 }
 
+#ifndef CLAR_FREESTANDING
 void fake_spi_flash_populate_from_file(char *path, uint32_t offset) {
   cl_assert(s_state.storage);
   cl_assert(offset >= s_state.offset);
@@ -119,6 +120,7 @@ void fake_spi_flash_populate_from_file(char *path, uint32_t offset) {
   // copy file to fake flash storage
   cl_assert(fread(&s_state.storage[fake_offset], 1, st.st_size, file) > 0);
 }
+#endif /* CLAR_FREESTANDING */
 
 void fake_spi_flash_force_future_failure(int after_n_bytes, jmp_buf *retire_to) {
   s_state.bytes_left_till_write_failure = after_n_bytes;

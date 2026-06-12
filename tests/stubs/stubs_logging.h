@@ -6,7 +6,9 @@
 #include "system/logging.h"
 #include "util/string.h"
 
+#ifndef CLAR_FREESTANDING
 #include <assert.h>
+#endif
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
@@ -51,7 +53,11 @@ void command_dump_malloc() {
 }
 
 void reset_due_to_software_failure() {
+#ifdef CLAR_FREESTANDING
+  __builtin_trap();
+#else
   assert(0);
+#endif
 }
 
 void app_log_vargs(uint8_t log_level, const char *src_filename, int src_line_number,
