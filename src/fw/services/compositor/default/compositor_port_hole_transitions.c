@@ -22,8 +22,10 @@ static CompositorPortHoleTransitionData s_data;
 void compositor_port_hole_transition_draw_outer_ring(GContext *ctx, int16_t thickness,
                                                      GColor ring_color) {
   const uint16_t overdraw = 2;
+  const GRect frame = (GRect) { .origin = GPointZero,
+                                .size = graphics_context_get_framebuffer_size(ctx) };
   graphics_context_set_fill_color(ctx, ring_color);
-  graphics_fill_radial(ctx, grect_inset(DISP_FRAME, GEdgeInsets(-overdraw)),
+  graphics_fill_radial(ctx, grect_inset(frame, GEdgeInsets(-overdraw)),
                        GOvalScaleModeFitCircle, thickness + overdraw, 0, TRIG_MAX_ANGLE);
 }
 
