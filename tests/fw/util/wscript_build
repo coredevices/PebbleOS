@@ -1,12 +1,17 @@
 from waftools.pebble_test import clar
 
 clar(ctx,
-     sources_ant_glob = "src/fw/util/base64.c",
-     test_sources_ant_glob = "test_base64.c")
+     sources_ant_glob = "src/fw/util/base64.c src/libc/ctype_ptr.c",
+     test_sources_ant_glob = "test_base64.c",
+     add_includes = ["src/fw", "src/libutil/includes", "tests/stubs", "src/libc"],
+     freestanding=True)
 
 clar(ctx,
-     sources_ant_glob = "src/fw/util/shared_circular_buffer.c",
-     test_sources_ant_glob = "test_shared_circular_buffer.c")
+     sources_ant_glob = "src/fw/util/shared_circular_buffer.c"
+                        " src/libutil/list.c src/libutil/platform.c",
+     test_sources_ant_glob = "test_shared_circular_buffer.c",
+     add_includes = ["src/fw", "src/libutil/includes", "tests/stubs"],
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob = " src/fw/util/time/time.c" \
@@ -65,12 +70,22 @@ clar(ctx,
      test_sources_ant_glob = "test_rand.c")
 
 clar(ctx,
-     sources_ant_glob = "src/fw/util/stats.c",
-     test_sources_ant_glob = "test_stats.c")
+     sources_ant_glob = "src/fw/util/stats.c src/libutil/sort.c",
+     test_sources_ant_glob = "test_stats.c",
+     add_includes = ["src/fw", "src/libutil/includes", "tests/stubs"],
+     freestanding=True)
+
+clar(ctx,
+     sources_ant_glob = None,
+     test_sources_ant_glob = "test_graphics.c",
+     add_includes = ["src/fw", "src/libutil/includes"],
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob='src/fw/util/legacy_checksum.c',
-     test_sources_ant_glob='test_legacy_checksum.c')
+     test_sources_ant_glob='test_legacy_checksum.c',
+     add_includes = ["src/fw"],
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob = " src/fw/util/rand/rand.c" \
@@ -80,11 +95,15 @@ clar(ctx,
 
 clar(ctx,
     sources_ant_glob = "src/fw/util/hdlc.c",
-    test_sources_ant_glob = "test_hdlc.c")
+    test_sources_ant_glob = "test_hdlc.c",
+    add_includes = ["src/fw", "src/libutil/includes", "tests/stubs"],
+    freestanding=True)
 
 clar(ctx,
      sources_ant_glob = "src/fw/util/stringlist.c",
-     test_sources_ant_glob = "test_stringlist.c")
+     test_sources_ant_glob = "test_stringlist.c",
+     add_includes = ["src/fw", "src/libutil/includes"],
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob = "src/fw/util/pstring.c",
@@ -98,10 +117,14 @@ clar(ctx,
 
 clar(ctx,
      sources_ant_glob = "src/fw/util/ihex.c",
-     test_sources_ant_glob = "test_ihex.c")
+     test_sources_ant_glob = "test_ihex.c",
+     add_includes = ["src/fw"],
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob = "src/fw/util/sle.c",
-     test_sources_ant_glob = "test_sle.c")
+     test_sources_ant_glob = "test_sle.c",
+     add_includes = ["src/fw", "src/libutil/includes", "tests"],
+     freestanding=True)
 
 # vim:filetype=python
