@@ -17,7 +17,6 @@
 #include "util/ratio.h"
 #include "pbl/services/battery/battery_state.h"
 #include "pbl/services/light.h"
-#include "pbl/services/new_timer/new_timer.h"
 #include "shell/prefs.h"
 
 extern void battery_ui_reset_fsm_for_tests(void);
@@ -29,7 +28,6 @@ extern void battery_ui_reset_fsm_for_tests(void);
 #include "stubs_vibe_intensity.h"
 #include "stubs_vibe_pattern.h"
 #include "stubs_light.h"
-#include "stubs_new_timer.h"
 #include "stubs_shell_prefs.h"
 
 typedef enum PowerState {
@@ -162,7 +160,7 @@ void test_battery_ui_fsm__initialize(void) {
   s_is_charging = false;
 
   light_enable(false);
-  stub_timer_reset_all();
+  s_breathe_active = false;
   charging_set_blink_when_full_enabled(true);
   charging_set_vibe_when_full_enabled(true);
 
@@ -393,7 +391,7 @@ void test_battery_ui_fsm__vibe_on_charge_complete_ignores_dnd(void) {
   cl_assert_equal_i(s_vibe_count, 1);
 }
 
-void test_battery_ui_fsm__blink_on_charge_complete(void) {
+void test_battery_ui_fsm__breathe_on_charge_complete(void) {
   PreciseBatteryChargeState charging = prv_make_state(50, true, true),
                             fully_charged = prv_make_state(100, false, true),
                             nop = prv_make_state(50, false, false);
@@ -401,16 +399,16 @@ void test_battery_ui_fsm__blink_on_charge_complete(void) {
   charging_set_blink_when_full_enabled(true);
 
   prv_change_state(charging);
-  cl_assert_equal_b(false, light_is_on());
+  cl_assert_equal_b(false, s_breathe_active);
 
   prv_change_state(fully_charged);
-  cl_assert_equal_b(true, light_is_on());
+  cl_assert_equal_b(true, s_breathe_active);
 
   prv_change_state(nop);
-  cl_assert_equal_b(false, light_is_on());
+  cl_assert_equal_b(false, s_breathe_active);
 }
 
-void test_battery_ui_fsm__blink_disabled_on_charge_complete(void) {
+void test_battery_ui_fsm__breathe_disabled_on_charge_complete(void) {
   PreciseBatteryChargeState charging = prv_make_state(50, true, true),
                             fully_charged = prv_make_state(100, false, true),
                             nop = prv_make_state(50, false, false);
@@ -418,42 +416,11 @@ void test_battery_ui_fsm__blink_disabled_on_charge_complete(void) {
   charging_set_blink_when_full_enabled(false);
 
   prv_change_state(charging);
-  cl_assert_equal_b(false, light_is_on());
+  cl_assert_equal_b(false, s_breathe_active);
 
   prv_change_state(fully_charged);
-  cl_assert_equal_b(false, light_is_on());
+  cl_assert_equal_b(false, s_breathe_active);
 
   prv_change_state(nop);
-  cl_assert_equal_b(false, light_is_on());
-}
-
-void test_battery_ui_fsm__blink_toggle_cycle(void) {
-  PreciseBatteryChargeState charging = prv_make_state(50, true, true),
-                            fully_charged = prv_make_state(100, false, true),
-                            nop = prv_make_state(50, false, false);
-
-  charging_set_blink_when_full_enabled(true);
-
-  prv_change_state(charging);
-  cl_assert_equal_b(false, light_is_on());
-
-  // Entering fully charged turns light on
-  prv_change_state(fully_charged);
-  cl_assert_equal_b(true, light_is_on());
-
-  // First timer tick: light toggles off
-  stub_timer_fire_all();
-  cl_assert_equal_b(false, light_is_on());
-
-  // Second timer tick: light toggles on
-  stub_timer_fire_all();
-  cl_assert_equal_b(true, light_is_on());
-
-  // Third timer tick: light toggles off
-  stub_timer_fire_all();
-  cl_assert_equal_b(false, light_is_on());
-
-  // Leaving fully charged stops blink and turns light off
-  prv_change_state(nop);
-  cl_assert_equal_b(false, light_is_on());
+  cl_assert_equal_b(false, s_breathe_active);
 }
