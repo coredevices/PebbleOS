@@ -717,6 +717,31 @@
       "md_fn": "airplane_mode_toggle_get_app_info"
     },
     {
+      "id": -101,
+      "enum": "MUSIC_NEXT_TRACK_ACTION",
+      "md_fn": "music_next_track_action_get_app_info"
+    },
+    {
+      "id": -102,
+      "enum": "MUSIC_PREVIOUS_TRACK_ACTION",
+      "md_fn": "music_previous_track_action_get_app_info"
+    },
+    {
+      "id": -103,
+      "enum": "MUSIC_PLAY_PAUSE_ACTION",
+      "md_fn": "music_play_pause_action_get_app_info"
+    },
+    {
+      "id": -104,
+      "enum": "MUSIC_VOLUME_UP_ACTION",
+      "md_fn": "music_volume_up_action_get_app_info"
+    },
+    {
+      "id": -105,
+      "enum": "MUSIC_VOLUME_DOWN_ACTION",
+      "md_fn": "music_volume_down_action_get_app_info"
+    },
+    {
       "id": -97,
       "enum": "SPORTS",
       "md_fn": "sports_app_get_info"
