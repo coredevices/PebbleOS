@@ -8,13 +8,69 @@
 #include <host/ble_store.h>
 #include <host/ble_uuid.h>
 #include <os/os_mbuf.h>
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <syscfg/syscfg.h>
 #include <system/logging.h>
 #include <system/passert.h>
 
+#include "nimble_pebble_pairing_service.h"
 #include "nimble_type_conversions.h"
 
 #define TRIGGER_PAIRING_NO_SEC_REQ    (1U << 1U)
 #define TRIGGER_PAIRING_FORCE_SEC_REQ (1U << 2U)
+
+typedef struct {
+  bool is_used;
+  uint16_t conn_handle;
+} GatewayCandidate;
+
+static GatewayCandidate s_gateway_candidates[MYNEWT_VAL(BLE_MAX_CONNECTIONS)];
+
+static void prv_note_gateway_candidate(uint16_t conn_handle) {
+  GatewayCandidate *free_candidate = NULL;
+  for (size_t i = 0; i < MYNEWT_VAL(BLE_MAX_CONNECTIONS); ++i) {
+    GatewayCandidate *candidate = &s_gateway_candidates[i];
+    if (candidate->is_used && candidate->conn_handle == conn_handle) {
+      return;
+    }
+    if (!candidate->is_used && !free_candidate) {
+      free_candidate = candidate;
+    }
+  }
+
+  if (free_candidate) {
+    *free_candidate = (GatewayCandidate){
+        .is_used = true,
+        .conn_handle = conn_handle,
+    };
+  }
+}
+
+static bool prv_is_gateway_candidate(uint16_t conn_handle) {
+  for (size_t i = 0; i < MYNEWT_VAL(BLE_MAX_CONNECTIONS); ++i) {
+    const GatewayCandidate *candidate = &s_gateway_candidates[i];
+    if (candidate->is_used && candidate->conn_handle == conn_handle) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void nimble_pebble_pairing_service_handle_disconnect(uint16_t conn_handle) {
+  for (size_t i = 0; i < MYNEWT_VAL(BLE_MAX_CONNECTIONS); ++i) {
+    GatewayCandidate *candidate = &s_gateway_candidates[i];
+    if (candidate->is_used && candidate->conn_handle == conn_handle) {
+      *candidate = (GatewayCandidate){};
+      return;
+    }
+  }
+}
+
+bool nimble_pebble_pairing_service_peer_is_gateway(const ble_addr_t *peer_addr) {
+  struct ble_gap_conn_desc desc;
+  const int rc = ble_gap_conn_find_by_addr(peer_addr, &desc);
+  return (rc == 0 && prv_is_gateway_candidate(desc.conn_handle));
+}
 
 static int pebble_pairing_service_get_connectivity_status(
     uint16_t conn_handle, PebblePairingServiceConnectivityStatus *status) {
@@ -33,14 +89,12 @@ static int pebble_pairing_service_get_connectivity_status(
   struct ble_store_value_sec value_sec;
   bool is_bonded = (ble_store_read_peer_sec(&key_sec, &value_sec) == 0);
 
-  int bond_count = 0;
-  ble_store_util_count(BLE_STORE_OBJ_TYPE_PEER_SEC, &bond_count);
-
   memset(status, 0, sizeof(*status));
   status->ble_is_connected = true;
   status->ble_is_bonded = is_bonded;
   status->ble_is_encrypted = desc.sec_state.encrypted;
-  status->has_bonded_gateway = (bond_count > 0);
+  status->has_bonded_gateway = (bt_persistent_storage_has_active_ble_gateway_bonding() ||
+                                bt_persistent_storage_has_ble_ancs_bonding());
   status->supports_pinning_without_security_request = true;
 
   return 0;
@@ -89,6 +143,8 @@ static int prv_access_trigger_pairing(uint16_t conn_handle, uint16_t attr_handle
   if (rc != 0) {
     return rc;
   }
+
+  prv_note_gateway_candidate(conn_handle);
 
   if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR && !desc.sec_state.encrypted) {
     rc = ble_gap_security_initiate(conn_handle);

@@ -14,6 +14,7 @@
 #include <system/passert.h>
 #include <util/list.h>
 
+#include "nimble_pebble_pairing_service.h"
 #include "nimble_type_conversions.h"
 
 #define KEY_SIZE 16
@@ -168,7 +169,7 @@ static void prv_notify_host_bonding_changed(const int obj_type,
   // persist bonding
   memset(&bonding, 0, sizeof(bonding));
 
-  bonding.is_gateway = true;
+  bonding.is_gateway = nimble_pebble_pairing_service_peer_is_gateway(&value_sec->peer_addr);
 
   // read any existing data of the opposite type and combine with the new data before sending to the
   // host
