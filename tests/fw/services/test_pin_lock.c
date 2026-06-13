@@ -10,6 +10,17 @@
 #include "fake_settings_file.h"
 #include "fake_rng.h"
 #include "stubs_mutex.h"
+#include "stubs_event_service_client.h"
+
+// Minimal timer stubs — pin_lock_init() arms the idle timer; unit tests drive
+// the pure handlers directly so full timer semantics are not needed here.
+#include "pbl/services/new_timer/new_timer.h"
+TimerID new_timer_create(void) { return 1; }
+bool new_timer_start(TimerID timer, uint32_t timeout_ms, NewTimerCallback cb,
+                     void *cb_data, uint32_t flags) { return true; }
+bool new_timer_stop(TimerID timer) { return true; }
+bool new_timer_scheduled(TimerID timer, uint32_t *expire_ms_p) { return false; }
+void new_timer_delete(TimerID timer) {}
 
 void test_pin_lock__initialize(void) {
   fake_settings_file_reset();
@@ -131,4 +142,35 @@ void test_pin_lock__lock_now_noop_when_disabled(void) {
   pin_lock_init();          // disabled
   pin_lock_lock_now();
   cl_assert_equal_b(false, pin_lock_is_locked());
+}
+
+void test_pin_lock__inactivity_locks_when_trigger_on(void) {
+  const uint8_t pin[4] = {1,2,3,4};
+  pin_lock_storage_set_pin(pin, 4);
+  PinLockConfig cfg; pin_lock_storage_load(&cfg);
+  cfg.trigger_timeout = true; cfg.timeout_s = 30;
+  pin_lock_storage_save_config(&cfg);
+  pin_lock_init();
+  cl_assert_equal_b(false, pin_lock_is_locked());
+  pin_lock_handle_inactivity_timeout();
+  cl_assert_equal_b(true, pin_lock_is_locked());
+}
+
+void test_pin_lock__inactivity_noop_when_trigger_off(void) {
+  const uint8_t pin[4] = {1,2,3,4};
+  pin_lock_storage_set_pin(pin, 4);  // trigger_timeout stays false
+  pin_lock_init();
+  pin_lock_handle_inactivity_timeout();
+  cl_assert_equal_b(false, pin_lock_is_locked());
+}
+
+void test_pin_lock__bt_disconnect_locks_when_trigger_on(void) {
+  const uint8_t pin[4] = {1,2,3,4};
+  pin_lock_storage_set_pin(pin, 4);
+  PinLockConfig cfg; pin_lock_storage_load(&cfg);
+  cfg.trigger_bt_disconnect = true;
+  pin_lock_storage_save_config(&cfg);
+  pin_lock_init();
+  pin_lock_handle_bt_disconnected();
+  cl_assert_equal_b(true, pin_lock_is_locked());
 }

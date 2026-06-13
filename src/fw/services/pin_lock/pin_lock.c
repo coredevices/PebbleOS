@@ -2,7 +2,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 #include "services/pin_lock/pin_lock.h"
 
+#include "applib/event_service_client.h"
 #include "drivers/rng.h"
+#include "kernel/events.h"
+#include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/settings/settings_file.h"
 #include "system/status_codes.h"
 #include "util/attributes.h"
@@ -174,6 +177,50 @@ static struct {
   bool locked;
 } s_pin_lock;
 
+static TimerID s_idle_timer = TIMER_INVALID_ID;
+static EventServiceInfo s_button_sub;
+static EventServiceInfo s_conn_sub;
+
+static void prv_idle_timer_cb(void *unused) {
+  pin_lock_handle_inactivity_timeout();
+}
+
+static void prv_button_event_handler(PebbleEvent *e, void *context) {
+  pin_lock_handle_activity();
+}
+
+static void prv_conn_event_handler(PebbleEvent *e, void *context) {
+  // Lock when the system (Pebble app) phone session closes.
+  if (e->bluetooth.comm_session_event.is_system &&
+      !e->bluetooth.comm_session_event.is_open) {
+    pin_lock_handle_bt_disconnected();
+  }
+}
+
+void pin_lock_handle_activity(void) {
+  if (!s_pin_lock.config.enabled || !s_pin_lock.config.trigger_timeout ||
+      s_pin_lock.locked) {
+    return;
+  }
+  if (s_idle_timer == TIMER_INVALID_ID) {
+    s_idle_timer = new_timer_create();
+  }
+  new_timer_start(s_idle_timer, (uint32_t)s_pin_lock.config.timeout_s * 1000,
+                  prv_idle_timer_cb, NULL, 0);
+}
+
+void pin_lock_handle_inactivity_timeout(void) {
+  if (s_pin_lock.config.enabled && s_pin_lock.config.trigger_timeout) {
+    s_pin_lock.locked = true;
+  }
+}
+
+void pin_lock_handle_bt_disconnected(void) {
+  if (s_pin_lock.config.enabled && s_pin_lock.config.trigger_bt_disconnect) {
+    s_pin_lock.locked = true;
+  }
+}
+
 void pin_lock_reload_config(void) {
   pin_lock_storage_load(&s_pin_lock.config);
 }
@@ -181,6 +228,20 @@ void pin_lock_reload_config(void) {
 void pin_lock_init(void) {
   pin_lock_reload_config();
   s_pin_lock.locked = s_pin_lock.config.enabled && s_pin_lock.config.trigger_boot;
+
+  s_button_sub = (EventServiceInfo){
+    .type = PEBBLE_BUTTON_DOWN_EVENT,
+    .handler = prv_button_event_handler,
+  };
+  event_service_client_subscribe(&s_button_sub);
+
+  s_conn_sub = (EventServiceInfo){
+    .type = PEBBLE_BT_CONNECTION_DEBOUNCED_EVENT,
+    .handler = prv_conn_event_handler,
+  };
+  event_service_client_subscribe(&s_conn_sub);
+
+  pin_lock_handle_activity();
 }
 
 bool pin_lock_is_locked(void) {

@@ -70,3 +70,15 @@ void pin_lock_reload_config(void);
 bool pin_lock_should_hide_notifications(void);
 bool pin_lock_should_hide_timeline(void);
 uint8_t pin_lock_get_pin_len(void);
+
+//! Notify the service of user activity (resets the inactivity timer). Exposed
+//! for testing; in production it's driven by button events.
+void pin_lock_handle_activity(void);
+
+//! Invoked when the inactivity timer expires (locks if the timeout trigger is
+//! on). Exposed for testing; in production it's the timer callback.
+void pin_lock_handle_inactivity_timeout(void);
+
+//! Invoked on Bluetooth disconnect (locks if that trigger is on). Exposed for
+//! testing; in production it's the connection-event handler.
+void pin_lock_handle_bt_disconnected(void);
