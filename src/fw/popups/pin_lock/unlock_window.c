@@ -61,8 +61,9 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorWhite);
   graphics_fill_rect(ctx, &bg);
 
-  // Refresh the mask preference each frame (can change while window is open).
+  // Refresh prefs each frame (can change while the window is open).
   s_flap.config.mask_confirmed = pin_lock_should_mask_digits();
+  s_flap.config.haptic = pin_lock_should_haptic();
   pin_flap_draw(&s_flap, ctx, GRect(0, 0, DISP_COLS, DISP_ROWS));
 }
 

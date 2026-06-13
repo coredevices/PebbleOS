@@ -94,10 +94,11 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
     d->flap.config.title = i18n_noop("Set PIN");
   }
 
-  // Read mask preference from flash (app context cannot use kernel cache).
+  // Read prefs from flash (app context cannot use the kernel cache).
   PinLockConfig st;
   pin_lock_storage_load(&st);
   d->flap.config.mask_confirmed = st.pin_len ? st.mask_digits : true;
+  d->flap.config.haptic = st.pin_len ? st.haptic : true;
 
   pin_flap_draw(&d->flap, ctx, GRect(0, 0, DISP_COLS, DISP_ROWS));
 }
@@ -290,6 +291,7 @@ void security_pin_entry_push(const SecurityPinEntryConfig *config) {
     .entry          = &d->entry,
     .title          = i18n_noop("Enter PIN"),
     .mask_confirmed = true,
+    .haptic         = true,
   };
   pin_flap_init(&d->flap, &flap_cfg);
 

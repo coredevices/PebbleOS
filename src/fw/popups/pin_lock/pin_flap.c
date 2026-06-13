@@ -14,6 +14,7 @@
 #include "applib/graphics/graphics_line.h"
 #include "applib/graphics/text.h"
 #include "applib/ui/animation.h"
+#include "applib/ui/vibes.h"
 #include "board/display.h"
 #include "pbl/services/i18n/i18n.h"
 
@@ -37,6 +38,14 @@ static GFont prv_digit_font(int16_t panel_w) {
 }
 
 // ── helpers ───────────────────────────────────────────────────────────────────
+
+// Draw a soft drop-shadow below+right of the panel for a raised, tactile look.
+// Most of it is hidden behind the panel; only the bottom/right edge peeks out.
+static void prv_draw_shadow(GContext *ctx, const GRect *r) {
+  GRect sh = GRect(r->origin.x + 1, r->origin.y + 3, r->size.w, r->size.h);
+  graphics_context_set_fill_color(ctx, GColorDarkGray);
+  graphics_fill_round_rect(ctx, &sh, PANEL_RADIUS, GCornersAll);
+}
 
 // Draw one split-flap panel at `r`, with a horizontal seam in the middle.
 // Fill colour is already set by the caller.
@@ -82,6 +91,13 @@ static void prv_roll_stopped(Animation *animation, bool finished, void *context)
   PinFlap *flap = (PinFlap *)context;
   flap->animating = false;
   flap->anim = NULL;
+  // Light "tic" as the flap settles — only on a natural finish (not when a
+  // rapid next press interrupts the roll), so holding up/down doesn't buzz-storm.
+  if (finished && flap->config.haptic) {
+    static const uint32_t segments[] = { 22 };  // ~22 ms, a faint tick
+    VibePattern pattern = { .durations = segments, .num_segments = 1 };
+    vibes_enqueue_custom_pattern(pattern);
+  }
   // Final dirty so the layer redraws in static state.
   if (flap->layer) {
     layer_mark_dirty(flap->layer);
@@ -170,6 +186,8 @@ void pin_flap_draw(PinFlap *flap, GContext *ctx, GRect bounds) {
   for (uint8_t i = 0; i < n; i++) {
     const int16_t px = start_x + (int16_t)i * (panel_w + PANEL_GAP);
     GRect panel = GRect(px, panel_y, panel_w, panel_h);
+
+    prv_draw_shadow(ctx, &panel);
 
     if (i == e->pos) {
       // Active panel: white fill, double border for emphasis.

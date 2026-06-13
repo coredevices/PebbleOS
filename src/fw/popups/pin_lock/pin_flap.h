@@ -15,6 +15,7 @@ typedef struct {
   const PinEntry *entry;   // caller owns
   const char *title;       // i18n key drawn bold above the panels
   bool mask_confirmed;     // confirmed positions show '*' when true
+  bool haptic;             // light vibe when a flap finishes rolling
 } PinFlapConfig;
 
 typedef struct PinFlap {
