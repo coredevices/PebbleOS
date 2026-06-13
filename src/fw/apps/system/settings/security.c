@@ -3,6 +3,7 @@
 
 #include "security.h"
 #include "menu.h"
+#include "option_menu.h"
 #include "window.h"
 
 #include "applib/ui/app_window_stack.h"
@@ -11,10 +12,77 @@
 #include "pbl/services/i18n/i18n.h"
 #include "services/pin_lock/pin_lock.h"
 #include "system/passert.h"
+#include "util/size.h"
+
+typedef enum {
+  ROW_ENABLED = 0,
+  ROW_CHANGE_PIN,
+  ROW_TRIGGER_BOOT,
+  ROW_TRIGGER_TIMEOUT,
+  ROW_TRIGGER_BT,
+  ROW_HIDE_NOTIFS,
+  ROW_HIDE_TIMELINE,
+  ROW_LOCK_NOW,
+  NUM_ROWS_ALL,
+} SecurityRow;
 
 typedef struct SecurityData {
   SettingsCallbacks callbacks;
+  PinLockConfig cfg;
 } SecurityData;
+
+// Timeout interval option menu
+static const uint16_t s_timeout_values[] = { 0, 30, 60, 300 };
+static const char *s_timeout_labels[] = {
+  i18n_noop("Immediately"),
+  i18n_noop("30 Seconds"),
+  i18n_noop("1 Minute"),
+  i18n_noop("5 Minutes"),
+};
+
+static int prv_timeout_index(uint16_t timeout_s) {
+  for (size_t i = 0; i < ARRAY_LENGTH(s_timeout_values); i++) {
+    if (s_timeout_values[i] == timeout_s) {
+      return (int)i;
+    }
+  }
+  return 0;
+}
+
+static void prv_timeout_select(OptionMenu *option_menu, int selection, void *context) {
+  SecurityData *data = (SecurityData *)context;
+  data->cfg.timeout_s = s_timeout_values[selection];
+  pin_lock_storage_save_config(&data->cfg);
+  pin_lock_reload_config();
+  pin_lock_storage_load(&data->cfg);
+  app_window_stack_remove(&option_menu->window, true /* animated */);
+  settings_menu_reload_data(SettingsMenuItemSecurity);
+  settings_menu_mark_dirty(SettingsMenuItemSecurity);
+}
+
+static void prv_timeout_menu_push(SecurityData *data) {
+  const int index = prv_timeout_index(data->cfg.timeout_s);
+  const OptionMenuCallbacks callbacks = {
+    .select = prv_timeout_select,
+  };
+  settings_option_menu_push(i18n_noop("Auto-Lock After"), OptionMenuContentType_SingleLine,
+                            index, &callbacks,
+                            ARRAY_LENGTH(s_timeout_labels), false /* icons */,
+                            s_timeout_labels, data);
+}
+
+// Helpers
+static void prv_reload_cfg(SecurityData *data) {
+  pin_lock_storage_load(&data->cfg);
+}
+
+static void prv_save_and_reload(SecurityData *data) {
+  pin_lock_storage_save_config(&data->cfg);
+  pin_lock_reload_config();
+  prv_reload_cfg(data);
+}
+
+// SettingsCallbacks
 
 static void prv_deinit_cb(SettingsCallbacks *context) {
   SecurityData *data = (SecurityData *)context;
@@ -22,31 +90,137 @@ static void prv_deinit_cb(SettingsCallbacks *context) {
   app_free(data);
 }
 
+static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
+  SecurityData *data = (SecurityData *)context;
+  // When disabled show only the Enable row.
+  return data->cfg.enabled ? NUM_ROWS_ALL : 1;
+}
+
 static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
                             const Layer *cell_layer, uint16_t row, bool selected) {
   SecurityData *data = (SecurityData *)context;
-  // Only one row: "Lock Now"
-  (void)row;
-  menu_cell_basic_draw(ctx, cell_layer, i18n_get(i18n_noop("Lock Now"), data), NULL, NULL);
-}
+  const char *title = NULL;
+  const char *subtitle = NULL;
 
-static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
-  return 1;
+  switch ((SecurityRow)row) {
+    case ROW_ENABLED:
+      title = i18n_noop("PIN Lock");
+      subtitle = data->cfg.enabled ? i18n_noop("On") : i18n_noop("Off");
+      break;
+    case ROW_CHANGE_PIN:
+      title = i18n_noop("Change PIN");
+      break;
+    case ROW_TRIGGER_BOOT:
+      title = i18n_noop("Lock on Start");
+      subtitle = data->cfg.trigger_boot ? i18n_noop("On") : i18n_noop("Off");
+      break;
+    case ROW_TRIGGER_TIMEOUT:
+      title = i18n_noop("Auto-Lock");
+      if (data->cfg.trigger_timeout) {
+        subtitle = s_timeout_labels[prv_timeout_index(data->cfg.timeout_s)];
+      } else {
+        subtitle = i18n_noop("Off");
+      }
+      break;
+    case ROW_TRIGGER_BT:
+      title = i18n_noop("Lock on BT Disconnect");
+      subtitle = data->cfg.trigger_bt_disconnect ? i18n_noop("On") : i18n_noop("Off");
+      break;
+    case ROW_HIDE_NOTIFS:
+      title = i18n_noop("Hide Notifications");
+      subtitle = data->cfg.hide_notifications ? i18n_noop("On") : i18n_noop("Off");
+      break;
+    case ROW_HIDE_TIMELINE:
+      title = i18n_noop("Hide Timeline");
+      subtitle = data->cfg.hide_timeline ? i18n_noop("On") : i18n_noop("Off");
+      break;
+    case ROW_LOCK_NOW:
+      title = i18n_noop("Lock Now");
+      break;
+    default:
+      return;
+  }
+
+  menu_cell_basic_draw(ctx, cell_layer,
+                       i18n_get(title, data),
+                       subtitle ? i18n_get(subtitle, data) : NULL,
+                       NULL);
 }
 
 static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
-  pin_lock_lock_now();
+  SecurityData *data = (SecurityData *)context;
+
+  switch ((SecurityRow)row) {
+    case ROW_ENABLED:
+      // Stub: wired fully in commit 3 (change/verify PIN flow).
+      // For now, just toggle without PIN verification.
+      if (data->cfg.enabled) {
+        pin_lock_storage_clear();
+      } else {
+        // Enabling requires a PIN to be set; defer to commit 3.
+      }
+      prv_reload_cfg(data);
+      break;
+    case ROW_CHANGE_PIN:
+      // Stub: wired fully in commit 3.
+      break;
+    case ROW_TRIGGER_BOOT:
+      data->cfg.trigger_boot = !data->cfg.trigger_boot;
+      prv_save_and_reload(data);
+      break;
+    case ROW_TRIGGER_TIMEOUT:
+      data->cfg.trigger_timeout = !data->cfg.trigger_timeout;
+      if (data->cfg.trigger_timeout) {
+        // Push interval picker; also persist the toggle first.
+        prv_save_and_reload(data);
+        prv_timeout_menu_push(data);
+        return; // skip redraw here; done after picker closes
+      }
+      prv_save_and_reload(data);
+      break;
+    case ROW_TRIGGER_BT:
+      data->cfg.trigger_bt_disconnect = !data->cfg.trigger_bt_disconnect;
+      prv_save_and_reload(data);
+      break;
+    case ROW_HIDE_NOTIFS:
+      data->cfg.hide_notifications = !data->cfg.hide_notifications;
+      prv_save_and_reload(data);
+      break;
+    case ROW_HIDE_TIMELINE:
+      data->cfg.hide_timeline = !data->cfg.hide_timeline;
+      prv_save_and_reload(data);
+      break;
+    case ROW_LOCK_NOW:
+      pin_lock_lock_now();
+      return; // no redraw needed
+    default:
+      return;
+  }
+
+  settings_menu_reload_data(SettingsMenuItemSecurity);
+  settings_menu_mark_dirty(SettingsMenuItemSecurity);
+}
+
+static void prv_appear_cb(SettingsCallbacks *context) {
+  SecurityData *data = (SecurityData *)context;
+  // Refresh config whenever the submenu becomes visible (e.g. after PIN flow pops).
+  prv_reload_cfg(data);
+  settings_menu_reload_data(SettingsMenuItemSecurity);
+  settings_menu_mark_dirty(SettingsMenuItemSecurity);
 }
 
 static Window *prv_init(void) {
   SecurityData *data = app_malloc_check(sizeof(*data));
   *data = (SecurityData){};
 
+  pin_lock_storage_load(&data->cfg);
+
   data->callbacks = (SettingsCallbacks){
     .deinit = prv_deinit_cb,
     .draw_row = prv_draw_row_cb,
     .select_click = prv_select_click_cb,
     .num_rows = prv_num_rows_cb,
+    .appear = prv_appear_cb,
   };
 
   return settings_window_create(SettingsMenuItemSecurity, &data->callbacks);
