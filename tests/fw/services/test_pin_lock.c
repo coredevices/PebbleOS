@@ -95,6 +95,7 @@ void test_pin_lock__config_round_trips(void) {
   cfg.trigger_bt_disconnect = true;
   cfg.timeout_s = 60;
   cfg.hide_notifications = true;
+  cfg.mask_digits = true;
   pin_lock_storage_save_config(&cfg);
   PinLockConfig got;
   pin_lock_storage_load(&got);
@@ -104,6 +105,14 @@ void test_pin_lock__config_round_trips(void) {
   cl_assert_equal_b(true, got.hide_notifications);
   cl_assert_equal_b(true, got.enabled);
   cl_assert_equal_b(true, pin_lock_storage_verify_pin(pin, 4));
+  cl_assert_equal_b(true, got.mask_digits);
+}
+
+void test_pin_lock__masked_by_default(void) {
+  const uint8_t pin[4] = {1,2,3,4};
+  pin_lock_storage_set_pin(pin, 4);
+  PinLockConfig cfg; pin_lock_storage_load(&cfg);
+  cl_assert_equal_b(true, cfg.mask_digits);
 }
 
 void test_pin_lock__starts_unlocked_when_disabled(void) {
