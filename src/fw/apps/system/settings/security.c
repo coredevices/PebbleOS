@@ -4,6 +4,7 @@
 #include "security.h"
 #include "menu.h"
 #include "option_menu.h"
+#include "security_pin_entry.h"
 #include "window.h"
 
 #include "applib/ui/app_window_stack.h"
@@ -147,23 +148,93 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
                        NULL);
 }
 
+// Completion callbacks for the PIN flow invoked from security_pin_entry.
+
+static void prv_on_set_pin_complete(bool success, const uint8_t *digits, uint8_t len, void *ctx) {
+  if (!success) {
+    return;
+  }
+  SecurityData *data = (SecurityData *)ctx;
+  pin_lock_storage_set_pin(digits, len);
+  prv_reload_cfg(data);
+  settings_menu_reload_data(SettingsMenuItemSecurity);
+  settings_menu_mark_dirty(SettingsMenuItemSecurity);
+}
+
+// Two-step change-PIN: first verify the current PIN, then set a new one.
+static void prv_on_change_pin_set_complete(bool success, const uint8_t *digits, uint8_t len,
+                                           void *ctx) {
+  prv_on_set_pin_complete(success, digits, len, ctx);
+}
+
+static void prv_on_verify_for_change_complete(bool success, const uint8_t *digits, uint8_t len,
+                                              void *ctx) {
+  if (!success) {
+    return;
+  }
+  SecurityData *data = (SecurityData *)ctx;
+  const SecurityPinEntryConfig set_cfg = {
+    .mode = SecurityPinEntryMode_Set,
+    .on_complete = prv_on_change_pin_set_complete,
+    .ctx = data,
+  };
+  security_pin_entry_push(&set_cfg);
+}
+
+static void prv_on_verify_for_disable_complete(bool success, const uint8_t *digits, uint8_t len,
+                                               void *ctx) {
+  if (!success) {
+    return;
+  }
+  SecurityData *data = (SecurityData *)ctx;
+  pin_lock_storage_clear();
+  prv_reload_cfg(data);
+  settings_menu_reload_data(SettingsMenuItemSecurity);
+  settings_menu_mark_dirty(SettingsMenuItemSecurity);
+}
+
 static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
   SecurityData *data = (SecurityData *)context;
 
   switch ((SecurityRow)row) {
     case ROW_ENABLED:
-      // Stub: wired fully in commit 3 (change/verify PIN flow).
-      // For now, just toggle without PIN verification.
       if (data->cfg.enabled) {
-        pin_lock_storage_clear();
+        // Disable: verify the current PIN first.
+        const SecurityPinEntryConfig cfg = {
+          .mode = SecurityPinEntryMode_Verify,
+          .on_complete = prv_on_verify_for_disable_complete,
+          .ctx = data,
+        };
+        security_pin_entry_push(&cfg);
       } else {
-        // Enabling requires a PIN to be set; defer to commit 3.
+        // Enable: set a new PIN.
+        const SecurityPinEntryConfig cfg = {
+          .mode = SecurityPinEntryMode_Set,
+          .on_complete = prv_on_set_pin_complete,
+          .ctx = data,
+        };
+        security_pin_entry_push(&cfg);
       }
-      prv_reload_cfg(data);
-      break;
+      return; // redraw happens in the completion callbacks
     case ROW_CHANGE_PIN:
-      // Stub: wired fully in commit 3.
-      break;
+      if (data->cfg.enabled) {
+        // Verify existing PIN then set a new one.
+        const SecurityPinEntryConfig cfg = {
+          .mode = SecurityPinEntryMode_Verify,
+          .on_complete = prv_on_verify_for_change_complete,
+          .ctx = data,
+        };
+        security_pin_entry_push(&cfg);
+      } else {
+        // No PIN set yet; go straight to set-PIN flow.
+        const SecurityPinEntryConfig cfg = {
+          .mode = SecurityPinEntryMode_Set,
+          .on_complete = prv_on_set_pin_complete,
+          .ctx = data,
+        };
+        security_pin_entry_push(&cfg);
+      }
+      return;
     case ROW_TRIGGER_BOOT:
       data->cfg.trigger_boot = !data->cfg.trigger_boot;
       prv_save_and_reload(data);
