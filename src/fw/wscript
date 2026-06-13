@@ -436,7 +436,7 @@ def _build_recovery(bld):
             'apps/prf/mfg_speaker_asterix.c',
             'apps/prf/mfg_mic_asterix.c',
         ])
-    
+
     if not bld.env.CONFIG_BOARD_FAMILY_OBELIX:
         excludes.extend([
             'apps/prf/mfg_speaker_obelix.c',
@@ -627,6 +627,7 @@ def build(bld):
     bld.recurse('services')
     bld.recurse('applib')
     bld.recurse('soc')
+    bld.recurse('pm')
 
     if bld.env.VARIANT == 'prf':
         _build_recovery(bld)

@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2024 Google LLC
+# SPDX-License-Identifier: Apache-2.0
+
+sources = []
+use = ['fw_includes', 'pbl_includes', 'libutil']
+
+# PM Notifier
+if bld.env.CONFIG_PM_NOTIFIER:
+    sources.append('pm_notifier.c')
+
+bld.stlib(
+    target='pm',
+    source=sources,
+    use=use,
+)
+
+bld(
+    name='pm',
+    use=bld.env.PM,
+)

@@ -5,6 +5,7 @@ rsource "soc/Kconfig"
 rsource "apps/Kconfig"
 rsource "drivers/Kconfig"
 rsource "kernel/Kconfig"
+rsource "pm/Kconfig"
 rsource "services/Kconfig"
 
 menu "Software Features"
@@ -194,5 +195,11 @@ config PROFILE_INTERRUPTS
 config PERFORMANCE_TESTS
     bool "Performance test instrumentation"
     select PROFILER
+
+config PM
+    bool "Power Management"
+    default y
+    help
+      Enable power management features.
 
 endmenu
