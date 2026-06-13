@@ -40,6 +40,7 @@ typedef enum {
 typedef struct {
   Window window;
   PinEntry entry;
+  PinFlap flap;
   SecurityPinEntryConfig cfg;
   Phase phase;
   uint8_t chosen_len;                     // selected during Phase_Length (Set-mode)
@@ -84,28 +85,21 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
   }
 
   // Enter / Confirm phases: delegate to the shared split-flap widget.
-  const char *title_key;
+  // Update per-frame fields; entry pointer and layer handle are stable.
   if (d->cfg.mode == SecurityPinEntryMode_Verify) {
-    title_key = i18n_noop("Enter PIN");
+    d->flap.config.title = i18n_noop("Enter PIN");
   } else if (d->phase == Phase_Confirm) {
-    title_key = i18n_noop("Confirm PIN");
+    d->flap.config.title = i18n_noop("Confirm PIN");
   } else {
-    title_key = i18n_noop("Set PIN");
+    d->flap.config.title = i18n_noop("Set PIN");
   }
 
   // Read mask preference from flash (app context cannot use kernel cache).
   PinLockConfig st;
   pin_lock_storage_load(&st);
-  const bool mask = st.pin_len ? st.mask_digits : true;
+  d->flap.config.mask_confirmed = st.pin_len ? st.mask_digits : true;
 
-  PinFlapConfig cfg = {
-    .entry          = &d->entry,
-    .title          = title_key,
-    .mask_confirmed = mask,
-  };
-  PinFlap flap;
-  pin_flap_init(&flap, &cfg);
-  pin_flap_draw(&flap, ctx, GRect(0, 0, DISP_COLS, DISP_ROWS));
+  pin_flap_draw(&d->flap, ctx, GRect(0, 0, DISP_COLS, DISP_ROWS));
 }
 
 static void prv_up_handler(ClickRecognizerRef recognizer, void *context) {
@@ -114,10 +108,12 @@ static void prv_up_handler(ClickRecognizerRef recognizer, void *context) {
     if (d->chosen_len < PIN_LOCK_MAX_LEN) {
       d->chosen_len++;
     }
+    prv_redraw(d);
   } else {
+    const uint8_t old = d->entry.digits[d->entry.pos];
     pin_entry_up(&d->entry);
+    pin_flap_animate_step(&d->flap, window_get_root_layer(&d->window), old, +1);
   }
-  prv_redraw(d);
 }
 
 static void prv_down_handler(ClickRecognizerRef recognizer, void *context) {
@@ -126,10 +122,12 @@ static void prv_down_handler(ClickRecognizerRef recognizer, void *context) {
     if (d->chosen_len > PIN_LOCK_MIN_LEN) {
       d->chosen_len--;
     }
+    prv_redraw(d);
   } else {
+    const uint8_t old = d->entry.digits[d->entry.pos];
     pin_entry_down(&d->entry);
+    pin_flap_animate_step(&d->flap, window_get_root_layer(&d->window), old, -1);
   }
-  prv_redraw(d);
 }
 
 static void prv_select_handler(ClickRecognizerRef recognizer, void *context) {
@@ -167,6 +165,7 @@ static void prv_select_handler(ClickRecognizerRef recognizer, void *context) {
       PBL_LOG_DBG("Security PIN entry: wrong PIN, resetting");
       vibes_double_pulse();
       pin_entry_init(&d->entry, d->entry.len);
+      pin_flap_reset(&d->flap);
       prv_redraw(d);
     }
     return;
@@ -180,6 +179,7 @@ static void prv_select_handler(ClickRecognizerRef recognizer, void *context) {
     }
     d->phase = Phase_Confirm;
     pin_entry_init(&d->entry, d->entry.len);
+    pin_flap_reset(&d->flap);
     prv_redraw(d);
   } else {
     // Compare confirmation with first pass.
@@ -207,6 +207,7 @@ static void prv_select_handler(ClickRecognizerRef recognizer, void *context) {
       vibes_double_pulse();
       d->phase = Phase_Enter;
       pin_entry_init(&d->entry, d->entry.len);
+      pin_flap_reset(&d->flap);
       prv_redraw(d);
     }
   }
@@ -230,6 +231,7 @@ static void prv_back_handler(ClickRecognizerRef recognizer, void *context) {
     if (d->phase == Phase_Confirm) {
       d->phase = Phase_Enter;
       pin_entry_init(&d->entry, d->entry.len);
+      pin_flap_reset(&d->flap);
       prv_redraw(d);
     } else if (d->cfg.mode == SecurityPinEntryMode_Set) {
       // Set-mode entry: return to length choice rather than cancelling.
@@ -257,6 +259,7 @@ static void prv_click_config_provider(void *context) {
 
 static void prv_window_unload(Window *window) {
   PinEntryWindowData *d = window_get_user_data(window);
+  pin_flap_reset(&d->flap);
   i18n_free_all(d);
   app_free(d);
 }
@@ -281,6 +284,14 @@ void security_pin_entry_push(const SecurityPinEntryConfig *config) {
     d->phase = Phase_Enter;
     pin_entry_init(&d->entry, len);
   }
+
+  // Initialise the flap with the entry pointer; title/mask updated each frame.
+  PinFlapConfig flap_cfg = {
+    .entry          = &d->entry,
+    .title          = i18n_noop("Enter PIN"),
+    .mask_confirmed = true,
+  };
+  pin_flap_init(&d->flap, &flap_cfg);
 
   window_init(&d->window, WINDOW_NAME("Security PIN Entry"));
   window_set_user_data(&d->window, d);

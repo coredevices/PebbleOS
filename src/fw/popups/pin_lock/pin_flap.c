@@ -3,7 +3,7 @@
 
 // Shared split-flap (Solari-style) PIN panel widget.
 // Draws a bold title and a centred row of rounded panels, one per PIN digit.
-// Static rendering only — the flip animation is wired in a later task.
+// Supports a vertical-roll (Solari flip) animation on the active panel.
 
 #include "pin_flap.h"
 
@@ -13,6 +13,7 @@
 #include "applib/graphics/graphics.h"
 #include "applib/graphics/graphics_line.h"
 #include "applib/graphics/text.h"
+#include "applib/ui/animation.h"
 #include "board/display.h"
 #include "pbl/services/i18n/i18n.h"
 
@@ -45,20 +46,88 @@ static void prv_draw_panel_shell(GContext *ctx, const GRect *r) {
                      GPoint(r->origin.x + r->size.w - 2, seam_y));
 }
 
-// Draw the digit (or mask character) centred inside `r`.
-// Single function so Task 4 can animate just this site.
-static void prv_draw_active_digit(GContext *ctx, const GRect *r, uint8_t digit) {
+// Draw the digit centred inside `r`, shifted vertically by `dy` pixels.
+// A negative dy moves the text upward; positive moves it downward.
+static void prv_draw_digit_offset(GContext *ctx, const GRect *r,
+                                  uint8_t digit, int16_t dy) {
   char buf[2] = { (char)('0' + digit), '\0' };
   GFont font = fonts_get_system_font(DIGIT_FONT_KEY);
+  GRect shifted = GRect(r->origin.x, r->origin.y + dy, r->size.w, r->size.h);
   graphics_context_set_text_color(ctx, GColorBlack);
-  graphics_draw_text(ctx, buf, font, *r,
+  graphics_draw_text(ctx, buf, font, shifted,
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+}
+
+// ── pure helper ───────────────────────────────────────────────────────────────
+
+int16_t pin_flap_roll_offset(int32_t progress, int16_t panel_h) {
+  return (int16_t)(((int64_t)progress * panel_h) / ANIMATION_NORMALIZED_MAX);
+}
+
+// ── animation callbacks ───────────────────────────────────────────────────────
+
+static void prv_roll_update(Animation *animation, const AnimationProgress progress) {
+  PinFlap *flap = (PinFlap *)animation_get_context(animation);
+  flap->progress = progress;
+  layer_mark_dirty(flap->layer);
+}
+
+static void prv_roll_stopped(Animation *animation, bool finished, void *context) {
+  PinFlap *flap = (PinFlap *)context;
+  flap->animating = false;
+  flap->anim = NULL;
+  // Final dirty so the layer redraws in static state.
+  if (flap->layer) {
+    layer_mark_dirty(flap->layer);
+  }
 }
 
 // ── public API ────────────────────────────────────────────────────────────────
 
 void pin_flap_init(PinFlap *flap, const PinFlapConfig *config) {
-  flap->config = *config;
+  *flap = (PinFlap){ .config = *config };
+}
+
+void pin_flap_reset(PinFlap *flap) {
+  if (flap->anim) {
+    animation_unschedule(flap->anim);
+    animation_destroy(flap->anim);
+    flap->anim = NULL;
+  }
+  flap->animating = false;
+  flap->progress = 0;
+}
+
+void pin_flap_animate_step(PinFlap *flap, Layer *layer,
+                           uint8_t from_digit, int8_t direction) {
+  // Unschedule any in-flight animation before starting a new one.
+  if (flap->anim) {
+    animation_unschedule(flap->anim);
+    animation_destroy(flap->anim);
+    flap->anim = NULL;
+  }
+
+  flap->layer = layer;
+  flap->from_digit = from_digit;
+  flap->direction = direction;
+  flap->progress = 0;
+  flap->animating = true;
+
+  static const AnimationImplementation s_roll_impl = {
+    .update = prv_roll_update,
+  };
+
+  Animation *anim = animation_create();
+  if (!anim) {
+    flap->animating = false;
+    return;
+  }
+  animation_set_duration(anim, 180);
+  animation_set_curve(anim, AnimationCurveEaseOut);
+  animation_set_implementation(anim, &s_roll_impl);
+  animation_set_handlers(anim, (AnimationHandlers){ .stopped = prv_roll_stopped }, flap);
+  flap->anim = anim;
+  animation_schedule(anim);
 }
 
 void pin_flap_draw(PinFlap *flap, GContext *ctx, GRect bounds) {
@@ -95,7 +164,31 @@ void pin_flap_draw(PinFlap *flap, GContext *ctx, GRect bounds) {
       GRect inner = GRect(panel.origin.x + 1, panel.origin.y + 1,
                           panel.size.w - 2, panel.size.h - 2);
       graphics_draw_round_rect(ctx, &inner, PANEL_RADIUS > 1 ? PANEL_RADIUS - 1 : 0);
-      prv_draw_active_digit(ctx, &panel, e->digits[i]);
+
+      if (flap->animating) {
+        // Clip all digit drawing to the panel bounds so the roll stays inside.
+        GDrawState saved = graphics_context_get_drawing_state(ctx);
+        GDrawState clipped = saved;
+        clipped.clip_box = panel;
+        graphics_context_set_drawing_state(ctx, clipped);
+
+        // Roll offset: how far the incoming digit has travelled into the panel.
+        const int16_t off =
+            pin_flap_roll_offset(flap->progress, PANEL_H);
+        // direction +1 (up): new digit enters from bottom, old exits to top.
+        // direction -1 (down): new digit enters from top, old exits to bottom.
+        const int16_t new_dy = (int16_t)(flap->direction > 0
+                                         ? PANEL_H - off
+                                         : off - PANEL_H);
+        const int16_t old_dy = (int16_t)(-flap->direction * off);
+
+        prv_draw_digit_offset(ctx, &panel, e->digits[i], new_dy);
+        prv_draw_digit_offset(ctx, &panel, flap->from_digit, old_dy);
+
+        graphics_context_set_drawing_state(ctx, saved);
+      } else {
+        prv_draw_digit_offset(ctx, &panel, e->digits[i], 0);
+      }
     } else if (i < e->pos) {
       // Confirmed panel: light grey fill.
       graphics_context_set_fill_color(ctx, GColorLightGray);
@@ -107,7 +200,7 @@ void pin_flap_draw(PinFlap *flap, GContext *ctx, GRect bounds) {
         graphics_draw_text(ctx, "*", font, panel,
                            GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
       } else {
-        prv_draw_active_digit(ctx, &panel, e->digits[i]);
+        prv_draw_digit_offset(ctx, &panel, e->digits[i], 0);
       }
     } else {
       // Future panel: white fill, no content.

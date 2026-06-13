@@ -52,10 +52,7 @@ bool pin_entry_back(PinEntry *e) {
 
 static Window   s_window;
 static PinEntry s_entry;
-
-static void prv_redraw(void) {
-  layer_mark_dirty(window_get_root_layer(&s_window));
-}
+static PinFlap  s_flap;
 
 static void prv_update_proc(Layer *layer, GContext *ctx) {
   // A custom root-layer update proc replaces the window's default background
@@ -64,33 +61,31 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorWhite);
   graphics_fill_rect(ctx, &bg);
 
-  PinFlapConfig cfg = {
-    .entry           = &s_entry,
-    .title           = i18n_noop("Enter PIN"),
-    .mask_confirmed  = pin_lock_should_mask_digits(),
-  };
-  PinFlap flap;
-  pin_flap_init(&flap, &cfg);
-  pin_flap_draw(&flap, ctx, GRect(0, 0, DISP_COLS, DISP_ROWS));
+  // Refresh the mask preference each frame (can change while window is open).
+  s_flap.config.mask_confirmed = pin_lock_should_mask_digits();
+  pin_flap_draw(&s_flap, ctx, GRect(0, 0, DISP_COLS, DISP_ROWS));
 }
 
 static void prv_pop(void) {
+  pin_flap_reset(&s_flap);
   window_stack_remove(&s_window, true /* animated */);
 }
 
 static void prv_up_handler(ClickRecognizerRef recognizer, void *context) {
+  const uint8_t old = s_entry.digits[s_entry.pos];
   pin_entry_up(&s_entry);
-  prv_redraw();
+  pin_flap_animate_step(&s_flap, window_get_root_layer(&s_window), old, +1);
 }
 
 static void prv_down_handler(ClickRecognizerRef recognizer, void *context) {
+  const uint8_t old = s_entry.digits[s_entry.pos];
   pin_entry_down(&s_entry);
-  prv_redraw();
+  pin_flap_animate_step(&s_flap, window_get_root_layer(&s_window), old, -1);
 }
 
 static void prv_select_handler(ClickRecognizerRef recognizer, void *context) {
   if (!pin_entry_select(&s_entry)) {
-    prv_redraw();
+    layer_mark_dirty(window_get_root_layer(&s_window));
     return;
   }
   // All digits confirmed — verify the PIN.
@@ -101,7 +96,8 @@ static void prv_select_handler(ClickRecognizerRef recognizer, void *context) {
     PBL_LOG_DBG("PIN unlock: incorrect PIN, resetting entry");
     vibes_double_pulse();
     pin_entry_init(&s_entry, s_entry.len);
-    prv_redraw();
+    pin_flap_reset(&s_flap);
+    layer_mark_dirty(window_get_root_layer(&s_window));
   }
 }
 
@@ -110,7 +106,7 @@ static void prv_back_handler(ClickRecognizerRef recognizer, void *context) {
     // At first position: cancel (stay locked) and dismiss.
     prv_pop();
   } else {
-    prv_redraw();
+    layer_mark_dirty(window_get_root_layer(&s_window));
   }
 }
 
@@ -124,6 +120,13 @@ static void prv_click_config_provider(void *context) {
 
 void pin_unlock_window_push(void) {
   pin_entry_init(&s_entry, pin_lock_get_pin_len());
+
+  PinFlapConfig cfg = {
+    .entry          = &s_entry,
+    .title          = i18n_noop("Enter PIN"),
+    .mask_confirmed = pin_lock_should_mask_digits(),
+  };
+  pin_flap_init(&s_flap, &cfg);
 
   window_init(&s_window, WINDOW_NAME("PIN Unlock"));
   window_set_background_color(&s_window, GColorWhite);
