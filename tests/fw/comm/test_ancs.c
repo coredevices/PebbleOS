@@ -234,7 +234,7 @@ BTErrno gatt_client_op_write(BLECharacteristic characteristic,
                             (uint8_t*) s_this_message_has_no_content_response);
     s_num_ds_notifications_received++;
   } else if (uid == s_invalid_param_uid) {
-    ancs_handle_write_response(0, 0xA2);
+    ancs_handle_write_response(s_characteristics[ANCSCharacteristicControl], 0xA2);
     s_num_ds_notifications_received++;
   } else if (uid ==  multiple_complete_dict_uid) {
     prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_multiple_complete_dicts), (uint8_t*) s_multiple_complete_dicts);
