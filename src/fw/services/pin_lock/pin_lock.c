@@ -7,6 +7,7 @@
 #include "kernel/events.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/settings/settings_file.h"
+#include "syscall/syscall_internal.h"
 #include "system/status_codes.h"
 #include "util/attributes.h"
 #include "util/sha2.h"
@@ -256,6 +257,18 @@ void pin_lock_lock_now(void) {
 
 void pin_lock_mark_unlocked(void) {
   s_pin_lock.locked = false;
+}
+
+// Syscalls: the Settings app runs in a separate (unprivileged) context and does
+// not share the kernel-side runtime state. It persists config/PIN to flash
+// directly, then calls these to apply the change to the live kernel state that
+// the watchface gate and triggers read.
+DEFINE_SYSCALL(void, sys_pin_lock_reload_config, void) {
+  pin_lock_reload_config();
+}
+
+DEFINE_SYSCALL(void, sys_pin_lock_lock_now, void) {
+  pin_lock_lock_now();
 }
 
 bool pin_lock_should_hide_notifications(void) {

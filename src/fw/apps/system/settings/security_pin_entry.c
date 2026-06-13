@@ -66,6 +66,12 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
   Window *window = layer_get_window(layer);
   PinEntryWindowData *d = window_get_user_data(window);
 
+  // A custom root-layer update proc replaces the window's default background
+  // fill, so paint it ourselves to fully cover whatever is below.
+  const GRect bg = GRect(0, 0, DISP_COLS, DISP_ROWS);
+  graphics_context_set_fill_color(ctx, GColorWhite);
+  graphics_fill_rect(ctx, &bg);
+
   // Draw the title string.
   const char *title_key;
   if (d->phase == Phase_Length) {
@@ -288,9 +294,13 @@ void security_pin_entry_push(const SecurityPinEntryConfig *config) {
     d->chosen_len = PIN_LOCK_MIN_LEN;
     pin_entry_init(&d->entry, PIN_LOCK_MIN_LEN);
   } else {
-    // Verify against the stored PIN — use its persisted length.
+    // Verify against the stored PIN — read its persisted length from flash
+    // (the app context does not share the kernel's cached config).
+    PinLockConfig stored;
+    pin_lock_storage_load(&stored);
+    const uint8_t len = stored.pin_len ? stored.pin_len : PIN_LOCK_MIN_LEN;
     d->phase = Phase_Enter;
-    pin_entry_init(&d->entry, pin_lock_get_pin_len());
+    pin_entry_init(&d->entry, len);
   }
 
   window_init(&d->window, WINDOW_NAME("Security PIN Entry"));

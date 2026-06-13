@@ -12,6 +12,7 @@
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/i18n/i18n.h"
 #include "services/pin_lock/pin_lock.h"
+#include "syscall/syscall.h"
 #include "system/passert.h"
 #include "util/size.h"
 
@@ -54,7 +55,7 @@ static void prv_timeout_select(OptionMenu *option_menu, int selection, void *con
   SecurityData *data = (SecurityData *)context;
   data->cfg.timeout_s = s_timeout_values[selection];
   pin_lock_storage_save_config(&data->cfg);
-  pin_lock_reload_config();
+  sys_pin_lock_reload_config();  // apply to the live kernel-side state
   pin_lock_storage_load(&data->cfg);
   app_window_stack_remove(&option_menu->window, true /* animated */);
   settings_menu_reload_data(SettingsMenuItemSecurity);
@@ -79,7 +80,7 @@ static void prv_reload_cfg(SecurityData *data) {
 
 static void prv_save_and_reload(SecurityData *data) {
   pin_lock_storage_save_config(&data->cfg);
-  pin_lock_reload_config();
+  sys_pin_lock_reload_config();  // apply to the live kernel-side state
   prv_reload_cfg(data);
 }
 
@@ -156,6 +157,7 @@ static void prv_on_set_pin_complete(bool success, const uint8_t *digits, uint8_t
   }
   SecurityData *data = (SecurityData *)ctx;
   pin_lock_storage_set_pin(digits, len);
+  sys_pin_lock_reload_config();  // kernel picks up enabled + new pin_len
   prv_reload_cfg(data);
   settings_menu_reload_data(SettingsMenuItemSecurity);
   settings_menu_mark_dirty(SettingsMenuItemSecurity);
@@ -188,6 +190,7 @@ static void prv_on_verify_for_disable_complete(bool success, const uint8_t *digi
   }
   SecurityData *data = (SecurityData *)ctx;
   pin_lock_storage_clear();
+  sys_pin_lock_reload_config();  // kernel picks up disabled state
   prv_reload_cfg(data);
   settings_menu_reload_data(SettingsMenuItemSecurity);
   settings_menu_mark_dirty(SettingsMenuItemSecurity);
@@ -262,7 +265,7 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       prv_save_and_reload(data);
       break;
     case ROW_LOCK_NOW:
-      pin_lock_lock_now();
+      sys_pin_lock_lock_now();
       return; // no redraw needed
     default:
       return;
