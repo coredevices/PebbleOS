@@ -969,7 +969,7 @@ void ancs_handle_service_discovered(BLECharacteristic *characteristics, PhoneSlo
 
   if (s_ancs_client->characteristics[0] != BLE_CHARACTERISTIC_INVALID) {
     PBL_LOG_WRN("Multiple ANCS services registered?!");
-    ancs_invalidate_all_references();
+    ancs_invalidate_all_references_for_slot(slot);
   }
 
   // Keep around the BLECharacteristic references:
