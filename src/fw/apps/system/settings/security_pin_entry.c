@@ -38,6 +38,7 @@
 #define TITLE_Y     (DOT_ROW_Y - DOT_RADIUS * 5)
 
 typedef enum {
+  Phase_Length,   // Set-mode only: choose PIN length (4-8)
   Phase_Enter,    // collecting the first pass (or the only pass in Verify mode)
   Phase_Confirm,  // Set-mode: re-enter to confirm
 } Phase;
@@ -47,6 +48,7 @@ typedef struct {
   PinEntry entry;
   SecurityPinEntryConfig cfg;
   Phase phase;
+  uint8_t chosen_len;                     // selected during Phase_Length (Set-mode)
   uint8_t first_digits[PIN_LOCK_MAX_LEN]; // saved first-pass digits for Set-mode
 } PinEntryWindowData;
 
@@ -66,7 +68,9 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
 
   // Draw the title string.
   const char *title_key;
-  if (d->cfg.mode == SecurityPinEntryMode_Verify) {
+  if (d->phase == Phase_Length) {
+    title_key = i18n_noop("PIN Length");
+  } else if (d->cfg.mode == SecurityPinEntryMode_Verify) {
     title_key = i18n_noop("Enter PIN");
   } else if (d->phase == Phase_Confirm) {
     title_key = i18n_noop("Confirm PIN");
@@ -78,6 +82,17 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, i18n_get(title_key, d), font, title_box,
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+
+  // Length-choice phase: show the chosen count as a single large numeral.
+  if (d->phase == Phase_Length) {
+    char buf[2] = { (char)('0' + d->chosen_len), '\0' };
+    GFont digit_font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
+    GRect box = GRect(0, DOT_ROW_Y - DIGIT_HALF, DISP_COLS, DIGIT_HALF * 2);
+    graphics_context_set_text_color(ctx, GColorBlack);
+    graphics_draw_text(ctx, buf, digit_font, box,
+                       GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+    return;
+  }
 
   // Draw dots.
   const uint8_t n = d->entry.len;
@@ -110,18 +125,38 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
 
 static void prv_up_handler(ClickRecognizerRef recognizer, void *context) {
   PinEntryWindowData *d = (PinEntryWindowData *)context;
-  pin_entry_up(&d->entry);
+  if (d->phase == Phase_Length) {
+    if (d->chosen_len < PIN_LOCK_MAX_LEN) {
+      d->chosen_len++;
+    }
+  } else {
+    pin_entry_up(&d->entry);
+  }
   prv_redraw(d);
 }
 
 static void prv_down_handler(ClickRecognizerRef recognizer, void *context) {
   PinEntryWindowData *d = (PinEntryWindowData *)context;
-  pin_entry_down(&d->entry);
+  if (d->phase == Phase_Length) {
+    if (d->chosen_len > PIN_LOCK_MIN_LEN) {
+      d->chosen_len--;
+    }
+  } else {
+    pin_entry_down(&d->entry);
+  }
   prv_redraw(d);
 }
 
 static void prv_select_handler(ClickRecognizerRef recognizer, void *context) {
   PinEntryWindowData *d = (PinEntryWindowData *)context;
+
+  if (d->phase == Phase_Length) {
+    // Length chosen — start entering the new PIN.
+    pin_entry_init(&d->entry, d->chosen_len);
+    d->phase = Phase_Enter;
+    prv_redraw(d);
+    return;
+  }
 
   if (!pin_entry_select(&d->entry)) {
     // Not at last digit yet; advance.
@@ -194,13 +229,29 @@ static void prv_select_handler(ClickRecognizerRef recognizer, void *context) {
 
 static void prv_back_handler(ClickRecognizerRef recognizer, void *context) {
   PinEntryWindowData *d = (PinEntryWindowData *)context;
+
+  // Length-choice phase: Back cancels the whole flow.
+  if (d->phase == Phase_Length) {
+    const SecurityPinEntryConfig cfg = d->cfg;
+    prv_pop(d);
+    if (cfg.on_complete) {
+      cfg.on_complete(false, NULL, 0, cfg.ctx);
+    }
+    return;
+  }
+
   if (pin_entry_back(&d->entry)) {
-    // At first position: cancel and dismiss (back to Confirm = back to Enter).
+    // At the first position, step back one stage.
     if (d->phase == Phase_Confirm) {
       d->phase = Phase_Enter;
       pin_entry_init(&d->entry, d->entry.len);
       prv_redraw(d);
+    } else if (d->cfg.mode == SecurityPinEntryMode_Set) {
+      // Set-mode entry: return to length choice rather than cancelling.
+      d->phase = Phase_Length;
+      prv_redraw(d);
     } else {
+      // Verify-mode: cancel and dismiss.
       const SecurityPinEntryConfig cfg = d->cfg;
       prv_pop(d);
       if (cfg.on_complete) {
@@ -229,10 +280,18 @@ void security_pin_entry_push(const SecurityPinEntryConfig *config) {
   PinEntryWindowData *d = app_malloc_check(sizeof(*d));
   *d = (PinEntryWindowData){
     .cfg = *config,
-    .phase = Phase_Enter,
   };
 
-  pin_entry_init(&d->entry, PIN_LOCK_MIN_LEN);
+  if (config->mode == SecurityPinEntryMode_Set) {
+    // Choose the PIN length (4-8) first, then enter+confirm.
+    d->phase = Phase_Length;
+    d->chosen_len = PIN_LOCK_MIN_LEN;
+    pin_entry_init(&d->entry, PIN_LOCK_MIN_LEN);
+  } else {
+    // Verify against the stored PIN — use its persisted length.
+    d->phase = Phase_Enter;
+    pin_entry_init(&d->entry, pin_lock_get_pin_len());
+  }
 
   window_init(&d->window, WINDOW_NAME("Security PIN Entry"));
   window_set_user_data(&d->window, d);
