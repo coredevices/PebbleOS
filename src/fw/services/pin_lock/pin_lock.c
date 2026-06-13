@@ -34,6 +34,7 @@ typedef struct PACKED {
   uint8_t  hide_timeline;
   uint8_t  pin_len;
   uint8_t  mask_digits;
+  uint8_t  haptic;
 } PinLockStored;
 
 void pin_lock_compute_hash(const uint8_t *salt, const uint8_t *digits, uint8_t len,
@@ -75,6 +76,7 @@ bool pin_lock_storage_load(PinLockConfig *out) {
   out->hide_timeline         = stored.hide_timeline;
   out->pin_len               = stored.pin_len;
   out->mask_digits           = stored.mask_digits;
+  out->haptic                = stored.haptic;
   return true;
 }
 
@@ -93,6 +95,7 @@ void pin_lock_storage_save_config(const PinLockConfig *config) {
     .hide_timeline         = config->hide_timeline,
     .pin_len               = config->pin_len,
     .mask_digits           = config->mask_digits,
+    .haptic                = config->haptic,
   };
   settings_file_set(&f, PIN_KEY_CONFIG, sizeof(PIN_KEY_CONFIG), &stored, sizeof(stored));
   settings_file_close(&f);
@@ -117,6 +120,7 @@ void pin_lock_storage_set_pin(const uint8_t *digits, uint8_t len) {
   pin_lock_storage_load(&cfg);
   if (!cfg.enabled) {
     cfg.mask_digits = true;
+    cfg.haptic = true;
   }
   cfg.enabled = true;
   cfg.pin_len = len;
@@ -135,6 +139,7 @@ void pin_lock_storage_set_pin(const uint8_t *digits, uint8_t len) {
     .hide_timeline         = cfg.hide_timeline,
     .pin_len               = cfg.pin_len,
     .mask_digits           = cfg.mask_digits,
+    .haptic                = cfg.haptic,
   };
   settings_file_set(&f, PIN_KEY_CONFIG, sizeof(PIN_KEY_CONFIG), &stored, sizeof(stored));
   settings_file_set(&f, PIN_KEY_SALT, sizeof(PIN_KEY_SALT), salt, sizeof(salt));
@@ -291,6 +296,11 @@ bool pin_lock_should_hide_timeline(void) {
 bool pin_lock_should_mask_digits(void) {
   // A fresh/disabled config defaults to masked.
   return s_pin_lock.config.enabled ? s_pin_lock.config.mask_digits : true;
+}
+
+bool pin_lock_should_haptic(void) {
+  // A fresh/disabled config defaults to haptics on.
+  return s_pin_lock.config.enabled ? s_pin_lock.config.haptic : true;
 }
 
 uint8_t pin_lock_get_pin_len(void) {

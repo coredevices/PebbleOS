@@ -25,6 +25,7 @@ typedef enum {
   ROW_HIDE_NOTIFS,
   ROW_HIDE_TIMELINE,
   ROW_SHOW_DIGITS,
+  ROW_HAPTIC,
   ROW_LOCK_NOW,
   NUM_ROWS_ALL,
 } SecurityRow;
@@ -140,6 +141,10 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
     case ROW_SHOW_DIGITS:
       title = i18n_noop("Show PIN digits");
       subtitle = !data->cfg.mask_digits ? i18n_noop("On") : i18n_noop("Off");
+      break;
+    case ROW_HAPTIC:
+      title = i18n_noop("Haptic feedback");
+      subtitle = data->cfg.haptic ? i18n_noop("On") : i18n_noop("Off");
       break;
     case ROW_LOCK_NOW:
       title = i18n_noop("Lock Now");
@@ -271,6 +276,10 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       break;
     case ROW_SHOW_DIGITS:
       data->cfg.mask_digits = !data->cfg.mask_digits;
+      prv_save_and_reload(data);
+      break;
+    case ROW_HAPTIC:
+      data->cfg.haptic = !data->cfg.haptic;
       prv_save_and_reload(data);
       break;
     case ROW_LOCK_NOW:

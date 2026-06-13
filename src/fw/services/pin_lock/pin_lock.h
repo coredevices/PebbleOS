@@ -29,6 +29,7 @@ typedef struct {
   bool hide_notifications;    //!< suppress notification popups when locked
   bool hide_timeline;         //!< suppress timeline peeks when locked
   bool mask_digits;           //!< confirmed digits shown as '*' (default true)
+  bool haptic;                //!< light vibe on digit-flip settle (default true)
   uint8_t pin_len;            //!< 4-8
 } PinLockConfig;
 
@@ -72,6 +73,8 @@ bool pin_lock_should_hide_notifications(void);
 bool pin_lock_should_hide_timeline(void);
 //! True when confirmed PIN digits should be masked as '*' (default true).
 bool pin_lock_should_mask_digits(void);
+//! True when the digit-flip haptic tick is enabled (default true).
+bool pin_lock_should_haptic(void);
 uint8_t pin_lock_get_pin_len(void);
 
 //! Notify the service of user activity (resets the inactivity timer). Exposed
