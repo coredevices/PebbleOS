@@ -252,8 +252,8 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
   cl_assert_equal_m(&irk_out, &pairing_1.irk, sizeof(irk_out));
   cl_assert_equal_m(&device_out, &pairing_1.identity, sizeof(device_out));
 
-  // Store a pairing with a different identity. Dual-phone firmware keeps up to
-  // MAX_PHONE_CONNECTIONS distinct BLE pairings.
+  // Store a pairing with a different identity. Two BLE pairings are allowed simultaneously
+  // (MAX_PHONE_CONNECTIONS=2), so both pairings should coexist.
   SMPairingInfo pairing_2;
   memset(&pairing_2, 0x00, sizeof(pairing_2));
   pairing_2 = (SMPairingInfo) {
@@ -282,9 +282,10 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
   cl_assert(id_2 != BT_BONDING_ID_INVALID);
   cl_assert(id_2 != id_1);
   cl_assert_equal_i(s_ble_bonding_change_add_count, 2);
+  // Both pairings coexist since MAX_PHONE_CONNECTIONS=2 allows two simultaneous BLE pairings.
   cl_assert_equal_i(s_ble_bonding_change_delete_count, 0);
 
-  // Both pairings coexist.
+  // Both pairing_1 and pairing_2 exist.
   ret = bt_persistent_storage_get_ble_pairing_by_id(id_1, &irk_out, &device_out, NULL /* name */);
   cl_assert(ret);
   cl_assert_equal_m(&irk_out, &pairing_1.irk, sizeof(irk_out));
@@ -311,7 +312,8 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
   cl_assert_equal_m(&irk_out, &pairing_2.irk, sizeof(irk_out));
   cl_assert_equal_m(&device_out, &pairing_2.identity, sizeof(device_out));
 
-  // Store yet another distinct pairing: prune excess bondings, keeping only the newest.
+  // Store a third distinct pairing: exceeds MAX_PHONE_CONNECTIONS, so pairing_1 and pairing_2
+  // are pruned and only the most recent (pairing_3) is kept.
   SMPairingInfo pairing_3;
   memset(&pairing_3, 0x00, sizeof(pairing_3));
   pairing_3 = (SMPairingInfo) {

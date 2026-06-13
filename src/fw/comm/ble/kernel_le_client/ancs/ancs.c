@@ -939,8 +939,9 @@ void ancs_handle_subscribe(BLECharacteristic subscribed_characteristic,
 }
 
 void ancs_invalidate_all_references_for_slot(PhoneSlot slot) {
-  s_ancs_client = s_ancs_clients[slot];
-  if (!s_ancs_client) return;
+  ANCSClient *client = s_ancs_clients[slot];
+  if (!client) return;
+  s_ancs_client = client;
   for (int c = 0; c < NumANCSCharacteristic; c++) {
     s_ancs_client->characteristics[c] = BLE_CHARACTERISTIC_INVALID;
   }
