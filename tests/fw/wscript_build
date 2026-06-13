@@ -327,4 +327,8 @@ clar(ctx,
      test_sources_ant_glob="test_getting_started_button_combo.c",
      defines=["CONFIG_RECOVERY_FW"]) # Enable all combos
 
+clar(ctx,
+     sources_ant_glob="src/fw/popups/pin_lock/unlock_window.c",
+     test_sources_ant_glob="test_pin_unlock_buffer.c")
+
 # vim:filetype=python
