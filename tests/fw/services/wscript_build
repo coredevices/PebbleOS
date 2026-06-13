@@ -471,4 +471,10 @@ clar(ctx,
      test_sources_ant_glob="test_app_glance_service.c",
      override_includes=['dummy_board'])
 
+clar(ctx,
+    sources_ant_glob = \
+        " src/fw/services/pin_lock/pin_lock.c" \
+        " src/fw/util/sha2.c",
+    test_sources_ant_glob = "test_pin_lock.c")
+
 # vim:filetype=python
