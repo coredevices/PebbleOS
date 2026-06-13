@@ -952,6 +952,13 @@ void ancs_invalidate_all_references(void) {
   for (PhoneSlot slot = 0; slot < MAX_PHONE_CONNECTIONS; slot++) {
     ancs_invalidate_all_references_for_slot(slot);
   }
+  s_ancs_client = NULL;
+  for (PhoneSlot slot = 0; slot < MAX_PHONE_CONNECTIONS; slot++) {
+    if (s_ancs_clients[slot]) {
+      s_ancs_client = s_ancs_clients[slot];
+      break;
+    }
+  }
 }
 
 void ancs_handle_service_removed(BLECharacteristic *characteristics, uint8_t num_characteristics) {
@@ -984,7 +991,7 @@ void ancs_handle_service_discovered(BLECharacteristic *characteristics, PhoneSlo
                                                           GAPLEClientKernel);
     if (e != BTErrnoOK) {
       PBL_LOG_WRN("Failed to subscribe ANCS charx %d (err=%d), ignoring service", c, e);
-      ancs_invalidate_all_references();
+      ancs_invalidate_all_references_for_slot(slot);
       return;
     }
   }
