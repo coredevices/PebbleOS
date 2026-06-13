@@ -114,6 +114,65 @@ typedef struct ANCSClient {
 static ANCSClient *s_ancs_clients[MAX_PHONE_CONNECTIONS];
 static ANCSClient *s_ancs_client;
 
+// UID-to-slot map: routes notification actions to the correct phone.
+// ANCS UIDs are only unique per-connection; without this a dismiss on one
+// phone would accidentally fire on the other if both share the same UID.
+#define ANCS_UID_SLOT_MAP_SIZE 32
+
+typedef struct {
+  uint32_t uid;
+  PhoneSlot slot;
+  bool valid;
+} UIDSlotEntry;
+
+static UIDSlotEntry s_uid_slot_map[ANCS_UID_SLOT_MAP_SIZE];
+
+static void prv_uid_slot_record(uint32_t uid, PhoneSlot slot) {
+  int free_idx = -1;
+  for (int i = 0; i < ANCS_UID_SLOT_MAP_SIZE; i++) {
+    if (s_uid_slot_map[i].valid && s_uid_slot_map[i].uid == uid) {
+      s_uid_slot_map[i].slot = slot;
+      return;
+    }
+    if (!s_uid_slot_map[i].valid && free_idx < 0) {
+      free_idx = i;
+    }
+  }
+  if (free_idx >= 0) {
+    s_uid_slot_map[free_idx] = (UIDSlotEntry){ .uid = uid, .slot = slot, .valid = true };
+  } else {
+    // Table full: evict entry 0 (oldest by position)
+    s_uid_slot_map[0] = (UIDSlotEntry){ .uid = uid, .slot = slot, .valid = true };
+  }
+}
+
+static void prv_uid_slot_forget(uint32_t uid) {
+  for (int i = 0; i < ANCS_UID_SLOT_MAP_SIZE; i++) {
+    if (s_uid_slot_map[i].valid && s_uid_slot_map[i].uid == uid) {
+      s_uid_slot_map[i].valid = false;
+      return;
+    }
+  }
+}
+
+static void prv_uid_slot_clear_slot(PhoneSlot slot) {
+  for (int i = 0; i < ANCS_UID_SLOT_MAP_SIZE; i++) {
+    if (s_uid_slot_map[i].valid && s_uid_slot_map[i].slot == slot) {
+      s_uid_slot_map[i].valid = false;
+    }
+  }
+}
+
+static bool prv_uid_slot_lookup(uint32_t uid, PhoneSlot *slot_out) {
+  for (int i = 0; i < ANCS_UID_SLOT_MAP_SIZE; i++) {
+    if (s_uid_slot_map[i].valid && s_uid_slot_map[i].uid == uid) {
+      *slot_out = s_uid_slot_map[i].slot;
+      return true;
+    }
+  }
+  return false;
+}
+
 static PhoneSlot prv_slot_for_characteristic(BLECharacteristic c) {
   for (PhoneSlot slot = 0; slot < MAX_PHONE_CONNECTIONS; slot++) {
     ANCSClient *client = s_ancs_clients[slot];
@@ -991,16 +1050,19 @@ static void prv_handle_ns_notification(uint32_t length, const uint8_t *notificat
         PBL_LOG_DBG("Ignoring notification because we just connected and PreExisting");
       } else {
         PBL_LOG_DBG("Added ANCS notification!");
+        prv_uid_slot_record(nsnotification->uid, s_ancs_client->slot);
         prv_notif_queue_push_attr_request(nsnotification->uid, properties);
       }
 
       break;
     case EventIDNotificationModified:
       PBL_LOG_DBG("Modified ANCS notification!");
+      prv_uid_slot_record(nsnotification->uid, s_ancs_client->slot);
       prv_notif_queue_push_attr_request(nsnotification->uid, properties);
       break;
     case EventIDNotificationRemoved:
       PBL_LOG_DBG("Removed ANCS notification");
+      prv_uid_slot_forget(nsnotification->uid);
       ancs_notifications_handle_notification_removed(nsnotification->uid, properties);
       break;
   }
@@ -1118,17 +1180,20 @@ static void prv_perform_action(uint32_t notification_uid, ActionId action_id) {
 }
 
 static void prv_serialize_action(const PerformNotificationActionMsg *action_msg) {
-  bool any_client = false;
-  for (PhoneSlot slot = 0; slot < MAX_PHONE_CONNECTIONS; slot++) {
-    if (s_ancs_clients[slot]) {
-      s_ancs_client = s_ancs_clients[slot];
-      any_client = true;
-      prv_notif_queue_push_action(action_msg->notification_uid, action_msg->action_id);
+  PhoneSlot slot = PHONE_SLOT_INVALID;
+  if (!prv_uid_slot_lookup(action_msg->notification_uid, &slot) ||
+      !s_ancs_clients[slot]) {
+    // UID not in map or that slot disconnected; fall back to first active slot
+    for (PhoneSlot s = 0; s < MAX_PHONE_CONNECTIONS; s++) {
+      if (s_ancs_clients[s]) { slot = s; break; }
     }
   }
-  if (!any_client) {
-    PBL_LOG_ERR("No ANCS client");
+  if (slot == PHONE_SLOT_INVALID || !s_ancs_clients[slot]) {
+    PBL_LOG_ERR("No ANCS client for action uid=%"PRIu32, action_msg->notification_uid);
+    return;
   }
+  s_ancs_client = s_ancs_clients[slot];
+  prv_notif_queue_push_action(action_msg->notification_uid, action_msg->action_id);
 }
 
 void prv_serialize_action_launcher_task_cb(void *data) {
@@ -1191,6 +1256,7 @@ void ancs_destroy(PhoneSlot slot) {
     ancs_app_name_storage_deinit();
   }
   prv_reset_and_flush();
+  prv_uid_slot_clear_slot(slot);
   kernel_free(s_ancs_client);
   s_ancs_clients[slot] = NULL;
   s_ancs_client = NULL;
