@@ -14,7 +14,6 @@
 #include "applib/graphics/gcolor_definitions.h"
 #include "applib/graphics/gcontext.h"
 #include "applib/graphics/graphics.h"
-#include "applib/graphics/graphics_circle.h"
 #include "applib/graphics/text.h"
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/layer.h"
@@ -22,20 +21,15 @@
 #include "applib/ui/window.h"
 #include "board/display.h"
 #include "kernel/pbl_malloc.h"
-#include "popups/pin_lock/unlock_window.h"
 #include "pbl/services/i18n/i18n.h"
+#include "popups/pin_lock/pin_flap.h"
+#include "popups/pin_lock/unlock_window.h"
 #include "services/pin_lock/pin_lock.h"
 #include "system/logging.h"
 #include "system/passert.h"
 
-// Dot layout — mirror unlock_window.c constants so the UI looks identical.
-#define DOT_RADIUS    7
-#define DOT_SPACING  20
-#define DOT_ROW_Y   (DISP_ROWS / 2)
-#define DIGIT_HALF  (DOT_RADIUS * 2)
-
-// Title text height above the dot row.
-#define TITLE_Y     (DOT_ROW_Y - DOT_RADIUS * 5)
+// Layout constant for the length-choice phase only.
+#define DIGIT_HALF  14
 
 typedef enum {
   Phase_Length,   // Set-mode only: choose PIN length (4-8)
@@ -72,61 +66,46 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorWhite);
   graphics_fill_rect(ctx, &bg);
 
-  // Draw the title string.
-  const char *title_key;
+  // Length-choice phase: title + single large numeral (unchanged).
   if (d->phase == Phase_Length) {
-    title_key = i18n_noop("PIN Length");
-  } else if (d->cfg.mode == SecurityPinEntryMode_Verify) {
-    title_key = i18n_noop("Enter PIN");
-  } else if (d->phase == Phase_Confirm) {
-    title_key = i18n_noop("Confirm PIN");
-  } else {
-    title_key = i18n_noop("Set PIN");
-  }
-  GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
-  GRect title_box = GRect(0, TITLE_Y, DISP_COLS, 24);
-  graphics_context_set_text_color(ctx, GColorBlack);
-  graphics_draw_text(ctx, i18n_get(title_key, d), font, title_box,
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+    GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
+    GRect title_box = GRect(0, DISP_ROWS / 2 - DIGIT_HALF * 5, DISP_COLS, 24);
+    graphics_context_set_text_color(ctx, GColorBlack);
+    graphics_draw_text(ctx, i18n_get(i18n_noop("PIN Length"), d), font, title_box,
+                       GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
 
-  // Length-choice phase: show the chosen count as a single large numeral.
-  if (d->phase == Phase_Length) {
     char buf[2] = { (char)('0' + d->chosen_len), '\0' };
     GFont digit_font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
-    GRect box = GRect(0, DOT_ROW_Y - DIGIT_HALF, DISP_COLS, DIGIT_HALF * 2);
+    GRect box = GRect(0, DISP_ROWS / 2 - DIGIT_HALF, DISP_COLS, DIGIT_HALF * 2);
     graphics_context_set_text_color(ctx, GColorBlack);
     graphics_draw_text(ctx, buf, digit_font, box,
                        GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
     return;
   }
 
-  // Draw dots.
-  const uint8_t n = d->entry.len;
-  const int16_t total_w = (n - 1) * DOT_SPACING;
-  const int16_t start_x = (DISP_COLS - total_w) / 2;
-
-  for (uint8_t i = 0; i < n; i++) {
-    const int16_t cx = start_x + i * DOT_SPACING;
-    const GPoint centre = GPoint(cx, DOT_ROW_Y);
-
-    if (i < d->entry.pos) {
-      graphics_context_set_fill_color(ctx, GColorBlack);
-      graphics_fill_circle(ctx, centre, DOT_RADIUS);
-    } else if (i == d->entry.pos) {
-      char buf[2] = { (char)('0' + d->entry.digits[i]), '\0' };
-      GFont digit_font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
-      GRect box = GRect(cx - DIGIT_HALF, DOT_ROW_Y - DIGIT_HALF,
-                        DIGIT_HALF * 2, DIGIT_HALF * 2);
-      graphics_context_set_fill_color(ctx, GColorWhite);
-      graphics_fill_rect(ctx, &box);
-      graphics_context_set_fill_color(ctx, GColorBlack);
-      graphics_draw_text(ctx, buf, digit_font, box,
-                         GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
-    } else {
-      graphics_context_set_stroke_color(ctx, GColorBlack);
-      graphics_draw_circle(ctx, centre, DOT_RADIUS);
-    }
+  // Enter / Confirm phases: delegate to the shared split-flap widget.
+  const char *title_key;
+  if (d->cfg.mode == SecurityPinEntryMode_Verify) {
+    title_key = i18n_noop("Enter PIN");
+  } else if (d->phase == Phase_Confirm) {
+    title_key = i18n_noop("Confirm PIN");
+  } else {
+    title_key = i18n_noop("Set PIN");
   }
+
+  // Read mask preference from flash (app context cannot use kernel cache).
+  PinLockConfig st;
+  pin_lock_storage_load(&st);
+  const bool mask = st.pin_len ? st.mask_digits : true;
+
+  PinFlapConfig cfg = {
+    .entry          = &d->entry,
+    .title          = title_key,
+    .mask_confirmed = mask,
+  };
+  PinFlap flap;
+  pin_flap_init(&flap, &cfg);
+  pin_flap_draw(&flap, ctx, GRect(0, 0, DISP_COLS, DISP_ROWS));
 }
 
 static void prv_up_handler(ClickRecognizerRef recognizer, void *context) {
