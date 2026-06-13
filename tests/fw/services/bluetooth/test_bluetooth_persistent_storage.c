@@ -236,6 +236,7 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
     .is_remote_identity_info_valid = true,
     .is_mitm_protection_enabled = true,
   };
+  fake_rtc_increment_time(1);
   BTBondingID id_1 = bt_persistent_storage_store_ble_pairing(&pairing_1,
                                                              true /* is_gateway */, NULL,
                                                              false /* requires_address_pinning */,
@@ -251,8 +252,8 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
   cl_assert_equal_m(&irk_out, &pairing_1.irk, sizeof(irk_out));
   cl_assert_equal_m(&device_out, &pairing_1.identity, sizeof(device_out));
 
-  // Store a pairing with a different identity. Only one BLE pairing is allowed at a time, so this
-  // must replace the previous one.
+  // Store a pairing with a different identity. Dual-phone firmware keeps up to
+  // MAX_PHONE_CONNECTIONS distinct BLE pairings.
   SMPairingInfo pairing_2;
   memset(&pairing_2, 0x00, sizeof(pairing_2));
   pairing_2 = (SMPairingInfo) {
@@ -273,6 +274,7 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
     },
     .is_remote_identity_info_valid = true,
   };
+  fake_rtc_increment_time(1);
   BTBondingID id_2 = bt_persistent_storage_store_ble_pairing(&pairing_2, true /* is_gateway */,
                                                              NULL,
                                                              false /* requires_address_pinning */,
@@ -280,12 +282,13 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
   cl_assert(id_2 != BT_BONDING_ID_INVALID);
   cl_assert(id_2 != id_1);
   cl_assert_equal_i(s_ble_bonding_change_add_count, 2);
-  // pairing_1 should have been removed automatically.
-  cl_assert_equal_i(s_ble_bonding_change_delete_count, 1);
+  cl_assert_equal_i(s_ble_bonding_change_delete_count, 0);
 
-  // pairing_1 is gone, pairing_2 remains.
+  // Both pairings coexist.
   ret = bt_persistent_storage_get_ble_pairing_by_id(id_1, &irk_out, &device_out, NULL /* name */);
-  cl_assert(!ret);
+  cl_assert(ret);
+  cl_assert_equal_m(&irk_out, &pairing_1.irk, sizeof(irk_out));
+  cl_assert_equal_m(&device_out, &pairing_1.identity, sizeof(device_out));
 
   ret = bt_persistent_storage_get_ble_pairing_by_id(id_2, &irk_out, &device_out, NULL /* name */);
   cl_assert(ret);
@@ -294,20 +297,21 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
 
   // Re-store the same pairing (same identity): this is an update, not an add, and must not delete
   // anything.
+  fake_rtc_increment_time(1);
   BTBondingID id_X = bt_persistent_storage_store_ble_pairing(&pairing_2, true /* is_gateway */,
                                                              NULL,
                                                              false /* requires_address_pinning */,
                                                              false /* auto_accept_re_pairing */);
   cl_assert_equal_i(id_2, id_X);
   cl_assert_equal_i(s_ble_bonding_change_update_count, 1);
-  cl_assert_equal_i(s_ble_bonding_change_delete_count, 1);
+  cl_assert_equal_i(s_ble_bonding_change_delete_count, 0);
 
   ret = bt_persistent_storage_get_ble_pairing_by_id(id_2, &irk_out, &device_out, NULL /* name */);
   cl_assert(ret);
   cl_assert_equal_m(&irk_out, &pairing_2.irk, sizeof(irk_out));
   cl_assert_equal_m(&device_out, &pairing_2.identity, sizeof(device_out));
 
-  // Store yet another distinct pairing: pairing_2 should be replaced.
+  // Store yet another distinct pairing: prune excess bondings, keeping only the newest.
   SMPairingInfo pairing_3;
   memset(&pairing_3, 0x00, sizeof(pairing_3));
   pairing_3 = (SMPairingInfo) {
@@ -328,6 +332,7 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
     },
     .is_remote_identity_info_valid = true,
   };
+  fake_rtc_increment_time(1);
   BTBondingID id_3 = bt_persistent_storage_store_ble_pairing(&pairing_3, true /* is_gateway */,
                                                              NULL,
                                                              false /* requires_address_pinning */,
