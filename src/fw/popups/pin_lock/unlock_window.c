@@ -70,6 +70,12 @@ static void prv_redraw(void) {
 //   index == pos → decimal numeral for the current digit value
 //   index > pos  → empty ring (not yet entered)
 static void prv_update_proc(Layer *layer, GContext *ctx) {
+  // A custom root-layer update proc replaces the window's default background
+  // fill, so paint it ourselves to fully cover the app/watchface below.
+  const GRect bg = GRect(0, 0, DISP_COLS, DISP_ROWS);
+  graphics_context_set_fill_color(ctx, GColorWhite);
+  graphics_fill_rect(ctx, &bg);
+
   const uint8_t n = s_entry.len;
   // Total row spans (n-1) gaps plus two half-radii on the outer edges.
   const int16_t total_w = (n - 1) * DOT_SPACING;
