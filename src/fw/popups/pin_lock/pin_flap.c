@@ -18,23 +18,28 @@
 #include "pbl/services/i18n/i18n.h"
 
 // ── panel geometry ────────────────────────────────────────────────────────────
-// Each panel is PANEL_W × PANEL_H pixels with PANEL_GAP between panels.
-// Chosen so 8 panels fit inside DISP_COLS (200 px on emery):
-//   8 * 24 + 7 * 1 = 199 px.
-#define PANEL_W       24
-#define PANEL_H       28
-#define PANEL_GAP      1
-#define PANEL_RADIUS   3
-// Vertical offset of the panel row from the top of `bounds`.
-#define PANELS_TOP_OFFSET  60
+// Panels scale to fill the row width based on the PIN length, so a 4-digit PIN
+// gets big, clear cards while an 8-digit PIN still fits across the display.
+#define ROW_MARGIN          12   // left/right margin around the panel row
+#define PANEL_GAP            4
+#define PANEL_MAX_W         44    // cap so short PINs aren't absurdly wide
+#define PANEL_MIN_W         16
+#define PANEL_ASPECT_EXTRA  12    // panel height = width + this (taller card look)
+#define PANEL_RADIUS         4
+#define PANELS_TOP_OFFSET   66
 
-// The digit font used inside each panel — LECO 20pt monospace numerals.
-#define DIGIT_FONT_KEY  FONT_KEY_LECO_20_BOLD_NUMBERS
+// Pick a LECO monospace numeric font sized to the panel width.
+static GFont prv_digit_font(int16_t panel_w) {
+  if (panel_w >= 40) return fonts_get_system_font(FONT_KEY_LECO_36_BOLD_NUMBERS);
+  if (panel_w >= 32) return fonts_get_system_font(FONT_KEY_LECO_32_BOLD_NUMBERS);
+  if (panel_w >= 24) return fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM);
+  return fonts_get_system_font(FONT_KEY_LECO_20_BOLD_NUMBERS);
+}
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 // Draw one split-flap panel at `r`, with a horizontal seam in the middle.
-// Fill and border colours are already set by the caller.
+// Fill colour is already set by the caller.
 static void prv_draw_panel_shell(GContext *ctx, const GRect *r) {
   graphics_fill_round_rect(ctx, r, PANEL_RADIUS, GCornersAll);
   graphics_context_set_stroke_color(ctx, GColorBlack);
@@ -46,15 +51,16 @@ static void prv_draw_panel_shell(GContext *ctx, const GRect *r) {
                      GPoint(r->origin.x + r->size.w - 2, seam_y));
 }
 
-// Draw the digit centred inside `r`, shifted vertically by `dy` pixels.
-// A negative dy moves the text upward; positive moves it downward.
-static void prv_draw_digit_offset(GContext *ctx, const GRect *r,
-                                  uint8_t digit, int16_t dy) {
-  char buf[2] = { (char)('0' + digit), '\0' };
-  GFont font = fonts_get_system_font(DIGIT_FONT_KEY);
-  GRect shifted = GRect(r->origin.x, r->origin.y + dy, r->size.w, r->size.h);
+// Draw a single glyph (digit or '*') vertically centred in `panel`, shifted by
+// `dy` pixels (used by the roll animation). Negative dy moves it up.
+static void prv_draw_glyph(GContext *ctx, const GRect *panel, GFont font,
+                           char ch, int16_t dy) {
+  char buf[2] = { ch, '\0' };
+  const int16_t fh = (int16_t)fonts_get_font_height(font);
+  const int16_t y = panel->origin.y + (panel->size.h - fh) / 2 + dy;
+  GRect box = GRect(panel->origin.x, y, panel->size.w, fh + 4);
   graphics_context_set_text_color(ctx, GColorBlack);
-  graphics_draw_text(ctx, buf, font, shifted,
+  graphics_draw_text(ctx, buf, font, box,
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
 }
 
@@ -133,75 +139,72 @@ void pin_flap_animate_step(PinFlap *flap, Layer *layer,
 void pin_flap_draw(PinFlap *flap, GContext *ctx, GRect bounds) {
   const PinEntry *e = flap->config.entry;
   const uint8_t n = e->len;
+  if (n == 0) {
+    return;
+  }
 
-  // ── title ─────────────────────────────────────────────────────────────────
-  GFont title_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
-  GRect title_box = GRect(bounds.origin.x,
-                          bounds.origin.y + 28,
-                          bounds.size.w,
-                          24);
+  // ── title (bold, clock-style) ───────────────────────────────────────────────
+  GFont title_font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
+  GRect title_box = GRect(bounds.origin.x, bounds.origin.y + 20, bounds.size.w, 32);
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, i18n_get(flap->config.title, flap), title_font, title_box,
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
   i18n_free_all(flap);
 
-  // ── panel row ─────────────────────────────────────────────────────────────
-  // Total row width: n panels + (n-1) gaps.
-  const int16_t row_w = (int16_t)(n * PANEL_W + (n > 0 ? (n - 1) : 0) * PANEL_GAP);
-  // Centre horizontally within bounds.
+  // ── dynamic panel sizing ────────────────────────────────────────────────────
+  const int16_t avail_w = bounds.size.w - 2 * ROW_MARGIN;
+  int16_t panel_w = (int16_t)((avail_w - (n - 1) * PANEL_GAP) / n);
+  if (panel_w > PANEL_MAX_W) {
+    panel_w = PANEL_MAX_W;
+  }
+  if (panel_w < PANEL_MIN_W) {
+    panel_w = PANEL_MIN_W;
+  }
+  const int16_t panel_h = panel_w + PANEL_ASPECT_EXTRA;
+  GFont digit_font = prv_digit_font(panel_w);
+
+  const int16_t row_w = (int16_t)(n * panel_w + (n - 1) * PANEL_GAP);
   const int16_t start_x = bounds.origin.x + (bounds.size.w - row_w) / 2;
   const int16_t panel_y = bounds.origin.y + PANELS_TOP_OFFSET;
 
   for (uint8_t i = 0; i < n; i++) {
-    const int16_t px = start_x + (int16_t)i * (PANEL_W + PANEL_GAP);
-    GRect panel = GRect(px, panel_y, PANEL_W, PANEL_H);
+    const int16_t px = start_x + (int16_t)i * (panel_w + PANEL_GAP);
+    GRect panel = GRect(px, panel_y, panel_w, panel_h);
 
     if (i == e->pos) {
       // Active panel: white fill, double border for emphasis.
       graphics_context_set_fill_color(ctx, GColorWhite);
       prv_draw_panel_shell(ctx, &panel);
-      // Inner emphasis border (inset by 1 px).
       GRect inner = GRect(panel.origin.x + 1, panel.origin.y + 1,
                           panel.size.w - 2, panel.size.h - 2);
       graphics_draw_round_rect(ctx, &inner, PANEL_RADIUS > 1 ? PANEL_RADIUS - 1 : 0);
 
       if (flap->animating) {
-        // Clip all digit drawing to the panel bounds so the roll stays inside.
+        // Clip the rolling digits to the panel so they stay inside the card.
         GDrawState saved = graphics_context_get_drawing_state(ctx);
         GDrawState clipped = saved;
         clipped.clip_box = panel;
         graphics_context_set_drawing_state(ctx, clipped);
 
-        // Roll offset: how far the incoming digit has travelled into the panel.
-        const int16_t off =
-            pin_flap_roll_offset(flap->progress, PANEL_H);
-        // direction +1 (up): new digit enters from bottom, old exits to top.
-        // direction -1 (down): new digit enters from top, old exits to bottom.
-        const int16_t new_dy = (int16_t)(flap->direction > 0
-                                         ? PANEL_H - off
-                                         : off - PANEL_H);
+        const int16_t off = pin_flap_roll_offset(flap->progress, panel_h);
+        // +1 (up): new enters from bottom, old exits to top.
+        // -1 (down): new enters from top, old exits to bottom.
+        const int16_t new_dy = (int16_t)(flap->direction > 0 ? panel_h - off : off - panel_h);
         const int16_t old_dy = (int16_t)(-flap->direction * off);
 
-        prv_draw_digit_offset(ctx, &panel, e->digits[i], new_dy);
-        prv_draw_digit_offset(ctx, &panel, flap->from_digit, old_dy);
+        prv_draw_glyph(ctx, &panel, digit_font, (char)('0' + e->digits[i]), new_dy);
+        prv_draw_glyph(ctx, &panel, digit_font, (char)('0' + flap->from_digit), old_dy);
 
         graphics_context_set_drawing_state(ctx, saved);
       } else {
-        prv_draw_digit_offset(ctx, &panel, e->digits[i], 0);
+        prv_draw_glyph(ctx, &panel, digit_font, (char)('0' + e->digits[i]), 0);
       }
     } else if (i < e->pos) {
-      // Confirmed panel: light grey fill.
+      // Confirmed panel: light grey fill; masked '*' or the real digit.
       graphics_context_set_fill_color(ctx, GColorLightGray);
       prv_draw_panel_shell(ctx, &panel);
-      // Show masked '*' or the real digit depending on config.
-      if (flap->config.mask_confirmed) {
-        GFont font = fonts_get_system_font(DIGIT_FONT_KEY);
-        graphics_context_set_text_color(ctx, GColorBlack);
-        graphics_draw_text(ctx, "*", font, panel,
-                           GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
-      } else {
-        prv_draw_digit_offset(ctx, &panel, e->digits[i], 0);
-      }
+      const char ch = flap->config.mask_confirmed ? '*' : (char)('0' + e->digits[i]);
+      prv_draw_glyph(ctx, &panel, digit_font, ch, 0);
     } else {
       // Future panel: white fill, no content.
       graphics_context_set_fill_color(ctx, GColorWhite);
