@@ -47,3 +47,26 @@ bool pin_lock_storage_verify_pin(const uint8_t *digits, uint8_t len);
 
 //! Wipe salt+hash from storage and set enabled=false.
 void pin_lock_storage_clear(void);
+
+//! Initialize the service: load config, set initial locked state
+//! (locked if enabled && trigger_boot). Call once at boot.
+void pin_lock_init(void);
+
+//! True when the watch is currently locked (navigation must be gated).
+bool pin_lock_is_locked(void);
+
+//! Force the watch into the locked state (used by "Lock now" and triggers).
+//! No-op if the feature is disabled.
+void pin_lock_lock_now(void);
+
+//! Called by the unlock UI after a correct PIN: clears the locked state.
+void pin_lock_mark_unlocked(void);
+
+//! Re-read config from storage into the running service (call after Settings
+//! changes the config or PIN).
+void pin_lock_reload_config(void);
+
+//! Accessors used by suppression gates and the unlock UI.
+bool pin_lock_should_hide_notifications(void);
+bool pin_lock_should_hide_timeline(void);
+uint8_t pin_lock_get_pin_len(void);

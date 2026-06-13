@@ -92,4 +92,43 @@ void test_pin_lock__config_round_trips(void) {
   cl_assert_equal_i(60, got.timeout_s);
   cl_assert_equal_b(true, got.hide_notifications);
   cl_assert_equal_b(true, got.enabled);
+  cl_assert_equal_b(true, pin_lock_storage_verify_pin(pin, 4));
+}
+
+void test_pin_lock__starts_unlocked_when_disabled(void) {
+  pin_lock_init();
+  cl_assert_equal_b(false, pin_lock_is_locked());
+}
+
+void test_pin_lock__boot_locked_when_enabled_and_trigger_boot(void) {
+  const uint8_t pin[4] = {1,2,3,4};
+  pin_lock_storage_set_pin(pin, 4);
+  PinLockConfig cfg; pin_lock_storage_load(&cfg);
+  cfg.trigger_boot = true;
+  pin_lock_storage_save_config(&cfg);
+  pin_lock_init();
+  cl_assert_equal_b(true, pin_lock_is_locked());
+}
+
+void test_pin_lock__not_boot_locked_without_trigger_boot(void) {
+  const uint8_t pin[4] = {1,2,3,4};
+  pin_lock_storage_set_pin(pin, 4);  // enabled but trigger_boot stays false
+  pin_lock_init();
+  cl_assert_equal_b(false, pin_lock_is_locked());
+}
+
+void test_pin_lock__lock_now_then_unlock(void) {
+  const uint8_t pin[4] = {1,2,3,4};
+  pin_lock_storage_set_pin(pin, 4);
+  pin_lock_init();
+  pin_lock_lock_now();
+  cl_assert_equal_b(true, pin_lock_is_locked());
+  pin_lock_mark_unlocked();
+  cl_assert_equal_b(false, pin_lock_is_locked());
+}
+
+void test_pin_lock__lock_now_noop_when_disabled(void) {
+  pin_lock_init();          // disabled
+  pin_lock_lock_now();
+  cl_assert_equal_b(false, pin_lock_is_locked());
 }

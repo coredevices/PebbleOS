@@ -167,3 +167,44 @@ void pin_lock_storage_clear(void) {
   settings_file_set(&f, PIN_KEY_CONFIG, sizeof(PIN_KEY_CONFIG), &stored, sizeof(stored));
   settings_file_close(&f);
 }
+
+// Runtime state
+static struct {
+  PinLockConfig config;
+  bool locked;
+} s_pin_lock;
+
+void pin_lock_reload_config(void) {
+  pin_lock_storage_load(&s_pin_lock.config);
+}
+
+void pin_lock_init(void) {
+  pin_lock_reload_config();
+  s_pin_lock.locked = s_pin_lock.config.enabled && s_pin_lock.config.trigger_boot;
+}
+
+bool pin_lock_is_locked(void) {
+  return s_pin_lock.locked;
+}
+
+void pin_lock_lock_now(void) {
+  if (s_pin_lock.config.enabled) {
+    s_pin_lock.locked = true;
+  }
+}
+
+void pin_lock_mark_unlocked(void) {
+  s_pin_lock.locked = false;
+}
+
+bool pin_lock_should_hide_notifications(void) {
+  return s_pin_lock.locked && s_pin_lock.config.hide_notifications;
+}
+
+bool pin_lock_should_hide_timeline(void) {
+  return s_pin_lock.locked && s_pin_lock.config.hide_timeline;
+}
+
+uint8_t pin_lock_get_pin_len(void) {
+  return s_pin_lock.config.pin_len ? s_pin_lock.config.pin_len : PIN_LOCK_MIN_LEN;
+}
