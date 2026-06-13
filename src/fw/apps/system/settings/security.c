@@ -24,6 +24,7 @@ typedef enum {
   ROW_TRIGGER_BT,
   ROW_HIDE_NOTIFS,
   ROW_HIDE_TIMELINE,
+  ROW_SHOW_DIGITS,
   ROW_LOCK_NOW,
   NUM_ROWS_ALL,
 } SecurityRow;
@@ -135,6 +136,10 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
     case ROW_HIDE_TIMELINE:
       title = i18n_noop("Hide Timeline");
       subtitle = data->cfg.hide_timeline ? i18n_noop("On") : i18n_noop("Off");
+      break;
+    case ROW_SHOW_DIGITS:
+      title = i18n_noop("Show PIN digits");
+      subtitle = !data->cfg.mask_digits ? i18n_noop("On") : i18n_noop("Off");
       break;
     case ROW_LOCK_NOW:
       title = i18n_noop("Lock Now");
@@ -262,6 +267,10 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       break;
     case ROW_HIDE_TIMELINE:
       data->cfg.hide_timeline = !data->cfg.hide_timeline;
+      prv_save_and_reload(data);
+      break;
+    case ROW_SHOW_DIGITS:
+      data->cfg.mask_digits = !data->cfg.mask_digits;
       prv_save_and_reload(data);
       break;
     case ROW_LOCK_NOW:
