@@ -41,6 +41,7 @@
 
 #include "pbl/services/activity/activity.h"
 #include "pbl/services/activity/activity_insights.h"
+#include "pbl/services/activity/workout_service.h"
 
 #include "pbl/services/analytics/analytics.h"
 
@@ -211,6 +212,9 @@ static uint8_t s_alarms_app_opened = 0;
 
 #define PREF_KEY_ACTIVITY_HRM_PREFERENCES "hrmPreferences"
 static ActivityHRMSettings s_activity_hrm_preferences = ACTIVITY_HRM_DEFAULT_PREFERENCES;
+
+#define PREF_KEY_ACTIVITY_BLE_HRM_WORKOUT_SHARING "bleHrmWorkoutSharing"
+static bool s_activity_ble_hrm_workout_sharing_enabled = false;
 
 #define PREF_KEY_ACTIVITY_HEART_RATE_PREFERENCES "heartRatePreferences"
 static HeartRatePreferences s_activity_hr_preferences = ACTIVITY_HEART_RATE_DEFAULT_PREFERENCES;
@@ -626,10 +630,16 @@ static bool prv_set_s_activity_hrm_preferences(ActivityHRMSettings *new_settings
 
 #ifdef CONFIG_HRM
   hrm_manager_handle_prefs_changed();
-#endif // CONFIG_HRM
-#if BLE_HRM_SERVICE
   ble_hrm_handle_activity_prefs_heart_rate_is_enabled(new_settings->enabled);
-#endif // BLE_HRM_SERVICE
+#endif // CONFIG_HRM
+  return true;
+}
+
+static bool prv_set_s_activity_ble_hrm_workout_sharing_enabled(bool *enabled) {
+  s_activity_ble_hrm_workout_sharing_enabled = *enabled;
+#ifdef CONFIG_HRM
+  workout_service_handle_ble_hrm_workout_sharing_prefs_changed();
+#endif // CONFIG_HRM
   return true;
 }
 
@@ -1773,6 +1783,16 @@ void activity_prefs_set_hrm_activity_tracking_enabled(bool enabled) {
     hrm_manager_handle_prefs_changed();
   }
 }
+
+bool activity_prefs_ble_hrm_workout_sharing_is_enabled(void) {
+  return s_activity_ble_hrm_workout_sharing_enabled;
+}
+
+void activity_prefs_set_ble_hrm_workout_sharing_enabled(bool enabled) {
+  if (s_activity_ble_hrm_workout_sharing_enabled != enabled) {
+    prv_pref_set(PREF_KEY_ACTIVITY_BLE_HRM_WORKOUT_SHARING, &enabled, sizeof(enabled));
+  }
+}
 #endif
 
 void alarm_prefs_set_alarms_app_opened(uint8_t version) {
@@ -1913,6 +1933,8 @@ void pbl_analytics_external_collect_settings(void) {
                              activity_prefs_get_hrm_measurement_interval());
   PBL_ANALYTICS_SET_UNSIGNED(settings_health_hrm_activity_tracking_enabled,
                              activity_prefs_hrm_activity_tracking_is_enabled());
+  PBL_ANALYTICS_SET_UNSIGNED(settings_health_ble_hrm_workout_sharing_enabled,
+                             activity_prefs_ble_hrm_workout_sharing_is_enabled());
 #endif
   PBL_ANALYTICS_SET_UNSIGNED(settings_power_mode, shell_prefs_get_power_mode());
   PBL_ANALYTICS_SET_UNSIGNED(settings_motion_sensitivity, shell_prefs_get_motion_sensitivity());

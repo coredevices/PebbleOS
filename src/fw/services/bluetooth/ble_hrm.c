@@ -5,6 +5,7 @@
 
 #include "applib/event_service_client.h"
 #include "comm/ble/gap_le_connection.h"
+#include "comm/ble/gap_le_slave_reconnect.h"
 #include "comm/bt_lock.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/event_loop.h"
@@ -29,6 +30,7 @@ PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
 static bool s_ble_hrm_is_inited;
 static int s_ble_hrm_subscription_count;
+static bool s_ble_hrm_workout_mode;
 static struct {
   EventServiceInfo service_info;
   HRMSessionRef manager_session;
@@ -45,12 +47,11 @@ bool ble_hrm_is_supported_and_enabled(void) {
 
 static void prv_reset_subscriptions(void);
 
-//! The HRM GATT service is exposed here, but the watch does not share heart
-//! rate yet: BLE HRM sharing is introduced (gated to an active workout) in a
-//! later change. Until then a subscriber receives nothing and is never
-//! prompted.
+//! HRM data is only ever shared during an active workout (gated by the BLE HRM
+//! workout-sharing setting). There is no separate per-device consent: while in
+//! workout mode any subscribed consumer receives the heart rate.
 static bool prv_is_sharing(const GAPLEConnection *const connection) {
-  return false;
+  return (connection->hrm_service_is_subscribed && s_ble_hrm_workout_mode);
 }
 
 bool ble_hrm_is_sharing_to_connection(const GAPLEConnection *const connection) {
@@ -147,10 +148,10 @@ void ble_hrm_handle_activity_prefs_heart_rate_is_enabled(bool is_enabled) {
   }
   PBL_LOG_INFO("BLE HRM heart rate pref updated: is_enabled=%u", is_enabled);
 
-  if (!is_enabled) {
+  if (!is_enabled && !s_ble_hrm_workout_mode) {
     prv_reset_subscriptions();
   }
-  bt_driver_hrm_service_enable(is_enabled);
+  bt_driver_hrm_service_enable(is_enabled || s_ble_hrm_workout_mode);
 }
 
 static void prv_put_sharing_state_updated_event(int subscription_count) {
@@ -192,6 +193,14 @@ static void prv_update_is_sharing(GAPLEConnection *connection, bool prev_is_shar
   prv_put_sharing_state_updated_event(s_ble_hrm_subscription_count);
 }
 
+static void prv_disconnect_to_kill_subscription(GAPLEConnection *connection) {
+  // Unfortunately, GATT does not offer a way to remove a subscription from the server side.
+  // Only clients (subscribers) themselves can change the subscription state (write the CCCD).
+  // When stopping sharing, we're disconnecting the LE link just to reset the remote subscription
+  // state. Yes, a pretty big hammer... :( If we don't do this, the other end will stay subscribed.
+  bt_driver_gap_le_disconnect(&connection->device);
+}
+
 static void prv_update_subscription(GAPLEConnection *connection, bool is_subscribed) {
   bt_lock_assert_held(true);
   if (connection->hrm_service_is_subscribed == is_subscribed) {
@@ -202,6 +211,13 @@ static void prv_update_subscription(GAPLEConnection *connection, bool is_subscri
   const bool prev_is_sharing = prv_is_sharing(connection);
   connection->hrm_service_is_subscribed = is_subscribed;
   prv_update_is_sharing(connection, prev_is_sharing);
+
+  // Single consumer: once our consumer subscribes during a workout there's no
+  // reason to keep advertising, so stop. Advertising resumes if it disconnects
+  // (see ble_hrm_handle_disconnection).
+  if (is_subscribed && prv_is_sharing(connection)) {
+    gap_le_slave_reconnect_hrm_stop();
+  }
 }
 
 static void prv_reset_subscriptions(void) {
@@ -236,6 +252,11 @@ void ble_hrm_handle_disconnection(GAPLEConnection *connection) {
   if (!s_ble_hrm_is_inited) {
     return;
   }
+  if (prv_is_sharing(connection)) {
+    // Our HRM consumer dropped mid-workout; keep advertising the HR service so
+    // it (or another consumer) can reconnect for the rest of the workout.
+    gap_le_slave_reconnect_hrm_start();
+  }
   prv_update_subscription(connection, false /* is_subscribed */);
 }
 
@@ -245,7 +266,58 @@ void ble_hrm_init(void) {
 
 void ble_hrm_deinit(void) {
   s_ble_hrm_is_inited = false;
+  s_ble_hrm_workout_mode = false;
+  gap_le_slave_reconnect_hrm_stop();
   prv_reset_subscriptions();
+}
+
+static void prv_workout_mode_update_connection_cb(GAPLEConnection *connection, void *data) {
+  const bool previous_workout_mode = *(bool *)data;
+  const bool prev_is_sharing = (connection->hrm_service_is_subscribed && previous_workout_mode);
+  prv_update_is_sharing(connection, prev_is_sharing);
+
+  // When leaving workout mode, drop any consumer that is still subscribed so it
+  // stops receiving (and re-subscribes cleanly on the next workout).
+  if (!s_ble_hrm_workout_mode && connection->hrm_service_is_subscribed) {
+    prv_disconnect_to_kill_subscription(connection);
+  }
+}
+
+void ble_hrm_set_workout_mode(bool enabled) {
+  if (!prv_hw_and_sw_supports_hrm()) {
+    return;
+  }
+
+  PBL_LOG_INFO("BLE HRM workout mode: enabled=%u", enabled);
+
+  bt_lock();
+
+  if (enabled == s_ble_hrm_workout_mode) {
+    bt_unlock();
+    return;
+  }
+
+  const bool previous_workout_mode = s_ble_hrm_workout_mode;
+  s_ble_hrm_workout_mode = enabled;
+  gap_le_connection_for_each(prv_workout_mode_update_connection_cb, (void *)&previous_workout_mode);
+
+  if (enabled) {
+    // Start persistent HRM advertising so external devices can discover us for the full workout.
+    gap_le_slave_reconnect_hrm_start();
+
+    // Enable the HRM service
+    bt_driver_hrm_service_enable(true);
+  } else {
+    // Stop advertising the HRM service
+    gap_le_slave_reconnect_hrm_stop();
+
+    // If the heart rate pref is disabled and no sharing is active, disable the HRM service
+    if (!activity_prefs_heart_rate_is_enabled() && s_ble_hrm_subscription_count == 0) {
+      bt_driver_hrm_service_enable(false);
+    }
+  }
+
+  bt_unlock();
 }
 
 #endif

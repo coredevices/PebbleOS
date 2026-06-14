@@ -35,6 +35,9 @@ void workout_service_activity_event_handler(PebbleActivityEvent *event);
 //! Event handler for Workout events
 void workout_service_workout_event_handler(PebbleWorkoutEvent *event);
 
+//! Called when the BLE HRM workout sharing preference changes
+void workout_service_handle_ble_hrm_workout_sharing_prefs_changed(void);
+
 //! Returns true if there is an ongoing workout
 bool workout_service_is_workout_ongoing(void);
 
