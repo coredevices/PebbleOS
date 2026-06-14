@@ -289,9 +289,17 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       data->cfg.haptic = !data->cfg.haptic;
       prv_save_and_reload(data);
       break;
-    case ROW_LOCK_NOW:
-      sys_pin_lock_lock_now_and_show();  // lock + show the unlock screen now
-      return; // no redraw needed
+    case ROW_LOCK_NOW: {
+      // Test the lock: show the PIN screen as an app window so it returns to
+      // this Security menu after the PIN is entered (it is just a try-it).
+      const SecurityPinEntryConfig cfg = {
+        .mode = SecurityPinEntryMode_Verify,
+        .on_complete = NULL,
+        .ctx = data,
+      };
+      security_pin_entry_push(&cfg);
+      return;
+    }
     default:
       return;
   }

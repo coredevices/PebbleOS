@@ -315,6 +315,4 @@ bool sys_do_not_disturb_is_active(void);
 void sys_pin_lock_reload_config(void);
 //! Lock the watch now (no-op if the PIN lock feature is disabled).
 void sys_pin_lock_lock_now(void);
-//! Lock the watch now and immediately present the PIN unlock screen.
-void sys_pin_lock_lock_now_and_show(void);
 //! @} // end addtogroup Preferences
