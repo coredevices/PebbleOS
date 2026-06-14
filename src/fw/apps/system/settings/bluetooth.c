@@ -15,6 +15,7 @@
 #include "applib/ui/ui.h"
 #include "comm/bt_lock.h"
 #include "comm/ble/gap_le_connection.h"
+#include "comm/ble/kernel_le_client/multi_phone.h"
 #include "comm/ble/gap_le_device_name.h"
 #include "comm/ble/kernel_le_client/multi_phone.h"
 #include "drivers/rtc.h"
@@ -536,7 +537,7 @@ static void prv_expand_cb(SettingsCallbacks *context) {
   // Keep the watch discoverable while fewer than MAX_PHONE_CONNECTIONS are paired.
   data->did_enable_pairability = false;
   prv_update_settings_pairability(data);
-  
+
   // Reload & redraw after pairing popup
   app_focus_service_subscribe_handlers((AppFocusHandlers) { .did_focus = prv_focus_handler });
 }
