@@ -22,7 +22,6 @@
 #include "kernel/pbl_malloc.h"
 #include "kernel/ui/kernel_ui.h"
 #include "kernel/ui/modals/modal_manager.h"
-#include "popups/ble_hrm/ble_hrm_stop_sharing_popup.h"
 #include "popups/notifications/notification_window.h"
 #include "process_state/app_state/app_state.h"
 #include "pbl/services/analytics/analytics.h"
@@ -31,7 +30,6 @@
 #include "pbl/services/evented_timer.h"
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/blob_db/reminder_db.h"
-#include "pbl/services/bluetooth/ble_hrm.h"
 #include "pbl/services/notifications/action_chaining_window.h"
 #include "pbl/services/notifications/alerts_preferences.h"
 #include "pbl/services/notifications/ancs/ancs_notifications.h"
@@ -633,21 +631,6 @@ static void prv_do_action_analytics(const TimelineItem *pin, const ActionMenuIte
   }
 }
 
-#ifdef CONFIG_HRM
-static void prv_invoke_ble_hrm_stop_sharing_action(ActionMenu *action_menu,
-                                                   const TimelineItem *item) {
-  ble_hrm_revoke_all();
-
-  const TimelineItemAction *dismiss_action = timeline_item_find_dismiss_action(item);
-  if (dismiss_action) {
-    timeline_invoke_action(item, dismiss_action, NULL);
-  }
-
-  SimpleDialog *stopped_sharing_dialog = ble_hrm_stop_sharing_popup_create();
-  action_menu_set_result_window(action_menu, &stopped_sharing_dialog->dialog.window);
-}
-#endif
-
 T_STATIC ActionResultData *prv_invoke_action(ActionMenu *action_menu,
                                              const TimelineItemAction *action,
                                              const TimelineItem *pin,
@@ -677,14 +660,11 @@ T_STATIC ActionResultData *prv_invoke_action(ActionMenu *action_menu,
     case TimelineItemActionTypeEmpty:
     case TimelineItemActionTypeUnknown:
       break;
-#ifdef CONFIG_HRM
     case TimelineItemActionTypeBLEHRMStopSharing:
-      prv_invoke_ble_hrm_stop_sharing_action(action_menu, pin);
-      return NULL;
-#else
-    case TimelineItemActionTypeBLEHRMStopSharing:
+      // Legacy BLE HRM consent/stop-sharing action. HRM sharing is now gated to
+      // active workouts only, so this action is no longer produced; keep the
+      // (wire-serialized) enum value handled as a no-op.
       break;
-#endif
   }
 
   PBL_LOG_ERR("Unsupported action type %d", action->type);
