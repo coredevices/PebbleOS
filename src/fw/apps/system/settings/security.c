@@ -35,41 +35,56 @@ typedef struct SecurityData {
   PinLockConfig cfg;
 } SecurityData;
 
-// Timeout interval option menu
-static const uint16_t s_timeout_values[] = { 0, 30, 60, 300 };
+// Auto-lock interval picker. Index 0 is "Off" (the timeout trigger disabled);
+// the rest enable it with the matching inactivity duration.
+static const uint16_t s_timeout_values[] = {
+  0, 0, 30, 60, 180, 300, 600, 900, 1800, 3600,
+};
+static const bool s_timeout_on[] = {
+  false, true, true, true, true, true, true, true, true, true,
+};
 static const char *s_timeout_labels[] = {
+  i18n_noop("Off"),
   i18n_noop("Immediately"),
   i18n_noop("30 Seconds"),
   i18n_noop("1 Minute"),
+  i18n_noop("3 Minutes"),
   i18n_noop("5 Minutes"),
+  i18n_noop("10 Minutes"),
+  i18n_noop("15 Minutes"),
+  i18n_noop("30 Minutes"),
+  i18n_noop("1 Hour"),
 };
 
-static int prv_timeout_index(uint16_t timeout_s) {
-  for (size_t i = 0; i < ARRAY_LENGTH(s_timeout_values); i++) {
-    if (s_timeout_values[i] == timeout_s) {
+static int prv_timeout_index(const SecurityData *data) {
+  if (!data->cfg.trigger_timeout) {
+    return 0;  // Off
+  }
+  for (size_t i = 1; i < ARRAY_LENGTH(s_timeout_values); i++) {
+    if (s_timeout_values[i] == data->cfg.timeout_s) {
       return (int)i;
     }
   }
-  return 0;
+  return 1;  // a stored duration we don't list -> default to Immediately
 }
 
 static void prv_timeout_select(OptionMenu *option_menu, int selection, void *context) {
   SecurityData *data = (SecurityData *)context;
+  data->cfg.trigger_timeout = s_timeout_on[selection];
   data->cfg.timeout_s = s_timeout_values[selection];
   pin_lock_storage_save_config(&data->cfg);
   sys_pin_lock_reload_config();  // apply to the live kernel-side state
   pin_lock_storage_load(&data->cfg);
+  // Pop the picker; the Security submenu refreshes via its appear callback.
   app_window_stack_remove(&option_menu->window, true /* animated */);
-  settings_menu_reload_data(SettingsMenuItemSecurity);
-  settings_menu_mark_dirty(SettingsMenuItemSecurity);
 }
 
 static void prv_timeout_menu_push(SecurityData *data) {
-  const int index = prv_timeout_index(data->cfg.timeout_s);
+  const int index = prv_timeout_index(data);
   const OptionMenuCallbacks callbacks = {
     .select = prv_timeout_select,
   };
-  settings_option_menu_push(i18n_noop("Auto-Lock After"), OptionMenuContentType_SingleLine,
+  settings_option_menu_push(i18n_noop("Auto-Lock"), OptionMenuContentType_SingleLine,
                             index, &callbacks,
                             ARRAY_LENGTH(s_timeout_labels), false /* icons */,
                             s_timeout_labels, data);
@@ -120,11 +135,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       break;
     case ROW_TRIGGER_TIMEOUT:
       title = i18n_noop("Auto-Lock");
-      if (data->cfg.trigger_timeout) {
-        subtitle = s_timeout_labels[prv_timeout_index(data->cfg.timeout_s)];
-      } else {
-        subtitle = i18n_noop("Off");
-      }
+      subtitle = s_timeout_labels[prv_timeout_index(data)];
       break;
     case ROW_TRIGGER_BT:
       title = i18n_noop("Lock on BT Disconnect");
@@ -253,15 +264,9 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       prv_save_and_reload(data);
       break;
     case ROW_TRIGGER_TIMEOUT:
-      data->cfg.trigger_timeout = !data->cfg.trigger_timeout;
-      if (data->cfg.trigger_timeout) {
-        // Push interval picker; also persist the toggle first.
-        prv_save_and_reload(data);
-        prv_timeout_menu_push(data);
-        return; // skip redraw here; done after picker closes
-      }
-      prv_save_and_reload(data);
-      break;
+      // Always open the picker; it includes "Off" to disable the trigger.
+      prv_timeout_menu_push(data);
+      return;
     case ROW_TRIGGER_BT:
       data->cfg.trigger_bt_disconnect = !data->cfg.trigger_bt_disconnect;
       prv_save_and_reload(data);

@@ -20,13 +20,13 @@ typedef enum {
   SettingsMenuItemQuickLaunch,
   SettingsMenuItemDateTime,
   SettingsMenuItemDisplay,
+  SettingsMenuItemSecurity,
   SettingsMenuItemHealth,
 #ifdef CONFIG_THEMING
   SettingsMenuItemThemes,
 #endif
   SettingsMenuItemActivity,
   SettingsMenuItemSystem,
-  SettingsMenuItemSecurity,
   SettingsMenuItem_Count,
   SettingsMenuItem_Invalid
 } SettingsMenuItem;
