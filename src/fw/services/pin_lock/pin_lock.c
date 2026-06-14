@@ -205,7 +205,9 @@ static void prv_button_event_handler(PebbleEvent *e, void *context) {
 }
 
 static void prv_conn_event_handler(PebbleEvent *e, void *context) {
-  // Lock when the system (Pebble app) phone session closes.
+  // Lock as soon as the system (Pebble app) phone session closes. We use the
+  // raw comm-session event, not the debounced one: the debounced service hides
+  // disconnects for 25 s, which is too long to leave a privacy lock open.
   if (e->bluetooth.comm_session_event.is_system &&
       !e->bluetooth.comm_session_event.is_open) {
     pin_lock_handle_bt_disconnected();
@@ -251,7 +253,7 @@ void pin_lock_init(void) {
   event_service_client_subscribe(&s_button_sub);
 
   s_conn_sub = (EventServiceInfo){
-    .type = PEBBLE_BT_CONNECTION_DEBOUNCED_EVENT,
+    .type = PEBBLE_COMM_SESSION_EVENT,
     .handler = prv_conn_event_handler,
   };
   event_service_client_subscribe(&s_conn_sub);
