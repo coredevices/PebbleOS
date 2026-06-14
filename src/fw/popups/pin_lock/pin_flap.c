@@ -44,7 +44,7 @@ static GFont prv_digit_font(int16_t panel_w) {
 // Most of it is hidden behind the panel; only the bottom/right edge peeks out.
 static void prv_draw_shadow(GContext *ctx, const GRect *r) {
   GRect sh = GRect(r->origin.x + 1, r->origin.y + 3, r->size.w, r->size.h);
-  graphics_context_set_fill_color(ctx, GColorDarkGray);
+  graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorDarkGray, GColorBlack));
   graphics_fill_round_rect(ctx, &sh, PANEL_RADIUS, GCornersAll);
 }
 
@@ -177,7 +177,7 @@ static void prv_draw_padlock(GContext *ctx, GRect bounds,
   const int16_t arch_top = body_y - LOCK_SHACKLE_H;
 
   // Left leg.
-  graphics_context_set_fill_color(ctx, GColorDarkGray);
+  graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorDarkGray, GColorBlack));
   {
     GRect leg_l = GRect(leg_x_l, arch_top - lift_l,
                         LOCK_SHACKLE_T, LOCK_SHACKLE_H - lift_l);
@@ -336,11 +336,12 @@ void pin_flap_draw(PinFlap *flap, GContext *ctx, GRect bounds) {
     prv_draw_shadow(ctx, &panel);
 
     if (i == e->pos) {
-      // Active panel: white fill, double border for emphasis.
+      // Active panel: white fill, accent-tinted inner ring for emphasis.
       graphics_context_set_fill_color(ctx, GColorWhite);
       prv_draw_panel_shell(ctx, &panel);
       GRect inner = GRect(panel.origin.x + 1, panel.origin.y + 1,
                           panel.size.w - 2, panel.size.h - 2);
+      graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(flap->config.accent, GColorBlack));
       graphics_draw_round_rect(ctx, &inner, PANEL_RADIUS > 1 ? PANEL_RADIUS - 1 : 0);
 
       if (flap->animating) {
@@ -365,7 +366,7 @@ void pin_flap_draw(PinFlap *flap, GContext *ctx, GRect bounds) {
       }
     } else if (i < e->pos) {
       // Confirmed panel: light grey fill; masked '*' or the real digit.
-      graphics_context_set_fill_color(ctx, GColorLightGray);
+      graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite));
       prv_draw_panel_shell(ctx, &panel);
       const char ch = flap->config.mask_confirmed ? '*' : (char)('0' + e->digits[i]);
       prv_draw_glyph(ctx, &panel, digit_font, ch, 0);

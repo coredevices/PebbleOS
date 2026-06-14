@@ -16,6 +16,7 @@ typedef struct {
   const char *title;       // i18n key drawn bold above the panels
   bool mask_confirmed;     // confirmed positions show '*' when true
   bool haptic;             // light vibe when a flap finishes rolling
+  GColor accent;           // theme highlight; tints the active panel (colour only)
 } PinFlapConfig;
 
 // Padlock visual states.

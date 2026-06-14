@@ -16,6 +16,7 @@
 #include "pbl/services/i18n/i18n.h"
 #include "pin_flap.h"
 #include "services/pin_lock/pin_lock.h"
+#include "shell/prefs.h"
 #include "system/logging.h"
 
 // ── entry-buffer ──────────────────────────────────────────────────────────────
@@ -139,6 +140,7 @@ void pin_unlock_window_push(void) {
     .entry          = &s_entry,
     .title          = i18n_noop("Enter PIN"),
     .mask_confirmed = pin_lock_should_mask_digits(),
+    .accent         = shell_prefs_get_theme_highlight_color(),
   };
   pin_flap_init(&s_flap, &cfg);
 

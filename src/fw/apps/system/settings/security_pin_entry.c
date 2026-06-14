@@ -25,6 +25,7 @@
 #include "popups/pin_lock/pin_flap.h"
 #include "popups/pin_lock/unlock_window.h"
 #include "services/pin_lock/pin_lock.h"
+#include "shell/prefs.h"
 #include "system/logging.h"
 #include "system/passert.h"
 
@@ -325,6 +326,7 @@ void security_pin_entry_push(const SecurityPinEntryConfig *config) {
     .title          = i18n_noop("Enter PIN"),
     .mask_confirmed = true,
     .haptic         = true,
+    .accent         = shell_prefs_get_theme_highlight_color(),
   };
   pin_flap_init(&d->flap, &flap_cfg);
 
