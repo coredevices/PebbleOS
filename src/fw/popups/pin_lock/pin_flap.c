@@ -21,19 +21,19 @@
 // ── panel geometry ────────────────────────────────────────────────────────────
 // Panels scale to fill the row width based on the PIN length, so a 4-digit PIN
 // gets big, clear cards while an 8-digit PIN still fits across the display.
-#define ROW_MARGIN          12   // left/right margin around the panel row
-#define PANEL_GAP            4
-#define PANEL_MAX_W         44    // cap so short PINs aren't absurdly wide
+#define ROW_MARGIN          10   // left/right margin around the panel row
+#define PANEL_GAP            5
+#define PANEL_MAX_W         34    // narrow, drum-wheel proportion
 #define PANEL_MIN_W         16
-#define PANEL_ASPECT_EXTRA  12    // panel height = width + this (taller card look)
+#define PANEL_ASPECT_EXTRA  18    // panel height = width + this (taller than wide)
 #define PANEL_RADIUS         4
-#define PANELS_TOP_OFFSET   66
+#define PANELS_TOP_OFFSET   62
 
-// Pick a LECO monospace numeric font sized to the panel width.
+// Pick a LECO bold numeric font sized to fill the panel. Only the *bold*
+// LECO faces (<= 36) are registered as system fonts; 38/42/60 fall back.
 static GFont prv_digit_font(int16_t panel_w) {
-  if (panel_w >= 40) return fonts_get_system_font(FONT_KEY_LECO_36_BOLD_NUMBERS);
-  if (panel_w >= 32) return fonts_get_system_font(FONT_KEY_LECO_32_BOLD_NUMBERS);
-  if (panel_w >= 24) return fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM);
+  if (panel_w >= 30) return fonts_get_system_font(FONT_KEY_LECO_36_BOLD_NUMBERS);
+  if (panel_w >= 24) return fonts_get_system_font(FONT_KEY_LECO_32_BOLD_NUMBERS);
   return fonts_get_system_font(FONT_KEY_LECO_20_BOLD_NUMBERS);
 }
 
@@ -47,17 +47,12 @@ static void prv_draw_shadow(GContext *ctx, const GRect *r) {
   graphics_fill_round_rect(ctx, &sh, PANEL_RADIUS, GCornersAll);
 }
 
-// Draw one split-flap panel at `r`, with a horizontal seam in the middle.
-// Fill colour is already set by the caller.
+// Draw one rounded drum-window panel at `r`. Fill colour is set by the caller.
+// No centre seam — the digit rolls like a number drum on an old flip clock.
 static void prv_draw_panel_shell(GContext *ctx, const GRect *r) {
   graphics_fill_round_rect(ctx, r, PANEL_RADIUS, GCornersAll);
   graphics_context_set_stroke_color(ctx, GColorBlack);
   graphics_draw_round_rect(ctx, r, PANEL_RADIUS);
-  // Solari seam: a 1-px horizontal line across the vertical midpoint.
-  int16_t seam_y = r->origin.y + r->size.h / 2;
-  graphics_draw_line(ctx,
-                     GPoint(r->origin.x + 1, seam_y),
-                     GPoint(r->origin.x + r->size.w - 2, seam_y));
 }
 
 // Draw a single glyph (digit or '*') vertically centred in `panel`, shifted by
@@ -66,7 +61,9 @@ static void prv_draw_glyph(GContext *ctx, const GRect *panel, GFont font,
                            char ch, int16_t dy) {
   char buf[2] = { ch, '\0' };
   const int16_t fh = (int16_t)fonts_get_font_height(font);
-  const int16_t y = panel->origin.y + (panel->size.h - fh) / 2 + dy;
+  // Number glyphs sit in the upper part of the line box (empty descender space
+  // below), so nudge down ~1/8 of the line height to optically centre them.
+  const int16_t y = panel->origin.y + (panel->size.h - fh) / 2 + (fh / 8) + dy;
   GRect box = GRect(panel->origin.x, y, panel->size.w, fh + 4);
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, buf, font, box,
