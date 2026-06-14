@@ -787,6 +787,14 @@ void test_activity_insights__sleep_summary_no_history(void) {
 }
 
 // ---------------------------------------------------------------------------------------
+// The "activation delay" insights (the day 1 / day 4 / day 10 "pebble health nag"
+// notifications) were removed from production in commit aaf2f45f3
+// ("services/normal/activity_insights: remove pebble health nag"), which deleted the
+// ActivationDelayInsight table and prv_do_activation_delay_insights() from
+// activity_insights.c. activity_insights_process_minute_data() therefore no longer pushes any
+// activation-delay notification. These cases now assert that contract: stepping the clock across
+// the windows that used to trigger the day 1 / day 4 / day 10 nags produces no ANCS
+// notifications.
 void test_activity_insights__activation_delay_insights_time_trigger(void) {
   time_t now = mktime(&s_init_time_tm);
   prv_set_activation_time(now);
@@ -799,30 +807,32 @@ void test_activity_insights__activation_delay_insights_time_trigger(void) {
   activity_insights_process_minute_data(now);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
-  now += 8 * SECONDS_PER_HOUR; // Jan 2 @ 6:00pm
+  now += 8 * SECONDS_PER_HOUR; // Jan 2 @ 6:00pm - used to fire the day 1 nag
   rtc_set_time(now);
   activity_insights_process_minute_data(now);
-  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
+  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
   now += (3 * SECONDS_PER_DAY) + (2 * SECONDS_PER_HOUR); // Jan 5 @ 8:00pm
   rtc_set_time(now);
   activity_insights_process_minute_data(now);
-  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
+  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
   s_health_app_opened_version = 1;
 
-  now += 30 * SECONDS_PER_MINUTE; // Jan 5 @ 8:30pm
+  now += 30 * SECONDS_PER_MINUTE; // Jan 5 @ 8:30pm - used to fire the day 4 nag
   rtc_set_time(now);
   activity_insights_process_minute_data(now);
-  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 2);
+  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
-  now += 6 * SECONDS_PER_DAY; // Jan 11 @ 8:30pm
+  now += 6 * SECONDS_PER_DAY; // Jan 11 @ 8:30pm - used to fire the day 10 nag
   rtc_set_time(now);
   activity_insights_process_minute_data(now);
-  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 3);
+  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 }
 
 // ---------------------------------------------------------------------------------------
+// See the note above: the activation-delay nag was removed in aaf2f45f3, so the 15-minute
+// retry window that used to fire the day 1 nag now produces no notification either.
 void test_activity_insights__activation_delay_insights_fifteen_interval_trigger(void) {
   time_t now = mktime(&s_init_time_tm);
   prv_set_activation_time(now);
@@ -838,7 +848,7 @@ void test_activity_insights__activation_delay_insights_fifteen_interval_trigger(
   now += (10 * SECONDS_PER_MINUTE); // Jan 2 @ 6:15pm
   rtc_set_time(now);
   activity_insights_process_minute_data(now);
-  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
+  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 }
 
 // Make sure that when the watch resets, we retain state properly

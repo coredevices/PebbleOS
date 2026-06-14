@@ -11,6 +11,19 @@ config RELEASE
       features like Memfault crash reporting that should only run on
       shipping firmware.
 
+config RECOVERY_FW
+    bool "Recovery firmware (PRF)"
+    help
+      Build the recovery firmware variant. Set via prj_prf.conf when
+      configuring with --variant=prf; do not set manually.
+
+config MFG
+    bool "Manufacturing firmware"
+    help
+      Enable manufacturing-only functionality in the PRF build. PRF
+      and MFG firmwares are mostly the same, so MFG builds also
+      define the recovery-firmware symbols.
+
 config PBLBOOT
     bool "PBLBOOT bootloader"
     help
@@ -18,6 +31,42 @@ config PBLBOOT
       header to the firmware binary and assume a two-slot flash
       layout with direct XIP. Disable for boards whose SoC bootloader
       consumes a raw image and uses a single firmware slot.
+
+menu "Compiler options"
+
+config LTO
+    bool "Link-time optimization"
+
+choice
+    prompt "Optimization level"
+    default SIZE_OPTIMIZATIONS
+
+config SIZE_OPTIMIZATIONS
+    bool "Optimize for size (-Os)"
+
+config DEBUG_OPTIMIZATIONS
+    bool "Optimize for debugging (-Og)"
+
+config NO_OPTIMIZATIONS
+    bool "No optimizations (-O0)"
+    help
+      Previously known as "fat firmware". Requires 1M of onboard
+      flash.
+
+endchoice
+
+config COMPILER_SAVE_TEMPS
+    bool "Save compiler temporaries"
+    help
+      Save *.i and *.s files during compilation.
+
+config DEBUG_INFO
+    bool "Debug information"
+    default y
+    help
+      Compile with -g3 debug information.
+
+endmenu
 
 config IS_BIGBOARD
     bool "Bigboard variant"

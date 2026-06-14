@@ -6,6 +6,9 @@
 #include <btutil/bt_uuid.h>
 #include <host/ble_gap.h>
 #include <string.h>
+#include <system/logging.h>
+
+PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
 void nimble_addr_to_pebble_addr(const ble_addr_t *addr, BTDeviceAddress *addr_out) {
   memcpy(&addr_out->octets, &addr->val, BLE_DEV_ADDR_LEN);
@@ -30,7 +33,7 @@ bool pebble_device_to_nimble_conn_handle(const BTDeviceInternal *device, uint16_
 
   int rc = ble_gap_conn_find_by_addr(&addr, &desc);
   if (rc != 0) {
-    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "failed to find connection handle for addr" BT_DEVICE_ADDRESS_FMT,
+    PBL_LOG_ERR("failed to find connection handle for addr" BT_DEVICE_ADDRESS_FMT,
       BT_DEVICE_ADDRESS_XPLODE(device->address));
   } else {
     *handle = desc.conn_handle;

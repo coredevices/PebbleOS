@@ -5,3 +5,11 @@ config SERVICE_ACTIVITY
     bool "Activity"
     help
       Activity (step/sleep/workout) tracking service.
+
+if SERVICE_ACTIVITY
+
+module = SERVICE_ACTIVITY
+module-str = Activity
+source "src/fw/Kconfig.template.log_level"
+
+endif

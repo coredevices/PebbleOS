@@ -94,30 +94,6 @@ def options(opt):
         action="store_true",
         help="Use whatever CC is in the environment as our compiler",
     )
-    opt.add_option(
-        "--fat_firmware",
-        action="store_true",
-        help="build in GDB mode WITH logs; requires 1M of onbaord flash",
-    )
-    opt.add_option(
-        "--gdb",
-        action="store_true",
-        help="build in GDB mode (no optimization, no logs)",
-    )
-    opt.add_option("--lto", action="store_true", help="Enable link-time optimization")
-    opt.add_option(
-        "--no-lto", action="store_true", help="Disable link-time optimization"
-    )
-    opt.add_option(
-        "--save_temps",
-        action="store_true",
-        help="Save *.i and *.s files during compilation",
-    )
-    opt.add_option(
-        "--no_debug",
-        action="store_true",
-        help="Remove -g debug information. See --save_temps",
-    )
 
 
 def configure(conf):
@@ -218,16 +194,16 @@ Or re-configure with the --relax_toolchain_restrictions option. """
         "-fno-builtin-itoa",
     ]
 
-    if not conf.options.no_debug:
+    if conf.env.CONFIG_DEBUG_INFO:
         args += [
             "-g3",  # Extra debugging info, including macro definitions
             "-gdwarf-4",
         ]  # More detailed debug info
 
-    if conf.options.save_temps:
+    if conf.env.CONFIG_COMPILER_SAVE_TEMPS:
         args += ["-save-temps=obj"]
 
-    if conf.options.lto:
+    if conf.env.CONFIG_LTO:
         args += ["-flto"]
         if not using_clang_compiler(conf):
             # None of these options are supported by clang
@@ -281,9 +257,24 @@ Or re-configure with the --relax_toolchain_restrictions option. """
         # Yes that define name is super misleading, but what can you do.
         pass
 
+    # Reproducibility: strip the absolute source-root prefix from all
+    # embedded paths so that binaries are identical regardless of where
+    # the tree is checked out.  -ffile-prefix-map covers both debug info
+    # and __FILE__ macros; -fdebug-prefix-map is a subset but listed
+    # explicitly for toolchains that pre-date -ffile-prefix-map.
+    src_root = conf.srcnode.abspath()
+    args += [
+        "-ffile-prefix-map=" + src_root + "=.",
+        "-fdebug-prefix-map=" + src_root + "=.",
+    ]
+
     conf.env.append_value("CFLAGS", args)
     conf.env.append_value("ASFLAGS", args)
     conf.env.append_value("LINKFLAGS", args)
+
+    # Deterministic archiving: the 'D' modifier suppresses timestamps and
+    # UIDs inside .a files so archives are byte-for-byte reproducible.
+    conf.env.ARFLAGS = ["rcsD"]
 
     conf.env.SHLIB_MARKER = None
     conf.env.STLIB_MARKER = None
@@ -292,11 +283,10 @@ Or re-configure with the --relax_toolchain_restrictions option. """
     if conf.env.CONFIG_RELEASE:
         optimize_flags = "-Os"
         print("Release mode")
-    elif conf.options.fat_firmware:
+    elif conf.env.CONFIG_NO_OPTIMIZATIONS:
         optimize_flags = "-O0"
-        conf.env.IS_FAT_FIRMWARE = True
-        print("Building Fat Firmware (no optimizations, logging enabled)")
-    elif conf.options.gdb:
+        print("No optimizations")
+    elif conf.env.CONFIG_DEBUG_OPTIMIZATIONS:
         optimize_flags = "-Og"
         print("GDB mode")
     else:

@@ -25,7 +25,7 @@ static const SystemThemeTextStyle s_text_styles[NumPreferredContentSizes] = {
   [PreferredContentSizeSmall] = {
     .fonts = {
       [TextStyleFont_Header] = FONT_KEY_GOTHIC_18_BOLD,
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
       [TextStyleFont_Title] = FONT_KEY_GOTHIC_18_BOLD,
       [TextStyleFont_Body] = FONT_KEY_GOTHIC_18,
 #endif
@@ -37,7 +37,7 @@ static const SystemThemeTextStyle s_text_styles[NumPreferredContentSizes] = {
       [TextStyleFont_MenuCellTitle] = FONT_KEY_GOTHIC_18_BOLD,
       //! @note this is the same as Medium until Small is designed
       [TextStyleFont_MenuCellSubtitle] = FONT_KEY_GOTHIC_18,
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
       //! @note this is the same as Medium until Small is designed
       [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_LECO_20_BOLD_NUMBERS,
 #endif
@@ -52,7 +52,7 @@ static const SystemThemeTextStyle s_text_styles[NumPreferredContentSizes] = {
   [PreferredContentSizeMedium] = {
     .fonts = {
       [TextStyleFont_Header] = FONT_KEY_GOTHIC_18_BOLD,
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
       [TextStyleFont_Title] = FONT_KEY_GOTHIC_24_BOLD,
       [TextStyleFont_Body] = FONT_KEY_GOTHIC_24_BOLD,
 #endif
@@ -61,7 +61,7 @@ static const SystemThemeTextStyle s_text_styles[NumPreferredContentSizes] = {
       [TextStyleFont_Footer] = FONT_KEY_GOTHIC_18,
       [TextStyleFont_MenuCellTitle] = FONT_KEY_GOTHIC_24_BOLD,
       [TextStyleFont_MenuCellSubtitle] = FONT_KEY_GOTHIC_18,
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
       [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_LECO_20_BOLD_NUMBERS,
 #endif
       [TextStyleFont_TimeHeaderWords] = FONT_KEY_GOTHIC_14_BOLD,
@@ -72,7 +72,7 @@ static const SystemThemeTextStyle s_text_styles[NumPreferredContentSizes] = {
   [PreferredContentSizeLarge] = {
     .fonts = {
       [TextStyleFont_Header] = FONT_KEY_GOTHIC_24_BOLD,
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
       [TextStyleFont_Title] = FONT_KEY_GOTHIC_28_BOLD,
       [TextStyleFont_Body] = FONT_KEY_GOTHIC_28,
 #endif
@@ -81,7 +81,7 @@ static const SystemThemeTextStyle s_text_styles[NumPreferredContentSizes] = {
       [TextStyleFont_Footer] = FONT_KEY_GOTHIC_18,
       [TextStyleFont_MenuCellTitle] = FONT_KEY_GOTHIC_24_BOLD,
       [TextStyleFont_MenuCellSubtitle] = FONT_KEY_GOTHIC_24,
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
       [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM,
 #endif
       [TextStyleFont_TimeHeaderWords] = FONT_KEY_GOTHIC_18_BOLD,
@@ -92,7 +92,7 @@ static const SystemThemeTextStyle s_text_styles[NumPreferredContentSizes] = {
   [PreferredContentSizeExtraLarge] = {
     .fonts = {
       [TextStyleFont_Header] = FONT_KEY_GOTHIC_28_BOLD,
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
       [TextStyleFont_Title] = FONT_KEY_GOTHIC_36_BOLD,
       [TextStyleFont_Body] = FONT_KEY_GOTHIC_36,
 #endif
@@ -104,7 +104,7 @@ static const SystemThemeTextStyle s_text_styles[NumPreferredContentSizes] = {
       [TextStyleFont_MenuCellTitle] = FONT_KEY_GOTHIC_28,
       //! @note this is the same as Large until ExtraLarge is designed
       [TextStyleFont_MenuCellSubtitle] = FONT_KEY_GOTHIC_24_BOLD,
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
       //! @note this is the same as Large until ExtraLarge is designed
       [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM,
 #endif

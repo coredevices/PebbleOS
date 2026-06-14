@@ -27,6 +27,8 @@
 
 #include <inttypes.h>
 
+PBL_LOG_MODULE_DEFINE(driver_i2c, CONFIG_DRIVER_I2C_LOG_LEVEL);
+
 #define I2C_ERROR_TIMEOUT_MS  (1000)
 #define I2C_TIMEOUT_ATTEMPTS_MAX (2 * 1000 * 1000)
 

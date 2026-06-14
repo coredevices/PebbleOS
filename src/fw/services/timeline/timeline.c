@@ -33,6 +33,8 @@
 #include "util/size.h"
 #include "util/time/time.h"
 
+PBL_LOG_MODULE_DEFINE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
+
 struct TimelineNode {
   ListNode node;
   int index;

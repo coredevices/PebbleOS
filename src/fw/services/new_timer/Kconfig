@@ -5,3 +5,11 @@ config SERVICE_NEW_TIMER
     bool "New timer"
     help
       Legacy "new" timer service.
+
+if SERVICE_NEW_TIMER
+
+module = SERVICE_NEW_TIMER
+module-str = New timer
+source "src/fw/Kconfig.template.log_level"
+
+endif

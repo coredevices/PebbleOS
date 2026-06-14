@@ -15,6 +15,8 @@
 
 #include <stdio.h>
 
+PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
+
 //! Fits the maximum string "sent an attachment" and i18n translations,
 //! plus the emoji, newline and quotes when there is a text message in addition to media.
 #define MULTIMEDIA_INDICATOR_LENGTH 64

@@ -22,6 +22,8 @@
 #include <btutil/bt_device.h>
 #include <btutil/sm_util.h>
 
+PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
+
 
 //! This is just an interface for the shared PRF storage
 

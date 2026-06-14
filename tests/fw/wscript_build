@@ -325,6 +325,6 @@ for platform in ['obelix']:
 clar(ctx,
      sources_ant_glob="src/fw/apps/prf/recovery_first_use/getting_started_button_combo.c ",
      test_sources_ant_glob="test_getting_started_button_combo.c",
-     defines=["RECOVERY_FW"]) # Enable all combos
+     defines=["CONFIG_RECOVERY_FW"]) # Enable all combos
 
 # vim:filetype=python

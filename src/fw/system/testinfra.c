@@ -18,7 +18,7 @@ static void prv_emit_ready_log(void *unused) {
 
 void notify_system_ready_for_communication(void) {
 #if !UNITTEST
-#if PULSE_EVERYWHERE
+#ifdef CONFIG_PULSE_EVERYWHERE
   static bool s_pulse_started = false;
   if (!s_pulse_started) {
     pulse_start();

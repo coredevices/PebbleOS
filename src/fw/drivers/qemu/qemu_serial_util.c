@@ -68,7 +68,7 @@ uint8_t *qemu_serial_private_assemble_message(QemuSerialGlobals *state, uint32_t
 
   uint16_t bytes_avail = shared_circular_buffer_get_read_space_remaining(&state->isr_buffer,
                 &state->isr_buffer_client);
-  QEMU_LOG_DEBUG("prv_assemble_packet, state:%d, bytes:%d", state->recv_state,
+  PBL_LOG_VERBOSE("prv_assemble_packet, state:%d, bytes:%d", state->recv_state,
             bytes_avail);
 
   // Log message if we detected any receive errors
@@ -85,7 +85,7 @@ uint8_t *qemu_serial_private_assemble_message(QemuSerialGlobals *state, uint32_t
               &bytes_read);
         bytes_avail -= bytes_read;
         if (byte == QEMU_HEADER_MSB) {
-          QEMU_LOG_DEBUG("got header signature MSB");
+          PBL_LOG_VERBOSE("got header signature MSB");
           state->recv_state = QemuRecvState_WaitingHdrSignatureLSB;
           state->start_recv_packet_time = cur_time;
         }
@@ -98,7 +98,7 @@ uint8_t *qemu_serial_private_assemble_message(QemuSerialGlobals *state, uint32_t
         bytes_avail -= bytes_read;
         if (byte == QEMU_HEADER_LSB) {
           state->recv_state = QemuRecvState_WaitingHdr;
-          QEMU_LOG_DEBUG("got header signature LSB");
+          PBL_LOG_VERBOSE("got header signature LSB");
         } else {
           state->recv_state = QemuRecvState_WaitingHdr;
         }
@@ -126,7 +126,7 @@ uint8_t *qemu_serial_private_assemble_message(QemuSerialGlobals *state, uint32_t
           PBL_LOG_ERR("Invalid header data size %d", state->hdr.len);
           state->recv_state = QemuRecvState_WaitingHdrSignatureMSB;
         } else {
-          QEMU_LOG_DEBUG("got header: protocol: %d, len: %d", state->hdr.protocol, state->hdr.len);
+          PBL_LOG_VERBOSE("got header: protocol: %d, len: %d", state->hdr.protocol, state->hdr.len);
           state->recv_state = QemuRecvState_WaitingData;
         }
       }
@@ -140,7 +140,7 @@ uint8_t *qemu_serial_private_assemble_message(QemuSerialGlobals *state, uint32_t
         state->msg_buffer_bytes += bytes_read;
         bytes_avail -= bytes_read;
 
-        QEMU_LOG_DEBUG("received %d bytes of msg data, need %d more", bytes_read,
+        PBL_LOG_VERBOSE("received %d bytes of msg data, need %d more", bytes_read,
                         state->hdr.len - state->msg_buffer_bytes);
 
         // Got the complete message?

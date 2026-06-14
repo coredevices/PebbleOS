@@ -32,7 +32,7 @@ _Static_assert((CORE_ID_MAIN_MCU & PACKED_CORE_MASK) == CORE_ID_MAIN_MCU, "Core 
 #define str(s) xstr(s)
 #define xstr(s) #s
 
-#ifdef PBL_LOGS_HASHED
+#ifdef CONFIG_LOG_HASHED
 // Define the .log_string section format.
 static const char prv_NewLogHeader[] __attribute__((nocommon, used, section(".log_string.header")))
     = NEW_LOG_HEADER "=<file>:<line>:<level>:<color>:<msg>,"\
@@ -179,7 +179,7 @@ static void prv_log_internal(bool async, uint8_t log_level, const char* src_file
   prv_release_log_state(state);
 }
 
-#ifdef PBL_LOGS_HASHED
+#ifdef CONFIG_LOG_HASHED
 
 void pbl_log_hashed_sync(const uint32_t packed_loghash, ...) {
   va_list fmt_args;
@@ -290,7 +290,7 @@ void pbl_log_hashed_vargs(const bool async, const uint32_t core_number,
   prv_release_log_state(state);
 }
 
-#endif /* PBL_LOGS_HASHED */
+#endif /* CONFIG_LOG_HASHED */
 
 void pbl_log_vargs(uint8_t log_level, const char *src_filename,
                    int src_line_number, const char *fmt, va_list args) {

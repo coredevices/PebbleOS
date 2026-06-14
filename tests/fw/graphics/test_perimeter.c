@@ -40,7 +40,12 @@ GRangeHorizontal perimeter_for_display_rect(const GPerimeter *perimeter,
                                             GRangeVertical vertical_range,
                                             uint16_t inset);
 
+// perimeter_for_circle and perimeter_for_display_round exist only on round
+// displays, perimeter_for_display_rect only on rectangular ones. clar scans
+// this file textually (no preprocessing), so every test_ function must stay
+// defined on both platforms; guard each body by display shape instead.
 void test_perimeter__perimeter_for_circle(void) {
+#if PBL_ROUND
   GRect bounds = GRect(0,0,180,180);
   GPoint center = grect_center_point(&bounds);
   int16_t radius = bounds.size.w / 2;
@@ -49,7 +54,7 @@ void test_perimeter__perimeter_for_circle(void) {
   for (int y = 0; y < bounds.size.h; y++) {
     GRangeHorizontal h_range = perimeter_for_circle(
       (GRangeVertical) {.origin_y = y, .size_h = 0}, center, radius);
-    
+
     // internally we use integer_sqrt, which causes precision loss
     // so we need to mirror some of the fixed point truncation here
     int16_t height = 90 - y;
@@ -60,6 +65,7 @@ void test_perimeter__perimeter_for_circle(void) {
     cl_assert(BETWEEN(h_range.origin_x, test_origin - 1, test_origin + 1));
     cl_assert(BETWEEN(h_range.size_w, (width - 1) * 2, (width + 1) * 2));
   }
+#endif
 }
 
 #define cl_assert_equal_rangehorizontal(r1, r2) \
@@ -69,6 +75,7 @@ void test_perimeter__perimeter_for_circle(void) {
   } while(0)
 
 void test_perimeter__perimeter_for_display_rect(void) {
+#if PBL_RECT
   GPerimeter p = {
     .callback = perimeter_for_display_rect,
   };
@@ -80,9 +87,11 @@ void test_perimeter__perimeter_for_display_rect(void) {
   expected = (GRangeHorizontal){.origin_x = 5, .size_w = DISP_COLS - 10};
   cl_assert_equal_rangehorizontal(expected, perimeter_for_display_rect(&p, &ctx_size, r, 5));
   cl_assert_equal_i(0, perimeter_for_display_rect(&p, &ctx_size, r, 500).size_w);
+#endif
 }
 
 void test_perimeter__perimeter_for_display_round(void) {
+#if PBL_ROUND
   GPerimeter p = {
     .callback = perimeter_for_display_round,
   };
@@ -96,6 +105,7 @@ void test_perimeter__perimeter_for_display_round(void) {
   expected = perimeter_for_circle(r, grect_center_point(&disp), grect_shortest_side(disp) / 2 - 5);
   cl_assert_equal_rangehorizontal(expected, perimeter_for_display_round(&p, &ctx_size, r, 5));
   cl_assert_equal_i(0, perimeter_for_display_round(&p, &ctx_size, r, 500).size_w);
+#endif
 }
 
 void test_perimeter__g_perimeter_for_display(void) {

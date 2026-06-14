@@ -37,6 +37,8 @@
 
 #include <stdio.h>
 
+PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
+
 #define INSIGHTS_LOG_DEBUG(fmt, args...) \
         PBL_LOG_D_DBG(LOG_DOMAIN_ACTIVITY_INSIGHTS, fmt, ## args)
 

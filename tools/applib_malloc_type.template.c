@@ -16,7 +16,7 @@ _Static_assert(sizeof(${name}) + ${total_3x_padding} == ${size_3x},
 #endif
 
 void *_applib_type_malloc_${name}(void) {
-#if defined(MALLOC_INSTRUMENTATION)
+#if defined(CONFIG_MALLOC_INSTRUMENTATION)
   register uintptr_t lr __asm("lr");
   const uintptr_t saved_lr = lr;
 #else
@@ -26,7 +26,7 @@ void *_applib_type_malloc_${name}(void) {
 }
 
 void *_applib_type_zalloc_${name}(void) {
-#if defined(MALLOC_INSTRUMENTATION)
+#if defined(CONFIG_MALLOC_INSTRUMENTATION)
   register uintptr_t lr __asm("lr");
   const uintptr_t saved_lr = lr;
 #else

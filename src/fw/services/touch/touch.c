@@ -16,7 +16,7 @@
 #include "os/mutex.h"
 #include "system/passert.h"
 
-#define TOUCH_DEBUG(fmt, args...) PBL_LOG_D_DBG(LOG_DOMAIN_TOUCH, fmt, ##args)
+PBL_LOG_MODULE_DEFINE(service_touch, CONFIG_SERVICE_TOUCH_LOG_LEVEL);
 
 static TouchState s_touch_state = TouchState_FingerUp;
 static int16_t s_last_x;
@@ -81,12 +81,10 @@ void touch_service_set_globally_enabled(bool enabled) {
     return;
   }
   s_globally_enabled = enabled;
-  const bool has_subscribers = s_subscriber_count > 0;
+  const bool sensor_enabled = enabled && (s_subscriber_count > 0);
   mutex_unlock(s_touch_mutex);
 
-  if (has_subscribers) {
-    touch_sensor_set_enabled(enabled);
-  }
+  touch_sensor_set_enabled(sensor_enabled);
   if (!enabled) {
     // Avoid delivering stale position on re-enable.
     touch_reset();
@@ -170,10 +168,10 @@ void touch_handle_update(TouchState touch_state, int16_t x, int16_t y) {
 
     if (touch_state == TouchState_FingerDown) {
       PBL_ANALYTICS_ADD(touch_event_count, 1);
-      TOUCH_DEBUG("Touch: Touchdown @ (%" PRId16 ", %" PRId16 ")", x, y);
+      PBL_LOG_DBG("Touch: Touchdown @ (%" PRId16 ", %" PRId16 ")", x, y);
       prv_put_touch_event(TouchEvent_Touchdown, x, y);
     } else {
-      TOUCH_DEBUG("Touch: Liftoff");
+      PBL_LOG_DBG("Touch: Liftoff");
       prv_put_touch_event(TouchEvent_Liftoff, x, y);
     }
     return;
@@ -184,7 +182,7 @@ void touch_handle_update(TouchState touch_state, int16_t x, int16_t y) {
     s_last_y = y;
     mutex_unlock(s_touch_mutex);
 
-    TOUCH_DEBUG("Touch: Position Update @ (%" PRId16 ", %" PRId16 ")", x, y);
+    PBL_LOG_VERBOSE("Touch: Position Update @ (%" PRId16 ", %" PRId16 ")", x, y);
     prv_put_touch_event(TouchEvent_PositionUpdate, x, y);
     return;
   }
@@ -195,9 +193,14 @@ void touch_handle_update(TouchState touch_state, int16_t x, int16_t y) {
 void touch_handle_gesture(TouchGesture gesture, int16_t x, int16_t y) {
   mutex_lock(s_touch_mutex);
 
+  if (!s_globally_enabled) {
+    mutex_unlock(s_touch_mutex);
+    return;
+  }
+
   prv_apply_rotation(&x, &y);
 
-  TOUCH_DEBUG("Gesture: %d @ (%" PRId16 ", %" PRId16 ")", gesture, x, y);
+  PBL_LOG_DBG("Gesture: %d @ (%" PRId16 ", %" PRId16 ")", gesture, x, y);
 
   switch (gesture) {
     case TouchGesture_Tap:

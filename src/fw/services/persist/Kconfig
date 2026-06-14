@@ -5,3 +5,11 @@ config SERVICE_PERSIST
     bool "Persist"
     help
       App-persistent storage service.
+
+if SERVICE_PERSIST
+
+module = SERVICE_PERSIST
+module-str = Persist
+source "src/fw/Kconfig.template.log_level"
+
+endif

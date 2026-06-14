@@ -5,3 +5,11 @@ config SERVICE_VIBES
     bool "Vibes"
     help
       Vibe scores / intensity service.
+
+if SERVICE_VIBES
+
+module = SERVICE_VIBES
+module-str = Vibes
+source "src/fw/Kconfig.template.log_level"
+
+endif

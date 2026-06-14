@@ -14,6 +14,8 @@
 
 #include <stdint.h>
 
+PBL_LOG_MODULE_DECLARE(service_app_message, CONFIG_SERVICE_APP_MESSAGE_LOG_LEVEL);
+
 extern const ReceiverImplementation g_default_kernel_receiver_implementation;
 extern const ReceiverImplementation g_app_message_receiver_implementation;
 

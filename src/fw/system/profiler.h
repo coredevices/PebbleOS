@@ -6,7 +6,7 @@
 /* Setting up a profiler node:
  *  1. Create a new profiler node by adding it to profiler_list.h.
  *  2. Place PROFILER_NODE_START(<node>) and PROFILER_NODE_STOP(<node>) as desired.
- *  3. Make sure you are building with the "--profiler" configure option.
+ *  3. Make sure you are building with CONFIG_PROFILER=y.
  *
  * Starting the profiler:
  *  The prompt commands "profiler start" and "profiler stop" can be used to toggle it from the
@@ -21,7 +21,7 @@
 
 #include "util/list.h"
 
-#if PROFILER
+#ifdef CONFIG_PROFILER
 #include <cmsis_core.h>
 #endif
 
@@ -42,7 +42,7 @@ typedef struct {
 
 extern Profiler g_profiler;
 
-#if !defined(PROFILER)
+#if !defined(CONFIG_PROFILER)
 
 #define PROFILER_NODE(name)
 #define PROFILER_INIT
@@ -97,7 +97,7 @@ extern Profiler g_profiler;
 #define PROFILER_NODE_GET_COUNT(node) \
   profiler_node_get_count(&g_profiler_node_##node)
 
-#endif // PROFILER
+#endif // CONFIG_PROFILER
 
 void profiler_init(void);
 void profiler_print_stats(void);

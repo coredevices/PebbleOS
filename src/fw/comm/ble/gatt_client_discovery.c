@@ -5,7 +5,6 @@
 #include "gatt_service_changed.h"
 #include "gap_le_connection.h"
 
-#include "ble_log.h"
 
 #include "comm/bt_lock.h"
 #include "comm/bt_conn_mgr.h"

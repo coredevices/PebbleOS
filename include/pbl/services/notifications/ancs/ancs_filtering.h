@@ -31,7 +31,9 @@ uint8_t ancs_filtering_get_mute_type(const iOSNotifPrefs *app_notif_prefs);
 //! Returns true when the app's rules say to filter a notification.
 //! @param app_notif_prefs Prefs for the given app loaded from the notif pref db
 //! @param title Notification title
+//! @param subtitle Notification subtitle, matched as part of the title field
 //! @param body Notification body/message
 bool ancs_filtering_matches_rules(const iOSNotifPrefs *app_notif_prefs,
                                   const ANCSAttribute *title,
+                                  const ANCSAttribute *subtitle,
                                   const ANCSAttribute *body);

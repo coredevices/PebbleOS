@@ -9,7 +9,7 @@
 #include "gap_le_advert.h"
 #include "gap_le_connect.h"
 
-#include "comm/ble/ble_log.h"
+#include "system/logging.h"
 #include "comm/bt_lock.h"
 
 #include "kernel/event_loop.h"
@@ -83,7 +83,9 @@ static void prv_evaluate(ReconnectType prev_type) {
       // Create adv payload with only flags + HR service UUID. This is enough for various mobile
       // fitness apps to be able to reconnect to Pebble as BLE HRM.
       ad = ble_ad_create();
-      ble_ad_set_flags(ad, GAP_LE_AD_FLAGS_GEN_DISCOVERABLE_MASK);
+      // BLE-only watch: advertise "BR/EDR Not Supported" so dual-mode hosts use LE.
+      ble_ad_set_flags(ad, GAP_LE_AD_FLAGS_GEN_DISCOVERABLE_MASK |
+                           GAP_LE_AD_FLAGS_BR_EDR_NOT_SUPPORTED_MASK);
       Uuid service_uuid = bt_uuid_expand_16bit(0x180D);
       ble_ad_set_service_uuids(ad, &service_uuid, 1);
     } else {
@@ -151,7 +153,7 @@ void gap_le_slave_reconnect_stop(void) {
 
 // -----------------------------------------------------------------------------
 void gap_le_slave_reconnect_start(void) {
-#if RECOVERY_FW
+#ifdef CONFIG_RECOVERY_FW
   return; // Only use discoverable packet for PRF
 #endif
   bt_lock();

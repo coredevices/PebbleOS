@@ -13,6 +13,8 @@
 
 #include <stdlib.h>
 
+PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
+
 
 #define SYNC_TIMEOUT_SECONDS 30
 #define SYNC_ABANDON_TIMEOUT_SECONDS (5 * 60)  // 5 minutes to fully abandon

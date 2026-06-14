@@ -8,6 +8,8 @@
 #include "system/passert.h"
 #include "util/size.h"
 
+PBL_LOG_MODULE_DECLARE(service_put_bytes, CONFIG_SERVICE_PUT_BYTES_LOG_LEVEL);
+
 
 #ifdef UNITTEST
 extern const PutBytesStorageImplementation s_raw_implementation;
@@ -23,7 +25,7 @@ static const PutBytesStorageImplementation s_raw_implementation = {
   .deinit = pb_storage_raw_deinit
 };
 
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
 #include "pbl/services/put_bytes/put_bytes_storage_file.h"
 
 static const PutBytesStorageImplementation s_file_implementation = {
@@ -33,7 +35,7 @@ static const PutBytesStorageImplementation s_file_implementation = {
   .calculate_crc = pb_storage_file_calculate_crc,
   .deinit = pb_storage_file_deinit
 };
-#endif  // #ifndef RECOVERY_FW
+#endif  // #ifndef CONFIG_RECOVERY_FW
 #endif  // #ifdef UNITTEST
 
 
@@ -57,7 +59,7 @@ bool pb_storage_init(PutBytesStorage *storage, PutBytesObjectType object_type,
     [ObjectFirmware] = &s_raw_implementation,
     [ObjectRecovery] = &s_raw_implementation,
     [ObjectSysResources] = &s_raw_implementation,
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
     [ObjectAppResources] = &s_file_implementation,
     [ObjectWatchApp] = &s_file_implementation,
     [ObjectFile] = &s_file_implementation,

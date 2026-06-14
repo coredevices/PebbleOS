@@ -16,13 +16,9 @@ clar(bld,
 
 clar(bld,
     sources_ant_glob = "src/fw/comm/ble/gap_le_advert.c "
-                       "src/fw/comm/ble/gap_le_connection.c "
                        "src/fw/services/regular_timer/service.c "
-                       "src/fw/comm/internals/bt_conn_mgr.c "
-                       "tests/fakes/fake_GAPAPI.c "
-                       "tests/fakes/fake_rtc.c "
-                       "tests/fakes/fake_HCIAPI.c "
-                       "tests/fakes/fake_gap_le_connect_params.c ",
+                       "tests/fakes/fake_bt_driver_advert.c "
+                       "tests/fakes/fake_rtc.c ",
     test_sources_ant_glob = "test_gap_le_advert.c",
     override_includes=['dummy_board'])
 
@@ -43,8 +39,7 @@ clar(bld,
                        "src/fw/comm/internals/bt_conn_mgr.c "
                        "tests/fakes/fake_events.c "
                        "tests/fakes/fake_rtc.c "
-                       "tests/fakes/fake_GATTAPI.c "
-                       "tests/fakes/fake_GATTAPI_test_vectors.c "
+                       "tests/fakes/fake_bt_driver_gatt.c "
                        "tests/fakes/fake_gap_le_connect_params.c ",
     test_sources_ant_glob = "test_gatt_client_accessors.c")
 
@@ -59,8 +54,7 @@ clar(bld,
                        "tests/fakes/fake_gap_le_connect_params.c "
                        "tests/fakes/fake_events.c "
                        "tests/fakes/fake_rtc.c "
-                       "tests/fakes/fake_GATTAPI.c "
-                       "tests/fakes/fake_GATTAPI_test_vectors.c ",
+                       "tests/fakes/fake_bt_driver_gatt.c ",
     test_sources_ant_glob = "test_gatt_client_discovery.c")
 
 clar(bld,
@@ -75,8 +69,7 @@ clar(bld,
                        "src/fw/comm/internals/bt_conn_mgr.c "
                        "tests/fakes/fake_gap_le_connect_params.c "
                        "tests/fakes/fake_events.c "
-                       "tests/fakes/fake_GATTAPI.c "
-                       "tests/fakes/fake_GATTAPI_test_vectors.c "
+                       "tests/fakes/fake_bt_driver_gatt.c "
                        "tests/fakes/fake_queue.c "
                        "tests/fakes/fake_rtc.c ",
     test_sources_ant_glob = "test_gatt_client_subscriptions.c",
@@ -90,8 +83,7 @@ clar(bld,
                        "src/fw/comm/ble/gatt_service_changed.c "
                        "src/fw/comm/internals/bt_conn_mgr.c "
                        "tests/fakes/fake_gap_le_connect_params.c "
-                       "tests/fakes/fake_GATTAPI.c "
-                       "tests/fakes/fake_GATTAPI_test_vectors.c "
+                       "tests/fakes/fake_bt_driver_gatt.c "
                        "tests/fakes/fake_rtc.c",
     test_sources_ant_glob = "test_gatt_service_changed_client.c")
 
@@ -103,8 +95,7 @@ clar(bld,
                       "src/fw/comm/ble/gatt_service_changed.c "
                       "src/fw/comm/internals/bt_conn_mgr.c "
                       "tests/fakes/fake_gap_le_connect_params.c "
-                      "tests/fakes/fake_GATTAPI.c "
-                      "tests/fakes/fake_GATTAPI_test_vectors.c "
+                      "tests/fakes/fake_bt_driver_gatt.c "
                       "tests/fakes/fake_rtc.c",
       test_sources_ant_glob="test_gatt_service_changed_server.c")
 
@@ -171,7 +162,6 @@ for ppogatt_version in [ 0, 1]:
                        "third_party/tinymt/TinyMT/tinymt/tinymt32.c "
                        "tests/fakes/fake_gatt_client_operations.c " \
                        "tests/fakes/fake_gatt_client_subscriptions.c " \
-                       "tests/fakes/fake_rtc.c " \
                        "tests/fakes/fake_session.c",
          defines=["USE_PPOGATT_VERSION=%d" % ppogatt_version],
          test_name='test_ppogatt_v%d' % ppogatt_version,

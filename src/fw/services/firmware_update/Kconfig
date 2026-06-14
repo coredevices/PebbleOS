@@ -5,3 +5,11 @@ config SERVICE_FIRMWARE_UPDATE
     bool "Firmware update"
     help
       Firmware update endpoint/state machine.
+
+if SERVICE_FIRMWARE_UPDATE
+
+module = SERVICE_FIRMWARE_UPDATE
+module-str = Firmware update
+source "src/fw/Kconfig.template.log_level"
+
+endif

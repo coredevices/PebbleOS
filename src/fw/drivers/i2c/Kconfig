@@ -15,7 +15,12 @@ config I2C_NRF5
 
 config I2C_SF32LB
     bool "SiFli SF32LB I2C Controller"
+    select HAL_SIFLI_I2C
     help
       Support for the SiFli SF32LB I2C controller.
+
+module = DRIVER_I2C
+module-str = I2C
+source "src/fw/Kconfig.template.log_level"
 
 endif # I2C

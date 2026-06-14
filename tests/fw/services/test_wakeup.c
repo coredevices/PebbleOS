@@ -293,7 +293,9 @@ void test_wakeup__handle_clock_change_scheduled_jump(void) {
 
   // Jump the remainder plus an offset (missing the event)
   rtc_set_time(sys_get_time() + final_timeout / 1000 + time_jump_seconds);
-  wakeup_handle_clock_change();
+  // A large jump that misses an event is a significant clock change: that is
+  // the path that deletes past events and raises the missed-event popup.
+  wakeup_handle_significant_clock_change();
 
   // There should be a missed wakeup event and a popup displayed
   cl_assert_equal_b(s_popup_occurred, true);

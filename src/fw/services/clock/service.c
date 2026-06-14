@@ -24,7 +24,7 @@
 #include "util/string.h"
 #include "pbl/services/analytics/analytics.h"
 
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
 #include "pbl/services/notifications/do_not_disturb.h"
 #include "pbl/services/notifications/alerts.h"
 #include "pbl/services/notifications/alerts_preferences_private.h"
@@ -34,7 +34,9 @@
 
 #include <stdio.h>
 
-// NOTE: There are RECOVERY_FW ifdefs in this file because PRF does not have
+PBL_LOG_MODULE_DEFINE(service_clock, CONFIG_SERVICE_CLOCK_LOG_LEVEL);
+
+// NOTE: There are CONFIG_RECOVERY_FW ifdefs in this file because PRF does not have
 // timezone support
 
 #define UNKNOWN_TIMEZONE_ID (-1)
@@ -43,7 +45,7 @@ static const uint16_t protocol_time_endpoint_id = 11;
 
 static RegularTimerInfo s_dst_checker;
 
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
 // Armed on the first timer tick, after init has settled.
 static bool s_hourly_chime_armed;
 #endif
@@ -74,7 +76,7 @@ typedef struct PACKED {
 _Static_assert(sizeof(time_t) == 4, "Sizeof time_t does not match endpoint definition");
 #endif
 
-#if !defined(RECOVERY_FW)
+#if !defined(CONFIG_RECOVERY_FW)
 static time_t prv_clock_dstrule_to_timestamp(
     bool is_end, const TimezoneInfo *tz_info, const TimezoneDSTRule *rule, int year) {
 
@@ -136,7 +138,7 @@ static time_t prv_clock_dstrule_to_timestamp(
   uxtime -= time_tm.tm_gmtoff;
   return uxtime;
 }
-#endif // RECOVERY_FW
+#endif // CONFIG_RECOVERY_FW
 
 T_STATIC void prv_update_dstrule_timestamps_by_dstzone_id(TimezoneInfo *tz_info, time_t utc_time) {
   if (tz_info->dst_id == 0) {
@@ -145,7 +147,7 @@ T_STATIC void prv_update_dstrule_timestamps_by_dstzone_id(TimezoneInfo *tz_info,
     return;
   }
 
-#if defined(RECOVERY_FW)
+#if defined(CONFIG_RECOVERY_FW)
   return;
 #else
 
@@ -197,13 +199,13 @@ T_STATIC void prv_update_dstrule_timestamps_by_dstzone_id(TimezoneInfo *tz_info,
   tz_info->dst_start = dst_start_stamps[start_idx];
   tz_info->dst_end = dst_end_stamps[end_idx];
 
-#endif // RECOVERY_FW
+#endif // CONFIG_RECOVERY_FW
 }
 
 static void prv_clock_get_timezone_info_from_region_id(
     int16_t region_id, time_t utc_time, TimezoneInfo *tz_info) {
 
-#ifdef RECOVERY_FW
+#ifdef CONFIG_RECOVERY_FW
   *tz_info = (TimezoneInfo) { .dst_id = 0 };
 #else
   timezone_database_load_region_info(region_id, tz_info);
@@ -227,7 +229,7 @@ static TimezoneInfo prv_get_timezone_info_from_data(TimezoneCBData *tz_data) {
   }
 
   // Else, we couldn't find find the specified timezone.
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
   TimezoneInfo tz_info = {
     .dst_id = 0,
     .timezone_id = UNKNOWN_TIMEZONE_ID,
@@ -395,7 +397,7 @@ T_STATIC void prv_watch_dst(void* user) {
   const bool was_dst = (bool)user;
   const bool is_dst = time_get_isdst(rtc_get_time());
   
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
   if (!s_hourly_chime_armed) {
     s_hourly_chime_armed = true;
   } else if (alerts_should_vibrate_for_type(AlertOther) &&
@@ -444,7 +446,7 @@ void clock_init(void) {
     .cb = prv_watch_dst,
     .cb_data = (void*)time_get_isdst(rtc_get_time()),
   };
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
   s_hourly_chime_armed = false;
 #endif
   regular_timer_add_seconds_callback(&s_dst_checker);

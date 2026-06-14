@@ -23,7 +23,7 @@
 
 #define INDICATOR "»"
 
-#if !PBL_ROUND || (!defined(RECOVERY_FW) && CONFIG_SCREEN_COLOR_DEPTH_BITS == 8)
+#if !PBL_ROUND || (!defined(CONFIG_RECOVERY_FW) && CONFIG_SCREEN_COLOR_DEPTH_BITS == 8)
 static const int VERTICAL_PADDING = PBL_IF_COLOR_ELSE(2, 4);
 #endif
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
@@ -403,7 +403,7 @@ static void prv_cell_item_draw(GContext *ctx, const Layer *cell_layer,
   // layer box.
   if (selected) {
     prv_animate_cell(aml, &label_text_frame, &draw_top_shading, &draw_bottom_shading);
-#if !defined(RECOVERY_FW) && CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
+#if !defined(CONFIG_RECOVERY_FW) && CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
     // Replace the clip box with a clip box that will render the item in the right place with the
     // right size, without menu layer's selection clipping. Menu layer will responsible for cleaning
     // up the changes made to this clip box.
@@ -429,7 +429,7 @@ static void prv_cell_item_draw(GContext *ctx, const Layer *cell_layer,
                    prv_cell_item_content_draw_round)(ctx, cell_layer, aml, item, selected,
                                                      &label_text_frame);
 
-#if !defined(RECOVERY_FW) && CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
+#if !defined(CONFIG_RECOVERY_FW) && CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   const int16_t fade_height = 10;
   graphics_context_set_compositing_mode(ctx, GCompOpSet);
   if (draw_top_shading) {
@@ -772,7 +772,7 @@ void action_menu_layer_init(ActionMenuLayer *aml, const GRect *frame) {
       .selection_changed = prv_selection_changed_cb
   });
 
-#if !defined(RECOVERY_FW)
+#if !defined(CONFIG_RECOVERY_FW)
   gbitmap_init_with_resource_system(&aml->item_animation.fade_top, SYSTEM_APP,
                                     RESOURCE_ID_ACTION_MENU_FADE_TOP);
   gbitmap_init_with_resource_system(&aml->item_animation.fade_bottom, SYSTEM_APP,
@@ -791,7 +791,7 @@ void action_menu_layer_deinit(ActionMenuLayer *aml) {
 
   prv_unschedule_item_animation(aml);
 
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
   gbitmap_deinit(&aml->item_animation.fade_top);
   gbitmap_deinit(&aml->item_animation.fade_bottom);
 #endif

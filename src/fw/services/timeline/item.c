@@ -9,6 +9,8 @@
 #include "system/logging.h"
 #include "system/passert.h"
 
+PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
+
 static bool prv_is_valid_item(const TimelineItem *item) {
   return item && !uuid_is_invalid(&item->header.id);
 }

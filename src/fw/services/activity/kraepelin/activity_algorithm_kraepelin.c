@@ -26,6 +26,8 @@
 #include "pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h"
 #include "pbl/services/activity/kraepelin/kraepelin_algorithm.h"
 
+PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
+
 // NOTE: This file is called "activity_sleep" for legacy reasons. A better name now would be
 // something like "activity_minute_data", but we want to maintain compatibility with prior
 // releases that only used it for sleep data.

@@ -79,7 +79,7 @@ jobs:
             --endpoint-url "${{ vars.LOG_HASH_BUCKET_ENDPOINT }}"
 
       - name: Configure PRF MFG
-        run: ./waf configure --board ${{ matrix.board }} --variant=prf --mfg --nohash -DCONFIG_RELEASE=y
+        run: ./waf configure --board ${{ matrix.board }} --variant=prf -DCONFIG_MFG=y -DCONFIG_LOG_HASHED=n -DCONFIG_RELEASE=y
 
       - name: Build MFG PRF
         run: ./waf build

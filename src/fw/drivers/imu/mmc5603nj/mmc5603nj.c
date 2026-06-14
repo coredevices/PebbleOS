@@ -15,6 +15,8 @@
 #include "mmc5603nj.h"
 #include "registers.h"
 
+PBL_LOG_MODULE_DEFINE(driver_mag_mmc5603nj, CONFIG_DRIVER_IMU_LOG_LEVEL);
+
 // Forward declarations of private methods
 static bool prv_mmc5603nj_read(uint8_t reg_addr, uint8_t data_len, uint8_t *data);
 static bool prv_mmc5603nj_write(uint8_t reg_addr, uint8_t data);
@@ -22,7 +24,7 @@ static bool prv_mmc5603nj_init(void);
 static bool prv_mmc5603nj_check_whoami(void);
 static bool prv_mmc5603nj_reset(void);
 static bool prv_mmc5603nj_set_sample_rate_hz(uint8_t rate_hz);
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
 static bool prv_configure_polling(void);
 static void prv_mmc5603nj_polling_callback(void *data);
 #endif
@@ -40,7 +42,7 @@ static bool s_initialized = false;
 static int s_use_refcount = 0;
 static PebbleMutex *s_mag_mutex;
 static uint8_t s_sample_rate_hz = 0;
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
 static TimerID s_polling_timer = TIMER_INVALID_ID;
 static uint16_t s_polling_interval_ms = 0;
 #endif
@@ -248,7 +250,7 @@ bool prv_mmc5603nj_set_sample_rate_hz(uint8_t rate_hz) {
 
   s_sample_rate_hz = rate_hz;
 
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
   if (!prv_configure_polling()) {
     PBL_LOG_ERR("MMC5603NJ: Failed to configure polling");
     return false;
@@ -258,7 +260,7 @@ bool prv_mmc5603nj_set_sample_rate_hz(uint8_t rate_hz) {
   return true;
 }
 
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
 // Configure polling (to simulate data-ready interrupts)
 
 static bool prv_configure_polling(void) {

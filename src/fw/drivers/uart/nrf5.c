@@ -7,6 +7,7 @@
 #include "drivers/dma.h"
 #include "drivers/gpio.h"
 #include "drivers/periph_config.h"
+#include "system/logging.h"
 #include "system/passert.h"
 
 #include "FreeRTOS.h"
@@ -20,6 +21,8 @@
 #else
 #include <nrfx_dppi.h>
 #endif
+
+PBL_LOG_MODULE_DEFINE(driver_uart_nrf5, CONFIG_DRIVER_UART_LOG_LEVEL);
 
 
 // UART: 8n1, duplex

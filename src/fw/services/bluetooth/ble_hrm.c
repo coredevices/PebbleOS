@@ -27,6 +27,8 @@
 #include <util/list.h>
 #include <util/size.h>
 
+PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
+
 #ifdef CONFIG_HRM
 
 #define BLE_HRM_UPDATE_INTERVAL_SEC (1)

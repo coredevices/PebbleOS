@@ -75,7 +75,7 @@ static void prv_select_shutdown(int index, void *context) {
   enter_standby(RebootReasonCode_ShutdownMenuItem);
 }
 
-#ifdef MANUFACTURING_FW
+#ifdef CONFIG_MFG
 static void prv_load_prf_confirmed(ClickRecognizerRef recognizer, void *context) {
   ConfirmationDialog *confirmation_dialog = (ConfirmationDialog *)context;
   confirmation_dialog_pop(confirmation_dialog);
@@ -168,7 +168,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
     { .title = "BLE Advertising",   .callback = prv_select_ble_adv },
     { .title = "Shutdown",          .callback = prv_select_shutdown },
     { .title = "Reset",             .callback = prv_select_reset },
-#ifdef MANUFACTURING_FW
+#ifdef CONFIG_MFG
     { .title = "Reset Results",     .callback = prv_select_reset_results },
     { .title = "Load PRF",          .callback = prv_select_load_prf },
 #endif

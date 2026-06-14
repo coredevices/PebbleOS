@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2024 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
@@ -9,7 +9,7 @@ import copy
 import json
 from math import sqrt
 import re
-import urllib2
+import urllib
 import sys
 from os.path import basename, splitext
 
@@ -26,7 +26,7 @@ def download_values_from_color_lovers(r, g, b):
     """
 
     url = "http://www.colourlovers.com/api/color/%02x%02x%02x?format=json" % (r, g, b)
-    opener = urllib2.build_opener()
+    opener = urllib.request.build_opener()
     opener.addheaders = [("User-agent", "Mozilla/5.0")]
     response = opener.open(url)
     s = response.read()
@@ -75,7 +75,7 @@ def parse_colors_from_wikipedia_html(html):
 
     url_base = "http://en.wikipedia.org"
     colors = []
-    soup = BeautifulSoup(html)
+    soup = BeautifulSoup(html, features="html.parser")
     for tr in soup.find("table").find_all("tr"):
         tds = tr.find_all("td")
         if len(tds) == 9:
@@ -103,7 +103,9 @@ def download_and_parse_colors_from_wikipedia():
     """
     Requests and caches into wikipedia_colors.json all available colors from wikipedias "list of colors" pages
     """
-    import wikipedia
+    from mediawikiapi import MediaWikiAPI, Config
+
+    wikipedia = MediaWikiAPI(config=Config(timeout=15))
 
     colors = []
     for title in ["List of colors: A-F", "List of colors: G-M", "List of colors: N-Z"]:
@@ -268,9 +270,9 @@ def enhanced_color(color):
     r = result["r"]
     g = result["g"]
     b = result["b"]
-    r2 = r / 85
-    g2 = g / 85
-    b2 = b / 85
+    r2 = int(r / 85)
+    g2 = int(g / 85)
+    b2 = int(b / 85)
 
     c_identifier = "GColor%s" % result["identifier"]
     result["c_identifier"] = c_identifier
@@ -337,7 +339,7 @@ def all_colors_with_names():
         # for now, we only look at colors from wikipedia
         # color lovers code can be deleted as soon as we agreed on final color names
         # candidates += load_colorlovers_colors()
-    except IOError, e:
+    except IOError as e:
         raise IOError(
             "%s\n\n%s" % (e, "make sure you called --download_wikipedia once")
         )
@@ -393,7 +395,10 @@ def render_header(colors):
             % (identifier.ljust(color_define_maxlen), value_identifier)
         )
 
-    file_content = """#pragma once
+    file_content = """/* SPDX-FileCopyrightText: 2024 Google LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#pragma once
 
 // @%s
 // THIS FILE HAS BEEN GENERATED, PLEASE DON'T MODIFY ITS CONTENT MANUALLY
@@ -412,10 +417,10 @@ def render_header(colors):
 //! @param alpha Alpha value from 0 - 255
 //! @return GColor created from the RGBA values
 #define GColorFromRGBA(red, green, blue, alpha) ((GColor8){ \\
-  .a = (uint8_t)(alpha) >> 6, \\
-  .r = (uint8_t)(red) >> 6, \\
-  .g = (uint8_t)(green) >> 6, \\
   .b = (uint8_t)(blue) >> 6, \\
+  .g = (uint8_t)(green) >> 6, \\
+  .r = (uint8_t)(red) >> 6, \\
+  .a = (uint8_t)(alpha) >> 6, \\
   })
 
 //! Convert RGB to GColor.
@@ -425,7 +430,6 @@ def render_header(colors):
 //! @return GColor created from the RGB values
 #define GColorFromRGB(red, green, blue) \\
   GColorFromRGBA(red, green, blue, 255)
-
 
 //! Convert hex integer to GColor.
 //! @param v Integer hex value (e.g. 0x64ff46)

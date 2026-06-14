@@ -26,6 +26,8 @@
 #include <inttypes.h>
 #include <stddef.h>
 
+PBL_LOG_MODULE_DEFINE(service_vibe_pattern, CONFIG_SERVICE_VIBE_PATTERN_LOG_LEVEL);
+
 typedef struct {
   ListNode list_node;
   uint64_t time_start;
@@ -363,7 +365,7 @@ DEFINE_SYSCALL(void, sys_vibe_pattern_trigger_start, void) {
     return;
   }
 
-#if !defined(RECOVERY_FW)
+#if !defined(CONFIG_RECOVERY_FW)
   {
     unsigned int step_count = 0;
     uint32_t total_duration_ms = 0;

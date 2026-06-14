@@ -146,7 +146,7 @@ NORETURN croak_oom(size_t bytes, int saved_lr, Heap *heap_ptr) {
   PBL_LOG_ALWAYS("CROAK OOM: Failed to alloc %d bytes at LR: 0x%x (used %u, free %u, max_free %u)",
                  bytes, saved_lr, used, free_bytes, max_free);
 
-#ifdef MALLOC_INSTRUMENTATION
+#ifdef CONFIG_MALLOC_INSTRUMENTATION
   command_dump_malloc_kernel();
 #endif
 

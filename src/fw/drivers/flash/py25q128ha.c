@@ -175,7 +175,7 @@ const FlashSecurityRegisters *flash_impl_security_registers_info(void) {
   return qspi_flash_security_registers_info(QSPI_FLASH);
 }
 
-#ifdef RECOVERY_FW
+#ifdef CONFIG_RECOVERY_FW
 status_t flash_impl_lock_security_register(uint32_t address) {
   return qspi_flash_lock_security_register(QSPI_FLASH, address);
 }

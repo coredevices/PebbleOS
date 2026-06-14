@@ -10,7 +10,7 @@
 #include <stdio.h>
 
 
-#if PULSE_EVERYWHERE
+#ifdef CONFIG_PULSE_EVERYWHERE
 #define DEFAULT_SERIAL_BAUD_RATE 1000000
 #else
 #define DEFAULT_SERIAL_BAUD_RATE 230400
@@ -18,7 +18,7 @@
 
 
 void dbgserial_init(void) {
-#if !defined(CONFIG_RELEASE) || defined(MANUFACTURING_FW)
+#if !defined(CONFIG_RELEASE) || defined(CONFIG_MFG)
   uart_init(DBG_UART);
 #else
   uart_init_tx_only(DBG_UART);

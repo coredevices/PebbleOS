@@ -28,8 +28,11 @@ size_t resource_load_byte_range_system(ResAppNum app_num, uint32_t resource_id,
 
 void test_timezone_database__get_region_count(void) {
   // Note this test will break every time we update the timezone database and that's ok. Just
-  // make sure the new number is sane and update the expected number.
-  cl_assert_equal_i(timezone_database_get_region_count(), 336);
+  // make sure the new number is sane and update the expected number. The count is derived from
+  // the number of Zone entries in resources/normal/base/tzdata/timezones_olson.txt after the
+  // generator's filtering (build_zoneinfo_list); it dropped to 308 as the bundled tzdata has been
+  // updated since the original 336.
+  cl_assert_equal_i(timezone_database_get_region_count(), 308);
 }
 
 void test_timezone_database__find_region_by_name_simple(void) {
@@ -112,6 +115,8 @@ void test_timezone_database__kazakhstan(void) {
 
     cl_assert(result);
     cl_assert_equal_i(tz_info.dst_id, 0); // No DST
-    cl_assert_equal_i(tz_info.tm_gmtoff, 6 * 60 * 60); // +6 hours
+    // Kazakhstan unified its time zones and moved from UTC+6 to UTC+5 on
+    // 2024-03-01 (tzdata 2024a); Asia/Almaty's current offset is now +5 hours.
+    cl_assert_equal_i(tz_info.tm_gmtoff, 5 * 60 * 60); // +5 hours
   }
 }

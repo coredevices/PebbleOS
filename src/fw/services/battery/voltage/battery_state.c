@@ -23,6 +23,8 @@
 #include "util/math.h"
 #include "util/ratio.h"
 
+PBL_LOG_MODULE_DECLARE(service_battery, CONFIG_SERVICE_BATTERY_LOG_LEVEL);
+
 #ifdef DEBUG_BATTERY_STATE
 #define BATTERY_SAMPLE_RATE_MS 1000
 #else

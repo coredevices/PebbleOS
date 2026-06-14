@@ -8,6 +8,8 @@
 #include "system/logging.h"
 #include "util/net.h"
 
+PBL_LOG_MODULE_DECLARE(service_comm_session, CONFIG_SERVICE_COMM_SESSION_LOG_LEVEL);
+
 static const uint16_t META_ENDPOINT_ID = 0;
 
 static void prv_send_meta_response_kernelbg_cb(void *data) {

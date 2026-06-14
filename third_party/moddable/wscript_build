@@ -186,7 +186,7 @@ else:
             '-DMODGCC=1',
             '-DMODINSTRUMENTATION=1',
             '-DmxInstrument',
-            '-DmxUseDefaultSharedChunks=1',
+            '-DmxDebug',
             '-fno-strict-aliasing',
             '-fomit-frame-pointer',
             '-fshort-enums',
@@ -200,7 +200,8 @@ else:
             '-Wno-unused-function',
             '-Wno-unused-variable',
             '-Wno-misleading-indentation',
-            '-Wno-error=maybe-uninitialized']
+            '-Wno-error=maybe-uninitialized',
+            '-Wno-error=implicit-fallthrough']
 
         bld(export_includes=libxs_includes, name='libxs_includes')
 

@@ -52,11 +52,11 @@ typedef struct PACKED {
 
 enum {
   APP_FETCH_INSTALL_COMMAND = 0x01,
-} AppFetchCommand;
+};
 
 enum {
   APP_FETCH_INSTALL_RESPONSE = 0x01,
-} AppFetchResponse;
+};
 
 typedef struct AppFetchData {
   CommSession *session;

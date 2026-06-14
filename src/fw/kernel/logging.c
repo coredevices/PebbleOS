@@ -41,7 +41,7 @@ static bool prv_check_serial_log_enabled(int level) {
            (level <= g_pbl_log_level));
 }
 
-#if !PULSE_EVERYWHERE
+#ifndef CONFIG_PULSE_EVERYWHERE
 #define TIMESTAMP_BUFFER_SIZE 40
 static void prv_log_timestamp(void) {
   // Enough stack space to use sprintfs?
@@ -74,10 +74,14 @@ static void prv_log_serial(
 
   // Log the log level and the current task+privilege level
   {
+#ifdef CONFIG_LOG_TASK_PREFIX
     unsigned char task_char = pebble_task_get_char(pebble_task_get_current());
     if (mcu_state_is_privileged()) {
       task_char = toupper(task_char);
     }
+#else
+    unsigned char task_char = '-';
+#endif
 
     char buffer[] = { pbl_log_get_level_char(log_level), ' ', task_char, ' ', 0 };
     serial_console_write_log_message(buffer);
@@ -105,14 +109,14 @@ static void prv_log_serial(
   // Append our newlines and our trailing null
   serial_console_write_log_message("\r\n");
 }
-#endif // PULSE_EVERYWHERE
+#endif // CONFIG_PULSE_EVERYWHERE
 
 void kernel_pbl_log_serial(LogBinaryMessage *log_message, bool async) {
   if (!prv_check_serial_log_enabled(log_message->log_level)) {
     return;
   }
 
-#if PULSE_EVERYWHERE
+#ifdef CONFIG_PULSE_EVERYWHERE
   if (async) {
     pulse_logging_log(log_message->log_level, log_message->filename,
                       htons(log_message->line_number), log_message->message);
@@ -148,7 +152,7 @@ void kernel_pbl_log(LogBinaryMessage* log_message, bool async) {
 
 void kernel_pbl_log_from_fault_handler(
     const char *src_filename, uint16_t src_line_number, const char *message) {
-#if PULSE_EVERYWHERE
+#ifdef CONFIG_PULSE_EVERYWHERE
   pulse_logging_log_sync(LOG_LEVEL_ALWAYS, src_filename,
                          src_line_number, message);
 #else

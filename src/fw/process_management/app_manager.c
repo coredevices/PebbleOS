@@ -38,12 +38,12 @@
 #include "pbl/services/light.h"
 #include "pbl/services/app_cache.h"
 #include "pbl/services/new_timer/new_timer.h"
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
 #include "pbl/services/powermode_service.h"
 #endif
 #include "pbl/services/app_inbox_service.h"
 #include "pbl/services/app_outbox_service.h"
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
 #include "pbl/services/speaker/speaker_service.h"
 #endif
 #include "shell/normal/app_idle_timeout.h"
@@ -101,7 +101,7 @@ typedef struct {
 } AppCrashInfo;
 
 static NextApp s_next_app;
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
 static bool s_powermode_hp_requested;
 static TimerID s_powermode_release_timer;
 
@@ -114,7 +114,7 @@ void app_manager_init(void) {
 
   s_app_task_context = (ProcessContext) { 0 };
 
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
   // Start in high-performance mode; released when a watchface is loaded
   powermode_service_request_hp();
   s_powermode_hp_requested = true;
@@ -161,7 +161,7 @@ static void prv_app_task_main(void *entry_point) {
   // be cleaned up, make it so the kernel can do it on the apps behalf and put
   // the call at the bottom of prv_app_cleanup.
   app_state_deinit();
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
   app_message_close();
 #endif
 
@@ -201,7 +201,7 @@ void prv_dump_start_app_info(const PebbleProcessMd *app_md) {
 }
 
 #define APP_STACK_JS_SIZE (8 * 1024)
-#define APP_STACK_NORMAL_SIZE (2 * 1024)
+#define APP_STACK_NORMAL_SIZE (4 * 1024)
 
 static size_t prv_get_app_segment_size(const PebbleProcessMd *app_md) {
   switch (process_metadata_get_app_sdk_type(app_md)) {
@@ -240,7 +240,7 @@ T_STATIC size_t prv_get_stack_guard_size(void) {
   return (uintptr_t)__stack_guard_size__;
 }
 
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
 // ---------------------------------------------------------------------------------------------
 static void prv_powermode_release_cb(void *data) {
   (void)data;
@@ -389,7 +389,7 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
   system_app_state_machine_register_app_launch(s_app_task_context.install_id);
 
   // Track per-watchface usage metrics
-#if !RECOVERY_FW && !SHELL_SDK
+#if !defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_SHELL_SDK)
   if (app_md->process_type == ProcessTypeWatchface) {
     PBL_ANALYTICS_TIMER_START(watchface_time_ms);
     PBL_ANALYTICS_SET_STRING(watchface_name, process_metadata_get_name(app_md));
@@ -399,11 +399,11 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
   }
 #endif
 
-#if !defined(RECOVERY_FW)
+#if !defined(CONFIG_RECOVERY_FW)
   health_tracking_ui_register_app_launch(s_app_task_context.install_id);
 #endif
 
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
   if (app_md->process_type == ProcessTypeWatchface) {
     if (s_powermode_hp_requested) {
       new_timer_start(s_powermode_release_timer, POWERMODE_WATCHFACE_RELEASE_DELAY_MS,
@@ -439,7 +439,7 @@ static void prv_app_cleanup(void) {
 
   // Perform app specific cleanup
   app_idle_timeout_stop();
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
   app_inbox_service_unregister_all();
   app_outbox_service_cleanup_all_pending_messages();
 #endif
@@ -447,7 +447,7 @@ static void prv_app_cleanup(void) {
   light_set_system_color();
   sys_vibe_history_stop_collecting();
   sys_vibe_pattern_clear();
-#ifndef RECOVERY_FW
+#ifndef CONFIG_RECOVERY_FW
   speaker_service_stop_for_task(PebbleTask_App);
 #endif
   ble_app_cleanup();
@@ -475,7 +475,7 @@ static void prv_app_show_crash_ui(AppInstallId install_id) {
     return;
   }
 
-#if !defined(RECOVERY_FW)
+#if !defined(CONFIG_RECOVERY_FW)
   static AppCrashInfo crash_info = { 0 };
   // If the same watchface crashes twice in one minute, then we show a dialog informing
   // the user that the watchface has crashed.  Any button press will dismiss
@@ -633,7 +633,7 @@ static bool prv_app_switch(bool gracefully) {
 // ---------------------------------------------------------------------------------------------
 void app_manager_start_first_app(void) {
   const PebbleProcessMd* app_md = system_app_state_machine_system_start();
-#if SHELL_SDK
+#ifdef CONFIG_SHELL_SDK
   // SDK shell's system_start returns the default watchface (a flash app) when one is set.
   // If an install crashed partway through PutBytes, BlobDB has the entry and
   // watchface_default_install_id already points at it, but the on-flash PBL_APP is
@@ -744,7 +744,7 @@ void app_manager_handle_app_fetch_request_event(const PebbleAppFetchRequestEvent
 }
 
 // -----------------------------------------------------------------------------------------
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
 static AppInstallId prv_get_app_exit_reason_destination_install_id_override(void) {
   switch (s_app_task_context.exit_reason) {
     case APP_EXIT_NOT_SPECIFIED:
@@ -770,7 +770,7 @@ void app_manager_close_current_app(bool gracefully) {
   const AppInstallId current_app_id = s_app_task_context.install_id;
   AppInstallId destination_app_id = INSTALL_ID_INVALID;
 
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
   destination_app_id = prv_get_app_exit_reason_destination_install_id_override();
 #endif
 

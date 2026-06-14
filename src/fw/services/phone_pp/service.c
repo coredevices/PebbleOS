@@ -17,6 +17,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+PBL_LOG_MODULE_DEFINE(service_phone_pp, CONFIG_SERVICE_PHONE_PP_LOG_LEVEL);
+
 #define CALLER_BUFFER_LENGTH 32
 
 static const uint16_t PHONE_CTRL_ENDPOINT = 0x21;

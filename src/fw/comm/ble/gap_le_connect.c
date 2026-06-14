@@ -3,7 +3,6 @@
 
 #include "gap_le_connect.h"
 
-#include "ble_log.h"
 #include "comm/bluetooth_analytics.h"
 #include "comm/bt_conn_mgr.h"
 #include "comm/bt_lock.h"
@@ -23,6 +22,8 @@
 #include <bluetooth/pebble_pairing_service.h>
 #include <btutil/bt_device.h>
 #include <btutil/sm_util.h>
+
+PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
 #if BLE_MASTER_CONNECT_SUPPORT // FIXME: Shouldn't be needed after PBL-32761
 extern unsigned int bt_stack_id(void);
@@ -454,7 +455,7 @@ void bt_driver_handle_le_connection_complete_event(const BleConnectionCompleteEv
         bluetooth_analytics_handle_no_intent_for_connection();
       }
 
-#if RECOVERY_FW
+#ifdef CONFIG_RECOVERY_FW
       // In PRF, stick to shortest connection interval indefinitely:
       conn_mgr_set_ble_conn_response_time(connection, BtConsumerPRF,
                                           ResponseTimeMin, MAX_PERIOD_RUN_FOREVER);
@@ -493,7 +494,7 @@ void bt_driver_handle_le_disconnection_complete_event(const BleDisconnectionComp
     case HciStatusCode_Success: {
       // Disconnection! Update our records:
       GAPLEConnection *connection = gap_le_connection_by_device(&event->peer_address);
-#if defined(CONFIG_HRM) && !defined(RECOVERY_FW)
+#if defined(CONFIG_HRM) && !defined(CONFIG_RECOVERY_FW)
       ble_hrm_handle_disconnection(connection);
 #endif
       const bool local_is_master = connection->local_is_master;
@@ -622,7 +623,7 @@ static void prv_start_connecting(void) {
     return;
   }
 
-  BLE_LOG_DEBUG("Starting connecting..");
+  PBL_LOG_DBG("Starting connecting..");
   unsigned int stack_id = bt_stack_id();
   // See Bluetooth Spec 4.0, Volume 2, Part E, Chapter 7.8.12:
   const GAP_LE_Address_Type_t local_addr_type = BleAddressType_Random;
@@ -656,7 +657,7 @@ static void prv_stop_connecting(void) {
     return;
   }
   unsigned int stack_id = bt_stack_id();
-  BLE_LOG_DEBUG("Stopping connecting...");
+  PBL_LOG_DBG("Stopping connecting...");
   // See Bluetooth Spec 4.0, Volume 2, Part E, Chapter 7.8.13:
   const int r = GAP_LE_Cancel_Create_Connection(stack_id);
   if (r) {
@@ -674,8 +675,8 @@ static void prv_mutate_whitelist(const BTDeviceInternal *device, bool is_adding)
   PBL_LOG_WRN("BLE whitelist mutation unimplemented");
 #else
   unsigned int stack_id = bt_stack_id();
-  BLE_LOG_DEBUG("Mutating white-list (adding=%u): " BD_ADDR_FMT,
-                is_adding, BT_DEVICE_ADDRESS_XPLODE(device->address));
+  PBL_LOG_DBG("Mutating white-list (adding=%u): " BD_ADDR_FMT,
+              is_adding, BT_DEVICE_ADDRESS_XPLODE(device->address));
   // See Bluetooth Spec 4.0, Volume 2, Part E, Chapter 7.8.15:
   uint8_t status = 0;
   const uint8_t addr_type = device->is_random_address ? 0x01 : 0x00;
@@ -1128,7 +1129,7 @@ BTErrno gap_le_connect_cancel_by_bonding(BTBondingID bonding_id, GAPLEClient cli
 void gap_le_connect_cancel_all(GAPLEClient client) {
   bt_lock();
   {
-    BLE_LOG_DEBUG("Cancel connecting all for client %u...", client);
+    PBL_LOG_DBG("Cancel connecting all for client %u...", client);
 
     GAPLEConnectionIntent *intent = s_intents;
     while (intent) {

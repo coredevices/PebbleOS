@@ -15,6 +15,7 @@ config EXTI_NRF5
 
 config EXTI_SF32LB
     bool "SiFli SF32LB"
+    select HAL_SIFLI_GPIO
     help
       Support for the SiFli SF32LB external interrupt controller.
 
@@ -22,5 +23,9 @@ config EXTI_QEMU
     bool "QEMU External Interrupt"
     help
       Support for the QEMU external interrupt peripheral.
+
+module = DRIVER_EXTI
+module-str = External Interrupt
+source "src/fw/Kconfig.template.log_level"
 
 endif # EXTI

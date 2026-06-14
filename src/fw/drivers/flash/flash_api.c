@@ -25,6 +25,8 @@
 #include "FreeRTOS.h"
 #include "semphr.h"
 
+PBL_LOG_MODULE_DEFINE(driver_flash, CONFIG_DRIVER_FLASH_LOG_LEVEL);
+
 #define MAX_ERASE_RETRIES (3)
 
 static PebbleMutex *s_flash_lock;
@@ -524,7 +526,7 @@ const FlashSecurityRegisters *flash_security_registers_info(void) {
   return flash_impl_security_registers_info();
 }
 
-#ifdef RECOVERY_FW
+#ifdef CONFIG_RECOVERY_FW
 status_t flash_lock_security_register(uint32_t addr) {
   status_t status;
 
@@ -534,7 +536,7 @@ status_t flash_lock_security_register(uint32_t addr) {
 
   return status;
 }
-#endif // RECOVERY_FW
+#endif // CONFIG_RECOVERY_FW
 
 #include "console/prompt.h"
 void command_flash_unprotect(void) {

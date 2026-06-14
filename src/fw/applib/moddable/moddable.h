@@ -1,4 +1,5 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-FileCopyrightText: 2025-2026 Moddable Tech, Inc. */
 /* SPDX-License-Identifier: Apache-2.0 */
 #pragma once
 

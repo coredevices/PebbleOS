@@ -5,3 +5,11 @@ config SERVICE_PHONE_PP
     bool "Phone (Pebble Protocol)"
     help
       Phone endpoint over Pebble Protocol.
+
+if SERVICE_PHONE_PP
+
+module = SERVICE_PHONE_PP
+module-str = Phone (Pebble Protocol)
+source "src/fw/Kconfig.template.log_level"
+
+endif

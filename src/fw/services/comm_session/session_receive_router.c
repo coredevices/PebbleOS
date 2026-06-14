@@ -15,6 +15,8 @@
 // Generated table of endpoint handler (s_protocol_endpoints):
 #include "services/comm_session/protocol_endpoints_table.auto.h"
 
+PBL_LOG_MODULE_DECLARE(service_comm_session, CONFIG_SERVICE_COMM_SESSION_LOG_LEVEL);
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Static helper functions
 

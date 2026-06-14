@@ -6,6 +6,7 @@
 #include "drivers/hrm.h"
 #include "board/board.h"
 #include "kernel/util/sleep.h"
+#include "system/logging.h"
 
 #ifdef HRM_USE_GH3X2X
 #include "math.h"
@@ -13,12 +14,13 @@
 #include "kernel/events.h"
 #include "pbl/services/system_task.h"
 #include "pbl/services/hrm/hrm_manager.h"
-#include "system/logging.h"
 
 #include "gh_demo.h"
 #include "gh_demo_inner.h"
 #include "gh3x2x_demo_mp.h"
 #endif // HRM_USE_GH3X2X
+
+PBL_LOG_MODULE_DEFINE(driver_hrm_gh3x2x, CONFIG_DRIVER_HRM_LOG_LEVEL);
 
 void gh3026_reset_pin_ctrl(uint8_t pin_level) {
 #if GH3X2X_RESET_PIN_CTRLBY_NPM1300
@@ -254,7 +256,7 @@ bool gh3x2x_ble_data_recv(void* context) {
 // GH3X2X calibration/factory testing
 
 void gh3x2x_rawdata_notify(uint32_t *p_rawdata, uint32_t data_count) {
-#ifdef MANUFACTURING_FW
+#ifdef CONFIG_MFG
   HRMDevice* p_dev = HRM;
   if (p_dev == NULL || p_dev->state->enabled == false) {
     return;
@@ -335,7 +337,7 @@ void gh3x2x_rawdata_notify(uint32_t *p_rawdata, uint32_t data_count) {
 #endif
 }
 
-#ifdef MANUFACTURING_FW
+#ifdef CONFIG_MFG
 void gh3x2x_factory_test_enable(HRMDevice *dev, GH3x2xFTType test_type) {
   uint32_t mode = 0;
   if (test_type == HRM_FACTORY_TEST_CTR) {                    // CTR
@@ -423,7 +425,7 @@ void gh3x2x_set_work_mode(int32_t mode) {
   //always enable soft adt
   state->work_mode = mode | GH3X2X_FUNCTION_SOFT_ADT_IR;
 }
-#endif // MANUFACTURING_FW
+#endif // CONFIG_MFG
 
 #endif // HRM_USE_GH3X2X
 
@@ -456,7 +458,7 @@ bool hrm_enable(HRMDevice *dev) {
   s_hrm_int_flag = false;
 
   dev->state->work_mode = GH3X2X_FUNCTION_HR | GH3X2X_FUNCTION_SOFT_ADT_GREEN;
-#ifdef MANUFACTURING_FW
+#ifdef CONFIG_MFG
   dev->state->work_mode = GH3X2X_FUNCTION_HR | GH3X2X_FUNCTION_SPO2 | GH3X2X_FUNCTION_SOFT_ADT_IR;
 #endif
 

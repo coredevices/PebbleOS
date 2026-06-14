@@ -5,3 +5,11 @@ config SERVICE_ACCEL_MANAGER
     bool "Accelerometer manager"
     help
       Accelerometer data subscription manager.
+
+if SERVICE_ACCEL_MANAGER
+
+module = SERVICE_ACCEL_MANAGER
+module-str = Accelerometer manager
+source "src/fw/Kconfig.template.log_level"
+
+endif

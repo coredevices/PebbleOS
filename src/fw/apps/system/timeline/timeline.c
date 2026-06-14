@@ -149,7 +149,7 @@ static bool prv_set_state(TimelineAppData *data, TimelineAppState next_state) {
 T_STATIC void prv_init_peek_layer(TimelineAppData *data);
 
 static void prv_launch_watchface(void *data) {
-#ifdef SHELL_SDK
+#ifdef CONFIG_SHELL_SDK
   // FIXME: We don't want to show off our unfinished animations in the sdkshell
   watchface_launch_default(NULL);
 #else
@@ -173,8 +173,8 @@ static void prv_swap_timeline(void *data) {
   const bool is_future = (s_app_data->timeline_model.direction == TimelineIterDirectionFuture);
   const bool to_timeline = true;
   const CompositorTransition *transition = PBL_IF_RECT_ELSE(
-      compositor_slide_transition_timeline_get(is_future, to_timeline, timeline_model_is_empty()),
-      compositor_dot_transition_timeline_get(is_future, to_timeline));
+      compositor_slide_transition_timeline_get(!is_future, to_timeline, timeline_model_is_empty()),
+      compositor_dot_transition_timeline_get(!is_future, to_timeline));
   static TimelineArgs args = (TimelineArgs) {
     .force_full = true
   };
@@ -188,10 +188,13 @@ static void prv_swap_timeline(void *data) {
       .common.transition = transition,
     });
   } else {
-    Uuid full_uuid = TIMELINE_FULL_UUID_INIT;
+    Uuid app_uuid;
+    sys_get_app_uuid(&app_uuid);
+    const Uuid target_uuid = uuid_equal(&app_uuid, &(Uuid)TIMELINE_FULL_UUID_INIT) ?
+        (Uuid)TIMELINE_UUID_INIT : (Uuid)TIMELINE_FULL_UUID_INIT;
     args.direction = TimelineIterDirectionFuture;
     app_manager_put_launch_app_event(&(AppLaunchEventConfig) {
-      .id = app_install_get_id_for_uuid((const Uuid *)(&full_uuid)),
+      .id = app_install_get_id_for_uuid((const Uuid *)&target_uuid),
       .common.args = (const void *)&args,
       .common.transition = transition,
     });

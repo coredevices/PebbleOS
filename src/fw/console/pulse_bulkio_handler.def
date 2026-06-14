@@ -8,6 +8,6 @@ REGISTER_BULKIO_HANDLER(ExternalFlash, 2, pulse_bulkio_domain_external_flash)
 REGISTER_BULKIO_HANDLER(Framebuffer, 3, pulse_bulkio_domain_framebuffer)
 REGISTER_BULKIO_HANDLER(Coredump, 4, pulse_bulkio_domain_coredump)
 
-#if !RECOVERY_FW
+#if !defined(CONFIG_RECOVERY_FW)
 REGISTER_BULKIO_HANDLER(PFS, 5, pulse_bulkio_domain_pfs)
 #endif

@@ -3,7 +3,7 @@
 
 #include "fake_gap_le_connect_params.h"
 
-#include "GAPAPI.h"
+#include "pbl/services/new_timer/new_timer.h"
 
 static ResponseTimeState s_last_requested_desired_state;
 
@@ -12,18 +12,10 @@ void gap_le_connect_params_request(GAPLEConnection *connection,
   s_last_requested_desired_state = desired_state;
 }
 
-void gap_le_connect_params_setup_connection(GAPLEConnection *connection) {
+void gap_le_connect_params_setup_connection(GAPLEConnection *connection, TimerID timer) {
 }
 
 void gap_le_connect_params_cleanup_by_connection(GAPLEConnection *connection) {
-}
-
-void gap_le_connect_params_handle_update(unsigned int stack_id,
-                                    const GAP_LE_Connection_Parameter_Updated_Event_Data_t *event) {
-}
-
-void gap_le_connect_params_handle_connection_parameter_update_response(
-                       const GAP_LE_Connection_Parameter_Update_Response_Event_Data_t *event_data) {
 }
 
 static ResponseTimeState s_actual_state;

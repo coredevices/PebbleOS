@@ -74,7 +74,7 @@ jobs:
       - name: Configure
         run: |
           if [ "${{ matrix.mode }}" == "mfg" ]; then
-            OPTS="--mfg --nohash"
+            OPTS="-DCONFIG_MFG=y -DCONFIG_LOG_HASHED=n"
           fi
 
           ./waf configure --board ${{ matrix.board }} --variant=prf $OPTS

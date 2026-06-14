@@ -15,6 +15,8 @@ config MIC_NRF5
 
 config MIC_SF32LB
     bool "SiFli SF32LB PDM"
+    select HAL_SIFLI_AUDCODEC
+    select HAL_SIFLI_PDM
     help
       Support for the SiFli SF32LB PDM microphone interface.
 
@@ -25,5 +27,9 @@ config MIC_QEMU
       MIC_SAMPLE_RATE so the voice service can run end-to-end against
       `pebble transcribe`, which ignores audio frames and replies with
       a canned transcription on a timer.
+
+module = DRIVER_MIC
+module-str = Microphone
+source "src/fw/Kconfig.template.log_level"
 
 endif # MIC

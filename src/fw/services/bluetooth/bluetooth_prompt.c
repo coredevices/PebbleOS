@@ -35,14 +35,14 @@ void command_bt_prefs_wipe(void) {
 
 void command_bt_sprf_nuke(void) {
   shared_prf_storage_wipe_all();
-#if RECOVERY_FW
+#ifdef CONFIG_RECOVERY_FW
   // Reset system to get caches (in s_intents, s_connections and controller-side caches) in sync.
   extern void factory_reset_set_reason_and_reset(void);
   factory_reset_set_reason_and_reset();
 #endif
 }
 
-#ifdef RECOVERY_FW
+#ifdef CONFIG_RECOVERY_FW
 void command_bt_status(void) {
   char buffer[64];
 
@@ -73,4 +73,4 @@ void command_bt_status(void) {
     prompt_send_response_fmt(buffer, sizeof(buffer), "Device: %s", name);
   }
 }
-#endif // RECOVERY_FW
+#endif // CONFIG_RECOVERY_FW

@@ -22,6 +22,8 @@
 
 #include <string.h>
 
+PBL_LOG_MODULE_DEFINE(driver_vibe, CONFIG_DRIVER_VIBE_LOG_LEVEL);
+
 
 //! Make a resolution of 100. Working in integer duty cycles on the following ranges:
 //!

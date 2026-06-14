@@ -104,7 +104,7 @@ void soc_early_init(void);
 const int __attribute__((used)) uxTopUsedPriority = configMAX_PRIORITIES - 1;
 
 static TimerID s_lowpower_timer = TIMER_INVALID_ID;
-#ifndef MANUFACTURING_FW
+#ifndef CONFIG_MFG
 static TimerID s_uptime_timer = TIMER_INVALID_ID;
 #endif
 static void main_task(void *parameter);
@@ -112,9 +112,9 @@ static void main_task(void *parameter);
 static void print_splash_screen(void)
 {
 
-#if defined(MANUFACTURING_FW)
+#if defined(CONFIG_MFG)
   PBL_LOG_ALWAYS("PebbleOS - MANUFACTURING MODE");
-#elif defined(RECOVERY_FW)
+#elif defined(CONFIG_RECOVERY_FW)
   PBL_LOG_ALWAYS("PebbleOS - RECOVERY MODE");
 #else
   PBL_LOG_ALWAYS("PebbleOS");
@@ -179,7 +179,7 @@ int main(void) {
 
   rtc_init();
 
-#ifdef RECOVERY_FW
+#ifdef CONFIG_RECOVERY_FW
   boot_bit_clear(BOOT_BIT_RECOVERY_START_IN_PROGRESS);
 #endif
 
@@ -283,7 +283,7 @@ static void clear_reset_loop_detection_bits(void) {
   boot_bit_clear(BOOT_BIT_RESET_LOOP_DETECT_THREE);
 }
 
-#ifndef MANUFACTURING_FW
+#ifndef CONFIG_MFG
 static void uptime_callback(void* data) {
   PBL_LOG_VERBOSE("Uptime reached 15 minutes, set stable bit.");
   new_timer_delete(s_uptime_timer);
@@ -302,7 +302,7 @@ static NOINLINE void prv_main_task_init(void) {
   static McuRebootReason s_mcu_reboot_reason;
   s_mcu_reboot_reason = watchdog_clear_reset_flag();
 
-#if PULSE_EVERYWHERE
+#ifdef CONFIG_PULSE_EVERYWHERE
   pulse_init();
   pulse_logging_init();
 #endif
@@ -350,7 +350,7 @@ static NOINLINE void prv_main_task_init(void) {
   mfg_write_bigboard_serial_number();
 #endif
 
-#if defined(MANUFACTURING_FW)
+#if defined(CONFIG_MFG)
   mfg_info_update_constant_data();
 #endif
 
@@ -363,7 +363,7 @@ static NOINLINE void prv_main_task_init(void) {
   // Do this early before things can screw ith it.
   check_prf_update();
 
-#if defined(CONFIG_PBLBOOT) && defined(RECOVERY_FW) && !defined(MANUFACTURING_FW)
+#if defined(CONFIG_PBLBOOT) && defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_MFG)
   // Invalidate slot0/1 when booting PRF, so we force main firmware re-install
   firmware_storage_invalidate_firmware_slot(0);
   firmware_storage_invalidate_firmware_slot(1);
@@ -415,7 +415,7 @@ static NOINLINE void prv_main_task_init(void) {
   new_timer_start(s_lowpower_timer,
                   10 * 1000, prv_low_power_debug_config_callback, NULL, 0 /*flags*/);
 
-#ifndef MANUFACTURING_FW
+#ifndef CONFIG_MFG
   s_uptime_timer = new_timer_create();
   new_timer_start(s_uptime_timer, 15 * 60 * 1000, uptime_callback, NULL, 0 /*flags*/);
 #else

@@ -19,6 +19,8 @@
 
 #include <string.h>
 
+PBL_LOG_MODULE_DEFINE(service_event_service, CONFIG_SERVICE_EVENT_SERVICE_LOG_LEVEL);
+
 typedef struct {
   int num_subscribers;
   QueueHandle_t subscribers[NumPebbleTask];

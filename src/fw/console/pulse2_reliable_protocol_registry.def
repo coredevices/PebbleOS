@@ -37,7 +37,7 @@
 //
 //        void transport_state_handler(void);
 
-#if !DISABLE_PROMPT
+#ifdef CONFIG_PROMPT
 ON_PACKET(PULSE2_RELIABLE_PROMPT_PROTOCOL, pulse2_prompt_packet_handler)
 #endif
 

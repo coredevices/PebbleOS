@@ -276,10 +276,10 @@ void test_graphics_gtransform_${BIT_DEPTH_NAME}__rotation(void) {
   // a = b = 10*cos(45) - 10*sin(45)
   // c = d = 10*sin(45) + 10*cos(45)
   t_c = GTransform(GTransformNumberFromNumber(0),
-                   GTransformNumberFromNumber(0), 
-                   (Fixed_S32_16){ .raw_value = (int32_t)(923960) },
-                   (Fixed_S32_16){ .raw_value = (int32_t)(923960) }, 
-                   GTransformNumberFromNumber(10), 
+                   GTransformNumberFromNumber(0),
+                   (Fixed_S32_16){ .raw_value = (int32_t)(926800) },
+                   (Fixed_S32_16){ .raw_value = (int32_t)(926800) },
+                   GTransformNumberFromNumber(10),
                    GTransformNumberFromNumber(10));
 
   gtransform_rotate(&t_new, &t1, DEG_TO_TRIGANGLE(45));

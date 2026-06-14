@@ -166,7 +166,7 @@ static bool prv_is_upscaled_app(void) {
   if (app_framebuffer_size.h == DISP_ROWS) {
     return false;  // Native app, not upscaled
   }
-#if defined(CONFIG_APP_SCALING) && !defined(RECOVERY_FW)
+#if defined(CONFIG_APP_SCALING) && !defined(CONFIG_RECOVERY_FW)
   // On platforms that support scaling mode, check the preference
   return shell_prefs_get_legacy_app_render_mode() >= LegacyAppRenderMode_ScalingNearest;
 #else
@@ -413,7 +413,7 @@ static void prv_push_timeline_peek(void *unused) {
 void timeline_peek_init(void) {
   TimelinePeek *peek = &s_peek;
   *peek = (TimelinePeek) {
-#if !SHELL_SDK
+#ifndef CONFIG_SHELL_SDK
     .enabled = timeline_peek_prefs_get_enabled(),
 #endif
   };
@@ -446,7 +446,7 @@ static bool prv_can_animate(void) {
 
 void timeline_peek_set_visible(bool visible, bool animated) {
   TimelinePeek *peek = &s_peek;
-#if !SHELL_SDK
+#ifndef CONFIG_SHELL_SDK
   if (!peek->exists) {
     visible = false;
   }

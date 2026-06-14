@@ -23,13 +23,12 @@
 
 #include "nimble_store.h"
 
+PBL_LOG_MODULE_DEFINE(bt, CONFIG_BT_LOG_LEVEL);
+
 static const uint32_t s_bt_stack_start_stop_timeout_ms = 10000;
 
 extern void pebble_pairing_service_init(void);
 extern void nimble_discover_init(void);
-#ifdef CONFIG_SOC_SF32LB52
-extern void ble_transport_ll_wake_lcpu(void);
-#endif
 
 #if NIMBLE_CFG_CONTROLLER
 static TaskHandle_t s_ll_task_handle;
@@ -52,23 +51,22 @@ typedef enum {
 static DriverState s_driver_state = DriverStateStopped;
 
 static void prv_sync_cb(void) {
-  PBL_LOG_D_DBG(LOG_DOMAIN_BT, "NimBLE host synchronized");
+  PBL_LOG_DBG("NimBLE host synchronized");
   xSemaphoreGive(s_host_started);
   bt_driver_handle_host_resynced();
 }
 
 static void prv_reset_cb(int reason) {
-  PBL_LOG_D_WRN(LOG_DOMAIN_BT, "NimBLE host reset (reason: 0x%04x)", (uint16_t)reason);
+  PBL_LOG_WRN("NimBLE host reset (reason: 0x%04x)", (uint16_t)reason);
 #ifdef CONFIG_SOC_SF32LB52
-  // Controller stopped answering HCI. Keep the LCPU reachable and crash so the
-  // coredump captures LCPU RAM; the reboot cold-recovers the controller.
-  ble_transport_ll_wake_lcpu();
+  // Controller stopped answering HCI. Crash so the coredump captures LCPU RAM
+  // (core_dump wakes the LCPU itself); the reboot cold-recovers the controller.
   PBL_CROAK("NimBLE host reset 0x%04x; captured LCPU RAM", (uint16_t)reason);
 #endif
 }
 
 static void prv_host_task_main(void *unused) {
-  PBL_LOG_D_DBG(LOG_DOMAIN_BT, "NimBLE host task started");
+  PBL_LOG_DBG("NimBLE host task started");
 
   ble_hs_cfg.sync_cb = prv_sync_cb;
   ble_hs_cfg.reset_cb = prv_reset_cb;
@@ -120,12 +118,12 @@ bool bt_driver_start(BTDriverConfig *config) {
   BaseType_t f_rc;
 
   if (s_driver_state == DriverStateStarted) {
-    PBL_LOG_D_WRN(LOG_DOMAIN_BT, "Driver already started; skipping start");
+    PBL_LOG_WRN("Driver already started; skipping start");
     return true;
   }
 
   if (s_driver_state != DriverStateStopped) {
-    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "Unexpected driver state %u; refusing to start",
+    PBL_LOG_ERR("Unexpected driver state %u; refusing to start",
                   (unsigned)s_driver_state);
     return false;
   }
@@ -155,16 +153,13 @@ bool bt_driver_start(BTDriverConfig *config) {
   ble_hs_sched_start();
   f_rc = xSemaphoreTake(s_host_started, milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms));
   if (f_rc != pdTRUE) {
-#ifdef CONFIG_SOC_SF32LB52
-    // Keep the LCPU reachable so the coredump captures its RAM.
-    ble_transport_ll_wake_lcpu();
-#endif
+    // core_dump wakes the LCPU itself, so its RAM is captured here too.
     PBL_CROAK("NimBLE host start timed out");
   }
 
   rc = ble_hs_util_ensure_addr(0);
   if (rc != 0) {
-    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "Failed to ensure address: 0x%04x", (uint16_t)rc);
+    PBL_LOG_ERR("Failed to ensure address: 0x%04x", (uint16_t)rc);
     goto err;
   }
 
@@ -179,7 +174,7 @@ err:
     s_driver_state = DriverStateStopped;
     return false;
   } else if (rc != 0) {
-    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "Failed to stop NimBLE host after start failure: 0x%04x", (uint16_t)rc);
+    PBL_LOG_ERR("Failed to stop NimBLE host after start failure: 0x%04x", (uint16_t)rc);
     return false;
   }
 
