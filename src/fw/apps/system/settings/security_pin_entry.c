@@ -45,7 +45,28 @@ typedef struct {
   Phase phase;
   uint8_t chosen_len;                     // selected during Phase_Length (Set-mode)
   uint8_t first_digits[PIN_LOCK_MAX_LEN]; // saved first-pass digits for Set-mode
+  // Fields for deferred completion via padlock open animation.
+  SecurityPinEntryConfig done_cfg;
+  uint8_t done_digits[PIN_LOCK_MAX_LEN];
+  uint8_t done_len;
 } PinEntryWindowData;
+
+static void prv_pop(PinEntryWindowData *d);
+
+static void prv_on_open_done(void *ctx) {
+  PinEntryWindowData *d = (PinEntryWindowData *)ctx;
+  // Capture deferred completion data before prv_pop frees d.
+  SecurityPinEntryConfig cfg = d->done_cfg;
+  uint8_t digits[PIN_LOCK_MAX_LEN];
+  for (uint8_t i = 0; i < d->done_len; i++) {
+    digits[i] = d->done_digits[i];
+  }
+  uint8_t len = d->done_len;
+  prv_pop(d);
+  if (cfg.on_complete) {
+    cfg.on_complete(true, digits, len, cfg.ctx);
+  }
+}
 
 static void prv_redraw(PinEntryWindowData *d) {
   layer_mark_dirty(window_get_root_layer(&d->window));
@@ -151,22 +172,28 @@ static void prv_select_handler(ClickRecognizerRef recognizer, void *context) {
   // Last digit confirmed.
   if (d->cfg.mode == SecurityPinEntryMode_Verify) {
     if (pin_lock_storage_verify_pin(d->entry.digits, d->entry.len)) {
-      // Capture everything before prv_pop: removal may unload+free `d`.
-      const SecurityPinEntryConfig cfg = d->cfg;
-      const uint8_t len = d->entry.len;
-      uint8_t digits[PIN_LOCK_MAX_LEN];
-      for (uint8_t i = 0; i < len; i++) {
-        digits[i] = d->entry.digits[i];
+      // Store completion data in d; prv_on_open_done will pop + call on_complete.
+      d->done_cfg = d->cfg;
+      d->done_len = d->entry.len;
+      for (uint8_t i = 0; i < d->entry.len; i++) {
+        d->done_digits[i] = d->entry.digits[i];
       }
-      prv_pop(d);
-      if (cfg.on_complete) {
-        cfg.on_complete(true, digits, len, cfg.ctx);
-      }
+      pin_flap_padlock_open(&d->flap, window_get_root_layer(&d->window),
+                            prv_on_open_done, d);
+      return;
     } else {
       PBL_LOG_DBG("Security PIN entry: wrong PIN, resetting");
       vibes_double_pulse();
       pin_entry_init(&d->entry, d->entry.len);
-      pin_flap_reset(&d->flap);
+      // Reset roll animation only; padlock_shake manages lock_anim itself.
+      if (d->flap.anim) {
+        animation_unschedule(d->flap.anim);
+        animation_destroy(d->flap.anim);
+        d->flap.anim = NULL;
+      }
+      d->flap.animating = false;
+      d->flap.progress = 0;
+      pin_flap_padlock_shake(&d->flap, window_get_root_layer(&d->window));
       prv_redraw(d);
     }
     return;
@@ -192,23 +219,29 @@ static void prv_select_handler(ClickRecognizerRef recognizer, void *context) {
       }
     }
     if (match) {
-      // Capture everything before prv_pop: removal may unload+free `d`.
-      const SecurityPinEntryConfig cfg = d->cfg;
-      const uint8_t len = d->entry.len;
-      uint8_t digits[PIN_LOCK_MAX_LEN];
-      for (uint8_t i = 0; i < len; i++) {
-        digits[i] = d->entry.digits[i];
+      // Store completion data in d; prv_on_open_done will pop + call on_complete.
+      d->done_cfg = d->cfg;
+      d->done_len = d->entry.len;
+      for (uint8_t i = 0; i < d->entry.len; i++) {
+        d->done_digits[i] = d->entry.digits[i];
       }
-      prv_pop(d);
-      if (cfg.on_complete) {
-        cfg.on_complete(true, digits, len, cfg.ctx);
-      }
+      pin_flap_padlock_open(&d->flap, window_get_root_layer(&d->window),
+                            prv_on_open_done, d);
+      return;
     } else {
       PBL_LOG_DBG("Security PIN entry: confirmation mismatch, restarting");
       vibes_double_pulse();
       d->phase = Phase_Enter;
       pin_entry_init(&d->entry, d->entry.len);
-      pin_flap_reset(&d->flap);
+      // Reset roll animation only; padlock_shake manages lock_anim itself.
+      if (d->flap.anim) {
+        animation_unschedule(d->flap.anim);
+        animation_destroy(d->flap.anim);
+        d->flap.anim = NULL;
+      }
+      d->flap.animating = false;
+      d->flap.progress = 0;
+      pin_flap_padlock_shake(&d->flap, window_get_root_layer(&d->window));
       prv_redraw(d);
     }
   }

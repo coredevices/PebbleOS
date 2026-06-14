@@ -18,15 +18,26 @@ typedef struct {
   bool haptic;             // light vibe when a flap finishes rolling
 } PinFlapConfig;
 
+// Padlock visual states.
+#define PIN_FLAP_LOCK_CLOSED  0
+#define PIN_FLAP_LOCK_SHAKING 1
+#define PIN_FLAP_LOCK_OPENING 2
+
 typedef struct PinFlap {
   PinFlapConfig config;
-  // Animation state — valid only while animating is true.
+  // Roll animation state — valid only while animating is true.
   Animation *anim;
   Layer *layer;          // marked dirty each frame
   AnimationProgress progress;  // 0..ANIMATION_NORMALIZED_MAX, current roll
   bool animating;
   uint8_t from_digit;    // digit rolling out
   int8_t direction;      // +1 up (next), -1 down (prev)
+  // Padlock animation state.
+  Animation *lock_anim;
+  int32_t lock_progress;   // 0..ANIMATION_NORMALIZED_MAX
+  uint8_t lock_state;      // PIN_FLAP_LOCK_* values above
+  void (*lock_on_open_done)(void *ctx);
+  void *lock_on_open_ctx;
 } PinFlap;
 
 void pin_flap_init(PinFlap *flap, const PinFlapConfig *config);
@@ -47,3 +58,10 @@ void pin_flap_animate_step(PinFlap *flap, Layer *layer,
 
 //! Unschedule any running animation and reset animation state.
 void pin_flap_reset(PinFlap *flap);
+
+//! Shake the padlock (wrong PIN). Non-blocking; settles back to closed.
+void pin_flap_padlock_shake(PinFlap *flap, Layer *layer);
+
+//! Play the open animation (correct PIN); calls on_done(ctx) when finished.
+void pin_flap_padlock_open(PinFlap *flap, Layer *layer,
+                           void (*on_done)(void *ctx), void *ctx);

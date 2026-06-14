@@ -72,6 +72,11 @@ static void prv_pop(void) {
   window_stack_remove(&s_window, true /* animated */);
 }
 
+static void prv_on_unlocked(void *ctx) {
+  pin_lock_mark_unlocked();
+  prv_pop();
+}
+
 static void prv_up_handler(ClickRecognizerRef recognizer, void *context) {
   const uint8_t old = s_entry.digits[s_entry.pos];
   pin_entry_up(&s_entry);
@@ -91,13 +96,21 @@ static void prv_select_handler(ClickRecognizerRef recognizer, void *context) {
   }
   // All digits confirmed — verify the PIN.
   if (pin_lock_storage_verify_pin(s_entry.digits, s_entry.len)) {
-    pin_lock_mark_unlocked();
-    prv_pop();
+    pin_flap_padlock_open(&s_flap, window_get_root_layer(&s_window),
+                          prv_on_unlocked, NULL);
   } else {
     PBL_LOG_DBG("PIN unlock: incorrect PIN, resetting entry");
     vibes_double_pulse();
     pin_entry_init(&s_entry, s_entry.len);
-    pin_flap_reset(&s_flap);
+    // Reset roll state only; padlock_shake manages the lock animation itself.
+    if (s_flap.anim) {
+      animation_unschedule(s_flap.anim);
+      animation_destroy(s_flap.anim);
+      s_flap.anim = NULL;
+    }
+    s_flap.animating = false;
+    s_flap.progress = 0;
+    pin_flap_padlock_shake(&s_flap, window_get_root_layer(&s_window));
     layer_mark_dirty(window_get_root_layer(&s_window));
   }
 }
