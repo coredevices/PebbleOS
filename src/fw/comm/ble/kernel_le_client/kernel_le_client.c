@@ -47,8 +47,26 @@ static PhoneSlotInfo s_phone_slots[MAX_PHONE_CONNECTIONS];
 static PhoneSlot s_discovery_slot = PHONE_SLOT_INVALID;
 static PhoneSlot s_gateway_slot = PHONE_SLOT_INVALID;
 
+// Bonding IDs that are gateway-capable (ANCS), cached at init to avoid
+// calling bt_persistent_storage from within the BLE connection event handler
+// (where bt_lock is held and storage calls can deadlock).
+static BTBondingID s_gateway_bonding_ids[MAX_PHONE_CONNECTIONS];
+static uint8_t s_gateway_bonding_count = 0;
+
 bool kernel_le_client_is_gateway_slot(PhoneSlot slot) {
   return s_gateway_slot == slot;
+}
+
+static bool prv_is_gateway_bonding(BTBondingID bonding_id) {
+  if (bonding_id == BT_BONDING_ID_INVALID) {
+    return false;
+  }
+  for (uint8_t i = 0; i < s_gateway_bonding_count; i++) {
+    if (s_gateway_bonding_ids[i] == bonding_id) {
+      return true;
+    }
+  }
+  return false;
 }
 
 static void prv_ancs_handle_service_discovered_cb(BLECharacteristic *characteristics) {
@@ -515,9 +533,9 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
 
     // Track which slot is the gateway. Only the first gateway-capable phone to
     // connect wins; the slot is cleared when it disconnects.
-    if (s_gateway_slot == PHONE_SLOT_INVALID &&
-        event->bonding_id != BT_BONDING_ID_INVALID &&
-        bt_persistent_storage_is_ble_ancs_bonding(event->bonding_id)) {
+    // Use the cached bonding list -- do NOT call bt_persistent_storage here
+    // because bt_lock is held and storage calls can deadlock.
+    if (s_gateway_slot == PHONE_SLOT_INVALID && prv_is_gateway_bonding(event->bonding_id)) {
       s_gateway_slot = slot;
       PBL_LOG_DBG("Gateway slot: %u", slot);
     }
@@ -608,8 +626,19 @@ static void prv_cleanup_clients_kernel_main_cb(void *unused) {
 void kernel_le_client_handle_bonding_change(BTBondingID bonding, BtPersistBondingOp op) {
   if (bt_persistent_storage_is_ble_ancs_bonding(bonding)) {
     if (op == BtPersistBondingOpWillDelete) {
+      // Remove from gateway bonding cache.
+      for (uint8_t i = 0; i < s_gateway_bonding_count; i++) {
+        if (s_gateway_bonding_ids[i] == bonding) {
+          s_gateway_bonding_ids[i] = s_gateway_bonding_ids[--s_gateway_bonding_count];
+          break;
+        }
+      }
       prv_cancel_connect_gateway_bonding(bonding);
     } else if (op == BtPersistBondingOpDidAdd) {
+      // Add to gateway bonding cache.
+      if (s_gateway_bonding_count < MAX_PHONE_CONNECTIONS) {
+        s_gateway_bonding_ids[s_gateway_bonding_count++] = bonding;
+      }
       prv_connect_gateway_bonding(bonding);
     }
   }
@@ -620,10 +649,14 @@ void kernel_le_client_init(void) {
   // Reset analytics
   ppogatt_reset_disconnect_counter();
 
-  BTBondingID bondings[MAX_PHONE_CONNECTIONS];
-  int count = bt_persistent_storage_get_all_ble_ancs_bondings(bondings, MAX_PHONE_CONNECTIONS);
-  for (int i = 0; i < count; i++) {
-    prv_connect_gateway_bonding(bondings[i]);
+  // Cache gateway bonding IDs here (safe to call storage at init time) so the
+  // BLE connection event handler can identify gateway phones without touching
+  // storage while bt_lock is held.
+  s_gateway_bonding_count = bt_persistent_storage_get_all_ble_ancs_bondings(
+      s_gateway_bonding_ids, MAX_PHONE_CONNECTIONS);
+
+  for (uint8_t i = 0; i < s_gateway_bonding_count; i++) {
+    prv_connect_gateway_bonding(s_gateway_bonding_ids[i]);
   }
 }
 
