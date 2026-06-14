@@ -11,7 +11,7 @@
 #include "applib/graphics/gcolor_definitions.h"
 #include "applib/graphics/gcontext.h"
 #include "applib/graphics/graphics.h"
-#include "applib/graphics/graphics_line.h"
+#include "applib/graphics/graphics_circle.h"
 #include "applib/graphics/text.h"
 #include "applib/ui/animation.h"
 #include "applib/ui/vibes.h"
@@ -29,11 +29,11 @@
 #define PANEL_RADIUS         4
 #define PANELS_TOP_OFFSET   62
 
-// Pick a LECO bold numeric font sized to fill the panel. Only the *bold*
-// LECO faces (<= 36) are registered as system fonts; 38/42/60 fall back.
+// Pick a numeric font sized to fill the panel. BITHAM is the tall, blocky
+// clock face; fall back to LECO for the narrow 8-digit panels.
 static GFont prv_digit_font(int16_t panel_w) {
-  if (panel_w >= 30) return fonts_get_system_font(FONT_KEY_LECO_36_BOLD_NUMBERS);
-  if (panel_w >= 24) return fonts_get_system_font(FONT_KEY_LECO_32_BOLD_NUMBERS);
+  if (panel_w >= 30) return fonts_get_system_font(FONT_KEY_BITHAM_42_MEDIUM_NUMBERS);
+  if (panel_w >= 24) return fonts_get_system_font(FONT_KEY_BITHAM_34_MEDIUM_NUMBERS);
   return fonts_get_system_font(FONT_KEY_LECO_20_BOLD_NUMBERS);
 }
 
@@ -61,9 +61,7 @@ static void prv_draw_glyph(GContext *ctx, const GRect *panel, GFont font,
                            char ch, int16_t dy) {
   char buf[2] = { ch, '\0' };
   const int16_t fh = (int16_t)fonts_get_font_height(font);
-  // Number glyphs sit in the upper part of the line box (empty descender space
-  // below), so nudge down ~1/8 of the line height to optically centre them.
-  const int16_t y = panel->origin.y + (panel->size.h - fh) / 2 + (fh / 8) + dy;
+  const int16_t y = panel->origin.y + (panel->size.h - fh) / 2 + dy;
   GRect box = GRect(panel->origin.x, y, panel->size.w, fh + 4);
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, buf, font, box,
@@ -215,11 +213,18 @@ void pin_flap_draw(PinFlap *flap, GContext *ctx, GRect bounds) {
         prv_draw_glyph(ctx, &panel, digit_font, (char)('0' + e->digits[i]), 0);
       }
     } else if (i < e->pos) {
-      // Confirmed panel: light grey fill; masked '*' or the real digit.
+      // Confirmed panel: light grey fill.
       graphics_context_set_fill_color(ctx, GColorLightGray);
       prv_draw_panel_shell(ctx, &panel);
-      const char ch = flap->config.mask_confirmed ? '*' : (char)('0' + e->digits[i]);
-      prv_draw_glyph(ctx, &panel, digit_font, ch, 0);
+      if (flap->config.mask_confirmed) {
+        // Masked: a filled dot (the numeric drum font has no '*' glyph).
+        const GPoint c = GPoint(panel.origin.x + panel.size.w / 2,
+                                panel.origin.y + panel.size.h / 2);
+        graphics_context_set_fill_color(ctx, GColorBlack);
+        graphics_fill_circle(ctx, c, panel.size.w / 5);
+      } else {
+        prv_draw_glyph(ctx, &panel, digit_font, (char)('0' + e->digits[i]), 0);
+      }
     } else {
       // Future panel: white fill, no content.
       graphics_context_set_fill_color(ctx, GColorWhite);
