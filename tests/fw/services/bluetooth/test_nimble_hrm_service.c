@@ -24,6 +24,15 @@
 #include "stubs_logging.h"
 #include "stubs_passert.h"
 
+// NimBLE's transport layer is unused in this host-only service test, but the
+// host headers reference these impls. Stub them out.
+int ble_transport_to_ll_cmd_impl(void *buf) { return 0; }
+int ble_transport_to_ll_acl_impl(struct os_mbuf *om) { return 0; }
+int ble_transport_to_ll_iso_impl(struct os_mbuf *om) { return 0; }
+int ble_transport_to_hs_evt_impl(void *buf) { return 0; }
+int ble_transport_to_hs_acl_impl(struct os_mbuf *om) { return 0; }
+int ble_transport_to_hs_iso_impl(struct os_mbuf *om) { return 0; }
+
 #define HRM_SERVICE_UUID (0x180D)
 #define HRM_MEASUREMENT_UUID (0x2A37)
 #define HRM_BODY_SENSOR_LOCATION_UUID (0x2A38)

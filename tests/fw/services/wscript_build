@@ -461,15 +461,17 @@ clar(ctx,
 
 clar(ctx,
      sources_ant_glob=(
-         "src/bluetooth-fw/nimble/hrm_service.c"
+         "src/bluetooth-fw/nimble/hrm_service.c "
+         "third_party/nimble/mynewt-nimble/porting/npl/dummy/src/npl_os_dummy.c"
      ),
      test_sources_ant_glob="bluetooth/test_nimble_hrm_service.c",
      add_includes=[
          "third_party/nimble/port/include/sf32lb52",
          "third_party/nimble/mynewt-nimble/nimble/include",
          "third_party/nimble/mynewt-nimble/nimble/host/include",
+         "third_party/nimble/mynewt-nimble/nimble/transport/include",
          "third_party/nimble/mynewt-nimble/porting/nimble/include",
-         "third_party/nimble/mynewt-nimble/porting/npl/freertos/include",
+         "third_party/nimble/mynewt-nimble/porting/npl/dummy/include",
          "src/bluetooth-fw/nimble",
      ],
      defines=[
