@@ -61,7 +61,7 @@ static void prv_draw_glyph(GContext *ctx, const GRect *panel, GFont font,
   char buf[2] = { ch, '\0' };
   const int16_t fh = (int16_t)fonts_get_font_height(font);
   // Pebble text renders lower than the rect top, so nudge up to optically centre.
-  const int16_t y = panel->origin.y + (panel->size.h - fh) / 2 - (fh / 5) + dy;
+  const int16_t y = panel->origin.y + (panel->size.h - fh) / 2 - (fh / 12) + dy;
   GRect box = GRect(panel->origin.x, y, panel->size.w, fh + 4);
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, buf, font, box,
