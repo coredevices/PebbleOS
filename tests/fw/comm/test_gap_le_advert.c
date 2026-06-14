@@ -80,17 +80,11 @@ void test_gap_le_advert__initialize(void) {
 
   regular_timer_init();
   gap_le_advert_init();
-
-  // gap_le_advert keeps its slave-connection state in a static that init() does
-  // not clear, so a prior test that connected as slave would leave advertising
-  // paused. Reset it through the public API for a clean slate each test.
-  for (PhoneSlot slot = 0; slot < MAX_PHONE_CONNECTIONS; slot++) {
-    gap_le_advert_handle_disconnect_as_slave();
-  }
 }
 
 void test_gap_le_advert__cleanup(void) {
   gap_le_advert_deinit();
+  fake_system_task_callbacks_cleanup();
 
   // Make sure deinit did disable advertising and clean up timer:
   cl_assert(!gap_le_is_advertising_enabled());
@@ -627,6 +621,8 @@ void test_gap_le_advert__continue_after_slave_connection(void) {
 
   // Call the connection handler:
   gap_le_advert_handle_connect_as_slave();
+  // Advertising restart is deferred to KernelBG; flush callbacks before asserting.
+  fake_system_task_callbacks_invoke_pending();
   // One phone slot is still free, so advertising resumes for a second phone.
   cl_assert_equal_b(gap_le_is_advertising_enabled(), true);
 
@@ -652,10 +648,12 @@ void test_gap_le_advert__suppress_advertising_when_both_slots_full(void) {
 
   gap_le_set_advertising_disabled();
   gap_le_advert_handle_connect_as_slave();
+  fake_system_task_callbacks_invoke_pending();
   cl_assert_equal_b(gap_le_is_advertising_enabled(), true);
 
   gap_le_set_advertising_disabled();
   gap_le_advert_handle_connect_as_slave();
+  fake_system_task_callbacks_invoke_pending();
   cl_assert_equal_b(gap_le_is_advertising_enabled(), false);
 
   regular_timer_fire_seconds(1);
