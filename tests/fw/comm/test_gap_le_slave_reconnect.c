@@ -16,6 +16,7 @@
 ///////////////////////////////////////////////////////////
 
 #include "fake_bt_driver_advert.h"
+#include "fake_new_timer.h"
 #include "fake_pbl_malloc.h"
 #include "fake_rtc.h"
 
@@ -23,12 +24,16 @@
 ///////////////////////////////////////////////////////////
 
 #include "stubs_analytics.h"
+#include "stubs_ble_syscalls.h"
 #include "stubs_bluetopia_interface.h"
 #include "stubs_bt_lock.h"
 #include "stubs_logging.h"
 #include "stubs_mutex.h"
 #include "stubs_passert.h"
+#include "stubs_pebble_tasks.h"
 #include "stubs_prompt.h"
+#include "stubs_rand_ptr.h"
+#include "stubs_serial.h"
 
 bool gap_le_connect_is_connected_as_slave(void) {
   return false;
@@ -113,7 +118,11 @@ void test_gap_le_slave_reconnect__hrm_advertises_heart_rate_service(void) {
   Scan_Response_Data_t scan_resp_data_out;
   cl_assert_equal_i(0, gap_le_get_scan_response_data(&scan_resp_data_out));
 
-  regular_timer_fire_seconds(30);
+  // The first advertising term lasts 30s; advance the 1-second cycle timer
+  // 30 times so the job moves on to its second (Long-interval) term.
+  for (int i = 0; i < 30; ++i) {
+    regular_timer_fire_seconds(1);
+  }
   gap_le_assert_advertising_interval(GAPLEAdvertisingInterval_Long);
 
   gap_le_slave_reconnect_hrm_stop();

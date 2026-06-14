@@ -663,7 +663,11 @@ void test_gap_le_advert__hrm_reconnection_continues_after_slave_connection(void)
   assert_ad_data("hrm");
   gap_le_assert_advertising_interval(GAPLEAdvertisingInterval_Short);
 
-  regular_timer_fire_seconds(2);
+  // The first term lasts 2s; advance the 1-second cycle timer twice so the job
+  // moves on to its second (Long-interval) term while the connection is up.
+  for (int i = 0; i < 2; ++i) {
+    regular_timer_fire_seconds(1);
+  }
   cl_assert_equal_b(gap_le_is_advertising_enabled(), true);
   assert_ad_data("hrm");
   gap_le_assert_advertising_interval(GAPLEAdvertisingInterval_Long);
