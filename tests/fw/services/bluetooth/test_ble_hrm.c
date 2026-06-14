@@ -26,6 +26,16 @@
 #include "stubs_logging.h"
 #include "stubs_passert.h"
 
+static int s_gap_le_slave_reconnect_hrm_start_call_count;
+void gap_le_slave_reconnect_hrm_start(void) {
+  ++s_gap_le_slave_reconnect_hrm_start_call_count;
+}
+
+static int s_gap_le_slave_reconnect_hrm_stop_call_count;
+void gap_le_slave_reconnect_hrm_stop(void) {
+  ++s_gap_le_slave_reconnect_hrm_stop_call_count;
+}
+
 static bool s_activity_prefs_heart_rate_is_enabled;
 bool activity_prefs_heart_rate_is_enabled(void) {
   return s_activity_prefs_heart_rate_is_enabled;
@@ -38,19 +48,32 @@ void bt_driver_hrm_service_enable(bool enable) {
   s_bt_driver_hrm_service_is_enabled = enable;
 }
 
+static BleHrmServiceMeasurement s_last_ble_hrm_measurement;
 static int s_bt_driver_hrm_service_handle_measurement_call_count;
+static BTDeviceInternal s_last_permitted_devices[10];
+static size_t s_last_num_permitted_devices;
 void bt_driver_hrm_service_handle_measurement(const BleHrmServiceMeasurement *measurement,
                                               const BTDeviceInternal *permitted_devices,
                                               size_t num_permitted_devices) {
   ++s_bt_driver_hrm_service_handle_measurement_call_count;
+  s_last_ble_hrm_measurement = *measurement;
+  s_last_num_permitted_devices = num_permitted_devices;
+  memcpy(s_last_permitted_devices, permitted_devices,
+         sizeof(*permitted_devices) * num_permitted_devices);
 }
 
 bool bt_driver_is_hrm_service_supported(void) {
   return true;
 }
 
+static BTDeviceInternal s_last_disconnected;
 int bt_driver_gap_le_disconnect(const BTDeviceInternal *peer_address) {
+  s_last_disconnected = *peer_address;
   return 0;
+}
+
+static void prv_assert_last_disconnected(const BTDeviceInternal *peer_address) {
+  cl_assert_equal_b(bt_device_internal_equal(peer_address, &s_last_disconnected), true);
 }
 
 static int s_hrm_manager_subscribe_with_callback_call_count;
@@ -126,6 +149,8 @@ void test_ble_hrm__cleanup(void) {
   ble_hrm_deinit();
 
   prv_assert_event_service_subscribed(false);
+  // hrm manager sub vs unsub calls should be the same, there should be no subscription any more
+  // after de-initing:
   cl_assert_equal_i(s_sys_hrm_manager_unsubscribe_call_count,
                     s_hrm_manager_subscribe_with_callback_call_count);
 
@@ -139,7 +164,9 @@ void test_ble_hrm__cleanup(void) {
 #define TEST_DEVICE_NAME "iPhone Martijn"
 
 static GAPLEConnection s_conn_a;
+static GAPLEConnection s_conn_b;
 static const BTDeviceInternal *s_device_a;
+static const BTDeviceInternal *s_device_b;
 
 void test_ble_hrm__initialize(void) {
   fake_pbl_malloc_clear_tracking();
@@ -148,14 +175,21 @@ void test_ble_hrm__initialize(void) {
   }
   s_activity_prefs_heart_rate_is_enabled = true;
   s_bt_driver_hrm_service_is_enabled = true;
+  s_last_num_permitted_devices = 0;
+  memset(s_last_permitted_devices, 0, sizeof(s_last_permitted_devices));
   s_bt_driver_hrm_service_enable_call_count = 0;
   s_hrm_manager_subscribe_with_callback_call_count = 0;
   s_sys_hrm_manager_unsubscribe_call_count = 0;
   s_bt_driver_hrm_service_handle_measurement_call_count = 0;
+  s_gap_le_slave_reconnect_hrm_start_call_count = 0;
+  s_gap_le_slave_reconnect_hrm_stop_call_count = 0;
   s_last_session_ref = ~0;
   s_next_session_ref = 1234;
+  s_last_disconnected = (BTDeviceInternal) {};
+  s_last_ble_hrm_measurement = (BleHrmServiceMeasurement) {};
   fake_event_service_init();
 
+  // Set up fake devices/connections:
   s_conn_a = (GAPLEConnection) {
     .device_name = TEST_DEVICE_NAME,
     .device = {
@@ -164,8 +198,18 @@ void test_ble_hrm__initialize(void) {
       },
     },
   };
+  s_conn_b = (GAPLEConnection) {
+    .device_name = TEST_DEVICE_NAME,
+    .device = {
+      .address = {
+        .octets = {6, 5, 4, 3, 2, 1},
+      },
+    },
+  };
   s_connections[0] = &s_conn_a;
+  s_connections[1] = &s_conn_b;
   s_device_a = device_from_le_connection(&s_conn_a);
+  s_device_b = device_from_le_connection(&s_conn_b);
 
   ble_hrm_init();
 }
@@ -174,15 +218,15 @@ void test_ble_hrm__init_deinit_no_subscriptions(void) {
   // let cleanup & initialize do the work :)
 }
 
-// The HRM GATT service is exposed, but the watch does not share heart rate yet
-// (that arrives, gated to workouts, in a later change). A subscriber receives
-// nothing and is never prompted.
-void test_ble_hrm__no_sharing_or_prompt(void) {
+// HRM sharing happens only during an active workout; subscribing outside workout mode does not
+// start sharing and never prompts.
+void test_ble_hrm__no_sharing_or_prompt_outside_workout(void) {
   cl_assert_equal_i(s_hrm_manager_subscribe_with_callback_call_count, 0);
   prv_assert_event_service_subscribed(false);
 
   bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
 
+  // No prompt, no sharing, no HRM manager subscription:
   cl_assert_equal_b(false, ble_hrm_is_sharing_to_connection(&s_conn_a));
   cl_assert_equal_b(false, ble_hrm_is_sharing());
   cl_assert_equal_i(s_hrm_manager_subscribe_with_callback_call_count, 0);
@@ -191,7 +235,7 @@ void test_ble_hrm__no_sharing_or_prompt(void) {
   bt_driver_cb_hrm_service_update_subscription(s_device_a, false);
 }
 
-// Handle a subscription/disconnection callback that arrives after deinit:
+// Test that we handle races where a subscription/disconnection callback happens after deiniting:
 void test_ble_hrm__sub_after_deinit(void) {
   ble_hrm_deinit();
 
@@ -201,8 +245,58 @@ void test_ble_hrm__sub_after_deinit(void) {
 
   ble_hrm_handle_disconnection(&s_conn_a);
   prv_assert_event_service_subscribed(false);
+  cl_assert_equal_i(s_hrm_manager_subscribe_with_callback_call_count, 0);
 
   ble_hrm_init(); // reinit, __cleanup() will deinit again
+}
+
+static void prv_put_and_assert_hrm_event(HRMEventType subtype, uint8_t bpm, HRMQuality quality,
+                                         bool expect_bt_driver_cb, bool expected_is_on_wrist) {
+  int call_count_before = s_bt_driver_hrm_service_handle_measurement_call_count;
+
+  PebbleEvent hrm_event = {
+    .type = PEBBLE_HRM_EVENT,
+    .hrm = {
+      .event_type = subtype,
+      .bpm = {
+        .bpm = bpm,
+        .quality = quality,
+      },
+    },
+  };
+  event_put(&hrm_event);
+  fake_event_service_handle_last();
+
+  if (expect_bt_driver_cb) {
+    cl_assert_equal_i(call_count_before + 1, s_bt_driver_hrm_service_handle_measurement_call_count);
+    cl_assert_equal_i(bpm, s_last_ble_hrm_measurement.bpm);
+    cl_assert_equal_b(expected_is_on_wrist, s_last_ble_hrm_measurement.is_on_wrist);
+  } else {
+    cl_assert_equal_i(call_count_before, s_bt_driver_hrm_service_handle_measurement_call_count);
+  }
+}
+
+void test_ble_hrm__handle_hrm_event(void) {
+  ble_hrm_set_workout_mode(true);
+
+  bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
+  cl_assert_equal_b(true, ble_hrm_is_sharing_to_connection(&s_conn_a));
+
+  prv_put_and_assert_hrm_event(HRMEvent_BPM, 80, HRMQuality_Excellent,
+                               true /* expect bt driver cb */, true /* expected_is_on_wrist */);
+
+  // Only subscribed device A receives HR:
+  cl_assert_equal_i(1, s_last_num_permitted_devices);
+  cl_assert_equal_m(&s_last_permitted_devices[0], s_device_a, sizeof(*s_device_a));
+
+  prv_put_and_assert_hrm_event(HRMEvent_BPM, 80, HRMQuality_OffWrist,
+                               true /* expect bt driver cb */, false /* expected_is_on_wrist */);
+
+  // Ignore non-BPM event:
+  prv_put_and_assert_hrm_event(HRMEvent_HRV, 80, HRMQuality_OffWrist,
+                               false /* expect bt driver cb */, false /* expected_is_on_wrist */);
+
+  ble_hrm_set_workout_mode(false);
 }
 
 void test_ble_hrm__handle_activity_pref_hrm_changes(void) {
@@ -213,11 +307,125 @@ void test_ble_hrm__handle_activity_pref_hrm_changes(void) {
   cl_assert_equal_i(1, s_bt_driver_hrm_service_enable_call_count);
   cl_assert_equal_b(false, s_bt_driver_hrm_service_is_enabled);
 
+  // Disabled, again -- would lead to another call to bt_driver_hrm_service_enable(),
+  // the BT driver lib keeps track of whether it's enabled and is expected to ignore the call.
   ble_hrm_handle_activity_prefs_heart_rate_is_enabled(false);
   cl_assert_equal_i(2, s_bt_driver_hrm_service_enable_call_count);
   cl_assert_equal_b(false, s_bt_driver_hrm_service_is_enabled);
 
+  // Enable
   ble_hrm_handle_activity_prefs_heart_rate_is_enabled(true);
   cl_assert_equal_i(3, s_bt_driver_hrm_service_enable_call_count);
   cl_assert_equal_b(true, s_bt_driver_hrm_service_is_enabled);
+}
+
+void test_ble_hrm__unsub_upon_deinit(void) {
+  ble_hrm_set_workout_mode(true);
+  bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
+  cl_assert_equal_b(true, ble_hrm_is_sharing());
+
+  // __cleanup() does the deinit and asserts the HRM mgr subscribe/unsubscribe calls balance, and
+  // ble_hrm_deinit() also clears workout mode.
+}
+
+void test_ble_hrm__workout_mode_shares_without_permission_prompt(void) {
+  s_activity_prefs_heart_rate_is_enabled = false;
+  s_bt_driver_hrm_service_is_enabled = false;
+
+  ble_hrm_set_workout_mode(true);
+  cl_assert_equal_i(1, s_gap_le_slave_reconnect_hrm_start_call_count);
+  cl_assert_equal_i(1, s_bt_driver_hrm_service_enable_call_count);
+  cl_assert_equal_b(true, s_bt_driver_hrm_service_is_enabled);
+  cl_assert_equal_b(false, ble_hrm_is_supported_and_enabled());
+
+  bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
+  cl_assert_equal_b(true, ble_hrm_is_sharing_to_connection(&s_conn_a));
+  cl_assert_equal_b(true, ble_hrm_is_sharing());
+  prv_assert_event_service_subscribed(true);
+
+  // Single consumer: subscribing stops advertising.
+  cl_assert_equal_i(1, s_gap_le_slave_reconnect_hrm_stop_call_count);
+
+  prv_put_and_assert_hrm_event(HRMEvent_BPM, 80, HRMQuality_Excellent,
+                               true /* expect bt driver cb */, true /* expected_is_on_wrist */);
+  cl_assert_equal_i(1, s_last_num_permitted_devices);
+  cl_assert_equal_m(&s_last_permitted_devices[0], s_device_a, sizeof(*s_device_a));
+
+  ble_hrm_set_workout_mode(false);
+  cl_assert_equal_i(2, s_gap_le_slave_reconnect_hrm_stop_call_count);
+  cl_assert_equal_i(2, s_bt_driver_hrm_service_enable_call_count);
+  cl_assert_equal_b(false, s_bt_driver_hrm_service_is_enabled);
+  cl_assert_equal_b(false, ble_hrm_is_sharing_to_connection(&s_conn_a));
+  cl_assert_equal_b(false, ble_hrm_is_sharing());
+  prv_assert_event_service_subscribed(false);
+  prv_assert_last_disconnected(s_device_a);
+}
+
+void test_ble_hrm__workout_mode_resumes_advertising_after_consumer_disconnect(void) {
+  s_activity_prefs_heart_rate_is_enabled = false;
+  s_bt_driver_hrm_service_is_enabled = false;
+
+  // Workout starts: begin advertising for a consumer to discover us.
+  ble_hrm_set_workout_mode(true);
+  cl_assert_equal_i(1, s_gap_le_slave_reconnect_hrm_start_call_count);
+  cl_assert_equal_i(0, s_gap_le_slave_reconnect_hrm_stop_call_count);
+
+  // Consumer subscribes: stop advertising, we have our single consumer.
+  bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
+  cl_assert_equal_b(true, ble_hrm_is_sharing_to_connection(&s_conn_a));
+  cl_assert_equal_i(1, s_gap_le_slave_reconnect_hrm_stop_call_count);
+
+  // Consumer disconnects mid-workout: resume advertising so it can reconnect.
+  ble_hrm_handle_disconnection(&s_conn_a);
+  cl_assert_equal_b(false, ble_hrm_is_sharing_to_connection(&s_conn_a));
+  cl_assert_equal_i(2, s_gap_le_slave_reconnect_hrm_start_call_count);
+
+  // A fresh subscription stops advertising again.
+  bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
+  cl_assert_equal_b(true, ble_hrm_is_sharing_to_connection(&s_conn_a));
+  cl_assert_equal_i(2, s_gap_le_slave_reconnect_hrm_stop_call_count);
+
+  ble_hrm_set_workout_mode(false);
+}
+
+void test_ble_hrm__workout_mode_ignores_duplicate_transitions(void) {
+  s_activity_prefs_heart_rate_is_enabled = false;
+  s_bt_driver_hrm_service_is_enabled = false;
+
+  ble_hrm_set_workout_mode(true);
+  ble_hrm_set_workout_mode(true);
+
+  cl_assert_equal_i(1, s_gap_le_slave_reconnect_hrm_start_call_count);
+  cl_assert_equal_i(0, s_gap_le_slave_reconnect_hrm_stop_call_count);
+  cl_assert_equal_i(1, s_bt_driver_hrm_service_enable_call_count);
+  cl_assert_equal_b(true, s_bt_driver_hrm_service_is_enabled);
+
+  ble_hrm_set_workout_mode(false);
+  ble_hrm_set_workout_mode(false);
+
+  cl_assert_equal_i(1, s_gap_le_slave_reconnect_hrm_start_call_count);
+  cl_assert_equal_i(1, s_gap_le_slave_reconnect_hrm_stop_call_count);
+  cl_assert_equal_i(2, s_bt_driver_hrm_service_enable_call_count);
+  cl_assert_equal_b(false, s_bt_driver_hrm_service_is_enabled);
+}
+
+void test_ble_hrm__activity_pref_off_keeps_service_enabled_during_workout_mode(void) {
+  s_activity_prefs_heart_rate_is_enabled = true;
+  s_bt_driver_hrm_service_is_enabled = true;
+
+  ble_hrm_set_workout_mode(true);
+  cl_assert_equal_b(true, s_bt_driver_hrm_service_is_enabled);
+
+  s_activity_prefs_heart_rate_is_enabled = false;
+  ble_hrm_handle_activity_prefs_heart_rate_is_enabled(false);
+  cl_assert_equal_i(2, s_bt_driver_hrm_service_enable_call_count);
+  cl_assert_equal_b(true, s_bt_driver_hrm_service_is_enabled);
+
+  bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
+  cl_assert_equal_b(true, ble_hrm_is_sharing_to_connection(&s_conn_a));
+  prv_assert_event_service_subscribed(true);
+
+  ble_hrm_set_workout_mode(false);
+  cl_assert_equal_b(false, s_bt_driver_hrm_service_is_enabled);
+  prv_assert_event_service_subscribed(false);
 }

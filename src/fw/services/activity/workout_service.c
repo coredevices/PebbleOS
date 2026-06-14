@@ -14,6 +14,9 @@
 #include "applib/health_service.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
+#ifdef CONFIG_HRM
+#include "pbl/services/bluetooth/ble_hrm.h"
+#endif
 #include "pbl/services/evented_timer.h"
 #include "pbl/services/regular_timer.h"
 #include "system/passert.h"
@@ -87,6 +90,21 @@ static void prv_put_event(PebbleWorkoutEventType e_type) {
     }
   };
   event_put(&event);
+}
+
+static bool prv_is_ble_hrm_workout_type(ActivitySessionType type) {
+  return type == ActivitySessionType_Walk ||
+         type == ActivitySessionType_Run ||
+         type == ActivitySessionType_Open;
+}
+
+static void prv_set_ble_hrm_workout_mode(ActivitySessionType type, bool enabled) {
+#ifdef CONFIG_HRM
+  if (prv_is_ble_hrm_workout_type(type)) {
+    ble_hrm_set_workout_mode(enabled &&
+                             activity_prefs_ble_hrm_workout_sharing_is_enabled());
+  }
+#endif
 }
 
 static int32_t prv_get_avg_hr(void) {
@@ -189,9 +207,29 @@ static void prv_handle_heart_rate_update(HealthEventHeartRateUpdateData *event) 
 
 // ---------------------------------------------------------------------------------------
 bool workout_service_is_workout_type_supported(ActivitySessionType type) {
-  return type == ActivitySessionType_Walk ||
-         type == ActivitySessionType_Run ||
-         type == ActivitySessionType_Open;
+  return prv_is_ble_hrm_workout_type(type);
+}
+
+// ---------------------------------------------------------------------------------------
+void workout_service_handle_ble_hrm_workout_sharing_prefs_changed(void) {
+#ifdef CONFIG_HRM
+  if (!s_workout_data.s_workout_mutex) {
+    return;
+  }
+
+  ActivitySessionType type = ActivitySessionType_Invalid;
+  prv_lock();
+  {
+    if (s_workout_data.current_workout) {
+      type = s_workout_data.current_workout->type;
+    }
+  }
+  prv_unlock();
+
+  if (type != ActivitySessionType_Invalid) {
+    prv_set_ble_hrm_workout_mode(type, true);
+  }
+#endif
 }
 
 // ---------------------------------------------------------------------------------------
@@ -399,6 +437,9 @@ bool workout_service_start_workout(ActivitySessionType type) {
   }
 unlock:
   prv_unlock();
+  if (rv) {
+    prv_set_ble_hrm_workout_mode(type, true);
+  }
   return rv;
 }
 
@@ -444,6 +485,7 @@ unlock:
 // ---------------------------------------------------------------------------------------
 bool workout_service_stop_workout(void) {
   bool save_session = false;
+  ActivitySessionType stopped_type = ActivitySessionType_Invalid;
   ActivitySession session_to_save;
   int32_t avg_hr_to_save = 0;
   int32_t hr_zone_time_s_to_save[HRZoneCount];
@@ -457,6 +499,7 @@ bool workout_service_stop_workout(void) {
     }
 
     CurrentWorkoutData *wrkt = s_workout_data.current_workout;
+    stopped_type = wrkt->type;
 
     // Snapshot the session data so we can persist it after dropping the
     // workout mutex. activity_insights_push_activity_session_notification
@@ -503,6 +546,8 @@ bool workout_service_stop_workout(void) {
     s_workout_data.current_workout = NULL;
   }
   prv_unlock();
+
+  prv_set_ble_hrm_workout_mode(stopped_type, false);
 
   if (save_session) {
     activity_sessions_prv_add_activity_session(&session_to_save);
