@@ -962,11 +962,18 @@ void ancs_invalidate_all_references(void) {
 }
 
 void ancs_handle_service_removed(BLECharacteristic *characteristics, uint8_t num_characteristics) {
-  // There should only be one ancs client
-  ancs_invalidate_all_references();
+  (void)characteristics;
+  (void)num_characteristics;
+  for (PhoneSlot slot = 0; slot < MAX_PHONE_CONNECTIONS; slot++) {
+    ancs_invalidate_all_references_for_slot(slot);
+  }
 }
 
 void ancs_handle_service_discovered(BLECharacteristic *characteristics, PhoneSlot slot) {
+  if (slot >= MAX_PHONE_CONNECTIONS || !s_ancs_clients[slot]) {
+    PBL_LOG_WRN("ANCS service discovered with no client for slot %u", slot);
+    return;
+  }
   s_ancs_client = s_ancs_clients[slot];
   PBL_LOG_DBG("In ANCS service discovery CB");
   PBL_ASSERTN(characteristics); // should only be called if we found something!

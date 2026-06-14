@@ -531,6 +531,9 @@ void ams_create(void) {
 }
 
 void ams_invalidate_all_references(void) {
+  if (!s_ams_client) {
+    return;
+  }
   // We've gotten new characteristic references,
   // this means the old ones will have been unsubscribed, so we're disconnected from AMS:
   prv_set_connected(false);
