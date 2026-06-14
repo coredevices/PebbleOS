@@ -816,11 +816,10 @@ static void prv_update_track_progress(MusicAppData *data) {
     return;
   }
 
-  if (!data->temporarily_show_progress){
-  if (!shell_prefs_get_music_show_progress_bar()){
+  if (!data->temporarily_show_progress && !shell_prefs_get_music_show_progress_bar()){
     return;
   }
-  }
+
   if (!music_is_progress_reporting_supported()) {
     progress_layer_set_progress(&data->track_pos_bar, 0);
   } else {
@@ -1036,7 +1035,7 @@ static void prv_handle_init(void) {
   music_request_low_latency_for_period(5000);
 
   prv_set_pos_update_timer(data, music_get_playback_state());
-  if (music_is_progress_reporting_supported()) {
+  if (music_is_progress_reporting_supported() && shell_prefs_get_music_show_progress_bar()) {
     accel_tap_service_subscribe(prv_show_progress_bar_temporarily);
   }
 }
