@@ -16,6 +16,7 @@
 #include "pbl/services/i18n/i18n.h"
 #include "pin_flap.h"
 #include "services/pin_lock/pin_lock.h"
+#include "syscall/syscall_internal.h"
 #include "system/logging.h"
 
 // ── entry-buffer ──────────────────────────────────────────────────────────────
@@ -137,4 +138,14 @@ void pin_unlock_window_push(void) {
   layer_set_update_proc(window_get_root_layer(&s_window), prv_update_proc);
 
   modal_window_push(&s_window, ModalPriorityCritical, true /* animated */);
+}
+
+// "Lock now" from the Settings app: lock and immediately present the unlock
+// screen so the user sees the lock take effect. Runs in the kernel context, so
+// it can push the modal directly.
+DEFINE_SYSCALL(void, sys_pin_lock_lock_now_and_show, void) {
+  pin_lock_lock_now();
+  if (pin_lock_is_locked()) {
+    pin_unlock_window_push();
+  }
 }

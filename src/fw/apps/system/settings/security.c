@@ -288,7 +288,7 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       prv_save_and_reload(data);
       break;
     case ROW_LOCK_NOW:
-      sys_pin_lock_lock_now();
+      sys_pin_lock_lock_now_and_show();  // lock + show the unlock screen now
       return; // no redraw needed
     default:
       return;
