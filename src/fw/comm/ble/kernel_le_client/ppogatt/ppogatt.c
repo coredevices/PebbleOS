@@ -4,6 +4,7 @@
 #include "ppogatt.h"
 #include "ppogatt_internal.h"
 
+#include "comm/ble/kernel_le_client/kernel_le_client.h"
 #include "comm/ble/gap_le_connection.h"
 #include "comm/ble/gatt_client_operations.h"
 #include "comm/bt_lock.h"
@@ -211,6 +212,11 @@ static CommSessionTransportType prv_get_type(struct Transport *transport) {
   return CommSessionTransportType_PPoGATT;
 }
 
+static bool prv_is_gateway(Transport *transport) {
+  PPoGATTClient *client = (PPoGATTClient *)transport;
+  return kernel_le_client_is_gateway_slot(client->slot);
+}
+
 static const TransportImplementation s_ppogatt_transport_implementation = {
   .send_next = &ppogatt_send_next,
   .close = &ppogatt_close,
@@ -218,6 +224,7 @@ static const TransportImplementation s_ppogatt_transport_implementation = {
   .set_connection_responsiveness = prv_set_connection_responsiveness,
   .get_uuid = prv_get_uuid,
   .get_type = prv_get_type,
+  .is_gateway = prv_is_gateway,
 };
 
 // -------------------------------------------------------------------------------------------------

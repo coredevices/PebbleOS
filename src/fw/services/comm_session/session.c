@@ -440,15 +440,28 @@ static CommSession *prv_find_session_by_type(CommSessionTransportType session_ty
 }
 
 static CommSession *prv_get_system_session(void) {
-  // Attempt to explicitly find and return a session that isn't QEMU or PULSE
-  CommSession *session = (CommSession *) list_find((ListNode *) s_session_head,
-                                                   prv_find_session_is_system_filter, NULL);
-  if (session) {
-    return session;
+  // Scan all sessions, preferring the one whose transport reports it is the gateway phone.
+  // This ensures app install and other system traffic go to the correct phone when two are
+  // connected simultaneously.
+  CommSession *fallback = NULL;
+  for (ListNode *node = (ListNode *)s_session_head; node; node = list_get_next(node)) {
+    CommSession *s = (CommSession *)node;
+    if (!prv_find_session_is_system_filter(node, NULL)) {
+      continue;
+    }
+    if (s->transport_imp->is_gateway && s->transport_imp->is_gateway(s->transport)) {
+      return s;
+    }
+    if (!fallback) {
+      fallback = s;
+    }
+  }
+  if (fallback) {
+    return fallback;
   }
 
   // If we don't find one, try to find a PULSE session
-  session = prv_find_session_by_type(CommSessionTransportType_PULSE);
+  CommSession *session = prv_find_session_by_type(CommSessionTransportType_PULSE);
   if (session) {
     return session;
   }

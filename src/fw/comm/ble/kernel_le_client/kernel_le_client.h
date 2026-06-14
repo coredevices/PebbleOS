@@ -5,6 +5,7 @@
 
 #include "kernel/events.h"
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
+#include "comm/ble/kernel_le_client/multi_phone.h"
 
 //! @file kernel_le_client.h
 //! Module that is responsible of connecting to the BLE gateway (aka "the phone") in order to:
@@ -13,6 +14,9 @@
 //! - bootstrap the "Service Changed" module
 
 void kernel_le_client_handle_bonding_change(BTBondingID bonding, BtPersistBondingOp op);
+
+//! Returns true if the given slot is connected to the primary gateway phone.
+bool kernel_le_client_is_gateway_slot(PhoneSlot slot);
 
 void kernel_le_client_handle_event(const PebbleEvent *event);
 
