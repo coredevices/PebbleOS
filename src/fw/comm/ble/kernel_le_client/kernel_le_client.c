@@ -54,6 +54,15 @@ static void prv_ppogatt_handle_service_discovered_cb(BLECharacteristic *characte
   ppogatt_handle_service_discovered(characteristics, s_discovery_slot);
 }
 
+static void prv_ancs_handle_service_removed_cb(BLECharacteristic *characteristics,
+                                              uint8_t num_characteristics) {
+  (void)characteristics;
+  (void)num_characteristics;
+  if (s_discovery_slot != PHONE_SLOT_INVALID) {
+    ancs_invalidate_all_references_for_slot(s_discovery_slot);
+  }
+}
+
 static PhoneSlot prv_slot_for_device(const BTDeviceInternal *device) {
   for (PhoneSlot slot = 0; slot < MAX_PHONE_CONNECTIONS; slot++) {
     if (s_phone_slots[slot].active &&
@@ -167,7 +176,7 @@ static const KernelLEClient s_clients[KernelLEClientNum] = {
     .characteristic_uuids = s_ancs_characteristic_uuids,
     .num_characteristics = NumANCSCharacteristic,
     .handle_service_discovered = prv_ancs_handle_service_discovered_cb,
-    .handle_service_removed = ancs_handle_service_removed,
+    .handle_service_removed = prv_ancs_handle_service_removed_cb,
     .invalidate_all_references = ancs_invalidate_all_references,
     .can_handle_characteristic = ancs_can_handle_characteristic,
     .handle_write_response = ancs_handle_write_response,
@@ -252,6 +261,10 @@ static void prv_handle_all_services_invalidated(void) {
 static void prv_handle_services_added(
     PebbleBLEGATTClientServicesAdded *added_services, BTDeviceInternal *device) {
   s_discovery_slot = prv_slot_for_device(device);
+  if (s_discovery_slot == PHONE_SLOT_INVALID) {
+    PBL_LOG_WRN("ServicesAdded for unknown device, ignoring");
+    return;
+  }
   // loop through the new services
   for (int s = 0; s < added_services->num_services_added; s++) {
     // get the uuid for the service
@@ -319,7 +332,9 @@ static void prv_handle_gatt_service_discovery_event(const PebbleBLEGATTClientSer
 
   switch (event_info->type) {
     case PebbleServicesRemoved:
+      s_discovery_slot = prv_slot_for_device(&event_info->device);
       prv_handle_services_removed(&event_info->services_removed_data);
+      s_discovery_slot = PHONE_SLOT_INVALID;
       break;
     case PebbleServicesInvalidateAll:
       prv_handle_all_services_invalidated();
@@ -403,7 +418,7 @@ static void prv_consume_notifications(const PebbleBLEGATTClientEvent *event) {
                                                            GAPLEClientKernel, &has_more);
 
     const KernelLEClient * const client = prv_client_for_characteristic(header.characteristic);
-    if (client->handle_read_or_notification) {
+    if (client && client->handle_read_or_notification) {
       client->handle_read_or_notification(header.characteristic, buffer, header.value_length,
                                           BLEGATTErrorSuccess);
     } else {

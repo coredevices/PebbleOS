@@ -692,6 +692,14 @@ msgstr ""
 msgid "Open the Pebble app on your phone to connect."
 msgstr ""
 
+#: ../src/fw/apps/system/settings/bluetooth.c
+msgid "Open the Pebble app on another phone to connect."
+msgstr ""
+
+#: ../src/fw/apps/system/settings/bluetooth.c
+msgid "Forget a device to pair a new one."
+msgstr ""
+
 #: ../src/fw/apps/system/settings/bluetooth.c:452
 msgid "Forget this device to pair a new device."
 msgstr ""

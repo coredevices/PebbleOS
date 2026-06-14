@@ -1074,6 +1074,9 @@ void ppogatt_handle_subscribe(BLECharacteristic characteristic,
       bt_lock();
       goto unlock;
     }
+    if (!client) {
+      goto unlock;
+    }
     PBL_ASSERTN(client->state == StateDisconnectedSubscribingData);
     if (error) {
       const uint32_t elapsed_ms =
