@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "ancs.h"
+#include "comm/ble/kernel_le_client/multi_phone.h"
 #include "ancs_app_name_storage.h"
 #include "ancs_types.h"
 #include "ancs_util.h"
@@ -94,6 +95,9 @@ typedef struct {
 } NotificationQueueNode;
 
 typedef struct ANCSClient {
+  PhoneSlot slot;
+  bool just_connected;
+  RegularTimerInfo notification_connection_delay_timer;
   ANCSClientState state;
   BLECharacteristic characteristics[NumANCSCharacteristic];
   RegularTimerInfo is_alive_timer;
@@ -107,7 +111,78 @@ typedef struct ANCSClient {
   uint8_t alive_checks_without_ns;
 } ANCSClient;
 
+static ANCSClient *s_ancs_clients[MAX_PHONE_CONNECTIONS];
 static ANCSClient *s_ancs_client;
+
+// UID-to-slot map: routes notification actions to the correct phone.
+// ANCS UIDs are only unique per-connection; without this a dismiss on one
+// phone would accidentally fire on the other if both share the same UID.
+#define ANCS_UID_SLOT_MAP_SIZE 32
+
+typedef struct {
+  uint32_t uid;
+  PhoneSlot slot;
+  bool valid;
+} UIDSlotEntry;
+
+static UIDSlotEntry s_uid_slot_map[ANCS_UID_SLOT_MAP_SIZE];
+
+static void prv_uid_slot_record(uint32_t uid, PhoneSlot slot) {
+  int free_idx = -1;
+  for (int i = 0; i < ANCS_UID_SLOT_MAP_SIZE; i++) {
+    if (s_uid_slot_map[i].valid && s_uid_slot_map[i].uid == uid) {
+      s_uid_slot_map[i].slot = slot;
+      return;
+    }
+    if (!s_uid_slot_map[i].valid && free_idx < 0) {
+      free_idx = i;
+    }
+  }
+  if (free_idx >= 0) {
+    s_uid_slot_map[free_idx] = (UIDSlotEntry){ .uid = uid, .slot = slot, .valid = true };
+  } else {
+    // Table full: evict entry 0 (oldest by position)
+    s_uid_slot_map[0] = (UIDSlotEntry){ .uid = uid, .slot = slot, .valid = true };
+  }
+}
+
+static void prv_uid_slot_forget(uint32_t uid) {
+  for (int i = 0; i < ANCS_UID_SLOT_MAP_SIZE; i++) {
+    if (s_uid_slot_map[i].valid && s_uid_slot_map[i].uid == uid) {
+      s_uid_slot_map[i].valid = false;
+      return;
+    }
+  }
+}
+
+static void prv_uid_slot_clear_slot(PhoneSlot slot) {
+  for (int i = 0; i < ANCS_UID_SLOT_MAP_SIZE; i++) {
+    if (s_uid_slot_map[i].valid && s_uid_slot_map[i].slot == slot) {
+      s_uid_slot_map[i].valid = false;
+    }
+  }
+}
+
+static bool prv_uid_slot_lookup(uint32_t uid, PhoneSlot *slot_out) {
+  for (int i = 0; i < ANCS_UID_SLOT_MAP_SIZE; i++) {
+    if (s_uid_slot_map[i].valid && s_uid_slot_map[i].uid == uid) {
+      *slot_out = s_uid_slot_map[i].slot;
+      return true;
+    }
+  }
+  return false;
+}
+
+static PhoneSlot prv_slot_for_characteristic(BLECharacteristic c) {
+  for (PhoneSlot slot = 0; slot < MAX_PHONE_CONNECTIONS; slot++) {
+    ANCSClient *client = s_ancs_clients[slot];
+    if (!client) continue;
+    for (int i = 0; i < NumANCSCharacteristic; i++) {
+      if (client->characteristics[i] == c) return slot;
+    }
+  }
+  return PHONE_SLOT_INVALID;
+}
 
 // -----------------------------------------------------------------------------
 // State Machine
@@ -275,7 +350,9 @@ static void prv_reset_and_idle(void) {
   prv_reset_reassembly_context();
 }
 
-static void prv_reset_and_retry(void *unused) {
+static void prv_reset_and_retry(void *data) {
+  PhoneSlot slot = (PhoneSlot)(uintptr_t)data;
+  s_ancs_client = s_ancs_clients[slot];
   if (s_ancs_client == NULL) {
     return;
   }
@@ -326,6 +403,7 @@ static void prv_is_ancs_alive_response_timeout(void *data);
 static void prv_ancs_is_alive_schedule_next_check(void) {
   s_ancs_client->is_alive_timer = (const RegularTimerInfo) {
     .cb = prv_is_ancs_alive_cb,
+    .cb_data = (void *)(uintptr_t)s_ancs_client->slot,
   };
   regular_timer_add_multiminute_callback(&s_ancs_client->is_alive_timer,
                                          ANCS_IS_ALIVE_NEXT_CHECK_TIME_MINUTES);
@@ -334,6 +412,7 @@ static void prv_ancs_is_alive_schedule_next_check(void) {
 static void prv_ancs_is_alive_start_response_wait_timer(void) {
   s_ancs_client->is_alive_timer = (const RegularTimerInfo) {
     .cb = prv_is_ancs_alive_response_timeout,
+    .cb_data = (void *)(uintptr_t)s_ancs_client->slot,
   };
   regular_timer_add_multisecond_callback(&s_ancs_client->is_alive_timer,
                                          ANCS_IS_ALIVE_RESPONSE_WAIT_TIME_SECONDS);
@@ -390,6 +469,8 @@ static void prv_resubscribe_to_ancs(void) {
 }
 
 static void prv_is_ancs_alive_response_timeout_launcher_task_cb(void *data) {
+  PhoneSlot slot = (PhoneSlot)(uintptr_t)data;
+  s_ancs_client = s_ancs_clients[slot];
   if (!s_ancs_client) {
     return;
   }
@@ -463,6 +544,8 @@ T_STATIC void prv_check_ancs_alive(void) {
 }
 
 static void prv_is_ancs_alive_launcher_task_cb(void *data) {
+  PhoneSlot slot = (PhoneSlot)(uintptr_t)data;
+  s_ancs_client = s_ancs_clients[slot];
   if (!s_ancs_client) {
     return;
   }
@@ -480,25 +563,26 @@ static void prv_is_ancs_alive_cb(void *data) {
 // -----------------------------------------------------------------------------
 //! With iOS 8.2 the pre-existing flag seems to be broken. Don't allow notifications for a bit after
 //! reconnection so that all the "real" pre-existing notification don't come through again.
-static RegularTimerInfo s_notification_connection_delay_timer;
-static bool s_just_connected = false;
-
 static void prv_set_no_longer_just_connected(void *data) {
-  s_just_connected = false;
-  regular_timer_remove_callback(&s_notification_connection_delay_timer);
+  PhoneSlot slot = (PhoneSlot)(uintptr_t)data;
+  ANCSClient *client = s_ancs_clients[slot];
+  if (!client) return;
+  client->just_connected = false;
+  regular_timer_remove_callback(&client->notification_connection_delay_timer);
 }
 
 static void prv_start_temp_notification_connection_delay_timer(void) {
-  if (regular_timer_is_scheduled(&s_notification_connection_delay_timer)) {
-    regular_timer_remove_callback(&s_notification_connection_delay_timer);
+  if (regular_timer_is_scheduled(&s_ancs_client->notification_connection_delay_timer)) {
+    regular_timer_remove_callback(&s_ancs_client->notification_connection_delay_timer);
   }
-  s_just_connected = true;
+  s_ancs_client->just_connected = true;
 
   const int post_connection_notification_ignore_seconds = 10;
-  s_notification_connection_delay_timer = (const RegularTimerInfo) {
+  s_ancs_client->notification_connection_delay_timer = (const RegularTimerInfo) {
     .cb = prv_set_no_longer_just_connected,
+    .cb_data = (void *)(uintptr_t)s_ancs_client->slot,
   };
-  regular_timer_add_multisecond_callback(&s_notification_connection_delay_timer,
+  regular_timer_add_multisecond_callback(&s_ancs_client->notification_connection_delay_timer,
                                          post_connection_notification_ignore_seconds);
 }
 
@@ -776,7 +860,8 @@ static void prv_get_notification_attributes(uint32_t uid) {
       prv_reset_and_flush();
     } else {
       prv_set_state(ANCSClientStateRetrying);
-      evented_timer_register(ANCS_RETRY_TIME_MS, false, prv_reset_and_retry, NULL);
+      evented_timer_register(ANCS_RETRY_TIME_MS, false, prv_reset_and_retry,
+                             (void *)(uintptr_t)s_ancs_client->slot);
     }
   }
 }
@@ -831,6 +916,9 @@ static void prv_put_ancs_disconnected_event(void) {
 // Catching the subscription (CCCD write) confirmation for analytics purposes:
 void ancs_handle_subscribe(BLECharacteristic subscribed_characteristic,
                            BLESubscription subscription_type, BLEGATTError error) {
+  PhoneSlot slot = prv_slot_for_characteristic(subscribed_characteristic);
+  if (slot == PHONE_SLOT_INVALID) return;
+  s_ancs_client = s_ancs_clients[slot];
   ANCSCharacteristic characteristic_id = prv_get_id_for_characteristic(subscribed_characteristic);
   if (characteristic_id != ANCSCharacteristicNotification &&
       characteristic_id != ANCSCharacteristicData) {
@@ -850,21 +938,43 @@ void ancs_handle_subscribe(BLECharacteristic subscribed_characteristic,
   }
 }
 
-void ancs_invalidate_all_references(void) {
+void ancs_invalidate_all_references_for_slot(PhoneSlot slot) {
+  s_ancs_client = s_ancs_clients[slot];
+  if (!s_ancs_client) return;
   for (int c = 0; c < NumANCSCharacteristic; c++) {
     s_ancs_client->characteristics[c] = BLE_CHARACTERISTIC_INVALID;
   }
-
   prv_reset_and_flush();
   prv_put_ancs_disconnected_event();
 }
 
-void ancs_handle_service_removed(BLECharacteristic *characteristics, uint8_t num_characteristics) {
-  // There should only be one ancs client
-  ancs_invalidate_all_references();
+void ancs_invalidate_all_references(void) {
+  for (PhoneSlot slot = 0; slot < MAX_PHONE_CONNECTIONS; slot++) {
+    ancs_invalidate_all_references_for_slot(slot);
+  }
+  s_ancs_client = NULL;
+  for (PhoneSlot slot = 0; slot < MAX_PHONE_CONNECTIONS; slot++) {
+    if (s_ancs_clients[slot]) {
+      s_ancs_client = s_ancs_clients[slot];
+      break;
+    }
+  }
 }
 
-void ancs_handle_service_discovered(BLECharacteristic *characteristics) {
+void ancs_handle_service_removed(BLECharacteristic *characteristics, uint8_t num_characteristics) {
+  (void)characteristics;
+  (void)num_characteristics;
+  for (PhoneSlot slot = 0; slot < MAX_PHONE_CONNECTIONS; slot++) {
+    ancs_invalidate_all_references_for_slot(slot);
+  }
+}
+
+void ancs_handle_service_discovered(BLECharacteristic *characteristics, PhoneSlot slot) {
+  if (slot >= MAX_PHONE_CONNECTIONS || !s_ancs_clients[slot]) {
+    PBL_LOG_WRN("ANCS service discovered with no client for slot %u", slot);
+    return;
+  }
+  s_ancs_client = s_ancs_clients[slot];
   PBL_LOG_DBG("In ANCS service discovery CB");
   PBL_ASSERTN(characteristics); // should only be called if we found something!
 
@@ -873,7 +983,7 @@ void ancs_handle_service_discovered(BLECharacteristic *characteristics) {
 
   if (s_ancs_client->characteristics[0] != BLE_CHARACTERISTIC_INVALID) {
     PBL_LOG_WRN("Multiple ANCS services registered?!");
-    ancs_invalidate_all_references();
+    ancs_invalidate_all_references_for_slot(slot);
   }
 
   // Keep around the BLECharacteristic references:
@@ -888,22 +998,14 @@ void ancs_handle_service_discovered(BLECharacteristic *characteristics) {
                                                           GAPLEClientKernel);
     if (e != BTErrnoOK) {
       PBL_LOG_WRN("Failed to subscribe ANCS charx %d (err=%d), ignoring service", c, e);
-      ancs_invalidate_all_references();
+      ancs_invalidate_all_references_for_slot(slot);
       return;
     }
   }
 }
 
 bool ancs_can_handle_characteristic(BLECharacteristic characteristic) {
-  if (!s_ancs_client) {
-    return false;
-  }
-  for (int c = 0; c < NumANCSCharacteristic; ++c) {
-    if (s_ancs_client->characteristics[c] == characteristic) {
-      return true;
-    }
-  }
-  return false;
+  return prv_slot_for_characteristic(characteristic) != PHONE_SLOT_INVALID;
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -958,20 +1060,23 @@ static void prv_handle_ns_notification(uint32_t length, const uint8_t *notificat
       // By skipping the pre-existing check we will re-recieve all the notifications
       // we got in the past 2 hours. To get past this ignore notifications for the first couple
       // seconds after connecting
-      if (s_just_connected && (nsnotification->event_flags & EventFlagPreExisting)) {
+      if (s_ancs_client->just_connected && (nsnotification->event_flags & EventFlagPreExisting)) {
         PBL_LOG_DBG("Ignoring notification because we just connected and PreExisting");
       } else {
         PBL_LOG_DBG("Added ANCS notification!");
+        prv_uid_slot_record(nsnotification->uid, s_ancs_client->slot);
         prv_notif_queue_push_attr_request(nsnotification->uid, properties);
       }
 
       break;
     case EventIDNotificationModified:
       PBL_LOG_DBG("Modified ANCS notification!");
+      prv_uid_slot_record(nsnotification->uid, s_ancs_client->slot);
       prv_notif_queue_push_attr_request(nsnotification->uid, properties);
       break;
     case EventIDNotificationRemoved:
       PBL_LOG_DBG("Removed ANCS notification");
+      prv_uid_slot_forget(nsnotification->uid);
       ancs_notifications_handle_notification_removed(nsnotification->uid, properties);
       break;
   }
@@ -996,6 +1101,9 @@ static void prv_handle_ds_notification(uint32_t length, const uint8_t *data) {
 
 void ancs_handle_read_or_notification(BLECharacteristic characteristic, const uint8_t *value,
                                       size_t value_length, BLEGATTError error) {
+  PhoneSlot slot = prv_slot_for_characteristic(characteristic);
+  if (slot == PHONE_SLOT_INVALID) return;
+  s_ancs_client = s_ancs_clients[slot];
   if (error != BLEGATTErrorSuccess) {
     PBL_LOG_ERR("Read or notification error: %d", error);
     prv_reset_due_to_bt_error();
@@ -1021,6 +1129,9 @@ void ancs_handle_read_or_notification(BLECharacteristic characteristic, const ui
 // Writing commands to the ANCS Control Point
 
 void ancs_handle_write_response(BLECharacteristic characteristic, BLEGATTError error) {
+  PhoneSlot slot = prv_slot_for_characteristic(characteristic);
+  if (slot == PHONE_SLOT_INVALID) return;
+  s_ancs_client = s_ancs_clients[slot];
   if (error == ANCS_INVALID_PARAM) {
     if (s_ancs_client->state == ANCSClientStateAliveCheck) {
       // We got a response so cancel the response wait timer and setup another check.
@@ -1083,11 +1194,19 @@ static void prv_perform_action(uint32_t notification_uid, ActionId action_id) {
 }
 
 static void prv_serialize_action(const PerformNotificationActionMsg *action_msg) {
-  if (!s_ancs_client) {
-    PBL_LOG_ERR("No ANCS client");
+  PhoneSlot slot = PHONE_SLOT_INVALID;
+  if (!prv_uid_slot_lookup(action_msg->notification_uid, &slot) ||
+      !s_ancs_clients[slot]) {
+    // UID not in map or that slot disconnected; fall back to first active slot
+    for (PhoneSlot s = 0; s < MAX_PHONE_CONNECTIONS; s++) {
+      if (s_ancs_clients[s]) { slot = s; break; }
+    }
+  }
+  if (slot == PHONE_SLOT_INVALID || !s_ancs_clients[slot]) {
+    PBL_LOG_ERR("No ANCS client for action uid=%"PRIu32, action_msg->notification_uid);
     return;
   }
-
+  s_ancs_client = s_ancs_clients[slot];
   prv_notif_queue_push_action(action_msg->notification_uid, action_msg->action_id);
 }
 
@@ -1116,32 +1235,44 @@ void ancs_perform_action(uint32_t notification_uid, uint8_t action_id) {
 }
 
 void ancs_handle_ios9_or_newer_detected(void) {
-  // The ANCSClient is created as soon as the gateway is connected (see kernel_le_client.c).
-  PBL_ASSERTN(s_ancs_client);
-  s_ancs_client->version = ANCSVersion_iOS9OrNewer;
+  for (PhoneSlot slot = 0; slot < MAX_PHONE_CONNECTIONS; slot++) {
+    if (s_ancs_clients[slot]) {
+      s_ancs_clients[slot]->version = ANCSVersion_iOS9OrNewer;
+    }
+  }
 }
 
 // -------------------------------------------------------------------------------------------------
 // Lifecyle
 
-void ancs_create(void) {
-  PBL_ASSERTN(s_ancs_client == NULL);
-  s_ancs_client = (ANCSClient *) kernel_zalloc_check(sizeof(ANCSClient));
+void ancs_create(PhoneSlot slot) {
+  PBL_ASSERTN(s_ancs_clients[slot] == NULL);
+  s_ancs_clients[slot] = (ANCSClient *) kernel_zalloc_check(sizeof(ANCSClient));
+  s_ancs_client = s_ancs_clients[slot];
+  s_ancs_client->slot = slot;
   buffer_init(&s_ancs_client->reassembly_ctx.buffer,
               sizeof(s_ancs_client->reassembly_ctx.buffer_storage));
-  ancs_app_name_storage_init();
+  if (slot == 0) {
+    ancs_app_name_storage_init();
+  }
 }
 
-void ancs_destroy(void) {
+void ancs_destroy(PhoneSlot slot) {
+  s_ancs_client = s_ancs_clients[slot];
   if (!s_ancs_client) {
     return;
   }
   prv_ancs_is_alive_stop_timer();
-
-  ancs_app_name_storage_deinit();
-
+  if (regular_timer_is_scheduled(&s_ancs_client->notification_connection_delay_timer)) {
+    regular_timer_remove_callback(&s_ancs_client->notification_connection_delay_timer);
+  }
+  if (slot == 0) {
+    ancs_app_name_storage_deinit();
+  }
   prv_reset_and_flush();
+  prv_uid_slot_clear_slot(slot);
   kernel_free(s_ancs_client);
+  s_ancs_clients[slot] = NULL;
   s_ancs_client = NULL;
   prv_put_ancs_disconnected_event();
 }

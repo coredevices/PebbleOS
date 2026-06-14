@@ -234,7 +234,7 @@ BTErrno gatt_client_op_write(BLECharacteristic characteristic,
                             (uint8_t*) s_this_message_has_no_content_response);
     s_num_ds_notifications_received++;
   } else if (uid == s_invalid_param_uid) {
-    ancs_handle_write_response(0, 0xA2);
+    ancs_handle_write_response(s_characteristics[ANCSCharacteristicControl], 0xA2);
     s_num_ds_notifications_received++;
   } else if (uid ==  multiple_complete_dict_uid) {
     prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_multiple_complete_dicts), (uint8_t*) s_multiple_complete_dicts);
@@ -292,12 +292,12 @@ void test_ancs__initialize(void) {
   fake_event_init();
   fake_gatt_client_subscriptions_set_subscribe_return_value(BTErrnoOK);
 
-  ancs_create();
-  ancs_handle_service_discovered(s_characteristics);
+  ancs_create(0);
+  ancs_handle_service_discovered(s_characteristics, 0);
 }
 
 void test_ancs__cleanup(void) {
-  ancs_destroy();
+  ancs_destroy(0);
   cl_assert_equal_i(regular_timer_seconds_count(), 0);
   cl_assert_equal_i(regular_timer_minutes_count(), 0);
   regular_timer_deinit();
@@ -311,7 +311,7 @@ void test_ancs__should_fail_soft_on_subscribe_failure(void) {
   cl_assert(ancs_can_handle_characteristic(s_characteristics[ANCSCharacteristicData]));
 
   fake_gatt_client_subscriptions_set_subscribe_return_value(BTErrnoInvalidParameter);
-  ancs_handle_service_discovered(s_characteristics);
+  ancs_handle_service_discovered(s_characteristics, 0);
 
   // ANCS is left disconnected rather than crashing:
   cl_assert(!ancs_can_handle_characteristic(s_characteristics[ANCSCharacteristicData]));
@@ -484,7 +484,7 @@ void test_ancs__alive_check_disconnection(void) {
   cl_assert_equal_i(s_num_requested_notif_attributes, 1);
   // simulate a disconnection/reconnection
   ancs_handle_service_removed(s_characteristics, NumANCSCharacteristic);
-  ancs_handle_service_discovered(s_characteristics);
+  ancs_handle_service_discovered(s_characteristics, 0);
   // we should be back in the Idle state
   cl_assert_equal_i(prv_get_state(), ANCSClientStateIdle);
   // Make sure we can still receive notifications
@@ -552,12 +552,12 @@ void test_ancs__notification_parsing(void) {
 void test_ancs__disconnection(void) {
   // Simulate a disconnection/reconnection
   ancs_handle_service_removed(s_characteristics, NumANCSCharacteristic);
-  ancs_handle_service_discovered(s_characteristics);
+  ancs_handle_service_discovered(s_characteristics, 0);
   cl_assert_equal_i(fake_event_get_last().type, PEBBLE_ANCS_DISCONNECTED_EVENT);
   fake_event_clear_last();
 
   // If we unexpectedly register another session, make sure we send the event
-  ancs_handle_service_discovered(s_characteristics);
+  ancs_handle_service_discovered(s_characteristics, 0);
   cl_assert_equal_i(fake_event_get_last().type, PEBBLE_ANCS_DISCONNECTED_EVENT);
   fake_event_clear_last();
 
@@ -565,7 +565,7 @@ void test_ancs__disconnection(void) {
   cl_assert_equal_i(fake_event_get_last().type, PEBBLE_ANCS_DISCONNECTED_EVENT);
 
   // Make sure that losing BT altogether sends the event
-  ancs_destroy();
+  ancs_destroy(0);
   cl_assert_equal_i(fake_event_get_last().type, PEBBLE_ANCS_DISCONNECTED_EVENT);
   fake_event_clear_last();
 }

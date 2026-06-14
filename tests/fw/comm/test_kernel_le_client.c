@@ -21,16 +21,18 @@
 #include "stubs_rand_ptr.h"
 #include "stubs_rtc.h"
 
+#include "comm/ble/kernel_le_client/multi_phone.h"
+
 void ams_create(void) {
 }
 
 void ams_destroy(void) {
 }
 
-void ancs_create(void) {
+void ancs_create(PhoneSlot slot) {
 }
 
-void ancs_destroy(void) {
+void ancs_destroy(PhoneSlot slot) {
 }
 
 void app_launch_handle_disconnection(void) {
@@ -38,6 +40,14 @@ void app_launch_handle_disconnection(void) {
 
 BTBondingID bt_persistent_storage_get_ble_ancs_bonding(void) {
   return 1;
+}
+
+int bt_persistent_storage_get_all_ble_ancs_bondings(BTBondingID *out, int max_count) {
+  if (max_count > 0) {
+    out[0] = 1;
+    return 1;
+  }
+  return 0;
 }
 
 bool bt_persistent_storage_is_ble_ancs_bonding(BTBondingID bonding) {
@@ -89,10 +99,13 @@ void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
   system_task_add_callback(callback, data);
 }
 
-void ppogatt_create(void) {
+void ppogatt_create(PhoneSlot slot) {
 }
 
-void ppogatt_destroy(void) {
+void ppogatt_destroy(PhoneSlot slot) {
+}
+
+void ppogatt_handle_service_discovered(BLECharacteristic *characteristics, PhoneSlot slot) {
 }
 
 void ppogatt_handle_buffer_empty(void) {
@@ -249,6 +262,17 @@ void test_kernel_le_client__read_response_consumed_even_if_client_is_gone(void) 
 }
 
 void test_kernel_le_client__service_added(void) {
+  // ServicesAdded is ignored unless the device has an active phone slot.
+  PebbleEvent connect = (PebbleEvent) {
+    .type = PEBBLE_BLE_CONNECTION_EVENT,
+    .bluetooth.le.connection = {
+      .connected = true,
+      .bonding_id = 1,
+      .bt_device_bits = s_test_device.opaque.opaque_64,
+    },
+  };
+  kernel_le_client_handle_event(&connect);
+
   uint8_t num_services_added = ARRAY_LENGTH(s_service_handles);
   PebbleBLEGATTClientServiceEventInfo *info =
       kernel_malloc(sizeof(PebbleBLEGATTClientServiceEventInfo) +

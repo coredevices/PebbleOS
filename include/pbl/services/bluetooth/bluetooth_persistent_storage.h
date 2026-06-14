@@ -65,10 +65,12 @@ bool bt_persistent_storage_get_ble_pairing_by_addr(const BTDeviceInternal *devic
                                                    SMIdentityResolvingKey *IRK_out,
                                                    char name_out[BT_DEVICE_NAME_BUFFER_SIZE]);
 
-//! Returns the first ANCS supported bonding that is found
-//! The case of having multiple supported ANCS bondings isn't handled well yet.
-//! When this happens this could easily be changed to a for_each_ancs_supported_bonding(cb)
+//! Returns the first ANCS supported bonding that is found.
 BTBondingID bt_persistent_storage_get_ble_ancs_bonding(void);
+
+//! Collects all BLE ANCS bondings into @p out, up to @p max_count entries.
+//! @return number of bondings written into @p out.
+int bt_persistent_storage_get_all_ble_ancs_bondings(BTBondingID *out, int max_count);
 
 //! Returns true if the bondings is BLE and supports ANCS
 bool bt_persistent_storage_is_ble_ancs_bonding(BTBondingID bonding);
