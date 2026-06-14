@@ -69,7 +69,9 @@ static int prv_timeout_index(const SecurityData *data) {
 }
 
 static void prv_timeout_select(OptionMenu *option_menu, int selection, void *context) {
-  SecurityData *data = (SecurityData *)context;
+  // The option-menu callback context is the settings wrapper data; the real
+  // SecurityData is stored inside it.
+  SecurityData *data = settings_option_menu_get_context((SettingsOptionMenuData *)context);
   data->cfg.trigger_timeout = s_timeout_on[selection];
   data->cfg.timeout_s = s_timeout_values[selection];
   pin_lock_storage_save_config(&data->cfg);
@@ -158,7 +160,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       subtitle = data->cfg.haptic ? i18n_noop("On") : i18n_noop("Off");
       break;
     case ROW_LOCK_NOW:
-      title = i18n_noop("Lock Now");
+      title = i18n_noop("Test Lock");
       break;
     default:
       return;
