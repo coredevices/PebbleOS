@@ -3,11 +3,8 @@
 
 #include <bluetooth/responsiveness.h>
 #include <host/ble_gap.h>
-#include <system/logging.h>
 
 #include "nimble_type_conversions.h"
-
-PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
 bool bt_driver_le_connection_parameter_update(const BTDeviceInternal *addr,
                                               const BleConnectionParamsUpdateReq *req) {

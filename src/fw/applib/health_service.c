@@ -733,7 +733,7 @@ static void prv_init_metric_alert(HealthServiceState *state, HealthMetric metric
   info->threshold = threshold;
 }
 
-#if !defined(CONFIG_RECOVERY_FW)
+#if !defined(RECOVERY_FW)
 // ---------------------------------------------------------------------------------------------
 // Determine if we should generate a health metric alert event
 static void prv_check_and_generate_metric_alert(HealthServiceState *state, HealthMetric metric,
@@ -758,7 +758,7 @@ static void prv_check_and_generate_metric_alert(HealthServiceState *state, Healt
 
 // ----------------------------------------------------------------------------------------------
 T_STATIC void prv_health_event_handler(PebbleEvent *e, void *context) {
-#if !defined(CONFIG_RECOVERY_FW)
+#if !defined(RECOVERY_FW)
   HealthServiceState *state = prv_get_state(true);
   PBL_ASSERTN(state && state->event_handler != NULL);
 
@@ -783,7 +783,7 @@ T_STATIC void prv_health_event_handler(PebbleEvent *e, void *context) {
     prv_check_and_generate_metric_alert(state, HealthMetricHeartRateBPM,
                                         &state->cache->alert_threshold_heart_rate);
   }
-#endif // !defined(CONFIG_RECOVERY_FW)
+#endif // !defined(RECOVERY_FW)
 }
 
 // ----------------------------------------------------------------------------------------------

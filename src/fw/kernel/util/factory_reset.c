@@ -21,7 +21,7 @@
 #include "system/reset.h"
 #include "kernel/util/sleep.h"
 
-#if !defined(CONFIG_RECOVERY_FW)
+#if !RECOVERY_FW
 #include "pbl/services/blob_db/pin_db.h"
 #include "pbl/services/blob_db/reminder_db.h"
 #include "pbl/services/filesystem/pfs.h"
@@ -73,7 +73,7 @@ void factory_reset(bool should_shutdown) {
 
   prv_factory_reset_non_pfs_data();
 
-#if !defined(CONFIG_RECOVERY_FW)
+#if !defined(RECOVERY_FW)
   // pfs_format() holds the PFS mutex across the erase, blocking concurrent
   // writes from the App task that would otherwise survive into a freshly-erased region.
   pfs_format(false /* write_erase_headers */);
@@ -92,7 +92,7 @@ void factory_reset(bool should_shutdown) {
   prv_factory_reset_post(should_shutdown);
 }
 
-#if !defined(CONFIG_RECOVERY_FW)
+#if !RECOVERY_FW
 void close_db_files() {
   // Deinit the databases and any clients
   timeline_event_deinit();
@@ -114,7 +114,7 @@ void factory_reset_fast(void *unused) {
 
   prv_factory_reset_post(false /* should_shutdown */);
 }
-#endif // !defined(CONFIG_RECOVERY_FW)
+#endif // !RECOVERY_FW
 
 //! Used by the mfg flow to kick us out the MFG firmware and into the conumer PRF that's stored
 //! on the external flash.

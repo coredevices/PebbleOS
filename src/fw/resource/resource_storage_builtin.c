@@ -52,7 +52,7 @@ static bool resource_storage_builtin_find_resource(ResourceStoreEntry *entry, Re
   // In the future, we need to change this hideously gross behavior.
   // BUTTTTTTT, PRF only has builtin, so we _need_ to say yes on PRF!
   if (resource_id == 0) {
-#ifdef CONFIG_RECOVERY_FW
+#if RECOVERY_FW
     return true;
 #else
     return false;

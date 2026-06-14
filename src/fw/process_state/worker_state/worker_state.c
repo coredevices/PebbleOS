@@ -131,7 +131,7 @@ HealthServiceState *worker_state_get_health_service_state(void) {
 
 // ===================================================================================================
 // Serial Commands
-#ifdef CONFIG_MALLOC_INSTRUMENTATION
+#ifdef MALLOC_INSTRUMENTATION
 void command_dump_malloc_worker(void) {
   heap_dump_malloc_instrumentation_to_dbgserial(worker_state_get_heap());
 }

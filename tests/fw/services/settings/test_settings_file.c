@@ -40,9 +40,7 @@ void test_settings_file__initialize(void) {
   pfs_init(false);
 }
 
-void test_settings_file__cleanup(void) {
-  stub_pbl_malloc_set_kernel_malloc_should_fail(false);
-}
+void test_settings_file__cleanup(void) {}
 
 #include <stdio.h>
 
@@ -937,37 +935,4 @@ void test_settings_file__iterator_wrapping(void) {
   cl_must_pass(settings_file_get(&file, key, key_len, val, val_len));
   after_count = settings_raw_iter_prv_get_num_record_searches();
   cl_assert_equal_i(NUM_RECORDS - 1, after_count - before_count);
-}
-
-void test_settings_file__rewrite_filtered_oom(void) {
-  printf("\nTesting that compaction aborts cleanly when kernel_malloc fails...\n");
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "test_file_rewrite_oom", 4096));
-  uint8_t key[4];
-  int key_len = sizeof(key) - 1;
-  memcpy(key, "key", sizeof(key));
-  uint8_t val[4];
-  int val_len = sizeof(val) - 1;
-  memcpy(val, "val", sizeof(val));
-  set_and_verify(&file, key, key_len, val, val_len);
-
-  // Compaction under OOM must fail without crashing and without touching
-  // the on-disk file.
-  stub_pbl_malloc_set_kernel_malloc_should_fail(true);
-  cl_assert_equal_i(E_OUT_OF_MEMORY, settings_file_compact(&file));
-  stub_pbl_malloc_set_kernel_malloc_should_fail(false);
-
-  // The file must still be open and intact.
-  verify(&file, key, key_len, val, val_len);
-
-  // Once memory is available again, compaction must succeed.
-  cl_must_pass(settings_file_compact(&file));
-  verify(&file, key, key_len, val, val_len);
-
-  settings_file_close(&file);
-
-  // And the data must survive a reopen.
-  cl_must_pass(settings_file_open(&file, "test_file_rewrite_oom", 4096));
-  verify(&file, key, key_len, val, val_len);
-  settings_file_close(&file);
 }

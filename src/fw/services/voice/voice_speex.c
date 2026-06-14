@@ -19,10 +19,10 @@
 #include <string.h>
 #include <inttypes.h>
 
-PBL_LOG_MODULE_DECLARE(service_voice, CONFIG_SERVICE_VOICE_LOG_LEVEL);
-
 // External Speex mode declarations
 extern const SpeexMode speex_wb_mode;
+
+#define VOICE_SPEEX_LOG(fmt, args...) PBL_LOG_D_DBG(LOG_DOMAIN_VOICE, fmt, ## args)
 
 // Speex bitstream version
 #define SPEEX_BITSTREAM_VERSION 4
@@ -63,18 +63,18 @@ bool voice_speex_init(void) {
 
   // Get channel count from mic device (default to mono if not specified)
   s_encoder.channels = (uint8_t)mic_get_channels(MIC);
-  PBL_LOG_DBG("Mic channels: %"PRIu8, s_encoder.channels);
+  VOICE_SPEEX_LOG("Mic channels: %"PRIu8, s_encoder.channels);
 
   // Initialize Speex encoder - use wideband mode for 16kHz sample rate
   const SpeexMode *mode = &speex_wb_mode;
   if (!mode) {
-    PBL_LOG_ERR("Failed to get Speex wideband mode");
+    VOICE_SPEEX_LOG("ERROR: Failed to get Speex wideband mode");
     return false;
   }
   
   s_encoder.enc_state = speex_encoder_init(mode);
   if (!s_encoder.enc_state) {
-    PBL_LOG_ERR("Failed to initialize Speex encoder");
+    VOICE_SPEEX_LOG("ERROR: Failed to initialize Speex encoder");
     return false;
   }
 
@@ -88,7 +88,7 @@ bool voice_speex_init(void) {
 
   // Get frame size
   speex_encoder_ctl(s_encoder.enc_state, SPEEX_GET_FRAME_SIZE, &s_encoder.frame_size);
-  PBL_LOG_DBG("Initial frame size from Speex: %"PRIu32, s_encoder.frame_size);
+  VOICE_SPEEX_LOG("Initial frame size from Speex: %"PRIu32, s_encoder.frame_size);
 
   // Set encoder parameters
   int tmp = SPEEX_QUALITY;
@@ -99,11 +99,11 @@ bool voice_speex_init(void) {
 
   tmp = SPEEX_SAMPLE_RATE;
   speex_encoder_ctl(s_encoder.enc_state, SPEEX_SET_SAMPLING_RATE, &tmp);
-  PBL_LOG_DBG("Set sample rate to: %d", tmp);
+  VOICE_SPEEX_LOG("Set sample rate to: %d", tmp);
 
   tmp = SPEEX_BIT_RATE;
   speex_encoder_ctl(s_encoder.enc_state, SPEEX_SET_BITRATE, &tmp);
-  PBL_LOG_DBG("Set bit rate to: %d", tmp);
+  VOICE_SPEEX_LOG("Set bit rate to: %d", tmp);
 
   // Get actual parameters
   int actual_sample_rate, actual_bit_rate;
@@ -125,13 +125,13 @@ bool voice_speex_init(void) {
 
   s_encoder.initialized = true;
 
-  PBL_LOG_DBG("Speex encoder initialized: sample_rate=%"PRIu32", bit_rate=%"PRIu16", frame_size=%"PRIu32", channels=%"PRIu8,
-              s_encoder.sample_rate, s_encoder.bit_rate, s_encoder.frame_size, s_encoder.channels);
+  VOICE_SPEEX_LOG("Speex encoder initialized: sample_rate=%"PRIu32", bit_rate=%"PRIu16", frame_size=%"PRIu32", channels=%"PRIu8,
+                  s_encoder.sample_rate, s_encoder.bit_rate, s_encoder.frame_size, s_encoder.channels);
   
   // Verify sample rates match
   if (s_encoder.sample_rate != MIC_SAMPLE_RATE) {
-    PBL_LOG_WRN("Speex sample rate (%"PRIu32") != Mic sample rate (%d)",
-                s_encoder.sample_rate, MIC_SAMPLE_RATE);
+    VOICE_SPEEX_LOG("WARNING: Speex sample rate (%"PRIu32") != Mic sample rate (%d)", 
+                    s_encoder.sample_rate, MIC_SAMPLE_RATE);
   }
 
   return true;
@@ -174,12 +174,12 @@ void voice_speex_get_transfer_info(AudioTransferInfoSpeex *info) {
   info->frame_size = (uint16_t)s_encoder.frame_size;  // Explicit cast to uint16_t
   info->bitstream_version = s_encoder.bitstream_version;
   
-  PBL_LOG_DBG("Transfer info: sample_rate=%"PRIu32", bit_rate=%"PRIu16", frame_size=%"PRIu16", bitstream_version=%"PRIu8,
-              info->sample_rate, info->bit_rate, info->frame_size, info->bitstream_version);
+  VOICE_SPEEX_LOG("Transfer info: sample_rate=%"PRIu32", bit_rate=%"PRIu16", frame_size=%"PRIu16", bitstream_version=%"PRIu8, 
+                  info->sample_rate, info->bit_rate, info->frame_size, info->bitstream_version);
   
   // Additional validation
   if (info->sample_rate != 16000) {
-    PBL_LOG_WRN("Unexpected sample rate in transfer info: %"PRIu32, info->sample_rate);
+    VOICE_SPEEX_LOG("WARNING: Unexpected sample rate in transfer info: %"PRIu32, info->sample_rate);
   }
 }
 
@@ -198,12 +198,12 @@ size_t voice_speex_get_frame_buffer_size(void) {
 
 int voice_speex_encode_frame(int16_t *samples, uint8_t *encoded_data, size_t max_encoded_size) {
   if (!s_encoder.initialized) {
-    PBL_LOG_ERR("encode_frame called but Speex not initialized");
+    VOICE_SPEEX_LOG("ERROR: encode_frame called but Speex not initialized");
     return -1;
   }
 
   if (!samples || !encoded_data) {
-    PBL_LOG_ERR("encode_frame called with invalid buffers");
+    VOICE_SPEEX_LOG("ERROR: encode_frame called with invalid buffers");
     return -1;
   }
 
@@ -236,11 +236,11 @@ int voice_speex_encode_frame(int16_t *samples, uint8_t *encoded_data, size_t max
   int encoded_bytes = speex_bits_write(&s_encoder.bits, (char *)encoded_data, max_encoded_size);
   
   if (encoded_bytes < 0) {
-    PBL_LOG_ERR("Failed to write Speex encoded data (returned %d)", encoded_bytes);
+    VOICE_SPEEX_LOG("ERROR: Failed to write Speex encoded data (returned %d)", encoded_bytes);
     return -1;
   }
 
-  PBL_LOG_VERBOSE("Encoded frame: input_samples=%"PRIu32", output_bytes=%d, frame_size=%"PRIu32", channels=%"PRIu8,
+  VOICE_SPEEX_LOG("Encoded frame: input_samples=%"PRIu32", output_bytes=%d, frame_size=%"PRIu32", channels=%"PRIu8, 
                   total_samples, encoded_bytes, s_encoder.frame_size, s_encoder.channels);
 
   return encoded_bytes;

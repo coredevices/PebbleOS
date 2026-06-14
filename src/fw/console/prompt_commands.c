@@ -458,7 +458,7 @@ void command_flash_sec_info(void) {
   }
 }
 
-#ifdef CONFIG_RECOVERY_FW
+#ifdef RECOVERY_FW
 void command_flash_sec_lock(const char *address_str, const char *password) {
   if (strcmp(password, "l0ckm3f0r3v3r") == 0) {
     uint32_t address = strtoul(address_str, NULL, 0);
@@ -468,7 +468,7 @@ void command_flash_sec_lock(const char *address_str, const char *password) {
     prompt_send_response("FAIL: Invalid password");
   }
 }
-#endif // CONFIG_RECOVERY_FW
+#endif // RECOVERY_FW
 #endif // CONFIG_OTP_FLASH
 
 #include "util/rand.h"
@@ -1121,7 +1121,7 @@ void command_display_drop_complete(void) {
 #ifndef CONFIG_SOC_SF32LB52
 // Simply parks the chip permanently in stop mode in whatever state it's currently in. This can be
 // pretty handy when trying to profile power of the chip under certains states
-// NOTE: If you did not configure with CONFIG_NO_WATCHDOG=y, the HW watchdog will reboot you in ~8s
+// NOTE: If you did not configure with `--nowatchdog`, the HW watchdog will reboot you in ~8s
 void command_enter_stop(void) {
   dbgserial_putstr("Entering stop mode indefinitely ... reboot your board to get out!!");
   __disable_irq();
@@ -1140,7 +1140,7 @@ void command_enter_stop(void) {
 }
 #endif
 
-#ifndef CONFIG_RECOVERY_FW
+#ifndef RECOVERY_FW
 // Create a bunch of fragmentation in the filesystem by creating a large number
 // of files and only deleting a small number of them
 void command_litter_filesystem(const char *s_number, const char *s_size) {
@@ -1272,7 +1272,7 @@ void command_mflt_device_info(void) {
 }
 #endif  // MEMFAULT
 
-#ifdef CONFIG_PERFORMANCE_TESTS
+#if PERFORMANCE_TESTS
 // for task_watchdog_bit_set_all
 #include "drivers/task_watchdog.h"
 // For taskYIELD()

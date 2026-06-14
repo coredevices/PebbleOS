@@ -7,8 +7,6 @@
 #include "system/passert.h"
 #include "util/attributes.h"
 
-PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
-
 typedef enum {
   // Values 0 - 3 are deprecated, do not use.
   BLEControlCommandTypeSetDiscoverablePairable = 4,

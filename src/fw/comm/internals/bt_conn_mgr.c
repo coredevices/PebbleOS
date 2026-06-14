@@ -131,7 +131,7 @@ static void prv_handle_response_latency_for_le_conn(GAPLEConnection *hdl) {
   uint16_t secs_til_max_latency;
   ResponseTimeState state;
   BtConsumer responsible_consumer;
-#ifdef CONFIG_RECOVERY_FW
+#ifdef RECOVERY_FW
   // We don't care if we burn up some power from PRF and we want FW to update quickly
   secs_til_max_latency = MAX_PERIOD_RUN_FOREVER;
   state = ResponseTimeMin;

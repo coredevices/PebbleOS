@@ -11,8 +11,6 @@
 #include "system/logging.h"
 #include "system/status_codes.h"
 
-PBL_LOG_MODULE_DECLARE(service_get_bytes, CONFIG_SERVICE_GET_BYTES_LOG_LEVEL);
-
 typedef struct {
   uint32_t core_dump_base;
   bool only_get_new_coredump;

@@ -5,10 +5,7 @@
 
 #include "applib/app_logging.h"
 #include "kernel/memory_layout.h"
-#include "kernel/pebble_tasks.h"
 #include "mcu/privilege.h"
-#include "process_management/app_manager.h"
-#include "process_management/pebble_process_md.h"
 #include "process_management/process_loader.h"
 #include "process_management/process_manager.h"
 #include "syscall/syscall.h"
@@ -18,21 +15,8 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-#include <cmsis_core.h>
 #include <stdint.h>
 #include <inttypes.h>
-
-// Run App/Worker syscalls on a dedicated privileged stack instead of the
-// caller's small unprivileged one, so a task that exhausts its stack faults
-// unprivileged (only that process dies) instead of rebooting the system.
-// Enabled on ARMv8-M (needs PSPLIM); ARMv7-M keeps the old behaviour.
-#if !defined(SYSCALL_PRIVILEGED_STACK)
-#  if defined(CONFIG_MPU_TYPE_ARMV8M)
-#    define SYSCALL_PRIVILEGED_STACK 1
-#  else
-#    define SYSCALL_PRIVILEGED_STACK 0
-#  endif
-#endif
 
 // Indices into FreeRTOS thread local storage
 #define TLS_SYSCALL_LR_IDX 0
@@ -137,106 +121,6 @@ void syscall_assert_userspace_buffer(const void* buf, size_t num_bytes) {
   syscall_failed();
 }
 
-#if SYSCALL_PRIVILEGED_STACK
-// Dedicated privileged stacks for App/Worker syscalls. Plain .bss statics land
-// in the privileged-only .kernel_bss output (KERNEL_RAM): unreadable by app
-// code, zeroed at boot. (Not section(".kernel_bss") -- that would orphan them.)
-#define SYSCALL_STACK_WORDS 512u  // 2 KiB each; size against measured high-water.
-static StackType_t s_app_syscall_stack[SYSCALL_STACK_WORDS] __attribute__((aligned(8)));
-static StackType_t s_worker_syscall_stack[SYSCALL_STACK_WORDS] __attribute__((aligned(8)));
-
-// Port hook: top of the current task's dedicated syscall stack (base in
-// *base_out), or NULL to keep it on the caller's stack. App + Worker only;
-// moddable apps use mcu_call_unprivileged() and stay on their own stack.
-uint32_t *xApplicationGetSyscallStack(uintptr_t *base_out) {
-  StackType_t *stack;
-  switch (pebble_task_get_current()) {
-    case PebbleTask_App:
-#ifdef CONFIG_MODDABLE_XS
-      {
-        const PebbleProcessMd *md = app_manager_get_current_app_md();
-        if (md != NULL && md->is_moddable_app) {
-          return NULL;
-        }
-      }
-#endif
-      stack = s_app_syscall_stack;
-      break;
-    case PebbleTask_Worker:
-      stack = s_worker_syscall_stack;
-      break;
-    default:
-      return NULL;
-  }
-  *base_out = (uintptr_t)&stack[0];
-  return (uint32_t *)&stack[SYSCALL_STACK_WORDS];
-}
-
-static bool prv_psp_in_syscall_stack(uintptr_t psp, const StackType_t *stack) {
-  return (psp > (uintptr_t)&stack[0]) && (psp <= (uintptr_t)&stack[SYSCALL_STACK_WORDS]);
-}
-
-// Task SP/PSPLIM to restore if the finishing syscall ran on a dedicated stack,
-// packed as (psplim << 32 | sp) to return in r0:r1; 0 = no switch needed.
-USED uint64_t syscall_stack_restore_target(void) {
-  const uintptr_t psp = __get_PSP();
-  if (prv_psp_in_syscall_stack(psp, s_app_syscall_stack) ||
-      prv_psp_in_syscall_stack(psp, s_worker_syscall_stack)) {
-    const uint32_t sp = (uint32_t)prv_get_syscall_sp();  // slot1 = pre-syscall task SP
-    const uint32_t psplim = (uint32_t)ulTaskGetStackStart(xTaskGetCurrentTaskHandle());
-    return ((uint64_t)psplim << 32) | sp;
-  }
-  return 0;
-}
-
-// Peak unused bytes on a syscall stack: scan the zeroed .bss from the base to
-// the first written word (the high-water). For sizing during validation.
-static uint16_t prv_syscall_stack_free_bytes(const StackType_t *stack) {
-  uint32_t i = 0;
-  while (i < SYSCALL_STACK_WORDS && stack[i] == 0) {
-    i++;
-  }
-  return (uint16_t)(i * sizeof(StackType_t));
-}
-
-uint16_t syscall_app_stack_free_bytes(void) {
-  return prv_syscall_stack_free_bytes(s_app_syscall_stack);
-}
-
-uint16_t syscall_worker_stack_free_bytes(void) {
-  return prv_syscall_stack_free_bytes(s_worker_syscall_stack);
-}
-
-// Drop privilege and return to the task. If the syscall ran on a dedicated
-// stack, restore PSP/PSPLIM to the task stack first (while still privileged).
-EXTERNALLY_VISIBLE void NAKED_FUNC USED prv_drop_privilege(void) {
-  __asm volatile (
-    " push {r0, r1} \n"                       // save syscall return value
-    " bl process_manager_handle_syscall_exit \n"
-    " bl get_syscall_lr \n"                    // r0 = real return address
-    " push {r0, r1} \n"                        // save real LR (r1 = pad; keeps 8-byte align)
-    " bl syscall_stack_restore_target \n"      // r0 = restore SP (0 = none), r1 = restore PSPLIM
-    " mov r2, r0 \n"                           // r2 = restore SP
-    " mov r3, r1 \n"                           // r3 = restore PSPLIM
-    " pop {r0, r1} \n"                         // r0 = real LR
-    " mov r12, r0 \n"                          // r12 = real LR (caller-saved; no bl follows)
-    " pop {r0, r1} \n"                         // r0,r1 = syscall return value
-    " cbz r2, 1f \n"                           // skip stack switch if not relocated
-    " msr psp, r2 \n"                          // back to the app stack (higher addr; safe vs low limit)
-    " msr psplim, r3 \n"                       // restore the app stack limit
-    " isb \n"
-    "1: \n"
-    " mrs r2, control \n"                      // drop privilege: CONTROL.nPRIV = 1
-    " orr r2, r2, #1 \n"
-    " msr control, r2 \n"
-    " isb \n"
-    " bx r12 \n"                               // return into the app
-  );
-}
-#else
-uint16_t syscall_app_stack_free_bytes(void) { return 0xFFFF; }
-uint16_t syscall_worker_stack_free_bytes(void) { return 0xFFFF; }
-
 // Drop privileges and return to the address stored in thread local storage
 // Has to preserve r0 and r1 so the syscall's return value is passed through
 EXTERNALLY_VISIBLE void NAKED_FUNC USED prv_drop_privilege(void) {
@@ -255,7 +139,6 @@ EXTERNALLY_VISIBLE void NAKED_FUNC USED prv_drop_privilege(void) {
     " bx lr \n" // Leave the syscall
   );
 }
-#endif // SYSCALL_PRIVILEGED_STACK
 
 // Just jump straight into the drop privilege code
 EXTERNALLY_VISIBLE void NAKED_FUNC USED prv_drop_privilege_wrapper(void) {

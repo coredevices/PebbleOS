@@ -162,7 +162,7 @@ static void prv_debug_str(const char* msg) {
 // NOTE: We are explicitly avoiding use of vsniprintf and cohorts to reduce our stack
 // requirements
 static void prv_debug_str_str(const char* msg, const char* s) {
-#ifdef CONFIG_PULSE_EVERYWHERE
+#if PULSE_EVERYWHERE
   void *ctx = pulse_logging_log_sync_begin(LOG_LEVEL_ALWAYS, __FILE_NAME__, 0);
   pulse_logging_log_sync_append(ctx, msg);
   pulse_logging_log_sync_append(ctx, s);
@@ -192,7 +192,7 @@ static void prv_debug_str_int(const char* msg, uint32_t i, int base) {
     itoa(i, buffer, base);
   }
 
-#ifdef CONFIG_PULSE_EVERYWHERE
+#if PULSE_EVERYWHERE
   void *ctx = pulse_logging_log_sync_begin(LOG_LEVEL_ALWAYS, __FILE_NAME__, 0);
   pulse_logging_log_sync_append(ctx, msg);
   pulse_logging_log_sync_append(ctx, buffer);
@@ -447,14 +447,14 @@ static void prv_write_memory_regions(const MemoryRegion *regions, unsigned int c
 }
 
 #if defined(CONFIG_SOC_SF32LB52)
-// Wake the LCPU so its LPSYS RAM is reachable, letting BLE crashes (e.g. NimBLE
-// host asserts) capture the controller RAM. HAL_HPAON_WakeCore busy-waits for
-// the LCPU to ack; if it is fully powered down this blocks until the watchdog
-// reboots us, costing only this dump. We reset right after, so the wake request
-// is never balanced.
+// LCPU RAM lives in the LPSYS domain; reading it while that domain is powered
+// down hangs/faults. LP_ACTIVE reports whether it is reachable.
 static void prv_dump_lcpu_ram(uint32_t flash_base) {
-  HAL_HPAON_WakeCore(CORE_ID_LCPU);
-  prv_write_memory_regions(&LCPU_MEMORY_REGION, 1, flash_base);
+  if (hwp_hpsys_aon->ISSR & HPSYS_AON_ISSR_LP_ACTIVE) {
+    prv_write_memory_regions(&LCPU_MEMORY_REGION, 1, flash_base);
+  } else {
+    prv_debug_str("CD: LCPU domain off, skipping LCPU RAM");
+  }
 }
 #endif
 

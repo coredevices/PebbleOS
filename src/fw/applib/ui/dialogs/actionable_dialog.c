@@ -103,20 +103,20 @@ static void prv_actionable_dialog_load(Window *window) {
   }
   ActionBarLayer *action_bar = actionable_dialog->action_bar;
   if (actionable_dialog->action_bar_type == DialogActionBarConfirm) {
-#if !defined(CONFIG_RECOVERY_FW)
+#if !defined(RECOVERY_FW)
     actionable_dialog->select_icon = gbitmap_create_with_resource(
         RESOURCE_ID_ACTION_BAR_ICON_CHECK);
 #endif
     action_bar_layer_set_context(action_bar, window);
     action_bar_layer_set_icon(action_bar, BUTTON_ID_SELECT, actionable_dialog->select_icon);
   } else if (actionable_dialog->action_bar_type == DialogActionBarDecline) {
-#if !defined(CONFIG_RECOVERY_FW)
+#if !defined(RECOVERY_FW)
     actionable_dialog->select_icon = gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_X);
 #endif
     action_bar_layer_set_context(action_bar, window);
     action_bar_layer_set_icon(action_bar, BUTTON_ID_SELECT, actionable_dialog->select_icon);
   } else if (actionable_dialog->action_bar_type == DialogActionBarConfirmDecline) {
-#if !defined(CONFIG_RECOVERY_FW)
+#if !defined(RECOVERY_FW)
     actionable_dialog->up_icon = gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_CHECK);
     actionable_dialog->down_icon = gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_X);
 #endif

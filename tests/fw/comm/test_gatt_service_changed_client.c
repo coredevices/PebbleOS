@@ -13,7 +13,9 @@
 // Fakes
 ///////////////////////////////////////////////////////////
 
-#include "fake_bt_driver_gatt.h"
+#include "fake_GAPAPI.h"
+#include "fake_GATTAPI.h"
+#include "fake_GATTAPI_test_vectors.h"
 #include "fake_pbl_malloc.h"
 #include "fake_new_timer.h"
 #include "fake_rtc.h"
@@ -22,6 +24,8 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 
+#include "stubs_bluetopia_interface.h"
+#include "stubs_bt_driver_gatt.h"
 #include "stubs_bt_lock.h"
 #include "stubs_events.h"
 #include "stubs_gatt_client_subscriptions.h"
@@ -31,6 +35,10 @@
 #include "stubs_prompt.h"
 #include "stubs_rand_ptr.h"
 #include "stubs_regular_timer.h"
+
+extern bool prv_contains_service_changed_characteristic(
+    GAPLEConnection *connection,
+    const GATT_Service_Discovery_Indication_Data_t *event);
 
 void core_dump_reset(bool is_forced) {
 }
@@ -91,24 +99,43 @@ void fake_kernel_malloc_mark_assert_equal(void) { }
 ///////////////////////////////////////////////////////////
 
 #define TEST_GATT_CONNECTION_ID (1234)
+#define TEST_BT_STACK_ID (1)
 
-static const BTDeviceInternal s_device = {
-  .address = { .octets = { 1, 2, 3, 4, 5, 6 } },
-};
+typedef enum {
+  Unknown,
+  Handled,
+  Unhandled,
+} HandleResult;
+
+static HandleResult s_last_handle_discovery_result;
+
+static void prv_bluetopia_service_discovery_cb(unsigned int stack_id,
+                                               GATT_Service_Discovery_Event_Data_t *event,
+                                               unsigned long callback_param) {
+  cl_assert_equal_i(stack_id, TEST_BT_STACK_ID);
+  if (event->Event_Data_Type == etGATT_Service_Discovery_Indication) {
+    const GATT_Service_Discovery_Indication_Data_t *indication =
+                                           event->Event_Data.GATT_Service_Discovery_Indication_Data;
+    cl_assert_equal_i(s_connection.gatt_connection_id, TEST_GATT_CONNECTION_ID);
+    cl_assert_equal_i(indication->ConnectionID, TEST_GATT_CONNECTION_ID);
+
+    s_last_handle_discovery_result =
+        prv_contains_service_changed_characteristic(&s_connection, indication) ? Handled : Unhandled;
+  }
+}
 
 // Tests
 ///////////////////////////////////////////////////////////
 
 void test_gatt_service_changed_client__initialize(void) {
+  s_last_handle_discovery_result = Unknown;
   fake_gatt_init();
   s_connection = (GAPLEConnection) {
-    .device = s_device,
     .gatt_connection_id = TEST_GATT_CONNECTION_ID,
     .gatt_service_changed_att_handle = 0,
   };
-  // Kick off a discovery so the fake driver is in the running state and will
-  // deliver the service indications the tests inject below.
-  cl_assert_equal_i(gatt_client_discovery_discover_all(&s_device), BTErrnoOK);
+  GATT_Start_Service_Discovery_Handle_Range(TEST_BT_STACK_ID, TEST_GATT_CONNECTION_ID, NULL, 0, NULL,
+                               prv_bluetopia_service_discovery_cb, 0);
 }
 
 void test_gatt_service_changed_client__cleanup(void) {
@@ -119,27 +146,28 @@ void test_gatt_service_changed_client__cleanup(void) {
 
 void test_gatt_service_changed_client__handle_non_gatt_profile_service(void) {
   fake_gatt_put_discovery_indication_blood_pressure_service(TEST_GATT_CONNECTION_ID);
-  // A service without the Service Changed characteristic leaves the recorded
-  // handle untouched.
-  cl_assert_equal_i(s_connection.gatt_service_changed_att_handle, 0);
+  cl_assert_equal_i(s_last_handle_discovery_result, Unhandled);
 }
 
 void test_gatt_service_changed_client__handle_gatt_profile_service(void) {
   fake_gatt_put_discovery_indication_gatt_profile_service(TEST_GATT_CONNECTION_ID,
                                                      true /* has_service_changed_characteristic */);
-  // The driver reports the Service Changed characteristic's handle, which the
-  // firmware records so it can match future Service Changed indications. (The
-  // CCCD subscription that the old Bluetopia client performed now lives in the
-  // driver; see commit 3b9276848 onward and src/bluetooth-fw/nimble.)
-  cl_assert_equal_i(s_connection.gatt_service_changed_att_handle,
-                    fake_gatt_gatt_profile_service_service_changed_att_handle());
+  cl_assert_equal_i(s_last_handle_discovery_result, Handled);
+
+  // Verify the CCCD of the Service Changed characteristic has been written:
+  cl_assert_equal_i(fake_gatt_write_last_written_handle(),
+                    fake_gatt_gatt_profile_service_service_changed_cccd_att_handle());
+
+  // Simulate getting a Write Response confirmation for the written CCCD:
+  fake_gatt_put_write_response_for_last_write();
+
+  // Today we don't really do anything upon getting the confirmation
 }
 
 void test_gatt_service_changed_client__handle_gatt_profile_service_missing_service_changed(void) {
   fake_gatt_put_discovery_indication_gatt_profile_service(TEST_GATT_CONNECTION_ID,
                                                     false /* has_service_changed_characteristic */);
-  // No Service Changed characteristic in the profile service: nothing recorded.
-  cl_assert_equal_i(s_connection.gatt_service_changed_att_handle, 0);
+  cl_assert_equal_i(s_last_handle_discovery_result, Handled);
 }
 
 // Characteristic Value Indications
@@ -157,10 +185,6 @@ void test_gatt_service_changed_client__handle_indication_non_service_changed(voi
 void test_gatt_service_changed_client__handle_indication_service_changed(void) {
   fake_gatt_put_discovery_indication_gatt_profile_service(TEST_GATT_CONNECTION_ID,
                                                      true /* has_service_changed_characteristic */);
-  // Finish the initial discovery so the indication-triggered rediscovery can
-  // start a fresh one.
-  fake_gatt_put_discovery_complete_event(GATT_SERVICE_DISCOVERY_STATUS_SUCCESS,
-                                         TEST_GATT_CONNECTION_ID);
   const uint16_t att_handle = fake_gatt_gatt_profile_service_service_changed_att_handle();
 
   fake_kernel_malloc_mark();

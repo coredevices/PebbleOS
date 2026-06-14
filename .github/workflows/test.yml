@@ -61,9 +61,7 @@ jobs:
         run: ./waf configure --board ${{env.TEST_BOARD}}
 
       - name: Run tests
-        # -k keeps going after a failing test so the run reports every failure,
-        # not just the first. The job still fails if anything failed.
-        run: ./waf test -k
+        run: ./waf test
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v6

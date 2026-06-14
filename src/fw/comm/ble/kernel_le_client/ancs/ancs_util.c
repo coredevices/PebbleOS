@@ -4,6 +4,7 @@
 #include "ancs_util.h"
 #include "ancs_types.h"
 
+#include "comm/ble/ble_log.h"
 
 #include "syscall/syscall.h"
 

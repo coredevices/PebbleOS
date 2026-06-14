@@ -24,8 +24,6 @@
 #include "system/logging.h"
 #include "system/passert.h"
 
-PBL_LOG_MODULE_DEFINE(driver_pmic_npm1300, CONFIG_DRIVER_PMIC_LOG_LEVEL);
-
 #define CHARGER_DEBOUNCE_MS 400
 #define ADC_POLL_DELAY_MS   5     // Delay between ADC poll iterations to reduce I2C traffic
 #define ADC_POLL_TIMEOUT_MS 100   // Max time to wait for ADC measurement

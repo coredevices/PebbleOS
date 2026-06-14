@@ -140,7 +140,7 @@ static void prv_dismiss_warning(void) {
 }
 
 static void prv_enter_low_power(void *ignored) {
-#ifndef CONFIG_RECOVERY_FW
+#ifndef RECOVERY_FW
   watchface_start_low_power();
   modal_manager_pop_all_below_priority(ModalPriorityAlarm);
   modal_manager_set_min_priority(ModalPriorityAlarm);
@@ -154,7 +154,7 @@ static void prv_enter_low_power(void *ignored) {
 }
 
 static void prv_exit_low_power(void) {
-#ifndef CONFIG_RECOVERY_FW
+#ifndef RECOVERY_FW
   modal_manager_set_min_priority(ModalPriorityMin);
   watchface_launch_default(NULL);
   vibe_intensity_set(vibe_intensity_get());

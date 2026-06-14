@@ -13,8 +13,6 @@
 #include "system/passert.h"
 #include "util/list.h"
 
-PBL_LOG_MODULE_DEFINE(service_app_outbox_service, CONFIG_SERVICE_APP_OUTBOX_SERVICE_LOG_LEVEL);
-
 static PebbleRecursiveMutex *s_app_outbox_mutex;
 
 typedef struct {

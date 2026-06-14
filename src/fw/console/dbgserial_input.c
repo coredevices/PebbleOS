@@ -17,7 +17,7 @@
 
 #include "drivers/gpio.h"
 
-#if !defined(CONFIG_RELEASE) || defined(CONFIG_MFG)
+#if !defined(CONFIG_RELEASE) || defined(MANUFACTURING_FW)
 
 #define STOP_MODE_TIMEOUT_MS (2000)
 

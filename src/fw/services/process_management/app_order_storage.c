@@ -10,8 +10,6 @@
 #include "system/logging.h"
 #include "system/passert.h"
 
-PBL_LOG_MODULE_DEFINE(service_process_management, CONFIG_SERVICE_PROCESS_MANAGEMENT_LOG_LEVEL);
-
 #define ORDER_FILE "lnc_ord"
 
 typedef struct {
@@ -24,12 +22,6 @@ static AppOrderData s_data;
 void app_order_storage_init(void) {
   s_data.order_mutex = mutex_create();
 }
-
-#if UNITTEST
-void app_order_storage_reset_for_tests(void) {
-  s_data.file_known_missing = false;
-}
-#endif
 
 //! Must be called from the App Task
 AppMenuOrderStorage *app_order_read_order(void) {

@@ -9,10 +9,7 @@
 #include "drivers/periph_config.h"
 #include "kernel/events.h"
 #include "mcu/interrupts.h"
-#include "system/logging.h"
 #include "system/passert.h"
-
-PBL_LOG_MODULE_DEFINE(driver_exti_sf32lb, CONFIG_DRIVER_EXTI_LOG_LEVEL);
 
 #define EXTI_MAX_GPIO1_PIN_NUM 16
 

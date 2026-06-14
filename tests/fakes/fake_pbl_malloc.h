@@ -33,13 +33,6 @@ static void prv_pointer_list_add(void *ptr, size_t bytes, void *lr) {
   s_pointer_list = (PointerListNode *)list_prepend((ListNode *)s_pointer_list, &node->list_node);
 }
 
-//! @return true iff ptr is currently a live tracked allocation. Useful for
-//! safely deciding whether a pointer recovered from a union (where it may
-//! overlap non-pointer data) is a real heap allocation that must be freed.
-static bool fake_pbl_malloc_contains(void *ptr) {
-  return list_find((ListNode *)s_pointer_list, prv_pointer_list_filter, ptr) != NULL;
-}
-
 static void prv_pointer_list_remove(void *ptr) {
   ListNode *node = list_find((ListNode *)s_pointer_list, prv_pointer_list_filter, ptr);
   if (!node && ptr) {

@@ -17,8 +17,6 @@
 #include "queue.h"
 #include "task.h"
 
-PBL_LOG_MODULE_DEFINE(service_system_task, CONFIG_SERVICE_SYSTEM_TASK_LOG_LEVEL);
-
 #define SYSTEM_TASK_PRIORITY (tskIDLE_PRIORITY + 1)
 
 typedef struct {

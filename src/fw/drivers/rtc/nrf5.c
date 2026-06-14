@@ -30,8 +30,6 @@
 #include <stdio.h>
 #include <string.h>
 
-PBL_LOG_MODULE_DEFINE(driver_rtc_nrf5, CONFIG_DRIVER_RTC_LOG_LEVEL);
-
 //! The type of a raw reading from the RTC (masked to 0xFFFFFF).
 typedef uint32_t RtcIntervalTicks;
 
@@ -135,7 +133,7 @@ static time_t prv_ticks_to_time(RtcTicks ticks) {
 }
 
 void rtc_set_time(time_t time) {
-#ifdef CONFIG_LOG
+#ifdef PBL_LOG_ENABLED
   char buffer[TIME_STRING_BUFFER_SIZE];
   PBL_LOG_INFO("Setting time to %lu <%s>", time, time_t_to_string(buffer, time));
 #endif

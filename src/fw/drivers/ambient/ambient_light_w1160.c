@@ -13,8 +13,6 @@
 
 #include <inttypes.h>
 
-PBL_LOG_MODULE_DEFINE(driver_ambient_w1160, CONFIG_DRIVER_AMBIENT_LOG_LEVEL);
-
 // Registers
 #define W1160_STATE_REG             0x00
 #define W1160_IT_FAST1_REG          0x02

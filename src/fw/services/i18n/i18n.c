@@ -41,8 +41,6 @@
 #include "system/passert.h"
 #include "util/list.h"
 
-PBL_LOG_MODULE_DEFINE(service_i18n, CONFIG_SERVICE_I18N_LOG_LEVEL);
-
 //////////////////////////////////////////////////////
 // See mo.h for a description of the MO file format //
 //////////////////////////////////////////////////////

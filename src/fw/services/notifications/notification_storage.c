@@ -18,8 +18,6 @@
 #include <stddef.h>
 #include <string.h>
 
-PBL_LOG_MODULE_DEFINE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
-
 typedef struct NotificationIterState {
   SerializedTimelineItemHeader header;
   int fd;

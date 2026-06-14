@@ -20,8 +20,6 @@
 #include "util/math.h"
 #include "util/units.h"
 
-PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
-
 #define SETTINGS_FILE_NAME "appglancedb"
 //! The defines below calculate `APP_GLANCE_DB_MAX_USED_SIZE` which is the actual minimum space we
 //! need to guarantee all of the apps's glances on the watch can have the same number of slices,

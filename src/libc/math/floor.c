@@ -5,11 +5,11 @@
 // Implements:
 //   double floor(double x);
 
+#include <pblibc_private.h>
+
 #include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
-
-#include <pblibc_private.h>
 
 // TODO: PBL-36144 replace this naive implementation with __builtin_floor()
 

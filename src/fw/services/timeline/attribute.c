@@ -10,8 +10,6 @@
 #include "system/logging.h"
 #include "util/math.h"
 
-PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
-
 #define MAX_LENGTH_TITLE (64)
 #define MAX_LENGTH_SUBTITLE (64)
 #define MAX_LENGTH_BODY (512)

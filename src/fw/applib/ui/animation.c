@@ -1051,7 +1051,7 @@ void animation_private_state_init(AnimationState *state) {
 #endif
 
   // If this a legacy 2.0 application, instantiate the 2.0 legacy animation support
-#ifndef CONFIG_RECOVERY_FW
+#ifndef RECOVERY_FW
   if (process_manager_compiled_with_legacy2_sdk()) {
     animation_legacy2_private_init_scheduler((AnimationLegacy2Scheduler *)state);
     return;

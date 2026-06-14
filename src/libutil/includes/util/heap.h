@@ -72,7 +72,7 @@ void heap_set_corruption_handler(Heap *heap, CorruptionHandler corruption_handle
 //! @note heap_init() must be called prior to using heap_malloc().
 //! @param nbytes Number of bytes to be allocated. Must be > 0.
 //! @param client_pc The PC register of the client who caused this malloc. Only used when
-//!                  CONFIG_MALLOC_INSTRUMENTATION is defined.
+//!                  MALLOC_INSTRUMENTATION is defined.
 //! @return A pointer to the start of the allocated memory
 void* heap_malloc(Heap* const heap, unsigned long nbytes, uintptr_t client_pc);
 
@@ -91,7 +91,7 @@ void heap_free(Heap* const heap, void* ptr, uintptr_t client_pc);
 //! @param ptr Points to the memory region to re-allocate.
 //! @param nbytes The total number of bytes to allocate.
 //! @param client_pc The PC register of the client who caused this malloc. Only used when
-//!                  CONFIG_MALLOC_INSTRUMENTATION is defined.
+//!                  MALLOC_INSTRUMENTATION is defined.
 void* heap_realloc(Heap* const heap, void *ptr, unsigned long nbytes, uintptr_t client_pc);
 
 //! Allocate a buffer to hold anything. The initial contents of the buffer

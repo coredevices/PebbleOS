@@ -63,15 +63,8 @@ static char *s_text = "A B C D E F G "
 
 void prv_prepare_fb_steps_xy(GSize size, int16_t steps_x, int16_t steps_y) {
   gbitmap_destroy(s_dest_bitmap);
-  // These are off-screen, tiled scratch buffers for side-by-side comparison, not
-  // the real display framebuffer. On a round platform GBITMAP_NATIVE_FORMAT is
-  // GBitmapFormat8BitCircular, whose data is addressed through a per-row offset
-  // table (g_gbitmap_data_row_infos) that is only attached to a full-screen
-  // (DISP_COLS x DISP_ROWS) bitmap. A non-full-screen circular bitmap has no row
-  // table, so reading a data row dereferences an unset pointer and segfaults.
-  // Use a plain rectangular 8-bit format, which addresses rows by row_size_bytes.
   s_dest_bitmap = gbitmap_create_blank(GSize(size.w * steps_x, size.h * steps_y),
-                                       GBitmapFormat8Bit);
+                                       GBITMAP_NATIVE_FORMAT);
   ctx.dest_bitmap = *s_dest_bitmap;
   ctx.draw_state.clip_box = (GRect){.size = size};
   ctx.draw_state.drawing_box = ctx.draw_state.clip_box;
@@ -415,10 +408,6 @@ void test_graphics_draw_text_flow__max_used_size_draw_text_doom(void) {
 }
 
 void test_graphics_draw_text_flow__no_infinite_loop(void) {
-  // This case uses the rect-display perimeter, which only exists on rect
-  // platforms. The suite builds for the round (gabbro) platform, so the body is
-  // compiled out there; clar still discovers the test because it scans textually.
-#if PBL_RECT
   TextLayoutExtended layout = {
     .flow_data = {
       .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_rect},
@@ -452,7 +441,6 @@ void test_graphics_draw_text_flow__no_infinite_loop(void) {
   }
 
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
-#endif // PBL_RECT
 }
 
 void test_graphics_draw_text_flow__no_infinite_loop2(void) {

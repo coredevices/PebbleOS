@@ -28,8 +28,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-PBL_LOG_MODULE_DEFINE(service_get_bytes, CONFIG_SERVICE_GET_BYTES_LOG_LEVEL);
-
 // Internal state used by the protocol handler.
 typedef struct {
   CommSession *session;

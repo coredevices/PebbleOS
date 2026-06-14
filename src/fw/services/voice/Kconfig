@@ -6,11 +6,3 @@ config SERVICE_VOICE
     default y if MIC
     help
       Voice (dictation) service. Requires a microphone driver (CONFIG_MIC).
-
-if SERVICE_VOICE
-
-module = SERVICE_VOICE
-module-str = Voice
-source "src/fw/Kconfig.template.log_level"
-
-endif

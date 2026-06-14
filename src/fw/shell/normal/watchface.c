@@ -194,59 +194,6 @@ static void prv_check_combo_back_hold(void) {
   }
 }
 
-static void prv_launch_timeline_app(AppInstallId app_id, ClickRecognizerRef recognizer,
-                                    AppLaunchReason reason) {
-  static TimelineArgs s_timeline_args;
-  s_timeline_args.launch_into_pin = true;
-  s_timeline_args.stay_in_list_view = true;
-  timeline_peek_get_item_id(&s_timeline_args.pin_id);
-
-  const ButtonId button = click_recognizer_get_button_id(recognizer);
-  const CompositorTransition *animation = NULL;
-  const bool is_up = (button == BUTTON_ID_UP);
-  const bool is_future = (app_id == APP_ID_TIMELINE) || (app_id == APP_ID_TIMELINE_FULL && !is_up);
-
-  if (app_id == APP_ID_TIMELINE) {
-    s_timeline_args.direction = TimelineIterDirectionFuture;
-  } else if (app_id == APP_ID_TIMELINE_PAST) {
-    s_timeline_args.direction = TimelineIterDirectionPast;
-  } else {
-    s_timeline_args.direction = is_future ? TimelineIterDirectionFuture : TimelineIterDirectionPast;
-  }
-
-  const bool timeline_is_destination = true;
-#if PBL_ROUND
-  animation = compositor_dot_transition_timeline_get(is_future, timeline_is_destination);
-#else
-  const bool jump = (!uuid_is_invalid(&s_timeline_args.pin_id) && !timeline_peek_is_first_event());
-  animation = jump ? compositor_peek_transition_timeline_get() :
-                     compositor_slide_transition_timeline_get(is_future, timeline_is_destination,
-                                                              timeline_peek_is_future_empty());
-#endif
-  prv_launch_app_via_button(&(AppLaunchEventConfig) {
-    .id = app_id,
-    .common.reason = reason,
-    .common.args = &s_timeline_args,
-    .common.transition = animation,
-  }, recognizer);
-}
-
-static void prv_launch_quick_launch_app(AppInstallId app_id, ClickRecognizerRef recognizer,
-                                        AppLaunchReason timeline_reason, void *non_timeline_args) {
-  const bool is_timeline = (app_id == APP_ID_TIMELINE) ||
-                           (app_id == APP_ID_TIMELINE_PAST) ||
-                           (app_id == APP_ID_TIMELINE_FULL);
-  if (is_timeline) {
-    prv_launch_timeline_app(app_id, recognizer, timeline_reason);
-  } else {
-    prv_launch_app_via_button(&(AppLaunchEventConfig) {
-      .id = app_id,
-      .common.reason = APP_LAUNCH_QUICK_LAUNCH,
-      .common.args = non_timeline_args,
-    }, recognizer);
-  }
-}
-
 static void prv_quick_launch_handler(ClickRecognizerRef recognizer, void *data) {
   ButtonId button = click_recognizer_get_button_id(recognizer);
 
@@ -260,9 +207,11 @@ static void prv_quick_launch_handler(ClickRecognizerRef recognizer, void *data) 
     app_id = app_install_get_id_for_uuid(&quick_launch_setup_get_app_info()->uuid);
   }
   s_buttons_pressed = BIT_CLEAR;  // Reset our own tracking
-
-  prv_launch_quick_launch_app(app_id, recognizer, APP_LAUNCH_QUICK_LAUNCH,
-                              (void*)APP_QUICK_LAUNCH_ACTION_HOLD);
+  prv_launch_app_via_button(&(AppLaunchEventConfig) {
+    .id = app_id,
+    .common.reason = APP_LAUNCH_QUICK_LAUNCH,
+    .common.args = (void*)APP_QUICK_LAUNCH_ACTION_HOLD,
+  }, recognizer);
 }
 
 static void prv_launch_up_down(ClickRecognizerRef recognizer, void *data) {
@@ -273,10 +222,46 @@ static void prv_launch_up_down(ClickRecognizerRef recognizer, void *data) {
   }
   
   if (!quick_launch_single_click_is_enabled(button)) return;
-  const AppInstallId app_id = quick_launch_single_click_get_app(button);
+  //check if quick launch app is not timeline
+  if (quick_launch_single_click_get_app(button) != APP_ID_TIMELINE) {
+    //launch other quick launch apps
+    prv_launch_app_via_button(&(AppLaunchEventConfig) {
+      .id = quick_launch_single_click_get_app(button),
+      .common.reason = APP_LAUNCH_QUICK_LAUNCH,
+      .common.args = (void*)APP_QUICK_LAUNCH_ACTION_TAP,
+    }, recognizer);
+    return;
+  }
 
-  prv_launch_quick_launch_app(app_id, recognizer, APP_LAUNCH_SYSTEM,
-                              (void*)APP_QUICK_LAUNCH_ACTION_TAP);
+  static TimelineArgs s_timeline_args;
+  const bool is_up = (click_recognizer_get_button_id(recognizer) == BUTTON_ID_UP);
+  if (is_up) {
+    PBL_LOG_DBG("Launching timeline in past mode.");
+    s_timeline_args.direction = TimelineIterDirectionPast;
+  } else {
+    PBL_LOG_DBG("Launching timeline in future mode.");
+    s_timeline_args.direction = TimelineIterDirectionFuture;
+  }
+  s_timeline_args.launch_into_pin = true;
+  s_timeline_args.stay_in_list_view = true;
+  timeline_peek_get_item_id(&s_timeline_args.pin_id);
+
+  const CompositorTransition *animation = NULL;
+  const bool is_future = (s_timeline_args.direction == TimelineIterDirectionFuture);
+  const bool timeline_is_destination = true;
+#if PBL_ROUND
+  animation = compositor_dot_transition_timeline_get(is_future, timeline_is_destination);
+#else
+  const bool jump = (!uuid_is_invalid(&s_timeline_args.pin_id) && !timeline_peek_is_first_event());
+  animation = jump ? compositor_peek_transition_timeline_get() :
+                     compositor_slide_transition_timeline_get(is_future, timeline_is_destination,
+                                                              timeline_peek_is_future_empty());
+#endif
+  prv_launch_app_via_button(&(AppLaunchEventConfig) {
+    .id = APP_ID_TIMELINE,
+    .common.args = &s_timeline_args,
+    .common.transition = animation,
+  }, recognizer);
 }
 
 static void prv_configure_click_handler(ButtonId button_id, ClickHandler single_click_handler) {

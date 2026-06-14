@@ -26,8 +26,6 @@
 
 #include <string.h>
 
-PBL_LOG_MODULE_DEFINE(service_voice, CONFIG_SERVICE_VOICE_LOG_LEVEL);
-
 #define SPEEX_BITSTREAM_VERSION (4)
 
 #define TIMEOUT_SESSION_SETUP (8000)
@@ -35,6 +33,8 @@ PBL_LOG_MODULE_DEFINE(service_voice, CONFIG_SERVICE_VOICE_LOG_LEVEL);
 
 // Buffer size
 #define MAX_ENCODED_FRAME_SIZE (200)
+
+#define VOICE_LOG(fmt, args...)   PBL_LOG_D_DBG(LOG_DOMAIN_VOICE, fmt, ## args)
 
 typedef enum {
   SessionState_Idle = 0,
@@ -68,12 +68,12 @@ static void prv_session_result_timeout(void * data);
 
 static void prv_audio_data_handler(int16_t *samples, size_t sample_count, void *context) {
   if (!voice_speex_is_initialized()) {
-    PBL_LOG_DBG("Speex not initialized, dropping audio data");
+    VOICE_LOG("Speex not initialized, dropping audio data");
     return;
   }
 
   if (s_state != SessionState_Recording) {
-    PBL_LOG_DBG("Not recording, dropping audio data");
+    VOICE_LOG("Not recording, dropping audio data");
     return;
   }
 
@@ -85,7 +85,7 @@ static void prv_audio_data_handler(int16_t *samples, size_t sample_count, void *
   // Ensure we have the right amount of data for a frame
   size_t expected_samples = voice_speex_get_frame_size();
   if (sample_count != expected_samples) {
-    PBL_LOG_DBG("Unexpected audio sample count: got %zu, expected %zu", sample_count, expected_samples);
+    VOICE_LOG("Unexpected audio sample count: got %zu, expected %zu", sample_count, expected_samples);
     return;
   }
 
@@ -97,7 +97,7 @@ static void prv_audio_data_handler(int16_t *samples, size_t sample_count, void *
     // Send encoded data to audio endpoint
     audio_endpoint_add_frame(s_session_id, encoded_buffer, encoded_bytes);
   } else {
-    PBL_LOG_DBG("Failed to encode audio frame");
+    VOICE_LOG("Failed to encode audio frame");
   }
 }
 
@@ -110,7 +110,7 @@ static void prv_teardown_session(void) {
 }
 
 static void prv_stop_recording(void) {
-  PBL_LOG_DBG("prv_stop_recording called - stopping mic and audio endpoint transfer");
+  VOICE_LOG("prv_stop_recording called - stopping mic and audio endpoint transfer");
 
   // First, set state to non-recording to prevent any new audio processing
   s_state = SessionState_WaitForSessionResult;
@@ -128,7 +128,7 @@ static void prv_stop_recording(void) {
 }
 
 static void prv_cancel_recording(void) {
-  PBL_LOG_DBG("prv_cancel_recording called - cancelling mic and audio endpoint transfer");
+  VOICE_LOG("prv_cancel_recording called - cancelling mic and audio endpoint transfer");
   mic_stop(MIC);
 
   audio_endpoint_cancel_transfer(s_session_id);
@@ -160,8 +160,8 @@ static void prv_start_result_timeout(void) {
 
 static void prv_audio_transfer_stopped_handler(AudioEndpointSessionId session_id) {
   mutex_lock(s_lock);
-  PBL_LOG_DBG("prv_audio_transfer_stopped_handler called with session_id=%d (current=%d)", 
-              session_id, s_session_id);
+  VOICE_LOG("prv_audio_transfer_stopped_handler called with session_id=%d (current=%d)", 
+            session_id, s_session_id);
   
   if (s_session_id != session_id) {
     PBL_LOG_WRN("Received audio transfer message when no session was in progress ("
@@ -177,7 +177,7 @@ static void prv_audio_transfer_stopped_handler(AudioEndpointSessionId session_id
     return;
   }
 
-  PBL_LOG_DBG("Stopping recording due to phone request");
+  VOICE_LOG("Stopping recording due to phone request");
   // TODO: Handle this better: there is no feedback to the UI that we've stopped recording
   s_state = SessionState_WaitForSessionResult;
   prv_stop_recording();
@@ -187,20 +187,20 @@ static void prv_audio_transfer_stopped_handler(AudioEndpointSessionId session_id
 }
 
 static bool prv_start_recording(void) {
-  PBL_LOG_DBG("prv_start_recording called");
+  VOICE_LOG("prv_start_recording called");
   // Start microphone with Speex frame buffer
   int16_t *frame_buffer = voice_speex_get_frame_buffer();
   size_t frame_size_samples = voice_speex_get_frame_size();  // Get frame size in samples
 
-  PBL_LOG_DBG("Got Speex frame buffer: %p, frame_size_samples: %zu", frame_buffer, frame_size_samples);
+  VOICE_LOG("Got Speex frame buffer: %p, frame_size_samples: %zu", frame_buffer, frame_size_samples);
 
   if (frame_buffer && frame_size_samples > 0) {
-    PBL_LOG_DBG("Starting microphone with frame buffer");
+    VOICE_LOG("Starting microphone with frame buffer");
     if (!mic_start(MIC, &prv_audio_data_handler, NULL, frame_buffer, frame_size_samples)) {
       PBL_LOG_ERR("Failed to start microphone for voice session");
       return false;
     }
-    PBL_LOG_DBG("Microphone started successfully");
+    VOICE_LOG("Microphone started successfully");
   } else {
     PBL_LOG_ERR("Invalid Speex frame buffer");
     return false;
@@ -224,32 +224,32 @@ static void prv_send_event(VoiceEventType event_type, VoiceStatus status,
 
 //! Expects s_lock is held by caller
 static void prv_handle_subsystem_started(SessionState transition_to_state) {
-  PBL_LOG_DBG("prv_handle_subsystem_started called: transition_to_state=%d, current_state=%d", 
-              transition_to_state, s_state);
+  VOICE_LOG("prv_handle_subsystem_started called: transition_to_state=%d, current_state=%d", 
+            transition_to_state, s_state);
             
   PBL_ASSERTN(transition_to_state == SessionState_VoiceEndpointSetupReceived ||
               transition_to_state == SessionState_AudioEndpointSetupReceived);
 
   if (s_state == SessionState_Idle) { // we error'ed out
-    PBL_LOG_DBG("Session already errored out (state=Idle), ignoring subsystem start");
+    VOICE_LOG("Session already errored out (state=Idle), ignoring subsystem start");
     return;
   }
 
   if (s_state == SessionState_StartSession) {
     // we are still waiting for one of the subsystems to be ready
-    PBL_LOG_DBG("First subsystem ready, transitioning to state %d", transition_to_state);
+    VOICE_LOG("First subsystem ready, transitioning to state %d", transition_to_state);
     s_state = transition_to_state;
   } else {
     PBL_ASSERTN((s_state == SessionState_VoiceEndpointSetupReceived ||
                  s_state == SessionState_AudioEndpointSetupReceived) &&
                 (transition_to_state != s_state));
     
-    PBL_LOG_DBG("Both subsystems ready, transitioning to Recording state");
+    VOICE_LOG("Both subsystems ready, transitioning to Recording state");
     s_state = SessionState_Recording;
 
     new_timer_stop(s_timeout);
 
-    PBL_LOG_DBG("Starting recording now that both subsystems are ready");
+    VOICE_LOG("Starting recording now that both subsystems are ready");
     if (!prv_start_recording()) {
       PBL_LOG_ERR("Voice session setup failed while starting recording");
       prv_cancel_session();
@@ -267,8 +267,8 @@ static void prv_session_result_timeout(void * data) {
   mutex_lock(s_lock);
 
   if (s_teardown_in_progress || (s_timeout_generation != s_session_generation)) {
-    PBL_LOG_DBG("Ignoring stale session result timeout (t_gen=%"PRIu32" cur=%"PRIu32" teardown=%d)",
-                s_timeout_generation, s_session_generation, s_teardown_in_progress);
+    VOICE_LOG("Ignoring stale session result timeout (t_gen=%"PRIu32" cur=%"PRIu32" teardown=%d)",
+              s_timeout_generation, s_session_generation, s_teardown_in_progress);
     mutex_unlock(s_lock);
     return;
   }
@@ -286,8 +286,8 @@ static void prv_session_result_timeout(void * data) {
 static void prv_session_setup_timeout(void * data) {
   mutex_lock(s_lock);
   if (s_teardown_in_progress || (s_timeout_generation != s_session_generation)) {
-    PBL_LOG_DBG("Ignoring stale session setup timeout (t_gen=%"PRIu32" cur=%"PRIu32" teardown=%d)",
-                s_timeout_generation, s_session_generation, s_teardown_in_progress);
+    VOICE_LOG("Ignoring stale session setup timeout (t_gen=%"PRIu32" cur=%"PRIu32" teardown=%d)",
+              s_timeout_generation, s_session_generation, s_teardown_in_progress);
     mutex_unlock(s_lock);
     return;
   }
@@ -336,7 +336,7 @@ void voice_init(void) {
 // voice_handle_session_setup_result call or a session setup timeout occurs (timer callback
 // prv_session_setup_timeout)
 VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
-  PBL_LOG_DBG("voice_start_dictation called with session_type: %d", session_type);
+  VOICE_LOG("voice_start_dictation called with session_type: %d", session_type);
   mutex_lock(s_lock);
 
   // Lazily initialize Speex encoder to avoid baseline memory usage when voice not used
@@ -349,7 +349,7 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
   }
 
   if (s_state != SessionState_Idle) {
-    PBL_LOG_DBG("Voice service not idle (state: %d), returning invalid session", s_state);
+    VOICE_LOG("Voice service not idle (state: %d), returning invalid session", s_state);
     mutex_unlock(s_lock);
     return VOICE_SESSION_ID_INVALID;
   }
@@ -360,7 +360,7 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
     s_session_generation = 1;
   }
   s_teardown_in_progress = false;
-  PBL_LOG_DBG("Setting state to StartSession");
+  VOICE_LOG("Setting state to StartSession");
   s_state = SessionState_StartSession;
 
   // check if we're being started from an app so we know to send the UUID when setting up a session
@@ -372,7 +372,7 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
     uuid_to_string(&s_app_uuid, uuid_str);
     PBL_LOG_INFO("Starting app-initiated voice dictation session for app %s", uuid_str);
   } else {
-    PBL_LOG_DBG("Starting system-initiated voice dictation session");
+    VOICE_LOG("Starting system-initiated voice dictation session");
   }
 
   // Set up communication session responsiveness for voice session
@@ -385,17 +385,17 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
   // Get Speex transfer info
   AudioTransferInfoSpeex transfer_info;
   voice_speex_get_transfer_info(&transfer_info);
-  PBL_LOG_DBG("Got Speex transfer info: sample_rate=%"PRIu32", bit_rate=%"PRIu16", frame_size=%"PRIu16, 
-              transfer_info.sample_rate, transfer_info.bit_rate, transfer_info.frame_size);
+  VOICE_LOG("Got Speex transfer info: sample_rate=%"PRIu32", bit_rate=%"PRIu16", frame_size=%"PRIu16, 
+            transfer_info.sample_rate, transfer_info.bit_rate, transfer_info.frame_size);
 
-  PBL_LOG_DBG("Setting up audio endpoint transfer");
+  VOICE_LOG("Setting up audio endpoint transfer");
   s_session_id = audio_endpoint_setup_transfer(prv_audio_transfer_stopped_handler);
   PBL_ASSERTN(s_session_id != AUDIO_ENDPOINT_SESSION_INVALID_ID);
-  PBL_LOG_DBG("Audio endpoint transfer setup complete with session_id=%d", s_session_id);
+  VOICE_LOG("Audio endpoint transfer setup complete with session_id=%d", s_session_id);
 
 
   PBL_LOG_INFO("Send session setup message. Session type: %d", session_type);
-  PBL_LOG_DBG("Calling voice_endpoint_setup_session");
+  VOICE_LOG("Calling voice_endpoint_setup_session");
   voice_endpoint_setup_session(session_type, s_session_id, &transfer_info,
       s_from_app ? &s_app_uuid : NULL);
 
@@ -405,7 +405,7 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
   s_timeout_generation = s_session_generation;
   new_timer_start(s_timeout, TIMEOUT_SESSION_SETUP, prv_session_setup_timeout, NULL, 0);
 
-  PBL_LOG_DBG("Audio transfer setup complete, handling subsystem started");
+  VOICE_LOG("Audio transfer setup complete, handling subsystem started");
   prv_handle_subsystem_started(SessionState_AudioEndpointSetupReceived);
 
   mutex_unlock(s_lock);
@@ -448,7 +448,7 @@ void voice_cancel_dictation(VoiceSessionId session_id) {
     if (!stopped) {
       // Timer callback in progress or already firing; invalidate generation so callback no-ops
       s_timeout_generation = 0;
-      PBL_LOG_DBG("Timeout stop race (cancel), invalidating timeout generation");
+      VOICE_LOG("Timeout stop race (cancel), invalidating timeout generation");
     }
     s_teardown_in_progress = true;
     if (s_state == SessionState_StartSession ||
@@ -471,14 +471,14 @@ unlock:
 // end the recording
 void voice_handle_session_setup_result(VoiceEndpointResult result,
     VoiceEndpointSessionType session_type, bool app_initiated) {
-  PBL_LOG_DBG("voice_handle_session_setup_result: result=%d, session_type=%d, app_initiated=%d", 
-              result, session_type, app_initiated);
-  PBL_LOG_DBG("Current state: %d", s_state);
+  VOICE_LOG("voice_handle_session_setup_result: result=%d, session_type=%d, app_initiated=%d", 
+            result, session_type, app_initiated);
+  VOICE_LOG("Current state: %d", s_state);
 
   mutex_lock(s_lock);
 
   if (s_state == SessionState_Idle) {
-    PBL_LOG_DBG("State is Idle, ignoring session setup result");
+    VOICE_LOG("State is Idle, ignoring session setup result");
     goto unlock;
   }
 
@@ -509,7 +509,7 @@ void voice_handle_session_setup_result(VoiceEndpointResult result,
   }
 
   if (result != VoiceEndpointResultSuccess) {
-    PBL_LOG_DBG("Session setup failed with result %d", result);
+    VOICE_LOG("ERROR: Session setup failed with result %d", result);
     prv_cancel_session();
     VoiceStatus status = prv_get_status_from_result(result);
     PBL_LOG_WRN("Error occurred setting up session: %d", result);
@@ -518,7 +518,7 @@ void voice_handle_session_setup_result(VoiceEndpointResult result,
   }
 
   if (app_initiated != s_from_app) {
-    PBL_LOG_DBG("App initiated mismatch - received=%d, expected=%d", app_initiated, s_from_app);
+    VOICE_LOG("ERROR: App initiated mismatch - received=%d, expected=%d", app_initiated, s_from_app);
     prv_cancel_session();
     if (app_initiated) {
       PBL_LOG_WRN("Received session setup result for app initiated session when it "
@@ -531,15 +531,15 @@ void voice_handle_session_setup_result(VoiceEndpointResult result,
     goto done;
   }
 
-  PBL_LOG_DBG("Session setup successful!");
+  VOICE_LOG("Session setup successful!");
   has_error = false;
 
 done:
   if (has_error) {
-    PBL_LOG_DBG("Session setup had errors, stopping timeout timer");
+    VOICE_LOG("Session setup had errors, stopping timeout timer");
     new_timer_stop(s_timeout);
   } else {
-    PBL_LOG_DBG("Session setup complete, notifying voice endpoint subsystem started");
+    VOICE_LOG("Session setup complete, notifying voice endpoint subsystem started");
     prv_handle_subsystem_started(SessionState_VoiceEndpointSetupReceived);
   }
 unlock:

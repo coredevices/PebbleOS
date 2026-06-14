@@ -13,11 +13,8 @@ BUILD_ID_SECTION_NAME = ".note.gnu.build-id"
 BUILD_ID_NOTE_OWNER_NAME = "GNU"
 BUILD_ID_NOTE_TYPE_NAME = "NT_GNU_BUILD_ID"
 
-NEW_LOGGING_VERSION = "NL0102"
+NEW_LOGGING_VERSION = "NL0101"
 NEW_LOGGING_HEADER_OFFSET = 0
-
-# File -> module map entries emitted by PBL_LOG_MODULE_DEFINE/PBL_LOG_MODULE_DECLARE
-MODULE_LINE_PREFIX = "MODULE:"
 
 LOG_LINE_SPLIT_REGEX = r"([^\0]+)\0"
 LOG_LINE_SPLIT_PATTERN = re.compile(
@@ -113,33 +110,15 @@ class LogDict:
 
         # First, split the section by '\0' characters, keeping track of the start.
         # There may be padding, so ignore any empty strings.
-        modules = {}
-        entries = {}
         for line in LOG_LINE_SPLIT_PATTERN.finditer(section):
             # Skip the header line
             if line.start() == NEW_LOGGING_HEADER_OFFSET:
                 continue
 
-            # Collect file -> module map entries
-            if line.group(1).startswith(MODULE_LINE_PREFIX):
-                file_name, _, module = line.group(1)[
-                    len(MODULE_LINE_PREFIX) :
-                ].rpartition(":")
-                modules[file_name] = module
-                continue
-
             tags = self.log_line_regex.match(line.group(1))
 
             # Add the core offset to the 'offset' parameter
-            entries[str(line.start() + self.core_id_offset)] = tags.groupdict()
-
-        # Attach the module name to every message from a mapped file
-        for tags in entries.values():
-            module = modules.get(tags.get("file"))
-            if module:
-                tags["module"] = module
-
-        self.log_dict.update(entries)
+            self.log_dict[str(line.start() + self.core_id_offset)] = tags.groupdict()
 
     def get_log_dict(self):
         return self.log_dict

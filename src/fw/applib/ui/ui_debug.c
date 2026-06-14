@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#ifdef CONFIG_UI_DEBUG
+#ifdef UI_DEBUG
 
 #include "ui.h"
 #include "applib/ui/app_window_stack.h"
@@ -93,4 +93,4 @@ void command_dump_window(void) {
   }
   layer_dump_tree(window_get_root_layer(window));
 }
-#endif /* CONFIG_UI_DEBUG */
+#endif /* UI_DEBUG */

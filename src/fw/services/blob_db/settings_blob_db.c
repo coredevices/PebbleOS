@@ -19,8 +19,6 @@
 
 #include <string.h>
 
-PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
-
 //! Notification preferences file name and size
 #define NOTIF_PREFS_FILE_NAME "notifpref"
 #define NOTIF_PREFS_FILE_LEN (1024)

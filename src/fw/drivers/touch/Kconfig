@@ -18,8 +18,4 @@ config TOUCH_QEMU
     help
       Support for the QEMU touchscreen peripheral.
 
-module = DRIVER_TOUCH
-module-str = Touchscreen
-source "src/fw/Kconfig.template.log_level"
-
 endif # TOUCH

@@ -62,9 +62,7 @@ bool animation_destroy(Animation *animation) {
 
 static int s_app_window_render_count;
 FrameBuffer* app_state_get_framebuffer(void) {
-  // Not a great proxy for app rendering but good enough. The compositor fetches the app
-  // framebuffer once per app render (via compositor_get_app_framebuffer_as_bitmap() on the
-  // fast path where the app framebuffer matches the display), so this increments once per render.
+  // Not a great proxy for app rendering but good enough. This gets called twice per app render.
   ++s_app_window_render_count;
 
   return compositor_get_framebuffer();
@@ -111,16 +109,8 @@ void framebuffer_clear(FrameBuffer* f) {
 void framebuffer_dirty_all(FrameBuffer *fb) {
 }
 
-// Back the framebuffer bitmap with a real buffer sized for the display. compositor_render_app()
-// memsets framebuffer_get_size_bytes() bytes through this bitmap's addr, so it must point at at
-// least DISP_COLS * DISP_ROWS bytes of valid storage.
-static uint8_t s_framebuffer_data[DISP_COLS * DISP_ROWS];
 GBitmap framebuffer_get_as_bitmap(FrameBuffer *fb, const GSize *size) {
-  return (GBitmap) {
-    .addr = s_framebuffer_data,
-    .row_size_bytes = DISP_COLS,
-    .bounds = GRect(0, 0, size->w, size->h),
-  };
+  return (GBitmap) { };
 }
 
 void framebuffer_set_line(FrameBuffer* f, uint8_t y, const uint8_t* buffer) {
@@ -292,22 +282,15 @@ void test_compositor__app_render_busy(void) {
   cl_assert_equal_i(s_count_display_update, 2);
   cl_assert_equal_i(s_count_animation_schedule, 0);
 
-  // The deferred transition now fires. Since this is an App-to-App transition, the compositor
-  // requests a fresh app render and schedules the transition animation rather than rendering the
-  // app framebuffer straight to the display (see commit 6dcc0ff6a, which added the missing
-  // prv_send_app_render_request() to the App-to-App branch to fix a frozen-screen bug). The
-  // deferred app render that follows is consumed by scheduling the animation, so no extra display
-  // update happens here.
+  // transition is started from the deferred transition event
   s_display_update_in_progress = false;
   prv_handle_display_update_complete();
-  cl_assert_equal_i(s_count_display_update, 2);
-  cl_assert_equal_i(s_count_animation_schedule, 1);
+  cl_assert_equal_i(s_count_display_update, 3);
 
-  // A subsequent app render arrives mid-transition; the animation is already scheduled and the
-  // display is not updated again here.
+  // subsequent app render starts animation
   compositor_app_render_ready();
   cl_assert_equal_i(s_count_animation_schedule, 1);
-  cl_assert_equal_i(s_count_display_update, 2);
+  cl_assert_equal_i(s_count_display_update, 3);
 }
 
 void test_compositor__modal_transition_cancels_deferred_app(void) {
@@ -372,7 +355,7 @@ void test_compositor__app_not_ready_modal_push_pop(void) {
 
   // Now the app has rendered something and we should actually update the display.
   compositor_app_render_ready();
-  cl_assert_equal_i(s_app_window_render_count, 1);
+  cl_assert_equal_i(s_app_window_render_count, 2);
 }
 
 void test_compositor__app_not_ready_cancelled_animation_deferred(void) {
@@ -404,7 +387,7 @@ void test_compositor__app_not_ready_cancelled_animation_deferred(void) {
 
   // Now the app has rendered something and we should actually update the display.
   compositor_app_render_ready();
-  cl_assert_equal_i(s_app_window_render_count, 1);
+  cl_assert_equal_i(s_app_window_render_count, 2);
   cl_assert_equal_i(s_count_animation_destroy, 1);
 }
 

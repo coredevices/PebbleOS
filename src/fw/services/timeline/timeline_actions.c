@@ -44,8 +44,6 @@
 #include "util/size.h"
 #include "util/struct.h"
 
-PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
-
 typedef struct {
   void *action_data;
   void *context;

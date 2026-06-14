@@ -5,11 +5,3 @@ config SERVICE_POLL_REMOTE
     bool "Poll remote"
     help
       Poll-remote service.
-
-if SERVICE_POLL_REMOTE
-
-module = SERVICE_POLL_REMOTE
-module-str = Poll remote
-source "src/fw/Kconfig.template.log_level"
-
-endif

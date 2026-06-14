@@ -12,16 +12,16 @@
 
 #include <cmsis_core.h>
 
-#if defined(CONFIG_NO_WATCHDOG)
+#if defined(NO_WATCHDOG)
 #include "FreeRTOS.h"
 #endif
 
 void prepare_for_software_failure(void) {
-#ifdef CONFIG_PULSE_EVERYWHERE
+#if PULSE_EVERYWHERE
   pulse_logging_log_buffer_flush();
 #endif
 
-#ifndef CONFIG_MFG
+#ifndef MANUFACTURING_FW
   boot_bit_set(BOOT_BIT_SOFTWARE_FAILURE_OCCURRED);
 #endif
 }
@@ -29,7 +29,7 @@ void prepare_for_software_failure(void) {
 NORETURN reset_due_to_software_failure(void) {
   prepare_for_software_failure();
 
-#if defined(CONFIG_NO_WATCHDOG)
+#if defined(NO_WATCHDOG)
   // Don't reset right away, leave it in a state we can inspect
 
   __disable_irq();

@@ -53,8 +53,4 @@ endchoice
 
 endif # MAG
 
-module = DRIVER_IMU
-module-str = IMU
-source "src/fw/Kconfig.template.log_level"
-
 endmenu

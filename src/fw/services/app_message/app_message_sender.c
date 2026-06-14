@@ -11,8 +11,6 @@
 #include "util/math.h"
 #include "util/net.h"
 
-PBL_LOG_MODULE_DEFINE(service_app_message, CONFIG_SERVICE_APP_MESSAGE_LOG_LEVEL);
-
 // -------------------------------------------------------------------------------------------------
 // Misc helpers:
 

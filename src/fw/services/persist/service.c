@@ -19,8 +19,6 @@
 #include "util/list.h"
 #include "util/units.h"
 
-PBL_LOG_MODULE_DEFINE(service_persist, CONFIG_SERVICE_PERSIST_LOG_LEVEL);
-
 #define PERSIST_STORAGE_MAX_SPACE MiBYTES(1)
 #define PERSIST_STORAGE_INITIAL_ALLOC KiBYTES(4)
 

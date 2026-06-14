@@ -5,6 +5,7 @@
 #include "ams_analytics.h"
 #include "ams_util.h"
 
+#include "comm/ble/ble_log.h"
 #include "comm/ble/gap_le_connection.h"
 #include "comm/ble/gatt_client_accessors.h"
 #include "comm/ble/gatt_client_operations.h"
@@ -26,8 +27,6 @@
 #include <btutil/bt_device.h>
 
 #include <string.h>
-
-PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
 // -------------------------------------------------------------------------------------------------
 // Function prototypes
@@ -552,7 +551,7 @@ void ams_handle_service_discovered(BLECharacteristic *characteristics) {
     return;
   }
 
-  PBL_LOG_DBG("In AMS service discovery CB");
+  BLE_LOG_DEBUG("In AMS service discovery CB");
   PBL_ASSERTN(characteristics);
 
   if (s_ams_client->characteristics[0] != BLE_CHARACTERISTIC_INVALID) {

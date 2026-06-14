@@ -1,5 +1,4 @@
 [general]
-extra-path=tools/gitlint
 contrib=contrib-body-requires-signed-off-by,contrib-disallow-cleanup-commits
 ignore-merge-commits=false
 ignore-fixup-commits=false

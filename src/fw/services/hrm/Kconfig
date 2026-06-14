@@ -6,11 +6,3 @@ config SERVICE_HRM
     default y if HRM
     help
       Heart rate monitor manager service. Requires an HRM driver (CONFIG_HRM).
-
-if SERVICE_HRM
-
-module = SERVICE_HRM
-module-str = Heart rate monitor
-source "src/fw/Kconfig.template.log_level"
-
-endif

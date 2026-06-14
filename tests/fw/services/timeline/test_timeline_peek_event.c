@@ -725,12 +725,7 @@ void test_timeline_peek_event__one_persistent_event_lifecycle(void) {
                .timeout_ms = timeout_s * MS_PER_SECOND,
                .time_type = TimelinePeekTimeType_ShowStarted, .is_first_event = true );
   prv_invoke_timer(timeout_s);
-  // The peek fires at exactly the persistent event's end time. prv_show_event() in the future
-  // direction treats an event as "in future until it ends" using an inclusive boundary
-  // (timestamp >= now - duration), so at now == end the just-ended event still counts towards
-  // future_has_event. is_future_empty is therefore false here, matching the non-persistent
-  // lifecycle tests above which leave .is_future_empty defaulted to false at this same boundary.
-  CHECK_NO_EVENTS( .count = 6 );
+  CHECK_NO_EVENTS( .count = 6, .is_future_empty = true );
 }
 
 void test_timeline_peek_event__upcoming_priotized_over_persistent_event_lifecycle(void) {
@@ -760,30 +755,19 @@ void test_timeline_peek_event__upcoming_priotized_over_persistent_event_lifecycl
                .time_type = TimelinePeekTimeType_ShowStarted, .is_first_event = true );
   prv_invoke_timer(timeout_s);
   timeout_s = TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S;
-  // The upcoming non-persistent item2 is prioritised for display while both items peek, but
-  // is_first_event reflects the earliest event in the future direction (prv_peek_filter tracks
-  // first_header separately from the displayed item). The persistent item1 has the earlier
-  // timestamp and is still within its peeking window, so item1 remains the first event and the
-  // peek for item2 reports is_first_event == false.
   CHECK_EVENT( .count = 7, .item_id = item2.header.id, .num_concurrent = 1,
                .timeout_ms = timeout_s * MS_PER_SECOND,
-               .time_type = TimelinePeekTimeType_ShowWillStart, .is_first_event = false );
+               .time_type = TimelinePeekTimeType_ShowWillStart, .is_first_event = true );
   prv_invoke_timer(timeout_s);
   timeout_s = TIMELINE_PEEK_HIDE_AFTER_TIME_S;
-  // item2 is still the displayed peek while the persistent item1 remains the earliest future
-  // event, so is_first_event stays false (see the count == 7 note above).
   CHECK_EVENT( .count = 8, .item_id = item2.header.id, .num_concurrent = 1,
-               .timeout_ms = timeout_s * MS_PER_SECOND,
-               .time_type = TimelinePeekTimeType_ShowStarted, .is_first_event = false );
-  prv_invoke_timer(timeout_s);
-  timeout_s = 30 * SECONDS_PER_MINUTE; // time until persistent event ends
-  // item2 has finished; the persistent item1 is again the only (and earliest) event being shown,
-  // so is_first_event is true here.
-  CHECK_EVENT( .count = 9, .item_id = item.header.id, .num_concurrent = 0,
                .timeout_ms = timeout_s * MS_PER_SECOND,
                .time_type = TimelinePeekTimeType_ShowStarted, .is_first_event = true );
   prv_invoke_timer(timeout_s);
-  // Fires at exactly the persistent event's end time, where the inclusive future boundary still
-  // counts the just-ended event (see one_persistent_event_lifecycle), so future is not empty.
-  CHECK_NO_EVENTS( .count = 10 );
+  timeout_s = 30 * SECONDS_PER_MINUTE; // time until persistent event ends
+  CHECK_EVENT( .count = 9, .item_id = item.header.id, .num_concurrent = 0,
+               .timeout_ms = timeout_s * MS_PER_SECOND,
+               .time_type = TimelinePeekTimeType_ShowStarted );
+  prv_invoke_timer(timeout_s);
+  CHECK_NO_EVENTS( .count = 10, .is_future_empty = true );
 }

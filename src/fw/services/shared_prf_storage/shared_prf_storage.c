@@ -14,8 +14,6 @@
 #include <btutil/sm_util.h>
 #include <os/mutex.h>
 
-PBL_LOG_MODULE_DEFINE(service_shared_prf_storage, CONFIG_SERVICE_SHARED_PRF_STORAGE_LOG_LEVEL);
-
 #define SPRF_REGION_SIZE (FLASH_REGION_SHARED_PRF_STORAGE_END - \
                           FLASH_REGION_SHARED_PRF_STORAGE_BEGIN)
 #define SPRF_NUM_PAGES (SPRF_REGION_SIZE / sizeof(SharedPRFData))

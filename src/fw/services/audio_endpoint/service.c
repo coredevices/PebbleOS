@@ -11,8 +11,6 @@
 #include "system/passert.h"
 #include "util/circular_buffer.h"
 
-PBL_LOG_MODULE_DEFINE(service_audio_endpoint, CONFIG_SERVICE_AUDIO_ENDPOINT_LOG_LEVEL);
-
 #define AUDIO_ENDPOINT (10000)
 
 #define ACTIVE_MODE_TIMEOUT      (10000)

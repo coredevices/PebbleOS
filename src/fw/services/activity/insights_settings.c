@@ -12,8 +12,6 @@
 #include "system/logging.h"
 #include "util/size.h"
 
-PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
-
 #define ACTIVITY_INSIGHTS_SETTINGS_FILENAME "insights"
 #define ACTIVITY_INSIGHTS_SETTINGS_DEFAULT_FILE_SIZE 4096
 

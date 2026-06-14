@@ -22,7 +22,7 @@ from pebble.loghashing.constants import (
 hex_digits = set(string.hexdigits)
 
 LOG_DICT_KEY_VERSION = "new_logging_version"
-NEW_LOGGING_VERSION = "NL0102"
+NEW_LOGGING_VERSION = "NL0101"
 
 LOG_LEVEL_ALWAYS = 0
 LOG_LEVEL_ERROR = 1
@@ -31,14 +31,13 @@ LOG_LEVEL_INFO = 100
 LOG_LEVEL_DEBUG = 200
 LOG_LEVEL_DEBUG_VERBOSE = 255
 
-# Zephyr-style severity tags; ALWAYS logs carry no tag
 level_strings_map = {
-    LOG_LEVEL_ALWAYS: "",
-    LOG_LEVEL_ERROR: "err",
-    LOG_LEVEL_WARNING: "wrn",
-    LOG_LEVEL_INFO: "inf",
-    LOG_LEVEL_DEBUG: "dbg",
-    LOG_LEVEL_DEBUG_VERBOSE: "vrb",
+    LOG_LEVEL_ALWAYS: "*",
+    LOG_LEVEL_ERROR: "E",
+    LOG_LEVEL_WARNING: "W",
+    LOG_LEVEL_INFO: "I",
+    LOG_LEVEL_DEBUG: "D",
+    LOG_LEVEL_DEBUG_VERBOSE: "V",
 }
 
 # Location of the core number in the message hash
@@ -83,25 +82,19 @@ def dehash_line(line, log_dict):
     if not line_dict:
         return line
 
-    # Zephyr-like format: [timestamp] <lvl> task source: msg. Messages from a
-    # log module already carry a "module: " prefix in formatted_msg; others get
-    # their file:line as the source.
     output = []
-
-    timestamp = " ".join(line_dict[key] for key in ("date", "time") if key in line_dict)
-    if timestamp:
-        output.append("[{}]".format(timestamp))
-
-    if "date" not in line_dict and line_dict.get("re_level"):
-        output.append("<{}>".format(line_dict["re_level"]))
-
-    # "-" means the task prefix is disabled (CONFIG_LOG_TASK_PREFIX)
-    if line_dict.get("task", "-") != "-":
+    if "date" not in line_dict and "re_level" in line_dict:
+        output.append(line_dict["re_level"])
+    if "task" in line_dict:
         output.append(line_dict["task"])
+    if "date" in line_dict:
+        output.append(line_dict["date"])
+    if "time" in line_dict:
+        output.append(line_dict["time"])
 
-    if "module" not in line_dict and "file" in line_dict and "line" in line_dict:
+    if "file" in line_dict and "line" in line_dict:
         filename = os.path.basename(line_dict["file"])
-        output.append("{}:{}:".format(filename, line_dict["line"]))
+        output.append("{}:{}>".format(filename, line_dict["line"]))
 
     output.append(line_dict["formatted_msg"])
 
@@ -222,10 +215,6 @@ def parse_message(msg, log_dict):
         output_msg = safe_output_msg % tuple(arg_list)
     except (TypeError, ValueError, UnicodeDecodeError) as e:
         output_msg = msg + " ----> ERROR: " + str(e)
-
-    # Prefix the message with the log module name, if any
-    if "module" in output_dict:
-        output_msg = "{}: {}".format(output_dict["module"], output_msg)
 
     # Add the formatted msg to the copy of our line dict
     output_dict["formatted_msg"] = output_msg

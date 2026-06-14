@@ -20,8 +20,6 @@
 #include <stdio.h>
 #include <string.h>
 
-PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
-
 #define HEALTH_DB_DEBUG 0
 #define HEALTH_DB_MAX_KEY_LEN 30
 

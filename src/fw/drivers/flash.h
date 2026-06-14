@@ -244,7 +244,7 @@ status_t flash_write_security_register(uint32_t addr, uint8_t val);
 //! @returns The information about the security registers.
 const FlashSecurityRegisters *flash_security_registers_info(void);
 
-#ifdef CONFIG_RECOVERY_FW
+#ifdef RECOVERY_FW
 //! Lock security register
 //!
 //! @warning This is a one time operation and will permanently lock the security registers.
@@ -254,4 +254,4 @@ const FlashSecurityRegisters *flash_security_registers_info(void);
 //! @retval S_SUCCESS if the lock was successful
 //! @retval StatusCode if the lock failed
 status_t flash_lock_security_register(uint32_t addr);
-#endif // CONFIG_RECOVERY_FW
+#endif // RECOVERY_FW

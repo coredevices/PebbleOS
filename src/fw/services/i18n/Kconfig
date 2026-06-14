@@ -5,11 +5,3 @@ config SERVICE_I18N
     bool "Internationalization"
     help
       Internationalization (gettext) runtime support.
-
-if SERVICE_I18N
-
-module = SERVICE_I18N
-module-str = Internationalization
-source "src/fw/Kconfig.template.log_level"
-
-endif

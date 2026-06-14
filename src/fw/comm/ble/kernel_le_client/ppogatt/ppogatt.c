@@ -820,7 +820,7 @@ static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value,
     PBL_LOG_ERR("Invalid UUID");
     goto handle_error;
   }
-#ifdef CONFIG_RECOVERY_FW
+#if RECOVERY_FW
   if (!uuid_is_system(&meta->app_uuid)) {
     PBL_LOG_ERR("Found PPoGATT server from non-Pebble app, not connecting in PRF..");
     goto handle_error;

@@ -61,14 +61,10 @@ static size_t prv_serialize_log_header(MessageContents *contents,
 
   // Log the log level and the current task+privilege level
   contents->log_level_char = pbl_log_get_level_char(log_level);
-#ifdef CONFIG_LOG_TASK_PREFIX
   contents->task_char = pebble_task_get_char(task);
   if (mcu_state_is_privileged()) {
     contents->task_char = toupper(contents->task_char);
   }
-#else
-  contents->task_char = '-';
-#endif
 
   contents->time_ms = timestamp_ms;
 

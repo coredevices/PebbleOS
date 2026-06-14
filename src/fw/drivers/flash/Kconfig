@@ -23,8 +23,4 @@ config FLASH_QEMU
     help
       Support for the QEMU external flash peripheral.
 
-module = DRIVER_FLASH
-module-str = Flash
-source "src/fw/Kconfig.template.log_level"
-
 endif # FLASH

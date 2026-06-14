@@ -27,7 +27,9 @@ typedef struct AccelServiceState {
   EventServiceInfo accel_shake_info;
   EventServiceInfo accel_double_tap_info;
 
+#if LOG_DOMAIN_ACCEL
   uint64_t prev_timestamp_ms;
+#endif
 } AccelServiceState;
 
 //! Initialize an existing state object

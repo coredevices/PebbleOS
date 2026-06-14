@@ -7,7 +7,7 @@
 #include "pbl/services/regular_timer.h"
 #include "syscall/syscall_internal.h"
 
-#ifndef CONFIG_RECOVERY_FW
+#ifndef RECOVERY_FW
 #include "pbl/services/notifications/do_not_disturb.h"
 #include "pbl/services/notifications/alerts.h"
 #include "pbl/services/notifications/alerts_preferences_private.h"
@@ -50,7 +50,7 @@ static void prv_handle_disconnection_debounced(void *data) {
   DebounceConnection conn_id = (DebounceConnection)data;
   s_debounced_state_is_connected[conn_id] = false;
   prv_put_debounced_connection_event(conn_id);
-#ifndef CONFIG_RECOVERY_FW
+#ifndef RECOVERY_FW
   if (alerts_should_vibrate_for_type(AlertOther)) {
     uint32_t vibe_id = vibe_score_info_get_resource_id(
         alerts_preferences_get_vibe_score_for_client(VibeClient_OnDisconnect));

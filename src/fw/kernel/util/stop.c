@@ -22,7 +22,7 @@
 
 static int s_num_items_disallowing_stop_mode = 0;
 
-#ifdef CONFIG_NOSLEEP
+#ifdef PBL_NOSLEEP
 static bool s_sleep_mode_allowed = false;
 #else
 static bool s_sleep_mode_allowed = true;
@@ -90,7 +90,7 @@ void stop_mode_enable( StopModeInhibitor inhibitor ) {
 }
 
 bool stop_mode_is_allowed(void) {
-#ifdef CONFIG_NOSTOP
+#if PBL_NOSTOP
   return false;
 #else
   return s_num_items_disallowing_stop_mode == 0;
@@ -102,7 +102,7 @@ void sleep_mode_enable(bool enable) {
 }
 
 bool sleep_mode_is_allowed(void) {
-#ifdef CONFIG_NOSLEEP
+#ifdef PBL_NOSLEEP
   return false;
 #endif
   return s_sleep_mode_allowed;

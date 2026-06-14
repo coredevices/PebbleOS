@@ -11,8 +11,6 @@
 #include "system/passert.h"
 #include "kernel/util/sleep.h"
 
-PBL_LOG_MODULE_DEFINE(driver_vibe_aw86225, CONFIG_DRIVER_VIBE_LOG_LEVEL);
-
 #define AW862XX_REG_SRST                                (0x00)
 #define AW862XX_REG_PLAYCFG2                            (0x07)
 #define AW862XX_REG_PLAYCFG3                            (0x08)

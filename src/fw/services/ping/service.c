@@ -17,8 +17,6 @@
 
 #include <inttypes.h>
 
-PBL_LOG_MODULE_DEFINE(service_ping, CONFIG_SERVICE_PING_LOG_LEVEL);
-
 #define PING_ENDPOINT 2001
 #define PING_MIN_PERIOD_SECS  (60 * 60)    // 1 hour
 

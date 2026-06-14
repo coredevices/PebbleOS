@@ -16,8 +16,6 @@
 
 #include "nimble_type_conversions.h"
 
-PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
-
 #define KEY_SIZE 16
 
 #define BLE_FLAG_SECURE_CONNECTIONS 0x01
@@ -207,14 +205,14 @@ static void prv_notify_host_bonding_changed(const int obj_type,
   if (bonding.pairing_info.is_remote_encryption_info_valid) {
     bt_driver_cb_handle_create_bonding(&bonding, &addr);
   } else {
-    PBL_LOG_DBG("Skipping notifying OS of our keys");
+    PBL_LOG_D_DBG(LOG_DOMAIN_BT, "Skipping notifying OS of our keys");
   }
 }
 
 static int prv_nimble_store_write_sec(const int obj_type,
                                       const struct ble_store_value_sec *value_sec) {
   if (value_sec->key_size != KEY_SIZE || value_sec->csrk_present) {
-    PBL_LOG_ERR("Unsupported security parameters");
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "Unsupported security parameters");
     return BLE_HS_ENOTSUP;
   }
 
@@ -432,7 +430,7 @@ static int prv_nimble_store_gen_key(uint8_t key, struct ble_store_gen_key *gen_k
 
     ret = ble_hs_hci_rand(stored_keys, sizeof(stored_keys));
     if (ret != 0) {
-      PBL_LOG_ERR("Could not generate root keys: %d", ret);
+      PBL_LOG_D_ERR(LOG_DOMAIN_BT, "Could not generate root keys: %d", ret);
       return ret;
     }
 

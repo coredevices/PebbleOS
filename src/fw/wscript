@@ -80,7 +80,11 @@ def configure(conf):
     define = 'MAX_FONT_GLYPH_SIZE={}'.format(platform['MAX_FONT_GLYPH_SIZE'])
     conf.env.append_value('DEFINES', [define])
 
-    conf.env.NORMAL_SHELL = 'sdk' if conf.env.CONFIG_SHELL_SDK else 'normal'
+    if conf.options.sdkshell:
+        conf.env.NORMAL_SHELL = 'sdk'
+        conf.env.append_value('DEFINES', ['SHELL_SDK'])
+    else:
+        conf.env.NORMAL_SHELL = 'normal'
 
     conf.env.PRF_AS_FIRMWARE = conf.options.prf_as_firmware
     if conf.options.prf_as_firmware:
@@ -114,7 +118,7 @@ def _generate_memory_layout(bld):
         slot_size = 3072 * 1024
         resources_size = 2048 * 1024
         prf_size = 576 * 1024
-        if bld.env.VARIANT == 'prf' and not (bld.env.CONFIG_MFG or bld.env.PRF_AS_FIRMWARE):
+        if bld.env.VARIANT == 'prf' and not (bld.env.IS_MFG or bld.env.PRF_AS_FIRMWARE):
             offset_size = ptable_size + bootloader_size + 2 * slot_size + 2 * resources_size
             fw_max_size = prf_size
         else:
@@ -128,7 +132,7 @@ def _generate_memory_layout(bld):
         # Bootloader
         offset_size = 32 * 1024
         flash_size = 1024 * 1024
-        if bld.env.CONFIG_BOARD_FAMILY_ASTERIX and bld.env.VARIANT == 'prf' and not bld.env.CONFIG_MFG:
+        if bld.env.CONFIG_BOARD_FAMILY_ASTERIX and bld.env.VARIANT == 'prf' and not bld.env.IS_MFG:
             fw_max_size = flash_size // 2
         else:
             fw_max_size = flash_size
@@ -169,14 +173,14 @@ def _generate_memory_layout(bld):
     AppRamSize = collections.namedtuple('AppRamSize',
                                         'app_segment runtime_reserved')
     APP_RAM_SIZES = {
-        'aplite': AppRamSize(28000, 6820),
-        'basalt': AppRamSize(68 * 1024, 30 * 1024),
-        'chalk': AppRamSize(68 * 1024, 30 * 1024),
+        'aplite': AppRamSize(25952, 6820),
+        'basalt': AppRamSize(66 * 1024, 30 * 1024),
+        'chalk': AppRamSize(66 * 1024, 30 * 1024),
         # FIXME: The runtime_reserved size could be reduced for diorite
-        'diorite': AppRamSize(68 * 1024, 30 * 1024),
-        'emery': AppRamSize(132 * 1024, 62 * 1024),
-        'flint': AppRamSize(68 * 1024, 30 * 1024),
-        'gabbro': AppRamSize(132 * 1024, 94 * 1024),
+        'diorite': AppRamSize(66 * 1024, 30 * 1024),
+        'emery': AppRamSize(130 * 1024, 62 * 1024),
+        'flint': AppRamSize(66 * 1024, 30 * 1024),
+        'gabbro': AppRamSize(130 * 1024, 94 * 1024),
     }
     APP_UNSUPPORTED = AppRamSize(0, 0)
 
@@ -364,7 +368,7 @@ def _link_firmware(bld, sources):
             bld(rule=waftools.objcopy.objcopy_bin, source=elf_node, target=bin_node)
 
         # Create the log_strings .elf and check the format specifier rules
-        if bld.env.CONFIG_LOG_HASHED:
+        if 'PBL_LOGS_HASHED' in bld.env.DEFINES:
             fw_loghash_node = bld.path.get_bld().make_node('tintin_fw_loghash_dict.json')
             bld(rule=waftools.generate_log_strings_json.wafrule,
                 source=elf_node, target=fw_loghash_node)
@@ -443,7 +447,7 @@ def _build_recovery(bld):
             'apps/prf/mfg_mic_obelix.c',
         ])
 
-    if not bld.env.CONFIG_BOARD_FAMILY_OBELIX or not bld.env.CONFIG_MFG:
+    if not bld.env.CONFIG_BOARD_FAMILY_OBELIX or not bld.env.IS_MFG:
         excludes.extend([
             'apps/prf/mfg_hrm_ctr_leakage_obelix.c',
         ])
@@ -476,7 +480,7 @@ def _build_recovery(bld):
 
 
 
-    if not bld.env.CONFIG_PROMPT:
+    if bld.env.DISABLE_PROMPT:
         sources = [ x for x in sources if not x.abspath().endswith('console/prompt.c') ]
         sources = [ x for x in sources if not x.abspath().endswith('console/prompt_commands.c') ]
 
@@ -574,7 +578,7 @@ def _build_normal(bld):
     sources.append(bld.path.get_bld().make_node('resource/timeline_resource_table.auto.c'))
     sources.append(bld.path.get_bld().make_node('builtin_resources.auto.c'))
 
-    if not bld.env.CONFIG_PROMPT:
+    if bld.env.DISABLE_PROMPT:
         sources = [ x for x in sources if not x.abspath().endswith('console/prompt.c') ]
         sources = [ x for x in sources if not x.abspath().endswith('console/prompt_commands.c') ]
 

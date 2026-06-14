@@ -5,11 +5,3 @@ config SERVICE_PING
     bool "Ping"
     help
       Ping endpoint.
-
-if SERVICE_PING
-
-module = SERVICE_PING
-module-str = Ping
-source "src/fw/Kconfig.template.log_level"
-
-endif

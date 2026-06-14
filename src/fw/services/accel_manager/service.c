@@ -26,8 +26,6 @@
 
 #include <inttypes.h>
 
-PBL_LOG_MODULE_DEFINE(service_accel_manager, CONFIG_SERVICE_ACCEL_MANAGER_LOG_LEVEL);
-
 // We use this as an argument to indicate a lookup of the current task
 #define PEBBLE_TASK_CURRENT PebbleTask_Unknown
 
@@ -333,7 +331,7 @@ static void prv_dispatch_data(bool post_event) {
       // Notify the subscriber that data is available
       state->event_posted = prv_call_data_callback(state);
 
-      PBL_LOG_VERBOSE("full set of %d samples for session %p", state->num_samples, state);
+      ACCEL_LOG_DEBUG("full set of %d samples for session %p", state->num_samples, state);
 
       if (!state->event_posted) {
         PBL_LOG_INFO("Failed to post accel event to task: 0x%x", (int) state->task);
@@ -415,7 +413,7 @@ void accel_manager_init(void) {
 
   // Apply saved motion sensitivity preference for Asterix/Obelix
   // Only available in normal shell (not PRF)
-  #if defined(CONFIG_ACCEL_SENSITIVITY) && !defined(CONFIG_RECOVERY_FW)
+  #if defined(CONFIG_ACCEL_SENSITIVITY) && !defined(RECOVERY_FW)
   extern uint8_t shell_prefs_get_motion_sensitivity(void);
   uint8_t saved_sensitivity = shell_prefs_get_motion_sensitivity();
   accel_manager_update_sensitivity(saved_sensitivity);
@@ -788,7 +786,7 @@ void accel_cb_shake_detected(IMUCoordinateAxis axis, int32_t direction) {
     return;
   }
 
-#if !defined(CONFIG_RECOVERY_FW)
+#if !defined(RECOVERY_FW)
   extern bool shell_prefs_get_accel_shake_log_info_enabled(void);
   if (shell_prefs_get_accel_shake_log_info_enabled()) {
     PBL_LOG_INFO("Shake detected; axis=%d, direction=%" PRId32, axis, direction);

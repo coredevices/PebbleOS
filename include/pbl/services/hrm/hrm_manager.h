@@ -24,7 +24,7 @@ typedef enum {
   HRMFeatureShift_BPM = 0,
   HRMFeatureShift_HRV = 1,
   HRMFeatureShift_SpO2 = 2,
-#ifdef CONFIG_MFG
+#ifdef MANUFACTURING_FW
   HRMFeatureShift_CTR = 3,
   HRMFeatureShift_Leakage = 4,
 #endif
@@ -35,7 +35,7 @@ typedef enum {
   HRMFeature_BPM = (1 << HRMFeatureShift_BPM), //!< Collect heartrate BPM.
   HRMFeature_HRV = (1 << HRMFeatureShift_HRV), //!< Collect heartrate variability.
   HRMFeature_SpO2 = (1 << HRMFeatureShift_SpO2), //!< Collect blood oxygen saturation.
-#ifdef CONFIG_MFG
+#ifdef MANUFACTURING_FW
   HRMFeature_CTR = (1 << HRMFeatureShift_CTR), //!< Collect ppg CTR test data.
   HRMFeature_Leakage = (1 << HRMFeatureShift_Leakage), //!< Collect ppg leakage test data.
 #endif
@@ -148,7 +148,7 @@ typedef struct {
   uint8_t spo2_percent;
   HRMQuality spo2_quality;
 
-#ifdef CONFIG_MFG
+#ifdef MANUFACTURING_FW
   double ctr[6];
   double leakage[6];
 #endif

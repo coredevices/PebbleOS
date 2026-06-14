@@ -56,7 +56,7 @@ static void prv_low_power_transition(bool active) {
                   NULL, 0 /*flags*/);
 
   // FIXME PBL-XXXXX: This should be in a shell/prf/battery_ui_fsm.c
-#ifdef CONFIG_RECOVERY_FW
+#if RECOVERY_FW
   if (active) {
     app_manager_launch_new_app(&(AppLaunchConfig) {
       .md = prf_low_power_app_get_info(),
@@ -77,7 +77,7 @@ void low_power_standby(void) {
 }
 
 void low_power_enter(void) {
-#ifdef CONFIG_RECOVERY_FW
+#if RECOVERY_FW
   if (mfg_is_mfg_mode()) {
     return;
   }

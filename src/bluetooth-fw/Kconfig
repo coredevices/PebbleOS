@@ -13,8 +13,6 @@ choice BT_FW
 
 config BT_FW_NIMBLE
     bool "NimBLE"
-    select HAL_SIFLI_IPC_QUEUE if SOC_SF32LB52
-    select HAL_SIFLI_LCPU if SOC_SF32LB52
 
 config BT_FW_QEMU
     bool "QEMU transport"
@@ -23,10 +21,6 @@ config BT_FW_STUB
     bool "Stub (no backend)"
 
 endchoice
-
-module = BT
-module-str = Bluetooth
-source "src/fw/Kconfig.template.log_level"
 
 config GH3X2X_TUNING_SERVICE_ENABLED
     bool "GH3X2X tuning service"

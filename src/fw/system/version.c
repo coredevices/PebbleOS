@@ -36,7 +36,7 @@ const FirmwareMetadata TINTIN_METADATA SECTION(".pbl_fw_version") = {
 #else
   .is_dual_slot = false,
 #endif
-#if defined(FIRMWARE_SLOT_0) && !defined(CONFIG_RECOVERY_FW)
+#if defined(FIRMWARE_SLOT_0) && !defined(RECOVERY_FW)
   .is_slot_0 = true,
 #else
   .is_slot_0 = false,

@@ -16,7 +16,7 @@
 
 #ifdef CONFIG_PBLBOOT
 // We assume that if we have pblboot, we use the two slots with direct XIP
-#if defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_MFG) && !defined(RECOVERY_FW_AS_FW)
+#if defined(RECOVERY_FW) && !defined(MANUFACTURING_FW) && !defined(RECOVERY_FW_AS_FW)
 // On recovery we always write to slot 0
 #define FLASH_REGION_FIRMWARE_DEST_BEGIN FLASH_REGION_FIRMWARE_SLOT_0_BEGIN
 #define FLASH_REGION_FIRMWARE_DEST_END FLASH_REGION_FIRMWARE_SLOT_0_END

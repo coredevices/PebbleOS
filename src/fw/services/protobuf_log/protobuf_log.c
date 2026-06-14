@@ -31,8 +31,6 @@
 #include "nanopb/measurements.pb.h"
 #include "nanopb/payload.pb.h"
 
-PBL_LOG_MODULE_DEFINE(service_protobuf_log, CONFIG_SERVICE_PROTOBUF_LOG_LOG_LEVEL);
-
 #define PROTOBUF_LOG_DEBUG(fmt, args...) \
             PBL_LOG_D_DBG(LOG_DOMAIN_PROTOBUF, fmt, ## args)
 
