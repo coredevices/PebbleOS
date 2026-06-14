@@ -12,6 +12,7 @@
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/regular_timer.h"
+#include "pbl/services/system_task.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/list.h"
@@ -99,6 +100,9 @@ static RegularTimerInfo s_cycle_regular_timer;
 static bool s_is_advertising;
 
 static uint8_t s_slave_connection_count;
+
+//! True when a KernelBG callback to restart advertising is already queued.
+static bool s_resume_advert_pending;
 
 //! Cache of the last advertising transmission power in dBm. A cache is kept in
 //! case the API call fails, for example because Bluetooth is disabled.
@@ -550,6 +554,8 @@ void gap_le_advert_init(void) {
     };
 
     s_is_advertising = false;
+    s_slave_connection_count = 0;
+    s_resume_advert_pending = false;
     s_gap_le_advert_is_initialized = true;
   }
 unlock:
@@ -574,6 +580,24 @@ void gap_le_advert_deinit(void) {
 }
 
 // -----------------------------------------------------------------------------
+// Deferred advertising restart callback: runs on KernelBG, outside the NimBLE
+// callback context so ble_gap_adv_start() is safe to call.
+static void prv_resume_advertising_kernelbg_cb(void *unused) {
+  bt_lock();
+  {
+    s_resume_advert_pending = false;
+    if (!s_gap_le_advert_is_initialized) {
+      goto unlock;
+    }
+    if (s_slave_connection_count < MAX_PHONE_CONNECTIONS) {
+      prv_perform_next_job(true /* force refresh */);
+    }
+  }
+unlock:
+  bt_unlock();
+}
+
+// -----------------------------------------------------------------------------
 void gap_le_advert_handle_connect_as_slave(void) {
   bt_lock();
   {
@@ -583,17 +607,16 @@ void gap_le_advert_handle_connect_as_slave(void) {
     // The link layer state machine inside the Bluetooth controller
     // automatically stops advertising when transitioning to "connected", so
     // update our own state. See 7.8.9 of Bluetooth Specification
-    //
-    // We don't instantly cycle the advertisements because our LE client
-    // handler (kernel_le_client.c) will unschedule jobs accordingly and we
-    // want to avoid unnecessary refreshes of the advertising state
     s_is_advertising = false;
     prv_analytics_stop_timers();
 
     s_slave_connection_count++;
-    if (s_slave_connection_count < MAX_PHONE_CONNECTIONS) {
+    if (s_slave_connection_count < MAX_PHONE_CONNECTIONS && !s_resume_advert_pending) {
       // Still have free slots; resume advertising so the next phone can connect.
-      prv_perform_next_job(true /* force refresh */);
+      // Deferred to KernelBG because this is called from within a NimBLE GAP
+      // callback -- calling ble_gap_adv_start() inline from that context is not safe.
+      s_resume_advert_pending = true;
+      system_task_add_callback(prv_resume_advertising_kernelbg_cb, NULL);
     }
   }
 unlock:
