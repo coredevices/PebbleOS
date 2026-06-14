@@ -90,6 +90,10 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   callback(data);
 }
 
+bool kernel_le_client_is_gateway_slot(PhoneSlot slot) {
+  return false;
+}
+
 // Helpers
 ///////////////////////////////////////////////////////////
 
