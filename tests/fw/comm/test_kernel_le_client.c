@@ -262,6 +262,17 @@ void test_kernel_le_client__read_response_consumed_even_if_client_is_gone(void) 
 }
 
 void test_kernel_le_client__service_added(void) {
+  // ServicesAdded is ignored unless the device has an active phone slot.
+  PebbleEvent connect = (PebbleEvent) {
+    .type = PEBBLE_BLE_CONNECTION_EVENT,
+    .bluetooth.le.connection = {
+      .connected = true,
+      .bonding_id = 1,
+      .bt_device_bits = s_test_device.opaque.opaque_64,
+    },
+  };
+  kernel_le_client_handle_event(&connect);
+
   uint8_t num_services_added = ARRAY_LENGTH(s_service_handles);
   PebbleBLEGATTClientServiceEventInfo *info =
       kernel_malloc(sizeof(PebbleBLEGATTClientServiceEventInfo) +
