@@ -329,7 +329,7 @@ clar(ctx,
 
 clar(ctx,
      sources_ant_glob="src/fw/popups/pin_lock/unlock_window.c "
-                      "src/fw/popups/pin_lock/pin_flap.c",
+                      "src/fw/popups/pin_lock/pin_drum.c",
      test_sources_ant_glob="test_pin_unlock_buffer.c")
 
 # vim:filetype=python

@@ -2,13 +2,13 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 #include "clar.h"
 #include "popups/pin_lock/unlock_window.h"
-#include "popups/pin_lock/pin_flap.h"
+#include "popups/pin_lock/pin_drum.h"
 
 #include "stubs_logging.h"
 #include "stubs_passert.h"
 
 // Stubs for UI and service symbols referenced by unlock_window.c and
-// pin_flap.c but not exercised by these pure buffer / helper tests.
+// pin_drum.c but not exercised by these pure buffer / helper tests.
 
 #include "applib/ui/window.h"
 #include "applib/ui/window_private.h"
@@ -46,15 +46,19 @@ void graphics_draw_text(GContext *ctx, const char *text, GFont font, const GRect
 GDrawState graphics_context_get_drawing_state(GContext *ctx) { return (GDrawState){}; }
 void graphics_context_set_drawing_state(GContext *ctx, GDrawState state) {}
 GFont fonts_get_system_font(const char *key) { return NULL; }
+uint8_t fonts_get_font_height(GFont font) { return 0; }
 void vibes_double_pulse(void) {}
+void vibes_enqueue_custom_pattern(VibePattern pattern) {}
 bool pin_lock_storage_verify_pin(const uint8_t *digits, uint8_t len) { return false; }
 void pin_lock_mark_unlocked(void) {}
 uint8_t pin_lock_get_pin_len(void) { return 4; }
 bool pin_lock_should_mask_digits(void) { return false; }
+bool pin_lock_should_haptic(void) { return false; }
+GColor shell_prefs_get_theme_highlight_color(void) { return (GColor){}; }
 // i18n stubs
 const char *i18n_get(const char *msgid, const void *owner) { return msgid; }
 void i18n_free_all(const void *owner) {}
-// Animation stubs — pin_flap_animate_step is not exercised by buffer tests.
+// Animation stubs — pin_drum_animate_step is not exercised by buffer tests.
 Animation *animation_create(void) { return NULL; }
 bool animation_destroy(Animation *a) { return true; }
 bool animation_set_duration(Animation *a, uint32_t ms) { return true; }
@@ -94,7 +98,7 @@ void test_pin_unlock_buffer__back_signals_cancel_at_first(void) {
 }
 
 void test_pin_unlock_buffer__roll_offset_endpoints(void) {
-  cl_assert_equal_i(0,  pin_flap_roll_offset(0, 40));
-  cl_assert_equal_i(40, pin_flap_roll_offset(65535, 40));
-  cl_assert_equal_i(20, pin_flap_roll_offset(32768, 40));
+  cl_assert_equal_i(0,  pin_drum_roll_offset(0, 40));
+  cl_assert_equal_i(40, pin_drum_roll_offset(65535, 40));
+  cl_assert_equal_i(20, pin_drum_roll_offset(32768, 40));
 }

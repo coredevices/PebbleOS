@@ -22,7 +22,7 @@
 #include "board/display.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/i18n/i18n.h"
-#include "popups/pin_lock/pin_flap.h"
+#include "popups/pin_lock/pin_drum.h"
 #include "popups/pin_lock/unlock_window.h"
 #include "services/pin_lock/pin_lock.h"
 #include "shell/prefs.h"
@@ -41,7 +41,7 @@ typedef enum {
 typedef struct {
   Window window;
   PinEntry entry;
-  PinFlap flap;
+  PinDrum drum;
   SecurityPinEntryConfig cfg;
   Phase phase;
   uint8_t chosen_len;                     // selected during Phase_Length (Set-mode)
@@ -106,23 +106,23 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
     return;
   }
 
-  // Enter / Confirm phases: delegate to the shared split-flap widget.
+  // Enter / Confirm phases: delegate to the shared drum-roll widget.
   // Update per-frame fields; entry pointer and layer handle are stable.
   if (d->cfg.mode == SecurityPinEntryMode_Verify) {
-    d->flap.config.title = i18n_noop("Enter PIN");
+    d->drum.config.title = i18n_noop("Enter PIN");
   } else if (d->phase == Phase_Confirm) {
-    d->flap.config.title = i18n_noop("Confirm PIN");
+    d->drum.config.title = i18n_noop("Confirm PIN");
   } else {
-    d->flap.config.title = i18n_noop("Set PIN");
+    d->drum.config.title = i18n_noop("Set PIN");
   }
 
   // Read prefs from flash (app context cannot use the kernel cache).
   PinLockConfig st;
   pin_lock_storage_load(&st);
-  d->flap.config.mask_confirmed = st.pin_len ? st.mask_digits : true;
-  d->flap.config.haptic = st.pin_len ? st.haptic : true;
+  d->drum.config.mask_confirmed = st.pin_len ? st.mask_digits : true;
+  d->drum.config.haptic = st.pin_len ? st.haptic : true;
 
-  pin_flap_draw(&d->flap, ctx, GRect(0, 0, DISP_COLS, DISP_ROWS));
+  pin_drum_draw(&d->drum, ctx, GRect(0, 0, DISP_COLS, DISP_ROWS));
 }
 
 static void prv_up_handler(ClickRecognizerRef recognizer, void *context) {
@@ -135,7 +135,7 @@ static void prv_up_handler(ClickRecognizerRef recognizer, void *context) {
   } else {
     const uint8_t old = d->entry.digits[d->entry.pos];
     pin_entry_up(&d->entry);
-    pin_flap_animate_step(&d->flap, window_get_root_layer(&d->window), old, +1);
+    pin_drum_animate_step(&d->drum, window_get_root_layer(&d->window), old, +1);
   }
 }
 
@@ -149,7 +149,7 @@ static void prv_down_handler(ClickRecognizerRef recognizer, void *context) {
   } else {
     const uint8_t old = d->entry.digits[d->entry.pos];
     pin_entry_down(&d->entry);
-    pin_flap_animate_step(&d->flap, window_get_root_layer(&d->window), old, -1);
+    pin_drum_animate_step(&d->drum, window_get_root_layer(&d->window), old, -1);
   }
 }
 
@@ -179,7 +179,7 @@ static void prv_select_handler(ClickRecognizerRef recognizer, void *context) {
       for (uint8_t i = 0; i < d->entry.len; i++) {
         d->done_digits[i] = d->entry.digits[i];
       }
-      pin_flap_padlock_open(&d->flap, window_get_root_layer(&d->window),
+      pin_drum_padlock_open(&d->drum, window_get_root_layer(&d->window),
                             prv_on_open_done, d);
       return;
     } else {
@@ -187,14 +187,14 @@ static void prv_select_handler(ClickRecognizerRef recognizer, void *context) {
       vibes_double_pulse();
       pin_entry_init(&d->entry, d->entry.len);
       // Reset roll animation only; padlock_shake manages lock_anim itself.
-      if (d->flap.anim) {
-        animation_unschedule(d->flap.anim);
-        animation_destroy(d->flap.anim);
-        d->flap.anim = NULL;
+      if (d->drum.anim) {
+        animation_unschedule(d->drum.anim);
+        animation_destroy(d->drum.anim);
+        d->drum.anim = NULL;
       }
-      d->flap.animating = false;
-      d->flap.progress = 0;
-      pin_flap_padlock_shake(&d->flap, window_get_root_layer(&d->window));
+      d->drum.animating = false;
+      d->drum.progress = 0;
+      pin_drum_padlock_shake(&d->drum, window_get_root_layer(&d->window));
       prv_redraw(d);
     }
     return;
@@ -208,7 +208,7 @@ static void prv_select_handler(ClickRecognizerRef recognizer, void *context) {
     }
     d->phase = Phase_Confirm;
     pin_entry_init(&d->entry, d->entry.len);
-    pin_flap_reset(&d->flap);
+    pin_drum_reset(&d->drum);
     prv_redraw(d);
   } else {
     // Compare confirmation with first pass.
@@ -226,7 +226,7 @@ static void prv_select_handler(ClickRecognizerRef recognizer, void *context) {
       for (uint8_t i = 0; i < d->entry.len; i++) {
         d->done_digits[i] = d->entry.digits[i];
       }
-      pin_flap_padlock_open(&d->flap, window_get_root_layer(&d->window),
+      pin_drum_padlock_open(&d->drum, window_get_root_layer(&d->window),
                             prv_on_open_done, d);
       return;
     } else {
@@ -235,14 +235,14 @@ static void prv_select_handler(ClickRecognizerRef recognizer, void *context) {
       d->phase = Phase_Enter;
       pin_entry_init(&d->entry, d->entry.len);
       // Reset roll animation only; padlock_shake manages lock_anim itself.
-      if (d->flap.anim) {
-        animation_unschedule(d->flap.anim);
-        animation_destroy(d->flap.anim);
-        d->flap.anim = NULL;
+      if (d->drum.anim) {
+        animation_unschedule(d->drum.anim);
+        animation_destroy(d->drum.anim);
+        d->drum.anim = NULL;
       }
-      d->flap.animating = false;
-      d->flap.progress = 0;
-      pin_flap_padlock_shake(&d->flap, window_get_root_layer(&d->window));
+      d->drum.animating = false;
+      d->drum.progress = 0;
+      pin_drum_padlock_shake(&d->drum, window_get_root_layer(&d->window));
       prv_redraw(d);
     }
   }
@@ -266,7 +266,7 @@ static void prv_back_handler(ClickRecognizerRef recognizer, void *context) {
     if (d->phase == Phase_Confirm) {
       d->phase = Phase_Enter;
       pin_entry_init(&d->entry, d->entry.len);
-      pin_flap_reset(&d->flap);
+      pin_drum_reset(&d->drum);
       prv_redraw(d);
     } else if (d->cfg.mode == SecurityPinEntryMode_Set) {
       // Set-mode entry: return to length choice rather than cancelling.
@@ -294,7 +294,7 @@ static void prv_click_config_provider(void *context) {
 
 static void prv_window_unload(Window *window) {
   PinEntryWindowData *d = window_get_user_data(window);
-  pin_flap_reset(&d->flap);
+  pin_drum_reset(&d->drum);
   i18n_free_all(d);
   app_free(d);
 }
@@ -320,15 +320,15 @@ void security_pin_entry_push(const SecurityPinEntryConfig *config) {
     pin_entry_init(&d->entry, len);
   }
 
-  // Initialise the flap with the entry pointer; title/mask updated each frame.
-  PinFlapConfig flap_cfg = {
+  // Initialise the drum with the entry pointer; title/mask updated each frame.
+  PinDrumConfig drum_cfg = {
     .entry          = &d->entry,
     .title          = i18n_noop("Enter PIN"),
     .mask_confirmed = true,
     .haptic         = true,
     .accent         = shell_prefs_get_theme_highlight_color(),
   };
-  pin_flap_init(&d->flap, &flap_cfg);
+  pin_drum_init(&d->drum, &drum_cfg);
 
   window_init(&d->window, WINDOW_NAME("Security PIN Entry"));
   window_set_user_data(&d->window, d);
