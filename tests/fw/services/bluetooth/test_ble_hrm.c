@@ -26,10 +26,14 @@
 #include "stubs_logging.h"
 #include "stubs_passert.h"
 
-void gap_le_slave_reconnect_hrm_restart(void) {
+static int s_gap_le_slave_reconnect_hrm_start_call_count;
+void gap_le_slave_reconnect_hrm_start(void) {
+  ++s_gap_le_slave_reconnect_hrm_start_call_count;
 }
 
+static int s_gap_le_slave_reconnect_hrm_stop_call_count;
 void gap_le_slave_reconnect_hrm_stop(void) {
+  ++s_gap_le_slave_reconnect_hrm_stop_call_count;
 }
 
 static bool s_activity_prefs_heart_rate_is_enabled;
@@ -58,14 +62,6 @@ void bt_driver_hrm_service_handle_measurement(const BleHrmServiceMeasurement *me
          sizeof(*permitted_devices) * num_permitted_devices);
 }
 
-static BLEHRMSharingRequest *s_last_sharing_request;
-static int s_ble_hrm_push_sharing_request_window_call_count;
-void ble_hrm_push_sharing_request_window(BLEHRMSharingRequest *sharing_request) {
-  ++s_ble_hrm_push_sharing_request_window_call_count;
-  cl_assert_equal_p(s_last_sharing_request, NULL);
-  s_last_sharing_request = sharing_request;
-}
-
 bool bt_driver_is_hrm_service_supported(void) {
   return true;
 }
@@ -78,11 +74,6 @@ int bt_driver_gap_le_disconnect(const BTDeviceInternal *peer_address) {
 
 static void prv_assert_last_disconnected(const BTDeviceInternal *peer_address) {
   cl_assert_equal_b(bt_device_internal_equal(peer_address, &s_last_disconnected), true);
-}
-
-static int s_ble_hrm_push_reminder_popup_call_count;
-void ble_hrm_push_reminder_popup(void) {
-  s_ble_hrm_push_reminder_popup_call_count++;
 }
 
 static int s_hrm_manager_subscribe_with_callback_call_count;
@@ -190,12 +181,11 @@ void test_ble_hrm__initialize(void) {
   s_hrm_manager_subscribe_with_callback_call_count = 0;
   s_sys_hrm_manager_unsubscribe_call_count = 0;
   s_bt_driver_hrm_service_handle_measurement_call_count = 0;
-  s_ble_hrm_push_sharing_request_window_call_count = 0;
-  s_ble_hrm_push_reminder_popup_call_count = 0;
+  s_gap_le_slave_reconnect_hrm_start_call_count = 0;
+  s_gap_le_slave_reconnect_hrm_stop_call_count = 0;
   s_last_session_ref = ~0;
   s_next_session_ref = 1234;
   s_last_disconnected = (BTDeviceInternal) {};
-  s_last_sharing_request = NULL;
   s_last_ble_hrm_measurement = (BleHrmServiceMeasurement) {};
   fake_event_service_init();
 
@@ -228,188 +218,24 @@ void test_ble_hrm__init_deinit_no_subscriptions(void) {
   // let cleanup & initialize do the work :)
 }
 
-static void prv_assert_permissions_ui_and_respond(bool is_granted) {
-  cl_assert(s_last_sharing_request);
-  ble_hrm_handle_sharing_request_response(is_granted, s_last_sharing_request);
-  s_last_sharing_request = NULL;
-}
-
-void test_ble_hrm__sub_unsub(void) {
-  cl_assert_equal_i(s_hrm_manager_subscribe_with_callback_call_count, 0);
-  cl_assert_equal_i(s_sys_hrm_manager_unsubscribe_call_count, 0);
-  prv_assert_event_service_subscribed(false);
-
-  // Device A subscribes:
-  bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
-
-  // Expect HRM manager NOT to be subscribed to yet, need to grant permission first:
+// HRM sharing happens only during an active workout; subscribing outside workout mode does not
+// start sharing and never prompts.
+void test_ble_hrm__no_sharing_or_prompt_outside_workout(void) {
   cl_assert_equal_i(s_hrm_manager_subscribe_with_callback_call_count, 0);
   prv_assert_event_service_subscribed(false);
-  cl_assert_equal_b(false, ble_hrm_is_sharing_to_connection(&s_conn_a));
 
-  // Expect permissions UI to be presented:
-  prv_assert_permissions_ui_and_respond(true /* is_granted */);
-
-  // Expect HRM manager to be subscribed to:
-  cl_assert_equal_i(s_hrm_manager_subscribe_with_callback_call_count, 1);
-  prv_assert_event_service_subscribed(true);
-  cl_assert_equal_b(true, ble_hrm_is_sharing_to_connection(&s_conn_a));
-
-  // Device A subscribes again, should be a no-op, no new permissions prompt:
-  bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
-  cl_assert_equal_i(s_hrm_manager_subscribe_with_callback_call_count, 1);
-  cl_assert_equal_i(s_sys_hrm_manager_unsubscribe_call_count, 0);
-
-  // Device B subscribes, shouldn't resubscribe to HRM manager, but should present a new
-  // permission prompt, because it's a different device:
-  bt_driver_cb_hrm_service_update_subscription(s_device_b, true);
-  cl_assert_equal_b(false, ble_hrm_is_sharing_to_connection(&s_conn_b));
-  prv_assert_permissions_ui_and_respond(true /* is_granted */);
-  cl_assert_equal_b(true, ble_hrm_is_sharing_to_connection(&s_conn_b));
-  prv_assert_event_service_subscribed(true);
-  cl_assert_equal_i(s_hrm_manager_subscribe_with_callback_call_count, 1);
-  cl_assert_equal_i(s_sys_hrm_manager_unsubscribe_call_count, 0);
-
-  // Device A disconnects, shouldn't unsubscribe from HRM manager because A is still subscribed:
-  ble_hrm_handle_disconnection(&s_conn_a);
-  cl_assert_equal_b(false, ble_hrm_is_sharing_to_connection(&s_conn_a));
-  prv_assert_event_service_subscribed(true);
-  cl_assert_equal_i(s_hrm_manager_subscribe_with_callback_call_count, 1);
-  cl_assert_equal_i(s_sys_hrm_manager_unsubscribe_call_count, 0);
-
-  // Device B unsubscribes, expect to be unsubscribed from HRM manager, because there are no more
-  // devices subscribed to the BLE HRM service:
-  bt_driver_cb_hrm_service_update_subscription(s_device_b, false);
-  cl_assert_equal_b(false, ble_hrm_is_sharing_to_connection(&s_conn_a));
-  prv_assert_event_service_subscribed(false);
-  cl_assert_equal_i(s_sys_hrm_manager_unsubscribe_call_count, 1);
-
-  // Device B unsubscribes again, should be no-op
-  bt_driver_cb_hrm_service_update_subscription(s_device_b, false);
-  prv_assert_event_service_subscribed(false);
-  cl_assert_equal_i(s_sys_hrm_manager_unsubscribe_call_count, 1);
-}
-
-void test_ble_hrm__sub_unsub_resub(void) {
-  // Device A subscribes:
   bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
 
-  // Expect permissions UI to be presented:
-  prv_assert_permissions_ui_and_respond(true /* is_granted */);
-
-  // Device A unsubscribes:
-  bt_driver_cb_hrm_service_update_subscription(s_device_a, false);
-
-  prv_assert_event_service_subscribed(false);
-
-  // Device A re-subscribes, permission should still be valid:
-  bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
-
-  prv_assert_event_service_subscribed(true);
-}
-
-void test_ble_hrm__revoke(void) {
-  // Device A subscribes:
-  bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
-
-  // Expect permissions UI to be presented:
-  prv_assert_permissions_ui_and_respond(true /* is_granted */);
-
-  cl_assert_equal_b(true, ble_hrm_is_sharing_to_connection(&s_conn_a));
-  cl_assert_equal_b(true, ble_hrm_is_sharing());
-  prv_assert_event_service_subscribed(true);
-
-  // Revoke:
-  ble_hrm_revoke_sharing_permission_for_connection(&s_conn_a);
-
+  // No prompt, no sharing, no HRM manager subscription:
   cl_assert_equal_b(false, ble_hrm_is_sharing_to_connection(&s_conn_a));
   cl_assert_equal_b(false, ble_hrm_is_sharing());
+  cl_assert_equal_i(s_hrm_manager_subscribe_with_callback_call_count, 0);
   prv_assert_event_service_subscribed(false);
-  prv_assert_last_disconnected(s_device_a);
-}
 
-void test_ble_hrm__revoke_all(void) {
-  // Device A subscribes:
-  bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
-
-  // Expect permissions UI to be presented:
-  prv_assert_permissions_ui_and_respond(true /* is_granted */);
-
-  // Device B subscribes:
-  bt_driver_cb_hrm_service_update_subscription(s_device_b, true);
-
-  // Expect permissions UI to be presented:
-  prv_assert_permissions_ui_and_respond(true /* is_granted */);
-
-  ble_hrm_revoke_all();
-
-  cl_assert_equal_b(false, ble_hrm_is_sharing_to_connection(&s_conn_a));
-  cl_assert_equal_b(false, ble_hrm_is_sharing_to_connection(&s_conn_b));
-  cl_assert_equal_b(false, ble_hrm_is_sharing());
-  prv_assert_event_service_subscribed(false);
-}
-
-void test_ble_hrm__revoke_after_disconnection(void) {
-  ble_hrm_revoke_sharing_permission_for_connection(NULL);
-
-  s_connections[0] = NULL;
-  ble_hrm_revoke_sharing_permission_for_connection(&s_conn_a);
-
-  cl_assert_equal_b(false, ble_hrm_is_sharing_to_connection(NULL));
-
-  // Shouldn't crash or anything
-}
-
-void test_ble_hrm__grant_after_disconnection(void) {
-  // Device A subscribes:
-  bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
-
-  // Fake disconnection:
-  s_connections[0] = NULL;
-
-  // Grabt permission after disconnection.
-  // Request object should be freed and thing shouldn't crash.
-  prv_assert_permissions_ui_and_respond(true /* is_granted */);
-
-  cl_assert_equal_b(false, ble_hrm_is_sharing_to_connection(&s_conn_a));
-}
-
-void test_ble_hrm__decline_permission_dont_ask_again_even_after_reconnecting(void) {
-  bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
-
-  // Decline:
-  prv_assert_permissions_ui_and_respond(false /* is_granted */);
-
-  // Unsub, resub:
   bt_driver_cb_hrm_service_update_subscription(s_device_a, false);
-  bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
-
-  // No sharing request UI:
-  cl_assert_equal_p(NULL, s_last_sharing_request);
-
-  // Fake disconnection:
-  ble_hrm_handle_disconnection(&s_conn_a);
-
-  // Fake reconn & subscribe:
-  bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
-
-  // No sharing request UI:
-  cl_assert_equal_p(NULL, s_last_sharing_request);
-
-  // Still declined:
-  cl_assert_equal_b(false, ble_hrm_is_sharing_to_connection(&s_conn_a));
 }
 
-void test_ble_hrm__unsub_upon_deinit(void) {
-  // Device A subscribes:
-  bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
-  prv_assert_permissions_ui_and_respond(true /* is_granted */);
-
-  // __cleanup() will do the deinit and also assert that  there's no subscription to the HRM mgr.
-}
-
-// Test that we handle a races where a subscription/disconnection callback happens in after
-// deiniting the stack:
+// Test that we handle races where a subscription/disconnection callback happens after deiniting:
 void test_ble_hrm__sub_after_deinit(void) {
   ble_hrm_deinit();
 
@@ -451,18 +277,15 @@ static void prv_put_and_assert_hrm_event(HRMEventType subtype, uint8_t bpm, HRMQ
 }
 
 void test_ble_hrm__handle_hrm_event(void) {
-  bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
-  cl_assert_equal_i(0, s_bt_driver_hrm_service_handle_measurement_call_count);
-  prv_assert_permissions_ui_and_respond(true /* is_granted */);
+  ble_hrm_set_workout_mode(true);
 
-  // Don't grant permission to device B:
-  bt_driver_cb_hrm_service_update_subscription(s_device_b, true);
-  prv_assert_permissions_ui_and_respond(false /* is_granted */);
+  bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
+  cl_assert_equal_b(true, ble_hrm_is_sharing_to_connection(&s_conn_a));
 
   prv_put_and_assert_hrm_event(HRMEvent_BPM, 80, HRMQuality_Excellent,
                                true /* expect bt driver cb */, true /* expected_is_on_wrist */);
 
-  // Assert only device A is listed as "permitted device" and B is not:
+  // Only subscribed device A receives HR:
   cl_assert_equal_i(1, s_last_num_permitted_devices);
   cl_assert_equal_m(&s_last_permitted_devices[0], s_device_a, sizeof(*s_device_a));
 
@@ -472,11 +295,14 @@ void test_ble_hrm__handle_hrm_event(void) {
   // Ignore non-BPM event:
   prv_put_and_assert_hrm_event(HRMEvent_HRV, 80, HRMQuality_OffWrist,
                                false /* expect bt driver cb */, false /* expected_is_on_wrist */);
+
+  ble_hrm_set_workout_mode(false);
 }
 
 void test_ble_hrm__handle_activity_pref_hrm_changes(void) {
   cl_assert_equal_b(true, s_bt_driver_hrm_service_is_enabled);
   cl_assert_equal_i(0, s_bt_driver_hrm_service_enable_call_count);
+  s_activity_prefs_heart_rate_is_enabled = false;
   ble_hrm_handle_activity_prefs_heart_rate_is_enabled(false);
   cl_assert_equal_i(1, s_bt_driver_hrm_service_enable_call_count);
   cl_assert_equal_b(false, s_bt_driver_hrm_service_is_enabled);
@@ -493,28 +319,113 @@ void test_ble_hrm__handle_activity_pref_hrm_changes(void) {
   cl_assert_equal_b(true, s_bt_driver_hrm_service_is_enabled);
 }
 
-void test_ble_hrm__popup_after_long_continuous_use(void) {
-  extern RegularTimerInfo *ble_hrm_timer(void);
-  RegularTimerInfo *timer = ble_hrm_timer();
+void test_ble_hrm__unsub_upon_deinit(void) {
+  ble_hrm_set_workout_mode(true);
+  bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
+  cl_assert_equal_b(true, ble_hrm_is_sharing());
+
+  // __cleanup() does the deinit and asserts the HRM mgr subscribe/unsubscribe calls balance, and
+  // ble_hrm_deinit() also clears workout mode.
+}
+
+void test_ble_hrm__workout_mode_shares_without_permission_prompt(void) {
+  s_activity_prefs_heart_rate_is_enabled = false;
+  s_bt_driver_hrm_service_is_enabled = false;
+
+  ble_hrm_set_workout_mode(true);
+  cl_assert_equal_i(1, s_gap_le_slave_reconnect_hrm_start_call_count);
+  cl_assert_equal_i(1, s_bt_driver_hrm_service_enable_call_count);
+  cl_assert_equal_b(true, s_bt_driver_hrm_service_is_enabled);
+  cl_assert_equal_b(false, ble_hrm_is_supported_and_enabled());
 
   bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
-  prv_assert_permissions_ui_and_respond(true /* is_granted */);
+  cl_assert_equal_b(true, ble_hrm_is_sharing_to_connection(&s_conn_a));
+  cl_assert_equal_b(true, ble_hrm_is_sharing());
+  prv_assert_event_service_subscribed(true);
 
-  cl_assert_equal_b(true, regular_timer_is_scheduled(timer));
+  // Single consumer: subscribing stops advertising.
+  cl_assert_equal_i(1, s_gap_le_slave_reconnect_hrm_stop_call_count);
 
-  bt_driver_cb_hrm_service_update_subscription(s_device_a, false);
-  cl_assert_equal_b(false, regular_timer_is_scheduled(timer));
+  prv_put_and_assert_hrm_event(HRMEvent_BPM, 80, HRMQuality_Excellent,
+                               true /* expect bt driver cb */, true /* expected_is_on_wrist */);
+  cl_assert_equal_i(1, s_last_num_permitted_devices);
+  cl_assert_equal_m(&s_last_permitted_devices[0], s_device_a, sizeof(*s_device_a));
+
+  ble_hrm_set_workout_mode(false);
+  cl_assert_equal_i(2, s_gap_le_slave_reconnect_hrm_stop_call_count);
+  cl_assert_equal_i(2, s_bt_driver_hrm_service_enable_call_count);
+  cl_assert_equal_b(false, s_bt_driver_hrm_service_is_enabled);
+  cl_assert_equal_b(false, ble_hrm_is_sharing_to_connection(&s_conn_a));
+  cl_assert_equal_b(false, ble_hrm_is_sharing());
+  prv_assert_event_service_subscribed(false);
+  prv_assert_last_disconnected(s_device_a);
+}
+
+void test_ble_hrm__workout_mode_resumes_advertising_after_consumer_disconnect(void) {
+  s_activity_prefs_heart_rate_is_enabled = false;
+  s_bt_driver_hrm_service_is_enabled = false;
+
+  // Workout starts: begin advertising for a consumer to discover us.
+  ble_hrm_set_workout_mode(true);
+  cl_assert_equal_i(1, s_gap_le_slave_reconnect_hrm_start_call_count);
+  cl_assert_equal_i(0, s_gap_le_slave_reconnect_hrm_stop_call_count);
+
+  // Consumer subscribes: stop advertising, we have our single consumer.
+  bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
+  cl_assert_equal_b(true, ble_hrm_is_sharing_to_connection(&s_conn_a));
+  cl_assert_equal_i(1, s_gap_le_slave_reconnect_hrm_stop_call_count);
+
+  // Consumer disconnects mid-workout: resume advertising so it can reconnect.
+  ble_hrm_handle_disconnection(&s_conn_a);
+  cl_assert_equal_b(false, ble_hrm_is_sharing_to_connection(&s_conn_a));
+  cl_assert_equal_i(2, s_gap_le_slave_reconnect_hrm_start_call_count);
+
+  // A fresh subscription stops advertising again.
+  bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
+  cl_assert_equal_b(true, ble_hrm_is_sharing_to_connection(&s_conn_a));
+  cl_assert_equal_i(2, s_gap_le_slave_reconnect_hrm_stop_call_count);
+
+  ble_hrm_set_workout_mode(false);
+}
+
+void test_ble_hrm__workout_mode_ignores_duplicate_transitions(void) {
+  s_activity_prefs_heart_rate_is_enabled = false;
+  s_bt_driver_hrm_service_is_enabled = false;
+
+  ble_hrm_set_workout_mode(true);
+  ble_hrm_set_workout_mode(true);
+
+  cl_assert_equal_i(1, s_gap_le_slave_reconnect_hrm_start_call_count);
+  cl_assert_equal_i(0, s_gap_le_slave_reconnect_hrm_stop_call_count);
+  cl_assert_equal_i(1, s_bt_driver_hrm_service_enable_call_count);
+  cl_assert_equal_b(true, s_bt_driver_hrm_service_is_enabled);
+
+  ble_hrm_set_workout_mode(false);
+  ble_hrm_set_workout_mode(false);
+
+  cl_assert_equal_i(1, s_gap_le_slave_reconnect_hrm_start_call_count);
+  cl_assert_equal_i(1, s_gap_le_slave_reconnect_hrm_stop_call_count);
+  cl_assert_equal_i(2, s_bt_driver_hrm_service_enable_call_count);
+  cl_assert_equal_b(false, s_bt_driver_hrm_service_is_enabled);
+}
+
+void test_ble_hrm__activity_pref_off_keeps_service_enabled_during_workout_mode(void) {
+  s_activity_prefs_heart_rate_is_enabled = true;
+  s_bt_driver_hrm_service_is_enabled = true;
+
+  ble_hrm_set_workout_mode(true);
+  cl_assert_equal_b(true, s_bt_driver_hrm_service_is_enabled);
+
+  s_activity_prefs_heart_rate_is_enabled = false;
+  ble_hrm_handle_activity_prefs_heart_rate_is_enabled(false);
+  cl_assert_equal_i(2, s_bt_driver_hrm_service_enable_call_count);
+  cl_assert_equal_b(true, s_bt_driver_hrm_service_is_enabled);
 
   bt_driver_cb_hrm_service_update_subscription(s_device_a, true);
-  cl_assert_equal_b(true, regular_timer_is_scheduled(timer));
+  cl_assert_equal_b(true, ble_hrm_is_sharing_to_connection(&s_conn_a));
+  prv_assert_event_service_subscribed(true);
 
-  cl_assert_equal_i(0, s_ble_hrm_push_reminder_popup_call_count);
-  fake_regular_timer_trigger(timer);
-  cl_assert_equal_i(1, s_ble_hrm_push_reminder_popup_call_count);
-
-  // Except timer to be rescheduled again:
-  cl_assert_equal_b(true, regular_timer_is_scheduled(timer));
-
-  bt_driver_cb_hrm_service_update_subscription(s_device_a, false);
-  cl_assert_equal_b(false, regular_timer_is_scheduled(timer));
+  ble_hrm_set_workout_mode(false);
+  cl_assert_equal_b(false, s_bt_driver_hrm_service_is_enabled);
+  prv_assert_event_service_subscribed(false);
 }

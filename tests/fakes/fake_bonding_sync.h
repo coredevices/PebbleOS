@@ -36,7 +36,9 @@ static bool prv_list_find_cb(ListNode *found_list_node, void *data) {
   const BleBonding *bonding = (const BleBonding *)data;
   const BLEBondingNode *found_node = (const BLEBondingNode *)found_list_node;
   const BleBonding *found_bonding = &found_node->bonding;
-  return sm_is_pairing_info_equal_identity(&bonding->pairing_info, &found_bonding->pairing_info);
+  return (bonding->is_gateway == found_bonding->is_gateway &&
+          sm_is_pairing_info_equal_identity(&bonding->pairing_info,
+                                            &found_bonding->pairing_info));
 }
 
 static void prv_remove_node(BLEBondingNode *node) {

@@ -257,6 +257,13 @@ bool activity_prefs_hrm_activity_tracking_is_enabled(void) {
 
 void activity_prefs_set_hrm_activity_tracking_enabled(bool enabled) {
 }
+
+bool activity_prefs_ble_hrm_workout_sharing_is_enabled(void) {
+  return true;
+}
+
+void activity_prefs_set_ble_hrm_workout_sharing_enabled(bool enabled) {
+}
 #endif
 
 ActivityInsightSettings *activity_prefs_get_sleep_reward_settings(void) {
