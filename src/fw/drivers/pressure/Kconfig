@@ -13,8 +13,4 @@ config PRESSURE_BMP390
     help
       Support for the Bosch BMP390 barometric pressure sensor.
 
-module = DRIVER_PRESSURE
-module-str = Pressure Sensor
-source "src/fw/Kconfig.template.log_level"
-
 endif # PRESSURE

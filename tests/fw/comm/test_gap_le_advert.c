@@ -11,7 +11,7 @@
 // Fakes
 ///////////////////////////////////////////////////////////
 
-#include "fake_bt_driver_advert.h"
+#include "fake_GAPAPI.h"
 #include "fake_new_timer.h"
 #include "fake_rtc.h"
 #include "fake_system_task.h"
@@ -30,6 +30,11 @@
 #include "stubs_passert.h"
 #include "stubs_prompt.h"
 
+void gap_le_connect_bluetopia_connection_callback(uint32_t stack_id,
+                                                  GAP_LE_Event_Data_t* event_data,
+                                                  uint32_t CallbackParameter) {
+}
+
 bool static s_is_connected_as_slave = false;
 
 bool gap_le_connect_is_connected_as_slave(void) {
@@ -46,6 +51,10 @@ void gap_le_slave_reconnect_start(void) {
 }
 
 void gatt_service_changed_server_cleanup_by_connection(GAPLEConnection *connection) {
+}
+
+int HCI_LE_Set_Advertise_Enable(unsigned int BluetoothStackID, ...) {
+  return (0);
 }
 
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
@@ -67,7 +76,7 @@ static void unscheduled_callback(GAPLEAdvertisingJobRef job,
 }
 
 void test_gap_le_advert__initialize(void) {
-  fake_bt_driver_advert_init();
+  fake_GAPAPI_init();
 
   s_unscheduled_cb_count = 0;
   s_unscheduled_job = NULL;
@@ -79,11 +88,6 @@ void test_gap_le_advert__initialize(void) {
 
   regular_timer_init();
   gap_le_advert_init();
-
-  // gap_le_advert keeps its slave-connection state in a static that init() does
-  // not clear, so a prior test that connected as slave would leave advertising
-  // paused. Reset it through the public API for a clean slate each test.
-  gap_le_advert_handle_disconnect_as_slave();
 }
 
 void test_gap_le_advert__cleanup(void) {
@@ -627,14 +631,9 @@ void test_gap_le_advert__continue_after_slave_connection(void) {
   // we should have stopped advertising for reconnection
   cl_assert_equal_b(gap_le_is_advertising_enabled(), false);
 
-  // While connected as slave, the cycle timer must not re-enable advertising:
-  // the bt_driver contract does not advertise during a connection.
+  // Trigger the advertising to start up again. Since we still have an advertisement job set,
+  // it should continue.
   regular_timer_fire_seconds(1);
-  cl_assert_equal_b(gap_le_is_advertising_enabled(), false);
-
-  // Once disconnected, advertising resumes since the advertisement job is still
-  // scheduled:
-  gap_le_advert_handle_disconnect_as_slave();
   cl_assert_equal_b(gap_le_is_advertising_enabled(), true);
 
   free(ad);

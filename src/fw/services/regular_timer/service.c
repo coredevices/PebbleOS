@@ -13,8 +13,6 @@
 
 #include <time.h>
 
-PBL_LOG_MODULE_DEFINE(service_regular_timer, CONFIG_SERVICE_REGULAR_TIMER_LOG_LEVEL);
-
 //! Don't let users modify the list while callbacks are occurring.
 static PebbleMutex * s_callback_list_semaphore = 0;
 

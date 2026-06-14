@@ -99,7 +99,7 @@ void fonts_unload_custom_font(GFont font) {
   applib_free(font_info);
 }
 
-#if !defined(CONFIG_RECOVERY_FW)
+#if !RECOVERY_FW
 static const struct {
   const char *key_name;
   uint8_t height;

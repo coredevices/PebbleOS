@@ -109,18 +109,124 @@ def options(opt):
                    choices=waftools.openocd.JTAG_OPTIONS.keys(),
                    help='Which JTAG programmer we are using '
                         '(bb2 (default), olimex, ev2, etc)')
+    opt.add_option('--nosleep', action='store_true',
+                   help='Disable sleep and stop mode (to use JTAG+GDB)')
+    opt.add_option('--nostop', action='store_true',
+                   help='Disable stop mode (to use JTAG+GDB)')
+    opt.add_option('--nowatch', action='store_true',
+                   help='Disable the watchface idle timeout')
+    opt.add_option('--nowatchdog', action='store_true',
+                   help='Disable automatic reboots when watchdog fires')
+    opt.add_option('--performance_tests', action='store_true',
+                   help='Enables instrumentation for performance testing (off by default)')
+    opt.add_option('--ui_debug', action='store_true',
+                   help='Enable window dump & layer nudge CLI cmd (off by default)')
+    opt.add_option('--sdkshell', action='store_true',
+                   help='Use the sdk shell instead of the normal shell')
+    opt.add_option('--nolog', action='store_true',
+                   help='Disable PBL_LOG macros to save space')
+    opt.add_option('--nohash', action='store_true',
+                   help='Disable log hashing and make the logs human readable')
+    opt.add_option('--log-level', default='debug', choices=['error', 'warn', 'info', 'debug', 'debug_verbose'],
+       help='Default global log level')
+    opt.add_option('--flash-log-level', default='info', choices=['error', 'warn', 'info', 'debug', 'debug_verbose'],
+       help='Default flash log level')
+
     opt.add_option('--compile_commands', action='store_true', help='Create a clang compile_commands.json')
     opt.add_option('--onlysdk', action='store_true', help="only build the sdk")
     opt.add_option('--no-link', action='store_true',
                    help='Do not link the final firmware binary. This is used for static analysis')
+    opt.add_option('--noprompt', action='store_true',
+                   help='Disable the serial console to save space')
+    opt.add_option('--profiler', action='store_true', help='Enable the profiler.')
+    opt.add_option('--profile_interrupts', action='store_true',
+                   help='Enable profiling of all interrupts.')
+    opt.add_option('--no_sandbox', action='store_true',
+                   help='Disable the MPU for 3rd party apps.')
+    opt.add_option('--malloc_instrumentation', action='store_true',
+                   help='Enables malloc instrumentation')
     opt.add_option('--variant', action='store', default='normal',
                    choices=['normal', 'prf'],
                    help='Build variant: normal (default) or prf (recovery firmware)')
+    opt.add_option('--mfg', action='store_true', help='Enable specific MFG-only options in the PRF build')
+    opt.add_option('--no-pulse-everywhere',
+                   action='store_true',
+                   help='Disables PULSE everywhere, uses legacy logs and prompt')
 
 def handle_configure_options(conf):
+    if conf.options.noprompt:
+        conf.env.append_value('DEFINES', 'DISABLE_PROMPT')
+        conf.env.DISABLE_PROMPT = True
+
+    if conf.options.malloc_instrumentation:
+        conf.env.append_value('DEFINES', 'MALLOC_INSTRUMENTATION')
+        print("Enabling malloc instrumentation")
+
+    if conf.options.performance_tests:
+        conf.env.PERFORMANCE_TESTS = True
+
+    if conf.options.nosleep:
+        conf.env.append_value('DEFINES', 'PBL_NOSLEEP')
+        print("Sleep/stop mode disabled")
+
+    if conf.options.nostop:
+        conf.env.append_value('DEFINES', 'PBL_NOSTOP')
+        print("Stop mode disabled")
+
+    if conf.options.nowatch:
+        conf.env.append_value('DEFINES', 'NO_WATCH_TIMEOUT')
+        print("Watch watchdog disabled")
+
+    if conf.options.nowatchdog:
+        conf.env.append_value('DEFINES', 'NO_WATCHDOG')
+        conf.env.NO_WATCHDOG = True
+        print("Watchdog reboot disabled")
+
+    if conf.options.performance_tests:
+        conf.env.append_value('DEFINES', 'PERFORMANCE_TESTS')
+        conf.options.profiler = True
+        print("Instrumentation and apps for performance measurement enabled (enables profiler)")
+
+    print(f"Log level: {conf.options.log_level.upper()}")
+    conf.env.append_value('DEFINES', f'DEFAULT_LOG_LEVEL=LOG_LEVEL_{conf.options.log_level.upper()}')
+
+    conf.env.append_value('DEFINES', f'FLASH_LOG_LEVEL=LOG_LEVEL_{conf.options.flash_log_level.upper()}')
+
+    if conf.options.ui_debug:
+        conf.env.append_value('DEFINES', 'UI_DEBUG')
+
+    if conf.options.no_sandbox:
+        print("Sandbox disabled")
+    else:
+        conf.env.append_value('DEFINES', 'APP_SANDBOX')
+
+    if not conf.options.nolog:
+        conf.env.append_value('DEFINES', 'PBL_LOG_ENABLED')
+        if not conf.options.nohash and not conf.env.CONFIG_QEMU:
+            conf.env.append_value('DEFINES', 'PBL_LOGS_HASHED')
+
+    if conf.options.profile_interrupts:
+        conf.env.append_value('DEFINES', 'PROFILE_INTERRUPTS')
+        if not conf.options.profiler:
+            # Can't profile interrupts without the profiler enabled
+            print("Enabling profiler")
+            conf.options.profiler = True
+
+    if conf.options.profiler:
+        conf.env.append_value('DEFINES', 'PROFILER')
+        if not conf.options.nostop:
+            print("Enable --nostop for accurate profiling.")
+            conf.env.append_value('DEFINES', 'PBL_NOSTOP')
+
+    if conf.options.lto:
+        print("Turning on LTO.")
+
     if conf.options.no_link:
         conf.env.NO_LINK = True
         print("Not linking firmware")
+
+    if not conf.options.no_pulse_everywhere and (not conf.env.CONFIG_RELEASE or conf.options.mfg):
+        conf.env.append_value('DEFINES', 'PULSE_EVERYWHERE=1')
 
 def configure(conf):
     if not conf.options.board:
@@ -177,6 +283,7 @@ def configure(conf):
 
     conf.env.VARIANT = conf.options.variant
     if conf.env.VARIANT == 'prf':
+        conf.env.append_value('DEFINES', ['RECOVERY_FW'])
         conf.env.JS_ENGINE = 'none'
 
     # PRF variant forces JS_ENGINE='none' above. If the board's defconfig had
@@ -186,6 +293,12 @@ def configure(conf):
     if conf.env.JS_ENGINE == 'none' and conf.env.CONFIG_MODDABLE_XS:
         conf.env.append_value('CFLAGS', ['-UCONFIG_MODDABLE_XS'])
         conf.env.CONFIG_MODDABLE_XS = None
+
+    if conf.options.mfg:
+        # Note that for the most part PRF and MFG firmwares are the same, so for MFG PRF builds
+        # both MANUFACTURING_FW and RECOVERY_FW will be defined.
+        conf.env.IS_MFG = True
+        conf.env.append_value('DEFINES', ['MANUFACTURING_FW'])
 
     conf.find_program('node nodejs', var='NODE',
                       errmsg="Unable to locate the Node command. "
@@ -248,10 +361,7 @@ def configure(conf):
                         '-gdwarf-4',
                         '-O0',
                         '-fdata-sections',
-                        '-ffunction-sections',
-                        '-fno-common',
-                        '-ffp-contract=off',
-                        '-fexcess-precision=standard' ]
+                        '-ffunction-sections' ]
 
     # Reset LINKFLAGS so firmware-specific flags (e.g. --undefined=HAL_GetTick)
     # don't leak into the host test environment.
@@ -267,7 +377,7 @@ def configure(conf):
     conf.env.append_value('DEFINES', 'CLAR_FIXTURE_PATH="' +
                                      conf.path.make_node('tests/fixtures/').abspath() + '"')
 
-    conf.env.append_value('DEFINES', 'CONFIG_LOG=1')
+    conf.env.append_value('DEFINES', 'PBL_LOG_ENABLED')
 
     if conf.options.compile_commands:
         conf.load('clang_compilation_database', tooldir='waftools')
@@ -369,7 +479,7 @@ def build(bld):
     if not bld.env.NO_LINK:
         bld.add_post_fun(size_fw)
         bld.add_post_fun(size_resources)
-        if bld.env.CONFIG_LOG_HASHED:
+        if 'PBL_LOGS_HASHED' in bld.env.DEFINES:
             bld.add_post_fun(merge_loghash_dicts)
 
 
@@ -524,7 +634,7 @@ def _make_bundle(ctx, fw_bin_path, fw_type='normal', board=None, resource_path=N
 
     if resource_path is not None:
         b.add_resources(resource_path, version_ts)
-    if not ctx.env.CONFIG_RELEASE and ctx.env.CONFIG_LOG_HASHED:
+    if not ctx.env.CONFIG_RELEASE and 'PBL_LOGS_HASHED' in ctx.env.DEFINES:
         loghash_dict = ctx.path.get_bld().make_node(LOGHASH_OUT_PATH).abspath()
         b.add_loghash(loghash_dict)
 
@@ -625,13 +735,13 @@ def _check_firmware_image_size(ctx, path):
     firmware_size = os.path.getsize(path)
     # Determine flash and bootloader size so we can calculate the max firmware size
     if ctx.env.CONFIG_SOC_NRF52:
-        if ctx.env.VARIANT == 'prf' and not ctx.env.CONFIG_MFG:
+        if ctx.env.VARIANT == 'prf' and not ctx.env.IS_MFG:
             max_firmware_size = 512 * BYTES_PER_K
         else:
             # 1024k of flash and 32k bootloader
             max_firmware_size = (1024 - 32) * BYTES_PER_K
     elif ctx.env.CONFIG_SOC_SF32LB52:
-        if ctx.env.VARIANT == 'prf' and not ctx.env.CONFIG_MFG:
+        if ctx.env.VARIANT == 'prf' and not ctx.env.IS_MFG:
             max_firmware_size = 576 * BYTES_PER_K
         else:
             # 3072k of flash

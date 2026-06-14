@@ -14,8 +14,6 @@
 
 #include <string.h>
 
-PBL_LOG_MODULE_DECLARE(service_process_management, CONFIG_SERVICE_PROCESS_MANAGEMENT_LOG_LEVEL);
-
 //! This comes from the generated pebble.auto.c with all the exported functions in it.
 extern const void* const g_pbl_system_tbl[];
 

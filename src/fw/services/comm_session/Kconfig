@@ -5,11 +5,3 @@ config SERVICE_COMM_SESSION
     bool "Comm session"
     help
       Pebble Protocol communication session management.
-
-if SERVICE_COMM_SESSION
-
-module = SERVICE_COMM_SESSION
-module-str = Comm session
-source "src/fw/Kconfig.template.log_level"
-
-endif

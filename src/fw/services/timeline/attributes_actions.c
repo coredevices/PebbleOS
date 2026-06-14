@@ -7,8 +7,6 @@
 
 #include "system/logging.h"
 
-PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
-
 
 #define GROUP_TYPE AttributeGroupType_Action
 

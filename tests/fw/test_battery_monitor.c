@@ -122,11 +122,6 @@ void test_battery_monitor__initialize(void) {
   s_stop_mode_allowed = true;
   fake_rtc_init(0, 0);
   fake_rtc_auto_increment_ticks(0);
-
-  // The discharge curve's 100% reference is mutated by
-  // battery_curve_set_full_voltage() during charge-complete handling and
-  // persists across tests; restore it so each test starts from a clean curve.
-  battery_curve_reset_for_tests();
 }
 
 void test_battery_monitor__cleanup(void) {
@@ -277,15 +272,10 @@ critical -> lpm
 lpm -> critical
 critical -> good
 */
-// Must mirror the PowerStateID enum in src/fw/services/battery/battery_monitor.c.
-// PowerStatePluggedIn was added in 9d3a9548f ("add plugged in status"): whenever
-// the watch is plugged in, it ignores battery level/charge status and operates
-// normally, so the state machine reports PluggedIn rather than Good/LowPower.
 typedef enum {
   PowerStateGood,
   PowerStateLowPower,
   PowerStateCritical,
-  PowerStatePluggedIn,
   PowerStateStandby
 } PowerStateID;
 extern PowerStateID s_power_state;
@@ -308,12 +298,12 @@ void test_battery_monitor__transitions(void) {
   cl_assert(s_in_low_power);
   cl_assert_equal_i(s_power_state, PowerStateLowPower);
 
-  // lpm -> good (plugged in => PluggedIn, which resumes normal operation)
+  // lpm -> good
   fake_battery_set_charging(true);
   fake_battery_set_connected(true);
   periodic_timer_trigger(1);
   cl_assert(!s_in_low_power);
-  cl_assert_equal_i(s_power_state, PowerStatePluggedIn);
+  cl_assert_equal_i(s_power_state, PowerStateGood);
 
   // good -> critical
   fake_battery_set_millivolts(critical_mv);
@@ -337,14 +327,14 @@ void test_battery_monitor__transitions(void) {
   cl_assert(s_in_low_power);
   cl_assert_equal_i(s_power_state, PowerStateCritical);
 
-  // critical -> good (plugged in => PluggedIn, which resumes normal operation)
+  // critical -> good
   fake_battery_set_charging(true);
   fake_battery_set_connected(true);
   fake_battery_set_millivolts(good_mv);
   periodic_timer_trigger(20);
   cl_assert(!battery_monitor_critical_lockout());
   cl_assert(!s_in_low_power);
-  cl_assert_equal_i(s_power_state, PowerStatePluggedIn);
+  cl_assert_equal_i(s_power_state, PowerStateGood);
 }
 
 void test_battery_monitor__low_first_run(void) {
@@ -395,13 +385,10 @@ void test_battery_monitor__critical_plugged_in(void) {
   cl_assert(battery_monitor_critical_lockout());
 
   cl_assert_equal_i(standby_timer_get_timeout(), 30000);
-
-  // Plugging in transitions to PowerStatePluggedIn, whose exit-from-critical
-  // action (prv_exit_critical) stops the standby timer, so standby is averted.
   fake_battery_set_charging(true);
   fake_battery_set_connected(true);
   periodic_timer_trigger(1);
-  cl_assert(!standby_timer_is_scheduled());
+  standby_timer_trigger(1);
   cl_assert(!s_entered_standby);
 }
 
@@ -480,16 +467,10 @@ void test_battery_monitor__connection_states(void) {
   periodic_timer_trigger(1);
   cl_assert(!s_in_low_power && battery_get_charge_state().charge_percent == 60);
 
-  // Discharging but connected: prv_update_done_charging() shifts the discharge
-  // curve's 100% reference down to (current voltage - fudge). With the current
-  // gabbro/silk curve data the 60% charge voltage (3970mV) is far below the
-  // discharge curve's 90% point (4120mV), and battery_curve_set_full_voltage()
-  // clamps the full-voltage so it cannot drop below that 90% point + 1. So the
-  // 3970mV reading interpolates to ~73% raw, which battery_get_charge_state()
-  // bins to 70% - it no longer clamps to 100%.
+  // Discharging but connected - The charge should update so 60% is 100%
   fake_battery_set_charging(false);
   periodic_timer_trigger(1);
-  cl_assert_equal_i(battery_get_charge_state().charge_percent, 70);
+  cl_assert_equal_i(battery_get_charge_state().charge_percent, 100);
 }
 
 void test_battery_monitor__battery_get_charge_state(void) {

@@ -17,7 +17,7 @@
 #include <limits.h>
 #include <string.h>
 
-#if defined(CONFIG_RECOVERY_FW) || defined(UNITTEST)
+#if (RECOVERY_FW || UNITTEST)
 #define SIMPLE_DIALOG_ANIMATED false
 #else
 #define SIMPLE_DIALOG_ANIMATED true

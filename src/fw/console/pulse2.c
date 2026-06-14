@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#ifdef CONFIG_PULSE_EVERYWHERE
+#if PULSE_EVERYWHERE
 
 #include "pulse.h"
 #include "pulse2_reliable_retransmit_timer.h"

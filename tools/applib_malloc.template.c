@@ -50,7 +50,7 @@ static void* prv_malloc(size_t size, uintptr_t client_pc) {
     return NULL;
   }
 
-#if defined(CONFIG_MALLOC_INSTRUMENTATION)
+#if defined(MALLOC_INSTRUMENTATION)
   void *result = task_malloc_with_pc(size, client_pc);
 #else
   void *result = task_malloc(size);
@@ -75,7 +75,7 @@ static void* prv_zalloc(size_t size, uintptr_t client_pc) {
 }
 
 void* applib_malloc(size_t size) {
-#if defined(CONFIG_MALLOC_INSTRUMENTATION)
+#if defined(MALLOC_INSTRUMENTATION)
   register uintptr_t lr __asm("lr");
   uintptr_t saved_lr = lr;
   return prv_malloc(size, saved_lr);
@@ -85,7 +85,7 @@ void* applib_malloc(size_t size) {
 }
 
 void* applib_zalloc(size_t size) {
-#if defined(CONFIG_MALLOC_INSTRUMENTATION)
+#if defined(MALLOC_INSTRUMENTATION)
   register uintptr_t lr __asm("lr");
   uintptr_t saved_lr = lr;
   return prv_zalloc(size, saved_lr);
@@ -95,7 +95,7 @@ void* applib_zalloc(size_t size) {
 }
 
 void applib_free(void *ptr) {
-#if defined(CONFIG_MALLOC_INSTRUMENTATION)
+#if defined(MALLOC_INSTRUMENTATION)
   register uintptr_t lr __asm("lr");
   uintptr_t saved_lr = lr;
   task_free_with_pc(ptr, saved_lr);

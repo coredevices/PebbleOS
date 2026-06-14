@@ -19,8 +19,6 @@
 #include "system/hexdump.h"
 #include "util/build_id.h"
 
-PBL_LOG_MODULE_DECLARE(service_process_management, CONFIG_SERVICE_PROCESS_MANAGEMENT_LOG_LEVEL);
-
 // 64k. Note that both tintin and snowy apps have a maximum size of 64k enforced by the SDK, even
 // though there isn't enough memory for load more than 24k in practice on tintin.
 static const uint32_t APP_MAX_SIZE = 0x10000;

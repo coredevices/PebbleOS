@@ -68,7 +68,7 @@ static void prv_fixup_firmware_metadata(FirmwareMetadata *fw_metadata) {
 static void prv_fixup_running_firmware_metadata(FirmwareMetadata *fw_metadata) {
   prv_fixup_firmware_metadata(fw_metadata);
 
-#ifdef CONFIG_MFG
+#ifdef MANUFACTURING_FW
   // Lie to the phone and force this to say we're not a MFG firmware. If we tell the phone app
   // that we're a MFG firmware it will get mad at us and try to update us out of this mode. We
   // want to stay in this mode to collect logs and core dumps at the factory.
@@ -146,7 +146,7 @@ static void prv_send_watch_versions(CommSession *session) {
   resource_version_to_network_endian(&versions_msg.system_resources_version);
 
   versions_msg.is_unfaithful = bt_persistent_storage_is_unfaithful();
-#if !defined(CONFIG_RECOVERY_FW)
+#if !RECOVERY_FW
   versions_msg.activity_insights_version = hton16(activity_insights_settings_get_version());
 #endif
 
@@ -167,7 +167,7 @@ void system_version_protocol_msg_callback(CommSession *session, const uint8_t* d
 }
 
 void command_version_info(void) {
-#ifdef CONFIG_MFG
+#ifdef MANUFACTURING_FW
   prompt_send_response("MANUFACTURING FW");
 #endif
 

@@ -5,11 +5,3 @@ config SERVICE_APP_ORDER_ENDPOINT
     bool "App order endpoint"
     help
       Endpoint used to order installed apps in the launcher.
-
-if SERVICE_APP_ORDER_ENDPOINT
-
-module = SERVICE_APP_ORDER_ENDPOINT
-module-str = App order endpoint
-source "src/fw/Kconfig.template.log_level"
-
-endif

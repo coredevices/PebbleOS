@@ -182,7 +182,7 @@ static bool prv_event_put_isr(QueueHandle_t queue, const char* queue_type, uintp
   if (!xQueueSendToBackFromISR(queue, event, &should_context_switch)) {
     prv_log_event_put_failure(queue_type, saved_lr, event);
 
-#ifdef CONFIG_NO_WATCHDOG
+#ifdef NO_WATCHDOG
     while (1);
 #endif
 
@@ -359,7 +359,7 @@ void **event_get_buffer(PebbleEvent *event) {
         return (void **)(&event->bluetooth.le.gatt_client_service.info);
       }
       break;
-#ifdef CONFIG_MFG
+#ifdef MANUFACTURING_FW
     case PEBBLE_HRM_EVENT:
       if (event->hrm.event_type == HRMEvent_CTR) {
         return (void **)(&event->hrm.ctr);
@@ -443,7 +443,7 @@ BaseType_t event_queue_cleanup_and_reset(QueueHandle_t queue) {
     PBL_ASSERTN(xQueueReceive(queue, &event, 0) != pdFAIL);
     // event service does some book-keeping about events, notify it that we're dropping these.
     sys_event_service_cleanup(&event);
-#if !defined(CONFIG_RECOVERY_FW)
+#if !RECOVERY_FW
     // app outbox service messages need to be cleaned up:
     app_outbox_service_cleanup_event(&event);
 #endif

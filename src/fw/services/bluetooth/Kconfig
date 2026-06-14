@@ -22,11 +22,3 @@ config BLE_GATT_SUBSCRIPTION_DEPTH
     help
       Per-client GATT subscription buffer depth, in max-size notifications.
       Deeper absorbs notification bursts (fewer drops) at the cost of RAM.
-
-if SERVICE_BLUETOOTH
-
-module = SERVICE_BLUETOOTH
-module-str = Bluetooth
-source "src/fw/Kconfig.template.log_level"
-
-endif

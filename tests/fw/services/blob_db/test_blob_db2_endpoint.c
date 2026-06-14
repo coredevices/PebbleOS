@@ -19,8 +19,6 @@
 ////////////////////////////////////
 #include "stubs_analytics.h"
 #include "stubs_app_cache.h"
-#include "stubs_app_glance_db.h"
-#include "stubs_health_db.h"
 #include "stubs_ios_notif_pref_db.h"
 #include "stubs_app_db.h"
 #include "stubs_contacts_db.h"
@@ -111,27 +109,9 @@ status_t blob_db_sync_db(BlobDBId db_id) {
   return S_SUCCESS;
 }
 
-// A fake dirty item is needed because the error path of the write/writeback response handler
-// logs the rejected item by dereferencing sync_session->dirty_list->key. Allocate a real
-// BlobDBDirtyItem (which has a flexible key[] member) so that path reads valid memory.
-static const char s_fake_dirty_key[] = "fakekey";
-
-#define FAKE_DIRTY_ITEM_SIZE (sizeof(BlobDBDirtyItem) + sizeof(s_fake_dirty_key))
-static uint8_t s_fake_dirty_item_storage[FAKE_DIRTY_ITEM_SIZE];
-static BlobDBSyncSession s_fake_sync_session;
-
 BlobDBSyncSession *blob_db_sync_get_session_for_token(BlobDBToken token) {
-  BlobDBDirtyItem *dirty_item = (BlobDBDirtyItem *)s_fake_dirty_item_storage;
-  dirty_item->node = (ListNode){ 0 };
-  dirty_item->last_updated = 0;
-  dirty_item->key_len = sizeof(s_fake_dirty_key);
-  memcpy(dirty_item->key, s_fake_dirty_key, sizeof(s_fake_dirty_key));
-
-  s_fake_sync_session = (BlobDBSyncSession){
-    .dirty_list = dirty_item,
-  };
   // Don't return NULL
-  return &s_fake_sync_session;
+  return (BlobDBSyncSession *)1;
 }
 
 extern void blob_db2_set_accepting_messages(bool ehh);
@@ -204,14 +184,9 @@ void test_blob_db2_endpoint__handle_write_response(void) {
                                  sizeof(s_start_write_response_success));
   cl_assert(did_sync_next);
 
-  // A rejected (error) write response still advances the sync: the item is logged and then marked
-  // synced via blob_db_sync_next() to avoid re-sending it on every sync. The endpoint never
-  // cancels a sync in response to a write/writeback error.
-  did_sync_next = false;
   blob_db2_protocol_msg_callback(NULL, s_start_write_response_error,
                                  sizeof(s_start_write_response_error));
-  cl_assert(did_sync_next);
-  cl_assert(!did_sync_cancel);
+  cl_assert(did_sync_cancel);
 }
 
 
@@ -232,13 +207,9 @@ void test_blob_db2_endpoint__handle_writeback_response(void) {
                                  sizeof(s_start_writeback_response_success));
   cl_assert(did_sync_next);
 
-  // As with the write response above, a rejected writeback advances the sync rather than
-  // cancelling it.
-  did_sync_next = false;
   blob_db2_protocol_msg_callback(NULL, s_start_writeback_response_error,
                                  sizeof(s_start_writeback_response_error));
-  cl_assert(did_sync_next);
-  cl_assert(!did_sync_cancel);
+  cl_assert(did_sync_cancel);
 }
 
 static const uint8_t s_sync_done_response[] = {

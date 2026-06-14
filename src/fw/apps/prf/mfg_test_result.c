@@ -5,7 +5,7 @@
 
 #include <string.h>
 
-#ifdef CONFIG_MFG
+#ifdef MANUFACTURING_FW
 #include "drivers/flash.h"
 #include "flash_region/flash_region.h"
 #include "util/attributes.h"
@@ -17,7 +17,7 @@ static MfgTestResult s_results[NUM_MODES][MfgTestIdCount];
 static bool s_result_reported;
 static uint8_t s_mode_index;
 
-#ifdef CONFIG_MFG
+#ifdef MANUFACTURING_FW
 // Append-only log of results in the MFG_RESULTS subsector. Each report writes
 // one record; the subsector is only erased once the log fills up (compaction).
 typedef struct PACKED {
@@ -92,7 +92,7 @@ static void prv_append(MfgTestId test, uint8_t mode_index, bool passed, uint32_t
 
   prv_write_record(s_record_count++, test, mode_index, passed, value);
 }
-#endif  // CONFIG_MFG
+#endif  // MANUFACTURING_FW
 
 void mfg_test_result_set_mode(uint8_t mode) {
   // Map mode bitmask to array index: semi-finished=0, finished=1
@@ -104,7 +104,7 @@ void mfg_test_result_report(MfgTestId test, bool passed, uint32_t value) {
     return;
   }
 
-#ifdef CONFIG_MFG
+#ifdef MANUFACTURING_FW
   prv_ensure_loaded();
   prv_append(test, s_mode_index, passed, value);
 #endif
@@ -122,7 +122,7 @@ const MfgTestResult *mfg_test_result_get(MfgTestId test) {
     return NULL;
   }
 
-#ifdef CONFIG_MFG
+#ifdef MANUFACTURING_FW
   prv_ensure_loaded();
 #endif
 
@@ -139,7 +139,7 @@ void mfg_test_result_reset(void) {
   memset(s_results, 0, sizeof(s_results));
   s_result_reported = false;
 
-#ifdef CONFIG_MFG
+#ifdef MANUFACTURING_FW
   if (!flash_subsector_is_erased(FLASH_REGION_MFG_RESULTS_BEGIN)) {
     flash_erase_subsector_blocking(FLASH_REGION_MFG_RESULTS_BEGIN);
   }

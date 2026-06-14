@@ -21,8 +21,6 @@
 #include <stddef.h>
 #include <stdio.h>
 
-PBL_LOG_MODULE_DECLARE(service_data_logging, CONFIG_SERVICE_DATA_LOGGING_LOG_LEVEL);
-
 
 typedef enum {
   DLS_VERSION_0 = 0x20,

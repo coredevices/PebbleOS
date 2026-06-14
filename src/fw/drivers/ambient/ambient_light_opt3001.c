@@ -13,8 +13,6 @@
 
 #include <inttypes.h>
 
-PBL_LOG_MODULE_DEFINE(driver_ambient_opt3001, CONFIG_DRIVER_AMBIENT_LOG_LEVEL);
-
 static uint32_t s_sensor_light_dark_threshold;
 static bool s_initialized = false;
 

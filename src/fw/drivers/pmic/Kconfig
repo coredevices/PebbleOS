@@ -13,8 +13,4 @@ config PMIC_NPM1300
     help
       Support for the Nordic nPM1300 PMIC.
 
-module = DRIVER_PMIC
-module-str = PMIC
-source "src/fw/Kconfig.template.log_level"
-
 endif # PMIC

@@ -88,7 +88,7 @@ _Static_assert(sizeof(struct FirmwareMetadata) == (sizeof(uint32_t) +
 
 // Shared defines. Let's not duplicate this everywhere.
 
-#ifdef CONFIG_RECOVERY_FW
+#ifdef RECOVERY_FW
   #define FIRMWARE_METADATA_IS_RECOVERY_FIRMWARE (true)
 #else
   #define FIRMWARE_METADATA_IS_RECOVERY_FIRMWARE (false)

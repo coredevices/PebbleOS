@@ -25,8 +25,6 @@
 #include "util/time/time.h"
 #include "util/units.h"
 
-PBL_LOG_MODULE_DEFINE(service_app_cache, CONFIG_SERVICE_APP_CACHE_LOG_LEVEL);
-
 //! @file app_cache.c
 //! App Cache
 
@@ -271,7 +269,7 @@ status_t app_cache_free_up_space(uint32_t bytes_needed) {
     EachEvictData evict_data = (EachEvictData) {
       .bytes_needed = bytes_needed,
       .do_not_evict = {
-#ifndef CONFIG_SHELL_SDK
+#if !SHELL_SDK
         quick_launch_get_app(BUTTON_ID_UP),
         quick_launch_get_app(BUTTON_ID_SELECT),
         quick_launch_get_app(BUTTON_ID_DOWN),

@@ -18,8 +18,4 @@ config HRM_STUB
     help
       Stub heart rate monitor implementation.
 
-module = DRIVER_HRM
-module-str = Heart Rate Monitor
-source "src/fw/Kconfig.template.log_level"
-
 endif # HRM

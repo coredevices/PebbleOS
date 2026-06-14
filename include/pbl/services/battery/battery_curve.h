@@ -19,12 +19,6 @@ void battery_curve_set_compensation(BatteryCurveVoltageCompensationKey key, int 
 
 void battery_curve_set_full_voltage(uint16_t voltage);
 
-#if UNITTEST
-//! Restore the discharge curve mutated by battery_curve_set_full_voltage().
-//! For test isolation only; not built into production firmware.
-void battery_curve_reset_for_tests(void);
-#endif
-
 //! Returns the corresponding battery percentage as a ratio32.
 uint32_t battery_curve_sample_ratio32_charge_percent(uint32_t battery_mv, bool is_charging);
 

@@ -30,8 +30,6 @@
 #include <btutil/bt_device.h>
 #include <btutil/sm_util.h>
 
-PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
-
 #ifdef UNITTEST
 // Let the unittest define this using a header override:
 #  include "pbl/services/bluetooth/bluetooth_persistent_storage_unittest_impl.h"

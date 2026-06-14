@@ -29,8 +29,6 @@
 #include "util/legacy_checksum.h"
 #include "util/math.h"
 
-PBL_LOG_MODULE_DEFINE(service_filesystem, CONFIG_SERVICE_FILESYSTEM_LOG_LEVEL);
-
 static PebbleRecursiveMutex *s_pfs_mutex = NULL;
 
 #define IS_FILE_TYPE(file_type, type)   ((file_type) == (type))

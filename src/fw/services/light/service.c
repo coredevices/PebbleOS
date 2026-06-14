@@ -26,8 +26,6 @@
 
 #include <stdlib.h>
 
-PBL_LOG_MODULE_DEFINE(service_light, CONFIG_SERVICE_LIGHT_LOG_LEVEL);
-
 typedef enum {
   LIGHT_STATE_ON = 1,           // backlight on, no timeouts
   LIGHT_STATE_ON_TIMED = 2,     // backlight on, will start fading after a period
@@ -149,7 +147,7 @@ static uint8_t prv_backlight_get_intensity(void) {
     return backlight_low_power_intensity;
   }
   
-#if defined(CONFIG_DYNAMIC_BACKLIGHT) && !defined(CONFIG_RECOVERY_FW)
+#if defined(CONFIG_DYNAMIC_BACKLIGHT) && !defined(RECOVERY_FW)
   // Dynamic backlight: dim in utter darkness, otherwise user max. The
   // bright-outdoor case is already filtered upstream by prv_light_allowed()
   // for ambient-sensor-enabled wakes; the few paths that bypass that gate

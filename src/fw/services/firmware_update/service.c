@@ -12,7 +12,7 @@
 #include "process_management/app_manager.h"
 #include "pbl/services/battery/battery_monitor.h"
 #include "pbl/services/system_task.h"
-#ifndef CONFIG_RECOVERY_FW
+#ifndef RECOVERY_FW
 #include "pbl/services/powermode_service.h"
 #endif
 #include "pbl/services/runlevel.h"
@@ -28,8 +28,6 @@
 #include <inttypes.h>
 #include <stdbool.h>
 #include <string.h>
-
-PBL_LOG_MODULE_DEFINE(service_firmware_update, CONFIG_SERVICE_FIRMWARE_UPDATE_LOG_LEVEL);
 
 // The legacy firmware UI breaks firmware and resources into 50% chunks. In reality since these
 // parts are not of equal sizes, one of these '50%' blocks will take longer than the
@@ -188,7 +186,7 @@ static FirmwareUpdateStatus prv_firmware_update_start(PebbleSystemMessageEvent *
       .restart = true,
     });
     put_bytes_expect_init(FIRMWARE_TIMEOUT_MS);
-#ifndef CONFIG_RECOVERY_FW
+#ifndef RECOVERY_FW
     powermode_service_request_hp();
 #endif
     result = FirmwareUpdateRunning;
@@ -219,7 +217,7 @@ static void prv_firmware_update_finish(bool failed) {
   }
 
   s_update_status = failed ? FirmwareUpdateFailed : FirmwareUpdateStopped;
-#ifndef CONFIG_RECOVERY_FW
+#ifndef RECOVERY_FW
   powermode_service_release_hp();
 #endif
 

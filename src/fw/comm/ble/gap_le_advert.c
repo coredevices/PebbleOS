@@ -7,6 +7,7 @@
 #include <bluetooth/bt_driver_advert.h>
 #include <bluetooth/init.h>
 
+#include "comm/ble/ble_log.h"
 #include "comm/bt_lock.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/analytics/analytics.h"
@@ -14,8 +15,6 @@
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/list.h"
-
-PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
 //! CC2564 / HCI Advertising Limitation:
 //! ------------------------------
@@ -205,14 +204,14 @@ static void prv_increment_elapsed_time_for_job(GAPLEAdvertisingJob **job_ptr, bo
     if (job->cur_term < job->num_terms) {
       // Take care of GAPLE_ADVERTISING_DURATION_LOOP_AROUND:
       if (job->terms[job->cur_term].duration_secs == GAPLE_ADVERTISING_DURATION_LOOP_AROUND) {
-        PBL_LOG_DBG("Job looped around to term %"PRIu16,
-                    job->terms[job->cur_term].loop_around_index);
+        BLE_LOG_DEBUG("Job looped around to term %"PRIu16,
+                      job->terms[job->cur_term].loop_around_index);
         job->cur_term = job->terms[job->cur_term].loop_around_index;
       }
 
       job->term_time_elapsed_secs = 0;
-      PBL_LOG_DBG("Job is performing next advertising term (%d/%d)",
-                  job->cur_term, job->num_terms);
+      BLE_LOG_DEBUG("Job is performing next advertising term (%d/%d)",
+                    job->cur_term, job->num_terms);
       // force an update to make sure the new requested term takes
       if (has_new_term) {
         *has_new_term = true;
@@ -228,8 +227,8 @@ static void prv_increment_elapsed_time_for_job(GAPLEAdvertisingJob **job_ptr, bo
         job->unscheduled_callback(job, true /* completed */, job->unscheduled_callback_data);
       }
 
-      PBL_LOG_DBG("Unscheduled advertising completed job: %s",
-                  prv_string_for_debug_tag(job->tag));
+      BLE_LOG_DEBUG("Unscheduled advertising completed job: %s",
+                    prv_string_for_debug_tag(job->tag));
       kernel_free(job->terms);
       kernel_free(job);
       *job_ptr = NULL;
@@ -500,8 +499,8 @@ void gap_le_advert_unschedule_job_types(
 
     for (size_t i = 0; i < num_types; i++) {
       if (job->tag == tag_types[i]) {
-        PBL_LOG_DBG("Removing advertisement of type %s",
-                    prv_string_for_debug_tag(job->tag));
+        BLE_LOG_DEBUG("Removing advertisement of type %s",
+                      prv_string_for_debug_tag(job->tag));
         gap_le_advert_unschedule(job);
       }
     }
@@ -633,6 +632,18 @@ void bt_driver_handle_host_resynced(void) {
   }
 unlock:
   bt_unlock();
+}
+
+GAPLEAdvertisingJobRef gap_le_advert_get_current_job(void) {
+  return s_current;
+}
+
+GAPLEAdvertisingJobRef gap_le_advert_get_jobs(void) {
+  return s_jobs;
+}
+
+GAPLEAdvertisingJobTag gap_le_advert_get_job_tag(GAPLEAdvertisingJobRef job) {
+  return job->tag;
 }
 
 #undef GAP_LE_ADVERT_LOG_LEVEL

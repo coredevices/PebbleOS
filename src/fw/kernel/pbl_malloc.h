@@ -18,7 +18,7 @@ Heap *task_heap_get_for_current_task(void);
 
 // task_* functions map to app_* or kernel_* based on which task we're calling it on.
 void *task_malloc(size_t bytes);
-#if defined(CONFIG_MALLOC_INSTRUMENTATION)
+#if defined(MALLOC_INSTRUMENTATION)
 void *task_malloc_with_pc(size_t bytes, uintptr_t client_pc);
 #endif
 void *task_malloc_check(size_t bytes);
@@ -28,7 +28,7 @@ void *task_zalloc_check(size_t size);
 void *task_calloc(size_t count, size_t size);
 void *task_calloc_check(size_t count, size_t size);
 void task_free(void *ptr);
-#if defined(CONFIG_MALLOC_INSTRUMENTATION)
+#if defined(MALLOC_INSTRUMENTATION)
 void task_free_with_pc(void *ptr, uintptr_t client_pc);
 #endif
 char* task_strdup(const char* s);

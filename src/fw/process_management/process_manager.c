@@ -185,7 +185,7 @@ void process_manager_init_context(ProcessContext* context,
   context->exit_reason = APP_EXIT_NOT_SPECIFIED;
 }
 
-#if !defined(CONFIG_RECOVERY_FW)
+#if !defined(RECOVERY_FW)
 bool process_manager_check_SDK_compatible(const AppInstallId id) {
   AppInstallEntry entry;
   if (!app_install_get_entry_for_install_id(id, &entry)) {
@@ -245,7 +245,7 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
   }
 
   const PebbleProcessMd *md = NULL;
-#if !defined(CONFIG_RECOVERY_FW)
+#if !RECOVERY_FW
   if (app_install_id_from_app_db(id)) {
       if (!process_manager_check_SDK_compatible(id)) {
         return;
@@ -295,7 +295,7 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
     return;
   }
 
-#if !defined(CONFIG_RECOVERY_FW)
+#if !RECOVERY_FW
   if (!is_worker) {
     // Check if the app ram size is valid in order to determine if its SDK version is supported.
     if (!app_manager_is_app_supported(md)) {
@@ -383,7 +383,7 @@ bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully)
 
   // If already safe to kill, we're done
   if (context->safe_to_kill) {
-#if !defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_SHELL_SDK)
+#if !RECOVERY_FW && !SHELL_SDK
     // Stop per-watchface time tracking if this was a watchface
     if (context->app_md->process_type == ProcessTypeWatchface) {
       PBL_ANALYTICS_TIMER_STOP(watchface_time_ms);
@@ -423,7 +423,7 @@ bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully)
     if (prv_force_stop_task_if_unprivileged(context)) {
       PBL_LOG_DBG("Got it");
 
-#if !defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_SHELL_SDK)
+#if !RECOVERY_FW && !SHELL_SDK
       // Stop per-watchface time tracking if this was a watchface
       if (context->app_md->process_type == ProcessTypeWatchface) {
         PBL_ANALYTICS_TIMER_STOP(watchface_time_ms);
@@ -545,7 +545,7 @@ void process_manager_process_cleanup(PebbleTask task) {
   hrm_manager_process_cleanup(task, context->install_id);
 #endif
 
-#ifndef CONFIG_RECOVERY_FW
+#ifndef RECOVERY_FW
 #ifdef CONFIG_MIC
   voice_kill_app_session(task);
 #endif
@@ -553,7 +553,7 @@ void process_manager_process_cleanup(PebbleTask task) {
 
   if (task == PebbleTask_App) {
   }
-#endif // CONFIG_RECOVERY_FW
+#endif // RECOVERY_FW
 
   // Unregister the task
   pebble_task_unregister(task);

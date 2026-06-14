@@ -19,8 +19,6 @@
 
 #include "bf0_hal_rtc.h"
 
-PBL_LOG_MODULE_DEFINE(driver_rtc_sf32lb, CONFIG_DRIVER_RTC_LOG_LEVEL);
-
 // The RTC clock, CLK_RTC, can be configured to use the LXT32 (32.768 kHz) or
 // LRC10 (9.8 kHz). The prescaler values need to be set such that the CLK1S
 // event runs at 1 Hz. The formula that relates prescaler values with the

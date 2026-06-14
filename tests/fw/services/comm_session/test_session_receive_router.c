@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "BSCAPI.h"
 #include "clar.h"
 #include "kernel/events.h"
 #include "pbl/services/comm_session/meta_endpoint.h"

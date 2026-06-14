@@ -14,8 +14,6 @@
 #include "system/logging.h"
 #include "process_management/app_manager.h"
 
-PBL_LOG_MODULE_DEFINE(service_evented_timer, CONFIG_SERVICE_EVENTED_TIMER_LOG_LEVEL);
-
 typedef struct EventedTimer {
   ListNode list_node;
 

@@ -650,13 +650,6 @@ void test_pfs__get_size(void) {
 }
 
 void test_pfs__migration(void) {
-  // The filesystem migration path grows the filesystem by adding flash regions one at a time.
-  // This only happens on legacy multi-region (non-contiguous) flash layouts (Pebble OG / Steel,
-  // PLATFORM_TINTIN / n25q), which expose FLASH_REGION_FILESYSTEM_2_BEGIN. Modern platforms (e.g.
-  // obelix) have a single contiguous filesystem region, so there is no second region to migrate
-  // into and ftl_populate_region_list() is a no-op. Guard the migration-specific assertions so
-  // this case only exercises behaviour that exists on the platform under test.
-#ifdef FLASH_REGION_FILESYSTEM_2_BEGIN
   // reset the flash
   fake_spi_flash_cleanup();
   fake_spi_flash_init(0, 0x1000000);
@@ -705,7 +698,6 @@ void test_pfs__migration(void) {
     cl_assert(fd >= 0);
     cl_assert(pfs_close(fd) == S_SUCCESS);
   }
-#endif // FLASH_REGION_FILESYSTEM_2_BEGIN
 }
 
 static uint32_t s_watch_file_callback_called_count = 0;

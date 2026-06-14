@@ -31,8 +31,6 @@
 
 #include <string.h>
 
-PBL_LOG_MODULE_DEFINE(service_put_bytes, CONFIG_SERVICE_PUT_BYTES_LOG_LEVEL);
-
 typedef enum {
   PutBytesIdle = 0x00,
   PutBytesInit = 0x01,
@@ -394,7 +392,7 @@ static void prv_timer_callback(void* data) {
 }
 
 static bool prv_has_valid_fw_update_state_for_object_type(PutBytesObjectType type) {
-#ifndef CONFIG_RECOVERY_FW
+#ifndef RECOVERY_FW
   if (!firmware_update_is_in_progress()) {
     bool is_fw_update_object = (type == ObjectFirmware ||
                                 type == ObjectRecovery ||
@@ -572,7 +570,7 @@ static bool prv_has_invalid_request_length(const PutBytesCommand command, uint32
 }
 
 static bool prv_is_object_allowed(PutBytesObjectType type) {
-#ifdef CONFIG_RECOVERY_FW
+#ifdef RECOVERY_FW
   switch (type) {
     case ObjectFirmware:
     case ObjectSysResources:
@@ -632,7 +630,7 @@ static bool prv_setup_storage_for_init_request(const InitRequest *request, uint3
   PutBytesStorageInfo *storage_info = NULL;
 
   switch (request->type) {
-#ifndef CONFIG_RECOVERY_FW
+#ifndef RECOVERY_FW
     case ObjectFile: {
       storage_info = kernel_malloc_check(sizeof(PutBytesStorageInfo) +
                                          strlen(request->filename) + 1);

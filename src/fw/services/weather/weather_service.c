@@ -16,8 +16,6 @@
 #include "system/logging.h"
 #include "system/passert.h"
 
-PBL_LOG_MODULE_DEFINE(service_weather, CONFIG_SERVICE_WEATHER_LOG_LEVEL);
-
 static int prv_weather_data_list_node_comparator(void *a, void *b) {
   return ((WeatherDataListNode *)b)->id - ((WeatherDataListNode *)a)->id;
 }

@@ -5,11 +5,3 @@ config SERVICE_ALARMS
     bool "Alarms"
     help
       Alarms service.
-
-if SERVICE_ALARMS
-
-module = SERVICE_ALARMS
-module-str = Alarms
-source "src/fw/Kconfig.template.log_level"
-
-endif

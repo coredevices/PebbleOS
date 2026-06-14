@@ -13,8 +13,6 @@
 
 #include <inttypes.h>
 
-PBL_LOG_MODULE_DECLARE(service_comm_session, CONFIG_SERVICE_COMM_SESSION_LOG_LEVEL);
-
 //! Default option for the kernel receiver, execute the endpoint handler on KernelBG.
 const PebbleTask g_default_kernel_receiver_opt_bg = PebbleTask_KernelBackground;
 

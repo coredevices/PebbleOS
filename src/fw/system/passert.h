@@ -9,7 +9,7 @@
 #include <util/likely.h>
 
 
-#ifdef CONFIG_LOG_HASHED
+#ifdef PBL_LOGS_HASHED
   #include <logging/log_hashing.h>
 
 NORETURN passert_failed_hashed(uint32_t packed_loghash, ...);
@@ -110,7 +110,7 @@ void passert_check_not_task(enum PebbleTask unexpected_task);
 
 // extern void command_dump_malloc(void);
 
-#ifdef CONFIG_LOG_HASHED
+#ifdef PBL_LOGS_HASHED
 
   #define PBL_CROAK(msg, ...) \
     do { \
@@ -118,12 +118,12 @@ void passert_check_not_task(enum PebbleTask unexpected_task);
                    ## __VA_ARGS__); \
     } while (0)
 
-#else // CONFIG_LOG_HASHED
+#else // PBL_LOGS_HASHED
 
   #define PBL_CROAK(fmt, args...) \
       passert_failed(__FILE_NAME__, __LINE__, "*** CROAK: " fmt, ## args)
 
-#endif // CONFIG_LOG_HASHED
+#endif // PBL_LOGS_HASHED
 
 typedef struct Heap Heap;
 

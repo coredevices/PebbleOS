@@ -30,8 +30,6 @@
 
 #include <string.h>
 
-PBL_LOG_MODULE_DEFINE(service_alarms, CONFIG_SERVICE_ALARMS_LOG_LEVEL);
-
 #define DEFAULT_SNOOZE_DELAY_M (10)
 #define MAX_CONFIGURED_ALARMS (10)
 

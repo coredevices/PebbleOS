@@ -5,11 +5,3 @@ config SERVICE_DATA_LOGGING
     bool "Data logging"
     help
       Data logging (DLS) service.
-
-if SERVICE_DATA_LOGGING
-
-module = SERVICE_DATA_LOGGING
-module-str = Data logging
-source "src/fw/Kconfig.template.log_level"
-
-endif

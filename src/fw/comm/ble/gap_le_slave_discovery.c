@@ -8,6 +8,7 @@
 
 #include "applib/bluetooth/ble_ad_parse.h"
 
+#include "comm/ble/ble_log.h"
 #include "comm/bt_lock.h"
 
 #include "git_version.auto.h"
@@ -53,11 +54,7 @@ static void prv_schedule_ad_job(void) {
   // central is only doing a scan request if the Service UUID matches with their
   // interests, to save radio time / battery life we keep the advertisement part
   // as "small" as possible (21 bytes currently).
-  // Advertise "BR/EDR Not Supported" alongside General Discoverable: these are
-  // BLE-only watches, so dual-mode hosts must connect over LE instead of attempting
-  // a classic page (which would time out).
-  ble_ad_set_flags(ad, GAP_LE_AD_FLAGS_GEN_DISCOVERABLE_MASK |
-                       GAP_LE_AD_FLAGS_BR_EDR_NOT_SUPPORTED_MASK);
+  ble_ad_set_flags(ad, GAP_LE_AD_FLAGS_GEN_DISCOVERABLE_MASK);
 
   // *DO NOT* use pebble_bt_uuid_expand() here!
   // ble_ad_set_service_uuids() will be "smart" and include only the 16-bit UUID, but only if the
@@ -65,7 +62,7 @@ static void prv_schedule_ad_job(void) {
   Uuid service_uuids[2];
   size_t num_uuids = 0;
 
-#if defined(CONFIG_HRM) && !defined(CONFIG_RECOVERY_FW)
+#if defined(CONFIG_HRM) && !defined(RECOVERY_FW)
   // NOTE: The HRM service has to be first in the list because otherwise the Pebble won't
   // show up as an HRM device in Strava for Android...
   if (ble_hrm_is_supported_and_enabled()) {

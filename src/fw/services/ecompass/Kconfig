@@ -6,11 +6,3 @@ config SERVICE_ECOMPASS
     default y if MAG
     help
       Electronic compass service. Requires a magnetometer driver (CONFIG_MAG).
-
-if SERVICE_ECOMPASS
-
-module = SERVICE_ECOMPASS
-module-str = E-compass
-source "src/fw/Kconfig.template.log_level"
-
-endif

@@ -13,8 +13,6 @@
 #include "util/units.h"
 #include "util/uuid.h"
 
-PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
-
 static struct {
   SettingsFile settings_file;
   PebbleRecursiveMutex *mutex;

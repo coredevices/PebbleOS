@@ -23,7 +23,7 @@ bool graphics_release_frame_buffer(GContext* ctx, GBitmap* buffer) {
   return true;
 }
 
-void graphics_draw_pixel(GContext* ctx, GPoint point) {}
+void graphics_draw_pixel(){}
 void graphics_fill_rect(GContext* ctx, const GRect *rect) {}
 void graphics_private_draw_horizontal_line(){}
 void graphics_private_draw_vertical_line(){}

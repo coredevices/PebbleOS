@@ -5,11 +5,3 @@ config SERVICE_APP_FETCH_ENDPOINT
     bool "App fetch endpoint"
     help
       Endpoint used by the phone to fetch apps on demand.
-
-if SERVICE_APP_FETCH_ENDPOINT
-
-module = SERVICE_APP_FETCH_ENDPOINT
-module-str = App fetch endpoint
-source "src/fw/Kconfig.template.log_level"
-
-endif

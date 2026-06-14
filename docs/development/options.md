@@ -35,20 +35,15 @@ Keep in mind that some targets may not currently compile as-is.
   PRF (recovery) builds always disable the engine regardless of this
   value.
 
-## Manufacturing
-
-:`-DCONFIG_MFG=y`:
-  Enable manufacturing-only functionality in the PRF build.
-
 ## Debugging
 
-:`-DCONFIG_NO_WATCHDOG=y`:
+:`--nowatchdog`:
   Disable watchdog
 
-:`-DCONFIG_NOSTOP=y`:
+:`--nostop`:
   Disable STOP mode
 
-:`-DCONFIG_NOSLEEP=y`:
+:`--nosleep`:
   Disable sleep mode
 
 ## Flashing
@@ -58,13 +53,9 @@ Keep in mind that some targets may not currently compile as-is.
 
 ## Logging
 
-:`-DCONFIG_DEFAULT_LOG_LEVEL_<LEVEL>=y`:
-  Default log level, where `<LEVEL>` is one of `ERROR`, `WARNING`,
-  `INFO`, `DEBUG` (default) or `DEBUG_VERBOSE`.
+:`--log-level`:
+  Default log level.
 
-:`-DCONFIG_LOG_HASHED=n`:
+:`--nohash`:
   Disable log messages hashing.
   This will increase ROM usage, but will not require a dictionary file to decode logs.
-
-These and many more options can also be browsed and changed interactively with
-`./waf menuconfig` after configuring.

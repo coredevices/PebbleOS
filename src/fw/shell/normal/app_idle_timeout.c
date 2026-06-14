@@ -12,13 +12,13 @@
 #include "system/passert.h"
 
 
+static const int WATCHFACE_TIMEOUT_MS = 30000;
+
 TimerID s_timer;
 bool s_app_paused = false;
 bool s_app_started = false;
 
-#ifndef CONFIG_NO_WATCH_TIMEOUT
-static const int WATCHFACE_TIMEOUT_MS = 30000;
-
+#ifndef NO_WATCH_TIMEOUT
 static void prv_kernel_callback_watchface_launch(void* data) {
   watchface_launch_default(shell_get_watchface_compositor_animation(true /* watchface_is_dest */));
 }
@@ -45,7 +45,7 @@ void app_idle_timeout_start(void) {
   PBL_ASSERTN(s_timer == TIMER_INVALID_ID);
 
   s_app_started = true;
-#ifndef CONFIG_NO_WATCH_TIMEOUT
+#ifndef NO_WATCH_TIMEOUT
   prv_start_timer(true /* create a timer */);
 #endif
 }
@@ -67,13 +67,13 @@ void app_idle_timeout_pause(void) {
 
 void app_idle_timeout_resume(void) {
   s_app_paused = false;
-#ifndef CONFIG_NO_WATCH_TIMEOUT
+#ifndef NO_WATCH_TIMEOUT
   prv_start_timer(false /* do not create a timer */);
 #endif
 }
 
 void app_idle_timeout_refresh(void) {
-#ifndef CONFIG_NO_WATCH_TIMEOUT
+#ifndef NO_WATCH_TIMEOUT
   prv_start_timer(false /* do not create a timer */);
 #endif
 }

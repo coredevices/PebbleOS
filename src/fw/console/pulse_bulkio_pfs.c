@@ -26,7 +26,7 @@ typedef struct PACKED PFSOpenOptions {
   char filename[0];
 } PFSOpenOptions;
 
-#if !defined(CONFIG_RECOVERY_FW)
+#if !RECOVERY_FW
 static int prv_open_file(void *packet_data, size_t length) {
   PFSOpenOptions *options = packet_data;
 

@@ -15,8 +15,6 @@
 
 #include <bluetooth/pairability.h>
 
-PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
-
 static void prv_pairability_timer_cb(void *unused);
 
 static int s_allow_ble_pairing_refcount = 0;

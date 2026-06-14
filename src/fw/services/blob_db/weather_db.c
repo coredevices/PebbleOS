@@ -9,11 +9,8 @@
 #include "pbl/services/settings/settings_file.h"
 #include "pbl/services/weather/weather_service.h"
 #include "pbl/services/weather/weather_types.h"
-#include "system/logging.h"
 #include "system/passert.h"
 #include "util/units.h"
-
-PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
 #define SETTINGS_FILE_NAME "weatherdb"
 

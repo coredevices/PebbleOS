@@ -9,8 +9,6 @@
 #include "system/passert.h"
 #include "util/math.h"
 
-PBL_LOG_MODULE_DECLARE(service_settings, CONFIG_SERVICE_SETTINGS_LOG_LEVEL);
-
   ///////////////////////////////////////////////////
  // Helper functions for handling internal errors //
 ///////////////////////////////////////////////////

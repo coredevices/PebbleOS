@@ -39,14 +39,11 @@ clar(bld,
 clar(bld,
      sources_ant_glob=(
         "src/fw/services/bluetooth/bluetooth_persistent_storage_prf.c "
-        "src/fw/services/shared_prf_storage/shared_prf_storage.c "
-        "tests/fakes/fake_flash_region.c "
+        "src/fw/services/shared_prf_storage/v2_sprf/shared_prf_storage.c "
         "tests/fakes/fake_spi_flash.c "
         "tests/fakes/fake_events.c "
      ),
-     test_sources_ant_glob="test_bluetooth_persistent_storage_prf.c",
-     platforms=['obelix'],
-     override_includes=['shared_prf_storage_v3'])
+     test_sources_ant_glob="test_bluetooth_persistent_storage_prf.c")
 
 # Run the bluetooth_persistent_storage.c unit tests for the v2 serialization format.
 # (The v1 format was removed.)

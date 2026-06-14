@@ -58,7 +58,7 @@ typedef struct _tagHeapInfo_t
   //! Size of this segment, measured in units of ALIGNMENT_SIZE, including this size of this beginer
   uint16_t Size:15;
 
-#ifdef CONFIG_MALLOC_INSTRUMENTATION
+#ifdef MALLOC_INSTRUMENTATION
   uintptr_t pc; //<! The address that called malloc.
 #endif
 
@@ -246,7 +246,7 @@ void *heap_malloc(Heap* const heap, unsigned long nbytes, uintptr_t client_pc) {
     if (allocated_block != NULL) {
       // We've allocated a new block, update our metrics
 
-#ifdef CONFIG_MALLOC_INSTRUMENTATION
+#ifdef MALLOC_INSTRUMENTATION
       allocated_block->pc = client_pc;
 #endif
 
@@ -306,7 +306,7 @@ void heap_free(Heap* const heap, void *ptr, uintptr_t client_pc) {
 #endif
 
     // Update metrics
-#ifdef CONFIG_MALLOC_INSTRUMENTATION
+#ifdef MALLOC_INSTRUMENTATION
     heap_info_ptr->pc = client_pc;
 #endif
     heap->current_size -= heap_info_ptr->Size * ALIGNMENT_SIZE;
@@ -517,7 +517,7 @@ static HeapInfo_t *allocate_block(Heap* const heap, unsigned long n_units, HeapI
 
 // A very naive realloc implementation
 void* heap_realloc(Heap* const heap, void *ptr, unsigned long nbytes, uintptr_t client_pc) {
-#if !defined(CONFIG_MALLOC_INSTRUMENTATION)
+#if !defined(MALLOC_INSTRUMENTATION)
   client_pc = 0;
 #endif
   // Get a pointer to the Heap Info.
@@ -550,7 +550,7 @@ uint32_t heap_get_minimum_headroom(Heap *heap) {
 
 // Serial Commands
 ///////////////////////////////////////////////////////////
-#ifdef CONFIG_MALLOC_INSTRUMENTATION
+#ifdef MALLOC_INSTRUMENTATION
 void heap_dump_malloc_instrumentation_to_dbgserial(Heap *heap) {
   char buffer[80];
   unsigned long num_free_blocks = 0;

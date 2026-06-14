@@ -12,8 +12,6 @@
 #include "applib/applib_malloc.auto.h"
 #include "util/net.h"
 
-PBL_LOG_MODULE_DECLARE(service_vibes, CONFIG_SERVICE_VIBES_LOG_LEVEL);
-
 #define VIBE_SCORE_MAX_REPEAT_DELAY_MS (10000) // matches MAX_VIBE_DURATION_MS in vibe_pattern
 
 static VibeNote *prv_vibe_score_get_note_list(GenericAttribute *notes_attribute) {

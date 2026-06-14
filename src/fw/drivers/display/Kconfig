@@ -10,7 +10,6 @@ if DISPLAY
 
 config DISPLAY_JDI_SF32LB
     bool "JDI (SiFli SF32LB)"
-    select HAL_SIFLI_LCD
     help
       Support for JDI display via SiFli SF32LB.
 
@@ -23,9 +22,5 @@ config DISPLAY_QEMU
     bool "QEMU Framebuffer Display"
     help
       Support for the QEMU framebuffer display peripheral.
-
-module = DRIVER_DISPLAY
-module-str = Display
-source "src/fw/Kconfig.template.log_level"
 
 endif # DISPLAY

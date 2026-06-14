@@ -18,8 +18,6 @@
 #include "system/logging.h"
 #include "system/hexdump.h"
 
-PBL_LOG_MODULE_DECLARE(service_comm_session, CONFIG_SERVICE_COMM_SESSION_LOG_LEVEL);
-
 
 extern bool comm_session_is_valid(const CommSession *session);
 

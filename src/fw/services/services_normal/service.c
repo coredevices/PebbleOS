@@ -132,7 +132,7 @@ void services_normal_init(void) {
   app_glance_service_init();
 
   powermode_service_init();
-#ifndef CONFIG_SHELL_SDK
+#if !SHELL_SDK
   powermode_service_set_enabled(shell_prefs_get_power_mode() == PowerMode_LowPower);
 #endif
 }

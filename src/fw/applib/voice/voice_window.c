@@ -80,6 +80,8 @@
 
 static const uint32_t UNFOLD_DURATION = 500;
 
+#define VOICE_LOG(fmt, args...)   PBL_LOG_D_DBG(LOG_DOMAIN_VOICE, fmt, ## args)
+
 static void prv_start_dictation(VoiceUiData *data);
 static void prv_stop_dictation(VoiceUiData *data);
 static void prv_cancel_dictation(VoiceUiData *data);
@@ -127,7 +129,7 @@ static void prv_teardown(VoiceUiData *data) {
 }
 
 static void prv_exit_and_send_result_event(VoiceUiData *data, DictationSessionStatus result) {
-  PBL_LOG_DBG("Send result");
+  VOICE_LOG("Send result");
 
   PebbleEvent event = {
     .type = PEBBLE_DICTATION_EVENT,
@@ -146,10 +148,10 @@ static void prv_exit_and_send_result_event(VoiceUiData *data, DictationSessionSt
 
 static void prv_handle_error_retries(VoiceUiData *data) {
   if (data->error_count < MAX_ERROR_COUNT) {
-    PBL_LOG_DBG("Restarting dictation after error");
+    VOICE_LOG("Restarting dictation after error");
     prv_start_dictation(data);
   } else {
-    PBL_LOG_DBG("Too many errors! Exiting...");
+    VOICE_LOG("Too many errors! Exiting...");
     prv_exit_and_send_result_event(data, data->error_exit_status);
   }
 }
@@ -242,7 +244,7 @@ static void prv_handle_bt_conn_result(bool connected, void *context) {
       prv_voice_window_push(data);
     }
   } else {
-    PBL_LOG_DBG("Bluetooth not restored! Exiting...");
+    VOICE_LOG("Bluetooth not restored! Exiting...");
     prv_exit_and_send_result_event(data, DictationSessionStatusFailureConnectivityError);
   }
 }
@@ -272,7 +274,7 @@ static void prv_update_analytics_metrics(VoiceUiData *data) {
 
 static void prv_dictation_timeout_cb(void *context) {
   VoiceUiData *data = context;
-  PBL_LOG_DBG("Single session timeout");
+  VOICE_LOG("Single session timeout");
   prv_stop_dictation(data);
 }
 
@@ -292,11 +294,11 @@ static void prv_handle_ready_error(VoiceUiData *data) {
 }
 
 static void prv_handle_ready_event(VoiceUiData *data, PebbleVoiceServiceEvent *event) {
-  PBL_LOG_DBG("Handling ready event");
+  VOICE_LOG("Handling ready event");
 
   switch (event->status) {
     case VoiceStatusSuccess:
-      PBL_LOG_DBG("Session setup successfully");
+      VOICE_LOG("Session setup successfully");
       data->start_ms = prv_get_time_ms();
       data->speech_detected = false;
       data->dictation_timeout = app_timer_register(DICTATION_TIMEOUT, prv_dictation_timeout_cb,
@@ -327,7 +329,7 @@ static void prv_handle_ready_event(VoiceUiData *data, PebbleVoiceServiceEvent *e
 
     case VoiceStatusErrorGeneric:
     case VoiceStatusTimeout:
-      PBL_LOG_DBG("Session setup error %d", event->status);
+      VOICE_LOG("Session setup error %d", event->status);
       prv_handle_ready_error(data);
       break;
     default:
@@ -351,11 +353,11 @@ static bool prv_handle_dictation_success(VoiceUiData *data, PebbleVoiceServiceEv
   }
 
   if (!data->message) {
-    PBL_LOG_DBG("Empty sentence received");
+    VOICE_LOG("Empty sentence received");
     return false;
   }
 
-  PBL_LOG_DBG("New sentence: %s", data->message);
+  VOICE_LOG("New sentence: %s", data->message);
   return true;
 }
 
@@ -373,7 +375,7 @@ static void prv_handle_dictation_error(VoiceUiData *data, VoiceStatus error_stat
     }
   } else {
     if (!speech_detected) {
-      PBL_LOG_DBG("No speech detected! Exiting...");
+      VOICE_LOG("No speech detected! Exiting...");
       prv_exit_and_send_result_event(data, DictationSessionStatusFailureNoSpeechDetected);
     } else {
       prv_exit_and_send_result_event(data, DictationSessionStatusFailureRecognizerError);
@@ -382,7 +384,7 @@ static void prv_handle_dictation_error(VoiceUiData *data, VoiceStatus error_stat
 }
 
 static void prv_handle_dictation_result(VoiceUiData *data, PebbleVoiceServiceEvent *event) {
-  PBL_LOG_DBG("Handling result event");
+  VOICE_LOG("Handling result event");
   data->session_id = VOICE_SESSION_ID_INVALID;
   bool success = false;
   switch (event->status) {
@@ -406,17 +408,17 @@ static void prv_handle_dictation_result(VoiceUiData *data, PebbleVoiceServiceEve
       break;
 
     case VoiceStatusErrorGeneric:
-      PBL_LOG_DBG("Result: error %"PRId8, event->status);
+      VOICE_LOG("Result: error %"PRId8, event->status);
       prv_handle_dictation_error(data, event->status);
       break;
 
     case VoiceStatusRecognizerResponseError:
-      PBL_LOG_DBG("Result: speech not recognized");
+      VOICE_LOG("Result: speech not recognized");
       prv_handle_dictation_error(data, event->status);
       break;
 
     case VoiceStatusTimeout:
-      PBL_LOG_DBG("Result: timeout");
+      VOICE_LOG("Result: timeout");
       if (!connection_service_peek_pebble_app_connection()) {
         data->error_count++;
         if (data->error_count < MAX_ERROR_COUNT) {
@@ -464,7 +466,7 @@ static void prv_voice_event_handler(PebbleEvent *e, void *context) {
   VoiceUiData *data = context;
 
   VoiceUiState simple_state = prv_get_simple_state(data->state);
-  PBL_LOG_DBG("Event received: %"PRIu8"; state:%"PRIu8, event->type, simple_state);
+  VOICE_LOG("Event received: %"PRIu8"; state:%"PRIu8, event->type, simple_state);
   switch (simple_state) {
     case StateWaitForReady:
       if (event->type == VoiceEventTypeSessionSetup) {
@@ -480,11 +482,11 @@ static void prv_voice_event_handler(PebbleEvent *e, void *context) {
 
     case StateRecording:
       if (event->type == VoiceEventTypeSilenceDetected) {
-        PBL_LOG_DBG("Silence detected");
+        VOICE_LOG("Silence detected");
         prv_stop_dictation(data);
       }
       if (event->type == VoiceEventTypeSpeechDetected) {
-        PBL_LOG_DBG("Speech detected");
+        VOICE_LOG("Speech detected");
         data->speech_detected = true;
       }
       if (event->type == VoiceEventTypeSessionResult) {
@@ -501,7 +503,7 @@ static void prv_voice_event_handler(PebbleEvent *e, void *context) {
     case StateFinished:
     case StateExiting:
       // Discard event
-      PBL_LOG_DBG("Ignoring event");
+      VOICE_LOG("Ignoring event");
       break;
     default:
       WTF;
@@ -509,7 +511,7 @@ static void prv_voice_event_handler(PebbleEvent *e, void *context) {
 }
 
 static void prv_start_dictation(VoiceUiData *data) {
-  PBL_LOG_DBG("Start dictation session");
+  VOICE_LOG("Start dictation session");
   PBL_ASSERTN(data->session_id == VOICE_SESSION_ID_INVALID);
   data->session_id = sys_voice_start_dictation(data->session_type);
   if (data->session_id == VOICE_SESSION_ID_INVALID) {
@@ -525,7 +527,7 @@ static void prv_start_dictation(VoiceUiData *data) {
 }
 
 static void prv_stop_dictation(VoiceUiData *data) {
-  PBL_LOG_DBG("Stop dictation and wait for result");
+  VOICE_LOG("Stop dictation and wait for result");
   sys_voice_stop_dictation(data->session_id);
   prv_set_mic_window_state(data, StateWaitForResponse);
   prv_update_analytics_metrics(data);
@@ -535,7 +537,7 @@ static void prv_stop_dictation(VoiceUiData *data) {
 static void prv_cancel_dictation(VoiceUiData *data) {
   if ((data->state != StateStart) && (data->state != StateFinished) &&
       (data->state != StateExiting) && (data->state != StateError)) {
-    PBL_LOG_DBG("Cancel dictation session");
+    VOICE_LOG("Cancel dictation session");
     sys_voice_cancel_dictation(data->session_id);
     data->session_id = VOICE_SESSION_ID_INVALID;
     app_timer_cancel(data->dictation_timeout);
@@ -874,7 +876,7 @@ static void prv_mic_click_handler(ClickRecognizerRef recognizer, void *context) 
   VoiceUiData *data = context;
   ButtonId button_id = click_recognizer_get_button_id(recognizer);
   if (button_id == BUTTON_ID_BACK) {
-    PBL_LOG_DBG("Exit UI");
+    VOICE_LOG("Exit UI");
     prv_cancel_dictation(data);
     DictationSessionStatus status = DictationSessionStatusFailureTranscriptionRejected;
     if ((data->error_count > 0) && !data->last_session_successful) {
@@ -980,7 +982,7 @@ static VoiceUiState prv_get_next_state(VoiceUiState current_state, VoiceUiState 
 
   PBL_ASSERTN(next_state != StateStart); // Cannot transition to start state
 
-  PBL_LOG_DBG("Transition: Current state: %d; new state: %d", current_state, next_state);
+  VOICE_LOG("Transition: Current state: %d; new state: %d", current_state, next_state);
 
   // Transition will be handled by the animation stopped handler if defer_transition is set to true
   *defer_transition = false;
@@ -1075,7 +1077,7 @@ static VoiceUiState prv_get_next_state(VoiceUiState current_state, VoiceUiState 
 
 // This handles all the microphone UI transitions
 static void prv_do_transition(VoiceUiData *data, VoiceUiState state) {
-  PBL_LOG_DBG("Transition: %d -> %d", data->state, state);
+  VOICE_LOG("Transition: %d -> %d", data->state, state);
   switch (state) {
     case StateStartWaitForReady:
       // Fly in dot
@@ -1158,7 +1160,7 @@ static void prv_set_mic_window_state(VoiceUiData *data, VoiceUiState state) {
   }
 
   data->state = state;
-  PBL_LOG_DBG("State: %d", data->state);
+  VOICE_LOG("State: %d", data->state);
 }
 
 static void prv_mic_window_load(Window *window) {

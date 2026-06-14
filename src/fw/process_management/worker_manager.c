@@ -119,7 +119,7 @@ bool worker_manager_launch_new_worker_with_args(const PebbleProcessMd *app_md, c
   PBL_ASSERT_TASK(PebbleTask_KernelMain);
 
   // Don't launch workers in recovery mode to reduce the chance of crashes
-#ifdef CONFIG_RECOVERY_FW
+#ifdef RECOVERY_FW
   return false;
 #endif
 

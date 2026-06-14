@@ -435,7 +435,7 @@ static void app_install_launcher_task_callback(void *context) {
       // app, not during an AppDB clear.
       if (!app_upgrade) {
         persist_service_delete_file(s_install_callback_data.uuid);
-#if !defined(CONFIG_RECOVERY_FW)
+#if !defined(RECOVERY_FW)
         comm_session_app_session_capabilities_evict(s_install_callback_data.uuid);
 #endif
       }
@@ -588,7 +588,7 @@ bool app_install_id_from_app_db(AppInstallId id) {
 static GColor prv_hard_coded_color_for_3rd_party_apps(Uuid *uuid) {
 
   // Remove this from Recovery FW for code size savings.
-#if !defined(CONFIG_RECOVERY_FW)
+#if !defined(RECOVERY_FW)
 
   // this is a temporary solution to enable custom colors for 3rd-party apps
   // please replace this, once PBL-19673 landed
@@ -806,7 +806,7 @@ static const PebbleProcessMd *prv_get_md_for_reg_entry(const AppRegistryEntry *r
 }
 
 static const PebbleProcessMd *prv_get_md_for_flash_id(AppInstallId id, bool worker) {
-#ifdef CONFIG_RECOVERY_FW
+#ifdef RECOVERY_FW
   return NULL;
 #endif
 

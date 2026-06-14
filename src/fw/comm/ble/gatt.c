@@ -3,15 +3,13 @@
 
 #include <bluetooth/gatt.h>
 
-#include "system/logging.h"
+#include "comm/ble/ble_log.h"
 #include "comm/ble/gap_le_connection.h"
 #include "comm/ble/gatt_service_changed.h"
 #include "comm/bt_lock.h"
 #include "kernel/events.h"
 
 #include <bluetooth/pebble_pairing_service.h>
-
-PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
 //! @see comment in gatt_client_subscriptions.c
 extern void gatt_client_subscriptions_handle_server_notification(GAPLEConnection *connection,
@@ -30,8 +28,8 @@ void bt_driver_cb_gatt_handle_connect(const GattDeviceConnectionEvent *event) {
     }
     connection->gatt_connection_id = event->connection_id;
     connection->gatt_mtu = event->mtu;
-    PBL_LOG_DBG("GATT Connection for " BT_DEVICE_ADDRESS_FMT,
-                BT_DEVICE_ADDRESS_XPLODE(event->dev_address));
+    BLE_LOG_DEBUG("GATT Connection for " BT_DEVICE_ADDRESS_FMT,
+                  BT_DEVICE_ADDRESS_XPLODE(event->dev_address));
   }
 unlock:
   bt_unlock();
@@ -46,8 +44,8 @@ void bt_driver_cb_gatt_handle_disconnect(const GattDeviceDisconnectionEvent *eve
     }
     connection->gatt_connection_id = 0;
     connection->gatt_mtu = 0;
-    PBL_LOG_DBG("GATT Disconnection for " BT_DEVICE_ADDRESS_FMT,
-                BT_DEVICE_ADDRESS_XPLODE(event->dev_address));
+    BLE_LOG_DEBUG("GATT Disconnection for " BT_DEVICE_ADDRESS_FMT,
+                  BT_DEVICE_ADDRESS_XPLODE(event->dev_address));
   }
 unlock:
   bt_unlock();
@@ -85,7 +83,7 @@ void bt_driver_cb_gatt_handle_notification(const GattServerNotifIndicEvent *even
                                                        event->attr_handle,
                                                        event->attr_val,
                                                        event->attr_val_len);
-  PBL_LOG_VERBOSE("GATT Server Notification for handle %u " BT_DEVICE_ADDRESS_FMT,
+  BLE_LOG_VERBOSE("GATT Server Notification for handle %u " BT_DEVICE_ADDRESS_FMT,
                   event->attr_handle, BT_DEVICE_ADDRESS_XPLODE(event->dev_address));
 }
 
@@ -96,7 +94,7 @@ void bt_driver_cb_gatt_handle_indication(const GattServerNotifIndicEvent *event)
   {
     connection = gap_le_connection_by_addr(&event->dev_address);
 
-    PBL_LOG_VERBOSE("GATT Server Indication for handle %u " BT_DEVICE_ADDRESS_FMT,
+    BLE_LOG_VERBOSE("GATT Server Indication for handle %u " BT_DEVICE_ADDRESS_FMT,
                     event->attr_handle,
                     BT_DEVICE_ADDRESS_XPLODE(event->dev_address));
 

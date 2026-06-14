@@ -164,35 +164,32 @@ class LogDehash(object):
             return {"formatted_msg": string, "unhashed": True}
 
     def basic_format_line(self, line_dict):
-        # Zephyr-like format: [timestamp] <lvl> task source: msg. Messages from
-        # a log module already carry a "module: " prefix in formatted_msg;
-        # others get their file:line as the source.
         output = []
 
-        timestamp = " ".join(
-            line_dict[key] for key in ("date", "time") if key in line_dict
-        )
-        if timestamp:
-            output.append("[{}]".format(timestamp))
+        if "support" not in line_dict and "re_level" in line_dict:
+            output.append(line_dict["re_level"])
+        if self.print_core and "core_number" in line_dict:
+            output.append(line_dict["core_number"])
+        if "task" in line_dict:
+            output.append(line_dict["task"])
+        if "date" in line_dict:
+            output.append(line_dict["date"])
+        if "time" in line_dict:
+            output.append(line_dict["time"])
         elif "support" not in line_dict:
             # Use the current time if one isn't provided by the system
             now = datetime.now()
             output.append(
-                "[%02d:%02d:%02d.%03d]"
+                "%02d:%02d:%02d.%03d"
                 % (now.hour, now.minute, now.second, now.microsecond / 1000)
             )
 
-        if "support" not in line_dict and line_dict.get("re_level"):
-            output.append("<{}>".format(line_dict["re_level"]))
-        if self.print_core and "core_number" in line_dict:
-            output.append(line_dict["core_number"])
-        # "-" means the task prefix is disabled (CONFIG_LOG_TASK_PREFIX)
-        if line_dict.get("task", "-") != "-":
-            output.append(line_dict["task"])
+        pre_padding = ""
+        post_padding = ""
 
-        if "module" not in line_dict and "file" in line_dict and "line" in line_dict:
+        if "file" in line_dict and "line" in line_dict:
             filename = os.path.basename(line_dict["file"])
-            file_line = "{}:{}:".format(filename, line_dict["line"])
+            file_line = "{}:{}>".format(filename, line_dict["line"])
             if self.justify_size < 0:
                 output.append(file_line.rjust(abs(self.justify_size)))
             else:

@@ -141,7 +141,7 @@ static void prv_timer_handler(void) {
     }
   }
 
-#if !defined(CONFIG_MFG)
+#if !defined(MANUFACTURING_FW)
   // Now that s_debounced_button_state is updated, check to see if the user is holding down the reset
   // combination.
   static uint32_t s_hard_reset_timer = 0;

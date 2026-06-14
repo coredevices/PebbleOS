@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#undef CONFIG_LOG_HASHED
+#undef PBL_LOGS_HASHED
 
 #include "applib/app.h"
 #include "applib/ui/ui.h"

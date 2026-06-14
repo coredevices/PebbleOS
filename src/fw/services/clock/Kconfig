@@ -5,11 +5,3 @@ config SERVICE_CLOCK
     bool "Clock"
     help
       Wall-clock time formatting and events.
-
-if SERVICE_CLOCK
-
-module = SERVICE_CLOCK
-module-str = Clock
-source "src/fw/Kconfig.template.log_level"
-
-endif

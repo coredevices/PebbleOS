@@ -44,7 +44,7 @@ ALIAS("Default_Handler") void SysTick_Handler(void);
 #undef IRQ_DEF
 
 
-#ifdef CONFIG_PROFILE_INTERRUPTS
+#if PROFILE_INTERRUPTS
 #include "system/profiler.h"
 #define IRQ_DEF(idx, irq) static inline void irq##_IRQHandler_profiled(void) { \
   extern ProfilerNode g_profiler_node_##irq##_IRQ; \
@@ -62,7 +62,7 @@ ALIAS("Default_Handler") void SysTick_Handler(void);
 # error "No IRQ definition for this MICRO_FAMILY"
 #endif
 #undef IRQ_DEF
-#endif // CONFIG_PROFILE_INTERRUPTS
+#endif // PROFILE_INTERRUPTS
 
 
 EXTERNALLY_VISIBLE SECTION(".isr_vector") const void * const vector_table[] = {
@@ -84,7 +84,7 @@ EXTERNALLY_VISIBLE SECTION(".isr_vector") const void * const vector_table[] = {
   SysTick_Handler,
 
   // External Interrupts
-#ifdef CONFIG_PROFILE_INTERRUPTS
+#if PROFILE_INTERRUPTS
 #define IRQ_DEF(idx, irq) [idx + 16] = irq##_IRQHandler_profiled,
 #else
 #define IRQ_DEF(idx, irq) [idx + 16] = irq##_IRQHandler,

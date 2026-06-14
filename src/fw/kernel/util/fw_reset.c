@@ -92,7 +92,7 @@ void reset_protocol_msg_callback(CommSession *session, const uint8_t* data, unsi
 void fw_prepare_for_reset(void) {
   // Tear down Bluetooth, to avoid confusing the phone:
   services_set_runlevel(RunLevel_BareMinimum);
-#ifdef CONFIG_PULSE_EVERYWHERE
+#if PULSE_EVERYWHERE
   pulse_end();
 #endif
 }

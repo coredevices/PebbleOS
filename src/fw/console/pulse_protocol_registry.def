@@ -23,7 +23,7 @@
 // definition.
 
 // DO NOT REMOVE THIS PROTOCOL!
-#ifndef CONFIG_PULSE_EVERYWHERE
+#if !PULSE_EVERYWHERE
 REGISTER_PROTOCOL(PULSE_PROTOCOL_LLC, pulse_llc_handler, pulse_llc_link_state_handler)
 REGISTER_PROTOCOL(PULSE_PROTOCOL_PROMPT, pulse_prompt_handler, pulse_prompt_link_state_handler)
 #endif

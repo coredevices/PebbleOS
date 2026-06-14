@@ -57,29 +57,6 @@ GAPLEConnection *gatt_client_characteristic_get_connection(BLECharacteristic cha
   return NULL;
 }
 
-// The bt_lock-held write path (see prv_send_next_packets) is only taken when
-// bt_lock_is_held() is true; the test's bt_lock stub never reports it held, so
-// these entry points must not be reached. Fail loudly if they are.
-uint16_t gatt_client_characteristic_get_handle_and_connection(
-    BLECharacteristic characteristic_ref, GAPLEConnection **connection_out) {
-  cl_fail("unexpected call: bt_lock is never held in this test");
-  return 0;
-}
-
-BTErrno bt_driver_gatt_write_without_response(GAPLEConnection *connection, const uint8_t *value,
-                                              size_t value_length, uint16_t att_handle) {
-  cl_fail("unexpected call: bt_lock is never held in this test");
-  return BTErrnoOK;
-}
-
-// Meta rediscovery bails out in prv_request_meta_rediscovery when the
-// characteristic has no connection, which the stub above always returns, so the
-// kernelbg callback never runs and this is never reached.
-BTErrno gatt_client_discovery_rediscover_all(const BTDeviceInternal *device) {
-  cl_fail("unexpected call: meta rediscovery has no connection in this test");
-  return BTErrnoOK;
-}
-
 static BTDeviceInternal s_device = {};
 
 BTDeviceInternal gatt_client_characteristic_get_device(BLECharacteristic characteristic_ref) {
@@ -492,31 +469,12 @@ void test_ppogatt__cleanup_client_when_meta_read_fails(void) {
   cl_assert_equal_i(ppogatt_client_count(), 0);
 }
 
-// Fires the pending meta-read retry timer and re-delivers a failing meta read
-// response, advancing one step through the PPOGATT_META_READ_RETRY_COUNT_MAX
-// retry budget. Used to drive a retriable meta failure to client deletion.
-static void prv_fail_meta_read_retry(BLECharacteristic meta, const uint8_t *value,
-                                     size_t value_length, BLEGATTError error) {
-  stub_new_timer_invoke(1);
-  ppogatt_handle_read_or_notification(meta, value, value_length, error);
-}
-
 void test_ppogatt__cleanup_client_when_meta_read_gets_error_response(void) {
   fake_gatt_client_op_set_read_return_value(BTErrnoOK);
   prv_notify_services_discovered(1);
-
-  BLECharacteristic meta = s_characteristics[0][PPoGATTCharacteristicMeta];
-
-  // A failing meta read is now retriable (commit 8651be8fb): the first failure
-  // schedules a retry rather than deleting the client.
-  ppogatt_handle_read_or_notification(meta, NULL, 0, BLEGATTErrorInvalidHandle);
-  cl_assert_equal_i(ppogatt_client_count(), 1);
-
-  // Exhaust the remaining retries; the client is deleted only after
-  // PPOGATT_META_READ_RETRY_COUNT_MAX failures.
-  for (int i = 1; i < PPOGATT_META_READ_RETRY_COUNT_MAX; i++) {
-    prv_fail_meta_read_retry(meta, NULL, 0, BLEGATTErrorInvalidHandle);
-  }
+  ppogatt_handle_read_or_notification(s_characteristics[0][PPoGATTCharacteristicMeta],
+                                      NULL, 0,
+                                      BLEGATTErrorInvalidHandle);
   cl_assert_equal_i(ppogatt_client_count(), 0);
 }
 
@@ -525,21 +483,10 @@ void test_ppogatt__cleanup_client_when_data_subscription_cccd_write_failed(void)
 
   prv_notify_services_discovered(1);
 
-  BLECharacteristic meta = s_characteristics[0][PPoGATTCharacteristicMeta];
-
-  // The meta read succeeds, but the data subscription cccd write fails. That is
-  // now treated as a retriable failure (commit 8651be8fb), so the first attempt
-  // schedules a retry instead of deleting the client.
-  ppogatt_handle_read_or_notification(meta, (const uint8_t *) &s_meta_v0_system,
-                                      sizeof(s_meta_v0_system), BLEGATTErrorSuccess);
-  cl_assert_equal_i(ppogatt_client_count(), 1);
-
-  // Each retry re-reads the meta (success) and re-attempts the failing
-  // subscription; the client is deleted only after the retry budget is spent.
-  for (int i = 1; i < PPOGATT_META_READ_RETRY_COUNT_MAX; i++) {
-    prv_fail_meta_read_retry(meta, (const uint8_t *) &s_meta_v0_system,
-                             sizeof(s_meta_v0_system), BLEGATTErrorSuccess);
-  }
+  ppogatt_handle_read_or_notification(s_characteristics[0][PPoGATTCharacteristicMeta],
+                                      (const uint8_t *) &s_meta_v0_system,
+                                      sizeof(s_meta_v0_system),
+                                      BLEGATTErrorSuccess);
   cl_assert_equal_i(ppogatt_client_count(), 0);
   cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), false);
 }

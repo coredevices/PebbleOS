@@ -3,7 +3,7 @@
 
 // GENERATED -- DO NOT EDIT
 
-#include "pbl/services/comm_session/test_endpoint_ids.h"
+#include "test_endpoint_ids.h"
 
 extern void private_test_protocol_msg_callback(CommSession *session,
                                                const uint8_t* data, size_t length);

@@ -6,36 +6,18 @@
 #include <bluetooth/gatt.h>
 
 #include <host/ble_gatt.h>
-#include <host/ble_hs.h>
-#include <system/logging.h>
-
-PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
-
-// NimBLE reports ATT-layer failures as BLE_HS_ERR_ATT_BASE + the ATT error
-// code. GATT clients match responses against spec-level BLEGATTError values
-// (e.g. ANCS treats ATT Invalid Parameter 0xA2 as an expected reply), so hand
-// ATT errors back raw; everything else stays in the BTErrno internal range.
-static BLEGATTError prv_gatt_error_code(uint16_t status) {
-  if (status == 0) {
-    return BLEGATTErrorSuccess;
-  }
-  if ((status > BLE_HS_ERR_ATT_BASE) && (status <= BLE_HS_ERR_ATT_BASE + UINT8_MAX)) {
-    return (BLEGATTError)(status - BLE_HS_ERR_ATT_BASE);
-  }
-  return (BLEGATTError)(BTErrnoInternalErrorBegin + status);
-}
 
 static int prv_gatt_write_event_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
                                    struct ble_gatt_attr *attr, void *arg) {
   if (error->status != 0U) {
-    PBL_LOG_ERR("GATT write failed (hdl: 0x%" PRIx16 "): 0x%" PRIx16,
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "GATT write failed (hdl: 0x%" PRIx16 "): 0x%" PRIx16,
               error->att_handle, error->status);
   }
 
   GattClientOpWriteReponse resp = {
       .hdr = {
           .type = GattClientOpResponseWrite,
-          .error_code = prv_gatt_error_code(error->status),
+          .error_code = error->status == 0 ? 0 : BTErrnoInternalErrorBegin + error->status,
           .context = arg,
       }};
   bt_driver_cb_gatt_client_operations_handle_response(&resp.hdr);
@@ -45,7 +27,7 @@ static int prv_gatt_write_event_cb(uint16_t conn_handle, const struct ble_gatt_e
 static int prv_gatt_read_event_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
                                   struct ble_gatt_attr *attr, void *arg) {
   if (error->status != 0U) {
-    PBL_LOG_ERR("GATT read failed (hdl: 0x%" PRIx16 "): 0x%" PRIx16,
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "GATT read failed (hdl: 0x%" PRIx16 "): 0x%" PRIx16,
               error->att_handle, error->status);
   }
 
@@ -53,7 +35,7 @@ static int prv_gatt_read_event_cb(uint16_t conn_handle, const struct ble_gatt_er
       .hdr =
           {
               .type = GattClientOpResponseRead,
-              .error_code = prv_gatt_error_code(error->status),
+              .error_code = error->status == 0 ? 0 : BTErrnoInternalErrorBegin + error->status,
               .context = arg,
           },
       .value = attr->om->om_data,
@@ -65,7 +47,7 @@ static int prv_gatt_read_event_cb(uint16_t conn_handle, const struct ble_gatt_er
 
 BTErrno bt_driver_gatt_write_without_response(GAPLEConnection *connection, const uint8_t *value,
                                               size_t value_length, uint16_t att_handle) {
-  PBL_LOG_VERBOSE("bt_driver_gatt_write_without_response: %d",
+  PBL_LOG_D_VERBOSE(LOG_DOMAIN_BT, "bt_driver_gatt_write_without_response: %d",
             att_handle);
   uint16_t conn_handle;
   if (!pebble_device_to_nimble_conn_handle(&connection->device, &conn_handle)) {
@@ -74,7 +56,7 @@ BTErrno bt_driver_gatt_write_without_response(GAPLEConnection *connection, const
 
   int rc = ble_gattc_write_no_rsp_flat(conn_handle, att_handle, value, value_length);
   if (rc != 0) {
-    PBL_LOG_ERR("Failed to write without response: %d", rc);
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "Failed to write without response: %d", rc);
     return BTErrnoInternalErrorBegin + rc;
   }
 
@@ -83,7 +65,7 @@ BTErrno bt_driver_gatt_write_without_response(GAPLEConnection *connection, const
 
 BTErrno bt_driver_gatt_write(GAPLEConnection *connection, const uint8_t *value, size_t value_length,
                              uint16_t att_handle, void *context) {
-  PBL_LOG_VERBOSE("bt_driver_gatt_write: %d", att_handle);
+  PBL_LOG_D_VERBOSE(LOG_DOMAIN_BT, "bt_driver_gatt_write: %d", att_handle);
   uint16_t conn_handle;
   if (!pebble_device_to_nimble_conn_handle(&connection->device, &conn_handle)) {
     return BTErrnoInvalidState;
@@ -92,7 +74,7 @@ BTErrno bt_driver_gatt_write(GAPLEConnection *connection, const uint8_t *value, 
   int rc = ble_gattc_write_flat(conn_handle, att_handle, value, value_length,
                                 prv_gatt_write_event_cb, context);
   if (rc != 0) {
-    PBL_LOG_ERR("Failed to write: %d", rc);
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "Failed to write: %d", rc);
     return BTErrnoInternalErrorBegin + rc;
   }
 
@@ -100,7 +82,7 @@ BTErrno bt_driver_gatt_write(GAPLEConnection *connection, const uint8_t *value, 
 }
 
 BTErrno bt_driver_gatt_read(GAPLEConnection *connection, uint16_t att_handle, void *context) {
-  PBL_LOG_VERBOSE("bt_driver_gatt_read: %d", att_handle);
+  PBL_LOG_D_VERBOSE(LOG_DOMAIN_BT, "bt_driver_gatt_read: %d", att_handle);
   uint16_t conn_handle;
   if (!pebble_device_to_nimble_conn_handle(&connection->device, &conn_handle)) {
     return BTErrnoInvalidState;
@@ -108,7 +90,7 @@ BTErrno bt_driver_gatt_read(GAPLEConnection *connection, uint16_t att_handle, vo
 
   int rc = ble_gattc_read(conn_handle, att_handle, prv_gatt_read_event_cb, context);
   if (rc != 0) {
-    PBL_LOG_ERR("Failed to read: %d", rc);
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "Failed to read: %d", rc);
     return BTErrnoInternalErrorBegin + rc;
   }
 

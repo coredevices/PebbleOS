@@ -7,7 +7,7 @@
 #include "applib/graphics/gdraw_command_image.h"
 #include "util/uuid.h"
 
-#if !defined(CONFIG_RECOVERY_FW)
+#if !RECOVERY_FW
 #include "resource/timeline_resource_ids.auto.h"
 #else
 typedef uint32_t TimelineResourceId;

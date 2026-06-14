@@ -5,11 +5,3 @@ config SERVICE_TIMEZONE_DATABASE
     bool "Timezone database"
     help
       Timezone database service.
-
-if SERVICE_TIMEZONE_DATABASE
-
-module = SERVICE_TIMEZONE_DATABASE
-module-str = Timezone database
-source "src/fw/Kconfig.template.log_level"
-
-endif

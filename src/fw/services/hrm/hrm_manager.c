@@ -16,7 +16,6 @@
 #include "pbl/services/activity/activity.h"
 #include "syscall/syscall_internal.h"
 #include "system/hexdump.h"
-#include "system/logging.h"
 #include "system/passert.h"
 #include "util/attributes.h"
 #include "util/math.h"
@@ -26,8 +25,6 @@
 #include "queue.h"
 
 #include <stddef.h>
-
-PBL_LOG_MODULE_DEFINE(service_hrm, CONFIG_SERVICE_HRM_LOG_LEVEL);
 
 #define HRM_DEBUG 0
 
@@ -167,7 +164,7 @@ static void prv_handle_accel_data(void * data) {
 }
 
 T_STATIC bool prv_can_turn_sensor_on(void) {
-#if defined(CONFIG_IS_BIGBOARD) || defined(CONFIG_RECOVERY_FW)
+#if defined(CONFIG_IS_BIGBOARD) || RECOVERY_FW
   return true;
 #endif
 
@@ -348,7 +345,7 @@ static void prv_system_task_hrm_handler(void *context) {
           continue;
         }
         break;
-#ifdef CONFIG_MFG
+#ifdef MANUFACTURING_FW
       case HRMEvent_CTR:
         if (!(state->features & HRMFeature_CTR)) {
           continue;
@@ -411,7 +408,7 @@ static void prv_populate_hrm_event(PebbleHRMEvent *event, HRMFeature feature, co
         },
       };
       break;
-#ifdef CONFIG_MFG
+#ifdef MANUFACTURING_FW
     case HRMFeature_CTR:
     {
       HRMCTRData *ctr_data = kernel_zalloc_check(sizeof(HRMCTRData));
