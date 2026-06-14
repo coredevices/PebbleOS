@@ -45,6 +45,11 @@ typedef struct {
 
 static PhoneSlotInfo s_phone_slots[MAX_PHONE_CONNECTIONS];
 static PhoneSlot s_discovery_slot = PHONE_SLOT_INVALID;
+static PhoneSlot s_gateway_slot = PHONE_SLOT_INVALID;
+
+bool kernel_le_client_is_gateway_slot(PhoneSlot slot) {
+  return s_gateway_slot == slot;
+}
 
 static void prv_ancs_handle_service_discovered_cb(BLECharacteristic *characteristics) {
   ancs_handle_service_discovered(characteristics, s_discovery_slot);
@@ -508,6 +513,15 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
       return;
     }
 
+    // Track which slot is the gateway. Only the first gateway-capable phone to
+    // connect wins; the slot is cleared when it disconnects.
+    if (s_gateway_slot == PHONE_SLOT_INVALID &&
+        event->bonding_id != BT_BONDING_ID_INVALID &&
+        bt_persistent_storage_is_ble_ancs_bonding(event->bonding_id)) {
+      s_gateway_slot = slot;
+      PBL_LOG_DBG("Gateway slot: %u", slot);
+    }
+
     ancs_create(slot);
     ppogatt_create(slot);
     if (slot == 0) {
@@ -528,6 +542,9 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
 
     PhoneSlot slot = prv_slot_for_device(&device);
     if (slot != PHONE_SLOT_INVALID) {
+      if (s_gateway_slot == slot) {
+        s_gateway_slot = PHONE_SLOT_INVALID;
+      }
       ppogatt_destroy(slot);
       ancs_destroy(slot);
       prv_free_slot(slot);

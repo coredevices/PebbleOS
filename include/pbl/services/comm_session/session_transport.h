@@ -46,6 +46,10 @@ typedef bool (*TransportSchedule)(CommSession *session);
 
 typedef bool (*TransportScheduleTask)(Transport *transport);
 
+//! Return true if this transport is connected to the primary gateway phone.
+//! May be NULL if the transport does not support gateway selection.
+typedef bool (*TransportIsGateway)(Transport *transport);
+
 //! Set of function pointers that the session can use to call back to the transport
 typedef struct TransportImplementation {
   //! Pointer to function of that will trigger the transport to send out any newly enqueued data
@@ -68,6 +72,10 @@ typedef struct TransportImplementation {
   //! @note When providing a function, .schedule_task must be provided as well!
   TransportSchedule schedule;
   TransportScheduleTask is_current_task_schedule_task;
+
+  //! Optional. Return true if this transport is connected to the gateway phone.
+  //! When NULL, the transport is not considered a gateway candidate.
+  TransportIsGateway is_gateway;
 } TransportImplementation;
 
 //! The "destination" of the transport
