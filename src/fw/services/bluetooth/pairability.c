@@ -96,24 +96,28 @@ void bt_pairability_release_ble(void) {
   prv_schedule_evaluation();
 }
 
+static void prv_count_ble_pairings_cb(BTDeviceInternal *device, SMIdentityResolvingKey *irk,
+                                      const char *name, BTBondingID *id, void *context) {
+  (*(int *)context)++;
+}
+
 //! Call this whenever we modify the number of saved bondings we have.
 void bt_pairability_update_due_to_bonding_change(void) {
-  static bool s_pairable_due_to_no_gateway_bondings = false;
+  static bool s_pairable_due_to_room_for_phones = false;
 
-  BTBondingID bondings[MAX_PHONE_CONNECTIONS];
-  const int ble_ancs_count =
-      bt_persistent_storage_get_all_ble_ancs_bondings(bondings, MAX_PHONE_CONNECTIONS);
-  const bool room_for_more_phones = ble_ancs_count < MAX_PHONE_CONNECTIONS;
+  int ble_pairing_count = 0;
+  bt_persistent_storage_for_each_ble_pairing(prv_count_ble_pairings_cb, &ble_pairing_count);
+  const bool room_for_more_phones = ble_pairing_count < MAX_PHONE_CONNECTIONS;
 
-  if (room_for_more_phones && !bt_persistent_storage_has_active_ble_gateway_bonding()) {
-    if (!s_pairable_due_to_no_gateway_bondings) {
+  if (room_for_more_phones) {
+    if (!s_pairable_due_to_room_for_phones) {
       bt_pairability_use();
-      s_pairable_due_to_no_gateway_bondings = true;
+      s_pairable_due_to_room_for_phones = true;
     }
   } else {
-    if (s_pairable_due_to_no_gateway_bondings) {
+    if (s_pairable_due_to_room_for_phones) {
       bt_pairability_release();
-      s_pairable_due_to_no_gateway_bondings = false;
+      s_pairable_due_to_room_for_phones = false;
     }
   }
 }
