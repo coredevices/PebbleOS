@@ -40,10 +40,6 @@ void gpio_output_set(const OutputConfig *pin_config, bool asserted) {
   REG32(QEMU_GPIO_BASE + GPIO_OUTPUT) = output;
 }
 
-void gpio_init_all(void) {
-  // Nothing to configure for QEMU
-}
-
 void gpio_input_init(const InputConfig *input_cfg) {
   (void)input_cfg;
 }
