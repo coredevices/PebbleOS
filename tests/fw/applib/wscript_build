@@ -99,7 +99,8 @@ clar(ctx,
                        "  tests/fakes/fake_rtc.c" \
                        "  tests/fakes/fake_spi_flash.c" \
                        "  tests/fixtures/resources/builtin_resources.auto.c" \
-                       "  tests/fixtures/resources/pfs_resource_table.c",
+                       "  tests/fixtures/resources/pfs_resource_table.c" \
+                       "  tests/fw/applib/test_text_resources_font_stub.c",
     test_sources_ant_glob = "test_text_resources.c",
     override_includes=['dummy_board'])
 
