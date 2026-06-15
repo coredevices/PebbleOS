@@ -53,6 +53,14 @@ RUNNERS = {
 }
 
 
+def _available_boards():
+    boards_dir = os.path.join(waflib.Context.run_dir or os.getcwd(), 'boards')
+    return sorted(
+        board for board in os.listdir(boards_dir)
+        if os.path.isdir(os.path.join(boards_dir, board)) and not board.startswith('.')
+    )
+
+
 def truncate(msg):
     if msg is None:
         return msg
@@ -89,20 +97,11 @@ def options(opt):
     gr.add_option('--no_run', action='store_true', help='Do not run the tests, just build them')
     gr.add_option('--no_images', action='store_true', help='skip generation of test images, '
                   'which are only required for some tests and can slow down build times')
+    boards = _available_boards()
     opt.add_option('--board', action='store',
-                   choices=[ 'asterix',
-                             'obelix_dvt',
-                             'obelix_pvt',
-                             'obelix_bb2',
-                             'getafix_evt',
-                             'getafix_dvt',
-                             'getafix_dvt2',
-                             'qemu_emery',
-                             'qemu_flint',
-                             'qemu_gabbro',
-                            ],
+                   choices=boards,
                    help='Which board we are targeting '
-                        'asterix, obelix, getafix...')
+                        '({})'.format(', '.join(boards)))
     opt.add_option('--runner', default=None, choices=['openocd', 'sftool', 'nrfutil'],
                    help='Which runner we are using')
     opt.add_option('--openocd-jtag', action='store', default=None, dest='openocd_jtag',  # default is bb2 (below)
