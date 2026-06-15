@@ -1097,9 +1097,10 @@ void put_bytes_expect_init(uint32_t timeout_ms) {
 
 void put_bytes_handle_comm_session_event(const PebbleCommSessionEvent *
                                          comm_session_event) {
-  // Only abort on session close. Opening a second phone's session while a
-  // transfer is in progress on the first phone must not interrupt it.
-  if (comm_session_event->is_system && !comm_session_event->is_open) {
+  // Only abort when the gateway system session closes. A non-gateway phone
+  // disconnecting during an active transfer must not interrupt it.
+  if (comm_session_event->is_system && comm_session_event->is_gateway
+      && !comm_session_event->is_open) {
     prv_cleanup_async();
   }
 }

@@ -401,6 +401,8 @@ typedef struct PACKED PebbleCommSessionEvent { // 1 byte
   bool is_open:1;
   //! True if the pebble app has connected & false if a third-party app has connected
   bool is_system:1;
+  //! True if the session that opened/closed is the designated gateway phone slot
+  bool is_gateway:1;
 } PebbleCommSessionEvent;
 
 typedef struct PACKED { // 1 bytes
