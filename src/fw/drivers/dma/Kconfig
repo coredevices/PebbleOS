@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig DMA
+    bool "DMA"
+    help
+      DMA Drivers
+
+if DMA
+
+config DMA_NRF5
+    bool "Nordic nRF5 DMA Controller"
+    help
+      Support for the Nordic nRF5 DMA controller.
+
+config DMA_SF32LB
+    bool "SiFli SF32LB DMA Controller"
+    help
+      Support for the SiFli SF32LB DMA controller.
+
+endif # DMA

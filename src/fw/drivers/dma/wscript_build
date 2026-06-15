@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+use = ['freertos', 'fw_includes']
+
+if bld.env.CONFIG_DMA_NRF5:
+    use.append('hal_nordic')
+    sources.append('nrf5.c')
+elif bld.env.CONFIG_DMA_SF32LB:
+    use.append('hal_sifli')
+    sources.append('sf32lb.c')
+
+bld.objects(
+    name='driver_dma',
+    source=sources,
+    use=use,
+)
+
+bld.env.DRIVERS.append('driver_dma')

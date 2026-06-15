@@ -381,4 +381,7 @@ bld(
     use=bld.env.DRIVERS,
 )
 
+if bld.env.CONFIG_DMA:
+    bld.recurse('dma')
+
 # vim:filetype=python
