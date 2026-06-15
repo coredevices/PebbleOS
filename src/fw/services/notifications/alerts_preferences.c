@@ -49,6 +49,9 @@ static bool s_speaker_muted = false;
 #define PREF_KEY_SPEAKER_VOLUME "speakerVolume"
 static uint8_t s_speaker_volume = 100;
 
+#define PREF_KEY_HOURLY_CHIME_SOUND "hourlyChimeSound"
+static bool s_hourly_chime_sound = false;
+
 #define PREF_KEY_VIBE "vibe"
 static bool s_vibe_on_notification = true;
 
@@ -326,6 +329,7 @@ void alerts_preferences_init(void) {
   RESTORE_PREF(PREF_KEY_DND_MUTE_SPEAKER, s_dnd_mute_speaker);
   RESTORE_PREF(PREF_KEY_SPEAKER_MUTED, s_speaker_muted);
   RESTORE_PREF(PREF_KEY_SPEAKER_VOLUME, s_speaker_volume);
+  RESTORE_PREF(PREF_KEY_HOURLY_CHIME_SOUND, s_hourly_chime_sound);
   RESTORE_PREF(PREF_KEY_LEGACY_DND_SCHEDULE, s_legacy_dnd_schedule);
   RESTORE_PREF(PREF_KEY_LEGACY_DND_SCHEDULE_ENABLED, s_legacy_dnd_schedule_enabled);
   RESTORE_PREF(s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key,
@@ -458,6 +462,15 @@ void alerts_preferences_set_speaker_volume(uint8_t volume) {
   }
   s_speaker_volume = volume;
   SET_PREF(PREF_KEY_SPEAKER_VOLUME, s_speaker_volume);
+}
+
+bool alerts_preferences_get_hourly_chime_sound(void) {
+  return s_hourly_chime_sound;
+}
+
+void alerts_preferences_set_hourly_chime_sound(bool enable) {
+  s_hourly_chime_sound = enable;
+  SET_PREF(PREF_KEY_HOURLY_CHIME_SOUND, s_hourly_chime_sound);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -699,6 +712,7 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
   RELOAD_IF_MATCH(PREF_KEY_DND_MUTE_SPEAKER, s_dnd_mute_speaker);
   RELOAD_IF_MATCH(PREF_KEY_SPEAKER_MUTED, s_speaker_muted);
   RELOAD_IF_MATCH(PREF_KEY_SPEAKER_VOLUME, s_speaker_volume);
+  RELOAD_IF_MATCH(PREF_KEY_HOURLY_CHIME_SOUND, s_hourly_chime_sound);
 
 #undef RELOAD_IF_MATCH
 
