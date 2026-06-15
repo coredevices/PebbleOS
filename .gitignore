@@ -65,4 +65,4 @@ artifacts/
 
 .claude/settings.local.json
 .envrc
-.direnv
+.direnvopenocd.cfg
