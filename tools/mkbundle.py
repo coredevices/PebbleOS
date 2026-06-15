@@ -347,7 +347,10 @@ def make_dual_slot_bundle(
                     "size": flen(resources_path),
                     "crc": stm32crc(resources_path),
                 }
-                z.write(resources_path, "{}/{}".format(slot_dir, os.path.basename(resources_path)))
+                z.write(
+                    resources_path,
+                    "{}/{}".format(slot_dir, os.path.basename(resources_path)),
+                )
             z.write(fw_path, "{}/tintin_fw.bin".format(slot_dir))
             z.writestr("{}/manifest.json".format(slot_dir), json.dumps(manifest))
 
