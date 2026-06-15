@@ -72,7 +72,7 @@ static bool prv_write_register(uint8_t register_address, uint8_t datum) {
 }
 
 void vibe_init(void) {
-  gpio_output_init(&BOARD_CONFIG_VIBE.ctl, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_init(&BOARD_CONFIG_VIBE.ctl, GPIO_OType_PP);
   gpio_output_set(&BOARD_CONFIG_VIBE.ctl, true);
   uint8_t rv;
   bool found = prv_read_register(DRV2604_STATUS, &rv);

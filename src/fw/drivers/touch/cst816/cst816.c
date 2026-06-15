@@ -221,7 +221,7 @@ void touch_sensor_init(void) {
   s_i2c_lock = mutex_create();
 
 #ifndef RESET_PIN_CTRLBY_NPM1300
-  gpio_output_init(&CST816->reset, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_init(&CST816->reset, GPIO_OType_PP);
 #endif
 
   cst816_hw_reset();

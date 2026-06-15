@@ -48,12 +48,6 @@ typedef enum {
   GPIO_PuPd_DOWN,
 } GPIOPuPd_TypeDef;
 
-typedef enum {
-  GPIO_Speed_2MHz,
-  GPIO_Speed_50MHz,
-  GPIO_Speed_200MHz
-} GPIOSpeed_TypeDef;
-
 typedef struct {
   void *const peripheral;
   const uint32_t gpio_pin;

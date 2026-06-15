@@ -19,8 +19,6 @@ typedef enum {
   GPIO_OType_OD
 } GPIOOType_TypeDef;
 
-typedef void* GPIOSpeed_TypeDef;
-
 typedef enum {
   GPIO_PuPd_NOPULL,
   GPIO_PuPd_UP,

@@ -128,23 +128,23 @@ static void prv_power_cycle(void){
   // allowing for a clean power cycle.
 
   cfg.gpio_pin = DISPLAY->pinmux.b1.pad - PAD_PA00;
-  gpio_output_init(&cfg, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_init(&cfg, GPIO_OType_PP);
   gpio_output_set(&cfg, false);
 
   cfg.gpio_pin = DISPLAY->pinmux.vck.pad - PAD_PA00;
-  gpio_output_init(&cfg, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_init(&cfg, GPIO_OType_PP);
   gpio_output_set(&cfg, false);
 
   cfg.gpio_pin = DISPLAY->pinmux.xrst.pad - PAD_PA00;
-  gpio_output_init(&cfg, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_init(&cfg, GPIO_OType_PP);
   gpio_output_set(&cfg, false);
 
   cfg.gpio_pin = DISPLAY->pinmux.hck.pad - PAD_PA00;
-  gpio_output_init(&cfg, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_init(&cfg, GPIO_OType_PP);
   gpio_output_set(&cfg, false);
 
   cfg.gpio_pin = DISPLAY->pinmux.r2.pad - PAD_PA00;
-  gpio_output_init(&cfg, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_init(&cfg, GPIO_OType_PP);
   gpio_output_set(&cfg, false);
 
   gpio_output_set(&DISPLAY->vddp, false);
@@ -355,8 +355,8 @@ void display_init(void) {
 
   DisplayJDIState *state = DISPLAY->state;
 
-  gpio_output_init(&DISPLAY->vddp, GPIO_OType_PP, GPIO_Speed_2MHz);
-  gpio_output_init(&DISPLAY->vlcd, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_init(&DISPLAY->vddp, GPIO_OType_PP);
+  gpio_output_init(&DISPLAY->vlcd, GPIO_OType_PP);
 
   prv_power_cycle();
 

@@ -317,7 +317,7 @@ void vibe_init(void) {
     s_drive_frequency_hz = AW86225->lra_frequency_hz;
   }
 
-  gpio_output_init(&BOARD_CONFIG_VIBE.ctl, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_init(&BOARD_CONFIG_VIBE.ctl, GPIO_OType_PP);
 
   gpio_output_set(&BOARD_CONFIG_VIBE.ctl, true);
   psleep(AW862XX_PWR_OFF_TIME);

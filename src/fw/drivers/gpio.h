@@ -21,12 +21,6 @@ typedef enum {
   GPIO_PuPd_DOWN,
 } GPIOPuPd_TypeDef;
 
-typedef enum {
-  GPIO_Speed_2MHz,
-  GPIO_Speed_50MHz,
-  GPIO_Speed_200MHz
-} GPIOSpeed_TypeDef;
-
 #endif
 
 #ifdef CONFIG_SOC_NRF52
@@ -45,11 +39,7 @@ void gpio_release(GPIO_TypeDef* GPIOx);
 //!
 //! @param pin_config the BOARD_CONFIG pin configuration struct
 //! @param otype the output type of the pin (GPIO_OType_PP or GPIO_OType_OD)
-//! @param speed the output slew rate
-//! @note The slew rate should be set as low as possible for the
-//!       pin function to minimize ringing and RF interference.
-void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype,
-                      GPIOSpeed_TypeDef speed);
+void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype);
 
 //! Assert or deassert the output pin.
 //!
@@ -63,12 +53,9 @@ void gpio_output_set(const OutputConfig *pin_config, bool asserted);
 //!
 //! @param pin_config the BOARD_CONFIG pin configuration struct
 //! @param otype the output type of the pin (GPIO_OType_PP or GPIO_OType_OD)
-//! @param speed the output slew rate
 //! @param pupd pull-up or pull-down configuration
-//! @note The slew rate should be set as low as possible for the
-//!       pin function to minimize ringing and RF interference.
 void gpio_af_init(const AfConfig *af_config, GPIOOType_TypeDef otype,
-                  GPIOSpeed_TypeDef speed, GPIOPuPd_TypeDef pupd);
+                  GPIOPuPd_TypeDef pupd);
 
 //! Configure a GPIO alternate function pin to minimize power consumption.
 //!

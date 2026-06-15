@@ -34,9 +34,7 @@ void gpio_release(GPIO_TypeDef *GPIOx) {
   portEXIT_CRITICAL();
 }
 
-void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype,
-                      GPIOSpeed_TypeDef speed) {
-  (void)speed;
+void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype) {
   gpio_use(pin_config->gpio);
   GPIO_InitTypeDef GPIO_InitStruct;
   GPIO_InitStruct.Pin = pin_config->gpio_pin;

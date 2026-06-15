@@ -61,7 +61,7 @@ void vibe_init(void) {
   periph_config_acquire_lock();
 
   if (BOARD_CONFIG_VIBE.options & ActuatorOptions_Ctl) {
-    gpio_output_init(&BOARD_CONFIG_VIBE.ctl, GPIO_OType_PP, GPIO_Speed_2MHz);
+    gpio_output_init(&BOARD_CONFIG_VIBE.ctl, GPIO_OType_PP);
     gpio_output_set(&BOARD_CONFIG_VIBE.ctl, false);
     s_initialized = true;
   }
