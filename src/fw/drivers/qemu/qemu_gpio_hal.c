@@ -13,14 +13,6 @@
 #define GPIO_STATE   0x00  // r: bit per button
 #define GPIO_OUTPUT  0x04  // w: output state bits
 
-void gpio_use(GPIO_TypeDef *gpios) {
-  (void)gpios;
-}
-
-void gpio_release(GPIO_TypeDef *gpios) {
-  (void)gpios;
-}
-
 void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype) {
   (void)pin_config;
   (void)otype;
