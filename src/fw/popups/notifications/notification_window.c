@@ -41,6 +41,7 @@
 #include "pbl/services/notifications/ancs/ancs_filtering.h"
 #include "pbl/services/notifications/do_not_disturb.h"
 #include "pbl/services/notifications/notification_storage.h"
+#include "services/pin_lock/pin_lock.h"
 #include "pbl/services/notifications/notification_types.h"
 #include "pbl/services/notifications/notifications.h"
 #include "pbl/services/timeline/attribute.h"
@@ -1494,8 +1495,15 @@ static void prv_handle_notification_added_common(Uuid *id, NotificationType type
 
   alerts_incoming_alert_analytics();
 
-  if (do_not_disturb_is_active() && 
+  if (do_not_disturb_is_active() &&
       alerts_preferences_dnd_get_show_notifications() == DndNotificationModeHide) {
+    return;
+  }
+
+  // Suppress the popup while the watch is locked and the user opted to hide
+  // notifications. The notification is still stored; its history stays behind
+  // the lock.
+  if (pin_lock_should_hide_notifications()) {
     return;
   }
 
