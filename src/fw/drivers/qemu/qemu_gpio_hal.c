@@ -40,22 +40,6 @@ void gpio_output_set(const OutputConfig *pin_config, bool asserted) {
   REG32(QEMU_GPIO_BASE + GPIO_OUTPUT) = output;
 }
 
-void gpio_af_init(const AfConfig *af_config, GPIOOType_TypeDef otype,
-                  GPIOPuPd_TypeDef pupd) {
-  (void)af_config;
-  (void)otype;
-  (void)pupd;
-}
-
-void gpio_af_configure_low_power(const AfConfig *af_config) {
-  (void)af_config;
-}
-
-void gpio_af_configure_fixed_output(const AfConfig *af_config, bool asserted) {
-  (void)af_config;
-  (void)asserted;
-}
-
 void gpio_init_all(void) {
   // Nothing to configure for QEMU
 }

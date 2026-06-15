@@ -47,34 +47,6 @@ void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype);
 //! is true, and drives it low if pin_config.active_high is false.
 void gpio_output_set(const OutputConfig *pin_config, bool asserted);
 
-#ifndef CONFIG_SOC_NRF52
-
-//! Configure a GPIO alternate function.
-//!
-//! @param pin_config the BOARD_CONFIG pin configuration struct
-//! @param otype the output type of the pin (GPIO_OType_PP or GPIO_OType_OD)
-//! @param pupd pull-up or pull-down configuration
-void gpio_af_init(const AfConfig *af_config, GPIOOType_TypeDef otype,
-                  GPIOPuPd_TypeDef pupd);
-
-//! Configure a GPIO alternate function pin to minimize power consumption.
-//!
-//! Once a pin has been configured for low power, it is no longer
-//! connected to its alternate function. \ref gpio_af_init will need to
-//! be called again on the pin in order to configure it in alternate
-//! function mode again.
-void gpio_af_configure_low_power(const AfConfig *af_config);
-
-//! Configure a GPIO alternate function pin to drive a constant output.
-//!
-//! Once a pin has been configured as a fixed output, it is no longer
-//! connected to its alternate function. \ref gpio_af_init will need to
-//! be called again on the pin in order to configure it in alternate
-//! function mode again.
-void gpio_af_configure_fixed_output(const AfConfig *af_config, bool asserted);
-
-#endif
-
 //! Configure all GPIOs in the system to optimize for power consumption.
 //! At poweron most GPIOs can be configured as analog inputs instead of the
 //! default digital input. This allows digital filtering logic to be shut down,
