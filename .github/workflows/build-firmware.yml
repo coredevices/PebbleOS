@@ -81,7 +81,17 @@ jobs:
         run: ./waf configure --board '${{ matrix.board }}'
 
       - name: Build
-        run: ./waf build
+        run: |
+          ./waf build
+          # For pblboot boards (dual-slot flash), also build slot 1 so the
+          # bundle step can produce a combined slot0+slot1 PBZ.
+          # tintin_fw.nohdr.bin is only produced by the pblboot build rule.
+          if [ -f build/src/fw/tintin_fw.nohdr.bin ]; then
+            cp build/src/fw/tintin_fw.bin build/src/fw/tintin_fw_slot0.bin
+            ./waf configure --board ${{ matrix.board }} --slot 1
+            ./waf build
+            cp build/src/fw/tintin_fw.bin build/src/fw/tintin_fw_slot1.bin
+          fi
 
       - name: Bundle
         run: ./waf bundle
