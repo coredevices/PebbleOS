@@ -10,10 +10,11 @@ NO_REVISION = "_"
 
 
 class BoardSpec:
-    def __init__(self, target, name, revision=None):
+    def __init__(self, target, name, revision=None, runners=None):
         self.target = target
         self.name = name
         self.revision = revision
+        self.runners = runners or []
 
 
 def _boards_dir(srcdir):
@@ -27,10 +28,10 @@ def _revision_manifest(board_dir, board):
     return None
 
 
-def load_revisions(board_dir, board):
+def _load_manifest(board_dir, board):
     manifest = _revision_manifest(board_dir, board)
     if manifest is None:
-        return []
+        return None, {}
 
     with open(manifest) as f:
         data = yaml.safe_load(f)
@@ -38,7 +39,35 @@ def load_revisions(board_dir, board):
     if not isinstance(data, dict):
         raise ValueError(f"Invalid revision manifest {manifest}: expected mapping")
 
+    return manifest, data
+
+
+def _validate_string_list(manifest, data, key):
+    values = data.get(key, [])
+    if not isinstance(values, list):
+        raise ValueError(f"Invalid revision manifest {manifest}: expected {key} list")
+
+    for value in values:
+        if not isinstance(value, str) or not value:
+            raise ValueError(
+                f"Invalid revision manifest {manifest}: {key} must be non-empty strings"
+            )
+
+    if len(values) != len(set(values)):
+        raise ValueError(f"Duplicate {key} found in {manifest}")
+
+    return values
+
+
+def load_revisions(board_dir, board):
+    manifest, data = _load_manifest(board_dir, board)
+    if manifest is None:
+        return []
+
     revisions = data.get("revisions")
+    if revisions is None:
+        return []
+
     if not isinstance(revisions, list):
         raise ValueError(
             f"Invalid revision manifest {manifest}: expected revisions list"
@@ -58,6 +87,14 @@ def load_revisions(board_dir, board):
         raise ValueError(f"Duplicate revisions found in {manifest}")
 
     return revisions
+
+
+def load_runners(board_dir, board):
+    manifest, data = _load_manifest(board_dir, board)
+    if manifest is None:
+        return []
+
+    return _validate_string_list(manifest, data, "runners")
 
 
 def available_boards(srcdir):
@@ -112,4 +149,4 @@ def parse_board(srcdir, target):
     elif revision is not None:
         raise ValueError(f"Board '{board}' does not define revisions")
 
-    return BoardSpec(target, board, revision)
+    return BoardSpec(target, board, revision, load_runners(board_dir, board))

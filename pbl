@@ -38,7 +38,7 @@ QEMU_DECORATIONS = {
 }
 QEMU_DECORATION_CHOICES = sorted({d for ds in QEMU_DECORATIONS.values() for d in ds}) + ["none"]
 
-# Set by setup(); the reused waftools runner modules and config snapshot.
+# Set by setup() from --dry-run.
 _DRY_RUN = False
 
 
@@ -101,30 +101,26 @@ def load_env():
     return Env(data)
 
 
-# --- waftools runner reuse ------------------------------------------------
+# --- runner reuse ---------------------------------------------------------
 
-# Reused waftools runner modules; populated by setup(). These are plain helper
-# modules (no waf runtime needed) -- openocd/pebble_sdk_locator fall back to a
-# stub logger when waflib is absent.
-openocd = sftool = nrfutil = None
+# Populated by setup() with the self-contained tools.runners package.
+runners = None
 
 
 def setup(options):
-    """Bootstrap for operational commands: resolve build env, import the reused
-    runner modules, and activate an installed SDK. Returns (env, shim)."""
-    global openocd, sftool, nrfutil, _DRY_RUN
+    """Bootstrap for operational commands: resolve build env, import the
+    runner package, and activate an installed SDK. Returns the build env."""
+    global runners, _DRY_RUN
 
     _DRY_RUN = getattr(options, "dry_run", False)
 
-    # The reused waftools modules and tools/ helpers live under the repo root.
+    # The tools/ helpers live under the repo root.
     if REPO_ROOT not in sys.path:
         sys.path.insert(0, REPO_ROOT)
 
-    import waftools.openocd as _openocd
-    import waftools.sftool as _sftool
-    import waftools.nrfutil as _nrfutil
+    import tools.runners as _runners
 
-    openocd, sftool, nrfutil = _openocd, _sftool, _nrfutil
+    runners = _runners
 
     # Prefer an installed PebbleOS SDK's binaries (toolchain, QEMU, sftool).
     try:
@@ -133,30 +129,7 @@ def setup(options):
     except Exception:
         pass
 
-    env = load_env()
-    shim = WafShim(env, options)
-    return env, shim
-
-
-class WafShim:
-    """Minimal stand-in for a waf BuildContext, passed to the reused
-    waftools.{openocd,sftool,nrfutil} helpers."""
-
-    def __init__(self, env, options):
-        self.env = env
-        self.options = options
-
-    def exec_command(self, cmd, stdout=None, stderr=None):
-        if _DRY_RUN:
-            _pprint("YELLOW", "[dry-run] " + cmd)
-            return 0
-        return subprocess.call(cmd, shell=True)
-
-    def cmd_and_log(self, args, quiet=None, output=None):
-        return subprocess.run(args, capture_output=True, text=True, check=True).stdout
-
-    def fatal(self, msg):
-        _fatal(msg)
+    return load_env()
 
 
 # --- Artifact paths (relative to repo root; cwd is REPO_ROOT) --------------
@@ -175,6 +148,48 @@ def fw_elf():
 
 def pbpack():
     return "build/system_resources.pbpack"
+
+
+def make_runner(env, options):
+    selected = getattr(options, "runner", None) or env.RUNNER
+    if not selected:
+        _fatal("No runner available for board {}".format(env.BOARD))
+
+    supported = env.SUPPORTED_RUNNERS
+    if not supported:
+        supported = [env.RUNNER] if env.RUNNER else []
+
+    if selected not in supported:
+        _fatal(
+            "Board {} does not support runner {}. Supported runners: {}".format(
+                env.BOARD, selected, ", ".join(supported) or "none"
+            )
+        )
+
+    resources_file = None
+    if getattr(options, "resources", False) and env.VARIANT != "prf":
+        resources_file = pbpack()
+
+    cfg = runners.RunnerConfig(
+        board_dir=os.path.join("boards", env.BOARD_NAME),
+        soc=env.CONFIG_SOC,
+        hex_file=fw_hex(),
+        elf_file=fw_elf(),
+        resources_file=resources_file,
+        dry_run=getattr(options, "dry_run", False),
+    )
+
+    try:
+        return runners.create(selected, cfg, options)
+    except runners.RunnerError as e:
+        _fatal(str(e))
+
+
+def _run_runner(env, options, command):
+    try:
+        make_runner(env, options).run(command)
+    except runners.RunnerError as e:
+        _fatal(str(e))
 
 
 # --- Shared helpers (moved from wscript) -----------------------------------
@@ -233,34 +248,12 @@ def run_arm_gdb(elf_path, cmd_str="", target_server_port=3333):
 
 # --- Operational commands --------------------------------------------------
 
-def cmd_flash(env, shim, options):
+def cmd_flash(env, options):
     _check_firmware_image_size(env, fw_bin())
-    hex_path = fw_hex()
-
-    flash_resources = options.resources and env.VARIANT != "prf"
-    if flash_resources and env.RUNNER != "sftool":
-        _fatal("--resources is only supported on the sftool runner")
-
-    if env.RUNNER == "openocd":
-        openocd.run_command(
-            shim,
-            "init; reset halt; program {} reset;".format(hex_path),
-            expect=["Programming Finished", "Programming Finished", "shutdown"],
-            enforce_expect=True,
-        )
-    elif env.RUNNER == "sftool":
-        files = [hex_path]
-        if flash_resources:
-            files.append("{}@0x12620000".format(pbpack()))
-        sftool.write_flash(shim, *files)
-    elif env.RUNNER == "nrfutil":
-        nrfutil.program(shim, hex_path)
-        nrfutil.reset(shim)
-    else:
-        _fatal("Unsupported operation on: {}".format(env.RUNNER))
+    _run_runner(env, options, "flash")
 
 
-def cmd_console(env, shim, options):
+def cmd_console(env, options):
     if env.CONFIG_QEMU:
         tty = "socket://%s" % (options.qemu_host or "localhost:12345")
     else:
@@ -284,21 +277,16 @@ def cmd_console(env, shim, options):
         _run_shell(inner)
 
 
-def cmd_debug(env, shim, options):
-    elf = fw_elf()
+def cmd_debug(env, options):
     if env.CONFIG_QEMU:
         import pexpect
         cmd_line = "%s ./tools/qemu/qemu_gdb_proxy.py --port=1233 --target=localhost:1234" % sys.executable
         proc = pexpect.spawn(cmd_line, logfile=sys.stdout, encoding="utf-8")
         proc.expect(["Connected to target", pexpect.TIMEOUT], timeout=10)
-        run_arm_gdb(elf, target_server_port=1233)
+        run_arm_gdb(fw_elf(), target_server_port=1233)
         return
 
-    if env.RUNNER != "openocd":
-        _fatal("debug only supported with openocd runner")
-
-    with openocd.daemon(shim, "openocd.cfg", use_swd="swd" in env.OPENOCD_JTAG):
-        run_arm_gdb(elf, cmd_str='--init-command=".gdbinit"')
+    _run_runner(env, options, "debug")
 
 
 def _qemu_launch(env, options):
@@ -350,7 +338,7 @@ def _qemu_launch(env, options):
     _run_shell(cmd_line)
 
 
-def cmd_qemu(env, shim, options):
+def cmd_qemu(env, options):
     # The flash images are build artifacts, so let waf produce them. Always
     # rebuild the micro-flash image; by default rebuild the SPI flash too
     # (--keep-flash-image keeps the stored apps/data from a previous run).
@@ -363,7 +351,7 @@ def cmd_qemu(env, shim, options):
     _qemu_launch(env, options)
 
 
-def cmd_screenshot(env, shim, options):
+def cmd_screenshot(env, options):
     import socket
 
     sock_path = os.path.join(BUILD_DIR, "qemu-mon.sock")
@@ -404,34 +392,28 @@ def cmd_screenshot(env, shim, options):
     _pprint("CYAN", "Wrote screenshot to {}".format(out_path))
 
 
-def cmd_openocd(env, shim, options):
+def cmd_openocd(env, options):
     """Starts openocd and leaves it running, resetting the board to improve the
     chances of attaching successfully."""
-    openocd.run_command(shim, "init; reset", shutdown=False)
+    _run_runner(env, options, "debugserver")
 
 
-def cmd_reset(env, shim, options):
+def cmd_reset(env, options):
     """Resets a connected device."""
-    if env.RUNNER == "openocd":
-        openocd.run_command(shim, "init; reset;", expect=["found"])
-    else:
-        _fatal("Unsupported operation on: {}".format(env.RUNNER))
+    _run_runner(env, options, "reset")
 
 
-def cmd_bork(env, shim, options):
+def cmd_run(env, options):
+    """Starts or resumes execution on a connected device."""
+    _run_runner(env, options, "run")
+
+
+def cmd_bork(env, options):
     """Resets and wipes a connected device."""
-    if env.RUNNER == "openocd":
-        openocd.run_command(shim, "init; reset halt;", ignore_fail=True)
-        openocd.run_command(shim, "init; flash erase_sector 0 0 1;", ignore_fail=True)
-    elif env.RUNNER == "sftool":
-        sftool.erase_flash(shim)
-    elif env.RUNNER == "nrfutil":
-        nrfutil.erase(shim)
-    else:
-        _fatal("Unsupported operation on: {}".format(env.RUNNER))
+    _run_runner(env, options, "erase")
 
 
-def cmd_image_resources(env, shim, options):
+def cmd_image_resources(env, options):
     tty = options.tty
     if tty is None:
         _fatal("Error: --tty not specified")
@@ -446,7 +428,7 @@ def cmd_image_resources(env, shim, options):
         _fatal("Imaging failed")
 
 
-def cmd_image_recovery(env, shim, options):
+def cmd_image_recovery(env, options):
     tty = options.tty
     if tty is None:
         _fatal("Error: --tty not specified")
@@ -623,7 +605,7 @@ def _pack_lang_code(env, lang_code):
     _pprint("CYAN", "Created language pack at {}".format(language_pack))
 
 
-def cmd_make_lang(env, shim, options):
+def cmd_make_lang(env, options):
     """Generate a new language's translation files and update existing ones."""
     import polib
 
@@ -660,13 +642,13 @@ def cmd_make_lang(env, shim, options):
                          po_path, new_po_file.name])
 
 
-def cmd_pack_lang(env, shim, options):
+def cmd_pack_lang(env, options):
     """Generate the language pack (pbpack) for a single language."""
     _ensure_lang_imports()
     _pack_lang_code(env, options.lang)
 
 
-def cmd_pack_all_langs(env, shim, options):
+def cmd_pack_all_langs(env, options):
     """Generate language packs (pbpacks) for every language."""
     _ensure_lang_imports()
     lang_root = os.path.join(REPO_ROOT, LANG_DIR_REL)
@@ -682,6 +664,7 @@ OPERATIONAL = {
     "screenshot": cmd_screenshot,
     "openocd": cmd_openocd,
     "reset": cmd_reset,
+    "run": cmd_run,
     "bork": cmd_bork,
     "image_resources": cmd_image_resources,
     "image_recovery": cmd_image_recovery,
@@ -702,8 +685,17 @@ def build_parser():
     dry.add_argument("--dry-run", action="store_true",
                      help="Print the runner command instead of executing it")
 
-    p = sub.add_parser("flash", parents=[dry], help="Flash firmware to a device")
-    p.add_argument("--tty", help="tty for the sftool runner")
+    runner = argparse.ArgumentParser(add_help=False)
+    runner.add_argument("-r", "--runner", help="Override the board's default runner")
+
+    # Runner-specific arguments (e.g. --tty for sftool) are contributed by the
+    # runners themselves, mirroring Zephyr's west do_add_parser().
+    import tools.runners as _runners
+    runner_args = argparse.ArgumentParser(add_help=False)
+    _runners.register_args(runner_args)
+
+    p = sub.add_parser("flash", parents=[dry, runner, runner_args],
+                       help="Flash firmware to a device")
     p.add_argument("--resources", action="store_true",
                    help="Also flash system resources alongside the firmware")
 
@@ -715,7 +707,7 @@ def build_parser():
     p.add_argument("--reconnect", action="store_true",
                    help="Wrap the console in a keep-alive driver that reconnects")
 
-    sub.add_parser("debug", help="Attach gdb to the target")
+    sub.add_parser("debug", parents=[runner, runner_args], help="Attach gdb to the target")
 
     p = sub.add_parser("qemu", help="Launch the firmware under QEMU")
     p.add_argument("--keep-flash-image", action="store_true",
@@ -727,9 +719,14 @@ def build_parser():
     p.add_argument("--screenshot-output", default=None,
                    help="Output path (must end in .png). Defaults to build/screenshot.png")
 
-    sub.add_parser("openocd", parents=[dry], help="Start openocd and leave it running")
-    sub.add_parser("reset", parents=[dry], help="Reset a connected device")
-    sub.add_parser("bork", parents=[dry], help="Reset and wipe a connected device")
+    sub.add_parser("openocd", parents=[dry, runner, runner_args],
+                   help="Start openocd and leave it running")
+    sub.add_parser("reset", parents=[dry, runner, runner_args],
+                   help="Reset a connected device")
+    sub.add_parser("run", parents=[dry, runner, runner_args],
+                   help="Start or resume a connected device")
+    sub.add_parser("bork", parents=[dry, runner, runner_args],
+                   help="Reset and wipe a connected device")
 
     p = sub.add_parser("image_resources", parents=[dry],
                        help="UART-image system resources")
@@ -784,8 +781,8 @@ def main(argv):
             setattr(options, attr, os.path.abspath(val))
 
     os.chdir(REPO_ROOT)
-    env, shim = setup(options)
-    OPERATIONAL[options.command](env, shim, options)
+    env = setup(options)
+    OPERATIONAL[options.command](env, options)
     return 0
 
 

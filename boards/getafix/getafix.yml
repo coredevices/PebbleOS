@@ -5,3 +5,6 @@ revisions:
   - evt
   - dvt
   - dvt2
+
+runners:
+  - sftool
