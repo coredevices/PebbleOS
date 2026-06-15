@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-config BOARD_FAMILY_NAME
-    default "obelix"
+config BOARD_GETAFIX_DVT
+    bool
+    default y

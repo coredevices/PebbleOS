@@ -29,6 +29,7 @@ sys.path.append(os.path.join(waf_dir, 'sdk/tools/'))
 sys.path.append(os.path.join(waf_dir, 'waftools'))
 
 import waftools.gitinfo
+import waftools.boards
 import waftools.ldscript
 import waftools.openocd
 import waftools.pebble_sdk_gcc as pebble_sdk_gcc
@@ -44,21 +45,13 @@ LOGHASH_OUT_PATH = 'src/fw/loghash_dict.json'
 
 RUNNERS = {
     'asterix': ['openocd', 'nrfutil'],
-    'obelix_dvt': ['sftool'],
-    'obelix_pvt': ['sftool'],
-    'obelix_bb2': ['sftool'],
-    'getafix_evt': ['sftool'],
-    'getafix_dvt': ['sftool'],
-    'getafix_dvt2': ['sftool'],
+    'obelix': ['sftool'],
+    'getafix': ['sftool'],
 }
 
 
 def _available_boards():
-    boards_dir = os.path.join(waflib.Context.run_dir or os.getcwd(), 'boards')
-    return sorted(
-        board for board in os.listdir(boards_dir)
-        if os.path.isdir(os.path.join(boards_dir, board)) and not board.startswith('.')
-    )
+    return waftools.boards.available_boards(waflib.Context.run_dir or os.getcwd())
 
 
 def truncate(msg):
@@ -126,6 +119,11 @@ def configure(conf):
         conf.fatal('No board selected! '
                    'You must pass a --board argument when configuring.')
 
+    try:
+        board = waftools.boards.parse_board(conf.srcnode.abspath(), conf.options.board)
+    except ValueError as e:
+        conf.fatal(str(e))
+
     # Has to be 'waftools.gettext' as unadorned 'gettext' will find the gettext
     # module in the standard library.
     conf.load('waftools.gettext')
@@ -140,17 +138,17 @@ def configure(conf):
         conf.env.JS_ENGINE = 'none'
 
     if not conf.options.runner:
-        conf.env.RUNNER = RUNNERS.get(conf.options.board, [None])[0]
+        conf.env.RUNNER = RUNNERS.get(board.target, RUNNERS.get(board.name, [None]))[0]
     else:
-        if conf.options.runner not in RUNNERS.get(conf.options.board, []):
+        if conf.options.runner not in RUNNERS.get(board.target, RUNNERS.get(board.name, [])):
             conf.fatal('Runner {} is not supported on board {}'.format(
-                       conf.options.runner, conf.options.board))
+                       conf.options.runner, board.target))
         conf.env.RUNNER = conf.options.runner
 
     if conf.env.RUNNER == 'openocd':
         if conf.options.openocd_jtag:
             conf.env.OPENOCD_JTAG = conf.options.openocd_jtag
-        elif conf.options.board in ('asterix'):
+        elif board.target in ('asterix'):
             conf.env.OPENOCD_JTAG = 'swd_cmsisdap'
         else:
             # default to bb2
@@ -169,10 +167,12 @@ def configure(conf):
         conf.env.PLATFORM_NAME = 'gabbro'
         conf.env.MIN_SDK_VERSION = 3
     else:
-        conf.fatal('No platform specified for {}!'.format(conf.options.board))
+        conf.fatal('No platform specified for {}!'.format(board.target))
 
     # Save this for later
-    conf.env.BOARD = conf.options.board
+    conf.env.BOARD = board.target
+    conf.env.BOARD_NAME = board.name
+    conf.env.BOARD_REVISION = board.revision
 
     conf.env.VARIANT = conf.options.variant
     if conf.env.VARIANT == 'prf':

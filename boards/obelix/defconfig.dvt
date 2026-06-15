@@ -1,0 +1,3 @@
+# obelix dvt board revision configuration
+
+CONFIG_ACCEL_LIS2DW12_DISABLE_ADDR_PULLUP=y

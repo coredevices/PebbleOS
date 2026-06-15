@@ -69,16 +69,18 @@ config DEBUG_INFO
 endmenu
 
 config IS_BIGBOARD
-    bool "Bigboard variant"
+    bool "Bigboard revision"
     help
-      Engineering/development PCB variant of a board (`_bb` suffix
+      Engineering/development PCB revision of a board (`_bb` suffix
       in the board name). Gates bigboard-only behaviour that differs
       from the shipping board.
 
 # Source the active board's Kconfig and its per-board defaults; kconfig.py
-# exports $(BOARD) from the --board argument.
+# exports $(BOARD) and $(BOARD_REVISION) from the --board argument.
 rsource "boards/$(BOARD)/Kconfig"
+osource "boards/$(BOARD)/Kconfig.$(BOARD_REVISION)"
 rsource "boards/$(BOARD)/Kconfig.defconfig"
+osource "boards/$(BOARD)/Kconfig.defconfig.$(BOARD_REVISION)"
 
 config BOARD_FAMILY_ASTERIX
     bool
@@ -99,7 +101,7 @@ config BOARD_FAMILY_NAME
     string
     help
       Lowercase token identifying the board family (or the single
-      board, for QEMU variants). Used for resource path lookups
+      board, for QEMU boards). Used for resource path lookups
       and string outputs. Set per board in
       boards/<board>/Kconfig.defconfig.
 

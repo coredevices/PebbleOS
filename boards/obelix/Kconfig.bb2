@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-config BOARD_FAMILY_NAME
-    default "getafix"
+config BOARD_OBELIX_BB2
+    bool
+    default y

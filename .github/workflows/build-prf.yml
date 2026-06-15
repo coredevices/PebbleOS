@@ -21,6 +21,7 @@ jobs:
           filters: |
             src:
               - '.github/workflows/build-prf.yml'
+              - 'boards/**'
               - 'platform/**'
               - 'resources/**'
               - 'src/**'
@@ -42,11 +43,11 @@ jobs:
       matrix:
         board:
           - asterix
-          - obelix_dvt
-          - obelix_pvt
-          - getafix_evt
-          - getafix_dvt
-          - getafix_dvt2
+          - obelix@dvt
+          - obelix@pvt
+          - getafix@evt
+          - getafix@dvt
+          - getafix@dvt2
         mode:
           - normal
           - mfg
@@ -71,13 +72,19 @@ jobs:
         shell: bash
         run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
 
+      - name: Set artifact board name
+        id: artifact_board
+        run: echo "NAME=$(printf '%s' "$BOARD" | tr @ _)" >> "$GITHUB_OUTPUT"
+        env:
+          BOARD: ${{ matrix.board }}
+
       - name: Configure
         run: |
           if [ "${{ matrix.mode }}" == "mfg" ]; then
             OPTS="-DCONFIG_MFG=y -DCONFIG_LOG_HASHED=n"
           fi
 
-          ./waf configure --board ${{ matrix.board }} --variant=prf $OPTS
+          ./waf configure --board '${{ matrix.board }}' --variant=prf $OPTS
 
       - name: Build
         run: ./waf build
@@ -88,7 +95,7 @@ jobs:
       - name: Store
         uses: actions/upload-artifact@v6
         with:
-          name: prf-${{ matrix.board }}-${{ matrix.mode }}
+          name: prf-${{ steps.artifact_board.outputs.NAME }}-${{ matrix.mode }}
           path: |
             build/**/*.elf
             build/**/*.pbz

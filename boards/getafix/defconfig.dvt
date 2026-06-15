@@ -1,0 +1,3 @@
+# getafix dvt board revision configuration
+
+CONFIG_VIBE_AW8623X=y
