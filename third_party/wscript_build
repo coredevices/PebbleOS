@@ -17,7 +17,7 @@ if bld.env.CONFIG_HAL_SIFLI:
 if bld.env.CONFIG_BT_FW_NIMBLE:
     bld.recurse('nimble')
 
-if bld.env.CONFIG_BOARD_FAMILY_ASTERIX:
+if bld.env.CONFIG_ACCEL_LSM6DSO or bld.env.CONFIG_GYRO_LSM6DSO:
     bld.recurse('hal_lsm6dso')
 
 bld.recurse('memfault')
