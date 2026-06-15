@@ -56,12 +56,14 @@ extern void comm_session_send_queue_cleanup(CommSession *session);
 
 // -------------------------------------------------------------------------------------------------
 
-static void prv_put_comm_session_event(bool is_open, bool is_system) {
+static void prv_put_comm_session_event(bool is_open, bool is_system, bool is_gateway) {
   PebbleEvent event = {
     .type = PEBBLE_COMM_SESSION_EVENT,
-    .bluetooth.comm_session_event.is_open = is_open,
-    .bluetooth.comm_session_event
-    .is_system = is_system,
+    .bluetooth.comm_session_event = {
+      .is_open = is_open,
+      .is_system = is_system,
+      .is_gateway = is_gateway,
+    },
   };
   event_put(&event);
 }
@@ -230,12 +232,12 @@ CommSession * comm_session_open(Transport *transport, const TransportImplementat
 
   comm_session_analytics_open_session(session);
 
-  prv_put_comm_session_event(true, is_system);
+  prv_put_comm_session_event(true, is_system, false /* is_gateway */);
 
   if (is_system && (session->destination == TransportDestinationHybrid)) {
     // For Android, if the app is connected, PebbleKit should be
     // working as well
-    prv_put_comm_session_event(true, false);
+    prv_put_comm_session_event(true, false, false /* is_gateway */);
   }
 
   return session;
@@ -263,10 +265,12 @@ void comm_session_close(CommSession *session, CommSessionCloseReason reason) {
 #endif
   }
 
-  prv_put_comm_session_event(false, is_system);
+  const bool is_gateway = (is_system && session->transport_imp->is_gateway
+                           && session->transport_imp->is_gateway(session->transport));
+  prv_put_comm_session_event(false, is_system, is_gateway);
 
   if (is_system && (session->destination == TransportDestinationHybrid)) {
-    prv_put_comm_session_event(true, false);
+    prv_put_comm_session_event(true, false, false /* is_gateway */);
   }
 
   // Cleanup:
