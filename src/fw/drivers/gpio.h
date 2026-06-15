@@ -55,6 +55,3 @@ void gpio_input_init_pull_up_down(const InputConfig *input_cfg, GPIOPuPd_TypeDef
 
 //! @return bool the current state of the GPIO pin
 bool gpio_input_read(const InputConfig *input_cfg);
-
-//! Configure gpios as analog inputs. Useful for unused GPIOs as this is their lowest power state.
-void gpio_analog_init(const InputConfig *input_cfg);

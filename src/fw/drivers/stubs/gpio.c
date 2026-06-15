@@ -24,6 +24,3 @@ bool gpio_input_read(const InputConfig *input_config) {
 
   return false;
 }
-
-void gpio_analog_init(const InputConfig *input_config) {
-}

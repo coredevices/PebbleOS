@@ -56,7 +56,3 @@ bool gpio_input_read(const InputConfig *input_cfg) {
   uint32_t state = REG32(QEMU_GPIO_BASE + GPIO_STATE);
   return (state & (1U << input_cfg->gpio_pin)) != 0;
 }
-
-void gpio_analog_init(const InputConfig *input_cfg) {
-  (void)input_cfg;
-}
