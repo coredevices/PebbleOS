@@ -29,7 +29,10 @@ def flen(path):
 def stm32crc(path):
     with open(path, "r+b") as f:
         binfile = f.read()
-        return stm32_crc.crc32(binfile) & 0xFFFFFFFF
+        crc = stm32_crc.crc32(binfile) & 0xFFFFFFFF
+        # Return as signed 32-bit so Java JSONObject.getInt() never overflows.
+        # Bit pattern is preserved, so watch-side CRC verification is unaffected.
+        return crc if crc < 0x80000000 else crc - 0x100000000
 
 
 def check_paths(*args):
