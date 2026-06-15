@@ -888,8 +888,11 @@ static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value,
     // a new service will get added again. The old one remains when it was killed through Xcode
     // before. The old one seems to go away *after* the new one gets added in the crash scenario.
     PPoGATTClient *existing_client = prv_find_client_with_uuid(&app_uuid);
-    if (existing_client) {
-      PBL_LOG_ERR("Found PPoGATT server with same UUID. Keeping only the last one.");
+    if (existing_client && existing_client->slot == client->slot) {
+      // Only remove the duplicate if it is on the same slot. A second phone running the same
+      // app (same UUID) on a different slot is a legitimate dual-phone session and must not
+      // be torn down.
+      PBL_LOG_ERR("Found PPoGATT server with same UUID on same slot. Keeping only the last one.");
       prv_delete_client(existing_client, true /* is_disconnected */, DeleteReason_DuplicateServer);
     }
     client->state = StateDisconnectedSubscribingData;
