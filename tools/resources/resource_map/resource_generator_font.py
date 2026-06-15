@@ -35,6 +35,7 @@ class FontResourceGenerator(ResourceGenerator):
         definition.character_regex = definition_dict.get("characterRegex")
         definition.compatibility = definition_dict.get("compatibility")
         definition.compress = definition_dict.get("compress")
+        definition.baseline_offset = definition_dict.get("baselineOffset", 0)
         definition.extended = bool(definition_dict.get("extended"))
         definition.tracking_adjust = definition_dict.get("trackingAdjust")
         definition.pixel_height = definition_dict.get("pixelHeight")
@@ -92,8 +93,10 @@ class FontResourceGenerator(ResourceGenerator):
             is_legacy = definition.compatibility == "2.7"
             max_glyphs = MAX_GLYPHS_EXTENDED if definition.extended else MAX_GLYPHS
 
+            baseline_offset = getattr(definition, "baseline_offset", 0) or 0
             font = Font(
-                ttf_path, height, max_glyphs, definition.max_glyph_size, is_legacy
+                ttf_path, height, max_glyphs, definition.max_glyph_size, is_legacy,
+                baseline_offset=baseline_offset
             )
 
             if definition.character_regex is not None:
