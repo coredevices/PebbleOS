@@ -12,6 +12,7 @@
 #include "kernel/pbl_malloc.h"
 #include "kernel/ui/kernel_ui.h"
 #include "kernel/ui/modals/modal_manager.h"
+#include "services/pin_lock/pin_lock.h"
 #include "shell/prefs.h"
 #include "syscall/syscall_internal.h"
 #include "system/logging.h"
@@ -528,6 +529,9 @@ bool timeline_peek_is_future_empty(void) {
 }
 
 void timeline_peek_push(void) {
+  if (pin_lock_should_hide_timeline()) {
+    return;
+  }
   TimelinePeek *peek = &s_peek;
   modal_window_push(&peek->window, ModalPriorityDiscreet, true);
 }

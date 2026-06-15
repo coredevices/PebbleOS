@@ -59,6 +59,7 @@ void clock_get_until_time(char *buffer, int buf_size, time_t timestamp, int max_
 #include "stubs_pebble_process_info.h"
 #include "stubs_pebble_tasks.h"
 #include "stubs_pin_db.h"
+#include "stubs_pin_lock.h"
 #include "stubs_process_manager.h"
 #include "stubs_prompt.h"
 #include "stubs_property_animation.h"

@@ -57,6 +57,7 @@
 #include "stubs_pebble_tasks.h"
 #include "stubs_peek_layer.h"
 #include "stubs_pin_db.h"
+#include "stubs_pin_lock.h"
 #include "stubs_print.h"
 #include "stubs_process_manager.h"
 #include "stubs_prompt.h"
