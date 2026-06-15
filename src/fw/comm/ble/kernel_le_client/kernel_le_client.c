@@ -46,6 +46,7 @@ typedef struct {
 static PhoneSlotInfo s_phone_slots[MAX_PHONE_CONNECTIONS];
 static PhoneSlot s_discovery_slot = PHONE_SLOT_INVALID;
 static PhoneSlot s_gateway_slot = PHONE_SLOT_INVALID;
+static PhoneSlot s_ams_slot = PHONE_SLOT_INVALID;
 
 // Bonding IDs that are gateway-capable (ANCS), cached at init to avoid
 // calling bt_persistent_storage from within the BLE connection event handler
@@ -542,8 +543,13 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
 
     ancs_create(slot);
     ppogatt_create(slot);
-    if (slot == 0) {
-      ams_create();
+    if (s_ams_slot == PHONE_SLOT_INVALID) {
+      const bool is_gateway_slot = (slot == s_gateway_slot);
+      const bool is_slot0_fallback = (s_gateway_slot == PHONE_SLOT_INVALID && slot == 0);
+      if (is_gateway_slot || is_slot0_fallback) {
+        ams_create();
+        s_ams_slot = slot;
+      }
     }
 
     int active_count = 0;
@@ -566,13 +572,23 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
       ppogatt_destroy(slot);
       ancs_destroy(slot);
       prv_free_slot(slot);
+      if (s_ams_slot == slot) {
+        ams_destroy();
+        s_ams_slot = PHONE_SLOT_INVALID;
+      }
     }
-    if (slot == 0) {
-      ams_destroy();
+
+    int remaining = 0;
+    for (PhoneSlot s = 0; s < MAX_PHONE_CONNECTIONS; s++) {
+      if (s_phone_slots[s].active) remaining++;
     }
-    app_launch_handle_disconnection();
+    if (remaining == 0) {
+      app_launch_handle_disconnection();
+    }
     gap_le_slave_reconnect_start();
-    gatt_client_op_cleanup(GAPLEClientKernel);
+    if (remaining == 0) {
+      gatt_client_op_cleanup(GAPLEClientKernel);
+    }
   }
 }
 
@@ -620,6 +636,7 @@ static void prv_cleanup_clients_kernel_main_cb(void *unused) {
     ancs_destroy(slot);
   }
   ams_destroy();
+  s_ams_slot = PHONE_SLOT_INVALID;
 }
 
 // -------------------------------------------------------------------------------------------------
