@@ -62,11 +62,16 @@ jobs:
       - name: Copy PRF artifacts
         run: |
           mkdir -p artifacts
-          cp build/src/fw/tintin_fw.hex artifacts/prf_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}.hex
-          cp build/src/fw/tintin_fw.bin artifacts/prf_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}.bin
-          cp build/src/fw/tintin_fw.elf artifacts/prf_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}.elf
-          cp build/*.pbz artifacts
-          cp build/src/fw/tintin_fw_loghash_dict.json artifacts/prf_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}_loghash_dict.json
+          cp build/src/fw/tintin_fw.hex \
+             artifacts/prf_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}.hex
+          cp build/src/fw/tintin_fw.bin \
+             artifacts/prf_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}.bin
+          cp build/src/fw/tintin_fw.elf \
+             artifacts/prf_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}.elf
+          cp build/recovery_${{ matrix.board }}_${{ github.ref_name }}.pbz \
+             artifacts/recovery_${{ steps.artifact_board.outputs.NAME }}_${{ github.ref_name }}.pbz
+          cp build/src/fw/tintin_fw_loghash_dict.json \
+             artifacts/prf_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}_loghash_dict.json
 
       - name: Get PRF Build ID
         id: prf_build_id
@@ -179,11 +184,16 @@ jobs:
       - name: Copy firmware artifacts
         run: |
           mkdir -p artifacts
-          cp build/src/fw/tintin_fw.hex artifacts/firmware_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.hex
-          cp build/src/fw/tintin_fw.bin artifacts/firmware_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.bin
-          cp build/src/fw/tintin_fw.elf artifacts/firmware_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.elf
-          cp build/*.pbz artifacts
-          cp build/src/fw/tintin_fw_loghash_dict.json artifacts/firmware_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}_loghash_dict.json
+          cp build/src/fw/tintin_fw.hex \
+             artifacts/firmware_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.hex
+          cp build/src/fw/tintin_fw.bin \
+             artifacts/firmware_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.bin
+          cp build/src/fw/tintin_fw.elf \
+             artifacts/firmware_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.elf
+          cp build/normal_${{ matrix.board }}_${{ github.ref_name }}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.pbz \
+             artifacts/normal_${{ steps.artifact_board.outputs.NAME }}_${{ github.ref_name }}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.pbz
+          cp build/src/fw/tintin_fw_loghash_dict.json \
+             artifacts/firmware_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}_loghash_dict.json
 
       - name: Get Build ID
         id: build_id
