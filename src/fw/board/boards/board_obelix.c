@@ -360,15 +360,6 @@ static const LIS2DW12Config s_lis2dw12_config = {
       .peripheral = hwp_gpio1,
       .gpio_pin = 38,
     },
-#if defined(CONFIG_BOARD_OBELIX_DVT) || defined(CONFIG_BOARD_OBELIX_BB2)
-    .disable_addr_pullup = true,
-#endif
-    .wk_dur_default = 1U,
-    .wk_ths_min = 1U,
-    .wk_ths_max = 40U,
-    .wk_ths_default = 16U,
-    .scale_mg = 4000U,
-    .fifo_threshold = 32U,
 #ifdef CONFIG_IS_BIGBOARD
     .axis_map = {
         [AXIS_X] = 0,

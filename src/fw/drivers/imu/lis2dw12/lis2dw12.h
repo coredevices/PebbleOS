@@ -37,26 +37,6 @@ typedef struct LIS2DW12Config {
   I2CSlavePort i2c;
   //! INT1 EXTI configuration
   ExtiConfig int1;
-  //! Disable ADDR pull-up resistor
-  bool disable_addr_pullup;
-  //! Default wake duration (0-3)
-  uint8_t wk_dur_default;
-  //! Default wake threshold (wk_ths_min, wk_ths_max)
-  uint8_t wk_ths_default;
-  //! Minimum wake threshold (1-63)
-  uint8_t wk_ths_min;
-  //! Maximum wake threshold (1-63)
-  uint8_t wk_ths_max;
-  //! Scale (+/-2000, 4000, 8000 or 16000 mg)
-  uint16_t scale_mg;
-  //! FIFO threshold (1-32)
-  //! FIFO threshold should be chosen so that FIFO can be drained before overrun
-  //! occurs at max ODR (200 Hz in this implementation). At maximum rate, a new
-  //! sample is available every 5 ms, and the FIFO can hold up to 32 samples.
-  //! FIFO drain takes 29 + 9 * 32 * 6 clocks. For example, at 400 kHz I2C clock,
-  //! this is ~4.4ms to drain a full FIFO. Choosing a threshold of 16 samples,
-  //! would give 16 / 200 Hz = 80 ms to drain the FIFO before overrun occurs.
-  uint8_t fifo_threshold;
   //! Axis mapping (0: X, 1: Y, 2: Z)
   uint8_t axis_map[3];
   //! Axis direction (1 upside, -1 downside)
