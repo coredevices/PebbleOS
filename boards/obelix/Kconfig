@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-config BOARD_OBELIX_PVT
+config BOARD_OBELIX
     bool
     default y
     select BOARD_FAMILY_OBELIX
