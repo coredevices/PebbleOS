@@ -47,12 +47,6 @@ void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype);
 //! is true, and drives it low if pin_config.active_high is false.
 void gpio_output_set(const OutputConfig *pin_config, bool asserted);
 
-//! Configure all GPIOs in the system to optimize for power consumption.
-//! At poweron most GPIOs can be configured as analog inputs instead of the
-//! default digital input. This allows digital filtering logic to be shut down,
-//! saving quite a bit of power.
-void gpio_init_all(void);
-
 //! Configure gpios as inputs (suitable for things like exti lines)
 void gpio_input_init(const InputConfig *input_cfg);
 
