@@ -34,6 +34,7 @@ static const uint32_t SETTINGS_MENU_ICON_RESOURCES[SettingsMenuItem_Count] = {
 #endif
   [SettingsMenuItemActivity] = RESOURCE_ID_SETTINGS_MENU_ICON_BACKGROUND_APP,
   [SettingsMenuItemSystem] = RESOURCE_ID_SETTINGS_MENU_ICON_SYSTEM,
+  [SettingsMenuItemSecurity] = RESOURCE_ID_SETTINGS_MENU_ICON_SYSTEM,
 };
 #endif
 

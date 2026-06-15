@@ -9,6 +9,7 @@
 #include "quick_launch.h"
 #include "quiet_time.h"
 #include "remote.h"
+#include "security.h"
 #include "system.h"
 #include "time.h"
 #include "timeline.h"
@@ -38,6 +39,7 @@ static const SettingsModuleGetMetadata s_submodule_registry[] = {
   [SettingsMenuItemThemes]        = settings_themes_get_info,
 #endif
   [SettingsMenuItemSystem]        = settings_system_get_info,
+  [SettingsMenuItemSecurity]      = settings_security_get_info,
 };
 
 const SettingsModuleMetadata *settings_menu_get_submodule_info(SettingsMenuItem category) {
