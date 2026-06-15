@@ -33,6 +33,9 @@ typedef enum VibeSettingsRow {
   VibeSettingsRow_PhoneCalls,
   VibeSettingsRow_Alarms,
   VibeSettingsRow_Hourly,
+#ifdef CONFIG_SPEAKER
+  VibeSettingsRow_HourlyChimeSound,
+#endif
   VibeSettingsRow_OnDisconnect,
   VibeSettingsRow_System,
   VibeSettingsRow_Count,
@@ -98,6 +101,16 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       client = VibeClient_Hourly;
       break;
     }
+#ifdef CONFIG_SPEAKER
+    case VibeSettingsRow_HourlyChimeSound: {
+      title = i18n_noop("Hourly Chime");
+      subtitle = alerts_preferences_get_hourly_chime_sound()
+          ? i18n_noop("On") : i18n_noop("Off");
+      menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data),
+                           i18n_get(subtitle, data), NULL);
+      return;
+    }
+#endif
     case VibeSettingsRow_OnDisconnect: {
       title = i18n_noop("On Disconnect");
       client = VibeClient_OnDisconnect;
@@ -133,8 +146,9 @@ static void prv_selection_changed_cb(SettingsCallbacks *context, uint16_t new_ro
   switch (new_row) {
 #ifdef CONFIG_SPEAKER
     case VibeSettingsRow_MuteSpeaker:
-    case VibeSettingsRow_SpeakerVolume: {
-      // No vibe preview — this row controls a non-vibe setting.
+    case VibeSettingsRow_SpeakerVolume:
+    case VibeSettingsRow_HourlyChimeSound: {
+      // No vibe preview — these rows control non-vibe settings.
       return;
     }
 #endif
@@ -218,6 +232,12 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
     }
     case VibeSettingsRow_SpeakerVolume: {
       prv_push_volume_window((SettingsVibePatternsData *)context);
+      return;
+    }
+    case VibeSettingsRow_HourlyChimeSound: {
+      alerts_preferences_set_hourly_chime_sound(
+          !alerts_preferences_get_hourly_chime_sound());
+      settings_menu_mark_dirty(SettingsMenuItemVibrations);
       return;
     }
 #endif
