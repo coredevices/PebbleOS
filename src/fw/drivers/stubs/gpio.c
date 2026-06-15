@@ -1,12 +1,5 @@
 #include "drivers/gpio.h"
 
-void gpio_use(GPIO_TypeDef* GPIOx) {
-
-}
-
-void gpio_release(GPIO_TypeDef* GPIOx) {
-}
-
 void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype) {
 }
 

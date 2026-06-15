@@ -23,18 +23,6 @@ typedef enum {
 
 #endif
 
-#ifdef CONFIG_SOC_NRF52
-
-void gpio_use(uint32_t pin);
-void gpio_release(uint32_t pin);
-
-#else
-
-void gpio_use(GPIO_TypeDef* GPIOx);
-void gpio_release(GPIO_TypeDef* GPIOx);
-
-#endif
-
 //! Initialize a GPIO as an output.
 //!
 //! @param pin_config the BOARD_CONFIG pin configuration struct
