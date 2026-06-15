@@ -186,7 +186,7 @@ static int16_t prv_axis_raw_mg(IMUCoordinateAxis axis, const uint8_t *raw) {
   offset = LIS2DW12->axis_map[axis];
 
   val = LIS2DW12->axis_dir[axis] *
-        (prv_raw_to_s12(&raw[offset * 2U]) * (int16_t)LIS2DW12->scale_mg) /
+        (prv_raw_to_s12(&raw[offset * 2U]) * (int16_t)CONFIG_ACCEL_LIS2DW12_SCALE_MG) /
         (int16_t)LIS2DW12_S12_SCALE_RANGE;
 
   if (LIS2DW12->state->rotated && (axis == AXIS_X || axis == AXIS_Y)) {
@@ -477,20 +477,20 @@ void accel_init(void) {
 
   // Disable ADDR pull-up if requested
   // NOTE: This is an undocumented register (provided by FAE)
-  if (LIS2DW12->disable_addr_pullup) {
-    ret = prv_lis2dw12_read(LIS2DW12_UNDOC, &val, 1);
-    if (!ret) {
-      PBL_LOG_ERR("Failed to read LIS2DW12 register 0x17");
-      return;
-    }
-
-    val |= LIS2DW12_UNDOC_ADDR_PULLUP_DIS;
-    ret = prv_lis2dw12_write(LIS2DW12_UNDOC, &val, 1);
-    if (!ret) {
-      PBL_LOG_ERR("Failed to write LIS2DW12 register 0x17");
-      return;
-    }
+#ifdef CONFIG_ACCEL_LIS2DW12_DISABLE_ADDR_PULLUP
+  ret = prv_lis2dw12_read(LIS2DW12_UNDOC, &val, 1);
+  if (!ret) {
+    PBL_LOG_ERR("Failed to read LIS2DW12 register 0x17");
+    return;
   }
+
+  val |= LIS2DW12_UNDOC_ADDR_PULLUP_DIS;
+  ret = prv_lis2dw12_write(LIS2DW12_UNDOC, &val, 1);
+  if (!ret) {
+    PBL_LOG_ERR("Failed to write LIS2DW12 register 0x17");
+    return;
+  }
+#endif
 
   // Single-data conversion via SLP_MODE_1, latch function IRQ
   val = LIS2DW12_CTRL3_SLP_MODE_SEL_SLP_MODE_1 | LIS2DW12_CTRL3_LIR;
@@ -501,7 +501,7 @@ void accel_init(void) {
   }
 
   // Configure scale
-  switch (LIS2DW12->scale_mg) {
+  switch (CONFIG_ACCEL_LIS2DW12_SCALE_MG) {
     case 2000U:
       val = LIS2DW12_CTRL6_FS_2G;
       break;
@@ -515,7 +515,7 @@ void accel_init(void) {
       val = LIS2DW12_CTRL6_FS_16G;
       break;
     default:
-      PBL_LOG_ERR("Invalid scale: %" PRIu16, LIS2DW12->scale_mg);
+      PBL_LOG_ERR("Invalid scale: %d", CONFIG_ACCEL_LIS2DW12_SCALE_MG);
       return;
   }
 
@@ -526,21 +526,21 @@ void accel_init(void) {
   }
 
   // Configure wake-up threshold defaults
-  val = LIS2DW12_WAKE_UP_DUR_WAKE_DUR(LIS2DW12->wk_dur_default);
+  val = LIS2DW12_WAKE_UP_DUR_WAKE_DUR(CONFIG_ACCEL_LIS2DW12_WK_DUR_DEFAULT);
   ret = prv_lis2dw12_write(LIS2DW12_WAKE_UP_DUR, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write WAKE_UP_DUR register");
     return;
   }
 
-  val = LIS2DW12_WAKE_UP_THS_WK_THS(LIS2DW12->wk_ths_default);
+  val = LIS2DW12_WAKE_UP_THS_WK_THS(CONFIG_ACCEL_LIS2DW12_WK_THS_DEFAULT);
   ret = prv_lis2dw12_write(LIS2DW12_WAKE_UP_THS, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write WAKE_UP_THS register");
     return;
   }
 
-  LIS2DW12->state->wk_ths_curr = LIS2DW12->wk_ths_default;
+  LIS2DW12->state->wk_ths_curr = CONFIG_ACCEL_LIS2DW12_WK_THS_DEFAULT;
 
   // Enable INT1 external interrupt
   exti_configure_pin(LIS2DW12->int1, ExtiTrigger_Rising, prv_lis2dw12_int1_irq_handler);
@@ -590,8 +590,8 @@ void accel_set_num_samples(uint32_t num_samples) {
   }
 
   // Limit to FIFO threshold
-  if (num_samples > LIS2DW12->fifo_threshold) {
-    num_samples = LIS2DW12->fifo_threshold;
+  if (num_samples > CONFIG_ACCEL_LIS2DW12_FIFO_THRESHOLD) {
+    num_samples = CONFIG_ACCEL_LIS2DW12_FIFO_THRESHOLD;
   }
 
   // Disable all INT1 before changing FIFO threshold
@@ -762,7 +762,8 @@ void accel_set_shake_sensitivity_high(bool sensitivity_high) {
     return;
   }
 
-  val = LIS2DW12_WAKE_UP_THS_WK_THS(sensitivity_high ? LIS2DW12->wk_ths_min : LIS2DW12->state->wk_ths_curr);
+  val = LIS2DW12_WAKE_UP_THS_WK_THS(sensitivity_high ? CONFIG_ACCEL_LIS2DW12_WK_THS_MIN
+                                                     : LIS2DW12->state->wk_ths_curr);
   ret = prv_lis2dw12_write(LIS2DW12_WAKE_UP_THS, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write WAKE_UP_THS register");
@@ -784,8 +785,8 @@ void accel_set_shake_sensitivity_percent(uint8_t percent) {
 
   // Reverse mapping: 0 = max sensitivity (MIN threshold), 100 = min sensitivity (MAX threshold)
   // [0, 100] -> [wk_ths_max, wk_ths_min]
-  raw = LIS2DW12->wk_ths_max -
-        (percent * (LIS2DW12->wk_ths_max - LIS2DW12->wk_ths_min)) / 100U;
+  raw = CONFIG_ACCEL_LIS2DW12_WK_THS_MAX -
+        (percent * (CONFIG_ACCEL_LIS2DW12_WK_THS_MAX - CONFIG_ACCEL_LIS2DW12_WK_THS_MIN)) / 100U;
 
   val = LIS2DW12_WAKE_UP_THS_WK_THS(raw);
   ret = prv_lis2dw12_write(LIS2DW12_WAKE_UP_THS, &val, 1);
