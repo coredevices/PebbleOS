@@ -90,6 +90,8 @@ if bld.env.CONFIG_SERVICE_PHONE_CALL:
     bld.recurse('phone_call')
 if bld.env.CONFIG_SERVICE_PHONE_PP:
     bld.recurse('phone_pp')
+if bld.env.CONFIG_SERVICE_PIN_LOCK:
+    bld.recurse('pin_lock')
 if bld.env.CONFIG_SERVICE_PING:
     bld.recurse('ping')
 if bld.env.CONFIG_SERVICE_POLL_REMOTE:

@@ -43,6 +43,8 @@
 #include "process_management/process_manager.h"
 #include "process_management/worker_manager.h"
 #include "resource/resource_ids.auto.h"
+#include "services/pin_lock/pin_lock.h"
+
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/battery/battery_state.h"
 #include "pbl/services/battery/battery_monitor.h"
@@ -559,6 +561,10 @@ static NOINLINE void prv_launcher_main_loop_init(void) {
   i18n_set_resource(shell_prefs_get_language_resource_id());
 #endif
   app_manager_start_first_app();
+
+#ifndef CONFIG_RECOVERY_FW
+  pin_lock_init();
+#endif
 
 #ifndef CONFIG_RECOVERY_FW
   // Launch the default worker. If any of the buttons are down, or we hit 2 strikes already,

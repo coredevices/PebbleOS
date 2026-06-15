@@ -309,4 +309,10 @@ WatchInfoColor sys_watch_info_get_color(void);
 //! choice and avoid disturbing actions such as vibration if quiet time is active.
 //! @return True, if Quiet Time is currently active.
 bool sys_do_not_disturb_is_active(void);
+
+//! Re-read the PIN lock config from flash into the live kernel-side state.
+//! Called by the Settings app after it changes the config or PIN in flash.
+void sys_pin_lock_reload_config(void);
+//! Lock the watch now (no-op if the PIN lock feature is disabled).
+void sys_pin_lock_lock_now(void);
 //! @} // end addtogroup Preferences
