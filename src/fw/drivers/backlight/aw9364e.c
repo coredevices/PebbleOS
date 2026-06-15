@@ -22,7 +22,7 @@
 #define AW9364E_OFF_TIME_US 2600U
 
 void backlight_init(void) {
-  gpio_output_init(&AW9364E.gpio, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_init(&AW9364E.gpio, GPIO_OType_PP);
 }
 
 void backlight_set_brightness(uint8_t brightness) {

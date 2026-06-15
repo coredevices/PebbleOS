@@ -148,10 +148,10 @@ void display_init(void) {
   nrfx_err_t err = nrfx_spim_init(&BOARD_CONFIG_DISPLAY.spi, &config, prv_spim_evt_handler, NULL);
   PBL_ASSERTN(err == NRFX_SUCCESS);
 
-  gpio_output_init(&BOARD_CONFIG_DISPLAY.cs, GPIO_OType_PP, GPIO_Speed_50MHz);
+  gpio_output_init(&BOARD_CONFIG_DISPLAY.cs, GPIO_OType_PP);
 
-  gpio_output_init(&BOARD_CONFIG_DISPLAY.on_ctrl, (GPIOOType_TypeDef)BOARD_CONFIG_DISPLAY.on_ctrl_otype,
-                   GPIO_Speed_50MHz);
+  gpio_output_init(&BOARD_CONFIG_DISPLAY.on_ctrl,
+                   (GPIOOType_TypeDef)BOARD_CONFIG_DISPLAY.on_ctrl_otype);
   gpio_output_set(&BOARD_CONFIG_DISPLAY.on_ctrl, true);
 
   prv_extcomin_init();

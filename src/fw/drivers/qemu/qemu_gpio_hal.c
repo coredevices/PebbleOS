@@ -21,11 +21,9 @@ void gpio_release(GPIO_TypeDef *gpios) {
   (void)gpios;
 }
 
-void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype,
-                      GPIOSpeed_TypeDef speed) {
+void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype) {
   (void)pin_config;
   (void)otype;
-  (void)speed;
 }
 
 void gpio_output_set(const OutputConfig *pin_config, bool asserted) {
@@ -43,10 +41,9 @@ void gpio_output_set(const OutputConfig *pin_config, bool asserted) {
 }
 
 void gpio_af_init(const AfConfig *af_config, GPIOOType_TypeDef otype,
-                  GPIOSpeed_TypeDef speed, GPIOPuPd_TypeDef pupd) {
+                  GPIOPuPd_TypeDef pupd) {
   (void)af_config;
   (void)otype;
-  (void)speed;
   (void)pupd;
 }
 

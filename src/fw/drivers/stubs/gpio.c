@@ -7,15 +7,14 @@ void gpio_use(GPIO_TypeDef* GPIOx) {
 void gpio_release(GPIO_TypeDef* GPIOx) {
 }
 
-void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype,
-                      GPIOSpeed_TypeDef speed) {
+void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype) {
 }
 
 void gpio_output_set(const OutputConfig *pin_config, bool asserted) {
 }
 
 void gpio_af_init(const AfConfig *af_config, GPIOOType_TypeDef otype,
-                  GPIOSpeed_TypeDef speed, GPIOPuPd_TypeDef pupd) {
+                  GPIOPuPd_TypeDef pupd) {
 }
 
 void gpio_af_configure_low_power(const AfConfig *af_config) {

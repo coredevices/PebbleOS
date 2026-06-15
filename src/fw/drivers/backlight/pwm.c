@@ -15,7 +15,7 @@ static const uint32_t PWM_OUTPUT_FREQUENCY_HZ = 256;
 
 void backlight_init(void) {
   if (BACKLIGHT_PWM.ctl.gpio != NULL) {
-    gpio_output_init(&BACKLIGHT_PWM.ctl, GPIO_OType_PP, GPIO_Speed_2MHz);
+    gpio_output_init(&BACKLIGHT_PWM.ctl, GPIO_OType_PP);
     gpio_output_set(&BACKLIGHT_PWM.ctl, false);
   }
 
