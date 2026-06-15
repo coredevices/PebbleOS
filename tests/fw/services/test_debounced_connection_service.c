@@ -108,6 +108,10 @@ void test_debounced_connection_service__connected_to_disconnected(void) {
 
   check_connected();
 
+  // In production the session is closed before the disconnect event fires.
+  fake_transport_set_connected(s_transport, false);
+  s_session = NULL;
+
   //! Get disconnected event
   prv_send_connection_event(false);
 

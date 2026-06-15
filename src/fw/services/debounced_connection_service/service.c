@@ -48,6 +48,11 @@ static void prv_put_debounced_connection_event(DebounceConnection conn_id) {
 
 static void prv_handle_disconnection_debounced(void *data) {
   DebounceConnection conn_id = (DebounceConnection)data;
+  // If another session of the same type is still active, stay connected.
+  // This prevents a spurious disconnect when one phone drops but another remains linked.
+  if (conn_id == MobileAppDebounce && comm_session_get_system_session() != NULL) {
+    return;
+  }
   s_debounced_state_is_connected[conn_id] = false;
   prv_put_debounced_connection_event(conn_id);
 #ifndef CONFIG_RECOVERY_FW

@@ -217,6 +217,11 @@ static bool prv_is_gateway(Transport *transport) {
   return kernel_le_client_is_gateway_slot(client->slot);
 }
 
+static int prv_get_phone_slot(Transport *transport) {
+  PPoGATTClient *client = (PPoGATTClient *)transport;
+  return (int)client->slot;
+}
+
 static const TransportImplementation s_ppogatt_transport_implementation = {
   .send_next = &ppogatt_send_next,
   .close = &ppogatt_close,
@@ -225,6 +230,7 @@ static const TransportImplementation s_ppogatt_transport_implementation = {
   .get_uuid = prv_get_uuid,
   .get_type = prv_get_type,
   .is_gateway = prv_is_gateway,
+  .get_phone_slot = prv_get_phone_slot,
 };
 
 // -------------------------------------------------------------------------------------------------
