@@ -9,34 +9,11 @@
 
 #include <stdint.h>
 
-static RCC_MODULE_TYPE prv_get_gpio_rcc_module(GPIO_TypeDef *GPIOx) {
-  if (GPIOx == hwp_gpio1) {
-    return RCC_MOD_GPIO1;
-  } else if (GPIOx == hwp_gpio2) {
-    return RCC_MOD_GPIO2;
-  } else {
-    WTF;
-  }
-  return 0;
-}
-
-void gpio_use(GPIO_TypeDef *GPIOx) {
-  RCC_MODULE_TYPE rcc_module = prv_get_gpio_rcc_module(GPIOx);
-  portENTER_CRITICAL();
-  HAL_RCC_EnableModule(rcc_module);
-  portEXIT_CRITICAL();
-}
-
-void gpio_release(GPIO_TypeDef *GPIOx) {
-  RCC_MODULE_TYPE rcc_module = prv_get_gpio_rcc_module(GPIOx);
-  portENTER_CRITICAL();
-  HAL_RCC_DisableModule(rcc_module);
-  portEXIT_CRITICAL();
-}
-
 void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype) {
-  gpio_use(pin_config->gpio);
   GPIO_InitTypeDef GPIO_InitStruct;
+
+  HAL_RCC_EnableModule(RCC_MOD_GPIO1);
+
   GPIO_InitStruct.Pin = pin_config->gpio_pin;
   if (otype == GPIO_OType_OD) {
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
@@ -56,8 +33,10 @@ void gpio_input_init(const InputConfig *input_cfg) {
 }
 
 void gpio_input_init_pull_up_down(const InputConfig *input_cfg, GPIOPuPd_TypeDef pupd) {
-  gpio_use(input_cfg->gpio);
   GPIO_InitTypeDef GPIO_InitStruct;
+
+  HAL_RCC_EnableModule(RCC_MOD_GPIO1);
+
   GPIO_InitStruct.Pin = input_cfg->gpio_pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
