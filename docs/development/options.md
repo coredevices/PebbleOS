@@ -53,8 +53,20 @@ Keep in mind that some targets may not currently compile as-is.
 
 ## Flashing
 
-:`--openocd-jtag`:
-  Choose alternative flash/debug probe when using OpenOCD runner.
+The `flash`, `run` and `debug` commands talk to a connected device through a
+*runner*. Each board declares its supported runners in its board manifest
+(e.g. `boards/<board>/<board>.yml`) and the first one is used by default. For
+the OpenOCD runner, the probe and target configuration lives in the board's
+`support/openocd.cfg`.
+
+:`--runner`:
+  Override the board's default runner for `flash`/`run`/`debug`.
+
+:`--tty`:
+  Serial port used by the `sftool` runner.
+
+:`--resources`:
+  Also flash system resources alongside the firmware (`sftool` runner).
 
 ## Logging
 

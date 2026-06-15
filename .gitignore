@@ -37,7 +37,6 @@ a.out
 tools/font/ttf
 roundrect.h
 log.txt
-openocd.cfg
 .DS_Store
 tools/bitmaps/*.h
 tools/bitmaps/*.pbi
