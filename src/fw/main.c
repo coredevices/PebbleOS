@@ -128,37 +128,6 @@ static void print_splash_screen(void)
   PBL_LOG_ALWAYS(" ");
 }
 
-#ifdef DUMP_GPIO_CFG_STATE
-static void dump_gpio_configuration_state(void) {
-  char name[2] = { 0 };
-  name[0] = 'A'; // GPIO Port A
-
-  GPIO_TypeDef *gpio_pin;
-
-  for (uint32_t gpio_addr = (uint32_t)GPIOA; gpio_addr <= (uint32_t)GPIOI;
-       gpio_addr += 0x400) {
-    gpio_pin = (GPIO_TypeDef *)gpio_addr;
-
-    gpio_use(gpio_pin);
-    uint32_t mode = gpio_pin->MODER;
-    gpio_release(gpio_pin);
-
-    uint16_t pin_cfg_mask = 0;
-    char buf[80];
-    for (int pin = 0; pin < 16; pin++) {
-      if ((mode & GPIO_MODER_MODER0) != GPIO_Mode_AN) {
-        pin_cfg_mask |= (0x1 << pin);
-      }
-      mode >>= 2;
-    }
-
-    dbgserial_putstr_fmt(buf, sizeof(buf), "Non Analog P%s cfg: 0x%"PRIx16,
-      name, (int)pin_cfg_mask);
-    name[0]++;
-  }
-}
-#endif /* DUMP_GPIO_CFG_STATE */
-
 int main(void) {
   soc_early_init();
 
@@ -425,11 +394,6 @@ static NOINLINE void prv_main_task_init(void) {
   // Initialize button driver at the last moment to prevent "system on" button press from
   // entering the kernel event queue.
   debounced_button_init();
-
-#ifdef DUMP_GPIO_CFG_STATE
-  // at this point everything should be configured!
-  dump_gpio_configuration_state();
-#endif
 
   task_watchdog_resume();
 }
