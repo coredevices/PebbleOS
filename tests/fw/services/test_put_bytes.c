@@ -990,7 +990,8 @@ void test_put_bytes__session_closed_after_fw_init(void) {
 
   PebbleCommSessionEvent app_event = {
     .is_open = false,
-    .is_system = true
+    .is_system = true,
+    .is_gateway = true,
   };
 
   // Close the BT session, have put_bytes react
@@ -1006,7 +1007,8 @@ void test_put_bytes__session_closed_after_expect_init(void) {
 
   PebbleCommSessionEvent app_event = {
     .is_open = false,
-    .is_system = true
+    .is_system = true,
+    .is_gateway = true,
   };
 
   // Close the BT session, have put_bytes react
