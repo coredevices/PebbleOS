@@ -289,6 +289,14 @@
       ]
     },
     {
+      "id": -192,
+      "enum": "ACCEL_DEMO",
+      "md_fn": "accel_demo_get_info",
+      "ifdefs": [
+        "CONFIG_DEMO_APP_ACCEL_DEMO"
+      ]
+    },
+    {
       "id": -43,
       "enum": "PERSIST",
       "md_fn": "persist_app_get_info",
