@@ -98,10 +98,10 @@ static bool s_touch_enabled = true;
 static bool s_touch_navigation_menu_enabled = true;
 
 #define PREF_KEY_CHARGING_BLINK_WHEN_FULL "chargingBlinkWhenFull"
-static bool s_charging_blink_when_full = true;
+static bool s_charging_blink_when_full = false;
 
 #define PREF_KEY_CHARGING_VIBE_WHEN_FULL "chargingVibeWhenFull"
-static bool s_charging_vibe_when_full = true;
+static bool s_charging_vibe_when_full = false;
 
 #define PREF_KEY_MOTION_SENSITIVITY "motionSensitivity"
 static uint8_t s_motion_sensitivity = 55; // Default to Medium
