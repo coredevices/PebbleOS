@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "drivers/imu/lis2dw12/lis2dw12.h"
+#include "drivers/imu/lsm6dso/lsm6dso.h"
 #include "drivers/pmic/npm1300.h"
 #include "drivers/vibe/vibe_aw86225.h"
 #include "drivers/touch/cst816/touch_sensor_definitions.h"
@@ -20,8 +20,7 @@ extern QSPIPort * const QSPI;
 extern QSPIFlash * const QSPI_FLASH;
 extern I2CBus *const I2C1_BUS;
 extern I2CBus *const I2C2_BUS;
-extern const LIS2DW12Config *const LIS2DW12;
-extern I2CSlavePort *const I2C_LSM6DSO;
+extern const LSM6DSOConfig *const LSM6DSO;
 extern I2CSlavePort * const I2C_MMC5603NJ;
 extern I2CSlavePort * const I2C_NPM1300;
 extern I2CSlavePort *const I2C_AW86225;

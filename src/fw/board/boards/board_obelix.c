@@ -344,17 +344,13 @@ I2CBus *const I2C2_BUS = &s_i2c_bus_2;
 
 IRQ_MAP(I2C2, i2c_irq_handler, I2C2_BUS);
 
-static LIS2DW12State s_lis2dw12_state;
+static LSM6DSOState s_lsm6dso_state;
 
-static const LIS2DW12Config s_lis2dw12_config = {
-    .state = &s_lis2dw12_state,
+static const LSM6DSOConfig s_lsm6dso_config = {
+    .state = &s_lsm6dso_state,
     .i2c = {
         .bus = &s_i2c_bus_2,
-#if defined(CONFIG_BOARD_OBELIX_DVT) || defined(CONFIG_BOARD_OBELIX_BB2)
-        .address = 0x18,
-#else
-        .address = 0x19,
-#endif
+        .address = 0x6a,
     },
     .int1 = {
       .peripheral = hwp_gpio1,
@@ -373,26 +369,19 @@ static const LIS2DW12Config s_lis2dw12_config = {
     },
 #else
     .axis_map = {
-        [AXIS_X] = 1,
-        [AXIS_Y] = 0,
+        [AXIS_X] = 0,
+        [AXIS_Y] = 1,
         [AXIS_Z] = 2,
     },
     .axis_dir = {
         [AXIS_X] = -1,
         [AXIS_Y] = 1,
-        [AXIS_Z] = -1,
+        [AXIS_Z] = 1,
     },
 #endif
 };
 
-const LIS2DW12Config *const LIS2DW12 = &s_lis2dw12_config;
-
-static const I2CSlavePort s_i2c_lsm6dso = {
-    .bus = &s_i2c_bus_2,
-    .address = 0x6a,
-};
-
-I2CSlavePort *const I2C_LSM6DSO = &s_i2c_lsm6dso;
+const LSM6DSOConfig *const LSM6DSO = &s_lsm6dso_config;
 
 static const I2CSlavePort s_i2c_mmc5603nj = {
     .bus = &s_i2c_bus_2,
