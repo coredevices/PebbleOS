@@ -197,12 +197,6 @@ void accel_init(void) {
   s_timer_id = new_timer_create();
 }
 
-void accel_power_up(void) {
-}
-
-void accel_power_down(void) {
-}
-
 uint32_t accel_set_sampling_interval(uint32_t interval_us) {
   mutex_lock(s_accel_mutex);
   {
