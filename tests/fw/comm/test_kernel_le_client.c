@@ -19,9 +19,32 @@
 #include "stubs_passert.h"
 #include "stubs_pbl_malloc.h"
 #include "stubs_rand_ptr.h"
+#include "stubs_regular_timer.h"
 #include "stubs_rtc.h"
 
+#include "comm/ble/gap_le_connection.h"
 #include "comm/ble/kernel_le_client/multi_phone.h"
+#include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
+#include "popups/gateway_switch_popup.h"
+
+GAPLEConnection *gap_le_connection_by_device(const BTDeviceInternal *device) {
+  return NULL;
+}
+
+void gap_le_connection_copy_device_name(const GAPLEConnection *connection,
+                                        char *name_out, size_t namelen) {
+}
+
+bool bt_persistent_storage_get_active_gateway(BTBondingID *bonding_out,
+                                              BtPersistBondingType *type_out) {
+  return false;
+}
+
+void bt_persistent_storage_set_active_gateway(BTBondingID bonding) {
+}
+
+void gateway_switch_popup_show(BTBondingID bonding_id, const char *device_name) {
+}
 
 void ams_create(void) {
 }
