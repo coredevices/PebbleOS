@@ -17,15 +17,6 @@ elif bld.env.CONFIG_VIBE_DRV2604:
         'driver_periph_config',
         'pbl_includes',
     ])
-elif bld.env.CONFIG_VIBE_PWM:
-    sources.append('vibe.c')
-    use.extend([
-        'driver_gpio',
-        'driver_periph_config',
-        'driver_pwm',
-        'freertos',
-        'pbl_includes',
-    ])
 
 bld.objects(
     name='driver_vibe',
