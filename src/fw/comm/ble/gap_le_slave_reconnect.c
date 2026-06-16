@@ -19,6 +19,8 @@
 
 #include <btutil/bt_uuid.h>
 
+PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
+
 //! Reference to the reconnection advertising job.
 //! bt_lock() needs to be taken before accessing this variable.
 static GAPLEAdvertisingJobRef s_reconnect_advert_job;

@@ -12,6 +12,8 @@
 
 #include "nimble_type_conversions.h"
 
+PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
+
 #define HRM_SERVICE_UUID (0x180D)
 #define HRM_MEASUREMENT_UUID (0x2A37)
 #define HRM_BODY_SENSOR_LOCATION_UUID (0x2A38)
@@ -122,13 +124,13 @@ void bt_driver_hrm_service_handle_measurement(const BleHrmServiceMeasurement *me
 
     struct os_mbuf *om = ble_hs_mbuf_from_flat(payload, payload_size);
     if (!om) {
-      PBL_LOG_D_ERR(LOG_DOMAIN_BT, "Failed to allocate HRM measurement notification");
+      PBL_LOG_ERR("Failed to allocate HRM measurement notification");
       return;
     }
 
     const int rc = ble_gatts_notify_custom(conn_handle, s_hrm_measurement_handle, om);
     if (rc != 0) {
-      PBL_LOG_D_ERR(LOG_DOMAIN_BT, "Failed to notify HRM measurement: 0x%04x", (uint16_t)rc);
+      PBL_LOG_ERR("Failed to notify HRM measurement: 0x%04x", (uint16_t)rc);
     }
   }
 }
@@ -142,7 +144,7 @@ void bt_driver_hrm_service_handle_subscription(uint16_t conn_handle, uint16_t at
   struct ble_gap_conn_desc desc;
   const int rc = ble_gap_conn_find(conn_handle, &desc);
   if (rc != 0) {
-    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "Failed to find HRM subscriber connection: 0x%04x",
+    PBL_LOG_ERR("Failed to find HRM subscriber connection: 0x%04x",
                   (uint16_t)rc);
     return;
   }

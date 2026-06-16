@@ -151,7 +151,9 @@ void ble_hrm_handle_activity_prefs_heart_rate_is_enabled(bool is_enabled) {
   if (!is_enabled && !s_ble_hrm_workout_mode) {
     prv_reset_subscriptions();
   }
-  bt_driver_hrm_service_enable(is_enabled || s_ble_hrm_workout_mode);
+  // BLE HRM service is only enabled during workout mode (s_ble_hrm_workout_mode).
+  // The heart rate preference controls on-watch HR monitoring, not BLE advertising.
+  bt_driver_hrm_service_enable(s_ble_hrm_workout_mode);
 }
 
 static void prv_put_sharing_state_updated_event(int subscription_count) {
@@ -311,10 +313,8 @@ void ble_hrm_set_workout_mode(bool enabled) {
     // Stop advertising the HRM service
     gap_le_slave_reconnect_hrm_stop();
 
-    // If the heart rate pref is disabled and no sharing is active, disable the HRM service
-    if (!activity_prefs_heart_rate_is_enabled() && s_ble_hrm_subscription_count == 0) {
-      bt_driver_hrm_service_enable(false);
-    }
+    // BLE HRM service is only for workout sharing; disable when workout ends.
+    bt_driver_hrm_service_enable(false);
   }
 
   bt_unlock();
