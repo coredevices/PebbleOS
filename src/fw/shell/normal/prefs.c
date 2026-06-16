@@ -836,8 +836,8 @@ void shell_prefs_init(void) {
   s_backlight_color = BOARD_CONFIG.backlight_default_color;
 #endif
   // Use board-specific default motion sensitivity if provided (non-zero)
-  if (BOARD_CONFIG_ACCEL.accel_config.default_motion_sensitivity != 0) {
-    s_motion_sensitivity = BOARD_CONFIG_ACCEL.accel_config.default_motion_sensitivity;
+  if (BOARD_CONFIG_ACCEL.default_motion_sensitivity != 0) {
+    s_motion_sensitivity = BOARD_CONFIG_ACCEL.default_motion_sensitivity;
   }
   s_mutex = mutex_create();
 

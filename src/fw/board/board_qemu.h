@@ -139,27 +139,8 @@ typedef struct {
   const uint16_t battery_capacity_hours;
 } BoardConfigPower;
 
-typedef enum {
-  AccelThresholdLow,
-  AccelThresholdHigh,
-  AccelThreshold_Num,
-} AccelThreshold;
-
 typedef struct {
-  int axes_offsets[3];
-  bool axes_inverts[3];
-  uint32_t shake_thresholds[AccelThreshold_Num];
-  uint32_t double_tap_threshold;
-  uint8_t tap_shock;
-  uint8_t tap_quiet;
-  uint8_t tap_dur;
   uint8_t default_motion_sensitivity;
-} AccelConfig;
-
-typedef struct {
-  const AccelConfig accel_config;
-  const InputConfig accel_int_gpios[2];
-  const ExtiConfig accel_ints[2];
 } BoardConfigAccel;
 
 typedef struct {
