@@ -31,7 +31,7 @@ static void prv_click_cb(ClickRecognizerRef recognizer, void *context) {
     kernel_le_client_set_active_gateway(args->bonding_id);
   }
   s_is_on_screen = false;
-  task_free(args);
+  kernel_free(args);
 }
 
 static void prv_click_config_provider(void *context) {
@@ -44,7 +44,7 @@ static void prv_show_kernelmain_cb(void *ctx) {
   GatewaySwitchArgs *args = (GatewaySwitchArgs *)ctx;
 
   if (s_is_on_screen) {
-    task_free(args);
+    kernel_free(args);
     return;
   }
   s_is_on_screen = true;
