@@ -32,8 +32,15 @@
 #define TEXT_FONT      (fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD))
 #endif
 
-#define TEXT_LEFT_MARGIN_PX  (PBL_IF_RECT_ELSE(6, 0))
-#define TEXT_RIGHT_MARGIN_PX (PBL_IF_RECT_ELSE(6, 0))
+// On taller round displays, inset the text box so the larger font still wraps
+// to two lines instead of running edge-to-edge against the round bezel.
+#if PBL_DISPLAY_HEIGHT >= 200
+#define TEXT_ROUND_MARGIN_PX (28)
+#else
+#define TEXT_ROUND_MARGIN_PX (0)
+#endif
+#define TEXT_LEFT_MARGIN_PX  (PBL_IF_RECT_ELSE(6, TEXT_ROUND_MARGIN_PX))
+#define TEXT_RIGHT_MARGIN_PX (PBL_IF_RECT_ELSE(6, TEXT_ROUND_MARGIN_PX))
 #define TEXT_FLOW_INSET_PX   (PBL_IF_RECT_ELSE(0, 8))
 #define TEXT_LINE_HEIGHT_PX  (fonts_get_font_height(TEXT_FONT))
 #define TEXT_MAX_HEIGHT_PX   ((2 * TEXT_LINE_HEIGHT_PX) + 8) // 2 line + some space for descenders

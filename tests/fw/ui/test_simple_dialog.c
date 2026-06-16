@@ -276,12 +276,8 @@ void test_simple_dialog__does_text_fit(void) {
 
   msg = "This error is too long to fit on any display shape :(";
   text_fits = simple_dialog_does_text_fit(msg, DISP_FRAME.size, icon_size, use_status_bar);
-#if PBL_DISPLAY_WIDTH >= 200
-  // With the larger 28-point font, this longer string overflows the obelix
-  // (rect) layout; gabbro's round display still fits it because screen text
-  // flow wraps it within the 2-line cap.
-  PBL_IF_RECT_ELSE(cl_assert(!text_fits), cl_assert(text_fits));
-#else
+  // With the larger 28-point font (and the round text-box inset that keeps it
+  // wrapping to two lines), this string overflows the 2-line cap on every
+  // display shape, living up to its name.
   cl_assert(!text_fits);
-#endif
 }
