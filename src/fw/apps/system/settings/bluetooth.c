@@ -356,13 +356,20 @@ static void draw_stored_remote_item(GContext *ctx, const Layer *cell_layer,
 
   // Add ellipsis if the name might have been cut off by the mobile
   const char ellipsis[] = UTF8_ELLIPSIS_STRING;
+  const char gateway_suffix[] = " (G)";
   const size_t max_name_size = BT_DEVICE_NAME_BUFFER_SIZE - 2;
   const size_t name_size = strnlen(remote->name, BT_DEVICE_NAME_BUFFER_SIZE);
-  char *remote_name = task_zalloc_check(max_name_size + sizeof(ellipsis));
+  char *remote_name = task_zalloc_check(max_name_size + sizeof(ellipsis) + sizeof(gateway_suffix));
   strncpy(remote_name, remote->name, name_size);
   if (name_size > max_name_size) {
     const size_t ellipsis_start_offset = utf8_get_size_truncate(remote_name, name_size);
     strncpy(&remote_name[ellipsis_start_offset], ellipsis, sizeof(ellipsis));
+  }
+
+  const bool is_gateway = (remote->ble.connection != NULL &&
+                           remote->ble.connection == gap_le_connection_get_gateway());
+  if (is_gateway) {
+    strncat(remote_name, gateway_suffix, sizeof(gateway_suffix));
   }
 
   const char *is_sharing_heart_rate =
