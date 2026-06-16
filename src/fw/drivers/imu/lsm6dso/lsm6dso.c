@@ -616,14 +616,6 @@ void accel_init(void) {
   LSM6DSO->state->initialized = true;
 }
 
-void accel_power_up(void) {
-  // Driver automatically keeps the sensor active as needed
-}
-
-void accel_power_down(void) {
-  // Driver automatically keeps the sensor in lowest power mode
-}
-
 uint32_t accel_set_sampling_interval(uint32_t interval_us) {
   if (!LSM6DSO->state->initialized) {
     // Just pretend we can achieve any requested interval
