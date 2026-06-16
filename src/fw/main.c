@@ -24,6 +24,7 @@
 #include "drivers/battery.h"
 #include "drivers/display/display.h"
 #include "drivers/gpio.h"
+#include "drivers/gyro.h"
 #include "drivers/hrm.h"
 #include "drivers/mag.h"
 #include "drivers/mic.h"
@@ -228,6 +229,9 @@ static void init_drivers(void) {
 #endif
 
   accel_init();
+#ifdef CONFIG_GYRO
+  gyro_init();
+#endif
 #ifdef CONFIG_MAG
   mag_init();
 #endif
