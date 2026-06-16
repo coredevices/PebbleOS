@@ -594,6 +594,12 @@ static void prv_handle_reset_complete(PPoGATTClient *client, const PPoGATTPacket
                                            &s_ppogatt_transport_implementation,
                                            client->destination);
   if (!session) {
+    PBL_LOG_WRN("comm_session_open failed for slot %u, scheduling rediscovery",
+                (unsigned)client->slot);
+    if (!s_rediscovery_requested[client->slot]) {
+      s_rediscovery_requested[client->slot] = true;
+      prv_request_meta_rediscovery(client);
+    }
     prv_delete_client(client, false /* is_disconnected */, DeleteReason_CouldntOpenCommSession);
     return;
   }
