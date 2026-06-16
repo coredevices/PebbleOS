@@ -60,6 +60,7 @@ static BTBondingID s_gateway_bonding_ids[MAX_PHONE_CONNECTIONS];
 static uint8_t s_gateway_bonding_count = 0;
 
 static BTBondingID s_pinned_gateway_bonding = BT_BONDING_ID_INVALID;
+static BTBondingID s_active_gateway_bonding = BT_BONDING_ID_INVALID;
 
 static RegularTimerInfo s_gateway_absent_timer;
 static BTBondingID s_gateway_absent_secondary_bonding = BT_BONDING_ID_INVALID;
@@ -67,6 +68,10 @@ static char s_gateway_absent_device_name[BT_DEVICE_NAME_BUFFER_SIZE];
 
 bool kernel_le_client_is_gateway_slot(PhoneSlot slot) {
   return s_gateway_slot == slot;
+}
+
+BTBondingID kernel_le_client_get_gateway_bonding(void) {
+  return s_active_gateway_bonding;
 }
 
 static bool prv_is_gateway_bonding(BTBondingID bonding_id) {
@@ -593,11 +598,13 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
         PBL_LOG_DBG("Pinned gateway taking over slot");
       }
       s_gateway_slot = slot;
+      s_active_gateway_bonding = event->bonding_id;
       PBL_LOG_DBG("Pinned gateway slot: %u", slot);
       prv_cancel_gateway_absent_timer();
     } else if (s_gateway_slot == PHONE_SLOT_INVALID &&
                prv_is_gateway_bonding(event->bonding_id)) {
       s_gateway_slot = slot;
+      s_active_gateway_bonding = event->bonding_id;
       PBL_LOG_DBG("Gateway slot: %u", slot);
     }
 
@@ -629,6 +636,7 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
     if (slot != PHONE_SLOT_INVALID) {
       if (s_gateway_slot == slot) {
         s_gateway_slot = PHONE_SLOT_INVALID;
+        s_active_gateway_bonding = BT_BONDING_ID_INVALID;
       }
       ppogatt_destroy(slot);
       ancs_destroy(slot);
@@ -673,6 +681,7 @@ void kernel_le_client_set_active_gateway(BTBondingID bonding_id) {
     if (conn->bonding_id == bonding_id) {
       if (s_gateway_slot != slot) {
         s_gateway_slot = slot;
+        s_active_gateway_bonding = bonding_id;
         PBL_LOG_DBG("Gateway switched to slot %u by user", slot);
         if (s_ams_slot != slot) {
           if (s_ams_slot != PHONE_SLOT_INVALID) {
