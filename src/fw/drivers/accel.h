@@ -106,6 +106,14 @@ uint32_t accel_get_sampling_interval(void);
 //! @see accel_cb_new_sample
 void accel_set_num_samples(uint32_t num_samples);
 
+//! Returns the maximum number of samples the driver can batch.
+//!
+//! This is the depth of the hardware FIFO and the upper bound on the value
+//! that can be passed to accel_set_num_samples().
+//!
+//! @see accel_set_num_samples
+uint32_t accel_get_max_num_samples(void);
+
 //! Peek at the most recent accelerometer sample.
 //!
 //! @param[out] data Pointer to a buffer to write accelerometer data

@@ -581,6 +581,10 @@ uint32_t accel_get_sampling_interval(void) {
   return LIS2DW12->state->sampling_interval_us;
 }
 
+uint32_t accel_get_max_num_samples(void) {
+  return LIS2DW12_FIFO_SIZE;
+}
+
 void accel_set_num_samples(uint32_t num_samples) {
   bool ret;
   uint8_t val;
