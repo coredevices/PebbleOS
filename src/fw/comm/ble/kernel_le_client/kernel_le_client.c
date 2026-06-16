@@ -19,15 +19,10 @@
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 
-#include "pbl/services/regular_timer.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/likely.h"
 #include "util/size.h"
-
-#ifndef CONFIG_RECOVERY_FW
-#include "popups/gateway_switch_popup.h"
-#endif
 
 #include "comm/ble/gap_le_advert.h"
 #include "comm/ble/gap_le_connect.h"
@@ -61,10 +56,6 @@ static uint8_t s_gateway_bonding_count = 0;
 
 static BTBondingID s_pinned_gateway_bonding = BT_BONDING_ID_INVALID;
 static BTBondingID s_active_gateway_bonding = BT_BONDING_ID_INVALID;
-
-static RegularTimerInfo s_gateway_absent_timer;
-static BTBondingID s_gateway_absent_secondary_bonding = BT_BONDING_ID_INVALID;
-static char s_gateway_absent_device_name[BT_DEVICE_NAME_BUFFER_SIZE];
 
 bool kernel_le_client_is_gateway_slot(PhoneSlot slot) {
   return s_gateway_slot == slot;
@@ -525,46 +516,6 @@ log_error:
           client);
 }
 
-static void prv_gateway_absent_timer_cb(void *unused) {
-  regular_timer_remove_callback(&s_gateway_absent_timer);
-  if (s_gateway_slot != PHONE_SLOT_INVALID ||
-      s_gateway_absent_secondary_bonding == BT_BONDING_ID_INVALID) {
-    return;
-  }
-  int remaining = 0;
-  for (PhoneSlot s = 0; s < MAX_PHONE_CONNECTIONS; s++) {
-    if (s_phone_slots[s].active) remaining++;
-  }
-  if (remaining == 0) return;
-#ifndef CONFIG_RECOVERY_FW
-  gateway_switch_popup_show(s_gateway_absent_secondary_bonding,
-                            s_gateway_absent_device_name);
-#endif
-}
-
-static void prv_start_gateway_absent_timer(PhoneSlot secondary_slot) {
-  GAPLEConnection *conn = gap_le_connection_by_device(&s_phone_slots[secondary_slot].device);
-  if (conn) {
-    s_gateway_absent_secondary_bonding = conn->bonding_id;
-    gap_le_connection_copy_device_name(conn, s_gateway_absent_device_name,
-                                       sizeof(s_gateway_absent_device_name));
-  } else {
-    s_gateway_absent_secondary_bonding = BT_BONDING_ID_INVALID;
-    s_gateway_absent_device_name[0] = '\0';
-  }
-  if (!regular_timer_is_scheduled(&s_gateway_absent_timer)) {
-    s_gateway_absent_timer = (RegularTimerInfo){ .cb = prv_gateway_absent_timer_cb };
-    regular_timer_add_multiminute_callback(&s_gateway_absent_timer, 5);
-  }
-}
-
-static void prv_cancel_gateway_absent_timer(void) {
-  if (regular_timer_is_scheduled(&s_gateway_absent_timer)) {
-    regular_timer_remove_callback(&s_gateway_absent_timer);
-  }
-  s_gateway_absent_secondary_bonding = BT_BONDING_ID_INVALID;
-}
-
 static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
   PBL_LOG_DBG("PEBBLE_BLE_CONNECTION_EVENT: reason=0x%x, conn=%u, bond=%u",
           event->hci_reason, event->connected, event->bonding_id);
@@ -600,7 +551,14 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
       s_gateway_slot = slot;
       s_active_gateway_bonding = event->bonding_id;
       PBL_LOG_DBG("Pinned gateway slot: %u", slot);
-      prv_cancel_gateway_absent_timer();
+      // Reclaim AMS for the pinned gateway (may have been on secondary fallback).
+      if (s_ams_slot != slot) {
+        if (s_ams_slot != PHONE_SLOT_INVALID) {
+          ams_destroy();
+        }
+        ams_create();
+        s_ams_slot = slot;
+      }
     } else if (s_gateway_slot == PHONE_SLOT_INVALID &&
                prv_is_gateway_bonding(event->bonding_id)) {
       s_gateway_slot = slot;
@@ -660,13 +618,25 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
     }
     if (was_gateway && remaining > 0) {
       for (PhoneSlot s = 0; s < MAX_PHONE_CONNECTIONS; s++) {
-        if (s_phone_slots[s].active) {
-          prv_start_gateway_absent_timer(s);
-          break;
+        if (!s_phone_slots[s].active) continue;
+        // Auto-promote without touching persistent storage or s_pinned_gateway_bonding
+        // so the preferred gateway is restored automatically on reconnect.
+        s_gateway_slot = s;
+        GAPLEConnection *conn = gap_le_connection_by_device(&s_phone_slots[s].device);
+        if (conn) {
+          s_active_gateway_bonding = conn->bonding_id;
         }
+        if (s_ams_slot != s) {
+          if (s_ams_slot != PHONE_SLOT_INVALID) {
+            ams_destroy();
+          }
+          ams_create();
+          s_ams_slot = s;
+        }
+        PBL_LOG_DBG("Gateway absent, auto-promoting slot %u", (unsigned)s);
+        break;
       }
     } else if (remaining == 0) {
-      prv_cancel_gateway_absent_timer();
       app_launch_handle_disconnection();
     }
     gap_le_slave_reconnect_start();
