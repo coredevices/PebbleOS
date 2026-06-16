@@ -80,6 +80,54 @@ config ACCEL_LIS2DW12_FIFO_THRESHOLD
 
 endif # ACCEL_LIS2DW12
 
+if ACCEL_LSM6DSO
+
+config ACCEL_LSM6DSO_WK_DUR_DEFAULT
+    int "Default wake duration"
+    range 0 3
+    default 0
+    help
+      Default wake duration applied at init.
+
+config ACCEL_LSM6DSO_WK_THS_MIN
+    int "Minimum wake threshold"
+    range 0 63
+    default 0
+    help
+      Minimum (highest sensitivity) wake-up threshold.
+
+config ACCEL_LSM6DSO_WK_THS_MAX
+    int "Maximum wake threshold"
+    range 0 63
+    default 63
+    help
+      Maximum (lowest sensitivity) wake-up threshold.
+
+config ACCEL_LSM6DSO_WK_THS_DEFAULT
+    int "Default wake threshold"
+    range 0 63
+    default 0
+    help
+      Default wake-up threshold applied at init.
+
+config ACCEL_LSM6DSO_SCALE_MG
+    int "Full-scale range (mg)"
+    default 2000
+    help
+      Acceleration full-scale range in mg (2000, 4000, 8000 or 16000).
+
+config ACCEL_LSM6DSO_FIFO_THRESHOLD
+    int "FIFO threshold"
+    range 0 512
+    default 0
+    help
+      FIFO watermark threshold in samples (up to the 512-sample FIFO depth).
+      The watermark is programmed up to its 9-bit maximum (511). Sizes the
+      static read buffer (7 bytes/sample). Must be chosen so the FIFO can be
+      drained before overrun occurs at the maximum ODR.
+
+endif # ACCEL_LSM6DSO
+
 menuconfig MAG
     bool "Magnetometer"
     help

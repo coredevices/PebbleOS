@@ -1,6 +1,7 @@
 #pragma once
 
 #include "drivers/backlight/pwm.h"
+#include "drivers/imu/lsm6dso/lsm6dso.h"
 #include "drivers/pmic/npm1300.h"
 #include "pbl/services/imu/units.h"
 #include "util/size.h"
@@ -149,6 +150,6 @@ extern I2CSlavePort * const I2C_OPT3001;
 extern I2CSlavePort * const I2C_DA7212;
 extern I2CSlavePort * const I2C_MMC5603NJ;
 extern I2CSlavePort * const I2C_BMP390;
-extern I2CSlavePort * const I2C_LSM6D;
+extern const LSM6DSOConfig *const LSM6DSO;
 
 extern const Npm1300Config NPM1300_CONFIG;

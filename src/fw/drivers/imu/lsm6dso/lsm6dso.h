@@ -1,4 +1,4 @@
-/* SPDX-FileCopyrightText: 2025 Matthew Wardrop */
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #pragma once
@@ -6,40 +6,45 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-//! Bitmask values describing high level driver state for diagnostics.
-enum {
-  LSM6DSO_STATE_FLAG_INITIALIZED = 1u << 0,
-  LSM6DSO_STATE_FLAG_ENABLED = 1u << 1,
-  LSM6DSO_STATE_FLAG_RUNNING = 1u << 2,
-  LSM6DSO_STATE_FLAG_HEALTH_OK = 1u << 3,
-  LSM6DSO_STATE_FLAG_SAMPLE_VALID = 1u << 4,
-};
+#include "drivers/accel.h"
+#include "drivers/rtc.h"
+#include "pbl/services/regular_timer.h"
 
-typedef struct {
-  int16_t last_sample_mg[3];
-  uint32_t last_sample_age_ms;
-  uint32_t last_successful_read_age_ms;
-  uint32_t last_interrupt_age_ms;
-  uint32_t last_wake_event_age_ms;
-  uint32_t last_double_tap_age_ms;
-  uint32_t i2c_error_count;
-  uint32_t consecutive_error_count;
-  uint32_t watchdog_event_count;
-  uint32_t recovery_success_count;
-  uint32_t state_flags;
-  uint32_t interrupt_count;
-  uint32_t wake_event_count;
-  uint32_t double_tap_event_count;
-} Lsm6dsoDiagnostics;
+// Accelerometer sample size (X, Y, Z, 16-bit each)
+#define LSM6DSO_SAMPLE_SIZE_BYTES 6
+// FIFO word size as read from FIFO_DATA_OUT (1 tag byte + 6 data bytes)
+#define LSM6DSO_FIFO_WORD_SIZE_BYTES 7
+// Static read buffer capacity (in samples), sized to the configured watermark
+// (at least one sample so the buffer is never zero-length)
+#define LSM6DSO_FIFO_SIZE \
+  (CONFIG_ACCEL_LSM6DSO_FIFO_THRESHOLD > 0 ? CONFIG_ACCEL_LSM6DSO_FIFO_THRESHOLD : 1)
 
-//! Initialize the LSM6DSO accelerometer driver.
-void lsm6dso_init(void);
+typedef struct LSM6DSOState {
+  bool initialized;
+  bool rotated;
+  bool shake_detection_enabled;
+  bool double_tap_detection_enabled;
+  uint32_t sampling_interval_us;
+  uint16_t num_samples;
+  uint8_t raw_sample_buf[LSM6DSO_FIFO_SIZE * LSM6DSO_FIFO_WORD_SIZE_BYTES];
+  RegularTimerInfo int1_wdt_timer;
+  RtcTicks last_int1_tick;
+  uint32_t int1_period_ms;
+  uint32_t num_recoveries;
+  uint8_t wk_ths_curr;
+  AccelDriverSample last_sample;
+  bool last_sample_valid;
+} LSM6DSOState;
 
-//! Enter normal mode for the LSM6DSO accelerometer.
-void lsm6dso_power_up(void);
-
-//! Enter low-power mode for the LSM6DSO accelerometer.
-void lsm6dso_power_down(void);
-
-//! Retrieve a snapshot of sensor diagnostics for telemetry.
-void lsm6dso_get_diagnostics(Lsm6dsoDiagnostics *diagnostics);
+typedef struct LSM6DSOConfig {
+  //! Driver state
+  LSM6DSOState *state;
+  //! I2C slave port configuration
+  I2CSlavePort i2c;
+  //! INT1 EXTI configuration
+  ExtiConfig int1;
+  //! Axis mapping (0: X, 1: Y, 2: Z)
+  uint8_t axis_map[3];
+  //! Axis direction (1 upside, -1 downside)
+  int8_t axis_dir[3];
+} LSM6DSOConfig;
