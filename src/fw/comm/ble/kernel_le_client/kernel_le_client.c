@@ -625,6 +625,13 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
     }
     if (active_count >= MAX_PHONE_CONNECTIONS) {
       gap_le_slave_reconnect_stop();
+    } else {
+      // Restart slave advertising so the second phone slot can be filled.
+      // A connection event stops the hardware advertising; without an explicit
+      // restart Android (which is not in the ANCS bonding list and thus has no
+      // outbound connect attempt) would never see the watch advertising again.
+      gap_le_slave_reconnect_stop();
+      gap_le_slave_reconnect_start();
     }
     gatt_client_discovery_discover_all(&device);
 
