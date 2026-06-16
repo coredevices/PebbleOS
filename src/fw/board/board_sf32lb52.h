@@ -154,11 +154,6 @@ typedef struct {
   const MagConfig mag_config;
 } BoardConfigMag;
 
-typedef enum {
-  SpiPeriphClockAPB1,
-  SpiPeriphClockAPB2
-} SpiPeriphClock;
-
 #include "drivers/dma.h"
 #include "drivers/flash/qspi_flash.h"
 #include "drivers/flash/qspi_flash_definitions.h"
