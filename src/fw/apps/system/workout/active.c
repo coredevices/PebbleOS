@@ -209,6 +209,17 @@ static GFont prv_get_number_font(bool prefer_larger_font) {
 #endif
 }
 
+//! Font for durations that include hours ("HH:MM:SS"). On a narrow rectangular
+//! display the regular reduced number font (LECO_42) is too wide for 8 chars and
+//! the seconds get clipped, so use a narrower font there.
+static GFont prv_get_duration_font(void) {
+#if PBL_DISPLAY_HEIGHT >= 200 && PBL_RECT
+  return fonts_get_system_font(FONT_KEY_LECO_36_BOLD_NUMBERS);
+#else
+  return prv_get_number_font(false);
+#endif
+}
+
 static GTextNode* prv_create_text_node(WorkoutActiveWindow *active_window,
                                        WorkoutMetricType metric_type,
                                        bool prefer_larger_font,
@@ -302,8 +313,8 @@ static GTextNode* prv_create_text_node(WorkoutActiveWindow *active_window,
           (char *)number_text_node->text, buffer_size, i18n_owner, active_window->workout_data);
 
       if (strlen(number_text_node->text) > 5) {
-        // text is long so use smaller font
-        number_text_node->font = prv_get_number_font(false);
+        // text is long (includes hours) so use a font that fits the seconds
+        number_text_node->font = prv_get_duration_font();
       }
       break;
     }
