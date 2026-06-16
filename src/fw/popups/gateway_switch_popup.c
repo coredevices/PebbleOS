@@ -14,6 +14,7 @@
 #include "system/logging.h"
 
 #include <btutil/bt_device.h>
+#include <stdio.h>
 #include <string.h>
 
 typedef struct {
