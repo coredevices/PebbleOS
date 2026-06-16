@@ -18,6 +18,10 @@ void kernel_le_client_handle_bonding_change(BTBondingID bonding, BtPersistBondin
 //! Returns true if the given slot is connected to the primary gateway phone.
 bool kernel_le_client_is_gateway_slot(PhoneSlot slot);
 
+//! Explicitly set a bonding as the preferred gateway. Persists across reboots.
+//! If the bonding is currently connected, switches the active gateway slot immediately.
+void kernel_le_client_set_active_gateway(BTBondingID bonding_id);
+
 void kernel_le_client_handle_event(const PebbleEvent *event);
 
 void kernel_le_client_init(void);

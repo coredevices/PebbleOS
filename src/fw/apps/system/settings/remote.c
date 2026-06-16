@@ -18,6 +18,7 @@
 #include "popups/ble_hrm/ble_hrm_stop_sharing_popup.h"
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/analytics/analytics.h"
+#include "comm/ble/kernel_le_client/kernel_le_client.h"
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/bluetooth/ble_hrm.h"
@@ -29,6 +30,7 @@
 
 enum {
   RemoteMenuForget = 0,
+  RemoteMenuSetAsGateway,
 #ifdef CONFIG_HRM
   RemoteMenuStopSharingHeartRate,
 #endif
@@ -101,6 +103,15 @@ static void prv_stop_sharing_heart_rate(ActionMenu *action_menu,
 }
 #endif  // CONFIG_HRM
 
+static void prv_set_as_gateway(ActionMenu *action_menu,
+                                const ActionMenuItem *item,
+                                void *context) {
+  SettingsRemoteData *remote_data = (SettingsRemoteData *)context;
+  StoredRemote *remote = &remote_data->remote;
+  kernel_le_client_set_active_gateway(remote->ble.bonding);
+  settings_bluetooth_update_remotes(remote_data->bt_data);
+}
+
 void settings_remote_menu_push(struct SettingsBluetoothData *bt_data, StoredRemote *stored_remote) {
   SettingsRemoteData *data = app_malloc_check(sizeof(SettingsRemoteData));
 
@@ -115,12 +126,13 @@ void settings_remote_menu_push(struct SettingsBluetoothData *bt_data, StoredRemo
     .did_close = prv_remote_menu_cleanup,
   };
 
+  const bool is_connected = (stored_remote->ble.connection != NULL);
 #ifdef CONFIG_HRM
   const bool is_sharing_hr =
       settings_bluetooth_is_sharing_heart_rate_for_stored_remote(stored_remote);
-  const size_t num_items = RemoteMenu_Count - (is_sharing_hr ? 0 : 1);
+  const size_t num_items = 1 + (is_connected ? 1 : 0) + (is_sharing_hr ? 1 : 0);
 #else
-  const size_t num_items = RemoteMenu_Count;
+  const size_t num_items = 1 + (is_connected ? 1 : 0);
 #endif
   ActionMenuLevel *level =
       task_zalloc_check(sizeof(ActionMenuLevel) + num_items * sizeof(ActionMenuItem));
@@ -129,15 +141,24 @@ void settings_remote_menu_push(struct SettingsBluetoothData *bt_data, StoredRemo
     .display_mode = ActionMenuLevelDisplayModeWide,
   };
 
-  level->items[RemoteMenuForget] = (ActionMenuItem) {
+  int item_idx = 0;
+  level->items[item_idx++] = (ActionMenuItem) {
     .label = i18n_get("Forget", data),
     .perform_action = prv_forget_item,
     .action_data = data,
   };
 
+  if (is_connected) {
+    level->items[item_idx++] = (ActionMenuItem) {
+      .label = i18n_get("Set as Gateway", data),
+      .perform_action = prv_set_as_gateway,
+      .action_data = data,
+    };
+  }
+
 #ifdef CONFIG_HRM
   if (is_sharing_hr) {
-    level->items[RemoteMenuStopSharingHeartRate] = (ActionMenuItem) {
+    level->items[item_idx++] = (ActionMenuItem) {
       .label = i18n_get("Stop Sharing Heart Rate", data),
       .perform_action = prv_stop_sharing_heart_rate,
       .action_data = data,

@@ -54,6 +54,8 @@ static PhoneSlot s_ams_slot = PHONE_SLOT_INVALID;
 static BTBondingID s_gateway_bonding_ids[MAX_PHONE_CONNECTIONS];
 static uint8_t s_gateway_bonding_count = 0;
 
+static BTBondingID s_pinned_gateway_bonding = BT_BONDING_ID_INVALID;
+
 bool kernel_le_client_is_gateway_slot(PhoneSlot slot) {
   return s_gateway_slot == slot;
 }
@@ -532,11 +534,19 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
       return;
     }
 
-    // Track which slot is the gateway. Only the first gateway-capable phone to
-    // connect wins; the slot is cleared when it disconnects.
-    // Use the cached bonding list -- do NOT call bt_persistent_storage here
-    // because bt_lock is held and storage calls can deadlock.
-    if (s_gateway_slot == PHONE_SLOT_INVALID && prv_is_gateway_bonding(event->bonding_id)) {
+    // Track which slot is the gateway. The pinned bonding always wins; otherwise
+    // the first gateway-capable phone to connect wins.
+    // Use cached values -- do NOT call bt_persistent_storage here because
+    // bt_lock is held and storage calls can deadlock.
+    if (s_pinned_gateway_bonding != BT_BONDING_ID_INVALID &&
+        event->bonding_id == s_pinned_gateway_bonding) {
+      if (s_gateway_slot != PHONE_SLOT_INVALID && s_gateway_slot != slot) {
+        PBL_LOG_DBG("Pinned gateway taking over slot");
+      }
+      s_gateway_slot = slot;
+      PBL_LOG_DBG("Pinned gateway slot: %u", slot);
+    } else if (s_gateway_slot == PHONE_SLOT_INVALID &&
+               prv_is_gateway_bonding(event->bonding_id)) {
       s_gateway_slot = slot;
       PBL_LOG_DBG("Gateway slot: %u", slot);
     }
@@ -588,6 +598,32 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
     gap_le_slave_reconnect_start();
     if (remaining == 0) {
       gatt_client_op_cleanup(GAPLEClientKernel);
+    }
+  }
+}
+
+// -------------------------------------------------------------------------------------------------
+void kernel_le_client_set_active_gateway(BTBondingID bonding_id) {
+  bt_persistent_storage_set_active_gateway(bonding_id);
+  s_pinned_gateway_bonding = bonding_id;
+
+  for (PhoneSlot slot = 0; slot < MAX_PHONE_CONNECTIONS; slot++) {
+    if (!s_phone_slots[slot].active) continue;
+    GAPLEConnection *conn = gap_le_connection_by_device(&s_phone_slots[slot].device);
+    if (!conn) continue;
+    if (conn->bonding_id == bonding_id) {
+      if (s_gateway_slot != slot) {
+        s_gateway_slot = slot;
+        PBL_LOG_DBG("Gateway switched to slot %u by user", slot);
+        if (s_ams_slot != slot) {
+          if (s_ams_slot != PHONE_SLOT_INVALID) {
+            ams_destroy();
+          }
+          ams_create();
+          s_ams_slot = slot;
+        }
+      }
+      break;
     }
   }
 }
@@ -671,6 +707,8 @@ void kernel_le_client_init(void) {
   // storage while bt_lock is held.
   s_gateway_bonding_count = bt_persistent_storage_get_all_ble_ancs_bondings(
       s_gateway_bonding_ids, MAX_PHONE_CONNECTIONS);
+
+  bt_persistent_storage_get_active_gateway(&s_pinned_gateway_bonding, NULL);
 
   for (uint8_t i = 0; i < s_gateway_bonding_count; i++) {
     prv_connect_gateway_bonding(s_gateway_bonding_ids[i]);
