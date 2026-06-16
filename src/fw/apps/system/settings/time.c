@@ -332,8 +332,9 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       prv_cycle_clock_timezone_source();
       break;
     case TimeRow_Timezone:
-      // Set Timezone Region
-      PBL_ASSERTN(clock_timezone_source_is_manual());
+      if (!clock_timezone_source_is_manual()) {
+        return;
+      }
       prv_continent_menu_push(data);
       break;
     default:
