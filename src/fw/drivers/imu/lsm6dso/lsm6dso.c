@@ -647,6 +647,10 @@ uint32_t accel_get_sampling_interval(void) {
   return LSM6DSO->state->sampling_interval_us;
 }
 
+uint32_t accel_get_max_num_samples(void) {
+  return LSM6DSO_FIFO_THRESHOLD;
+}
+
 void accel_set_num_samples(uint32_t num_samples) {
   bool ret;
   uint8_t val;

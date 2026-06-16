@@ -222,6 +222,11 @@ uint32_t accel_get_sampling_interval(void) {
 }
 
 
+uint32_t accel_get_max_num_samples(void) {
+  return QEMU_ACCEL_RCV_BUFFER_SAMPLES;
+}
+
+
 void accel_set_num_samples(uint32_t num_samples) {
   mutex_lock(s_accel_mutex);
   {
