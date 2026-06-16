@@ -47,6 +47,10 @@ bool shell_prefs_get_vibe_log_info_enabled(void) {
   return false;
 }
 
+uint32_t accel_get_max_num_samples(void) {
+  return 32;
+}
+
 //helpers
 static uint64_t prv_get_current_time() {
   time_t s;

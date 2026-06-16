@@ -15,13 +15,9 @@ typedef void (*AccelDataReadyCallback)(void *context);
 
 typedef struct AccelManagerState AccelManagerState;
 
-#if defined(CONFIG_BOARD_FAMILY_ASTERIX) || defined(CONFIG_BOARD_FAMILY_OBELIX)
-static const unsigned int ACCEL_MAX_SAMPLES_PER_UPDATE = 26 * 2; // wake every 2 seconds -- lsm6dso is 26Hz
-#elif defined(CONFIG_BOARD_FAMILY_GETAFIX)
-static const unsigned int ACCEL_MAX_SAMPLES_PER_UPDATE = 26 * 2; // wake every 2 seconds -- FIXME(GETAFIX): review
-#else
-static const unsigned int ACCEL_MAX_SAMPLES_PER_UPDATE = 25;
-#endif
+//! Returns the maximum number of samples that can be batched per update, i.e.
+//! the depth of the accelerometer's hardware FIFO.
+uint32_t sys_accel_manager_get_max_samples_per_update(void);
 
 
 void accel_manager_init(void);
