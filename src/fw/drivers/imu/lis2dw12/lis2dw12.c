@@ -590,8 +590,8 @@ void accel_set_num_samples(uint32_t num_samples) {
   }
 
   // Limit to FIFO threshold
-  if (num_samples > CONFIG_ACCEL_LIS2DW12_FIFO_THRESHOLD) {
-    num_samples = CONFIG_ACCEL_LIS2DW12_FIFO_THRESHOLD;
+  if (num_samples > LIS2DW12_FIFO_SIZE) {
+    num_samples = LIS2DW12_FIFO_SIZE;
   }
 
   // Disable all INT1 before changing FIFO threshold
