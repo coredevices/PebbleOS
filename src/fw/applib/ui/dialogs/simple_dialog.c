@@ -27,7 +27,7 @@
 #define TEXT_ALIGNMENT (GTextAlignmentCenter)
 #define TEXT_OVERFLOW  (GTextOverflowModeWordWrap)
 #if PBL_DISPLAY_HEIGHT >= 200
-#define TEXT_FONT      (fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD))
+#define TEXT_FONT      (fonts_get_system_font(FONT_KEY_GOTHIC_28))
 #else
 #define TEXT_FONT      (fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD))
 #endif
