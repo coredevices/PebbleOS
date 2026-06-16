@@ -369,7 +369,7 @@ static void draw_stored_remote_item(GContext *ctx, const Layer *cell_layer,
   const bool is_gateway = (remote->ble.connection != NULL &&
                            remote->ble.connection == gap_le_connection_get_gateway());
   if (is_gateway) {
-    strncat(remote_name, gateway_suffix, sizeof(gateway_suffix));
+    strncat(remote_name, gateway_suffix, strlen(gateway_suffix));
   }
 
   const char *is_sharing_heart_rate =
