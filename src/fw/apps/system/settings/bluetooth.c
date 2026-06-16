@@ -366,7 +366,7 @@ static void draw_stored_remote_item(GContext *ctx, const Layer *cell_layer,
   const bool is_gateway = (remote->ble.bonding != BT_BONDING_ID_INVALID &&
                            remote->ble.bonding == kernel_le_client_get_gateway_bonding());
   if (is_gateway) {
-    strncpy(remote_name, gateway_prefix, sizeof(gateway_prefix));
+    strcpy(remote_name, gateway_prefix);
     name_start = remote_name + strlen(gateway_prefix);
   }
 
