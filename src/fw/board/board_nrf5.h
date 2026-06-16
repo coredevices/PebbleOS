@@ -228,10 +228,6 @@ typedef struct {
                              //< duty cycle so that 100% duty cycle will always be 3.3V RMS.
 } BoardConfigActuator;
 
-typedef enum {
-  SpiPeriphClockNrf5
-} SpiPeriphClock;
-
 typedef struct {
   NRF_RTC_Type *rtc;
   NRF_GPIOTE_Type *gpiote;

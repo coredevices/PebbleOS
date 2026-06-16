@@ -31,7 +31,6 @@
 #include "drivers/pmic.h"
 #include "drivers/pressure.h"
 #include "drivers/pwr.h"
-#include "drivers/spi.h"
 #include "drivers/task_watchdog.h"
 #include "drivers/temperature.h"
 #include "drivers/touch/touch_sensor.h"

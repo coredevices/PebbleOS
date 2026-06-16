@@ -152,11 +152,6 @@ typedef struct {
   const MagConfig mag_config;
 } BoardConfigMag;
 
-typedef enum {
-  SpiPeriphClockAPB1,
-  SpiPeriphClockAPB2
-} SpiPeriphClock;
-
 // QEMU MMIO peripheral base addresses
 #define QEMU_UART0_BASE     0x40000000
 #define QEMU_UART1_BASE     0x40001000
