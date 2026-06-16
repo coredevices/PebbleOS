@@ -591,7 +591,7 @@ def _make_pblboot_bundle(ctx):
         slot1_fw_path=slot1_node.abspath(),
         firmware_timestamp=version_ts,
         firmware_commit=version_commit,
-        firmware_hwrev=ctx.env.BOARD,
+        firmware_hwrev=ctx.env.BOARD.replace('@', '_'),
         firmware_version_tag=version_string,
         resources_path=resource_node.abspath(),
         resources_timestamp=version_ts,
