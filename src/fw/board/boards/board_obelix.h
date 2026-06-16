@@ -40,9 +40,7 @@ extern const TouchSensor *CST816;
 extern const AudioDevice* AUDIO;
 
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
-  .accel_config = {
-    .default_motion_sensitivity = 55U, // Medium
-  },
+  .default_motion_sensitivity = 55U, // Medium
 };
 
 static const BoardConfigMag BOARD_CONFIG_MAG = {

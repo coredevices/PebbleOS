@@ -44,9 +44,7 @@ extern const LedControllerAW9364E AW9364E;
 extern const BoardConfigActuator BOARD_CONFIG_VIBE;
 
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
-  .accel_config = {
-    .default_motion_sensitivity = 55U, // Medium
-  },
+  .default_motion_sensitivity = 55U, // Medium
 };
 
 static const BoardConfigMag BOARD_CONFIG_MAG = {
