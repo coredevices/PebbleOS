@@ -18,6 +18,10 @@ void kernel_le_client_handle_bonding_change(BTBondingID bonding, BtPersistBondin
 //! Returns true if the given slot is connected to the primary gateway phone.
 bool kernel_le_client_is_gateway_slot(PhoneSlot slot);
 
+//! Returns the bonding ID of the currently active gateway phone,
+//! or BT_BONDING_ID_INVALID if no gateway is connected.
+BTBondingID kernel_le_client_get_gateway_bonding(void);
+
 //! Explicitly set a bonding as the preferred gateway. Persists across reboots.
 //! If the bonding is currently connected, switches the active gateway slot immediately.
 void kernel_le_client_set_active_gateway(BTBondingID bonding_id);

@@ -15,6 +15,7 @@
 #include "applib/ui/ui.h"
 #include "comm/bt_lock.h"
 #include "comm/ble/gap_le_connection.h"
+#include "comm/ble/kernel_le_client/kernel_le_client.h"
 #include "comm/ble/kernel_le_client/multi_phone.h"
 #include "comm/ble/gap_le_device_name.h"
 #include "comm/ble/kernel_le_client/multi_phone.h"
@@ -356,20 +357,23 @@ static void draw_stored_remote_item(GContext *ctx, const Layer *cell_layer,
 
   // Add ellipsis if the name might have been cut off by the mobile
   const char ellipsis[] = UTF8_ELLIPSIS_STRING;
-  const char gateway_suffix[] = " (G)";
+  const char gateway_prefix[] = "* ";
   const size_t max_name_size = BT_DEVICE_NAME_BUFFER_SIZE - 2;
   const size_t name_size = strnlen(remote->name, BT_DEVICE_NAME_BUFFER_SIZE);
-  char *remote_name = task_zalloc_check(max_name_size + sizeof(ellipsis) + sizeof(gateway_suffix));
-  strncpy(remote_name, remote->name, name_size);
-  if (name_size > max_name_size) {
-    const size_t ellipsis_start_offset = utf8_get_size_truncate(remote_name, name_size);
-    strncpy(&remote_name[ellipsis_start_offset], ellipsis, sizeof(ellipsis));
+  char *remote_name = task_zalloc_check(sizeof(gateway_prefix) + max_name_size + sizeof(ellipsis));
+  char *name_start = remote_name;
+
+  const bool is_gateway = (remote->ble.bonding != BT_BONDING_ID_INVALID &&
+                           remote->ble.bonding == kernel_le_client_get_gateway_bonding());
+  if (is_gateway) {
+    strncpy(remote_name, gateway_prefix, sizeof(gateway_prefix));
+    name_start = remote_name + strlen(gateway_prefix);
   }
 
-  const bool is_gateway = (remote->ble.connection != NULL &&
-                           remote->ble.connection == gap_le_connection_get_gateway());
-  if (is_gateway) {
-    strncat(remote_name, gateway_suffix, strlen(gateway_suffix));
+  strncpy(name_start, remote->name, name_size);
+  if (name_size > max_name_size) {
+    const size_t ellipsis_start_offset = utf8_get_size_truncate(name_start, name_size);
+    strncpy(&name_start[ellipsis_start_offset], ellipsis, sizeof(ellipsis));
   }
 
   const char *is_sharing_heart_rate =
