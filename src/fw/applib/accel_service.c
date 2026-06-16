@@ -422,10 +422,11 @@ int accel_session_set_sampling_rate(AccelServiceState *state, AccelSamplingRate 
 // -----------------------------------------------------------------------------------------------
 int accel_session_set_samples_per_update(AccelServiceState *state, uint32_t samples_per_update) {
 
-  if (samples_per_update > ACCEL_MAX_SAMPLES_PER_UPDATE) {
+  uint32_t max_samples_per_update = sys_accel_manager_get_max_samples_per_update();
+  if (samples_per_update > max_samples_per_update) {
     APP_LOG(LOG_LEVEL_WARNING, "%d samples per update requested, max is %d",
-            (int)samples_per_update, ACCEL_MAX_SAMPLES_PER_UPDATE);
-    samples_per_update = ACCEL_MAX_SAMPLES_PER_UPDATE;
+            (int)samples_per_update, (int)max_samples_per_update);
+    samples_per_update = max_samples_per_update;
   }
   if (!state->manager_state
       || (samples_per_update > 0 && !state->data_handler && !state->raw_data_handler

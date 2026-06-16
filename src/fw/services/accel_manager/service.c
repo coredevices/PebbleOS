@@ -193,7 +193,7 @@ static uint32_t prv_get_sample_interval_info(uint32_t *lowest_interval_us,
   }
 
   uint32_t num_samples = lowest_us_per_update / (*lowest_interval_us);
-  num_samples = MIN(num_samples, ACCEL_MAX_SAMPLES_PER_UPDATE);
+  num_samples = MIN(num_samples, accel_get_max_num_samples());
 
   return num_samples;
 }
@@ -486,7 +486,7 @@ DEFINE_SYSCALL(AccelManagerState*, sys_accel_manager_data_subscribe,
       .data_cb_handler = data_cb,
       .data_cb_context = context,
       .sampling_interval_us = (US_PER_SECOND / rate),
-      .samples_per_update = ACCEL_MAX_SAMPLES_PER_UPDATE,
+      .samples_per_update = accel_get_max_num_samples(),
     };
 
     bool no_subscribers_before = (s_data_subscribers == NULL);
@@ -612,7 +612,7 @@ uint32_t accel_manager_set_jitterfree_sampling_rate(AccelManagerState *state,
 DEFINE_SYSCALL(int, sys_accel_manager_set_sample_buffer,
                AccelManagerState *state, AccelRawData *buffer, uint32_t samples_per_update) {
   prv_assert_state_from_user(state);
-  if (samples_per_update > ACCEL_MAX_SAMPLES_PER_UPDATE) {
+  if (samples_per_update > accel_get_max_num_samples()) {
     return -1;
   }
 
@@ -630,6 +630,10 @@ DEFINE_SYSCALL(int, sys_accel_manager_set_sample_buffer,
   mutex_unlock_recursive(s_accel_manager_mutex);
 
   return 0;
+}
+
+DEFINE_SYSCALL(uint32_t, sys_accel_manager_get_max_samples_per_update, void) {
+  return accel_get_max_num_samples();
 }
 
 DEFINE_SYSCALL(uint32_t, sys_accel_manager_get_num_samples,
