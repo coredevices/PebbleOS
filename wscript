@@ -173,6 +173,7 @@ def configure(conf):
     conf.env.BOARD = board.target
     conf.env.BOARD_NAME = board.name
     conf.env.BOARD_REVISION = board.revision
+    conf.env.BOARD_NORMALIZED = board.normalized
 
     conf.env.VARIANT = conf.options.variant
     if conf.env.VARIANT == 'prf':
@@ -502,13 +503,13 @@ def _make_bundle(ctx, fw_bin_path, fw_type='normal', board=None, resource_path=N
     import mkbundle
 
     if board is None:
-        board = ctx.env.BOARD
+        board = ctx.env.BOARD_NORMALIZED
 
     b = mkbundle.PebbleBundle()
 
     version_string, version_ts, version_commit = _get_version_info(ctx)
     slot = ctx.env.SLOT if fw_type == 'normal' and ctx.env.SLOT != -1 else None
-    out_file = ctx.get_pbz_node(fw_type, ctx.env.BOARD, version_string, slot).path_from(ctx.path)
+    out_file = ctx.get_pbz_node(fw_type, ctx.env.BOARD_NORMALIZED, version_string, slot).path_from(ctx.path)
 
     try:
         _check_firmware_image_size(ctx, fw_bin_path)

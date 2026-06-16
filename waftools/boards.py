@@ -16,6 +16,10 @@ class BoardSpec:
         self.revision = revision
         self.runners = runners or []
 
+    @property
+    def normalized(self):
+        return self.target.replace("@", "_")
+
 
 def _boards_dir(srcdir):
     return os.path.join(srcdir, "boards")
