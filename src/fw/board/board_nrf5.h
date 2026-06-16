@@ -289,4 +289,6 @@ typedef const struct AudioDevice AudioDevice;
 void board_early_init(void);
 void board_init(void);
 
+#include "drivers/i2c/definitions.h"
+
 #include "board_definitions.h"
