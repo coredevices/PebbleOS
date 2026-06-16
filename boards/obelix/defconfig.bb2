@@ -1,4 +1,3 @@
 # obelix bb2 board revision configuration
 
 CONFIG_IS_BIGBOARD=y
-CONFIG_ACCEL_LIS2DW12_DISABLE_ADDR_PULLUP=y
