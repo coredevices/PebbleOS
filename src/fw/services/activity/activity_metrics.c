@@ -554,6 +554,20 @@ void activity_metrics_prv_get_median_hr_bpm(int32_t *median_out,
 }
 
 // --------------------------------------------------------------------------------------------
+void activity_metrics_prv_get_spo2_sample(uint8_t *percent_out, uint8_t *quality_out) {
+  ActivityState *state = activity_private_state();
+  pbl_mutex_lock(&state->mutex, PBL_FOREVER);
+  {
+    *percent_out = state->spo2.pending_percent;
+    *quality_out = state->spo2.pending_quality;
+    // Consume it so the same reading isn't repeated across subsequent minutes.
+    state->spo2.pending_percent = 0;
+    state->spo2.pending_quality = 0;
+  }
+  pbl_mutex_unlock(&state->mutex);
+}
+
+// --------------------------------------------------------------------------------------------
 void activity_metrics_prv_reset_hr_stats(void) {
   ActivityState *state = activity_private_state();
   pbl_mutex_lock(&state->mutex, PBL_FOREVER);

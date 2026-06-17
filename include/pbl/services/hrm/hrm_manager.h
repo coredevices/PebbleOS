@@ -96,7 +96,8 @@ HRMSessionRef sys_hrm_manager_get_app_subscription(AppInstallId app_id);
 //! @return true on success, false on failure
 bool sys_hrm_manager_unsubscribe(HRMSessionRef session);
 
-//! Set the enabled features for the given HRM subscription
+//! Set the enabled features for the given HRM subscription. A subscription with no features is
+//! kept but ignored by the sensor scheduler (it never turns the sensor on and receives no data).
 //! @param session the HRMSessionRef returned by sys_hrm_manager_app_subscribe
 //! @param features the desired features
 //! @return true on success, false on failure

@@ -903,6 +903,9 @@ DEFINE_SYSCALL(bool, sys_hrm_manager_set_features, HRMSessionRef session, HRMFea
     state->features = features;
     success = true;
   }
+  // Re-evaluate right away: a feature change can turn the sensor on, off, or onto the other
+  // optical path, and must not wait for the next sample to trigger a pass.
+  system_task_add_callback(prv_update_hrm_enable_system_cb, NULL);
   pbl_mutex_unlock(&s_manager_state.lock);
   return success;
 }

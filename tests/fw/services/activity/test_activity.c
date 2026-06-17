@@ -147,6 +147,10 @@ bool sys_hrm_manager_unsubscribe(HRMSessionRef session) {
   return true;
 }
 
+bool sys_hrm_manager_set_features(HRMSessionRef session, HRMFeature features) {
+  return true;
+}
+
 bool sys_hrm_manager_set_update_interval(HRMSessionRef session, uint32_t update_interval_s,
                                          uint16_t expire_s) {
   cl_assert(session < s_hrm_next_session_ref);
