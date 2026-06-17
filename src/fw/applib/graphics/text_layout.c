@@ -803,6 +803,7 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
             cursor.origin.x += walked_width_px;
 
             if (!codepoint_is_zero_width(rcp)) {
+              text_resources_get_glyph(&ctx->font_cache, rcp, text_box_params->font);
               render_glyph(ctx, rcp, text_box_params->font, cursor);
             }
 
@@ -830,6 +831,7 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
           cursor.origin.x += walked_width_px;
 
           if (!codepoint_is_zero_width(scp)) {
+            text_resources_get_glyph(&ctx->font_cache, scp, text_box_params->font);
             render_glyph(ctx, scp, text_box_params->font, cursor);
           }
 
@@ -852,6 +854,7 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
         .size.h = fonts_get_font_height(text_box_params->font)
       };
       cursor.origin.x += walked_width_px;
+      text_resources_get_glyph(&ctx->font_cache, line->suffix_codepoint, text_box_params->font);
       render_glyph(ctx, line->suffix_codepoint, text_box_params->font, cursor);
     }
 
