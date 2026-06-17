@@ -282,7 +282,7 @@ static const I2CSlavePort s_i2c_aw86225 = {
     .bus = &s_i2c_bus_1,
     .address = 0x58,
 };
-  
+
 I2CSlavePort *const I2C_AW86225 = &s_i2c_aw86225;
 
 static const AW86225Config s_aw86225_config = {
@@ -468,6 +468,24 @@ static I2CBusHalState s_i2c_bus_hal_state_4 = {
         .Mode = HAL_I2C_MODE_MASTER,
         .core = CORE_ID_HCPU,
     },
+    .dma_tx = {
+        .Instance = DMA1_Channel6,
+        .dma_irq = DMAC1_CH6_IRQn,
+        .request = DMA_REQUEST_3,
+        .dma_irq_prio = 5,
+    },
+    .dma_rx = {
+        .Instance = DMA1_Channel7,
+        .dma_irq = DMAC1_CH7_IRQn,
+        .request = DMA_REQUEST_3,
+        .dma_irq_prio = 5,
+    },
+    .hdma_tx = {
+        .Instance = DMA1_Channel6,
+    },
+    .hdma_rx = {
+        .Instance = DMA1_Channel7,
+    },
 };
 
 static I2CBusHal s_i2c_bus_hal_4 = {
@@ -487,6 +505,9 @@ static I2CBusHal s_i2c_bus_hal_4 = {
     .module = RCC_MOD_I2C4,
     .irqn = I2C4_IRQn,
     .irq_priority = 5,
+    .dma_tx_irqn = DMAC1_CH6_IRQn,
+    .dma_rx_irqn = DMAC1_CH7_IRQn,
+    .dma_irq_priority = 5,
 };
 
 static I2CBusState s_i2c_bus_state_4;
@@ -501,6 +522,8 @@ static I2CBus s_i2c_bus_4 = {
 I2CBus *const I2C4_BUS = &s_i2c_bus_4;
 
 IRQ_MAP(I2C4, i2c_irq_handler, I2C4_BUS);
+IRQ_MAP(DMAC1_CH6, i2c_dma_tx_irq_handler, I2C4_BUS);
+IRQ_MAP(DMAC1_CH7, i2c_dma_rx_irq_handler, I2C4_BUS);
 
 static const I2CSlavePort s_i2c_gh3x2x = {
     .bus = &s_i2c_bus_4,
@@ -543,7 +566,7 @@ static const I2CSlavePort s_i2c_w1160 = {
     .bus = &s_i2c_bus_1,
     .address = 0x48,
   };
-  
+
 I2CSlavePort *const I2C_W1160 = &s_i2c_w1160;
 
 const BoardConfigPower BOARD_CONFIG_POWER = {
@@ -590,7 +613,7 @@ static const MicDevice mic_device = {
     .clk_gpio = {
         .pad = PAD_PA22,
         .func = PDM1_CLK,
-        .flags = PIN_NOPULL, 
+        .flags = PIN_NOPULL,
     },
     .data_gpio = {
         .pad = PAD_PA23,
@@ -599,7 +622,7 @@ static const MicDevice mic_device = {
     },
     .pdm_dma_irq = DMAC1_CH5_IRQn,
     .pdm_irq = PDM1_IRQn,
-    .pdm_irq_priority = 5, 
+    .pdm_irq_priority = 5,
     .channels = 1,
     .sample_rate = 16000,
     .channel_depth = 16,

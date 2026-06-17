@@ -11,6 +11,10 @@
 
 typedef struct I2CBusHalState {
   I2C_HandleTypeDef hdl;
+  DMA_HandleTypeDef hdma_tx;
+  DMA_HandleTypeDef hdma_rx;
+  struct dma_config dma_tx;
+  struct dma_config dma_rx;
 } I2CBusHalState;
 
 typedef const struct I2CBusHal {
@@ -20,6 +24,11 @@ typedef const struct I2CBusHal {
   RCC_MODULE_TYPE module;
   IRQn_Type irqn;
   uint8_t irq_priority;
+  IRQn_Type dma_tx_irqn;
+  IRQn_Type dma_rx_irqn;
+  uint8_t dma_irq_priority;
 } I2CBusHal;
 
 void i2c_irq_handler(I2CBus *bus);
+void i2c_dma_tx_irq_handler(I2CBus *bus);
+void i2c_dma_rx_irq_handler(I2CBus *bus);
