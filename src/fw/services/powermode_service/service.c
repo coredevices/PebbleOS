@@ -20,6 +20,9 @@ void powermode_service_init(void) {
 
 void powermode_service_set_enabled(bool enabled) {
   s_enabled = enabled;
+  if (enabled && s_refcount == 0) {
+    cpumode_set(CPUMode_LowPower);
+  }
 }
 
 void powermode_service_request_hp(void) {
