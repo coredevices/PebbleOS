@@ -12,6 +12,9 @@
 #include "dbgserial.h"
 #include "debug/flash_logging.h"
 #include "drivers/flash.h"
+#if defined(CONFIG_QEMU) && !defined(CONFIG_RECOVERY_FW)
+#include "drivers/rtc.h"
+#endif
 #include "drivers/task_watchdog.h"
 #include "flash_region/flash_region.h"
 #include "kernel/event_loop.h"
@@ -29,6 +32,12 @@
 #include "pbl/services/compositor/compositor.h"
 #include "pbl/services/system_task.h"
 #include "pbl/services/filesystem/pfs.h"
+#if defined(CONFIG_QEMU) && !defined(CONFIG_RECOVERY_FW)
+#include "pbl/services/notifications/notifications.h"
+#include "pbl/services/timeline/attribute.h"
+#include "pbl/services/timeline/timeline.h"
+#include "pbl/services/timeline/timeline_resources.h"
+#endif
 #include "syscall/syscall.h"
 #include "system/bootbits.h"
 #include "system/hexdump.h"
@@ -66,6 +75,37 @@ void pfs_command_stress(void) {
   prompt_send_response("PFS stress from kernel BG");
   system_task_add_callback(prv_pfs_stress_callback, NULL);
 }
+
+#if defined(CONFIG_QEMU) && !defined(CONFIG_RECOVERY_FW)
+void command_test_cjk_notification(void) {
+  AttributeList attr_list = {};
+  attribute_list_add_cstring(&attr_list, AttributeIdSender, "CJK Smoke");
+  attribute_list_add_cstring(&attr_list, AttributeIdTitle,
+                             "简体中文 / 繁體中文 / 日本語");
+  attribute_list_add_cstring(&attr_list, AttributeIdBody,
+                             "通知测试：中文简体、繁體中文、日文漢字、"
+                             "ひらがな、カタカナ。");
+  attribute_list_add_resource_id(&attr_list, AttributeIdIconTiny,
+                                 TIMELINE_RESOURCE_NOTIFICATION_GENERIC);
+  attribute_list_add_uint8(&attr_list, AttributeIdBgColor,
+                           GColorBlueMoonARGB8);
+
+  TimelineItem *item =
+      timeline_item_create_with_attributes(rtc_get_time(), 0,
+                                           TimelineItemTypeNotification,
+                                           LayoutIdNotification, &attr_list,
+                                           NULL);
+  attribute_list_destroy_list(&attr_list);
+  if (!item) {
+    prompt_send_response("Failed to create CJK notification");
+    return;
+  }
+
+  notifications_add_notification(item);
+  timeline_item_destroy(item);
+  prompt_send_response("OK");
+}
+#endif
 
 extern void command_read_word(const char* address_str) {
   int32_t address = str_to_address(address_str);
