@@ -42,6 +42,39 @@ class FontResourceGenerator(ResourceGenerator):
         return definition
 
     @staticmethod
+    def _resolve_character_list_path(bld, resource_source_path, character_list):
+        repo_root = getattr(bld, "srcnode", bld.path).abspath()
+        build_root = bld.path.abspath()
+        source_path = resource_source_path
+        if os.path.isabs(source_path):
+            source_abs = os.path.normpath(source_path)
+        else:
+            source_abs = os.path.abspath(os.path.join(build_root, source_path))
+
+        if os.path.isabs(character_list):
+            character_list_abs = os.path.normpath(character_list)
+        else:
+            character_list_abs = os.path.normpath(
+                os.path.join(source_abs, character_list)
+            )
+
+        if os.path.commonpath([source_abs, character_list_abs]) != source_abs:
+            bld.fatal(
+                "Font characterList path '{}' escapes resource source "
+                "path '{}'.".format(character_list, resource_source_path)
+            )
+
+        dependency_path = os.path.relpath(character_list_abs, build_root)
+        dependency_path = find_most_specific_filename(
+            bld, bld.env, bld.path, dependency_path
+        )
+        resolved_abs = os.path.abspath(
+            os.path.join(build_root, dependency_path)
+        )
+        character_list_path = os.path.relpath(resolved_abs, repo_root)
+        return character_list_path, dependency_path
+
+    @staticmethod
     def definitions_from_dict(bld, definition_dict, resource_source_path):
         definitions = ResourceGenerator.definitions_from_dict(
             bld, definition_dict, resource_source_path
@@ -52,22 +85,12 @@ class FontResourceGenerator(ResourceGenerator):
             FontResourceGenerator._apply_font_fields(d, definition_dict, max_glyph_size)
             font_ext = os.path.splitext(d.file)[-1].lower()
             if d.character_list and font_ext in (".ttf", ".otf", ".bdf"):
-                source_path = resource_source_path
-                if os.path.isabs(source_path):
-                    source_path = os.path.relpath(source_path, bld.path.abspath())
-                character_list_path = os.path.join(source_path, d.character_list)
-                if character_list_path.startswith(".."):
-                    character_list_path = os.path.normpath(character_list_path)
-                else:
-                    character_list_path = find_most_specific_filename(
-                        bld, bld.env, bld.path, character_list_path
+                character_list_path, dependency_path = (
+                    FontResourceGenerator._resolve_character_list_path(
+                        bld, resource_source_path, d.character_list
                     )
+                )
                 d.character_list = character_list_path
-                dependency_path = character_list_path
-                if os.path.isabs(dependency_path):
-                    dependency_path = os.path.relpath(
-                        dependency_path, bld.path.abspath()
-                    )
                 d.sources.append(dependency_path)
 
         return definitions

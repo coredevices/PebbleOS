@@ -13,12 +13,23 @@ from pathlib import Path
 root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 sys.path.insert(0, root_dir)
 
-import freetype  # noqa: E402
+try:
+    import freetype  # noqa: E402
 
-from font.fontgen import FEATURE_OFFSET_16, MAX_GLYPHS_EXTENDED  # noqa: E402
-from resources.resource_map.resource_generator_font import (  # noqa: E402
-    FontResourceGenerator,
-)
+    from font.fontgen import (  # noqa: E402
+        FEATURE_OFFSET_16,
+        MAX_GLYPHS_EXTENDED,
+    )
+    from resources.resource_map.resource_generator_font import (  # noqa: E402
+        FontResourceGenerator,
+    )
+    FREETYPE_IMPORT_ERROR = None
+except ImportError as e:
+    freetype = None
+    FEATURE_OFFSET_16 = 0x01
+    MAX_GLYPHS_EXTENDED = 255 * 128
+    FontResourceGenerator = None
+    FREETYPE_IMPORT_ERROR = e
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -80,13 +91,26 @@ class FakePath:
         return str(REPO_ROOT)
 
 
+class FakeResourcePath:
+    def relpath(self):
+        return "resources"
+
+    def abspath(self):
+        return str(RESOURCE_ROOT)
+
+
 class FakeBuild:
     env = FakeEnv()
     path = FakePath()
+    srcnode = FakePath()
     variant = "normal"
 
     def fatal(self, message):
         raise AssertionError(message)
+
+
+class FakeResourceBuild(FakeBuild):
+    path = FakeResourcePath()
 
 
 def load_codepoints():
@@ -115,6 +139,9 @@ def parse_pbf_codepoints(font_data):
     else:
         _, max_height, num_glyphs, _, table_size, cp_bytes = header
         features = 0
+
+    if cp_bytes not in (2, 4):
+        raise AssertionError(f"Unexpected codepoint byte width: {cp_bytes}")
 
     offset_table_format = "<"
     offset_table_format += "L" if cp_bytes == 4 else "H"
@@ -202,6 +229,11 @@ class TestCjkFontFallback(unittest.TestCase):
         self.assertLessEqual(len(codepoints) + 1, MAX_GLYPHS_EXTENDED)
 
     def test_source_font_supports_every_configured_codepoint(self):
+        if FREETYPE_IMPORT_ERROR is not None:
+            raise unittest.SkipTest(
+                f"freetype is not available: {FREETYPE_IMPORT_ERROR}"
+            )
+
         face = freetype.Face(str(FONT_PATH))
         unsupported = [
             f"U+{cp:04X}"
@@ -212,6 +244,11 @@ class TestCjkFontFallback(unittest.TestCase):
         self.assertEqual([], unsupported)
 
     def test_generated_pbf_indexes_cjk_notification_glyphs(self):
+        if FREETYPE_IMPORT_ERROR is not None:
+            raise unittest.SkipTest(
+                f"font generation is not available: {FREETYPE_IMPORT_ERROR}"
+            )
+
         definition = FontResourceGenerator.font_definition_from_dict(
             FakeEnv,
             {
@@ -236,6 +273,11 @@ class TestCjkFontFallback(unittest.TestCase):
             assert_codepoints_contain(self, indexed_codepoints, name, text)
 
     def test_font_character_list_is_tracked_as_a_generated_source(self):
+        if FREETYPE_IMPORT_ERROR is not None:
+            raise unittest.SkipTest(
+                f"font generation is not available: {FREETYPE_IMPORT_ERROR}"
+            )
+
         bld = FakeBuild()
         current_directory = os.getcwd()
         os.chdir(REPO_ROOT)
@@ -269,7 +311,106 @@ class TestCjkFontFallback(unittest.TestCase):
         )
         self.assertIn(definition.character_list, definition.sources)
 
+    def test_font_character_list_accepts_absolute_in_tree_paths(self):
+        if FREETYPE_IMPORT_ERROR is not None:
+            raise unittest.SkipTest(
+                f"font generation is not available: {FREETYPE_IMPORT_ERROR}"
+            )
+
+        bld = FakeBuild()
+        definitions = FontResourceGenerator.definitions_from_dict(
+            bld,
+            {
+                "type": "font",
+                "name": "FONT_FALLBACK_INTERNAL_EXTENDED",
+                "file": (
+                    "normal/base/lang/zh_CN/"
+                    "NotoSansCJKsc-DemiLight.otf"
+                ),
+                "characterList": str(CODEPOINTS_PATH),
+                "pixelHeight": 14,
+                "extended": True,
+            },
+            str(RESOURCE_ROOT),
+        )
+
+        self.assertEqual(1, len(definitions))
+        definition = definitions[0]
+        self.assertEqual(
+            "resources/normal/base/lang/cjk_notification_codepoints.json",
+            definition.character_list,
+        )
+        self.assertIn(definition.character_list, definition.sources)
+
+    def test_font_character_list_keeps_open_and_dependency_paths(self):
+        if FREETYPE_IMPORT_ERROR is not None:
+            raise unittest.SkipTest(
+                f"font generation is not available: {FREETYPE_IMPORT_ERROR}"
+            )
+
+        bld = FakeResourceBuild()
+        definitions = FontResourceGenerator.definitions_from_dict(
+            bld,
+            {
+                "type": "font",
+                "name": "FONT_FALLBACK_INTERNAL_EXTENDED",
+                "file": (
+                    "normal/base/lang/zh_CN/"
+                    "NotoSansCJKsc-DemiLight.otf"
+                ),
+                "characterList": (
+                    "normal/base/lang/"
+                    "cjk_notification_codepoints.json"
+                ),
+                "pixelHeight": 14,
+                "extended": True,
+            },
+            ".",
+        )
+
+        self.assertEqual(1, len(definitions))
+        definition = definitions[0]
+        self.assertEqual(
+            "resources/normal/base/lang/cjk_notification_codepoints.json",
+            definition.character_list,
+        )
+        self.assertIn(
+            "normal/base/lang/cjk_notification_codepoints.json",
+            definition.sources,
+        )
+
+    def test_font_character_list_rejects_traversal_outside_source(self):
+        if FREETYPE_IMPORT_ERROR is not None:
+            raise unittest.SkipTest(
+                f"font generation is not available: {FREETYPE_IMPORT_ERROR}"
+            )
+
+        bld = FakeBuild()
+        with self.assertRaisesRegex(
+            AssertionError, "escapes resource source path"
+        ):
+            FontResourceGenerator.definitions_from_dict(
+                bld,
+                {
+                    "type": "font",
+                    "name": "FONT_FALLBACK_INTERNAL_EXTENDED",
+                    "file": (
+                        "normal/base/lang/zh_CN/"
+                        "NotoSansCJKsc-DemiLight.otf"
+                    ),
+                    "characterList": "../outside.json",
+                    "pixelHeight": 14,
+                    "extended": True,
+                },
+                "resources",
+            )
+
     def test_pbf_fonts_do_not_track_legacy_character_lists(self):
+        if FREETYPE_IMPORT_ERROR is not None:
+            raise unittest.SkipTest(
+                f"font generation is not available: {FREETYPE_IMPORT_ERROR}"
+            )
+
         bld = FakeBuild()
         definitions = FontResourceGenerator.definitions_from_dict(
             bld,
