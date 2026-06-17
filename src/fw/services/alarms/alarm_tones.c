@@ -107,7 +107,7 @@ static const SpeakerNote s_bell[] = {
   NOTE(69, SpeakerWaveformSine, 700),  // A4
 };
 
-// Chime — two short beeps at A8.
+// Chime — two short beeps at C7.
 static const SpeakerNote s_chime[] = {
   NOTE(96, SpeakerWaveformSine, 100),  // A8
   NOTE(0,   SpeakerWaveformSine, 100),
