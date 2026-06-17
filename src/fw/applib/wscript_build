@@ -36,6 +36,7 @@ if bld.env.VARIANT == 'prf':
                  'ui/date_selection_window.c',
                  'ui/time_selection_window.c',
                  'ui/time_range_selection_window.c',
+                 'ui/day_picker.c',
                  'voice/*']
 
 if not bld.env.CONFIG_BOARD_FAMILY_GETAFIX and not bld.env.CONFIG_BOARD_QEMU_GABBRO:
