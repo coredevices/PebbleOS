@@ -68,9 +68,7 @@ class FontResourceGenerator(ResourceGenerator):
         dependency_path = find_most_specific_filename(
             bld, bld.env, bld.path, dependency_path
         )
-        resolved_abs = os.path.abspath(
-            os.path.join(build_root, dependency_path)
-        )
+        resolved_abs = os.path.abspath(os.path.join(build_root, dependency_path))
         character_list_path = os.path.relpath(resolved_abs, repo_root)
         return character_list_path, dependency_path
 

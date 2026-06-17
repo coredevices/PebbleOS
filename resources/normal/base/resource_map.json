@@ -11,7 +11,11 @@
       "file": "normal/base/lang/zh_CN/NotoSansCJKsc-DemiLight.otf",
       "characterList": "normal/base/lang/cjk_notification_codepoints.json",
       "pixelHeight": 14,
-      "extended": true
+      "extended": true,
+      "targetPlatforms": [
+        "emery",
+        "gabbro"
+      ]
     },
     {
       "type": "pdc",

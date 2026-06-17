@@ -103,7 +103,9 @@ resource_definitions = []
 for r in resources_dict['media']:
     defs = resource_generator.definitions_from_dict(bld, r, '')
 
-    resource_definitions.extend(defs)
+    resource_definitions.extend(
+        d for d in defs if d.is_in_target_platform(bld)
+    )
 
 resource_declarations = []
 if 'files' in resources_dict:

@@ -23,6 +23,7 @@ try:
     from resources.resource_map.resource_generator_font import (  # noqa: E402
         FontResourceGenerator,
     )
+
     FREETYPE_IMPORT_ERROR = None
 except ImportError as e:
     freetype = None
@@ -34,37 +35,21 @@ except ImportError as e:
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RESOURCE_ROOT = REPO_ROOT / "resources"
-FONT_PATH = (
-    RESOURCE_ROOT
-    / "normal/base/lang/zh_CN/NotoSansCJKsc-DemiLight.otf"
-)
-CODEPOINTS_PATH = (
-    RESOURCE_ROOT
-    / "normal/base/lang/cjk_notification_codepoints.json"
-)
+FONT_PATH = RESOURCE_ROOT / "normal/base/lang/zh_CN/NotoSansCJKsc-DemiLight.otf"
+CODEPOINTS_PATH = RESOURCE_ROOT / "normal/base/lang/cjk_notification_codepoints.json"
 RESOURCE_MAP_PATH = RESOURCE_ROOT / "normal/base/resource_map.json"
 SYSTEM_RESOURCE_PATH = REPO_ROOT / "src/fw/resource/system_resource.c"
 
 REQUIRED_TEXT_SAMPLES = {
-    "simplified_chinese": (
-        "中文通知测试日程会议提醒"
-        "天气今天明天地点时间"
-    ),
-    "traditional_chinese": (
-        "繁體中文通知測試日程會議提醒"
-        "天氣今天明天地點時間"
-    ),
+    "simplified_chinese": ("中文通知测试日程会议提醒天气今天明天地点时间"),
+    "traditional_chinese": ("繁體中文通知測試日程會議提醒天氣今天明天地點時間"),
     "japanese": (
         "日本語通知テスト予定会議"
         "リマインダーこんにちはカタカナ"
         "東京大阪京都駅渋谷確認済み"
         "電車遅延"
     ),
-    "korean_seed": (
-        "한국어알림테스트회의일정"
-        "메시지전화오늘내일장소"
-        "시간확인삭제저장"
-    ),
+    "korean_seed": ("한국어알림테스트회의일정메시지전화오늘내일장소시간확인삭제저장"),
 }
 
 EXPECTED_RANGES = {
@@ -81,6 +66,10 @@ EXPECTED_RANGES = {
 
 class FakeEnv:
     PLATFORM_NAME = "emery"
+
+
+class FakeFlintEnv:
+    PLATFORM_NAME = "flint"
 
 
 class FakePath:
@@ -107,6 +96,10 @@ class FakeBuild:
 
     def fatal(self, message):
         raise AssertionError(message)
+
+
+class FakeFlintBuild(FakeBuild):
+    env = FakeFlintEnv()
 
 
 class FakeResourceBuild(FakeBuild):
@@ -213,8 +206,35 @@ class TestCjkFontFallback(unittest.TestCase):
         )
         self.assertEqual(14, fallback["pixelHeight"])
         self.assertTrue(fallback["extended"])
+        self.assertEqual(["emery", "gabbro"], fallback["targetPlatforms"])
         self.assertTrue(FONT_PATH.exists())
         self.assertTrue(CODEPOINTS_PATH.exists())
+
+    def test_extended_fallback_is_limited_to_large_resource_platforms(self):
+        if FREETYPE_IMPORT_ERROR is not None:
+            raise unittest.SkipTest(
+                f"font generation is not available: {FREETYPE_IMPORT_ERROR}"
+            )
+
+        bld = FakeBuild()
+        definitions = FontResourceGenerator.definitions_from_dict(
+            bld,
+            {
+                "type": "font",
+                "name": "FONT_FALLBACK_INTERNAL_EXTENDED",
+                "file": ("normal/base/lang/zh_CN/NotoSansCJKsc-DemiLight.otf"),
+                "characterList": ("normal/base/lang/cjk_notification_codepoints.json"),
+                "pixelHeight": 14,
+                "extended": True,
+                "targetPlatforms": ["emery", "gabbro"],
+            },
+            "resources",
+        )
+
+        self.assertEqual(1, len(definitions))
+        definition = definitions[0]
+        self.assertTrue(definition.is_in_target_platform(FakeBuild()))
+        self.assertFalse(definition.is_in_target_platform(FakeFlintBuild()))
 
     def test_codepoint_list_covers_cjk_notification_text(self):
         codepoints = set(load_codepoints())
@@ -236,9 +256,7 @@ class TestCjkFontFallback(unittest.TestCase):
 
         face = freetype.Face(str(FONT_PATH))
         unsupported = [
-            f"U+{cp:04X}"
-            for cp in load_codepoints()
-            if face.get_char_index(cp) == 0
+            f"U+{cp:04X}" for cp in load_codepoints() if face.get_char_index(cp) == 0
         ]
 
         self.assertEqual([], unsupported)
@@ -260,9 +278,7 @@ class TestCjkFontFallback(unittest.TestCase):
             },
             str(FONT_PATH),
         )
-        font_data = FontResourceGenerator.build_font_data(
-            definition.file, definition
-        )
+        font_data = FontResourceGenerator.build_font_data(definition.file, definition)
         metadata, indexed_codepoints = parse_pbf_codepoints(font_data)
 
         self.assertEqual(14, metadata["max_height"])
@@ -287,13 +303,9 @@ class TestCjkFontFallback(unittest.TestCase):
                 {
                     "type": "font",
                     "name": "FONT_FALLBACK_INTERNAL_EXTENDED",
-                    "file": (
-                        "normal/base/lang/zh_CN/"
-                        "NotoSansCJKsc-DemiLight.otf"
-                    ),
+                    "file": ("normal/base/lang/zh_CN/NotoSansCJKsc-DemiLight.otf"),
                     "characterList": (
-                        "normal/base/lang/"
-                        "cjk_notification_codepoints.json"
+                        "normal/base/lang/cjk_notification_codepoints.json"
                     ),
                     "pixelHeight": 14,
                     "extended": True,
@@ -323,10 +335,7 @@ class TestCjkFontFallback(unittest.TestCase):
             {
                 "type": "font",
                 "name": "FONT_FALLBACK_INTERNAL_EXTENDED",
-                "file": (
-                    "normal/base/lang/zh_CN/"
-                    "NotoSansCJKsc-DemiLight.otf"
-                ),
+                "file": ("normal/base/lang/zh_CN/NotoSansCJKsc-DemiLight.otf"),
                 "characterList": str(CODEPOINTS_PATH),
                 "pixelHeight": 14,
                 "extended": True,
@@ -354,14 +363,8 @@ class TestCjkFontFallback(unittest.TestCase):
             {
                 "type": "font",
                 "name": "FONT_FALLBACK_INTERNAL_EXTENDED",
-                "file": (
-                    "normal/base/lang/zh_CN/"
-                    "NotoSansCJKsc-DemiLight.otf"
-                ),
-                "characterList": (
-                    "normal/base/lang/"
-                    "cjk_notification_codepoints.json"
-                ),
+                "file": ("normal/base/lang/zh_CN/NotoSansCJKsc-DemiLight.otf"),
+                "characterList": ("normal/base/lang/cjk_notification_codepoints.json"),
                 "pixelHeight": 14,
                 "extended": True,
             },
@@ -386,18 +389,13 @@ class TestCjkFontFallback(unittest.TestCase):
             )
 
         bld = FakeBuild()
-        with self.assertRaisesRegex(
-            AssertionError, "escapes resource source path"
-        ):
+        with self.assertRaisesRegex(AssertionError, "escapes resource source path"):
             FontResourceGenerator.definitions_from_dict(
                 bld,
                 {
                     "type": "font",
                     "name": "FONT_FALLBACK_INTERNAL_EXTENDED",
-                    "file": (
-                        "normal/base/lang/zh_CN/"
-                        "NotoSansCJKsc-DemiLight.otf"
-                    ),
+                    "file": ("normal/base/lang/zh_CN/NotoSansCJKsc-DemiLight.otf"),
                     "characterList": "../outside.json",
                     "pixelHeight": 14,
                     "extended": True,
