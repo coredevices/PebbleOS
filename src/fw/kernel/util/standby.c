@@ -5,7 +5,6 @@
 
 #include "drivers/display/display.h"
 #include "drivers/pmic.h"
-#include "drivers/pwr.h"
 #include "drivers/periph_config.h"
 #include "system/bootbits.h"
 #include "system/logging.h"
