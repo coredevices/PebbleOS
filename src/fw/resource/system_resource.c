@@ -51,7 +51,9 @@ static GFont prv_load_system_font(const char *font_key) {
     PBL_LOG_DBG("GETTING FALLBACK FONT");
     // load fallback font
     if (!s_system_fonts_info_table[NUM_SYSTEM_FONTS].loaded) {
-      PBL_ASSERTN(text_resources_init_font(SYSTEM_APP, RESOURCE_ID_FONT_FALLBACK_INTERNAL, 0,
+      PBL_ASSERTN(text_resources_init_font(SYSTEM_APP,
+          RESOURCE_ID_FONT_FALLBACK_INTERNAL,
+          RESOURCE_ID_FONT_FALLBACK_INTERNAL_EXTENDED,
           &s_system_fonts_info_table[NUM_SYSTEM_FONTS]));
     }
     return &s_system_fonts_info_table[NUM_SYSTEM_FONTS];
@@ -107,4 +109,3 @@ DEFINE_SYSCALL(void, sys_font_reload_font, FontInfo *fontinfo) {
   text_resources_init_font(fontinfo->base.app_num, fontinfo->base.resource_id,
       fontinfo->extension.resource_id, fontinfo);
 }
-

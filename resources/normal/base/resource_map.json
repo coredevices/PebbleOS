@@ -6,6 +6,14 @@
       "characterRegex": "[0-9a-fx]"
     },
     {
+      "type": "font",
+      "name": "FONT_FALLBACK_INTERNAL_EXTENDED",
+      "file": "normal/base/lang/zh_CN/NotoSansCJKsc-DemiLight.otf",
+      "characterList": "normal/base/lang/cjk_notification_codepoints.json",
+      "pixelHeight": 14,
+      "extended": true
+    },
+    {
       "type": "pdc",
       "name": "BATTERY_ICON_LOW_LARGE",
       "file": "normal/base/images/Pebble_80x80_Low_battery.svg"

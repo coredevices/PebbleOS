@@ -4,6 +4,7 @@
 from resources.types.resource_object import ResourceObject
 from resources.types.resource_definition import ResourceDefinition
 from resources.resource_map.resource_generator import ResourceGenerator
+from resources.find_resource_filename import find_most_specific_filename
 
 from font.fontgen import Font, MAX_GLYPHS_EXTENDED, MAX_GLYPHS
 
@@ -49,6 +50,25 @@ class FontResourceGenerator(ResourceGenerator):
         max_glyph_size = FontResourceGenerator._max_glyph_size(bld.env)
         for d in definitions:
             FontResourceGenerator._apply_font_fields(d, definition_dict, max_glyph_size)
+            font_ext = os.path.splitext(d.file)[-1].lower()
+            if d.character_list and font_ext in (".ttf", ".otf", ".bdf"):
+                source_path = resource_source_path
+                if os.path.isabs(source_path):
+                    source_path = os.path.relpath(source_path, bld.path.abspath())
+                character_list_path = os.path.join(source_path, d.character_list)
+                if character_list_path.startswith(".."):
+                    character_list_path = os.path.normpath(character_list_path)
+                else:
+                    character_list_path = find_most_specific_filename(
+                        bld, bld.env, bld.path, character_list_path
+                    )
+                d.character_list = character_list_path
+                dependency_path = character_list_path
+                if os.path.isabs(dependency_path):
+                    dependency_path = os.path.relpath(
+                        dependency_path, bld.path.abspath()
+                    )
+                d.sources.append(dependency_path)
 
         return definitions
 
