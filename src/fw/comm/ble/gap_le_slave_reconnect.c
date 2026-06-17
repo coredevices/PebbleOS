@@ -113,7 +113,7 @@ static void prv_evaluate(ReconnectType prev_type) {
     }
 
     // Values chosen according to Apple Accessory Design Guidelines
-    const GAPLEAdvertisingJobTerm fast_then_slow_terms[] = {
+    const GAPLEAdvertisingJobTerm advert_terms[] = {
         {
             .duration_secs = 30,
             .interval = GAPLEAdvertisingInterval_Short,
@@ -123,22 +123,9 @@ static void prv_evaluate(ReconnectType prev_type) {
             .interval = GAPLEAdvertisingInterval_Long,
         },
     };
-    const GAPLEAdvertisingJobTerm slow_only_terms[] = {
-        {
-            .duration_secs = GAPLE_ADVERTISING_DURATION_INFINITE,
-            .interval = GAPLEAdvertisingInterval_Long,
-        },
-    };
-
-    const bool partial_connection = gap_le_advert_get_slave_connection_count() > 0;
-    const GAPLEAdvertisingJobTerm *advert_terms =
-        partial_connection ? slow_only_terms : fast_then_slow_terms;
-    const uint8_t num_terms = partial_connection
-                                  ? sizeof(slow_only_terms) / sizeof(GAPLEAdvertisingJobTerm)
-                                  : sizeof(fast_then_slow_terms) / sizeof(GAPLEAdvertisingJobTerm);
 
     s_reconnect_advert_job = gap_le_advert_schedule(
-        ad, advert_terms, num_terms,
+        ad, advert_terms, sizeof(advert_terms) / sizeof(GAPLEAdvertisingJobTerm),
         prv_advert_job_unscheduled_callback, NULL, GAPLEAdvertisingJobTagReconnection);
 
     if (use_hrm_payload) {

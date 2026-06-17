@@ -598,15 +598,6 @@ unlock:
 }
 
 // -----------------------------------------------------------------------------
-uint8_t gap_le_advert_get_slave_connection_count(void) {
-  uint8_t count;
-  bt_lock();
-  count = s_slave_connection_count;
-  bt_unlock();
-  return count;
-}
-
-// -----------------------------------------------------------------------------
 void gap_le_advert_handle_connect_as_slave(void) {
   bt_lock();
   {

@@ -126,7 +126,7 @@ static void prv_schedule_ad_job(void) {
                                        sizeof(struct ManufacturerSpecificData));
 
   // Values chosen according to Apple Accessory Design Guidelines.
-  const GAPLEAdvertisingJobTerm fast_then_slow_terms[] = {
+  const GAPLEAdvertisingJobTerm advert_terms[] = {
       {
           // Extend this term from recommended 30s to 5min so user has e.g. time
           // to download or open mobile app.
@@ -138,22 +138,9 @@ static void prv_schedule_ad_job(void) {
           .interval = GAPLEAdvertisingInterval_Long,
       },
   };
-  const GAPLEAdvertisingJobTerm slow_only_terms[] = {
-      {
-          .duration_secs = GAPLE_ADVERTISING_DURATION_INFINITE,
-          .interval = GAPLEAdvertisingInterval_Long,
-      },
-  };
-
-  const bool partial_connection = gap_le_advert_get_slave_connection_count() > 0;
-  const GAPLEAdvertisingJobTerm *advert_terms =
-      partial_connection ? slow_only_terms : fast_then_slow_terms;
-  const uint8_t num_terms = partial_connection
-                                ? sizeof(slow_only_terms) / sizeof(GAPLEAdvertisingJobTerm)
-                                : sizeof(fast_then_slow_terms) / sizeof(GAPLEAdvertisingJobTerm);
 
   s_discovery_advert_job = gap_le_advert_schedule(
-      ad, advert_terms, num_terms,
+      ad, advert_terms, sizeof(advert_terms) / sizeof(GAPLEAdvertisingJobTerm),
       prv_job_unschedule_callback, NULL, GAPLEAdvertisingJobTagDiscovery);
 
   ble_ad_destroy(ad);
