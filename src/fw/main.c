@@ -167,10 +167,6 @@ int main(void) {
 
   pebble_task_create(PebbleTask_KernelMain, &task_params, NULL);
 
-  // Always start the firmware in a state where we explicitly do not allow stop mode.
-  // FIXME: This seems overly cautious to me, we shouldn't have to do this.
-  stop_mode_disable(InhibitorMain);
-
   vTaskStartScheduler();
   for(;;);
 }
@@ -369,8 +365,6 @@ static NOINLINE void prv_main_task_init(void) {
   clear_reset_loop_detection_bits();
 
   task_watchdog_mask_set(PebbleTask_KernelMain);
-
-  stop_mode_enable(InhibitorMain);
 
   // Leave the board with stop and sleep mode debugging enabled for at least 10
   // seconds to give OpenOCD time to start and still able to connect when it is
