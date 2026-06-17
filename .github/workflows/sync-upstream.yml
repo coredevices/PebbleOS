@@ -1,0 +1,67 @@
+name: Sync upstream
+
+on:
+  schedule:
+    - cron: '0 4 * * *'  # 4am UTC nightly
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream https://github.com/coredevices/PebbleOS.git
+          git fetch upstream --tags --force
+
+      - name: Attempt rebase onto upstream/main
+        id: rebase
+        run: |
+          if git rebase upstream/main; then
+            echo "clean=true" >> "$GITHUB_OUTPUT"
+          else
+            git rebase --abort
+            echo "clean=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push (clean rebase)
+        if: steps.rebase.outputs.clean == 'true'
+        run: git push origin main --force-with-lease --tags
+
+      - name: Open conflict PR (unclean rebase)
+        if: steps.rebase.outputs.clean == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="sync/upstream-$(date +%Y%m%d)"
+          git checkout -b "$BRANCH"
+          git merge upstream/main --no-edit || true
+          git add -A
+          git diff --cached --quiet || git commit -m "sync: upstream merge $(date +%Y-%m-%d) (conflicts need resolution)"
+          git push origin "$BRANCH"
+          gh pr create \
+            --title "sync: upstream $(date +%Y-%m-%d) -- conflicts" \
+            --body "$(cat <<'EOF'
+          Nightly upstream sync could not rebase cleanly. Resolve the conflicts
+          in this branch and merge to keep main up to date.
+
+          Upstream: https://github.com/coredevices/PebbleOS
+          EOF
+          )" \
+            --base main \
+            --head "$BRANCH"
