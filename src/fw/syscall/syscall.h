@@ -310,3 +310,8 @@ WatchInfoColor sys_watch_info_get_color(void);
 //! @return True, if Quiet Time is currently active.
 bool sys_do_not_disturb_is_active(void);
 //! @} // end addtogroup Preferences
+
+//! Get the time of the next enabled alarm.
+//! @param timestamp_out Set to the UTC time of the next enabled alarm.
+//! @return True if at least one enabled alarm is scheduled.
+bool sys_alarm_get_next_enabled(time_t *timestamp_out);

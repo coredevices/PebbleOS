@@ -4,7 +4,7 @@
               "You should also make sure you are obeying our API design guidelines:",
               "https://pebbletechnology.atlassian.net/wiki/display/DEV/SDK+API+Design+Guidelines"
             ],
-  "revision" : "104",
+  "revision" : "105",
   "version" : "2.0",
   "files": [
     "fw/drivers/ambient_light.h",
@@ -42,6 +42,7 @@
     "include/bluetooth/bluetooth_types.h",
     "libbtutil/include/btutil/bt_device.h",
     "libbtutil/include/btutil/bt_uuid.h",
+    "fw/applib/alarm_service.h",
     "fw/applib/compass_service.h",
     "fw/applib/connection_service.h",
     "fw/applib/data_logging.h",
@@ -308,6 +309,15 @@
           "name": "EventService",
           "exports": [
             {
+              "type": "group",
+              "name": "AlarmService",
+              "exports": [
+                { "type": "function",
+                  "name": "alarm_service_peek_next",
+                  "addedRevision": "105"
+                }
+              ]
+            }, {
               "type": "group",
               "name": "ConnectionService",
               "exports": [
