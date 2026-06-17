@@ -95,6 +95,9 @@ struct HRMManagerState {
   bool enabled_run_level;      // True if the current run_level (LowPower, Stationary,
                                // Normal, etc.) allows the sensor to be turned on
   bool enabled_charging_state; // Ture if we aren't plugged in / charging
+
+  HRMFeature active_features; // Features the sensor is sampling now (0 when off). Only one
+                              // optical path (green BPM/HRV or red/IR SpO2) runs at a time.
 };
 
 //! Subscription for KernelBG or KernelMain clients.

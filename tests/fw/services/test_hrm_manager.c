@@ -41,6 +41,7 @@ extern TimerID prv_get_timer_id(void);
 extern bool prv_can_turn_sensor_on(void);
 extern void prv_charger_event_cb(PebbleEvent *e);
 extern uint32_t prv_get_dropped_events_count(void);
+extern HRMFeature prv_select_active_path(HRMFeature wanted, HRMFeature active);
 
 // -----------------------------------------------------------------------------
 // HRM Driver fakes
@@ -106,6 +107,11 @@ bool activity_prefs_heart_rate_is_enabled(void) {
   return s_activity_prefs_heart_rate_is_enabled;
 }
 
+static bool s_activity_prefs_blood_oxygen_is_enabled = false;
+bool activity_prefs_blood_oxygen_is_enabled(void) {
+  return s_activity_prefs_blood_oxygen_is_enabled;
+}
+
 bool battery_is_usb_connected(void) {
   return false;
 }
@@ -169,6 +175,7 @@ void test_hrm_manager__initialize(void) {
   s_num_cb_events_1 = 0;
   s_num_cb_events_2 = 0;
   memset(&s_hrm_state, 0, sizeof(s_hrm_state));
+  s_activity_prefs_blood_oxygen_is_enabled = false;
   hrm_manager_init();
   hrm_manager_enable(true);
 
@@ -245,6 +252,93 @@ void test_hrm_manager__feature_change_restarts_sensor(void) {
   sys_hrm_manager_unsubscribe(session_ref);
   fake_system_task_callbacks_invoke_pending();
   cl_assert_equal_b(hrm_is_enabled(HRM), false);
+}
+
+// A same-path superset keeps running: a served longer-interval BPM|HRV subscriber must not make the
+// sensor restart to BPM-only (and back again once it's due) while a 1 s BPM consumer keeps it on.
+void test_hrm_manager__same_path_superset_keeps_running(void) {
+  stub_pebble_tasks_set_current(PebbleTask_App);
+  HRMSessionRef live_ref = sys_hrm_manager_app_subscribe(1 /*app_id*/, 1, 0, HRMFeature_BPM);
+  fake_system_task_callbacks_invoke_pending();
+  cl_assert_equal_i(s_hrm_state.features, HRMFeature_BPM);
+  cl_assert_equal_i(s_hrm_state.enable_count, 1);
+
+  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  HRMSessionRef hrv_ref =
+      hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID, SECONDS_PER_MINUTE, 0,
+                                          HRMFeature_BPM | HRMFeature_HRV, prv_fake_hrm_1_cb, NULL);
+  fake_system_task_callbacks_invoke_pending();
+  cl_assert_equal_i(s_hrm_state.features, HRMFeature_BPM | HRMFeature_HRV);
+  cl_assert_equal_i(s_hrm_state.enable_count, 2);
+
+  // A Good BPM sample serves both; the HRV subscriber is no longer due but still live, so the
+  // running BPM|HRV set is kept.
+  prv_fake_send_new_data();
+  hrm_manager_handle_prefs_changed();
+  fake_system_task_callbacks_invoke_pending();
+  cl_assert_equal_b(hrm_is_enabled(HRM), true);
+  cl_assert_equal_i(s_hrm_state.features, HRMFeature_BPM | HRMFeature_HRV);
+  cl_assert_equal_i(s_hrm_state.enable_count, 2);
+
+  // Once the HRV subscriber is gone, drop back to BPM only.
+  sys_hrm_manager_unsubscribe(hrv_ref);
+  fake_system_task_callbacks_invoke_pending();
+  cl_assert_equal_i(s_hrm_state.features, HRMFeature_BPM);
+  cl_assert_equal_i(s_hrm_state.enable_count, 3);
+
+  sys_hrm_manager_unsubscribe(live_ref);
+  fake_system_task_callbacks_invoke_pending();
+  cl_assert_equal_b(hrm_is_enabled(HRM), false);
+}
+
+// The pref mask keeps background subscribers off a disabled path, but a foreground app that asked
+// for the feature bypasses it.
+void test_hrm_manager__pref_mask_exempts_foreground_app(void) {
+  s_activity_prefs_blood_oxygen_is_enabled = false;
+
+  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  HRMSessionRef bg_ref = hrm_manager_subscribe_with_callback(
+      INSTALL_ID_INVALID, 1, 0, HRMFeature_SpO2, prv_fake_hrm_1_cb, NULL);
+  fake_system_task_callbacks_invoke_pending();
+  cl_assert_equal_b(hrm_is_enabled(HRM), false);
+
+  stub_pebble_tasks_set_current(PebbleTask_App);
+  HRMSessionRef app_ref = sys_hrm_manager_app_subscribe(1 /*app_id*/, 1, 0, HRMFeature_SpO2);
+  fake_system_task_callbacks_invoke_pending();
+  cl_assert_equal_b(hrm_is_enabled(HRM), true);
+  cl_assert_equal_i(s_hrm_state.features, HRMFeature_SpO2);
+
+  sys_hrm_manager_unsubscribe(app_ref);
+  fake_system_task_callbacks_invoke_pending();
+  cl_assert_equal_b(hrm_is_enabled(HRM), false);
+  sys_hrm_manager_unsubscribe(bg_ref);
+}
+
+// The green (BPM/HRV) and red/IR (SpO2) optical paths are mutually exclusive in hardware. When both
+// are due the manager must serve exactly one path at a time and hand off to the other once the
+// running path's subscribers are served, instead of one starving the other.
+void test_hrm_manager__select_active_path(void) {
+  // Only one path due -> sample it, untouched.
+  cl_assert_equal_i(prv_select_active_path(HRMFeature_BPM, 0), HRMFeature_BPM);
+  cl_assert_equal_i(prv_select_active_path(HRMFeature_SpO2, 0), HRMFeature_SpO2);
+  cl_assert_equal_i(prv_select_active_path(0, 0), 0);
+
+  // Cold start with both paths due (nothing running yet) -> SpO2 goes first.
+  cl_assert_equal_i(prv_select_active_path(HRMFeature_BPM | HRMFeature_SpO2, 0), HRMFeature_SpO2);
+
+  // SpO2 already running and both still due -> keep SpO2 (don't cut its measurement short).
+  cl_assert_equal_i(prv_select_active_path(HRMFeature_BPM | HRMFeature_SpO2, HRMFeature_SpO2),
+                    HRMFeature_SpO2);
+
+  // SpO2 served and backed off (only BPM left due) while SpO2 was running -> hand off to BPM.
+  cl_assert_equal_i(prv_select_active_path(HRMFeature_BPM, HRMFeature_SpO2), HRMFeature_BPM);
+
+  // BPM already running and both still due -> keep the green path running.
+  cl_assert_equal_i(prv_select_active_path(HRMFeature_BPM | HRMFeature_SpO2, HRMFeature_BPM),
+                    HRMFeature_BPM);
+
+  // BPM served and backed off (only SpO2 left due) while BPM was running -> hand off to SpO2.
+  cl_assert_equal_i(prv_select_active_path(HRMFeature_SpO2, HRMFeature_BPM), HRMFeature_SpO2);
 }
 
 // When we cleanup after an app process, its subscription, if any, should get an expiration time
@@ -431,8 +525,9 @@ void test_hrm_manager__no_feature_callbacks(void) {
   prv_fake_send_new_data();
   fake_system_task_callbacks_invoke_pending();
 
-  // HRM should be enabled, subscriber should exist, no callbacks triggered.
-  cl_assert_equal_b(hrm_is_enabled(HRM), true);
+  // A subscriber with no requested features is ignored entirely: it must not power the sensor on,
+  // but the subscription still exists and receives no callbacks.
+  cl_assert_equal_b(hrm_is_enabled(HRM), false);
   cl_assert(prv_get_subscriber_state_from_ref(session_ref));
 
   cl_assert_equal_i(s_event_count, 0);
