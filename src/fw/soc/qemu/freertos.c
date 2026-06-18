@@ -56,7 +56,6 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
       s_last_ticks_commanded_in_stop = stop_duration;
 
       rtc_alarm_set(stop_duration);
-      enter_stop_mode();
 
       RtcTicks ticks_elapsed = rtc_alarm_get_elapsed_ticks();
 

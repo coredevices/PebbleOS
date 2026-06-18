@@ -38,30 +38,6 @@ typedef struct {
 // they are read and modified by multiple threads
 static InhibitorTickProfile s_inhibitor_profile[InhibitorNumItems];
 
-#ifdef CONFIG_SOC_NRF52
-void enter_stop_mode(void) {
-  dbgserial_enable_rx_exti();
-  dbgserial_disable_rx_dma_before_stop();
-
-  flash_power_down_for_stop_mode();
-  rtc_systick_pause();
-
-  /* XXX(nrf5): LATER: have MPSL turn off HFCLK */
-
-  __DSB(); // Drain any pending memory writes before entering sleep.
-  do_wfi(); // Wait for Interrupt (enter sleep mode). Work around F2/F4 errata.
-  __ISB(); // Let the pipeline catch up (force the WFI to activate before moving on).
-
-  rtc_systick_resume();
-  flash_power_up_after_stop_mode();
-
-  dbgserial_enable_rx_dma_after_stop();
-}
-#elif defined(CONFIG_QEMU)
-void enter_stop_mode(void) {
-}
-#endif
-
 void stop_mode_disable( StopModeInhibitor inhibitor ) {
   portENTER_CRITICAL();
   ++s_num_items_disallowing_stop_mode;

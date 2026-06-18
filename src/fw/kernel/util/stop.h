@@ -29,13 +29,6 @@ typedef enum {
   InhibitorNumItems
 } StopModeInhibitor;
 
-/** Enter stop mode.
- *
- *  \note Probably no good reason to call this function from most application 
- *  code. Let the FreeRTOS scheduler do its job.
- */
-void enter_stop_mode(void);
-
 /** Prevent the scheduler from entering stop mode in idle.  Usually called when
  * we know that there is some resource or peripheral being used that does not 
  * require the use of the CPU, but that going into stop mode would interrupt.
