@@ -107,12 +107,13 @@ static const SpeakerNote s_bell[] = {
   NOTE(69, SpeakerWaveformSine, 700),  // A4
 };
 
-// Chime — two short beeps at C8.
+// Chime — two short beeps at C7. Leading rest lets the amp settle before the
+// first tone (otherwise the first beep is nearly inaudible).
 static const SpeakerNote s_chime[] = {
+  NOTE(0,  SpeakerWaveformSine, 500),
+  NOTE(96, SpeakerWaveformSine, 100),  // C7
   NOTE(0,  SpeakerWaveformSine, 100),
-  NOTE(108, SpeakerWaveformSine, 100),  // C8
-  NOTE(0,  SpeakerWaveformSine, 100),
-  NOTE(108, SpeakerWaveformSine, 100),  // C8
+  NOTE(96, SpeakerWaveformSine, 100),  // C7
 };
 
 #undef NOTE

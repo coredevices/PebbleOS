@@ -53,6 +53,7 @@ static RegularTimerInfo s_dst_checker;
 #ifndef CONFIG_RECOVERY_FW
 // Armed on the first timer tick, after init has settled.
 static bool s_hourly_chime_armed;
+#define HOURLY_CHIME_VOLUME 50
 #endif
 
 static time_t prv_migrate_local_time_to_UTC(time_t local_time) {
@@ -422,7 +423,7 @@ T_STATIC void prv_watch_dst(void* user) {
       uint32_t count;
       alarm_tones_get(AlarmTone_Chime, &notes, &count);
       speaker_service_play_note_seq(notes, count, SpeakerPriorityNotification,
-                                    alerts_preferences_get_speaker_volume());
+                                    HOURLY_CHIME_VOLUME);
     }
 #endif
   }
