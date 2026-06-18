@@ -9,7 +9,6 @@
 #include "drivers/task_watchdog.h"
 #include "console/prompt.h"
 #include "kernel/util/stop.h"
-#include "kernel/util/wfi.h"
 #include "pbl/services/analytics/analytics.h"
 #include "util/math.h"
 
@@ -65,9 +64,9 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
     if (xExpectedIdleTime < MIN_STOP_TICKS || !stop_mode_is_allowed()) {
       RtcTicks sleep_start_ticks = rtc_get_ticks();
 
-      __DSB();  // Drain any pending memory writes before entering sleep.
-      do_wfi();  // Wait for Interrupt (enter sleep mode). Work around F2/F4 errata.
-      __ISB();  // Let the pipeline catch up (force the WFI to activate before moving on).
+      __DSB();
+      __WFI();
+      __ISB();
 
       s_analytics_sleep_ticks += rtc_get_ticks() - sleep_start_ticks;
     } else {
@@ -81,9 +80,9 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
       rtc_alarm_set(stop_duration);
       rtc_systick_pause();
 
-      __DSB(); // Drain any pending memory writes before entering sleep.
-      do_wfi(); // Wait for Interrupt (enter sleep mode). Work around F2/F4 errata.
-      __ISB(); // Let the pipeline catch up (force the WFI to activate before moving on).
+      __DSB();
+      __WFI();
+      __ISB();
 
       rtc_systick_resume();
 
