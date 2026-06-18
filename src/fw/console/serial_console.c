@@ -11,7 +11,6 @@
 #include "console/pulse_internal.h"
 #include "drivers/mic.h"
 #include "drivers/watchdog.h"
-#include "kernel/util/stop.h"
 #include "os/tick.h"
 #include "system/logging.h"
 #include "system/passert.h"
@@ -86,14 +85,6 @@ void serial_console_set_state(SerialConsoleState new_state) {
     portEXIT_CRITICAL();
     return;
   }
-
-#ifndef CONFIG_PULSE_EVERYWHERE
-  if (new_state == SERIAL_CONSOLE_STATE_LOGGING) {
-    stop_mode_enable(InhibitorDbgSerial);
-  } else if (s_serial_console_state == SERIAL_CONSOLE_STATE_LOGGING) {
-    stop_mode_disable(InhibitorDbgSerial);
-  }
-#endif
 
   s_serial_console_state = new_state;
 
