@@ -14,7 +14,6 @@
 
 #include "drivers/clocksource.h"
 #include "drivers/rtc.h"
-#include "drivers/periph_config.h"
 #include "drivers/flash.h"
 #include "drivers/debounced_button.h"
 
@@ -30,7 +29,6 @@
 #include "drivers/otp.h"
 #include "drivers/pmic.h"
 #include "drivers/pressure.h"
-#include "drivers/pwr.h"
 #include "drivers/task_watchdog.h"
 #include "drivers/temperature.h"
 #include "drivers/touch/touch_sensor.h"
@@ -167,13 +165,6 @@ int main(void) {
   };
 
   pebble_task_create(PebbleTask_KernelMain, &task_params, NULL);
-
-  // Always start the firmware in a state where we explicitly do not allow stop mode.
-  // FIXME: This seems overly cautious to me, we shouldn't have to do this.
-  stop_mode_disable(InhibitorMain);
-
-  // Turn off power to internal flash when in stop mode
-  pwr_flash_power_down_stop_mode(true /* power_down */);
 
   vTaskStartScheduler();
   for(;;);
@@ -373,8 +364,6 @@ static NOINLINE void prv_main_task_init(void) {
   clear_reset_loop_detection_bits();
 
   task_watchdog_mask_set(PebbleTask_KernelMain);
-
-  stop_mode_enable(InhibitorMain);
 
   // Leave the board with stop and sleep mode debugging enabled for at least 10
   // seconds to give OpenOCD time to start and still able to connect when it is
