@@ -58,7 +58,6 @@
 
 // FreeRTOS stuff
 #include "FreeRTOS.h"
-#include "freertos_application.h"
 #include "task.h"
 #include "queue.h"
 
