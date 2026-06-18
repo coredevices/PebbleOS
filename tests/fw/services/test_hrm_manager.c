@@ -112,6 +112,11 @@ bool activity_prefs_blood_oxygen_is_enabled(void) {
   return s_activity_prefs_blood_oxygen_is_enabled;
 }
 
+static bool s_activity_prefs_blood_oxygen_activity_tracking_is_enabled = false;
+bool activity_prefs_blood_oxygen_activity_tracking_is_enabled(void) {
+  return s_activity_prefs_blood_oxygen_activity_tracking_is_enabled;
+}
+
 bool battery_is_usb_connected(void) {
   return false;
 }

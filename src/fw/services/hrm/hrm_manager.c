@@ -167,8 +167,11 @@ T_STATIC bool prv_can_turn_sensor_on(void) {
   return true;
 #endif
 
+  // Keep this in sync with prv_prefs_allowed_features(): a pref that can allow a feature there has
+  // to be able to turn the sensor on here, or that feature's reader silently never runs.
   return s_manager_state.enabled_run_level && s_manager_state.enabled_charging_state &&
-         (activity_prefs_heart_rate_is_enabled() || activity_prefs_blood_oxygen_is_enabled());
+         (activity_prefs_heart_rate_is_enabled() || activity_prefs_blood_oxygen_is_enabled() ||
+          activity_prefs_blood_oxygen_activity_tracking_is_enabled());
 }
 
 // Features the user prefs currently allow. BPM (green) and SpO2 (red/IR) sampling are each gated on
@@ -178,7 +181,11 @@ static HRMFeature prv_prefs_allowed_features(void) {
   HRMFeature allowed = (HRMFeature)~0;
 #ifndef CONFIG_RECOVERY_FW
   // The recovery firmware doesn't gate the sensor on user prefs (see prv_can_turn_sensor_on()).
-  if (!activity_prefs_blood_oxygen_is_enabled()) {
+  //
+  // SpO2 is allowed if daily monitoring is on, OR if the during-activities opt-in is on (it works
+  // independently of the daily toggle).
+  if (!activity_prefs_blood_oxygen_is_enabled() &&
+      !activity_prefs_blood_oxygen_activity_tracking_is_enabled()) {
     allowed &= ~HRMFeature_SpO2;
   }
   // HRV shares the green LED with BPM, so the heart rate pref gates both. Without this an HRV
