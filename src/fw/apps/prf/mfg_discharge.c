@@ -17,6 +17,7 @@
 #include "services/common/bluetooth/bluetooth_ctl.h"
 #include "services/common/light.h"
 #include "system/logging.h"
+#include "util/time/time.h"
 
 #define CHARGE_TARGET_PERCENT 100
 #define DRAIN_TARGET_PERCENT 70
@@ -52,7 +53,7 @@ typedef struct {
   uint32_t elapsed_seconds;
 } AppData;
 
-static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
+static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
   AppData *data = app_state_get_user_data();
 
   // Get battery state
@@ -90,6 +91,9 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
         serial_console_set_rx_enabled(false);
         bt_ctl_set_enabled(false);
 
+        // Update only once a minute during discharge to reduce wake-ups
+        tick_timer_service_subscribe(MINUTE_UNIT, prv_handle_tick);
+
         data->test_state = DischargeStateDischarging;
         data->elapsed_seconds = 0;
       }
@@ -99,9 +103,9 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
       if (data->elapsed_seconds == 0) {
         data->initial_voltage_mv = battery_const.v_mv;
         data->initial_percent = charge_state.charge_percent;
+      } else {
+        data->elapsed_seconds += SECONDS_PER_MINUTE;
       }
-
-      data->elapsed_seconds++;
 
       int hours = data->elapsed_seconds / 3600;
       int mins = (data->elapsed_seconds % 3600) / 60;
@@ -172,7 +176,7 @@ static void app_init(void) {
   window_set_click_config_provider(window, prv_config_provider);
   window_set_fullscreen(window, true);
 
-  tick_timer_service_subscribe(SECOND_UNIT, prv_handle_second_tick);
+  tick_timer_service_subscribe(SECOND_UNIT, prv_handle_tick);
 
   app_window_stack_push(window, true /* Animated */);
 }
