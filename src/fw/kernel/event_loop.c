@@ -56,6 +56,7 @@
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/light.h"
 #include "pbl/services/new_timer/new_timer.h"
+#include "pbl/services/powermode_service.h"
 #include "pbl/services/put_bytes/put_bytes.h"
 #include "pbl/services/system_task.h"
 #ifdef CONFIG_TOUCH
