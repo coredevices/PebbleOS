@@ -234,7 +234,6 @@ typedef struct {
   const NrfLowPowerPWM extcomin;
 } BoardConfigSharpDisplay;
 
-typedef const struct DMARequest DMARequest;
 typedef const struct UARTDevice UARTDevice;
 typedef const struct SPIBus SPIBus;
 typedef const struct SPISlavePort SPISlavePort;
