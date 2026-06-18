@@ -14,9 +14,6 @@
 #include "system/passert.h"
 #include "util/math.h"
 
-#include "pbl/services/battery/battery_monitor.h"
-#include "pbl/services/battery/battery_state.h"
-
 #include <string.h>
 
 PBL_LOG_MODULE_DEFINE(driver_vibe_drv2604, CONFIG_DRIVER_VIBE_LOG_LEVEL);
@@ -124,10 +121,6 @@ void vibe_set_strength(int8_t strength) {
 void vibe_ctl(bool on) {
   if (!s_initialized) {
     return;
-  }
-
-  if (on && battery_monitor_critical_lockout()) {
-    on = false;
   }
 
   PBL_LOG_DBG("Vibe status <%s>", on ? "on" : "off");
