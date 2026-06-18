@@ -11,7 +11,7 @@
 #include "drivers/rtc.h"
 #include "drivers/sf32lb52/rc10k.h"
 #include "drivers/task_watchdog.h"
-#include "kernel/util/stop.h"
+#include "kernel/util/idle.h"
 #include "os/tick.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/soc/sf32lb/sleep.h"
@@ -184,7 +184,7 @@ static uint32_t prv_calc_elapsed_ticks(uint32_t gtimer_cyc) {
 }
 
 void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime) {
-  if (!sleep_mode_is_allowed()) {
+  if (!idle_is_allowed()) {
     return;
   }
 

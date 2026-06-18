@@ -3,13 +3,13 @@
 
 #include <cmsis_core.h>
 
-#include "kernel/util/stop.h"
+#include "kernel/util/idle.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
 
 extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
-  if (!sleep_mode_is_allowed()) {
+  if (!idle_is_allowed()) {
     return;
   }
 

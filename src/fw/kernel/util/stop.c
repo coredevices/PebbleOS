@@ -20,12 +20,6 @@
 
 static int s_num_items_disallowing_stop_mode = 0;
 
-#ifdef CONFIG_NOSLEEP
-static bool s_sleep_mode_allowed = false;
-#else
-static bool s_sleep_mode_allowed = true;
-#endif
-
 typedef struct {
   uint32_t active_count;
   RtcTicks ticks_when_stop_mode_disabled;
@@ -69,24 +63,4 @@ bool stop_mode_is_allowed(void) {
 #else
   return s_num_items_disallowing_stop_mode == 0;
 #endif
-}
-
-void sleep_mode_enable(bool enable) {
-  s_sleep_mode_allowed = enable;
-}
-
-bool sleep_mode_is_allowed(void) {
-#ifdef CONFIG_NOSLEEP
-  return false;
-#endif
-  return s_sleep_mode_allowed;
-}
-
-
-void command_scheduler_force_active(void) {
-  sleep_mode_enable(false);
-}
-
-void command_scheduler_resume_normal(void) {
-  sleep_mode_enable(true);
 }

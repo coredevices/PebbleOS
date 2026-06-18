@@ -8,7 +8,7 @@
 #include "drivers/rtc.h"
 #include "drivers/task_watchdog.h"
 #include "console/prompt.h"
-#include "kernel/util/stop.h"
+#include "kernel/util/idle.h"
 #include "pbl/services/analytics/analytics.h"
 
 #include <cmsis_core.h>
@@ -25,7 +25,7 @@ static const RtcTicks EARLY_WAKEUP_TICKS = 2;
 static const RtcTicks MIN_FULL_SLEEP_TICKS = 5;
 
 extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
-  if (!rtc_alarm_is_initialized() || !sleep_mode_is_allowed()) {
+  if (!rtc_alarm_is_initialized() || !idle_is_allowed()) {
     return;
   }
 
