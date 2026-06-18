@@ -10,6 +10,7 @@
 #include "console/prompt.h"
 #include "kernel/util/idle.h"
 #include "pbl/services/analytics/analytics.h"
+#include "pbl/soc/nrf/sleep.h"
 
 #include <cmsis_core.h>
 
@@ -32,7 +33,7 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
   __disable_irq();
 
   if (eTaskConfirmSleepModeStatus() != eAbortSleep) {
-    if (xExpectedIdleTime < MIN_FULL_SLEEP_TICKS || !stop_mode_is_allowed()) {
+    if (xExpectedIdleTime < MIN_FULL_SLEEP_TICKS || !soc_nrf_sleep_full_is_allowed()) {
       RtcTicks sleep_start_ticks = rtc_get_ticks();
 
       NRF_NVMC->ICACHECNF &= ~NVMC_ICACHECNF_CACHEEN_Msk;
