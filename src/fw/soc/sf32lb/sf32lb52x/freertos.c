@@ -15,6 +15,7 @@
 #include "kernel/util/wfi.h"
 #include "os/tick.h"
 #include "pbl/services/analytics/analytics.h"
+#include "pbl/soc/sf32lb/sleep.h"
 #include "util/math.h"
 
 #include <bf0_hal.h>
@@ -196,12 +197,25 @@ void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime) {
   __disable_irq();
 
   if (eTaskConfirmSleepModeStatus() != eAbortSleep) {
+    SocSf32lbSleepLevel max_level = soc_sf32lb_sleep_max_level();
+
+    // The generic stop-mode gate caps the system at plain WFI.
     if (!stop_mode_is_allowed()) {
-      prv_enter_wfi();
-    } else {
-      if (xExpectedIdleTime < MIN_DEEPSLEEP_TICKS || s_force_deepwfi) {
+      max_level = MIN(max_level, SOC_SF32LB_WFI);
+    }
+    // Deep sleep needs a minimum idle window; the debug flag forces deep WFI.
+    if (xExpectedIdleTime < MIN_DEEPSLEEP_TICKS || s_force_deepwfi) {
+      max_level = MIN(max_level, SOC_SF32LB_DEEPWFI);
+    }
+
+    switch (max_level) {
+      case SOC_SF32LB_WFI:
+        prv_enter_wfi();
+        break;
+      case SOC_SF32LB_DEEPWFI:
         prv_enter_deepwfi();
-      } else {
+        break;
+      case SOC_SF32LB_DEEPSLEEP: {
         uint32_t gtimer_start;
         uint32_t gtimer_stop;
         uint32_t gtimer_delta;
@@ -255,7 +269,10 @@ void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime) {
 
         // enable systick
         SysTick->CTRL |= (SysTick_CTRL_ENABLE_Msk | SysTick_CTRL_TICKINT_Msk);
+        break;
       }
+      default:
+        break;
     }
   }
 
