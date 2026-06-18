@@ -8,6 +8,7 @@
 #include "drivers/pmic.h"
 #include "drivers/rtc.h"
 #include "kernel/events.h"
+#include "kernel/util/stop.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/battery/battery_state.h"
 #include "pbl/services/new_timer/new_timer.h"
@@ -38,9 +39,8 @@ PBL_LOG_MODULE_DECLARE(service_battery, CONFIG_SERVICE_BATTERY_LOG_LEVEL);
 
 #define ALWAYS_UPDATE_PCT 10.0f
 #define RECONNECTION_DELAY_MS (1 * 1000)
-// TODO: Adjust sample rate based on activity periods once we have good
-// power consumption profiles
-#define BATTERY_SAMPLE_RATE_S 1
+#define BATTERY_FAST_SAMPLE_RATE_S 1
+#define BATTERY_IDLE_SAMPLE_RATE_S 60
 
 #define LOG_MIN_SEC 30
 
@@ -76,6 +76,15 @@ static uint32_t s_last_tte;
 static uint32_t s_last_ttf;
 static RtcTicks s_last_log;
 static bool s_charger_enabled;
+static uint8_t s_sample_skip_count;
+
+static void prv_callback_from_regular_timer(void *data);
+
+static RegularTimerInfo battery_regular_timer = {
+    .cb = prv_callback_from_regular_timer,
+};
+
+static uint16_t s_battery_poll_interval_s = BATTERY_FAST_SAMPLE_RATE_S;
 
 #if FUEL_GAUGE_STATEFUL
 #define FUEL_GAUGE_SAVE_INTERVAL_S 300
@@ -217,6 +226,8 @@ static void prv_save_state(void) {
 #endif // FUEL_GAUGE_STATEFUL
 
 static void prv_schedule_update(uint32_t delay, bool force_update);
+static bool prv_use_fast_battery_poll(void);
+static void prv_update_battery_poll_interval(void);
 
 static int prv_fuel_gauge_init_common(const BatteryConstants *constants, bool load_state) {
   struct nrf_fuel_gauge_init_parameters parameters = {0};
@@ -304,6 +315,13 @@ static void prv_update_state(void *force_update) {
   s_update_pending = false;
   update = (force_update != NULL) || s_pending_force_update;
   s_pending_force_update = false;
+
+  const uint8_t MAX_SAMPLE_SKIPS = 5;
+  if (!update && s_sample_skip_count < MAX_SAMPLE_SKIPS && !stop_mode_is_allowed()) {
+    s_sample_skip_count++;
+    return;
+  }
+  s_sample_skip_count = 0;
 
   ret = battery_get_constants(&constants);
   if (ret < 0) {
@@ -415,6 +433,8 @@ static void prv_update_state(void *force_update) {
     s_charger_enabled = true;
     pmic_set_charger_state(true);
   }
+
+  prv_update_battery_poll_interval();
 }
 
 static void prv_enqueue_update(bool force) {
@@ -437,6 +457,28 @@ static void prv_update_callback(void *data) {
 static void prv_callback_from_regular_timer(void *data) {
   // no need to stop the new_timer here, since this came from the regular_timer
   prv_enqueue_update(false);
+}
+
+static bool prv_use_fast_battery_poll(void) {
+  if (s_last_battery_charge_state.is_plugged || s_last_battery_charge_state.is_charging) {
+    return true;
+  }
+  if (s_last_battery_charge_state.pct < (uint8_t)ALWAYS_UPDATE_PCT) {
+    return true;
+  }
+  return false;
+}
+
+static void prv_update_battery_poll_interval(void) {
+  uint16_t interval =
+      prv_use_fast_battery_poll() ? BATTERY_FAST_SAMPLE_RATE_S : BATTERY_IDLE_SAMPLE_RATE_S;
+
+  if (interval == s_battery_poll_interval_s) {
+    return;
+  }
+
+  s_battery_poll_interval_s = interval;
+  regular_timer_add_multisecond_callback(&battery_regular_timer, interval);
 }
 
 static void prv_schedule_update(uint32_t delay, bool force_update) {
@@ -523,10 +565,7 @@ void battery_state_init(void) {
 
   battery_state_force_update();
 
-  static RegularTimerInfo battery_regular_timer = {
-    .cb = prv_callback_from_regular_timer
-  };
-  regular_timer_add_multisecond_callback(&battery_regular_timer, BATTERY_SAMPLE_RATE_S);
+  regular_timer_add_multisecond_callback(&battery_regular_timer, BATTERY_FAST_SAMPLE_RATE_S);
 
   s_analytics_last_voltage_mv = s_last_voltage_mv;
   s_analytics_last_cpct = s_last_soc_cpct;

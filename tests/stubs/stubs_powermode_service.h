@@ -4,6 +4,7 @@
 #include "pbl/services/powermode_service.h"
 
 void powermode_service_init(void) {}
+void powermode_service_boot_complete(void) {}
 void powermode_service_set_enabled(bool enabled) {}
 void powermode_service_request_hp(void) {}
 void powermode_service_release_hp(void) {}

@@ -551,6 +551,8 @@ static NOINLINE void prv_launcher_main_loop_init(void) {
                                                                 : RunLevel_Normal;
   services_set_runlevel(run_level);
 
+  powermode_service_boot_complete();
+
   // emulate a button press-and-release to turn on/off the backlight
   light_button_pressed();
   light_button_released();

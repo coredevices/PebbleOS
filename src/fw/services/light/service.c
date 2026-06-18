@@ -114,7 +114,7 @@ static uint32_t s_total_on_time_ms; // Total backlight on time tracked internall
 //! that follows the press within the TTL) skip the ~200 ms I2C poll.
 static uint32_t s_als_cached_level;
 static RtcTicks s_als_cached_ticks;  // 0 = invalid
-#define ALS_CACHE_TTL_TICKS (RTC_TICKS_HZ)  // 1 second
+#define ALS_CACHE_TTL_OFF_TICKS (5 * RTC_TICKS_HZ)
 
 static void prv_change_state(BacklightState new_state);
 
@@ -122,7 +122,8 @@ static uint32_t prv_get_als_level(void) {
   RtcTicks now = rtc_get_ticks();
   const bool cache_valid =
       s_als_cached_ticks != 0 &&
-      (s_current_brightness > 0 || (now - s_als_cached_ticks) < ALS_CACHE_TTL_TICKS);
+      (s_current_brightness > 0 ||
+       (now - s_als_cached_ticks) < ALS_CACHE_TTL_OFF_TICKS);
   if (cache_valid) {
     return s_als_cached_level;
   }
