@@ -12,7 +12,9 @@
 #include "process_management/app_manager.h"
 #include "process_management/worker_manager.h"
 #include "pbl/services/analytics/analytics.h"
+#ifdef CONFIG_SERVICE_POWERMODE_SERVICE
 #include "pbl/services/powermode_service.h"
+#endif
 #include "pbl/services/system_task.h"
 #include "pbl/services/activity/activity.h"
 #include "syscall/syscall_internal.h"
@@ -229,7 +231,9 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
     if (turn_sensor_on && !hrm_is_enabled(HRM) && !hrm_permanently_failed) {
       // Turn on the sensor now
       HRM_LOG("Turning on HR sensor");
+#ifdef CONFIG_SERVICE_POWERMODE_SERVICE
       powermode_service_request_hp();
+#endif
 
       // Only subscribe if not already subscribed (prevents leak if hrm_is_enabled is out of sync)
       if (s_manager_state.accel_state) {
@@ -257,7 +261,9 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
         }
         sys_accel_manager_data_unsubscribe(s_manager_state.accel_state);
         s_manager_state.accel_state = NULL;
+#ifdef CONFIG_SERVICE_POWERMODE_SERVICE
         powermode_service_release_hp();
+#endif
       } else {
         // Success - reset failure counter
         s_manager_state.enable_failure_count = 0;
@@ -270,7 +276,9 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
     } else if (!turn_sensor_on && hrm_is_enabled(HRM)) {
       // Turn off the sensor now
       HRM_LOG("Turning off HR sensor");
+#ifdef CONFIG_SERVICE_POWERMODE_SERVICE
       powermode_service_release_hp();
+#endif
       hrm_disable(HRM);
       // Stop tracking HRM on-time
       PBL_ANALYTICS_TIMER_STOP(hrm_on_time_ms);
