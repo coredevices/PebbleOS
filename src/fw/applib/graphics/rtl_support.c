@@ -8,9 +8,8 @@
 
 #include <string.h>
 
-// Maximum number of codepoints we can handle in a single reversal
-// Keep small for stack safety on embedded systems (32 codepoints * 4 bytes = 128 bytes)
-// 32 is sufficient for all real Hebrew words including long morphological forms
+// Maximum number of codepoints we can handle in a single reversal.
+// 32 is sufficient for real Hebrew words including long morphological forms.
 #define MAX_RTL_CODEPOINTS 32
 
 bool utf8_contains_rtl(const utf8_t *start, const utf8_t *end) {
@@ -68,10 +67,8 @@ size_t utf8_reverse_for_rtl(const utf8_t *src, size_t src_len,
     return 0;
   }
 
-  // First pass: collect all codepoints into an array
-  Codepoint codepoints[MAX_RTL_CODEPOINTS];
+  // First pass: find the end of the bounded input we will reverse.
   size_t num_codepoints = 0;
-
   utf8_t *ptr = (utf8_t *)src;
   const utf8_t *end = src + src_len;
 
@@ -81,19 +78,30 @@ size_t utf8_reverse_for_rtl(const utf8_t *src, size_t src_len,
     if (cp == 0 || next == NULL) {
       break;
     }
-    codepoints[num_codepoints++] = cp;
     ptr = next;
+    num_codepoints++;
   }
 
   if (num_codepoints == 0) {
     return 0;
   }
 
-  // Second pass: write codepoints in reverse order to destination
+  const utf8_t *reverse_ptr = ptr;
   size_t dest_offset = 0;
 
-  for (size_t i = num_codepoints; i > 0; i--) {
-    Codepoint cp = codepoints[i - 1];
+  // Second pass: walk backward over UTF-8 sequence starts and write each
+  // codepoint to the destination. This avoids a stack array in the render path.
+  while (reverse_ptr > src) {
+    const utf8_t *cp_start = reverse_ptr - 1;
+    while (cp_start > src && ((*cp_start & 0xC0) == 0x80)) {
+      cp_start--;
+    }
+
+    utf8_t *next = NULL;
+    Codepoint cp = utf8_peek_codepoint((utf8_t *)cp_start, &next);
+    if (cp == 0 || next == NULL || next > reverse_ptr) {
+      break;
+    }
 
     // Make sure we have room for at least 4 bytes + null terminator
     if (dest_offset + 4 >= dest_size) {
@@ -102,9 +110,11 @@ size_t utf8_reverse_for_rtl(const utf8_t *src, size_t src_len,
 
     size_t bytes_written = utf8_encode_codepoint(cp, dest + dest_offset);
     if (bytes_written == 0) {
-      continue; // Skip invalid codepoints
+      reverse_ptr = cp_start;
+      continue;
     }
     dest_offset += bytes_written;
+    reverse_ptr = cp_start;
   }
 
   // Null-terminate if we have space

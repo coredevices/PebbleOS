@@ -752,6 +752,8 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
     // Pass 3: Render segments in (possibly reordered) visual order
     int walked_width_px = 0;
     utf8_t *last_visited_char = NULL;
+    utf8_t rtl_buffer[128];
+    const size_t rtl_buffer_size = sizeof(rtl_buffer);
 
     for (int seg_idx = 0; seg_idx < num_segments; seg_idx++) {
       BiDiSegment *seg = &segments[seg_idx];
@@ -761,27 +763,32 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
         // Shape, reverse, render. Buffers sized to fit any single line on
         // 200-260 px displays; shaping expands Arabic basic-block (2 UTF-8
         // bytes) to presentation forms (3 bytes).
-        utf8_t shaped_buffer[128];
-        utf8_t rtl_buffer[128];
-        const utf8_t *to_render = seg->start;
         size_t render_len = seg_len;
+        size_t reversed_len = 0;
 
-        if (render_len > sizeof(rtl_buffer) - 4) {
-          render_len = sizeof(rtl_buffer) - 4;
+        if (render_len > rtl_buffer_size - 4) {
+          render_len = rtl_buffer_size - 4;
         }
 
         if (utf8_contains_arabic(seg->start, seg->end)) {
-          size_t shaped_len = arabic_shape_text(seg->start, render_len,
-                                                shaped_buffer, sizeof(shaped_buffer) - 1);
-          if (shaped_len > 0) {
-            shaped_buffer[shaped_len] = '\0';
-            to_render = shaped_buffer;
-            render_len = shaped_len;
+          utf8_t *shaped_buffer = applib_malloc(rtl_buffer_size);
+          if (shaped_buffer) {
+            size_t shaped_len = arabic_shape_text(seg->start, render_len,
+                                                  shaped_buffer, rtl_buffer_size - 1);
+            if (shaped_len > 0) {
+              shaped_buffer[shaped_len] = '\0';
+              reversed_len = utf8_reverse_for_rtl(shaped_buffer, shaped_len,
+                                                  rtl_buffer, rtl_buffer_size - 1);
+            }
+            applib_free(shaped_buffer);
           }
         }
 
-        size_t reversed_len = utf8_reverse_for_rtl(to_render, render_len,
-                                                    rtl_buffer, sizeof(rtl_buffer) - 1);
+        if (reversed_len == 0) {
+          reversed_len = utf8_reverse_for_rtl(seg->start, render_len,
+                                              rtl_buffer, rtl_buffer_size - 1);
+        }
+
         if (reversed_len > 0) {
           rtl_buffer[reversed_len] = '\0';
 
