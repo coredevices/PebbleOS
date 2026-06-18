@@ -167,9 +167,10 @@ typedef enum {
 // sdk.major:0x5 .minor:0x63 -- Export launch_button() (rev 102)
 // sdk.major:0x5 .minor:0x64 -- Add kModdableCreationFlagDebug (rev 103)
 // sdk.major:0x5 .minor:0x65 -- Expose SPEAKER_MAX_NOTES and SPEAKER_MAX_TRACKS (rev 104)
+// sdk.major:0x5 .minor:0x66 -- Expose SPEAKER_MAX_SAMPLE_BYTES_TOTAL (rev 105)
 
 #define PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR 0x5
-#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x65
+#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x66
 
 // The first SDK to ship with 2.x APIs
 #define PROCESS_INFO_FIRST_2X_SDK_VERSION_MAJOR 0x4

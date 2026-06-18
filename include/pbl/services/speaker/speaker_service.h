@@ -73,9 +73,6 @@ bool speaker_service_play_tracks(const SpeakerTrack *tracks, uint32_t num_tracks
 //! given task whenever playback ends.
 void speaker_service_register_finish(PebbleTask task);
 
-//! Max total sample-data bytes per speaker_service_play_tracks call.
-#define SPEAKER_MAX_SAMPLE_BYTES_TOTAL (16 * 1024)
-
 //! Open a PCM stream for writing.
 //! @param pri Priority level
 //! @param vol Volume (0-100)

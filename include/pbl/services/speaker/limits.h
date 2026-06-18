@@ -8,3 +8,7 @@
 
 //! Maximum number of parallel tracks in a single speaker_play_tracks() call.
 #define SPEAKER_MAX_TRACKS 4
+
+//! Maximum total sample-data bytes across all tracks in one speaker_play_tracks()
+//! call.
+#define SPEAKER_MAX_SAMPLE_BYTES_TOTAL (16 * 1024)

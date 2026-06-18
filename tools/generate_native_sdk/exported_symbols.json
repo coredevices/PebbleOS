@@ -4,7 +4,7 @@
               "You should also make sure you are obeying our API design guidelines:",
               "https://pebbletechnology.atlassian.net/wiki/display/DEV/SDK+API+Design+Guidelines"
             ],
-  "revision" : "104",
+  "revision" : "105",
   "version" : "2.0",
   "files": [
     "fw/drivers/ambient_light.h",
@@ -4584,6 +4584,10 @@
               "type": "define",
               "name": "SPEAKER_MAX_TRACKS",
               "addedRevision": "104"
+            }, {
+              "type": "define",
+              "name": "SPEAKER_MAX_SAMPLE_BYTES_TOTAL",
+              "addedRevision": "105"
             }, {
               "type": "function",
               "name": "speaker_play_notes",
