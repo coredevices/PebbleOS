@@ -90,9 +90,10 @@ void app_manager_close_current_app(bool gracefully) {
   }
 }
 
-void battery_ui_display_plugged(void) {
+void battery_ui_display_plugged(uint8_t percent) {
   s_modal_onscreen = true;
   s_modal_charging = true;
+  s_modal_percent = percent;
 }
 
 void battery_ui_display_fully_charged(void) {
