@@ -86,10 +86,7 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
         sniprintf(data->details_string, sizeof(data->details_string),
                   "Draining\n%" PRIu8 "%%", charge_state.charge_percent);
       } else {
-        // Disable sources of power consumption to minimize impact on discharge test results
         light_enable(false);
-        serial_console_set_rx_enabled(false);
-        bt_ctl_set_enabled(false);
 
         // Update only once a minute during discharge to reduce wake-ups
         tick_timer_service_subscribe(MINUTE_UNIT, prv_handle_tick);
@@ -148,6 +145,10 @@ static void app_init(void) {
   AppData *data = app_malloc_check(sizeof(AppData));
 
   app_state_set_user_data(data);
+
+  // Disable sources of power consumption to minimize impact on discharge test results
+  serial_console_set_rx_enabled(false);
+  bt_ctl_set_enabled(false);
 
   *data = (AppData){
       .test_state = DischargeStateChargeTo100,
