@@ -4,7 +4,7 @@
               "You should also make sure you are obeying our API design guidelines:",
               "https://pebbletechnology.atlassian.net/wiki/display/DEV/SDK+API+Design+Guidelines"
             ],
-  "revision" : "103",
+  "revision" : "104",
   "version" : "2.0",
   "files": [
     "fw/drivers/ambient_light.h",
@@ -114,6 +114,7 @@
     "fw/applib/ui/ui.h",
     "fw/applib/ui/vibes.h",
     "fw/applib/ui/speaker.h",
+    "include/pbl/services/speaker/limits.h",
     "include/pbl/services/speaker/note_sequence.h",
     "include/pbl/services/speaker/speaker_finish_reason.h",
     "include/pbl/services/speaker/speaker_pcm_format.h",
@@ -4575,6 +4576,18 @@
             }, {
               "type": "type",
               "name": "SpeakerTrack"
+            }, {
+              "type": "define",
+              "name": "SPEAKER_MAX_NOTES",
+              "addedRevision": "104"
+            }, {
+              "type": "define",
+              "name": "SPEAKER_MAX_TRACKS",
+              "addedRevision": "104"
+            }, {
+              "type": "define",
+              "name": "SPEAKER_MAX_SAMPLE_BYTES_TOTAL",
+              "addedRevision": "104"
             }, {
               "type": "function",
               "name": "speaker_play_notes",

@@ -7,11 +7,11 @@
 #include "kernel/pebble_tasks.h"
 #include "pbl/services/speaker/speaker_pcm_format.h"
 #include "pbl/services/speaker/speaker_service.h"
+#include "pbl/services/speaker/limits.h"
 #include "pbl/services/speaker/note_sequence.h"
 #include "pbl/services/speaker/track.h"
 #include "system/passert.h"
 
-#define SPEAKER_MAX_NOTES 256
 #define SPEAKER_MAX_STREAM_WRITE 8192
 
 DEFINE_SYSCALL(bool, sys_speaker_play_note_seq, const SpeakerNote *notes,
