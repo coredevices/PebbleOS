@@ -15,7 +15,6 @@
 #include "drivers/exti.h"
 #include "drivers/gpio.h"
 #include "drivers/i2c.h"
-#include "drivers/periph_config.h"
 #include "kernel/events.h"
 #include "kernel/util/delay.h"
 #include "kernel/util/sleep.h"

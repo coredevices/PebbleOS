@@ -7,7 +7,6 @@
 
 #include "system/passert.h"
 
-#include "drivers/periph_config.h"
 #include "FreeRTOS.h"
 
 #include <nrfx.h>

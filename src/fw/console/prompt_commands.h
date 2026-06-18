@@ -238,7 +238,6 @@ extern void command_ble_logging_get_level(void);
 extern void command_ble_host_reset(void);
 
 extern void command_audit_delay_us(void);
-extern void command_enter_stop(void);
 
 extern void dialog_test_cmds(void);
 
@@ -327,9 +326,6 @@ static const Command s_prompt_commands[] = {
   { "battery status", command_print_battery_status, 0 },
 #ifndef CONFIG_RELEASE
   { "audit delay", command_audit_delay_us, 0 },
-#ifndef CONFIG_SOC_SF32LB52
-  { "enter stop", command_enter_stop, 0},
-#endif
 #endif
 #ifndef CONFIG_RECOVERY_FW
   { "app list", command_app_list, 0 },

@@ -45,10 +45,6 @@ static QemuDisplayDevice s_display = {
 
 DisplayDevice *const DISPLAY = &s_display;
 
-const BoardConfigActuator BOARD_CONFIG_VIBE = {
-  .options = 0,
-};
-
 const BoardConfigPower BOARD_CONFIG_POWER = {
   .low_power_threshold = 2U,
   .battery_capacity_hours = 168U,

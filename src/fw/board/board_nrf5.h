@@ -155,12 +155,6 @@ typedef enum {
   OptionActiveHigh
 } PowerCtl5VOptions;
 
-typedef enum {
-  ActuatorOptions_Ctl = 1 << 0, ///< GPIO is used to enable / disable vibe
-  ActuatorOptions_Pwm = 1 << 1, ///< PWM control
-  ActuatorOptions_HBridge = 1 << 3, //< PWM actuates an H-Bridge, requires ActuatorOptions_PWM
-} ActuatorOptions;
-
 typedef struct {
   // Audio Configuration
   /////////////////////////////////////////////////////////////////////////////
@@ -220,12 +214,7 @@ typedef struct {
 } BoardConfigMag;
 
 typedef struct {
-  const ActuatorOptions options;
   const OutputConfig ctl;
-  const PwmConfig pwm;
-  const uint16_t vsys_scale; //< Voltage to scale duty cycle to in mV. 0 if no scaling should occur.
-                             //< For example, Silk VBat may droop to 3.3V, so we scale down vibe
-                             //< duty cycle so that 100% duty cycle will always be 3.3V RMS.
 } BoardConfigActuator;
 
 typedef struct {

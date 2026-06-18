@@ -12,7 +12,6 @@
 #include "drivers/clocksource.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
-#include "kernel/util/stop.h"
 #include "os/mutex.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/bluetooth/ble_bas.h"
@@ -65,7 +64,6 @@ static void prv_comm_start(void) {
   if (s_comm_is_running) {
     return;
   }
-  stop_mode_disable(InhibitorCommMode);
   // Heap allocated to reduce stack usage
   BTDriverConfig *config = kernel_zalloc_check(sizeof(BTDriverConfig));
   dis_get_info(&config->dis_info);
@@ -95,15 +93,12 @@ static void prv_comm_start(void) {
     PBL_LOG_ERR("BT driver failed to start!");
     // FIXME: PBL-36163 -- handle this better
   }
-
-  stop_mode_enable(InhibitorCommMode);
 }
 
 static void prv_comm_stop(void) {
   if (!s_comm_is_running) {
     return;
   }
-  stop_mode_disable(InhibitorCommMode);
   ble_bas_deinit();
 #if defined(CONFIG_HRM) && !defined(CONFIG_RECOVERY_FW)
   ble_hrm_deinit();
@@ -112,7 +107,6 @@ static void prv_comm_stop(void) {
 
   // Should be the last thing to happen that touches the Bluetooth controller directly
   bt_driver_stop();
-  stop_mode_enable(InhibitorCommMode);
   s_comm_is_running = false;
 
   // This is a legacy event used to update the Settings app.

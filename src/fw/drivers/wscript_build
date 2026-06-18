@@ -5,7 +5,6 @@ if bld.env.CONFIG_QEMU:
         'driver_button',
         'driver_mcu',
         'driver_mpu',
-        'driver_pwr',
         'driver_task_watchdog',
         'driver_qemu_stubs',
     ])
@@ -24,13 +23,6 @@ if bld.env.CONFIG_QEMU:
         ],
     )
 
-    # periph_config stub for QEMU (required by qemu_serial)
-    bld.objects(
-        name='driver_periph_config',
-        source=[],
-        use=['fw_includes'],
-    )
-
 elif bld.env.CONFIG_BOARD_FAMILY_ASTERIX:
     bld.env.DRIVERS.extend([
         'driver_button',
@@ -38,8 +30,6 @@ elif bld.env.CONFIG_BOARD_FAMILY_ASTERIX:
         'driver_mpu',
         'driver_nrf5_hfxo',
         'driver_otp',
-        'driver_periph_config',
-        'driver_pwr',
         'driver_task_watchdog',
     ])
 
@@ -48,8 +38,6 @@ elif bld.env.CONFIG_BOARD_FAMILY_OBELIX:
         'driver_button',
         'driver_mcu',
         'driver_mpu',
-        'driver_periph_config',
-        'driver_pwr',
         'driver_qspi',
         'driver_rc10k',
         'driver_task_watchdog',
@@ -60,8 +48,6 @@ elif bld.env.CONFIG_BOARD_FAMILY_GETAFIX:
         'driver_button',
         'driver_mcu',
         'driver_mpu',
-        'driver_periph_config',
-        'driver_pwr',
         'driver_qspi',
         'driver_rc10k',
         'driver_task_watchdog',
@@ -136,16 +122,6 @@ if bld.env.CONFIG_FLASH:
 
 if bld.env.CONFIG_GPIO:
     bld.recurse('gpio')
-
-bld.objects(
-    name='driver_pwr',
-    source=[
-        'stubs/pwr.c',
-    ],
-    use=[
-        'fw_includes',
-    ],
-)
 
 if bld.env.CONFIG_I2C:
     bld.recurse('i2c')

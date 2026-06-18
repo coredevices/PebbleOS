@@ -3,7 +3,6 @@
 
 #include "drivers/task_watchdog.h"
 
-#include "drivers/periph_config.h"
 #include "drivers/watchdog.h"
 #include "kernel/core_dump.h"
 #include "kernel/event_loop.h"

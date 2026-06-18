@@ -91,18 +91,6 @@ typedef struct {
 typedef struct {
 } TimerConfig;
 
-typedef enum {
-  ActuatorOptions_Ctl = 1 << 0,
-  ActuatorOptions_Pwm = 1 << 1,
-  ActuatorOptions_HBridge = 1 << 3,
-} ActuatorOptions;
-
-typedef struct {
-  const ActuatorOptions options;
-  const OutputConfig ctl;
-  const PwmConfig pwm;
-} BoardConfigActuator;
-
 typedef struct {
   uint8_t backlight_on_percent;
   uint32_t ambient_light_dark_threshold;

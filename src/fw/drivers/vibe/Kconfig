@@ -23,11 +23,6 @@ config VIBE_DRV2604
     help
       Support for the TI DRV2604 haptic driver.
 
-config VIBE_PWM
-    bool "PWM-based vibration"
-    help
-      Support for PWM-based vibration motor control.
-
 module = DRIVER_VIBE
 module-str = Vibration Motor
 source "src/fw/Kconfig.template.log_level"
