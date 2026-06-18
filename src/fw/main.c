@@ -14,7 +14,6 @@
 
 #include "drivers/clocksource.h"
 #include "drivers/rtc.h"
-#include "drivers/periph_config.h"
 #include "drivers/flash.h"
 #include "drivers/debounced_button.h"
 

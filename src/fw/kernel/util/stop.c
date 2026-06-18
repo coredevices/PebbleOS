@@ -4,7 +4,6 @@
 #include "console/dbgserial.h"
 #include "console/dbgserial_input.h"
 #include "drivers/flash.h"
-#include "drivers/periph_config.h"
 #include "drivers/rtc.h"
 #include "drivers/task_watchdog.h"
 #include "os/tick.h"

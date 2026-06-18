@@ -7,7 +7,6 @@
 #include "drivers/button.h"
 #include "drivers/exti.h"
 #include "drivers/gpio.h"
-#include "drivers/periph_config.h"
 #include "drivers/timer.h"
 #include "kernel/events.h"
 #include "kernel/util/stop.h"

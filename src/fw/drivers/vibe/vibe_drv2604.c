@@ -7,7 +7,6 @@
 #include "console/prompt.h"
 #include "drivers/gpio.h"
 #include "drivers/i2c.h"
-#include "drivers/periph_config.h"
 #include "drivers/pmic.h"
 #include "drivers/pwm.h"
 #include "drivers/timer.h"

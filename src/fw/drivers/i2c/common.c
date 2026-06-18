@@ -8,7 +8,6 @@
 #include "board/board.h"
 #include "debug/power_tracking.h"
 #include "drivers/gpio.h"
-#include "drivers/periph_config.h"
 #include "drivers/rtc.h"
 #include "FreeRTOS.h"
 #include "kernel/pbl_malloc.h"

@@ -5,7 +5,6 @@
 #include "console/prompt.h"
 #include "drivers/ambient_light.h"
 #include "drivers/i2c.h"
-#include "drivers/periph_config.h"
 #include "kernel/util/sleep.h"
 #include "mfg/mfg_info.h"
 #include "system/logging.h"
