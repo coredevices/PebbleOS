@@ -13,7 +13,7 @@
 #include "util/circular_buffer.h"
 #include "util/heap.h"
 #include "kernel/util/sleep.h"
-#include "kernel/util/stop.h"
+#include "pbl/soc/sf32lb/sleep.h"
 #include "pdm_definitions.h"
 #include "pbl/services/system_task.h"
 #include "FreeRTOS.h"
@@ -366,8 +366,8 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
   // Set is_running to true BEFORE starting PDM, since the event handler will be called immediately
   state->is_running = true;
 
-  // Prevent CPU from entering stop mode during audio capture
-  stop_mode_disable(InhibitorMic);
+  // Prevent CPU from entering deep sleep during audio capture
+  soc_sf32lb_sleep_block(SOC_SF32LB_DEEPWFI);
 
   // Start PDM capture
   if (!prv_start_pdm_capture(this)) {
@@ -381,7 +381,7 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
     state->raw_dma_buffer = NULL;
     hpdm->pRxBuffPtr = NULL;
 
-    stop_mode_enable(InhibitorMic);
+    soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
     state->is_running = false;  // Reset on failure
 #if PDM_POWER_NPM1300_LDO2
   (void)NPM1300_OPS.ldo2_set_enabled(false);
@@ -434,8 +434,8 @@ void mic_stop(const MicDevice *this) {
   (void)NPM1300_OPS.ldo2_set_enabled(false);
 #endif
 
-  // Allow CPU to enter stop mode again
-  stop_mode_enable(InhibitorMic);
+  // Allow CPU to enter deep sleep again
+  soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
 
   mutex_unlock_recursive(state->mutex);
 }

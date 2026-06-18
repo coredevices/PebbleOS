@@ -8,7 +8,7 @@
 #include "drivers/exti.h"
 #include "drivers/gpio.h"
 #include "kernel/events.h"
-#include "kernel/util/stop.h"
+#include "pbl/soc/sf32lb/sleep.h"
 #include "system/bootbits.h"
 #include "system/reset.h"
 #include "util/bitset.h"
@@ -59,7 +59,7 @@ static void disable_button_timer(void) {
   if (s_timer_enabled) {
     s_timer_enabled = false;
     HAL_GPT_Base_Stop_IT(&s_tim_hdl);
-    stop_mode_enable(InhibitorButton);
+    soc_sf32lb_sleep_release(SOC_SF32LB_DEEPSLEEP);
   }
 }
 
@@ -68,7 +68,7 @@ static void prv_enable_button_timer(void) {
   if (!s_timer_enabled) {
     s_timer_enabled = true;
     HAL_GPT_Base_Start_IT(&s_tim_hdl);
-    stop_mode_disable(InhibitorButton);
+    soc_sf32lb_sleep_block(SOC_SF32LB_DEEPSLEEP);
   }
   __enable_irq();
 }

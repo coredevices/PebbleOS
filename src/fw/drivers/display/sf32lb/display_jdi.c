@@ -10,7 +10,7 @@
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/delay.h"
-#include "kernel/util/stop.h"
+#include "pbl/soc/sf32lb/sleep.h"
 #include "kernel/coredump_extra_regions.h"
 #include "drivers/rtc.h"
 #include "mcu/cache.h"
@@ -282,7 +282,7 @@ static void prv_display_update_terminate(void *data) {
 
   s_updating = false;
   s_uccb();
-  stop_mode_enable(InhibitorDisplay);
+  soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
 }
 
 void display_jdi_irq_handler(DisplayJDIDevice *disp) {
@@ -475,7 +475,7 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   s_updating = true;
   s_eof_observed = false;
 
-  stop_mode_disable(InhibitorDisplay);
+  soc_sf32lb_sleep_block(SOC_SF32LB_DEEPWFI);
   // Arm the timer before kickoff so the EOF IRQ, which can fire as soon as
   // SendLayerData_IT returns, never races us into a state where the timer
   // isn't yet armed. prv_display_update_terminate stops it on the normal
@@ -507,7 +507,7 @@ void display_update_boot_frame(uint8_t *framebuffer) {
   s_update_y0 = 0;
   s_update_y1 = PBL_DISPLAY_HEIGHT - 1;
 
-  stop_mode_disable(InhibitorDisplay);
+  soc_sf32lb_sleep_block(SOC_SF32LB_DEEPWFI);
   HAL_StatusTypeDef status = prv_display_update_start();
   if (status == HAL_OK) {
     xSemaphoreTake(s_sem, portMAX_DELAY);
@@ -516,7 +516,7 @@ void display_update_boot_frame(uint8_t *framebuffer) {
     // since the EOF IRQ that gives the semaphore never fires.
     prv_handle_send_failure("boot", status);
   }
-  stop_mode_enable(InhibitorDisplay);
+  soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
 }
 
 void display_clear(void) {}
