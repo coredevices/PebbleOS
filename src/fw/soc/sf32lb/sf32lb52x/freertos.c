@@ -199,10 +199,6 @@ void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime) {
   if (eTaskConfirmSleepModeStatus() != eAbortSleep) {
     SocSf32lbSleepLevel max_level = soc_sf32lb_sleep_max_level();
 
-    // The generic stop-mode gate caps the system at plain WFI.
-    if (!stop_mode_is_allowed()) {
-      max_level = MIN(max_level, SOC_SF32LB_WFI);
-    }
     // Deep sleep needs a minimum idle window; the debug flag forces deep WFI.
     if (xExpectedIdleTime < MIN_DEEPSLEEP_TICKS || s_force_deepwfi) {
       max_level = MIN(max_level, SOC_SF32LB_DEEPWFI);
