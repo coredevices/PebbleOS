@@ -8,7 +8,6 @@
 #include "drivers/task_watchdog.h"
 #include "os/tick.h"
 #include "kernel/util/stop.h"
-#include "kernel/util/wfi.h"
 #include "mcu/interrupts.h"
 #include "pbl/services/analytics/analytics.h"
 #include "system/passert.h"

@@ -12,7 +12,6 @@
 #include "drivers/sf32lb52/rc10k.h"
 #include "drivers/task_watchdog.h"
 #include "kernel/util/stop.h"
-#include "kernel/util/wfi.h"
 #include "os/tick.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/soc/sf32lb/sleep.h"
