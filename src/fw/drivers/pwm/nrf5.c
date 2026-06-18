@@ -3,7 +3,6 @@
 
 #include "drivers/gpio.h"
 #include "drivers/pwm.h"
-#include "drivers/timer.h"
 #include "system/passert.h"
 
 #include <nrfx.h>

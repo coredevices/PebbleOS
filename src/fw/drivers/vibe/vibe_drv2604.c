@@ -9,7 +9,6 @@
 #include "drivers/i2c.h"
 #include "drivers/pmic.h"
 #include "drivers/pwm.h"
-#include "drivers/timer.h"
 #include "kernel/util/stop.h"
 #include "system/logging.h"
 #include "system/passert.h"
