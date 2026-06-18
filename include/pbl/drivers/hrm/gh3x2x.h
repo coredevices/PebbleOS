@@ -27,6 +27,8 @@ typedef struct {
 typedef struct HRMDeviceState {
   bool enabled;
   bool is_wear;
+  bool spo2_assumed_wear; // is_wear is the SpO2 path's assumed-worn value, not an ADT verdict
+  bool wear_before_spo2;  // ADT verdict to restore once the green path runs again
   int32_t work_mode;
   uint16_t timer_period_ms;
   AppTimer *timer;
