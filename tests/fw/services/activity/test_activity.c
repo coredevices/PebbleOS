@@ -151,6 +151,10 @@ bool sys_hrm_manager_set_features(HRMSessionRef session, HRMFeature features) {
   return true;
 }
 
+bool hrm_manager_has_continuous_green_subscriber(void) {
+  return false;
+}
+
 bool sys_hrm_manager_set_update_interval(HRMSessionRef session, uint32_t update_interval_s,
                                          uint16_t expire_s) {
   cl_assert(session < s_hrm_next_session_ref);
