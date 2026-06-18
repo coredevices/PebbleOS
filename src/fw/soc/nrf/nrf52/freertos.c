@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include <inttypes.h>
 
-#include "console/dbgserial.h"
-#include "console/dbgserial_input.h"
 #include "drivers/flash.h"
 #include "drivers/rtc.h"
 #include "drivers/task_watchdog.h"
@@ -78,8 +76,6 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
       // Go into stop mode until the wakeup_tick.
       s_last_ticks_commanded_in_stop = stop_duration;
 
-      dbgserial_enable_rx_exti();
-      dbgserial_disable_rx_dma_before_stop();
       flash_power_down_for_stop_mode();
 
       rtc_alarm_set(stop_duration);
@@ -92,7 +88,6 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
       rtc_systick_resume();
 
       flash_power_up_after_stop_mode();
-      dbgserial_enable_rx_dma_after_stop();
 
       RtcTicks ticks_elapsed = rtc_alarm_get_elapsed_ticks();
 

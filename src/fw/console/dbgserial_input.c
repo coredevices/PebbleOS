@@ -4,48 +4,17 @@
 #include "dbgserial_input.h"
 
 #include "board/board.h"
-#include "drivers/dma.h"
-#include "drivers/exti.h"
 #include "drivers/uart.h"
-#include "kernel/util/stop.h"
-#include "os/tick.h"
-#include "pbl/services/system_task.h"
-#include "pbl/services/new_timer/new_timer.h"
-#include "system/passert.h"
 #include "util/attributes.h"
-#include "util/likely.h"
-
-#include "drivers/gpio.h"
 
 #if !defined(CONFIG_RELEASE) || defined(CONFIG_MFG)
 
-#define STOP_MODE_TIMEOUT_MS (2000)
-
-#ifndef CONFIG_SOC_SF32LB52
-static void dbgserial_interrupt_handler(bool *should_context_switch);
-#endif
-
 static DbgSerialCharacterCallback s_character_callback;
-#ifndef CONFIG_SOC_SF32LB52
-static TimerID s_stop_mode_timeout_timer;
-//! Use a seperate variable so it's safe to check from the ISR.
-static bool s_stop_mode_inhibited = false;
-#endif
 
 //! We DMA into this buffer as a circular buffer
 #define DMA_BUFFER_LENGTH (200)
 static uint8_t s_dma_buffer[DMA_BUFFER_LENGTH] __attribute__((aligned(4)));
 static bool s_dma_enabled = false;
-
-#ifndef CONFIG_SOC_SF32LB52
-static void stop_mode_timeout_timer_callback(void* cb_data) {
-  // re-enable stop mode
-  if (s_stop_mode_inhibited) {
-    stop_mode_enable(InhibitorDbgSerial);
-    s_stop_mode_inhibited = false;
-  }
-}
-#endif
 
 static bool prv_uart_irq_handler(UARTDevice *dev, uint8_t data, const UARTRXErrorFlags *err_flags) {
   bool should_context_switch = false;
@@ -56,58 +25,14 @@ static bool prv_uart_irq_handler(UARTDevice *dev, uint8_t data, const UARTRXErro
 }
 
 void dbgserial_input_init(void) {
-#ifndef CONFIG_SOC_SF32LB52
-  exti_configure_pin(BOARD_CONFIG.dbgserial_int, ExtiTrigger_Falling, dbgserial_interrupt_handler);
-#endif
-
   // set up the USART interrupt on RX
   uart_set_rx_interrupt_handler(DBG_UART, prv_uart_irq_handler);
   uart_set_rx_interrupt_enabled(DBG_UART, true);
-
-#ifndef CONFIG_SOC_SF32LB52
-  s_stop_mode_timeout_timer = new_timer_create();
-
-  // Enable receive interrupts
-  dbgserial_enable_rx_exti();
-#endif
-}
-
-void dbgserial_enable_rx_exti(void) {
-#ifndef CONFIG_SOC_SF32LB52
-  exti_enable(BOARD_CONFIG.dbgserial_int);
-#endif
 }
 
 void dbgserial_register_character_callback(DbgSerialCharacterCallback callback) {
   s_character_callback = callback;
 }
-
-#ifndef CONFIG_SOC_SF32LB52
-// This callback gets installed by dbgserial_interrupt_handler()
-// using system_task_add_callback_from_isr().
-// It is used to start up our timer since doing so from an ISR is not allowed.
-static void prv_start_timer_callback(void* data) {
-  new_timer_start(s_stop_mode_timeout_timer, STOP_MODE_TIMEOUT_MS, stop_mode_timeout_timer_callback,
-                  NULL, 0 /*flags*/);
-}
-
-static void dbgserial_interrupt_handler(bool *should_context_switch) {
-  exti_disable(BOARD_CONFIG.dbgserial_int);
-
-  // Start the timer
-  system_task_add_callback_from_isr(prv_start_timer_callback, (void *)0, should_context_switch);
-
-  if (!s_stop_mode_inhibited) {
-    // We don't bother cancelling the timer if we leave the state where we don't want to stop mode
-    // anymore. For example, if we ctrl-c to enter the prompt (disable stop and start timer),
-    // ctrl-d to leave the prompt, and then ctrl-c again before the timer goes off, we'll have the
-    // timer still running. If we were to disable stop again after rescheduling the timer, the timer
-    // would only go off once for the two disables and we'd end up jamming the reference count.
-    stop_mode_disable(InhibitorDbgSerial);
-    s_stop_mode_inhibited = true;
-  }
-}
-#endif
 
 void dbgserial_set_rx_dma_enabled(bool enabled) {
   if (enabled == s_dma_enabled) {
@@ -125,38 +50,12 @@ void dbgserial_set_input_enabled(bool enabled) {
   uart_set_rx_interrupt_enabled(DBG_UART, enabled);
 }
 
-#ifdef CONFIG_SOC_NRF52
-void dbgserial_disable_rx_dma_before_stop() {
-  // We will have an EXTI wake us if something happens.  We'll lose the
-  // first byte anyway, but probably we would have on STM32 also -- and
-  // anyway, Pulse will retransmit.
-  if (s_dma_enabled) {
-    uart_stop_rx_dma(DBG_UART);
-  }
-}
-
-void dbgserial_enable_rx_dma_after_stop() {
-  if (s_dma_enabled) {
-    uart_start_rx_dma(DBG_UART, s_dma_buffer, DMA_BUFFER_LENGTH);
-  }
-}
-
-#endif
-
 #else
 void dbgserial_input_init(void) {}
-
-void dbgserial_enable_rx_exti(void) {}
 
 void dbgserial_register_character_callback(DbgSerialCharacterCallback callback) {}
 
 void dbgserial_set_rx_dma_enabled(bool enabled) {}
 
 void dbgserial_set_input_enabled(bool enabled) {}
-
-#ifdef CONFIG_SOC_NRF52
-void dbgserial_disable_rx_dma_before_stop() {}
-
-void dbgserial_enable_rx_dma_after_stop() {}
-#endif
 #endif

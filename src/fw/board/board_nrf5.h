@@ -168,10 +168,6 @@ typedef struct {
   const OutputConfig photo_en;
   const bool als_always_on;
 
-  // Debug Serial Configuration
-  /////////////////////////////////////////////////////////////////////////////
-  const GpioteConfig dbgserial_int;
-
   const uint8_t backlight_on_percent; // percent of max possible brightness
 } BoardConfig;
 

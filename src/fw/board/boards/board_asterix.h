@@ -20,12 +20,6 @@ static const BoardConfig BOARD_CONFIG = {
   .als_always_on = true,
 
   .backlight_on_percent = 25,
-  
-  .dbgserial_int = {
-    .peripheral = NRFX_GPIOTE_INSTANCE(0), 
-    .channel = 0,
-    .gpio_pin = NRF_GPIO_PIN_MAP(0, 5),
-  },
 
   .has_mic = true,
   .mic_config = {

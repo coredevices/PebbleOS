@@ -90,7 +90,6 @@ void serial_console_set_state(SerialConsoleState new_state) {
 #ifndef CONFIG_PULSE_EVERYWHERE
   if (new_state == SERIAL_CONSOLE_STATE_LOGGING) {
     stop_mode_enable(InhibitorDbgSerial);
-    dbgserial_enable_rx_exti();
   } else if (s_serial_console_state == SERIAL_CONSOLE_STATE_LOGGING) {
     stop_mode_disable(InhibitorDbgSerial);
   }

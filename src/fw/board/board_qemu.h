@@ -103,7 +103,6 @@ typedef struct {
   // override is set. User-preference overrides this via backlight_set_color().
   uint32_t backlight_default_color;
 #endif
-  ExtiConfig dbgserial_int;
 } BoardConfig;
 
 typedef struct {
