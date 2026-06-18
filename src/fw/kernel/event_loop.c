@@ -56,7 +56,9 @@
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/light.h"
 #include "pbl/services/new_timer/new_timer.h"
+#ifdef CONFIG_SERVICE_POWERMODE_SERVICE
 #include "pbl/services/powermode_service.h"
+#endif
 #include "pbl/services/put_bytes/put_bytes.h"
 #include "pbl/services/system_task.h"
 #ifdef CONFIG_TOUCH
@@ -578,7 +580,9 @@ static NOINLINE void prv_launcher_main_loop_init(void) {
   }
 #endif
 
+#ifdef CONFIG_SERVICE_POWERMODE_SERVICE
   powermode_service_boot_complete();
+#endif
 
   notify_system_ready_for_communication();
   serial_console_enable_prompt();
