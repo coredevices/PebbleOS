@@ -58,11 +58,6 @@ static bool prv_uart_irq_handler(UARTDevice *dev, uint8_t data, const UARTRXErro
 void dbgserial_input_init(void) {
 #ifndef CONFIG_SOC_SF32LB52
   exti_configure_pin(BOARD_CONFIG.dbgserial_int, ExtiTrigger_Falling, dbgserial_interrupt_handler);
-
-  // some platforms have a seperate pin for the EXTI int and the USART
-  if (BOARD_CONFIG.dbgserial_int_gpio.gpio != NULL) {
-    gpio_input_init(&BOARD_CONFIG.dbgserial_int_gpio);
-  }
 #endif
 
   // set up the USART interrupt on RX

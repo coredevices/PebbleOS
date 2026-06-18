@@ -171,7 +171,6 @@ typedef struct {
   // Debug Serial Configuration
   /////////////////////////////////////////////////////////////////////////////
   const GpioteConfig dbgserial_int;
-  const InputConfig dbgserial_int_gpio;
 
   const uint8_t backlight_on_percent; // percent of max possible brightness
 } BoardConfig;
