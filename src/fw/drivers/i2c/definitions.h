@@ -73,7 +73,6 @@ struct I2CBus {
   AfConfig scl_gpio;  ///< Alternate Function configuration for SCL pin
   AfConfig sda_gpio;  ///< Alternate Function configuration for SDA pin
 #endif
-  StopModeInhibitor stop_mode_inhibitor;
   const char *name;  //! Device ID for logging purposes
 };
 

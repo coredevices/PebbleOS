@@ -294,12 +294,10 @@ static bool prv_do_transfer(I2CBus *bus, I2CTransferDirection direction, uint16_
                             uint8_t register_address, uint32_t size, uint8_t *data,
                             I2CTransferType type) {
   mutex_lock(bus->state->bus_mutex);
-  stop_mode_disable(bus->stop_mode_inhibitor);
 
   bool result = prv_do_transfer_locked(bus, direction, device_address, register_address, size,
                                        data, type);
 
-  stop_mode_enable(bus->stop_mode_inhibitor);
   mutex_unlock(bus->state->bus_mutex);
 
   return result;
@@ -382,7 +380,6 @@ bool i2c_write_read_block(I2CSlavePort *slave, uint32_t write_size, const uint8_
 
   // Take control of bus; only one task may use bus at a time
   mutex_lock(bus->state->bus_mutex);
-  stop_mode_disable(bus->stop_mode_inhibitor);
 
   // Perform write transfer
   bool result = prv_do_transfer_locked(bus, Write, slave->address, 0, write_size,
@@ -394,7 +391,6 @@ bool i2c_write_read_block(I2CSlavePort *slave, uint32_t write_size, const uint8_
                                     read_buffer, NoRegisterAddress);
   }
 
-  stop_mode_enable(bus->stop_mode_inhibitor);
   mutex_unlock(bus->state->bus_mutex);
 
   if (!result) {
