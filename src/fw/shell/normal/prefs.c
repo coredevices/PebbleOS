@@ -238,7 +238,7 @@ static uint8_t s_timeline_peek_unsupported_face_mode = TimelinePeekUnsupportedFa
 #ifdef CONFIG_APP_SCALING
 #define PREF_KEY_LEGACY_APP_RENDER_MODE "legacyAppRenderMode"
 #endif
-static uint8_t s_power_mode = PowerMode_HighPerformance;
+static uint8_t s_power_mode = PowerMode_LowPower;
 static bool s_coredump_on_request_enabled = false;
 static bool s_accel_shake_log_info_enabled = false;
 static bool s_vibe_log_info_enabled = false;

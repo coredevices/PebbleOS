@@ -384,7 +384,7 @@ static void prv_reset_due_to_bt_error(void) {
 // Is Alive Logic
 
 #define ANCS_INVALID_PARAM 0xA2
-#define ANCS_IS_ALIVE_NEXT_CHECK_TIME_MINUTES 15 // Check every 15 minutes for faster recovery
+#define ANCS_IS_ALIVE_NEXT_CHECK_TIME_MINUTES 30
 #define ANCS_IS_ALIVE_RESPONSE_WAIT_TIME_SECONDS 5 // 5 seconds
 
 // Force a CCCD refresh after this many consecutive alive-check intervals

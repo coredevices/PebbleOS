@@ -104,7 +104,7 @@ static NextApp s_next_app;
 static bool s_powermode_hp_requested;
 static TimerID s_powermode_release_timer;
 
-#define POWERMODE_WATCHFACE_RELEASE_DELAY_MS 5000
+#define POWERMODE_WATCHFACE_RELEASE_DELAY_MS 2000
 #endif
 
 // ---------------------------------------------------------------------------------------------

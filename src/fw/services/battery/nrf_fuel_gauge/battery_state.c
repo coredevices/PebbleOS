@@ -41,6 +41,8 @@ PBL_LOG_MODULE_DECLARE(service_battery, CONFIG_SERVICE_BATTERY_LOG_LEVEL);
 #define RECONNECTION_DELAY_MS (1 * 1000)
 #define BATTERY_FAST_SAMPLE_RATE_S 1
 #define BATTERY_IDLE_SAMPLE_RATE_S 60
+#define BATTERY_IDLE_HIGH_SOC_SAMPLE_RATE_S 120
+#define BATTERY_IDLE_HIGH_SOC_PCT 50
 
 #define LOG_MIN_SEC 30
 
@@ -470,8 +472,12 @@ static bool prv_use_fast_battery_poll(void) {
 }
 
 static void prv_update_battery_poll_interval(void) {
-  uint16_t interval =
-      prv_use_fast_battery_poll() ? BATTERY_FAST_SAMPLE_RATE_S : BATTERY_IDLE_SAMPLE_RATE_S;
+  uint16_t interval = BATTERY_FAST_SAMPLE_RATE_S;
+  if (!prv_use_fast_battery_poll()) {
+    interval = (s_last_battery_charge_state.pct >= BATTERY_IDLE_HIGH_SOC_PCT)
+                   ? BATTERY_IDLE_HIGH_SOC_SAMPLE_RATE_S
+                   : BATTERY_IDLE_SAMPLE_RATE_S;
+  }
 
   if (interval == s_battery_poll_interval_s) {
     return;
