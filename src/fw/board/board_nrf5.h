@@ -56,18 +56,6 @@ enum {
  * a compilation error from that line if the IRQ does not exist within irq_nrf52.def.
  */
 
-// There are a lot of DMA streams and they are very straight-forward to define. Let's use some
-// macro magic to make it a bit less tedious and error-prone.
-#define CREATE_DMA_STREAM(cnum, snum) \
-  static DMAStreamState s_dma##cnum##_stream##snum##_state; \
-  static DMAStream DMA##cnum##_STREAM##snum##_DEVICE = { \
-    .state = &s_dma##cnum##_stream##snum##_state, \
-    .controller = &DMA##cnum##_DEVICE, \
-    .periph = DMA##cnum##_Stream##snum, \
-    .irq_channel = DMA##cnum##_Stream##snum##_IRQn, \
-  }; \
-  IRQ_MAP(DMA##cnum##_Stream##snum, dma_stream_irq_handler, &DMA##cnum##_STREAM##snum##_DEVICE)
-
 typedef struct {
   nrfx_gpiote_t peripheral;
   uint8_t channel;
@@ -75,12 +63,6 @@ typedef struct {
 } GpioteConfig;
 
 typedef GpioteConfig ExtiConfig; /* compatibility */
-
-typedef enum {
-  AccelThresholdLow, ///< A sensitive state used for stationary mode
-  AccelThresholdHigh, ///< The accelerometer's default sensitivity
-  AccelThreshold_Num,
-} AccelThreshold;
 
 typedef struct {
   const char* const name; ///< Name for debugging purposes.
@@ -97,15 +79,6 @@ typedef struct {
   void *gpio; ///< For compatibility, GPIO_RESOURCE_EXISTS if this is in use, NULL if not.
   const uint32_t gpio_pin; ///< The result of NRF_GPIO_PIN_MAP(port, pin).
 } InputConfig;
-
-typedef struct {
-  NRF_TIMER_Type *peripheral;
-} TimerConfig;
-
-typedef struct {
-  const TimerConfig timer;
-  const uint8_t irq_channel;
-} TimerIrqConfig;
 
 typedef struct {
   void *gpio; ///< For compatibility, GPIO_RESOURCE_EXISTS if this is in use, NULL if not.
@@ -144,21 +117,11 @@ typedef struct {
   NRF_SPIM_Type *spi;
   uint32_t spi_clock_ctrl;
   nrf_pdm_gain_t gain;
-
-  //! Pin we use to control power to the microphone. Only used on certain boards.
-  OutputConfig mic_gpio_power;
 } MicConfig;
-
-typedef enum {
-  OptionNotPresent = 0, // FIXME
-  OptionActiveLowOpenDrain,
-  OptionActiveHigh
-} PowerCtl5VOptions;
 
 typedef struct {
   // Audio Configuration
   /////////////////////////////////////////////////////////////////////////////
-  const bool has_mic;
   const MicConfig mic_config;
 
   // Ambient Light Configuration
@@ -179,11 +142,6 @@ typedef struct {
   const bool active_high;
   nrfx_timer_t timer;
 } BoardConfigButton;
-
-typedef struct {
-  const uint32_t numerator;
-  const uint32_t denominator;
-} VMonScale;
 
 // Power Configuration
 /////////////////////////////////////////////////////////////////////////////
@@ -235,8 +193,6 @@ typedef struct {
 } BoardConfigSharpDisplay;
 
 typedef const struct UARTDevice UARTDevice;
-typedef const struct SPIBus SPIBus;
-typedef const struct SPISlavePort SPISlavePort;
 typedef const struct I2CBus I2CBus;
 typedef const struct I2CSlavePort I2CSlavePort;
 typedef const struct HRMDevice HRMDevice;

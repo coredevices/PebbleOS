@@ -21,7 +21,6 @@ static const BoardConfig BOARD_CONFIG = {
 
   .backlight_on_percent = 25,
 
-  .has_mic = true,
   .mic_config = {
     .gain = 40,
   }
