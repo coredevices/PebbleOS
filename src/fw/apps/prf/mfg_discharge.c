@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "applib/app.h"
+#include "applib/battery_state_service.h"
 #include "applib/ui/ui.h"
 #include "applib/ui/window_private.h"
 #include "applib/tick_timer_service.h"
@@ -53,9 +54,17 @@ typedef struct {
   uint32_t elapsed_seconds;
 } AppData;
 
-static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
-  AppData *data = app_state_get_user_data();
+static void prv_render(AppData *data);
 
+static void prv_handle_battery_state(BatteryChargeState charge) {
+  prv_render(app_state_get_user_data());
+}
+
+static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
+  prv_render(app_state_get_user_data());
+}
+
+static void prv_render(AppData *data) {
   // Get battery state
   BatteryConstants battery_const;
   BatteryChargeState charge_state;
@@ -73,6 +82,8 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
                   "Charging\n%" PRIu8 "%%", charge_state.charge_percent);
       } else {
         data->test_state = DischargeStateDrainTo70;
+        prv_render(data);
+        return;
       }
       break;
 
@@ -88,11 +99,15 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
       } else {
         light_enable(false);
 
-        // Update only once a minute during discharge to reduce wake-ups
+        // Discharge phase: drive updates from a once-a-minute tick rather than
+        // battery events to keep the elapsed clock accurate and minimize wake-ups
+        battery_state_service_unsubscribe();
         tick_timer_service_subscribe(MINUTE_UNIT, prv_handle_tick);
 
         data->test_state = DischargeStateDischarging;
         data->elapsed_seconds = 0;
+        prv_render(data);
+        return;
       }
       break;
 
@@ -177,7 +192,11 @@ static void app_init(void) {
   window_set_click_config_provider(window, prv_config_provider);
   window_set_fullscreen(window, true);
 
-  tick_timer_service_subscribe(SECOND_UNIT, prv_handle_tick);
+  // During charge/drain, update only on battery state changes (the battery
+  // monitor samples ~once a minute and forces an update on plug/unplug) to
+  // avoid per-second wake-ups while waiting for the charger
+  battery_state_service_subscribe(prv_handle_battery_state);
+  prv_render(data);
 
   app_window_stack_push(window, true /* Animated */);
 }
