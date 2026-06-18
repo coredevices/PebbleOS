@@ -16,6 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
         with:
+          ref: main
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -24,27 +25,68 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Record existing version tags
+        id: tags_before
+        run: |
+          git ls-remote --tags origin \
+            | awk '/^[^ ]+ refs\/tags\/v/ && !/^{}$/ { sub("refs/tags/", "", $2); print $2 }' \
+            | sort -V > /tmp/origin_tags_before.txt
+          if [ -s /tmp/origin_tags_before.txt ]; then
+            echo "latest=$(tail -1 /tmp/origin_tags_before.txt)" >> "$GITHUB_OUTPUT"
+          else
+            echo "latest=" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Fetch upstream
         run: |
           git remote add upstream https://github.com/coredevices/PebbleOS.git
-          git fetch upstream --tags --force
+          git fetch upstream main --tags --force
 
-      - name: Attempt rebase onto upstream/main
-        id: rebase
+      - name: Merge upstream/main
+        id: merge
         run: |
-          if git rebase upstream/main; then
+          if git merge upstream/main --no-edit; then
             echo "clean=true" >> "$GITHUB_OUTPUT"
           else
-            git rebase --abort
+            git merge --abort
             echo "clean=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Push (clean rebase)
-        if: steps.rebase.outputs.clean == 'true'
-        run: git push origin main --force-with-lease --tags
+      - name: Push main (clean merge)
+        if: steps.merge.outputs.clean == 'true'
+        run: git push origin main
 
-      - name: Open conflict PR (unclean rebase)
-        if: steps.rebase.outputs.clean == 'false'
+      - name: Push new release tag
+        if: steps.merge.outputs.clean == 'true'
+        id: release_tag
+        run: |
+          mapfile -t new_tags < <(
+            git tag -l 'v*' | sort -V | while read -r tag; do
+              if ! grep -qxF "$tag" /tmp/origin_tags_before.txt; then
+                echo "$tag"
+              fi
+            done
+          )
+
+          if [ "${#new_tags[@]}" -eq 0 ]; then
+            echo "No new upstream version tags."
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          latest_new="${new_tags[-1]}"
+          echo "latest_new=$latest_new" >> "$GITHUB_OUTPUT"
+          echo "Pushing release tag $latest_new (skipping ${#new_tags[@]} new tag(s), using latest only)."
+          git push origin "refs/tags/${latest_new}"
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Release summary
+        if: steps.release_tag.outputs.pushed == 'true'
+        run: |
+          echo "Tagged ${{ steps.release_tag.outputs.latest_new }} — Release workflow will build firmware from the tag push."
+
+      - name: Open conflict PR (unclean merge)
+        if: steps.merge.outputs.clean == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -57,7 +99,7 @@ jobs:
           gh pr create \
             --title "sync: upstream $(date +%Y-%m-%d) -- conflicts" \
             --body "$(cat <<'EOF'
-          Nightly upstream sync could not rebase cleanly. Resolve the conflicts
+          Nightly upstream sync could not merge cleanly. Resolve the conflicts
           in this branch and merge to keep main up to date.
 
           Upstream: https://github.com/coredevices/PebbleOS
