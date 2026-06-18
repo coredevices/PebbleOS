@@ -155,6 +155,16 @@ bool hrm_manager_has_continuous_green_subscriber(void) {
   return false;
 }
 
+// Activity-SpO2 / HR-pause APIs referenced by activity.c. Stubbed to keep the auto-activity HR
+// path idle so these tests exercise only the daily HR/SpO2 schedulers.
+bool activity_algorithm_activity_hrm_is_active(void) {
+  return false;
+}
+
+void activity_algorithm_activity_hrm_set_paused(bool paused) {
+  (void)paused;
+}
+
 bool sys_hrm_manager_set_update_interval(HRMSessionRef session, uint32_t update_interval_s,
                                          uint16_t expire_s) {
   cl_assert(session < s_hrm_next_session_ref);

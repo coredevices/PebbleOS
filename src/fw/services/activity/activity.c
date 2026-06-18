@@ -80,6 +80,10 @@ static uint32_t prv_get_hrm_period_sec(void) {
 }
 #endif
 
+#ifdef CONFIG_HRM
+static void prv_activity_spo2_schedule_update(void); // defined below; used by the HR callback
+#endif
+
 // ------------------------------------------------------------------------------------------------
 // If necessary, change the sampling period of our heart rate subscription
 // @param[in] now_ts number of seconds the system has been running (from time_get_uptime_seconds())
@@ -126,7 +130,10 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
     // Don't start a measurement while SpO2 is mid-measurement: HR and SpO2 share one optical path,
     // so overlapping windows make the manager ping-pong between them and re-pay the sensor spin-up,
     // which stops either from converging. Defer and retry next tick (without resetting the period).
-    if (!s_activity_state.hr.currently_sampling && s_activity_state.spo2.currently_sampling) {
+    // Also yield to an in-progress activity-triggered SpO2 attempt for the same reason.
+    if (!s_activity_state.hr.currently_sampling &&
+        (s_activity_state.spo2.currently_sampling ||
+         s_activity_state.activity_spo2.phase == ActivitySpO2ActPhase_Sampling)) {
       return;
     }
 
@@ -217,6 +224,10 @@ T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) 
     // NOTE: Must be kept at the bottom of the function, or at least below
     //   `activity_metrics_prv_add_median_hr_sample`
     prv_heart_rate_subscription_update(now_uptime_ts);
+
+    // HR flows at 1 Hz while an activity is in progress, so this is where the activity SpO2 reader
+    // counts down its Wait / Backoff phases.
+    prv_activity_spo2_schedule_update();
   }
 }
 #endif // CONFIG_HRM
@@ -326,9 +337,12 @@ static void prv_spo2_subscription_update(uint32_t now_ts) {
     // prv_heart_rate_subscription _update). HR runs first each tick so it wins ties; SpO2 takes its
     // turn once HR finishes. Likewise defer while a live consumer (workout HR, the BLE relay, a
     // foreground app) keeps the green path on: the manager would hand the path to us for the whole
-    // window, blanking their live HR for a background reading. Retry on the next tick.
+    // window, blanking their live HR for a background reading. Also yield to an in-progress
+    // activity-triggered SpO2 attempt. Retry on the next tick.
     if (!s_activity_state.spo2.currently_sampling &&
-        (s_activity_state.hr.currently_sampling || hrm_manager_has_continuous_green_subscriber())) {
+        (s_activity_state.hr.currently_sampling ||
+         s_activity_state.activity_spo2.phase == ActivitySpO2ActPhase_Sampling ||
+         hrm_manager_has_continuous_green_subscriber())) {
       return;
     }
 
@@ -413,6 +427,150 @@ static void prv_spo2_init(void) {
 static void prv_spo2_deinit(void) {
 #ifdef CONFIG_HRM
   sys_hrm_manager_unsubscribe(s_activity_state.spo2.hrm_session);
+#endif // CONFIG_HRM
+}
+
+// ------------------------------------------------------------------------------------------------
+// Activity-triggered SpO2: while HR-during-activities is sampling continuously, periodically pause
+// HR and grab one SpO2 point. Independent of the daily SpO2 schedule and the daily SpO2 toggle.
+#ifdef CONFIG_HRM
+// Pause the continuous activity HR and turn our dedicated SpO2 session on (sampling), or the
+// reverse (resume HR, idle SpO2).
+static void prv_activity_spo2_set_sampling(bool sampling) {
+  activity_algorithm_activity_hrm_set_paused(sampling);
+  // A dormant session asks for no features so the manager never treats it as due (see
+  // prv_spo2_set_sampling()).
+  sys_hrm_manager_set_features(s_activity_state.activity_spo2.hrm_session,
+                               sampling ? HRMFeature_SpO2 : (HRMFeature)0);
+  const uint32_t interval =
+      sampling ? ACTIVITY_HRM_SUBSCRIPTION_ON_PERIOD_SEC : ACTIVITY_HRM_SUBSCRIPTION_OFF_PERIOD_SEC;
+  sys_hrm_manager_set_update_interval(s_activity_state.activity_spo2.hrm_session, interval,
+                                      0 /*expire_sec*/);
+}
+
+static void prv_activity_spo2_start_attempt(uint32_t now_ts) {
+  ActivitySpO2ActivitySupport *as = &s_activity_state.activity_spo2;
+  as->got_reading = false;
+  as->phase = ActivitySpO2ActPhase_Sampling;
+  as->phase_started_ts = now_ts;
+  prv_activity_spo2_set_sampling(true);
+}
+
+// Drive the activity SpO2 state machine. Scheduled (see prv_activity_spo2_schedule_update) from the
+// minute handler (backstop) and from the HR / SpO2 data callbacks (1 Hz while the relevant sensor
+// is on, giving precise sub-minute timing).
+static void prv_activity_spo2_update(uint32_t now_ts) {
+  ActivitySpO2ActivitySupport *as = &s_activity_state.activity_spo2;
+
+  // Eligible only while the opt-in is on, HR-during-activities is on, and an activity HR session is
+  // actually running right now.
+  const bool eligible = activity_prefs_blood_oxygen_activity_tracking_is_enabled() &&
+                        activity_prefs_hrm_activity_tracking_is_enabled() &&
+                        activity_algorithm_activity_hrm_is_active();
+
+  if (!eligible) {
+    if (as->phase != ActivitySpO2ActPhase_Idle) {
+      if (as->phase == ActivitySpO2ActPhase_Sampling) {
+        prv_activity_spo2_set_sampling(false); // resume HR, idle our session
+      }
+      as->phase = ActivitySpO2ActPhase_Idle;
+    }
+    return;
+  }
+
+  switch (as->phase) {
+    case ActivitySpO2ActPhase_Idle:
+      // Activity just became eligible: begin the wait window.
+      as->phase = ActivitySpO2ActPhase_Wait;
+      as->phase_started_ts = now_ts;
+      break;
+    case ActivitySpO2ActPhase_Wait:
+      if (now_ts - as->phase_started_ts >= ACTIVITY_SPO2_ACTIVITY_INTERVAL_SEC) {
+        prv_activity_spo2_start_attempt(now_ts);
+      }
+      break;
+    case ActivitySpO2ActPhase_Sampling:
+      if (as->got_reading) {
+        // Success: resume HR and wait the full interval before the next point.
+        prv_activity_spo2_set_sampling(false);
+        as->phase = ActivitySpO2ActPhase_Wait;
+        as->phase_started_ts = now_ts;
+      } else if (now_ts - as->phase_started_ts >= ACTIVITY_SPO2_ACTIVITY_ATTEMPT_SEC) {
+        // Timed out with no valid reading: resume HR for a breather, then retry.
+        prv_activity_spo2_set_sampling(false);
+        as->phase = ActivitySpO2ActPhase_Backoff;
+        as->phase_started_ts = now_ts;
+      }
+      break;
+    case ActivitySpO2ActPhase_Backoff:
+      if (now_ts - as->phase_started_ts >= ACTIVITY_SPO2_ACTIVITY_BACKOFF_SEC) {
+        prv_activity_spo2_start_attempt(now_ts);
+      }
+      break;
+  }
+}
+
+static void prv_activity_spo2_update_system_cb(void *unused) {
+  s_activity_state.activity_spo2.update_pending = false;
+  prv_activity_spo2_update(time_get_uptime_seconds());
+}
+
+// Run the state machine from its own KernelBG callback rather than inline. The HRM data callbacks
+// run with the HRM manager lock held, and the state machine takes the activity algorithm mutex,
+// which the App task takes before the manager lock (e.g. enabling activity tracking resets the
+// algorithm's HRM session), so running it inline would invert the lock order and deadlock. The
+// minute handler schedules it too, so it never runs under the activity mutex either.
+static void prv_activity_spo2_schedule_update(void) {
+  if (s_activity_state.activity_spo2.update_pending) {
+    return;
+  }
+  s_activity_state.activity_spo2.update_pending = true;
+  system_task_add_callback(prv_activity_spo2_update_system_cb, NULL);
+}
+
+// Kernel BG callback for the activity SpO2 session. Only fires while we are sampling (our session
+// is idle otherwise).
+T_STATIC void prv_activity_spo2_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
+  if (hrm_event->event_type != HRMEvent_SpO2) {
+    return;
+  }
+  const uint8_t pct = hrm_event->spo2.percent;
+  const HRMQuality quality = hrm_event->spo2.quality;
+
+  // Any reading the algorithm accepts counts: stash it for the next minute record (same channel as
+  // the daily SpO2 reader) and mark the attempt successful.
+  if (!hrm_event->spo2.invalid && quality != HRMQuality_OffWrist && pct > 0) {
+    s_activity_state.spo2.pending_percent = pct;
+    s_activity_state.spo2.pending_quality = prv_spo2_health_quality(quality);
+    s_activity_state.activity_spo2.got_reading = true;
+  }
+
+  prv_activity_spo2_schedule_update();
+}
+#endif // CONFIG_HRM
+
+// ---------------------------------------------------------------------------------------
+// Init / de-init activity-triggered SpO2 support
+static void prv_activity_spo2_init(void) {
+#ifdef CONFIG_HRM
+  s_activity_state.activity_spo2.phase = ActivitySpO2ActPhase_Idle;
+  s_activity_state.activity_spo2.update_pending = false;
+  // Dormant until an attempt starts (see prv_activity_spo2_set_sampling).
+  s_activity_state.activity_spo2.hrm_session = hrm_manager_subscribe_with_callback(
+      INSTALL_ID_INVALID, ACTIVITY_HRM_SUBSCRIPTION_OFF_PERIOD_SEC, 0 /*expire_s*/, (HRMFeature)0,
+      prv_activity_spo2_subscription_cb, NULL);
+  PBL_ASSERTN(s_activity_state.activity_spo2.hrm_session != HRM_INVALID_SESSION_REF);
+#endif // CONFIG_HRM
+}
+
+static void prv_activity_spo2_deinit(void) {
+#ifdef CONFIG_HRM
+  // Make sure HR isn't left paused if we tear down mid-attempt.
+  if (s_activity_state.activity_spo2.phase == ActivitySpO2ActPhase_Sampling) {
+    activity_algorithm_activity_hrm_set_paused(false);
+  }
+  sys_hrm_manager_unsubscribe(s_activity_state.activity_spo2.hrm_session);
+  s_activity_state.activity_spo2.phase = ActivitySpO2ActPhase_Idle;
 #endif // CONFIG_HRM
 }
 
@@ -676,6 +834,12 @@ static void NOINLINE prv_process_minute_data_tail(time_t utc_sec) {
 
     // Update the SpO2 sampling period if necessary
     prv_spo2_subscription_update(time_get_uptime_seconds());
+
+#ifdef CONFIG_HRM
+    // Drive the activity-triggered SpO2 reader (backstop; the data callbacks drive it
+    // finer-grained)
+    prv_activity_spo2_schedule_update();
+#endif
   }
   pbl_mutex_unlock(&s_activity_state.mutex);
 
@@ -998,6 +1162,7 @@ static void prv_start_tracking_cb(void *context) {
       // session if an hrm is present
       prv_heart_rate_init();
       prv_spo2_init();
+      prv_activity_spo2_init();
     }
 
     // Set the user data
@@ -1041,6 +1206,7 @@ static void prv_stop_tracking_cb(void *context) {
   // Close down heart rate support
   prv_heart_rate_deinit();
   prv_spo2_deinit();
+  prv_activity_spo2_deinit();
 
   PBL_ASSERTN(activity_algorithm_deinit());
   s_activity_state.started = false;
