@@ -13,7 +13,6 @@
 #include "kernel/pbl_malloc.h"
 #include "os/tick.h"
 #include "kernel/util/sleep.h"
-#include "kernel/util/stop.h"
 #include "os/mutex.h"
 #include "semphr.h"
 #include "system/logging.h"

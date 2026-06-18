@@ -5,7 +5,6 @@
 
 #include "drivers/rtc.h"
 #include "os/mutex.h"
-#include "kernel/util/stop.h"
 
 #include "freertos_types.h"
 #include "portmacro.h"

@@ -8,7 +8,6 @@
 #include "drivers/exti.h"
 #include "drivers/gpio.h"
 #include "kernel/events.h"
-#include "kernel/util/stop.h"
 #include "system/bootbits.h"
 #include "system/reset.h"
 #include "util/bitset.h"

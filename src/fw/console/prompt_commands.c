@@ -21,7 +21,6 @@
 #include "kernel/util/delay.h"
 #include "kernel/util/factory_reset.h"
 #include "kernel/util/sleep.h"
-#include "kernel/util/stop.h"
 #include "process_management/app_manager.h"
 #include "process_management/worker_manager.h"
 #include "prompt.h"
