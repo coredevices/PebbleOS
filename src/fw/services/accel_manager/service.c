@@ -336,7 +336,7 @@ static void prv_dispatch_data(bool post_event) {
       PBL_LOG_VERBOSE("full set of %d samples for session %p", state->num_samples, state);
 
       if (!state->event_posted) {
-        PBL_LOG_INFO("Failed to post accel event to task: 0x%x", (int) state->task);
+        PBL_LOG_ERR("Failed to post accel event to task: 0x%x", (int) state->task);
       }
     }
     state = (AccelManagerState *)state->list_node.next;
@@ -344,19 +344,6 @@ static void prv_dispatch_data(bool post_event) {
 
   mutex_unlock_recursive(s_accel_manager_mutex);
 }
-
-#ifdef TEST_KERNEL_SUBSCRIPTION
-static void prv_kernel_data_subscription_handler(AccelData *accel_data,
-    uint32_t num_samples) {
-  PBL_LOG_INFO("Received %" PRIu32 " accel samples for KernelMain.", num_samples);
-}
-
-static void prv_kernel_tap_subscription_handler(AccelAxisType axis,
-    int32_t direction) {
-  PBL_LOG_INFO("Received a tap event for KernelMain, axis: %d, "
-      "direction: %" PRId32, axis, direction);
-}
-#endif
 
 // Compute and return the device's delta position to help determine movement as idle.
 static uint32_t prv_compute_delta_pos(AccelData *cur_pos, AccelData *last_pos) {
@@ -396,9 +383,7 @@ void accel_manager_update_sensitivity(uint8_t sensitivity_percent) {
   
   mutex_lock_recursive(s_accel_manager_mutex);
   accel_set_shake_sensitivity_percent(sensitivity_percent);
-  mutex_unlock_recursive(s_accel_manager_mutex);
-  
-  PBL_LOG_INFO("Motion sensitivity updated to %u percent", sensitivity_percent);
+  mutex_unlock_recursive(s_accel_manager_mutex);  
 }
 
 void accel_manager_init(void) {
@@ -419,7 +404,7 @@ void accel_manager_init(void) {
   extern uint8_t shell_prefs_get_motion_sensitivity(void);
   uint8_t saved_sensitivity = shell_prefs_get_motion_sensitivity();
   accel_manager_update_sensitivity(saved_sensitivity);
-  PBL_LOG_INFO("Initialized motion sensitivity to %u percent", saved_sensitivity);
+  PBL_LOG_DBG("Initialized motion sensitivity to %u percent", saved_sensitivity);
   #endif
 }
 
