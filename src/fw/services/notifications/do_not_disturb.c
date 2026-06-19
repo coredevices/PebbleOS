@@ -12,7 +12,6 @@
 #include "applib/ui/window_manager.h"
 #include <pbl/drivers/rtc.h>
 #include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
 #include "kernel/ui/modals/modal_manager.h"
 #include "process_state/app_state/app_state.h"
 #include "resource/resource_ids.auto.h"
@@ -172,8 +171,9 @@ void quiet_time_get_scheduled_days(const QuietTimeScheduleConfig *config, bool o
   }
 }
 
-static bool prv_is_time_in_range(const struct tm *now, const QuietTimeScheduleConfig *schedule) {
-  int now_minutes = now->tm_hour * 60 + now->tm_min;
+//! Effective end of a schedule's quiet window, in minutes-from-midnight. A
+//! from==to schedule means a one-minute window, never a no-op.
+static int prv_schedule_end_minutes(const QuietTimeScheduleConfig *schedule) {
   int from_minutes = schedule->from_hour * 60 + schedule->from_minute;
   int to_minutes = schedule->to_hour * 60 + schedule->to_minute;
   if (from_minutes == to_minutes) {
@@ -182,6 +182,13 @@ static bool prv_is_time_in_range(const struct tm *now, const QuietTimeScheduleCo
       to_minutes = 1;
     }
   }
+  return to_minutes;
+}
+
+static bool prv_is_time_in_range(const struct tm *now, const QuietTimeScheduleConfig *schedule) {
+  int now_minutes = now->tm_hour * 60 + now->tm_min;
+  int from_minutes = schedule->from_hour * 60 + schedule->from_minute;
+  int to_minutes = prv_schedule_end_minutes(schedule);
   if (from_minutes <= to_minutes) {
     return (now_minutes >= from_minutes && now_minutes < to_minutes);
   } else {
@@ -239,19 +246,11 @@ static void prv_set_schedule_mode_timer() {
     quiet_time_get_scheduled_days(&s_qt_schedule_cache[i], days);
 
     if (days[time.tm_wday]) {
-      int from = s_qt_schedule_cache[i].from_hour * 60 + s_qt_schedule_cache[i].from_minute;
-      int to = s_qt_schedule_cache[i].to_hour * 60 + s_qt_schedule_cache[i].to_minute;
-      // Align with prv_is_time_in_range: same-from/to means a 1-minute window
-      if (from == to) {
-        to = (to + 1) % (24 * 60);
-        if (to == 0) {
-          to = 1;
-        }
-      }
+      int to_minutes = prv_schedule_end_minutes(&s_qt_schedule_cache[i]);
       time_t s = time_util_get_seconds_until_daily_time(&time,
                    s_qt_schedule_cache[i].from_hour, s_qt_schedule_cache[i].from_minute);
       time_t e = time_util_get_seconds_until_daily_time(&time,
-                   to / 60, to % 60);
+                   to_minutes / 60, to_minutes % 60);
       earliest_transition = MIN(earliest_transition, MIN(s, e));
     }
 
@@ -277,7 +276,12 @@ static void prv_set_schedule_mode_timer() {
     s_data.is_in_schedule_period = currently_active;
   }
 
-  PBL_ASSERTN(earliest_transition > 0);
+  // Defensive clamp: a config edge case (e.g. all-true day mask collapsing to
+  // the current minute) could theoretically yield 0; never reboot the watch
+  // over a schedule-config oddity.
+  if (earliest_transition <= 0) {
+    earliest_transition = SECONDS_PER_DAY;
+  }
 
   PBL_LOG_DBG("%s scheduled period. %u seconds until update",
       s_data.is_in_schedule_period ? "In" : "Out of", (unsigned int) earliest_transition);
@@ -515,6 +519,7 @@ void quiet_time_get_string_for_custom(const bool *scheduled_days, char *buffer, 
 
   // Monday-first ordering: skip Sunday (index 0) and iterate Mon..Sat, then Sun.
   size_t pos = 0;
+  bool truncated = false;
   for (int idx = 1; idx <= DAYS_PER_WEEK; idx++) {
     int i = idx % DAYS_PER_WEEK;
     if (!scheduled_days[i]) {
@@ -525,6 +530,7 @@ void quiet_time_get_string_for_custom(const bool *scheduled_days, char *buffer, 
     size_t day_len = strlen(day_buf);
     size_t needed = day_len + (pos > 0 ? 1 : 0);
     if (pos + needed >= buf_len) {
+      truncated = true;
       break;
     }
     if (pos > 0) {
@@ -532,6 +538,14 @@ void quiet_time_get_string_for_custom(const bool *scheduled_days, char *buffer, 
     }
     memcpy(buffer + pos, day_buf, day_len);
     pos += day_len;
+  }
+  // Some days did not fit: make the truncation visible instead of silently
+  // hiding scheduled days. The marker only goes in when there is room for it
+  // (the UTF-8 ellipsis is 3 bytes plus the terminator).
+  if (truncated && buf_len >= pos + 4) {
+    buffer[pos++] = 0xE2;
+    buffer[pos++] = 0x80;
+    buffer[pos++] = 0xA6;
   }
   buffer[pos] = '\0';
 }

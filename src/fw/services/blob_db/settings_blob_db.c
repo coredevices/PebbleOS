@@ -154,6 +154,10 @@ static const char *s_syncable_notif_prefs[] = {
 
 static const size_t s_num_syncable_notif_prefs = ARRAY_LENGTH(s_syncable_notif_prefs);
 
+// The five qtSchedule* entries above must stay in sync with MAX_QUIET_TIME_SCHEDULES.
+_Static_assert(ARRAY_LENGTH(s_syncable_notif_prefs) >= MAX_QUIET_TIME_SCHEDULES,
+               "s_syncable_notif_prefs must include a key for every QT schedule slot");
+
 static bool s_initialized = false;
 
 //! Check if the connected phone supports Settings BlobDB sync
@@ -640,7 +644,7 @@ status_t settings_blob_db_is_dirty(bool *is_dirty_out) {
   SettingsFile file;
   status_t status = settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN);
   if (PASSED(status)) {
-      settings_file_each(&file, prv_is_dirty_callback, &ctx);
+    settings_file_each(&file, prv_is_dirty_callback, &ctx);
     settings_file_close(&file);
   }
   prefs_private_unlock();
@@ -650,7 +654,7 @@ status_t settings_blob_db_is_dirty(bool *is_dirty_out) {
     alerts_preferences_lock();
     status = settings_file_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN);
     if (PASSED(status)) {
-    settings_file_each(&file, prv_is_dirty_callback, &ctx);
+      settings_file_each(&file, prv_is_dirty_callback, &ctx);
       settings_file_close(&file);
     }
     alerts_preferences_unlock();

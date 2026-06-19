@@ -15,7 +15,9 @@
 //! Initialize the settings BlobDB
 void settings_blob_db_init(void);
 
+#if UNITTEST
 void settings_blob_db_reset_for_test(void);
+#endif
 
 //! Insert/update a setting
 status_t settings_blob_db_insert(const uint8_t *key, int key_len,

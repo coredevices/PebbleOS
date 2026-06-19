@@ -855,6 +855,22 @@ void test_do_not_disturb__qt_display_strings(void) {
   char tiny_buf[8];
   quiet_time_get_string_for_custom(many_days, tiny_buf, sizeof(tiny_buf));
   cl_assert_equal_s(tiny_buf, "Mon,Wed");
+
+  // Multi-day truncation with room: truncation is marked with an ellipsis
+  bool all_days[DAYS_PER_WEEK] = {true, true, true, true, true, true, true};
+  char tight_buf[23]; // fits "Mon,Tue,Wed,Thu,Fri…" with terminator
+  quiet_time_get_string_for_custom(all_days, tight_buf, sizeof(tight_buf));
+  cl_assert_equal_s(tight_buf, "Mon,Tue,Wed,Thu,Fri…");
+
+  // Room for content but not for the ellipsis marker: plain cut
+  char cramped_buf[24];
+  quiet_time_get_string_for_custom(all_days, cramped_buf, sizeof(cramped_buf));
+  cl_assert_equal_s(cramped_buf, "Mon,Tue,Wed,Thu,Fri,Sat");
+
+  // All days fit fully, no ellipsis
+  char full_buf[28];
+  quiet_time_get_string_for_custom(all_days, full_buf, sizeof(full_buf));
+  cl_assert_equal_s(full_buf, "Mon,Tue,Wed,Thu,Fri,Sat,Sun");
 }
 
 void test_do_not_disturb__qt_multi_schedule_active(void) {
@@ -1130,5 +1146,33 @@ void test_do_not_disturb__refresh_active_state_noop_when_unchanged(void) {
   do_not_disturb_refresh_active_state();
   cl_assert(do_not_disturb_is_active() == false);
   cl_assert_equal_i(s_num_dnd_events_put, 0);
+}
+
+//! A phone-originated qtSchedule* write must re-evaluate active state and
+//! re-arm the schedule timer, same as the other DND state keys.
+void test_do_not_disturb__phone_qt_schedule_synced(void) {
+  // Time is Thursday 12:00 in the fixture; schedule Thursday 13:00-14:00.
+  QuietTimeScheduleConfig config = {
+    .is_used = true,
+    .kind = QT_KIND_EVERYDAY,
+    .from_hour = 13,
+    .to_hour = 14,
+    .enabled = true,
+  };
+  rtc_set_time(s_thursday_13_00);
+
+  cl_assert(do_not_disturb_is_active() == false);
+  s_num_dnd_events_put = 0;
+
+  prv_simulate_phone_write("qtSchedule0", &config, sizeof(config));
+
+  // The synced schedule is now in effect: DND active and an event posted.
+  cl_assert(do_not_disturb_is_active() == true);
+  cl_assert_equal_i(s_num_dnd_events_put, 1);
+
+  // A no-op resync of the same value must not double-fire.
+  prv_simulate_phone_write("qtSchedule0", &config, sizeof(config));
+  cl_assert(do_not_disturb_is_active() == true);
+  cl_assert_equal_i(s_num_dnd_events_put, 1);
 }
 

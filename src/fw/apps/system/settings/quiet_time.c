@@ -18,7 +18,7 @@
 #include "pbl/services/notifications/alerts_preferences.h"
 #include "pbl/services/notifications/alerts_preferences_private.h"
 #include "resource/resource_ids.auto.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/size.h"
 #include "pbl/util/string.h"
@@ -325,6 +325,7 @@ static void prv_add_day_picker_callback(DayPickerResult result, void *context) {
   QuietTimeScheduleConfig config = {
     .kind = (QuietTimeKind)result.kind,
     .enabled = true,
+    // Default 10:00 PM - 7:00 AM, like the legacy weekday/weekend defaults.
     .from_hour = 22,
     .from_minute = 0,
     .to_hour = 7,
