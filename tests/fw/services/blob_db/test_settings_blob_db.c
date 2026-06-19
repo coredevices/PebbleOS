@@ -34,7 +34,6 @@
 #include "stubs_session.h"
 #include "stubs_sleep.h"
 #include "stubs_task_watchdog.h"
-#include "stubs_powermode_service.h"
 
 void WEAK alerts_preferences_lock(void) { }
 void WEAK alerts_preferences_unlock(void) { }

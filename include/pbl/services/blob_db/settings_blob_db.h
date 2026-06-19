@@ -23,7 +23,9 @@
  */
 void settings_blob_db_init(void);
 
+#if UNITTEST
 void settings_blob_db_reset_for_test(void);
+#endif
 
 /**
  * @brief Insert or replace a record in the settings database.

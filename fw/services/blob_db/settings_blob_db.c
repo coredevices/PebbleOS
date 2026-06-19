@@ -159,6 +159,10 @@ static const char *s_syncable_notif_prefs[] = {
 
 static const size_t s_num_syncable_notif_prefs = ARRAY_LENGTH(s_syncable_notif_prefs);
 
+// The five qtSchedule* entries above must stay in sync with MAX_QUIET_TIME_SCHEDULES.
+_Static_assert(ARRAY_LENGTH(s_syncable_notif_prefs) >= MAX_QUIET_TIME_SCHEDULES,
+               "s_syncable_notif_prefs must include a key for every QT schedule slot");
+
 static bool s_initialized = false;
 
 //! Check if the connected phone supports Settings BlobDB sync

@@ -36,8 +36,7 @@ void do_not_disturb_handle_pref_synced(void) {
   return;
 }
 
-void do_not_disturb_refresh_active_state(void) {
-}
+void do_not_disturb_refresh_active_state(void) {}
 
 void vibe_intensity_init(void) {
   return;
@@ -65,8 +64,7 @@ void test_alerts__initialize(void) {
   alerts_set_mask(AlertMaskAllOn);
 }
 
-void test_alerts__cleanup(void) {
-}
+void test_alerts__cleanup(void) {}
 
 // Tests
 /////////////////////////////////
