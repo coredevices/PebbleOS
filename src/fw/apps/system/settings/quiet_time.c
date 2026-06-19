@@ -329,6 +329,7 @@ static void prv_add_day_picker_callback(DayPickerResult result, void *context) {
   QuietTimeScheduleConfig config = {
     .kind = (QuietTimeKind)result.kind,
     .enabled = true,
+    // Default 10:00 PM - 7:00 AM, like the legacy weekday/weekend defaults.
     .from_hour = 22,
     .from_minute = 0,
     .to_hour = 7,

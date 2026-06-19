@@ -825,88 +825,11 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
     }
   }
 
-  // Check legacy DND schedule keys - re-migrate to new format if pushed by old phone
-  {
-    bool legacy_updated = false;
-
-    if ((key_len == (int)strlen(s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key) ||
-         key_len == (int)(strlen(s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key) + 1)) &&
-        memcmp(key, s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key,
-               strlen(s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key)) == 0) {
-      __typeof__(s_dnd_schedule[WeekdaySchedule].schedule) _tmp;
-      if (settings_file_get(&file, key, key_len, &_tmp, sizeof(_tmp)) == S_SUCCESS) {
-        s_dnd_schedule[WeekdaySchedule].schedule = _tmp;
-        matched_key = s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key;
-        legacy_updated = true;
-      }
-      goto legacy_done;
-    }
-    if ((key_len == (int)strlen(s_dnd_schedule_keys[WeekdaySchedule].enabled_pref_key) ||
-         key_len == (int)(strlen(s_dnd_schedule_keys[WeekdaySchedule].enabled_pref_key) + 1)) &&
-        memcmp(key, s_dnd_schedule_keys[WeekdaySchedule].enabled_pref_key,
-               strlen(s_dnd_schedule_keys[WeekdaySchedule].enabled_pref_key)) == 0) {
-      __typeof__(s_dnd_schedule[WeekdaySchedule].enabled) _tmp;
-      if (settings_file_get(&file, key, key_len, &_tmp, sizeof(_tmp)) == S_SUCCESS) {
-        s_dnd_schedule[WeekdaySchedule].enabled = _tmp;
-        matched_key = s_dnd_schedule_keys[WeekdaySchedule].enabled_pref_key;
-        legacy_updated = true;
-      }
-      goto legacy_done;
-    }
-    if ((key_len == (int)strlen(s_dnd_schedule_keys[WeekendSchedule].schedule_pref_key) ||
-         key_len == (int)(strlen(s_dnd_schedule_keys[WeekendSchedule].schedule_pref_key) + 1)) &&
-        memcmp(key, s_dnd_schedule_keys[WeekendSchedule].schedule_pref_key,
-               strlen(s_dnd_schedule_keys[WeekendSchedule].schedule_pref_key)) == 0) {
-      __typeof__(s_dnd_schedule[WeekendSchedule].schedule) _tmp;
-      if (settings_file_get(&file, key, key_len, &_tmp, sizeof(_tmp)) == S_SUCCESS) {
-        s_dnd_schedule[WeekendSchedule].schedule = _tmp;
-        matched_key = s_dnd_schedule_keys[WeekendSchedule].schedule_pref_key;
-        legacy_updated = true;
-      }
-      goto legacy_done;
-    }
-    if ((key_len == (int)strlen(s_dnd_schedule_keys[WeekendSchedule].enabled_pref_key) ||
-         key_len == (int)(strlen(s_dnd_schedule_keys[WeekendSchedule].enabled_pref_key) + 1)) &&
-        memcmp(key, s_dnd_schedule_keys[WeekendSchedule].enabled_pref_key,
-               strlen(s_dnd_schedule_keys[WeekendSchedule].enabled_pref_key)) == 0) {
-      __typeof__(s_dnd_schedule[WeekendSchedule].enabled) _tmp;
-      if (settings_file_get(&file, key, key_len, &_tmp, sizeof(_tmp)) == S_SUCCESS) {
-        s_dnd_schedule[WeekendSchedule].enabled = _tmp;
-        matched_key = s_dnd_schedule_keys[WeekendSchedule].enabled_pref_key;
-        legacy_updated = true;
-      }
-      goto legacy_done;
-    }
-
-legacy_done:
-    if (legacy_updated) {
-      s_qt_schedule[0] = (QuietTimeScheduleConfig){
-        .is_used = true,
-        .kind = QT_KIND_WEEKDAYS,
-        .from_hour = s_dnd_schedule[WeekdaySchedule].schedule.from_hour,
-        .from_minute = s_dnd_schedule[WeekdaySchedule].schedule.from_minute,
-        .to_hour = s_dnd_schedule[WeekdaySchedule].schedule.to_hour,
-        .to_minute = s_dnd_schedule[WeekdaySchedule].schedule.to_minute,
-        .enabled = s_dnd_schedule[WeekdaySchedule].enabled,
-      };
-      memset(s_qt_schedule[0].scheduled_days, 0, sizeof(s_qt_schedule[0].scheduled_days));
-      s_qt_schedule[1] = (QuietTimeScheduleConfig){
-        .is_used = true,
-        .kind = QT_KIND_WEEKENDS,
-        .from_hour = s_dnd_schedule[WeekendSchedule].schedule.from_hour,
-        .from_minute = s_dnd_schedule[WeekendSchedule].schedule.from_minute,
-        .to_hour = s_dnd_schedule[WeekendSchedule].schedule.to_hour,
-        .to_minute = s_dnd_schedule[WeekendSchedule].schedule.to_minute,
-        .enabled = s_dnd_schedule[WeekendSchedule].enabled,
-      };
-      memset(s_qt_schedule[1].scheduled_days, 0, sizeof(s_qt_schedule[1].scheduled_days));
-
-      settings_file_set(&file, "qtSchedule0", strlen("qtSchedule0"),
-                        &s_qt_schedule[0], sizeof(QuietTimeScheduleConfig));
-      settings_file_set(&file, "qtSchedule1", strlen("qtSchedule1"),
-                        &s_qt_schedule[1], sizeof(QuietTimeScheduleConfig));
-    }
-  }
+  // Legacy DND schedule keys (dndWeekdaySchedule, etc.) are already handled by
+  // the RELOAD_IF_MATCH calls above, which goto done on match. One-time
+  // migration to the qtSchedule* keys happens in prv_migrate_qt_schedules
+  // at init; new local edits keep the QT slots in sync via the legacy
+  // setters in do_not_disturb.c.
 
 #undef RELOAD_IF_MATCH
 

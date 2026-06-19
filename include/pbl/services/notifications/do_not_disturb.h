@@ -125,7 +125,9 @@ void quiet_time_get_scheduled_days(const QuietTimeScheduleConfig *config, bool o
 //! Display string for a QuietTimeKind
 const char *quiet_time_get_string_for_kind(QuietTimeKind kind);
 
-//! Display string for custom scheduled days. Buffer must be at least 28 bytes.
+//! Display string for custom scheduled days. Buffer must be at least 28 bytes
+//! (7 short day abbreviations + 6 comma separators + NUL). A single selected
+//! day uses the long form (e.g. "Wednesdays", 11 bytes incl. NUL).
 void quiet_time_get_string_for_custom(const bool *scheduled_days, char *buffer, size_t buf_len);
 
 //! Get the number of active (enabled and non-empty) schedule slots

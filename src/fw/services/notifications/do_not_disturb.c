@@ -15,7 +15,6 @@
 #include "applib/ui/window_stack.h"
 #include "drivers/rtc.h"
 #include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
 #include "kernel/ui/modals/modal_manager.h"
 #include "process_state/app_state/app_state.h"
 #include "resource/resource_ids.auto.h"
@@ -284,7 +283,12 @@ static void prv_set_schedule_mode_timer() {
     s_data.is_in_schedule_period = currently_active;
   }
 
-  PBL_ASSERTN(earliest_transition > 0);
+  // Defensive clamp: a config edge case (e.g. all-true day mask collapsing to
+  // the current minute) could theoretically yield 0; never reboot the watch
+  // over a schedule-config oddity.
+  if (earliest_transition <= 0) {
+    earliest_transition = SECONDS_PER_DAY;
+  }
 
   PBL_LOG_DBG("%s scheduled period. %u seconds until update",
       s_data.is_in_schedule_period ? "In" : "Out of", (unsigned int) earliest_transition);
