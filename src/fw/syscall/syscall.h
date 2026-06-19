@@ -48,6 +48,9 @@ struct tm* sys_localtime_r(const time_t *timep, struct tm *result);
 void sys_copy_timezone_abbr(char* timezone_abbr, time_t time);
 time_t sys_time_start_of_today(void);
 
+//! Report whether the calling task needs second-resolution clock ticks.
+void sys_tick_timer_set_seconds_subscribed(bool needs_seconds);
+
 
 void sys_evented_timer_consume(TimerID timer_id, EventedTimerCallback* out_cb, void** out_cb_data);
 
