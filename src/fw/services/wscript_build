@@ -72,8 +72,6 @@ if bld.env.CONFIG_SERVICE_I18N:
     bld.recurse('i18n')
 if bld.env.CONFIG_SERVICE_IDLE_WATCHDOG:
     bld.recurse('idle_watchdog')
-if bld.env.CONFIG_SERVICE_LEGACY:
-    bld.recurse('legacy')
 if bld.env.CONFIG_SERVICE_LIGHT:
     bld.recurse('light')
 if bld.env.CONFIG_SERVICE_MUSIC:
