@@ -21,6 +21,11 @@
 #include "process_management/process_manager.h"
 #include "process_state/app_state/app_state.h"
 #include "shell/prefs.h"
+#ifdef CONFIG_SERVICE_POWERMODE_SERVICE
+#include "drivers/rtc.h"
+#include "pbl/services/powermode_service.h"
+#define POWERMODE_COMPOSITOR_BOOST_MS 200
+#endif
 #include "system/logging.h"
 #include "system/passert.h"
 #include "system/profiler.h"
@@ -133,9 +138,36 @@ void compositor_set_modal_transition_offset(GPoint modal_offset) {
   s_animation_state.modal_offset = modal_offset;
 }
 
+#ifdef CONFIG_SERVICE_POWERMODE_SERVICE
+// Render runs on KernelMain, so the depth tracking needs no locking. The depth
+// guard collapses the nested app+modal render into a single work report.
+static RtcTicks s_render_start_ticks;
+static uint8_t s_render_depth;
+
+static void prv_render_work_begin(void) {
+  if (s_render_depth++ == 0) {
+    s_render_start_ticks = rtc_get_ticks();
+  }
+}
+
+static void prv_render_work_end(void) {
+  if (s_render_depth == 0 || --s_render_depth != 0) {
+    return;
+  }
+  const RtcTicks elapsed_ticks = rtc_get_ticks() - s_render_start_ticks;
+  // Report the CPU-bound render cost (not the display flush, which is
+  // DMA-bound) so the governor can step the CPU up when rendering lags.
+  powermode_service_report_work_ms((uint32_t)((elapsed_ticks * 1000) / RTC_TICKS_HZ));
+}
+#else
+static void prv_render_work_begin(void) {}
+static void prv_render_work_end(void) {}
+#endif
+
 void compositor_render_app(void) {
   PBL_ASSERT_TASK(PebbleTask_KernelMain);
 
+  prv_render_work_begin();
   PROFILER_NODE_START(compositor);
 
   // Don't trust the size field within the app framebuffer as the app could modify it.
@@ -156,9 +188,12 @@ void compositor_render_app(void) {
   PROFILER_NODE_STOP(compositor);
 
   framebuffer_dirty_all(&s_framebuffer);
+  prv_render_work_end();
 }
 
 void compositor_render_modal(void) {
+  prv_render_work_begin();
+
   GContext *ctx = kernel_ui_get_graphics_context();
 
   // We make this GDrawState static to save stack space, thus the declaration and init must be
@@ -171,6 +206,8 @@ void compositor_render_modal(void) {
   modal_manager_render(ctx);
 
   ctx->draw_state = prev_state;
+
+  prv_render_work_end();
 }
 
 // Compositor implementation
@@ -200,6 +237,10 @@ T_STATIC void prv_handle_display_update_complete(void) {
 
 static void prv_compositor_flush(void) {
   PBL_ASSERT_TASK(PebbleTask_KernelMain);
+
+#ifdef CONFIG_SERVICE_POWERMODE_SERVICE
+  powermode_service_boost_ms(POWERMODE_COMPOSITOR_BOOST_MS);
+#endif
 
   // Stop the framebuffer_prepare performance timer. This timer was started when the client
   // first posted the render event to the system.
