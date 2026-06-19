@@ -61,7 +61,7 @@ PBL_LOG_MODULE_DEFINE(driver_touch_cst816, CONFIG_DRIVER_TOUCH_LOG_LEVEL);
 
 /* Workaround: the CST816 occasionally wedges and stops asserting its INT line.
  * If no touch activity is seen between two watchdog checks, hard-reset it. */
-#define CST816_WATCHDOG_PERIOD_MIN    30
+#define CST816_WATCHDOG_PERIOD_MIN    60
 
 /* The chip stays awake for 2s after a wake; an interrupt seen >=2s after the
  * previous one therefore marks a fresh sleep->awake transition. */

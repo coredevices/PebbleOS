@@ -245,7 +245,7 @@ static void prv_exit_disabled_state(void) {
 #if DEBUG_STATIONARY
   regular_timer_add_seconds_callback(&s_accel_stationary_timer_info);
 #else
-  regular_timer_add_minutes_callback(&s_accel_stationary_timer_info);
+  regular_timer_add_multiminute_callback(&s_accel_stationary_timer_info, 2);
 #endif
   s_current_state = StationaryStateAwake;
 }
