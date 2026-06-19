@@ -178,10 +178,6 @@ static uint16_t prv_ntc_threshold_code(uint8_t celsius) {
 void battery_init(void) {
 }
 
-uint32_t pmic_get_last_reset_reason(void) {
-  return 0;
-}
-
 static bool prv_read_register(uint16_t register_address, uint8_t *result) {
   i2c_use(I2C_NPM1300);
   uint8_t regad[2] = { register_address >> 8, register_address & 0xFF };

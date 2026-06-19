@@ -400,9 +400,6 @@ void light_enable_interaction(void) {
 
   if (prv_light_allowed()) {
     prv_change_state(LIGHT_STATE_ON_TIMED);
-  } else {
-    PBL_LOG_INFO("Backlight rejected: allowed=%d, brightness=%" PRIu8 ", is_light=%d",
-                 s_backlight_allowed, s_current_brightness, prv_als_is_light());
   }
 
   mutex_unlock(s_mutex);

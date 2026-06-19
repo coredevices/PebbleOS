@@ -151,7 +151,7 @@ static const KernelLEClient s_clients[KernelLEClientNum] = {
     .handle_service_removed = app_launch_handle_service_removed,
     .invalidate_all_references = app_launch_invalidate_all_references,
     .can_handle_characteristic = app_launch_can_handle_characteristic,
-    .handle_read_or_notification = app_launch_handle_read_or_notification,
+    .handle_read_or_notification = NULL,
   },
   [KernelLEClientDIS] = {
     .debug_name = "DIS",
@@ -170,26 +170,15 @@ static const KernelLEClient s_clients[KernelLEClientNum] = {
 static void prv_handle_services_removed(PebbleBLEGATTClientServicesRemoved *services_removed) {
   PebbleBLEGATTClientServiceHandles *service_remove_info = &services_removed->handles[0];
   for (int s = 0; s < services_removed->num_services_removed; s++) {
-#ifndef CONFIG_RELEASE
-    bool removed = false;
-#endif
     for (int c = 0; c < KernelLEClientNum; c++) {
       const KernelLEClient * const client = &s_clients[c];
       if (uuid_equal(&service_remove_info->uuid, client->service_uuid)) {
-#ifndef CONFIG_RELEASE
-        removed = true;
-#endif
         client->handle_service_removed(
             (BLECharacteristic *)&service_remove_info->char_and_desc_handles[0],
                                        service_remove_info->num_characteristics);
       }
     }
 
-#ifndef CONFIG_RELEASE
-    char uuid_string[UUID_STRING_BUFFER_LENGTH];
-    uuid_to_string(&service_remove_info->uuid, uuid_string);
-    PBL_LOG_INFO("%s removed: %d", uuid_string, (int)removed);
-#endif
     int num_hdls = service_remove_info->num_descriptors +
         service_remove_info->num_characteristics;
     service_remove_info =
@@ -233,19 +222,6 @@ static void prv_handle_services_added(
         continue;
       }
 
-#if !UNITTEST
-      ATTHandleRange range = { };
-      gatt_client_service_get_handle_range(added_services->services[s], &range);
-      if (c == KernelLEClientPPoGATT) {
-        // We are trying to track down an issue on iOS where PPoGATT doesn't get opened (PBL-40084)
-        // This message should help us determine if iOS is publishing the service
-        PBL_LOG_INFO("Found an instance of %s at 0x%"PRIx16"-0x%"PRIx16"!",
-                client->debug_name, range.start, range.end);
-      } else {
-        PBL_LOG_DBG("Found an instance of %s at 0x%"PRIx16"-0x%"PRIx16"!",
-                client->debug_name, range.start, range.end);
-      }
-#endif
       client->handle_service_discovered(characteristics);
     }
   }

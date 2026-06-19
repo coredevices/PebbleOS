@@ -328,7 +328,7 @@ static void prv_check_timeouts(PPoGATTClient *client) {
       client->state == StateConnectedClosedAwaitingResetCompleteRemoteInitiatedReset) {
     if (prv_has_timeout(client)) {
       // We've timed out waiting for a reset to be completed, start over:
-      PBL_LOG_INFO("Timed out waiting for Reset Complete, Resetting again...");
+      PBL_LOG_WRN("Timed out waiting for Reset Complete, Resetting again...");
       prv_start_reset(client);
     }
     return;
@@ -620,8 +620,8 @@ static void prv_handle_reset_complete(PPoGATTClient *client, const PPoGATTPacket
   {
     const uint32_t elapsed_ms =
         (rtc_get_ticks() - client->created_ticks) * 1000 / RTC_TICKS_HZ;
-    PBL_LOG_INFO("Hurray! PPoGATT Session is opened (Vers: %d TXW: %d RXW: %d) after %"PRIu32"ms!",
-            client->version, client->out.tx_window_size, client->out.rx_window_size, elapsed_ms);
+    PBL_LOG_INFO("PPoGATT Session is opened (Vers: %d TXW: %d RXW: %d) after %"PRIu32"ms!",
+                 client->version, client->out.tx_window_size, client->out.rx_window_size, elapsed_ms);
   }
 }
 

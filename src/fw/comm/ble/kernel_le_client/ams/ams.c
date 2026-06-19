@@ -602,7 +602,7 @@ void ams_handle_subscribe(BLECharacteristic subscribed_characteristic,
     PBL_LOG_ERR("Failed to subscribe AMS");
     return;
   }
-  PBL_LOG_INFO("Hurray! AMS subscribed");
+  PBL_LOG_INFO("AMS subscribed");
   if (!prv_set_connected(true)) {
     PBL_LOG_ERR("Another music service was already connected. Aborting AMS setup.");
     return;

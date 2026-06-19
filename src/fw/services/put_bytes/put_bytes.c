@@ -298,7 +298,7 @@ static bool prv_init_put_job_queue_if_necessary(void) {
         prv_deinit_put_job_queue();
         return false;
       } if (i == 1) {
-        PBL_LOG_INFO("Not enough memory for PB pre-ack, falling back to legacy mode");
+        PBL_LOG_DBG("Not enough memory for PB pre-ack, falling back to legacy mode");
         put_jobs->enable_preack = false;
         break;
       } else {
@@ -330,7 +330,7 @@ static void prv_add_nack_no_token_system_callback(void) {
 }
 
 static void prv_cleanup(void) {
-  PBL_LOG_INFO("Put bytes cleanup. Tok: %"PRIu32, s_pb_state.token);
+  PBL_LOG_DBG("Put bytes cleanup. Tok: %"PRIu32, s_pb_state.token);
 
   prv_deinit_put_job_queue();
   s_pb_state.receiver = (__typeof__(s_pb_state.receiver)) {};
@@ -502,7 +502,7 @@ static void prv_do_install(uint32_t token) {
     return;
   }
 
-  PBL_LOG_INFO("PutBytes install CB. Tok: %"PRIu32", type: %d", token, o->type);
+  PBL_LOG_DBG("PutBytes install CB. Tok: %"PRIu32", type: %d", token, o->type);
 
   switch (o->type) {
   case ObjectFirmware:
@@ -526,7 +526,7 @@ static void prv_do_install(uint32_t token) {
 }
 
 static void prv_do_abort(void) {
-  PBL_LOG_INFO("PutBytes abort CB. Tok: %"PRIu32".", s_pb_state.token);
+  PBL_LOG_DBG("PutBytes abort CB. Tok: %"PRIu32".", s_pb_state.token);
   prv_mark_pb_jobs_complete(1);
   prv_cleanup_and_send_response(ResponseAck);
 }
@@ -725,7 +725,7 @@ static void prv_do_init(void) {
   const uint32_t r = rand();
   s_pb_state.token = MAX(1, r);
 
-  PBL_LOG_INFO("PutBytes Init CB. Type: %d, Idx: %"PRIu32", Size: %"PRIu32" Tok: %"PRIu32,
+  PBL_LOG_DBG("PutBytes Init CB. Type: %d, Idx: %"PRIu32", Size: %"PRIu32" Tok: %"PRIu32,
           (int) s_pb_state.type, s_pb_state.index,
           s_pb_state.total_size, s_pb_state.token);
 
@@ -1030,7 +1030,7 @@ void put_bytes_cancel(void) {
   } else if (s_pb_state.type == ObjectWatchApp ||
              s_pb_state.type == ObjectAppResources ||
              s_pb_state.type == ObjectWatchWorker) {
-    PBL_LOG_INFO("Forcefully cancelling put_bytes transfer of app binaries");
+    PBL_LOG_DBG("Forcefully cancelling put_bytes transfer of app binaries");
     prv_cleanup();
   } else {
     PBL_LOG_DBG("Attempted to cancel put_bytes with a non desired type, %d",

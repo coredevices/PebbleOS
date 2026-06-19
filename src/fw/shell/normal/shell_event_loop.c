@@ -54,7 +54,6 @@ static void prv_maybe_run_settings_dbs_compaction_migration(void) {
   if (shell_prefs_get_settings_dbs_compacted_v1()) {
     return;
   }
-  PBL_LOG_INFO("settings_dbs_compaction_migration: scheduling");
   system_task_add_callback(prv_settings_dbs_compaction_migration_cb, NULL);
 }
 
@@ -92,7 +91,6 @@ void shell_event_loop_handle_event(PebbleEvent *e) {
       return;
 
     case PEBBLE_ALARM_CLOCK_EVENT:
-      PBL_LOG_INFO("Alarm event in the shell event loop");
       stationary_wake_up();
       alarm_popup_push_window(&e->alarm_clock);
       return;

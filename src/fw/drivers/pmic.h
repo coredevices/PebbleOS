@@ -9,9 +9,6 @@
 //! Initialize the PMIC driver. Call this once at startup.
 bool pmic_init(void);
 
-//! @return The reset reason or 0 if the driver was not able to determine a reset reason
-uint32_t pmic_get_last_reset_reason(void);
-
 //! Tell the PMIC to power off the board and enter a standby-like state. All components will
 //! have their power removed (except for the RTC so we'll still keep time) and the PMIC itself
 //! will monitor the buttons for when to wake up.

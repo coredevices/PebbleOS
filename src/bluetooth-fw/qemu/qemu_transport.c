@@ -60,7 +60,7 @@ static void prv_send_next(Transport *transport) {
 // -----------------------------------------------------------------------------------------
 // bt_lock() is held by caller
 static void prv_reset(Transport *transport) {
-  PBL_LOG_INFO("Unimplemented");
+  PBL_LOG_WRN("Unimplemented");
 }
 
 static void prv_granted_kernel_main_cb(void *ctx) {

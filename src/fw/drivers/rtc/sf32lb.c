@@ -257,12 +257,6 @@ static void prv_rtc_set_time_no_cal_reset(time_t time) {
   HAL_RTC_SetTime(&RTC_Handler, &rtc_time_struct, RTC_FORMAT_BIN);
   HAL_RTC_SetDate(&RTC_Handler, &rtc_date_struct, RTC_FORMAT_BIN);
 
-  PBL_LOG_INFO("RTC set time to %lu", time);
-  PBL_LOG_INFO("%u:%u:%u, %u/%u/%u (%u)",
-          rtc_time_struct.Hours, rtc_time_struct.Minutes, rtc_time_struct.Seconds,
-          rtc_date_struct.Month, rtc_date_struct.Date, rtc_date_struct.Year,
-          rtc_date_struct.WeekDay);
-
   // Send clock change event to notify system components (e.g., DND timer scheduler)
   // This ensures long-duration timers are properly rescheduled after calibration adjustments
   int32_t time_delta = (int32_t)(time - old_time);

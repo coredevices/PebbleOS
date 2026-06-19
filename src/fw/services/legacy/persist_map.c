@@ -65,8 +65,6 @@ static int prv_pmap_open_debug_wrapper(const char *name, uint8_t op_flags, uint8
   if (fd < 0) { // pmap, where'd you go, we miss you so?!
     PBL_HEXDUMP_D(LOG_LEVEL_INFO, LOG_LEVEL_INFO, (uint8_t *)s_pmap_fd_diagnostic_data,
                   sizeof(s_pmap_fd_diagnostic_data));
-
-    test_infra_quarantine_board("pmap file went missing");
   } else {
     prv_pmap_grab_debug_fd_data(fd);
   }

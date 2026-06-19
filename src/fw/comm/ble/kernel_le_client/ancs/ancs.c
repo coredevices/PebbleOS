@@ -545,8 +545,8 @@ T_STATIC void prv_check_ancs_alive(void) {
     // probe -- the next 15 min alive check will verify recovery.
     if (++s_ancs_client->alive_checks_without_ns >=
         ANCS_ALIVE_CHECKS_WITHOUT_NS_BEFORE_RESUBSCRIBE) {
-      PBL_LOG_INFO("ANCS NS silent for %u alive checks; forcing CCCD resubscribe",
-                   s_ancs_client->alive_checks_without_ns);
+      PBL_LOG_WRN("ANCS NS silent for %u alive checks; forcing CCCD resubscribe",
+                  s_ancs_client->alive_checks_without_ns);
       s_ancs_client->alive_checks_without_ns = 0;
       prv_resubscribe_to_ancs();
       // ancs_handle_subscribe() will re-arm on success; schedule a backup so
@@ -959,7 +959,7 @@ void ancs_handle_subscribe(BLECharacteristic subscribed_characteristic,
   }
 
   if (error == BLEGATTErrorSuccess) {
-    PBL_LOG_INFO("Hurray! ANCS subscribed: %u", characteristic_id);
+    PBL_LOG_INFO("ANCS subscribed: %u", characteristic_id);
 
     if (characteristic_id == ANCSCharacteristicData) {
       prv_ancs_is_alive_start_tracking();
