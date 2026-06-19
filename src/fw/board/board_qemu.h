@@ -66,11 +66,6 @@ typedef struct {
 } OutputConfig;
 
 typedef struct {
-  void *gpio;
-  uint8_t gpio_pin;
-} AfConfig;
-
-typedef struct {
   int pad;
   int func;
   int flags;
@@ -87,9 +82,6 @@ typedef struct {
   Pinmux pwm_pin;
   PwmState *state;
 } PwmConfig;
-
-typedef struct {
-} TimerConfig;
 
 typedef struct {
   uint8_t backlight_on_percent;
@@ -157,8 +149,6 @@ typedef struct {
 
 // Forward-declare device types
 typedef const struct UARTDevice UARTDevice;
-typedef const struct SPIBus SPIBus;
-typedef const struct SPISlavePort SPISlavePort;
 typedef const struct I2CBus I2CBus;
 typedef const struct I2CSlavePort I2CSlavePort;
 typedef const struct QSPIPort QSPIPort;

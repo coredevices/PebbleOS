@@ -77,6 +77,10 @@ static int s_num_buttons_down;
 //! The current app is forcing the light on and off, don't muck with it.
 static bool s_user_controlled_state;
 
+//! True while a touch is holding the backlight on. Lets app teardown release a
+//! touch whose liftoff was never delivered. KernelMain-only.
+static bool s_touch_holding;
+
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
 //! The app's requested backlight tint. Valid only when s_app_rgb_override_valid
 //! is true; otherwise the LED uses the user default (white).
@@ -317,6 +321,7 @@ void light_init(void) {
   s_timer_id = new_timer_create();
   s_num_buttons_down = 0;
   s_user_controlled_state = false;
+  s_touch_holding = false;
   s_fade_start_intensity = 0;
   s_fade_step_size = 0;
   s_mutex = mutex_create();
@@ -365,6 +370,23 @@ void light_button_released(void) {
   }
 
   mutex_unlock(s_mutex);
+}
+
+void light_touch_down(void) {
+  // Mirror a touch onto the button refcount, coalescing repeats to one ref.
+  if (s_touch_holding) {
+    return;
+  }
+  s_touch_holding = true;
+  light_button_pressed();
+}
+
+void light_touch_up(void) {
+  if (!s_touch_holding) {
+    return;
+  }
+  s_touch_holding = false;
+  light_button_released();
 }
 
 void light_enable_interaction(void) {
@@ -424,6 +446,10 @@ void light_enable_respect_settings(bool enable) {
 }
 
 void light_reset_user_controlled(void) {
+  // Release a touch that never saw its liftoff (app exited mid-press) so the
+  // button refcount can't leak. Call before locking; light_touch_up locks.
+  light_touch_up();
+
   mutex_lock(s_mutex);
 
   // http://www.youtube.com/watch?v=6t_KgE6Yuqg

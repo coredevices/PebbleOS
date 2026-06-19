@@ -292,9 +292,16 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
 
 #ifdef CONFIG_TOUCH
     case PEBBLE_TOUCH_EVENT: {
-      // When an app subscribes to touch events we ignore the global
-      // wake-on-touch preference and instead tie the backlight to the touch
-      // itself: forced on while a finger is down, then timed out after liftoff.
+      // For touch-subscribed apps, tie the backlight to the touch: on while a
+      // finger is down, timed out after liftoff. Release on liftoff ungated
+      // so the refcount can't leak if the app unsubscribed or DnD turned on mid-touch.
+      if (e->touch.event.type == TouchEvent_Liftoff) {
+        light_touch_up();
+        return;
+      }
+      if (e->touch.event.type != TouchEvent_Touchdown) {
+        return;
+      }
       if (!touch_has_app_subscribers()) {
         return;
       }
@@ -305,11 +312,7 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
         return;
       }
 #endif
-      if (e->touch.event.type == TouchEvent_Touchdown) {
-        light_button_pressed();
-      } else if (e->touch.event.type == TouchEvent_Liftoff) {
-        light_button_released();
-      }
+      light_touch_down();
       return;
     }
 #endif

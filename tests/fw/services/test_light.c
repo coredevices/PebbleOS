@@ -257,3 +257,45 @@ void test_light__interaction_during_fading(void) {
   light_enable_interaction();
   check_on_timed_and_consume();
 }
+
+void test_light__touch_down_and_up(void) {
+  // A touch behaves like a button: on while down, timed out after liftoff.
+  light_touch_down();
+  check_on();
+
+  light_touch_up();
+  check_on_timed_and_consume();
+}
+
+void test_light__touch_down_is_coalesced(void) {
+  // Repeated touch-downs take one reference; one touch-up fully releases it.
+  light_touch_down();
+  check_on();
+
+  light_touch_down();
+  check_on();
+
+  light_touch_up();
+  check_on_timed_and_consume();
+}
+
+void test_light__touch_up_without_down_is_noop(void) {
+  // A stray liftoff must not underflow the refcount or disturb the off state.
+  light_touch_up();
+  check_off();
+
+  light_button_pressed();
+  check_on();
+  light_button_released();
+  check_on_timed_and_consume();
+}
+
+void test_light__touch_hold_released_on_app_teardown(void) {
+  // App teardown must release the hold so the backlight times out, not stick on.
+  light_touch_down();
+  check_on();
+
+  light_reset_user_controlled();
+
+  check_on_timed_and_consume();
+}

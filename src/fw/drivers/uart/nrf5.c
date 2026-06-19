@@ -4,7 +4,6 @@
 #include "nrf5.h"
 #include "drivers/uart.h"
 
-#include "drivers/dma.h"
 #include "drivers/gpio.h"
 #include "system/logging.h"
 #include "system/passert.h"

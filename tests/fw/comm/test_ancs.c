@@ -476,6 +476,21 @@ void test_ancs__ancs_invalid_param(void) {
 
 extern ANCSClientState prv_get_state(void);
 extern void prv_check_ancs_alive(void);
+extern uint32_t prv_get_queue_depth(void);
+extern bool prv_queue_contains_uid(uint32_t uid);
+extern void prv_is_ancs_alive_launcher_task_cb(void *data);
+
+// Send a notification whose uid the fake never answers, so the head wedges.
+static void prv_send_unanswered_notification(uint32_t uid) {
+  NSNotification ns_notification = {
+    .event_id = EventIDNotificationAdded,
+    .event_flags = 0,
+    .category_id = CategoryIDSocial,
+    .category_count = 1,
+    .uid = uid,
+  };
+  prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t *) &ns_notification);
+}
 
 void test_ancs__alive_check_disconnection(void) {
   prv_check_ancs_alive();
@@ -621,6 +636,72 @@ void test_ancs__reset_after_retry(void) {
   prv_send_notification((uint8_t *)&s_complete_dict);
   ancs_invalidate_all_references();
   cl_assert_equal_i(prv_get_state(), ANCSClientStateIdle);
+}
+
+// A lost DS response must not wedge the queue: the watchdog drops the stuck head.
+void test_ancs__op_timeout_recovers_wedged_head(void) {
+  // The fake never answers this uid, so the head wedges in-flight.
+  prv_send_unanswered_notification(0xD0000001);
+  cl_assert_equal_i(prv_get_state(), ANCSClientStateRequestedNotification);
+  cl_assert_equal_i(s_num_requested_notif_attributes, 1);
+
+  // Queue more behind it (distinct uids so they aren't deduped).
+  prv_send_notification((uint8_t *)&s_complete_dict);
+  prv_send_notification((uint8_t *)&s_message_size_attr_dict);
+  cl_assert_equal_i(prv_get_queue_depth(), 3);
+  cl_assert_equal_i(s_num_requested_notif_attributes, 1);
+  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
+
+  // Watchdog fires: stuck head dropped, queue drains.
+  regular_timer_fire_seconds(1);
+
+  cl_assert_equal_i(prv_get_state(), ANCSClientStateIdle);
+  cl_assert_equal_i(prv_get_queue_depth(), 0);
+  cl_assert_equal_i(s_num_requested_notif_attributes, 3);
+  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 2);
+  cl_assert_equal_i(regular_timer_seconds_count(), 0);
+}
+
+// When full, evict the oldest pending request rather than drop the newest.
+void test_ancs__queue_full_evicts_oldest(void) {
+  // Wedge the head so nothing drains while we fill the queue.
+  prv_send_unanswered_notification(0xD0000002);
+  cl_assert_equal_i(prv_get_state(), ANCSClientStateRequestedNotification);
+
+  // Fill the queue (1 head + 15 pending == ANCS_NOTIF_QUEUE_MAX_DEPTH).
+  const uint32_t first_pending = 0xC0000000;
+  for (uint32_t i = 0; i < 15; i++) {
+    prv_send_unanswered_notification(first_pending + i);
+  }
+  cl_assert_equal_i(prv_get_queue_depth(), 16);
+  cl_assert(prv_queue_contains_uid(first_pending));
+
+  // One more while full: oldest evicted, newest kept, head safe.
+  const uint32_t newest = 0xB0000000;
+  prv_send_unanswered_notification(newest);
+
+  cl_assert_equal_i(prv_get_queue_depth(), 16);
+  cl_assert(prv_queue_contains_uid(newest));
+  cl_assert(!prv_queue_contains_uid(first_pending));
+  cl_assert(prv_queue_contains_uid(0xD0000002));
+}
+
+// If wedged across consecutive alive checks, escalate to flush + resubscribe.
+void test_ancs__alive_check_escalates_when_wedged(void) {
+  prv_send_unanswered_notification(0xD0000003);
+  prv_send_notification((uint8_t *)&s_complete_dict);
+  cl_assert_equal_i(prv_get_state(), ANCSClientStateRequestedNotification);
+  cl_assert_equal_i(prv_get_queue_depth(), 2);
+
+  // First busy alive check: defer, don't escalate yet.
+  prv_is_ancs_alive_launcher_task_cb(NULL);
+  cl_assert_equal_i(prv_get_state(), ANCSClientStateRequestedNotification);
+  cl_assert_equal_i(prv_get_queue_depth(), 2);
+
+  // Second consecutive busy alive check: force flush + resubscribe.
+  prv_is_ancs_alive_launcher_task_cb(NULL);
+  cl_assert_equal_i(prv_get_state(), ANCSClientStateIdle);
+  cl_assert_equal_i(prv_get_queue_depth(), 0);
 }
 
 // No Longer Supported
