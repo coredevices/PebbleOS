@@ -21,8 +21,12 @@ if bld.env.CONFIG_SCREEN_COLOR_DEPTH_BITS == 1:
 else:
     sources.append('default/compositor_modal_transitions.c')
 
+compositor_use = ['fw_includes']
+if bld.env.CONFIG_SERVICE_POWERMODE_SERVICE:
+    compositor_use.append('services_powermode_service')
+
 bld.stlib(
-    use=['fw_includes'],
+    use=compositor_use,
     source=sources,
     target='services_compositor',
 )
