@@ -12,7 +12,6 @@
 #include "process_management/app_install_manager.h"
 #include "pbl/services/filesystem/app_file.h"
 #include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/legacy/persist_map.h"
 #include "pbl/services/settings/settings_file.h"
 #include "system/logging.h"
 #include "system/passert.h"
@@ -58,19 +57,19 @@ static inline void prv_unlock(void) {
   mutex_unlock(s_mutex);
 }
 
-#define PERSIST_FILE_NAME_MAX_LENGTH sizeof("ps000001")
+// "ps" prefix + 32 hex chars (16-byte UUID) + NUL.
+#define PERSIST_FILE_NAME_MAX_LENGTH sizeof("ps000102030405060708090a0b0c0d0e0f")
 
 static status_t prv_get_file_name(char *name, size_t buf_len, const Uuid *uuid) {
-  // Firmware 2.x persist files are named "p%06d", the added "s" in the file
-  // name prefix indicates that it is in SettingsFile format.
-  int pid = persist_map_auto_id(uuid);
-  if (FAILED(pid)) {
-    // Attempting to debug persist map failure
-    PBL_LOG_WRN("Failed to get pid! %d", pid);
-    persist_map_dump();
-    return pid;
-  }
-  return snprintf(name, buf_len, "ps%06d", pid);
+  // Persist files are named "ps<uuid-hex>". The "ps" prefix indicates the file
+  // is in SettingsFile format. The UUID is stable across reinstalls, so the
+  // file follows the app regardless of its (volatile) AppInstallId.
+  const uint8_t *b = (const uint8_t *)uuid;
+  return snprintf(name, buf_len,
+                  "ps%02x%02x%02x%02x%02x%02x%02x%02x"
+                  "%02x%02x%02x%02x%02x%02x%02x%02x",
+                  b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7],
+                  b[8], b[9], b[10], b[11], b[12], b[13], b[14], b[15]);
 }
 
 status_t persist_service_delete_file(const Uuid *uuid) {
@@ -94,7 +93,6 @@ size_t persist_service_get_max_size(void) {
 
 // Designed to be called once during reset
 void persist_service_init(void) {
-  persist_map_init();
   s_mutex = mutex_create();
 
   // Find and delete any AppInstallId-indexed persist files. Due to PBL-16663
