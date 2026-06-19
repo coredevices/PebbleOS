@@ -673,7 +673,7 @@ static bool prv_set_s_power_mode(uint8_t *mode) {
     return false;
   }
   s_power_mode = *mode;
-  powermode_service_set_enabled(*mode == PowerMode_LowPower);
+  powermode_service_set_enabled(*mode != PowerMode_HighPerformance);
   return true;
 }
 

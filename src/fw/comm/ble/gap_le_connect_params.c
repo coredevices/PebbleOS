@@ -72,15 +72,15 @@
 
 static const GAPLEConnectRequestParams s_default_connection_params_table[NumResponseTimeState] = {
   [ResponseTimeMax] = {
-    .slave_latency_events = 3,
-    .connection_interval_min_1_25ms = 24, // 30ms
-    .connection_interval_max_1_25ms = 36, // 45ms
+    .slave_latency_events = 6,
+    .connection_interval_min_1_25ms = 40, // 50ms
+    .connection_interval_max_1_25ms = 56, // 70ms
     .supervision_timeout_10ms = 600, // 6s
   },
   [ResponseTimeMiddle] = {
-    .slave_latency_events = 3,
-    .connection_interval_min_1_25ms = 24, // 30ms
-    .connection_interval_max_1_25ms = 36, // 45ms
+    .slave_latency_events = 4,
+    .connection_interval_min_1_25ms = 32, // 40ms
+    .connection_interval_max_1_25ms = 48, // 60ms
     .supervision_timeout_10ms = 600, // 6s
   },
   [ResponseTimeMin] = {
