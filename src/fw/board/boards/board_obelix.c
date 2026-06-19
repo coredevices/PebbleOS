@@ -264,7 +264,6 @@ static I2CBus s_i2c_bus_1 = {
     .hal = &s_i2c_bus_hal_1,
     .state = &s_i2c_bus_state_1,
     .name = "i2c1",
-    .stop_mode_inhibitor = InhibitorI2C1,
 };
 
 I2CBus *const I2C1_BUS = &s_i2c_bus_1;
@@ -337,7 +336,6 @@ static I2CBus s_i2c_bus_2 = {
     .hal = &s_i2c_bus_hal_2,
     .state = &s_i2c_bus_state_2,
     .name = "i2c2",
-    .stop_mode_inhibitor = InhibitorI2C2,
 };
 
 I2CBus *const I2C2_BUS = &s_i2c_bus_2;
@@ -428,7 +426,6 @@ static I2CBus s_i2c_bus_3 = {
     .hal = &s_i2c_bus_hal_3,
     .state = &s_i2c_bus_state_3,
     .name = "i2c3",
-    .stop_mode_inhibitor = InhibitorI2C3,
 };
 
 I2CBus *const I2C3_BUS = &s_i2c_bus_3;
@@ -495,7 +492,6 @@ static I2CBus s_i2c_bus_4 = {
     .hal = &s_i2c_bus_hal_4,
     .state = &s_i2c_bus_state_4,
     .name = "i2c4",
-    .stop_mode_inhibitor = InhibitorI2C4,
 };
 
 I2CBus *const I2C4_BUS = &s_i2c_bus_4;

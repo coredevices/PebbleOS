@@ -12,7 +12,6 @@
 #include "drivers/task_watchdog.h"
 #include "drivers/watchdog.h"
 #include "flash_region/flash_region.h"
-#include "kernel/util/stop.h"
 #include "os/mutex.h"
 #include "os/tick.h"
 #include "process_management/worker_manager.h"
@@ -115,9 +114,7 @@ void flash_read_bytes(uint8_t* buffer, uint32_t start_addr,
   if (s_erase.suspended) {
     new_timer_start(s_erase_suspend_timer, 5, prv_erase_suspend_timer_cb, NULL, 0);
   }
-  stop_mode_disable(InhibitorFlash);
   flash_impl_read_sync(buffer, start_addr, buffer_size);
-  stop_mode_enable(InhibitorFlash);
   mutex_unlock(s_flash_lock);
 }
 
@@ -131,7 +128,6 @@ void flash_expect_program_failure(bool expect_failure) {
 void flash_write_bytes(const uint8_t *buffer, uint32_t start_addr,
                        uint32_t buffer_size) {
   mutex_lock(s_flash_lock);
-  stop_mode_disable(InhibitorFlash);  // FIXME: PBL-18028
   prv_erase_pause();
   if (s_erase.suspended) {
     new_timer_start(s_erase_suspend_timer, 50, prv_erase_suspend_timer_cb, NULL, 0);
@@ -173,7 +169,6 @@ void flash_write_bytes(const uint8_t *buffer, uint32_t start_addr,
     //   mutex_lock(s_flash_lock);
     // }
   }
-  stop_mode_enable(InhibitorFlash);
   mutex_unlock(s_flash_lock);
 }
 
@@ -206,12 +201,10 @@ static uint32_t prv_flash_erase_start(uint32_t addr,
         flash_impl_get_typical_subsector_erase_duration_ms() :
         flash_impl_get_typical_sector_erase_duration_ms(),
   };
-  stop_mode_disable(InhibitorFlash);  // FIXME: PBL-18028
   status_t status = is_subsector? flash_impl_blank_check_subsector(addr)
                                 : flash_impl_blank_check_sector(addr);
   PBL_ASSERT(PASSED(status), "Blank check error: %" PRId32, status);
   if (status != S_FALSE) {
-    stop_mode_enable(InhibitorFlash);
     s_erase.in_progress = false;
     mutex_unlock(s_flash_lock);
     xSemaphoreGive(s_erase_semphr);
@@ -228,7 +221,6 @@ static uint32_t prv_flash_erase_start(uint32_t addr,
     mutex_unlock(s_flash_lock);
     return (s_erase.expected_duration * 7 / 8);
   } else {
-    stop_mode_enable(InhibitorFlash);
     s_erase.in_progress = false;
     mutex_unlock(s_flash_lock);
     xSemaphoreGive(s_erase_semphr);
@@ -260,7 +252,6 @@ static uint32_t prv_flash_erase_poll(void) {
   }
 
   if (erase_finished) {
-    stop_mode_enable(InhibitorFlash);
     s_erase.in_progress = false;
   }
   mutex_unlock(s_flash_lock);

@@ -14,7 +14,6 @@ elif bld.env.CONFIG_VIBE_DRV2604:
     sources.append('vibe_drv2604.c')
     use.extend([
         'driver_gpio',
-        'driver_periph_config',
         'pbl_includes',
     ])
 

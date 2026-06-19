@@ -11,6 +11,7 @@
 #include "flash_region/flash_region.h"
 #include "kernel/util/delay.h"
 #include "kernel/util/sleep.h"
+#include "pbl/soc/nrf/sleep.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/math.h"
@@ -137,6 +138,7 @@ static void prv_read(QSPIFlash *dev, void *buf, size_t len, uint32_t addr) {
     nrf_qspi_int_disable(NRF_QSPI, NRF_QSPI_INT_READY_MASK);
   } else {
     nrf_qspi_int_enable(NRF_QSPI, NRF_QSPI_INT_READY_MASK);
+    soc_nrf_sleep_full_block();
   }
 
   nrf_qspi_read_buffer_set(NRF_QSPI, buf, len, addr);
@@ -149,6 +151,7 @@ static void prv_read(QSPIFlash *dev, void *buf, size_t len, uint32_t addr) {
     nrf_qspi_event_clear(NRF_QSPI, NRF_QSPI_EVENT_READY);
   } else {
     xSemaphoreTake(dev->qspi->state->sem, portMAX_DELAY);
+    soc_nrf_sleep_full_release();
   }
 }
 
@@ -157,6 +160,7 @@ static void prv_write(QSPIFlash *dev, const void *buf, size_t len, uint32_t addr
     nrf_qspi_int_disable(NRF_QSPI, NRF_QSPI_INT_READY_MASK);
   } else {
     nrf_qspi_int_enable(NRF_QSPI, NRF_QSPI_INT_READY_MASK);
+    soc_nrf_sleep_full_block();
   }
 
   nrf_qspi_write_buffer_set(NRF_QSPI, buf, len, addr);
@@ -169,6 +173,7 @@ static void prv_write(QSPIFlash *dev, const void *buf, size_t len, uint32_t addr
     nrf_qspi_event_clear(NRF_QSPI, NRF_QSPI_EVENT_READY);
   } else {
     xSemaphoreTake(dev->qspi->state->sem, portMAX_DELAY);
+    soc_nrf_sleep_full_release();
   }
 }
 
@@ -425,6 +430,8 @@ status_t qspi_flash_erase_begin(QSPIFlash *dev, uint32_t addr, bool is_subsector
   }
   nrf_qspi_event_clear(NRF_QSPI, NRF_QSPI_EVENT_READY);
 
+  soc_nrf_sleep_full_block();
+
   return S_SUCCESS;
 }
 
@@ -464,6 +471,8 @@ status_t qspi_flash_is_erase_complete(QSPIFlash *dev) {
   if ((sr2 & part->flag_status_bit_masks.erase_suspend) != 0U) {
     return E_AGAIN;
   }
+
+  soc_nrf_sleep_full_release();
 
   return S_SUCCESS;
 }

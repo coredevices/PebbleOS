@@ -21,7 +21,6 @@
 #include "kernel/util/delay.h"
 #include "kernel/util/factory_reset.h"
 #include "kernel/util/sleep.h"
-#include "kernel/util/stop.h"
 #include "process_management/app_manager.h"
 #include "process_management/worker_manager.h"
 #include "prompt.h"
@@ -1115,28 +1114,6 @@ void command_audit_delay_us(void) {
 void command_display_drop_complete(void) {
   display_jdi_test_drop_next_complete();
   prompt_send_response("display: armed drop of next LCDC complete; PBL_CROAK in ~500ms");
-}
-#endif
-
-#ifndef CONFIG_SOC_SF32LB52
-// Simply parks the chip permanently in stop mode in whatever state it's currently in. This can be
-// pretty handy when trying to profile power of the chip under certains states
-// NOTE: If you did not configure with CONFIG_NO_WATCHDOG=y, the HW watchdog will reboot you in ~8s
-void command_enter_stop(void) {
-  dbgserial_putstr("Entering stop mode indefinitely ... reboot your board to get out!!");
-  __disable_irq();
-  // disable all IRQn_Type >= 0 interrupts
-  for (size_t i = 0; i < ARRAY_LENGTH(NVIC->ISER); i++) {
-    NVIC->ICER[i] = NVIC->ISER[i];
-  }
-
-  // disable SysTick
-  SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
-
-  enter_stop_mode();
-
-  dbgserial_putstr("woah, failed to enter stop mode");
-  while (1) { }
 }
 #endif
 

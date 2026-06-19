@@ -148,16 +148,6 @@ endmenu
 
 menu "Debug & instrumentation"
 
-config NOSLEEP
-    bool "Disable sleep mode"
-    help
-      Keep the MCU out of sleep mode so JTAG+GDB stay usable.
-
-config NOSTOP
-    bool "Disable stop mode"
-    help
-      Keep the MCU out of stop mode so JTAG+GDB stay usable.
-
 config NO_WATCH_TIMEOUT
     bool "Disable watchface idle timeout"
 
@@ -185,7 +175,6 @@ config MALLOC_INSTRUMENTATION
 
 config PROFILER
     bool "Profiler"
-    select NOSTOP
 
 config PROFILE_INTERRUPTS
     bool "Profile all interrupts"

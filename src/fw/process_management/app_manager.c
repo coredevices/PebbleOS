@@ -58,7 +58,6 @@
 
 // FreeRTOS stuff
 #include "FreeRTOS.h"
-#include "freertos_application.h"
 #include "task.h"
 #include "queue.h"
 
@@ -201,7 +200,11 @@ void prv_dump_start_app_info(const PebbleProcessMd *app_md) {
 }
 
 #define APP_STACK_JS_SIZE (8 * 1024)
+#if defined(CONFIG_PLATFORM_EMERY) || defined(CONFIG_PLATFORM_GABBRO)
 #define APP_STACK_NORMAL_SIZE (4 * 1024)
+#else
+#define APP_STACK_NORMAL_SIZE (2 * 1024)
+#endif
 
 static size_t prv_get_app_segment_size(const PebbleProcessMd *app_md) {
   switch (process_metadata_get_app_sdk_type(app_md)) {
@@ -229,7 +232,16 @@ static size_t prv_get_app_stack_size(const PebbleProcessMd *app_md) {
     return APP_STACK_JS_SIZE;
   }
 #endif
-  return APP_STACK_NORMAL_SIZE;
+  // Only 4x/System apps get the larger stack: their segment (APP_RAM_SIZES) is
+  // sized for it. Legacy 2x/3x apps keep the historical 2 KiB stack to match
+  // their (unchanged) segment sizes.
+  switch (process_metadata_get_app_sdk_type(app_md)) {
+    case ProcessAppSDKType_Legacy2x:
+    case ProcessAppSDKType_Legacy3x:
+      return 2 * 1024;
+    default:
+      return APP_STACK_NORMAL_SIZE;
+  }
 }
 
 T_STATIC MemorySegment prv_get_app_ram_segment(void) {

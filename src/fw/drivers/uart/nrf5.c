@@ -6,7 +6,6 @@
 
 #include "drivers/dma.h"
 #include "drivers/gpio.h"
-#include "drivers/periph_config.h"
 #include "system/logging.h"
 #include "system/passert.h"
 

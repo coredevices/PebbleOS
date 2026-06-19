@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "pbl/services/speaker/limits.h"
 #include "pbl/services/speaker/note_sequence.h"
 #include "pbl/services/speaker/speaker_finish_reason.h"
 #include "pbl/services/speaker/speaker_pcm_format.h"
@@ -40,14 +41,14 @@ typedef void (*SpeakerFinishedCallback)(SpeakerFinishReason reason, void *ctx);
 
 //! Play a sequence of notes on the speaker.
 //! @param notes Array of SpeakerNote structs defining the melody
-//! @param num_notes Number of notes in the array
+//! @param num_notes Number of notes in the array (max SPEAKER_MAX_NOTES)
 //! @param volume Playback volume (0-100)
 //! @return true if playback started successfully
 bool speaker_play_notes(const SpeakerNote *notes, uint32_t num_notes, uint8_t volume);
 
 //! Play N monophonic tracks in parallel, mixed (polyphony).
 //! @param tracks Array of track descriptors (notes + optional sample).
-//! @param num_tracks Number of tracks. Must be >= 1 and <= 4.
+//! @param num_tracks Number of tracks. Must be >= 1 and <= SPEAKER_MAX_TRACKS.
 //! @param volume Playback volume (0-100).
 //! @return true if playback started successfully.
 bool speaker_play_tracks(const SpeakerTrack *tracks, uint32_t num_tracks, uint8_t volume);

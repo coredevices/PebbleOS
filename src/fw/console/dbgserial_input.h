@@ -16,14 +16,7 @@ void dbgserial_input_init(void);
 typedef void (*DbgSerialCharacterCallback)(char c, bool* should_context_switch);
 void dbgserial_register_character_callback(DbgSerialCharacterCallback callback);
 
-void dbgserial_enable_rx_exti(void);
-
 //! Enables/disables DMA-based receiving
 void dbgserial_set_rx_dma_enabled(bool enabled);
 
 void dbgserial_set_input_enabled(bool enabled);
-
-#ifdef CONFIG_SOC_NRF52
-void dbgserial_disable_rx_dma_before_stop();
-void dbgserial_enable_rx_dma_after_stop();
-#endif
