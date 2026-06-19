@@ -133,11 +133,6 @@ static time_t prv_ticks_to_time(RtcTicks ticks) {
 }
 
 void rtc_set_time(time_t time) {
-#ifdef CONFIG_LOG
-  char buffer[TIME_STRING_BUFFER_SIZE];
-  PBL_LOG_INFO("Setting time to %lu <%s>", time, time_t_to_string(buffer, time));
-#endif
-
   s_time_base = time;
   s_time_tick_base = rtc_get_ticks();
 
@@ -173,19 +168,12 @@ static void prv_restore_rtc_time_state(void) {
      * last time we saved.  */
     s_time_base = last_save_time;
     s_time_tick_base = 0;
-    PBL_LOG_INFO("Restore RTC: we are on our way up with amnesia");
   } else {
     RtcIntervalTicks current_ticks = prv_get_rtc_interval_ticks();
     const int32_t ticks_since_last_save = prv_elapsed_ticks(last_save_time_ticks * RTC_TICKS_HZ, current_ticks);
     s_time_base = last_save_time + (ticks_since_last_save / RTC_TICKS_HZ);
     s_time_tick_base = -(((int64_t)current_ticks) % RTC_TICKS_HZ);
-    PBL_LOG_INFO("Restore RTC: we are on our way up with interval_ticks = %"PRIu32, current_ticks);
-    PBL_LOG_INFO("Restore RTC: saved: %"PRIu32" diff: %"PRIu32, last_save_time_ticks, ticks_since_last_save);
   }
-
-  char buffer[TIME_STRING_BUFFER_SIZE];
-  PBL_LOG_INFO("Restore RTC: saved_time: %s raw: %lu", time_t_to_string(buffer, last_save_time), last_save_time);
-  PBL_LOG_INFO("Restore RTC: current time: %s", time_t_to_string(buffer, s_time_base));
 }
 
 static RtcIntervalTicks prv_get_last_save_time_ticks(void) {

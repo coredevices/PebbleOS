@@ -278,7 +278,7 @@ void settings_blob_db_init(void) {
   settings_file_set_change_callback(prv_settings_change_callback);
 
   s_initialized = true;
-  PBL_LOG_INFO("Settings BlobDB initialized (%u whitelisted settings)",
+  PBL_LOG_DBG("Settings BlobDB initialized (%u whitelisted settings)",
           (unsigned int) s_num_syncable_settings);
 }
 

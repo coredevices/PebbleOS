@@ -172,9 +172,6 @@ static bool prv_populate_payload(ProtobufLogConfig *config, size_t buffer_len, u
     PBL_LOG_ERR("Error encoding payload");
   }
 
-  // PBL-43622: Will revert later
-  PBL_LOG_INFO("Logged protobuf payload type: %d, utc:%"PRIu32, config->type,
-          payload.send_time_utc);
   return success;
 }
 

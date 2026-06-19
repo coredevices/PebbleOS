@@ -308,7 +308,7 @@ static MagCalStatus check_correction_value(int16_t *solution,
       if (saved_sample_match == 3) {
         saved_sample_match = 0;
         calib_idx = 0;
-        PBL_LOG_INFO("Persisting previous values!");
+        PBL_LOG_DBG("Persisting previous values!");
         return (MagCalStatusSavedSampleMatch); // locked
       }
     }

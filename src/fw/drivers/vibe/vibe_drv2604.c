@@ -70,10 +70,9 @@ void vibe_init(void) {
   gpio_output_set(&BOARD_CONFIG_VIBE.ctl, true);
   uint8_t rv;
   bool found = prv_read_register(DRV2604_STATUS, &rv);
-  if (found) {
-    PBL_LOG_INFO("Found DRV2604 with STATUS register %02x", rv);
-  } else {
+  if (!found) {
     PBL_LOG_ERR("Failed to read the STATUS register");
+    return;
   }
   
   /* calibration table maybe should live in the board file? */

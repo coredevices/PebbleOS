@@ -189,7 +189,7 @@ static void prv_track_quick_airplane_mode_toggles(bool is_airplane_mode_currentl
   const uint64_t max_interval_secs = 30;
   if (((now_ticks - s_airplane_mode_last_toggle_ticks) < (max_interval_secs * RTC_TICKS_HZ)) &&
       is_airplane_mode_currently_on) {
-    PBL_LOG_INFO("Quick airplane mode toggle detected!");
+    PBL_LOG_DBG("Quick airplane mode toggle detected!");
   }
   s_airplane_mode_last_toggle_ticks = now_ticks;
 }

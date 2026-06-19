@@ -105,7 +105,7 @@ static int prv_access_trigger_pairing(uint16_t conn_handle, uint16_t attr_handle
       return rc;
     }
 
-    PBL_LOG_INFO("Trigger pairing flags 0x%x", flags);
+    PBL_LOG_DBG("Trigger pairing flags 0x%x", flags);
 
     if ((((flags & TRIGGER_PAIRING_NO_SEC_REQ) == 0U) && !desc.sec_state.encrypted) ||
         ((flags & TRIGGER_PAIRING_FORCE_SEC_REQ) != 0U)) {

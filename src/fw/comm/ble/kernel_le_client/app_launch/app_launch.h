@@ -19,9 +19,6 @@ void app_launch_handle_service_removed(
 
 bool app_launch_can_handle_characteristic(BLECharacteristic characteristic);
 
-void app_launch_handle_read_or_notification(BLECharacteristic characteristic, const uint8_t *value,
-                                         size_t value_length, BLEGATTError error);
-
 void app_launch_handle_disconnection(void);
 
 void app_launch_trigger(void);

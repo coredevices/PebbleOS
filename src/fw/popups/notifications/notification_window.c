@@ -636,7 +636,6 @@ static void prv_clear_if_stale_reminder(Uuid *id, NotificationType type, void *c
   const time_t now = rtc_get_time();
 
   if (stale_time <= now && window_data->is_modal) {
-    PBL_LOG_INFO("Removing stale reminder from notification popup window");
     prv_remove_notification(window_data, id, true /* close am */);
   }
 }
@@ -1118,8 +1117,6 @@ static void prv_window_unload(Window *window) {
     return;
   }
 
-  PBL_LOG_INFO("Notification vibe: window_unload, cancelling vibes (pending_vibe=%d)",
-               data->pending_vibe);
   vibes_cancel();
   data->pending_vibe = false;
   if (data->color_preempted) {

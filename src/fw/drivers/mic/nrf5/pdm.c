@@ -424,9 +424,7 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
     mutex_unlock_recursive(state->mutex);
     return false;
   }
-  
-  PBL_LOG_INFO("Microphone started");
-  
+
   mutex_unlock_recursive(state->mutex);
   return true;
 }
@@ -466,9 +464,7 @@ void mic_stop(const MicDevice *this) {
   state->audio_buffer = NULL;
   state->audio_buffer_len = 0;
   state->main_pending = false;
-  
-  PBL_LOG_INFO("Microphone stopped");
-  
+
   mutex_unlock_recursive(state->mutex);
 }
 

@@ -322,7 +322,7 @@ static int prv_handle_gap_event(struct ble_gap_event *event, void *arg) {
       prv_handle_connection_event(event);
       break;
     case BLE_GAP_EVENT_DISCONNECT:
-      PBL_LOG_INFO("BLE_GAP_EVENT_DISCONNECT reason=0x%x",
+      PBL_LOG_DBG("BLE_GAP_EVENT_DISCONNECT reason=0x%x",
               event->disconnect.reason);
       prv_handle_disconnection_event(event);
       break;

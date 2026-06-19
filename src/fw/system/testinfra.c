@@ -42,11 +42,3 @@ void notify_system_ready_for_communication(void) {
   new_timer_start(s_ready_log_timer, 500, prv_emit_ready_log, NULL, 0);
 #endif
 }
-
-#ifdef CONFIG_IS_BIGBOARD
-NORETURN test_infra_quarantine_board(const char *quarantine_reason) {
-  PBL_LOG_INFO("Quarantine Board: %s", quarantine_reason);
-  boot_bit_set(BOOT_BIT_FORCE_PRF);
-  core_dump_reset(true /* is_forced */);
-}
-#endif /* CONFIG_IS_BIGBOARD */

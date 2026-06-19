@@ -50,7 +50,7 @@ static void prv_session_deinit(bool call_stop_handler) {
   bt_unlock();
 
   if (s_dropped_frames > 0) {
-    PBL_LOG_INFO("Dropped %"PRIu32" frames during audio transfer", s_dropped_frames);
+    PBL_LOG_WRN("Dropped %"PRIu32" frames during audio transfer", s_dropped_frames);
   }
 }
 

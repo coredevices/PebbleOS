@@ -39,5 +39,3 @@ void bluetooth_analytics_handle_put_bytes_stats(bool successful, uint8_t type, u
 void bluetooth_analytics_handle_get_bytes_stats(uint8_t type, uint32_t total_size,
                                                 uint32_t elapsed_time_ms,
                                                 const SlaveConnEventStats *orig_stats);
-
-void bluetooth_analytics_ble_mic_error(uint32_t num_sequential_mic_errors);
