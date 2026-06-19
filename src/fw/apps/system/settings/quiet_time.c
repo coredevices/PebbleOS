@@ -35,6 +35,7 @@ typedef struct {
 typedef struct {
   SettingsCallbacks callbacks;
   QuietTimeScheduleConfig schedules[MAX_QUIET_TIME_SCHEDULES];
+  int slot_for_row[MAX_QUIET_TIME_SCHEDULES];
   int num_schedules;
   char *action_menu_text;
   TimeRangeSelectionWindowData schedule_window;
@@ -45,6 +46,7 @@ typedef struct {
   uint32_t current_plus_icon_resource_id;
   bool can_add_schedule;
   bool show_limit_reached_text;
+  bool pending_time_range_push;
 } SettingsQuietTimeScheduleData;
 
 #ifdef CONFIG_TOUCH
@@ -134,6 +136,9 @@ static void prv_reload_schedules(SettingsQuietTimeScheduleData *data) {
   for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
     quiet_time_get_schedule(i, &data->schedules[i]);
     if (data->schedules[i].is_used) {
+      // Map display row -> slot index so the draw/select callbacks can find
+      // the right config even when earlier slots have been deleted.
+      data->slot_for_row[data->num_schedules] = i;
       data->num_schedules++;
     }
   }
@@ -340,8 +345,12 @@ static void prv_add_day_picker_callback(DayPickerResult result, void *context) {
   int index = quiet_time_create_schedule(&config);
   if (index >= 0) {
     quiet_time_set_schedule_enabled(index, true);
-    prv_schedule_refresh(data);
-    prv_time_range_select_window_push(index, data);
+    data->selected_schedule_index = index;
+    // Defer the time-range window push: the day picker pops itself *after* this
+    // callback returns, so pushing here would cause the pop to remove the
+    // time-range window instead. The schedule sub-menu's appear handler picks
+    // up the deferred push once the day picker is gone.
+    data->pending_time_range_push = true;
   }
 }
 
@@ -423,7 +432,7 @@ static void prv_schedule_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
 
   // Rows 1..N: each scheduled quiet-time entry, alarm-style.
   int idx = row - 1;
-  QuietTimeScheduleConfig *config = &data->schedules[idx];
+  QuietTimeScheduleConfig *config = &data->schedules[data->slot_for_row[idx]];
 
   // Title: time range, e.g. "10:00 PM - 6:00 AM".
   const uint8_t buffer_length = 32;
@@ -474,8 +483,9 @@ static void prv_schedule_select_click_cb(SettingsCallbacks *context, uint16_t ro
     day_picker_push(config, prv_add_day_picker_callback, data);
   } else {
     int idx = row - 1;
-    data->selected_schedule_index = idx;
-    prv_scheduled_dnd_menu_push(idx, data);
+    int slot = data->slot_for_row[idx];
+    data->selected_schedule_index = slot;
+    prv_scheduled_dnd_menu_push(slot, data);
   }
   settings_menu_reload_data(SettingsMenuItemQuietTime);
 }
@@ -486,6 +496,15 @@ static uint16_t prv_schedule_num_rows_cb(SettingsCallbacks *context) {
   return 1 + data->num_schedules;
 }
 
+static void prv_schedule_appear_cb(SettingsCallbacks *context) {
+  SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *)context;
+  if (data->pending_time_range_push) {
+    data->pending_time_range_push = false;
+    prv_schedule_refresh(data);
+    prv_time_range_select_window_push(data->selected_schedule_index, data);
+  }
+}
+
 static void prv_schedule_submenu_push(void) {
   SettingsQuietTimeScheduleData *data = app_zalloc_check(sizeof(*data));
 
@@ -494,6 +513,7 @@ static void prv_schedule_submenu_push(void) {
     .draw_row = prv_schedule_draw_row_cb,
     .select_click = prv_schedule_select_click_cb,
     .num_rows = prv_schedule_num_rows_cb,
+    .appear = prv_schedule_appear_cb,
   };
 
   prv_reload_schedules(data);
