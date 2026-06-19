@@ -485,7 +485,7 @@ static void prv_op_timeout_kick(void) {
 // Is Alive Logic
 
 #define ANCS_INVALID_PARAM 0xA2
-#define ANCS_IS_ALIVE_NEXT_CHECK_TIME_MINUTES 15 // Check every 15 minutes for faster recovery
+#define ANCS_IS_ALIVE_NEXT_CHECK_TIME_MINUTES 30
 #define ANCS_IS_ALIVE_RESPONSE_WAIT_TIME_SECONDS 5 // 5 seconds
 
 // Force a flush + resubscribe if still busy after this many alive checks

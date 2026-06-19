@@ -642,6 +642,11 @@ unlock:
 }
 
 // -----------------------------------------------------------------------------
+uint8_t gap_le_advert_get_slave_connection_count(void) {
+  return s_slave_connection_count;
+}
+
+// -----------------------------------------------------------------------------
 void bt_driver_handle_host_resynced(void) {
   bt_lock();
   {

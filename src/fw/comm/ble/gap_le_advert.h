@@ -133,3 +133,6 @@ void gap_le_advert_handle_connect_as_slave(void);
 //! This should be called so that gap_le_advert can update its internal state
 //! and start advertising connectable advertisements.
 void gap_le_advert_handle_disconnect_as_slave(void);
+
+//! Number of active phone connections as slave (0..MAX_PHONE_CONNECTIONS).
+uint8_t gap_le_advert_get_slave_connection_count(void);
