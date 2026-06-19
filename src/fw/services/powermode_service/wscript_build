@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 bld.stlib(
-    use=['fw_includes'],
+    use=['fw_includes', 'services_new_timer'],
     source=['service.c'],
     target='services_powermode_service',
 )
