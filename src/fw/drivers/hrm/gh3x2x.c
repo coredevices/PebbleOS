@@ -18,6 +18,7 @@
 #include "gh_demo.h"
 #include "gh_demo_inner.h"
 #include "gh3x2x_demo_mp.h"
+#include "goodix_hba.h"
 #endif // CONFIG_GH3X2X_ALGO
 
 PBL_LOG_MODULE_DEFINE(driver_hrm_gh3x2x, CONFIG_DRIVER_HRM_LOG_LEVEL);
@@ -29,6 +30,11 @@ void gh3026_reset_pin_ctrl(uint8_t pin_level) {
 }
 
 #ifdef CONFIG_GH3X2X_ALGO
+
+// Defined in the Goodix algo demo layer (gh3x2x_demo_algo_call_hr.c); selects the HR algorithm's
+// activity "scene" (read on every frame). Not declared in any shipped header, forward-declared
+// here.
+extern void Gh3x2xSetHbaMode(GS32 nHbaScenario);
 
 #define GH3X2X_LOG_ENABLE            0
 #define GH3X2X_FIFO_WATERMARK_CONFIG 80
@@ -601,4 +607,27 @@ void hrm_disable(HRMDevice *dev) {
 
 bool hrm_is_enabled(HRMDevice *dev) {
   return dev->state->enabled;
+}
+
+void hrm_set_activity_scene(HRMDevice *dev, HRMActivityScene scene) {
+#ifdef CONFIG_GH3X2X_ALGO
+  (void)dev;
+  // The Goodix EXCLUSIVE HR model ships per-activity "scenes" that are far more motion-tolerant
+  // than the default (e.g. high-HR running, high-intensity combine). Without this call the
+  // algorithm always runs the DEFAULT scene, which is where most movement-driven inaccuracy comes
+  // from. Gh3x2xSetHbaMode() writes a global the algorithm reads on every frame, so it is safe to
+  // flip live (no re-init) and idempotent.
+  static const GS32 s_scene_map[] = {
+    [HRMActivityScene_Default] = HBA_SCENES_DEFAULT,
+    [HRMActivityScene_Walk] = HBA_SCENES_WALKING_OUTSIDE,
+    [HRMActivityScene_Run] = HBA_SCENES_RUNNING_HIGH_HR,
+    [HRMActivityScene_HighIntensity] = HBA_SCENES_HIGH_INTENSITY_COMBINE,
+  };
+  const GS32 goodix_scene =
+      (scene <= HRMActivityScene_HighIntensity) ? s_scene_map[scene] : HBA_SCENES_DEFAULT;
+  Gh3x2xSetHbaMode(goodix_scene);
+#else
+  (void)dev;
+  (void)scene;
+#endif
 }

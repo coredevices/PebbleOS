@@ -7,6 +7,7 @@
 #include "hrm_manager.h"
 
 #include "applib/event_service_client.h"
+#include "pbl/services/hrm/hrm_activity_scene.h"
 #include <pbl/drivers/rtc.h>
 #include "kernel/events.h"
 #include "pbl/kernel/mutex.h"
@@ -19,8 +20,10 @@
 
 typedef void (*HRMSubscriberCallback)(PebbleHRMEvent *event, void *context);
 
-// We need roughly this many seconds of "spin up" time to get a good reading from the HR sensor
-// right after turning it on
+// Seconds of "spin up" time needed for a good reading right after turning the sensor on. Besides
+// pre-warming the sensor ahead of a future-due subscriber, this is subtracted from every
+// subscriber's remaining time, so a subscriber with an interval within it is always due and keeps
+// the sensor on continuously rather than paying an algorithm restart every interval.
 #define HRM_SENSOR_SPIN_UP_SEC 20
 
 typedef struct AccelServiceState AccelServiceState;
@@ -53,8 +56,9 @@ typedef struct HRMSubscriberState {
 #define HRM_MANAGER_ACCEL_MANAGER_SAMPLES_PER_UPDATE 4
 
 // After every HRM_CHECK_SENSOR_DISABLE_COUNT calls to hrm_manager_new_data_cb(), we check to see
-// if we should disable the sensor.
-#define HRM_CHECK_SENSOR_DISABLE_COUNT 10
+// if we should disable the sensor. Kept low so a served subscriber doesn't keep the LED lit (and
+// block the other optical path) for many seconds of extra on-time.
+#define HRM_CHECK_SENSOR_DISABLE_COUNT 3
 
 // After this many consecutive hrm_enable failures, stop trying until reboot
 #define HRM_MAX_ENABLE_FAILURES 3
@@ -100,6 +104,9 @@ struct HRMManagerState {
 
   HRMFeature active_features; // Features the sensor is sampling now (0 when off). Only one
                               // optical path (green BPM/HRV or red/IR SpO2) runs at a time.
+
+  HRMActivityScene activity_scene; // Activity context for the sensor's HR algorithm (motion-tuned
+                                   // model). Re-applied whenever the sensor powers on.
 };
 
 //! Subscription for KernelBG or KernelMain clients.
@@ -118,3 +125,8 @@ struct HRMManagerState {
 HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t update_interval_s,
                                                   uint16_t expire_s, HRMFeature features,
                                                   HRMSubscriberCallback callback, void *context);
+
+//! Set the activity context the HR algorithm should optimize for (see HRMActivityScene). Stored and
+//! re-applied on every sensor power-on, so callers don't need to re-arm it across sensor cycles.
+//! Safe to call from any task.
+void hrm_manager_set_activity_scene(HRMActivityScene scene);

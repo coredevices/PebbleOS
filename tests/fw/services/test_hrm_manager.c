@@ -65,6 +65,10 @@ void hrm_disable(HRMDevice *dev) {
 bool hrm_is_enabled(HRMDevice *dev) {
   return s_hrm_state.enabled;
 }
+void hrm_set_activity_scene(HRMDevice *dev, HRMActivityScene scene) {
+  (void)dev;
+  (void)scene;
+}
 
 // -----------------------------------------------------------------------------
 // Queue Fakes
