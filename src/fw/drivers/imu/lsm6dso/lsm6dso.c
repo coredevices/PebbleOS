@@ -229,17 +229,9 @@ static uint64_t prv_get_curr_system_time_us(void) {
   return (((uint64_t)time_s) * 1000 + time_ms) * 1000ULL;
 }
 
-static void prv_lsm6dso_read_samples(uint16_t num_samples) {
-  uint64_t timestamp_us;
-
-  if (!prv_lsm6dso_read(LSM6DSO_FIFO_DATA_OUT_TAG, LSM6DSO->state->raw_sample_buf,
-                        num_samples * LSM6DSO_FIFO_WORD_SIZE_BYTES)) {
-    PBL_LOG_ERR("Failed to read samples");
-    return;
-  }
-
-  timestamp_us = prv_get_curr_system_time_us();
-
+// Convert and dispatch the samples already sitting in raw_sample_buf. Kept free of
+// device I/O so it can run after the I2C reads instead of in between them.
+static void prv_lsm6dso_process_samples(uint16_t num_samples, uint64_t timestamp_us) {
   // Each FIFO word is a tag byte followed by 6 data bytes; point the batch at the
   // first data byte and let the service step over the tags via the stride.
   int8_t rotate = LSM6DSO->state->rotated ? -1 : 1;
@@ -339,7 +331,15 @@ static void prv_lsm6dso_int1_work_handler(void) {
   bool ret;
   uint8_t val;
   bool action_taken = false;
+  bool fifo_overrun = false;
+  bool shake = false;
+  uint16_t samples = 0U;
+  uint64_t timestamp_us = 0U;
 
+  // Read all device registers back-to-back to keep the I2C critical section
+  // short, then convert/dispatch below. The sample processing has no dependency
+  // on these reads, so deferring it avoids stretching the gap between the FIFO
+  // read and the ALL_INT_SRC read if this task gets preempted mid-handler.
   if (LSM6DSO->state->num_samples > 0U) {
     ret = prv_lsm6dso_read(LSM6DSO_FIFO_STATUS2, &val, 1);
     if (!ret) {
@@ -348,12 +348,9 @@ static void prv_lsm6dso_int1_work_handler(void) {
     }
 
     if ((val & LSM6DSO_FIFO_STATUS2_FIFO_OVR_IA) != 0U) {
-      PBL_LOG_WRN("FIFO overrun detected, re-arming");
-      prv_lsm6dso_enable_fifo(LSM6DSO->state->num_samples);
-      action_taken = true;
+      fifo_overrun = true;
     } else if ((val & LSM6DSO_FIFO_STATUS2_FIFO_WTM_IA) != 0U) {
       uint8_t status1;
-      uint16_t samples;
 
       if (!prv_lsm6dso_read(LSM6DSO_FIFO_STATUS1, &status1, 1)) {
         PBL_LOG_ERR("Could not read FIFO_STATUS1 register");
@@ -366,8 +363,12 @@ static void prv_lsm6dso_int1_work_handler(void) {
       }
 
       if (samples > 0U) {
-        prv_lsm6dso_read_samples(samples);
-        action_taken = true;
+        if (!prv_lsm6dso_read(LSM6DSO_FIFO_DATA_OUT_TAG, LSM6DSO->state->raw_sample_buf,
+                              samples * LSM6DSO_FIFO_WORD_SIZE_BYTES)) {
+          PBL_LOG_ERR("Failed to read samples");
+          return;
+        }
+        timestamp_us = prv_get_curr_system_time_us();
       }
     }
   }
@@ -379,13 +380,24 @@ static void prv_lsm6dso_int1_work_handler(void) {
       return;
     }
 
-    if ((val & LSM6DSO_ALL_INT_SRC_WU_IA) != 0U) {
-      PBL_LOG_DBG("Shake detected");
-      // TODO: provide more info about the shake (axis, direction, etc.) or
-      // refactor shake to be non-dimensional
-      accel_cb_shake_detected(AXIS_Z, 0);
-      action_taken = true;
-    }
+    shake = (val & LSM6DSO_ALL_INT_SRC_WU_IA) != 0U;
+  }
+
+  if (fifo_overrun) {
+    PBL_LOG_WRN("FIFO overrun detected, re-arming");
+    prv_lsm6dso_enable_fifo(LSM6DSO->state->num_samples);
+    action_taken = true;
+  } else if (samples > 0U) {
+    prv_lsm6dso_process_samples(samples, timestamp_us);
+    action_taken = true;
+  }
+
+  if (shake) {
+    PBL_LOG_DBG("Shake detected");
+    // TODO: provide more info about the shake (axis, direction, etc.) or
+    // refactor shake to be non-dimensional
+    accel_cb_shake_detected(AXIS_Z, 0);
+    action_taken = true;
   }
 
   if (!action_taken) {
