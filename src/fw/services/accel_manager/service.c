@@ -81,9 +81,10 @@ static uint8_t s_double_tap_subscribers_count = 0;
 
 //! Circular buffer that raw accel data is written into before being subsampled for each client
 static SharedCircularBuffer s_buffer;
-//! Storage for s_buffer
-//! 1600 bytes (~4s of data at 50Hz)
-static uint8_t s_buffer_storage[200 * sizeof(AccelManagerBufferData)];
+//! Storage for s_buffer, sized to hold ~2 batches plus headroom, with a floor
+//! that keeps buffering room for high-rate app subscribers.
+static uint8_t s_buffer_storage[MAX(200, 2 * CONFIG_SERVICE_ACCEL_MANAGER_BATCH_SAMPLES + 50) *
+                                sizeof(AccelManagerBufferData)];
 
 static uint64_t s_last_empty_timestamp_ms = 0;
 

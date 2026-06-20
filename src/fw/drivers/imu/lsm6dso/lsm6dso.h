@@ -15,7 +15,7 @@
 // FIFO word size as read from FIFO_DATA_OUT (1 tag byte + 6 data bytes)
 #define LSM6DSO_FIFO_WORD_SIZE_BYTES 7
 // FIFO watermark threshold in samples (up to the 512-sample FIFO depth)
-#define LSM6DSO_FIFO_THRESHOLD 32
+#define LSM6DSO_FIFO_THRESHOLD 128
 // Static read buffer capacity (in samples), sized to the watermark
 #define LSM6DSO_FIFO_SIZE LSM6DSO_FIFO_THRESHOLD
 
