@@ -137,6 +137,13 @@ static RtcTicks s_als_cached_ticks;  // 0 = invalid
 static void prv_change_state(BacklightState new_state);
 static void prv_change_brightness(uint8_t new_brightness);
 
+//! Whether a state drives the backlight visibly on. BREATHE_OFF is the dark
+//! gap between breathe cycles, so treat it as off for light_is_on() and the
+//! backlight event so subscribers don't see "on" while the screen is dark.
+static bool prv_state_is_on(BacklightState state) {
+  return state != LIGHT_STATE_OFF && state != LIGHT_STATE_BREATHE_OFF;
+}
+
 static uint32_t prv_get_als_level(void) {
   RtcTicks now = rtc_get_ticks();
   const bool cache_valid =
@@ -361,9 +368,9 @@ static void prv_change_state(BacklightState new_state) {
   }
 
   // Notify subscribers when the backlight transitions between on and off.
-  // Treat any non-OFF state as "on" so apps see a single edge per wake.
-  const bool was_on = (old_state != LIGHT_STATE_OFF);
-  const bool is_on = (s_light_state != LIGHT_STATE_OFF);
+  // Any visibly-on state counts as "on"; the dark breathe gap is "off".
+  const bool was_on = prv_state_is_on(old_state);
+  const bool is_on = prv_state_is_on(s_light_state);
   if (was_on != is_on) {
     PebbleEvent event = {
       .type = PEBBLE_BACKLIGHT_EVENT,
@@ -714,7 +721,7 @@ uint8_t light_get_current_brightness_percent(void) {
 }
 
 bool light_is_on(void) {
-  return s_light_state != LIGHT_STATE_OFF;
+  return prv_state_is_on(s_light_state);
 }
 
 void pbl_analytics_external_collect_backlight_stats(void) {

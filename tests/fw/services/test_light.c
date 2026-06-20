@@ -340,11 +340,9 @@ void test_light__breathe_hold_then_fade_out(void) {
   // Now in HOLD state at full brightness
   cl_assert_equal_i(s_backlight_brightness, 100);
 
-  // Fire hold timer — transitions to FADE_OUT, first step brightness drops
+  // Fire hold timer — transitions to FADE_OUT
   fire_light_timer();
-  // Step 0 of fade-out: (STEPS - 0) / STEPS * target = 100, so brightness
-  // is still 100 on the first callback call (step 0 is incremented to 1 before calc)
-  // Actually step increments first then checks >= STEPS. Let's fire all fade-out steps.
+  // Fire all fade-out steps to ramp brightness down to 0
   for (int i = 0; i < BREATHE_FADE_STEPS; i++) {
     fire_light_timer();
   }
@@ -435,4 +433,30 @@ void test_light__breathe_stop_during_off_period(void) {
   light_stop_charge_breathe();
   cl_assert_equal_i(s_backlight_brightness, 0);
   cl_assert(!stub_new_timer_is_scheduled(s_light_timer));
+}
+
+void test_light__breathe_off_period_reports_off(void) {
+  // The dark gap between breathe cycles must report as off so apps don't
+  // see the backlight as "on" while the screen is dark.
+  backlight_set_intensity(100);
+  light_start_charge_breathe();
+
+  // Lit phases report on
+  cl_assert(light_is_on());
+  for (int i = 0; i < BREATHE_FADE_STEPS; i++) {
+    fire_light_timer();
+  }
+  fire_light_timer(); // hold -> fade_out
+  cl_assert(light_is_on());
+
+  // Reach the dark gap (BREATHE_OFF)
+  for (int i = 0; i < BREATHE_FADE_STEPS; i++) {
+    fire_light_timer();
+  }
+  cl_assert_equal_i(s_backlight_brightness, 0);
+  cl_assert(!light_is_on());
+
+  // Firing the off-period timer returns to fade-in, which is on again
+  fire_light_timer();
+  cl_assert(light_is_on());
 }
