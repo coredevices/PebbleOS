@@ -7,15 +7,6 @@
 
 static uint32_t s_current_mhz = CPUMODE_FREQ_HIGH_MHZ;
 
-static void prv_update_deep_wfi_div(uint32_t hclk_mhz) {
-  // Keep deep-WFI HCLK near 4MHz regardless of the active tier.
-  uint32_t div = hclk_mhz / 4;
-  if (div < 1) {
-    div = 1;
-  }
-  HAL_RCC_HCPU_SetDeepWFIDiv(div, 0, 1);
-}
-
 static bool prv_is_valid_freq(uint32_t freq_mhz) {
   return freq_mhz == CPUMODE_FREQ_LIGHT_MHZ || freq_mhz == CPUMODE_FREQ_MEDIUM_MHZ ||
          freq_mhz == CPUMODE_FREQ_HIGH_MHZ;
@@ -34,8 +25,12 @@ void cpumode_set_freq_mhz(uint32_t freq_mhz) {
     HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_HP_TICK, RCC_CLK_TICK_HXT48);
   }
 
+  // NOTE: The deep-WFI clock divider is configured once at boot
+  // (see vPortEnableTimer) and must not be reprogrammed here. It divides a
+  // fixed 48MHz reference (not the active HCLK), so scaling it per-tier
+  // starves the sleeping-clock domain and breaks wake sources such as the
+  // accelerometer INT1.
   HAL_RCC_HCPU_ConfigHCLK(freq_mhz);
-  prv_update_deep_wfi_div(freq_mhz);
   s_current_mhz = freq_mhz;
 
   __enable_irq();
