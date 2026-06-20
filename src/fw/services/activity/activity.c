@@ -15,6 +15,7 @@
 #include "process_management/worker_manager.h"
 #include "pbl/services/battery/battery_state.h"
 #include "pbl/services/hrm/hrm_manager_private.h"
+#include "pbl/services/regular_timer.h"
 #include "pbl/services/system_task.h"
 #include "pbl/services/vibe_pattern.h"
 #include "pbl/services/alarms/alarm.h"
@@ -891,6 +892,37 @@ static void prv_handle_activity_enabled_change(void) {
   system_task_add_callback(prv_set_enable_cb, NULL);
 }
 
+// The charging gate (enabled_charging_state) is otherwise only updated from
+// battery state-change events. A missed event can leave step tracking wedged
+// off "as if plugged in" until reboot. Re-derive it from the live battery state
+// once a minute so it self-heals, and re-kick a start that never happened.
+static void prv_charging_resync_system_task_cb(void *data) {
+#ifndef CONFIG_IS_BIGBOARD
+  const bool charging_ok = !battery_is_usb_connected();
+  bool needs_reeval = false;
+  mutex_lock_recursive(s_activity_state.mutex);
+  if (charging_ok != s_activity_state.enabled_charging_state) {
+    s_activity_state.enabled_charging_state = charging_ok;
+    needs_reeval = true;
+  } else if (s_activity_state.should_be_started && !s_activity_state.started &&
+             prv_activity_allowed_to_be_enabled()) {
+    needs_reeval = true;
+  }
+  mutex_unlock_recursive(s_activity_state.mutex);
+  if (needs_reeval) {
+    prv_handle_activity_enabled_change();
+  }
+#endif
+}
+
+static void prv_charging_resync_timer_cb(void *unused) {
+  system_task_add_callback(prv_charging_resync_system_task_cb, NULL);
+}
+
+static RegularTimerInfo s_charging_resync_timer = {
+  .cb = prv_charging_resync_timer_cb,
+};
+
 static void prv_charger_event_cb(PebbleEvent *e, void *context) {
 #ifndef CONFIG_IS_BIGBOARD
   // Since bigboards are usually plugged in, don't react to a battery connection event
@@ -1010,6 +1042,9 @@ bool activity_init(void) {
     .handler = prv_charger_event_cb,
   };
   event_service_client_subscribe(&s_activity_state.charger_subscription);
+  // Safety net: re-sync the charging gate from live state in case a battery
+  // state-change event is ever missed.
+  regular_timer_add_minutes_callback(&s_charging_resync_timer);
 #ifdef CONFIG_IS_BIGBOARD
   s_activity_state.enabled_charging_state = true;
 #else
@@ -1416,6 +1451,7 @@ bool activity_test_reset(bool reset_settings, bool tracking_on,
     sys_psleep(1);
   }
   cron_job_unschedule(&s_activity_job);
+  regular_timer_remove_callback(&s_charging_resync_timer);
   mutex_destroy((PebbleMutex *)s_activity_state.mutex);
   if (reset_settings) {
     pfs_remove(ACTIVITY_SETTINGS_FILE_NAME);
