@@ -246,9 +246,6 @@ static void prv_lsm6dso_read_samples(uint16_t num_samples) {
     uint8_t *word;
 
     word = &LSM6DSO->state->raw_sample_buf[i * LSM6DSO_FIFO_WORD_SIZE_BYTES];
-    if ((word[0] >> 3U) != LSM6DSO_FIFO_TAG_XL_NC) {
-      continue;
-    }
 
     prv_raw_to_mg(&word[1], &sample);
     sample.timestamp_us = timestamp_us + i * LSM6DSO->state->sampling_interval_us;
