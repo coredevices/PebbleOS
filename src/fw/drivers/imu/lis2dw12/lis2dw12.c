@@ -222,19 +222,33 @@ static void prv_lis2dw12_read_samples(uint8_t num_samples) {
 
   timestamp_us = prv_get_curr_system_time_us();
 
-  AccelDriverSample sample = {0};
+  // Samples are 12-bit left-justified within a 16-bit little-endian word, so the
+  // raw word equals the 12-bit value << 4; scale the denominator by 16 to match.
+  int8_t rotate = LIS2DW12->state->rotated ? -1 : 1;
+  AccelRawBatch batch = {
+    .data = LIS2DW12->state->raw_sample_buf,
+    .num_samples = num_samples,
+    .stride = LIS2DW12_SAMPLE_SIZE_BYTES,
+    .axis = {
+      [AXIS_X] = {.offset = LIS2DW12->axis_map[AXIS_X] * 2U,
+                  .sign = (int8_t)(LIS2DW12->axis_dir[AXIS_X] * rotate)},
+      [AXIS_Y] = {.offset = LIS2DW12->axis_map[AXIS_Y] * 2U,
+                  .sign = (int8_t)(LIS2DW12->axis_dir[AXIS_Y] * rotate)},
+      [AXIS_Z] = {.offset = LIS2DW12->axis_map[AXIS_Z] * 2U, .sign = LIS2DW12->axis_dir[AXIS_Z]},
+    },
+    .scale_num = CONFIG_ACCEL_LIS2DW12_SCALE_MG,
+    .scale_den = LIS2DW12_S12_SCALE_RANGE << 4U,
+    .first_timestamp_us = timestamp_us,
+    .sampling_interval_us = LIS2DW12->state->sampling_interval_us,
+  };
 
-  for (uint8_t i = 0U; i < num_samples; ++i) {
-    uint8_t *raw;
+  accel_cb_new_samples(&batch);
 
-    raw = &LIS2DW12->state->raw_sample_buf[i * LIS2DW12_SAMPLE_SIZE_BYTES];
-    prv_raw_to_mg(raw, &sample);
-    sample.timestamp_us = timestamp_us + i * LIS2DW12->state->sampling_interval_us;
-
-    accel_cb_new_sample(&sample);
-  }
-
-  LIS2DW12->state->last_sample = sample;
+  // Keep the most recent sample around for accel_peek().
+  uint8_t *last = &LIS2DW12->state->raw_sample_buf[(num_samples - 1) * LIS2DW12_SAMPLE_SIZE_BYTES];
+  prv_raw_to_mg(last, &LIS2DW12->state->last_sample);
+  LIS2DW12->state->last_sample.timestamp_us =
+      timestamp_us + (num_samples - 1) * LIS2DW12->state->sampling_interval_us;
   LIS2DW12->state->last_sample_valid = true;
 }
 
