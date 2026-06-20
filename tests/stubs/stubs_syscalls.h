@@ -7,7 +7,11 @@
 #include "util/attributes.h"
 
 struct tm *WEAK sys_localtime_r(const time_t *timep, struct tm *result) {
+#ifndef CLAR_FREESTANDING
   return localtime_r(timep, result);
+#else
+  return NULL;
+#endif
 }
 
 ResAppNum WEAK sys_get_current_resource_num(void) {

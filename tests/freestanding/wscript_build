@@ -1,0 +1,43 @@
+# SPDX-FileCopyrightText: 2025 Google LLC
+# SPDX-License-Identifier: Apache-2.0
+
+#
+# Build the freestanding host-test shim as a static library.
+#
+# shim.c is compiled WITHOUT -nostdinc so it can reach host-libc headers.
+# It is the single adapter between freestanding test TUs (which use only
+# pblibc + compiler built-in headers) and the host system.
+#
+# Tests opt in by adding use=['freestanding_shim'] to their clar() call via
+# the freestanding=True flag in waftools/pebble_test.py.
+#
+
+import os
+
+shim_src = bld.path.find_node('shim.c')
+
+# Strip -nostdinc from shim's CFLAGS so host headers are reachable.
+shim_cflags = [f for f in bld.env.CFLAGS if f != '-nostdinc']
+# Also strip any -isystem flags that inject pblibc/compiler-builtins includes;
+# the shim must use host headers exclusively.
+filtered = []
+skip_next = False
+for f in shim_cflags:
+    if skip_next:
+        skip_next = False
+        continue
+    if f == '-isystem':
+        skip_next = True
+        continue
+    if f.startswith('-isystem'):
+        continue
+    filtered.append(f)
+shim_cflags = filtered
+
+bld.stlib(
+    source=[shim_src],
+    target='freestanding_shim',
+    name='freestanding_shim',
+    cflags=shim_cflags,
+    # No extra includes — shim uses only host headers.
+)

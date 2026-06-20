@@ -118,10 +118,10 @@
 #include <stdint.h>
 #include <limits.h>
 #include <stddef.h>
-#include <ctype.h>
 #include <stdbool.h>
 
 #include "pblibc_private.h"
+#include <ctype.h>
 
 // Not using 64-bit division for Dialog Bluetooth. This saves *gobs* of memory.
 #ifdef ARCH_NO_NATIVE_LONG_DIVIDE

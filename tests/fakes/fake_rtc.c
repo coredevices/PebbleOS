@@ -3,9 +3,11 @@
 
 #include "fake_rtc.h"
 
+#ifndef CLAR_FREESTANDING
 #include <stdlib.h>
-#include <string.h>
 #include <time.h>
+#endif
+#include <string.h>
 
 static RtcTicks s_rtc_tick_count;
 static RtcTicks s_rtc_auto_increment = 0;

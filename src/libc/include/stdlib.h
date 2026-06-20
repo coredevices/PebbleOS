@@ -44,5 +44,12 @@ void exit(int status) __attribute__((noreturn));
 // Not implemented, but included in the header to build the default platform.c of libs.
 void free(void *ptr);
 void *malloc(size_t bytes);
+// Provided by tests/freestanding/shim.c in freestanding builds; by host libc otherwise.
+void *calloc(size_t nmemb, size_t size);
+void *realloc(void *ptr, size_t size);
+void qsort(void *base, size_t nmemb, size_t size,
+           int (*compar)(const void *, const void *));
+void abort(void) __attribute__((noreturn));
+char *strdup(const char *s);
 
 long jrand48(unsigned short int s[3]);

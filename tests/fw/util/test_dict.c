@@ -10,7 +10,12 @@
 
 #include <string.h>
 #include <stdbool.h>
+#ifndef CLAR_FREESTANDING
 #include <strings.h>
+#else
+/* ffs() is not in pblibc; use the compiler builtin directly. */
+static inline int ffs(int x) { return __builtin_ffs(x); }
+#endif
 
 // Stubs
 ///////////////////////////////////////////////////////////

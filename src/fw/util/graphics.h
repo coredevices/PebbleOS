@@ -4,6 +4,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "util/attributes.h"
 
 //! This function extracts a value for a specific bit per pixel depth from an image buffer
 //! at a specific x y position.
