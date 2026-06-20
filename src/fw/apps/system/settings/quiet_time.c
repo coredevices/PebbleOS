@@ -10,6 +10,7 @@
 #include "applib/ui/day_picker.h"
 #include "applib/ui/menu_layer.h"
 #include "applib/ui/time_range_selection_window.h"
+#include "applib/app_timer.h"
 #include "kernel/pbl_malloc.h"
 #include "popups/health_tracking_ui.h"
 #include "pbl/services/clock.h"
@@ -346,6 +347,7 @@ static void prv_add_day_picker_callback(DayPickerResult result, void *context) {
   if (index >= 0) {
     quiet_time_set_schedule_enabled(index, true);
     data->selected_schedule_index = index;
+    prv_schedule_refresh(data);
     // Defer the time-range window push: the day picker pops itself *after* this
     // callback returns, so pushing here would cause the pop to remove the
     // time-range window instead. The schedule sub-menu's appear handler picks
@@ -496,12 +498,19 @@ static uint16_t prv_schedule_num_rows_cb(SettingsCallbacks *context) {
   return 1 + data->num_schedules;
 }
 
+static void prv_deferred_time_range_push(void *context) {
+  SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *)context;
+  prv_time_range_select_window_push(data->selected_schedule_index, data);
+}
+
 static void prv_schedule_appear_cb(SettingsCallbacks *context) {
   SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *)context;
   if (data->pending_time_range_push) {
     data->pending_time_range_push = false;
-    prv_schedule_refresh(data);
-    prv_time_range_select_window_push(data->selected_schedule_index, data);
+    // Defer to the next event-loop iteration so we're outside any window
+    // transition; pushing from inside an appear handler corrupts the
+    // transition context and the click config ends up on the wrong window.
+    app_timer_register(0, prv_deferred_time_range_push, data);
   }
 }
 
