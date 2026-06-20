@@ -240,20 +240,33 @@ static void prv_lsm6dso_read_samples(uint16_t num_samples) {
 
   timestamp_us = prv_get_curr_system_time_us();
 
-  AccelDriverSample sample = {0};
+  // Each FIFO word is a tag byte followed by 6 data bytes; point the batch at the
+  // first data byte and let the service step over the tags via the stride.
+  int8_t rotate = LSM6DSO->state->rotated ? -1 : 1;
+  AccelRawBatch batch = {
+    .data = &LSM6DSO->state->raw_sample_buf[1],
+    .num_samples = num_samples,
+    .stride = LSM6DSO_FIFO_WORD_SIZE_BYTES,
+    .axis = {
+      [AXIS_X] = {.offset = LSM6DSO->axis_map[AXIS_X] * 2U,
+                  .sign = (int8_t)(LSM6DSO->axis_dir[AXIS_X] * rotate)},
+      [AXIS_Y] = {.offset = LSM6DSO->axis_map[AXIS_Y] * 2U,
+                  .sign = (int8_t)(LSM6DSO->axis_dir[AXIS_Y] * rotate)},
+      [AXIS_Z] = {.offset = LSM6DSO->axis_map[AXIS_Z] * 2U, .sign = LSM6DSO->axis_dir[AXIS_Z]},
+    },
+    .scale_num = CONFIG_ACCEL_LSM6DSO_SCALE_MG,
+    .scale_den = LSM6DSO_S16_SCALE_RANGE,
+    .first_timestamp_us = timestamp_us,
+    .sampling_interval_us = LSM6DSO->state->sampling_interval_us,
+  };
 
-  for (uint16_t i = 0U; i < num_samples; ++i) {
-    uint8_t *word;
+  accel_cb_new_samples(&batch);
 
-    word = &LSM6DSO->state->raw_sample_buf[i * LSM6DSO_FIFO_WORD_SIZE_BYTES];
-
-    prv_raw_to_mg(&word[1], &sample);
-    sample.timestamp_us = timestamp_us + i * LSM6DSO->state->sampling_interval_us;
-
-    accel_cb_new_sample(&sample);
-  }
-
-  LSM6DSO->state->last_sample = sample;
+  // Keep the most recent sample around for accel_peek().
+  uint8_t *last = &LSM6DSO->state->raw_sample_buf[(num_samples - 1) * LSM6DSO_FIFO_WORD_SIZE_BYTES];
+  prv_raw_to_mg(&last[1], &LSM6DSO->state->last_sample);
+  LSM6DSO->state->last_sample.timestamp_us =
+      timestamp_us + (num_samples - 1) * LSM6DSO->state->sampling_interval_us;
   LSM6DSO->state->last_sample_valid = true;
 }
 
