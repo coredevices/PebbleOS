@@ -36,6 +36,12 @@
         "name": "GOTHIC_28_BOLD_EXTENDED",
         "alias": "GOTHIC_24_EXTENDED"
     }, {
+        "name": "GOTHIC_36_EXTENDED",
+        "alias": "GOTHIC_24_EXTENDED"
+    }, {
+        "name": "GOTHIC_36_BOLD_EXTENDED",
+        "alias": "GOTHIC_24_EXTENDED"
+    }, {
         "name": "BITHAM_18_LIGHT_SUBSET_EXTENDED",
         "file": ""
     }, {
