@@ -7,6 +7,7 @@
 #include "pbl/services/new_timer/new_timer.h"
 #include "system/logging.h"
 #include "system/passert.h"
+#include "util/time/time.h"
 
 #include "FreeRTOS.h"
 #include "portmacro.h"
@@ -28,7 +29,7 @@ static ListNode s_minutes_callbacks;
 // be sure that it isn't due to drifting.
 #define MISSING_MINUTE_CB_LOG_THRESHOLD_S 90
 static time_t s_last_minute_fire_ts; // uses
-static int s_last_minute_fired = -1; // Track which minute we last fired on
+static time_t s_last_minute_fired = -1; // Epoch-minute (utc / 60) we last fired on
 
 
 
@@ -79,20 +80,24 @@ static void timer_callback(void* data) {
 
   do_callbacks(&s_seconds_callbacks);
 
-  time_t t = rtc_get_time();
-  struct tm time;
-  localtime_r(&t, &time);
+  // Detect a minute rollover without a full broken-down-time conversion.
+  // localtime_r() runs a timezone/DST lookup and a year-walk loop on every 1 Hz
+  // wake just to read tm_min. Timezone and DST offsets are always a whole number
+  // of minutes, so a UTC epoch-minute boundary (utc / 60) lands at the same
+  // instant as the local minute boundary -- one division replaces the whole
+  // conversion. Firing on a change (rather than tm_sec == 0) still tolerates RTC
+  // adjustments.
+  const time_t t = rtc_get_time();
+  const time_t cur_minute = t / SECONDS_PER_MINUTE;
 
-  // Fire minute callbacks when the minute changes (not just when tm_sec == 0)
-  // This prevents missing callbacks when RTC adjusts
   bool should_fire_minute = false;
   if (s_last_minute_fired == -1) {
     // First run - initialize but don't fire
-    s_last_minute_fired = time.tm_min;
-  } else if (s_last_minute_fired != time.tm_min) {
+    s_last_minute_fired = cur_minute;
+  } else if (s_last_minute_fired != cur_minute) {
     // Minute changed - fire callback
     should_fire_minute = true;
-    s_last_minute_fired = time.tm_min;
+    s_last_minute_fired = cur_minute;
   }
 
   if (should_fire_minute) {

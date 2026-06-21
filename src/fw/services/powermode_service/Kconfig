@@ -5,3 +5,11 @@ config SERVICE_POWERMODE_SERVICE
     bool "Power mode"
     help
       Power-mode (low-power) service.
+
+if SERVICE_POWERMODE_SERVICE
+
+module = SERVICE_POWERMODE_SERVICE
+module-str = Power mode
+source "src/fw/Kconfig.template.log_level"
+
+endif
