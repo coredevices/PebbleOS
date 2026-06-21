@@ -457,11 +457,7 @@ void battery_state_init(void) {
 
   s_last_voltage_mv = constants.v_mv;
 
-  // Recovery: a prior build sampled the fuel gauge too infrequently, which can
-  // leave a stale/incorrect state-of-charge persisted to flash. Cold-start from
-  // live readings instead of reloading that saved state. (Set back to true once
-  // the gauge is healthy to keep its learned model across reboots.)
-  ret = prv_fuel_gauge_init_common(&constants, false);
+  ret = prv_fuel_gauge_init_common(&constants, true);
   PBL_ASSERTN(ret == 0);
 
   ret = nrf_fuel_gauge_ext_state_update(
