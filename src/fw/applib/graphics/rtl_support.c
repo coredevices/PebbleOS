@@ -61,6 +61,22 @@ bool utf8_contains_arabic(const utf8_t *start, const utf8_t *end) {
   return false;
 }
 
+// Weak-LTR digits: Western (0x30-0x39, as used in Arabic, Hebrew and other RTL
+// text) and Arabic-Indic (0x0660-0x0669, 0x06F0-0x06F9). Inside an RTL run
+// these keep their left-to-right order; reversing them with the run would turn
+// a number such as 2026 into 6202.
+static bool prv_codepoint_is_digit(Codepoint cp) {
+  return (cp >= 0x30 && cp <= 0x39) ||
+         (cp >= 0x0660 && cp <= 0x0669) ||
+         (cp >= 0x06F0 && cp <= 0x06F9);
+}
+
+// Separators that stay inside a numeric run when flanked by digits, so a time
+// or date such as 12:34 or 2026/06/22 keeps its left-to-right group order.
+static bool prv_codepoint_is_numeric_separator(Codepoint cp) {
+  return cp == ':' || cp == '/' || cp == '.' || cp == ',';
+}
+
 size_t utf8_reverse_for_rtl(const utf8_t *src, size_t src_len,
                             utf8_t *dest, size_t dest_size) {
   if (src == NULL || dest == NULL || src_len == 0 || dest_size == 0) {
@@ -101,6 +117,59 @@ size_t utf8_reverse_for_rtl(const utf8_t *src, size_t src_len,
     Codepoint cp = utf8_peek_codepoint((utf8_t *)cp_start, &next);
     if (cp == 0 || next == NULL || next > reverse_ptr) {
       break;
+    }
+
+    if (prv_codepoint_is_digit(cp)) {
+      // Weak-LTR: emit a contiguous digit run in logical (left-to-right)
+      // order instead of reversing it.
+      const utf8_t *run_start = cp_start;
+      while (run_start > src) {
+        const utf8_t *prev_start = run_start - 1;
+        while (prev_start > src && ((*prev_start & 0xC0) == 0x80)) {
+          prev_start--;
+        }
+        utf8_t *prev_next = NULL;
+        Codepoint prev_cp = utf8_peek_codepoint((utf8_t *)prev_start, &prev_next);
+        if (prev_cp == 0 || prev_next == NULL) {
+          break;
+        }
+        if (prv_codepoint_is_digit(prev_cp)) {
+          run_start = prev_start;
+          continue;
+        }
+        // A separator joins the run only between two digits. run_start already
+        // points at a digit (so the separator is followed by one); require a
+        // digit before it too, then pull both into the run in one step.
+        if (prv_codepoint_is_numeric_separator(prev_cp) && prev_start > src) {
+          const utf8_t *before = prev_start - 1;
+          while (before > src && ((*before & 0xC0) == 0x80)) {
+            before--;
+          }
+          utf8_t *before_next = NULL;
+          Codepoint before_cp = utf8_peek_codepoint((utf8_t *)before, &before_next);
+          if (before_cp != 0 && before_next != NULL && prv_codepoint_is_digit(before_cp)) {
+            run_start = before;
+            continue;
+          }
+        }
+        break;
+      }
+
+      const utf8_t *fwd = run_start;
+      while (fwd < reverse_ptr) {
+        utf8_t *fwd_next = NULL;
+        Codepoint dcp = utf8_peek_codepoint((utf8_t *)fwd, &fwd_next);
+        if (dcp == 0 || fwd_next == NULL || dest_offset + 4 >= dest_size) {
+          break;
+        }
+        size_t n = utf8_encode_codepoint(dcp, dest + dest_offset);
+        if (n != 0) {
+          dest_offset += n;
+        }
+        fwd = fwd_next;
+      }
+      reverse_ptr = run_start;
+      continue;
     }
 
     // Make sure we have room for at least 4 bytes + null terminator
