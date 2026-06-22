@@ -35,6 +35,13 @@ bool arabic_is_shapeable(Codepoint cp);
 //! width computation matches what is actually drawn.
 Codepoint arabic_shape_codepoint(Codepoint prev_cp, Codepoint curr_cp, Codepoint next_cp);
 
+//! Shape `curr_cp`, resolving a Lam-Alef ligature when `curr_cp` (Lam) is
+//! followed by `next_cp` (an Alef variant): returns the single ligature glyph
+//! and sets `*consumed_next` to true so the caller skips `next_cp`. Otherwise
+//! behaves like arabic_shape_codepoint() and leaves `*consumed_next` false.
+Codepoint arabic_shape_pair(Codepoint prev_cp, Codepoint curr_cp, Codepoint next_cp,
+                            bool *consumed_next);
+
 //! Shape Arabic text by converting basic Arabic letters to their
 //! contextual presentation forms based on position in words.
 //!

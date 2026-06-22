@@ -49,6 +49,11 @@ clar(ctx,
     test_sources_ant_glob = "test_rtl_support.c")
 
 clar(ctx,
+    sources_ant_glob = "src/fw/applib/graphics/arabic_shaping.c" \
+        " src/fw/applib/graphics/utf8.c",
+    test_sources_ant_glob = "test_arabic_shaping.c")
+
+clar(ctx,
     sources_ant_glob = "src/fw/applib/graphics/utf8.c" \
         " src/fw/applib/graphics/framebuffer.c" \
         " src/fw/applib/graphics/gtypes.c" \
