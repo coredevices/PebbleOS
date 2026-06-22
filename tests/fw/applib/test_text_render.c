@@ -22,7 +22,8 @@ void graphics_context_mark_dirty_rect(GContext* ctx, GRect rect) {}
 const GlyphData* text_resources_get_glyph(FontCache* font_cache, const Codepoint codepoint,
                                           FontInfo* fontinfo) { return NULL; }
 
-int16_t text_resources_get_glyph_baseline_offset(const FontInfo *font_info, Codepoint codepoint) {
+int16_t text_resources_get_glyph_baseline_offset(FontCache *font_cache, FontInfo *font_info,
+                                                 Codepoint codepoint) {
   return 0;
 }
 

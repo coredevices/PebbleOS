@@ -71,7 +71,8 @@ void render_glyph(GContext* const ctx, const uint32_t codepoint, FontInfo* const
   // drawn from the shorter sub-font float off the shared baseline on a
   // mixed-script line. No-op (0) for single-font text. See
   // text_resources_get_glyph_baseline_offset().
-  const int16_t baseline_offset = text_resources_get_glyph_baseline_offset(font, codepoint);
+  const int16_t baseline_offset =
+      text_resources_get_glyph_baseline_offset(&ctx->font_cache, font, codepoint);
 
   // Calculate the box that we intend to draw to the screen, in screen coordinates
   GRect glyph_target = {

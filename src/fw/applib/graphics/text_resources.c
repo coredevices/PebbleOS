@@ -586,21 +586,6 @@ bool text_resources_init_font(ResAppNum app_num, uint32_t font_resource,
   return true;
 }
 
-int16_t text_resources_get_glyph_baseline_offset(const FontInfo *font_info, Codepoint codepoint) {
-  // Baseline alignment only applies to extended fonts, which pair a base and an
-  // extension sub-font of possibly different heights on the same line. A
-  // non-extended FontInfo has a single sub-font, so there is nothing to align.
-  if (!font_info->extended) {
-    return 0;
-  }
-  // Each sub-font anchors its glyph baselines at its own max_height. Shift a
-  // glyph down by the difference between the FontInfo's overall height (the
-  // tallest sub-font) and the height of the sub-font this codepoint is drawn
-  // from, so the base and extension scripts share one baseline.
-  const FontResource *res = prv_font_res_for_codepoint(codepoint, font_info);
-  return (int16_t)font_info->max_height - (int16_t)res->md.max_height;
-}
-
 // Leaf glyph lookup against a single font. This NEVER consults the fallback font, which is what
 // structurally bounds the fallback to depth 1: the fallback font is looked up with this helper, so
 // it can never trigger a further fallback and no recursion or cycle is possible.
@@ -611,8 +596,13 @@ static const GlyphData *prv_get_glyph_in_font(FontCache *font_cache, Codepoint c
   return prv_get_glyph_metadata_from_spi(codepoint, font_cache, font_res, need_bitmap);
 }
 
+// When source_out is non-NULL it receives the FontResource that actually
+// supplied the returned glyph -- the primary sub-font, the system fallback, or
+// the wildcard's sub-font -- which is not always the one nominally mapped from
+// the requested codepoint. Baseline alignment needs the real source.
 static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint,
-                                      FontInfo *font_info, bool need_bitmap) {
+                                      FontInfo *font_info, bool need_bitmap,
+                                      const FontResource **source_out) {
   if (!font_info->loaded) {
     sys_font_reload_font(font_info);
   }
@@ -620,6 +610,9 @@ static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint
   // (a) Requested codepoint in the primary font.
   const GlyphData *data = prv_get_glyph_in_font(font_cache, codepoint, font_info, need_bitmap);
   if (data) {
+    if (source_out) {
+      *source_out = prv_font_res_for_codepoint(codepoint, font_info);
+    }
     return data;
   }
 
@@ -637,6 +630,9 @@ static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint
     }
     data = prv_get_glyph_in_font(font_cache, codepoint, fallback, need_bitmap);
     if (data) {
+      if (source_out) {
+        *source_out = prv_font_res_for_codepoint(codepoint, fallback);
+      }
       return data;
     }
   }
@@ -650,6 +646,9 @@ static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint
   for (unsigned int i = 0; i < ARRAY_LENGTH(substitutes); i++) {
     data = prv_get_glyph_in_font(font_cache, substitutes[i], font_info, need_bitmap);
     if (data) {
+      if (source_out) {
+        *source_out = prv_font_res_for_codepoint(substitutes[i], font_info);
+      }
       return data;
     }
   }
@@ -660,7 +659,7 @@ static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint
 int8_t text_resources_get_glyph_horiz_advance(FontCache *font_cache, const Codepoint codepoint,
                                               FontInfo *font_info) {
   // Metadata only: measuring must not pay the deep bitmap load; render pre-loads it in walk_line().
-  const GlyphData *g = prv_get_glyph(font_cache, codepoint, font_info, false /* need_bitmap */);
+  const GlyphData *g = prv_get_glyph(font_cache, codepoint, font_info, false /* need_bitmap */, NULL);
   if (!g) {
     return 0;
   }
@@ -669,5 +668,26 @@ int8_t text_resources_get_glyph_horiz_advance(FontCache *font_cache, const Codep
 
 const GlyphData *text_resources_get_glyph(FontCache *font_cache, const Codepoint codepoint,
                                           FontInfo *font_info) {
-  return prv_get_glyph(font_cache, codepoint, font_info, true /* need_bitmap */);
+  return prv_get_glyph(font_cache, codepoint, font_info, true /* need_bitmap */, NULL);
+}
+
+int16_t text_resources_get_glyph_baseline_offset(FontCache *font_cache, FontInfo *font_info,
+                                                 Codepoint codepoint) {
+  // Baseline alignment only applies to extended fonts, which pair a base and an
+  // extension sub-font of possibly different heights on the same line. A
+  // non-extended FontInfo has a single sub-font, so there is nothing to align.
+  if (!font_info->extended) {
+    return 0;
+  }
+  // Resolve the glyph the way the renderer will (metadata only) so the offset
+  // is based on the sub-font that actually supplies it -- including the system
+  // fallback or the wildcard box -- not the nominal sub-font for the codepoint.
+  // Each sub-font anchors its baselines at its own max_height, so shift a glyph
+  // down by the FontInfo height (the tallest sub-font) minus its source height.
+  const FontResource *source = NULL;
+  prv_get_glyph(font_cache, codepoint, font_info, false /* need_bitmap */, &source);
+  if (source == NULL) {
+    return 0;
+  }
+  return (int16_t)font_info->max_height - (int16_t)source->md.max_height;
 }
