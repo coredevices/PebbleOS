@@ -381,6 +381,17 @@ static const LSM6DSOConfig s_lsm6dso_config = {
 
 const LSM6DSOConfig *const LSM6DSO = &s_lsm6dso_config;
 
+// Legacy LIS2DW12 (replaced by the LSM6DSO). Kept only to soft-reset the part
+// at boot, since a firmware upgrade may leave it powered on existing devices.
+static const I2CSlavePort s_i2c_lis2dw12 = {
+    .bus = &s_i2c_bus_2,
+#if defined(CONFIG_BOARD_OBELIX_DVT) || defined(CONFIG_BOARD_OBELIX_BB2)
+    .address = 0x18,
+#else
+    .address = 0x19,
+#endif
+};
+
 static const I2CSlavePort s_i2c_mmc5603nj = {
     .bus = &s_i2c_bus_2,
     .address = 0x30,
@@ -651,6 +662,12 @@ void board_init(void) {
   i2c_init(I2C2_BUS);
   i2c_init(I2C3_BUS);
   i2c_init(I2C4_BUS);
+
+  // Soft-reset the legacy LIS2DW12 in case an upgrade left it powered on. CTRL2
+  // (0x21) SOFT_RESET (bit 6) restores the part to its powered-down defaults.
+  i2c_use((I2CSlavePort *)&s_i2c_lis2dw12);
+  i2c_write_register((I2CSlavePort *)&s_i2c_lis2dw12, 0x21, (1U << 6U));
+  i2c_release((I2CSlavePort *)&s_i2c_lis2dw12);
 
   mic_init(MIC);
   audio_init(AUDIO);
