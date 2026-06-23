@@ -61,7 +61,9 @@ static void prv_handle_battery_state(BatteryChargeState charge) {
 }
 
 static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
-  prv_render(app_state_get_user_data());
+  AppData *data = app_state_get_user_data();
+  data->elapsed_seconds += SECONDS_PER_MINUTE;
+  prv_render(data);
 }
 
 static void prv_render(AppData *data) {
@@ -106,33 +108,27 @@ static void prv_render(AppData *data) {
 
         data->test_state = DischargeStateDischarging;
         data->elapsed_seconds = 0;
+        data->initial_voltage_mv = battery_const.v_mv;
+        data->initial_percent = charge_state.charge_percent;
         prv_render(data);
         return;
       }
       break;
 
     case DischargeStateDischarging: {
-      if (data->elapsed_seconds == 0) {
-        data->initial_voltage_mv = battery_const.v_mv;
-        data->initial_percent = charge_state.charge_percent;
-      } else {
-        data->elapsed_seconds += SECONDS_PER_MINUTE;
-      }
-
       int hours = data->elapsed_seconds / 3600;
       int mins = (data->elapsed_seconds % 3600) / 60;
-      int secs = data->elapsed_seconds % 60;
 
       int32_t voltage_delta = battery_const.v_mv - data->initial_voltage_mv;
       int8_t percent_delta = (int8_t)charge_state.charge_percent - (int8_t)data->initial_percent;
 
       sniprintf(data->details_string, sizeof(data->details_string),
-                "Elapsed: %02d:%02d:%02d\n\n"
+                "Elapsed: %02d:%02d\n\n"
                 "Current:\n"
                 "%" PRId32 "mV %" PRIu8 "%%\n"
                 "Delta:\n"
                 "%" PRId32 "mV  %" PRId8 "%%",
-                hours, mins, secs,
+                hours, mins,
                 battery_const.v_mv, charge_state.charge_percent,
                 voltage_delta, percent_delta);
     } break;
