@@ -1441,7 +1441,7 @@ static void prv_handle_notification_acted_upon(Uuid *id) {
 }
 
 static void prv_do_notification_vibe(NotificationWindowData *data, Uuid *id) {
-  PBL_LOG_INFO("Notification vibe: do_vibe called");
+  PBL_LOG_DBG("Notification vibe: do_vibe called");
   TimelineItem *item = prv_get_current_notification(data);
   // Check if the current notification is the one we want to vibe for - if not then reload to make
   // sure it is, before reading the attributes.
@@ -1457,8 +1457,8 @@ static void prv_do_notification_vibe(NotificationWindowData *data, Uuid *id) {
   if (vibeDurations && vibeDurations->num_values > 0) {
     VibePattern patt;
 
-    PBL_LOG_INFO("Notification vibe: using CUSTOM pattern from phone, %" PRIu16 " segments",
-                 vibeDurations->num_values);
+    PBL_LOG_DBG("Notification vibe: using CUSTOM pattern from phone, %" PRIu16 " segments",
+                vibeDurations->num_values);
 
     patt.durations = vibeDurations->values;
     patt.num_segments = vibeDurations->num_values;
@@ -1468,8 +1468,8 @@ static void prv_do_notification_vibe(NotificationWindowData *data, Uuid *id) {
     VibeScore *score = vibe_client_get_score(VibeClient_Notifications);
     if (score) {
       VibeScoreId id = alerts_preferences_get_vibe_score_for_client(VibeClient_Notifications);
-      PBL_LOG_INFO("Notification vibe: using alerts preferences (%d, %s)",
-                   (int)id, vibe_score_info_get_name(id));
+      PBL_LOG_DBG("Notification vibe: using alerts preferences (%d, %s)",
+                  (int)id, vibe_score_info_get_name(id));
 
       vibe_score_do_vibe(score);
       vibe_score_destroy(score);

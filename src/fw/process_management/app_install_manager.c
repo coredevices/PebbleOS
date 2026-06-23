@@ -321,7 +321,7 @@ static void prv_app_install_delete(AppInstallId id, Uuid *uuid, bool app_upgrade
   if (delete_cache) {
     // only log when we actually delete the cache entry. This is so we don't print out 100 logs
     // during an app cache clear
-    PBL_LOG_INFO("Deleting app with id %"PRId32"", id);
+    PBL_LOG_DBG("Deleting app with id %"PRId32"", id);
     app_cache_remove_entry(id);
   }
 }

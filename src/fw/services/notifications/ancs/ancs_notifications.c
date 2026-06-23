@@ -218,7 +218,7 @@ static bool prv_should_ignore_because_stale(time_t timestamp) {
   // PBL-12726: Added a check to see if the timstamp is coming from a location based reminder
   // This work-around is causing more trouble than the problem it was solving...
   if (timestamp < (now - MAXIMUM_NOTIFY_TIME) && timestamp != INVALID_TIME) {
-    PBL_LOG_INFO("Not presenting stale notif (ts=%ld)", timestamp);
+    PBL_LOG_DBG("Not presenting stale notif (ts=%ld)", timestamp);
     return true;
   }
 
@@ -244,7 +244,7 @@ static bool prv_should_ignore_notification(uint32_t uid,
     char app_id_buffer[app_id->length + 1];
     pstring_pstring16_to_string(&app_id->pstr, app_id_buffer);
 
-    PBL_LOG_INFO("Ignoring notification from <%s>: Muted", app_id_buffer);
+    PBL_LOG_DBG("Ignoring notification from <%s>: Muted", app_id_buffer);
     return true;
   }
 
@@ -252,7 +252,7 @@ static bool prv_should_ignore_notification(uint32_t uid,
     char app_id_buffer[app_id->length + 1];
     pstring_pstring16_to_string(&app_id->pstr, app_id_buffer);
 
-    PBL_LOG_INFO("Ignoring notification from <%s>: Matched filtering rule", app_id_buffer);
+    PBL_LOG_DBG("Ignoring notification from <%s>: Matched filtering rule", app_id_buffer);
     return true;
   }
 
@@ -334,7 +334,7 @@ void ancs_notifications_handle_message(uint32_t uid,
     // When declining a phone call from the Phone UI we still get a missed call notification
     // with a different UID. We don't want to show a missed call notification / pin in this case.
     if (has_missed_call_property && ancs_phone_call_should_ignore_missed_calls()) {
-      PBL_LOG_INFO("Ignoring missed call");
+      PBL_LOG_DBG("Ignoring missed call");
       goto cleanup;
     }
   }
@@ -360,10 +360,10 @@ void ancs_notifications_handle_message(uint32_t uid,
       notification_storage_unlock();
       goto cleanup;
     }
-    PBL_LOG_INFO("Updating ANCS notification: %"PRIu32, uid);
+    PBL_LOG_DBG("Updating ANCS notification: %"PRIu32, uid);
     prv_handle_ancs_update(notification, &existing_header);
   } else {
-    PBL_LOG_INFO("New ANCS notification: %"PRIu32, uid);
+    PBL_LOG_DBG("New ANCS notification: %"PRIu32, uid);
     prv_handle_new_ancs_notif(notification);
   }
 

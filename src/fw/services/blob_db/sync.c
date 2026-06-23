@@ -39,7 +39,7 @@ static bool prv_session_token_filter_callback(ListNode *node, void *data) {
 }
 
 static void prv_abandon_kernelbg_callback(void *data) {
-  PBL_LOG_INFO("Blob DB Sync abandoned after extended timeout");
+  PBL_LOG_WRN("Blob DB Sync abandoned after extended timeout");
   BlobDBSyncSession *session = data;
   blob_db_sync_cancel(session);
 }
@@ -57,7 +57,7 @@ static void prv_timeout_kernelbg_callback(void *data) {
   }
 
   // Retry sending the current item
-  PBL_LOG_INFO("Blob DB Sync timeout, retrying (db %d)", session->db_id);
+  PBL_LOG_WRN("Blob DB Sync timeout, retrying (db %d)", session->db_id);
   session->state = BlobDBSyncSessionStateIdle;
   prv_send_writeback(session);
 }
@@ -77,7 +77,7 @@ static void prv_send_writeback(BlobDBSyncSession *session) {
   }
 
   if (!comm_session_get_system_session()) {
-    PBL_LOG_INFO("Cancelling sync: No route to phone");
+    PBL_LOG_DBG("Cancelling sync: No route to phone");
     blob_db_sync_cancel(session);
     return;
   }
@@ -160,7 +160,7 @@ status_t blob_db_sync_db(BlobDBId db_id) {
   if (db_id >= NumBlobDBs) {
     return E_INVALID_ARGUMENT;
   }
-  PBL_LOG_INFO("Starting BlobDB db sync: %d", db_id);
+  PBL_LOG_DBG("Starting BlobDB db sync: %d", db_id);
 
   BlobDBDirtyItem *dirty_list = blob_db_get_dirty_list(db_id);
   if (!dirty_list) {
@@ -195,7 +195,7 @@ status_t blob_db_sync_record(BlobDBId db_id, const void *key, int key_len, time_
   char buffer[key_len + 1];
   strncpy(buffer, (const char *)key, key_len);
   buffer[key_len] = '\0';
-  PBL_LOG_INFO("Starting BlobDB record sync: <%s>", buffer);
+  PBL_LOG_DBG("Starting BlobDB record sync: <%s>", buffer);
 
   BlobDBDirtyItem *dirty_list = kernel_zalloc_check(sizeof(BlobDBDirtyItem) + key_len);
   list_init((ListNode *)dirty_list);
@@ -248,7 +248,7 @@ void blob_db_sync_next(BlobDBSyncSession *session) {
     if (session->dirty_list) {
       prv_send_writeback(session);
     } else {
-      PBL_LOG_INFO("Finished syncing db %d, session type: %d", session->db_id,
+      PBL_LOG_DBG("Finished syncing db %d, session type: %d", session->db_id,
                                                                           session->session_type);
       if (regular_timer_is_scheduled(&session->timeout_timer)) {
         regular_timer_remove_callback(&session->timeout_timer);
