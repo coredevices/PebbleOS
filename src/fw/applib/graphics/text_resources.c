@@ -593,7 +593,15 @@ static const GlyphData *prv_get_glyph_in_font(FontCache *font_cache, Codepoint c
                                               FontInfo *font_info, bool need_bitmap) {
   const FontResource *font_res = prv_font_res_for_codepoint(codepoint, font_info);
   prv_check_font_cache(font_cache, font_res);
-  return prv_get_glyph_metadata_from_spi(codepoint, font_cache, font_res, need_bitmap);
+  const GlyphData *data = prv_get_glyph_metadata_from_spi(codepoint, font_cache, font_res,
+                                                          need_bitmap);
+  if (data || font_res != &font_info->base || !font_info->extended) {
+    return data;
+  }
+
+  prv_check_font_cache(font_cache, &font_info->extension);
+  return prv_get_glyph_metadata_from_spi(codepoint, font_cache, &font_info->extension,
+                                         need_bitmap);
 }
 
 static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint,

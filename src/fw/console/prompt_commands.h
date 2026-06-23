@@ -291,6 +291,10 @@ extern void command_force_deepwfi(const char *arg);
 extern void command_display_drop_complete(void);
 #endif
 
+#if defined(CONFIG_QEMU) && !defined(CONFIG_RECOVERY_FW)
+extern void command_test_cjk_notification(void);
+#endif
+
 #define KEEP_NON_ESSENTIAL_COMMANDS 1
 static const Command s_prompt_commands[] = {
   // PULSE entry point, needed for anything PULSE-related to work
@@ -620,6 +624,9 @@ static const Command s_prompt_commands[] = {
 #endif
 #if !defined(CONFIG_RELEASE) && defined(CONFIG_DISPLAY_JDI_SF32LB)
   { "display drop_complete", command_display_drop_complete, 0 },
+#endif
+#if defined(CONFIG_QEMU) && !defined(CONFIG_RECOVERY_FW)
+  { "test cjk notification", command_test_cjk_notification, 0 },
 #endif
 
 #if MEMFAULT

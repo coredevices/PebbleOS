@@ -173,8 +173,8 @@ class Font:
             self.regex = None
 
     def set_codepoint_list(self, list_path):
-        codepoints_file = open(list_path)
-        codepoints_json = json.load(codepoints_file)
+        with open(list_path) as codepoints_file:
+            codepoints_json = json.load(codepoints_file)
         self.codepoints = [int(cp) for cp in codepoints_json["codepoints"]]
 
     def is_supported_glyph(self, codepoint):

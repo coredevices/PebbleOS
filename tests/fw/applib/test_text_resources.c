@@ -227,6 +227,37 @@ void test_text_resources__extended_font(void) {
   cl_assert_equal_m(chinese_wildcard_bytes, glyph->data, glyph_size_bytes);
 }
 
+void test_text_resources__symbol_range_base_miss_checks_extension(void) {
+  const Codepoint heart_codepoint = 0x2665;
+
+  static FontInfo s_symbol_font;
+  memset(&s_symbol_font, 0, sizeof(s_symbol_font));
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_14_EMOJI, 0, &s_symbol_font));
+
+  const GlyphData *symbol_glyph = text_resources_get_glyph(&s_font_cache, heart_codepoint,
+                                                           &s_symbol_font);
+  cl_assert(symbol_glyph != NULL);
+  const uint8_t symbol_size = glyph_get_size_bytes(symbol_glyph);
+  uint8_t symbol_bytes[CACHE_GLYPH_SIZE];
+  cl_assert(symbol_size <= sizeof(symbol_bytes));
+  memcpy(symbol_bytes, symbol_glyph->data, symbol_size);
+
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_18,
+                                     RESOURCE_ID_GOTHIC_14_EMOJI, &s_font_info));
+  cl_assert(s_font_info.loaded);
+  cl_assert(s_font_info.extended);
+
+  memset(&s_font_cache, 0, sizeof(s_font_cache));
+  keyed_circular_cache_init(&s_font_cache.line_cache, s_font_cache.cache_keys,
+                            s_font_cache.cache_data, sizeof(LineCacheData), LINE_CACHE_SIZE);
+
+  const GlyphData *glyph = text_resources_get_glyph(&s_font_cache, heart_codepoint,
+                                                    &s_font_info);
+  cl_assert(glyph != NULL);
+  cl_assert_equal_i(glyph_get_size_bytes(glyph), symbol_size);
+  cl_assert_equal_m(symbol_bytes, glyph->data, symbol_size);
+}
+
 void test_text_resources__test_emoji_font(void) {
   const uint8_t phone_bytes[] = {0xfe, 0x81, 0x81, 0x3c, 0x66, 0x42, 0xc3, 0xe7, 0xff, 0x00, 0x00, 0x00};
 
