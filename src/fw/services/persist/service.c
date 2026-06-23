@@ -15,7 +15,9 @@
 #include "pbl/services/settings/settings_file.h"
 #include "system/logging.h"
 #include "system/passert.h"
+#include "util/attributes.h"
 #include "util/list.h"
+#include "util/math.h"
 #include "util/units.h"
 
 PBL_LOG_MODULE_DEFINE(service_persist, CONFIG_SERVICE_PERSIST_LOG_LEVEL);
@@ -91,9 +93,102 @@ size_t persist_service_get_max_size(void) {
   return PERSIST_STORAGE_MAX_SPACE;
 }
 
+// Persist files used to be named "ps%06d", where the id was allocated by the
+// legacy persist_map (the "pmap" file), a UUID->id table. They are now named
+// "ps<uuid-hex>" directly. The following migrates existing files to the new
+// scheme and removes the now-unused pmap.
+// TODO: remove this migration once all devices have upgraded.
+
+#define LEGACY_PMAP_FILE_NAME "pmap"
+#define LEGACY_PERSIST_FILE_NAME_MAX_LENGTH sizeof("ps000001")
+#define LEGACY_PMAP_EOF_ID ((int)(~0))
+
+typedef struct PACKED {
+  uint16_t version;
+} LegacyPersistMapHeader;
+
+typedef struct PACKED {
+  int id;
+  Uuid uuid;
+} LegacyPersistMapField;
+
+static status_t prv_copy_file(const char *from, const char *to) {
+  int from_fd = pfs_open(from, OP_FLAG_READ, 0, 0);
+  if (from_fd < 0) {
+    return from_fd;
+  }
+
+  size_t size = pfs_get_file_size(from_fd);
+  int to_fd = pfs_open(to, OP_FLAG_WRITE, FILE_TYPE_STATIC, size);
+  if (to_fd < 0) {
+    pfs_close(from_fd);
+    return to_fd;
+  }
+
+  status_t rv = S_SUCCESS;
+  const size_t chunk_size = 128;
+  uint8_t *buf = kernel_malloc(chunk_size);
+  if (buf == NULL) {
+    rv = E_OUT_OF_MEMORY;
+  } else {
+    size_t remaining = size;
+    while (remaining > 0) {
+      size_t n = MIN(remaining, chunk_size);
+      if ((rv = pfs_read(from_fd, buf, n)) != (int)n) {
+        rv = (rv >= 0) ? E_INTERNAL : rv;
+        break;
+      }
+      if ((rv = pfs_write(to_fd, buf, n)) != (int)n) {
+        rv = (rv >= 0) ? E_INTERNAL : rv;
+        break;
+      }
+      remaining -= n;
+    }
+    kernel_free(buf);
+  }
+
+  pfs_close(from_fd);
+  pfs_close(to_fd);
+  return rv;
+}
+
+static void prv_migrate_legacy_persist_files(void) {
+  int fd = pfs_open(LEGACY_PMAP_FILE_NAME, OP_FLAG_READ, 0, 0);
+  if (fd < 0) {
+    // No legacy map, nothing to migrate.
+    return;
+  }
+
+  pfs_seek(fd, sizeof(LegacyPersistMapHeader), FSeekSet);
+
+  LegacyPersistMapField field;
+  while (pfs_read(fd, (uint8_t *)&field, sizeof(field)) == (int)sizeof(field)) {
+    if (field.id == LEGACY_PMAP_EOF_ID) {
+      break;
+    }
+
+    char old_name[LEGACY_PERSIST_FILE_NAME_MAX_LENGTH];
+    snprintf(old_name, sizeof(old_name), "ps%06d", field.id);
+
+    char new_name[PERSIST_FILE_NAME_MAX_LENGTH];
+    if (FAILED(prv_get_file_name(new_name, sizeof(new_name), &field.uuid))) {
+      continue;
+    }
+
+    if (PASSED(prv_copy_file(old_name, new_name))) {
+      pfs_remove(old_name);
+    }
+  }
+
+  pfs_close(fd);
+  pfs_remove(LEGACY_PMAP_FILE_NAME);
+}
+
 // Designed to be called once during reset
 void persist_service_init(void) {
   s_mutex = mutex_create();
+
+  prv_migrate_legacy_persist_files();
 
   // Find and delete any AppInstallId-indexed persist files. Due to PBL-16663
   // (affecting FW 3.0-dp5 thru -dp7), the AppInstallId in the file name may not
