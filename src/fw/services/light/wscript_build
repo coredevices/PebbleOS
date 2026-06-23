@@ -1,9 +1,14 @@
 # SPDX-Copyright-Text: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+sources = ['service.c']
+
+if bld.env.CONFIG_BACKLIGHT_HAS_COLOR and bld.env.CONFIG_BACKLIGHT_QEMU_COLOR:
+    sources.append('light_commands.c')
+
 bld.stlib(
     use=['fw_includes', 'services_analytics'],
-    source=['service.c'],
+    source=sources,
     target='services_light',
 )
 bld.env.SERVICES.append('services_light')

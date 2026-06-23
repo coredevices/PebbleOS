@@ -53,6 +53,9 @@ extern void command_read_word(const char*);
 
 extern void command_backlight_ctl(const char*);
 extern void command_backlight_set_color(const char*);
+#if defined(CONFIG_BACKLIGHT_HAS_COLOR) && defined(CONFIG_BACKLIGHT_QEMU_COLOR)
+extern void command_backlight_day_night_test(const char*);
+#endif
 
 extern void command_battery_charge_option(const char*);
 
@@ -496,6 +499,9 @@ static const Command s_prompt_commands[] = {
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
   // Drivers
   { "backlight color", command_backlight_set_color, 1 },
+#endif
+#if defined(CONFIG_BACKLIGHT_HAS_COLOR) && defined(CONFIG_BACKLIGHT_QEMU_COLOR)
+  { "backlight daynight", command_backlight_day_night_test, 1 },
 #endif
 
 //  { "watch", command_watch, 0 },
