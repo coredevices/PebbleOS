@@ -378,10 +378,6 @@ static const TouchSensor s_touch_cst816 = {
         .gpio_pin = 28,
         .active_high = false,
     },
-    .max_x = 260,
-    .max_y = 260,
-    .invert_x_axis = false,
-    .invert_y_axis = true,
 };
 
 const TouchSensor *CST816 = &s_touch_cst816;
