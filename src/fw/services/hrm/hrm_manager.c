@@ -218,9 +218,10 @@ static bool prv_should_switch_path(HRMFeature wanted, HRMFeature active) {
 #endif
 }
 
-// Bring the sensor online sampling `features`, subscribing to accel data. Returns true on success.
-// Must be called with s_manager_state.lock held.
-static bool prv_sensor_enable(HRMFeature features) {
+// Bring the sensor online sampling `features`, subscribing to accel data. `low_latency` requests
+// the prompt FIFO cadence for a live-display consumer; background logging passes false to save
+// MCU/I2C wakeups. Returns true on success. Must be called with s_manager_state.lock held.
+static bool prv_sensor_enable(HRMFeature features, bool low_latency) {
   // Only subscribe if not already subscribed (prevents leak if hrm_is_enabled is out of sync)
   if (s_manager_state.accel_state) {
     PBL_LOG_WRN("HRM: accel already subscribed, unsubscribing first");
@@ -240,7 +241,7 @@ static bool prv_sensor_enable(HRMFeature features) {
     features = HRMFeature_BPM;
   }
 
-  if (!hrm_enable(HRM, features)) {
+  if (!hrm_enable(HRM, features, low_latency)) {
     // HRM failed to enable, clean up the accel subscription
     s_manager_state.enable_failure_count++;
     if (s_manager_state.enable_failure_count >= HRM_MAX_ENABLE_FAILURES) {
@@ -295,6 +296,10 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
     // tells the driver which PPG functions to sample (e.g. enable the SpO2/IR path only when a
     // SpO2 subscriber is actually due, so HR-only sessions stay on the low-power green path).
     HRMFeature wanted_features = 0;
+    // True if any due subscriber asked for the low-latency cadence, i.e. a consumer showing or
+    // streaming live data (foreground app, BLE HR relay). Background system readers (daily HR/SpO2
+    // logging) leave this false, letting the driver drain the FIFO less often to save wakeups.
+    bool low_latency_wanted = false;
 
     if (prv_can_turn_sensor_on()) {
       int32_t remaining_ticks = INT32_MAX;
@@ -351,6 +356,9 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
         if (subscriber_remaining_ticks <= 0) {
           // This subscriber is due now; the sensor must sample the features it asked for.
           wanted_features |= sub_features;
+          if (state->low_latency) {
+            low_latency_wanted = true;
+          }
         }
         subscriber_remaining_ticks = MAX(0, subscriber_remaining_ticks);
 
@@ -393,7 +401,7 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
         if (both_paths_due) {
           s_manager_state.last_conflict_winner = active_features;
         }
-        if (prv_sensor_enable(active_features)) {
+        if (prv_sensor_enable(active_features, low_latency_wanted)) {
           // Don't need the re-enable timer to fire
           new_timer_stop(s_manager_state.update_enable_timer_id);
         }
@@ -402,7 +410,7 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
         // so the waiting feature gets its turn (e.g. hand off from HR to SpO2, or back again).
         HRM_LOG("Switching HR sensor optical path");
         prv_sensor_disable();
-        prv_sensor_enable(active_features);
+        prv_sensor_enable(active_features, low_latency_wanted);
       }
     } else if (!turn_sensor_on && hrm_is_enabled(HRM)) {
       // Turn off the sensor now
@@ -738,6 +746,7 @@ void hrm_manager_init(void) {
 
 HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t update_interval_s,
                                                   uint16_t expire_s, HRMFeature features,
+                                                  bool low_latency,
                                                   HRMSubscriberCallback callback, void *context) {
   const PebbleTask current_task = pebble_task_get_current();
   bool is_app_subscription = false;
@@ -780,6 +789,7 @@ HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t 
     .callback_context = context,
     .update_interval_s = update_interval_s,
     .expire_utc = (expire_s != 0) ? (rtc_get_time() + expire_s) : 0,
+    .low_latency = low_latency,
     .features = features,
     .attempt_start_ticks = rtc_get_ticks(),
   };
@@ -795,8 +805,10 @@ HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t 
 
 DEFINE_SYSCALL(HRMSessionRef, sys_hrm_manager_app_subscribe,
     AppInstallId app_id, uint32_t update_interval_s, uint16_t expire_sec, HRMFeature features) {
-  return hrm_manager_subscribe_with_callback(app_id, update_interval_s, expire_sec, features, NULL,
-                                             NULL);
+  // App/worker subscriptions are foreground consumers showing live data, so they always want the
+  // prompt FIFO cadence.
+  return hrm_manager_subscribe_with_callback(app_id, update_interval_s, expire_sec, features,
+                                             true /*low_latency*/, NULL, NULL);
 }
 
 
@@ -931,7 +943,7 @@ void command_hrm_read(void) {
   sys_hrm_manager_unsubscribe(s_console_session);
   s_console_session = hrm_manager_subscribe_with_callback(
       INSTALL_ID_INVALID, 1 /*update_interval_s*/, 0 /*expire_s*/, HRMFeature_BPM,
-      prv_console_read_callback, NULL);
+      true /*low_latency*/, prv_console_read_callback, NULL);
   prompt_command_continues_after_returning();
 }
 
@@ -948,7 +960,7 @@ void command_spo2_read(void) {
   sys_hrm_manager_unsubscribe(s_console_session);
   s_console_session = hrm_manager_subscribe_with_callback(
       INSTALL_ID_INVALID, 1 /*update_interval_s*/, 0 /*expire_s*/, HRMFeature_SpO2,
-      prv_console_spo2_read_callback, NULL);
+      true /*low_latency*/, prv_console_spo2_read_callback, NULL);
   prompt_command_continues_after_returning();
 }
 

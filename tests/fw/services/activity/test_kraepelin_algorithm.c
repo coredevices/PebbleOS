@@ -32,6 +32,7 @@
 HRMSessionRef s_hrm_next_session_ref = 1;
 HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t update_interval_s,
                                                   uint16_t expire_s, HRMFeature features,
+                                                  bool low_latency,
                                                   HRMSubscriberCallback callback, void *context) {
   return s_hrm_next_session_ref++;
 }
