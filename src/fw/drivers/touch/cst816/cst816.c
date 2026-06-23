@@ -372,8 +372,9 @@ static void prv_watchdog_cb(void *data) {
 }
 
 void touch_sensor_set_enabled(bool enabled) {
+  cst816_hw_reset();
+
   if (enabled) {
-    cst816_hw_reset();
     exti_enable(CST816->int_exti);
     s_enabled = true;
     s_activity_since_check = true;
