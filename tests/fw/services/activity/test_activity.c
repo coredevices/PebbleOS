@@ -136,7 +136,8 @@ static int s_hrm_manager_num_update_interval_changes;
 static uint16_t s_hrm_manager_expire_s;
 HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t update_interval_s,
                                                   uint16_t expire_s, HRMFeature features,
-                                                  HRMSubscriberCallback callback, void *context) {
+                                                  bool low_latency, HRMSubscriberCallback callback,
+                                                  void *context) {
   s_hrm_manager_update_interval = update_interval_s;
   s_hrm_manager_expire_s = expire_s;
   return s_hrm_next_session_ref++;

@@ -26,6 +26,10 @@ typedef void (*HRMSubscriberCallback)(PebbleHRMEvent *event, void *context);
 // the sensor on continuously rather than paying an algorithm restart every interval.
 #define HRM_SENSOR_SPIN_UP_SEC 20
 
+// A foreground app polling at or under this interval is showing live readings and gets the
+// low-latency FIFO cadence; anything slower takes the default, cheaper cadence.
+#define HRM_LOW_LATENCY_MAX_INTERVAL_S 2
+
 typedef struct AccelServiceState AccelServiceState;
 
 typedef struct HRMSubscriberState {
@@ -41,6 +45,8 @@ typedef struct HRMSubscriberState {
   uint32_t update_interval_s; // How often to send updates to this subscriber
   time_t expire_utc;          // This subscription will expire at this time
   bool sent_expiration_event; // true after we've sent a HRMEvent_SubscriptionExpiring event
+  bool low_latency;           // true if this consumer needs the prompt FIFO cadence (a foreground
+                              // app showing live readings); false for background logging
   HRMFeature features;        // what features the subscriber is interested in
 
   RtcTicks
@@ -119,12 +125,17 @@ struct HRMManagerState {
 //! @param expire_s after this many seconds, this subscription will automatically expire. Pass 0
 //!   for no expiration.
 //! @param features A bitfield of the features the subscriber would like updates for
+//! @param low_latency true if this consumer shows live data and needs prompt updates; false for
+//!   background logging and streaming, which lets the sensor drain the FIFO less often to save
+//!   power. App subscriptions (via sys_hrm_manager_app_subscribe) derive this from their task and
+//!   update interval.
 //! @param callback the KernelBG callback to call when an HRM event is available
 //! @param context the context pointer for the callback
 //! @return the HRMSessionRef for this subscription. NULL on failure
 HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t update_interval_s,
                                                   uint16_t expire_s, HRMFeature features,
-                                                  HRMSubscriberCallback callback, void *context);
+                                                  bool low_latency, HRMSubscriberCallback callback,
+                                                  void *context);
 
 //! Set the activity context the HR algorithm should optimize for (see HRMActivityScene). Stored and
 //! re-applied on every sensor power-on, so callers don't need to re-arm it across sensor cycles.

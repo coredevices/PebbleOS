@@ -248,9 +248,10 @@ static bool prv_should_reconfigure(HRMFeature wanted, HRMFeature active, HRMFeat
 #endif
 }
 
-// Bring the sensor online sampling `features`, subscribing to accel data. Returns true on success.
-// Must be called with s_manager_state.lock held.
-static bool prv_sensor_enable(HRMFeature features) {
+// Bring the sensor online sampling `features`, subscribing to accel data. `low_latency` requests
+// the prompt FIFO cadence for a live-display consumer; background logging passes false to save
+// MCU/I2C wakeups. Returns true on success. Must be called with s_manager_state.lock held.
+static bool prv_sensor_enable(HRMFeature features, bool low_latency) {
   // Only subscribe if not already subscribed (prevents leak if hrm_is_enabled is out of sync)
   if (s_manager_state.accel_state) {
     PBL_LOG_WRN("HRM: accel already subscribed, unsubscribing first");
@@ -270,7 +271,7 @@ static bool prv_sensor_enable(HRMFeature features) {
     features = HRMFeature_BPM;
   }
 
-  if (!hrm_enable(HRM, features)) {
+  if (!hrm_enable(HRM, features, low_latency)) {
     // HRM failed to enable, clean up the accel subscription
     s_manager_state.enable_failure_count++;
     if (s_manager_state.enable_failure_count >= HRM_MAX_ENABLE_FAILURES) {
@@ -331,6 +332,10 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
     // Union of the features of every live subscriber, due or not. A running feature is kept until
     // its last subscriber goes away, so a served subscriber doesn't force a sensor restart.
     HRMFeature live_features = 0;
+    // True if any due subscriber asked for the low-latency cadence, i.e. a consumer showing or
+    // streaming live data (foreground app, BLE HR relay). Background system readers (daily HR/SpO2
+    // logging) leave this false, letting the driver drain the FIFO less often to save wakeups.
+    bool low_latency_wanted = false;
 
     if (prv_can_turn_sensor_on()) {
       RtcTicks cur_ticks = rtc_get_ticks();
@@ -388,6 +393,9 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
         if (subscriber_remaining_ticks <= 0) {
           // This subscriber is due now; the sensor must sample the features it asked for.
           wanted_features |= sub_features;
+          if (state->low_latency) {
+            low_latency_wanted = true;
+          }
         }
         subscriber_remaining_ticks = MAX(0, subscriber_remaining_ticks);
 
@@ -409,7 +417,7 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
       if (!hrm_is_enabled(HRM)) {
         // Sensor is off and a subscriber is due: bring it online.
         PBL_LOG_DBG("Turning on HR sensor (features 0x%x)", active_features);
-        if (prv_sensor_enable(active_features)) {
+        if (prv_sensor_enable(active_features, low_latency_wanted)) {
           // Don't need the re-enable timer to fire
           new_timer_stop(s_manager_state.update_enable_timer_id);
         }
@@ -420,7 +428,7 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
         PBL_LOG_DBG("Restarting HR sensor (0x%x -> 0x%x)", s_manager_state.active_features,
                     active_features);
         prv_sensor_disable();
-        prv_sensor_enable(active_features);
+        prv_sensor_enable(active_features, low_latency_wanted);
       }
     } else if (!turn_sensor_on && hrm_is_enabled(HRM)) {
       // Turn off the sensor now
@@ -793,7 +801,8 @@ void hrm_manager_init(void) {
 
 HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t update_interval_s,
                                                   uint16_t expire_s, HRMFeature features,
-                                                  HRMSubscriberCallback callback, void *context) {
+                                                  bool low_latency, HRMSubscriberCallback callback,
+                                                  void *context) {
   const PebbleTask current_task = pebble_task_get_current();
   bool is_app_subscription = false;
   if (current_task == PebbleTask_KernelBackground) {
@@ -835,6 +844,7 @@ HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t 
     .callback_context = context,
     .update_interval_s = update_interval_s,
     .expire_utc = (expire_s != 0) ? (rtc_get_time() + expire_s) : 0,
+    .low_latency = low_latency,
     .features = features,
   };
   s_manager_state.subscribers = list_insert_before(s_manager_state.subscribers, &state->list_node);
@@ -846,10 +856,18 @@ HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t 
   return state->session_ref;
 }
 
+// Only a foreground app showing live readings (a short update interval) is worth the extra
+// FIFO-drain wakeups of the low-latency cadence. Workers, the BLE relay (its notify cadence copes
+// with batched samples) and background logging take the default.
+static bool prv_wants_low_latency(PebbleTask task, uint32_t update_interval_s) {
+  return (task == PebbleTask_App) && (update_interval_s <= HRM_LOW_LATENCY_MAX_INTERVAL_S);
+}
+
 DEFINE_SYSCALL(HRMSessionRef, sys_hrm_manager_app_subscribe, AppInstallId app_id,
                uint32_t update_interval_s, uint16_t expire_sec, HRMFeature features) {
-  return hrm_manager_subscribe_with_callback(app_id, update_interval_s, expire_sec, features, NULL,
-                                             NULL);
+  const bool low_latency = prv_wants_low_latency(pebble_task_get_current(), update_interval_s);
+  return hrm_manager_subscribe_with_callback(app_id, update_interval_s, expire_sec, features,
+                                             low_latency, NULL, NULL);
 }
 
 DEFINE_SYSCALL(bool, sys_hrm_manager_unsubscribe, HRMSessionRef session) {
@@ -950,6 +968,11 @@ DEFINE_SYSCALL(bool, sys_hrm_manager_set_update_interval, HRMSessionRef session,
     state->update_interval_s = update_interval_s;
     state->expire_utc = (expire_s != 0) ? (rtc_get_time() + expire_s) : 0;
     state->sent_expiration_event = false;
+    if (state->task == PebbleTask_App || state->task == PebbleTask_Worker) {
+      // Apps pick their cadence through the interval, so keep the two in step. Applied at the next
+      // sensor start; a running session keeps its cadence rather than pay an algorithm restart.
+      state->low_latency = prv_wants_low_latency(state->task, update_interval_s);
+    }
     success = true;
   }
   system_task_add_callback(prv_update_hrm_enable_system_cb, NULL);
@@ -984,7 +1007,7 @@ void command_hrm_read(void) {
   sys_hrm_manager_unsubscribe(s_console_session);
   s_console_session = hrm_manager_subscribe_with_callback(
       INSTALL_ID_INVALID, 1 /*update_interval_s*/, 0 /*expire_s*/, HRMFeature_BPM,
-      prv_console_read_callback, NULL);
+      false /*low_latency*/, prv_console_read_callback, NULL);
   prompt_command_continues_after_returning();
 }
 
@@ -1007,7 +1030,7 @@ void command_spo2_read(void) {
   sys_hrm_manager_unsubscribe(s_console_session);
   s_console_session = hrm_manager_subscribe_with_callback(
       INSTALL_ID_INVALID, 1 /*update_interval_s*/, 0 /*expire_s*/, HRMFeature_SpO2,
-      prv_console_spo2_read_callback, NULL);
+      false /*low_latency*/, prv_console_spo2_read_callback, NULL);
   prompt_command_continues_after_returning();
 }
 

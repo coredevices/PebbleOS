@@ -193,8 +193,11 @@ static void prv_start_hrm_kernel_main(void *unused) {
     .handler = prv_ble_hrm_handle_hrm_data,
   };
   event_service_client_subscribe(&s_ble_hrm_session.service_info);
+  // The relay forwards whatever cadence the sensor delivers; batched FIFO drains are fine for the
+  // phone, so don't pay for the low-latency cadence over a whole streaming session.
   s_ble_hrm_session.manager_session = hrm_manager_subscribe_with_callback(
-      INSTALL_ID_INVALID, 1 /*update_interval_s*/, 0 /*expire_s*/, HRMFeature_BPM, NULL, NULL);
+      INSTALL_ID_INVALID, 1 /*update_interval_s*/, 0 /*expire_s*/, HRMFeature_BPM,
+      false /*low_latency*/, NULL, NULL);
 }
 
 static void prv_stop_hrm_kernel_main(void *unused) {

@@ -36,10 +36,21 @@ void gh3026_reset_pin_ctrl(uint8_t pin_level) {
 // here.
 extern void Gh3x2xSetHbaMode(GS32 nHbaScenario);
 
-#define GH3X2X_LOG_ENABLE            0
-#define GH3X2X_FIFO_WATERMARK_CONFIG 80
-#define GH3X2X_HR_SAMPLING_RATE      25
-#define GH3X2X_HRV_SAMPLING_RATE     100
+#define GH3X2X_LOG_ENABLE 0
+// FIFO read batch size. In normal interrupt mode the hardware IRQ fires when this many samples
+// accumulate, so it sets the end-to-end latency and update cadence. Lower = snappier first reading
+// and finer-grained HR/SpO2 updates, at the cost of more frequent I2C bursts. The manager picks per
+// session (see hrm_enable's low_latency arg) which of these two to use.
+//
+// Default (background daily HR/SpO2 logging, the BLE relay, apps polling at a longer interval):
+// the shipped watermark, draining every ~3.2s at the 25 Hz rate.
+#define GH3X2X_FIFO_WATERMARK_DEFAULT 80
+// A foreground app showing live HR at a 1-2s update interval: IRQ every ~1s so on-screen values
+// update promptly, at 3.2x the FIFO-drain wakeups and I2C bursts. Only worth paying while someone
+// is watching.
+#define GH3X2X_FIFO_WATERMARK_LOW_LATENCY 25
+#define GH3X2X_HR_SAMPLING_RATE           25
+#define GH3X2X_HRV_SAMPLING_RATE          100
 // The Goodix HRV algorithm reports at most 4 RR intervals per result
 #define GH3X2X_HRV_MAX_RRI_PER_RESULT 4
 
@@ -524,7 +535,7 @@ void hrm_init(HRMDevice *dev) {
   dev->state->initialized = true;
 }
 
-bool hrm_enable(HRMDevice *dev, HRMFeature features) {
+bool hrm_enable(HRMDevice *dev, HRMFeature features, bool low_latency) {
 #ifdef CONFIG_GH3X2X_ALGO
   if (!dev->state->initialized) {
     return false;
@@ -577,7 +588,8 @@ bool hrm_enable(HRMDevice *dev, HRMFeature features) {
   }
 #endif
 
-  GH3X2X_FifoWatermarkThrConfig(GH3X2X_FIFO_WATERMARK_CONFIG);
+  GH3X2X_FifoWatermarkThrConfig(low_latency ? GH3X2X_FIFO_WATERMARK_LOW_LATENCY
+                                            : GH3X2X_FIFO_WATERMARK_DEFAULT);
   GH3X2X_SetSoftEvent(GH3X2X_SOFT_EVENT_NEED_FORCE_READ_FIFO);
   Gh3x2xDemoFunctionSampleRateSet(GH3X2X_FUNCTION_HR, GH3X2X_HR_SAMPLING_RATE);
 #ifdef CONFIG_HRM_HRV
