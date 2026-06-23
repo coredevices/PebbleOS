@@ -28,6 +28,7 @@
 #include "pbl/services/light.h"
 #include "pbl/services/idle_watchdog.h"
 #include "system/logging.h"
+#include "util/time/time.h"
 
 #include <stdio.h>
 
@@ -363,7 +364,7 @@ static void prv_run_component_display(AppData *data) {
             comp_detail);
 }
 
-static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
+static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
   AppData *data = app_state_get_user_data();
 
   switch (data->state) {
@@ -575,6 +576,9 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
         backlight_set_color(0xFFFFFF);
 #endif
         light_enable(true);
+        // The screen only needs occasional refreshes while discharging, so
+        // tick once a minute to cut wake-ups and the test's own power draw.
+        tick_timer_service_subscribe(MINUTE_UNIT, prv_handle_tick);
         break;
       }
 
@@ -601,7 +605,8 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
     }
 
     case AgingStateDischarging: {
-      data->phase_elapsed_sec++;
+      // This phase ticks once a minute (see the Idle->Discharge transition).
+      data->phase_elapsed_sec += SECONDS_PER_MINUTE;
 
       BatteryConstants bc;
       battery_get_constants(&bc);
@@ -732,7 +737,7 @@ static void prv_handle_init(void) {
                                                            GTextAlignmentLeft));
   layer_add_child(window_layer, &status->layer);
 
-  tick_timer_service_subscribe(SECOND_UNIT, prv_handle_second_tick);
+  tick_timer_service_subscribe(SECOND_UNIT, prv_handle_tick);
 
   app_window_stack_push(window, true);
 }
