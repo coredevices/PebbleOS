@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "util/attributes.h"
+
 #define MUSIC_BUFFER_LENGTH 64
 
 typedef enum {
@@ -36,6 +38,7 @@ typedef enum {
 
   NumMusicCommand,
 } MusicCommand;
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Interface to Music app

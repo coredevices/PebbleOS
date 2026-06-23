@@ -251,3 +251,107 @@ void test_vibe_score__get_duration_returns_zero_for_null_score(void) {
 void test_vibe_score__get_repeat_delay_returns_zero_for_null_score(void) {
   cl_assert_equal_i(vibe_score_get_repeat_delay_ms(NULL), 0);
 }
+
+void test_vibe_score__triple_pulse_half_strength(void) {
+  uint8_t buffer[] = {
+      'V', 'I', 'B', 'E', // FourCC
+      1, 0, // version
+      0, 0, 0, 0, // reserved bytes
+      24, 0, // attr_list_size
+      2, // GenericAttributeList.num_attributes
+      VibeAttributeId_Notes,
+      12, 0, // GenericAttribute.length
+      15, 0, // VibeNote.vibe_duration_ms
+      9, // VibeNote.brake_duration_ms
+      100, // VibeNote.strength
+      15, 0, // VibeNote.vibe_duration_ms
+      9, // VibeNote.brake_duration_ms
+      50, // VibeNote.strength
+      100, 0, // VibeNote.vibe_duration_ms
+      0, // VibeNote.brake_duration_ms
+      0, // VibeNote.strength
+      VibeAttributeId_Pattern,
+      5, 0, // GenericAttribute.length
+      0, // 100
+      2, // 0
+      1, // 50
+      2, // 0
+      0  // 100
+  };
+  s_resource_buffer = buffer;
+  s_resource_buffer_size = sizeof(buffer);
+  VibeScore *score = vibe_score_create_with_resource_system(0, 0);
+  cl_assert(score);
+  vibe_score_do_vibe_with_strength(score, 50);
+  vibe_score_destroy(score);
+
+  cl_assert_equal_i(s_vibe_queue_index, 8);
+  cl_assert_equal_i(s_vibe_queue[0].duration_ms, 15);
+  cl_assert_equal_i(s_vibe_queue[0].strength, 50);
+  cl_assert_equal_i(s_vibe_queue[1].duration_ms, 9);
+  cl_assert_equal_i(s_vibe_queue[1].strength, -100);
+  cl_assert_equal_i(s_vibe_queue[2].duration_ms, 100);
+  cl_assert_equal_i(s_vibe_queue[2].strength, 0);
+  cl_assert_equal_i(s_vibe_queue[3].duration_ms, 15);
+  cl_assert_equal_i(s_vibe_queue[3].strength, 25);
+  cl_assert_equal_i(s_vibe_queue[4].duration_ms, 9);
+  cl_assert_equal_i(s_vibe_queue[4].strength, -100);
+  cl_assert_equal_i(s_vibe_queue[5].duration_ms, 100);
+  cl_assert_equal_i(s_vibe_queue[5].strength, 0);
+  cl_assert_equal_i(s_vibe_queue[6].duration_ms, 15);
+  cl_assert_equal_i(s_vibe_queue[6].strength, 50);
+  cl_assert_equal_i(s_vibe_queue[7].duration_ms, 9);
+  cl_assert_equal_i(s_vibe_queue[7].strength, -100);
+}
+
+void test_vibe_score__triple_pulse_extra_strength(void) {
+  uint8_t buffer[] = {
+      'V', 'I', 'B', 'E', // FourCC
+      1, 0, // version
+      0, 0, 0, 0, // reserved bytes
+      24, 0, // attr_list_size
+      2, // GenericAttributeList.num_attributes
+      VibeAttributeId_Notes,
+      12, 0, // GenericAttribute.length
+      15, 0, // VibeNote.vibe_duration_ms
+      9, // VibeNote.brake_duration_ms
+      100, // VibeNote.strength
+      15, 0, // VibeNote.vibe_duration_ms
+      9, // VibeNote.brake_duration_ms
+      50, // VibeNote.strength
+      100, 0, // VibeNote.vibe_duration_ms
+      0, // VibeNote.brake_duration_ms
+      0, // VibeNote.strength
+      VibeAttributeId_Pattern,
+      5, 0, // GenericAttribute.length
+      0, // 100
+      2, // 0
+      1, // 50
+      2, // 0
+      0  // 100
+  };
+  s_resource_buffer = buffer;
+  s_resource_buffer_size = sizeof(buffer);
+  VibeScore *score = vibe_score_create_with_resource_system(0, 0);
+  cl_assert(score);
+  vibe_score_do_vibe_with_strength(score, 150);
+  vibe_score_destroy(score);
+
+  cl_assert_equal_i(s_vibe_queue_index, 8);
+  cl_assert_equal_i(s_vibe_queue[0].duration_ms, 15);
+  cl_assert_equal_i(s_vibe_queue[0].strength, 100);
+  cl_assert_equal_i(s_vibe_queue[1].duration_ms, 9);
+  cl_assert_equal_i(s_vibe_queue[1].strength, -100);
+  cl_assert_equal_i(s_vibe_queue[2].duration_ms, 100);
+  cl_assert_equal_i(s_vibe_queue[2].strength, 0);
+  cl_assert_equal_i(s_vibe_queue[3].duration_ms, 15);
+  cl_assert_equal_i(s_vibe_queue[3].strength, 75);
+  cl_assert_equal_i(s_vibe_queue[4].duration_ms, 9);
+  cl_assert_equal_i(s_vibe_queue[4].strength, -100);
+  cl_assert_equal_i(s_vibe_queue[5].duration_ms, 100);
+  cl_assert_equal_i(s_vibe_queue[5].strength, 0);
+  cl_assert_equal_i(s_vibe_queue[6].duration_ms, 15);
+  cl_assert_equal_i(s_vibe_queue[6].strength, 100);
+  cl_assert_equal_i(s_vibe_queue[7].duration_ms, 9);
+  cl_assert_equal_i(s_vibe_queue[7].strength, -100);
+}

@@ -53,7 +53,15 @@ unsigned int vibe_score_get_repeat_delay_ms(VibeScore *score);
 
 // Queues the vibe pattern specified by the score and starts the vibe motor
 // If there the system is already playing a vibe, this will do nothing
+//
+// Runs vibe_score_do_vibe_with_strength with the identity note modifier (100% of note's strength)
 void vibe_score_do_vibe(VibeScore *score);
+
+// Queues the vibe pattern specified by the score and starts the vibe motor
+// If there the system is already playing a vibe, this will do nothing
+//
+// Each note within score will have the strength scaled by the supplied integer percentage (0-255%)
+void vibe_score_do_vibe_with_strength(VibeScore *score, uint8_t strength_percentage);
 
 // Frees a vibe created with vibe_score_create_with_resource
 void vibe_score_destroy(VibeScore *score);
