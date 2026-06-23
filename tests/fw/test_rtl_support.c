@@ -120,3 +120,34 @@ void test_rtl_support__separator_needs_two_digits(void) {
   cl_assert_equal_i(cps[1], '/');
   cl_assert_equal_i(cps[2], 0x0627);  // Alef
 }
+
+// rtl_segment_content_end: byte offset of the trailing-space boundary.
+static size_t prv_content_len(const char *str) {
+  utf8_t *start = (utf8_t *)str;
+  utf8_t *end = start + strlen(str);
+  return (size_t)(rtl_segment_content_end(start, end) - start);
+}
+
+void test_rtl_support__content_end_no_trailing_space(void) {
+  cl_assert_equal_i(prv_content_len("abc"), 3);
+}
+
+void test_rtl_support__content_end_single_trailing_space(void) {
+  cl_assert_equal_i(prv_content_len("abc "), 3);
+}
+
+// Trailing spaces peel; interior spaces stay with content.
+void test_rtl_support__content_end_interior_vs_trailing(void) {
+  cl_assert_equal_i(prv_content_len("ab cd   "), 5);  // boundary after 'd'
+}
+
+// All-space run has no content -> boundary is the start (segment kept whole).
+void test_rtl_support__content_end_all_spaces(void) {
+  cl_assert_equal_i(prv_content_len("   "), 0);
+  cl_assert_equal_i(prv_content_len(""), 0);
+}
+
+// Boundary lands on a codepoint start, not mid-sequence. "بر " = Beh Reh SP.
+void test_rtl_support__content_end_multibyte(void) {
+  cl_assert_equal_i(prv_content_len("\xD8\xA8\xD8\xB1 "), 4);  // two 2-byte cps, then space
+}

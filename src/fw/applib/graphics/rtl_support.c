@@ -77,6 +77,23 @@ static bool prv_codepoint_is_numeric_separator(Codepoint cp) {
   return cp == ':' || cp == '/' || cp == '.' || cp == ',';
 }
 
+utf8_t *rtl_segment_content_end(utf8_t *start, utf8_t *end) {
+  utf8_t *content_end = start;
+  utf8_t *scan = start;
+  while (scan < end) {
+    utf8_t *scan_next = NULL;
+    Codepoint scan_cp = utf8_peek_codepoint(scan, &scan_next);
+    if (scan_cp == 0 || scan_next == NULL) {
+      return end;
+    }
+    if (scan_cp != SPACE_CODEPOINT) {
+      content_end = scan_next;
+    }
+    scan = scan_next;
+  }
+  return content_end;
+}
+
 size_t utf8_reverse_for_rtl(const utf8_t *src, size_t src_len,
                             utf8_t *dest, size_t dest_size) {
   if (src == NULL || dest == NULL || src_len == 0 || dest_size == 0) {
