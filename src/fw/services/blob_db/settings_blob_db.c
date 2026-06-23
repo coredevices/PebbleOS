@@ -70,6 +70,10 @@ static const char *s_syncable_settings[] = {
 #endif
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
   "lightColor",
+  "lightColorDayNightEnabled",
+  "lightColorNight",
+  "lightColorSunriseMinute",
+  "lightColorSunsetMinute",
 #endif
 
   // Language preferences

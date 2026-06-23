@@ -3,12 +3,10 @@
 
 #include "pbl/services/light.h"
 
+#include "applib/event_service_client.h"
 #include "board/board.h"
 #include "drivers/ambient_light.h"
 #include "drivers/backlight.h"
-#ifdef CONFIG_BACKLIGHT_HAS_COLOR
-#include "drivers/backlight.h"
-#endif
 #include "drivers/rtc.h"
 #include "kernel/events.h"
 #include "kernel/low_power.h"
@@ -19,12 +17,15 @@
 #include "system/logging.h"
 #include "os/mutex.h"
 #include "system/passert.h"
+#include "util/time/time.h"
 
 #include "FreeRTOS.h"
 #include "semphr.h"
 #include "task.h"
 
 #include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
 PBL_LOG_MODULE_DEFINE(service_light, CONFIG_SERVICE_LIGHT_LOG_LEVEL);
 
@@ -89,9 +90,13 @@ static bool s_app_rgb_override_valid;
 
 //! Count of active modal preempts (notifications, etc.) that temporarily
 //! mask any app RGB override. The app's override stays stored; only while
-//! this refcount is non-zero is the LED driven to the default color.
+//! this refcount is non-zero is the LED driven to the scheduled system color.
 //! When the refcount returns to zero, the override (if any) is re-applied.
 static uint8_t s_color_preempt_refcount;
+
+static TimerID s_color_schedule_timer_id;
+static EventServiceInfo s_color_pref_event_info;
+static EventServiceInfo s_color_time_event_info;
 #endif
 
 //! For temporary disabling backlight (ie: low power mode)
@@ -121,6 +126,11 @@ static RtcTicks s_als_cached_ticks;  // 0 = invalid
 #define ALS_CACHE_TTL_TICKS (RTC_TICKS_HZ)  // 1 second
 
 static void prv_change_state(BacklightState new_state);
+
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+static void prv_schedule_next_day_night_change_locked(void);
+static void prv_day_night_timer_callback(void *data);
+#endif
 
 static uint32_t prv_get_als_level(void) {
   RtcTicks now = rtc_get_ticks();
@@ -192,14 +202,147 @@ static void prv_update_intensity_analytics(uint8_t new_intensity_pct) {
 }
 
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
-//! LED color to drive when no app has set an override. Backed by the
-//! user's stored backlight-color preference, defaulting to BACKLIGHT_COLOR_WARM_WHITE.
+static bool prv_day_night_schedule_valid(void) {
+  const uint16_t sunrise = backlight_get_sunrise_minute();
+  const uint16_t sunset = backlight_get_sunset_minute();
+
+  return backlight_day_night_color_is_enabled() &&
+         sunrise < MINUTES_PER_DAY &&
+         sunset < MINUTES_PER_DAY &&
+         sunrise != sunset;
+}
+
+static bool prv_is_daytime(time_t now) {
+  if (!prv_day_night_schedule_valid()) {
+    return true;
+  }
+
+  struct tm local;
+  localtime_r(&now, &local);
+
+  const uint16_t minute = local.tm_hour * MINUTES_PER_HOUR + local.tm_min;
+  const uint16_t sunrise = backlight_get_sunrise_minute();
+  const uint16_t sunset = backlight_get_sunset_minute();
+
+  if (sunrise < sunset) {
+    return minute >= sunrise && minute < sunset;
+  }
+
+  return minute >= sunrise || minute < sunset;
+}
+
+//! LED color to drive when no app has set an override. Backed by the user's
+//! stored backlight-color preferences.
+static uint32_t prv_get_system_backlight_color(void) {
+  if (!prv_day_night_schedule_valid()) {
+    return backlight_get_default_color();
+  }
+
+  return prv_is_daytime(rtc_get_time()) ? backlight_get_default_color()
+                                        : backlight_get_night_color();
+}
+
 static void prv_apply_rgb_color(void) {
   const bool preempted = (s_color_preempt_refcount > 0);
   const uint32_t color = (preempted || !s_app_rgb_override_valid)
-                             ? backlight_get_default_color()
+                             ? prv_get_system_backlight_color()
                              : s_app_rgb_override;
   backlight_set_color(color);
+}
+
+static uint32_t prv_seconds_until_boundary(uint32_t now_s, uint32_t boundary_s) {
+  return (boundary_s > now_s) ? (boundary_s - now_s)
+                              : (SECONDS_PER_DAY - now_s + boundary_s);
+}
+
+static uint32_t prv_seconds_until_next_day_night_boundary(time_t now) {
+  struct tm local;
+  localtime_r(&now, &local);
+
+  const uint32_t now_s = local.tm_hour * SECONDS_PER_HOUR +
+                         local.tm_min * SECONDS_PER_MINUTE +
+                         local.tm_sec;
+  const uint32_t sunrise_s = backlight_get_sunrise_minute() * SECONDS_PER_MINUTE;
+  const uint32_t sunset_s = backlight_get_sunset_minute() * SECONDS_PER_MINUTE;
+
+  const uint32_t delay_sunrise_s = prv_seconds_until_boundary(now_s, sunrise_s);
+  const uint32_t delay_sunset_s = prv_seconds_until_boundary(now_s, sunset_s);
+  const uint32_t delay_s = MIN(delay_sunrise_s, delay_sunset_s);
+  return delay_s == 0 ? 1 : delay_s;
+}
+
+static void prv_schedule_next_day_night_change_locked(void) {
+  if (s_color_schedule_timer_id == TIMER_INVALID_ID) {
+    return;
+  }
+
+  new_timer_stop(s_color_schedule_timer_id);
+
+  if (!prv_day_night_schedule_valid()) {
+    return;
+  }
+
+  const uint32_t delay_ms =
+      prv_seconds_until_next_day_night_boundary(rtc_get_time()) * MS_PER_SECOND;
+  new_timer_start(s_color_schedule_timer_id, delay_ms, prv_day_night_timer_callback, NULL, 0);
+}
+
+static void prv_day_night_timer_callback(void *data) {
+  (void)data;
+
+  mutex_lock(s_mutex);
+
+  if (s_light_state != LIGHT_STATE_OFF) {
+    prv_apply_rgb_color();
+  }
+
+  prv_schedule_next_day_night_change_locked();
+
+  mutex_unlock(s_mutex);
+}
+
+static bool prv_is_day_night_color_pref(const char *key) {
+  return strcmp(key, "lightColor") == 0 ||
+         strcmp(key, "lightColorDayNightEnabled") == 0 ||
+         strcmp(key, "lightColorNight") == 0 ||
+         strcmp(key, "lightColorSunriseMinute") == 0 ||
+         strcmp(key, "lightColorSunsetMinute") == 0;
+}
+
+static void prv_handle_day_night_color_schedule_changed(void) {
+  mutex_lock(s_mutex);
+
+  if (s_light_state != LIGHT_STATE_OFF) {
+    prv_apply_rgb_color();
+  }
+
+  prv_schedule_next_day_night_change_locked();
+
+  mutex_unlock(s_mutex);
+}
+
+static void prv_day_night_pref_change_handler(PebbleEvent *event, void *context) {
+  (void)context;
+
+  const char *key = event->pref_change.key;
+  if (key && prv_is_day_night_color_pref(key)) {
+    prv_handle_day_night_color_schedule_changed();
+  }
+}
+
+static void prv_day_night_time_change_handler(PebbleEvent *event, void *context) {
+  (void)event;
+  (void)context;
+
+  prv_handle_day_night_color_schedule_changed();
+}
+
+void light_handle_backlight_color_prefs_loaded(void) {
+  if (!s_mutex) {
+    return;
+  }
+
+  prv_handle_day_night_color_schedule_changed();
 }
 #endif
 
@@ -318,10 +461,18 @@ static bool prv_light_allowed(void) {
 void light_init(void) {
   s_light_state = LIGHT_STATE_OFF;
   s_current_brightness = 0;
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+  s_color_schedule_timer_id = new_timer_create();
+#endif
   s_timer_id = new_timer_create();
   s_num_buttons_down = 0;
   s_user_controlled_state = false;
   s_touch_holding = false;
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+  s_app_rgb_override = 0;
+  s_app_rgb_override_valid = false;
+  s_color_preempt_refcount = 0;
+#endif
   s_fade_start_intensity = 0;
   s_fade_step_size = 0;
   s_mutex = mutex_create();
@@ -334,6 +485,24 @@ void light_init(void) {
 
   s_als_cached_level = 0;
   s_als_cached_ticks = 0;
+
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+  s_color_pref_event_info = (EventServiceInfo) {
+    .type = PEBBLE_PREF_CHANGE_EVENT,
+    .handler = prv_day_night_pref_change_handler,
+  };
+  event_service_client_subscribe(&s_color_pref_event_info);
+
+  s_color_time_event_info = (EventServiceInfo) {
+    .type = PEBBLE_SET_TIME_EVENT,
+    .handler = prv_day_night_time_change_handler,
+  };
+  event_service_client_subscribe(&s_color_time_event_info);
+
+  mutex_lock(s_mutex);
+  prv_schedule_next_day_night_change_locked();
+  mutex_unlock(s_mutex);
+#endif
 }
 
 void light_button_pressed(void) {
