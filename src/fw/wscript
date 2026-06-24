@@ -255,11 +255,22 @@ def _link_firmware(bld, sources):
             'bt_driver',
             'comm',
             'console',
+            'debug',
             'drivers',
+            'flash_region',
             'freertos',
             'fw_services',
             'gcc',
+            'kernel',
             'mfg',
+            'popups',
+            'process_management',
+            'process_state',
+            'resource',
+            'shell',
+            'syscall',
+            'system',
+            'util',
             'proto_schemas',
             'libbtutil',
             'libos',
@@ -322,28 +333,8 @@ def _link_firmware(bld, sources):
 
 
 def _build_recovery(bld):
-    source_dirs = ['process_management',
-                   'process_state/**',
-                   'debug',
-                   'flash_region',
-                   'graphics',
-                   'kernel/**',
-                   'resource',
-                   'syscall',
-                   'system',
-                   'shell',
-                   'shell/prf/**',
-                   'util/**']
-
-    excludes = ['process_management/app_custom_icon.c',
-                'process_management/app_menu_data_source.c',
-                'resource/resource_storage_file.c']
-
-    sources = sum([bld.path.ant_glob('%s/*.c' % d, excl=excludes) for d in source_dirs], [])
-    sources.extend(bld.path.ant_glob('*.c'))
+    sources = bld.path.ant_glob('*.c')
     sources.extend(bld.path.ant_glob('*.[sS]'))
-
-    sources.append(bld.path.make_node('popups/bluetooth_pairing_ui.c'))
 
     sources.append(bld.path.get_bld().make_node('builtin_resources.auto.c'))
 
@@ -360,32 +351,14 @@ def _build_normal(bld):
 
     bld.DYNAMIC_RESOURCES.append(tzdata_bin)
 
-    source_dirs = ['process_management',
-                   'process_state/**',
-                   'debug',
-                   'flash_region',
-                   'graphics',
-                   'kernel/**',
-                   'launcher/**',
-                   'popups/**',
-                   'resource',
-                   'syscall',
-                   'system',
-                   'shell',
-                   'shell/sdk/**' if bld.env.CONFIG_SHELL_SDK else 'shell/normal/**',
-                   'util/**']
-
-    excludes = []
-
-    if not bld.env.CONFIG_HRM:
-        excludes.append('popups/ble_hrm/**')
-
-    sources = sum([bld.path.ant_glob('%s/*.c' % d, excl=excludes) for d in source_dirs], [])
-    sources.extend(bld.path.ant_glob('*.c'))
+    sources = bld.path.ant_glob('*.c')
     sources.extend(bld.path.ant_glob('*.[sS]'))
 
+    # Collect translatable strings from the firmware-core sources. apps,
+    # services and applib have their own .pot targets (merged below).
     gettexts = []
-    gettexts.extend(sources)
+    gettexts.extend(bld.path.ant_glob('**/*.c',
+                                      excl=['apps/**', 'services/**', 'applib/**']))
     gettexts.extend(bld.path.ant_glob('**/*.h'))
     gettexts.extend(bld.path.ant_glob('**/*.def'))
 
@@ -452,6 +425,16 @@ def build(bld):
     bld.recurse('mfg')
     bld.recurse('comm')
     bld.recurse('console')
+    bld.recurse('debug')
+    bld.recurse('flash_region')
+    bld.recurse('kernel')
+    bld.recurse('popups')
+    bld.recurse('process_management')
+    bld.recurse('process_state')
+    bld.recurse('resource')
+    bld.recurse('syscall')
+    bld.recurse('system')
+    bld.recurse('util')
     bld.recurse('apps/core')
 
     if bld.env.VARIANT == 'prf':
