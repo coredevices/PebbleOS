@@ -596,10 +596,36 @@ static const GlyphData *prv_get_glyph_in_font(FontCache *font_cache, Codepoint c
   return prv_get_glyph_metadata_from_spi(codepoint, font_cache, font_res, need_bitmap);
 }
 
+// Leaf glyph lookup against an explicit sub-font resource, bypassing the base/extension routing.
+// Used for the base<->extension sibling fallback.
+static const GlyphData *prv_get_glyph_in_font_res(FontCache *font_cache, Codepoint codepoint,
+                                                  const FontResource *font_res, bool need_bitmap) {
+  prv_check_font_cache(font_cache, font_res);
+  return prv_get_glyph_metadata_from_spi(codepoint, font_cache, font_res, need_bitmap);
+}
+
+//! The other of base/extension, used as fallback when the routed font lacks
+//! the glyph. NULL when no extension is loaded or when the routed font is not
+//! part of this FontInfo (e.g. the emoji font).
+static const FontResource *prv_alt_font_res(const FontResource *font_res,
+                                            const FontInfo *font_info) {
+  if (!font_info->extended) {
+    return NULL;
+  }
+  if (font_res == &font_info->base) {
+    return &font_info->extension;
+  }
+  if (font_res == &font_info->extension) {
+    return &font_info->base;
+  }
+  return NULL;
+}
+
 // When source_out is non-NULL it receives the FontResource that actually
-// supplied the returned glyph -- the primary sub-font, the system fallback, or
-// the wildcard's sub-font -- which is not always the one nominally mapped from
-// the requested codepoint. Baseline alignment needs the real source.
+// supplied the returned glyph -- the primary sub-font, the base<->extension
+// sibling, the system fallback, or the wildcard's sub-font -- which is not
+// always the one nominally mapped from the requested codepoint. Baseline
+// alignment needs the real source.
 static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint,
                                       FontInfo *font_info, bool need_bitmap,
                                       const FontResource **source_out) {
@@ -607,16 +633,34 @@ static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint
     sys_font_reload_font(font_info);
   }
 
-  // (a) Requested codepoint in the primary font.
-  const GlyphData *data = prv_get_glyph_in_font(font_cache, codepoint, font_info, need_bitmap);
+  // (a) Requested codepoint in the routed (base/extension) sub-font.
+  const FontResource *primary_res = prv_font_res_for_codepoint(codepoint, font_info);
+  const GlyphData *data = prv_get_glyph_in_font_res(font_cache, codepoint, primary_res, need_bitmap);
   if (data) {
     if (source_out) {
-      *source_out = prv_font_res_for_codepoint(codepoint, font_info);
+      *source_out = primary_res;
     }
     return data;
   }
 
-  // (b) Missing from the primary font: retry the SAME codepoint once against the system fallback
+  // (a2) Missing from the routed sub-font: try the sibling sub-font (base<->extension) of the same
+  //      FontInfo before going wider. prv_font_res_for_codepoint routes each codepoint to exactly
+  //      one of base/extension, but a glyph can live in the other one: Latin-classified codepoints
+  //      supplied by a language pack (e.g. Vietnamese ơ/ư at U+01A1/U+01B0), or base-only glyphs
+  //      like ﬁ/π that get routed to the extension once a pack is installed. The sibling is part of
+  //      this FontInfo, so source_out keeps baseline alignment correct.
+  const FontResource *alt_res = prv_alt_font_res(primary_res, font_info);
+  if (alt_res != NULL) {
+    data = prv_get_glyph_in_font_res(font_cache, codepoint, alt_res, need_bitmap);
+    if (data) {
+      if (source_out) {
+        *source_out = alt_res;
+      }
+      return data;
+    }
+  }
+
+  // (b) Missing from this FontInfo: retry the SAME codepoint once against the system fallback
   //     font, which carries a wider character set. The fallback is a process-global, not per-font
   //     state, so it lives here in the renderer rather than on FontInfo (whose layout is frozen
   //     applib ABI). It is fetched via the syscall directly (the NULL key is the fallback font),
