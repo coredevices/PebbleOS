@@ -439,16 +439,7 @@ def _build_normal(bld):
         source_dirs.append('apps/system/timeline')
         source_dirs.append('apps/system/launcher/default/**')
     else:
-        source_dirs.extend(('apps/%s/**' % d for d in ('system', 'watch')))
-        if bld.env.CONFIG_PLATFORM_GABBRO:
-            excludes.append('apps/watch/tictoc/default')
-            excludes.append('apps/watch/tictoc/bw')
-        elif bld.env.CONFIG_SCREEN_COLOR_DEPTH_BITS == 1:
-            excludes.append('apps/watch/tictoc/default')
-            excludes.append('apps/watch/tictoc/round')
-        else:
-            excludes.append('apps/watch/tictoc/bw')
-            excludes.append('apps/watch/tictoc/round')
+        source_dirs.append('apps/system/**')
 
     if not bld.env.CONFIG_HRM:
         excludes.append('popups/ble_hrm/**')

@@ -3,4 +3,8 @@
 
 bld.recurse('demo')
 
+# The watch faces are only part of the normal (non-SDK) shell.
+if bld.env.NORMAL_SHELL != 'sdk':
+    bld.recurse('watch')
+
 # vim:filetype=python
