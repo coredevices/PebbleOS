@@ -202,7 +202,7 @@ def configure(conf):
 
     # Strip CONFIG_* DEFINES mirrored from the configure-time board: each test
     # selects its own simulated platform (asterix / obelix / gabbro) and injects
-    # the matching BOARD_FAMILY/PLATFORM/SCREEN_COLOR_DEPTH_BITS itself, so the
+    # the matching BOARD/PLATFORM/SCREEN_COLOR_DEPTH_BITS itself, so the
     # configure board's symbols would just collide with the per-test ones.
     conf.env.DEFINES = [d for d in conf.env.DEFINES
                         if not d.split('=', 1)[0].startswith('CONFIG_')]

@@ -39,7 +39,7 @@ if bld.env.VARIANT == 'prf':
                  'ui/day_picker.c',
                  'voice/*']
 
-if not bld.env.CONFIG_BOARD_FAMILY_GETAFIX and not bld.env.CONFIG_BOARD_QEMU_GABBRO:
+if not bld.env.CONFIG_BOARD_GETAFIX and not bld.env.CONFIG_BOARD_QEMU_GABBRO:
     excludes.append('ui/window_stack_animation_round*')
 
 if not bld.env.CONFIG_MIC:

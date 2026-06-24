@@ -1,4 +1,4 @@
-if bld.env.CONFIG_BOARD_FAMILY_ASTERIX:
+if bld.env.CONFIG_BOARD_ASTERIX:
     bld.objects(
         name='board',
         source=[
@@ -10,7 +10,7 @@ if bld.env.CONFIG_BOARD_FAMILY_ASTERIX:
             'drivers',
         ],
     )
-elif bld.env.CONFIG_BOARD_FAMILY_OBELIX:
+elif bld.env.CONFIG_BOARD_OBELIX:
     bld.objects(
         name='board',
         source=[
@@ -22,7 +22,7 @@ elif bld.env.CONFIG_BOARD_FAMILY_OBELIX:
             'drivers',
         ],
     )
-elif bld.env.CONFIG_BOARD_FAMILY_GETAFIX:
+elif bld.env.CONFIG_BOARD_GETAFIX:
     bld.objects(
         name='board',
         source=[

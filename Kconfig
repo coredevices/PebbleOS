@@ -82,21 +82,6 @@ osource "boards/$(BOARD)/Kconfig.$(BOARD_REVISION)"
 rsource "boards/$(BOARD)/Kconfig.defconfig"
 osource "boards/$(BOARD)/Kconfig.defconfig.$(BOARD_REVISION)"
 
-config BOARD_FAMILY_ASTERIX
-    bool
-    help
-      Hidden symbol selected by boards in the Asterix family.
-
-config BOARD_FAMILY_OBELIX
-    bool
-    help
-      Hidden symbol selected by boards in the Obelix family.
-
-config BOARD_FAMILY_GETAFIX
-    bool
-    help
-      Hidden symbol selected by boards in the Getafix family.
-
 config BOARD_FAMILY_NAME
     string
     help

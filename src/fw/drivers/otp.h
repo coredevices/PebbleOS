@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#if defined(CONFIG_BOARD_FAMILY_ASTERIX) || defined(CONFIG_BOARD_FAMILY_OBELIX) || defined(CONFIG_BOARD_FAMILY_GETAFIX) || defined(CONFIG_BOARD_QEMU_EMERY) || defined(CONFIG_BOARD_QEMU_FLINT) || defined(CONFIG_BOARD_QEMU_GABBRO)
+#if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX) || defined(CONFIG_BOARD_QEMU_EMERY) || defined(CONFIG_BOARD_QEMU_FLINT) || defined(CONFIG_BOARD_QEMU_GABBRO)
 enum {
   OTP_HWVER = 0,
   OTP_SERIAL = 1,

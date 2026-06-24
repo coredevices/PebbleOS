@@ -48,11 +48,11 @@ PBL_LOG_MODULE_DECLARE(service_battery, CONFIG_SERVICE_BATTERY_LOG_LEVEL);
 #define BATTERY_MIN_VALID_VOLTAGE_MV 3300
 
 static const struct battery_model prv_battery_model = {
-#ifdef CONFIG_BOARD_FAMILY_ASTERIX
+#ifdef CONFIG_BOARD_ASTERIX
 #include "battery_asterix.inc"
-#elif defined(CONFIG_BOARD_FAMILY_OBELIX)
+#elif defined(CONFIG_BOARD_OBELIX)
 #include "battery_obelix.inc"
-#elif defined(CONFIG_BOARD_FAMILY_GETAFIX)
+#elif defined(CONFIG_BOARD_GETAFIX)
 #include "battery_getafix.inc"
 #else
 #error "Battery model not defined for this platform"

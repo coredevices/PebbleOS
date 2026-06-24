@@ -430,18 +430,18 @@ def add_clar_test(
     if platform in test_sdk_platform:
         platform_defines.append(test_sdk_platform[platform])
 
-    # Map the test platform to its CONFIG_BOARD_FAMILY_*. Tests don't load a
-    # board defconfig, so inject the family symbol the production code expects.
-    # Gabbro tests simulate the round-display Getafix HW family (the gabbro SDK
-    # platform's closest real-board analog), so they get CONFIG_BOARD_FAMILY_GETAFIX
+    # Map the test platform to its CONFIG_BOARD_*. Tests don't load a board
+    # defconfig, so inject the board symbol the production code expects.
+    # Gabbro tests simulate the round-display Getafix board (the gabbro SDK
+    # platform's closest real-board analog), so they get CONFIG_BOARD_GETAFIX
     # alongside CONFIG_PLATFORM_GABBRO above.
-    test_board_family = {
-        "asterix": "CONFIG_BOARD_FAMILY_ASTERIX=1",
-        "obelix": "CONFIG_BOARD_FAMILY_OBELIX=1",
-        "gabbro": "CONFIG_BOARD_FAMILY_GETAFIX=1",
+    test_board = {
+        "asterix": "CONFIG_BOARD_ASTERIX=1",
+        "obelix": "CONFIG_BOARD_OBELIX=1",
+        "gabbro": "CONFIG_BOARD_GETAFIX=1",
     }
-    if platform in test_board_family:
-        platform_defines.append(test_board_family[platform])
+    if platform in test_board:
+        platform_defines.append(test_board[platform])
 
     if sources_ant_glob is not None:
         platform_sources_ant_glob = sources_ant_glob

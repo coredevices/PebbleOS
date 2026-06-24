@@ -23,11 +23,11 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#ifdef CONFIG_BOARD_FAMILY_ASTERIX
+#ifdef CONFIG_BOARD_ASTERIX
 const char *const s_model = "P2D";
-#elif defined(CONFIG_BOARD_FAMILY_OBELIX)
+#elif defined(CONFIG_BOARD_OBELIX)
 const char *const s_model = "PT2";
-#elif defined(CONFIG_BOARD_FAMILY_GETAFIX)
+#elif defined(CONFIG_BOARD_GETAFIX)
 const char *const s_model = "PR2";
 #else
 const char *const s_model = "Unknown";
@@ -40,7 +40,7 @@ typedef struct {
 } ColorTable;
 
 const ColorTable s_color_table[] = {
-#ifdef CONFIG_BOARD_FAMILY_ASTERIX
+#ifdef CONFIG_BOARD_ASTERIX
   {
     .color = WATCH_INFO_COLOR_COREDEVICES_P2D_BLACK,
     .name = "BLACK",
@@ -51,7 +51,7 @@ const ColorTable s_color_table[] = {
     .name = "WHITE",
     .short_name = "WH",
   }
-#elif defined(CONFIG_BOARD_FAMILY_OBELIX)
+#elif defined(CONFIG_BOARD_OBELIX)
   {
     .color = WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_GREY,
     .name = "BLACK/GREY",
@@ -72,7 +72,7 @@ const ColorTable s_color_table[] = {
     .name = "SILVER/GREY",
     .short_name = "SG",
   },
-#elif defined(CONFIG_BOARD_FAMILY_GETAFIX)
+#elif defined(CONFIG_BOARD_GETAFIX)
   {
     .color = WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK_20,
     .name = "BLACK-20MM",
