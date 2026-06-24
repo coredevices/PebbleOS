@@ -323,9 +323,6 @@ def _link_firmware(bld, sources):
 
 def _get_comm_sources(bld, is_recovery):
     excl = []
-    if bld.env.CONFIG_QEMU:
-        excl.append('comm/internals/profiles/ispp.c')
-
     if is_recovery:
         excl.append('comm/ble/kernel_le_client/ancs/*.c')
         excl.append('comm/ble/kernel_le_client/ams/*.c')
