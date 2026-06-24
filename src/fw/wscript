@@ -206,7 +206,6 @@ def _generate_memory_layout(bld):
     ram_end = sum(total_ram)  # The end of RAM is the start address plus the size.
     all_app_ram_sizes = [app_ram_size_2x, app_ram_size_3x, app_ram_size_4x]
     app_ram_size = max(sum(x) for x in all_app_ram_sizes)
-    system_app_segment_size = max(x.app_segment for x in all_app_ram_sizes)
     app_runtime_size = max(x.runtime_reserved for x in all_app_ram_sizes)
     if app_ram_size <= 0 or app_runtime_size <= 0:
         bld.fatal("App RAM is too small!")
@@ -236,14 +235,6 @@ def _generate_memory_layout(bld):
         FW_FLASH_LENGTH=fw_flash_length,
         FLASH_SIZE=flash_size,
         BOOTLOADER_SYMBOLS=bootloader_symbol_definitions)
-
-    bld(features='subst',
-        source=bld.path.find_node('process_management/sdk_memory_limits.template.h'),
-        target=bld.path.get_bld().make_node('process_management/sdk_memory_limits.auto.h'),
-        APP_RAM_2X_SIZE=str(app_ram_size_2x.app_segment),
-        APP_RAM_3X_SIZE=str(app_ram_size_3x.app_segment),
-        APP_RAM_4X_SIZE=str(app_ram_size_4x.app_segment),
-        APP_RAM_SYSTEM_SIZE=str(system_app_segment_size))
 
     return ldscript_result
 

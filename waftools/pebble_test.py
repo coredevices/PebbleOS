@@ -399,6 +399,15 @@ def add_clar_test(
         'PLATFORM_NAME="%s"' % platform,
     ] + ["CONFIG_SCREEN_COLOR_DEPTH_BITS=%d" % bitdepth]
 
+    # app_manager.c sizes app segments from CONFIG_APP_RAM_*_SEGMENT_SIZE.
+    # Tests don't load a board defconfig, so inject fixed sizes (the values
+    # the old sdk_memory_limits.auto.h test override used).
+    platform_defines += [
+        "CONFIG_APP_RAM_2X_SEGMENT_SIZE=23900",
+        "CONFIG_APP_RAM_3X_SEGMENT_SIZE=65536",
+        "CONFIG_APP_RAM_4X_SEGMENT_SIZE=65536",
+    ]
+
     # flash_region.h selects a per-chip header from CONFIG_FLASH_*. Tests
     # don't load a board defconfig, so inject the right one based on which
     # flash chip the simulated platform expects.
