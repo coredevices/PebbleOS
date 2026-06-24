@@ -27,6 +27,7 @@ elif bld.env.CONFIG_BOARD_GETAFIX:
         name='board',
         source=[
             'boards/board_getafix.c',
+            'displays/display_getafix.c',
         ],
         use=[
             'fw_includes',
@@ -63,6 +64,8 @@ elif bld.env.CONFIG_BOARD_QEMU_GABBRO:
         name='board',
         source=[
             'boards/board_qemu_gabbro.c',
+            # qemu_gabbro needs the getafix round display row info data
+            'displays/display_getafix.c',
         ],
         use=[
             'fw_includes',

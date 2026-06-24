@@ -235,13 +235,6 @@ def _generate_memory_layout(bld):
 
 
 def _link_firmware(bld, sources):
-    if bld.env.CONFIG_QEMU:
-        if bld.env.CONFIG_BOARD_QEMU_GABBRO:
-            # qemu_gabbro needs the getafix round display row info data
-            sources += ['board/displays/display_getafix.c']
-    elif bld.env.CONFIG_BOARD_GETAFIX:
-        sources += ['board/displays/display_getafix.c']
-
     fw_linkflags = ['-Wl,--cref',
                     '-Wl,-Map=tintin_fw.map',
                     '-Wl,--gc-sections',
