@@ -154,8 +154,6 @@ def configure(conf):
     conf.env.SUPPORTED_RUNNERS = board.runners
     conf.env.RUNNER = board.runners[0] if board.runners else None
 
-    conf.env.FLASH_ITCM = False
-
     # Set platform used for building the SDK
     if conf.env.CONFIG_PLATFORM_EMERY:
         conf.env.PLATFORM_NAME = 'emery'
