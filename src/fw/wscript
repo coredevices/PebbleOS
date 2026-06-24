@@ -80,8 +80,6 @@ def configure(conf):
     define = 'MAX_FONT_GLYPH_SIZE={}'.format(platform['MAX_FONT_GLYPH_SIZE'])
     conf.env.append_value('DEFINES', [define])
 
-    conf.env.NORMAL_SHELL = 'sdk' if conf.env.CONFIG_SHELL_SDK else 'normal'
-
     conf.env.PRF_AS_FIRMWARE = conf.options.prf_as_firmware
     if conf.options.prf_as_firmware:
         conf.env.append_value('DEFINES', 'RECOVERY_FW_AS_FW')
@@ -428,13 +426,13 @@ def _build_normal(bld):
                    'syscall',
                    'system',
                    'shell',
-                   'shell/%s/**' % bld.env.NORMAL_SHELL,
+                   'shell/sdk/**' if bld.env.CONFIG_SHELL_SDK else 'shell/normal/**',
                    'util/**']
 
     excludes = []
 
     source_dirs.append('apps/core/**')
-    if bld.env.NORMAL_SHELL == 'sdk':
+    if bld.env.CONFIG_SHELL_SDK:
         source_dirs.append('apps/sdk/**')
         source_dirs.append('apps/system/timeline')
         source_dirs.append('apps/system/launcher/default/**')
@@ -449,7 +447,7 @@ def _build_normal(bld):
     sources.extend(bld.path.ant_glob('*.c'))
     sources.extend(bld.path.ant_glob('*.[sS]'))
 
-    if bld.env.NORMAL_SHELL == 'sdk':
+    if bld.env.CONFIG_SHELL_SDK:
         sources.append('apps/system/app_fetch_ui.c')
         sources.append('apps/system/watchfaces.c')
 

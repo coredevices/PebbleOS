@@ -167,8 +167,10 @@ def generate_apps_table(task):
 
 if bld.env.VARIANT == 'prf':
     shell_name = 'prf'
+elif bld.env.CONFIG_SHELL_SDK:
+    shell_name = 'sdk'
 else:
-    shell_name = bld.env.NORMAL_SHELL
+    shell_name = 'normal'
 
 in_node = bld.path.find_node('%s/system_app_registry_list.json' % shell_name)
 
