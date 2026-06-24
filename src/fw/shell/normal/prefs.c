@@ -1935,6 +1935,7 @@ void pbl_analytics_external_collect_settings(void) {
   PBL_ANALYTICS_SET_UNSIGNED(settings_motion_sensitivity, shell_prefs_get_motion_sensitivity());
   PBL_ANALYTICS_SET_UNSIGNED(settings_backlight_intensity_pct, backlight_get_intensity());
   PBL_ANALYTICS_SET_UNSIGNED(settings_backlight_timeout_s, backlight_get_timeout_ms() / 1000);
+  PBL_ANALYTICS_SET_UNSIGNED(settings_touch_enabled, touch_is_globally_enabled());
 }
 
 bool shell_prefs_get_music_show_volume_controls(void) {
