@@ -408,18 +408,6 @@ def _build_recovery(bld):
     _link_firmware(bld, sources)
 
 
-def _get_launcher_globs_to_exclude(bld):
-    system_launchers_root_path = 'apps/system/launcher/'
-    legacy_launcher_glob = system_launchers_root_path + 'legacy/**'
-    default_launcher_glob = system_launchers_root_path + 'default/**'
-    launcher_globs_to_exclude = [legacy_launcher_glob, default_launcher_glob]
-
-    launcher_glob_to_use = default_launcher_glob
-
-    launcher_globs_to_exclude.remove(launcher_glob_to_use)
-    return launcher_globs_to_exclude
-
-
 def _build_normal(bld):
     # Generate timezone data
     olson_txt = bld.srcnode.make_node('resources/normal/base/tzdata/timezones_olson.txt')
@@ -464,8 +452,6 @@ def _build_normal(bld):
         else:
             excludes.append('apps/watch/tictoc/bw')
             excludes.append('apps/watch/tictoc/round')
-
-    excludes.extend(_get_launcher_globs_to_exclude(bld))
 
     if not bld.env.CONFIG_HRM:
         excludes.append('popups/ble_hrm/**')
