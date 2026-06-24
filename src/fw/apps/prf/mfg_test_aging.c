@@ -53,11 +53,6 @@
 // Adjust here if the target ever changes.
 #define DISCHARGE_TARGET_PERCENT 65
 
-// Pre-discharge phase parameters — if the battery arrives too full, drain it
-// to a known starting level before the charge+cycle phase.
-#define PRE_DISCHARGE_THRESHOLD_PERCENT 85
-#define PRE_DISCHARGE_TARGET_PERCENT 70
-
 #ifdef CONFIG_SPEAKER
 static const int16_t sine_wave_4k[] = {
   0, 32767, 0, -32768, 0, 32767, 0, -32768,
@@ -66,9 +61,7 @@ static const int16_t sine_wave_4k[] = {
 #endif
 
 typedef enum {
-  AgingStateInit = 0,
-  AgingStatePreDischarge,
-  AgingStateWaitPlug,
+  AgingStateWaitPlug = 0,
   AgingStateChargingAndCycling,
   AgingStateWaitUnplug,
   AgingStateIdle,
@@ -368,82 +361,6 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
   AppData *data = app_state_get_user_data();
 
   switch (data->state) {
-    case AgingStateInit: {
-      // Decide on the first tick whether the battery needs to be drained to a
-      // known level before charging. Reading the battery here keeps all the
-      // battery accesses in the tick handler.
-      BatteryChargeState cs = battery_get_charge_state();
-      if (cs.charge_percent > PRE_DISCHARGE_THRESHOLD_PERCENT) {
-        data->state = AgingStatePreDischarge;
-        data->phase_elapsed_sec = 0;
-#ifdef CONFIG_BACKLIGHT_HAS_COLOR
-        data->saved_backlight_color = backlight_get_color();
-        backlight_set_color(0xFFFFFF);
-#endif
-        light_enable(true);
-        sniprintf(data->status_string, sizeof(data->status_string),
-                  "PRE-DISCHARGE\nStarting...");
-      } else {
-        data->state = AgingStateWaitPlug;
-      }
-      break;
-    }
-
-    case AgingStatePreDischarge: {
-      BatteryConstants bc;
-      battery_get_constants(&bc);
-      BatteryChargeState cs = battery_get_charge_state();
-
-      // The battery can only drain while unplugged: prompt the operator to
-      // unplug instead of spinning here charging the cell. Don't count this
-      // wait against the drain time.
-      if (cs.is_plugged) {
-        light_enable(false);
-#ifdef CONFIG_BACKLIGHT_HAS_COLOR
-        backlight_set_color(data->saved_backlight_color);
-#endif
-        sniprintf(data->status_string, sizeof(data->status_string),
-                  "PRE-DISCHARGE\n\nUnplug watch\nto drain to %d%%",
-                  PRE_DISCHARGE_TARGET_PERCENT);
-        break;
-      }
-
-      data->phase_elapsed_sec++;
-
-      // Resume draining with backlight on (it may have been turned off above
-      // while plugged).
-#ifdef CONFIG_BACKLIGHT_HAS_COLOR
-      backlight_set_color(0xFFFFFF);
-#endif
-      light_enable(true);
-
-      if (cs.charge_percent <= PRE_DISCHARGE_TARGET_PERCENT) {
-        light_enable(false);
-#ifdef CONFIG_BACKLIGHT_HAS_COLOR
-        backlight_set_color(data->saved_backlight_color);
-#endif
-        data->state = AgingStateWaitPlug;
-        data->phase_elapsed_sec = 0;
-        break;
-      }
-
-      char time_str[16];
-      prv_format_time(time_str, sizeof(time_str), data->phase_elapsed_sec);
-
-      int8_t temp_c = (int8_t)(bc.t_mc / 1000);
-      uint8_t temp_c_frac = ((bc.t_mc > 0 ? bc.t_mc : -bc.t_mc) % 1000) / 10;
-
-      sniprintf(data->status_string, sizeof(data->status_string),
-                "PRE-DISCHARGE\nTime: %s\n\n"
-                "%" PRId32 "mV %" PRIu8 "%%\n"
-                "%" PRId8 ".%02" PRIu8 "C\n\n"
-                "Target: %d%%",
-                time_str, bc.v_mv, cs.charge_percent,
-                temp_c, temp_c_frac,
-                PRE_DISCHARGE_TARGET_PERCENT);
-      break;
-    }
-
     case AgingStateWaitPlug: {
       BatteryChargeState cs = battery_get_charge_state();
       if (cs.is_plugged) {
@@ -668,7 +585,7 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
 static void prv_back_click_handler(ClickRecognizerRef recognizer, void *context) {
   AppData *data = app_state_get_user_data();
 
-  if (data->state == AgingStateDischarging || data->state == AgingStatePreDischarge) {
+  if (data->state == AgingStateDischarging) {
     light_enable(false);
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
     backlight_set_color(data->saved_backlight_color);
@@ -694,7 +611,7 @@ static void prv_config_provider(void *context) {
 static void prv_handle_init(void) {
   AppData *data = app_malloc_check(sizeof(AppData));
   *data = (AppData){
-    .state = AgingStateInit,
+    .state = AgingStateWaitPlug,
 #ifdef CONFIG_SPEAKER
     .audio_playing = false,
 #endif
