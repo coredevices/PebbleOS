@@ -82,14 +82,6 @@ osource "boards/$(BOARD)/Kconfig.$(BOARD_REVISION)"
 rsource "boards/$(BOARD)/Kconfig.defconfig"
 osource "boards/$(BOARD)/Kconfig.defconfig.$(BOARD_REVISION)"
 
-config BOARD_FAMILY_NAME
-    string
-    help
-      Lowercase token identifying the board family (or the single
-      board, for QEMU boards). Used for resource path lookups
-      and string outputs. Set per board in
-      boards/<board>/Kconfig.defconfig.
-
 config QEMU_MACHINE
     string
     depends on QEMU
