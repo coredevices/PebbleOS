@@ -341,11 +341,6 @@ def _get_mfg_paths(bld):
     else:
         bld.fatal('No MFG configuration for board %s' % bld.env.BOARD)
 
-def _get_dbg_paths(bld):
-    """Return a list of directories we want to build to support debug logging on a platform"""
-
-    return ('debug/default',)
-
 def _get_comm_sources(bld, is_recovery):
     excl = []
     if bld.env.CONFIG_QEMU:
@@ -381,7 +376,6 @@ def _build_recovery(bld):
                    'util/**']
 
     source_dirs.extend(_get_mfg_paths(bld))
-    source_dirs.extend(_get_dbg_paths(bld))
 
     excludes = ['process_management/app_custom_icon.c',
                 'process_management/app_menu_data_source.c',
@@ -498,7 +492,6 @@ def _build_normal(bld):
             excludes.append('apps/watch/tictoc/round')
 
     source_dirs.extend(_get_mfg_paths(bld))
-    source_dirs.extend(_get_dbg_paths(bld))
 
     excludes.extend(_get_launcher_globs_to_exclude(bld))
 
