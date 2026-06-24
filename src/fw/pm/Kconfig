@@ -1,0 +1,37 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig PM
+    bool "Power Management Subsystem"
+    default y
+    help
+      Enable power management subsystem. This provides Zephyr-style power
+      management features including device power management, suspend/resume,
+      and shutdown notifications.
+
+if PM
+
+config PM_DEBUG
+    bool "PM Debug Logging"
+    default n
+    help
+      Enable debug logging for power management subsystem.
+
+config PM_NOTIFIER
+    bool "PM Notifier"
+    default y
+    help
+      Enable the PM notifier subsystem which allows modules to register
+      callbacks for power management events (suspend, resume, shutdown).
+
+config PM_SHUTDOWN
+    bool "PM Shutdown Integration"
+    default y
+    help
+      Enable integration with the shutdown subsystem.
+
+module = PM
+module-str = pm
+source "src/fw/Kconfig.template.log_level"
+
+endif # PM
