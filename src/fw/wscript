@@ -322,7 +322,6 @@ def _link_firmware(bld, sources):
 
 def _build_recovery(bld):
     source_dirs = ['apps/core/**',
-                   'apps/prf/**',
                    'process_management',
                    'process_state/**',
                    'console',
@@ -340,39 +339,6 @@ def _build_recovery(bld):
     excludes = ['process_management/app_custom_icon.c',
                 'process_management/app_menu_data_source.c',
                 'resource/resource_storage_file.c']
-
-    if not bld.env.CONFIG_BOARD_ASTERIX:
-        excludes.extend([
-            'apps/prf/mfg_speaker_asterix.c',
-            'apps/prf/mfg_mic_asterix.c',
-        ])
-    
-    if not bld.env.CONFIG_BOARD_OBELIX:
-        excludes.extend([
-            'apps/prf/mfg_speaker_obelix.c',
-            'apps/prf/mfg_mic_obelix.c',
-        ])
-
-    if not bld.env.CONFIG_BOARD_OBELIX or not bld.env.CONFIG_MFG:
-        excludes.extend([
-            'apps/prf/mfg_hrm_ctr_leakage_obelix.c',
-        ])
-
-    if not bld.env.CONFIG_BOARD_GETAFIX:
-        excludes.extend([
-            'apps/prf/mfg_mic_getafix.c',
-        ])
-
-    # Exclude magnetometer test for platforms without magnetometer
-    if not bld.env.CONFIG_MAG:
-        excludes.extend([
-            'apps/prf/mfg_mag.c',
-        ])
-
-    if not bld.env.CONFIG_TOUCH:
-        excludes.extend([
-            'apps/prf/mfg_touch.c',
-        ])
 
     sources = sum([bld.path.ant_glob('%s/*.c' % d, excl=excludes) for d in source_dirs], [])
     sources.extend(bld.path.ant_glob('*.c'))
@@ -512,6 +478,7 @@ def build(bld):
     bld.recurse('comm')
 
     if bld.env.VARIANT == 'prf':
+        bld.recurse('apps/prf')
         _build_recovery(bld)
     else:
         bld.recurse('apps')
