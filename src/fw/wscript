@@ -291,46 +291,40 @@ def _link_firmware(bld, sources):
         ldscripts.append(bld.srcnode.find_node(
             'third_party/memfault/port/memfault_compact_log.ld'))
 
-    if bld.env.NO_LINK:
-        # Only build the object files
-        bld.objects(source=sources,
-                    use=uses,
-                    includes='fonts')
+    # Build and link the firmware ELF
+    elf_node = bld.path.get_bld().make_node('tintin_fw.elf')
+    x = bld.program(source=sources,
+                use=uses,
+                link_group=True,
+                lib=['gcc'],
+                target=elf_node,
+                includes='fonts',
+                ldscript=ldscripts,
+                linkflags=fw_linkflags)
+
+    x.env.append_value('LINKFLAGS', fw_linkflags)
+
+    if bld.env.CONFIG_PBLBOOT:
+        nohdr_hex_node = elf_node.change_ext('.nohdr.hex')
+        bld(rule=waftools.objcopy.objcopy_hex, source=elf_node, target=nohdr_hex_node)
+        hex_node = elf_node.change_ext('.hex')
+        bld(rule=waftools.pblboot.insert_header_hex, source=nohdr_hex_node, target=hex_node)
+        nohdr_bin_node = elf_node.change_ext('.nohdr.bin')
+        bld(rule=waftools.objcopy.objcopy_bin, source=elf_node, target=nohdr_bin_node)
+        bin_node = elf_node.change_ext('.bin')
+        bld(rule=waftools.pblboot.insert_header_bin, source=nohdr_bin_node, target=bin_node)
     else:
-        # ..and actually build and link the firmware ELF
-        elf_node = bld.path.get_bld().make_node('tintin_fw.elf')
-        x = bld.program(source=sources,
-                    use=uses,
-                    link_group=True,
-                    lib=['gcc'],
-                    target=elf_node,
-                    includes='fonts',
-                    ldscript=ldscripts,
-                    linkflags=fw_linkflags)
+        hex_node = elf_node.change_ext('.hex')
+        bld(rule=waftools.objcopy.objcopy_hex, source=elf_node, target=hex_node)
+        bin_node = elf_node.change_ext('.bin')
+        bld(rule=waftools.objcopy.objcopy_bin, source=elf_node, target=bin_node)
 
-        x.env.append_value('LINKFLAGS', fw_linkflags)
-
-        if bld.env.CONFIG_PBLBOOT:
-            nohdr_hex_node = elf_node.change_ext('.nohdr.hex')
-            bld(rule=waftools.objcopy.objcopy_hex, source=elf_node, target=nohdr_hex_node)
-            hex_node = elf_node.change_ext('.hex')
-            bld(rule=waftools.pblboot.insert_header_hex, source=nohdr_hex_node, target=hex_node)
-            nohdr_bin_node = elf_node.change_ext('.nohdr.bin')
-            bld(rule=waftools.objcopy.objcopy_bin, source=elf_node, target=nohdr_bin_node)
-            bin_node = elf_node.change_ext('.bin')
-            bld(rule=waftools.pblboot.insert_header_bin, source=nohdr_bin_node, target=bin_node)
-        else:
-            hex_node = elf_node.change_ext('.hex')
-            bld(rule=waftools.objcopy.objcopy_hex, source=elf_node, target=hex_node)
-            bin_node = elf_node.change_ext('.bin')
-            bld(rule=waftools.objcopy.objcopy_bin, source=elf_node, target=bin_node)
-
-        # Create the log_strings .elf and check the format specifier rules
-        if bld.env.CONFIG_LOG_HASHED:
-            fw_loghash_node = bld.path.get_bld().make_node('tintin_fw_loghash_dict.json')
-            bld(rule=waftools.generate_log_strings_json.wafrule,
-                source=elf_node, target=fw_loghash_node)
-            bld.LOGHASH_DICTS.append(fw_loghash_node)
+    # Create the log_strings .elf and check the format specifier rules
+    if bld.env.CONFIG_LOG_HASHED:
+        fw_loghash_node = bld.path.get_bld().make_node('tintin_fw_loghash_dict.json')
+        bld(rule=waftools.generate_log_strings_json.wafrule,
+            source=elf_node, target=fw_loghash_node)
+        bld.LOGHASH_DICTS.append(fw_loghash_node)
 
 
 def _get_mfg_paths(bld):
