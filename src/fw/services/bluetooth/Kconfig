@@ -23,6 +23,20 @@ config BLE_GATT_SUBSCRIPTION_DEPTH
       Per-client GATT subscription buffer depth, in max-size notifications.
       Deeper absorbs notification bursts (fewer drops) at the cost of RAM.
 
+config BT_ANCS_CLIENT
+    bool "ANCS (Apple Notification Center Service) client"
+    default y if !RECOVERY_FW
+    help
+      Build the ANCS GATT client (iOS notifications). Off in the recovery
+      firmware, which has no notification UI.
+
+config BT_AMS_CLIENT
+    bool "AMS (Apple Media Service) client"
+    default y if !RECOVERY_FW
+    help
+      Build the AMS GATT client (iOS music control). Off in the recovery
+      firmware, which has no music UI.
+
 if SERVICE_BLUETOOTH
 
 module = SERVICE_BLUETOOTH
