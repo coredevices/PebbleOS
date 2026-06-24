@@ -159,8 +159,6 @@ def _generate_memory_layout(bld):
     fw_flash_length = '%(fw_max_size)d - %(firmware_offset)d' % locals()
     fw_flash_origin = '0x%(flash_origin)08x + %(offset_size)d + %(firmware_offset)d' % locals()
 
-    bootloader_symbol_definitions = ""
-
     # Determine ram layout
 
     # Each tuple defines the amount of RAM we give to apps (stack + text + data
@@ -233,8 +231,7 @@ def _generate_memory_layout(bld):
         FLASH_ORIGIN="0x{:x}".format(flash_origin),
         FW_FLASH_ORIGIN=fw_flash_origin,
         FW_FLASH_LENGTH=fw_flash_length,
-        FLASH_SIZE=flash_size,
-        BOOTLOADER_SYMBOLS=bootloader_symbol_definitions)
+        FLASH_SIZE=flash_size)
 
     return ldscript_result
 
