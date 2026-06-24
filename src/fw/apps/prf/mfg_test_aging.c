@@ -39,9 +39,8 @@
 
 // Charge + cycling phase parameters
 #define CHARGE_AND_CYCLE_DURATION_SEC (4 * 3600)  // 4 hours total
-#define CHARGE_TIMEOUT_SEC (90 * 60)              // Charge must reach target within 90min
-#define CHARGE_TARGET_PERCENT 100
-#define CHARGE_HOLD_MIN_PERCENT 99                // Tolerance for ADC noise after 100% reached
+#define CHARGE_TIMEOUT_SEC (90 * 60)              // PMIC must report charge complete within 90min
+#define CHARGE_COMPLETE_MIN_PERCENT 99            // Min SoC to accept a PMIC charge-complete
 #define TEMP_MIN_MC 15000                         // 15.0C
 #define TEMP_MAX_MC 35000                         // 35.0C
 
@@ -106,7 +105,7 @@ typedef struct {
   uint32_t phase_elapsed_sec;
   uint32_t cycle_count;
 
-  // Set once battery first reaches CHARGE_TARGET_PERCENT during charge+cycle phase
+  // Set once the PMIC reports charge complete during the charge+cycle phase
   bool charge_complete;
 
   // Battery state at start of idle phase, used for the 6% drop check
@@ -366,12 +365,9 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
       if (cs.is_plugged) {
         data->state = AgingStateChargingAndCycling;
         data->phase_elapsed_sec = 0;
-        data->charge_complete = (cs.charge_percent >= CHARGE_TARGET_PERCENT);
-        if (data->charge_complete) {
-          // Battery was already full at plug-in: stop active charging now
-          // so the cell isn't held at 100% by continuous BMS top-off.
-          battery_set_charge_enable(false);
-        }
+        // Completion is derived from the PMIC charge state inside the
+        // charge+cycle phase, not pre-decided from the SoC at plug-in.
+        data->charge_complete = false;
         data->component = ComponentAccel;
         data->component_elapsed_sec = 0;
         data->cycle_count = 1;
@@ -403,22 +399,25 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
         break;
       }
 
-      // Charge progress / completion tracking
+      // Charge completion tracking. We're guaranteed plugged here (an unplug
+      // fails above). Treat the battery as full once the PMIC stops charging
+      // on its own at a near-full SoC. "Plugged but not charging" below the
+      // threshold is a transient (just-plugged / between cycles), so we keep
+      // waiting and may restart. A charger/cell fault never reaches this and
+      // trips the timeout instead.
       if (!data->charge_complete) {
-        if (cs.charge_percent >= CHARGE_TARGET_PERCENT) {
+        if (!cs.is_charging && cs.charge_percent >= CHARGE_COMPLETE_MIN_PERCENT) {
           data->charge_complete = true;
-          // Stop active charging now that we're full. The system keeps
-          // running off USB power, so the battery just holds at 100%
-          // for the rest of the cycling phase instead of being held
-          // there by continuous top-off, which is gentler on the cell.
+          // Now that the PMIC reports full, stop active charging so the cell
+          // isn't held near 100% by continuous top-off for the rest of the
+          // cycling phase, which is gentler on the cell. The battery may sag a
+          // little under cycling load with charging off; that's expected, and
+          // charge retention is validated separately by the idle phase.
           battery_set_charge_enable(false);
         } else if (data->phase_elapsed_sec >= CHARGE_TIMEOUT_SEC) {
           prv_enter_fail(data, "Charge timeout\n(90min)");
           break;
         }
-      } else if (cs.charge_percent < CHARGE_HOLD_MIN_PERCENT) {
-        prv_enter_fail(data, "Battery dropped\nafter charge");
-        break;
       }
 
       // Phase done?
