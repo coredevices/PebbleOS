@@ -254,6 +254,7 @@ def _link_firmware(bld, sources):
             'board',
             'bt_driver',
             'comm',
+            'console',
             'drivers',
             'freertos',
             'fw_services',
@@ -324,7 +325,6 @@ def _build_recovery(bld):
     source_dirs = ['apps/core/**',
                    'process_management',
                    'process_state/**',
-                   'console',
                    'debug',
                    'flash_region',
                    'graphics',
@@ -348,13 +348,6 @@ def _build_recovery(bld):
 
     sources.append(bld.path.get_bld().make_node('builtin_resources.auto.c'))
 
-
-
-
-    if not bld.env.CONFIG_PROMPT:
-        sources = [ x for x in sources if not x.abspath().endswith('console/prompt.c') ]
-        sources = [ x for x in sources if not x.abspath().endswith('console/prompt_commands.c') ]
-
     _link_firmware(bld, sources)
 
 
@@ -370,7 +363,6 @@ def _build_normal(bld):
 
     source_dirs = ['process_management',
                    'process_state/**',
-                   'console',
                    'debug',
                    'flash_region',
                    'graphics',
@@ -420,10 +412,6 @@ def _build_normal(bld):
     sources.append(bld.path.get_bld().make_node('resource/pfs_resource_table.auto.c'))
     sources.append(bld.path.get_bld().make_node('resource/timeline_resource_table.auto.c'))
     sources.append(bld.path.get_bld().make_node('builtin_resources.auto.c'))
-
-    if not bld.env.CONFIG_PROMPT:
-        sources = [ x for x in sources if not x.abspath().endswith('console/prompt.c') ]
-        sources = [ x for x in sources if not x.abspath().endswith('console/prompt_commands.c') ]
 
     _link_firmware(bld, sources)
 
@@ -476,6 +464,7 @@ def build(bld):
     bld.recurse('soc')
     bld.recurse('mfg')
     bld.recurse('comm')
+    bld.recurse('console')
 
     if bld.env.VARIANT == 'prf':
         bld.recurse('apps/prf')
