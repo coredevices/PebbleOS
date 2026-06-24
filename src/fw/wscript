@@ -322,8 +322,7 @@ def _link_firmware(bld, sources):
 
 
 def _build_recovery(bld):
-    source_dirs = ['apps/core/**',
-                   'process_management',
+    source_dirs = ['process_management',
                    'process_state/**',
                    'debug',
                    'flash_region',
@@ -378,24 +377,12 @@ def _build_normal(bld):
 
     excludes = []
 
-    source_dirs.append('apps/core/**')
-    if bld.env.CONFIG_SHELL_SDK:
-        source_dirs.append('apps/sdk/**')
-        source_dirs.append('apps/system/timeline')
-        source_dirs.append('apps/system/launcher/default/**')
-    else:
-        source_dirs.append('apps/system/**')
-
     if not bld.env.CONFIG_HRM:
         excludes.append('popups/ble_hrm/**')
 
     sources = sum([bld.path.ant_glob('%s/*.c' % d, excl=excludes) for d in source_dirs], [])
     sources.extend(bld.path.ant_glob('*.c'))
     sources.extend(bld.path.ant_glob('*.[sS]'))
-
-    if bld.env.CONFIG_SHELL_SDK:
-        sources.append('apps/system/app_fetch_ui.c')
-        sources.append('apps/system/watchfaces.c')
 
     gettexts = []
     gettexts.extend(sources)
@@ -404,7 +391,7 @@ def _build_normal(bld):
 
     bld.gettext(source=gettexts, target='fw.pot')
     bld.msgcat(
-            source='fw.pot services/services.pot applib/applib.pot',
+            source='fw.pot services/services.pot applib/applib.pot apps/apps.pot',
             target='tintin.pot')
 
 
@@ -465,6 +452,7 @@ def build(bld):
     bld.recurse('mfg')
     bld.recurse('comm')
     bld.recurse('console')
+    bld.recurse('apps/core')
 
     if bld.env.VARIANT == 'prf':
         bld.recurse('apps/prf')
