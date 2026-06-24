@@ -20,7 +20,7 @@
 #include "system/logging.h"
 #include "util/time/time.h"
 
-#define CHARGE_TARGET_PERCENT 100
+#define CHARGE_TARGET_PERCENT 99
 #define DRAIN_TARGET_PERCENT 70
 
 typedef enum {
@@ -79,7 +79,15 @@ static void prv_render(AppData *data) {
       if (!charge_state.is_plugged) {
         sniprintf(data->details_string, sizeof(data->details_string),
                   "Plug charger\n%" PRIu8 "%%", charge_state.charge_percent);
-      } else if (charge_state.charge_percent < CHARGE_TARGET_PERCENT) {
+      } else if (charge_state.is_charging ||
+                 charge_state.charge_percent < CHARGE_TARGET_PERCENT) {
+        // Keep waiting while plugged until the PMIC reports charge complete
+        // (plugged, no longer charging) AND we've reached a near-full SoC.
+        // "Plugged but not charging" can be a transient state right after
+        // plug-in or between charge cycles, so we don't treat a partial charge
+        // as complete; we just keep waiting. A genuine charging fault stays
+        // stuck here (never advancing) rather than starting the test from a
+        // partial charge.
         sniprintf(data->details_string, sizeof(data->details_string),
                   "Charging\n%" PRIu8 "%%", charge_state.charge_percent);
       } else {
