@@ -266,6 +266,7 @@ def _link_firmware(bld, sources):
             'freertos',
             'fw_services',
             'gcc',
+            'mfg',
             'proto_schemas',
             'libbtutil',
             'libos',
@@ -327,20 +328,6 @@ def _link_firmware(bld, sources):
         bld.LOGHASH_DICTS.append(fw_loghash_node)
 
 
-def _get_mfg_paths(bld):
-    """Return a list of directories we want to build to support manufacturing on a platform"""
-
-    if bld.env.CONFIG_QEMU:
-        return ('mfg/qemu',)
-    elif bld.env.CONFIG_BOARD_ASTERIX:
-        return ('mfg/asterix',)
-    elif bld.env.CONFIG_BOARD_OBELIX:
-        return ('mfg/obelix',)
-    elif bld.env.CONFIG_BOARD_GETAFIX:
-        return ('mfg/getafix',)
-    else:
-        bld.fatal('No MFG configuration for board %s' % bld.env.BOARD)
-
 def _get_comm_sources(bld, is_recovery):
     excl = []
     if bld.env.CONFIG_QEMU:
@@ -365,17 +352,12 @@ def _build_recovery(bld):
                    'flash_region',
                    'graphics',
                    'kernel/**',
-                   'mfg',
-                   'mfg/mfg_apps',
-                   'mfg/mfg_mode',
                    'resource',
                    'syscall',
                    'system',
                    'shell',
                    'shell/prf/**',
                    'util/**']
-
-    source_dirs.extend(_get_mfg_paths(bld))
 
     excludes = ['process_management/app_custom_icon.c',
                 'process_management/app_menu_data_source.c',
@@ -463,7 +445,6 @@ def _build_normal(bld):
                    'graphics',
                    'kernel/**',
                    'launcher/**',
-                   'mfg',
                    'popups/**',
                    'resource',
                    'syscall',
@@ -490,8 +471,6 @@ def _build_normal(bld):
         else:
             excludes.append('apps/watch/tictoc/bw')
             excludes.append('apps/watch/tictoc/round')
-
-    source_dirs.extend(_get_mfg_paths(bld))
 
     excludes.extend(_get_launcher_globs_to_exclude(bld))
 
@@ -576,6 +555,7 @@ def build(bld):
     bld.recurse('services')
     bld.recurse('applib')
     bld.recurse('soc')
+    bld.recurse('mfg')
 
     if bld.env.VARIANT == 'prf':
         _build_recovery(bld)
