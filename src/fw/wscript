@@ -253,6 +253,7 @@ def _link_firmware(bld, sources):
     uses = ['applib',
             'board',
             'bt_driver',
+            'comm',
             'drivers',
             'freertos',
             'fw_services',
@@ -319,16 +320,6 @@ def _link_firmware(bld, sources):
         bld.LOGHASH_DICTS.append(fw_loghash_node)
 
 
-def _get_comm_sources(bld):
-    excl = []
-    if not bld.env.CONFIG_BT_ANCS_CLIENT:
-        excl.append('comm/ble/kernel_le_client/ancs/*.c')
-    if not bld.env.CONFIG_BT_AMS_CLIENT:
-        excl.append('comm/ble/kernel_le_client/ams/*.c')
-
-    return bld.path.ant_glob('comm/**/*.c', excl=excl)
-
-
 def _build_recovery(bld):
     source_dirs = ['apps/core/**',
                    'apps/prf/**',
@@ -384,7 +375,6 @@ def _build_recovery(bld):
         ])
 
     sources = sum([bld.path.ant_glob('%s/*.c' % d, excl=excludes) for d in source_dirs], [])
-    sources.extend(_get_comm_sources(bld))
     sources.extend(bld.path.ant_glob('*.c'))
     sources.extend(bld.path.ant_glob('*.[sS]'))
 
@@ -442,7 +432,6 @@ def _build_normal(bld):
         excludes.append('popups/ble_hrm/**')
 
     sources = sum([bld.path.ant_glob('%s/*.c' % d, excl=excludes) for d in source_dirs], [])
-    sources.extend(_get_comm_sources(bld))
     sources.extend(bld.path.ant_glob('*.c'))
     sources.extend(bld.path.ant_glob('*.[sS]'))
 
@@ -520,6 +509,7 @@ def build(bld):
     bld.recurse('applib')
     bld.recurse('soc')
     bld.recurse('mfg')
+    bld.recurse('comm')
 
     if bld.env.VARIANT == 'prf':
         _build_recovery(bld)
