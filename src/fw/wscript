@@ -165,56 +165,37 @@ def _generate_memory_layout(bld):
 
     # Each tuple defines the amount of RAM we give to apps (stack + text + data
     # + bss + heap) and the amount of RAM reserved for the application runtime
-    # (AppState) for each SDK platform, respectively.
+    # (AppState) for each app execution environment, respectively. The values
+    # come from the CONFIG_APP_RAM_*X_* symbols, which are set per SDK platform
+    # in the top-level Kconfig.
     AppRamSize = collections.namedtuple('AppRamSize',
                                         'app_segment runtime_reserved')
-    # emery and gabbro use a 4 KiB app stack (see APP_STACK_NORMAL_SIZE); their
-    # app_segment is sized 2 KiB larger to compensate. All other platforms keep
-    # the 2 KiB stack and the historical segment sizes.
-    APP_RAM_SIZES = {
-        'aplite': AppRamSize(25952, 6820),
-        'basalt': AppRamSize(66 * 1024, 30 * 1024),
-        'chalk': AppRamSize(66 * 1024, 30 * 1024),
-        # FIXME: The runtime_reserved size could be reduced for diorite
-        'diorite': AppRamSize(66 * 1024, 30 * 1024),
-        'emery': AppRamSize(132 * 1024, 62 * 1024),
-        'flint': AppRamSize(66 * 1024, 30 * 1024),
-        'gabbro': AppRamSize(132 * 1024, 94 * 1024),
-    }
-    APP_UNSUPPORTED = AppRamSize(0, 0)
+    app_ram_size_2x = AppRamSize(bld.env.CONFIG_APP_RAM_2X_SEGMENT_SIZE,
+                                 bld.env.CONFIG_APP_RAM_2X_RUNTIME_SIZE)
+    app_ram_size_3x = AppRamSize(bld.env.CONFIG_APP_RAM_3X_SEGMENT_SIZE,
+                                 bld.env.CONFIG_APP_RAM_3X_RUNTIME_SIZE)
+    app_ram_size_4x = AppRamSize(bld.env.CONFIG_APP_RAM_4X_SEGMENT_SIZE,
+                                 bld.env.CONFIG_APP_RAM_4X_RUNTIME_SIZE)
 
     # The process loader enforces eight-byte alignment on all segments, so
     # configuring a segment with a size that is not a multiple of eight will
     # result in segments being smaller than expected. The runtime_reserved
     # size is not checked as its value isn't currently used anywhere.
-    for platform, sizes in APP_RAM_SIZES.items():
+    for name, sizes in (('2x', app_ram_size_2x), ('3x', app_ram_size_3x),
+                        ('4x', app_ram_size_4x)):
         if sizes.app_segment % 8 != 0:
-            bld.fatal("The app_segment size for APP_RAM_SIZES[%r] is not a "
-                      "multiple of eight bytes. You're gonna have a bad "
-                      "time." % platform)
+            bld.fatal("The app_segment size for the %s app environment is not "
+                      "a multiple of eight bytes. You're gonna have a bad "
+                      "time." % name)
 
-    # In the FW, the app execution environment is based on the major FW version with which the SDK
-    # is associated. Each model supports a different set of SDK platforms, and determines the SDK
-    # platform of an app using these major FW version associations (and also by considering the
-    # hardware capabilities watch model itself - i.e. chalk vs basalt). We want to define
-    # APP_RAM_*X_SIZE macros for each app execution environment supported by the model so we
-    # don't need to hard-code these in the FW itself.
+    # Determine the board's total RAM layout.
     if bld.env.CONFIG_PLATFORM_EMERY:
-        app_ram_size_2x = APP_RAM_SIZES['aplite']
-        app_ram_size_3x = APP_RAM_SIZES['basalt']
-        app_ram_size_4x = APP_RAM_SIZES['emery']
         # We have 512K of SRAM, last 1K reserved for LCPU IPC
         total_ram = (0x20000000, (512 - 1) * 1024)
     elif bld.env.CONFIG_PLATFORM_FLINT:
-        app_ram_size_2x = APP_RAM_SIZES['aplite']
-        app_ram_size_3x = APP_RAM_SIZES['aplite']
-        app_ram_size_4x = APP_RAM_SIZES['flint']
         retained_size = 256
         total_ram = (0x20000000 + retained_size, 256 * 1024 - retained_size)
     elif bld.env.CONFIG_PLATFORM_GABBRO:
-        app_ram_size_2x = APP_UNSUPPORTED
-        app_ram_size_3x = APP_RAM_SIZES['chalk']
-        app_ram_size_4x = APP_RAM_SIZES['gabbro']
         # We have 512K of SRAM, last 1K reserved for LCPU IPC
         total_ram = (0x20000000, (512 - 1) * 1024)
     else:
