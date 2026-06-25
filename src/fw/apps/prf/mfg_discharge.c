@@ -61,9 +61,11 @@ static void prv_handle_battery_state(BatteryChargeState charge) {
 }
 
 static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
-  AppData *data = app_state_get_user_data();
-  data->elapsed_seconds += SECONDS_PER_MINUTE;
-  prv_render(data);
+  if ((units_changed & MINUTE_UNIT) != 0) {
+    AppData *data = app_state_get_user_data();
+    data->elapsed_seconds += SECONDS_PER_MINUTE;
+    prv_render(data);
+  }
 }
 
 static void prv_render(AppData *data) {
