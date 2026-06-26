@@ -28,7 +28,29 @@ static MfgData prv_fetch_struct(void) {
   // Fallback data if not available
   if (result.data_version != CURRENT_DATA_VERSION) {
       result.data_version = CURRENT_DATA_VERSION;
+#if defined(CONFIG_QEMU_WATCH_COLOR_PR2_BLACK_20)
+      result.color = WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK_20;
+#elif defined(CONFIG_QEMU_WATCH_COLOR_PR2_SILVER_14)
+      result.color = WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_14;
+#elif defined(CONFIG_QEMU_WATCH_COLOR_PR2_SILVER_20)
+      result.color = WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_20;
+#elif defined(CONFIG_QEMU_WATCH_COLOR_PR2_GOLD_14)
+      result.color = WATCH_INFO_COLOR_COREDEVICES_PR2_GOLD_14;
+#elif defined(CONFIG_QEMU_WATCH_COLOR_PT2_BLACK_GREY)
       result.color = WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_GREY;
+#elif defined(CONFIG_QEMU_WATCH_COLOR_PT2_BLACK_RED)
+      result.color = WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_RED;
+#elif defined(CONFIG_QEMU_WATCH_COLOR_PT2_SILVER_BLUE)
+      result.color = WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_BLUE;
+#elif defined(CONFIG_QEMU_WATCH_COLOR_PT2_SILVER_GREY)
+      result.color = WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_GREY;
+#elif defined(CONFIG_QEMU_WATCH_COLOR_P2D_BLACK)
+      result.color = WATCH_INFO_COLOR_COREDEVICES_P2D_BLACK;
+#elif defined(CONFIG_QEMU_WATCH_COLOR_P2D_WHITE)
+      result.color = WATCH_INFO_COLOR_COREDEVICES_P2D_WHITE;
+#else
+      result.color = WATCH_INFO_COLOR_UNKNOWN;
+#endif
       strncpy(result.model, "qemu", sizeof(result.model));
       result.model[MFG_INFO_MODEL_STRING_LENGTH - 1] = '\0';
       result.vibe_cali = MFG_INFO_VIBE_CALI_INVALID;

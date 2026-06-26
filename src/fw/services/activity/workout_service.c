@@ -16,11 +16,14 @@
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/evented_timer.h"
 #include "pbl/services/regular_timer.h"
+#include "system/logging.h"
 #include "system/passert.h"
 #include "util/time/time.h"
 #include "util/units.h"
 
 #include <os/mutex.h>
+
+PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
 #define WORKOUT_HR_READING_TS_EXPIRE (SECONDS_PER_MINUTE)
 #define WORKOUT_ENDED_HR_SUBSCRIPTION_TS_EXPIRE (10 * SECONDS_PER_MINUTE)

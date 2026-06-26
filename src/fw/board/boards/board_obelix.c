@@ -264,7 +264,6 @@ static I2CBus s_i2c_bus_1 = {
     .hal = &s_i2c_bus_hal_1,
     .state = &s_i2c_bus_state_1,
     .name = "i2c1",
-    .stop_mode_inhibitor = InhibitorI2C1,
 };
 
 I2CBus *const I2C1_BUS = &s_i2c_bus_1;
@@ -337,38 +336,24 @@ static I2CBus s_i2c_bus_2 = {
     .hal = &s_i2c_bus_hal_2,
     .state = &s_i2c_bus_state_2,
     .name = "i2c2",
-    .stop_mode_inhibitor = InhibitorI2C2,
 };
 
 I2CBus *const I2C2_BUS = &s_i2c_bus_2;
 
 IRQ_MAP(I2C2, i2c_irq_handler, I2C2_BUS);
 
-static LIS2DW12State s_lis2dw12_state;
+static LSM6DSOState s_lsm6dso_state;
 
-static const LIS2DW12Config s_lis2dw12_config = {
-    .state = &s_lis2dw12_state,
+static const LSM6DSOConfig s_lsm6dso_config = {
+    .state = &s_lsm6dso_state,
     .i2c = {
         .bus = &s_i2c_bus_2,
-#if defined(CONFIG_BOARD_OBELIX_DVT) || defined(CONFIG_BOARD_OBELIX_BB2)
-        .address = 0x18,
-#else
-        .address = 0x19,
-#endif
+        .address = 0x6a,
     },
     .int1 = {
       .peripheral = hwp_gpio1,
       .gpio_pin = 38,
     },
-#if defined(CONFIG_BOARD_OBELIX_DVT) || defined(CONFIG_BOARD_OBELIX_BB2)
-    .disable_addr_pullup = true,
-#endif
-    .wk_dur_default = 1U,
-    .wk_ths_min = 1U,
-    .wk_ths_max = 40U,
-    .wk_ths_default = 16U,
-    .scale_mg = 4000U,
-    .fifo_threshold = 32U,
 #ifdef CONFIG_IS_BIGBOARD
     .axis_map = {
         [AXIS_X] = 0,
@@ -382,26 +367,30 @@ static const LIS2DW12Config s_lis2dw12_config = {
     },
 #else
     .axis_map = {
-        [AXIS_X] = 1,
-        [AXIS_Y] = 0,
+        [AXIS_X] = 0,
+        [AXIS_Y] = 1,
         [AXIS_Z] = 2,
     },
     .axis_dir = {
         [AXIS_X] = -1,
         [AXIS_Y] = 1,
-        [AXIS_Z] = -1,
+        [AXIS_Z] = 1,
     },
 #endif
 };
 
-const LIS2DW12Config *const LIS2DW12 = &s_lis2dw12_config;
+const LSM6DSOConfig *const LSM6DSO = &s_lsm6dso_config;
 
-static const I2CSlavePort s_i2c_lsm6dso = {
+// Legacy LIS2DW12 (replaced by the LSM6DSO). Kept only to soft-reset the part
+// at boot, since a firmware upgrade may leave it powered on existing devices.
+static const I2CSlavePort s_i2c_lis2dw12 = {
     .bus = &s_i2c_bus_2,
-    .address = 0x6a,
+#if defined(CONFIG_BOARD_OBELIX_DVT) || defined(CONFIG_BOARD_OBELIX_BB2)
+    .address = 0x18,
+#else
+    .address = 0x19,
+#endif
 };
-
-I2CSlavePort *const I2C_LSM6DSO = &s_i2c_lsm6dso;
 
 static const I2CSlavePort s_i2c_mmc5603nj = {
     .bus = &s_i2c_bus_2,
@@ -448,7 +437,6 @@ static I2CBus s_i2c_bus_3 = {
     .hal = &s_i2c_bus_hal_3,
     .state = &s_i2c_bus_state_3,
     .name = "i2c3",
-    .stop_mode_inhibitor = InhibitorI2C3,
 };
 
 I2CBus *const I2C3_BUS = &s_i2c_bus_3;
@@ -515,7 +503,6 @@ static I2CBus s_i2c_bus_4 = {
     .hal = &s_i2c_bus_hal_4,
     .state = &s_i2c_bus_state_4,
     .name = "i2c4",
-    .stop_mode_inhibitor = InhibitorI2C4,
 };
 
 I2CBus *const I2C4_BUS = &s_i2c_bus_4;
@@ -675,6 +662,12 @@ void board_init(void) {
   i2c_init(I2C2_BUS);
   i2c_init(I2C3_BUS);
   i2c_init(I2C4_BUS);
+
+  // Soft-reset the legacy LIS2DW12 in case an upgrade left it powered on. CTRL2
+  // (0x21) SOFT_RESET (bit 6) restores the part to its powered-down defaults.
+  i2c_use((I2CSlavePort *)&s_i2c_lis2dw12);
+  i2c_write_register((I2CSlavePort *)&s_i2c_lis2dw12, 0x21, (1U << 6U));
+  i2c_release((I2CSlavePort *)&s_i2c_lis2dw12);
 
   mic_init(MIC);
   audio_init(AUDIO);

@@ -5,3 +5,11 @@ config SERVICE_WEATHER
     bool "Weather"
     help
       Weather service.
+
+if SERVICE_WEATHER
+
+module = SERVICE_WEATHER
+module-str = Weather
+source "src/fw/Kconfig.template.log_level"
+
+endif

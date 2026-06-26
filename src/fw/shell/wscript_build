@@ -133,7 +133,7 @@ def generate_apps_table(task):
         if "DISABLED" in defines:
             return False
 
-        if (platforms) and (task.generator.bld.env.CONFIG_BOARD_FAMILY_NAME not in platforms):
+        if (platforms) and (task.generator.bld.env.BOARD_NAME not in platforms):
             # If we have a platform list and the current platform isn't listed, return false
             return False
 
@@ -167,8 +167,10 @@ def generate_apps_table(task):
 
 if bld.env.VARIANT == 'prf':
     shell_name = 'prf'
+elif bld.env.CONFIG_SHELL_SDK:
+    shell_name = 'sdk'
 else:
-    shell_name = bld.env.NORMAL_SHELL
+    shell_name = 'normal'
 
 in_node = bld.path.find_node('%s/system_app_registry_list.json' % shell_name)
 
@@ -179,5 +181,11 @@ bld(rule=generate_apps_table,
     source=[in_node],
     target=[registry, app_enum],
     vars=['DEFINES'])
+
+bld.objects(
+    name='shell',
+    source=bld.path.ant_glob('*.c') + bld.path.ant_glob('%s/**/*.c' % shell_name),
+    use=['fw_includes', 'pblibc_includes'],
+)
 
 # vim:filetype=python

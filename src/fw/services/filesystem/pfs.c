@@ -29,6 +29,8 @@
 #include "util/legacy_checksum.h"
 #include "util/math.h"
 
+PBL_LOG_MODULE_DEFINE(service_filesystem, CONFIG_SERVICE_FILESYSTEM_LOG_LEVEL);
+
 static PebbleRecursiveMutex *s_pfs_mutex = NULL;
 
 #define IS_FILE_TYPE(file_type, type)   ((file_type) == (type))
@@ -540,7 +542,7 @@ static void update_last_written_page(void) {
         prv_page_to_flash_offset(pg) + offsetof(PageHeader, last_written));
     if (hdr.last_written == LAST_WRITTEN_TAG) {
       s_last_page_written = pg;
-      PBL_LOG_INFO("Last written page %d", (int)s_last_page_written);
+      PBL_LOG_DBG("Last written page %d", (int)s_last_page_written);
       return;
     }
   }

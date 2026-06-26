@@ -37,6 +37,13 @@
 static FontCache s_font_cache;
 static FontInfo s_font_info;
 
+// The renderer obtains the per-glyph fallback font from fonts_get_fallback_font(), which calls
+// sys_font_get_system_font(NULL). A test installs a fallback by pointing s_test_fallback_font at
+// its own FontInfo (NULL = no fallback, the default). The strong override of the weak syscall stub
+// lives in test_text_resources_font_stub.c so it resolves at link time without colliding with the
+// in-TU stub.
+extern FontInfo *s_test_fallback_font;
+
 #define FONT_COMPRESSION_FIXTURE_PATH "font_compression"
 
 // Helpers
@@ -56,6 +63,7 @@ void test_text_resources__initialize(void) {
 
   memset(&s_font_info, 0, sizeof(s_font_info));
   memset(&s_font_cache, 0, sizeof(s_font_cache));
+  s_test_fallback_font = NULL;
 
   FontCache *font_cache = &s_font_cache;
   memset(font_cache->cache_keys, 0, sizeof(font_cache->cache_keys));
@@ -219,6 +227,52 @@ void test_text_resources__extended_font(void) {
   cl_assert_equal_m(chinese_wildcard_bytes, glyph->data, glyph_size_bytes);
 }
 
+void test_text_resources__baseline_offset(void) {
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_18, RESOURCE_ID_GOTHIC_18_EXTENDED,
+                                     &s_font_info));
+  cl_assert(s_font_info.extended);
+
+  // The offset follows the sub-font that actually supplies the glyph. 'a' is
+  // drawn from the base, 乐 from the extension; each shifts by the FontInfo
+  // height minus its own source sub-font's height.
+  int16_t latin_off = text_resources_get_glyph_baseline_offset(&s_font_cache, &s_font_info, 'a');
+  int16_t cjk_off =
+      text_resources_get_glyph_baseline_offset(&s_font_cache, &s_font_info, 0x4E50 /* 乐 */);
+
+  cl_assert_equal_i(latin_off, s_font_info.max_height - s_font_info.base.md.max_height);
+  cl_assert_equal_i(cjk_off, s_font_info.max_height - s_font_info.extension.md.max_height);
+
+  // 袈 is absent from the extension, so it renders as the wildcard box, which
+  // resolves to the extension sub-font here. The offset must match the sub-font
+  // the glyph actually came from, not be derived blindly from the requested
+  // (CJK) codepoint -- they differ once a glyph falls back to another sub-font.
+  int16_t missing_off =
+      text_resources_get_glyph_baseline_offset(&s_font_cache, &s_font_info, 0x8888 /* 袈 */);
+  cl_assert_equal_i(missing_off, s_font_info.max_height - s_font_info.extension.md.max_height);
+
+  // Offsets are never negative and the tallest sub-font is the unshifted anchor.
+  cl_assert(latin_off >= 0);
+  cl_assert(cjk_off >= 0);
+  cl_assert(latin_off == 0 || cjk_off == 0);
+}
+
+void test_text_resources__baseline_offset_non_extended(void) {
+  // A font with no extension has a single sub-font: nothing to align, so the
+  // offset must always be zero regardless of codepoint. This guards every
+  // non-extended font (system and custom fonts, all languages) from being
+  // vertically shifted.
+  FontInfo font_info;
+  memset(&font_info, 0, sizeof(font_info));
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_18, 0 /* no extension */, &font_info));
+  cl_assert(!font_info.extended);
+
+  cl_assert_equal_i(text_resources_get_glyph_baseline_offset(&s_font_cache, &font_info, 'a'), 0);
+  cl_assert_equal_i(
+      text_resources_get_glyph_baseline_offset(&s_font_cache, &font_info, 0x4E50 /* 乐 */), 0);
+  cl_assert_equal_i(
+      text_resources_get_glyph_baseline_offset(&s_font_cache, &font_info, 0x0644 /* lam */), 0);
+}
+
 void test_text_resources__test_emoji_font(void) {
   const uint8_t phone_bytes[] = {0xfe, 0x81, 0x81, 0x3c, 0x66, 0x42, 0xc3, 0xe7, 0xff, 0x00, 0x00, 0x00};
 
@@ -251,6 +305,131 @@ void DISABLED_test_text_resources__test_emoji_fallback(void) {
   cl_assert_equal_m(phone_bytes, glyph->data, glyph_size_bytes);
 }
 
+
+// Per-glyph fallback chain
+////////////////////////////////////
+
+// Core regression: a codepoint absent from the primary font but present in the configured
+// fallback font now resolves to the real fallback glyph, instead of silently yielding only the
+// primary wildcard box.
+void test_text_resources__per_glyph_fallback(void) {
+  // primary: plain gothic 18, no extension -> lacks CJK 0x4E50
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_18, 0, &s_font_info));
+
+  // Baseline with no fallback: 0x4E50 misses -> gothic wildcard, NOT the CJK glyph.
+  const uint8_t gothic_wildcard[] = {0xff, 0x60, 0x30, 0x18, 0x0c, 0x06, 0x83, 0xc1,
+                                     0x60, 0x30, 0x18, 0x0c, 0xfe, 0x01};
+  const GlyphData *g0 = text_resources_get_glyph(&s_font_cache, 0x4E50, &s_font_info);
+  cl_assert(g0 != NULL);
+  cl_assert_equal_m(gothic_wildcard, g0->data, glyph_get_size_bytes(g0));
+
+  // Install fallback = gothic 18 + extended (which contains 0x4E50) as the system fallback font.
+  static FontInfo s_fallback;
+  memset(&s_fallback, 0, sizeof(s_fallback));
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_18,
+                                     RESOURCE_ID_GOTHIC_18_EXTENDED, &s_fallback));
+  s_test_fallback_font = &s_fallback;
+
+  // Fresh cache so the primary negative-cache entry from g0 does not short-circuit.
+  memset(&s_font_cache, 0, sizeof(s_font_cache));
+  keyed_circular_cache_init(&s_font_cache.line_cache, s_font_cache.cache_keys,
+                            s_font_cache.cache_data, sizeof(LineCacheData), LINE_CACHE_SIZE);
+
+  const uint8_t cjk_bytes[] = {0x00, 0x0C, 0xE2, 0x01, 0x0F, 0x80, 0x30, 0x40, 0x08, 0x10, 0x04,
+                               0x08, 0x82, 0xFC, 0xFF, 0x80, 0x00, 0x44, 0x00, 0x26, 0x01, 0x11,
+                               0x41, 0x08, 0x11, 0x84, 0x04, 0x82, 0xC0, 0x01, 0x40, 0x00};
+  const GlyphData *g1 = text_resources_get_glyph(&s_font_cache, 0x4E50, &s_font_info);
+  cl_assert(g1 != NULL);
+  cl_assert_equal_m(cjk_bytes, g1->data, glyph_get_size_bytes(g1));  // real fallback glyph
+}
+
+// A codepoint present in the primary font is served by the primary font; the fallback is not
+// consulted. Wire a different fallback whose 'a' glyph provably differs from the primary's (a
+// smaller font has different glyph dimensions and therefore different bitmap bytes), capture both
+// dynamically, assert the premise, then verify the result equals the PRIMARY bytes.
+void test_text_resources__fallback_not_used_when_present(void) {
+  // Step 1: capture the primary (GOTHIC_18) 'a' bytes.
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_18, 0, &s_font_info));
+  memset(&s_font_cache, 0, sizeof(s_font_cache));
+  keyed_circular_cache_init(&s_font_cache.line_cache, s_font_cache.cache_keys,
+                            s_font_cache.cache_data, sizeof(LineCacheData), LINE_CACHE_SIZE);
+
+  const GlyphData *primary_g = text_resources_get_glyph(&s_font_cache, 'a', &s_font_info);
+  cl_assert(primary_g != NULL);
+  uint8_t primary_size = glyph_get_size_bytes(primary_g);
+
+  // Copy the primary glyph bitmap so we have a stable snapshot even after a cache reset.
+  uint8_t primary_bytes[CACHE_GLYPH_SIZE];
+  cl_assert(primary_size <= sizeof(primary_bytes));
+  memcpy(primary_bytes, primary_g->data, primary_size);
+
+  // Step 2: init GOTHIC_14 as the fallback and fetch its 'a' directly.
+  // GOTHIC_14 is shorter (14px cap-height vs 18px), so its 'a' bitmap has different dimensions
+  // and therefore different bytes — the premise check in step 3 will catch any regression where
+  // they happen to collide.
+  static FontInfo s_fallback;
+  memset(&s_fallback, 0, sizeof(s_fallback));
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_14, 0, &s_fallback));
+
+  // Fresh cache so there is no stale entry from the primary fetch above.
+  memset(&s_font_cache, 0, sizeof(s_font_cache));
+  keyed_circular_cache_init(&s_font_cache.line_cache, s_font_cache.cache_keys,
+                            s_font_cache.cache_data, sizeof(LineCacheData), LINE_CACHE_SIZE);
+
+  const GlyphData *fallback_g = text_resources_get_glyph(&s_font_cache, 'a', &s_fallback);
+  cl_assert(fallback_g != NULL);
+  uint8_t fallback_size = glyph_get_size_bytes(fallback_g);
+
+  uint8_t fallback_bytes[CACHE_GLYPH_SIZE];
+  cl_assert(fallback_size <= sizeof(fallback_bytes));
+  memcpy(fallback_bytes, fallback_g->data, fallback_size);
+
+  // Step 3: assert the premise — the fallback 'a' must differ from the primary 'a'.
+  // If it doesn't, this test cannot distinguish "primary used" from "fallback used".
+  cl_assert(primary_size != fallback_size ||
+            memcmp(primary_bytes, fallback_bytes, primary_size) != 0);
+
+  // Step 4: install the fallback, reset the cache, and fetch 'a' through the primary font.
+  // The result must equal the CAPTURED PRIMARY bytes, proving the fallback was not consulted.
+  s_test_fallback_font = &s_fallback;
+  memset(&s_font_cache, 0, sizeof(s_font_cache));
+  keyed_circular_cache_init(&s_font_cache.line_cache, s_font_cache.cache_keys,
+                            s_font_cache.cache_data, sizeof(LineCacheData), LINE_CACHE_SIZE);
+
+  const GlyphData *result_g = text_resources_get_glyph(&s_font_cache, 'a', &s_font_info);
+  cl_assert(result_g != NULL);
+  cl_assert_equal_i(glyph_get_size_bytes(result_g), primary_size);
+  cl_assert_equal_m(primary_bytes, result_g->data, primary_size);
+}
+
+// When the primary font IS the system fallback font, the self-reference guard skips the redundant
+// second lookup: no loop or crash, and a missing codepoint still yields the primary wildcard.
+void test_text_resources__fallback_self_reference(void) {
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_18, 0, &s_font_info));
+  s_test_fallback_font = &s_font_info;  // primary is its own fallback
+
+  const uint8_t gothic_wildcard[] = {0xff, 0x60, 0x30, 0x18, 0x0c, 0x06, 0x83, 0xc1,
+                                     0x60, 0x30, 0x18, 0x0c, 0xfe, 0x01};
+  const GlyphData *g = text_resources_get_glyph(&s_font_cache, 0x4E50, &s_font_info);
+  cl_assert(g != NULL);                 // returns primary wildcard, no hang
+  cl_assert_equal_m(gothic_wildcard, g->data, glyph_get_size_bytes(g));
+}
+
+// A codepoint missing from BOTH primary and fallback still yields the primary wildcard,
+// proving the chain-exhausted tail survives.
+void test_text_resources__fallback_miss_yields_primary_wildcard(void) {
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_18, 0, &s_font_info));
+  static FontInfo s_fallback;
+  memset(&s_fallback, 0, sizeof(s_fallback));
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_18, 0, &s_fallback));
+  s_test_fallback_font = &s_fallback;
+
+  const uint8_t gothic_wildcard[] = {0xff, 0x60, 0x30, 0x18, 0x0c, 0x06, 0x83, 0xc1,
+                                     0x60, 0x30, 0x18, 0x0c, 0xfe, 0x01};
+  const GlyphData *g = text_resources_get_glyph(&s_font_cache, 0x8888 /* absent */, &s_font_info);
+  cl_assert(g != NULL);
+  cl_assert_equal_m(gothic_wildcard, g->data, glyph_get_size_bytes(g));
+}
 
 void test_text_resources__test_glyph_decompression(void) {
   // There is no way to get the list of glyphs present in a font with the existing API. This list

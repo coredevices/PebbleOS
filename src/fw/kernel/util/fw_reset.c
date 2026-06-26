@@ -69,7 +69,7 @@ void reset_protocol_msg_callback(CommSession *session, const uint8_t* data, unsi
       break;
 
     case ResetCmdCoreDump:
-      PBL_LOG_INFO("Core dump + Reboot triggered");
+      PBL_LOG_WRN("Core dump + Reboot triggered");
       core_dump_reset(true /* force overwrite any existing core dump */);
       break;
 

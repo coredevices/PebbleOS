@@ -48,12 +48,6 @@ typedef enum {
   GPIO_PuPd_DOWN,
 } GPIOPuPd_TypeDef;
 
-typedef enum {
-  GPIO_Speed_2MHz,
-  GPIO_Speed_50MHz,
-  GPIO_Speed_200MHz
-} GPIOSpeed_TypeDef;
-
 typedef struct {
   void *const peripheral;
   const uint32_t gpio_pin;
@@ -70,11 +64,6 @@ typedef struct {
   uint8_t gpio_pin;
   bool active_high;
 } OutputConfig;
-
-typedef struct {
-  void *gpio;
-  uint8_t gpio_pin;
-} AfConfig;
 
 typedef struct {
   int pad;
@@ -95,21 +84,6 @@ typedef struct {
 } PwmConfig;
 
 typedef struct {
-} TimerConfig;
-
-typedef enum {
-  ActuatorOptions_Ctl = 1 << 0,
-  ActuatorOptions_Pwm = 1 << 1,
-  ActuatorOptions_HBridge = 1 << 3,
-} ActuatorOptions;
-
-typedef struct {
-  const ActuatorOptions options;
-  const OutputConfig ctl;
-  const PwmConfig pwm;
-} BoardConfigActuator;
-
-typedef struct {
   uint8_t backlight_on_percent;
   uint32_t ambient_light_dark_threshold;
   uint32_t ambient_k_delta_threshold;
@@ -121,8 +95,6 @@ typedef struct {
   // override is set. User-preference overrides this via backlight_set_color().
   uint32_t backlight_default_color;
 #endif
-  ExtiConfig dbgserial_int;
-  InputConfig dbgserial_int_gpio;
 } BoardConfig;
 
 typedef struct {
@@ -145,27 +117,8 @@ typedef struct {
   const uint16_t battery_capacity_hours;
 } BoardConfigPower;
 
-typedef enum {
-  AccelThresholdLow,
-  AccelThresholdHigh,
-  AccelThreshold_Num,
-} AccelThreshold;
-
 typedef struct {
-  int axes_offsets[3];
-  bool axes_inverts[3];
-  uint32_t shake_thresholds[AccelThreshold_Num];
-  uint32_t double_tap_threshold;
-  uint8_t tap_shock;
-  uint8_t tap_quiet;
-  uint8_t tap_dur;
   uint8_t default_motion_sensitivity;
-} AccelConfig;
-
-typedef struct {
-  const AccelConfig accel_config;
-  const InputConfig accel_int_gpios[2];
-  const ExtiConfig accel_ints[2];
 } BoardConfigAccel;
 
 typedef struct {
@@ -176,11 +129,6 @@ typedef struct {
 typedef struct {
   const MagConfig mag_config;
 } BoardConfigMag;
-
-typedef enum {
-  SpiPeriphClockAPB1,
-  SpiPeriphClockAPB2
-} SpiPeriphClock;
 
 // QEMU MMIO peripheral base addresses
 #define QEMU_UART0_BASE     0x40000000
@@ -201,8 +149,6 @@ typedef enum {
 
 // Forward-declare device types
 typedef const struct UARTDevice UARTDevice;
-typedef const struct SPIBus SPIBus;
-typedef const struct SPISlavePort SPISlavePort;
 typedef const struct I2CBus I2CBus;
 typedef const struct I2CSlavePort I2CSlavePort;
 typedef const struct QSPIPort QSPIPort;

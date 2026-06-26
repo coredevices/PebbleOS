@@ -10,6 +10,8 @@
 #include "system/logging.h"
 #include "system/passert.h"
 
+PBL_LOG_MODULE_DEFINE(service_process_management, CONFIG_SERVICE_PROCESS_MANAGEMENT_LOG_LEVEL);
+
 #define ORDER_FILE "lnc_ord"
 
 typedef struct {

@@ -2,9 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "drivers/gpio.h"
-#include "drivers/periph_config.h"
 #include "drivers/pwm.h"
-#include "drivers/timer.h"
 #include "system/passert.h"
 
 #include <nrfx.h>

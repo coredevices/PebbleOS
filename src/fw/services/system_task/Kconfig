@@ -5,3 +5,11 @@ config SERVICE_SYSTEM_TASK
     bool "System task"
     help
       Background system task runner.
+
+if SERVICE_SYSTEM_TASK
+
+module = SERVICE_SYSTEM_TASK
+module-str = System task
+source "src/fw/Kconfig.template.log_level"
+
+endif

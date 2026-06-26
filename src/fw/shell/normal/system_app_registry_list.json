@@ -289,6 +289,14 @@
       ]
     },
     {
+      "id": -192,
+      "enum": "ACCEL_DEMO",
+      "md_fn": "accel_demo_get_info",
+      "ifdefs": [
+        "CONFIG_DEMO_APP_ACCEL_DEMO"
+      ]
+    },
+    {
       "id": -43,
       "enum": "PERSIST",
       "md_fn": "persist_app_get_info",
@@ -725,6 +733,11 @@
       "id": -32,
       "enum": "TIMELINE_FULL",
       "md_fn": "timeline_full_get_app_info"
+    },
+    {
+      "id": -100,
+      "enum": "NOTIFICATIONS_CLEAR_HISTORY",
+      "md_fn": "notifications_clear_history_app_get_info"
     }
   ],
   "resource_apps": [

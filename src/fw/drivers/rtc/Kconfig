@@ -15,6 +15,8 @@ config RTC_NRF5
 
 config RTC_SF32LB
     bool "SiFli SF32LB"
+    select HAL_SIFLI_LRC_CAL
+    select HAL_SIFLI_RTC
     help
       Support for the SiFli SF32LB RTC.
 
@@ -22,5 +24,9 @@ config RTC_QEMU
     bool "QEMU RTC"
     help
       Support for the QEMU RTC peripheral.
+
+module = DRIVER_RTC
+module-str = RTC
+source "src/fw/Kconfig.template.log_level"
 
 endif # RTC

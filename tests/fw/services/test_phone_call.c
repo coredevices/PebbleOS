@@ -44,8 +44,8 @@ void pp_get_phone_state_set_enabled(bool enabled) {}
 
 // Phone UI stubs that allow us to track what phone_call.c is doing
 static PhoneEventType s_last_phone_ui_event;
-void phone_ui_handle_incoming_call(PebblePhoneCaller *caller, bool can_answer,
-                                   bool show_ongoing_call_ui) {
+void phone_ui_handle_incoming_call(PebblePhoneCaller *caller, bool show_ongoing_call_ui,
+                                   PhoneCallSource source) {
   s_last_phone_ui_event = PhoneEventType_Incoming;
 }
 

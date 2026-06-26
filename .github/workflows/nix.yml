@@ -1,0 +1,76 @@
+name: Nix
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  changes-nix:
+    runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: read
+    outputs:
+      should-build: ${{ steps.filter.outputs.src == 'true' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            src:
+              - '.github/workflows/nix.yml'
+              - 'flake.nix'
+              - 'flake.lock'
+
+  nix-shell:
+    needs: changes-nix
+    if: needs.changes-nix.outputs.should-build == 'true'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm, macos-15]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
+      - name: Check flake
+        run: nix flake check
+
+      # Running the SDK binaries verifies autoPatchelfHook resolved all of
+      # their shared-library dependencies.
+      - name: Smoke test SDK tools
+        run: |
+          nix develop --command bash -c '
+            set -ex
+            arm-none-eabi-gcc --version
+            qemu-pebble --version
+            sftool --version
+          '
+
+      - name: Configure
+        run: nix develop --command ./waf configure --board asterix
+
+      - name: Build
+        run: nix develop --command ./waf build
+
+  nix-status:
+    needs: [changes-nix, nix-shell]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - if: needs.nix-shell.result == 'failure' || needs.nix-shell.result == 'cancelled'
+        run: exit 1

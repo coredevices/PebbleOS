@@ -5,3 +5,11 @@ config SERVICE_WAKEUP
     bool "Wakeup"
     help
       App wakeup scheduling service.
+
+if SERVICE_WAKEUP
+
+module = SERVICE_WAKEUP
+module-str = Wakeup
+source "src/fw/Kconfig.template.log_level"
+
+endif

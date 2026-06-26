@@ -28,6 +28,8 @@
 
 #include "nrf_fuel_gauge.h"
 
+PBL_LOG_MODULE_DECLARE(service_battery, CONFIG_SERVICE_BATTERY_LOG_LEVEL);
+
 #if !defined(CONFIG_RECOVERY_FW) || defined(CONFIG_MFG)
 #define FUEL_GAUGE_STATEFUL 1
 #else
@@ -38,7 +40,7 @@
 #define RECONNECTION_DELAY_MS (1 * 1000)
 // TODO: Adjust sample rate based on activity periods once we have good
 // power consumption profiles
-#define BATTERY_SAMPLE_RATE_S 1
+#define BATTERY_SAMPLE_RATE_MIN 1
 
 #define LOG_MIN_SEC 30
 
@@ -46,11 +48,11 @@
 #define BATTERY_MIN_VALID_VOLTAGE_MV 3300
 
 static const struct battery_model prv_battery_model = {
-#ifdef CONFIG_BOARD_FAMILY_ASTERIX
+#ifdef CONFIG_BOARD_ASTERIX
 #include "battery_asterix.inc"
-#elif defined(CONFIG_BOARD_FAMILY_OBELIX)
+#elif defined(CONFIG_BOARD_OBELIX)
 #include "battery_obelix.inc"
-#elif defined(CONFIG_BOARD_FAMILY_GETAFIX)
+#elif defined(CONFIG_BOARD_GETAFIX)
 #include "battery_getafix.inc"
 #else
 #error "Battery model not defined for this platform"
@@ -524,7 +526,7 @@ void battery_state_init(void) {
   static RegularTimerInfo battery_regular_timer = {
     .cb = prv_callback_from_regular_timer
   };
-  regular_timer_add_multisecond_callback(&battery_regular_timer, BATTERY_SAMPLE_RATE_S);
+  regular_timer_add_multiminute_callback(&battery_regular_timer, BATTERY_SAMPLE_RATE_MIN);
 
   s_analytics_last_voltage_mv = s_last_voltage_mv;
   s_analytics_last_cpct = s_last_soc_cpct;

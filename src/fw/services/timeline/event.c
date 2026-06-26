@@ -18,6 +18,8 @@
 #include "system/status_codes.h"
 #include "util/time/time.h"
 
+PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
+
 typedef struct TimelineEventState {
   const TimelineEventImpl *impl;
   SerializedTimelineItemHeader *filter_header;
@@ -71,7 +73,7 @@ static uint32_t prv_calc_timeout(const TimelineItem *item) {
 
 static void prv_set_timer(unsigned int timeout_ms) {
   if (!timeout_ms) {
-    PBL_LOG_INFO("Not setting timer.");
+    PBL_LOG_ERR("Not setting timer");
   } else if (new_timer_start(s_timer, timeout_ms, prv_new_timer_callback, NULL, 0)) {
     PBL_LOG_DBG("Set timer for %u", timeout_ms);
   } else {

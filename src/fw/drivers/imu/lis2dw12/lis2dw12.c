@@ -15,6 +15,8 @@
 #include "kernel/util/sleep.h"
 #include "util/math.h"
 
+PBL_LOG_MODULE_DEFINE(driver_accel_lis2dw12, CONFIG_DRIVER_IMU_LOG_LEVEL);
+
 // Implementation notes:
 //
 // - Peeking returns the last FIFO sample when sampling is active, otherwise
@@ -184,7 +186,7 @@ static int16_t prv_axis_raw_mg(IMUCoordinateAxis axis, const uint8_t *raw) {
   offset = LIS2DW12->axis_map[axis];
 
   val = LIS2DW12->axis_dir[axis] *
-        (prv_raw_to_s12(&raw[offset * 2U]) * (int16_t)LIS2DW12->scale_mg) /
+        (prv_raw_to_s12(&raw[offset * 2U]) * (int16_t)CONFIG_ACCEL_LIS2DW12_SCALE_MG) /
         (int16_t)LIS2DW12_S12_SCALE_RANGE;
 
   if (LIS2DW12->state->rotated && (axis == AXIS_X || axis == AXIS_Y)) {
@@ -209,30 +211,36 @@ static uint64_t prv_get_curr_system_time_us(void) {
   return (((uint64_t)time_s) * 1000 + time_ms) * 1000ULL;
 }
 
-static void prv_lis2dw12_read_samples(uint8_t num_samples) {
-  uint64_t timestamp_us;
+// Convert and dispatch the samples already sitting in raw_sample_buf. Kept free of
+// device I/O so it can run after the I2C reads instead of in between them.
+static void prv_lis2dw12_process_samples(uint8_t num_samples, uint64_t timestamp_us) {
+  // Samples are 12-bit left-justified within a 16-bit little-endian word, so the
+  // raw word equals the 12-bit value << 4; scale the denominator by 16 to match.
+  int8_t rotate = LIS2DW12->state->rotated ? -1 : 1;
+  AccelRawBatch batch = {
+    .data = LIS2DW12->state->raw_sample_buf,
+    .num_samples = num_samples,
+    .stride = LIS2DW12_SAMPLE_SIZE_BYTES,
+    .axis = {
+      [AXIS_X] = {.offset = LIS2DW12->axis_map[AXIS_X] * 2U,
+                  .sign = (int8_t)(LIS2DW12->axis_dir[AXIS_X] * rotate)},
+      [AXIS_Y] = {.offset = LIS2DW12->axis_map[AXIS_Y] * 2U,
+                  .sign = (int8_t)(LIS2DW12->axis_dir[AXIS_Y] * rotate)},
+      [AXIS_Z] = {.offset = LIS2DW12->axis_map[AXIS_Z] * 2U, .sign = LIS2DW12->axis_dir[AXIS_Z]},
+    },
+    .scale_num = CONFIG_ACCEL_LIS2DW12_SCALE_MG,
+    .scale_den = LIS2DW12_S12_SCALE_RANGE << 4U,
+    .first_timestamp_us = timestamp_us,
+    .sampling_interval_us = LIS2DW12->state->sampling_interval_us,
+  };
 
-  if (!prv_lis2dw12_read(LIS2DW12_OUT_X_L, LIS2DW12->state->raw_sample_buf,
-                         num_samples * LIS2DW12_SAMPLE_SIZE_BYTES)) {
-    PBL_LOG_ERR("Failed to read samples");
-    return;
-  }
+  accel_cb_new_samples(&batch);
 
-  timestamp_us = prv_get_curr_system_time_us();
-
-  AccelDriverSample sample = {0};
-
-  for (uint8_t i = 0U; i < num_samples; ++i) {
-    uint8_t *raw;
-
-    raw = &LIS2DW12->state->raw_sample_buf[i * LIS2DW12_SAMPLE_SIZE_BYTES];
-    prv_raw_to_mg(raw, &sample);
-    sample.timestamp_us = timestamp_us + i * LIS2DW12->state->sampling_interval_us;
-
-    accel_cb_new_sample(&sample);
-  }
-
-  LIS2DW12->state->last_sample = sample;
+  // Keep the most recent sample around for accel_peek().
+  uint8_t *last = &LIS2DW12->state->raw_sample_buf[(num_samples - 1) * LIS2DW12_SAMPLE_SIZE_BYTES];
+  prv_raw_to_mg(last, &LIS2DW12->state->last_sample);
+  LIS2DW12->state->last_sample.timestamp_us =
+      timestamp_us + (num_samples - 1) * LIS2DW12->state->sampling_interval_us;
   LIS2DW12->state->last_sample_valid = true;
 }
 
@@ -263,7 +271,15 @@ static void prv_lis2dw12_int1_work_handler(void) {
   bool ret;
   uint8_t val;
   bool action_taken = false;
+  bool fifo_overrun = false;
+  bool shake = false;
+  uint8_t samples = 0U;
+  uint64_t timestamp_us = 0U;
 
+  // Read all device registers back-to-back to keep the I2C critical section
+  // short, then convert/dispatch below. The sample processing has no dependency
+  // on these reads, so deferring it avoids stretching the gap between the FIFO
+  // read and the ALL_INT_SRC read if this task gets preempted mid-handler.
   if (LIS2DW12->state->num_samples > 0U) {
     ret = prv_lis2dw12_read(LIS2DW12_FIFO_SAMPLES, &val, 1);
     if (!ret) {
@@ -272,16 +288,16 @@ static void prv_lis2dw12_int1_work_handler(void) {
     }
 
     if ((val & LIS2DW12_FIFO_SAMPLES_FIFO_OVR) != 0U) {
-      PBL_LOG_WRN("FIFO overrun detected, re-arming");
-      prv_lis2dw12_enable_fifo(LIS2DW12->state->num_samples);
-      action_taken = true;
+      fifo_overrun = true;
     } else if ((val & LIS2DW12_FIFO_SAMPLES_FIFO_FTH) != 0U) {
-      uint8_t samples;
-
       samples = LIS2DW12_FIFO_SAMPLES_DIFF_GET(val);
       if (samples > 0U) {
-        prv_lis2dw12_read_samples(samples);
-        action_taken = true;
+        if (!prv_lis2dw12_read(LIS2DW12_OUT_X_L, LIS2DW12->state->raw_sample_buf,
+                               samples * LIS2DW12_SAMPLE_SIZE_BYTES)) {
+          PBL_LOG_ERR("Failed to read samples");
+          return;
+        }
+        timestamp_us = prv_get_curr_system_time_us();
       }
     }
   }
@@ -293,13 +309,24 @@ static void prv_lis2dw12_int1_work_handler(void) {
       return;
     }
 
-    if ((val & LIS2DW12_ALL_INT_SRC_WU_IA) != 0U) {
-      PBL_LOG_DBG("Shake detected");
-      // TODO: provide more info about the shake (axis, direction, etc.) or
-      // refactor shake to be non-dimensional
-      accel_cb_shake_detected(AXIS_Z, 0);
-      action_taken = true;
-    }
+    shake = (val & LIS2DW12_ALL_INT_SRC_WU_IA) != 0U;
+  }
+
+  if (fifo_overrun) {
+    PBL_LOG_WRN("FIFO overrun detected, re-arming");
+    prv_lis2dw12_enable_fifo(LIS2DW12->state->num_samples);
+    action_taken = true;
+  } else if (samples > 0U) {
+    prv_lis2dw12_process_samples(samples, timestamp_us);
+    action_taken = true;
+  }
+
+  if (shake) {
+    PBL_LOG_DBG("Shake detected");
+    // TODO: provide more info about the shake (axis, direction, etc.) or
+    // refactor shake to be non-dimensional
+    accel_cb_shake_detected(AXIS_Z, 0);
+    action_taken = true;
   }
 
   if (!action_taken) {
@@ -475,20 +502,20 @@ void accel_init(void) {
 
   // Disable ADDR pull-up if requested
   // NOTE: This is an undocumented register (provided by FAE)
-  if (LIS2DW12->disable_addr_pullup) {
-    ret = prv_lis2dw12_read(LIS2DW12_UNDOC, &val, 1);
-    if (!ret) {
-      PBL_LOG_ERR("Failed to read LIS2DW12 register 0x17");
-      return;
-    }
-
-    val |= LIS2DW12_UNDOC_ADDR_PULLUP_DIS;
-    ret = prv_lis2dw12_write(LIS2DW12_UNDOC, &val, 1);
-    if (!ret) {
-      PBL_LOG_ERR("Failed to write LIS2DW12 register 0x17");
-      return;
-    }
+#ifdef CONFIG_ACCEL_LIS2DW12_DISABLE_ADDR_PULLUP
+  ret = prv_lis2dw12_read(LIS2DW12_UNDOC, &val, 1);
+  if (!ret) {
+    PBL_LOG_ERR("Failed to read LIS2DW12 register 0x17");
+    return;
   }
+
+  val |= LIS2DW12_UNDOC_ADDR_PULLUP_DIS;
+  ret = prv_lis2dw12_write(LIS2DW12_UNDOC, &val, 1);
+  if (!ret) {
+    PBL_LOG_ERR("Failed to write LIS2DW12 register 0x17");
+    return;
+  }
+#endif
 
   // Single-data conversion via SLP_MODE_1, latch function IRQ
   val = LIS2DW12_CTRL3_SLP_MODE_SEL_SLP_MODE_1 | LIS2DW12_CTRL3_LIR;
@@ -499,7 +526,7 @@ void accel_init(void) {
   }
 
   // Configure scale
-  switch (LIS2DW12->scale_mg) {
+  switch (CONFIG_ACCEL_LIS2DW12_SCALE_MG) {
     case 2000U:
       val = LIS2DW12_CTRL6_FS_2G;
       break;
@@ -513,7 +540,7 @@ void accel_init(void) {
       val = LIS2DW12_CTRL6_FS_16G;
       break;
     default:
-      PBL_LOG_ERR("Invalid scale: %" PRIu16, LIS2DW12->scale_mg);
+      PBL_LOG_ERR("Invalid scale: %d", CONFIG_ACCEL_LIS2DW12_SCALE_MG);
       return;
   }
 
@@ -524,21 +551,21 @@ void accel_init(void) {
   }
 
   // Configure wake-up threshold defaults
-  val = LIS2DW12_WAKE_UP_DUR_WAKE_DUR(LIS2DW12->wk_dur_default);
+  val = LIS2DW12_WAKE_UP_DUR_WAKE_DUR(CONFIG_ACCEL_LIS2DW12_WK_DUR_DEFAULT);
   ret = prv_lis2dw12_write(LIS2DW12_WAKE_UP_DUR, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write WAKE_UP_DUR register");
     return;
   }
 
-  val = LIS2DW12_WAKE_UP_THS_WK_THS(LIS2DW12->wk_ths_default);
+  val = LIS2DW12_WAKE_UP_THS_WK_THS(CONFIG_ACCEL_LIS2DW12_WK_THS_DEFAULT);
   ret = prv_lis2dw12_write(LIS2DW12_WAKE_UP_THS, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write WAKE_UP_THS register");
     return;
   }
 
-  LIS2DW12->state->wk_ths_curr = LIS2DW12->wk_ths_default;
+  LIS2DW12->state->wk_ths_curr = CONFIG_ACCEL_LIS2DW12_WK_THS_DEFAULT;
 
   // Enable INT1 external interrupt
   exti_configure_pin(LIS2DW12->int1, ExtiTrigger_Rising, prv_lis2dw12_int1_irq_handler);
@@ -546,14 +573,6 @@ void accel_init(void) {
 
   LIS2DW12->state->int1_wdt_timer.cb = prv_int1_wdt_cb;
   LIS2DW12->state->initialized = true;
-}
-
-void accel_power_up(void) {
-  // Driver automatically keeps the sensor active as needed
-}
-
-void accel_power_down(void) {
-  // Driver automatically keeps the sensor in lowest power mode
 }
 
 uint32_t accel_set_sampling_interval(uint32_t interval_us) {
@@ -579,6 +598,10 @@ uint32_t accel_get_sampling_interval(void) {
   return LIS2DW12->state->sampling_interval_us;
 }
 
+uint32_t accel_get_max_num_samples(void) {
+  return LIS2DW12_FIFO_SIZE;
+}
+
 void accel_set_num_samples(uint32_t num_samples) {
   bool ret;
   uint8_t val;
@@ -588,8 +611,8 @@ void accel_set_num_samples(uint32_t num_samples) {
   }
 
   // Limit to FIFO threshold
-  if (num_samples > LIS2DW12->fifo_threshold) {
-    num_samples = LIS2DW12->fifo_threshold;
+  if (num_samples > LIS2DW12_FIFO_SIZE) {
+    num_samples = LIS2DW12_FIFO_SIZE;
   }
 
   // Disable all INT1 before changing FIFO threshold
@@ -760,7 +783,8 @@ void accel_set_shake_sensitivity_high(bool sensitivity_high) {
     return;
   }
 
-  val = LIS2DW12_WAKE_UP_THS_WK_THS(sensitivity_high ? LIS2DW12->wk_ths_min : LIS2DW12->state->wk_ths_curr);
+  val = LIS2DW12_WAKE_UP_THS_WK_THS(sensitivity_high ? CONFIG_ACCEL_LIS2DW12_WK_THS_MIN
+                                                     : LIS2DW12->state->wk_ths_curr);
   ret = prv_lis2dw12_write(LIS2DW12_WAKE_UP_THS, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write WAKE_UP_THS register");
@@ -782,8 +806,8 @@ void accel_set_shake_sensitivity_percent(uint8_t percent) {
 
   // Reverse mapping: 0 = max sensitivity (MIN threshold), 100 = min sensitivity (MAX threshold)
   // [0, 100] -> [wk_ths_max, wk_ths_min]
-  raw = LIS2DW12->wk_ths_max -
-        (percent * (LIS2DW12->wk_ths_max - LIS2DW12->wk_ths_min)) / 100U;
+  raw = CONFIG_ACCEL_LIS2DW12_WK_THS_MAX -
+        (percent * (CONFIG_ACCEL_LIS2DW12_WK_THS_MAX - CONFIG_ACCEL_LIS2DW12_WK_THS_MIN)) / 100U;
 
   val = LIS2DW12_WAKE_UP_THS_WK_THS(raw);
   ret = prv_lis2dw12_write(LIS2DW12_WAKE_UP_THS, &val, 1);

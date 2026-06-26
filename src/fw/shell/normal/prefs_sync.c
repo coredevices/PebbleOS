@@ -36,19 +36,7 @@ static void prv_try_start_sync(void) {
     return;
   }
 
-  PBL_LOG_INFO("Starting settings sync via BlobDB");
-
-  status_t status = blob_db_sync_db(BlobDBIdSettings);
-
-  if (status == S_SUCCESS) {
-    PBL_LOG_INFO("Settings sync started");
-  } else if (status == S_NO_ACTION_REQUIRED) {
-    PBL_LOG_DBG("No settings need syncing");
-  } else if (status == E_BUSY) {
-    PBL_LOG_DBG("Settings sync already in progress");
-  } else {
-    PBL_LOG_ERR("Failed to start settings sync: 0x%"PRIx32"", status);
-  }
+  blob_db_sync_db(BlobDBIdSettings);
 }
 
 //! Connection state change callback
@@ -57,11 +45,8 @@ static void prv_connection_handler(PebbleEvent *event, void *context) {
   s_is_connected = connected;
 
   if (connected) {
-    PBL_LOG_INFO("Phone connected, will sync when capabilities received");
     // Try to sync - capabilities may already be cached from previous connection
     prv_try_start_sync();
-  } else {
-    PBL_LOG_INFO("Phone disconnected");
   }
 }
 
@@ -69,7 +54,6 @@ static void prv_connection_handler(PebbleEvent *event, void *context) {
 static void prv_capabilities_handler(PebbleEvent *event, void *context) {
   // Check if the settings_sync_support capability changed
   if (event->capabilities.flags_diff.settings_sync_support) {
-    PBL_LOG_INFO("Settings sync capability changed, checking if we can sync");
     prv_try_start_sync();
   }
 }
@@ -78,7 +62,6 @@ static void prv_capabilities_handler(PebbleEvent *event, void *context) {
 
 void prefs_sync_init(void) {
   if (s_sync_initialized) {
-    PBL_LOG_WRN("Prefs sync already initialized");
     return;
   }
 
@@ -100,8 +83,6 @@ void prefs_sync_init(void) {
   s_is_connected = false;
 
   s_sync_initialized = true;
-
-  PBL_LOG_INFO("Prefs sync initialized (using BlobDB ID 0x0F)");
 }
 
 void prefs_sync_deinit(void) {
@@ -115,8 +96,6 @@ void prefs_sync_deinit(void) {
 
   s_sync_initialized = false;
   s_is_connected = false;
-
-  PBL_LOG_INFO("Prefs sync deinitialized");
 }
 
 void prefs_sync_trigger(void) {
@@ -136,17 +115,7 @@ void prefs_sync_trigger(void) {
     return;
   }
   
-  PBL_LOG_INFO("Manually triggering settings sync via BlobDB");
+  PBL_LOG_DBG("Manually triggering settings sync via BlobDB");
   
-  status_t status = blob_db_sync_db(BlobDBIdSettings);
-  
-  if (status == S_SUCCESS) {
-    PBL_LOG_INFO("Settings sync started");
-  } else if (status == S_NO_ACTION_REQUIRED) {
-    PBL_LOG_INFO("No settings need syncing");
-  } else if (status == E_BUSY) {
-    PBL_LOG_WRN("Settings sync already in progress");
-  } else {
-    PBL_LOG_ERR("Failed to start settings sync: 0x%"PRIx32"", status);
-  }
+  blob_db_sync_db(BlobDBIdSettings);
 }

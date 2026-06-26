@@ -19,6 +19,8 @@
 
 #include <stdio.h>
 
+PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
+
 T_STATIC const char *iOS_NOTIF_PREF_DB_FILE_NAME = "iosnotifprefdb";
 T_STATIC const int iOS_NOTIF_PREF_MAX_SIZE = KiBYTES(32);
 
@@ -228,7 +230,7 @@ status_t ios_notif_pref_db_insert(const uint8_t *key, int key_len,
     char buffer[key_len + 1];
     strncpy(buffer, (const char *)key, key_len);
     buffer[key_len] = '\0';
-    PBL_LOG_INFO("iOS notif pref insert <%s>", buffer);
+    PBL_LOG_DBG("iOS notif pref insert <%s>", buffer);
 
     // All records inserted from the phone are not dirty (the phone is the source of truth)
     rv = settings_file_mark_synced(&file, key, key_len);

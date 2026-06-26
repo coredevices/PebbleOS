@@ -1,0 +1,3 @@
+# obelix bb2 board revision configuration
+
+CONFIG_IS_BIGBOARD=y

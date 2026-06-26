@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "pbl/services/speaker/limits.h"
 #include "pbl/services/speaker/note_sequence.h"
 #include "pbl/services/speaker/speaker_finish_reason.h"
 #include "pbl/services/speaker/speaker_pcm_format.h"
@@ -71,12 +72,6 @@ bool speaker_service_play_tracks(const SpeakerTrack *tracks, uint32_t num_tracks
 //! Ask the service to post PEBBLE_SPEAKER_EVENT with the finish reason to the
 //! given task whenever playback ends.
 void speaker_service_register_finish(PebbleTask task);
-
-//! Max number of parallel tracks for polyphony.
-#define SPEAKER_MAX_TRACKS 4
-
-//! Max total sample-data bytes per speaker_service_play_tracks call.
-#define SPEAKER_MAX_SAMPLE_BYTES_TOTAL (16 * 1024)
 
 //! Open a PCM stream for writing.
 //! @param pri Priority level

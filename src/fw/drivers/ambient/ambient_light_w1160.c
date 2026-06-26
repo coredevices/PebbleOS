@@ -5,13 +5,14 @@
 #include "console/prompt.h"
 #include "drivers/ambient_light.h"
 #include "drivers/i2c.h"
-#include "drivers/periph_config.h"
 #include "kernel/util/sleep.h"
 #include "mfg/mfg_info.h"
 #include "system/logging.h"
 #include "system/passert.h"
 
 #include <inttypes.h>
+
+PBL_LOG_MODULE_DEFINE(driver_ambient_w1160, CONFIG_DRIVER_AMBIENT_LOG_LEVEL);
 
 // Registers
 #define W1160_STATE_REG             0x00

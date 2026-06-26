@@ -5,3 +5,11 @@ config SERVICE_PROCESS_MANAGEMENT
     bool "Process management"
     help
       App/process management and app storage.
+
+if SERVICE_PROCESS_MANAGEMENT
+
+module = SERVICE_PROCESS_MANAGEMENT
+module-str = Process management
+source "src/fw/Kconfig.template.log_level"
+
+endif

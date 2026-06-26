@@ -74,10 +74,14 @@ static void prv_log_serial(
 
   // Log the log level and the current task+privilege level
   {
+#ifdef CONFIG_LOG_TASK_PREFIX
     unsigned char task_char = pebble_task_get_char(pebble_task_get_current());
     if (mcu_state_is_privileged()) {
       task_char = toupper(task_char);
     }
+#else
+    unsigned char task_char = '-';
+#endif
 
     char buffer[] = { pbl_log_get_level_char(log_level), ' ', task_char, ' ', 0 };
     serial_console_write_log_message(buffer);

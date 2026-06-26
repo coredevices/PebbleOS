@@ -44,6 +44,23 @@ void shared_circular_buffer_init(SharedCircularBuffer* buffer, uint8_t* storage,
 bool shared_circular_buffer_write(SharedCircularBuffer* buffer, const uint8_t* data, uint16_t length,
         bool advance_slackers);
 
+//! Reserve a contiguous run of write space without copying any data in. Fill the returned
+//! segment(s) directly, then call shared_circular_buffer_write_commit() with the same length.
+//! The reservation may wrap the end of the storage, in which case it is split into two segments.
+//! @param buffer The buffer to reserve space in
+//! @param length Number of bytes to reserve
+//! @param advance_slackers See shared_circular_buffer_write()
+//! @param[out] seg1 Pointer to the first segment
+//! @param[out] seg1_length Length of the first segment (equals length when there's no wrap)
+//! @param[out] seg2 Pointer to the second segment, only valid when *seg1_length < length
+//! @return false if there's insufficient space.
+bool shared_circular_buffer_write_reserve(SharedCircularBuffer* buffer, uint16_t length,
+        bool advance_slackers, uint8_t** seg1, uint16_t* seg1_length, uint8_t** seg2);
+
+//! Commit a reservation previously made with shared_circular_buffer_write_reserve(), advancing
+//! the write index by length. The length must match the reserved length.
+void shared_circular_buffer_write_commit(SharedCircularBuffer* buffer, uint16_t length);
+
 //! Add a read client
 //! @param buffer The buffer to add the client to
 //! @param client Pointer to a client structure. This structure must be allocated by the caller and can not

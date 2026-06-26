@@ -80,8 +80,6 @@ def configure(conf):
     define = 'MAX_FONT_GLYPH_SIZE={}'.format(platform['MAX_FONT_GLYPH_SIZE'])
     conf.env.append_value('DEFINES', [define])
 
-    conf.env.NORMAL_SHELL = 'sdk' if conf.env.CONFIG_SHELL_SDK else 'normal'
-
     conf.env.PRF_AS_FIRMWARE = conf.options.prf_as_firmware
     if conf.options.prf_as_firmware:
         conf.env.append_value('DEFINES', 'RECOVERY_FW_AS_FW')
@@ -96,9 +94,9 @@ def _generate_memory_layout(bld):
 
     if bld.env.CONFIG_QEMU:
         ldscript_template = bld.path.find_node('qemu_flash_fw.ld.template')
-    elif bld.env.CONFIG_BOARD_FAMILY_ASTERIX:
+    elif bld.env.CONFIG_BOARD_ASTERIX:
         ldscript_template = bld.path.find_node('nrf52840_flash_fw.ld.template')
-    elif bld.env.CONFIG_BOARD_FAMILY_OBELIX or bld.env.CONFIG_BOARD_FAMILY_GETAFIX:
+    elif bld.env.CONFIG_BOARD_OBELIX or bld.env.CONFIG_BOARD_GETAFIX:
         ldscript_template = bld.path.find_node('sf32lb52_flash_fw.ld.template')
 
     # Determine sizes so we can later calculate FLASH_LENGTH_*
@@ -128,7 +126,7 @@ def _generate_memory_layout(bld):
         # Bootloader
         offset_size = 32 * 1024
         flash_size = 1024 * 1024
-        if bld.env.CONFIG_BOARD_FAMILY_ASTERIX and bld.env.VARIANT == 'prf' and not bld.env.CONFIG_MFG:
+        if bld.env.CONFIG_BOARD_ASTERIX and bld.env.VARIANT == 'prf' and not bld.env.CONFIG_MFG:
             fw_max_size = flash_size // 2
         else:
             fw_max_size = flash_size
@@ -139,8 +137,6 @@ def _generate_memory_layout(bld):
 
     if bld.env.CONFIG_QEMU:
         flash_origin = 0x00000000
-    elif bld.env.FLASH_ITCM:
-        flash_origin = 0x00200000
     elif bld.env.CONFIG_SOC_NRF52:
         flash_origin = 0x00000000
     elif bld.env.CONFIG_SOC_SF32LB52:
@@ -159,59 +155,41 @@ def _generate_memory_layout(bld):
     fw_flash_length = '%(fw_max_size)d - %(firmware_offset)d' % locals()
     fw_flash_origin = '0x%(flash_origin)08x + %(offset_size)d + %(firmware_offset)d' % locals()
 
-    bootloader_symbol_definitions = ""
-
     # Determine ram layout
 
     # Each tuple defines the amount of RAM we give to apps (stack + text + data
     # + bss + heap) and the amount of RAM reserved for the application runtime
-    # (AppState) for each SDK platform, respectively.
+    # (AppState) for each app execution environment, respectively. The values
+    # come from the CONFIG_APP_RAM_*X_* symbols, which are set per SDK platform
+    # in the top-level Kconfig.
     AppRamSize = collections.namedtuple('AppRamSize',
                                         'app_segment runtime_reserved')
-    APP_RAM_SIZES = {
-        'aplite': AppRamSize(25952, 6820),
-        'basalt': AppRamSize(66 * 1024, 30 * 1024),
-        'chalk': AppRamSize(66 * 1024, 30 * 1024),
-        # FIXME: The runtime_reserved size could be reduced for diorite
-        'diorite': AppRamSize(66 * 1024, 30 * 1024),
-        'emery': AppRamSize(130 * 1024, 62 * 1024),
-        'flint': AppRamSize(66 * 1024, 30 * 1024),
-        'gabbro': AppRamSize(130 * 1024, 94 * 1024),
-    }
-    APP_UNSUPPORTED = AppRamSize(0, 0)
+    app_ram_size_2x = AppRamSize(bld.env.CONFIG_APP_RAM_2X_SEGMENT_SIZE,
+                                 bld.env.CONFIG_APP_RAM_2X_RUNTIME_SIZE)
+    app_ram_size_3x = AppRamSize(bld.env.CONFIG_APP_RAM_3X_SEGMENT_SIZE,
+                                 bld.env.CONFIG_APP_RAM_3X_RUNTIME_SIZE)
+    app_ram_size_4x = AppRamSize(bld.env.CONFIG_APP_RAM_4X_SEGMENT_SIZE,
+                                 bld.env.CONFIG_APP_RAM_4X_RUNTIME_SIZE)
 
     # The process loader enforces eight-byte alignment on all segments, so
     # configuring a segment with a size that is not a multiple of eight will
     # result in segments being smaller than expected. The runtime_reserved
     # size is not checked as its value isn't currently used anywhere.
-    for platform, sizes in APP_RAM_SIZES.items():
+    for name, sizes in (('2x', app_ram_size_2x), ('3x', app_ram_size_3x),
+                        ('4x', app_ram_size_4x)):
         if sizes.app_segment % 8 != 0:
-            bld.fatal("The app_segment size for APP_RAM_SIZES[%r] is not a "
-                      "multiple of eight bytes. You're gonna have a bad "
-                      "time." % platform)
+            bld.fatal("The app_segment size for the %s app environment is not "
+                      "a multiple of eight bytes. You're gonna have a bad "
+                      "time." % name)
 
-    # In the FW, the app execution environment is based on the major FW version with which the SDK
-    # is associated. Each model supports a different set of SDK platforms, and determines the SDK
-    # platform of an app using these major FW version associations (and also by considering the
-    # hardware capabilities watch model itself - i.e. chalk vs basalt). We want to define
-    # APP_RAM_*X_SIZE macros for each app execution environment supported by the model so we
-    # don't need to hard-code these in the FW itself.
+    # Determine the board's total RAM layout.
     if bld.env.CONFIG_PLATFORM_EMERY:
-        app_ram_size_2x = APP_RAM_SIZES['aplite']
-        app_ram_size_3x = APP_RAM_SIZES['basalt']
-        app_ram_size_4x = APP_RAM_SIZES['emery']
         # We have 512K of SRAM, last 1K reserved for LCPU IPC
         total_ram = (0x20000000, (512 - 1) * 1024)
     elif bld.env.CONFIG_PLATFORM_FLINT:
-        app_ram_size_2x = APP_RAM_SIZES['aplite']
-        app_ram_size_3x = APP_RAM_SIZES['aplite']
-        app_ram_size_4x = APP_RAM_SIZES['flint']
         retained_size = 256
         total_ram = (0x20000000 + retained_size, 256 * 1024 - retained_size)
     elif bld.env.CONFIG_PLATFORM_GABBRO:
-        app_ram_size_2x = APP_UNSUPPORTED
-        app_ram_size_3x = APP_RAM_SIZES['chalk']
-        app_ram_size_4x = APP_RAM_SIZES['gabbro']
         # We have 512K of SRAM, last 1K reserved for LCPU IPC
         total_ram = (0x20000000, (512 - 1) * 1024)
     else:
@@ -222,7 +200,6 @@ def _generate_memory_layout(bld):
     ram_end = sum(total_ram)  # The end of RAM is the start address plus the size.
     all_app_ram_sizes = [app_ram_size_2x, app_ram_size_3x, app_ram_size_4x]
     app_ram_size = max(sum(x) for x in all_app_ram_sizes)
-    system_app_segment_size = max(x.app_segment for x in all_app_ram_sizes)
     app_runtime_size = max(x.runtime_reserved for x in all_app_ram_sizes)
     if app_ram_size <= 0 or app_runtime_size <= 0:
         bld.fatal("App RAM is too small!")
@@ -250,28 +227,12 @@ def _generate_memory_layout(bld):
         FLASH_ORIGIN="0x{:x}".format(flash_origin),
         FW_FLASH_ORIGIN=fw_flash_origin,
         FW_FLASH_LENGTH=fw_flash_length,
-        FLASH_SIZE=flash_size,
-        BOOTLOADER_SYMBOLS=bootloader_symbol_definitions)
-
-    bld(features='subst',
-        source=bld.path.find_node('process_management/sdk_memory_limits.template.h'),
-        target=bld.path.get_bld().make_node('process_management/sdk_memory_limits.auto.h'),
-        APP_RAM_2X_SIZE=str(app_ram_size_2x.app_segment),
-        APP_RAM_3X_SIZE=str(app_ram_size_3x.app_segment),
-        APP_RAM_4X_SIZE=str(app_ram_size_4x.app_segment),
-        APP_RAM_SYSTEM_SIZE=str(system_app_segment_size))
+        FLASH_SIZE=flash_size)
 
     return ldscript_result
 
 
 def _link_firmware(bld, sources):
-    if bld.env.CONFIG_QEMU:
-        if bld.env.CONFIG_BOARD_QEMU_GABBRO:
-            # qemu_gabbro needs the getafix round display row info data
-            sources += ['board/displays/display_getafix.c']
-    elif bld.env.CONFIG_BOARD_FAMILY_GETAFIX:
-        sources += ['board/displays/display_getafix.c']
-
     fw_linkflags = ['-Wl,--cref',
                     '-Wl,-Map=tintin_fw.map',
                     '-Wl,--gc-sections',
@@ -292,10 +253,24 @@ def _link_firmware(bld, sources):
     uses = ['applib',
             'board',
             'bt_driver',
+            'comm',
+            'console',
+            'debug',
             'drivers',
+            'flash_region',
             'freertos',
             'fw_services',
             'gcc',
+            'kernel',
+            'mfg',
+            'popups',
+            'process_management',
+            'process_state',
+            'resource',
+            'shell',
+            'syscall',
+            'system',
+            'util',
             'proto_schemas',
             'libbtutil',
             'libos',
@@ -321,178 +296,49 @@ def _link_firmware(bld, sources):
         ldscripts.append(bld.srcnode.find_node(
             'third_party/memfault/port/memfault_compact_log.ld'))
 
-    if bld.env.NO_LINK:
-        # Only build the object files
-        bld.objects(source=sources,
-                    use=uses,
-                    includes='fonts')
+    # Build and link the firmware ELF
+    elf_node = bld.path.get_bld().make_node('tintin_fw.elf')
+    x = bld.program(source=sources,
+                use=uses,
+                link_group=True,
+                lib=['gcc'],
+                target=elf_node,
+                includes='fonts',
+                ldscript=ldscripts,
+                linkflags=fw_linkflags)
+
+    x.env.append_value('LINKFLAGS', fw_linkflags)
+
+    if bld.env.CONFIG_PBLBOOT:
+        nohdr_hex_node = elf_node.change_ext('.nohdr.hex')
+        bld(rule=waftools.objcopy.objcopy_hex, source=elf_node, target=nohdr_hex_node)
+        hex_node = elf_node.change_ext('.hex')
+        bld(rule=waftools.pblboot.insert_header_hex, source=nohdr_hex_node, target=hex_node)
+        nohdr_bin_node = elf_node.change_ext('.nohdr.bin')
+        bld(rule=waftools.objcopy.objcopy_bin, source=elf_node, target=nohdr_bin_node)
+        bin_node = elf_node.change_ext('.bin')
+        bld(rule=waftools.pblboot.insert_header_bin, source=nohdr_bin_node, target=bin_node)
     else:
-        # ..and actually build and link the firmware ELF
-        elf_node = bld.path.get_bld().make_node('tintin_fw.elf')
-        x = bld.program(source=sources,
-                    use=uses,
-                    link_group=True,
-                    lib=['gcc'],
-                    target=elf_node,
-                    includes='fonts',
-                    ldscript=ldscripts,
-                    linkflags=fw_linkflags)
+        hex_node = elf_node.change_ext('.hex')
+        bld(rule=waftools.objcopy.objcopy_hex, source=elf_node, target=hex_node)
+        bin_node = elf_node.change_ext('.bin')
+        bld(rule=waftools.objcopy.objcopy_bin, source=elf_node, target=bin_node)
 
-        x.env.append_value('LINKFLAGS', fw_linkflags)
-
-        if bld.env.FLASH_ITCM:
-            # 0x07E00000 is the difference between the flash memory address and the flash ITCM
-            # address. We need to add this because otherwise OpenOCD is unable to write the
-            # image into the flash chip.
-            extra_args = '--change-addresses 0x07E00000'
-        else:
-            extra_args = ''
-
-        if bld.env.CONFIG_PBLBOOT:
-            nohdr_hex_node = elf_node.change_ext('.nohdr.hex')
-            bld(rule=waftools.objcopy.objcopy_hex, source=elf_node, target=nohdr_hex_node, extra_args=extra_args)
-            hex_node = elf_node.change_ext('.hex')
-            bld(rule=waftools.pblboot.insert_header_hex, source=nohdr_hex_node, target=hex_node)
-            nohdr_bin_node = elf_node.change_ext('.nohdr.bin')
-            bld(rule=waftools.objcopy.objcopy_bin, source=elf_node, target=nohdr_bin_node)
-            bin_node = elf_node.change_ext('.bin')
-            bld(rule=waftools.pblboot.insert_header_bin, source=nohdr_bin_node, target=bin_node)
-        else:
-            hex_node = elf_node.change_ext('.hex')
-            bld(rule=waftools.objcopy.objcopy_hex, source=elf_node, target=hex_node, extra_args=extra_args)
-            bin_node = elf_node.change_ext('.bin')
-            bld(rule=waftools.objcopy.objcopy_bin, source=elf_node, target=bin_node)
-
-        # Create the log_strings .elf and check the format specifier rules
-        if bld.env.CONFIG_LOG_HASHED:
-            fw_loghash_node = bld.path.get_bld().make_node('tintin_fw_loghash_dict.json')
-            bld(rule=waftools.generate_log_strings_json.wafrule,
-                source=elf_node, target=fw_loghash_node)
-            bld.LOGHASH_DICTS.append(fw_loghash_node)
-
-
-def _get_mfg_paths(bld):
-    """Return a list of directories we want to build to support manufacturing on a platform"""
-
-    if bld.env.CONFIG_QEMU:
-        return ('mfg/qemu',)
-    elif bld.env.CONFIG_BOARD_FAMILY_ASTERIX:
-        return ('mfg/asterix',)
-    elif bld.env.CONFIG_BOARD_FAMILY_OBELIX:
-        return ('mfg/obelix',)
-    elif bld.env.CONFIG_BOARD_FAMILY_GETAFIX:
-        return ('mfg/getafix',)
-    else:
-        bld.fatal('No MFG configuration for board %s' % bld.env.BOARD)
-
-def _get_dbg_paths(bld):
-    """Return a list of directories we want to build to support debug logging on a platform"""
-
-    return ('debug/default',)
-
-def _get_comm_sources(bld, is_recovery):
-    excl = []
-    if bld.env.CONFIG_QEMU:
-        excl.append('comm/internals/profiles/ispp.c')
-
-    if is_recovery:
-        excl.append('comm/ble/kernel_le_client/ancs/*.c')
-        excl.append('comm/ble/kernel_le_client/ams/*.c')
-    else:
-        excl.append('comm/prf_stubs/*')
-
-    return bld.path.ant_glob('comm/**/*.c', excl=excl)
+    # Create the log_strings .elf and check the format specifier rules
+    if bld.env.CONFIG_LOG_HASHED:
+        fw_loghash_node = bld.path.get_bld().make_node('tintin_fw_loghash_dict.json')
+        bld(rule=waftools.generate_log_strings_json.wafrule,
+            source=elf_node, target=fw_loghash_node)
+        bld.LOGHASH_DICTS.append(fw_loghash_node)
 
 
 def _build_recovery(bld):
-    source_dirs = ['apps/core/**',
-                   'apps/prf/**',
-                   'process_management',
-                   'process_state/**',
-                   'console',
-                   'debug',
-                   'flash_region',
-                   'graphics',
-                   'kernel/**',
-                   'mfg',
-                   'mfg/mfg_apps',
-                   'mfg/mfg_mode',
-                   'resource',
-                   'syscall',
-                   'system',
-                   'shell',
-                   'shell/prf/**',
-                   'util/**']
-
-    source_dirs.extend(_get_mfg_paths(bld))
-    source_dirs.extend(_get_dbg_paths(bld))
-
-    excludes = ['process_management/app_custom_icon.c',
-                'process_management/app_menu_data_source.c',
-                'resource/resource_storage_file.c']
-
-    if not bld.env.CONFIG_BOARD_FAMILY_ASTERIX:
-        excludes.extend([
-            'apps/prf/mfg_speaker_asterix.c',
-            'apps/prf/mfg_mic_asterix.c',
-        ])
-    
-    if not bld.env.CONFIG_BOARD_FAMILY_OBELIX:
-        excludes.extend([
-            'apps/prf/mfg_speaker_obelix.c',
-            'apps/prf/mfg_mic_obelix.c',
-        ])
-
-    if not bld.env.CONFIG_BOARD_FAMILY_OBELIX or not bld.env.CONFIG_MFG:
-        excludes.extend([
-            'apps/prf/mfg_hrm_ctr_leakage_obelix.c',
-        ])
-
-    if not bld.env.CONFIG_BOARD_FAMILY_GETAFIX:
-        excludes.extend([
-            'apps/prf/mfg_mic_getafix.c',
-        ])
-
-    # Exclude magnetometer test for platforms without magnetometer
-    if not bld.env.CONFIG_MAG:
-        excludes.extend([
-            'apps/prf/mfg_mag.c',
-        ])
-
-    if not bld.env.CONFIG_TOUCH:
-        excludes.extend([
-            'apps/prf/mfg_touch.c',
-        ])
-
-    sources = sum([bld.path.ant_glob('%s/*.c' % d, excl=excludes) for d in source_dirs], [])
-    sources.extend(_get_comm_sources(bld, True))
-    sources.extend(bld.path.ant_glob('*.c'))
+    sources = bld.path.ant_glob('*.c')
     sources.extend(bld.path.ant_glob('*.[sS]'))
-
-    sources.append(bld.path.make_node('popups/bluetooth_pairing_ui.c'))
 
     sources.append(bld.path.get_bld().make_node('builtin_resources.auto.c'))
 
-
-
-
-    if not bld.env.CONFIG_PROMPT:
-        sources = [ x for x in sources if not x.abspath().endswith('console/prompt.c') ]
-        sources = [ x for x in sources if not x.abspath().endswith('console/prompt_commands.c') ]
-
     _link_firmware(bld, sources)
-
-
-def _get_launcher_globs_to_exclude(bld):
-    system_launchers_root_path = 'apps/system/launcher/'
-    legacy_launcher_glob = system_launchers_root_path + 'legacy/**'
-    default_launcher_glob = system_launchers_root_path + 'default/**'
-    launcher_globs_to_exclude = [legacy_launcher_glob, default_launcher_glob]
-
-    launcher_glob_to_use = default_launcher_glob
-
-    launcher_globs_to_exclude.remove(launcher_glob_to_use)
-    return launcher_globs_to_exclude
 
 
 def _build_normal(bld):
@@ -505,67 +351,20 @@ def _build_normal(bld):
 
     bld.DYNAMIC_RESOURCES.append(tzdata_bin)
 
-    source_dirs = ['process_management',
-                   'process_state/**',
-                   'console',
-                   'debug',
-                   'flash_region',
-                   'graphics',
-                   'kernel/**',
-                   'launcher/**',
-                   'mfg',
-                   'popups/**',
-                   'resource',
-                   'syscall',
-                   'system',
-                   'shell',
-                   'shell/%s/**' % bld.env.NORMAL_SHELL,
-                   'util/**']
-
-    excludes = []
-
-    source_dirs.append('apps/core/**')
-    if bld.env.NORMAL_SHELL == 'sdk':
-        source_dirs.append('apps/sdk/**')
-        source_dirs.append('apps/system/timeline')
-        source_dirs.append('apps/system/launcher/default/**')
-    else:
-        source_dirs.extend(('apps/%s/**' % d for d in ('system', 'watch')))
-        if bld.env.CONFIG_BOARD_FAMILY_GETAFIX:
-            excludes.append('apps/watch/tictoc/default')
-            excludes.append('apps/watch/tictoc/bw')
-        elif bld.env.CONFIG_SCREEN_COLOR_DEPTH_BITS == 1:
-            excludes.append('apps/watch/tictoc/default')
-            excludes.append('apps/watch/tictoc/round')
-        else:
-            excludes.append('apps/watch/tictoc/bw')
-            excludes.append('apps/watch/tictoc/round')
-
-    source_dirs.extend(_get_mfg_paths(bld))
-    source_dirs.extend(_get_dbg_paths(bld))
-
-    excludes.extend(_get_launcher_globs_to_exclude(bld))
-
-    if not bld.env.CONFIG_HRM:
-        excludes.append('popups/ble_hrm/**')
-
-    sources = sum([bld.path.ant_glob('%s/*.c' % d, excl=excludes) for d in source_dirs], [])
-    sources.extend(_get_comm_sources(bld, False))
-    sources.extend(bld.path.ant_glob('*.c'))
+    sources = bld.path.ant_glob('*.c')
     sources.extend(bld.path.ant_glob('*.[sS]'))
 
-    if bld.env.NORMAL_SHELL == 'sdk':
-        sources.append('apps/system/app_fetch_ui.c')
-        sources.append('apps/system/watchfaces.c')
-
+    # Collect translatable strings from the firmware-core sources. apps,
+    # services and applib have their own .pot targets (merged below).
     gettexts = []
-    gettexts.extend(sources)
+    gettexts.extend(bld.path.ant_glob('**/*.c',
+                                      excl=['apps/**', 'services/**', 'applib/**']))
     gettexts.extend(bld.path.ant_glob('**/*.h'))
     gettexts.extend(bld.path.ant_glob('**/*.def'))
 
     bld.gettext(source=gettexts, target='fw.pot')
     bld.msgcat(
-            source='fw.pot services/services.pot applib/applib.pot',
+            source='fw.pot services/services.pot applib/applib.pot apps/apps.pot',
             target='tintin.pot')
 
 
@@ -573,10 +372,6 @@ def _build_normal(bld):
     sources.append(bld.path.get_bld().make_node('resource/pfs_resource_table.auto.c'))
     sources.append(bld.path.get_bld().make_node('resource/timeline_resource_table.auto.c'))
     sources.append(bld.path.get_bld().make_node('builtin_resources.auto.c'))
-
-    if not bld.env.CONFIG_PROMPT:
-        sources = [ x for x in sources if not x.abspath().endswith('console/prompt.c') ]
-        sources = [ x for x in sources if not x.abspath().endswith('console/prompt_commands.c') ]
 
     _link_firmware(bld, sources)
 
@@ -627,8 +422,23 @@ def build(bld):
     bld.recurse('services')
     bld.recurse('applib')
     bld.recurse('soc')
+    bld.recurse('mfg')
+    bld.recurse('comm')
+    bld.recurse('console')
+    bld.recurse('debug')
+    bld.recurse('flash_region')
+    bld.recurse('kernel')
+    bld.recurse('popups')
+    bld.recurse('process_management')
+    bld.recurse('process_state')
+    bld.recurse('resource')
+    bld.recurse('syscall')
+    bld.recurse('system')
+    bld.recurse('util')
+    bld.recurse('apps/core')
 
     if bld.env.VARIANT == 'prf':
+        bld.recurse('apps/prf')
         _build_recovery(bld)
     else:
         bld.recurse('apps')

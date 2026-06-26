@@ -8,6 +8,8 @@
 #include "syscall/syscall_internal.h"
 #include "system/logging.h"
 
+PBL_LOG_MODULE_DECLARE(service_i18n, CONFIG_SERVICE_I18N_LOG_LEVEL);
+
 DEFINE_SYSCALL(void, sys_i18n_get_locale, char *buf) {
   if (PRIVILEGE_WAS_ELEVATED) {
     if (pebble_task_get_current() == PebbleTask_Worker) {

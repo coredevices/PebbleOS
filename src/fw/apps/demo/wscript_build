@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 bld.recurse('shared')
+if bld.env.CONFIG_DEMO_APP_ACCEL_DEMO:
+    bld.recurse('accel_demo')
 if bld.env.CONFIG_DEMO_APP_ACTION_MENU:
     bld.recurse('action_menu')
 if bld.env.CONFIG_DEMO_APP_ACTIVITY_DEMO:

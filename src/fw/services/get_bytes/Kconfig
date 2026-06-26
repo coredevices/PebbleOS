@@ -5,3 +5,11 @@ config SERVICE_GET_BYTES
     bool "Get bytes"
     help
       get_bytes endpoint (file/flash/coredump retrieval).
+
+if SERVICE_GET_BYTES
+
+module = SERVICE_GET_BYTES
+module-str = Get bytes
+source "src/fw/Kconfig.template.log_level"
+
+endif

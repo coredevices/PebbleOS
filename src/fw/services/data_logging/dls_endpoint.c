@@ -24,6 +24,8 @@
 #include "FreeRTOS.h"
 #include "timers.h"
 
+PBL_LOG_MODULE_DECLARE(service_data_logging, CONFIG_SERVICE_DATA_LOGGING_LOG_LEVEL);
+
 typedef struct {
   ListNode list_node;
   DataLoggingSession *session;
