@@ -23,6 +23,8 @@
 #include "hal/nrf_clock.h"
 #include "nrfx_pdm.h"
 
+PBL_LOG_MODULE_DEFINE(driver_mic_nrf5, CONFIG_DRIVER_MIC_LOG_LEVEL);
+
 static void prv_pdm_event_handler(nrfx_pdm_evt_t const *p_evt);
 static void prv_dispatch_samples_system_task(void *data);
 static bool prv_allocate_buffers(MicDeviceState *state);
@@ -422,9 +424,7 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
     mutex_unlock_recursive(state->mutex);
     return false;
   }
-  
-  PBL_LOG_INFO("Microphone started");
-  
+
   mutex_unlock_recursive(state->mutex);
   return true;
 }
@@ -464,9 +464,7 @@ void mic_stop(const MicDevice *this) {
   state->audio_buffer = NULL;
   state->audio_buffer_len = 0;
   state->main_pending = false;
-  
-  PBL_LOG_INFO("Microphone stopped");
-  
+
   mutex_unlock_recursive(state->mutex);
 }
 

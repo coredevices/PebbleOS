@@ -22,9 +22,6 @@ typedef uint32_t FlashAddress;
 //! Initialize the low-level flash implementation and hardware into a known
 //! state where it is ready to accept commands.
 //!
-//! This function configures microcontroller peripherals. It should be guarded
-//! with periph_config_acquire_lock/periph_config_release_lock.
-//!
 //! @param coredump_mode True if we need this flash driver to not rely on any other system
 //!                      services such as FreeRTOS being available because we're in the middle
 //!                      of a core dump. This may result in slower operations.

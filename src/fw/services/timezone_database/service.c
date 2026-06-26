@@ -6,12 +6,15 @@
 #include "resource/resource.h"
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/clock.h"
+#include "system/logging.h"
 #include "system/passert.h"
 
 #include <util/attributes.h>
 #include <util/size.h>
 
 #include <string.h>
+
+PBL_LOG_MODULE_DEFINE(service_timezone_database, CONFIG_SERVICE_TIMEZONE_DATABASE_LOG_LEVEL);
 
 // The format of the database is as follows
 // Header

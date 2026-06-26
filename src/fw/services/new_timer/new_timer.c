@@ -18,6 +18,8 @@
 #include "semphr.h"
 #include "task.h"
 
+PBL_LOG_MODULE_DEFINE(service_new_timer, CONFIG_SERVICE_NEW_TIMER_LOG_LEVEL);
+
 
 typedef struct {
   NewTimerWorkCallback cb;

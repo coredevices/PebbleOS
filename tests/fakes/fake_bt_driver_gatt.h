@@ -76,6 +76,12 @@ TimerID bt_driver_gatt_get_watchdog_timer_id(void);
 //! the controller through bt_driver_gatt_send_changed_indication.
 int fake_gatt_get_service_changed_indication_count(void);
 
+//! @return the device from the most recent bt_driver_gatt_send_changed_indication call.
+const BTDeviceInternal *fake_gatt_get_service_changed_last_device(void);
+
+//! @return the ATT handle range from the most recent bt_driver_gatt_send_changed_indication call.
+ATTHandleRange fake_gatt_get_service_changed_last_range(void);
+
 //! Feeds a single discovered service to the firmware, as the driver would.
 void fake_gatt_put_discovery_indication_service(unsigned int connection_id,
                                                 const Service *service);

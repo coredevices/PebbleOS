@@ -7,7 +7,6 @@
 #include "ancs_util.h"
 #include "ancs_definition.h"
 
-#include "comm/ble/ble_log.h"
 #include "comm/ble/gatt_client_subscriptions.h"
 #include "comm/ble/gatt_client_operations.h"
 #include "comm/ble/kernel_le_client/dis/dis.h"
@@ -31,6 +30,8 @@
 
 #include <string.h>
 
+PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
+
 // -----------------------------------------------------------------------------
 // Static function prototypes
 
@@ -48,6 +49,12 @@ T_STATIC void prv_check_ancs_alive(void);
 
 static void prv_perform_action(uint32_t notification_uid, ActionId action_id);
 
+static void prv_op_timeout_start(void);
+
+static void prv_op_timeout_stop(void);
+
+static void prv_op_timeout_kick(void);
+
 // -----------------------------------------------------------------------------
 // Static variables
 //
@@ -62,6 +69,10 @@ static void prv_perform_action(uint32_t notification_uid, ActionId action_id);
 // chatty apps cannot grow it without limit. Action ops are not capped — they
 // are user-initiated and rare.
 #define ANCS_NOTIF_QUEUE_MAX_DEPTH 16
+
+// Bound the wait for a Control Point response so a lost reply can't wedge the
+// in-flight queue head forever (which blocks every later notification).
+#define ANCS_OP_RESPONSE_TIMEOUT_SECONDS 10
 
 typedef struct {
   uint8_t command_id;
@@ -96,6 +107,8 @@ typedef struct ANCSClient {
   ANCSClientState state;
   BLECharacteristic characteristics[NumANCSCharacteristic];
   RegularTimerInfo is_alive_timer;
+  // Watchdog for the in-flight Control Point request.
+  RegularTimerInfo op_timeout_timer;
   ReassemblyContext reassembly_ctx;
   ANCSAttribute *attributes[NUM_FETCHED_NOTIF_ATTRIBUTES];
   NotificationQueueNode *queue;
@@ -104,6 +117,8 @@ typedef struct ANCSClient {
   // Alive-check intervals with no NS traffic; reset by any NS notification.
   // Triggers a CCCD re-subscribe at the threshold to recover silent NS.
   uint8_t alive_checks_without_ns;
+  // Consecutive non-Idle alive checks; forces recovery at the threshold.
+  uint8_t consecutive_busy_alive_checks;
 } ANCSClient;
 
 static ANCSClient *s_ancs_client;
@@ -222,10 +237,32 @@ static void prv_notif_queue_push_action(uint32_t uid, ActionId action_id) {
   prv_notif_queue_push_common(node);
 }
 
+// Evict the oldest pending attribute request to make room for a newer one.
+// Never the in-flight head or a user action. Returns true if one was freed.
+static bool prv_evict_oldest_attr_request(void) {
+  const NotificationQueueNode *in_flight =
+      (s_ancs_client->state != ANCSClientStateIdle) ? s_ancs_client->queue : NULL;
+  NotificationQueueNode *node = s_ancs_client->queue;
+  while (node) {
+    NotificationQueueNode *next = (NotificationQueueNode *)list_get_next((ListNode *)node);
+    if (node != in_flight && node->op == NotificationQueueOpGetAttributes) {
+      PBL_LOG_WRN("ANCS queue full, evicting oldest notif (uid=%"PRIu32")", node->uid);
+      list_remove((ListNode *)node, (ListNode **)&s_ancs_client->queue, NULL);
+      kernel_free(node);
+      return true;
+    }
+    node = next;
+  }
+  return false;
+}
+
 static void prv_notif_queue_push_attr_request(uint32_t uid, ANCSProperty properties) {
   if (list_count((ListNode *)s_ancs_client->queue) >= ANCS_NOTIF_QUEUE_MAX_DEPTH) {
-    PBL_LOG_WRN("ANCS queue full, dropping notif (uid=%"PRIu32")", uid);
-    return;
+    // Evict a stale entry rather than drop the fresh one.
+    if (!prv_evict_oldest_attr_request()) {
+      PBL_LOG_WRN("ANCS queue full, dropping notif (uid=%"PRIu32")", uid);
+      return;
+    }
   }
 
   NotificationQueueNode *node = kernel_malloc(sizeof(NotificationQueueNode));
@@ -266,12 +303,29 @@ static void prv_notif_queue_next(void) {
   prv_do_notif_queue_operation();
 }
 
+#if UNITTEST
+T_STATIC uint32_t prv_get_queue_depth(void) {
+  return list_count((ListNode *)s_ancs_client->queue);
+}
+
+T_STATIC bool prv_queue_contains_uid(uint32_t uid) {
+  NotificationQueueNode key = {
+    .op = NotificationQueueOpGetAttributes,
+    .uid = uid,
+  };
+  return prv_notif_queue_find(&key) != NULL;
+}
+#endif
+
 // -----------------------------------------------------------------------------
 // Reset & Error Handling
 
 static void prv_reset_and_idle(void) {
+  prv_op_timeout_stop();
   prv_set_state(ANCSClientStateIdle);
   prv_reset_reassembly_context();
+  // Back to Idle: not wedged.
+  s_ancs_client->consecutive_busy_alive_checks = 0;
 }
 
 static void prv_reset_and_retry(void *unused) {
@@ -303,11 +357,63 @@ static void prv_reset_due_to_bt_error(void) {
 }
 
 // -----------------------------------------------------------------------------
+// In-flight operation watchdog
+//
+// Drops the queue head if its Control Point response never arrives.
+
+static void prv_op_timeout_launcher_task_cb(void *unused) {
+  if (!s_ancs_client) {
+    return;
+  }
+  prv_op_timeout_stop();
+  PBL_LOG_WRN("ANCS op timed out (state=%d, uid=%"PRIu32"); dropping stuck head",
+              s_ancs_client->state,
+              s_ancs_client->queue ? s_ancs_client->queue->uid : 0);
+  // Drop the wedged head so the queue keeps draining.
+  prv_reset_and_next();
+}
+
+static void prv_op_timeout_cb(void *unused) {
+  // Hop to KernelMain; ANCS state is single-threaded there.
+  launcher_task_add_callback(prv_op_timeout_launcher_task_cb, NULL);
+}
+
+static void prv_op_timeout_stop(void) {
+  if (s_ancs_client && regular_timer_is_scheduled(&s_ancs_client->op_timeout_timer)) {
+    regular_timer_remove_callback(&s_ancs_client->op_timeout_timer);
+  }
+}
+
+static void prv_op_timeout_start(void) {
+  if (!s_ancs_client) {
+    return;
+  }
+  // Only touch .cb — reassigning the whole struct would zero list_node while it
+  // may still be linked (we can re-arm from inside the callback), corrupting the
+  // regular-timer list.
+  prv_op_timeout_stop();
+  s_ancs_client->op_timeout_timer.cb = prv_op_timeout_cb;
+  regular_timer_add_multisecond_callback(&s_ancs_client->op_timeout_timer,
+                                         ANCS_OP_RESPONSE_TIMEOUT_SECONDS);
+}
+
+static void prv_op_timeout_kick(void) {
+  // DS data is progress; refresh the window so slow reassembly isn't killed.
+  if (s_ancs_client && regular_timer_is_scheduled(&s_ancs_client->op_timeout_timer)) {
+    prv_op_timeout_start();
+  }
+}
+
+// -----------------------------------------------------------------------------
 // Is Alive Logic
 
 #define ANCS_INVALID_PARAM 0xA2
 #define ANCS_IS_ALIVE_NEXT_CHECK_TIME_MINUTES 15 // Check every 15 minutes for faster recovery
 #define ANCS_IS_ALIVE_RESPONSE_WAIT_TIME_SECONDS 5 // 5 seconds
+
+// Force a flush + resubscribe if still busy after this many alive checks
+// (a wedge the op watchdog somehow missed).
+#define ANCS_MAX_BUSY_ALIVE_CHECKS 2
 
 // Force a CCCD refresh after this many consecutive alive-check intervals
 // without any NS traffic. 6 h is short enough to recover the same day for a
@@ -439,8 +545,8 @@ T_STATIC void prv_check_ancs_alive(void) {
     // probe -- the next 15 min alive check will verify recovery.
     if (++s_ancs_client->alive_checks_without_ns >=
         ANCS_ALIVE_CHECKS_WITHOUT_NS_BEFORE_RESUBSCRIBE) {
-      PBL_LOG_INFO("ANCS NS silent for %u alive checks; forcing CCCD resubscribe",
-                   s_ancs_client->alive_checks_without_ns);
+      PBL_LOG_WRN("ANCS NS silent for %u alive checks; forcing CCCD resubscribe",
+                  s_ancs_client->alive_checks_without_ns);
       s_ancs_client->alive_checks_without_ns = 0;
       prv_resubscribe_to_ancs();
       // ancs_handle_subscribe() will re-arm on success; schedule a backup so
@@ -461,13 +567,23 @@ T_STATIC void prv_check_ancs_alive(void) {
   }
 }
 
-static void prv_is_ancs_alive_launcher_task_cb(void *data) {
+T_STATIC void prv_is_ancs_alive_launcher_task_cb(void *data) {
   if (!s_ancs_client) {
     return;
   }
   if (s_ancs_client->state == ANCSClientStateIdle) {
+    s_ancs_client->consecutive_busy_alive_checks = 0;
     prv_check_ancs_alive();
+  } else if (++s_ancs_client->consecutive_busy_alive_checks >= ANCS_MAX_BUSY_ALIVE_CHECKS) {
+    // Wedged past the op watchdog: force recovery so we don't go silent.
+    PBL_LOG_ERR("ANCS busy for %u alive checks; forcing flush + resubscribe",
+                s_ancs_client->consecutive_busy_alive_checks);
+    s_ancs_client->consecutive_busy_alive_checks = 0;
+    prv_reset_due_to_bt_error();
+    prv_resubscribe_to_ancs();
+    prv_ancs_is_alive_schedule_next_check();
   } else {
+    // Legitimately processing; defer this round's probe.
     s_ancs_client->alive_check_pending = true;
   }
 }
@@ -612,7 +728,7 @@ static void prv_reassemble_ds_notification(uint32_t length, const uint8_t *data)
 
   if (!is_complete) {
     // Keep waiting
-    BLE_LOG_DEBUG("Incomplete response. Waiting for another DS notification.");
+    PBL_LOG_DBG("Incomplete response. Waiting for another DS notification.");
     return;
   }
 
@@ -733,6 +849,7 @@ static void prv_get_app_attributes(const ANCSAttribute *app_id) {
   }
 
   prv_set_state(ANCSClientStateRequestedApp);
+  prv_op_timeout_start();
 
   bool success = prv_write_control_point_request((const CPDSMessage *) request, request_size);
 
@@ -764,6 +881,8 @@ static void prv_get_notification_attributes(uint32_t uid) {
 
   bool retrying = (s_ancs_client->state == ANCSClientStateRetrying);
   prv_set_state(ANCSClientStateRequestedNotification);
+  // Arm before the write so completion/failure can cancel it.
+  prv_op_timeout_start();
 
   bool success = prv_write_control_point_request((const CPDSMessage *) request_buffer->data,
                                                  request_buffer->bytes_written);
@@ -774,6 +893,8 @@ static void prv_get_notification_attributes(uint32_t uid) {
     if (retrying) {
       prv_reset_and_flush();
     } else {
+      // Waiting on the retry timer, not a response.
+      prv_op_timeout_stop();
       prv_set_state(ANCSClientStateRetrying);
       evented_timer_register(ANCS_RETRY_TIME_MS, false, prv_reset_and_retry, NULL);
     }
@@ -838,7 +959,7 @@ void ancs_handle_subscribe(BLECharacteristic subscribed_characteristic,
   }
 
   if (error == BLEGATTErrorSuccess) {
-    PBL_LOG_INFO("Hurray! ANCS subscribed: %u", characteristic_id);
+    PBL_LOG_INFO("ANCS subscribed: %u", characteristic_id);
 
     if (characteristic_id == ANCSCharacteristicData) {
       prv_ancs_is_alive_start_tracking();
@@ -864,7 +985,7 @@ void ancs_handle_service_removed(BLECharacteristic *characteristics, uint8_t num
 }
 
 void ancs_handle_service_discovered(BLECharacteristic *characteristics) {
-  BLE_LOG_DEBUG("In ANCS service discovery CB");
+  PBL_LOG_DBG("In ANCS service discovery CB");
   PBL_ASSERTN(characteristics); // should only be called if we found something!
 
   // Pause while re-subscribing, it will be resumed when re-subscribed:
@@ -923,13 +1044,13 @@ static void prv_handle_ns_notification(uint32_t length, const uint8_t *notificat
   NSNotification* nsnotification = (NSNotification*) notification;
   ANCSProperty properties = ANCSProperty_None;
 
-  BLE_LOG_VERBOSE("NSNotification: ");
-  BLE_LOG_VERBOSE("> EventID: %d", nsnotification->event_id);
-  BLE_LOG_VERBOSE("> EventFlags: <%d>", nsnotification->event_flags);
-  BLE_LOG_VERBOSE("> CategoryID: <%d>", nsnotification->category_id);
-  BLE_LOG_VERBOSE("> CategoryCount: <%d>", nsnotification->category_count);
-  BLE_LOG_VERBOSE("> NotificationUID: <%"PRIu32">", nsnotification->uid);
-  BLE_HEXDUMP_VERBOSE((uint8_t *)nsnotification, sizeof(NSNotification));
+  PBL_LOG_VERBOSE("NSNotification: ");
+  PBL_LOG_VERBOSE("> EventID: %d", nsnotification->event_id);
+  PBL_LOG_VERBOSE("> EventFlags: <%d>", nsnotification->event_flags);
+  PBL_LOG_VERBOSE("> CategoryID: <%d>", nsnotification->category_id);
+  PBL_LOG_VERBOSE("> CategoryCount: <%d>", nsnotification->category_count);
+  PBL_LOG_VERBOSE("> NotificationUID: <%"PRIu32">", nsnotification->uid);
+  PBL_HEXDUMP(LOG_LEVEL_DEBUG_VERBOSE, (uint8_t *)nsnotification, sizeof(NSNotification));
 
   // Handle the CategoryID
   if (nsnotification->category_id == CategoryIDMissedCall) {
@@ -958,19 +1079,19 @@ static void prv_handle_ns_notification(uint32_t length, const uint8_t *notificat
       // we got in the past 2 hours. To get past this ignore notifications for the first couple
       // seconds after connecting
       if (s_just_connected && (nsnotification->event_flags & EventFlagPreExisting)) {
-        BLE_LOG_DEBUG("Ignoring notification because we just connected and PreExisting");
+        PBL_LOG_DBG("Ignoring notification because we just connected and PreExisting");
       } else {
-        BLE_LOG_DEBUG("Added ANCS notification!");
+        PBL_LOG_DBG("Added ANCS notification!");
         prv_notif_queue_push_attr_request(nsnotification->uid, properties);
       }
 
       break;
     case EventIDNotificationModified:
-      BLE_LOG_DEBUG("Modified ANCS notification!");
+      PBL_LOG_DBG("Modified ANCS notification!");
       prv_notif_queue_push_attr_request(nsnotification->uid, properties);
       break;
     case EventIDNotificationRemoved:
-      BLE_LOG_DEBUG("Removed ANCS notification");
+      PBL_LOG_DBG("Removed ANCS notification");
       ancs_notifications_handle_notification_removed(nsnotification->uid, properties);
       break;
   }
@@ -984,6 +1105,9 @@ static void prv_handle_ds_notification(uint32_t length, const uint8_t *data) {
     PBL_LOG_ERR("Received ANCS DS notification of length 0");
     return;
   }
+
+  // Forward progress — refresh the watchdog.
+  prv_op_timeout_kick();
 
   if (s_ancs_client->state == ANCSClientStateRequestedApp) {
     prv_handle_app_attributes_response(data, length);
@@ -1037,7 +1161,7 @@ void ancs_handle_write_response(BLECharacteristic characteristic, BLEGATTError e
     return;
   }
 
-  BLE_LOG_DEBUG("Got ACK for Control Point write");
+  PBL_LOG_DBG("Got ACK for Control Point write");
 
   if (s_ancs_client->queue && (s_ancs_client->queue->op == NotificationQueueOpPerformAction)) {
     // The action was successful
@@ -1049,11 +1173,11 @@ static bool prv_write_control_point_request(const CPDSMessage *cmd, size_t size)
   const BLECharacteristic cp = s_ancs_client->characteristics[ANCSCharacteristicControl];
   const BTErrno error = gatt_client_op_write(cp, (const uint8_t *) cmd, size, GAPLEClientKernel);
 
-  BLE_LOG_DEBUG("Writing to control point:");
+  PBL_LOG_DBG("Writing to control point:");
   PBL_HEXDUMP(LOG_LEVEL_DEBUG, (const uint8_t *) cmd, size);
 
   if (error != BTErrnoOK) {
-    BLE_LOG_DEBUG("Control point write error: %d", error);
+    PBL_LOG_DBG("Control point write error: %d", error);
     return false;
   }
 
@@ -1071,9 +1195,10 @@ static void prv_perform_action(uint32_t notification_uid, ActionId action_id) {
     .action_id = action_id,
   };
 
-  BLE_LOG_DEBUG("Taking action <%u> upon UID: %"PRIu32, action_id,
+  PBL_LOG_DBG("Taking action <%u> upon UID: %"PRIu32, action_id,
       notification_uid);
 
+  prv_op_timeout_start();
   const bool success = prv_write_control_point_request((const CPDSMessage *) &action_msg,
                                                        sizeof(action_msg));
   if (!success) {
@@ -1136,6 +1261,7 @@ void ancs_destroy(void) {
     return;
   }
   prv_ancs_is_alive_stop_timer();
+  prv_op_timeout_stop();
 
   ancs_app_name_storage_deinit();
 

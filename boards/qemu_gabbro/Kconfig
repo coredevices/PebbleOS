@@ -4,3 +4,22 @@
 config BOARD_QEMU_GABBRO
     bool
     default y
+
+choice
+    prompt "Emulated watch color"
+    help
+      Watch color reported by manufacturing info on the emulator.
+
+config QEMU_WATCH_COLOR_PR2_BLACK_20
+    bool "Black (20mm)"
+
+config QEMU_WATCH_COLOR_PR2_SILVER_14
+    bool "Silver (14mm)"
+
+config QEMU_WATCH_COLOR_PR2_SILVER_20
+    bool "Silver (20mm)"
+
+config QEMU_WATCH_COLOR_PR2_GOLD_14
+    bool "Gold (14mm)"
+
+endchoice

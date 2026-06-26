@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+excl = []
+if bld.env.VARIANT == 'prf':
+    excl += ['resource_storage_file.c']
+
+bld.objects(
+    name='resource',
+    source=bld.path.ant_glob('*.c', excl=excl),
+    use=['fw_includes', 'pblibc_includes'],
+)
+
+# vim:filetype=python

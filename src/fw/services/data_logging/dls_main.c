@@ -32,6 +32,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+PBL_LOG_MODULE_DEFINE(service_data_logging, CONFIG_SERVICE_DATA_LOGGING_LOG_LEVEL);
+
 static bool s_initialized = false;
 static bool s_sends_enabled_pp = true;
 static bool s_sends_enabled_run_level = true;

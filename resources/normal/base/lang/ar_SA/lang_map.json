@@ -53,6 +53,18 @@
         "pixelHeight": 20,
         "extended": true
     }, {
+        "name": "GOTHIC_36_EXTENDED",
+        "file": "NotoSansArabic-Regular.ttf",
+        "characterList": "arabic_codepoints.json",
+        "pixelHeight": 20,
+        "extended": true
+    }, {
+        "name": "GOTHIC_36_BOLD_EXTENDED",
+        "file": "NotoSansArabic-Bold.ttf",
+        "characterList": "arabic_codepoints.json",
+        "pixelHeight": 20,
+        "extended": true
+    }, {
         "name": "BITHAM_18_LIGHT_SUBSET_EXTENDED",
         "file": ""
     }, {

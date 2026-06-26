@@ -44,6 +44,8 @@
 #include "util/size.h"
 #include "util/struct.h"
 
+PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
+
 typedef struct {
   void *action_data;
   void *context;
@@ -265,7 +267,7 @@ static void prv_timeout_handler(void *context) {
   // we failed to perform action since we timed out.
   const char *msg = i18n_noop("Failed");
   const bool succeeded = false;
-  PBL_LOG_INFO("Timed out waiting for action result");
+  PBL_LOG_WRN("Timed out waiting for action result");
   prv_show_result_window_with_progress(data, TIMELINE_RESOURCE_GENERIC_WARNING, msg, succeeded);
 }
 

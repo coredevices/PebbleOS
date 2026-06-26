@@ -12,6 +12,8 @@
 
 #include <string.h>
 
+PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
+
 typedef enum {
   FilteringMatchTypeText = 0,
   FilteringMatchTypeRegex = 1,

@@ -5,3 +5,11 @@ config SERVICE_ANALYTICS
     bool "Analytics"
     help
       Firmware analytics and telemetry.
+
+if SERVICE_ANALYTICS
+
+module = SERVICE_ANALYTICS
+module-str = Analytics
+source "src/fw/Kconfig.template.log_level"
+
+endif

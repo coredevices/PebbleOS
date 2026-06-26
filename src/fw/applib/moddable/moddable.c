@@ -7,6 +7,8 @@
 #include "syscall/syscall_internal.h"
 #include "applib/app_logging.h"
 #include "applib/moddable/moddable.h"
+#include "applib/ui/dialogs/expandable_dialog.h"
+#include "applib/ui/dialogs/simple_dialog.h"
 
 #include <stddef.h>
 
@@ -23,6 +25,9 @@ void moddable_cleanup(void)
 
 	if (state->the)
 		xsDeleteMachine(state->the);
+
+	if (state->abortReason)
+		c_free(state->abortReason);
 
 	extern void modTimerExit(void);
 	modTimerExit();
@@ -120,9 +125,33 @@ DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr)
 
 	evented_timer_register(1, false, (EventedTimerCallback)modRunMachineSetup, the);
 
+	xsBeginHostExit(the);
 	app_event_loop();
+	xsEndHostExit(the);
 
+	int exitStatus = the->exitStatus;
+	char *abortReason = state->abortReason;
+	state->abortReason = NULL;
 	moddable_cleanup();
+
+	if ((xsNormalExit != exitStatus) && (xsDebuggerExit != exitStatus)) {
+		ExpandableDialog *dialog = expandable_dialog_create("");
+		Dialog *base_dialog = expandable_dialog_get_dialog(dialog);
+
+		expandable_dialog_set_header(dialog, "Alloy: Fatal Error");
+		char *msg = (char *)fxAbortString(exitStatus);
+		dialog_set_text(base_dialog, abortReason ? abortReason : msg);
+		if (abortReason) {
+		    c_free(abortReason);
+		}
+		dialog_set_icon(base_dialog, RESOURCE_ID_GENERIC_WARNING_SMALL);
+		dialog_set_fullscreen(base_dialog, true);
+		expandable_dialog_show_action_bar(dialog, false);
+
+		app_expandable_dialog_push(dialog);
+
+		app_event_loop();
+	}
 }
 
 #else

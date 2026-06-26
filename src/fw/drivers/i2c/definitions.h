@@ -5,7 +5,6 @@
 
 #include "drivers/rtc.h"
 #include "os/mutex.h"
-#include "kernel/util/stop.h"
 
 #include "freertos_types.h"
 #include "portmacro.h"
@@ -73,7 +72,6 @@ struct I2CBus {
   AfConfig scl_gpio;  ///< Alternate Function configuration for SCL pin
   AfConfig sda_gpio;  ///< Alternate Function configuration for SDA pin
 #endif
-  StopModeInhibitor stop_mode_inhibitor;
   const char *name;  //! Device ID for logging purposes
 };
 
@@ -87,6 +85,3 @@ void i2c_init(I2CBus *bus);
 
 //! Transfer event handler implemented in i2c.c and called by HAL implementation
 portBASE_TYPE i2c_handle_transfer_event(I2CBus *device, I2CTransferEvent event);
-
-#define I2C_DEBUG(fmt, args...) \
-  PBL_LOG_D_DBG(LOG_DOMAIN_I2C, fmt, ## args)

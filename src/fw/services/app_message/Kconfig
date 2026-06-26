@@ -5,3 +5,11 @@ config SERVICE_APP_MESSAGE
     bool "App message"
     help
       AppMessage (app <-> phone) transport.
+
+if SERVICE_APP_MESSAGE
+
+module = SERVICE_APP_MESSAGE
+module-str = App message
+source "src/fw/Kconfig.template.log_level"
+
+endif

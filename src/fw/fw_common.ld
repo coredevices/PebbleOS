@@ -163,7 +163,7 @@ SECTIONS {
         . = ALIGN(__stack_guard_size__);
         __kernel_main_stack_start__ = .;
 
-        . = . + 2048;
+        . = . + 4096;
     } >REGION_KERNEL_STACKS
     __kernel_main_stack_size__ = . - __kernel_main_stack_start__;
 

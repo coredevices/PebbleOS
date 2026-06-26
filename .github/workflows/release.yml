@@ -19,11 +19,11 @@ jobs:
       matrix:
         board:
           - asterix
-          - obelix_dvt
-          - obelix_pvt
-          - getafix_evt
-          - getafix_dvt
-          - getafix_dvt2
+          - obelix@dvt
+          - obelix@pvt
+          - getafix@evt
+          - getafix@dvt
+          - getafix@dvt2
 
     steps:
       - name: Mark Github workspace as safe
@@ -44,8 +44,14 @@ jobs:
           pip install -U pip
           pip install -r requirements.txt
 
+      - name: Set artifact board name
+        id: artifact_board
+        run: echo "NAME=$(printf '%s' "$BOARD" | tr @ _)" >> "$GITHUB_OUTPUT"
+        env:
+          BOARD: ${{ matrix.board }}
+
       - name: Configure
-        run: ./waf configure --board ${{ matrix.board }} --variant=prf -DCONFIG_RELEASE=y
+        run: ./waf configure --board '${{ matrix.board }}' --variant=prf -DCONFIG_RELEASE=y
 
       - name: Build PRF
         run: ./waf build
@@ -56,11 +62,11 @@ jobs:
       - name: Copy PRF artifacts
         run: |
           mkdir -p artifacts
-          cp build/src/fw/tintin_fw.hex artifacts/prf_${{ matrix.board }}_${{github.ref_name}}.hex
-          cp build/src/fw/tintin_fw.bin artifacts/prf_${{ matrix.board }}_${{github.ref_name}}.bin
-          cp build/src/fw/tintin_fw.elf artifacts/prf_${{ matrix.board }}_${{github.ref_name}}.elf
+          cp build/src/fw/tintin_fw.hex artifacts/prf_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}.hex
+          cp build/src/fw/tintin_fw.bin artifacts/prf_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}.bin
+          cp build/src/fw/tintin_fw.elf artifacts/prf_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}.elf
           cp build/*.pbz artifacts
-          cp build/src/fw/tintin_fw_loghash_dict.json artifacts/prf_${{ matrix.board }}_${{github.ref_name}}_loghash_dict.json
+          cp build/src/fw/tintin_fw_loghash_dict.json artifacts/prf_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}_loghash_dict.json
 
       - name: Get PRF Build ID
         id: prf_build_id
@@ -79,7 +85,7 @@ jobs:
             --endpoint-url "${{ vars.LOG_HASH_BUCKET_ENDPOINT }}"
 
       - name: Configure PRF MFG
-        run: ./waf configure --board ${{ matrix.board }} --variant=prf -DCONFIG_MFG=y -DCONFIG_LOG_HASHED=n -DCONFIG_RELEASE=y
+        run: ./waf configure --board '${{ matrix.board }}' --variant=prf -DCONFIG_MFG=y -DCONFIG_LOG_HASHED=n -DCONFIG_RELEASE=y
 
       - name: Build MFG PRF
         run: ./waf build
@@ -87,14 +93,14 @@ jobs:
       - name: Copy MFG PRF artifacts
         run: |
           mkdir -p artifacts
-          cp build/src/fw/tintin_fw.hex artifacts/prf_mfg_${{ matrix.board }}_${{github.ref_name}}.hex
-          cp build/src/fw/tintin_fw.bin artifacts/prf_mfg_${{ matrix.board }}_${{github.ref_name}}.bin
-          cp build/src/fw/tintin_fw.elf artifacts/prf_mfg_${{ matrix.board }}_${{github.ref_name}}.elf
+          cp build/src/fw/tintin_fw.hex artifacts/prf_mfg_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}.hex
+          cp build/src/fw/tintin_fw.bin artifacts/prf_mfg_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}.bin
+          cp build/src/fw/tintin_fw.elf artifacts/prf_mfg_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}.elf
 
       - name: Store
         uses: actions/upload-artifact@v6
         with:
-          name: artifacts-prf-${{ matrix.board }}
+          name: artifacts-prf-${{ steps.artifact_board.outputs.NAME }}
           path: artifacts
 
   build-firmware:
@@ -107,11 +113,11 @@ jobs:
       matrix:
         board:
           - asterix
-          - obelix_dvt
-          - obelix_pvt
-          - getafix_evt
-          - getafix_dvt
-          - getafix_dvt2
+          - obelix@dvt
+          - obelix@pvt
+          - getafix@evt
+          - getafix@dvt
+          - getafix@dvt2
         slot:
           - 0
           - 1
@@ -144,19 +150,25 @@ jobs:
         shell: bash
         run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
 
+      - name: Set artifact board name
+        id: artifact_board
+        run: echo "NAME=$(printf '%s' "$BOARD" | tr @ _)" >> "$GITHUB_OUTPUT"
+        env:
+          BOARD: ${{ matrix.board }}
+
       - name: Set slot suffix
         id: slot_suffix
         run: |
           NEEDS_SUFFIX="obelix_dvt obelix_pvt getafix_evt getafix_dvt getafix_dvt2"
 
-          if echo $NEEDS_SUFFIX | grep -wq "${{ matrix.board }}"; then
+          if echo $NEEDS_SUFFIX | grep -wq "${{ steps.artifact_board.outputs.NAME }}"; then
             echo "SLOT_SUFFIX=_slot${{ matrix.slot }}" >> "$GITHUB_OUTPUT"
           else
             echo "SLOT_SUFFIX=" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Configure
-        run: ./waf configure --board ${{ matrix.board }} --slot ${{ matrix.slot }} -DCONFIG_RELEASE=y
+        run: ./waf configure --board '${{ matrix.board }}' --slot ${{ matrix.slot }} -DCONFIG_RELEASE=y
 
       - name: Build firmware
         run: ./waf build
@@ -167,11 +179,11 @@ jobs:
       - name: Copy firmware artifacts
         run: |
           mkdir -p artifacts
-          cp build/src/fw/tintin_fw.hex artifacts/firmware_${{ matrix.board }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.hex
-          cp build/src/fw/tintin_fw.bin artifacts/firmware_${{ matrix.board }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.bin
-          cp build/src/fw/tintin_fw.elf artifacts/firmware_${{ matrix.board }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.elf
+          cp build/src/fw/tintin_fw.hex artifacts/firmware_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.hex
+          cp build/src/fw/tintin_fw.bin artifacts/firmware_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.bin
+          cp build/src/fw/tintin_fw.elf artifacts/firmware_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.elf
           cp build/*.pbz artifacts
-          cp build/src/fw/tintin_fw_loghash_dict.json artifacts/firmware_${{ matrix.board }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}_loghash_dict.json
+          cp build/src/fw/tintin_fw_loghash_dict.json artifacts/firmware_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}_loghash_dict.json
 
       - name: Get Build ID
         id: build_id
@@ -193,7 +205,7 @@ jobs:
       - name: Store
         uses: actions/upload-artifact@v6
         with:
-          name: artifacts-${{ matrix.board }}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}
+          name: artifacts-${{ steps.artifact_board.outputs.NAME }}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}
           path: artifacts
 
       - name: Upload symbols to Memfault
@@ -205,7 +217,7 @@ jobs:
             --org ${{ secrets.MEMFAULT_ORG }} \
             --project ${{ secrets.MEMFAULT_PROJECT }} \
             upload-mcu-symbols \
-            artifacts/firmware_${{ matrix.board }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.elf
+            artifacts/firmware_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.elf
 
   release:
     runs-on: ubuntu-24.04

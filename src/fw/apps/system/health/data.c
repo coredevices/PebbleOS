@@ -233,6 +233,10 @@ int32_t health_data_steps_get_current_average(HealthData *health_data) {
   return health_data->current_step_average;
 }
 
+int32_t health_data_steps_get_current_average_minute(HealthData *health_data) {
+  return health_data->step_average_last_updated_time;
+}
+
 int32_t health_data_steps_get_cur_wday_average(HealthData *health_data) {
   return prv_health_data_get_n_average_chunks(health_data, ACTIVITY_NUM_METRIC_AVERAGES);
 }

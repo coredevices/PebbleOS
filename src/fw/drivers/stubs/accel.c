@@ -16,6 +16,11 @@ void accel_set_num_samples(uint32_t num_samples) {
 }
 
 
+uint32_t accel_get_max_num_samples(void) {
+  return 1;
+}
+
+
 int accel_peek(AccelDriverSample *data) {
   return -1;
 }

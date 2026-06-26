@@ -10,7 +10,7 @@
 #define PA_POWER_DELAY_TIME      (200) /* us */
 
 void audio_init(AudioDevice* audio_device) {
-    gpio_output_init(&audio_device->pa_ctrl, GPIO_OType_PP, GPIO_Speed_2MHz);
+    gpio_output_init(&audio_device->pa_ctrl, GPIO_OType_PP);
     gpio_output_set(&audio_device->pa_ctrl, false);
     delay_us(PA_POWER_DELAY_TIME*10);
     audec_init(audio_device);

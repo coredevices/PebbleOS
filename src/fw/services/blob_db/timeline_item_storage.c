@@ -10,6 +10,8 @@
 #include "system/logging.h"
 #include "util/units.h"
 
+PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
+
 #define MAX_CHILDREN_PER_PIN 3
 
 // FIRM-1649: temporary instrumentation to catch long mutex hold/wait on the

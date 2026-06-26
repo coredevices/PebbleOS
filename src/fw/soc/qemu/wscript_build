@@ -2,6 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 bld.objects(
     name='soc',
-    source=['init.c'],
+    source=['init.c', 'freertos.c'],
     use=['fw_includes'],
 )

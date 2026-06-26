@@ -586,35 +586,80 @@ bool text_resources_init_font(ResAppNum app_num, uint32_t font_resource,
   return true;
 }
 
+// Leaf glyph lookup against a single font. This NEVER consults the fallback font, which is what
+// structurally bounds the fallback to depth 1: the fallback font is looked up with this helper, so
+// it can never trigger a further fallback and no recursion or cycle is possible.
+static const GlyphData *prv_get_glyph_in_font(FontCache *font_cache, Codepoint codepoint,
+                                              FontInfo *font_info, bool need_bitmap) {
+  const FontResource *font_res = prv_font_res_for_codepoint(codepoint, font_info);
+  prv_check_font_cache(font_cache, font_res);
+  return prv_get_glyph_metadata_from_spi(codepoint, font_cache, font_res, need_bitmap);
+}
+
+// When source_out is non-NULL it receives the FontResource that actually
+// supplied the returned glyph -- the primary sub-font, the system fallback, or
+// the wildcard's sub-font -- which is not always the one nominally mapped from
+// the requested codepoint. Baseline alignment needs the real source.
 static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint,
-                                      FontInfo *font_info, bool need_bitmap) {
+                                      FontInfo *font_info, bool need_bitmap,
+                                      const FontResource **source_out) {
   if (!font_info->loaded) {
     sys_font_reload_font(font_info);
   }
 
-  // if we cannot find the codepoint we are looking for, we should always be
-  // able to find the wildcard (square box) or ' ' character to display. We use
-  // the wildcard codepoint from the base font in case the extension pack has
-  // been deleted
-  const Codepoint codepoint_list[] = { codepoint, font_info->base.md.wildcard_codepoint, ' ' };
-  for (unsigned int i = 0; i < ARRAY_LENGTH(codepoint_list); i++) {
-    const FontResource *font_res = prv_font_res_for_codepoint(codepoint_list[i], font_info);
-    prv_check_font_cache(font_cache, font_res);
+  // (a) Requested codepoint in the primary font.
+  const GlyphData *data = prv_get_glyph_in_font(font_cache, codepoint, font_info, need_bitmap);
+  if (data) {
+    if (source_out) {
+      *source_out = prv_font_res_for_codepoint(codepoint, font_info);
+    }
+    return data;
+  }
 
-    const GlyphData *data = prv_get_glyph_metadata_from_spi(codepoint_list[i], font_cache,
-                                                            font_res, need_bitmap);
+  // (b) Missing from the primary font: retry the SAME codepoint once against the system fallback
+  //     font, which carries a wider character set. The fallback is a process-global, not per-font
+  //     state, so it lives here in the renderer rather than on FontInfo (whose layout is frozen
+  //     applib ABI). It is fetched via the syscall directly (the NULL key is the fallback font),
+  //     keeping text_resources independent of the fonts.c config layer. prv_get_glyph_in_font does
+  //     not recurse into the fallback, so at most one extra font is consulted with no loop. Skip
+  //     when the primary already is the fallback font.
+  FontInfo *fallback = sys_font_get_system_font(NULL);
+  if (fallback != NULL && fallback != font_info) {
+    if (!fallback->loaded) {
+      sys_font_reload_font(fallback);
+    }
+    data = prv_get_glyph_in_font(font_cache, codepoint, fallback, need_bitmap);
     if (data) {
+      if (source_out) {
+        *source_out = prv_font_res_for_codepoint(codepoint, fallback);
+      }
       return data;
     }
   }
-  PBL_LOG_WRN("failed to load glyph or wildcard");
+
+  // (c) Absent everywhere: fall back to the wildcard (square box) then ' ', looked up in the
+  //     PRIMARY font, so a glyph missing from every font still yields the primary font's box or
+  //     space. We use the wildcard codepoint from the base font in case the extension pack has
+  //     been deleted. The fallback font's own wildcard is deliberately never used: a single
+  //     missing-glyph box is the correct indicator.
+  const Codepoint substitutes[] = { font_info->base.md.wildcard_codepoint, ' ' };
+  for (unsigned int i = 0; i < ARRAY_LENGTH(substitutes); i++) {
+    data = prv_get_glyph_in_font(font_cache, substitutes[i], font_info, need_bitmap);
+    if (data) {
+      if (source_out) {
+        *source_out = prv_font_res_for_codepoint(substitutes[i], font_info);
+      }
+      return data;
+    }
+  }
+  PBL_LOG_WRN("failed to load glyph, fallback, or wildcard");
   return NULL;
 }
 
 int8_t text_resources_get_glyph_horiz_advance(FontCache *font_cache, const Codepoint codepoint,
                                               FontInfo *font_info) {
   // Metadata only: measuring must not pay the deep bitmap load; render pre-loads it in walk_line().
-  const GlyphData *g = prv_get_glyph(font_cache, codepoint, font_info, false /* need_bitmap */);
+  const GlyphData *g = prv_get_glyph(font_cache, codepoint, font_info, false /* need_bitmap */, NULL);
   if (!g) {
     return 0;
   }
@@ -623,5 +668,26 @@ int8_t text_resources_get_glyph_horiz_advance(FontCache *font_cache, const Codep
 
 const GlyphData *text_resources_get_glyph(FontCache *font_cache, const Codepoint codepoint,
                                           FontInfo *font_info) {
-  return prv_get_glyph(font_cache, codepoint, font_info, true /* need_bitmap */);
+  return prv_get_glyph(font_cache, codepoint, font_info, true /* need_bitmap */, NULL);
+}
+
+int16_t text_resources_get_glyph_baseline_offset(FontCache *font_cache, FontInfo *font_info,
+                                                 Codepoint codepoint) {
+  // Baseline alignment only applies to extended fonts, which pair a base and an
+  // extension sub-font of possibly different heights on the same line. A
+  // non-extended FontInfo has a single sub-font, so there is nothing to align.
+  if (!font_info->extended) {
+    return 0;
+  }
+  // Resolve the glyph the way the renderer will (metadata only) so the offset
+  // is based on the sub-font that actually supplies it -- including the system
+  // fallback or the wildcard box -- not the nominal sub-font for the codepoint.
+  // Each sub-font anchors its baselines at its own max_height, so shift a glyph
+  // down by the FontInfo height (the tallest sub-font) minus its source height.
+  const FontResource *source = NULL;
+  prv_get_glyph(font_cache, codepoint, font_info, false /* need_bitmap */, &source);
+  if (source == NULL) {
+    return 0;
+  }
+  return (int16_t)font_info->max_height - (int16_t)source->md.max_height;
 }

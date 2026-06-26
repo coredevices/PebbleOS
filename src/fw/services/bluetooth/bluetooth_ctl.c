@@ -12,7 +12,6 @@
 #include "drivers/clocksource.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
-#include "kernel/util/stop.h"
 #include "os/mutex.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/bluetooth/ble_bas.h"
@@ -25,6 +24,8 @@
 #include "pbl/services/system_task.h"
 #include "pbl/services/bluetooth/ble_hrm.h"
 #include "system/logging.h"
+
+PBL_LOG_MODULE_DEFINE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
 static bool s_comm_initialized = false;
 static bool s_comm_airplane_mode_on = false;
@@ -63,7 +64,6 @@ static void prv_comm_start(void) {
   if (s_comm_is_running) {
     return;
   }
-  stop_mode_disable(InhibitorCommMode);
   // Heap allocated to reduce stack usage
   BTDriverConfig *config = kernel_zalloc_check(sizeof(BTDriverConfig));
   dis_get_info(&config->dis_info);
@@ -93,15 +93,12 @@ static void prv_comm_start(void) {
     PBL_LOG_ERR("BT driver failed to start!");
     // FIXME: PBL-36163 -- handle this better
   }
-
-  stop_mode_enable(InhibitorCommMode);
 }
 
 static void prv_comm_stop(void) {
   if (!s_comm_is_running) {
     return;
   }
-  stop_mode_disable(InhibitorCommMode);
   ble_bas_deinit();
 #if defined(CONFIG_HRM) && !defined(CONFIG_RECOVERY_FW)
   ble_hrm_deinit();
@@ -110,7 +107,6 @@ static void prv_comm_stop(void) {
 
   // Should be the last thing to happen that touches the Bluetooth controller directly
   bt_driver_stop();
-  stop_mode_enable(InhibitorCommMode);
   s_comm_is_running = false;
 
   // This is a legacy event used to update the Settings app.
@@ -193,7 +189,7 @@ static void prv_track_quick_airplane_mode_toggles(bool is_airplane_mode_currentl
   const uint64_t max_interval_secs = 30;
   if (((now_ticks - s_airplane_mode_last_toggle_ticks) < (max_interval_secs * RTC_TICKS_HZ)) &&
       is_airplane_mode_currently_on) {
-    PBL_LOG_INFO("Quick airplane mode toggle detected!");
+    PBL_LOG_DBG("Quick airplane mode toggle detected!");
   }
   s_airplane_mode_last_toggle_ticks = now_ticks;
 }

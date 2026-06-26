@@ -36,6 +36,8 @@
 #include <stdbool.h>
 #include <string.h>
 
+PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
+
 typedef struct DoNotDisturbData {
   TimerID update_timer_id;
   bool is_in_schedule_period;
@@ -77,7 +79,7 @@ static void prv_do_update(void) {
     return;
   }
   s_data.was_active = is_active;
-  PBL_LOG_INFO("Quiet Time: %s", prv_bool_to_string(is_active));
+  PBL_LOG_DBG("Quiet Time: %s", prv_bool_to_string(is_active));
 
   prv_update_active_time(is_active);
   prv_put_dnd_event(is_active);

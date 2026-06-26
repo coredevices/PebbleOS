@@ -14,6 +14,8 @@
 #include "system/logging.h"
 #include "util/units.h"
 
+PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
+
 #define REMINDER_DB_FILE_NAME "reminderdb"
 #define REMINDER_DB_MAX_SIZE KiBYTES(40)
 #define MAX_REMINDER_SIZE SETTINGS_VAL_MAX_LEN
@@ -151,7 +153,7 @@ static status_t prv_insert_reminder(const uint8_t *key, int key_len,
 
   char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
   uuid_to_string((Uuid *)key, uuid_buffer);
-  PBL_LOG_INFO("Reminder added: %s", uuid_buffer);
+  PBL_LOG_DBG("Reminder added: %s", uuid_buffer);
 
   if (rv == S_SUCCESS) {
     if (has_reminded) {

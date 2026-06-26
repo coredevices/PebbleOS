@@ -10,7 +10,7 @@
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/delay.h"
-#include "kernel/util/stop.h"
+#include "pbl/soc/sf32lb/sleep.h"
 #include "kernel/coredump_extra_regions.h"
 #include "drivers/rtc.h"
 #include "mcu/cache.h"
@@ -26,6 +26,8 @@
 #include "bf0_hal_lcdc.h"
 #include "bf0_hal_lptim.h"
 #include "bf0_hal_rtc.h"
+
+PBL_LOG_MODULE_DEFINE(driver_display_jdi, CONFIG_DRIVER_DISPLAY_LOG_LEVEL);
 
 #define POWER_SEQ_DELAY_TIME_US  11000
 #define POWER_RESET_CYCLE_DELAY_TIME_US 500000
@@ -126,23 +128,23 @@ static void prv_power_cycle(void){
   // allowing for a clean power cycle.
 
   cfg.gpio_pin = DISPLAY->pinmux.b1.pad - PAD_PA00;
-  gpio_output_init(&cfg, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_init(&cfg, GPIO_OType_PP);
   gpio_output_set(&cfg, false);
 
   cfg.gpio_pin = DISPLAY->pinmux.vck.pad - PAD_PA00;
-  gpio_output_init(&cfg, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_init(&cfg, GPIO_OType_PP);
   gpio_output_set(&cfg, false);
 
   cfg.gpio_pin = DISPLAY->pinmux.xrst.pad - PAD_PA00;
-  gpio_output_init(&cfg, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_init(&cfg, GPIO_OType_PP);
   gpio_output_set(&cfg, false);
 
   cfg.gpio_pin = DISPLAY->pinmux.hck.pad - PAD_PA00;
-  gpio_output_init(&cfg, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_init(&cfg, GPIO_OType_PP);
   gpio_output_set(&cfg, false);
 
   cfg.gpio_pin = DISPLAY->pinmux.r2.pad - PAD_PA00;
-  gpio_output_init(&cfg, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_init(&cfg, GPIO_OType_PP);
   gpio_output_set(&cfg, false);
 
   gpio_output_set(&DISPLAY->vddp, false);
@@ -280,7 +282,7 @@ static void prv_display_update_terminate(void *data) {
 
   s_updating = false;
   s_uccb();
-  stop_mode_enable(InhibitorDisplay);
+  soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
 }
 
 void display_jdi_irq_handler(DisplayJDIDevice *disp) {
@@ -353,8 +355,8 @@ void display_init(void) {
 
   DisplayJDIState *state = DISPLAY->state;
 
-  gpio_output_init(&DISPLAY->vddp, GPIO_OType_PP, GPIO_Speed_2MHz);
-  gpio_output_init(&DISPLAY->vlcd, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_init(&DISPLAY->vddp, GPIO_OType_PP);
+  gpio_output_init(&DISPLAY->vlcd, GPIO_OType_PP);
 
   prv_power_cycle();
 
@@ -473,7 +475,7 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   s_updating = true;
   s_eof_observed = false;
 
-  stop_mode_disable(InhibitorDisplay);
+  soc_sf32lb_sleep_block(SOC_SF32LB_DEEPWFI);
   // Arm the timer before kickoff so the EOF IRQ, which can fire as soon as
   // SendLayerData_IT returns, never races us into a state where the timer
   // isn't yet armed. prv_display_update_terminate stops it on the normal
@@ -505,7 +507,7 @@ void display_update_boot_frame(uint8_t *framebuffer) {
   s_update_y0 = 0;
   s_update_y1 = PBL_DISPLAY_HEIGHT - 1;
 
-  stop_mode_disable(InhibitorDisplay);
+  soc_sf32lb_sleep_block(SOC_SF32LB_DEEPWFI);
   HAL_StatusTypeDef status = prv_display_update_start();
   if (status == HAL_OK) {
     xSemaphoreTake(s_sem, portMAX_DELAY);
@@ -514,7 +516,7 @@ void display_update_boot_frame(uint8_t *framebuffer) {
     // since the EOF IRQ that gives the semaphore never fires.
     prv_handle_send_failure("boot", status);
   }
-  stop_mode_enable(InhibitorDisplay);
+  soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
 }
 
 void display_clear(void) {}

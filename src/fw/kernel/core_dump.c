@@ -23,7 +23,6 @@
 
 #include "drivers/flash.h"
 #include "drivers/mpu.h"
-#include "drivers/spi.h"
 #include "drivers/watchdog.h"
 #include "drivers/rtc.h"
 

@@ -29,6 +29,8 @@
 #include <stdbool.h>
 #include <string.h>
 
+PBL_LOG_MODULE_DEFINE(service_firmware_update, CONFIG_SERVICE_FIRMWARE_UPDATE_LOG_LEVEL);
+
 // The legacy firmware UI breaks firmware and resources into 50% chunks. In reality since these
 // parts are not of equal sizes, one of these '50%' blocks will take longer than the
 // other. Additionally, iOS/Android and the watch are not in sync over what this should look like.

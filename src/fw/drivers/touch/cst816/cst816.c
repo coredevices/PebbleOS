@@ -9,6 +9,7 @@
 #include "kernel/events.h"
 #include "kernel/util/sleep.h"
 #include "os/tick.h"
+#include "pbl/services/regular_timer.h"
 #include "pbl/services/touch/touch.h"
 #include "pbl/services/system_task.h"
 #include "system/logging.h"
@@ -16,6 +17,8 @@
 #include "util/math.h"
 
 #include "cst816_fw.h"
+
+PBL_LOG_MODULE_DEFINE(driver_touch_cst816, CONFIG_DRIVER_TOUCH_LOG_LEVEL);
 
 #define CST816_RESET_CYCLE_TIME       10  /* ms */
 #define CST816_POR_DELAY_TIME         110 /* ms */
@@ -54,11 +57,23 @@
 #define CST816_FW_CHECKSUM_REG        0xA008
 #define CST816_FW_VER_INFO_INDEX      (-11)
 
+/* Workaround: the CST816 occasionally wedges and stops asserting its INT line.
+ * If no touch activity is seen between two watchdog checks, hard-reset it. */
+#define CST816_WATCHDOG_PERIOD_MIN    30
+
 static bool s_callback_scheduled = false;
+static bool s_enabled = false;
+static bool s_reset_scheduled = false;
+static bool s_activity_since_check = false;
 static PebbleMutex *s_i2c_lock;
 
 static void prv_exti_cb(bool *should_context_switch);
 static void cst816_hw_reset(void);
+static void prv_watchdog_cb(void *data);
+
+static RegularTimerInfo s_watchdog_timer = {
+  .cb = prv_watchdog_cb,
+};
 
 static bool prv_read_data(uint16_t register_address, uint8_t *result, uint16_t size, bool is_work_mode) {
   mutex_lock(s_i2c_lock);
@@ -219,7 +234,7 @@ void touch_sensor_init(void) {
   s_i2c_lock = mutex_create();
 
 #ifndef RESET_PIN_CTRLBY_NPM1300
-  gpio_output_init(&CST816->reset, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_init(&CST816->reset, GPIO_OType_PP);
 #endif
 
   cst816_hw_reset();
@@ -261,6 +276,9 @@ void touch_sensor_init(void) {
 static void prv_process_pending_messages(void* context) {
   bool rv;
   s_callback_scheduled = false;
+
+  // Any interrupt means the chip is alive; pet the idle watchdog.
+  s_activity_since_check = true;
 
   uint8_t id;
   rv = prv_read_data(CST816_GESTURE_ID, &id, 1, 1);
@@ -323,11 +341,51 @@ static void prv_exti_cb(bool *should_context_switch) {
   s_callback_scheduled = true;
 }
 
+// Runs on the system task: the actual recovery reset (cst816_hw_reset() sleeps
+// ~120ms, so it must not run on the regular-timer task).
+static void prv_idle_reset_worker(void *context) {
+  s_reset_scheduled = false;
+  if (!s_enabled) {
+    return;
+  }
+
+  exti_disable(CST816->int_exti);
+  cst816_hw_reset();
+  s_callback_scheduled = false;
+  s_activity_since_check = true;
+  exti_enable(CST816->int_exti);
+}
+
+// Runs on the regular-timer (NewTimers) task; keep it cheap, just offload.
+static void prv_watchdog_cb(void *data) {
+  if (!s_enabled || s_reset_scheduled) {
+    return;
+  }
+
+  if (s_activity_since_check) {
+    s_activity_since_check = false;
+    return;
+  }
+
+  s_reset_scheduled = true;
+  system_task_add_callback(prv_idle_reset_worker, NULL);
+}
+
 void touch_sensor_set_enabled(bool enabled) {
+  cst816_hw_reset();
+
   if (enabled) {
-    cst816_hw_reset();
     exti_enable(CST816->int_exti);
+    s_enabled = true;
+    s_activity_since_check = true;
+    if (!regular_timer_is_scheduled(&s_watchdog_timer)) {
+      regular_timer_add_multiminute_callback(&s_watchdog_timer, CST816_WATCHDOG_PERIOD_MIN);
+    }
   } else {
+    s_enabled = false;
+    if (regular_timer_is_scheduled(&s_watchdog_timer)) {
+      regular_timer_remove_callback(&s_watchdog_timer);
+    }
     uint8_t data = CST816_POWER_MODE_SLEEP;
     prv_write_data(CST816_POWER_MODE_REG, &data, 1, 1);
     exti_disable(CST816->int_exti);

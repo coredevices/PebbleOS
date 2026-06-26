@@ -5,3 +5,11 @@ config SERVICE_AUDIO_ENDPOINT
     bool "Audio endpoint"
     help
       Audio streaming endpoint.
+
+if SERVICE_AUDIO_ENDPOINT
+
+module = SERVICE_AUDIO_ENDPOINT
+module-str = Audio endpoint
+source "src/fw/Kconfig.template.log_level"
+
+endif

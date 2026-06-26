@@ -5,3 +5,11 @@ config SERVICE_APP_OUTBOX_SERVICE
     bool "App outbox"
     help
       App outbox messaging service.
+
+if SERVICE_APP_OUTBOX_SERVICE
+
+module = SERVICE_APP_OUTBOX_SERVICE
+module-str = App outbox
+source "src/fw/Kconfig.template.log_level"
+
+endif

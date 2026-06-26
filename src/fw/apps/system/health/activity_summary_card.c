@@ -14,10 +14,12 @@
 #include "board/display.h"
 #include "kernel/pbl_malloc.h"
 #include "resource/resource_ids.auto.h"
+#include "pbl/services/clock.h"
 #include "pbl/services/i18n/i18n.h"
 #include "system/logging.h"
 #include "util/size.h"
 #include "util/string.h"
+#include "util/time/time.h"
 
 // Compile-time display offset calculations
 #define HEALTH_X_OFFSET ((DISP_COLS - LEGACY_2X_DISP_COLS) / 2)
@@ -36,6 +38,7 @@ typedef struct HealthActivitySummaryCardData {
   KinoReel *icon;
   int32_t current_steps;
   int32_t typical_steps;
+  int32_t typical_steps_bin_minute;
   int32_t daily_average_steps;
 } HealthActivitySummaryCardData;
 
@@ -109,7 +112,11 @@ static void prv_render_current_steps(GContext *ctx, Layer *base_layer) {
     snprintf(buffer, sizeof(buffer), EM_DASH);
   }
 
-  const int y = PBL_IF_RECT_ELSE(PBL_IF_BW_ELSE(85, 83), 88) + HEALTH_Y_OFFSET;
+  // Mirror the pill's downshift at half the offset so the step count and
+  // pill stay visually balanced. Zero on legacy-sized displays where
+  // HEALTH_Y_OFFSET itself is 0.
+  const int y = PBL_IF_RECT_ELSE(PBL_IF_BW_ELSE(85, 83), 88) + HEALTH_Y_OFFSET
+                + HEALTH_Y_OFFSET / 6;
   graphics_context_set_text_color(ctx, CURRENT_TEXT_COLOR);
   graphics_draw_text(ctx, buffer, font,
                      GRect(0, y, base_layer->bounds.size.w, 40),
@@ -119,14 +126,37 @@ static void prv_render_current_steps(GContext *ctx, Layer *base_layer) {
 static void prv_render_typical_steps(GContext *ctx, Layer *base_layer) {
   HealthActivitySummaryCardData *data = layer_get_data(base_layer);
 
-  char steps_buffer[12];
-  if (data->typical_steps) {
-    snprintf(steps_buffer, sizeof(steps_buffer), "%"PRId32, data->typical_steps);
+  char daily_buffer[12];
+  if (data->daily_average_steps > 0) {
+    snprintf(daily_buffer, sizeof(daily_buffer), "%"PRId32, data->daily_average_steps);
   } else {
-    snprintf(steps_buffer, sizeof(steps_buffer), EM_DASH);
+    snprintf(daily_buffer, sizeof(daily_buffer), EM_DASH);
   }
 
-  health_ui_render_typical_text_box(ctx, base_layer, steps_buffer);
+#if DISP_COLS >= 200
+  // Wide displays break the typical data into a two-column split: the bin-aware
+  // count under its bin time on the left, the full-day total under a "TOTAL"
+  // label on the right. With no typical data to break down, fall through to the
+  // single daily-total line below.
+  if (data->typical_steps > 0) {
+    char steps_buffer[12];
+    snprintf(steps_buffer, sizeof(steps_buffer), "%"PRId32, data->typical_steps);
+
+    char bin_time[12];
+    clock_format_time(bin_time, sizeof(bin_time),
+                      data->typical_steps_bin_minute / MINUTES_PER_HOUR,
+                      data->typical_steps_bin_minute % MINUTES_PER_HOUR,
+                      false /* add_space */);
+
+    health_ui_render_split_typical_text_box(ctx, base_layer, steps_buffer, bin_time,
+                                            daily_buffer, i18n_get("TOTAL", base_layer));
+    return;
+  }
+#endif
+
+  // Narrow displays, and the no-typical-data case on wide displays, show just
+  // the daily total (em-dash when missing).
+  health_ui_render_typical_text_box(ctx, base_layer, daily_buffer);
 }
 
 static void prv_base_layer_update_proc(Layer *base_layer, GContext *ctx) {
@@ -134,6 +164,7 @@ static void prv_base_layer_update_proc(Layer *base_layer, GContext *ctx) {
 
   data->current_steps = health_data_current_steps_get(data->health_data);
   data->typical_steps = health_data_steps_get_current_average(data->health_data);
+  data->typical_steps_bin_minute = health_data_steps_get_current_average_minute(data->health_data);
   data->daily_average_steps = health_data_steps_get_cur_wday_average(data->health_data);
 
   prv_render_icon(ctx, base_layer);

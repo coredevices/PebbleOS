@@ -5,13 +5,14 @@
 #include "console/prompt.h"
 #include "drivers/ambient_light.h"
 #include "drivers/i2c.h"
-#include "drivers/periph_config.h"
 #include "kernel/util/sleep.h"
 #include "mfg/mfg_info.h"
 #include "system/logging.h"
 #include "system/passert.h"
 
 #include <inttypes.h>
+
+PBL_LOG_MODULE_DEFINE(driver_ambient_opt3001, CONFIG_DRIVER_AMBIENT_LOG_LEVEL);
 
 static uint32_t s_sensor_light_dark_threshold;
 static bool s_initialized = false;
@@ -62,11 +63,9 @@ void ambient_light_init(void) {
   }
 
   if (mf != OPT3001_MFGID_VAL || id != OPT3001_DEVID_VAL) {
-    PBL_LOG_INFO("OPT3001 read successfully, but had incorrect manuf %04x, id %04x", mf, id);
+    PBL_LOG_ERR("OPT3001 read successfully, but had incorrect manuf %04x, id %04x", mf, id);
     return;
   }
-  
-  PBL_LOG_INFO("found OPT3001 with manuf %04x, id %04x", mf, id);
 
   if (BOARD_CONFIG.als_always_on) {
     prv_write_register(OPT3001_CONFIG, OPT3001_CONFIG_RANGE_AUTO | OPT3001_CONFIG_CONVTIME_100MSEC | OPT3001_CONFIG_MODE_CONTINUOUS);

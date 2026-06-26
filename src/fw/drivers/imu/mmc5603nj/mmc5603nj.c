@@ -15,6 +15,8 @@
 #include "mmc5603nj.h"
 #include "registers.h"
 
+PBL_LOG_MODULE_DEFINE(driver_mag_mmc5603nj, CONFIG_DRIVER_IMU_LOG_LEVEL);
+
 // Forward declarations of private methods
 static bool prv_mmc5603nj_read(uint8_t reg_addr, uint8_t data_len, uint8_t *data);
 static bool prv_mmc5603nj_write(uint8_t reg_addr, uint8_t data);

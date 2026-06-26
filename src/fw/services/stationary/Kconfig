@@ -5,3 +5,11 @@ config SERVICE_STATIONARY
     bool "Stationary"
     help
       Stationary (idle-detection) service.
+
+if SERVICE_STATIONARY
+
+module = SERVICE_STATIONARY
+module-str = Stationary
+source "src/fw/Kconfig.template.log_level"
+
+endif
