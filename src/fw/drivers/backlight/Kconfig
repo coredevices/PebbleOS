@@ -43,4 +43,8 @@ config BACKLIGHT_QEMU_COLOR
     help
       Enable support for RGB backlight colors in the QEMU backlight driver.
   
+module = DRIVER_BACKLIGHT
+module-str = Backlight
+source "src/fw/Kconfig.template.log_level"
+
 endif # BACKLIGHT

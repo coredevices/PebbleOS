@@ -399,6 +399,15 @@ def add_clar_test(
         'PLATFORM_NAME="%s"' % platform,
     ] + ["CONFIG_SCREEN_COLOR_DEPTH_BITS=%d" % bitdepth]
 
+    # app_manager.c sizes app segments from CONFIG_APP_RAM_*_SEGMENT_SIZE.
+    # Tests don't load a board defconfig, so inject fixed sizes (the values
+    # the old sdk_memory_limits.auto.h test override used).
+    platform_defines += [
+        "CONFIG_APP_RAM_2X_SEGMENT_SIZE=23900",
+        "CONFIG_APP_RAM_3X_SEGMENT_SIZE=65536",
+        "CONFIG_APP_RAM_4X_SEGMENT_SIZE=65536",
+    ]
+
     # flash_region.h selects a per-chip header from CONFIG_FLASH_*. Tests
     # don't load a board defconfig, so inject the right one based on which
     # flash chip the simulated platform expects.
@@ -421,18 +430,18 @@ def add_clar_test(
     if platform in test_sdk_platform:
         platform_defines.append(test_sdk_platform[platform])
 
-    # Map the test platform to its CONFIG_BOARD_FAMILY_*. Tests don't load a
-    # board defconfig, so inject the family symbol the production code expects.
-    # Gabbro tests simulate the round-display Getafix HW family (the gabbro SDK
-    # platform's closest real-board analog), so they get CONFIG_BOARD_FAMILY_GETAFIX
+    # Map the test platform to its CONFIG_BOARD_*. Tests don't load a board
+    # defconfig, so inject the board symbol the production code expects.
+    # Gabbro tests simulate the round-display Getafix board (the gabbro SDK
+    # platform's closest real-board analog), so they get CONFIG_BOARD_GETAFIX
     # alongside CONFIG_PLATFORM_GABBRO above.
-    test_board_family = {
-        "asterix": "CONFIG_BOARD_FAMILY_ASTERIX=1",
-        "obelix": "CONFIG_BOARD_FAMILY_OBELIX=1",
-        "gabbro": "CONFIG_BOARD_FAMILY_GETAFIX=1",
+    test_board = {
+        "asterix": "CONFIG_BOARD_ASTERIX=1",
+        "obelix": "CONFIG_BOARD_OBELIX=1",
+        "gabbro": "CONFIG_BOARD_GETAFIX=1",
     }
-    if platform in test_board_family:
-        platform_defines.append(test_board_family[platform])
+    if platform in test_board:
+        platform_defines.append(test_board[platform])
 
     if sources_ant_glob is not None:
         platform_sources_ant_glob = sources_ant_glob

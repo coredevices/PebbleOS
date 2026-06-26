@@ -8,6 +8,8 @@
 #include "system/logging.h"
 #include "util/math.h"
 
+PBL_LOG_MODULE_DEFINE(service_prf_update, CONFIG_SERVICE_PRF_UPDATE_LOG_LEVEL);
+
 // Don't allow PRF updating when we're in PRF
 #ifndef CONFIG_RECOVERY_FW
 static void prv_do_update(void) {

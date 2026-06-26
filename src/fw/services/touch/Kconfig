@@ -6,3 +6,11 @@ config SERVICE_TOUCH
     default y if TOUCH
     help
       Touch event service. Requires a touch driver (CONFIG_TOUCH).
+
+if SERVICE_TOUCH
+
+module = SERVICE_TOUCH
+module-str = Touch
+source "src/fw/Kconfig.template.log_level"
+
+endif

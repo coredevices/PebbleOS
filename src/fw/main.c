@@ -14,7 +14,6 @@
 
 #include "drivers/clocksource.h"
 #include "drivers/rtc.h"
-#include "drivers/periph_config.h"
 #include "drivers/flash.h"
 #include "drivers/debounced_button.h"
 
@@ -30,8 +29,6 @@
 #include "drivers/otp.h"
 #include "drivers/pmic.h"
 #include "drivers/pressure.h"
-#include "drivers/pwr.h"
-#include "drivers/spi.h"
 #include "drivers/task_watchdog.h"
 #include "drivers/temperature.h"
 #include "drivers/touch/touch_sensor.h"
@@ -44,7 +41,6 @@
 #include "resource/system_resource.h"
 
 #include "kernel/coredump_extra_regions.h"
-#include "kernel/util/stop.h"
 #include "kernel/util/task_init.h"
 #include "kernel/util/sleep.h"
 #include "kernel/events.h"
@@ -128,37 +124,6 @@ static void print_splash_screen(void)
   PBL_LOG_ALWAYS(" ");
 }
 
-#ifdef DUMP_GPIO_CFG_STATE
-static void dump_gpio_configuration_state(void) {
-  char name[2] = { 0 };
-  name[0] = 'A'; // GPIO Port A
-
-  GPIO_TypeDef *gpio_pin;
-
-  for (uint32_t gpio_addr = (uint32_t)GPIOA; gpio_addr <= (uint32_t)GPIOI;
-       gpio_addr += 0x400) {
-    gpio_pin = (GPIO_TypeDef *)gpio_addr;
-
-    gpio_use(gpio_pin);
-    uint32_t mode = gpio_pin->MODER;
-    gpio_release(gpio_pin);
-
-    uint16_t pin_cfg_mask = 0;
-    char buf[80];
-    for (int pin = 0; pin < 16; pin++) {
-      if ((mode & GPIO_MODER_MODER0) != GPIO_Mode_AN) {
-        pin_cfg_mask |= (0x1 << pin);
-      }
-      mode >>= 2;
-    }
-
-    dbgserial_putstr_fmt(buf, sizeof(buf), "Non Analog P%s cfg: 0x%"PRIx16,
-      name, (int)pin_cfg_mask);
-    name[0]++;
-  }
-}
-#endif /* DUMP_GPIO_CFG_STATE */
-
 int main(void) {
   soc_early_init();
 
@@ -199,13 +164,6 @@ int main(void) {
   };
 
   pebble_task_create(PebbleTask_KernelMain, &task_params, NULL);
-
-  // Always start the firmware in a state where we explicitly do not allow stop mode.
-  // FIXME: This seems overly cautious to me, we shouldn't have to do this.
-  stop_mode_disable(InhibitorMain);
-
-  // Turn off power to internal flash when in stop mode
-  pwr_flash_power_down_stop_mode(true /* power_down */);
 
   vTaskStartScheduler();
   for(;;);
@@ -406,8 +364,6 @@ static NOINLINE void prv_main_task_init(void) {
 
   task_watchdog_mask_set(PebbleTask_KernelMain);
 
-  stop_mode_enable(InhibitorMain);
-
   // Leave the board with stop and sleep mode debugging enabled for at least 10
   // seconds to give OpenOCD time to start and still able to connect when it is
   // ready to flash in the new image via JTAG
@@ -425,11 +381,6 @@ static NOINLINE void prv_main_task_init(void) {
   // Initialize button driver at the last moment to prevent "system on" button press from
   // entering the kernel event queue.
   debounced_button_init();
-
-#ifdef DUMP_GPIO_CFG_STATE
-  // at this point everything should be configured!
-  dump_gpio_configuration_state();
-#endif
 
   task_watchdog_resume();
 }

@@ -27,6 +27,8 @@
 #include "util/size.h"
 #include "util/math.h"
 
+PBL_LOG_MODULE_DEFINE(service_compositor, CONFIG_SERVICE_COMPOSITOR_LOG_LEVEL);
+
 // The number of pixels for a given row which get set to black to round the corner. These numbers
 // are for the top-left corner, but can easily be translated to the other corners. This is used by
 

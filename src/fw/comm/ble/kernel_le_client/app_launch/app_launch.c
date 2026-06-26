@@ -50,17 +50,6 @@ bool app_launch_can_handle_characteristic(BLECharacteristic characteristic) {
 
 // -------------------------------------------------------------------------------------------------
 
-void app_launch_handle_read_or_notification(BLECharacteristic characteristic, const uint8_t *value,
-                                            size_t value_length, BLEGATTError error) {
-  // If error is BLEGATTErrorSuccess, it means the Pebble app responded.
-  PBL_LOG_INFO("App relaunch result: %u", error);
-  if (error == BLEGATTErrorSuccess) {
-  } else {
-  }
-}
-
-// -------------------------------------------------------------------------------------------------
-
 void app_launch_handle_disconnection(void) {
   s_app_launch_characteristic = BLE_CHARACTERISTIC_INVALID;
 }

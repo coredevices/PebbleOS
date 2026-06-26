@@ -4,3 +4,16 @@
 config BOARD_QEMU_FLINT
     bool
     default y
+
+choice
+    prompt "Emulated watch color"
+    help
+      Watch color reported by manufacturing info on the emulator.
+
+config QEMU_WATCH_COLOR_P2D_BLACK
+    bool "Black"
+
+config QEMU_WATCH_COLOR_P2D_WHITE
+    bool "White"
+
+endchoice

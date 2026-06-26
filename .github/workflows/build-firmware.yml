@@ -21,6 +21,7 @@ jobs:
           filters: |
             src:
               - '.github/workflows/build-firmware.yml'
+              - 'boards/**'
               - 'platform/**'
               - 'resources/**'
               - 'sdk/**'
@@ -44,11 +45,11 @@ jobs:
       matrix:
         board:
           - asterix
-          - obelix_dvt
-          - obelix_pvt
-          - getafix_evt
-          - getafix_dvt
-          - getafix_dvt2
+          - obelix@dvt
+          - obelix@pvt
+          - getafix@evt
+          - getafix@dvt
+          - getafix@dvt2
 
     steps:
       - name: Mark Github workspace as safe
@@ -70,8 +71,14 @@ jobs:
         shell: bash
         run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
 
+      - name: Set artifact board name
+        id: artifact_board
+        run: echo "NAME=$(printf '%s' "$BOARD" | tr @ _)" >> "$GITHUB_OUTPUT"
+        env:
+          BOARD: ${{ matrix.board }}
+
       - name: Configure
-        run: ./waf configure --board ${{ matrix.board }}
+        run: ./waf configure --board '${{ matrix.board }}'
 
       - name: Build
         run: ./waf build
@@ -82,7 +89,7 @@ jobs:
       - name: Store
         uses: actions/upload-artifact@v6
         with:
-          name: firmware-${{ matrix.board }}
+          name: firmware-${{ steps.artifact_board.outputs.NAME }}
           path: |
             build/**/*.elf
             build/**/*.pbz
@@ -112,4 +119,3 @@ jobs:
     steps:
       - if: needs.build-firmware.result == 'failure' || needs.build-firmware.result == 'cancelled'
         run: exit 1
-

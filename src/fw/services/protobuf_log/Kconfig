@@ -5,3 +5,11 @@ config SERVICE_PROTOBUF_LOG
     bool "Protobuf log"
     help
       Protobuf-encoded log/data upload service.
+
+if SERVICE_PROTOBUF_LOG
+
+module = SERVICE_PROTOBUF_LOG
+module-str = Protobuf log
+source "src/fw/Kconfig.template.log_level"
+
+endif

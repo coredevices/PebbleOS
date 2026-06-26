@@ -3,7 +3,6 @@
 
 #include "drivers/task_watchdog.h"
 
-#include "drivers/periph_config.h"
 #include "drivers/watchdog.h"
 #include "kernel/core_dump.h"
 #include "kernel/event_loop.h"
@@ -177,7 +176,7 @@ static void prv_app_task_throttle_start(void) {
   // once to aid in debug
   if (strcmp(last_throttled_task, curr_task) != 0) {
     strcpy(last_throttled_task, curr_task);
-    PBL_LOG_INFO("Starting App Throttling for %s", curr_task);
+    PBL_LOG_WRN("Starting App Throttling for %s", curr_task);
   } else {
     PBL_LOG_DBG("Starting App Throttling for %s", curr_task);
   }

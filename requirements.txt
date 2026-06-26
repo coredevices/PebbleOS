@@ -28,6 +28,7 @@ kconfiglib
 certifi
 libclang
 packaging
+PyYAML
 libpebble2>=0.0.16
 pathlib
 

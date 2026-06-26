@@ -47,6 +47,10 @@ bool shell_prefs_get_vibe_log_info_enabled(void) {
   return false;
 }
 
+uint32_t accel_get_max_num_samples(void) {
+  return 32;
+}
+
 //helpers
 static uint64_t prv_get_current_time() {
   time_t s;
@@ -256,6 +260,38 @@ void test_vibe__custom_pattern_with_amplitudes_verifies_strength(void) {
   // Last strength set was 25 (third segment)
   cl_assert_equal_i(s_last_strength_set, 25);
   // Motor is off after pattern completes
+  cl_assert_equal_b(s_vibe_on, false);
+}
+
+// A vibe started on the App task defaults to VibePatternOwner_App; a clear for a
+// different owner is a no-op, and app cleanup (VibePatternOwner_App) stops it.
+void test_vibe__clear_for_owner_scopes_to_owner(void) {
+  // Start a pattern as the App task, left in progress (don't run timers).
+  stub_pebble_tasks_set_current(PebbleTask_App);
+  cl_assert(sys_vibe_pattern_enqueue_step_raw(1000, 100));
+  sys_vibe_pattern_trigger_start();
+  cl_assert_equal_b(s_vibe_on, true);
+
+  // A clear for a different owner is a no-op: the pattern keeps running.
+  vibe_pattern_clear_for_owner(VibePatternOwner_Notification);
+  cl_assert_equal_b(s_vibe_on, true);
+
+  // A clear for the owning source stops it.
+  vibe_pattern_clear_for_owner(VibePatternOwner_App);
+  cl_assert_equal_b(s_vibe_on, false);
+
+  stub_pebble_tasks_set_current(PebbleTask_KernelMain);
+}
+
+// sys_vibe_pattern_clear is unconditional regardless of owner.
+void test_vibe__clear_ignores_owner(void) {
+  stub_pebble_tasks_set_current(PebbleTask_App);
+  cl_assert(sys_vibe_pattern_enqueue_step_raw(1000, 100));
+  sys_vibe_pattern_trigger_start();
+  cl_assert_equal_b(s_vibe_on, true);
+
+  stub_pebble_tasks_set_current(PebbleTask_KernelMain);
+  sys_vibe_pattern_clear();
   cl_assert_equal_b(s_vibe_on, false);
 }
 

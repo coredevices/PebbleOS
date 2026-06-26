@@ -7,10 +7,7 @@
 #include "drivers/button.h"
 #include "drivers/exti.h"
 #include "drivers/gpio.h"
-#include "drivers/periph_config.h"
-#include "drivers/timer.h"
 #include "kernel/events.h"
-#include "kernel/util/stop.h"
 #include "system/bootbits.h"
 #include "system/reset.h"
 #include "util/bitset.h"
@@ -57,9 +54,6 @@ static bool prv_check_timer_enabled(void) {
 static void disable_button_timer(void) {
   if (prv_check_timer_enabled()) {
     nrfx_timer_disable(&BOARD_CONFIG_BUTTON.timer);
-
-    // Allow us to enter stop mode
-    stop_mode_enable(InhibitorButton);
   }
 }
 
@@ -69,9 +63,6 @@ static void prv_enable_button_timer(void) {
   if (!prv_check_timer_enabled()) {
     nrfx_timer_enable(&BOARD_CONFIG_BUTTON.timer);
     nrfx_timer_resume(&BOARD_CONFIG_BUTTON.timer);
-
-    // Prevent us from entering stop mode (and disabling the clock timer)
-    stop_mode_disable(InhibitorButton);
   }
   __enable_irq();
 }

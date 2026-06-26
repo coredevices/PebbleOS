@@ -86,7 +86,7 @@ static void prv_handle_firmware_status_request(CommSession *session) {
     fw_status_resp.resource_crc = status.crc_of_bytes;
   }
 
-  PBL_LOG_INFO("FW Status Resp: res %"PRIu32" : 0x%x fw %"PRIu32" : 0x%x",
+  PBL_LOG_DBG("FW Status Resp: res %"PRIu32" : 0x%x fw %"PRIu32" : 0x%x",
           fw_status_resp.resource_bytes_written, (int)fw_status_resp.resource_crc,
           fw_status_resp.firmware_bytes_written, (int)fw_status_resp.firmware_crc);
 
@@ -121,8 +121,8 @@ void sys_msg_protocol_msg_callback(CommSession *session, const uint8_t* data, si
       SysMsgSmoothFirmwareStartPayload *payload = (SysMsgSmoothFirmwareStartPayload *)data;
       bytes_transferred = payload->bytes_already_transferred;
       total_size = bytes_transferred + payload->bytes_to_transfer;
-      PBL_LOG_INFO("Starting FW update, %"PRIu32" of %"PRIu32" bytes already "
-              "transferred", bytes_transferred, total_size);
+      PBL_LOG_INFO("Starting FW update, %"PRIu32" of %"PRIu32" bytes already transferred",
+                   bytes_transferred, total_size);
     }
 
     PebbleEvent e = {

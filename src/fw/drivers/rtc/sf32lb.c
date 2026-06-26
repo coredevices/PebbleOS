@@ -19,6 +19,8 @@
 
 #include "bf0_hal_rtc.h"
 
+PBL_LOG_MODULE_DEFINE(driver_rtc_sf32lb, CONFIG_DRIVER_RTC_LOG_LEVEL);
+
 // The RTC clock, CLK_RTC, can be configured to use the LXT32 (32.768 kHz) or
 // LRC10 (9.8 kHz). The prescaler values need to be set such that the CLK1S
 // event runs at 1 Hz. The formula that relates prescaler values with the
@@ -254,12 +256,6 @@ static void prv_rtc_set_time_no_cal_reset(time_t time) {
 
   HAL_RTC_SetTime(&RTC_Handler, &rtc_time_struct, RTC_FORMAT_BIN);
   HAL_RTC_SetDate(&RTC_Handler, &rtc_date_struct, RTC_FORMAT_BIN);
-
-  PBL_LOG_INFO("RTC set time to %lu", time);
-  PBL_LOG_INFO("%u:%u:%u, %u/%u/%u (%u)",
-          rtc_time_struct.Hours, rtc_time_struct.Minutes, rtc_time_struct.Seconds,
-          rtc_date_struct.Month, rtc_date_struct.Date, rtc_date_struct.Year,
-          rtc_date_struct.WeekDay);
 
   // Send clock change event to notify system components (e.g., DND timer scheduler)
   // This ensures long-duration timers are properly rescheduled after calibration adjustments

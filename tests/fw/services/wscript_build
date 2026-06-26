@@ -370,6 +370,7 @@ clar(ctx,
         "  tests/fakes/fake_events.c " \
         ,
     test_sources_ant_glob = "test_accel_manager.c",
+    defines=["CONFIG_SERVICE_ACCEL_MANAGER_BATCH_SAMPLES=25"],
     override_includes=['dummy_board'])
 
 clar(ctx,

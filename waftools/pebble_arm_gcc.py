@@ -257,9 +257,24 @@ Or re-configure with the --relax_toolchain_restrictions option. """
         # Yes that define name is super misleading, but what can you do.
         pass
 
+    # Reproducibility: strip the absolute source-root prefix from all
+    # embedded paths so that binaries are identical regardless of where
+    # the tree is checked out.  -ffile-prefix-map covers both debug info
+    # and __FILE__ macros; -fdebug-prefix-map is a subset but listed
+    # explicitly for toolchains that pre-date -ffile-prefix-map.
+    src_root = conf.srcnode.abspath()
+    args += [
+        "-ffile-prefix-map=" + src_root + "=.",
+        "-fdebug-prefix-map=" + src_root + "=.",
+    ]
+
     conf.env.append_value("CFLAGS", args)
     conf.env.append_value("ASFLAGS", args)
     conf.env.append_value("LINKFLAGS", args)
+
+    # Deterministic archiving: the 'D' modifier suppresses timestamps and
+    # UIDs inside .a files so archives are byte-for-byte reproducible.
+    conf.env.ARFLAGS = ["rcsD"]
 
     conf.env.SHLIB_MARKER = None
     conf.env.STLIB_MARKER = None

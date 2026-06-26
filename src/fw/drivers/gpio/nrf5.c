@@ -10,12 +10,10 @@ void gpio_input_init(const InputConfig *pin_config) {
   nrf_gpio_pin_dir_set(pin_config->gpio_pin, NRF_GPIO_PIN_DIR_INPUT);
 }
 
-void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype,
-                      GPIOSpeed_TypeDef speed) {
+void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype) {
   if (otype == GPIO_OType_OD)
     WTF;
 
-  /* XXX: speed */
   nrf_gpio_cfg(pin_config->gpio_pin, NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE);
 }
 

@@ -13,6 +13,8 @@
 #include <inttypes.h>
 #include <string.h>
 
+PBL_LOG_MODULE_DEFINE(driver_mic_qemu, CONFIG_DRIVER_MIC_LOG_LEVEL);
+
 static void prv_timer_cb(void *data) {
   MicDevice *this = data;
   MicDeviceState *state = this->state;
@@ -80,7 +82,6 @@ bool mic_start(MicDevice *this, MicDataHandlerCB data_handler, void *context,
     return false;
   }
 
-  PBL_LOG_INFO("QEMU mic stub started (period=%" PRIu32 "ms)", period_ms);
   return true;
 }
 

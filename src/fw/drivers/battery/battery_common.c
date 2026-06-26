@@ -4,7 +4,6 @@
 #include "drivers/battery.h"
 
 #include "drivers/gpio.h"
-#include "drivers/periph_config.h"
 
 static bool s_charging_forced_disable = false;
 

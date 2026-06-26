@@ -44,6 +44,8 @@
 #include "pbl/services/activity/activity_insights.h"
 #include "pbl/services/activity/activity_private.h"
 
+PBL_LOG_MODULE_DEFINE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
+
 // Our globals
 static ActivityState s_activity_state;
 static bool s_activity_initialized = false;
@@ -776,7 +778,7 @@ static void prv_start_tracking_cb(void *context) {
       PBL_ASSERTN(s_activity_state.accel_session == NULL);
       s_activity_state.accel_session = accel_session_create();
       accel_session_raw_data_subscribe(s_activity_state.accel_session, sampling_rate,
-                                       ACTIVITY_ALGORITHM_MAX_SAMPLES, prv_accel_cb);
+                                       CONFIG_SERVICE_ACTIVITY_BATCH_SAMPLES, prv_accel_cb);
 
       // Subscribe to get heart rate updates and create our measurement logging
       // session if an hrm is present
@@ -1354,7 +1356,7 @@ bool activity_test_feed_samples(AccelRawData *data, uint32_t num_samples) {
       sys_psleep(1);         // Wait for kernelBG to process prior data
     }
 
-    uint32_t chunk_size = MIN(ACTIVITY_ALGORITHM_MAX_SAMPLES, num_samples);
+    uint32_t chunk_size = MIN(CONFIG_SERVICE_ACTIVITY_BATCH_SAMPLES, num_samples);
 
     // Allocate space for the samples
     uint16_t req_size = sizeof(ActivityFeedSamples) + chunk_size * sizeof(AccelRawData);

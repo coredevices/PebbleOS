@@ -13,7 +13,6 @@ elif bld.env.CONFIG_ACCEL_LIS2DW12:
     accel_sources.append('lis2dw12/lis2dw12.c')
 elif bld.env.CONFIG_ACCEL_LSM6DSO:
     accel_sources.append('lsm6dso/lsm6dso.c')
-    accel_use.append('hal_lsm6dso')
 
 if accel_sources:
     bld.objects(

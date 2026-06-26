@@ -92,19 +92,17 @@ static uint32_t prv_do_data_handle_chunk(AccelServiceState *state, uint16_t time
     return 0;
   }
 
-#if LOG_DOMAIN_ACCEL
   uint32_t time_since_last_sample =
       (state->prev_timestamp_ms != 0) ? timestamp_ms - state->prev_timestamp_ms : 0;
   state->prev_timestamp_ms = timestamp_ms;
 
-  ACCEL_LOG_DEBUG("got %d samples for task %d at %ld (%lu ms delta)",
+  PBL_LOG_VERBOSE("got %d samples for task %d at %ld (%lu ms delta)",
                   (int)num_samples, (int)pebble_task_get_current(), (uint32_t)timestamp_ms,
                   time_since_last_sample);
 
   for (unsigned int i=0; i<num_samples; i++) {
-    ACCEL_LOG_DEBUG("  => x:%d, y:%d, z:%d", state->raw_data[i].x, state->raw_data[i].y, state->raw_data[i].z);
+    PBL_LOG_VERBOSE("  => x:%d, y:%d, z:%d", state->raw_data[i].x, state->raw_data[i].y, state->raw_data[i].z);
   }
-#endif
 
   if (state->raw_data_handler_deprecated) {
     state->raw_data_handler_deprecated(state->raw_data, num_samples);
@@ -254,7 +252,7 @@ int accel_service_peek(AccelData *accel_data) {
 
   int rc = sys_accel_manager_peek(accel_data);
 
-  ACCEL_LOG_DEBUG("peek data x:%d, y:%d, z:%d", accel_data->x, accel_data->y, accel_data->z);
+  PBL_LOG_VERBOSE("peek data x:%d, y:%d, z:%d", accel_data->x, accel_data->y, accel_data->z);
   if (rc != 0 || state->raw_data_handler_deprecated || state->raw_data_handler) {
     // No timestamp info needed
     return rc;
@@ -424,10 +422,11 @@ int accel_session_set_sampling_rate(AccelServiceState *state, AccelSamplingRate 
 // -----------------------------------------------------------------------------------------------
 int accel_session_set_samples_per_update(AccelServiceState *state, uint32_t samples_per_update) {
 
-  if (samples_per_update > ACCEL_MAX_SAMPLES_PER_UPDATE) {
+  uint32_t max_samples_per_update = sys_accel_manager_get_max_samples_per_update();
+  if (samples_per_update > max_samples_per_update) {
     APP_LOG(LOG_LEVEL_WARNING, "%d samples per update requested, max is %d",
-            (int)samples_per_update, ACCEL_MAX_SAMPLES_PER_UPDATE);
-    samples_per_update = ACCEL_MAX_SAMPLES_PER_UPDATE;
+            (int)samples_per_update, (int)max_samples_per_update);
+    samples_per_update = max_samples_per_update;
   }
   if (!state->manager_state
       || (samples_per_update > 0 && !state->data_handler && !state->raw_data_handler

@@ -5,3 +5,11 @@ config SERVICE_EVENT_SERVICE
     bool "Event service"
     help
       Generic event subscription/delivery service.
+
+if SERVICE_EVENT_SERVICE
+
+module = SERVICE_EVENT_SERVICE
+module-str = Event service
+source "src/fw/Kconfig.template.log_level"
+
+endif

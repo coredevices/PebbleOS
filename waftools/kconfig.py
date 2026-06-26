@@ -10,6 +10,8 @@ from waflib import Logs
 from waflib.Build import BuildContext
 from waflib.Configure import conf
 
+import waftools.boards
+
 
 def options(opt):
     opt.add_option(
@@ -85,23 +87,32 @@ def _apply_kconfig_overrides(conf, kconf):
 def configure(conf):
     import kconfiglib
 
-    board = conf.options.board
     srcdir = conf.srcnode.abspath()
     blddir = conf.bldnode.abspath()
+    try:
+        board = waftools.boards.parse_board(srcdir, conf.options.board)
+    except ValueError as e:
+        conf.fatal(str(e))
 
-    defconfig = os.path.join(srcdir, "boards", board, "defconfig")
+    defconfig = os.path.join(srcdir, "boards", board.name, "defconfig")
     if not os.path.exists(defconfig):
         conf.fatal(f"Board defconfig not found: {defconfig}")
+    revision_defconfig = os.path.join(
+        srcdir, "boards", board.name, f"defconfig.{board.revision}"
+    )
 
     os.environ["srctree"] = srcdir
     # The board is known from --board; export it so the root Kconfig can
     # source only the active board's Kconfig via `rsource "boards/$(BOARD)/..."`.
-    os.environ["BOARD"] = board
+    os.environ["BOARD"] = board.name
+    os.environ["BOARD_REVISION"] = board.revision or waftools.boards.NO_REVISION
     kconf = kconfiglib.Kconfig(os.path.join(srcdir, "Kconfig"))
     kconf.warn_assign_override = True
     kconf.warn_assign_redun = True
     kconf.warn_assign_undef = True
     kconf.load_config(defconfig)
+    if board.revision and os.path.exists(revision_defconfig):
+        kconf.load_config(revision_defconfig, replace=False)
 
     prj_conf = os.path.join(srcdir, "src", "fw", "prj.conf")
     if os.path.exists(prj_conf):
@@ -174,11 +185,13 @@ def configure(conf):
             conf.env.append_value("DEFINES", f"{key}={val}")
         elif isinstance(val, str):
             conf.env.append_value("DEFINES", f'{key}="{val}"')
-    msg = f"{len(kconfig)} symbols loaded from {board}"
+    msg = f"{len(kconfig)} symbols loaded from {board.target}"
     if os.path.exists(prj_conf):
         msg += " + prj.conf"
     if os.path.exists(variant_conf):
         msg += f" + prj_{variant}.conf"
+    if board.revision and os.path.exists(revision_defconfig):
+        msg += f" + defconfig.{board.revision}"
     if conf.options.kconfig_overrides:
         msg += f" + {len(conf.options.kconfig_overrides)} CLI override(s)"
     conf.msg("Kconfig", msg)
@@ -198,7 +211,8 @@ class menuconfig(BuildContext):
 
         env = os.environ.copy()
         env["srctree"] = srcdir
-        env["BOARD"] = self.env.BOARD
+        env["BOARD"] = self.env.BOARD_NAME
+        env["BOARD_REVISION"] = self.env.BOARD_REVISION or waftools.boards.NO_REVISION
         env["KCONFIG_CONFIG"] = os.path.join(blddir, ".config")
 
         subprocess.run(

@@ -41,6 +41,8 @@
 #include "system/passert.h"
 #include "util/list.h"
 
+PBL_LOG_MODULE_DEFINE(service_i18n, CONFIG_SERVICE_I18N_LOG_LEVEL);
+
 //////////////////////////////////////////////////////
 // See mo.h for a description of the MO file format //
 //////////////////////////////////////////////////////
@@ -222,7 +224,7 @@ static bool prv_get_metadata(struct DomainBinding *db) {
   }
 
   success = true;
-  PBL_LOG_INFO("language: %s, version %d", db->iso_locale, db->lang_version);
+  PBL_LOG_DBG("language: %s, version %d", db->iso_locale, db->lang_version);
 
 cleanup:
   kernel_free(header);

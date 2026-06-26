@@ -6,6 +6,8 @@
 #include "drivers/i2c.h"
 #include "system/logging.h"
 
+PBL_LOG_MODULE_DEFINE(driver_pressure_bmp390, CONFIG_DRIVER_PRESSURE_LOG_LEVEL);
+
 #define BMP390_CHIP_ID 0x00
 #define BMP390_CHIP_ID_VALUE 0x60
 #define BMP390_PWR_CTRL 0x1B

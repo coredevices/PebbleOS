@@ -46,6 +46,9 @@
  *         internally consistent.
  *  - .log_string
  *    which is a list of <token-list> representing the log strings from the source code.
+ *    Entries of the form "MODULE:<file>:<module-name>", emitted by PBL_LOG_MODULE_DEFINE /
+ *    PBL_LOG_MODULE_DECLARE, are metadata mapping a source file to its log module; they are
+ *    never referenced by a token.
  *
  * Note: this code must be compiled with -Os or the codesize will explode!
  *
@@ -74,7 +77,7 @@
 #include <string.h>
 #include "util/attributes.h"
 
-#define NEW_LOG_VERSION "0101"
+#define NEW_LOG_VERSION "0102"
 
 #define LOG_STRINGS_SECTION_ADDRESS 0xC0000000
 

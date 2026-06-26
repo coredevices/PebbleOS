@@ -27,4 +27,8 @@ config AMBIENT_LIGHT_BITS
       AMBIENT_LIGHT_LEVEL_MAX, which bounds the dark/backlight thresholds
       exposed to the shell and settings UI.
 
+module = DRIVER_AMBIENT
+module-str = Ambient Light Sensor
+source "src/fw/Kconfig.template.log_level"
+
 endif # AMBIENT_LIGHT

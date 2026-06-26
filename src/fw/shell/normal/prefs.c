@@ -72,7 +72,11 @@ static bool s_backlight_ambient_sensor_enabled = true;
 #define PREF_KEY_BACKLIGHT_TIMEOUT_MS "lightTimeoutMs"
 static uint32_t s_backlight_timeout_ms = DEFAULT_BACKLIGHT_TIMEOUT_MS;
 #define PREF_KEY_BACKLIGHT_INTENSITY "lightIntensity"
-static uint8_t s_backlight_intensity; // default pulled from BOARD_CONFIGs in shell_prefs_init()
+// Logical 0-100% brightness; the light service scales it to the HW maximum.
+#define BACKLIGHT_INTENSITY_MIN 1U
+#define BACKLIGHT_INTENSITY_MAX 100U
+#define BACKLIGHT_INTENSITY_DEFAULT 25U  // Medium
+static uint8_t s_backlight_intensity; // default set in shell_prefs_init()
 
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
 #define PREF_KEY_BACKLIGHT_COLOR "lightColor"
@@ -336,7 +340,16 @@ static bool prv_set_s_backlight_timeout_ms(uint32_t *timeout_ms) {
   return false;
 }
 
+static bool prv_backlight_intensity_is_valid(uint8_t intensity) {
+  return intensity >= BACKLIGHT_INTENSITY_MIN && intensity <= BACKLIGHT_INTENSITY_MAX;
+}
+
 static bool prv_set_s_backlight_intensity(uint8_t *intensity) {
+  // Reject out-of-range values
+  if (!prv_backlight_intensity_is_valid(*intensity)) {
+    s_backlight_intensity = BACKLIGHT_INTENSITY_DEFAULT;
+    return false;
+  }
   s_backlight_intensity = *intensity;
   return true;
 }
@@ -824,9 +837,9 @@ static void prv_convert_deprecated_backlight_behaviour_key(SettingsFile *file) {
 // ------------------------------------------------------------------------------------
 void shell_prefs_init(void) {
 #ifdef CONFIG_QEMU
-  s_backlight_intensity = 100U; // Blinding
+  s_backlight_intensity = BACKLIGHT_INTENSITY_MAX; // Blinding
 #else
-  s_backlight_intensity = 25U; // Medium
+  s_backlight_intensity = BACKLIGHT_INTENSITY_DEFAULT; // Medium
 #endif
   s_backlight_ambient_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
@@ -836,8 +849,8 @@ void shell_prefs_init(void) {
   s_backlight_color = BOARD_CONFIG.backlight_default_color;
 #endif
   // Use board-specific default motion sensitivity if provided (non-zero)
-  if (BOARD_CONFIG_ACCEL.accel_config.default_motion_sensitivity != 0) {
-    s_motion_sensitivity = BOARD_CONFIG_ACCEL.accel_config.default_motion_sensitivity;
+  if (BOARD_CONFIG_ACCEL.default_motion_sensitivity != 0) {
+    s_motion_sensitivity = BOARD_CONFIG_ACCEL.default_motion_sensitivity;
   }
   s_mutex = mutex_create();
 
@@ -860,6 +873,10 @@ void shell_prefs_init(void) {
   }
 
   settings_file_close(&file);
+  
+  if (!prv_backlight_intensity_is_valid(s_backlight_intensity)) {
+    s_backlight_intensity = BACKLIGHT_INTENSITY_DEFAULT;
+  }
   
   // Update the ambient light driver with the loaded threshold value
   ambient_light_set_dark_threshold(s_backlight_ambient_threshold);
@@ -1918,6 +1935,7 @@ void pbl_analytics_external_collect_settings(void) {
   PBL_ANALYTICS_SET_UNSIGNED(settings_motion_sensitivity, shell_prefs_get_motion_sensitivity());
   PBL_ANALYTICS_SET_UNSIGNED(settings_backlight_intensity_pct, backlight_get_intensity());
   PBL_ANALYTICS_SET_UNSIGNED(settings_backlight_timeout_s, backlight_get_timeout_ms() / 1000);
+  PBL_ANALYTICS_SET_UNSIGNED(settings_touch_enabled, touch_is_globally_enabled());
 }
 
 bool shell_prefs_get_music_show_volume_controls(void) {

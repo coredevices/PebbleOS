@@ -23,6 +23,8 @@
 #include <util/list.h>
 #include <util/size.h>
 
+PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
+
 #ifdef CONFIG_HRM
 
 static bool s_ble_hrm_is_inited;

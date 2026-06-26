@@ -16,6 +16,8 @@
 #include "util/math.h"
 #include "util/units.h"
 
+PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
+
 #define SETTINGS_FILE_NAME   "appdb"
 // Holds about ~150 app metadata blobs
 #define SETTINGS_FILE_SIZE KiBYTES(20)

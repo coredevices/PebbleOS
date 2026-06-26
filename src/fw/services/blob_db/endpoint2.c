@@ -21,6 +21,8 @@
 #include <stdio.h>
 #include <string.h>
 
+PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
+
 //! BlobDB Endpoint ID
 static const uint16_t BLOB_DB2_ENDPOINT_ID = 0xb2db;
 

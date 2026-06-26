@@ -27,7 +27,6 @@ static bool s_entered_standby;
 static bool s_in_low_power;
 static bool s_error_window_shown;
 static bool s_warning_window_shown;
-static bool s_stop_mode_allowed;
 static PebbleEvent s_last_event_put;
 
 bool battery_is_usb_connected_raw(void) {
@@ -55,10 +54,6 @@ bool firmware_update_is_in_progress(void) {
 }
 
 void battery_force_charge_enable(bool is_charging) { }
-
-bool stop_mode_is_allowed(void) {
-  return s_stop_mode_allowed;
-}
 
 static void periodic_timer_trigger(int count) {
   TimerID timer_id = battery_state_get_periodic_timer_id();
@@ -119,7 +114,6 @@ void test_battery_monitor__initialize(void) {
   s_error_window_shown = false;
   s_warning_window_shown = false;
   s_in_low_power = false;
-  s_stop_mode_allowed = true;
   fake_rtc_init(0, 0);
   fake_rtc_auto_increment_ticks(0);
 
@@ -430,30 +424,6 @@ void test_battery_monitor__increase_discharging(void) {
   fake_battery_set_millivolts(lower_mv);
   periodic_timer_trigger(20);
   cl_assert_equal_i(battery_get_charge_state().charge_percent, 20);
-}
-
-void test_battery_monitor__stop_mode_disabled(void) {
-  int start_mv = battery_curve_lookup_voltage_by_percent(50, false);
-  int end_mv = battery_curve_lookup_voltage_by_percent(20, false);
-
-  fake_battery_init(start_mv, false, false);
-
-  // Start off with a nice battery level
-  battery_monitor_init();
-  periodic_timer_trigger(1);
-  cl_assert_equal_i(battery_get_charge_state().charge_percent, 50);
-
-  // Pretend vibe activated or something like that.
-  // - The reported mV goes down and stop mode is disabled
-  // It should skip 5 times (MAX_SAMPLE_SKIPS) before updating.
-  fake_battery_set_millivolts(end_mv);
-  s_stop_mode_allowed = false;
-  periodic_timer_trigger(5);
-  cl_assert_equal_i(battery_get_charge_state().charge_percent, 50);
-
-  // After 5 skips, we should update.
-  periodic_timer_trigger(1);
-  cl_assert(battery_get_charge_state().charge_percent < 50);
 }
 
 void test_battery_monitor__connection_states(void) {

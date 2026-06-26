@@ -15,6 +15,8 @@
 #include "pbl/services/timeline/item.h"
 #include "system/logging.h"
 
+PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
+
 #define INVALID_SNOOZE_DELAY 0
 #define HALF_SNOOZE_END_MARK 30 // Seconds
 #define CONSTANT_SNOOZE_DELAY (10 * SECONDS_PER_MINUTE) // Seconds

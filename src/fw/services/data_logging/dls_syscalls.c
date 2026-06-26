@@ -10,6 +10,8 @@
 
 #include <inttypes.h>
 
+PBL_LOG_MODULE_DECLARE(service_data_logging, CONFIG_SERVICE_DATA_LOGGING_LOG_LEVEL);
+
 DEFINE_SYSCALL(DataLoggingSessionRef, sys_data_logging_create, uint32_t tag,
                DataLoggingItemType item_type, uint16_t item_size,
                void *buffer, bool resume) {

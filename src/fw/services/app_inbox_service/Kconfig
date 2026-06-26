@@ -5,3 +5,11 @@ config SERVICE_APP_INBOX_SERVICE
     bool "App inbox"
     help
       App inbox messaging service.
+
+if SERVICE_APP_INBOX_SERVICE
+
+module = SERVICE_APP_INBOX_SERVICE
+module-str = App inbox
+source "src/fw/Kconfig.template.log_level"
+
+endif

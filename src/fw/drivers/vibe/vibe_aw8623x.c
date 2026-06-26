@@ -10,6 +10,8 @@
 #include "system/logging.h"
 #include "system/passert.h"
 
+PBL_LOG_MODULE_DEFINE(driver_vibe_aw8623x, CONFIG_DRIVER_VIBE_LOG_LEVEL);
+
 #define AW8623X_PLAYCFG3 0x08U
 #define AW8623X_PLAYCFG3_BRK_EN (1U << 2U)
 #define AW8623X_PLAYCFG3_PLAY_MODE_CONT (2U << 0U)
@@ -80,7 +82,7 @@ void vibe_init(void) {
   bool ret;
   uint8_t val;
 
-  gpio_output_init(&BOARD_CONFIG_VIBE.ctl, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_init(&BOARD_CONFIG_VIBE.ctl, GPIO_OType_PP);
 
   gpio_output_set(&BOARD_CONFIG_VIBE.ctl, true);
   psleep(AW8623X_PWR_OFF_TIME_MS);

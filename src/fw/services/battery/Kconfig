@@ -14,3 +14,11 @@ config NRF_FUEL_GAUGE
       Use the Nordic nRF Fuel Gauge library for state-of-charge
       estimation. Requires the nPM1300 PMIC; selects both the prebuilt
       nonfree fuel-gauge lib and the matching battery service impl.
+
+if SERVICE_BATTERY
+
+module = SERVICE_BATTERY
+module-str = Battery
+source "src/fw/Kconfig.template.log_level"
+
+endif

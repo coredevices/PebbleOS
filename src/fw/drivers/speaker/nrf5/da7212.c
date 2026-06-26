@@ -19,6 +19,8 @@
 
 #include "nrfx_i2s.h"
 
+PBL_LOG_MODULE_DEFINE(driver_speaker_da7212, CONFIG_DRIVER_SPEAKER_LOG_LEVEL);
+
 // Hold the codec + I2S warm for this long after audio_stop before powering
 // down. Rapid play/pause spamming used to phaser the output until hard power
 // cycle; deferring the SYSTEM_ACTIVE=0 keeps the LINE output continuous

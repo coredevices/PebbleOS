@@ -5,3 +5,11 @@ config SERVICE_PRF_UPDATE
     bool "PRF update"
     help
       Recovery firmware update service.
+
+if SERVICE_PRF_UPDATE
+
+module = SERVICE_PRF_UPDATE
+module-str = PRF update
+source "src/fw/Kconfig.template.log_level"
+
+endif

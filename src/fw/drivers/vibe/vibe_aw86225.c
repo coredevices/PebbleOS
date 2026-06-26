@@ -11,6 +11,8 @@
 #include "system/passert.h"
 #include "kernel/util/sleep.h"
 
+PBL_LOG_MODULE_DEFINE(driver_vibe_aw86225, CONFIG_DRIVER_VIBE_LOG_LEVEL);
+
 #define AW862XX_REG_SRST                                (0x00)
 #define AW862XX_REG_PLAYCFG2                            (0x07)
 #define AW862XX_REG_PLAYCFG3                            (0x08)
@@ -315,7 +317,7 @@ void vibe_init(void) {
     s_drive_frequency_hz = AW86225->lra_frequency_hz;
   }
 
-  gpio_output_init(&BOARD_CONFIG_VIBE.ctl, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_init(&BOARD_CONFIG_VIBE.ctl, GPIO_OType_PP);
 
   gpio_output_set(&BOARD_CONFIG_VIBE.ctl, true);
   psleep(AW862XX_PWR_OFF_TIME);

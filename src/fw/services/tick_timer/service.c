@@ -10,6 +10,8 @@
 #include "system/logging.h"
 #include "system/passert.h"
 
+PBL_LOG_MODULE_DEFINE(service_tick_timer, CONFIG_SERVICE_TICK_TIMER_LOG_LEVEL);
+
 static uint16_t s_num_subscribers;
 
 static void timer_tick_event_publisher(void* data) {

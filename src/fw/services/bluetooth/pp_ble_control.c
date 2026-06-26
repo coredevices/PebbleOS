@@ -7,6 +7,8 @@
 #include "system/passert.h"
 #include "util/attributes.h"
 
+PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
+
 typedef enum {
   // Values 0 - 3 are deprecated, do not use.
   BLEControlCommandTypeSetDiscoverablePairable = 4,
@@ -23,7 +25,7 @@ typedef struct PACKED {
 static void prv_handle_set_discoverable_pairable(
     BLEControlCommandSetDiscoverablePairable *cmd_data) {
   bt_pairability_use_ble_for_period(cmd_data->duration);
-  PBL_LOG_INFO("Set Discoverable Pairable: %u, %u",
+  PBL_LOG_DBG("Set Discoverable Pairable: %u, %u",
           cmd_data->discoverable_pairable, cmd_data->duration);
 }
 
@@ -41,7 +43,7 @@ void pp_ble_control_protocol_msg_callback(
   const uint8_t opcode = *(const uint8_t *) data;
   switch (opcode) {
     case 0 ... 3:
-      PBL_LOG_INFO("Deprecated & unsupported opcode: %u", opcode);
+      PBL_LOG_WRN("Deprecated & unsupported opcode: %u", opcode);
       break;
 
     case BLEControlCommandTypeSetDiscoverablePairable: {

@@ -13,6 +13,7 @@
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/persist.h"
 #include "system/logging.h"
+#include "util/attributes.h"
 
 // Stubs
 ////////////////////////////////////
@@ -277,4 +278,67 @@ void test_persist__legacy2_max_usage(void) {
   // had available under the old implementation.
   // cl_assert_equal_i(persist_write_data(n + 1, &buffer, sizeof(buffer)),
   //                  E_OUT_OF_STORAGE);
+}
+
+// Legacy persist_map layout, used to seed a migration scenario.
+typedef struct PACKED {
+  uint16_t version;
+} LegacyPmapHeader;
+
+typedef struct PACKED {
+  int id;
+  Uuid uuid;
+} LegacyPmapField;
+
+static void prv_write_raw_file(const char *name, const void *data, size_t len) {
+  int fd = pfs_open(name, OP_FLAG_WRITE, FILE_TYPE_STATIC, len);
+  cl_assert(fd >= 0);
+  cl_assert_equal_i(pfs_write(fd, data, len), (int)len);
+  cl_assert(PASSED(pfs_close(fd)));
+}
+
+static void prv_uuid_file_name(char *name, const Uuid *uuid) {
+  const uint8_t *b = (const uint8_t *)uuid;
+  char *p = name;
+  *p++ = 'p';
+  *p++ = 's';
+  for (int i = 0; i < 16; ++i) {
+    p += snprintf(p, 3, "%02x", b[i]);
+  }
+}
+
+// Persist files written under the legacy "ps%06d" scheme (indexed by the pmap
+// UUID->id table) must be migrated to the "ps<uuid-hex>" scheme on boot.
+void test_persist__legacy_migration(void) {
+  const int legacy_id = 42;
+  const Uuid uuid = test_uuid_b;
+  const uint8_t content[] = "legacy persist payload";
+
+  char legacy_name[sizeof("ps000001")];
+  snprintf(legacy_name, sizeof(legacy_name), "ps%06d", legacy_id);
+  prv_write_raw_file(legacy_name, content, sizeof(content));
+
+  uint8_t pmap[sizeof(LegacyPmapHeader) + 2 * sizeof(LegacyPmapField)];
+  LegacyPmapHeader *hdr = (LegacyPmapHeader *)pmap;
+  hdr->version = 1;
+  LegacyPmapField *fields = (LegacyPmapField *)(pmap + sizeof(LegacyPmapHeader));
+  fields[0] = (LegacyPmapField){ .id = legacy_id, .uuid = uuid };
+  fields[1] = (LegacyPmapField){ .id = ~0 };  // EOF entry
+  prv_write_raw_file("pmap", pmap, sizeof(pmap));
+
+  persist_service_init();
+
+  // The file now lives under the new scheme with identical content.
+  char new_name[2 + 32 + 1];
+  prv_uuid_file_name(new_name, &uuid);
+  int fd = pfs_open(new_name, OP_FLAG_READ, 0, 0);
+  cl_assert(fd >= 0);
+  uint8_t readback[sizeof(content)];
+  cl_assert_equal_i(pfs_read(fd, readback, sizeof(readback)), (int)sizeof(readback));
+  cl_assert(memcmp(readback, content, sizeof(content)) == 0);
+  pfs_close(fd);
+
+  // The legacy file and the pmap are gone.
+  cl_assert(pfs_open(legacy_name, OP_FLAG_READ, 0, 0) < 0);
+  cl_assert(pfs_open("pmap", OP_FLAG_READ, 0, 0) < 0);
 }

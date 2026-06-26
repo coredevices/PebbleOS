@@ -5,3 +5,11 @@ config SERVICE_MUSIC
     bool "Music"
     help
       Music control service.
+
+if SERVICE_MUSIC
+
+module = SERVICE_MUSIC
+module-str = Music
+source "src/fw/Kconfig.template.log_level"
+
+endif

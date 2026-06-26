@@ -11,6 +11,8 @@
 #include "system/logging.h"
 #include "util/math.h"
 
+PBL_LOG_MODULE_DECLARE(service_music, CONFIG_SERVICE_MUSIC_LOG_LEVEL);
+
 static const uint16_t MUSIC_CTRL_ENDPOINT = 0x20;
 
 static bool s_connected;

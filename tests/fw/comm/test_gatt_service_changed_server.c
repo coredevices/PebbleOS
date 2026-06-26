@@ -3,7 +3,6 @@
 
 #include "comm/ble/gatt_service_changed.h"
 #include "comm/ble/gap_le_connection.h"
-#include "bluetopia_interface.h"
 
 #include "kernel/events.h"
 
@@ -16,9 +15,7 @@ extern void gatt_service_changed_server_init(void);
 // Fakes
 ///////////////////////////////////////////////////////////
 
-#include "fake_GAPAPI.h"
-#include "fake_GATTAPI.h"
-#include "fake_GATTAPI_test_vectors.h"
+#include "fake_bt_driver_gatt.h"
 #include "fake_pbl_malloc.h"
 #include "fake_new_timer.h"
 #include "fake_rtc.h"
@@ -27,9 +24,6 @@ extern void gatt_service_changed_server_init(void);
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include "stubs_bluetopia_interface.h"
-#include "stubs_bt_driver_gatt.h"
-#include "stubs_bt_driver_gatt_client_discovery.h"
 #include "stubs_bt_lock.h"
 #include "stubs_events.h"
 #include "stubs_gatt_client_subscriptions.h"
@@ -110,7 +104,7 @@ void test_gatt_service_changed_server__initialize(void) {
   gatt_service_changed_server_init();
   fake_gatt_init();
   gap_le_connection_init();
-  gap_le_connection_add(&s_device, NULL, false /* local_is_master */);
+  gap_le_connection_add(&s_device, NULL, false /* local_is_master */, TIMER_INVALID_ID);
   s_connection = gap_le_connection_by_device(&s_device);
   cl_assert(s_connection);
   s_connection->gatt_connection_id = s_connection_id;
@@ -163,7 +157,7 @@ void test_gatt_service_changed_server__reconnect_resubscribe_stop_sending_after_
   static const int max_times = 5;
 
   for (int i = 0; i < max_times + 1; ++i) {
-    gap_le_connection_add(&s_device, NULL, false /* local_is_master */);
+    gap_le_connection_add(&s_device, NULL, false /* local_is_master */, TIMER_INVALID_ID);
     s_connection = gap_le_connection_by_device(&s_device);
     cl_assert(s_connection);
     s_connection->gatt_connection_id = s_connection_id;
@@ -198,3 +192,18 @@ void test_gatt_service_changed_server__disconnect_during_delay(void) {
   prv_expect_service_changed_indication_api_call_count(0);
 }
 
+void test_gatt_service_changed_server__indication_carries_connection_and_full_range(void) {
+  gatt_service_changed_server_handle_fw_update();
+  prv_cccd_write(true /* is_subscribing */);
+
+  // Fire the delayed indication and let the system-task callback run.
+  prv_expect_service_changed_indication_api_call_count(1);
+
+  // The service layer must hand the driver the connection currently subscribed,
+  // and a "rediscover everything" range (0x0001 - 0xFFFF) so the remote cache is
+  // fully invalidated after the firmware update.
+  cl_assert(bt_device_equal(fake_gatt_get_service_changed_last_device(), &s_connection->device));
+  const ATTHandleRange range = fake_gatt_get_service_changed_last_range();
+  cl_assert_equal_i(range.start, 0x0001);
+  cl_assert_equal_i(range.end, 0xFFFF);
+}

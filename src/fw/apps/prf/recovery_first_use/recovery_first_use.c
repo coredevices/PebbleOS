@@ -199,7 +199,7 @@ static void prv_window_load(Window* window) {
                                GColorBlack, GColorWhite);
   layer_add_child(&window->layer, &qr_code->layer);
 
-#if defined(CONFIG_BOARD_FAMILY_OBELIX) || defined(CONFIG_BOARD_FAMILY_GETAFIX)
+#if defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX)
   const uint16_t name_height = 30;
 #else
   const uint16_t name_height = 20;
@@ -211,7 +211,7 @@ static void prv_window_load(Window* window) {
                                          PBL_IF_RECT_ELSE(name_height, name_height + 10),
                                          window->layer.bounds.size.w, name_height),
                                   NULL,
-#if defined(CONFIG_BOARD_FAMILY_OBELIX) || defined(CONFIG_BOARD_FAMILY_GETAFIX)
+#if defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX)
                                   fonts_get_system_font(FONT_KEY_GOTHIC_24),
 #else
                                   fonts_get_system_font(FONT_KEY_GOTHIC_14),

@@ -90,6 +90,12 @@ int32_t health_data_current_calories_get(HealthData *health_data);
 //! @return The integer number of steps that should be taken by this time today
 int32_t health_data_steps_get_current_average(HealthData *health_data);
 
+//! Get the minute-of-day of the latest completed step-average bin. Reflects the
+//! value cached by the most recent health_data_steps_get_current_average() call.
+//! @param health_data A pointer to the health data to use
+//! @return The minute-of-day (0..1439) of the latest completed step-average bin
+int32_t health_data_steps_get_current_average_minute(HealthData *health_data);
+
 //! Get the step average for the current day of the week
 //! @param health_data A pointer to the health data to use
 //! @return An integer value for the number of steps that are typically taken on this week day

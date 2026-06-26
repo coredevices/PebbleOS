@@ -5,6 +5,8 @@ bld.objects(
     name='soc',
     source=[
         'init.c',
+        'sleep.c',
+        'freertos.c',
     ],
     use=[
         'fw_includes',

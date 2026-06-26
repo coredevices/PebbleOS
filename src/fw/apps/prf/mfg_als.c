@@ -21,10 +21,10 @@
 #include <stdio.h>
 
 // ALS pass/fail range (adjust these values based on your test requirements)
-#ifdef CONFIG_BOARD_FAMILY_OBELIX
+#ifdef CONFIG_BOARD_OBELIX
 #define ALS_MIN_VALUE 100
 #define ALS_MAX_VALUE 250
-#elif defined(CONFIG_BOARD_FAMILY_GETAFIX)
+#elif defined(CONFIG_BOARD_GETAFIX)
 #define ALS_MIN_VALUE 1000
 #define ALS_MAX_VALUE 3000
 #else

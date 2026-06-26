@@ -10,6 +10,7 @@
 #include "pbl/services/alarms/alarm.h"
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
+#include "system/logging.h"
 #include "system/passert.h"
 #include "util/size.h"
 
@@ -19,6 +20,8 @@
 #include "pbl/services/activity/activity_algorithm.h"
 #include "pbl/services/activity/activity_insights.h"
 #include "pbl/services/activity/activity_private.h"
+
+PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
 
 // ------------------------------------------------------------------------------------

@@ -43,6 +43,9 @@ static bool s_dnd_touch_backlight = true;
 #define PREF_KEY_DND_MUTE_SPEAKER "dndMuteSpeaker"
 static bool s_dnd_mute_speaker = false;
 
+#define PREF_KEY_DND_AUTO_DISMISS "dndAutoDismiss"
+static bool s_dnd_auto_dismiss = false;
+
 #define PREF_KEY_SPEAKER_MUTED "speakerMuted"
 static bool s_speaker_muted = false;
 
@@ -342,6 +345,7 @@ void alerts_preferences_init(void) {
   RESTORE_PREF(PREF_KEY_NOTIF_VIBE_DELAY, s_notification_vibe_delay);
   RESTORE_PREF(PREF_KEY_NOTIF_BACKLIGHT, s_notification_backlight);
   RESTORE_PREF(PREF_KEY_NOTIF_STATUS_BAR_STYLE, s_notification_status_bar_style);
+  RESTORE_PREF(PREF_KEY_DND_AUTO_DISMISS, s_dnd_auto_dismiss);
 #undef RESTORE_PREF
 
   prv_migrate_legacy_dnd_schedule(&file);
@@ -581,6 +585,15 @@ bool alerts_preferences_dnd_get_mute_speaker(void) {
   return s_dnd_mute_speaker;
 }
 
+void alerts_preferences_dnd_set_auto_dismiss(bool enable) {
+  s_dnd_auto_dismiss = enable;
+  SET_PREF(PREF_KEY_DND_AUTO_DISMISS, s_dnd_auto_dismiss);
+}
+
+bool alerts_preferences_dnd_get_auto_dismiss(void) {
+  return s_dnd_auto_dismiss;
+}
+
 bool alerts_preferences_dnd_is_manually_enabled(void) {
   return s_do_not_disturb_manually_enabled;
 }
@@ -698,6 +711,7 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
   RELOAD_IF_MATCH(PREF_KEY_DND_TOUCH_BACKLIGHT, s_dnd_touch_backlight);
   RELOAD_IF_MATCH(PREF_KEY_DND_MUTE_SPEAKER, s_dnd_mute_speaker);
   RELOAD_IF_MATCH(PREF_KEY_SPEAKER_MUTED, s_speaker_muted);
+  RELOAD_IF_MATCH(PREF_KEY_DND_AUTO_DISMISS, s_dnd_auto_dismiss);
   RELOAD_IF_MATCH(PREF_KEY_SPEAKER_VOLUME, s_speaker_volume);
 
 #undef RELOAD_IF_MATCH

@@ -34,6 +34,8 @@
 
 #include <stdio.h>
 
+PBL_LOG_MODULE_DEFINE(service_clock, CONFIG_SERVICE_CLOCK_LOG_LEVEL);
+
 // NOTE: There are CONFIG_RECOVERY_FW ifdefs in this file because PRF does not have
 // timezone support
 
@@ -302,13 +304,6 @@ T_STATIC void prv_update_time_info_and_generate_event(time_t *t, TimezoneInfo *t
 static void prv_handle_set_utc_and_timezone_msg(TimezoneCBData *tz_data) {
   tz_data->utc_time = ntohl(tz_data->utc_time);
   tz_data->utc_offset_min = ntohs(tz_data->utc_offset_min);
-
-  const char *region_name = tz_data->region_name;
-  if (tz_data->region_name_len == 0) {
-    region_name = "[N/A]";
-  }
-  PBL_LOG_INFO("set_timezone utc_time: %u offset: %d region_name: %s",
-          (int) tz_data->utc_time, (int) tz_data->utc_offset_min, region_name);
 
   TimezoneInfo tz_info = prv_get_timezone_info_from_data(tz_data);
   shell_prefs_set_automatic_timezone_id(tz_info.timezone_id);
@@ -724,7 +719,6 @@ int16_t clock_get_timezone_region_id(void) {
 void clock_set_timezone_by_region_id(uint16_t region_id) {
   TimezoneInfo tz_info;
   prv_clock_get_timezone_info_from_region_id(region_id, rtc_get_time(), &tz_info);
-  PBL_LOG_INFO("Set timezone by region id (%u)", region_id);
   prv_update_time_info_and_generate_event(NULL, &tz_info);
 }
 
