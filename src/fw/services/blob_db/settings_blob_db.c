@@ -108,6 +108,9 @@ static const char *s_syncable_settings[] = {
   "menuScrollWrapAround",
   "menuScrollVibeBehavior",
 
+  // Battery preferences
+  "chargeLimitEnabled",
+
   // Worker preferences
   "workerId",
 
