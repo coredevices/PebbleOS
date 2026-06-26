@@ -49,6 +49,31 @@ typedef struct {
   int16_t z;
 } AccelDriverSample;
 
+//! Describes a batch of raw samples sitting in a driver-owned buffer, handed to
+//! accel_cb_new_samples() so the service can scale and copy them in place without
+//! a per-sample callback. See accel_cb_new_samples().
+typedef struct {
+  //! Pointer to the first raw sample (i.e. already past any per-sample header).
+  const uint8_t *data;
+  //! Number of samples in the buffer.
+  uint16_t num_samples;
+  //! Bytes between consecutive samples (lets the service step over e.g. FIFO tags).
+  uint8_t stride;
+  //! Per-axis source: byte offset of the little-endian int16 within a sample and its
+  //! sign (+1/-1), indexed by IMUCoordinateAxis. Encodes axis remap and direction.
+  struct {
+    uint8_t offset;
+    int8_t sign;
+  } axis[3];
+  //! Raw-count to milli-g conversion: mg = raw * scale_num / scale_den.
+  int32_t scale_num;
+  int32_t scale_den;
+  //! Timestamp of the first sample, in microseconds since the epoch.
+  uint64_t first_timestamp_us;
+  //! Interval between samples in microseconds.
+  uint32_t sampling_interval_us;
+} AccelRawBatch;
+
 //! Initialize accelerometer
 void accel_init(void);
 
@@ -159,6 +184,19 @@ bool accel_get_double_tap_detection_enabled(void);
 //!   accelerometer driver interface. To prevent reentrancy issues, avoid
 //!   calling accelerometer driver functions from within this function.
 extern void accel_cb_new_sample(AccelDriverSample const *data);
+
+//! Function called by the driver whenever a batch of new samples is available.
+//!
+//! @param[in] batch description of the raw samples. The pointers within are only
+//!   valid for the duration of the function call.
+//!
+//! Equivalent to calling accel_cb_new_sample() once per sample (oldest first, the
+//! last sample being the most recently acquired), but lets the service scale and
+//! copy the whole batch in one pass. The same reentrancy notes as
+//! accel_cb_new_sample() apply.
+//!
+//! @see accel_cb_new_sample
+extern void accel_cb_new_samples(AccelRawBatch const *batch);
 
 //! Function called by driver whenever shake is detected.
 //!

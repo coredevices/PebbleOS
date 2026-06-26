@@ -141,12 +141,6 @@ void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
   }
 
   PBL_LOG_INFO("MCU reset reason mask: 0x%x", (int)mcu_reboot_reason.reset_mask);
-#ifdef CONFIG_PMIC
-  uint32_t pmic_reset_reason = pmic_get_last_reset_reason();
-  if (pmic_reset_reason != 0) {
-    PBL_LOG_INFO("PMIC reset reason mask: 0x%x", (int)pmic_reset_reason);
-  }
-#endif
 
   // Core dumps always get an alert display, since the user asked for it.
   if (reason.code == RebootReasonCode_ForcedCoreDump) {

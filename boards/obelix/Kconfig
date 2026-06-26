@@ -4,4 +4,3 @@
 config BOARD_OBELIX
     bool
     default y
-    select BOARD_FAMILY_OBELIX

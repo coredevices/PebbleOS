@@ -59,11 +59,11 @@ static NORETURN fatal_logic_error(SettingsRawIter *iter) {
   PBL_LOG_ERR("settings_raw_iter logic error. "
           "Attempting to read affected file into RAM for easier debugging...");
   uint8_t *contents = read_file_into_ram(iter);
-  PBL_LOG_INFO("Removing affected file %s...", iter->file_name);
+  PBL_LOG_ERR("Removing affected file %s...", iter->file_name);
   // Remove the file that caused us to get into this state before we reboot,
   // that way we should be able to avoid getting into a reboot loop.
   pfs_close_and_remove(iter->fd);
-  PBL_LOG_INFO("Data at address %p. Rebooting...", contents);
+  PBL_LOG_ERR("Data at address %p. Rebooting...", contents);
   PBL_CROAK("Internal logic error.");
 }
 

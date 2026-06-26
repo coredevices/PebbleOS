@@ -82,29 +82,6 @@ osource "boards/$(BOARD)/Kconfig.$(BOARD_REVISION)"
 rsource "boards/$(BOARD)/Kconfig.defconfig"
 osource "boards/$(BOARD)/Kconfig.defconfig.$(BOARD_REVISION)"
 
-config BOARD_FAMILY_ASTERIX
-    bool
-    help
-      Hidden symbol selected by boards in the Asterix family.
-
-config BOARD_FAMILY_OBELIX
-    bool
-    help
-      Hidden symbol selected by boards in the Obelix family.
-
-config BOARD_FAMILY_GETAFIX
-    bool
-    help
-      Hidden symbol selected by boards in the Getafix family.
-
-config BOARD_FAMILY_NAME
-    string
-    help
-      Lowercase token identifying the board family (or the single
-      board, for QEMU boards). Used for resource path lookups
-      and string outputs. Set per board in
-      boards/<board>/Kconfig.defconfig.
-
 config QEMU_MACHINE
     string
     depends on QEMU
@@ -122,6 +99,108 @@ config PLATFORM_FLINT
 config PLATFORM_GABBRO
     bool "Gabbro"
 endchoice
+
+# App RAM sizes for each SDK app execution environment (2x/3x/4x) supported by
+# the model. For each environment, SEGMENT is the RAM given to the app itself
+# (stack + text + data + bss + heap) and RUNTIME is the RAM reserved for the
+# application runtime (AppState). A SEGMENT of 0 means the environment is
+# unsupported. SEGMENT must be a multiple of eight bytes, as the process loader
+# enforces eight-byte alignment on all segments.
+#
+# emery and gabbro use a 4 KiB app stack (see APP_STACK_NORMAL_SIZE); their
+# segment is sized 2 KiB larger to compensate. All other platforms keep the
+# 2 KiB stack and the historical segment sizes.
+#
+# The per-platform constants below are the source of truth; each environment
+# just selects which legacy SDK platform it maps to.
+
+config APP_RAM_APLITE_SEGMENT_SIZE
+    int
+    default 25952
+
+config APP_RAM_APLITE_RUNTIME_SIZE
+    int
+    default 6820
+
+config APP_RAM_BASALT_SEGMENT_SIZE
+    int
+    default 67584
+
+config APP_RAM_BASALT_RUNTIME_SIZE
+    int
+    default 30720
+
+config APP_RAM_CHALK_SEGMENT_SIZE
+    int
+    default 67584
+
+config APP_RAM_CHALK_RUNTIME_SIZE
+    int
+    default 30720
+
+config APP_RAM_FLINT_SEGMENT_SIZE
+    int
+    default 67584
+
+config APP_RAM_FLINT_RUNTIME_SIZE
+    int
+    default 30720
+
+config APP_RAM_EMERY_SEGMENT_SIZE
+    int
+    default 135168
+
+config APP_RAM_EMERY_RUNTIME_SIZE
+    int
+    default 63488
+
+config APP_RAM_GABBRO_SEGMENT_SIZE
+    int
+    default 135168
+
+config APP_RAM_GABBRO_RUNTIME_SIZE
+    int
+    default 96256
+
+config APP_RAM_2X_SEGMENT_SIZE
+    int
+    default APP_RAM_APLITE_SEGMENT_SIZE if PLATFORM_EMERY
+    default APP_RAM_APLITE_SEGMENT_SIZE if PLATFORM_FLINT
+    default 0
+
+config APP_RAM_2X_RUNTIME_SIZE
+    int
+    default APP_RAM_APLITE_RUNTIME_SIZE if PLATFORM_EMERY
+    default APP_RAM_APLITE_RUNTIME_SIZE if PLATFORM_FLINT
+    default 0
+
+config APP_RAM_3X_SEGMENT_SIZE
+    int
+    default APP_RAM_BASALT_SEGMENT_SIZE if PLATFORM_EMERY
+    default APP_RAM_APLITE_SEGMENT_SIZE if PLATFORM_FLINT
+    default APP_RAM_CHALK_SEGMENT_SIZE if PLATFORM_GABBRO
+    default 0
+
+config APP_RAM_3X_RUNTIME_SIZE
+    int
+    default APP_RAM_BASALT_RUNTIME_SIZE if PLATFORM_EMERY
+    default APP_RAM_APLITE_RUNTIME_SIZE if PLATFORM_FLINT
+    default APP_RAM_CHALK_RUNTIME_SIZE if PLATFORM_GABBRO
+    default 0
+
+config APP_RAM_4X_SEGMENT_SIZE
+    int
+    default APP_RAM_EMERY_SEGMENT_SIZE if PLATFORM_EMERY
+    default APP_RAM_FLINT_SEGMENT_SIZE if PLATFORM_FLINT
+    default APP_RAM_GABBRO_SEGMENT_SIZE if PLATFORM_GABBRO
+    default 0
+
+config APP_RAM_4X_RUNTIME_SIZE
+    int
+    default APP_RAM_EMERY_RUNTIME_SIZE if PLATFORM_EMERY
+    default APP_RAM_FLINT_RUNTIME_SIZE if PLATFORM_FLINT
+    default APP_RAM_GABBRO_RUNTIME_SIZE if PLATFORM_GABBRO
+    default 0
 
 choice
     prompt "Screen color depth"

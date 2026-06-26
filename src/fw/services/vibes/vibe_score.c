@@ -212,9 +212,6 @@ void vibe_score_do_vibe(VibeScore *score) {
       sys_vibe_pattern_enqueue_step_raw(note->brake_duration_ms, vibe_get_braking_strength());
     }
   }
-  unsigned int repeat_delay = vibe_score_get_repeat_delay_ms(score);
-  PBL_LOG_INFO("vibe_score: do_vibe, %u notes, %ums total, repeat_delay=%ums",
-               pattern_length, total_duration_ms, repeat_delay);
   sys_vibe_pattern_trigger_start();
 }
 

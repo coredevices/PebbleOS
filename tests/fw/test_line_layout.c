@@ -59,6 +59,34 @@ void line_reset(Line* line, utf8_t* start) {
   line->suffix_codepoint = 0;
 }
 
+// The line-width (measurement) pass must count a Lam-Alef ligature as one glyph,
+// like the render pass. "بلا" is three codepoints (Beh, Lam, Alef) but the
+// Lam-Alef collapses into one glyph, so the line is two advances wide, not
+// three. Before the measurement path was made ligature-aware it counted three,
+// inflating line width and triggering premature ellipsis on Arabic lines.
+void test_line_layout__lam_alef_width_counts_ligature_once(void) {
+  Iterator word_iter = ITERATOR_EMPTY;
+  WordIterState word_iter_state = WORD_ITER_STATE_EMPTY;
+  Line line = { 0 };
+
+  bool success = false;
+  const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, "\xD8\xA8\xD9\x84\xD8\xA7");  // بلا
+  cl_assert(success);
+
+  const TextBoxParams text_box_params = (TextBoxParams) {
+    .utf8_bounds = &utf8_bounds,
+    .box = (GRect) { GPointZero, (GSize) { 5 * HORIZ_ADVANCE_PX + 1, 11 } }
+  };
+  line.max_width_px = text_box_params.box.size.w;
+  line.height_px = text_box_params.box.size.h;
+
+  word_iter_init(&word_iter, &word_iter_state, &s_ctx, &text_box_params, utf8_bounds.start);
+
+  cl_assert(line_add_word(&s_ctx, &line, &word_iter_state.current, &text_box_params));
+  // Beh + (Lam-Alef ligature) == 2 advances, not the three raw codepoints.
+  cl_assert(line.width_px == 2 * HORIZ_ADVANCE_PX);
+}
+
 void test_line_layout__test_line_add_word_no_overflow(void) {
   // Allocate mutable types
   Iterator word_iter = ITERATOR_EMPTY;

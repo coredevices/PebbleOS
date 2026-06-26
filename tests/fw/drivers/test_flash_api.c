@@ -12,7 +12,6 @@
 #include "stubs_prompt.h"
 #include "stubs_queue.h"
 #include "stubs_sleep.h"
-#include "stubs_stop.h"
 #include "stubs_task_watchdog.h"
 #include "stubs_worker_manager.h"
 

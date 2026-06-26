@@ -926,7 +926,7 @@ void dls_storage_rebuild(void) {
       goto bad_session;
     }
 
-    PBL_LOG_INFO("Restored session %"PRIu8
+    PBL_LOG_DBG("Restored session %"PRIu8
             " num_bytes:%"PRIu32", read_offset:%"PRIu32", write_offset:%"PRIu32,
             session->comm.session_id, session->storage.num_bytes,
             session->storage.read_offset, session->storage.write_offset);
@@ -954,7 +954,7 @@ bad_session:
     head = (PFSFileListEntry *)head->list_node.next;
   }
 
-  PBL_LOG_INFO("Restored %d sessions. Total %"PRIu32" bytes allocated",
+  PBL_LOG_DBG("Restored %d sessions. Total %"PRIu32" bytes allocated",
           num_sessions_restored, prv_get_total_file_system_bytes());
 
   // Free the directory list

@@ -44,14 +44,6 @@ typedef const struct QSPIPort {
   uint32_t data_gpio[QSPI_NUM_DATA_PINS];
 #elif defined(CONFIG_SOC_SF32LB52)
   uint16_t clk_div;
-#else
-  uint16_t auto_polling_interval;
-  uint32_t clock_speed_hz;
-  uint32_t clock_ctrl;
-  AfConfig cs_gpio;
-  AfConfig clk_gpio;
-  AfConfig data_gpio[QSPI_NUM_DATA_PINS];
-  DMARequest *dma;
 #endif
 } QSPIPort;
 

@@ -229,34 +229,36 @@ static uint64_t prv_get_curr_system_time_us(void) {
   return (((uint64_t)time_s) * 1000 + time_ms) * 1000ULL;
 }
 
-static void prv_lsm6dso_read_samples(uint16_t num_samples) {
-  uint64_t timestamp_us;
+// Convert and dispatch the samples already sitting in raw_sample_buf. Kept free of
+// device I/O so it can run after the I2C reads instead of in between them.
+static void prv_lsm6dso_process_samples(uint16_t num_samples, uint64_t timestamp_us) {
+  // Each FIFO word is a tag byte followed by 6 data bytes; point the batch at the
+  // first data byte and let the service step over the tags via the stride.
+  int8_t rotate = LSM6DSO->state->rotated ? -1 : 1;
+  AccelRawBatch batch = {
+    .data = &LSM6DSO->state->raw_sample_buf[1],
+    .num_samples = num_samples,
+    .stride = LSM6DSO_FIFO_WORD_SIZE_BYTES,
+    .axis = {
+      [AXIS_X] = {.offset = LSM6DSO->axis_map[AXIS_X] * 2U,
+                  .sign = (int8_t)(LSM6DSO->axis_dir[AXIS_X] * rotate)},
+      [AXIS_Y] = {.offset = LSM6DSO->axis_map[AXIS_Y] * 2U,
+                  .sign = (int8_t)(LSM6DSO->axis_dir[AXIS_Y] * rotate)},
+      [AXIS_Z] = {.offset = LSM6DSO->axis_map[AXIS_Z] * 2U, .sign = LSM6DSO->axis_dir[AXIS_Z]},
+    },
+    .scale_num = CONFIG_ACCEL_LSM6DSO_SCALE_MG,
+    .scale_den = LSM6DSO_S16_SCALE_RANGE,
+    .first_timestamp_us = timestamp_us,
+    .sampling_interval_us = LSM6DSO->state->sampling_interval_us,
+  };
 
-  if (!prv_lsm6dso_read(LSM6DSO_FIFO_DATA_OUT_TAG, LSM6DSO->state->raw_sample_buf,
-                        num_samples * LSM6DSO_FIFO_WORD_SIZE_BYTES)) {
-    PBL_LOG_ERR("Failed to read samples");
-    return;
-  }
+  accel_cb_new_samples(&batch);
 
-  timestamp_us = prv_get_curr_system_time_us();
-
-  AccelDriverSample sample = {0};
-
-  for (uint16_t i = 0U; i < num_samples; ++i) {
-    uint8_t *word;
-
-    word = &LSM6DSO->state->raw_sample_buf[i * LSM6DSO_FIFO_WORD_SIZE_BYTES];
-    if ((word[0] >> 3U) != LSM6DSO_FIFO_TAG_XL_NC) {
-      continue;
-    }
-
-    prv_raw_to_mg(&word[1], &sample);
-    sample.timestamp_us = timestamp_us + i * LSM6DSO->state->sampling_interval_us;
-
-    accel_cb_new_sample(&sample);
-  }
-
-  LSM6DSO->state->last_sample = sample;
+  // Keep the most recent sample around for accel_peek().
+  uint8_t *last = &LSM6DSO->state->raw_sample_buf[(num_samples - 1) * LSM6DSO_FIFO_WORD_SIZE_BYTES];
+  prv_raw_to_mg(&last[1], &LSM6DSO->state->last_sample);
+  LSM6DSO->state->last_sample.timestamp_us =
+      timestamp_us + (num_samples - 1) * LSM6DSO->state->sampling_interval_us;
   LSM6DSO->state->last_sample_valid = true;
 }
 
@@ -329,7 +331,15 @@ static void prv_lsm6dso_int1_work_handler(void) {
   bool ret;
   uint8_t val;
   bool action_taken = false;
+  bool fifo_overrun = false;
+  bool shake = false;
+  uint16_t samples = 0U;
+  uint64_t timestamp_us = 0U;
 
+  // Read all device registers back-to-back to keep the I2C critical section
+  // short, then convert/dispatch below. The sample processing has no dependency
+  // on these reads, so deferring it avoids stretching the gap between the FIFO
+  // read and the ALL_INT_SRC read if this task gets preempted mid-handler.
   if (LSM6DSO->state->num_samples > 0U) {
     ret = prv_lsm6dso_read(LSM6DSO_FIFO_STATUS2, &val, 1);
     if (!ret) {
@@ -338,12 +348,9 @@ static void prv_lsm6dso_int1_work_handler(void) {
     }
 
     if ((val & LSM6DSO_FIFO_STATUS2_FIFO_OVR_IA) != 0U) {
-      PBL_LOG_WRN("FIFO overrun detected, re-arming");
-      prv_lsm6dso_enable_fifo(LSM6DSO->state->num_samples);
-      action_taken = true;
+      fifo_overrun = true;
     } else if ((val & LSM6DSO_FIFO_STATUS2_FIFO_WTM_IA) != 0U) {
       uint8_t status1;
-      uint16_t samples;
 
       if (!prv_lsm6dso_read(LSM6DSO_FIFO_STATUS1, &status1, 1)) {
         PBL_LOG_ERR("Could not read FIFO_STATUS1 register");
@@ -356,8 +363,12 @@ static void prv_lsm6dso_int1_work_handler(void) {
       }
 
       if (samples > 0U) {
-        prv_lsm6dso_read_samples(samples);
-        action_taken = true;
+        if (!prv_lsm6dso_read(LSM6DSO_FIFO_DATA_OUT_TAG, LSM6DSO->state->raw_sample_buf,
+                              samples * LSM6DSO_FIFO_WORD_SIZE_BYTES)) {
+          PBL_LOG_ERR("Failed to read samples");
+          return;
+        }
+        timestamp_us = prv_get_curr_system_time_us();
       }
     }
   }
@@ -369,13 +380,24 @@ static void prv_lsm6dso_int1_work_handler(void) {
       return;
     }
 
-    if ((val & LSM6DSO_ALL_INT_SRC_WU_IA) != 0U) {
-      PBL_LOG_DBG("Shake detected");
-      // TODO: provide more info about the shake (axis, direction, etc.) or
-      // refactor shake to be non-dimensional
-      accel_cb_shake_detected(AXIS_Z, 0);
-      action_taken = true;
-    }
+    shake = (val & LSM6DSO_ALL_INT_SRC_WU_IA) != 0U;
+  }
+
+  if (fifo_overrun) {
+    PBL_LOG_WRN("FIFO overrun detected, re-arming");
+    prv_lsm6dso_enable_fifo(LSM6DSO->state->num_samples);
+    action_taken = true;
+  } else if (samples > 0U) {
+    prv_lsm6dso_process_samples(samples, timestamp_us);
+    action_taken = true;
+  }
+
+  if (shake) {
+    PBL_LOG_DBG("Shake detected");
+    // TODO: provide more info about the shake (axis, direction, etc.) or
+    // refactor shake to be non-dimensional
+    accel_cb_shake_detected(AXIS_Z, 0);
+    action_taken = true;
   }
 
   if (!action_taken) {

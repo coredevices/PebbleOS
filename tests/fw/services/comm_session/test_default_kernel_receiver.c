@@ -202,8 +202,8 @@ void test_default_kernel_receiver__prepare_write_finish_multiple_sessions(void) 
 
 //! It's possible the same session can receiver multiple messages before any
 //! are processed on kernel BG. Make sure they do not interfere with one
-//! another. With coalesced callbacks, a single system_task callback drains
-//! all pending messages in order.
+//! another. Coalesced messages are drained one-per-callback (chained) and
+//! delivered in arrival order.
 void test_default_kernel_receiver__same_session_batched(void) {
   const int batch_num = 10;
   char data = 'a';
@@ -222,8 +222,8 @@ void test_default_kernel_receiver__same_session_batched(void) {
 
   prv_assert_no_handler_calls();
 
-  // All 10 messages are coalesced into a single system_task callback.
-  // Skip per-handler expected_data assertion; verify order via recording.
+  // One message per callback, but invoke_pending() loops over the reschedules,
+  // so all 10 are delivered. Verify order via recording.
   s_skip_data_assert = true;
   fake_system_task_callbacks_invoke_pending();
   cl_assert_equal_i(s_handler_call_count[HandlerA], batch_num);
@@ -235,6 +235,38 @@ void test_default_kernel_receiver__same_session_batched(void) {
     cl_assert_equal_i(s_recorded_lens[i], 1);
   }
 
+  cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), 0);
+}
+
+//! A coalesced batch must drain one message per callback so a slow handler
+//! can't starve the watchdog. Verify each callback handles exactly one.
+void test_default_kernel_receiver__batch_drains_one_per_callback(void) {
+  const int batch_num = 5;
+  char data = 'a';
+  for (int i = 0; i < batch_num; i++) {
+    Receiver *receiver = g_default_kernel_receiver_implementation.prepare(
+        FAKE_COMM_SESSION, &s_endpoints[0], 1);
+    cl_assert(receiver != NULL);
+    g_default_kernel_receiver_implementation.write(receiver, (uint8_t *)&data, 1);
+    g_default_kernel_receiver_implementation.finish(receiver);
+    data += 1;
+  }
+
+  prv_assert_no_handler_calls();
+  s_skip_data_assert = true;
+
+  // The flood coalesces into a single pending callback.
+  cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
+
+  // Each invocation runs one handler and chains the next callback.
+  for (int i = 0; i < batch_num; i++) {
+    cl_assert_equal_i(s_handler_call_count[HandlerA], i);
+    fake_system_task_callbacks_invoke(1);
+    cl_assert_equal_i(s_handler_call_count[HandlerA], i + 1);
+  }
+
+  // Nothing left to do once the batch is drained.
+  cl_assert_equal_i(fake_system_task_count_callbacks(), 0);
   cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), 0);
 }
 

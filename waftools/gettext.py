@@ -27,10 +27,16 @@ def configure(conf):
     )
     conf.find_program("msgcat")
 
+    # gettext >=0.22 shells out to git for a reproducible POT-Creation-Date,
+    # which warns per-source-file on out-of-tree build paths. Skip it when the
+    # installed xgettext supports --no-git.
+    help_text = conf.cmd_and_log(conf.env.XGETTEXT + ["--help"])
+    conf.env.XGETTEXT_NO_GIT = ["--no-git"] if "--no-git" in help_text else []
+
 
 class xgettext(Task.Task):
     run_str = (
-        "${XGETTEXT} -c/ -k --from-code=UTF-8 --language=C "
+        "${XGETTEXT} ${XGETTEXT_NO_GIT} -c/ -k --from-code=UTF-8 --language=C "
         + " ".join("--keyword=" + word for word in GETTEXT_KEYWORDS)
         + " -o ${TGT[0].abspath()} ${SRC}"
     )

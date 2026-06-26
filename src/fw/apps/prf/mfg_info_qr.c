@@ -31,15 +31,15 @@ typedef struct {
 } ColorTable;
 
 static const ColorTable s_color_table[] = {
-#ifdef CONFIG_BOARD_FAMILY_ASTERIX
+#ifdef CONFIG_BOARD_ASTERIX
   { .color = WATCH_INFO_COLOR_COREDEVICES_P2D_BLACK, .short_name = "BK" },
   { .color = WATCH_INFO_COLOR_COREDEVICES_P2D_WHITE, .short_name = "WH" },
-#elif defined(CONFIG_BOARD_FAMILY_OBELIX)
+#elif defined(CONFIG_BOARD_OBELIX)
   { .color = WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_GREY, .short_name = "BG" },
   { .color = WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_RED, .short_name = "BR" },
   { .color = WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_BLUE, .short_name = "SB" },
   { .color = WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_GREY, .short_name = "SG" },
-#elif defined(CONFIG_BOARD_FAMILY_GETAFIX)
+#elif defined(CONFIG_BOARD_GETAFIX)
   { .color = WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK_20, .short_name = "BK20" },
   { .color = WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_14, .short_name = "SV14" },
   { .color = WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_20, .short_name = "SV20" },
@@ -48,9 +48,12 @@ static const ColorTable s_color_table[] = {
 };
 
 static const char* prv_get_color_short_name(WatchInfoColor color) {
-  for (size_t i = 0; i < ARRAY_LENGTH(s_color_table); i++) {
-    if (s_color_table[i].color == color) {
-      return s_color_table[i].short_name;
+  // Pointer-based iteration so an empty table (boards with no color list)
+  // compiles without a `< 0` unsigned comparison warning.
+  for (const ColorTable *entry = s_color_table;
+       entry < s_color_table + ARRAY_LENGTH(s_color_table); entry++) {
+    if (entry->color == color) {
+      return entry->short_name;
     }
   }
   return "??";

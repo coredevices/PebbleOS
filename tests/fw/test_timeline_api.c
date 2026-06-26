@@ -100,6 +100,10 @@ void notifications_handle_notification_acted_upon(Uuid *notification_id) {
   return;
 }
 
+void notifications_handle_notification_removed(Uuid *notification_id) {
+  return;
+}
+
 // Setup
 /////////////////////////
 

@@ -8,6 +8,15 @@ config SERVICE_ACCEL_MANAGER
 
 if SERVICE_ACCEL_MANAGER
 
+config SERVICE_ACCEL_MANAGER_BATCH_SAMPLES
+    int "Max accel samples batched per callback"
+    default 125 if ACCEL_LSM6DSO
+    default 25
+    help
+      Maximum number of accelerometer samples delivered to a subscriber per
+      callback. Sizes the shared accel buffer. Limited by the accelerometer
+      FIFO depth.
+
 module = SERVICE_ACCEL_MANAGER
 module-str = Accelerometer manager
 source "src/fw/Kconfig.template.log_level"

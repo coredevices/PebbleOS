@@ -451,7 +451,7 @@ void bt_driver_handle_le_connection_complete_event(const BleConnectionCompleteEv
         // There is no connection intent from our end. This could be the phone that is connecting
         // for the first time. Let the connection watchdog (TODO: PBL-11236) take care of
         // disconnecting at some point, if the connection ends up being unused.
-        PBL_LOG_INFO("No intent for connection");
+        PBL_LOG_WRN("No intent for connection");
         bluetooth_analytics_handle_no_intent_for_connection();
       }
 

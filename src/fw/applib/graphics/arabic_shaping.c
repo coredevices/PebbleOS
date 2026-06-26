@@ -249,6 +249,50 @@ Codepoint arabic_shape_codepoint(Codepoint prev_cp, Codepoint curr_cp, Codepoint
   return prv_get_shaped_codepoint(entry, form);
 }
 
+// Lam-Alef mandatory ligatures: Lam (0x0644) followed by an Alef variant
+// collapses to a single glyph. Only isolated and final forms exist (Alef
+// never joins to a following letter).
+typedef struct {
+  uint16_t alef;        // second member of the pair
+  uint16_t isolated;    // ligature isolated form
+  uint16_t final_form;  // ligature final form (preceding letter joins)
+} LamAlefLigature;
+
+static const LamAlefLigature s_lam_alef[] = {
+  { 0x0622, 0xFEF5, 0xFEF6 },  // Lam + Alef with Madda
+  { 0x0623, 0xFEF7, 0xFEF8 },  // Lam + Alef with Hamza above
+  { 0x0625, 0xFEF9, 0xFEFA },  // Lam + Alef with Hamza below
+  { 0x0627, 0xFEFB, 0xFEFC },  // Lam + plain Alef
+};
+
+static const LamAlefLigature *prv_find_lam_alef(Codepoint curr, Codepoint next) {
+  if (curr != 0x0644) {
+    return NULL;
+  }
+  for (size_t i = 0; i < sizeof(s_lam_alef) / sizeof(s_lam_alef[0]); i++) {
+    if (s_lam_alef[i].alef == next) {
+      return &s_lam_alef[i];
+    }
+  }
+  return NULL;
+}
+
+Codepoint arabic_shape_pair(Codepoint prev_cp, Codepoint curr_cp, Codepoint next_cp,
+                            bool *consumed_next) {
+  *consumed_next = false;
+
+  // Lam-Alef ligature: curr (Lam) + next (an Alef variant) becomes one glyph.
+  const LamAlefLigature *lig = prv_find_lam_alef(curr_cp, next_cp);
+  if (lig != NULL) {
+    const ArabicShapingEntry *prev_entry = prv_find_shaping_entry(prev_cp);
+    bool prev_connects = (prev_entry != NULL) && prv_connects_left(prev_entry);
+    *consumed_next = true;
+    return prev_connects ? lig->final_form : lig->isolated;
+  }
+
+  return arabic_shape_codepoint(prev_cp, curr_cp, next_cp);
+}
+
 size_t arabic_shape_text(const utf8_t *src, size_t src_len,
                          utf8_t *dest, size_t dest_size) {
   if (src == NULL || dest == NULL || src_len == 0 || dest_size == 0) {
@@ -281,8 +325,15 @@ size_t arabic_shape_text(const utf8_t *src, size_t src_len,
 
   for (size_t i = 0; i < num_codepoints; i++) {
     Codepoint prev_cp = (i > 0) ? codepoints[i - 1] : 0;
+    Codepoint curr_cp = codepoints[i];
     Codepoint next_cp = (i + 1 < num_codepoints) ? codepoints[i + 1] : 0;
-    Codepoint shaped_cp = arabic_shape_codepoint(prev_cp, codepoints[i], next_cp);
+
+    // Lam-Alef collapses two codepoints into one ligature glyph.
+    bool consumed_next = false;
+    Codepoint shaped_cp = arabic_shape_pair(prev_cp, curr_cp, next_cp, &consumed_next);
+    if (consumed_next) {
+      i++;  // skip the Alef
+    }
 
     // Encode the shaped codepoint to UTF-8
     // Ensure we have room for at least 4 bytes (max UTF-8 length)

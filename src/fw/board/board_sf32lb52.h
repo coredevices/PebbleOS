@@ -63,11 +63,6 @@ typedef struct {
 } OutputConfig;
 
 typedef struct {
-  void *gpio;
-  uint8_t gpio_pin;
-} AfConfig;
-
-typedef struct {
   int pad;
   pin_function func;
   int flags;
@@ -87,9 +82,6 @@ typedef struct {
   Pinmux pwm_pin;
   PwmState *state;
 } PwmConfig;
-
-typedef struct {
-} TimerConfig;
 
 typedef struct {
   const OutputConfig ctl;
@@ -146,7 +138,6 @@ typedef struct {
   const MagConfig mag_config;
 } BoardConfigMag;
 
-#include "drivers/dma.h"
 #include "drivers/flash/qspi_flash.h"
 #include "drivers/flash/qspi_flash_definitions.h"
 #include "drivers/qspi_definitions.h"
@@ -155,10 +146,7 @@ typedef struct {
 #include "drivers/mic/sf32lb52/pdm_definitions.h"
 #include "drivers/speaker/sf32lb52/audio_definitions.h"
 
-typedef const struct DMARequest DMARequest;
 typedef const struct UARTDevice UARTDevice;
-typedef const struct SPIBus SPIBus;
-typedef const struct SPISlavePort SPISlavePort;
 typedef const struct I2CBus I2CBus;
 typedef const struct I2CSlavePort I2CSlavePort;
 typedef const struct HRMDevice HRMDevice;

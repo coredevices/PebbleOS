@@ -81,8 +81,8 @@ void shared_circular_buffer_remove_client(SharedCircularBuffer* buffer, SharedCi
 
 
 // -------------------------------------------------------------------------------------------------
-bool shared_circular_buffer_write(SharedCircularBuffer* buffer, const uint8_t* data, uint16_t length,
-      bool advance_slackers) {
+bool shared_circular_buffer_write_reserve(SharedCircularBuffer* buffer, uint16_t length,
+      bool advance_slackers, uint8_t** seg1, uint16_t* seg1_length, uint8_t** seg2) {
 
   // If no clients, no need to write
   if (!buffer->clients) {
@@ -111,19 +111,43 @@ bool shared_circular_buffer_write(SharedCircularBuffer* buffer, const uint8_t* d
     avail_space = buffer->buffer_size - max_data;
   }
 
+  *seg1 = &buffer->buffer[buffer->write_index];
   const uint16_t remaining_length = buffer->buffer_size - buffer->write_index;
   if (remaining_length < length) {
-    // Need to write the message in two chunks around the end of the buffer. Write the first chunk
-    memcpy(&buffer->buffer[buffer->write_index], data, remaining_length);
+    // Reservation wraps the end of the buffer, split it into two segments
+    *seg1_length = remaining_length;
+    *seg2 = &buffer->buffer[0];
+  } else {
+    *seg1_length = length;
+    *seg2 = NULL;
+  }
+  return true;
+}
 
-    buffer->write_index = 0;
-    data += remaining_length;
-    length -= remaining_length;
+
+// -------------------------------------------------------------------------------------------------
+void shared_circular_buffer_write_commit(SharedCircularBuffer* buffer, uint16_t length) {
+  buffer->write_index = (buffer->write_index + length) % buffer->buffer_size;
+}
+
+
+// -------------------------------------------------------------------------------------------------
+bool shared_circular_buffer_write(SharedCircularBuffer* buffer, const uint8_t* data, uint16_t length,
+      bool advance_slackers) {
+
+  uint8_t *seg1, *seg2;
+  uint16_t seg1_length;
+  if (!shared_circular_buffer_write_reserve(buffer, length, advance_slackers, &seg1, &seg1_length,
+                                            &seg2)) {
+    return false;
   }
 
-  // Write the last chunk
-  memcpy(&buffer->buffer[buffer->write_index], data, length);
-  buffer->write_index = (buffer->write_index + length) % buffer->buffer_size;
+  memcpy(seg1, data, seg1_length);
+  if (seg1_length < length) {
+    memcpy(seg2, data + seg1_length, length - seg1_length);
+  }
+
+  shared_circular_buffer_write_commit(buffer, length);
   return true;
 }
 

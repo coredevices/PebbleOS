@@ -121,7 +121,6 @@ static void prv_stop_recording(void) {
 
   mic_stop(MIC);
 
-  PBL_LOG_INFO("Stop recording audio");
   prv_teardown_session();
   
   // Speex cleanup will be handled by delayed cleanup to avoid race conditions
@@ -132,7 +131,6 @@ static void prv_cancel_recording(void) {
   mic_stop(MIC);
 
   audio_endpoint_cancel_transfer(s_session_id);
-  PBL_LOG_INFO("Cancel audio recording");
   prv_teardown_session();
 }
 
@@ -140,7 +138,6 @@ static void prv_cancel_early_session(void) {
   // For early cancellation, only cancel the audio endpoint transfer
   // Don't call mic_stop() since the microphone was never started
   audio_endpoint_cancel_transfer(s_session_id);
-  PBL_LOG_INFO("Cancel audio recording");
   prv_teardown_session();
 }
 
@@ -258,7 +255,6 @@ static void prv_handle_subsystem_started(SessionState transition_to_state) {
     }
 
     // Indicate to the UI that we have started recording
-    PBL_LOG_INFO("Session setup successfully");
     prv_send_event(VoiceEventTypeSessionSetup, VoiceStatusSuccess, NULL);
   }
 }
@@ -370,7 +366,7 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
     s_app_uuid = app_manager_get_current_app_md()->uuid;
     char uuid_str[UUID_STRING_BUFFER_LENGTH];
     uuid_to_string(&s_app_uuid, uuid_str);
-    PBL_LOG_INFO("Starting app-initiated voice dictation session for app %s", uuid_str);
+    PBL_LOG_DBG("Starting app-initiated voice dictation session for app %s", uuid_str);
   } else {
     PBL_LOG_DBG("Starting system-initiated voice dictation session");
   }
@@ -655,10 +651,10 @@ void voice_handle_dictation_result(VoiceEndpointResult result, AudioEndpointSess
   if (app_initiated) {
     char uuid_str[UUID_STRING_BUFFER_LENGTH];
     uuid_to_string(app_uuid, uuid_str);
-    PBL_LOG_INFO("Transcription received (%"PRIu32" B) for app %s",
+    PBL_LOG_DBG("Transcription received (%"PRIu32" B) for app %s",
         (uint32_t)sentence_size, uuid_str);
   } else {
-    PBL_LOG_INFO("Transcription received (%"PRIu32" B)", (uint32_t)sentence_size);
+    PBL_LOG_DBG("Transcription received (%"PRIu32" B)", (uint32_t)sentence_size);
   }
 
   prv_send_event(VoiceEventTypeSessionResult, VoiceStatusSuccess, event_data);

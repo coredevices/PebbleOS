@@ -45,6 +45,16 @@
         "characterList": "hebrew_codepoints.json",
         "extended": true
     }, {
+        "name": "GOTHIC_36_EXTENDED",
+        "file": "Heebo-Regular.ttf",
+        "characterList": "hebrew_codepoints.json",
+        "extended": true
+    }, {
+        "name": "GOTHIC_36_BOLD_EXTENDED",
+        "file": "Heebo-Bold.ttf",
+        "characterList": "hebrew_codepoints.json",
+        "extended": true
+    }, {
         "name": "BITHAM_18_LIGHT_SUBSET_EXTENDED",
         "file": ""
     }, {

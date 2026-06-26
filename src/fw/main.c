@@ -41,7 +41,6 @@
 #include "resource/system_resource.h"
 
 #include "kernel/coredump_extra_regions.h"
-#include "kernel/util/stop.h"
 #include "kernel/util/task_init.h"
 #include "kernel/util/sleep.h"
 #include "kernel/events.h"

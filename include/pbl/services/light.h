@@ -31,6 +31,15 @@ void light_button_pressed(void);
 //! to be called by the launcher on a button up event
 void light_button_released(void);
 
+//! @internal
+//! to be called on touch finger-down; mirrors a button press (coalesced).
+void light_touch_down(void);
+
+//! @internal
+//! to be called on liftoff and on app teardown to release a light_touch_down()
+//! hold. No-op if no touch is holding the backlight.
+void light_touch_up(void);
+
 //! @copydoc app_light_enable
 void light_enable(bool enable);
 

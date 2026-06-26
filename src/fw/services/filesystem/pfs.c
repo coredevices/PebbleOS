@@ -542,7 +542,7 @@ static void update_last_written_page(void) {
         prv_page_to_flash_offset(pg) + offsetof(PageHeader, last_written));
     if (hdr.last_written == LAST_WRITTEN_TAG) {
       s_last_page_written = pg;
-      PBL_LOG_INFO("Last written page %d", (int)s_last_page_written);
+      PBL_LOG_DBG("Last written page %d", (int)s_last_page_written);
       return;
     }
   }

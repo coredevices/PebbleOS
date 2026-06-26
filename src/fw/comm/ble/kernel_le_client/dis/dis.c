@@ -4,7 +4,9 @@
 #include "dis.h"
 
 #include "comm/ble/gap_le_connection.h"
+#if defined(CONFIG_BT_ANCS_CLIENT)
 #include "comm/ble/kernel_le_client/ancs/ancs.h"
+#endif
 #include "comm/bt_lock.h"
 #include "system/logging.h"
 #include "system/passert.h"
@@ -26,5 +28,7 @@ void dis_handle_service_discovered(BLECharacteristic *characteristics) {
   PBL_LOG_DBG("In DIS service discovery CB");
   PBL_ASSERTN(characteristics);
 
+#if defined(CONFIG_BT_ANCS_CLIENT)
   ancs_handle_ios9_or_newer_detected();
+#endif
 }

@@ -224,7 +224,7 @@ static bool prv_get_metadata(struct DomainBinding *db) {
   }
 
   success = true;
-  PBL_LOG_INFO("language: %s, version %d", db->iso_locale, db->lang_version);
+  PBL_LOG_DBG("language: %s, version %d", db->iso_locale, db->lang_version);
 
 cleanup:
   kernel_free(header);

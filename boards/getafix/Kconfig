@@ -4,4 +4,3 @@
 config BOARD_GETAFIX
     bool
     default y
-    select BOARD_FAMILY_GETAFIX

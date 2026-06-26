@@ -53,7 +53,7 @@ PBL_LOG_MODULE_DEFINE(service_app_cache, CONFIG_SERVICE_APP_CACHE_LOG_LEVEL);
 
 //! Keep enough room for the maximum sized application based on platform, plus a little more room.
 //! Source: https://pebbletechnology.atlassian.net/wiki/display/DEV/PBW+3.0
-#if defined(CONFIG_BOARD_FAMILY_ASTERIX) || defined(CONFIG_BOARD_FAMILY_OBELIX) || defined(UNITTEST)
+#if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX) || defined(UNITTEST)
 #define APP_SPACE_BUFFER KiBYTES(300)
 #else
 #define APP_SPACE_BUFFER MiBYTES(4)
