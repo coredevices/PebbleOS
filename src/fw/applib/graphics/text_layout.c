@@ -230,6 +230,8 @@ WordState word_state_update(WordState state, Codepoint codepoint) {
 
 //! @return true if init to new word, false otherwise (ie end of text)
 //! @note assumes 'start' is not NULL, but does not assume 'start' is valid start of word
+static Codepoint prv_peek_next_letter(utf8_t *pos, const utf8_t *end);
+
 bool word_init(GContext* ctx, Word* word, const TextBoxParams* const text_box_params, utf8_t* start) {
   word->width_px = 0;
 
@@ -263,28 +265,41 @@ bool word_init(GContext* ctx, Word* word, const TextBoxParams* const text_box_pa
   Codepoint curr_cp = utf8_iter_state->codepoint;
   WordState state = WordStateStart;
   state = word_state_update(state, curr_cp);
-  // arabic_shape_pair() can fold this codepoint and the next into a single
-  // glyph (the Arabic Lam-Alef ligature), reporting the next one as consumed.
-  // Its advance is then already counted, so skip it on the next iteration.
+  // arabic_shape_pair() can fold a Lam and the next Alef into one ligature glyph
+  // and report the Alef as consumed; its advance is then already counted, so the
+  // Alef is skipped later. Marks (harakat) are transparent: they keep their own
+  // width but are stepped over when picking joining context, like the renderer.
   bool skip_ligature_member = false;
+  const utf8_t *bounds_end =
+      (text_box_params->utf8_bounds != NULL) ? text_box_params->utf8_bounds->end : NULL;
 
   do {
+    utf8_t *curr_pos = utf8_iter_state->current;
     iter_next(&char_iter);
     Codepoint next_cp = utf8_iter_state->codepoint;
 
     if (state == WordStateGrowing || state == WordStateIdeograph) {
-      if (skip_ligature_member) {
+      if (skip_ligature_member && !arabic_is_transparent(curr_cp)) {
+        // The Alef folded into the preceding Lam-Alef ligature.
         skip_ligature_member = false;
+      } else if (arabic_is_transparent(curr_cp)) {
+        // A mark keeps its own width but is not reshaped.
+        word->width_px += prv_codepoint_get_horizontal_advance(&ctx->font_cache,
+            text_box_params->font, curr_cp);
       } else {
+        Codepoint shape_next =
+            arabic_is_transparent(next_cp) ? prv_peek_next_letter(curr_pos, bounds_end) : next_cp;
         bool consumed_next = false;
-        Codepoint width_cp = arabic_shape_pair(prev_cp, curr_cp, next_cp, &consumed_next);
+        Codepoint width_cp = arabic_shape_pair(prev_cp, curr_cp, shape_next, &consumed_next);
         word->width_px += prv_codepoint_get_horizontal_advance(&ctx->font_cache,
             text_box_params->font, width_cp);
         skip_ligature_member = consumed_next;
       }
     }
 
-    prev_cp = curr_cp;
+    if (!arabic_is_transparent(curr_cp)) {
+      prev_cp = curr_cp;
+    }
     curr_cp = next_cp;
     state = word_state_update(state, curr_cp);
   } while (state != WordStateEnd);
@@ -584,20 +599,28 @@ void update_dimensions_char_visitor_cb(GContext* ctx, const TextBoxParams* const
       line, line->width_px + line->origin.x, text_box_params->box.size.w);
 }
 
-// Peek the codepoint after the one starting at `pos`, bounded by `end`. Returns
-// 0 at a line/text boundary. Lets the width pass see the next letter so a
-// Lam-Alef pair folds into one ligature advance, matching the render path.
-static Codepoint prv_peek_next_codepoint(utf8_t *pos, const utf8_t *end) {
+// Peek the next letter after the one at `pos`, skipping transparent Arabic marks
+// and bounded by `end`. Returns 0 at a line/text boundary. Lets the width pass
+// fold a Lam-Alef (even across an intervening harakat) into one ligature advance
+// and pick the same joining context the renderer shapes with.
+static Codepoint prv_peek_next_letter(utf8_t *pos, const utf8_t *end) {
   if (pos == NULL) {
     return 0;
   }
   utf8_t *after = NULL;
   utf8_peek_codepoint(pos, &after);
-  if (after == NULL || (end != NULL && after >= end) || *after == '\0' || *after == '\n') {
-    return 0;
+  while (after != NULL && (end == NULL || after < end) && *after != '\0' && *after != '\n') {
+    utf8_t *next = NULL;
+    Codepoint cp = utf8_peek_codepoint(after, &next);
+    if (cp == 0 || next == NULL) {
+      break;
+    }
+    if (!arabic_is_transparent(cp)) {
+      return cp;
+    }
+    after = next;
   }
-  utf8_t *unused = NULL;
-  return utf8_peek_codepoint(after, &unused);
+  return 0;
 }
 
 // Ligature-aware glyph advance: a Lam-Alef pair measures as the single ligature
@@ -736,27 +759,31 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
         // Trailing spaces are kept in the run here and split out after the loop
         // (see the trailing-space peel below) so they reorder between runs.
 
-        if (skip_ligature_member) {
+        if (skip_ligature_member && !arabic_is_transparent(seg_cp)) {
           // Alef already counted in the preceding Lam-Alef ligature.
           skip_ligature_member = false;
         } else {
-          Codepoint next_seg_cp = 0;
-          if (seg_next < line_end && *seg_next != '\0' && *seg_next != '\n') {
-            utf8_t *peek_next = NULL;
-            next_seg_cp = utf8_peek_codepoint(seg_next, &peek_next);
+          Codepoint width_cp;
+          if (arabic_is_transparent(seg_cp)) {
+            // A mark keeps its own width but is not reshaped.
+            width_cp = seg_cp;
+          } else {
+            Codepoint next_seg_cp = prv_peek_next_letter(segment_end, line_end);
+            bool consumed_next = false;
+            width_cp = arabic_shape_pair(prev_seg_cp, seg_cp, next_seg_cp, &consumed_next);
+            skip_ligature_member = consumed_next;
           }
-          bool consumed_next = false;
-          Codepoint width_cp = arabic_shape_pair(prev_seg_cp, seg_cp, next_seg_cp, &consumed_next);
           int glyph_width = prv_codepoint_get_horizontal_advance(&ctx->font_cache,
               text_box_params->font, width_cp);
           if (total_width_px + segment_width_px + glyph_width + suffix_width_px > available_horiz_px) {
             break;
           }
           segment_width_px += glyph_width;
-          skip_ligature_member = consumed_next;
         }
 
-        prev_seg_cp = seg_cp;
+        if (!arabic_is_transparent(seg_cp)) {
+          prev_seg_cp = seg_cp;
+        }
         segment_end = seg_next;
       }
       size_t segment_len = segment_end - segment_start;
@@ -942,7 +969,7 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
   Codepoint prev_shaped_cp = 0;       // previous codepoint, for Arabic joining context
   bool skip_ligature_member = false;  // current codepoint was folded into a preceding ligature
   bool consumed_next = false;
-  Codepoint peek_cp = prv_peek_next_codepoint(utf8_iter_state->current, text_end);
+  Codepoint peek_cp = prv_peek_next_letter(utf8_iter_state->current, text_end);
   int next_glyph_width_px = prv_shaped_glyph_advance(ctx, text_box_params, prev_shaped_cp,
       current_codepoint, peek_cp, &consumed_next);
 
@@ -968,9 +995,14 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
 
     last_visited_char = utf8_iter_state->current;
 
-    // Carry the ligature decision to the next iteration before advancing.
-    skip_ligature_member = consumed_next;
-    prev_shaped_cp = current_codepoint;
+    // Carry the ligature decision before advancing. Marks (harakat) keep their
+    // width but do not break joining context, so they leave prev/skip untouched.
+    if (consumed_next) {
+      skip_ligature_member = true;
+    }
+    if (!arabic_is_transparent(current_codepoint)) {
+      prev_shaped_cp = current_codepoint;
+    }
 
     if (!iter_next(&char_iter)) {
       break;
@@ -986,12 +1018,16 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
     }
 
     consumed_next = false;
-    if (skip_ligature_member) {
-      // This codepoint (the Alef) was already counted in the preceding Lam-Alef
-      // ligature, so it adds no further width.
+    if (skip_ligature_member && !arabic_is_transparent(current_codepoint)) {
+      // The Alef folded into the preceding Lam-Alef ligature adds no width.
       next_glyph_width_px = 0;
+      skip_ligature_member = false;
+    } else if (arabic_is_transparent(current_codepoint)) {
+      // A mark keeps its own width but is not reshaped.
+      next_glyph_width_px = prv_codepoint_get_horizontal_advance(&ctx->font_cache,
+          text_box_params->font, current_codepoint);
     } else {
-      peek_cp = prv_peek_next_codepoint(utf8_iter_state->current, text_end);
+      peek_cp = prv_peek_next_letter(utf8_iter_state->current, text_end);
       next_glyph_width_px = prv_shaped_glyph_advance(ctx, text_box_params, prev_shaped_cp,
           current_codepoint, peek_cp, &consumed_next);
     }
