@@ -17,6 +17,7 @@
 #include "process_state/app_state/app_state.h"
 #include "resource/resource.h"
 #include "resource/resource_ids.auto.h"
+#include "pbl/services/i18n/i18n.h"
 #include "pbl/services/runlevel.h"
 #include "system/logging.h"
 #include "system/passert.h"
@@ -36,6 +37,8 @@ struct AppData {
   SimpleDialog *dialog;
   AppTimer *poweroff_timer;
   DialogState last_dialog_state;
+  uint8_t last_charge_percent;
+  char dialog_text[32];
   bool was_plugged;
 };
 
@@ -80,17 +83,35 @@ static void prv_battery_state_handler(BatteryChargeState charge) {
 
   Dialog *dialog = simple_dialog_get_dialog(data->dialog);
 
+  const bool should_update_text =
+      (next_dialog_state != DialogState_Uninitialized) &&
+      ((next_dialog_state != data->last_dialog_state) ||
+       ((next_dialog_state == DialogState_Charging) &&
+        (charge.charge_percent != data->last_charge_percent)));
+
+  if (should_update_text) {
+    switch (next_dialog_state) {
+      case DialogState_FullyCharged:
+        dialog_set_text(dialog, i18n_get("Fully Charged", data));
+        break;
+      case DialogState_Charging:
+      default:
+        snprintf(data->dialog_text, sizeof(data->dialog_text), "%s\n%u%%",
+                 i18n_get("Charging", data), charge.charge_percent);
+        dialog_set_text(dialog, data->dialog_text);
+        break;
+    }
+  }
+
   if (next_dialog_state != data->last_dialog_state) {
     // Setting the dialog icon to itself restarts the animation, which looks
     // bad, so we want to avoid that if we can help it.
     switch (next_dialog_state) {
       case DialogState_FullyCharged:
-        dialog_set_text(dialog, i18n_get("Fully Charged", data));
         dialog_set_icon(dialog, RESOURCE_ID_BATTERY_ICON_FULL_LARGE_INVERTED);
         break;
       case DialogState_Charging:
       default:
-        dialog_set_text(dialog, i18n_get("Charging", data));
         dialog_set_icon(dialog, RESOURCE_ID_BATTERY_ICON_CHARGING_LARGE_INVERTED);
         break;
     }
@@ -98,6 +119,7 @@ static void prv_battery_state_handler(BatteryChargeState charge) {
 
   data->was_plugged = charge.is_plugged;
   data->last_dialog_state = next_dialog_state;
+  data->last_charge_percent = charge.charge_percent;
 }
 
 static void prv_handle_init(void) {
@@ -119,6 +141,7 @@ static void prv_handle_init(void) {
   // Handle the edge-case where the charger is disconnected between the user
   // selecting shut down and this app subscribing to battery state events.
   // Also set the initial battery charge level.
+  data->last_charge_percent = UINT8_MAX;
   prv_battery_state_handler(battery_state_service_peek());
 
   app_simple_dialog_push(data->dialog);
