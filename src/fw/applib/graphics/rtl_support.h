@@ -32,3 +32,12 @@ bool utf8_contains_arabic(const utf8_t *start, const utf8_t *end);
 //! @return Number of bytes written to dest (excluding null terminator), or 0 on failure
 size_t utf8_reverse_for_rtl(const utf8_t *src, size_t src_len,
                             utf8_t *dest, size_t dest_size);
+
+//! Find the end of a bidi segment's content, i.e. the position just past its
+//! last non-space codepoint (the start of any trailing spaces), or `start` if
+//! the range is all spaces. The line layout peels trailing spaces into their
+//! own neutral segment so they reorder correctly between an RTL and an LTR run.
+//! @param start Pointer to start of the segment range
+//! @param end Pointer to end of the segment range (exclusive)
+//! @return Pointer in [start, end] just past the last non-space codepoint
+utf8_t *rtl_segment_content_end(utf8_t *start, utf8_t *end);

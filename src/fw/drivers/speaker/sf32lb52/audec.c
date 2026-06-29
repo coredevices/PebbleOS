@@ -20,6 +20,9 @@ PBL_LOG_MODULE_DEFINE(driver_speaker_sf32lb, CONFIG_DRIVER_SPEAKER_LOG_LEVEL);
     #define SINC_GAIN           0x14D
 #endif
 
+#define MIN_VOLUME              0
+#define MAX_VOLUME              100
+
 static const AUDCODE_DAC_CLK_CONFIG_TYPE codec_dac_clk_config[9] =
 {
 #if ALL_CLK_USING_PLL
@@ -262,6 +265,22 @@ static void prv_bf0_audio_pll_config(AudioDevice* audio_device, const AUDCODE_DA
     }
 }
 
+static void prv_apply_volume(AudioDevice* audio_device) {
+    AudioDeviceState* state = audio_device->state;
+    AUDCODEC_HandleTypeDef *haudcodec = &state->audcodec;
+
+    if (state->volume == 0) {
+        HAL_AUDCODEC_Mute_DACPath(haudcodec, 1);
+        return;
+    }
+
+    HAL_AUDCODEC_Mute_DACPath(haudcodec, 0);
+    // convert to HAL decoder range (-36~54)*2
+    int volume = ((int)state->volume - 36) * 2;
+    HAL_AUDCODEC_Config_DACPath_Volume(haudcodec, 0, volume);
+    HAL_AUDCODEC_Config_DACPath_Volume(haudcodec, 1, volume);
+}
+
 static bool prv_allocate_buffers(AudioDeviceState *state) {
     // Allocate circular buffer storage
     state->circ_buffer_storage = kernel_malloc(CIRCULAR_BUF_SIZE_BYTES);
@@ -300,6 +319,7 @@ bool audec_init(AudioDevice* audio_device) {
     haudcodec->Init.adc_cfg.opmode = 1;
     haudcodec->bufSize = CFG_AUDIO_PLAYBACK_PIPE_SIZE * 2;
     state->audec_queue_buf[HAL_AUDCODEC_DAC_CH0] = NULL;
+    state->volume = MAX_VOLUME;
 
     HAL_PMU_EnableAudio(1);
     HAL_RCC_EnableModule(RCC_MOD_AUDCODEC_HP);
@@ -365,6 +385,11 @@ void audec_start(AudioDevice* audio_device, AudioTransCB cb) {
     HAL_AUDCODEC_Config_DACPath(haudcodec, 1);
     HAL_AUDCODEC_Config_Analog_DACPath(haudcodec->Init.dac_cfg.dac_clk);
     HAL_AUDCODEC_Config_DACPath(haudcodec, 0);
+
+    hwp_audcodec->DAC_CH0_CFG_EXT &= ~AUDCODEC_DAC_CH0_CFG_EXT_RAMP_EN_Msk;
+    hwp_audcodec->DAC_CH1_CFG_EXT &= ~AUDCODEC_DAC_CH1_CFG_EXT_RAMP_EN_Msk;
+
+    prv_apply_volume(audio_device);
 }
 
 uint32_t audec_write(AudioDevice* audio_device, void *writeBuf, uint32_t size) {
@@ -382,24 +407,13 @@ uint32_t audec_write(AudioDevice* audio_device, void *writeBuf, uint32_t size) {
 }
 
 void audec_set_vol(AudioDevice* audio_device, int volume) {
-    AUDCODEC_HandleTypeDef *haudcodec = &audio_device->state->audcodec;
-    #define MIN_VOLUME          0
-    #define MAX_VOLUME          100
     if (volume > MAX_VOLUME)
         volume = MAX_VOLUME;
     if (volume < MIN_VOLUME)
         volume = MIN_VOLUME;
 
-    if (volume == 0) {
-        HAL_AUDCODEC_Mute_DACPath(haudcodec, 1);
-    } else {
-        HAL_AUDCODEC_Mute_DACPath(haudcodec, 0);
-        //convert to HAL decoder range (-36~54)*2
-        volume -= 36;
-        volume *= 2;
-        HAL_AUDCODEC_Config_DACPath_Volume(haudcodec, 0, volume);
-        HAL_AUDCODEC_Config_DACPath_Volume(haudcodec, 1, volume);
-    }
+    audio_device->state->volume = (uint8_t)volume;
+    prv_apply_volume(audio_device);
 }
 
 void audec_stop(AudioDevice* audio_device) {

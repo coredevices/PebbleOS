@@ -43,6 +43,17 @@ clar(ctx,
     test_sources_ant_glob = "test_codepoint.c")
 
 clar(ctx,
+    sources_ant_glob = "src/fw/applib/graphics/rtl_support.c" \
+        " src/fw/applib/graphics/utf8.c" \
+        " src/fw/applib/fonts/codepoint.c",
+    test_sources_ant_glob = "test_rtl_support.c")
+
+clar(ctx,
+    sources_ant_glob = "src/fw/applib/graphics/arabic_shaping.c" \
+        " src/fw/applib/graphics/utf8.c",
+    test_sources_ant_glob = "test_arabic_shaping.c")
+
+clar(ctx,
     sources_ant_glob = "src/fw/applib/graphics/utf8.c" \
         " src/fw/applib/graphics/framebuffer.c" \
         " src/fw/applib/graphics/gtypes.c" \
@@ -147,11 +158,6 @@ clar(ctx,
      override_includes=['dummy_board'])
 
 clar(ctx,
-    sources_ant_glob = "src/fw/debug/legacy/debug_db.c",
-    test_sources_ant_glob = "test_debug_db.c",
-    override_includes=['dummy_board'])
-
-clar(ctx,
     sources_ant_glob = \
         " src/fw/flash_region/flash_region.c" \
         " src/fw/flash_region/filesystem_regions.c" \
@@ -180,7 +186,7 @@ clar(ctx,
 for platform in ['asterix']:
     clar(ctx,
          sources_ant_glob =
-         " src/fw/debug/default/flash_logging.c"
+         " src/fw/debug/flash_logging.c"
          " src/fw/flash_region/flash_region.c"
          " tests/fakes/fake_spi_flash.c",
         defines=['DUMA_DISABLED', 'PLATFORM_%s' % platform.upper()],  # DUMA false-positive

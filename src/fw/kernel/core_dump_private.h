@@ -17,11 +17,11 @@
 #define COREDUMP_RAM_SIZE (276 * 1024)
 #elif defined(CONFIG_BOARD_QEMU_FLINT)
 #define COREDUMP_RAM_SIZE (256 * 1024)
-#elif defined(CONFIG_BOARD_FAMILY_OBELIX) || defined(CONFIG_BOARD_FAMILY_GETAFIX)
+#elif defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX)
 // Main RAM on SF32LB52 extends to _heap_end (0x20045000).
 // Thread stacks can be allocated above the 256KB mark.
 #define COREDUMP_RAM_SIZE (276 * 1024)
-#elif defined(CONFIG_BOARD_FAMILY_ASTERIX)
+#elif defined(CONFIG_BOARD_ASTERIX)
 #define COREDUMP_RAM_SIZE (256 * 1024)
 #endif
 

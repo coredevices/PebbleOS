@@ -4,3 +4,22 @@
 config BOARD_QEMU_EMERY
     bool
     default y
+
+choice
+    prompt "Emulated watch color"
+    help
+      Watch color reported by manufacturing info on the emulator.
+
+config QEMU_WATCH_COLOR_PT2_BLACK_GREY
+    bool "Black/Grey"
+
+config QEMU_WATCH_COLOR_PT2_BLACK_RED
+    bool "Black/Red"
+
+config QEMU_WATCH_COLOR_PT2_SILVER_BLUE
+    bool "Silver/Blue"
+
+config QEMU_WATCH_COLOR_PT2_SILVER_GREY
+    bool "Silver/Grey"
+
+endchoice

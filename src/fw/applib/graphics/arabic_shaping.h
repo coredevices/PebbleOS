@@ -23,6 +23,12 @@ typedef enum {
 //! @return true if the codepoint is a shapeable Arabic letter
 bool arabic_is_shapeable(Codepoint cp);
 
+//! Check if a codepoint is a transparent Arabic combining mark (harakat etc.).
+//! These marks sit on a base letter and must be skipped when picking the
+//! previous/next letter for cursive joining, so the layout/measurement path
+//! shapes the same forms the renderer draws.
+bool arabic_is_transparent(Codepoint cp);
+
 //! Shape a single Arabic codepoint based on its neighbors.
 //!
 //! Returns the contextual presentation form for `curr_cp` given the
@@ -34,6 +40,13 @@ bool arabic_is_shapeable(Codepoint cp);
 //! Used by both the renderer and the layout/measurement path so that
 //! width computation matches what is actually drawn.
 Codepoint arabic_shape_codepoint(Codepoint prev_cp, Codepoint curr_cp, Codepoint next_cp);
+
+//! Shape `curr_cp`, resolving a Lam-Alef ligature when `curr_cp` (Lam) is
+//! followed by `next_cp` (an Alef variant): returns the single ligature glyph
+//! and sets `*consumed_next` to true so the caller skips `next_cp`. Otherwise
+//! behaves like arabic_shape_codepoint() and leaves `*consumed_next` false.
+Codepoint arabic_shape_pair(Codepoint prev_cp, Codepoint curr_cp, Codepoint next_cp,
+                            bool *consumed_next);
 
 //! Shape Arabic text by converting basic Arabic letters to their
 //! contextual presentation forms based on position in words.

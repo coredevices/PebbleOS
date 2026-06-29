@@ -43,7 +43,6 @@ clar(ctx,
         " src/fw/services/filesystem/app_file.c"
         " src/fw/services/filesystem/flash_translation.c"
         " src/fw/services/filesystem/pfs.c"
-        " src/fw/services/legacy/persist_map.c"
         " src/fw/services/persist/service.c"
         " src/fw/services/settings/settings_file.c"
         " src/fw/services/settings/settings_raw_iter.c"

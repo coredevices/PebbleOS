@@ -8,6 +8,8 @@
 #include "drivers/battery.h"
 #include "drivers/rtc.h"
 
+#include "kernel/pebble_tasks.h"
+
 #include "util/list.h"
 #include "util/math.h"
 
@@ -151,6 +153,11 @@ static const uint32_t MAX_VIBE_DURATION_MS = 10000;
 
 static int s_pattern_timer = TIMER_INVALID_ID;
 static bool s_pattern_in_progress = false;
+// Source that started the active pattern; VibePatternOwner_Other when none is live.
+static VibePatternOwner s_pattern_owner = VibePatternOwner_Other;
+// Owner to assign to the next started pattern, set by vibe_pattern_set_owner();
+// consumed (reset to _Other) when the pattern starts.
+static VibePatternOwner s_pending_owner = VibePatternOwner_Other;
 // Reference points for drift-free step scheduling. The pattern's t=0 is anchored
 // to s_pattern_start_ticks; s_pattern_deadline_ms is the (start-relative)
 // completion time of the step the timer is currently waiting on. Each step's
@@ -297,6 +304,7 @@ static void prv_timer_callback(void* data) {
     // make sure it's off
     prv_vibes_set_vibe_strength(VIBE_STRENGTH_OFF);
     s_pattern_in_progress = false;
+    s_pattern_owner = VibePatternOwner_Other;
   }
 
   mutex_unlock(s_vibe_pattern_mutex);
@@ -338,6 +346,14 @@ bool prv_vibe_pattern_enqueue_step_raw(uint32_t duration_ms, int32_t strength) {
   step->strength = strength;
 
   if (s_vibe_queue_head == NULL) {
+    // Fresh queue: take the explicitly-set owner, else default by task.
+    if (s_pending_owner != VibePatternOwner_Other) {
+      s_pattern_owner = s_pending_owner;
+    } else {
+      s_pattern_owner = (pebble_task_get_current() == PebbleTask_App)
+                            ? VibePatternOwner_App : VibePatternOwner_Other;
+    }
+    s_pending_owner = VibePatternOwner_Other;
     s_vibe_queue_head = step;
   } else {
     list_append((ListNode*)s_vibe_queue_head, (ListNode*)step);
@@ -399,8 +415,9 @@ DEFINE_SYSCALL(void, sys_vibe_pattern_trigger_start, void) {
   mutex_unlock(s_vibe_pattern_mutex);
 }
 
-DEFINE_SYSCALL(void, sys_vibe_pattern_clear, void) {
-  mutex_lock(s_vibe_pattern_mutex);
+// Stop the active pattern and drop queued steps. Caller holds s_vibe_pattern_mutex.
+static void prv_clear_pattern_locked(void) {
+  mutex_assert_held_by_curr_task(s_vibe_pattern_mutex, true);
   new_timer_stop(s_pattern_timer);
   while (s_vibe_queue_head) {
     VibePatternStep *removed_node = s_vibe_queue_head;
@@ -409,6 +426,27 @@ DEFINE_SYSCALL(void, sys_vibe_pattern_clear, void) {
   }
   prv_vibes_set_vibe_strength(VIBE_STRENGTH_OFF);
   s_pattern_in_progress = false;
+  s_pattern_owner = VibePatternOwner_Other;
+}
+
+DEFINE_SYSCALL(void, sys_vibe_pattern_clear, void) {
+  mutex_lock(s_vibe_pattern_mutex);
+  prv_clear_pattern_locked();
+  mutex_unlock(s_vibe_pattern_mutex);
+}
+
+void vibe_pattern_set_owner(VibePatternOwner owner) {
+  mutex_lock(s_vibe_pattern_mutex);
+  s_pending_owner = owner;
+  mutex_unlock(s_vibe_pattern_mutex);
+}
+
+// Clear the active pattern only if `owner` started it; no-op otherwise.
+void vibe_pattern_clear_for_owner(VibePatternOwner owner) {
+  mutex_lock(s_vibe_pattern_mutex);
+  if (s_pattern_owner == owner) {
+    prv_clear_pattern_locked();
+  }
   mutex_unlock(s_vibe_pattern_mutex);
 }
 

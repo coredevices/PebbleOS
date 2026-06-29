@@ -108,16 +108,9 @@ def options(opt):
     pebble_runners.register_args(_OptParserAdapter(opt))
     opt.add_option('--compile_commands', action='store_true', help='Create a clang compile_commands.json')
     opt.add_option('--onlysdk', action='store_true', help="only build the sdk")
-    opt.add_option('--no-link', action='store_true',
-                   help='Do not link the final firmware binary. This is used for static analysis')
     opt.add_option('--variant', action='store', default='normal',
                    choices=['normal', 'prf'],
                    help='Build variant: normal (default) or prf (recovery firmware)')
-
-def handle_configure_options(conf):
-    if conf.options.no_link:
-        conf.env.NO_LINK = True
-        print("Not linking firmware")
 
 def configure(conf):
     if not conf.options.board:
@@ -153,8 +146,6 @@ def configure(conf):
 
     conf.env.SUPPORTED_RUNNERS = board.runners
     conf.env.RUNNER = board.runners[0] if board.runners else None
-
-    conf.env.FLASH_ITCM = False
 
     # Set platform used for building the SDK
     if conf.env.CONFIG_PLATFORM_EMERY:
@@ -202,8 +193,6 @@ def configure(conf):
     # Save a baseline environment that we'll use for ARM environments
     base_env = conf.env
 
-    handle_configure_options(conf)
-
     Logs.pprint('CYAN', 'Configuring arm_firmware environment')
     conf.setenv('', base_env)
     conf.load('pebble_arm_gcc', tooldir='waftools')
@@ -213,7 +202,7 @@ def configure(conf):
 
     # Strip CONFIG_* DEFINES mirrored from the configure-time board: each test
     # selects its own simulated platform (asterix / obelix / gabbro) and injects
-    # the matching BOARD_FAMILY/PLATFORM/SCREEN_COLOR_DEPTH_BITS itself, so the
+    # the matching BOARD/PLATFORM/SCREEN_COLOR_DEPTH_BITS itself, so the
     # configure board's symbols would just collide with the per-test ones.
     conf.env.DEFINES = [d for d in conf.env.DEFINES
                         if not d.split('=', 1)[0].startswith('CONFIG_')]
@@ -335,7 +324,7 @@ def build(bld):
         return
 
     # Do not enable stationary mode in PRF or release firmware
-    if (bld.env.VARIANT != 'prf' and not bld.env.CONFIG_QEMU and bld.env.NORMAL_SHELL != 'sdk'):
+    if (bld.env.VARIANT != 'prf' and not bld.env.CONFIG_QEMU and not bld.env.CONFIG_SHELL_SDK):
         bld.env.append_value('DEFINES', 'STATIONARY_MODE')
 
     if bld.variant == 'test':
@@ -362,12 +351,10 @@ def build(bld):
     # values that the other build steps added.
     bld.recurse('resources')
 
-    # if we're not linking the firmware don't run these
-    if not bld.env.NO_LINK:
-        bld.add_post_fun(size_fw)
-        bld.add_post_fun(size_resources)
-        if bld.env.CONFIG_LOG_HASHED:
-            bld.add_post_fun(merge_loghash_dicts)
+    bld.add_post_fun(size_fw)
+    bld.add_post_fun(size_resources)
+    if bld.env.CONFIG_LOG_HASHED:
+        bld.add_post_fun(merge_loghash_dicts)
 
 
 def merge_loghash_dicts(bld):

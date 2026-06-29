@@ -23,7 +23,7 @@ if bld.env.CONFIG_QEMU:
         ],
     )
 
-elif bld.env.CONFIG_BOARD_FAMILY_ASTERIX:
+elif bld.env.CONFIG_BOARD_ASTERIX:
     bld.env.DRIVERS.extend([
         'driver_button',
         'driver_mcu',
@@ -33,7 +33,7 @@ elif bld.env.CONFIG_BOARD_FAMILY_ASTERIX:
         'driver_task_watchdog',
     ])
 
-elif bld.env.CONFIG_BOARD_FAMILY_OBELIX:
+elif bld.env.CONFIG_BOARD_OBELIX:
     bld.env.DRIVERS.extend([
         'driver_button',
         'driver_mcu',
@@ -43,7 +43,7 @@ elif bld.env.CONFIG_BOARD_FAMILY_OBELIX:
         'driver_task_watchdog',
     ])
 
-elif bld.env.CONFIG_BOARD_FAMILY_GETAFIX:
+elif bld.env.CONFIG_BOARD_GETAFIX:
     bld.env.DRIVERS.extend([
         'driver_button',
         'driver_mcu',

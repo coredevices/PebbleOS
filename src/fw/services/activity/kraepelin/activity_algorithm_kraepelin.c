@@ -26,6 +26,10 @@
 #include "pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h"
 #include "pbl/services/activity/kraepelin/kraepelin_algorithm.h"
 
+#if defined(CONFIG_ALS_SCREEN_COMPENSATION)
+#include "services/light/als_screen_compensation.h"
+#endif
+
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
 // NOTE: This file is called "activity_sleep" for legacy reasons. A better name now would be
@@ -920,9 +924,17 @@ static uint32_t NOINLINE prv_fill_minute_record(time_t utc_sec, AlgMinuteDLSSamp
 
   m_rec->base.steps = MIN(s_alg_state->minute_steps, UINT8_MAX);
 
-  // The light level readings we get are from 0 to 4095 (12 bits). We only have 8 bits of storage,
-  // so divide it down to fit into 8 bits.
-  m_rec->base.light = ROUND(ambient_light_get_light_level(), ALG_RAW_LIGHT_SENSOR_DIVIDE_BY);
+  // Scale the reading into the 8-bit light field; saturate rather than wrap so a
+  // sensor whose range exceeds the field doesn't alias bright light down to
+  // "dark". On boards whose ALS sits under the display, correct for the screen
+  // content in front of the sensor first so the stored level reflects true
+  // ambient, not the watchface.
+#if defined(CONFIG_ALS_SCREEN_COMPENSATION)
+  const uint32_t light_level = als_compensation_correct(ambient_light_get_light_level());
+#else
+  const uint32_t light_level = ambient_light_get_light_level();
+#endif
+  m_rec->base.light = MIN(ROUND(light_level, ALG_RAW_LIGHT_SENSOR_DIVIDE_BY), UINT8_MAX);
 
   // Are we connected to a charger?
   const BatteryChargeState charge_state = battery_get_charge_state();

@@ -49,11 +49,10 @@ typedef struct {
   uint8_t payload[];
 } DefaultReceiverImpl;
 
-//! Pending receiver lists: completed messages are appended here instead of each
-//! getting their own system_task/launcher_task callback. A single callback is
-//! scheduled per list and drains all entries when it fires. This prevents the
-//! system task queue from overflowing when many Pebble Protocol messages arrive
-//! in rapid succession (e.g. after BT reconnect).
+//! Pending receiver lists. One callback per list is in flight at a time; it
+//! handles one message and reschedules until empty. Coalescing bounds the
+//! system task queue; one-per-callback keeps a slow handler from starving the
+//! task watchdog.
 static SingleListNode *s_pending_bg_head;
 static bool s_bg_callback_pending;
 
@@ -113,30 +112,50 @@ static void prv_append_to_pending_list(DefaultReceiverImpl *impl,
   }
 }
 
-static void prv_drain_pending_list(SingleListNode **head,
-                                   bool *callback_pending) {
-  // Snapshot and detach the list so new items that arrive while we are
-  // processing do not extend the current batch indefinitely.
-  SingleListNode *list = *head;
-  *head = NULL;
-  *callback_pending = false;
-
-  while (list) {
-    DefaultReceiverImpl *impl = (DefaultReceiverImpl *)list;
-    list = slist_get_next(list);
+//! Handle one pending message; returns true if more remain. One per callback
+//! so a slow handler (e.g. data logging blocking ~500ms per send) can't starve
+//! the watchdog: the draining task feeds it between callbacks.
+static bool prv_drain_one_pending(SingleListNode **head) {
+  DefaultReceiverImpl *impl = (DefaultReceiverImpl *)*head;
+  if (impl) {
+    *head = slist_get_next(&impl->node);
     PBL_ASSERTN(impl->handler_scheduled && impl->session);
     impl->endpoint->handler(impl->session, impl->payload, impl->total_payload_size);
     prv_wipe_receiver_data(impl);
     kernel_free(impl);
   }
+  return (*head != NULL);
 }
 
 static void prv_default_kernel_receiver_bg_cb(void *data) {
-  prv_drain_pending_list(&s_pending_bg_head, &s_bg_callback_pending);
+  if (prv_drain_one_pending(&s_pending_bg_head)) {
+    // Reschedule rather than loop so the watchdog gets fed between handlers.
+    system_task_add_callback(prv_default_kernel_receiver_bg_cb, NULL);
+    return;
+  }
+
+  s_bg_callback_pending = false;
+
+  // finish() runs on another task; re-check so a message appended during the
+  // window above isn't stranded.
+  if (s_pending_bg_head) {
+    s_bg_callback_pending = true;
+    system_task_add_callback(prv_default_kernel_receiver_bg_cb, NULL);
+  }
 }
 
 static void prv_default_kernel_receiver_main_cb(void *data) {
-  prv_drain_pending_list(&s_pending_main_head, &s_main_callback_pending);
+  if (prv_drain_one_pending(&s_pending_main_head)) {
+    launcher_task_add_callback(prv_default_kernel_receiver_main_cb, NULL);
+    return;
+  }
+
+  s_main_callback_pending = false;
+
+  if (s_pending_main_head) {
+    s_main_callback_pending = true;
+    launcher_task_add_callback(prv_default_kernel_receiver_main_cb, NULL);
+  }
 }
 
 static void prv_default_kernel_receiver_finish(Receiver *receiver) {

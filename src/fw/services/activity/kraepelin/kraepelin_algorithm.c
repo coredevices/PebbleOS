@@ -194,7 +194,7 @@ typedef struct {
 
 
 // Set the sleep parameters
-#if defined(CONFIG_BOARD_FAMILY_ASTERIX)
+#if defined(CONFIG_BOARD_ASTERIX)
 static const KAlgSleepParams KALG_SLEEP_PARAMS = {
   .max_sleep_minute_score = 500,  // Increased significantly for asterix - much stricter
   .force_wake_minute_score = 8000,
@@ -309,7 +309,7 @@ typedef struct {
 
 
 // Set the not-worn parameters
-#if defined(CONFIG_BOARD_FAMILY_ASTERIX)
+#if defined(CONFIG_BOARD_ASTERIX)
 static const KAlgNotWornParams KALG_NOT_WORN_PARAMS = {
   .max_non_worn_vmc = 2500,
   .min_worn_vmc = 15,  // Increased significantly for asterix - much higher baseline noise

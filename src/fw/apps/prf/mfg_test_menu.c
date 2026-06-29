@@ -56,21 +56,21 @@ static const MfgTestMenuEntry s_all_entries[] = {
 #ifdef CONFIG_MAG
   { "Magnetometer",  MfgTestId_Mag,           mfg_mag_app_get_info,       SF | FI },
 #endif
-#ifdef CONFIG_BOARD_FAMILY_ASTERIX
+#ifdef CONFIG_BOARD_ASTERIX
   { "Speaker",       MfgTestId_Speaker,       mfg_speaker_asterix_app_get_info, SF | FI },
-#elif defined(CONFIG_BOARD_FAMILY_OBELIX)
+#elif defined(CONFIG_BOARD_OBELIX)
   { "Speaker",       MfgTestId_Speaker,       mfg_speaker_obelix_app_get_info,  SF | FI },
 #endif
-#ifdef CONFIG_BOARD_FAMILY_ASTERIX
+#ifdef CONFIG_BOARD_ASTERIX
   { "Microphone",    MfgTestId_Mic,           mfg_mic_asterix_app_get_info, SF | FI },
-#elif defined(CONFIG_BOARD_FAMILY_OBELIX)
+#elif defined(CONFIG_BOARD_OBELIX)
   { "Microphone",    MfgTestId_Mic,           mfg_mic_obelix_app_get_info,  SF | FI },
-#elif defined(CONFIG_BOARD_FAMILY_GETAFIX)
+#elif defined(CONFIG_BOARD_GETAFIX)
   { "Microphone",    MfgTestId_Mic,           mfg_mic_getafix_app_get_info, SF | FI },
 #endif
   { "ALS",           MfgTestId_ALS,           mfg_als_app_get_info,       SF | FI },
   { "Vibration",     MfgTestId_Vibration,     mfg_vibration_app_get_info, SF | FI },
-#if defined(CONFIG_BOARD_FAMILY_OBELIX) && defined(CONFIG_MFG)
+#if defined(CONFIG_BOARD_OBELIX) && defined(CONFIG_MFG)
   { "HRM CTR/L",     MfgTestId_HrmCtrLeakage, mfg_hrm_ctr_leakage_obelix_app_get_info, SF | FI },
 #endif
   { "Charge",        MfgTestId_Charge,        mfg_charge_app_get_info,         SF | FI },

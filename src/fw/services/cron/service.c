@@ -69,7 +69,7 @@ void cron_service_handle_clock_change(PebbleSetTimeEvent *set_time_info) {
     if (must_recalc || change_diff >= job->clock_change_tolerance) {
       job->cached_execute_time = cron_job_get_execute_time(job);
     }
-    PBL_LOG_INFO("Cron job rescheduled for %ld", job->cached_execute_time);
+    PBL_LOG_DBG("Cron job rescheduled for %ld", job->cached_execute_time);
 
     newlist = list_sorted_add(newlist, &job->list_node, prv_sort, true);
   }

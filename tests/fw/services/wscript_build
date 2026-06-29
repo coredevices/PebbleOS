@@ -96,6 +96,14 @@ clar(ctx,
 
 clar(ctx,
     sources_ant_glob = \
+        " src/fw/services/light/als_screen_compensation_math.c" \
+        " src/fw/services/light/als_screen_compensation_region.c",
+    test_sources_ant_glob = "test_als_screen_compensation.c",
+    defines=['CONFIG_ALS_SCREEN_COMPENSATION', 'CONFIG_AMBIENT_LIGHT_BITS=16'],
+    override_includes=['dummy_board'])
+
+clar(ctx,
+    sources_ant_glob = \
         " tests/fakes/fake_events.c" \
         " tests/fakes/fake_session.c" \
         " src/fw/services/phone_call/util.c" \

@@ -39,6 +39,7 @@ typedef struct SettingsBacklightData {
   char als_value_buffer[16];  // Buffer for ALS value display
   char backlight_percent_buffer[16];  // Buffer for backlight percentage display
   AppTimer *update_timer;  // Timer for live updating debug values
+  bool als_primed;  // Whether we currently hold an ambient_light_prime() ref
 } SettingsBacklightData;
 
 static const char *s_language_labels[] = {
@@ -426,6 +427,12 @@ static void prv_backlight_appear_cb(SettingsCallbacks *context) {
     data->update_timer = app_timer_register(UPDATE_INTERVAL_MS,
                                             prv_backlight_update_timer_cb, data);
   }
+  // Hold the ALS in continuous mode while this submenu is visible so the
+  // 500 ms refresh tick doesn't pay a full integration time per read.
+  if (!data->als_primed) {
+    ambient_light_prime();
+    data->als_primed = true;
+  }
 }
 
 static void prv_backlight_hide_cb(SettingsCallbacks *context) {
@@ -434,6 +441,10 @@ static void prv_backlight_hide_cb(SettingsCallbacks *context) {
     app_timer_cancel(data->update_timer);
     data->update_timer = NULL;
   }
+  if (data->als_primed) {
+    ambient_light_release();
+    data->als_primed = false;
+  }
 }
 
 static void prv_backlight_deinit_cb(SettingsCallbacks *context) {
@@ -441,6 +452,10 @@ static void prv_backlight_deinit_cb(SettingsCallbacks *context) {
   if (data->update_timer) {
     app_timer_cancel(data->update_timer);
     data->update_timer = NULL;
+  }
+  if (data->als_primed) {
+    ambient_light_release();
+    data->als_primed = false;
   }
   i18n_free_all(data);
   app_free(data);

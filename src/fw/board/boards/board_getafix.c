@@ -378,10 +378,6 @@ static const TouchSensor s_touch_cst816 = {
         .gpio_pin = 28,
         .active_high = false,
     },
-    .max_x = 260,
-    .max_y = 260,
-    .invert_x_axis = false,
-    .invert_y_axis = true,
 };
 
 const TouchSensor *CST816 = &s_touch_cst816;
@@ -492,8 +488,9 @@ const BoardConfigPower BOARD_CONFIG_POWER = {
 
 const BoardConfig BOARD_CONFIG = {
   .backlight_on_percent = 25,
-  .ambient_light_dark_threshold = 150,
-  .ambient_k_delta_threshold = 25,
+  .ambient_light_dark_threshold = 2000,
+  .ambient_k_delta_threshold = 333,
+  .dynamic_backlight_min_threshold = 5,
 };
 
 const BoardConfigButton BOARD_CONFIG_BUTTON = {

@@ -23,6 +23,7 @@
 #include "pbl/services/blob_db/pin_db.h"
 #include "pbl/services/blob_db/reminder_db.h"
 #include "pbl/services/notifications/notification_storage.h"
+#include "pbl/services/notifications/notifications.h"
 #include "pbl/services/phone_call_util.h"
 #include "pbl/services/timeline/actions_endpoint.h"
 #include "system/logging.h"
@@ -755,6 +756,10 @@ static void prv_perform_ancs_negative_action(const TimelineItem *item,
     }
     prv_put_notification_action_result(&item->header.id, i18n_get(msg_i18n, &i18n_key), res_id,
                                        ActionResultTypeSuccess);
+  } else {
+    // Bulk mode suppresses the per-item dialog, but we must still remove the notification from the
+    // UI ourselves; the phone only echoes a removal for notifications still in its center.
+    notifications_handle_notification_removed((Uuid *)&item->header.id);
   }
 }
 

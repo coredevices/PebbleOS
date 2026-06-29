@@ -45,6 +45,7 @@
 #include "stubs_persist.h"
 #include "stubs_process_manager.h"
 #include "stubs_prompt.h"
+#include "stubs_quick_launch.h"
 #include "stubs_rand_ptr.h"
 #include "stubs_serial.h"
 #include "stubs_sleep.h"
@@ -63,10 +64,6 @@
 const uint32_t g_num_file_resource_stores = 0;
 const FileResourceData g_file_resource_stores[] = {};
 
-void quick_launch_remove_app(const Uuid *uuid) {
-  return;
-}
-
 bool build_id_contains_gnu_build_id(const ElfExternalNote *note) {
   return false;
 }
@@ -81,10 +78,6 @@ status_t pin_db_delete_with_parent(const TimelineItemId *parent_id) {
 
 bool pin_db_exists_with_parent(const TimelineItemId *parent_id) {
   return true;
-}
-
-AppInstallId quick_launch_get_app(uint8_t button) {
-  return 0;
 }
 
 AppInstallId worker_preferences_get_default_worker(void) {
