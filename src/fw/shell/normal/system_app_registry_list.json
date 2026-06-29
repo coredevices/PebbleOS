@@ -413,16 +413,6 @@
       "color_argb8": "GColorYellowARGB8"
     },
     {
-      "id": -60,
-      "enum": "SHUTDOWN_CHARGING",
-      "md_fn": "shutdown_charging_get_app_info",
-      "target_platforms": [
-        "snowy",
-        "spalding",
-        "robert"
-      ]
-    },
-    {
       "id": -61,
       "enum": "SWAP_LAYER",
       "md_fn": "swap_layer_demo_get_app_info",

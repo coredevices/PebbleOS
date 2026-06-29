@@ -56,12 +56,7 @@ static void prv_display_plugged(void *data);
 static void prv_dismiss_plugged(void);
 static void prv_display_fully_charged(void *data);
 static void prv_dismiss_fully_charged(void);
-// TODO PBL-39883: Replace w/ QUIRK_RESET_ON_SHUTDOWN_WHILE_CHARGING once arbitrary prefixes land
-#ifdef CONFIG_BOARD_ASTERIX
 static void prv_shutdown(void *ignored);
-#else
-static void prv_enter_shutdown_charging(void *ignored);
-#endif
 
 static const BatteryUIState ui_states[] = {
   [BatteryGood] = { .next_state = {
@@ -84,12 +79,7 @@ static const BatteryUIState ui_states[] = {
     .next_state = {
       BatteryGood, BatteryWarning, BatteryLowPower, BatteryCritical, BatteryShutdownCharging
   }},
-// TODO PBL-39883: Replace w/ QUIRK_RESET_ON_SHUTDOWN_WHILE_CHARGING once arbitrary prefixes land
-#ifdef CONFIG_BOARD_ASTERIX
   [BatteryShutdownCharging] = { .enter = prv_shutdown }
-#else
-  [BatteryShutdownCharging] = { .enter = prv_enter_shutdown_charging }
-#endif
 };
 
 static BatteryUIStateID s_state = BatteryGood;
@@ -199,18 +189,9 @@ static void prv_dismiss_fully_charged(void) {
   battery_ui_dismiss_modal();
 }
 
-// TODO PBL-39883: Replace w/ QUIRK_RESET_ON_SHUTDOWN_WHILE_CHARGING once arbitrary prefixes land
-#ifdef CONFIG_BOARD_ASTERIX
 static void prv_shutdown(void *ignored) {
   battery_ui_handle_shut_down();
 }
-#else
-static void prv_enter_shutdown_charging(void *ignored) {
-  app_manager_put_launch_app_event(&(AppLaunchEventConfig) {
-    .id = APP_ID_SHUTDOWN_CHARGING,
-  });
-}
-#endif
 
 // Internals
 
