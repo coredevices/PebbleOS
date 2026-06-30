@@ -8,6 +8,7 @@ import time
 import waflib
 from waflib import Logs
 from waflib.Build import BuildContext
+from waflib.Configure import conf
 
 
 def _normalize_kconfig_override_args(argv):
@@ -34,6 +35,7 @@ import tools.waf.ldscript
 import tools.waf.pebble_sdk_gcc as pebble_sdk_gcc
 import tools.runners as pebble_runners
 from tools.waf.pebble_sdk_locator import activate_sdk
+from tools.pebble_sdk_platform import pebble_platforms
 
 from pebble_sdk_version import set_env_sdk_version
 
@@ -42,6 +44,27 @@ from pebble_sdk_version import set_env_sdk_version
 activate_sdk(waflib.Context.run_dir or os.getcwd())
 
 LOGHASH_OUT_PATH = 'src/fw/loghash_dict.json'
+
+
+@conf
+def get_pbz_node(ctx, fw_type, board_type, version_string, slot=None):
+    return ctx.path.get_bld().make_node('{}_{}_{}{}.pbz'.format(
+        fw_type, board_type, version_string, "" if slot is None else f"_slot{slot}"
+    ))
+
+
+@conf
+def get_pbpack_node(ctx):
+    return ctx.path.get_bld().make_node('system_resources.pbpack')
+
+
+@conf
+def get_tintin_fw_node(ctx, subdir=None):
+    subpath = 'src/fw/tintin_fw.bin'
+    if subdir:
+        subpath = os.path.join(subdir, subpath)
+    return ctx.path.get_bld().make_node(subpath)
+
 
 def _available_boards():
     return tools.waf.boards.available_boards(waflib.Context.run_dir or os.getcwd())
@@ -76,7 +99,21 @@ def options(opt):
     opt.load('pebble_arm_gcc', tooldir='tools/waf')
     opt.load('show_configure', tooldir='tools/waf')
     opt.load('kconfig', tooldir='tools/waf')
-    opt.recurse('src/fw')
+
+    opt.add_option(
+        "--prf-as-firmware",
+        action='store_true',
+        help="Build PRF so that it links to the firmware region",
+    )
+
+    opt.add_option(
+        '--slot',
+        action='store',
+        type=int,
+        default=0,
+        choices=[0, 1],
+        help='Select for which slot to build the firmware. 0=primary, 1=secondary'
+    )
 
     gr = opt.add_option_group('test options')
     gr.add_option('-D', '--debug_test', action='store_true',
@@ -183,7 +220,22 @@ def configure(conf):
                              "Please check your Node installation and try again.")
 
     conf.load('protoc')
-    conf.recurse('src/fw')
+
+    conf.load('binary_header')
+
+    platform = pebble_platforms[conf.env.PLATFORM_NAME]
+    define = 'MAX_FONT_GLYPH_SIZE={}'.format(platform['MAX_FONT_GLYPH_SIZE'])
+    conf.env.append_value('DEFINES', [define])
+
+    conf.env.PRF_AS_FIRMWARE = conf.options.prf_as_firmware
+    if conf.options.prf_as_firmware:
+        conf.env.append_value('DEFINES', 'RECOVERY_FW_AS_FW')
+
+    if conf.env.CONFIG_PBLBOOT:
+        conf.env.SLOT = conf.options.slot
+        conf.env.append_value('DEFINES', f'FIRMWARE_SLOT_{conf.options.slot}')
+    else:
+        conf.env.SLOT = -1
 
     # Save a baseline environment that we'll use for unit tests
     # Detach so operations against conf.env don't affect unit_test_env
@@ -329,9 +381,7 @@ def build(bld):
 
     if bld.variant == 'test':
         bld.recurse('third_party/nanopb')
-        bld.recurse('src/libbtutil')
-        bld.recurse('src/libos')
-        bld.recurse('src/libutil')
+        bld.recurse('src')
         bld.recurse('tests')
         bld.recurse('tools')
         return
@@ -340,12 +390,7 @@ def build(bld):
         bld.recurse('stored_apps')
 
     bld.recurse('third_party')
-    bld.recurse('src/libbtutil')
-    bld.recurse('src/bluetooth-fw')
-    bld.recurse('src/libc')
-    bld.recurse('src/libos')
-    bld.recurse('src/libutil')
-    bld.recurse('src/fw')
+    bld.recurse('src')
 
     # Generate resources. Leave this until the end so we collect all the env['DYNAMIC_RESOURCES']
     # values that the other build steps added.

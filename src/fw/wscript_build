@@ -1,22 +1,15 @@
 import collections
-import json
-import os
 
 import waflib.Logs
-from waflib import Build, Task
-from waflib.Configure import conf
 from waflib.TaskGen import before_method, feature
 from waflib.Tools.ccroot import link_task
 
-import tools.waf.compress
 import tools.waf.generate_log_strings_json
 import tools.waf.generate_timezone_data
 import tools.waf.gitinfo
 import tools.waf.ldscript
 import tools.waf.objcopy
 import tools.waf.pblboot
-
-from tools.pebble_sdk_platform import pebble_platforms
 
 
 @feature("c")
@@ -35,60 +28,6 @@ class group_cprogram(link_task):
     vars=['LINKDEPS']
     inst_to='${BINDIR}'
 
-
-@conf
-def get_pbz_node(ctx, fw_type, board_type, version_string, slot=None):
-    return ctx.path.get_bld().make_node('{}_{}_{}{}.pbz'.format(
-        fw_type, board_type, version_string, "" if slot is None else f"_slot{slot}"
-    ))
-
-
-@conf
-def get_pbpack_node(ctx):
-    return ctx.path.get_bld().make_node('system_resources.pbpack')
-
-
-@conf
-def get_tintin_fw_node(ctx, subdir=None):
-    subpath = 'src/fw/tintin_fw.bin'
-    if subdir:
-        subpath = os.path.join(subdir, subpath)
-    return ctx.path.get_bld().make_node(subpath)
-
-
-def options(opt):
-    opt.add_option(
-        "--prf-as-firmware",
-        action='store_true',
-        help="Build PRF so that it links to the firmware region",
-    )
-
-    opt.add_option(
-        '--slot',
-        action='store',
-        type=int,
-        default=0,
-        choices=[0, 1],
-        help='Select for which slot to build the firmware. 0=primary, 1=secondary'
-    )
-
-
-def configure(conf):
-    conf.load('binary_header')
-
-    platform = pebble_platforms[conf.env.PLATFORM_NAME]
-    define = 'MAX_FONT_GLYPH_SIZE={}'.format(platform['MAX_FONT_GLYPH_SIZE'])
-    conf.env.append_value('DEFINES', [define])
-
-    conf.env.PRF_AS_FIRMWARE = conf.options.prf_as_firmware
-    if conf.options.prf_as_firmware:
-        conf.env.append_value('DEFINES', 'RECOVERY_FW_AS_FW')
-
-    if conf.env.CONFIG_PBLBOOT:
-        conf.env.SLOT = conf.options.slot
-        conf.env.append_value('DEFINES', f'FIRMWARE_SLOT_{conf.options.slot}')
-    else:
-        conf.env.SLOT = -1
 
 def _generate_memory_layout(bld):
 
@@ -375,73 +314,73 @@ def _build_normal(bld):
 
     _link_firmware(bld, sources)
 
-def build(bld):
-    bld.env.FW_APPS = []
 
-    # FIXME create applib_includes or something like that
-    fw_includes_use=['libbtutil_includes',
-                     'libos_includes',
-                     'libutil_includes',
-                     'pbl_includes',
-                     'freertos_includes',
-                     'idl_includes',
-                     'nanopb_includes']
+bld.env.FW_APPS = []
 
-    if bld.env.CONFIG_MEMFAULT:
-        fw_includes_use.append('memfault_includes')
+# FIXME create applib_includes or something like that
+fw_includes_use=['libbtutil_includes',
+                 'libos_includes',
+                 'libutil_includes',
+                 'pbl_includes',
+                 'freertos_includes',
+                 'idl_includes',
+                 'nanopb_includes']
 
-    if bld.env.CONFIG_SOC_NRF52:
-        fw_includes_use.append('hal_nordic')
-    elif bld.env.CONFIG_SOC_SF32LB52:
-        fw_includes_use.append('hal_sifli')
+if bld.env.CONFIG_MEMFAULT:
+    fw_includes_use.append('memfault_includes')
 
-    bld(export_includes=['.',
-                         'applib/vendor/uPNG',
-                         'applib/vendor/tinflate'],
-        use=fw_includes_use,
-        name='fw_includes')
+if bld.env.CONFIG_SOC_NRF52:
+    fw_includes_use.append('hal_nordic')
+elif bld.env.CONFIG_SOC_SF32LB52:
+    fw_includes_use.append('hal_sifli')
 
-    # Truncate the commit to fit in our versions struct. This may cause an ambiguous commit
-    # hash, but it's better than killing the build because the commit doesn't fit.
-    git_rev = tools.waf.gitinfo.get_git_revision(bld)
-    git_rev['COMMIT'] = git_rev['COMMIT'][:7]
-    git_rev['PATCH_VERBOSE_STRING']
-    if len(git_rev['TAG']) > 31:
-        waflib.Logs.warn('Git tag {} is too long, truncating'.format(git_rev['TAG']))
-        git_rev['TAG'] = git_rev['TAG'][:31]
+bld(export_includes=['.',
+                     'applib/vendor/uPNG',
+                     'applib/vendor/tinflate'],
+    use=fw_includes_use,
+    name='fw_includes')
 
-    bld(features='subst',
-        source='git_version.auto.h.in',
-        target='git_version.auto.h',
-        **git_rev)
+# Truncate the commit to fit in our versions struct. This may cause an ambiguous commit
+# hash, but it's better than killing the build because the commit doesn't fit.
+git_rev = tools.waf.gitinfo.get_git_revision(bld)
+git_rev['COMMIT'] = git_rev['COMMIT'][:7]
+git_rev['PATCH_VERBOSE_STRING']
+if len(git_rev['TAG']) > 31:
+    waflib.Logs.warn('Git tag {} is too long, truncating'.format(git_rev['TAG']))
+    git_rev['TAG'] = git_rev['TAG'][:31]
 
-    bld.recurse('startup')
-    bld.recurse('drivers')
-    bld.recurse('board')
-    bld.recurse('shell')
-    bld.recurse('services')
-    bld.recurse('applib')
-    bld.recurse('soc')
-    bld.recurse('mfg')
-    bld.recurse('comm')
-    bld.recurse('console')
-    bld.recurse('debug')
-    bld.recurse('flash_region')
-    bld.recurse('kernel')
-    bld.recurse('popups')
-    bld.recurse('process_management')
-    bld.recurse('process_state')
-    bld.recurse('resource')
-    bld.recurse('syscall')
-    bld.recurse('system')
-    bld.recurse('util')
-    bld.recurse('apps/core')
+bld(features='subst',
+    source='git_version.auto.h.in',
+    target='git_version.auto.h',
+    **git_rev)
 
-    if bld.env.VARIANT == 'prf':
-        bld.recurse('apps/prf')
-        _build_recovery(bld)
-    else:
-        bld.recurse('apps')
-        _build_normal(bld)
+bld.recurse('startup')
+bld.recurse('drivers')
+bld.recurse('board')
+bld.recurse('shell')
+bld.recurse('services')
+bld.recurse('applib')
+bld.recurse('soc')
+bld.recurse('mfg')
+bld.recurse('comm')
+bld.recurse('console')
+bld.recurse('debug')
+bld.recurse('flash_region')
+bld.recurse('kernel')
+bld.recurse('popups')
+bld.recurse('process_management')
+bld.recurse('process_state')
+bld.recurse('resource')
+bld.recurse('syscall')
+bld.recurse('system')
+bld.recurse('util')
+bld.recurse('apps/core')
+
+if bld.env.VARIANT == 'prf':
+    bld.recurse('apps/prf')
+    _build_recovery(bld)
+else:
+    bld.recurse('apps')
+    _build_normal(bld)
 
 # vim:filetype=python
