@@ -5,7 +5,6 @@ PebbleOS is the operating system running on Pebble smartwatches.
 ## Organization
 
 - `docs`: project documentation
-- `python_libs`: tools used in multiple areas, e.g. log dehashing, console, etc.
 - `resources`: firmware resources (icons, fonts, etc.)
 - `sdk`: application SDK generation files
 - `src`: firmware source
@@ -13,6 +12,8 @@ PebbleOS is the operating system running on Pebble smartwatches.
 - `third_party`: third-party code in git submodules, also includes glue code
 - `tools`: a variety of tools or scripts used in multiple areas, from build
   system, tests, etc.
+- `tools/libs`: Python packages used in multiple areas, e.g. log dehashing,
+  console, etc.
 - `tools/waf`: scripts used by the waf build system
 
 ## Code style

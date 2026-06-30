@@ -15,7 +15,7 @@ import os
 from datetime import datetime
 
 # Setup paths for dehash libraries
-PYTHON_LIBS_PATH = os.path.join(os.path.dirname(__file__), "..", "python_libs")
+PYTHON_LIBS_PATH = os.path.join(os.path.dirname(__file__), "libs")
 LOG_HASHING_PATH = os.path.join(os.path.dirname(__file__), "..", "tools", "log_hashing")
 
 if PYTHON_LIBS_PATH not in sys.path:
