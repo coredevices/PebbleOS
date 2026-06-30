@@ -15,6 +15,7 @@ config RTC_NRF5
 
 config RTC_SF32LB
     bool "SiFli SF32LB"
+    default y if SOC_SF32LB52
     select HAL_SIFLI_LRC_CAL
     select HAL_SIFLI_RTC
     help
