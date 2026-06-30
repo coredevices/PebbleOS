@@ -586,21 +586,6 @@ bool text_resources_init_font(ResAppNum app_num, uint32_t font_resource,
   return true;
 }
 
-int16_t text_resources_get_glyph_baseline_offset(const FontInfo *font_info, Codepoint codepoint) {
-  // Baseline alignment only applies to extended fonts, which pair a base and an
-  // extension sub-font of possibly different heights on the same line. A
-  // non-extended FontInfo has a single sub-font, so there is nothing to align.
-  if (!font_info->extended) {
-    return 0;
-  }
-  // Each sub-font anchors its glyph baselines at its own max_height. Shift a
-  // glyph down by the difference between the FontInfo's overall height (the
-  // tallest sub-font) and the height of the sub-font this codepoint is drawn
-  // from, so the base and extension scripts share one baseline.
-  const FontResource *res = prv_font_res_for_codepoint(codepoint, font_info);
-  return (int16_t)font_info->max_height - (int16_t)res->md.max_height;
-}
-
 // Leaf glyph lookup against a single font. This NEVER consults the fallback font, which is what
 // structurally bounds the fallback to depth 1: the fallback font is looked up with this helper, so
 // it can never trigger a further fallback and no recursion or cycle is possible.

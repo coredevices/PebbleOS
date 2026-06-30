@@ -66,17 +66,10 @@ void render_glyph(GContext* const ctx, const uint32_t codepoint, FontInfo* const
   // Bitfiddle the metrics data:
   GRect glyph_metrics = get_glyph_rect(glyph);
 
-  // Align to the font's common baseline. A FontInfo's base and extension
-  // sub-fonts can be rasterized at different heights; without this, glyphs
-  // drawn from the shorter sub-font float off the shared baseline on a
-  // mixed-script line. No-op (0) for single-font text. See
-  // text_resources_get_glyph_baseline_offset().
-  const int16_t baseline_offset = text_resources_get_glyph_baseline_offset(font, codepoint);
-
   // Calculate the box that we intend to draw to the screen, in screen coordinates
   GRect glyph_target = {
     .origin = { .x = cursor.origin.x + glyph_metrics.origin.x,
-                .y = cursor.origin.y + glyph_metrics.origin.y + baseline_offset },
+                .y = cursor.origin.y + glyph_metrics.origin.y },
     .size = { .w = glyph_metrics.size.w,
               .h = glyph_metrics.size.h }
   };

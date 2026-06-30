@@ -22,10 +22,6 @@ void graphics_context_mark_dirty_rect(GContext* ctx, GRect rect) {}
 const GlyphData* text_resources_get_glyph(FontCache* font_cache, const Codepoint codepoint,
                                           FontInfo* fontinfo) { return NULL; }
 
-int16_t text_resources_get_glyph_baseline_offset(const FontInfo *font_info, Codepoint codepoint) {
-  return 0;
-}
-
 
 extern int32_t prv_convert_1bit_addr_to_8bit_x(GBitmap *dest_bitmap, uint32_t *block_addr,
                                                int32_t y_offset);
