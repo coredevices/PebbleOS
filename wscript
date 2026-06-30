@@ -689,7 +689,7 @@ def _build_fw(bld):
     bld.recurse('src/fw/shell')
     bld.recurse('src/fw/services')
     bld.recurse('src/fw/applib')
-    bld.recurse('src/fw/soc')
+    bld.recurse('soc')
     bld.recurse('src/fw/mfg')
     bld.recurse('src/fw/comm')
     bld.recurse('src/fw/console')
