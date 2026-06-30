@@ -121,6 +121,27 @@ void test_rtl_support__separator_needs_two_digits(void) {
   cl_assert_equal_i(cps[2], 0x0627);  // Alef
 }
 
+// Bidi mirroring: brackets swap to their mirror when an RTL run is reversed, so
+// they keep opening toward the text they enclose.
+void test_rtl_support__brackets_mirror(void) {
+  Codepoint cps[8];
+
+  // "(نص)" = '(' Noon Sad ')'. Letters reverse to ص ن; the parens mirror so the
+  // pair still wraps the word: '(' ص ن ')'.
+  size_t n = prv_reverse("(\xD9\x86\xD8\xB5)", cps, 8);
+  cl_assert_equal_i(n, 4);
+  cl_assert_equal_i(cps[0], '(');
+  cl_assert_equal_i(cps[1], 0x0635);  // Sad
+  cl_assert_equal_i(cps[2], 0x0646);  // Noon
+  cl_assert_equal_i(cps[3], ')');
+
+  // A lone '(' before Alef: reversal puts it last and mirrors it to ')'.
+  n = prv_reverse("(\xD8\xA7", cps, 8);  // '(' Alef
+  cl_assert_equal_i(n, 2);
+  cl_assert_equal_i(cps[0], 0x0627);  // Alef
+  cl_assert_equal_i(cps[1], ')');
+}
+
 // rtl_segment_content_end: byte offset of the trailing-space boundary.
 static size_t prv_content_len(const char *str) {
   utf8_t *start = (utf8_t *)str;
