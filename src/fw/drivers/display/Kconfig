@@ -17,6 +17,7 @@ config DISPLAY_JDI_SF32LB
 
 config DISPLAY_SHARP_LS013B7DH01_NRF5
     bool "Sharp LS013B7DH01 (nRF5)"
+    default y if SOC_NRF52
     help
       Support for the Sharp LS013B7DH01 display via nRF5.
 

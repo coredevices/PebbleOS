@@ -10,6 +10,7 @@ if UART
 
 config UART_NRF5
     bool "Nordic nRF5 UART Controller"
+    default y if SOC_NRF52
     help
       Support for the Nordic nRF5 UART controller.
 

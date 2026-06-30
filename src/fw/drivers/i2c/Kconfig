@@ -10,6 +10,7 @@ if I2C
 
 config I2C_NRF5
     bool "Nordic nRF5 I2C Controller"
+    default y if SOC_NRF52
     help
       Support for the Nordic nRF5 I2C controller.
 

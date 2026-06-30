@@ -10,6 +10,7 @@ if RTC
 
 config RTC_NRF5
     bool "Nordic nRF5"
+    default y if SOC_NRF52
     help
       Support for the Nordic nRF5 RTC.
 
