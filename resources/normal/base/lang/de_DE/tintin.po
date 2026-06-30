@@ -4403,3 +4403,13 @@ msgstr "Aus"
 msgctxt "AlarmSound"
 msgid "Off"
 msgstr "Aus"
+
+#: ../src/fw/apps/system/settings/display.c:346
+msgctxt "DeviceState"
+msgid "On"
+msgstr "An"
+
+#: ../src/fw/apps/system/settings/display.c:352
+msgctxt "DeviceState"
+msgid "Off"
+msgstr "Aus"

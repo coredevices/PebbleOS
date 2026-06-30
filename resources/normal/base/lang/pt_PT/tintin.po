@@ -4428,3 +4428,13 @@ msgstr "Off"
 msgctxt "AlarmSound"
 msgid "Off"
 msgstr "Off"
+
+#: ../src/fw/apps/system/settings/display.c:346
+msgctxt "DeviceState"
+msgid "On"
+msgstr "On"
+
+#: ../src/fw/apps/system/settings/display.c:352
+msgctxt "DeviceState"
+msgid "Off"
+msgstr "Off"
