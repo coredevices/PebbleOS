@@ -1,8 +1,20 @@
 # SPDX-FileCopyrightText: 2024 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
-from waflib import Utils, Errors
+from waflib import Task, Utils, Errors
 from waflib.TaskGen import after, feature
+
+
+class ldscript_cpp(Task.Task):
+    """Preprocess a linker script with the C preprocessor before it's handed
+    to the linker, the same way Zephyr does. This gives linker scripts access
+    to Kconfig CONFIG_* defines (via autoconf.h), #include, #if, etc."""
+
+    run_str = (
+        "${CC} -x assembler-with-cpp -nostdinc -undef -E -P "
+        "-include ${AUTOCONF_H} ${SRC} -o ${TGT}"
+    )
+    color = "PINK"
 
 
 @after("apply_link")
@@ -26,5 +38,12 @@ def process_ldscript(self):
     for node in nodes:
         if not node:
             raise Errors.WafError("could not find %r" % self.ldscript)
+
+        if self.env.AUTOCONF_H:
+            preprocessed = node.parent.find_or_declare(node.name + ".pre")
+            tsk = self.create_task("ldscript_cpp", node, preprocessed)
+            tsk.dep_nodes.append(self.bld.bldnode.find_or_declare("autoconf.h"))
+            node = preprocessed
+
         self.link_task.env.append_value("LINKFLAGS", "-T%s" % node.abspath())
         self.link_task.dep_nodes.append(node)

@@ -168,6 +168,7 @@ def configure(conf):
     kconfig = conf.load_kconfig(config_path)
     for key, val in kconfig.items():
         conf.env[key] = val
+    conf.env.AUTOCONF_H = autoconf_path
     conf.env.append_unique("CFLAGS", ["-include", autoconf_path])
     conf.env.append_unique("cfg_files", [config_path])
 
