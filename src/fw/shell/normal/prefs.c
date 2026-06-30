@@ -1597,6 +1597,8 @@ uint32_t shell_prefs_get_language_resource_id(void) {
       return RESOURCE_ID_STRINGS_NL_NL;
     case ShellLanguagePortuguese:
       return RESOURCE_ID_STRINGS_PT_PT;
+    case ShellLanguagePolish:
+      return RESOURCE_ID_STRINGS_PL_PL;
     case ShellLanguageEnglish:
     case ShellLanguageInstalledPack:
     case ShellLanguageCount:

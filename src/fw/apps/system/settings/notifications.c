@@ -110,7 +110,7 @@ static void prv_filter_menu_push(SettingsNotificationsData *data) {
 
 static const char *s_text_size_names[] = {
   [SettingsContentSize_Small]   = i18n_noop("Smaller"),
-  [SettingsContentSize_Default] = i18n_noop("Default"),
+  [SettingsContentSize_Default] = i18n_ctx_noop("TextSize", "Default"),
   [SettingsContentSize_Large]   = i18n_noop("Larger"),
 };
 
@@ -266,7 +266,7 @@ static void prv_vibe_delay_menu_push(SettingsNotificationsData *data) {
 ////////////////////////
 
 static const char *s_status_bar_style_labels[] = {
-  [NotificationStatusBarStyle_Default]   = i18n_noop("Default"),
+  [NotificationStatusBarStyle_Default]   = i18n_ctx_noop("StatusBar", "Default"),
   [NotificationStatusBarStyle_Bold]      = i18n_noop("Bold"),
   [NotificationStatusBarStyle_LargeBold] = i18n_noop("Big & Bold"),
 };

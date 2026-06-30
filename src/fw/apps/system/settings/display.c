@@ -51,6 +51,7 @@ static const char *s_language_labels[] = {
   [ShellLanguageItalian] = "Italiano",
   [ShellLanguageDutch] = "Nederlands",
   [ShellLanguagePortuguese] = "Português",
+  [ShellLanguagePolish] = "Polski",
 };
 
 static void prv_language_menu_select(OptionMenu *option_menu, int selection, void *context) {
@@ -122,7 +123,7 @@ static void prv_intensity_menu_push(SettingsBacklightData *data) {
 // Orientation Settings
 /////////////////////////////
 static const char *s_display_orientation_labels[] = {
-    i18n_noop("Default"),
+    i18n_ctx_noop("Orientation", "Default"),
     i18n_noop("Left-Handed"),
 };
 
@@ -198,7 +199,7 @@ static void prv_timeout_menu_push(SettingsBacklightData *data) {
 static const char *s_touch_wake_labels[] = {
     [BacklightTouchWake_DoubleTap] = i18n_noop("Double Tap"),
     [BacklightTouchWake_Tap] = i18n_noop("Tap"),
-    [BacklightTouchWake_Off] = i18n_noop("Off"),
+    [BacklightTouchWake_Off] = i18n_ctx_noop("TouchWake", "Off"),
 };
 
 static void prv_touch_wake_menu_select(OptionMenu *option_menu, int selection, void *context) {
