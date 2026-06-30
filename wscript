@@ -1,3 +1,4 @@
+import collections
 import os
 import re
 import subprocess
@@ -9,6 +10,8 @@ import waflib
 from waflib import Logs
 from waflib.Build import BuildContext
 from waflib.Configure import conf
+from waflib.TaskGen import before_method, feature
+from waflib.Tools.ccroot import link_task
 
 
 def _normalize_kconfig_override_args(argv):
@@ -29,9 +32,13 @@ sys.path.append(os.path.join(waf_dir, 'tools/log_hashing'))
 sys.path.append(os.path.join(waf_dir, 'sdk/tools/'))
 sys.path.append(os.path.join(waf_dir, 'tools/waf'))
 
+import tools.waf.generate_log_strings_json
+import tools.waf.generate_timezone_data
 import tools.waf.gitinfo
 import tools.waf.boards
 import tools.waf.ldscript
+import tools.waf.objcopy
+import tools.waf.pblboot
 import tools.waf.pebble_sdk_gcc as pebble_sdk_gcc
 import tools.runners as pebble_runners
 from tools.waf.pebble_sdk_locator import activate_sdk
@@ -64,6 +71,23 @@ def get_tintin_fw_node(ctx, subdir=None):
     if subdir:
         subpath = os.path.join(subdir, subpath)
     return ctx.path.get_bld().make_node(subpath)
+
+
+@feature("c")
+@before_method('apply_link')
+def use_group_link(self):
+    """
+    Use a link group to resolve dependencies
+    """
+    if 'cprogram' in self.features and getattr(self, 'link_group', False):
+        self.features.insert(0, "group_cprogram")
+
+
+class group_cprogram(link_task):
+    run_str = '${LINK_CC} ${LINKFLAGS} ${CCLNK_SRC_F}${SRC} ${CCLNK_TGT_F}${TGT[0].abspath()} ${RPATH_ST:RPATH} ${FRAMEWORKPATH_ST:FRAMEWORKPATH} ${FRAMEWORK_ST:FRAMEWORK} ${ARCH_ST:ARCH} -Wl,--start-group ${STLIB_MARKER} ${STLIBPATH_ST:STLIBPATH} ${STLIB_ST:STLIB} ${SHLIB_MARKER} ${LIBPATH_ST:LIBPATH} ${LIB_ST:LIB} -Wl,--end-group'
+    ext_out=['.bin']
+    vars=['LINKDEPS']
+    inst_to='${BINDIR}'
 
 
 def _available_boards():
@@ -333,6 +357,369 @@ def stop_build_timer(ctx):
         fout.write(str(int(round(t.total_seconds()))))
 
 
+def _generate_memory_layout(bld, fw_node):
+
+    if bld.env.CONFIG_QEMU:
+        ldscript_template = fw_node.find_node('qemu_flash_fw.ld.template')
+    elif bld.env.CONFIG_BOARD_ASTERIX:
+        ldscript_template = fw_node.find_node('nrf52840_flash_fw.ld.template')
+    elif bld.env.CONFIG_BOARD_OBELIX or bld.env.CONFIG_BOARD_GETAFIX:
+        ldscript_template = fw_node.find_node('sf32lb52_flash_fw.ld.template')
+
+    # Determine sizes so we can later calculate FLASH_LENGTH_*
+    if bld.env.CONFIG_QEMU:
+        flash_size = 4 * 1024 * 1024
+        offset_size = 0
+        fw_max_size = flash_size
+
+    elif bld.env.CONFIG_SOC_SF32LB52:
+        flash_size = 32 * 1024 * 1024
+        ptable_size = 64 * 1024
+        bootloader_size = 64 * 1024
+        slot_size = 3072 * 1024
+        resources_size = 2048 * 1024
+        prf_size = 576 * 1024
+        if bld.env.VARIANT == 'prf' and not (bld.env.CONFIG_MFG or bld.env.PRF_AS_FIRMWARE):
+            offset_size = ptable_size + bootloader_size + 2 * slot_size + 2 * resources_size
+            fw_max_size = prf_size
+        else:
+            offset_size = ptable_size + bootloader_size
+            if bld.env.SLOT == 1:
+                offset_size += slot_size
+            offset_size = offset_size
+            fw_max_size = slot_size
+
+    elif bld.env.CONFIG_SOC_NRF52:
+        # Bootloader
+        offset_size = 32 * 1024
+        flash_size = 1024 * 1024
+        if bld.env.CONFIG_BOARD_ASTERIX and bld.env.VARIANT == 'prf' and not bld.env.CONFIG_MFG:
+            fw_max_size = flash_size // 2
+        else:
+            fw_max_size = flash_size
+
+    if bld.env.CONFIG_QEMU:
+        flash_size = 4 * 1024 * 1024
+        fw_max_size = flash_size
+
+    if bld.env.CONFIG_QEMU:
+        flash_origin = 0x00000000
+    elif bld.env.CONFIG_SOC_NRF52:
+        flash_origin = 0x00000000
+    elif bld.env.CONFIG_SOC_SF32LB52:
+        flash_origin = 0x12000000
+    else:
+        flash_origin = 0x08000000
+
+    firmware_offset = 0
+    if bld.env.CONFIG_SOC_SF32LB52:
+      firmware_offset = 4096
+
+    bld.env.FIRMWARE_OFFSET = firmware_offset
+    bld.env.append_value('DEFINES', [f'FIRMWARE_OFFSET={firmware_offset}'])
+
+    # Determine FLASH_LENGTH_*
+    fw_flash_length = '%(fw_max_size)d - %(firmware_offset)d' % locals()
+    fw_flash_origin = '0x%(flash_origin)08x + %(offset_size)d + %(firmware_offset)d' % locals()
+
+    # Determine ram layout
+
+    # Each tuple defines the amount of RAM we give to apps (stack + text + data
+    # + bss + heap) and the amount of RAM reserved for the application runtime
+    # (AppState) for each app execution environment, respectively. The values
+    # come from the CONFIG_APP_RAM_*X_* symbols, which are set per SDK platform
+    # in the top-level Kconfig.
+    AppRamSize = collections.namedtuple('AppRamSize',
+                                        'app_segment runtime_reserved')
+    app_ram_size_2x = AppRamSize(bld.env.CONFIG_APP_RAM_2X_SEGMENT_SIZE,
+                                 bld.env.CONFIG_APP_RAM_2X_RUNTIME_SIZE)
+    app_ram_size_3x = AppRamSize(bld.env.CONFIG_APP_RAM_3X_SEGMENT_SIZE,
+                                 bld.env.CONFIG_APP_RAM_3X_RUNTIME_SIZE)
+    app_ram_size_4x = AppRamSize(bld.env.CONFIG_APP_RAM_4X_SEGMENT_SIZE,
+                                 bld.env.CONFIG_APP_RAM_4X_RUNTIME_SIZE)
+
+    # The process loader enforces eight-byte alignment on all segments, so
+    # configuring a segment with a size that is not a multiple of eight will
+    # result in segments being smaller than expected. The runtime_reserved
+    # size is not checked as its value isn't currently used anywhere.
+    for name, sizes in (('2x', app_ram_size_2x), ('3x', app_ram_size_3x),
+                        ('4x', app_ram_size_4x)):
+        if sizes.app_segment % 8 != 0:
+            bld.fatal("The app_segment size for the %s app environment is not "
+                      "a multiple of eight bytes. You're gonna have a bad "
+                      "time." % name)
+
+    # Determine the board's total RAM layout.
+    if bld.env.CONFIG_PLATFORM_EMERY:
+        # We have 512K of SRAM, last 1K reserved for LCPU IPC
+        total_ram = (0x20000000, (512 - 1) * 1024)
+    elif bld.env.CONFIG_PLATFORM_FLINT:
+        retained_size = 256
+        total_ram = (0x20000000 + retained_size, 256 * 1024 - retained_size)
+    elif bld.env.CONFIG_PLATFORM_GABBRO:
+        # We have 512K of SRAM, last 1K reserved for LCPU IPC
+        total_ram = (0x20000000, (512 - 1) * 1024)
+    else:
+        bld.fatal("No set of supported SDK platforms defined for this board")
+
+    # Allocate RAM from the end to the start. Do the app first, then the worker, then give whatever
+    # is left to the kernel.
+    ram_end = sum(total_ram)  # The end of RAM is the start address plus the size.
+    all_app_ram_sizes = [app_ram_size_2x, app_ram_size_3x, app_ram_size_4x]
+    app_ram_size = max(sum(x) for x in all_app_ram_sizes)
+    app_runtime_size = max(x.runtime_reserved for x in all_app_ram_sizes)
+    if app_ram_size <= 0 or app_runtime_size <= 0:
+        bld.fatal("App RAM is too small!")
+    app_ram = (ram_end - app_ram_size, app_ram_size)
+    worker_ram_size = 12 * 1024  # The worker always gets 12k of RAM.
+    worker_ram = (ram_end - app_ram_size - worker_ram_size, worker_ram_size)
+    kernel_ram_size = total_ram[1] - app_ram_size - worker_ram_size
+    kernel_ram = (total_ram[0], kernel_ram_size)
+
+    # As a basic sanity check, make sure we're giving the kernel at least 64k.
+    if kernel_ram_size < 64 * 1024:
+        bld.fatal("Kernel RAM is too small!")
+
+    ldscript_result = ldscript_template.get_bld().change_ext('.ld', ext_in='.ld.template')
+
+    bld(features='subst',
+        path=fw_node,
+        source=ldscript_template,
+        target=ldscript_result,
+        KERNEL_RAM_ADDR="0x{:x}".format(kernel_ram[0]),
+        KERNEL_RAM_SIZE=kernel_ram[1],
+        APP_RAM_ADDR="0x{:x}".format(app_ram[0]),
+        APP_RAM_SIZE=app_ram[1],
+        WORKER_RAM_ADDR="0x{:x}".format(worker_ram[0]),
+        WORKER_RAM_SIZE=worker_ram[1],
+        FLASH_ORIGIN="0x{:x}".format(flash_origin),
+        FW_FLASH_ORIGIN=fw_flash_origin,
+        FW_FLASH_LENGTH=fw_flash_length,
+        FLASH_SIZE=flash_size)
+
+    return ldscript_result
+
+
+def _link_firmware(bld, fw_node, sources):
+    fw_linkflags = ['-Wl,--cref',
+                    '-Wl,-Map=tintin_fw.map',
+                    '-Wl,--gc-sections',
+                    '-Wl,--undefined=uxTopUsedPriority',
+                    '-Wl,--build-id=sha1',
+                    '-Wl,--sort-section=alignment',
+                    '-nostdlib']
+
+    fw_linkflags.extend(['-Wl,--wrap=malloc',
+                         '-Wl,--undefined=__wrap_malloc',
+                         '-Wl,--wrap=realloc',
+                         '-Wl,--undefined=__wrap_realloc',
+                         '-Wl,--wrap=calloc',
+                         '-Wl,--undefined=__wrap_calloc',
+                         '-Wl,--wrap=free',
+                         '-Wl,--undefined=__wrap_free'])
+
+    uses = ['applib',
+            'board',
+            'bt_driver',
+            'comm',
+            'console',
+            'debug',
+            'drivers',
+            'flash_region',
+            'freertos',
+            'fw_services',
+            'gcc',
+            'kernel',
+            'mfg',
+            'popups',
+            'process_management',
+            'process_state',
+            'resource',
+            'shell',
+            'syscall',
+            'system',
+            'util',
+            'proto_schemas',
+            'libbtutil',
+            'libos',
+            'libutil',
+            'nanopb',
+            'pblibc',
+            'pbl_includes',
+            'soc',
+            'speex',
+            'startup',
+            'tinymt32',
+            'upng']
+    uses.extend(bld.env.FW_APPS)
+
+    if bld.env.CONFIG_MEMFAULT:
+        fw_linkflags.append('-Wl,--require-defined=g_memfault_build_id')
+        uses.append('memfault')
+
+    ldscript = _generate_memory_layout(bld, fw_node)
+
+    ldscripts = [ldscript, 'fw_common.ld']
+    if bld.env.CONFIG_MEMFAULT:
+        ldscripts.append(bld.srcnode.find_node(
+            'third_party/memfault/port/memfault_compact_log.ld'))
+
+    # Build and link the firmware ELF
+    elf_node = fw_node.get_bld().make_node('tintin_fw.elf')
+    x = bld.program(source=sources,
+                use=uses,
+                link_group=True,
+                lib=['gcc'],
+                target=elf_node,
+                includes='fonts',
+                ldscript=ldscripts,
+                linkflags=fw_linkflags,
+                path=fw_node)
+
+    x.env.append_value('LINKFLAGS', fw_linkflags)
+
+    if bld.env.CONFIG_PBLBOOT:
+        nohdr_hex_node = elf_node.change_ext('.nohdr.hex')
+        bld(rule=tools.waf.objcopy.objcopy_hex, source=elf_node, target=nohdr_hex_node, path=fw_node)
+        hex_node = elf_node.change_ext('.hex')
+        bld(rule=tools.waf.pblboot.insert_header_hex, source=nohdr_hex_node, target=hex_node, path=fw_node)
+        nohdr_bin_node = elf_node.change_ext('.nohdr.bin')
+        bld(rule=tools.waf.objcopy.objcopy_bin, source=elf_node, target=nohdr_bin_node, path=fw_node)
+        bin_node = elf_node.change_ext('.bin')
+        bld(rule=tools.waf.pblboot.insert_header_bin, source=nohdr_bin_node, target=bin_node, path=fw_node)
+    else:
+        hex_node = elf_node.change_ext('.hex')
+        bld(rule=tools.waf.objcopy.objcopy_hex, source=elf_node, target=hex_node, path=fw_node)
+        bin_node = elf_node.change_ext('.bin')
+        bld(rule=tools.waf.objcopy.objcopy_bin, source=elf_node, target=bin_node, path=fw_node)
+
+    # Create the log_strings .elf and check the format specifier rules
+    if bld.env.CONFIG_LOG_HASHED:
+        fw_loghash_node = fw_node.get_bld().make_node('tintin_fw_loghash_dict.json')
+        bld(rule=tools.waf.generate_log_strings_json.wafrule,
+            source=elf_node, target=fw_loghash_node, path=fw_node)
+        bld.LOGHASH_DICTS.append(fw_loghash_node)
+
+
+def _build_recovery(bld, fw_node):
+    sources = fw_node.ant_glob('*.c')
+    sources.extend(fw_node.ant_glob('*.[sS]'))
+
+    sources.append(fw_node.get_bld().make_node('builtin_resources.auto.c'))
+
+    _link_firmware(bld, fw_node, sources)
+
+
+def _build_normal(bld, fw_node):
+    # Generate timezone data
+    olson_txt = bld.srcnode.make_node('resources/normal/base/tzdata/timezones_olson.txt')
+    tzdata_bin = bld.bldnode.make_node('resources/normal/base/tzdata/tzdata.bin.reso')
+    bld(rule=tools.waf.generate_timezone_data.wafrule,
+        source=olson_txt,
+        target=tzdata_bin)
+
+    bld.DYNAMIC_RESOURCES.append(tzdata_bin)
+
+    sources = fw_node.ant_glob('*.c')
+    sources.extend(fw_node.ant_glob('*.[sS]'))
+
+    # Collect translatable strings from the firmware-core sources. apps,
+    # services and applib have their own .pot targets (merged below).
+    gettexts = []
+    gettexts.extend(fw_node.ant_glob('**/*.c',
+                                     excl=['apps/**', 'services/**', 'applib/**']))
+    gettexts.extend(fw_node.ant_glob('**/*.h'))
+    gettexts.extend(fw_node.ant_glob('**/*.def'))
+
+    bld.gettext(source=gettexts, target='fw.pot', path=fw_node)
+    bld.msgcat(
+            source='fw.pot services/services.pot applib/applib.pot apps/apps.pot',
+            target='tintin.pot',
+            path=fw_node)
+
+
+    sources.append(fw_node.get_bld().make_node('pebble.auto.c'))
+    sources.append(fw_node.get_bld().make_node('resource/pfs_resource_table.auto.c'))
+    sources.append(fw_node.get_bld().make_node('resource/timeline_resource_table.auto.c'))
+    sources.append(fw_node.get_bld().make_node('builtin_resources.auto.c'))
+
+    _link_firmware(bld, fw_node, sources)
+
+
+def _build_fw(bld):
+    fw_node = bld.path.find_node('src/fw')
+
+    bld.env.FW_APPS = []
+
+    # FIXME create applib_includes or something like that
+    fw_includes_use=['libbtutil_includes',
+                     'libos_includes',
+                     'libutil_includes',
+                     'pbl_includes',
+                     'freertos_includes',
+                     'idl_includes',
+                     'nanopb_includes']
+
+    if bld.env.CONFIG_MEMFAULT:
+        fw_includes_use.append('memfault_includes')
+
+    if bld.env.CONFIG_SOC_NRF52:
+        fw_includes_use.append('hal_nordic')
+    elif bld.env.CONFIG_SOC_SF32LB52:
+        fw_includes_use.append('hal_sifli')
+
+    bld(export_includes=['.',
+                         'applib/vendor/uPNG',
+                         'applib/vendor/tinflate'],
+        use=fw_includes_use,
+        name='fw_includes',
+        path=fw_node)
+
+    # Truncate the commit to fit in our versions struct. This may cause an ambiguous commit
+    # hash, but it's better than killing the build because the commit doesn't fit.
+    git_rev = tools.waf.gitinfo.get_git_revision(bld)
+    git_rev['COMMIT'] = git_rev['COMMIT'][:7]
+    git_rev['PATCH_VERBOSE_STRING']
+    if len(git_rev['TAG']) > 31:
+        Logs.warn('Git tag {} is too long, truncating'.format(git_rev['TAG']))
+        git_rev['TAG'] = git_rev['TAG'][:31]
+
+    bld(features='subst',
+        source='git_version.auto.h.in',
+        target='git_version.auto.h',
+        path=fw_node,
+        **git_rev)
+
+    bld.recurse('src/fw/startup')
+    bld.recurse('src/fw/drivers')
+    bld.recurse('src/fw/board')
+    bld.recurse('src/fw/shell')
+    bld.recurse('src/fw/services')
+    bld.recurse('src/fw/applib')
+    bld.recurse('src/fw/soc')
+    bld.recurse('src/fw/mfg')
+    bld.recurse('src/fw/comm')
+    bld.recurse('src/fw/console')
+    bld.recurse('src/fw/debug')
+    bld.recurse('src/fw/flash_region')
+    bld.recurse('src/fw/kernel')
+    bld.recurse('src/fw/popups')
+    bld.recurse('src/fw/process_management')
+    bld.recurse('src/fw/process_state')
+    bld.recurse('src/fw/resource')
+    bld.recurse('src/fw/syscall')
+    bld.recurse('src/fw/system')
+    bld.recurse('src/fw/util')
+    bld.recurse('src/fw/apps/core')
+
+    if bld.env.VARIANT == 'prf':
+        bld.recurse('src/fw/apps/prf')
+        _build_recovery(bld, fw_node)
+    else:
+        bld.recurse('src/fw/apps')
+        _build_normal(bld, fw_node)
+
+
 def build(bld):
     bld.DYNAMIC_RESOURCES = []
     bld.LOGHASH_DICTS = []
@@ -391,6 +778,7 @@ def build(bld):
 
     bld.recurse('third_party')
     bld.recurse('src')
+    _build_fw(bld)
 
     # Generate resources. Leave this until the end so we collect all the env['DYNAMIC_RESOURCES']
     # values that the other build steps added.

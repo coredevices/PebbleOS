@@ -8,6 +8,5 @@ else:
     bld.recurse('libc')
     bld.recurse('libos')
     bld.recurse('libutil')
-    bld.recurse('fw')
 
 # vim:filetype=python
