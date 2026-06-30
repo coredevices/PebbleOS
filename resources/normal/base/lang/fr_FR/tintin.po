@@ -4418,3 +4418,28 @@ msgstr "J'écoute..."
 
 #~ msgid "Window Timeout"
 #~ msgstr "Durée d'affichage"
+
+#: ../src/fw/apps/system/settings/display.c:126
+msgctxt "Orientation"
+msgid "Default"
+msgstr "Normal"
+
+#: ../src/fw/apps/system/settings/notifications.c:113
+msgctxt "TextSize"
+msgid "Default"
+msgstr "Normal"
+
+#: ../src/fw/apps/system/settings/notifications.c:269
+msgctxt "StatusBar"
+msgid "Default"
+msgstr "Normal"
+
+#: ../src/fw/apps/system/settings/display.c:202
+msgctxt "TouchWake"
+msgid "Off"
+msgstr "Désactivé"
+
+#: ../src/fw/apps/system/alarms/alarm_detail.c:312
+msgctxt "AlarmSound"
+msgid "Off"
+msgstr "Désactivé"
