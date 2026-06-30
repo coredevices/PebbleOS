@@ -8,13 +8,13 @@ from waflib.Configure import conf
 from waflib.TaskGen import before_method, feature
 from waflib.Tools.ccroot import link_task
 
-import waftools.compress
-import waftools.generate_log_strings_json
-import waftools.generate_timezone_data
-import waftools.gitinfo
-import waftools.ldscript
-import waftools.objcopy
-import waftools.pblboot
+import tools.waf.compress
+import tools.waf.generate_log_strings_json
+import tools.waf.generate_timezone_data
+import tools.waf.gitinfo
+import tools.waf.ldscript
+import tools.waf.objcopy
+import tools.waf.pblboot
 
 from tools.pebble_sdk_platform import pebble_platforms
 
@@ -311,23 +311,23 @@ def _link_firmware(bld, sources):
 
     if bld.env.CONFIG_PBLBOOT:
         nohdr_hex_node = elf_node.change_ext('.nohdr.hex')
-        bld(rule=waftools.objcopy.objcopy_hex, source=elf_node, target=nohdr_hex_node)
+        bld(rule=tools.waf.objcopy.objcopy_hex, source=elf_node, target=nohdr_hex_node)
         hex_node = elf_node.change_ext('.hex')
-        bld(rule=waftools.pblboot.insert_header_hex, source=nohdr_hex_node, target=hex_node)
+        bld(rule=tools.waf.pblboot.insert_header_hex, source=nohdr_hex_node, target=hex_node)
         nohdr_bin_node = elf_node.change_ext('.nohdr.bin')
-        bld(rule=waftools.objcopy.objcopy_bin, source=elf_node, target=nohdr_bin_node)
+        bld(rule=tools.waf.objcopy.objcopy_bin, source=elf_node, target=nohdr_bin_node)
         bin_node = elf_node.change_ext('.bin')
-        bld(rule=waftools.pblboot.insert_header_bin, source=nohdr_bin_node, target=bin_node)
+        bld(rule=tools.waf.pblboot.insert_header_bin, source=nohdr_bin_node, target=bin_node)
     else:
         hex_node = elf_node.change_ext('.hex')
-        bld(rule=waftools.objcopy.objcopy_hex, source=elf_node, target=hex_node)
+        bld(rule=tools.waf.objcopy.objcopy_hex, source=elf_node, target=hex_node)
         bin_node = elf_node.change_ext('.bin')
-        bld(rule=waftools.objcopy.objcopy_bin, source=elf_node, target=bin_node)
+        bld(rule=tools.waf.objcopy.objcopy_bin, source=elf_node, target=bin_node)
 
     # Create the log_strings .elf and check the format specifier rules
     if bld.env.CONFIG_LOG_HASHED:
         fw_loghash_node = bld.path.get_bld().make_node('tintin_fw_loghash_dict.json')
-        bld(rule=waftools.generate_log_strings_json.wafrule,
+        bld(rule=tools.waf.generate_log_strings_json.wafrule,
             source=elf_node, target=fw_loghash_node)
         bld.LOGHASH_DICTS.append(fw_loghash_node)
 
@@ -345,7 +345,7 @@ def _build_normal(bld):
     # Generate timezone data
     olson_txt = bld.srcnode.make_node('resources/normal/base/tzdata/timezones_olson.txt')
     tzdata_bin = bld.bldnode.make_node('resources/normal/base/tzdata/tzdata.bin.reso')
-    bld(rule=waftools.generate_timezone_data.wafrule,
+    bld(rule=tools.waf.generate_timezone_data.wafrule,
         source=olson_txt,
         target=tzdata_bin)
 
@@ -403,7 +403,7 @@ def build(bld):
 
     # Truncate the commit to fit in our versions struct. This may cause an ambiguous commit
     # hash, but it's better than killing the build because the commit doesn't fit.
-    git_rev = waftools.gitinfo.get_git_revision(bld)
+    git_rev = tools.waf.gitinfo.get_git_revision(bld)
     git_rev['COMMIT'] = git_rev['COMMIT'][:7]
     git_rev['PATCH_VERBOSE_STRING']
     if len(git_rev['TAG']) > 31:

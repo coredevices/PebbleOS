@@ -10,7 +10,7 @@ from waflib import Logs
 from waflib.Build import BuildContext
 from waflib.Configure import conf
 
-import waftools.boards
+import tools.waf.boards
 
 
 def options(opt):
@@ -90,7 +90,7 @@ def configure(conf):
     srcdir = conf.srcnode.abspath()
     blddir = conf.bldnode.abspath()
     try:
-        board = waftools.boards.parse_board(srcdir, conf.options.board)
+        board = tools.waf.boards.parse_board(srcdir, conf.options.board)
     except ValueError as e:
         conf.fatal(str(e))
 
@@ -105,7 +105,7 @@ def configure(conf):
     # The board is known from --board; export it so the root Kconfig can
     # source only the active board's Kconfig via `rsource "boards/$(BOARD)/..."`.
     os.environ["BOARD"] = board.name
-    os.environ["BOARD_REVISION"] = board.revision or waftools.boards.NO_REVISION
+    os.environ["BOARD_REVISION"] = board.revision or tools.waf.boards.NO_REVISION
     kconf = kconfiglib.Kconfig(os.path.join(srcdir, "Kconfig"))
     kconf.warn_assign_override = True
     kconf.warn_assign_redun = True
@@ -212,7 +212,7 @@ class menuconfig(BuildContext):
         env = os.environ.copy()
         env["srctree"] = srcdir
         env["BOARD"] = self.env.BOARD_NAME
-        env["BOARD_REVISION"] = self.env.BOARD_REVISION or waftools.boards.NO_REVISION
+        env["BOARD_REVISION"] = self.env.BOARD_REVISION or tools.waf.boards.NO_REVISION
         env["KCONFIG_CONFIG"] = os.path.join(blddir, ".config")
 
         subprocess.run(

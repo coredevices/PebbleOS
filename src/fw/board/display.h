@@ -19,7 +19,7 @@ typedef struct {
 // FIXME: PBL-21049 Fix platform abstraction and board definition scheme
 #ifdef UNITTEST
 // Do nothing, a unit-test's wscript specifies platforms=[]
-// used by waftools/pebble_test.py to define these includes per test
+// used by tools/waf/pebble_test.py to define these includes per test
 #else
 
 #ifdef CONFIG_BOARD_ASTERIX

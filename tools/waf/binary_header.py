@@ -102,7 +102,7 @@ def process_binary_header(self):
     file is treated as a raw binary file.
 
     If the *compressed* parameter is True, the *source* files are compressed with
-    sparse length encoding (see waftools/sparse_length_encoding.py).
+    sparse length encoding (see tools/waf/sparse_length_encoding.py).
 
     The name of the array variable defaults to the source file name with all
     characters that are invaid C identifiers replaced with underscores. The name

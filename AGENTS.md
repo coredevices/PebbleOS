@@ -13,7 +13,7 @@ PebbleOS is the operating system running on Pebble smartwatches.
 - `third_party`: third-party code in git submodules, also includes glue code
 - `tools`: a variety of tools or scripts used in multiple areas, from build
   system, tests, etc.
-- `waftools`: scripts used by the build system
+- `tools/waf`: scripts used by the waf build system
 
 ## Code style
 

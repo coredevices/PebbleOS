@@ -26,14 +26,14 @@ waf_dir = sys.path[0]
 sys.path.append(os.path.join(waf_dir, 'tools'))
 sys.path.append(os.path.join(waf_dir, 'tools/log_hashing'))
 sys.path.append(os.path.join(waf_dir, 'sdk/tools/'))
-sys.path.append(os.path.join(waf_dir, 'waftools'))
+sys.path.append(os.path.join(waf_dir, 'tools/waf'))
 
-import waftools.gitinfo
-import waftools.boards
-import waftools.ldscript
-import waftools.pebble_sdk_gcc as pebble_sdk_gcc
+import tools.waf.gitinfo
+import tools.waf.boards
+import tools.waf.ldscript
+import tools.waf.pebble_sdk_gcc as pebble_sdk_gcc
 import tools.runners as pebble_runners
-from waftools.pebble_sdk_locator import activate_sdk
+from tools.waf.pebble_sdk_locator import activate_sdk
 
 from pebble_sdk_version import set_env_sdk_version
 
@@ -44,7 +44,7 @@ activate_sdk(waflib.Context.run_dir or os.getcwd())
 LOGHASH_OUT_PATH = 'src/fw/loghash_dict.json'
 
 def _available_boards():
-    return waftools.boards.available_boards(waflib.Context.run_dir or os.getcwd())
+    return tools.waf.boards.available_boards(waflib.Context.run_dir or os.getcwd())
 
 
 def truncate(msg):
@@ -73,9 +73,9 @@ class _OptParserAdapter(object):
 
 
 def options(opt):
-    opt.load('pebble_arm_gcc', tooldir='waftools')
-    opt.load('show_configure', tooldir='waftools')
-    opt.load('kconfig', tooldir='waftools')
+    opt.load('pebble_arm_gcc', tooldir='tools/waf')
+    opt.load('show_configure', tooldir='tools/waf')
+    opt.load('kconfig', tooldir='tools/waf')
     opt.recurse('src/fw')
 
     gr = opt.add_option_group('test options')
@@ -118,15 +118,15 @@ def configure(conf):
                    'You must pass a --board argument when configuring.')
 
     try:
-        board = waftools.boards.parse_board(conf.srcnode.abspath(), conf.options.board)
+        board = tools.waf.boards.parse_board(conf.srcnode.abspath(), conf.options.board)
     except ValueError as e:
         conf.fatal(str(e))
 
-    # Has to be 'waftools.gettext' as unadorned 'gettext' will find the gettext
+    # Has to be 'tools.waf.gettext' as unadorned 'gettext' will find the gettext
     # module in the standard library.
-    conf.load('waftools.gettext')
+    conf.load('tools.waf.gettext')
 
-    conf.load('kconfig', tooldir='waftools')
+    conf.load('kconfig', tooldir='tools/waf')
 
     # JS engine selection is driven entirely by CONFIG_MODDABLE_XS. Override
     # per-board with `-DCONFIG_MODDABLE_XS=y/n` at configure time.
@@ -195,7 +195,7 @@ def configure(conf):
 
     Logs.pprint('CYAN', 'Configuring arm_firmware environment')
     conf.setenv('', base_env)
-    conf.load('pebble_arm_gcc', tooldir='waftools')
+    conf.load('pebble_arm_gcc', tooldir='tools/waf')
 
     Logs.pprint('CYAN', 'Configuring unit test environment')
     conf.setenv('local', unit_test_env)
@@ -217,7 +217,7 @@ def configure(conf):
     conf.find_program('ar')
 
     conf.load('clang')
-    conf.load('pebble_test', tooldir='waftools')
+    conf.load('pebble_test', tooldir='tools/waf')
 
     conf.env.CLAR_DIR = conf.path.make_node('tools/clar/').abspath()
     conf.env.CFLAGS = [ '-std=c11',
@@ -256,7 +256,7 @@ def configure(conf):
     conf.env.append_value('DEFINES', 'CONFIG_LOG=1')
 
     if conf.options.compile_commands:
-        conf.load('clang_compilation_database', tooldir='waftools')
+        conf.load('clang_compilation_database', tooldir='tools/waf')
 
         if not os.path.lexists('compile_commands.json'):
             filename = 'compile_commands.json'
@@ -295,7 +295,7 @@ def build(bld):
     if bld.variant == 'test':
         bld.set_env(bld.all_envs['local'])
 
-    bld.load('file_name_c_define', tooldir='waftools')
+    bld.load('file_name_c_define', tooldir='tools/waf')
 
     bld.recurse('third_party/nanopb')
     bld.recurse('src/idl')
@@ -474,7 +474,7 @@ def docs_all(ctx):
 
 def _get_version_info(ctx):
     # FIXME: it's probably a better idea to lift board + version info from the .bin file... this can get out of sync!
-    git_revision = waftools.gitinfo.get_git_revision(ctx)
+    git_revision = tools.waf.gitinfo.get_git_revision(ctx)
     if git_revision['TAG'] != '?':
         version_string = git_revision['TAG']
         version_ts = int(git_revision['TIMESTAMP'])

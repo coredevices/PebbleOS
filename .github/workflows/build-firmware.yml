@@ -29,7 +29,7 @@ jobs:
               - 'stored_apps/**'
               - 'tools/**'
               - 'third_party/**'
-              - 'waftools/**'
+              - 'tools/waf/**'
               - 'waf'
               - 'wscript'
 

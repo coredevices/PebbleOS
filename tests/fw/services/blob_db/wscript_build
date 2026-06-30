@@ -1,4 +1,4 @@
-from waftools.pebble_test import clar
+from tools.waf.pebble_test import clar
 
 def test_timeline_service(test_name, defines=None):
     clar(ctx,

@@ -5,9 +5,9 @@
 # the profiling of tasks in a waf build.
 #
 # To use this!
-# * Grab the parallel_debug.py file from the waf repo and throw it in your waftools directory
+# * Grab the parallel_debug.py file from the waf repo and throw it in your tools/waf directory
 #   https://raw.githubusercontent.com/waf-project/waf/master/waflib/extras/parallel_debug.py
-# * Add "conf.load('parallel_debug', tooldir='waftools')" to the top of def configure in the
+# * Add "conf.load('parallel_debug', tooldir='tools/waf')" to the top of def configure in the
 #   root wscript
 # * Run your build! This should produce a pdebug.data and pdebug.svg in your root
 # * Run this script with the current directory being the root of your repo

@@ -1,4 +1,4 @@
-import waftools
+import tools.waf
 
 sources = bld.path.ant_glob('**/*.c')
 

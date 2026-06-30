@@ -27,7 +27,7 @@ jobs:
               - 'src/**'
               - 'tools/**'
               - 'third_party/**'
-              - 'waftools/**'
+              - 'tools/waf/**'
               - 'waf'
               - 'wscript'
 

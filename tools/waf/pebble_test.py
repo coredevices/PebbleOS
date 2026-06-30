@@ -3,7 +3,7 @@
 
 from waflib.TaskGen import after, feature, taskgen_method
 from waflib import Errors, Logs, Task, Utils
-from waftools import junit_xml
+from tools.waf import junit_xml
 from string import Template
 import hashlib
 import os
