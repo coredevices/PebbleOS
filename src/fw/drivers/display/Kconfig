@@ -23,6 +23,7 @@ config DISPLAY_SHARP_LS013B7DH01_NRF5
 
 config DISPLAY_QEMU
     bool "QEMU Framebuffer Display"
+    default y if SOC_QEMU
     help
       Support for the QEMU framebuffer display peripheral.
 

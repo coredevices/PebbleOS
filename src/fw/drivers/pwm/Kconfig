@@ -23,6 +23,7 @@ config PWM_SF32LB
 
 config PWM_QEMU
     bool "QEMU PWM"
+    default y if SOC_QEMU
     help
       Support for the QEMU PWM peripheral.
 

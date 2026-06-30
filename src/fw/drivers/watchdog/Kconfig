@@ -22,6 +22,7 @@ config WATCHDOG_SF32LB
 
 config WATCHDOG_QEMU
     bool "QEMU Watchdog"
+    default y if SOC_QEMU
     help
       Support for the QEMU watchdog (no-op).
 

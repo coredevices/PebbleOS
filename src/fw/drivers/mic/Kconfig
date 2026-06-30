@@ -24,6 +24,7 @@ config MIC_SF32LB
 
 config MIC_QEMU
     bool "QEMU stub"
+    default y if SOC_QEMU
     help
       Software-only microphone stub for QEMU. Delivers silence at
       MIC_SAMPLE_RATE so the voice service can run end-to-end against

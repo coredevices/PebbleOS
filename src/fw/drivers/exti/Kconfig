@@ -23,6 +23,7 @@ config EXTI_SF32LB
 
 config EXTI_QEMU
     bool "QEMU External Interrupt"
+    default y if SOC_QEMU
     help
       Support for the QEMU external interrupt peripheral.
 

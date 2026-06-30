@@ -24,6 +24,7 @@ config RTC_SF32LB
 
 config RTC_QEMU
     bool "QEMU RTC"
+    default y if SOC_QEMU
     help
       Support for the QEMU RTC peripheral.
 

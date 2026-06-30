@@ -22,6 +22,7 @@ config SPEAKER_SF32LB
 
 config SPEAKER_QEMU
     bool "QEMU audio"
+    default y if SOC_QEMU
     help
       QEMU audio device backing the speaker for emulated builds.
 

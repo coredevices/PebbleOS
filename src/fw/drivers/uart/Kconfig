@@ -23,6 +23,7 @@ config UART_SF32LB
 
 config UART_QEMU
     bool "QEMU Simple UART"
+    default y if SOC_QEMU
     help
       Support for the QEMU simple UART peripheral.
 
