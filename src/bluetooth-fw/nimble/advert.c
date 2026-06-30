@@ -15,6 +15,7 @@
 #include <pbl/util/math.h>
 
 #include "nimble_type_conversions.h"
+#include "ppog_reversed_service.h"
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
@@ -251,6 +252,7 @@ static void prv_handle_subscription_event(struct ble_gap_event *event) {
             event->subscribe.conn_handle, event->subscribe.attr_handle,
             event->subscribe.prev_notify, event->subscribe.cur_notify,
             event->subscribe.prev_indicate, event->subscribe.cur_indicate);
+  ppog_reversed_service_handle_subscribe_event(event);
 }
 
 static void prv_handle_notification_rx_event(struct ble_gap_event *event) {
@@ -279,6 +281,7 @@ static void prv_handle_notification_tx_event(struct ble_gap_event *event) {
             event->notify_tx.status,
             event->notify_tx.attr_handle,
             event->notify_tx.indication);
+  ppog_reversed_service_handle_notify_tx_event(event);
 }
 
 static int prv_handle_repeat_pairing_event(struct ble_gap_event *event) {

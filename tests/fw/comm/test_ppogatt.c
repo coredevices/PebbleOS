@@ -53,6 +53,10 @@ GAPLEConnection *gap_le_connection_get_gateway(void) {
   return NULL;
 }
 
+GAPLEConnection *gap_le_connection_by_device(const BTDeviceInternal *device) {
+  return NULL;
+}
+
 GAPLEConnection *gatt_client_characteristic_get_connection(BLECharacteristic characteristic_ref) {
   return NULL;
 }
@@ -69,6 +73,12 @@ uint16_t gatt_client_characteristic_get_handle_and_connection(
 BTErrno bt_driver_gatt_write_without_response(GAPLEConnection *connection, const uint8_t *value,
                                               size_t value_length, uint16_t att_handle) {
   cl_fail("unexpected call: bt_lock is never held in this test");
+  return BTErrnoOK;
+}
+
+// Reversed PPoG only fires from a reversed-role client, which this test never creates.
+BTErrno bt_driver_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf, uint16_t len) {
+  cl_fail("unexpected call: no reversed client in this test");
   return BTErrnoOK;
 }
 

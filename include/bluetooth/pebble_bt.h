@@ -20,13 +20,24 @@
 #define PEBBLE_BT_PPOGATT_DATA_CHARACTERISTIC_UUID_32BIT (0x10000001)
 #define PEBBLE_BT_PPOGATT_META_CHARACTERISTIC_UUID_32BIT (0x10000002)
 
-//! The Service UUID of the "Pebble Protocol over GATT" (PPoGATT) service that the watch
-//! publishes to operate as a Server instead of it's normal client role. This allows certain
-//! sad Android phones to communicate with the watch
-#define PEBBLE_BT_PPOGATT_WATCH_SERVER_SERVICE_UUID_32BIT             (0x30000003)
-#define PEBBLE_BT_PPOGATT_WATCH_SERVER_DATA_CHARACTERISTIC_UUID_32BIT (0x30000004)
-#define PEBBLE_BT_PPOGATT_WATCH_SERVER_META_CHARACTERISTIC_UUID_32BIT (0x30000005)
-#define PEBBLE_BT_PPOGATT_WATCH_SERVER_DATA_WR_CHARACTERISTIC_UUID_32BIT (0x30000006)
+//! V1: shipped on Pebble 2 / silk (Dialog DA1468x). The phone is the GATT
+//! client; the watch hosts these characteristics and emulates the legacy
+//! phone-as-server PPoGATT to the rest of the firmware. No meta
+//! characteristic — the phone assumes protocol v0 and sends the first
+//! ResetRequest itself. Reserved here so new allocations don't collide.
+#define PEBBLE_BT_PPOGATT_WATCH_SERVER_V1_SERVICE_UUID_32BIT             (0x30000003)
+#define PEBBLE_BT_PPOGATT_WATCH_SERVER_V1_DATA_CHARACTERISTIC_UUID_32BIT (0x30000004)
+#define PEBBLE_BT_PPOGATT_WATCH_SERVER_V1_META_CHARACTERISTIC_UUID_32BIT (0x30000005)
+#define PEBBLE_BT_PPOGATT_WATCH_SERVER_V1_DATA_WR_CHARACTERISTIC_UUID_32BIT (0x30000006)
+
+//! V2: reversed PPoGATT for NimBLE-based watches (asterix / SiFli). Phone is
+//! the GATT client. Differs from V1 in that the watch sends the first
+//! ResetRequest after the phone subscribes; version is taken from the
+//! ResetRequest payload (no separate meta characteristic — 0x40000002 is
+//! reserved here in case a future revision wants one).
+#define PEBBLE_BT_PPOGATT_WATCH_SERVER_SERVICE_UUID_32BIT             (0x40000000)
+#define PEBBLE_BT_PPOGATT_WATCH_SERVER_DATA_CHARACTERISTIC_UUID_32BIT (0x40000001)
+#define PEBBLE_BT_PPOGATT_WATCH_SERVER_DATA_WR_CHARACTERISTIC_UUID_32BIT (0x40000003)
 
 //! The Service UUID of the "Pebble App Launch" service.
 //! This UUID needs to be expanded using the Pebble Base UUID (@see pebble_bt_uuid_expand)
