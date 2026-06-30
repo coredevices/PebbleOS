@@ -44,7 +44,7 @@ static RtcTicks s_analytics_deepwfi_ticks;
 static RtcTicks s_analytics_deepsleep_ticks;
 static RtcTicks s_last_ticks;
 static uint32_t s_analytics_ipc_not_idle_count;
-static bool s_force_deepwfi;
+static bool s_force_wfi;
 
 //! Early wake-up ticks (to avoid over-sleeping due to wake-up latency)
 static const uint32_t EARLY_WAKEUP_TICKS = 4;
@@ -198,9 +198,14 @@ void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime) {
   if (eTaskConfirmSleepModeStatus() != eAbortSleep) {
     SocSf32lbSleepLevel max_level = soc_sf32lb_sleep_max_level();
 
-    // Deep sleep needs a minimum idle window; the debug flag forces deep WFI.
-    if (xExpectedIdleTime < MIN_DEEPSLEEP_TICKS || s_force_deepwfi) {
+    // Deep sleep needs a minimum idle window.
+    if (xExpectedIdleTime < MIN_DEEPSLEEP_TICKS) {
       max_level = MIN(max_level, SOC_SF32LB_DEEPWFI);
+    }
+
+    // The debug flag forces plain WFI (deep WFI and deep sleep disabled).
+    if (s_force_wfi) {
+      max_level = MIN(max_level, SOC_SF32LB_WFI);
     }
 
     switch (max_level) {
@@ -376,13 +381,13 @@ void dump_current_runtime_stats(void) {
   prompt_send_response(buf);
 }
 
-void command_force_deepwfi(const char *arg) {
+void command_force_wfi(const char *arg) {
   if (arg[0] == '1') {
-    s_force_deepwfi = true;
-    prompt_send_response("Deep WFI forced ON (deep sleep disabled)");
+    s_force_wfi = true;
+    prompt_send_response("WFI forced ON (deep WFI and deep sleep disabled)");
   } else {
-    s_force_deepwfi = false;
-    prompt_send_response("Deep WFI forced OFF (deep sleep allowed)");
+    s_force_wfi = false;
+    prompt_send_response("WFI forced OFF (deep WFI and deep sleep allowed)");
   }
 }
 

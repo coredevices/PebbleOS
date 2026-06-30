@@ -288,7 +288,7 @@ extern void command_analytics_heartbeat(void);
 extern void command_console_disable_rx(const char *seconds_str);
 
 #ifdef CONFIG_SOC_SF32LB52
-extern void command_force_deepwfi(const char *arg);
+extern void command_force_wfi(const char *arg);
 #endif
 
 #if !defined(CONFIG_RELEASE) && defined(CONFIG_DISPLAY_JDI_SF32LB)
@@ -624,7 +624,7 @@ static const Command s_prompt_commands[] = {
   { "vibe", command_vibe_ctl, 1 },
   { "console disable rx", command_console_disable_rx, 1 },
 #ifdef CONFIG_SOC_SF32LB52
-  { "force deepwfi", command_force_deepwfi, 1 },
+  { "force wfi", command_force_wfi, 1 },
 #endif
 #if !defined(CONFIG_RELEASE) && defined(CONFIG_DISPLAY_JDI_SF32LB)
   { "display drop_complete", command_display_drop_complete, 0 },
