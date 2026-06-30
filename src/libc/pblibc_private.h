@@ -3,8 +3,10 @@
 
 #pragma once
 
-// Rename (and re-define) the libc functions
-#if UNITTEST
+// Rename (and re-define) the libc functions. Freestanding host tests compile
+// under -nostdinc against pblibc with no host libc in scope, so there is
+// nothing to collide with and the rename shim is unnecessary there.
+#if UNITTEST && !defined(CLAR_FREESTANDING)
 #include <stddef.h>
 #include <stdarg.h>
 

@@ -1,6 +1,8 @@
 from waftools.pebble_test import clar
 
 clar(ctx,
-     sources_ant_glob = "src/libc/vsprintf.c",
+     sources_ant_glob = "src/libc/vsprintf.c" \
+                        " src/libc/ctype_ptr.c",
      test_sources_ant_glob = "test_sprintf.c",
-     add_includes = ["src/libc"])
+     add_includes = ["src/libc"],
+     freestanding=True)

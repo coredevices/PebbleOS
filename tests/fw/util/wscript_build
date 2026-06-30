@@ -16,7 +16,13 @@ clar(ctx,
 
 clar(ctx,
      sources_ant_glob = "src/fw/util/dict.c",
-     test_sources_ant_glob = "test_dict.c")
+     test_sources_ant_glob = "test_dict.c",
+     add_includes = [
+         "src/fw",
+         "src/libutil/includes",
+         "tests/stubs",
+     ],
+     freestanding=True)
 
 #clar(ctx,
 #     sources_ant_glob = "src/fw/util/mktime.c",
@@ -24,15 +30,34 @@ clar(ctx,
 
 clar(ctx,
      sources_ant_glob = "src/fw/util/buffer.c",
-     test_sources_ant_glob = "test_buffer.c")
+     test_sources_ant_glob = "test_buffer.c",
+     add_includes = [
+         "src/fw",
+         "src/libutil/includes",
+         "tests/stubs",
+     ],
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob = "src/fw/util/lru_cache.c",
-     test_sources_ant_glob = "test_lru_cache.c")
+     test_sources_ant_glob = "test_lru_cache.c",
+     add_includes = [
+         "src/fw",
+         "src/libutil/includes",
+         "tests/stubs",
+     ],
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob = "src/fw/util/mbuf.c src/fw/util/mbuf_iterator.c",
-     test_sources_ant_glob = "test_mbuf.c")
+     test_sources_ant_glob = "test_mbuf.c",
+     add_includes = [
+         "src/fw",
+         "src/libutil/includes",
+         "src/libos/include",
+         "tests/stubs",
+     ],
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob = "src/fw/util/rand/rand.c" \
@@ -63,7 +88,13 @@ clar(ctx,
 
 clar(ctx,
      sources_ant_glob = "src/fw/util/pstring.c",
-     test_sources_ant_glob = "test_pstring.c")
+     test_sources_ant_glob = "test_pstring.c",
+     add_includes = [
+         "src/fw",
+         "src/libutil/includes",
+         "tests/stubs",
+     ],
+     freestanding=True)
 
 clar(ctx,
      sources_ant_glob = "src/fw/util/ihex.c",

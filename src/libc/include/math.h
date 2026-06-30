@@ -9,6 +9,7 @@
 #endif
 
 #define INFINITY   ((double)(_HUGE_ENUF * _HUGE_ENUF))
+#define HUGE_VAL   INFINITY
 #define NAN        ((double)(INFINITY * 0.0F))
 
 #define INFINITY_F ((float)INFINITY)
@@ -86,9 +87,13 @@ float modff(float x, float *iptr);
 
 double nearbyint(double x);
 
+double pow(double x, double y);
+
 double round(double d);
 
 float roundf(float x);
+
+double scalbn(double x, int n);
 
 double sin(double x);
 

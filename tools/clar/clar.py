@@ -74,13 +74,25 @@ class ClarTestBuilder:
         self.clar_path = os.path.abspath(clar_path) if clar_path else None
 
         self.path = os.path.abspath(path)
-        self.modules = [
-            "clar_sandbox.c",
-            "clar_fixtures.c",
-            "clar_fs.c",
-            "clar_mock.c",
-            "clar_categorize.c",
-        ]
+
+        if print_mode == "freestanding":
+            # Freestanding builds omit POSIX-dependent modules (sandbox, fs,
+            # fixtures) and insert the I/O layer before categorize so that
+            # strcasecmp and printf are available to the modules that follow.
+            self.modules = [
+                "clar_sandbox_freestanding.c",
+                "clar_mock.c",
+                "clar_io_freestanding.c",
+                "clar_categorize.c",
+            ]
+        else:
+            self.modules = [
+                "clar_sandbox.c",
+                "clar_fixtures.c",
+                "clar_fs.c",
+                "clar_mock.c",
+                "clar_categorize.c",
+            ]
 
         self.modules.append("clar_print_%s.c" % print_mode)
 
