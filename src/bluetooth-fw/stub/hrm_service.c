@@ -7,7 +7,17 @@ bool bt_driver_is_hrm_service_supported(void) {
   return false;
 }
 
+void bt_driver_hrm_service_enable(bool enable) {
+}
+
+void bt_driver_hrm_service_init(void) {
+}
+
 void bt_driver_hrm_service_handle_measurement(const BleHrmServiceMeasurement *measurement,
                                               const BTDeviceInternal *permitted_devices,
                                               size_t num_permitted_devices) {
+}
+
+void bt_driver_hrm_service_handle_subscription(uint16_t conn_handle, uint16_t attr_handle,
+                                               bool is_subscribed) {
 }

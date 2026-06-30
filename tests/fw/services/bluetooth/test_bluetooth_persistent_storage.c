@@ -522,6 +522,69 @@ void test_bluetooth_persistent_storage__ble_ancs_bonding(void) {
   cl_assert(ret);
 }
 
+static SMPairingInfo prv_make_ble_pairing(uint8_t seed) {
+  SMPairingInfo pairing = {
+    .irk = (SMIdentityResolvingKey) {
+      .data = {
+        seed, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+        0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, seed,
+      },
+    },
+    .identity = (BTDeviceInternal) {
+      .address = (BTDeviceAddress) {
+        .octets = {
+          seed, 0x12, 0x13, 0x14, 0x15, seed,
+        },
+      },
+      .is_classic = false,
+      .is_random_address = false,
+    },
+    .is_remote_identity_info_valid = true,
+  };
+  return pairing;
+}
+
+void test_bluetooth_persistent_storage__non_gateway_ble_keeps_gateway(void) {
+  SMPairingInfo gateway_pairing = prv_make_ble_pairing(0x41);
+  BTBondingID gateway_id =
+      bt_persistent_storage_store_ble_pairing(&gateway_pairing, true /* is_gateway */, NULL,
+                                              false /* requires_address_pinning */, 0 /* flags */);
+  cl_assert(gateway_id != BT_BONDING_ID_INVALID);
+
+  SMPairingInfo hrm_pairing = prv_make_ble_pairing(0x48);
+  BTBondingID hrm_id =
+      bt_persistent_storage_store_ble_pairing(&hrm_pairing, false /* is_gateway */, NULL,
+                                              false /* requires_address_pinning */, 0 /* flags */);
+  cl_assert(hrm_id != BT_BONDING_ID_INVALID);
+  cl_assert(hrm_id != gateway_id);
+
+  cl_assert_equal_i(s_ble_bonding_change_add_count, 2);
+  cl_assert_equal_i(s_ble_bonding_change_delete_count, 0);
+  cl_assert(bt_persistent_storage_get_ble_pairing_by_id(gateway_id, NULL, NULL, NULL));
+  cl_assert(bt_persistent_storage_get_ble_pairing_by_id(hrm_id, NULL, NULL, NULL));
+  cl_assert_equal_i(bt_persistent_storage_get_ble_ancs_bonding(), gateway_id);
+
+  SMPairingInfo replacement_gateway_pairing = prv_make_ble_pairing(0x61);
+  BTBondingID replacement_gateway_id = bt_persistent_storage_store_ble_pairing(
+      &replacement_gateway_pairing, true /* is_gateway */, NULL,
+      false /* requires_address_pinning */, 0 /* flags */);
+  cl_assert(replacement_gateway_id != BT_BONDING_ID_INVALID);
+  cl_assert(replacement_gateway_id != gateway_id);
+
+  cl_assert_equal_i(s_ble_bonding_change_add_count, 3);
+  cl_assert_equal_i(s_ble_bonding_change_delete_count, 1);
+  cl_assert(!bt_persistent_storage_get_ble_pairing_by_id(gateway_id, NULL, NULL, NULL));
+  cl_assert(bt_persistent_storage_get_ble_pairing_by_id(hrm_id, NULL, NULL, NULL));
+  cl_assert(bt_persistent_storage_get_ble_pairing_by_id(replacement_gateway_id, NULL, NULL, NULL));
+  cl_assert_equal_i(bt_persistent_storage_get_ble_ancs_bonding(), replacement_gateway_id);
+
+  bt_persistent_storage_register_existing_ble_bondings();
+  cl_assert_equal_b(bonding_sync_contains_pairing_info(&gateway_pairing, true), false);
+  cl_assert_equal_b(bonding_sync_contains_pairing_info(&hrm_pairing, false), true);
+  cl_assert_equal_b(bonding_sync_contains_pairing_info(&hrm_pairing, true), false);
+  cl_assert_equal_b(bonding_sync_contains_pairing_info(&replacement_gateway_pairing, true), true);
+}
+
 void test_bluetooth_persistent_storage__ble_device_name(void) {
   SMPairingInfo pairing = {
     .irk = (SMIdentityResolvingKey) {
@@ -724,4 +787,3 @@ void test_bluetooth_persistent_storage__ble_serialized_data(void) {
   cl_assert_equal_i(data_len, data_size);
   cl_assert_equal_m(expected_raw_data, data, sizeof(expected_raw_data));
 }
-
