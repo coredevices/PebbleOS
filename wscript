@@ -66,11 +66,8 @@ def get_pbpack_node(ctx):
 
 
 @conf
-def get_tintin_fw_node(ctx, subdir=None):
-    subpath = 'src/fw/tintin_fw.bin'
-    if subdir:
-        subpath = os.path.join(subdir, subpath)
-    return ctx.path.get_bld().make_node(subpath)
+def get_pebbleos_node(ctx):
+    return ctx.path.get_bld().make_node('pebbleos.bin')
 
 
 @feature("c")
@@ -357,14 +354,14 @@ def stop_build_timer(ctx):
         fout.write(str(int(round(t.total_seconds()))))
 
 
-def _generate_memory_layout(bld, fw_node):
+def _generate_memory_layout(bld):
 
     if bld.env.CONFIG_QEMU:
-        ldscript_template = fw_node.find_node('qemu_flash_fw.ld.template')
+        ldscript_template = bld.path.find_node('src/fw/qemu_flash_fw.ld.template')
     elif bld.env.CONFIG_BOARD_ASTERIX:
-        ldscript_template = fw_node.find_node('nrf52840_flash_fw.ld.template')
+        ldscript_template = bld.path.find_node('src/fw/nrf52840_flash_fw.ld.template')
     elif bld.env.CONFIG_BOARD_OBELIX or bld.env.CONFIG_BOARD_GETAFIX:
-        ldscript_template = fw_node.find_node('sf32lb52_flash_fw.ld.template')
+        ldscript_template = bld.path.find_node('src/fw/sf32lb52_flash_fw.ld.template')
 
     # Determine sizes so we can later calculate FLASH_LENGTH_*
     if bld.env.CONFIG_QEMU:
@@ -483,7 +480,7 @@ def _generate_memory_layout(bld, fw_node):
     ldscript_result = ldscript_template.get_bld().change_ext('.ld', ext_in='.ld.template')
 
     bld(features='subst',
-        path=fw_node,
+        path=bld.path,
         source=ldscript_template,
         target=ldscript_result,
         KERNEL_RAM_ADDR="0x{:x}".format(kernel_ram[0]),
@@ -500,9 +497,9 @@ def _generate_memory_layout(bld, fw_node):
     return ldscript_result
 
 
-def _link_firmware(bld, fw_node, sources):
+def _link_firmware(bld, sources):
     fw_linkflags = ['-Wl,--cref',
-                    '-Wl,-Map=tintin_fw.map',
+                    '-Wl,-Map=pebbleos.map',
                     '-Wl,--gc-sections',
                     '-Wl,--undefined=uxTopUsedPriority',
                     '-Wl,--build-id=sha1',
@@ -557,15 +554,15 @@ def _link_firmware(bld, fw_node, sources):
         fw_linkflags.append('-Wl,--require-defined=g_memfault_build_id')
         uses.append('memfault')
 
-    ldscript = _generate_memory_layout(bld, fw_node)
+    ldscript = _generate_memory_layout(bld)
 
-    ldscripts = [ldscript, 'fw_common.ld']
+    ldscripts = [ldscript, 'src/fw/fw_common.ld']
     if bld.env.CONFIG_MEMFAULT:
         ldscripts.append(bld.srcnode.find_node(
             'third_party/memfault/port/memfault_compact_log.ld'))
 
     # Build and link the firmware ELF
-    elf_node = fw_node.get_bld().make_node('tintin_fw.elf')
+    elf_node = bld.path.get_bld().make_node('pebbleos.elf')
     x = bld.program(source=sources,
                 use=uses,
                 link_group=True,
@@ -573,44 +570,43 @@ def _link_firmware(bld, fw_node, sources):
                 target=elf_node,
                 includes='fonts',
                 ldscript=ldscripts,
-                linkflags=fw_linkflags,
-                path=fw_node)
+                linkflags=fw_linkflags)
 
     x.env.append_value('LINKFLAGS', fw_linkflags)
 
     if bld.env.CONFIG_PBLBOOT:
         nohdr_hex_node = elf_node.change_ext('.nohdr.hex')
-        bld(rule=tools.waf.objcopy.objcopy_hex, source=elf_node, target=nohdr_hex_node, path=fw_node)
+        bld(rule=tools.waf.objcopy.objcopy_hex, source=elf_node, target=nohdr_hex_node)
         hex_node = elf_node.change_ext('.hex')
-        bld(rule=tools.waf.pblboot.insert_header_hex, source=nohdr_hex_node, target=hex_node, path=fw_node)
+        bld(rule=tools.waf.pblboot.insert_header_hex, source=nohdr_hex_node, target=hex_node)
         nohdr_bin_node = elf_node.change_ext('.nohdr.bin')
-        bld(rule=tools.waf.objcopy.objcopy_bin, source=elf_node, target=nohdr_bin_node, path=fw_node)
+        bld(rule=tools.waf.objcopy.objcopy_bin, source=elf_node, target=nohdr_bin_node)
         bin_node = elf_node.change_ext('.bin')
-        bld(rule=tools.waf.pblboot.insert_header_bin, source=nohdr_bin_node, target=bin_node, path=fw_node)
+        bld(rule=tools.waf.pblboot.insert_header_bin, source=nohdr_bin_node, target=bin_node)
     else:
         hex_node = elf_node.change_ext('.hex')
-        bld(rule=tools.waf.objcopy.objcopy_hex, source=elf_node, target=hex_node, path=fw_node)
+        bld(rule=tools.waf.objcopy.objcopy_hex, source=elf_node, target=hex_node)
         bin_node = elf_node.change_ext('.bin')
-        bld(rule=tools.waf.objcopy.objcopy_bin, source=elf_node, target=bin_node, path=fw_node)
+        bld(rule=tools.waf.objcopy.objcopy_bin, source=elf_node, target=bin_node)
 
     # Create the log_strings .elf and check the format specifier rules
     if bld.env.CONFIG_LOG_HASHED:
-        fw_loghash_node = fw_node.get_bld().make_node('tintin_fw_loghash_dict.json')
+        fw_loghash_node = bld.path.get_bld().make_node('pebbleos_loghash_dict.json')
         bld(rule=tools.waf.generate_log_strings_json.wafrule,
-            source=elf_node, target=fw_loghash_node, path=fw_node)
+            source=elf_node, target=fw_loghash_node, path=bld.path)
         bld.LOGHASH_DICTS.append(fw_loghash_node)
 
 
-def _build_recovery(bld, fw_node):
-    sources = fw_node.ant_glob('*.c')
-    sources.extend(fw_node.ant_glob('*.[sS]'))
+def _build_recovery(bld):
+    sources = bld.path.ant_glob('src/fw/*.c')
+    sources.extend(bld.path.ant_glob('src/fw/*.[sS]'))
 
-    sources.append(fw_node.get_bld().make_node('builtin_resources.auto.c'))
+    sources.append(bld.path.get_bld().make_node('src/fw/builtin_resources.auto.c'))
 
-    _link_firmware(bld, fw_node, sources)
+    _link_firmware(bld, sources)
 
 
-def _build_normal(bld, fw_node):
+def _build_normal(bld):
     # Generate timezone data
     olson_txt = bld.srcnode.make_node('resources/normal/base/tzdata/timezones_olson.txt')
     tzdata_bin = bld.bldnode.make_node('resources/normal/base/tzdata/tzdata.bin.reso')
@@ -620,35 +616,34 @@ def _build_normal(bld, fw_node):
 
     bld.DYNAMIC_RESOURCES.append(tzdata_bin)
 
-    sources = fw_node.ant_glob('*.c')
-    sources.extend(fw_node.ant_glob('*.[sS]'))
+    sources = bld.path.ant_glob('src/fw/*.c')
+    sources.extend(bld.path.ant_glob('src/fw/*.[sS]'))
 
     # Collect translatable strings from the firmware-core sources. apps,
     # services and applib have their own .pot targets (merged below).
     gettexts = []
-    gettexts.extend(fw_node.ant_glob('**/*.c',
+    gettexts.extend(bld.path.ant_glob('src/fw/**/*.c',
                                      excl=['apps/**', 'services/**', 'applib/**']))
-    gettexts.extend(fw_node.ant_glob('**/*.h'))
-    gettexts.extend(fw_node.ant_glob('**/*.def'))
+    gettexts.extend(bld.path.ant_glob('src/fw/**/*.h'))
+    gettexts.extend(bld.path.ant_glob('src/fw/**/*.def'))
 
-    bld.gettext(source=gettexts, target='fw.pot', path=fw_node)
+    bld.gettext(source=gettexts, target=bld.path.get_bld().make_node('fw.pot'))
     bld.msgcat(
-            source='fw.pot services/services.pot applib/applib.pot apps/apps.pot',
-            target='tintin.pot',
-            path=fw_node)
+            source=[bld.path.get_bld().make_node('fw.pot'),
+                    bld.path.get_bld().make_node('src/fw/services/services.pot'),
+                    bld.path.get_bld().make_node('src/fw/applib/applib.pot'),
+                    bld.path.get_bld().make_node('src/fw/apps/apps.pot')],
+            target=bld.path.get_bld().make_node('pebbleos.pot'))
 
+    sources.append(bld.path.get_bld().make_node('src/fw/pebble.auto.c'))
+    sources.append(bld.path.get_bld().make_node('src/fw/resource/pfs_resource_table.auto.c'))
+    sources.append(bld.path.get_bld().make_node('src/fw/resource/timeline_resource_table.auto.c'))
+    sources.append(bld.path.get_bld().make_node('src/fw/builtin_resources.auto.c'))
 
-    sources.append(fw_node.get_bld().make_node('pebble.auto.c'))
-    sources.append(fw_node.get_bld().make_node('resource/pfs_resource_table.auto.c'))
-    sources.append(fw_node.get_bld().make_node('resource/timeline_resource_table.auto.c'))
-    sources.append(fw_node.get_bld().make_node('builtin_resources.auto.c'))
-
-    _link_firmware(bld, fw_node, sources)
+    _link_firmware(bld, sources)
 
 
 def _build_fw(bld):
-    fw_node = bld.path.find_node('src/fw')
-
     bld.env.FW_APPS = []
 
     # FIXME create applib_includes or something like that
@@ -668,12 +663,11 @@ def _build_fw(bld):
     elif bld.env.CONFIG_SOC_SF32LB52:
         fw_includes_use.append('hal_sifli')
 
-    bld(export_includes=['.',
-                         'applib/vendor/uPNG',
-                         'applib/vendor/tinflate'],
+    bld(export_includes=['src/fw',
+                         'src/fw/applib/vendor/uPNG',
+                         'src/fw/applib/vendor/tinflate'],
         use=fw_includes_use,
-        name='fw_includes',
-        path=fw_node)
+        name='fw_includes')
 
     # Truncate the commit to fit in our versions struct. This may cause an ambiguous commit
     # hash, but it's better than killing the build because the commit doesn't fit.
@@ -685,9 +679,8 @@ def _build_fw(bld):
         git_rev['TAG'] = git_rev['TAG'][:31]
 
     bld(features='subst',
-        source='git_version.auto.h.in',
-        target='git_version.auto.h',
-        path=fw_node,
+        source='src/fw/git_version.auto.h.in',
+        target=bld.path.get_bld().make_node('src/fw/git_version.auto.h'),
         **git_rev)
 
     bld.recurse('src/fw/startup')
@@ -714,10 +707,10 @@ def _build_fw(bld):
 
     if bld.env.VARIANT == 'prf':
         bld.recurse('src/fw/apps/prf')
-        _build_recovery(bld, fw_node)
+        _build_recovery(bld)
     else:
         bld.recurse('src/fw/apps')
-        _build_normal(bld, fw_node)
+        _build_normal(bld)
 
 
 def build(bld):
@@ -804,11 +797,11 @@ class SizeFirmware(BuildContext):
 def size_fw(ctx):
     """prints size information of the firmware"""
 
-    fw_elf = ctx.get_tintin_fw_node().change_ext('.elf')
+    fw_elf = ctx.get_pebbleos_node().change_ext('.elf')
     if fw_elf is None:
         ctx.fatal('No fw ELF found for size')
 
-    fw_bin = ctx.get_tintin_fw_node()
+    fw_bin = ctx.get_pebbleos_node()
     if fw_bin is None:
         ctx.fatal('No fw BIN found for size')
 
@@ -816,7 +809,7 @@ def size_fw(ctx):
     text, data, bss = binutils.size(fw_elf.abspath())
     total = text + data
     output = ('{:>7}    {:>7}    {:>7}    {:>7}    {:>7} filename\n'
-              '{:7}    {:7}    {:7}    {:7}    {:7x} tintin_fw.elf'.
+              '{:7}    {:7}    {:7}    {:7}    {:7x} pebbleos.elf'.
               format('text', 'data', 'bss', 'dec', 'hex', text, data, bss, total, total))
     Logs.pprint('YELLOW', '\n' + output)
 
@@ -969,9 +962,9 @@ def bundle(ctx):
     """bundles a firmware"""
 
     if ctx.env.VARIANT == 'prf':
-        _make_bundle(ctx, ctx.get_tintin_fw_node().path_from(ctx.path), fw_type='recovery')
+        _make_bundle(ctx, ctx.get_pebbleos_node().path_from(ctx.path), fw_type='recovery')
     else:
-        _make_bundle(ctx, ctx.get_tintin_fw_node().path_from(ctx.path),
+        _make_bundle(ctx, ctx.get_pebbleos_node().path_from(ctx.path),
                      resource_path=ctx.get_pbpack_node().path_from(ctx.path))
 
 
@@ -992,7 +985,7 @@ def qemu_image_micro(ctx):
     """creates the micro-flash image for qemu"""
     from intelhex import IntelHex
 
-    fw_hex = ctx.get_tintin_fw_node().change_ext('.hex')
+    fw_hex = ctx.get_pebbleos_node().change_ext('.hex')
     micro_flash_node = ctx.path.get_bld().make_node('qemu_micro_flash.bin')
     micro_flash_path = micro_flash_node.path_from(ctx.path)
     Logs.pprint('CYAN', 'Writing micro flash image to {}'.format(micro_flash_path))
@@ -1080,7 +1073,7 @@ def _create_runner(ctx, want_resources=False):
     if want_resources and ctx.options.resources and ctx.env.VARIANT != 'prf':
         resources_file = ctx.get_pbpack_node().path_from(ctx.path)
 
-    fw = ctx.get_tintin_fw_node()
+    fw = ctx.get_pebbleos_node()
     cfg = pebble_runners.RunnerConfig(
         board_dir=os.path.join('boards', ctx.env.BOARD_NAME),
         soc=ctx.env.CONFIG_SOC,
@@ -1102,7 +1095,7 @@ class FlashCommand(BuildContext):
 
 
 def flash(ctx):
-    fw_bin = ctx.get_tintin_fw_node()
+    fw_bin = ctx.get_pebbleos_node()
     try:
         space_left = _check_firmware_image_size(ctx, fw_bin.path_from(ctx.path))
     except FirmwareTooLargeException as e:
