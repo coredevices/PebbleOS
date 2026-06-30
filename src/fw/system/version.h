@@ -48,7 +48,7 @@ bool version_is_prf_installed(void);
 const uint8_t * version_get_build_id(size_t *out_len);
 
 //! Copies a hex C-string of the build id into the supplied buffer.
-//! Get the build id from an elf, using `arm-none-eabi-readelf -n tintin_fw.elf`
+//! Get the build id from an elf, using `arm-none-eabi-readelf -n pebbleos.elf`
 //! @param[out] buffer The buffer into which the string should be copied.
 //! @param max_length The length of buffer.
 void version_copy_current_build_id_hex_string(char *buffer, size_t buffer_bytes_left);

@@ -211,7 +211,7 @@ def image_resources(cmdr, pack="build/system_resources.pbpack"):
 
 
 @PebbleCommander.command()
-def image_firmware(cmdr, firm="build/prf/src/fw/tintin_fw.bin", address=None):
+def image_firmware(cmdr, firm="build/pebbleos.bin", address=None):
     """Image recovery firmware."""
     if address is not None:
         address = int(str(address), 0)

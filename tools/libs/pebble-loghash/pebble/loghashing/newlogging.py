@@ -52,7 +52,7 @@ def dehash_file(file_name, log_dict):
 
     :param line: The line to dehash
     :type line: str
-    :param log_dict: dict of dicts created from .log_strings section from tintin_fw.elf
+    :param log_dict: dict of dicts created from .log_strings section from pebbleos.elf
     :type log_dict: dict of dicts
 
     :returns: A list containing the dehashed lines
@@ -73,7 +73,7 @@ def dehash_line(line, log_dict):
 
     :param line: The line to dehash
     :type line: str
-    :param log_dict: dict of dicts created from .log_strings section from tintin_fw.elf
+    :param log_dict: dict of dicts created from .log_strings section from pebbleos.elf
     :type log_dict: dict of dicts
 
     :returns: Formatted line
@@ -114,7 +114,7 @@ def dehash_line_unformatted(line, log_dict):
 
     :param line: The line to dehash
     :type line: str
-    :param log_dict: dict of dicts created from .log_strings section from tintin_fw.elf
+    :param log_dict: dict of dicts created from .log_strings section from pebbleos.elf
     :type log_dict: dict of dicts
 
     :returns: A line_dict with keys 'formatted_msg', 'level', 'task', 'date', 'time', added.
@@ -133,7 +133,7 @@ def parse_line(line, log_dict):
 
     :param line: The line to dehash
     :type line: str
-    :param log_dict: dict of dicts created from .log_strings section from tintin_fw.elf
+    :param log_dict: dict of dicts created from .log_strings section from pebbleos.elf
     :type log_dict: dict of dicts
 
     :returns: A line_dict with keys 'formatted_msg', 'level', 'task', 'date', 'time',
@@ -181,7 +181,7 @@ def parse_message(msg, log_dict):
 
     :param msg: The message to parse
     :type msg: str
-    :param log_dict: dict of dicts created from .log_strings section from tintin_fw.elf
+    :param log_dict: dict of dicts created from .log_strings section from pebbleos.elf
     :type log_dict: dict of dicts
 
     :returns: the dict entry for the log line and the formatted message

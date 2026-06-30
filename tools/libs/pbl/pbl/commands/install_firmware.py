@@ -49,7 +49,7 @@ class InstallFirmwareCommand(PebbleCommand):
 
         bundle = PebbleBundle(args.filename)
 
-        self.progress_bar.variables["task"] = "tintin_fw.bin           "
+        self.progress_bar.variables["task"] = "pebbleos.bin            "
         firmware_bytes = bundle.zip.read(bundle.get_firmware_info()["name"])
         pb = PutBytes(self.pebble, PutBytesType.Firmware, firmware_bytes, bank=0)
         pb.register_handler("progress", self._handle_progress)

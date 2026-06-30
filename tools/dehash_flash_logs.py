@@ -186,9 +186,7 @@ def main():
             os.path.dirname(__file__),
             "..",
             "build",
-            "src",
-            "fw",
-            "tintin_fw_loghash_dict.json",
+            "pebbleos_loghash_dict.json",
         )
         if os.path.exists(default_dict):
             dehash_path = default_dict

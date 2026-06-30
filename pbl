@@ -135,15 +135,15 @@ def setup(options):
 # --- Artifact paths (relative to repo root; cwd is REPO_ROOT) --------------
 
 def fw_bin():
-    return "build/src/fw/tintin_fw.bin"
+    return "build/pebbleos.bin"
 
 
 def fw_hex():
-    return "build/src/fw/tintin_fw.hex"
+    return "build/pebbleos.hex"
 
 
 def fw_elf():
-    return "build/src/fw/tintin_fw.elf"
+    return "build/pebbleos.elf"
 
 
 def pbpack():
@@ -613,9 +613,9 @@ def cmd_make_lang(env, options):
 
     lang_code = options.lang
     lang_path = os.path.join(REPO_ROOT, LANG_DIR_REL, lang_code)
-    pot_path = os.path.join(REPO_ROOT, "build/src/fw/tintin.pot")
+    pot_path = os.path.join(REPO_ROOT, "build/pebbleos.pot")
     if not os.path.exists(pot_path):
-        _fatal("Error: could not find tintin.pot. Please run ./pbl build first")
+        _fatal("Error: could not find pebbleos.pot. Please run ./pbl build first")
 
     po_path = os.path.join(lang_path, "tintin.po")
     msginit_cmd = ["msginit", "-l", lang_code, "--no-translator", "-i", pot_path]
