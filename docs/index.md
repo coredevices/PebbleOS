@@ -88,6 +88,7 @@ development/options.md
 development/building_fw.md
 development/qemu.md
 development/moddable.md
+development/testing-locally.md
 ```
 
 ```{toctree}

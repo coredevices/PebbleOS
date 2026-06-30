@@ -1,0 +1,20 @@
+// VS Code / GitHub Codespaces devcontainer configuration.
+// Uses the same image as CI so the environment matches exactly.
+{
+  "name": "PebbleOS",
+  "image": "ghcr.io/coredevices/pebbleos-docker:v5",
+
+  // Mirror the CI setup steps: mark the workspace safe for git,
+  // then install Python dependencies into the image's /opt/venv.
+  // Also initialise submodules so waf can find third-party sources.
+  "postCreateCommand": "git config --system --add safe.directory ${containerWorkspaceFolder} && git submodule update --init --recursive && pip install -U pip && pip install -r requirements.txt",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "ms-python.python"
+      ]
+    }
+  }
+}
