@@ -254,102 +254,131 @@ static void prv_append_char(TemplateStringState *state, char c) {
   }
 }
 
-static const char * const s_second_strings[3][2] = {
-  /// Singular suffix for seconds with no units
+// Suffix columns: [0] singular, [1] plural ("few" for languages like Polish:
+// 2-4), [2] "many" (Polish: 0 and 5+). prv_plural_index() picks the column;
+// two-form languages never select [2].
+static const char * const s_second_strings[3][3] = {
+  /// Suffixes for seconds with no units
   { i18n_ctx_noop("TmplStringSing", ""),
-  /// Plural suffix for seconds with no units
-    i18n_ctx_noop("TmplStringPlur", "")},
-  /// Singular suffix for seconds with abbreviated units
+    i18n_ctx_noop("TmplStringPlur", ""),
+    i18n_ctx_noop("TmplStringMany", "")},
+  /// Suffixes for seconds with abbreviated units
   { i18n_ctx_noop("TmplStringSing", " sec"),
-  /// Plural suffix for seconds with abbreviated units
-    i18n_ctx_noop("TmplStringPlur", " sec")},
-  /// Singular suffix for seconds with full units
+    i18n_ctx_noop("TmplStringPlur", " sec"),
+    i18n_ctx_noop("TmplStringMany", " sec")},
+  /// Suffixes for seconds with full units
   { i18n_ctx_noop("TmplStringSing", " second"),
-  /// Plural suffix for seconds with full units
-    i18n_ctx_noop("TmplStringPlur", " seconds")},
+    i18n_ctx_noop("TmplStringPlur", " seconds"),
+    i18n_ctx_noop("TmplStringMany", " seconds")},
 };
 
-static const char * const s_minute_strings[3][2] = {
-  /// Singular suffix for minutes with no units
+static const char * const s_minute_strings[3][3] = {
+  /// Suffixes for minutes with no units
   { i18n_ctx_noop("TmplStringSing", ""),
-  /// Plural suffix for minutes with no units
-    i18n_ctx_noop("TmplStringPlur", "")},
-  /// Singular suffix for minutes with abbreviated units
+    i18n_ctx_noop("TmplStringPlur", ""),
+    i18n_ctx_noop("TmplStringMany", "")},
+  /// Suffixes for minutes with abbreviated units
   { i18n_ctx_noop("TmplStringSing", " min"),
-  /// Plural suffix for minutes with abbreviated units
-    i18n_ctx_noop("TmplStringPlur", " min")},
-  /// Singular suffix for minutes with full units
+    i18n_ctx_noop("TmplStringPlur", " min"),
+    i18n_ctx_noop("TmplStringMany", " min")},
+  /// Suffixes for minutes with full units
   { i18n_ctx_noop("TmplStringSing", " minute"),
-  /// Plural suffix for minutes with full units
-    i18n_ctx_noop("TmplStringPlur", " minutes")},
+    i18n_ctx_noop("TmplStringPlur", " minutes"),
+    i18n_ctx_noop("TmplStringMany", " minutes")},
 };
 
-static const char * const s_hour_strings[3][2] = {
-  /// Singular suffix for hours with no units
+static const char * const s_hour_strings[3][3] = {
+  /// Suffixes for hours with no units
   { i18n_ctx_noop("TmplStringSing", ""),
-  /// Plural suffix for hours with no units
-    i18n_ctx_noop("TmplStringPlur", "")},
-  /// Singular suffix for hours with abbreviated units
+    i18n_ctx_noop("TmplStringPlur", ""),
+    i18n_ctx_noop("TmplStringMany", "")},
+  /// Suffixes for hours with abbreviated units
   { i18n_ctx_noop("TmplStringSing", " hr"),
-  /// Plural suffix for hours with abbreviated units
-    i18n_ctx_noop("TmplStringPlur", " hr")},
-  /// Singular suffix for hours with full units
+    i18n_ctx_noop("TmplStringPlur", " hr"),
+    i18n_ctx_noop("TmplStringMany", " hr")},
+  /// Suffixes for hours with full units
   { i18n_ctx_noop("TmplStringSing", " hour"),
-  /// Plural suffix for hours with full units
-    i18n_ctx_noop("TmplStringPlur", " hours")},
+    i18n_ctx_noop("TmplStringPlur", " hours"),
+    i18n_ctx_noop("TmplStringMany", " hours")},
 };
 
-static const char * const s_day_strings[3][2] = {
-  /// Singular suffix for days with no units
+static const char * const s_day_strings[3][3] = {
+  /// Suffixes for days with no units
   { i18n_ctx_noop("TmplStringSing", ""),
-  /// Plural suffix for days with no units
-    i18n_ctx_noop("TmplStringPlur", "")},
-  /// Singular suffix for days with abbreviated units
+    i18n_ctx_noop("TmplStringPlur", ""),
+    i18n_ctx_noop("TmplStringMany", "")},
+  /// Suffixes for days with abbreviated units
   { i18n_ctx_noop("TmplStringSing", " d"),
-  /// Plural suffix for days with abbreviated units
-    i18n_ctx_noop("TmplStringPlur", " d")},
-  /// Singular suffix for days with full units
+    i18n_ctx_noop("TmplStringPlur", " d"),
+    i18n_ctx_noop("TmplStringMany", " d")},
+  /// Suffixes for days with full units
   { i18n_ctx_noop("TmplStringSing", " day"),
-  /// Plural suffix for days with full units
-    i18n_ctx_noop("TmplStringPlur", " days")},
+    i18n_ctx_noop("TmplStringPlur", " days"),
+    i18n_ctx_noop("TmplStringMany", " days")},
 };
 
 #if SUPPORT_MONTH
-static const char * const s_month_strings[3][2] = {
-  /// Singular suffix for months with no units
+static const char * const s_month_strings[3][3] = {
+  /// Suffixes for months with no units
   { i18n_ctx_noop("TmplStringSing", ""),
-  /// Plural suffix for months with no units
-    i18n_ctx_noop("TmplStringPlur", "")},
-  /// Singular suffix for months with abbreviated units
+    i18n_ctx_noop("TmplStringPlur", ""),
+    i18n_ctx_noop("TmplStringMany", "")},
+  /// Suffixes for months with abbreviated units
   { i18n_ctx_noop("TmplStringSing", " mo"),
-  /// Plural suffix for months with abbreviated units
-    i18n_ctx_noop("TmplStringPlur", " mo")},
-  /// Singular suffix for months with full units
+    i18n_ctx_noop("TmplStringPlur", " mo"),
+    i18n_ctx_noop("TmplStringMany", " mo")},
+  /// Suffixes for months with full units
   { i18n_ctx_noop("TmplStringSing", " month"),
-  /// Plural suffix for months with full units
-    i18n_ctx_noop("TmplStringPlur", " months")},
+    i18n_ctx_noop("TmplStringPlur", " months"),
+    i18n_ctx_noop("TmplStringMany", " months")},
 };
 #endif
 
 #if SUPPORT_YEAR
-static const char * const s_year_strings[3][2] = {
-  /// Singular suffix for years with no units
+static const char * const s_year_strings[3][3] = {
+  /// Suffixes for years with no units
   { i18n_ctx_noop("TmplStringSing", ""),
-  /// Plural suffix for years with no units
-    i18n_ctx_noop("TmplStringPlur", "")},
-  /// Singular suffix for years with abbreviated units
+    i18n_ctx_noop("TmplStringPlur", ""),
+    i18n_ctx_noop("TmplStringMany", "")},
+  /// Suffixes for years with abbreviated units
   { i18n_ctx_noop("TmplStringSing", " yr"),
-  /// Plural suffix for years with abbreviated units
-    i18n_ctx_noop("TmplStringPlur", " yr")},
-  /// Singular suffix for years with full units
+    i18n_ctx_noop("TmplStringPlur", " yr"),
+    i18n_ctx_noop("TmplStringMany", " yr")},
+  /// Suffixes for years with full units
   { i18n_ctx_noop("TmplStringSing", " year"),
-  /// Plural suffix for years with full units
-    i18n_ctx_noop("TmplStringPlur", " years")},
+    i18n_ctx_noop("TmplStringPlur", " years"),
+    i18n_ctx_noop("TmplStringMany", " years")},
 };
 #endif
 
+// Pick the plural suffix column for the active locale.
+//   0 = singular, 1 = plural / "few", 2 = "many"
+// Most languages have a two-form rule (singular vs plural) and never select
+// column 2. Polish has three forms; its rule mirrors the Plural-Forms header
+// in the pl_PL catalog.
+static int prv_plural_index(intmax_t value) {
+  char locale[ISO_LOCALE_LENGTH];
+  sys_i18n_get_locale(locale);
+  uintmax_t n = (value < 0) ? (uintmax_t)(-value) : (uintmax_t)value;
+
+  if (locale[0] == 'p' && locale[1] == 'l') {
+    // Polish: 1 -> one; n%10 in 2..4 (but not n%100 in 12..14) -> few; else many.
+    if (n == 1) {
+      return 0;
+    }
+    unsigned n10 = n % 10, n100 = n % 100;
+    if (n10 >= 2 && n10 <= 4 && (n100 < 10 || n100 >= 20)) {
+      return 1;
+    }
+    return 2;
+  }
+
+  // Default two-form rule: 1 -> singular, everything else -> plural.
+  return (n == 1) ? 0 : 1;
+}
+
 static void prv_do_conversion(TemplateStringState *state, intmax_t value, int divide, int mod,
-                              const char * const suffix_strings[3][2], FormatUnits add_units,
+                              const char * const suffix_strings[3][3], FormatUnits add_units,
                               bool zero_pad, bool should_mod) {
   int remain = (value % divide);
   if (!state->time_was_until) {
@@ -371,7 +400,7 @@ static void prv_do_conversion(TemplateStringState *state, intmax_t value, int di
     value %= mod;
   }
   prv_append_number(state, zero_pad ? "%02d" : "%d", value);
-  prv_append_string_i18n(state, suffix_strings[add_units][value != 1]);
+  prv_append_string_i18n(state, suffix_strings[add_units][prv_plural_index(value)]);
 }
 
 // This is a recursive function, so watch out!
