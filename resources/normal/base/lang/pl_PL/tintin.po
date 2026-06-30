@@ -3268,3 +3268,21 @@ msgstr "Wył."
 msgctxt "AlarmSound"
 msgid "Off"
 msgstr "Wył."
+
+#: ../src/fw/apps/system/settings/display.c:343
+msgid "On - %d%%"
+msgstr "Włączone - %d%%"
+
+#: ../src/fw/apps/system/settings/display.c:370
+msgid "On (%d)"
+msgstr "Włączone (%d)"
+
+#: ../src/fw/apps/system/settings/display.c:346
+msgctxt "DeviceState"
+msgid "On"
+msgstr "Włączone"
+
+#: ../src/fw/apps/system/settings/display.c:352
+msgctxt "DeviceState"
+msgid "Off"
+msgstr "Wyłączone"

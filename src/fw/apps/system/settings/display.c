@@ -341,16 +341,16 @@ static void prv_backlight_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
         if (backlight_is_dynamic_intensity_enabled()) {
           uint8_t current_percent = light_get_current_brightness_percent();
           snprintf(data->backlight_percent_buffer, sizeof(data->backlight_percent_buffer),
-                   "On - %"PRIu8"%%", current_percent);
+                   i18n_get("On - %d%%", data), (int)current_percent);
           subtitle = data->backlight_percent_buffer;
         } else {
-          subtitle = i18n_noop("On");
+          subtitle = i18n_ctx_noop("DeviceState", "On");
         }
 #else
-        subtitle = i18n_noop("On");
+        subtitle = i18n_ctx_noop("DeviceState", "On");
 #endif
       } else {
-        subtitle = i18n_noop("Off");
+        subtitle = i18n_ctx_noop("DeviceState", "Off");
       }
       break;
     case SettingsBacklightMotionWake:
@@ -368,10 +368,10 @@ static void prv_backlight_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       if (backlight_is_ambient_sensor_enabled()) {
         uint32_t als_value = ambient_light_get_light_level();
         snprintf(data->als_value_buffer, sizeof(data->als_value_buffer),
-                 "On (%"PRIu32")", als_value);
+                 i18n_get("On (%d)", data), (int)als_value);
         subtitle = data->als_value_buffer;
       } else {
-        subtitle = i18n_noop("Off");
+        subtitle = i18n_ctx_noop("DeviceState", "Off");
       }
       break;
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
