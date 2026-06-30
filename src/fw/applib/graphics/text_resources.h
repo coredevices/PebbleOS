@@ -117,13 +117,9 @@ int8_t text_resources_get_glyph_horiz_advance(FontCache *font_cache, Codepoint c
 //! can be rasterized at different heights; glyph baselines are anchored to their
 //! own sub-font's height, so without this a line mixing the two sub-fonts (any
 //! base script plus an extension such as Arabic, Hebrew or CJK) renders with
-//! mismatched baselines. The glyph is resolved exactly as text_resources_get_glyph()
-//! resolves it, so the offset follows the sub-font that actually supplies the
-//! glyph (including the system fallback or the wildcard box), not just the
-//! nominal sub-font for the codepoint. Returns 0 for single-font (non-extended)
-//! FontInfos and for glyphs drawn from the tallest sub-font.
-int16_t text_resources_get_glyph_baseline_offset(FontCache *font_cache, FontInfo *font_info,
-                                                 Codepoint codepoint);
+//! mismatched baselines. Returns 0 for single-font (non-extended) FontInfos and
+//! for glyphs drawn from the tallest sub-font.
+int16_t text_resources_get_glyph_baseline_offset(const FontInfo *font_info, Codepoint codepoint);
 
 //! Initialize a FontInfo struct with resource contents
 //! A FontInfo contains references to up to *two* font resources: a "base" font and an "extension".
