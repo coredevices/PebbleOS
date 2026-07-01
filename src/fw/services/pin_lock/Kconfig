@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_PIN_LOCK
+    bool "PIN Lock"
+    help
+      PIN lockscreen service.
+
+if SERVICE_PIN_LOCK
+
+module = SERVICE_PIN_LOCK
+module-str = PIN Lock
+source "src/fw/Kconfig.template.log_level"
+
+endif
