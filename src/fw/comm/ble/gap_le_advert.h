@@ -8,6 +8,7 @@
 typedef enum {
   GAPLEAdvertisingJobTagDiscovery,
   GAPLEAdvertisingJobTagReconnection,
+  GAPLEAdvertisingJobTagHrmReconnection,
 } GAPLEAdvertisingJobTag;
 
 //! Advertising interval preset, compliant with Apple Accessory Design Guidelines.

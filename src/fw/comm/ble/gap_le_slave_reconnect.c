@@ -126,7 +126,9 @@ static void prv_evaluate(ReconnectType prev_type) {
 
     s_reconnect_advert_job = gap_le_advert_schedule(
         ad, advert_terms, sizeof(advert_terms) / sizeof(GAPLEAdvertisingJobTerm),
-        prv_advert_job_unscheduled_callback, NULL, GAPLEAdvertisingJobTagReconnection);
+        prv_advert_job_unscheduled_callback, NULL,
+        use_hrm_payload ? GAPLEAdvertisingJobTagHrmReconnection :
+                          GAPLEAdvertisingJobTagReconnection);
 
     if (use_hrm_payload) {
       ble_ad_destroy(ad);
@@ -194,14 +196,19 @@ static void prv_hrm_reconnect_timeout_timer_callback(void *data) {
   launcher_task_add_callback(prv_hrm_reconnect_timeout_kernel_main_callback, NULL);
 }
 
-// -----------------------------------------------------------------------------
-void gap_le_slave_reconnect_hrm_restart(void) {
+static void prv_hrm_reconnect_timer_stop(void) {
+  if (regular_timer_is_scheduled(&s_hrm_reconnect_timer)) {
+    regular_timer_remove_callback(&s_hrm_reconnect_timer);
+  }
+}
+
+static void prv_hrm_reconnect_start(bool use_timeout) {
   bt_lock();
   {
     prv_set_and_evaluate(&s_is_hrm_reconnection_enabled, true);
 
-    // Always restart the timer:
-    if (!regular_timer_is_scheduled(&s_hrm_reconnect_timer)) {
+    prv_hrm_reconnect_timer_stop();
+    if (use_timeout) {
       s_hrm_reconnect_timer = (RegularTimerInfo) {
         .cb = prv_hrm_reconnect_timeout_timer_callback,
       };
@@ -212,14 +219,22 @@ void gap_le_slave_reconnect_hrm_restart(void) {
 }
 
 // -----------------------------------------------------------------------------
+void gap_le_slave_reconnect_hrm_start(void) {
+  prv_hrm_reconnect_start(false);
+}
+
+// -----------------------------------------------------------------------------
+void gap_le_slave_reconnect_hrm_restart(void) {
+  prv_hrm_reconnect_start(true);
+}
+
+// -----------------------------------------------------------------------------
 void gap_le_slave_reconnect_hrm_stop(void) {
   bt_lock();
   {
     prv_set_and_evaluate(&s_is_hrm_reconnection_enabled, false);
 
-    if (regular_timer_is_scheduled(&s_hrm_reconnect_timer)) {
-      regular_timer_remove_callback(&s_hrm_reconnect_timer);
-    }
+    prv_hrm_reconnect_timer_stop();
   }
   bt_unlock();
 }
