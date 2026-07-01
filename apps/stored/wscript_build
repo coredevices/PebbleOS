@@ -15,7 +15,7 @@ import generate_appinfo
 
 # -----------------------------------------------------------------------------------
 def build_app(bld, app_name):
-    sdk_folder = bld.path.parent.get_bld().make_node('sdk').make_node(bld.env.PLATFORM_NAME)
+    sdk_folder = bld.bldnode.make_node('sdk').make_node(bld.env.PLATFORM_NAME)
 
     # -----------------------------------------------------------------------------------
     # Generate the appinfo.auto.c file

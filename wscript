@@ -765,7 +765,7 @@ def build(bld):
         return
 
     if bld.variant == '' and bld.env.VARIANT != 'prf':
-        bld.recurse('stored_apps')
+        bld.recurse('apps/stored')
 
     bld.recurse('third_party')
     bld.recurse('lib')
