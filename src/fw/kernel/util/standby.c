@@ -5,10 +5,13 @@
 
 #include "drivers/display/display.h"
 #include "drivers/pmic.h"
+#include "drivers/soc_power.h"
 #include "system/bootbits.h"
 #include "system/logging.h"
 #include "system/reset.h"
 #include "system/passert.h"
+
+#ifndef CONFIG_HIBERNATE
 
 #ifdef CONFIG_PMIC
 static NORETURN prv_enter_standby(void) {
@@ -23,6 +26,8 @@ static NORETURN prv_enter_standby(void) {
 }
 #endif
 
+#endif /* CONFIG_HIBERNATE */
+
 NORETURN enter_standby(RebootReasonCode reason) {
   PBL_LOG_ALWAYS("Preparing to enter standby mode.");
 
@@ -34,6 +39,9 @@ NORETURN enter_standby(RebootReasonCode reason) {
 
   system_reset_prepare();
   reboot_reason_set_restarted_safely();
-
+#ifndef CONFIG_HIBERNATE
   prv_enter_standby();
+#else
+  enter_hibernate();
+#endif
 }
