@@ -108,6 +108,9 @@ AudioRecordingId sys_audio_recording_start(void);
 void sys_audio_recording_stop(AudioRecordingId recording_id);
 void sys_audio_recording_cancel(AudioRecordingId recording_id);
 bool sys_audio_recording_is_active(void);
+bool sys_audio_recording_play(AudioRecordingId recording_id);
+void sys_audio_recording_stop_playback(void);
+bool sys_audio_recording_is_playing(void);
 
 void sys_get_app_uuid(Uuid *uuid);
 bool sys_app_is_watchface(void);

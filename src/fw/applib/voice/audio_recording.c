@@ -32,3 +32,25 @@ bool audio_recording_is_active(void) {
   return false;
 #endif
 }
+
+bool audio_recording_play(AudioRecordingId recording_id) {
+#ifdef CONFIG_MIC
+  return sys_audio_recording_play(recording_id);
+#else
+  return false;
+#endif
+}
+
+void audio_recording_stop_playback(void) {
+#ifdef CONFIG_MIC
+  sys_audio_recording_stop_playback();
+#endif
+}
+
+bool audio_recording_is_playing(void) {
+#ifdef CONFIG_MIC
+  return sys_audio_recording_is_playing();
+#else
+  return false;
+#endif
+}

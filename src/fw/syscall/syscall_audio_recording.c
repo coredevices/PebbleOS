@@ -35,3 +35,25 @@ DEFINE_SYSCALL(bool, sys_audio_recording_is_active, void) {
   return false;
 #endif
 }
+
+DEFINE_SYSCALL(bool, sys_audio_recording_play, AudioRecordingId recording_id) {
+#ifdef CONFIG_MIC
+  return voice_recording_play(recording_id);
+#else
+  return false;
+#endif
+}
+
+DEFINE_SYSCALL(void, sys_audio_recording_stop_playback, void) {
+#ifdef CONFIG_MIC
+  voice_recording_stop_playback();
+#endif
+}
+
+DEFINE_SYSCALL(bool, sys_audio_recording_is_playing, void) {
+#ifdef CONFIG_MIC
+  return voice_recording_is_playing();
+#else
+  return false;
+#endif
+}
