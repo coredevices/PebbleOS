@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menu "C library"
+
+choice
+    prompt "C library"
+    default LIBC_PEBBLE
+    help
+      Which C library the firmware links against.
+
+config LIBC_PEBBLE
+    bool "Pebble (in-tree)"
+    help
+      The small in-tree C library (lib/c/pebble). Hand-written string,
+      math and printf tuned for the firmware; links with -nostdlib.
+
+endchoice
+
+endmenu
