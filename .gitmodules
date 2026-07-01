@@ -37,3 +37,6 @@
 [submodule "third_party/moddable/moddable"]
 	path = third_party/moddable/moddable
 	url = https://github.com/coredevices/moddable.git
+[submodule "third_party/picolibc"]
+	path = third_party/picolibc
+	url = https://github.com/picolibc/picolibc.git
