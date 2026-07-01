@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# The firmware C library is not built for the host unit tests; the tests
+# that exercise the Pebble libc compile its sources directly (tests/libc).
+if bld.variant != 'test':
+    bld.recurse('pebble')
+
+# vim:filetype=python
