@@ -552,9 +552,11 @@ void process_manager_process_cleanup(PebbleTask task) {
 #endif
   dls_inactivate_sessions(task);
 
+#ifdef CONFIG_MIC
   if (task == PebbleTask_App) {
     voice_recording_cleanup_task(task);
   }
+#endif
 #endif // CONFIG_RECOVERY_FW
 
   // Unregister the task
