@@ -19,10 +19,10 @@
 #include "pbl/services/notifications/alerts_private.h"
 #include "pbl/services/notifications/do_not_disturb.h"
 #include "system/passert.h"
-#include "util/attributes.h"
-#include "util/size.h"
-#include "util/string.h"
-#include "util/struct.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/size.h"
+#include "pbl/util/string.h"
+#include "pbl/util/struct.h"
 
 #include <stdio.h>
 

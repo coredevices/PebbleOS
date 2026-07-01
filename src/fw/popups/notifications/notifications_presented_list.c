@@ -3,7 +3,7 @@
 
 #include "notifications_presented_list.h"
 
-#include "util/list.h"
+#include "pbl/util/list.h"
 #include "kernel/pbl_malloc.h"
 
 #include <stdbool.h>

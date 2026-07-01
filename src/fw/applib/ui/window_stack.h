@@ -8,7 +8,7 @@
 #include "window_stack_animation.h"
 #include "window_stack_private.h"
 
-#include "util/list.h"
+#include "pbl/util/list.h"
 
 //! @internal
 //! Gets the topmost window of the given window stack.

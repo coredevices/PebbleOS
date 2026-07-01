@@ -8,7 +8,7 @@
 #include "drivers/rtc.h"
 #include "flash_region/flash_region.h"
 #include "kernel/events.h"
-#include "mcu/interrupts.h"
+#include "pbl/mcu/interrupts.h"
 #include "system/passert.h"
 #include "util/time/time.h"
 #include "system/logging.h"

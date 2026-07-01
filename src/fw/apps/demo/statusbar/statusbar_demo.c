@@ -6,7 +6,7 @@
 #include "pbl/services/i18n/i18n.h"
 #include "applib/app.h"
 #include "applib/ui/ui.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 typedef struct StatusBarDemoWindow {
   Window window;

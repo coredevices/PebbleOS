@@ -5,8 +5,8 @@
 #include "applib/health_service.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
-#include "os/mutex.h"
-#include "os/tick.h"
+#include "pbl/os/mutex.h"
+#include "pbl/os/tick.h"
 #include "pbl/services/protobuf_log/protobuf_log.h"
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
@@ -14,8 +14,8 @@
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/base64.h"
-#include "util/math.h"
-#include "util/size.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
 #include "util/stats.h"
 #include "util/units.h"
 
@@ -150,10 +150,10 @@ void activity_metrics_prv_get_metric_info(ActivityMetric metric, ActivityMetricI
 
 
 // ----------------------------------------------------------------------------------------------
-// Set the value of a given metric
-// The current value will only be overridden if the new value is higher
-// Historical values can be overridden with any value
-void activity_metrics_prv_set_metric(ActivityMetric metric, DayInWeek wday, int32_t value) {
+// Set the value of a given metric.
+// For the current day the cached value is only overridden when `force` is true or the new value is
+// higher than the current one. Historical values can be overridden with any value.
+static void prv_set_metric(ActivityMetric metric, DayInWeek wday, int32_t value, bool force) {
   if (!activity_tracking_on()) {
     return;
   }
@@ -181,11 +181,11 @@ void activity_metrics_prv_set_metric(ActivityMetric metric, DayInWeek wday, int3
   bool current_value_updated = false;
 
   if (cur_wday == wday) {
-    // Update our cached copy of the value if it is larger than what we currently have
-    if (m_info.value_p && value > *m_info.value_p) {
+    // Update our cached copy of the value when forced, or if it is larger than what we have
+    if (m_info.value_p && (force || value > *m_info.value_p)) {
       *m_info.value_p = value;
       current_value_updated = true;
-    } else if (m_info.value_u32p && (uint32_t)value > *m_info.value_u32p) {
+    } else if (m_info.value_u32p && (force || (uint32_t)value > *m_info.value_u32p)) {
       *m_info.value_u32p = value;
       current_value_updated = true;
     }
@@ -233,6 +233,22 @@ void activity_metrics_prv_set_metric(ActivityMetric metric, DayInWeek wday, int3
 
 unlock:
   mutex_unlock_recursive(state->mutex);
+}
+
+
+// ----------------------------------------------------------------------------------------------
+// Set the value of a given metric. The current day's value is only overridden if the new value is
+// higher; historical values can be overridden with any value.
+void activity_metrics_prv_set_metric(ActivityMetric metric, DayInWeek wday, int32_t value) {
+  prv_set_metric(metric, wday, value, false /* force */);
+}
+
+
+// ----------------------------------------------------------------------------------------------
+// Force the current day's value of a metric to an exact value (may also decrease it). Intended for
+// QEMU/test injection of health data.
+void activity_metrics_set_metric_exact(ActivityMetric metric, int32_t value) {
+  prv_set_metric(metric, time_util_get_day_in_week(rtc_get_time()), value, true /* force */);
 }
 
 

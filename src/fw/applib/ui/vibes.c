@@ -5,7 +5,7 @@
 
 #include "syscall/syscall.h"
 #include "system/logging.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #define PATTERN_FROM_DURATIONS(pat, array) (pat) = (VibePattern){ .durations = (array), .num_segments = ARRAY_LENGTH((array)) }
 

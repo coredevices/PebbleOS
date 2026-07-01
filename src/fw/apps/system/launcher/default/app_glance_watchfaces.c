@@ -10,9 +10,9 @@
 #include "process_management/app_install_manager.h"
 #include "shell/normal/watchface.h"
 #include "system/passert.h"
-#include "util/attributes.h"
-#include "util/string.h"
-#include "util/struct.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/string.h"
+#include "pbl/util/struct.h"
 
 #include <stdio.h>
 

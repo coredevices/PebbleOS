@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 #include "kernel/events.h"
 #include "process_management/app_install_types.h"
 

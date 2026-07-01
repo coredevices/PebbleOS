@@ -4,7 +4,7 @@
 #include "applib/app.h"
 #include "applib/tick_timer_service.h"
 #include "board/display.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/window.h"
 #include "applib/ui/window_private.h"
@@ -15,7 +15,7 @@
 #include "process_state/app_state/app_state.h"
 #include "process_management/pebble_process_md.h"
 #include "util/bitset.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include <stdbool.h>
 #include <stdint.h>

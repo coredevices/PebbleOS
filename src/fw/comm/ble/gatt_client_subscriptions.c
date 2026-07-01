@@ -20,11 +20,11 @@
 #include "system/logging.h"
 #include "system/passert.h"
 
-#include "util/circular_buffer.h"
-#include "util/likely.h"
+#include "pbl/util/circular_buffer.h"
+#include "pbl/util/likely.h"
 
-#include <os/mutex.h>
-#include <os/tick.h>
+#include <pbl/os/mutex.h>
+#include <pbl/os/tick.h>
 
 #include "FreeRTOS.h"
 #include "semphr.h"

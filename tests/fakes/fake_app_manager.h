@@ -6,7 +6,7 @@
 #include "process_management/pebble_process_md.h"
 #include "process_management/app_manager.h"
 #include "system/passert.h"
-#include "util/list.h"
+#include "pbl/util/list.h"
 
 #include <string.h>
 

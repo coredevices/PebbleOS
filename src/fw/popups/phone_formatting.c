@@ -4,7 +4,7 @@
 #include "phone_formatting.h"
 
 #include "applib/graphics/utf8.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #include <ctype.h>
 #include <stdio.h>

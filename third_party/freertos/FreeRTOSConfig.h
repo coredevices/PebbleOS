@@ -190,7 +190,7 @@ NVIC value of 255. */
   PBL_ASSERT(x, "FreeRTOS assert at " __FILE_NAME__ ":%d", __LINE__);
 
 #if configCHECK_CALL_SAFETY
-  #include "mcu/interrupts.h"
+  #include "pbl/mcu/interrupts.h"
   bool vPortInCritical( void );
   #define configASSERT_SAFE_TO_CALL_FREERTOS_API()            \
     configASSERT(!vPortInCritical() && !mcu_state_is_isr())

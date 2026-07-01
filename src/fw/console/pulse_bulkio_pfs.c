@@ -8,8 +8,8 @@
 #include "pbl/services/filesystem/pfs.h"
 #include "system/passert.h"
 #include "system/status_codes.h"
-#include "util/attributes.h"
-#include "util/math.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/math.h"
 
 #include <stdint.h>
 #include <string.h>

@@ -5,9 +5,9 @@
 
 #include "kernel/pbl_malloc.h"
 #include "system/logging.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "system/passert.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 //! Flags used for internal purposes (bits 24-31 are allocated for this purpose)
 #define MBUF_FLAG_IS_MANAGED ((uint32_t)(1 << 24))

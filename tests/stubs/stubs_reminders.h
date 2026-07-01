@@ -5,7 +5,7 @@
 
 #include "pbl/services/timeline/reminders.h"
 #include "system/status_codes.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 status_t WEAK reminders_update_timer(void) {
   return S_SUCCESS;

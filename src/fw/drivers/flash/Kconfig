@@ -20,6 +20,7 @@ config FLASH_GD25Q256E
 
 config FLASH_QEMU
     bool "QEMU External Flash"
+    default y if SOC_QEMU
     help
       Support for the QEMU external flash peripheral.
 

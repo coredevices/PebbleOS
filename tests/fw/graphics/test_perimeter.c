@@ -4,7 +4,7 @@
 #include "applib/graphics/perimeter.h"
 
 #include "clar.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 
 #include <string.h>
 #include <stdio.h>

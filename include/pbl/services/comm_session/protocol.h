@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <util/attributes.h>
+#include <pbl/util/attributes.h>
 #include <stdint.h>
 
 typedef struct PACKED {

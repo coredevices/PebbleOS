@@ -23,9 +23,9 @@
 
 #include <bluetooth/gap_le_connect.h>
 #include <bluetooth/hrm_service.h>
-#include <btutil/bt_device.h>
-#include <util/list.h>
-#include <util/size.h>
+#include <pbl/btutil/bt_device.h>
+#include <pbl/util/list.h>
+#include <pbl/util/size.h>
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 

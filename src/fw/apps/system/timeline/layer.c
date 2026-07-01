@@ -29,11 +29,11 @@
 #include "pbl/services/timeline/timeline_resources.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/math.h"
-#include "util/size.h"
-#include "util/string.h"
-#include "util/struct.h"
-#include "util/trig.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
+#include "pbl/util/string.h"
+#include "pbl/util/struct.h"
+#include "pbl/util/trig.h"
 
 #include <stdint.h>
 #include <time.h>

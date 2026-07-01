@@ -39,7 +39,7 @@
 #include "shell/prefs.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/list.h"
+#include "pbl/util/list.h"
 
 PBL_LOG_MODULE_DEFINE(service_i18n, CONFIG_SERVICE_I18N_LOG_LEVEL);
 

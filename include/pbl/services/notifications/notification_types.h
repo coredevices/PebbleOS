@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 //! This list is shared by notifications and reminders.
 typedef enum {

@@ -5,8 +5,8 @@
 #include "system/logging.h"
 #include "system/passert.h"
 
-#include "util/assert.h"
-#include "util/logging.h"
+#include "pbl/util/assert.h"
+#include "pbl/util/logging.h"
 
 void util_log(const char *filename, int line, const char *string) {
   pbl_log(LOG_LEVEL_INFO, filename, line, string);

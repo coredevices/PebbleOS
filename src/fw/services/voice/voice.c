@@ -8,7 +8,7 @@
 #include "drivers/mic.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/app_manager.h"
 #include "pbl/services/comm_session/session.h"
@@ -21,8 +21,8 @@
 #include "system/logging.h"
 #include "system/passert.h"
 #include "system/profiler.h"
-#include "util/likely.h"
-#include "util/uuid.h"
+#include "pbl/util/likely.h"
+#include "pbl/util/uuid.h"
 
 #include <string.h>
 

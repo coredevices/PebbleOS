@@ -16,9 +16,9 @@
 #include "pbl/services/activity/workout_service.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/attributes.h"
-#include "util/string.h"
-#include "util/struct.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/string.h"
+#include "pbl/util/struct.h"
 
 #include <stdio.h>
 

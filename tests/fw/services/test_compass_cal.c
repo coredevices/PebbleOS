@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "pbl/services/ecompass.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #include "clar.h"
 #include "stubs_language_ui.h"

@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <util/heap.h>
-#include "util/list.h"
-#include "util/math.h"
+#include <pbl/util/heap.h>
+#include "pbl/util/list.h"
+#include "pbl/util/math.h"
 
 #include <stdlib.h>
 #include <stdio.h>

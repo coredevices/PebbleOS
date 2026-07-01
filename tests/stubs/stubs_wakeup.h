@@ -4,6 +4,6 @@
 #pragma once
 
 #include "pbl/services/wakeup.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 void wakeup_migrate_timezone(int utc_diff) {}

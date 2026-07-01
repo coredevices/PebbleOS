@@ -4,7 +4,7 @@
 #pragma once
 
 #include "process_management/app_install_manager.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 typedef struct PACKED AppMenuOrderStorage {
   uint8_t list_length;

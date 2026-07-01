@@ -13,7 +13,7 @@
 #include "system/status_codes.h"
 #include "kernel/util/delay.h"
 #include "kernel/util/sleep.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 PBL_LOG_MODULE_DEFINE(driver_accel_lsm6dso, CONFIG_DRIVER_IMU_LOG_LEVEL);
 

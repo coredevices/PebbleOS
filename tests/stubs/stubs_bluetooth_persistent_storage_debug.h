@@ -5,7 +5,7 @@
 
 #include <bluetooth/bluetooth_types.h>
 #include <bluetooth/sm_types.h>
-#include <btutil/sm_util.h>
+#include <pbl/btutil/sm_util.h>
 
 void bluetooth_persistent_storage_debug_dump_ble_pairing_info(
   char *display_buf, const SMPairingInfo *info) {

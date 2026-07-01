@@ -1,7 +1,7 @@
 #pragma once
 
 #include "applib/fonts/codepoint.h"
-#include "util/iterator.h"
+#include "pbl/util/iterator.h"
 
 #include <inttypes.h>
 #include <stdbool.h>

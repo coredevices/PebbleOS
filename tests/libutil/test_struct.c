@@ -3,7 +3,7 @@
 
 #include "clar.h"
 
-#include "util/struct.h"
+#include "pbl/util/struct.h"
 
 typedef struct NullSafeFieldAccessTestStruct {
   int field_to_access;

@@ -5,7 +5,7 @@
 #include "applib/graphics/framebuffer.h"
 
 #include "util/bitset.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 #include "${BIT_DEPTH_NAME}/test_framebuffer.h"
 
 #include "clar.h"

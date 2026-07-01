@@ -6,7 +6,7 @@
 #include "pbl/services/blob_db/sync_util.h"
 #include "pbl/services/blob_db/timeline_item_storage.h"
 
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/timeline/reminders.h"

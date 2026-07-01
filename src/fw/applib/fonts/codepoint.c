@@ -3,7 +3,7 @@
 
 #include "codepoint.h"
 
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include <stddef.h>
 

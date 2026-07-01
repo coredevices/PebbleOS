@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 #include "drivers/flash.h"
 #include "flash_region/flash_region.h"
 #include "process_management/pebble_process_info.h"
@@ -17,7 +17,7 @@
 #include "system/logging.h"
 #include "system/passert.h"
 #include "system/hexdump.h"
-#include "util/build_id.h"
+#include "pbl/util/build_id.h"
 
 PBL_LOG_MODULE_DECLARE(service_process_management, CONFIG_SERVICE_PROCESS_MANAGEMENT_LOG_LEVEL);
 

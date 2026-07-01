@@ -19,8 +19,8 @@
 #include "syscall/syscall.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/math.h"
-#include "util/size.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
 #include "util/stats.h"
 
 

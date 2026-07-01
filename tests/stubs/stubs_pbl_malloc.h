@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <util/heap.h>
+#include <pbl/util/heap.h>
 
 static Heap s_heap;
 Heap *task_heap_get_for_current_task(void) {

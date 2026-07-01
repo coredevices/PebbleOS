@@ -4,7 +4,7 @@
 #pragma once
 
 #include "pbl/services/notifications/alerts_preferences_private.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 VibeScoreId WEAK alerts_preferences_get_vibe_score_for_client(VibeClient client) {
   return VibeScoreId_Invalid;

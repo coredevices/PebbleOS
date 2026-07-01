@@ -8,8 +8,8 @@
 #include "drivers/task_watchdog.h"
 #include "kernel/pebble_tasks.h"
 #include "kernel/util/task_init.h"
-#include "mcu/fpu.h"
-#include "os/tick.h"
+#include "pbl/mcu/fpu.h"
+#include "pbl/os/tick.h"
 #include "pbl/services/regular_timer.h"
 #include "system/passert.h"
 

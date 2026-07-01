@@ -19,9 +19,9 @@
 #include "shell/prefs.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/attributes.h"
-#include "util/list.h"
-#include "util/math.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/list.h"
+#include "pbl/util/math.h"
 #include "util/time/time.h"
 #include "util/units.h"
 

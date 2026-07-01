@@ -10,7 +10,7 @@
  * identify the build info, etc.
  */
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #include <stdint.h>
 #include <stdbool.h>

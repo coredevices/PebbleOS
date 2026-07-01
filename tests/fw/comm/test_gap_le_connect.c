@@ -13,7 +13,7 @@
 
 #include <bluetooth/bonding_sync.h>
 #include <bluetooth/sm_types.h>
-#include <btutil/bt_device.h>
+#include <pbl/btutil/bt_device.h>
 
 // Fakes
 ///////////////////////////////////////////////////////////

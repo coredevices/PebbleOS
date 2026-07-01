@@ -40,7 +40,6 @@ static uint8_t s_modal_percent;
 static bool s_modal_charging;
 static bool s_low_power;
 static bool s_critical;
-static bool s_shutdown_charging;
 
 void prv_set_state(PowerState state) {
   s_state = state;
@@ -77,17 +76,11 @@ void watchface_launch_default(const CompositorTransition *animation) {
 void app_manager_put_launch_app_event(const AppLaunchEventConfig *config) {
   if (config->id == APP_ID_BATTERY_CRITICAL) {
     s_critical = true;
-  } else {
-    s_shutdown_charging = true;
   }
 }
 
 void app_manager_close_current_app(bool gracefully) {
-  if (s_critical) {
-    s_critical = false;
-  } else {
-    s_shutdown_charging = false;
-  }
+  s_critical = false;
 }
 
 void battery_ui_display_plugged(void) {
@@ -150,7 +143,6 @@ void test_battery_ui_fsm__initialize(void) {
   s_modal_charging = false;
   s_low_power = false;
   s_critical = false;
-  s_shutdown_charging = false;
   s_is_charging = false;
 
   battery_ui_reset_fsm_for_tests();
@@ -216,13 +208,13 @@ void test_battery_ui_fsm__transitions(void) {
   prv_change_state(charging);
   cl_assert(!s_critical && s_modal_onscreen);
 
-  // Enter shutdown charging - modal should close, shutdown charging app should launch
+  // Shutdown while charging - modal should close, enter standby
   battery_ui_handle_shut_down();
-  cl_assert(!s_modal_onscreen && s_shutdown_charging);
+  cl_assert(!s_modal_onscreen && s_entered_standby);
 
   // Shouldn't be able to transition out
   prv_change_state(warning_18h);
-  cl_assert(!s_modal_onscreen && s_shutdown_charging);
+  cl_assert(!s_modal_onscreen);
 }
 
 void test_battery_ui_fsm__shutdown(void) {
@@ -232,12 +224,13 @@ void test_battery_ui_fsm__shutdown(void) {
   // Shutdown while normal - enter standby
   prv_change_state(nop);
   battery_ui_handle_shut_down();
-  cl_assert(!s_shutdown_charging && s_entered_standby);
+  cl_assert(s_entered_standby);
 
-  // Shutdown while charging - enter shutdown charging
+  // Shutdown while charging - enter standby
+  s_entered_standby = false;
   prv_change_state(charging);
   battery_ui_handle_shut_down();
-  cl_assert(s_shutdown_charging);
+  cl_assert(s_entered_standby);
 }
 
 void test_battery_ui_fsm__warning(void) {

@@ -23,7 +23,7 @@
 #include "pbl/services/bluetooth/pairability.h"
 #include "system/bootbits.h"
 #include "system/reset.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include <string.h>
 

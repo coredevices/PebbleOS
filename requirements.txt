@@ -32,6 +32,6 @@ PyYAML
 libpebble2>=0.0.16
 pathlib
 
--e python_libs/pebble-commander
--e python_libs/pulse2
--e python_libs/pebble-loghash
+-e tools/libs/pebble-commander
+-e tools/libs/pulse2
+-e tools/libs/pebble-loghash

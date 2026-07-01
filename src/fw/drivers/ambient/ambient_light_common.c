@@ -3,7 +3,7 @@
 
 #include "drivers/ambient_light.h"
 
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "system/passert.h"
 
 #include <stdbool.h>

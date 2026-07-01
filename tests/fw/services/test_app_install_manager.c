@@ -16,7 +16,7 @@
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/app_cache.h"
 #include "pbl/services/blob_db/app_db.h"
-#include "util/build_id.h"
+#include "pbl/util/build_id.h"
 #include "util/time/time.h"
 
 #include <stdio.h>

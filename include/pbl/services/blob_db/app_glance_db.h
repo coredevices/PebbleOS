@@ -5,9 +5,9 @@
 
 #include "pbl/services/app_glances/app_glance_service.h"
 #include "system/status_codes.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "util/time/time.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 #include <stdint.h>
 

@@ -5,7 +5,7 @@
 
 #include "pbl/services/contacts/attributes_address.h"
 #include "system/passert.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 typedef struct PACKED {
   uint8_t id;

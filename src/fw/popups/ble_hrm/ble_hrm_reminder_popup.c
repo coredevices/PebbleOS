@@ -9,7 +9,7 @@
 #include "pbl/services/timeline/timeline.h"
 #include "pbl/services/timeline/timeline_resources.h"
 
-#include <util/size.h>
+#include <pbl/util/size.h>
 
 void ble_hrm_push_reminder_popup(void) {
   AttributeList attr_list = {};

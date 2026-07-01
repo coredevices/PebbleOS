@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "util/time/time.h"
 
 time_t WEAK time_util_get_midnight_of(time_t ts) {

@@ -3,7 +3,7 @@
 
 #include "fake_queue.h"
 
-#include "util/circular_buffer.h"
+#include "pbl/util/circular_buffer.h"
 
 #include "FreeRTOS.h"
 #include "queue.h"

@@ -8,7 +8,7 @@
 #include "pbl/services/contacts/contacts.h"
 #include "pbl/services/blob_db/contacts_db.h"
 
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 // Fakes
 ////////////////////////////////////////////////////////////////

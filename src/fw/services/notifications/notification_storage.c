@@ -4,15 +4,15 @@
 #include "pbl/services/notifications/notification_storage.h"
 #include "pbl/services/notifications/notification_storage_private.h"
 
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/system_task.h"
 #include "system/logging.h"
 #include "system/logging.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "system/passert.h"
-#include "util/iterator.h"
+#include "pbl/util/iterator.h"
 
 #include <inttypes.h>
 #include <stddef.h>

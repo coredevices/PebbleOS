@@ -9,9 +9,9 @@
 #include "apps/system/launcher/default/launcher.h"
 #include "pbl/services/compositor/compositor_transitions.h"
 #include "system/passert.h"
-#include "util/attributes.h"
-#include "util/math.h"
-#include "util/size.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
 
 typedef struct CompositorLauncherAppTransitionData {
   bool app_is_destination;

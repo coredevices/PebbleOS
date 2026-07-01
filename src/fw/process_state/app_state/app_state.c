@@ -20,7 +20,7 @@
 #include "pbl/services/persist.h"
 #include "syscall/syscall_internal.h"
 #include "system/passert.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "tinymt32.h"
 
 #include <string.h>

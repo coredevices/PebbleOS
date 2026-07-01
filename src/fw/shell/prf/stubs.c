@@ -7,7 +7,7 @@
 //! to exist because systems that were common to both PRF and normal firmware wouldn't try to
 //! use something that only exists in normal, but we're not quite there yet.
 
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 #include "board/board.h"
 #include "drivers/backlight.h"
 #include "kernel/events.h"

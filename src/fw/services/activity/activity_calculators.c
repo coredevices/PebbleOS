@@ -7,7 +7,7 @@
 #include "pbl/services/activity/activity_private.h"
 #include "util/units.h"
 
-#include <util/math.h>
+#include <pbl/util/math.h>
 
 #include <stdint.h>
 #include <stdbool.h>

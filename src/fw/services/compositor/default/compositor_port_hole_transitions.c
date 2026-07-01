@@ -6,7 +6,7 @@
 #include "applib/graphics/bitblt.h"
 #include "applib/graphics/framebuffer.h"
 #include "applib/graphics/graphics_private.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 #include "pbl/services/compositor/compositor_transitions.h"
 
 #include "resource/resource_ids.auto.h"

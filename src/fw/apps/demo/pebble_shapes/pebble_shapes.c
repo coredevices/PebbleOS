@@ -9,7 +9,7 @@
 #include "applib/graphics/gtypes.h"
 #include "applib/graphics/gtransform.h"
 #include "applib/graphics/text.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 #include "applib/ui/action_bar_layer.h"
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/window.h"

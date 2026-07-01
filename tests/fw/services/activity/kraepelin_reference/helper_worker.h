@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 #include "constants_worker.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 #include "system/logging.h"
 
 

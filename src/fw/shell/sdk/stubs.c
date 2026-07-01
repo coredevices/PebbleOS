@@ -9,7 +9,7 @@
 #include "resource/resource_ids.auto.h"
 #include "shell/prefs.h"
 #include "util/time/time.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 #include <stdlib.h>
 

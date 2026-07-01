@@ -24,8 +24,8 @@
 
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/likely.h"
-#include "util/size.h"
+#include "pbl/util/likely.h"
+#include "pbl/util/size.h"
 
 #include "comm/ble/gap_le_advert.h"
 #include "comm/ble/gap_le_connect.h"

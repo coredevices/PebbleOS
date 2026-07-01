@@ -9,7 +9,7 @@
 #include "pbl/services/comm_session/session.h"
 #include "process_management/app_install_manager.h"
 #include "pbl/services/app_outbox_service.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 #include "util/net.h"
 
 extern const SessionSendJobImpl s_app_message_send_job_impl;

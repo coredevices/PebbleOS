@@ -5,7 +5,7 @@
 
 #include "comm/ble/gatt_client_operations.h"
 
-#include "util/list.h"
+#include "pbl/util/list.h"
 
 #include "clar_asserts.h"
 

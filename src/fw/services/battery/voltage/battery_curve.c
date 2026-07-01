@@ -5,9 +5,9 @@
 
 #include "board/board.h"
 #include "system/logging.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 #include "util/ratio.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 typedef struct VoltagePoint {
   uint8_t percent;

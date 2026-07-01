@@ -7,7 +7,7 @@
 #include "applib/event_service_client.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
 #include "pbl/services/comm_session/session_remote_version.h"
 #include "pbl/services/blob_db/watch_app_prefs_db.h"

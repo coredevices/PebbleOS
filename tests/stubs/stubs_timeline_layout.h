@@ -4,7 +4,7 @@
 #pragma once
 
 #include "pbl/services/timeline/timeline_layout.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 void WEAK timeline_layout_init(TimelineLayout *layout, const LayoutLayerConfig *config,
                                const TimelineLayoutImpl *timeline_layout_impl) {}

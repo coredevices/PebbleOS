@@ -4,7 +4,7 @@
 #include "applib/graphics/framebuffer.h"
 #include "applib/graphics/graphics.h"
 #include "applib/graphics/gtypes.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 
 #include "applib/ui/layer.h"
 #include "applib/ui/window_private.h"

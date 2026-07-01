@@ -11,7 +11,7 @@
 #include "applib/ui/animation_interpolate.h"
 #include "kernel/ui/modals/modal_manager.h"
 #include "system/passert.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 bool compositor_transition_app_to_app_should_be_skipped(void) {
   // App-to-app compositor transitions should only be visible if there are no opaque modal windows

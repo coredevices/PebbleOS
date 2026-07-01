@@ -4,7 +4,7 @@
 #pragma once
 
 #include "applib/data_logging.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 #include "kernel/pebble_tasks.h"
 
 //! This can be helpful when debugging. It changes the behavior of data logging to send any

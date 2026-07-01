@@ -6,7 +6,7 @@
 #if defined(CONFIG_ALS_SCREEN_COMPENSATION)
 
 #include "applib/graphics/gtypes.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #include <stddef.h>
 

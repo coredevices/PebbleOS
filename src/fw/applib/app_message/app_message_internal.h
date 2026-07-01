@@ -6,8 +6,8 @@
 #include "applib/app_message/app_message.h"
 #include "applib/app_timer.h"
 #include "pbl/services/app_message/app_message_sender.h"
-#include "util/attributes.h"
-#include "util/uuid.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/uuid.h"
 
 typedef struct CommSession CommSession;
 

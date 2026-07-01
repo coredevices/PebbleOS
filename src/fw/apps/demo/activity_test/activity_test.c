@@ -16,8 +16,8 @@
 #include "pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h"
 #include "pbl/services/activity/insights_settings.h"
 #include "system/logging.h"
-#include "util/math.h"
-#include "util/size.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
 
 #include "activity_test.h"
 

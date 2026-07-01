@@ -20,9 +20,9 @@
 #include "system/logging.h"
 #include "system/passert.h"
 #include "system/version.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "util/net.h"
-#include "util/string.h"
+#include "pbl/util/string.h"
 
 #include <bluetooth/bluetooth_types.h>
 

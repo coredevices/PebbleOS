@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 
 bool uuid_equal(const Uuid *uu1, const Uuid *uu2) {

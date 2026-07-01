@@ -7,7 +7,7 @@
 #include "applib/ui/recognizer/recognizer_impl.h"
 #include "applib/ui/recognizer/recognizer_manager.h"
 #include "applib/ui/recognizer/recognizer_private.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 // Stubs
 #include "stubs_passert.h"

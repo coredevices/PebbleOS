@@ -8,7 +8,7 @@
 #include "applib/preferred_content_size.h"
 #include "applib/graphics/graphics.h"
 #include "applib/graphics/text.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 #include "applib/fonts/fonts.h"
 #include "applib/ui/animation_timing.h"
 #include "applib/ui/click.h"
@@ -20,8 +20,8 @@
 #include "shell/system_theme.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/math.h"
-#include "util/size.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
 #include "vibes.h"
 
 #include <string.h>

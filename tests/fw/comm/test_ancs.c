@@ -11,7 +11,7 @@
 #include "pbl/services/evented_timer.h"
 #include "pbl/services/regular_timer.h"
 #include "pbl/services/notifications/ancs/ancs_notifications.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include "clar.h"
 

@@ -6,7 +6,7 @@
 #include "applib/graphics/gtypes.h"
 #include "applib/graphics/graphics.h"
 #include "applib/graphics/gpath.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 #include "applib/ui/ui.h"
 
 #include <string.h>

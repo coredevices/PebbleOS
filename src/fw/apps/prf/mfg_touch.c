@@ -17,7 +17,7 @@
 #include "applib/touch_service.h"
 #include "pbl/services/light.h"
 #include "pbl/services/touch/touch.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 
 #include <stdio.h>
 

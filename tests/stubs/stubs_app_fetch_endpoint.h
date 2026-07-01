@@ -4,7 +4,7 @@
 #pragma once
 
 #include "pbl/services/app_fetch_endpoint.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 bool WEAK app_fetch_in_progress(void) {
   return false;

@@ -3,9 +3,9 @@
 
 #include "drivers/task_watchdog.h"
 #include "kernel_heap.h"
-#include "mcu/interrupts.h"
+#include "pbl/mcu/interrupts.h"
 #include "pbl/services/analytics/analytics.h"
-#include "util/heap.h"
+#include "pbl/util/heap.h"
 
 #include <cmsis_core.h>
 

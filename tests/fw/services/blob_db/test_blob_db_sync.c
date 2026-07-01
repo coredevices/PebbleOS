@@ -21,7 +21,7 @@
 #include "pbl/services/blob_db/api.h"
 #include "pbl/services/blob_db/util.h"
 #include "pbl/services/blob_db/sync.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 
 // Writebacks counter

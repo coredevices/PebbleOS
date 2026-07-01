@@ -9,7 +9,7 @@
 #include "nanopb/measurements.pb.h"
 #include "system/passert.h"
 
-#include <util/size.h>
+#include <pbl/util/size.h>
 
 #include <stdint.h>
 #include <stdbool.h>

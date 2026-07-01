@@ -6,11 +6,11 @@
 #include "drivers/mag.h"
 #include "kernel/events.h"
 #include "kernel/util/sleep.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "pbl/services/new_timer/new_timer.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #include "mmc5603nj.h"
 #include "registers.h"

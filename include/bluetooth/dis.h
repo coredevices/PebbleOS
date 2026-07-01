@@ -5,7 +5,7 @@
 
 #include <stdbool.h>
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 // The reason the headers that define these lengths aren't included is because this header
 // is included by the various number of bt_driver implementations. They don't know what "mfg"

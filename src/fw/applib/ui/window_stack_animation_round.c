@@ -16,9 +16,9 @@
 #include "kernel/ui/kernel_ui.h"
 #include "pbl/services/compositor/compositor_transitions.h"
 #include "system/passert.h"
-#include "util/attributes.h"
-#include "util/math.h"
-#include "util/trig.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/math.h"
+#include "pbl/util/trig.h"
 
 // Window transition implementations
 //////////////////////////////////////

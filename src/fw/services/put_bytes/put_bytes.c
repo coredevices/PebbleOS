@@ -8,7 +8,7 @@
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/system_message.h"
-#include "os/tick.h"
+#include "pbl/os/tick.h"
 #include "resource/resource_storage_file.h"
 #include "pbl/services/comm_session/session.h"
 #include "pbl/services/comm_session/session_receive_router.h"
@@ -20,8 +20,8 @@
 #include "system/firmware_storage.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/attributes.h"
-#include "util/math.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/math.h"
 #include "util/net.h"
 #include <bluetooth/analytics.h>
 

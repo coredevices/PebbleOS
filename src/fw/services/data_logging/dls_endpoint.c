@@ -15,9 +15,9 @@
 #include "kernel/pbl_malloc.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "util/legacy_checksum.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #include <inttypes.h>
 

@@ -8,8 +8,8 @@
 #include "console/pulse_protocol_impl.h"
 
 #include "console/pulse_internal.h"
-#include "util/attributes.h"
-#include "util/math.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/math.h"
 
 #define LLC_INMSG_LINK_ESTABLISHMENT_REQUEST (1)
 #define LLC_INMSG_LINK_CLOSE_REQUEST (3)

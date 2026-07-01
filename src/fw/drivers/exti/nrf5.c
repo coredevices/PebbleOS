@@ -5,7 +5,7 @@
 
 #include "board/board.h"
 #include "kernel/events.h"
-#include "mcu/interrupts.h"
+#include "pbl/mcu/interrupts.h"
 #include "system/passert.h"
 
 #include <nrfx.h>

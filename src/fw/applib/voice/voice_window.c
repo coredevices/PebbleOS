@@ -13,7 +13,7 @@
 #include "applib/fonts/fonts.h"
 #include "applib/graphics/text_render.h"
 #include "applib/graphics/utf8.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 #include "applib/ui/animation.h"
 #include "applib/ui/animation_interpolate.h"
 #include "applib/ui/app_window_stack.h"
@@ -50,7 +50,7 @@
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
 #include "system/profiler.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include <string.h>
 

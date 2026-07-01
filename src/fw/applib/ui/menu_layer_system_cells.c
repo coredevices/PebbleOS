@@ -9,7 +9,7 @@
 #include "process_management/process_manager.h"
 #include "shell/system_theme.h"
 #include "system/passert.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 /////////////////////////////////
 // System Provided Cell Types

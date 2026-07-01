@@ -8,7 +8,7 @@
 #include "process_state/app_state/app_state.h"
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/vibes/vibe_score.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include <stdint.h>
 
