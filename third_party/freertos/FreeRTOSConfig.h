@@ -74,6 +74,13 @@
 #include "drivers/rtc.h"
 
 #include <cmsis_core.h>
+// Per-task newlib reentrancy needs newlib's struct _reent. picolibc uses
+// TLS instead (and has no reent.h), the Pebble libc has no per-thread
+// state, and the host unit-test build has no arm-newlib, so only pull it
+// in for a newlib firmware.
+#if defined(CONFIG_LIBC_NEWLIB) || defined(CONFIG_LIBC_NEWLIB_NANO)
+#include <reent.h>
+#endif
 
 extern uint32_t SystemCoreClock;
 
@@ -115,7 +122,11 @@ extern uint32_t SystemCoreClock;
 #define configUSE_RECURSIVE_MUTEXES		0
 #define configQUEUE_REGISTRY_SIZE		0
 #define configGENERATE_RUN_TIME_STATS	1
+#if defined(CONFIG_LIBC_NEWLIB) || defined(CONFIG_LIBC_NEWLIB_NANO)
+#define configUSE_NEWLIB_REENTRANT      1
+#else
 #define configUSE_NEWLIB_REENTRANT      0
+#endif
 #define configUSE_QUEUE_SETS            1
 #define configUSE_LIGHT_MUTEXES         1
 #define configUSE_RECURSIVE_LIGHT_MUTEXES 1

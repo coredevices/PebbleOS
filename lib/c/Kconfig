@@ -15,6 +15,20 @@ config LIBC_PEBBLE
       The small in-tree C library (lib/c/pebble). Hand-written string,
       math and printf tuned for the firmware; links with -nostdlib.
 
+config LIBC_NEWLIB
+    bool "Newlib (full)"
+    help
+      Full newlib from the toolchain. Largest, but complete C99
+      formatted I/O out of the box.
+
+config LIBC_NEWLIB_NANO
+    bool "Newlib nano"
+    help
+      Size-optimized newlib (nano.specs). Smaller than full newlib,
+      but its printf lacks the C99 length modifiers (%hhu, %zu, %llu)
+      the firmware relies on, so a small C99-capable printf from
+      lib/c/newlib is linked ahead of it.
+
 endchoice
 
 endmenu
