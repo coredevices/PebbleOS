@@ -217,6 +217,32 @@ int voice_recording_storage_open_payload(VoiceRecordingId id, uint32_t *data_byt
   return fd;
 }
 
+bool voice_recording_storage_get_metadata(VoiceRecordingId id,
+                                          VoiceRecordingStorageMetadata *out) {
+  char name[VOICE_REC_NAME_MAX];
+  prv_make_name(name, sizeof(name), VOICE_REC_PREFIX, id);
+  const int fd = pfs_open(name, OP_FLAG_READ, FILE_TYPE_STATIC, 0);
+  if (fd < 0) {
+    return false;
+  }
+
+  VoiceRecordingHeader header;
+  const bool ok = prv_read_header(fd, &header);
+  if (ok) {
+    *out = (VoiceRecordingStorageMetadata){
+        .channels = header.channels,
+        .speex = header.speex,
+        .created = header.created,
+        .app_uuid = header.app_uuid,
+        .frame_count = header.frame_count,
+        .duration_ms = header.duration_ms,
+        .data_bytes = header.data_bytes,
+    };
+  }
+  pfs_close(fd);
+  return ok;
+}
+
 static bool prv_read_info(const char *name, VoiceRecordingInfo *info) {
   const int fd = pfs_open(name, OP_FLAG_READ, FILE_TYPE_STATIC, 0);
   if (fd < 0) {
