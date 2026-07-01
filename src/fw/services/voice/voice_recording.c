@@ -440,6 +440,11 @@ unlock:
   mutex_unlock(s_lock);
 }
 
+void voice_recording_stop_active(void) {
+  // s_active_id is re-validated under the lock by voice_recording_stop().
+  voice_recording_stop(s_active_id);
+}
+
 void voice_recording_cancel(VoiceRecordingId id) {
   mutex_lock(s_lock);
 

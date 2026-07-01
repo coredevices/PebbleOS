@@ -156,6 +156,13 @@ static void prv_select_cb(OptionMenu *option_menu, int row, void *context) {
 
 static void prv_unload_cb(OptionMenu *option_menu, void *context) {
   SettingsRecordingsData *data = context;
+#if VOICE_REC_TEST_TRIGGER
+  // Finalize any in-progress recording so leaving the page doesn't leave the
+  // service stuck in the recording state (the mic keeps running otherwise).
+  if (voice_recording_in_progress()) {
+    voice_recording_stop_active();
+  }
+#endif
   option_menu_deinit(&data->option_menu);
   i18n_free_all(data);
   app_free(data);
