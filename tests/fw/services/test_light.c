@@ -20,6 +20,7 @@
 #include "stubs_analytics.h"
 #include "stubs_ambient_light.h"
 #include "stubs_battery_monitor.h"
+#include "stubs_event_service_client.h"
 #include "stubs_low_power.h"
 #include "stubs_serial.h"
 #include "stubs_logging.h"
@@ -42,6 +43,9 @@ extern const uint32_t LIGHT_FADE_STEPS;
 ///////////////////////////////////////////////////////////
 
 static TimerID s_light_timer;
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+static TimerID s_color_schedule_timer;
+#endif
 
 static uint8_t s_backlight_brightness;
 static bool s_backlight_enabled = true;
@@ -76,6 +80,63 @@ bool backlight_is_motion_enabled(void) {
   return false;
 }
 
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+static bool s_backlight_day_night_color_enabled;
+static uint16_t s_backlight_sunrise_minute = 6 * MINUTES_PER_HOUR;
+static uint16_t s_backlight_sunset_minute = 18 * MINUTES_PER_HOUR;
+static uint32_t s_backlight_default_color = BACKLIGHT_COLOR_WARM_WHITE;
+static uint32_t s_backlight_night_color = BACKLIGHT_COLOR_RED;
+static uint32_t s_backlight_color;
+
+bool backlight_day_night_color_is_enabled(void) {
+  return s_backlight_day_night_color_enabled;
+}
+
+void backlight_day_night_color_set_enabled(bool enabled) {
+  s_backlight_day_night_color_enabled = enabled;
+}
+
+uint32_t backlight_get_default_color(void) {
+  return s_backlight_default_color;
+}
+
+void backlight_set_default_color(uint32_t rgb_color) {
+  s_backlight_default_color = rgb_color;
+}
+
+uint32_t backlight_get_night_color(void) {
+  return s_backlight_night_color;
+}
+
+void backlight_set_night_color(uint32_t rgb_color) {
+  s_backlight_night_color = rgb_color;
+}
+
+uint16_t backlight_get_sunrise_minute(void) {
+  return s_backlight_sunrise_minute;
+}
+
+void backlight_set_sunrise_minute(uint16_t minute) {
+  s_backlight_sunrise_minute = minute;
+}
+
+uint16_t backlight_get_sunset_minute(void) {
+  return s_backlight_sunset_minute;
+}
+
+void backlight_set_sunset_minute(uint16_t minute) {
+  s_backlight_sunset_minute = minute;
+}
+
+void backlight_set_color(uint32_t rgb_color) {
+  s_backlight_color = rgb_color;
+}
+
+uint32_t backlight_get_color(void) {
+  return s_backlight_color;
+}
+#endif
+
 // From pref.h
 uint32_t s_backlight_timeout_ms;
 uint32_t backlight_get_timeout_ms(void) {
@@ -104,6 +165,35 @@ void backlight_set_intensity(uint8_t percent_intensity) {
 static uint8_t get_expected_brightness() {
   return backlight_get_intensity();
 }
+
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+static void prv_set_light_timer_ids(void) {
+  TimerID first_timer = TIMER_INVALID_ID;
+  TimerID second_timer = TIMER_INVALID_ID;
+
+  for (ListNode *node = s_idle_timers; node; node = list_get_next(node)) {
+    StubTimer *timer = (StubTimer *)node;
+    if (first_timer == TIMER_INVALID_ID) {
+      first_timer = timer->id;
+    } else if (second_timer == TIMER_INVALID_ID) {
+      second_timer = timer->id;
+    } else {
+      break;
+    }
+  }
+
+  cl_assert(first_timer != TIMER_INVALID_ID);
+  cl_assert(second_timer != TIMER_INVALID_ID);
+
+  if (first_timer > second_timer) {
+    s_light_timer = first_timer;
+    s_color_schedule_timer = second_timer;
+  } else {
+    s_light_timer = second_timer;
+    s_color_schedule_timer = first_timer;
+  }
+}
+#endif
 
 static void check_on(void) {
   cl_assert_equal_i(s_backlight_brightness, get_expected_brightness());
@@ -147,9 +237,22 @@ static void check_off(void) {
 ///////////////////////////////////////////////////////////
 
 void test_light__initialize(void) {
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+  s_backlight_day_night_color_enabled = false;
+  s_backlight_sunrise_minute = 6 * MINUTES_PER_HOUR;
+  s_backlight_sunset_minute = 18 * MINUTES_PER_HOUR;
+  s_backlight_default_color = BACKLIGHT_COLOR_WARM_WHITE;
+  s_backlight_night_color = BACKLIGHT_COLOR_RED;
+  s_backlight_color = 0;
+#endif
+
   light_init();
   light_allow(true);
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+  prv_set_light_timer_ids();
+#else
   s_light_timer = ((StubTimer*) s_idle_timers)->id;
+#endif
   backlight_set_intensity(100);
   s_backlight_enabled = true;
 }
@@ -157,7 +260,7 @@ void test_light__initialize(void) {
 void test_light__cleanup(void) {
   s_backlight_brightness = 0;
   s_backlight_enabled = true;
-  stub_new_timer_delete(s_light_timer);
+  stub_new_timer_cleanup();
 }
 
 void test_light__button_press_and_release(void) {
@@ -186,6 +289,34 @@ void test_light__light_enable(void) {
   light_enable(true);
   check_on();
 }
+
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+void test_light__backlight_color_prefs_loaded_schedules_day_night_timer(void) {
+  cl_assert(!stub_new_timer_is_scheduled(s_color_schedule_timer));
+
+  s_backlight_day_night_color_enabled = true;
+  s_backlight_sunrise_minute = 6 * MINUTES_PER_HOUR;
+  s_backlight_sunset_minute = 18 * MINUTES_PER_HOUR;
+
+  light_handle_backlight_color_prefs_loaded();
+
+  cl_assert(stub_new_timer_is_scheduled(s_color_schedule_timer));
+  cl_assert(stub_new_timer_timeout(s_color_schedule_timer) > 0);
+}
+
+void test_light__backlight_color_prefs_loaded_schedules_wrap_daylight_timer(void) {
+  cl_assert(!stub_new_timer_is_scheduled(s_color_schedule_timer));
+
+  s_backlight_day_night_color_enabled = true;
+  s_backlight_sunrise_minute = 3 * MINUTES_PER_HOUR;
+  s_backlight_sunset_minute = 1 * MINUTES_PER_HOUR;
+
+  light_handle_backlight_color_prefs_loaded();
+
+  cl_assert(stub_new_timer_is_scheduled(s_color_schedule_timer));
+  cl_assert(stub_new_timer_timeout(s_color_schedule_timer) > 0);
+}
+#endif
 
 void test_light__light_enable_plus_wrist_shake(void) {
   light_enable(true);

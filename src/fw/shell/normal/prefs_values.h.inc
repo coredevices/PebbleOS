@@ -10,6 +10,10 @@
   PREFS_MACRO(PREF_KEY_BACKLIGHT_INTENSITY, s_backlight_intensity)
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
   PREFS_MACRO(PREF_KEY_BACKLIGHT_COLOR, s_backlight_color)
+  PREFS_MACRO(PREF_KEY_BACKLIGHT_COLOR_DAY_NIGHT_ENABLED, s_backlight_color_day_night_enabled)
+  PREFS_MACRO(PREF_KEY_BACKLIGHT_COLOR_NIGHT, s_backlight_color_night)
+  PREFS_MACRO(PREF_KEY_BACKLIGHT_COLOR_SUNRISE_MINUTE, s_backlight_color_sunrise_minute)
+  PREFS_MACRO(PREF_KEY_BACKLIGHT_COLOR_SUNSET_MINUTE, s_backlight_color_sunset_minute)
 #endif
   PREFS_MACRO(PREF_KEY_BACKLIGHT_MOTION, s_backlight_motion_enabled)
   PREFS_MACRO(PREF_KEY_BACKLIGHT_TOUCH, s_backlight_touch_wake)

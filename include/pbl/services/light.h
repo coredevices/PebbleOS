@@ -23,6 +23,12 @@
 //! to be called when starting up to initialize variables correctly
 void light_init(void);
 
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+//! @internal
+//! to be called after persisted shell prefs are loaded
+void light_handle_backlight_color_prefs_loaded(void);
+#endif
+
 //! @internal
 //! to be called by the launcher on a button down event
 void light_button_pressed(void);
@@ -65,8 +71,8 @@ void light_set_color_rgb888(uint32_t rgb);
 void light_set_system_color(void);
 
 //! Request that the system color take precedence over any app override.
-//! While the refcount is non-zero, the LED is forced to the user default
-//! color even if an app has set an override. Used by notifications and
+//! While the refcount is non-zero, the LED is forced to the user's current
+//! system color even if an app has set an override. Used by notifications and
 //! other modals so they display in neutral white without permanently
 //! clearing the underlying app's color.
 void light_system_color_request(void);

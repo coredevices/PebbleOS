@@ -25,6 +25,7 @@
 #include "pbl/services/powermode_service.h"
 #include "pbl/services/hrm/hrm_manager.h"
 #include "pbl/services/i18n/i18n.h"
+#include "pbl/services/light.h"
 #include "resource/resource_ids.auto.h"
 #ifdef CONFIG_ORIENTATION_MANAGER
 #include "pbl/services/orientation_manager.h"
@@ -36,6 +37,7 @@
 #include "kernel/event_loop.h"
 #include "system/logging.h"
 #include "system/passert.h"
+#include "util/time/time.h"
 #include "pbl/util/size.h"
 #include "pbl/util/uuid.h"
 
@@ -79,8 +81,18 @@ static uint32_t s_backlight_timeout_ms = DEFAULT_BACKLIGHT_TIMEOUT_MS;
 static uint8_t s_backlight_intensity; // default set in shell_prefs_init()
 
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
+#define BACKLIGHT_COLOR_DEFAULT_SUNRISE_MINUTE (6 * MINUTES_PER_HOUR)
+#define BACKLIGHT_COLOR_DEFAULT_SUNSET_MINUTE (18 * MINUTES_PER_HOUR)
 #define PREF_KEY_BACKLIGHT_COLOR "lightColor"
 static uint32_t s_backlight_color; // default pulled from BOARD_CONFIG in shell_prefs_init()
+#define PREF_KEY_BACKLIGHT_COLOR_DAY_NIGHT_ENABLED "lightColorDayNightEnabled"
+static bool s_backlight_color_day_night_enabled = false;
+#define PREF_KEY_BACKLIGHT_COLOR_NIGHT "lightColorNight"
+static uint32_t s_backlight_color_night; // default pulled from BOARD_CONFIG in shell_prefs_init()
+#define PREF_KEY_BACKLIGHT_COLOR_SUNRISE_MINUTE "lightColorSunriseMinute"
+static uint16_t s_backlight_color_sunrise_minute = BACKLIGHT_COLOR_DEFAULT_SUNRISE_MINUTE;
+#define PREF_KEY_BACKLIGHT_COLOR_SUNSET_MINUTE "lightColorSunsetMinute"
+static uint16_t s_backlight_color_sunset_minute = BACKLIGHT_COLOR_DEFAULT_SUNSET_MINUTE;
 #endif
 
 #define PREF_KEY_BACKLIGHT_MOTION "lightMotion"
@@ -360,6 +372,35 @@ static bool prv_set_s_backlight_intensity(uint8_t *intensity) {
 static bool prv_set_s_backlight_color(uint32_t *rgb_color) {
   // Mask to packed 0x00RRGGBB; ignore any junk in the top byte.
   s_backlight_color = *rgb_color & 0x00FFFFFFU;
+  return true;
+}
+
+static bool prv_set_s_backlight_color_day_night_enabled(bool *enabled) {
+  s_backlight_color_day_night_enabled = *enabled;
+  return true;
+}
+
+static bool prv_set_s_backlight_color_night(uint32_t *rgb_color) {
+  // Mask to packed 0x00RRGGBB; ignore any junk in the top byte.
+  s_backlight_color_night = *rgb_color & 0x00FFFFFFU;
+  return true;
+}
+
+static bool prv_set_s_backlight_color_sunrise_minute(uint16_t *minute) {
+  if (*minute >= MINUTES_PER_DAY) {
+    s_backlight_color_sunrise_minute = BACKLIGHT_COLOR_DEFAULT_SUNRISE_MINUTE;
+    return false;
+  }
+  s_backlight_color_sunrise_minute = *minute;
+  return true;
+}
+
+static bool prv_set_s_backlight_color_sunset_minute(uint16_t *minute) {
+  if (*minute >= MINUTES_PER_DAY) {
+    s_backlight_color_sunset_minute = BACKLIGHT_COLOR_DEFAULT_SUNSET_MINUTE;
+    return false;
+  }
+  s_backlight_color_sunset_minute = *minute;
   return true;
 }
 #endif
@@ -856,6 +897,9 @@ void shell_prefs_init(void) {
 #endif
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
   s_backlight_color = BOARD_CONFIG.backlight_default_color;
+  s_backlight_color_night = BOARD_CONFIG.backlight_default_color;
+  s_backlight_color_sunrise_minute = BACKLIGHT_COLOR_DEFAULT_SUNRISE_MINUTE;
+  s_backlight_color_sunset_minute = BACKLIGHT_COLOR_DEFAULT_SUNSET_MINUTE;
 #endif
   // Use board-specific default motion sensitivity if provided (non-zero)
   if (BOARD_CONFIG_ACCEL.default_motion_sensitivity != 0) {
@@ -922,6 +966,10 @@ void shell_prefs_init(void) {
 #ifdef CONFIG_TOUCH
   touch_set_backlight_enabled(s_backlight_touch_wake != BacklightTouchWake_Off);
   touch_service_set_globally_enabled(s_touch_enabled);
+#endif
+
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+  light_handle_backlight_color_prefs_loaded();
 #endif
 }
 
@@ -1191,13 +1239,47 @@ void backlight_set_intensity(uint8_t percent_intensity) {
 
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
 uint32_t backlight_get_default_color(void) {
-  return s_backlight_color;
+  return s_backlight_color & 0x00FFFFFFU;
 }
 
 void backlight_set_default_color(uint32_t rgb_color) {
   // Clamp to 24-bit packed RGB; upper byte is unused.
   rgb_color &= 0x00FFFFFFU;
   prv_pref_set(PREF_KEY_BACKLIGHT_COLOR, &rgb_color, sizeof(rgb_color));
+}
+
+bool backlight_day_night_color_is_enabled(void) {
+  return s_backlight_color_day_night_enabled;
+}
+
+void backlight_day_night_color_set_enabled(bool enabled) {
+  prv_pref_set(PREF_KEY_BACKLIGHT_COLOR_DAY_NIGHT_ENABLED, &enabled, sizeof(enabled));
+}
+
+uint32_t backlight_get_night_color(void) {
+  return s_backlight_color_night & 0x00FFFFFFU;
+}
+
+void backlight_set_night_color(uint32_t rgb_color) {
+  // Clamp to 24-bit packed RGB; upper byte is unused.
+  rgb_color &= 0x00FFFFFFU;
+  prv_pref_set(PREF_KEY_BACKLIGHT_COLOR_NIGHT, &rgb_color, sizeof(rgb_color));
+}
+
+uint16_t backlight_get_sunrise_minute(void) {
+  return s_backlight_color_sunrise_minute;
+}
+
+void backlight_set_sunrise_minute(uint16_t minute) {
+  prv_pref_set(PREF_KEY_BACKLIGHT_COLOR_SUNRISE_MINUTE, &minute, sizeof(minute));
+}
+
+uint16_t backlight_get_sunset_minute(void) {
+  return s_backlight_color_sunset_minute;
+}
+
+void backlight_set_sunset_minute(uint16_t minute) {
+  prv_pref_set(PREF_KEY_BACKLIGHT_COLOR_SUNSET_MINUTE, &minute, sizeof(minute));
 }
 #endif
 
