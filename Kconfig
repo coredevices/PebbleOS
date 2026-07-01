@@ -220,5 +220,6 @@ config SCREEN_COLOR_DEPTH_BITS
     default 1 if SCREEN_COLOR_DEPTH_BITS_1
     default 8 if SCREEN_COLOR_DEPTH_BITS_8
 
+rsource "lib/c/Kconfig"
 rsource "src/Kconfig"
 rsource "third_party/Kconfig"

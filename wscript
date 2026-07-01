@@ -269,6 +269,9 @@ def configure(conf):
     Logs.pprint('CYAN', 'Configuring arm_firmware environment')
     conf.setenv('', base_env)
     conf.load('pebble_arm_gcc', tooldir='tools/waf')
+    # Select the C library (see lib/c/Kconfig) once the arch flags are set:
+    # picolibc-from-source is built for that exact multilib.
+    conf.load('libc', tooldir='tools/waf')
 
     Logs.pprint('CYAN', 'Configuring unit test environment')
     conf.setenv('local', unit_test_env)
@@ -503,8 +506,11 @@ def _link_firmware(bld, sources):
                     '-Wl,--gc-sections',
                     '-Wl,--undefined=uxTopUsedPriority',
                     '-Wl,--build-id=sha1',
-                    '-Wl,--sort-section=alignment',
-                    '-nostdlib']
+                    '-Wl,--sort-section=alignment']
+
+    # C library link flags (-nostdlib / -specs=...), selected by lib/c via
+    # tools/waf/libc.py. malloc/free are always redirected to pbl_malloc.
+    fw_linkflags.extend(bld.env.LIBC_LINKFLAGS)
 
     fw_linkflags.extend(['-Wl,--wrap=malloc',
                          '-Wl,--undefined=__wrap_malloc',
@@ -541,7 +547,6 @@ def _link_firmware(bld, sources):
             'libos',
             'libutil',
             'nanopb',
-            'pblibc',
             'pbl_includes',
             'soc',
             'speex',
@@ -549,6 +554,9 @@ def _link_firmware(bld, sources):
             'tinymt32',
             'upng']
     uses.extend(bld.env.FW_APPS)
+    # C library use targets (pblibc, or the newlib nano printf shim),
+    # selected by lib/c via tools/waf/libc.py.
+    uses.extend(bld.env.LIBC_USE)
 
     if bld.env.CONFIG_MEMFAULT:
         fw_linkflags.append('-Wl,--require-defined=g_memfault_build_id')
@@ -566,7 +574,7 @@ def _link_firmware(bld, sources):
     x = bld.program(source=sources,
                 use=uses,
                 link_group=True,
-                lib=['gcc'],
+                lib=bld.env.LIBC_LIBS,
                 target=elf_node,
                 includes='fonts',
                 ldscript=ldscripts,
