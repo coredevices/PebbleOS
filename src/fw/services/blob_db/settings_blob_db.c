@@ -102,6 +102,7 @@ static const char *s_syncable_settings[] = {
   "activityWorkoutAppOpened",
   "alarmsAppOpened",
   "hrmPreferences",
+  "bleHrmWorkoutSharing",
   "heartRatePreferences",
 
   // Menu wrap around preferences

@@ -227,6 +227,25 @@ void test_gap_le_connect__register_null_device(void) {
   cl_assert_equal_i(e, BTErrnoInvalidParameter);
 }
 
+void test_gap_le_connect__tracks_multiple_slave_connections(void) {
+  BTDeviceInternal device_a = prv_dummy_device(1);
+  BTDeviceInternal device_b = prv_dummy_device(2);
+
+  cl_assert_equal_b(gap_le_connect_is_connected_as_slave(), false);
+
+  prv_fake_connect(&device_a, false /* is_master */);
+  cl_assert_equal_b(gap_le_connect_is_connected_as_slave(), true);
+
+  prv_fake_connect(&device_b, false /* is_master */);
+  cl_assert_equal_b(gap_le_connect_is_connected_as_slave(), true);
+
+  prv_fake_disconnect(&device_a, false /* is_master */);
+  cl_assert_equal_b(gap_le_connect_is_connected_as_slave(), true);
+
+  prv_fake_disconnect(&device_b, false /* is_master */);
+  cl_assert_equal_b(gap_le_connect_is_connected_as_slave(), false);
+}
+
 void test_gap_le_connect__unregister_null_device(void) {
   BTErrno e = gap_le_connect_cancel(NULL, GAPLEClientApp);
   cl_assert_equal_i(e, BTErrnoInvalidParameter);

@@ -5,6 +5,7 @@
 
 #include <FreeRTOS.h>
 #include <bluetooth/init.h>
+#include <bluetooth/hrm_service.h>
 #include <comm/bt_lock.h>
 #include <host/ble_hs.h>
 #include <host/ble_hs_stop.h>
@@ -144,6 +145,7 @@ bool bt_driver_start(BTDriverConfig *config) {
   ble_svc_gatt_init();
   ble_svc_dis_init();
   pebble_pairing_service_init();
+  bt_driver_hrm_service_init();
   ble_svc_bas_init();
 
 #ifdef CONFIG_GH3X2X_TUNING_SERVICE_ENABLED
