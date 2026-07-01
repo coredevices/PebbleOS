@@ -372,7 +372,7 @@ static void prv_update_state(void *force_update) {
     float ttf;
 
     ttf = nrf_fuel_gauge_ttf_get();
-    if (!isnanf(ttf)) {
+    if (!isnan(ttf)) {
       s_last_ttf = (uint32_t)ttf;
     }
 
@@ -381,7 +381,7 @@ static void prv_update_state(void *force_update) {
     float tte;
 
     tte = nrf_fuel_gauge_tte_get();
-    if (!isnanf(tte)) {
+    if (!isnan(tte)) {
       s_last_tte = (uint32_t)tte;
     }
 
@@ -474,10 +474,10 @@ void battery_state_init(void) {
               1000.0f});
   PBL_ASSERTN(ret == 0);
 
-  runtime_parameters.a = NAN_F;
-  runtime_parameters.b = NAN_F;
-  runtime_parameters.c = NAN_F;
-  runtime_parameters.d = NAN_F;
+  runtime_parameters.a = NAN;
+  runtime_parameters.b = NAN;
+  runtime_parameters.c = NAN;
+  runtime_parameters.d = NAN;
   runtime_parameters.discard_positive_deltaz = true;
 
   nrf_fuel_gauge_param_adjust(&runtime_parameters);
