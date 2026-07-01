@@ -20,8 +20,8 @@
 
 #include <bluetooth/gap_le_connect.h>
 #include <bluetooth/pebble_pairing_service.h>
-#include <btutil/bt_device.h>
-#include <btutil/sm_util.h>
+#include <pbl/btutil/bt_device.h>
+#include <pbl/btutil/sm_util.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 

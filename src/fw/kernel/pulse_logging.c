@@ -10,12 +10,12 @@
 #include "console/pulse_protocol_impl.h"
 #include "kernel/events.h"
 
-#include "mcu/interrupts.h"
-#include "mcu/privilege.h"
-#include "util/attributes.h"
-#include "util/circular_buffer.h"
-#include "util/math.h"
-#include "util/string.h"
+#include "pbl/mcu/interrupts.h"
+#include "pbl/mcu/privilege.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/circular_buffer.h"
+#include "pbl/util/math.h"
+#include "pbl/util/string.h"
 
 #include "FreeRTOS.h"
 #include "task.h"

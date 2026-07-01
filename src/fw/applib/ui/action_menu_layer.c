@@ -17,7 +17,7 @@
 #include "resource/resource_ids.auto.h"
 #include "shell/system_theme.h"
 #include "system/passert.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #include <string.h>
 

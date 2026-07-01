@@ -6,7 +6,7 @@
 #include "pbl/services/comm_session/session_transport.h"
 #include "pbl/services/regular_timer.h"
 
-#include <util/size.h>
+#include <pbl/util/size.h>
 
 #include "clar.h"
 

@@ -4,7 +4,7 @@
 #pragma once
 
 #include "drivers/rtc.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 
 #include "freertos_types.h"
 #include "portmacro.h"

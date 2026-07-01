@@ -11,7 +11,7 @@
 #include "board/board.h"
 #include "drivers/gpio.h"
 #include "kernel/events.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "system/passert.h"
 #include "util/reverse.h"
 

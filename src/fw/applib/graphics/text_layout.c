@@ -31,9 +31,9 @@
 #include "process_state/app_state/app_state.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/hash.h"
-#include "util/iterator.h"
-#include "util/math.h"
+#include "pbl/util/hash.h"
+#include "pbl/util/iterator.h"
+#include "pbl/util/math.h"
 
 #include "process_management/process_manager.h"
 

@@ -15,7 +15,7 @@
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/settings/settings_file.h"
 #include "pbl/services/timeline/item.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #include <stdint.h>
 #include <string.h>

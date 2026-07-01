@@ -11,7 +11,7 @@
 #include <host/util/util.h>
 #include <kernel/pebble_tasks.h>
 #include <nimble/nimble_port.h>
-#include <os/tick.h>
+#include <pbl/os/tick.h>
 #include <semphr.h>
 #include <services/dis/ble_svc_dis.h>
 #include <services/bas/ble_svc_bas.h>

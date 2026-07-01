@@ -18,9 +18,9 @@
 #include "pbl/services/i18n/i18n.h"
 #include "system/logging.h"
 #include "system/hexdump.h"
-#include "util/math.h"
-#include "util/size.h"
-#include "util/string.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
+#include "pbl/util/string.h"
 
 #include <stdio.h>
 

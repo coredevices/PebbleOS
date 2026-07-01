@@ -6,10 +6,10 @@
 #include "pbl/services/weather/weather_service.h"
 #include "pbl/services/weather/weather_types.h"
 #include "system/status_codes.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "util/pstring.h"
 #include "util/time/time.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 #include <stdint.h>
 

@@ -26,7 +26,7 @@
 #include "resource/resource_ids.auto.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #include <inttypes.h>
 #include <stdio.h>

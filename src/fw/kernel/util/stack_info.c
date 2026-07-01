@@ -4,7 +4,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-#include "mcu/interrupts.h"
+#include "pbl/mcu/interrupts.h"
 
 extern uint32_t __isr_stack_start__[];
 

@@ -330,9 +330,6 @@ def add_clar_test(
         "include",
         "src/core",
         "src/fw",
-        "src/libbtutil/include",
-        "src/libos/include",
-        "src/libutil/includes",
         "src/boot",
         "src/fw/applib/vendor/tinflate",
         "src/fw/applib/vendor/uPNG",
@@ -370,10 +367,7 @@ def add_clar_test(
     # DUMA is found in tests/vendor/duma
     use += [
         "libutil",
-        "libutil_includes",
-        "libos_includes",
         "libbtutil",
-        "libbtutil_includes",
     ]
     if "DUMA_DISABLED" not in defines and "DUMA_DISABLED" not in bld.env.DEFINES:
         use.append("duma")

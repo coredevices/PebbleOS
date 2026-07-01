@@ -4,7 +4,7 @@
 #pragma once
 
 #include "pbl/services/notifications/do_not_disturb.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 bool WEAK do_not_disturb_is_active(void) {
   return false;

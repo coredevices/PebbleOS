@@ -8,7 +8,7 @@
 #include "drivers/rtc.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "process_management/app_install_manager.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/clock.h"
@@ -21,9 +21,9 @@
 #include "pbl/services/timeline/timeline.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/attributes.h"
-#include "util/list.h"
-#include "util/string.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/list.h"
+#include "pbl/util/string.h"
 #include "util/units.h"
 
 #include <pebbleos/cron.h>

@@ -12,10 +12,10 @@
 #include "drivers/sf32lb52/rc10k.h"
 #include "drivers/task_watchdog.h"
 #include "kernel/util/idle.h"
-#include "os/tick.h"
+#include "pbl/os/tick.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/soc/sf32lb/sleep.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #include <bf0_hal.h>
 

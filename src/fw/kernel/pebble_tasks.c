@@ -11,7 +11,7 @@
 #include "pbl/services/analytics/analytics.h"
 #include "syscall/syscall_internal.h"
 #include "system/passert.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include "FreeRTOS.h"
 #include "task.h"

@@ -8,12 +8,12 @@
 
 #include "applib/event_service_client.h"
 #include "kernel/events.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "pbl/services/data_logging/data_logging_service.h"
 #include "pbl/services/settings/settings_file.h"
 #include "system/hexdump.h"
 #include "system/logging.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #include <stdbool.h>
 #include <stdint.h>

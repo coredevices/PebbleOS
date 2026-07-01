@@ -5,7 +5,7 @@
 #include "kernel/pbl_malloc.h"
 #include "applib/graphics/gdraw_command_private.h"
 #include "applib/ui/animation.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include <string.h>
 

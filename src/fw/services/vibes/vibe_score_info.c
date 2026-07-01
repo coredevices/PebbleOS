@@ -6,7 +6,7 @@
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/i18n/i18n.h"
 #include "system/passert.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 typedef enum AlertType {
   AlertType_Notifications = 1 << 0,

@@ -8,9 +8,9 @@
 #include "pbl/services/comm_session/session_internal.h"
 #include "system/hexdump.h"
 #include "system/logging.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 #include "util/net.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 // Generated table of endpoint handler (s_protocol_endpoints):
 #include "services/comm_session/protocol_endpoints_table.auto.h"

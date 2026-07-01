@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include <bluetooth/pebble_bt.h>
 #include <bluetooth/responsiveness.h>
 

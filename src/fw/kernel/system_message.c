@@ -20,7 +20,7 @@
 #include "system/reboot_reason.h"
 #include "system/reset.h"
 #include "system/version.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "util/net.h"
 
 #include "FreeRTOS.h"

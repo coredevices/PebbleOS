@@ -19,7 +19,7 @@
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/units.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 

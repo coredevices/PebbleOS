@@ -9,8 +9,8 @@
 
 #include "applib/app_logging.h"
 #include "kernel/memory_layout.h"
-#include "mcu/interrupts.h"
-#include "mcu/privilege.h"
+#include "pbl/mcu/interrupts.h"
+#include "pbl/mcu/privilege.h"
 #include "pbl/services/system_task.h"
 #include "process_state/app_state/app_state.h"
 #include "process_state/worker_state/worker_state.h"
@@ -20,7 +20,7 @@
 #include "system/reboot_reason.h"
 #include "syscall/syscall.h"
 
-#include <util/heap.h>
+#include <pbl/util/heap.h>
 
 #include <cmsis_core.h>
 

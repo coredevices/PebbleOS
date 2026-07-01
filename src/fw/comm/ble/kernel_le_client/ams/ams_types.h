@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "util/attributes.h"
-#include "util/math.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/math.h"
 
 #include <stdint.h>
 

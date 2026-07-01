@@ -12,7 +12,7 @@
 //! TODO: We should probably split this in the future so there's one module to handle the
 //! dbgserial part and another module to handle executing commands.
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #include <stdbool.h>
 #include <stddef.h>

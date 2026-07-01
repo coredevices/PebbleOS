@@ -20,7 +20,7 @@
 #include "system/logging.h"
 #include "system/passert.h"
 #include "kernel/util/sleep.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #define NUM_REGIONS ARRAY_LENGTH(s_flash_regions)
 

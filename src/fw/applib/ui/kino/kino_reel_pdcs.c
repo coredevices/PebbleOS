@@ -11,7 +11,7 @@
 #include "syscall/syscall.h"
 #include "system/logging.h"
 #include "util/net.h"
-#include "util/struct.h"
+#include "pbl/util/struct.h"
 
 typedef struct {
   KinoReel base;

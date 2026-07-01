@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 // Newer than 4.7
 #if (__GNUC__ == 4 && __GNUC_MINOR__ > 7) || (__GNUC__ >= 5) || __clang__

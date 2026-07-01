@@ -1,12 +1,5 @@
-if bld.variant == 'test':
-    bld.recurse('libbtutil')
-    bld.recurse('libos')
-    bld.recurse('libutil')
-else:
-    bld.recurse('libbtutil')
+if bld.variant != 'test':
     bld.recurse('bluetooth-fw')
     bld.recurse('libc')
-    bld.recurse('libos')
-    bld.recurse('libutil')
 
 # vim:filetype=python

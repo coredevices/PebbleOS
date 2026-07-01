@@ -8,10 +8,10 @@
 #include "kernel/events.h"
 #include "process_management/app_manager.h"
 #include "shell/system_app_ids.auto.h"
-#include "os/mutex.h"
-#include "os/tick.h"
+#include "pbl/os/mutex.h"
+#include "pbl/os/tick.h"
 #include "system/logging.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 PBL_LOG_MODULE_DEFINE(service_music, CONFIG_SERVICE_MUSIC_LOG_LEVEL);
 

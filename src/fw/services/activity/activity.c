@@ -8,8 +8,8 @@
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "mfg/mfg_info.h"
-#include "os/mutex.h"
-#include "os/tick.h"
+#include "pbl/os/mutex.h"
+#include "pbl/os/tick.h"
 #include "popups/health_tracking_ui.h"
 #include "process_management/app_manager.h"
 #include "process_management/worker_manager.h"
@@ -29,8 +29,8 @@
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/base64.h"
-#include "util/math.h"
-#include "util/size.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
 #include "util/units.h"
 
 #include <pebbleos/cron.h>

@@ -223,7 +223,7 @@ clar(ctx,
 clar(ctx,
     sources_ant_glob = \
         " src/fw/util/crc8.c" \
-        " src/libutil/uuid.c" \
+        " lib/util/uuid.c" \
         " src/fw/util/rand/rand.c" \
         " third_party/tinymt/TinyMT/tinymt/tinymt32.c" \
         " tests/fakes/fake_rtc.c" \

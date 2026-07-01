@@ -7,7 +7,7 @@
 #include "applib/graphics/framebuffer.h"
 #include "applib/ui/bitmap_layer.h"
 #include "applib/ui/window_private.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include <stdio.h>
 

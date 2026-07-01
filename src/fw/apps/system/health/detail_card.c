@@ -10,7 +10,7 @@
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/activity/health_util.h"
 #include "shell/prefs.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include "system/logging.h"
 

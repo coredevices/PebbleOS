@@ -9,7 +9,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-#include <util/string.h>
+#include <pbl/util/string.h>
 
 // make sure we can unit-test log output
 #define CUSTOM_LOG_INTERNAL

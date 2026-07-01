@@ -11,7 +11,7 @@
 #include "applib/ui/window_private.h"
 #include "process_management/process_manager.h"
 #include "system/passert.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 
 const int16_t MAX_ICON_HEIGHT = 18;
 

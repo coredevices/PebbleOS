@@ -3,7 +3,7 @@
 
 #include "system/hexdump.h"
 #include "system/logging.h"
-#include "util/hexdump.h"
+#include "pbl/util/hexdump.h"
 #include "console/prompt.h"
 
 void hexdump_log(int level, const uint8_t *data, size_t length) {

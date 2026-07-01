@@ -5,7 +5,7 @@
 
 #include "process_management/app_menu_data_source.h"
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 WEAK void app_menu_data_source_init(AppMenuDataSource *source,
                                     const AppMenuDataSourceCallbacks *handlers,

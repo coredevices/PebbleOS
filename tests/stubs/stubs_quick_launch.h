@@ -4,7 +4,7 @@
 #pragma once
 
 #include "shell/normal/quick_launch.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 void WEAK quick_launch_remove_app(const Uuid *uuid) {}
 

@@ -4,11 +4,11 @@
 #include "pbl/services/cron.h"
 #include <pebbleos/cron.h>
 
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "system/passert.h"
 #include "pbl/services/regular_timer.h"
 #include "system/logging.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 PBL_LOG_MODULE_DEFINE(service_cron, CONFIG_SERVICE_CRON_LOG_LEVEL);
 

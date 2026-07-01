@@ -4,7 +4,7 @@
 #include "pbl/services/powermode_service.h"
 
 #include "drivers/cpumode.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "system/passert.h"
 
 #include <stdint.h>

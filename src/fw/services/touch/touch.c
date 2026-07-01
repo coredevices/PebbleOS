@@ -13,7 +13,7 @@
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
 #include "system/logging.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "system/passert.h"
 
 PBL_LOG_MODULE_DEFINE(service_touch, CONFIG_SERVICE_TOUCH_LOG_LEVEL);

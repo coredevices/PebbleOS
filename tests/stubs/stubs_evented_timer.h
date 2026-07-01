@@ -4,7 +4,7 @@
 #pragma once
 
 #include "pbl/services/evented_timer.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 void WEAK evented_timer_init(void) {}
 

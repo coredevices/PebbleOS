@@ -3,10 +3,10 @@
 
 #include "audio_definitions.h"
 #include "kernel/pbl_malloc.h"
-#include "mcu/cache.h"
+#include "pbl/mcu/cache.h"
 #include "system/passert.h"
 #include "system/logging.h"
-#include "util/misc.h"
+#include "pbl/util/misc.h"
 #include "pbl/services/system_task.h"
 #include "pbl/soc/sf32lb/sleep.h"
 

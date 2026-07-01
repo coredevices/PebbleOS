@@ -10,12 +10,12 @@
 #include "pbl/services/comm_session/protocol.h"
 #include "pbl/services/comm_session/session_send_buffer.h"
 #include "pbl/services/system_task.h"
-#include "util/circular_buffer.h"
+#include "pbl/util/circular_buffer.h"
 #include "system/hexdump.h"
 
 #include "clar_asserts.h"
 
-#include "util/list.h"
+#include "pbl/util/list.h"
 
 #include <string.h>
 

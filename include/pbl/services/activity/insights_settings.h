@@ -5,7 +5,7 @@
 
 #include "activity.h"
 #include "pbl/services/filesystem/pfs.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #define ACTIVITY_INSIGHTS_SETTINGS_SLEEP_REWARD "sleep_reward"
 #define ACTIVITY_INSIGHTS_SETTINGS_SLEEP_SUMMARY "sleep_summary"

@@ -9,7 +9,7 @@
 
 #include "protobuf_log.h"
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #include <stdint.h>
 

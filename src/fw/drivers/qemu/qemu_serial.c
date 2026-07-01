@@ -20,9 +20,9 @@
 #include "system/hexdump.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/likely.h"
+#include "pbl/util/likely.h"
 #include "util/net.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include "FreeRTOS.h"
 

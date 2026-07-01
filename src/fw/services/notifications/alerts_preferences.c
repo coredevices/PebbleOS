@@ -11,7 +11,7 @@
 #include "pbl/services/settings/settings_file.h"
 #include "pbl/services/vibes/vibe_intensity.h"
 #include "system/passert.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "util/bitset.h"
 
 #include <string.h>

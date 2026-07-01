@@ -6,7 +6,7 @@
 #include "window.h"
 #include "window_stack.h"
 
-#include "util/list.h"
+#include "pbl/util/list.h"
 
 //! @addtogroup UI
 //! @{

@@ -16,7 +16,7 @@
 #include "pbl/services/battery/battery_state.h"
 #include "pbl/services/bluetooth/local_id.h"
 #include "util/bitset.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include "git_version.auto.h"
 

@@ -3,7 +3,7 @@
 
 #include <bluetooth/gatt.h>
 
-#include <btutil/bt_device.h>
+#include <pbl/btutil/bt_device.h>
 
 BTErrno bt_driver_gatt_write_without_response(GAPLEConnection *connection,
                                               const uint8_t *value,

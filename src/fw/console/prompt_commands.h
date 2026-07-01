@@ -7,7 +7,7 @@
 #include "console/pulse_internal.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "system/logging.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 extern void command_help(void);
 

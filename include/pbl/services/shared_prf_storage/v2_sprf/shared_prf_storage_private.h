@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #include <bluetooth/bluetooth_types.h>
 #include <bluetooth/sm_types.h>

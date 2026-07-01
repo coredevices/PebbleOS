@@ -7,7 +7,7 @@
 #include "drivers/i2c.h"
 #include "kernel/util/sleep.h"
 #include "mfg/mfg_info.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "system/logging.h"
 #include "system/passert.h"
 

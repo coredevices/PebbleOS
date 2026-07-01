@@ -4,7 +4,7 @@
 #include "clar.h"
 #include "pebble_asserts.h"
 
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 #include "applib/graphics/graphics_circle_private.h"
 
 #include "stubs_compiled_with_legacy2_sdk.h"

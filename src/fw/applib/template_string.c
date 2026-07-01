@@ -7,10 +7,10 @@
 #include "pbl/services/i18n/i18n.h"
 #include "syscall/syscall.h"
 #include "system/passert.h"
-#include "util/attributes.h"
-#include "util/math.h"
-#include "util/size.h"
-#include "util/string.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
+#include "pbl/util/string.h"
 
 #include <ctype.h>
 #include <limits.h>

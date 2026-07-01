@@ -647,10 +647,7 @@ def _build_fw(bld):
     bld.env.FW_APPS = []
 
     # FIXME create applib_includes or something like that
-    fw_includes_use=['libbtutil_includes',
-                     'libos_includes',
-                     'libutil_includes',
-                     'pbl_includes',
+    fw_includes_use=['pbl_includes',
                      'freertos_includes',
                      'idl_includes',
                      'nanopb_includes']
@@ -761,6 +758,7 @@ def build(bld):
 
     if bld.variant == 'test':
         bld.recurse('third_party/nanopb')
+        bld.recurse('lib')
         bld.recurse('src')
         bld.recurse('tests')
         bld.recurse('tools')
@@ -770,6 +768,7 @@ def build(bld):
         bld.recurse('stored_apps')
 
     bld.recurse('third_party')
+    bld.recurse('lib')
     bld.recurse('src')
     _build_fw(bld)
 

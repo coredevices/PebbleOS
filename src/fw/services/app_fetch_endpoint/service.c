@@ -16,9 +16,9 @@
 #include "pbl/services/process_management/app_storage.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/attributes.h"
-#include "util/math.h"
-#include "util/uuid.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/math.h"
+#include "pbl/util/uuid.h"
 
 PBL_LOG_MODULE_DEFINE(service_app_fetch_endpoint, CONFIG_SERVICE_APP_FETCH_ENDPOINT_LOG_LEVEL);
 

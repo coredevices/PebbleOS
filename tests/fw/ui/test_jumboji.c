@@ -3,7 +3,7 @@
 
 #include "pbl/services/timeline/notification_jumboji_table.h"
 #include "pbl/services/timeline/notification_layout.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include "clar.h"
 

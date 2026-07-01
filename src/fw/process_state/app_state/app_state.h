@@ -35,8 +35,8 @@
 #include "kernel/logging_private.h"
 #include "pbl/services/app_glances/app_glance_service.h"
 #include "pbl/services/timeline/timeline_actions.h"
-#include "util/heap.h"
-#include "util/list.h"
+#include "pbl/util/heap.h"
+#include "pbl/util/list.h"
 
 struct _reent;
 

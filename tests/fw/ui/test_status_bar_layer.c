@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "applib/ui/status_bar_layer.h"
-#include "util/list.h"
+#include "pbl/util/list.h"
 #include "resource/resource_ids.auto.h"
 #include "resource/resource.h"
 

@@ -9,7 +9,7 @@
 #include "pbl/services/settings/settings_file.h"
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 
 _Static_assert(PERSIST_DATA_MAX_LENGTH <= SETTINGS_VAL_MAX_LEN,

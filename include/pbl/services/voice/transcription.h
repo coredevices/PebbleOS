@@ -4,7 +4,7 @@
 #pragma once
 
 #include "applib/graphics/utf8.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #include <stddef.h>
 #include <stdint.h>

@@ -8,7 +8,7 @@
 #include "flash_region/flash_region.h"
 #include "system/logging.h"
 #include "system/version.h"
-#include "util/crc32.h"
+#include "pbl/util/crc32.h"
 
 #ifdef CONFIG_SOC_SF32LB52
 #include <bf0_hal.h>

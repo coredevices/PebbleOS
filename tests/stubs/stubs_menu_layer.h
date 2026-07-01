@@ -4,7 +4,7 @@
 #pragma once
 
 #include "applib/ui/menu_layer.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 void WEAK menu_cell_basic_draw(GContext* ctx, const Layer *cell_layer, const char *title,
                                const char *subtitle, GBitmap *icon) {}

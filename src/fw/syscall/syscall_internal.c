@@ -6,7 +6,7 @@
 #include "applib/app_logging.h"
 #include "kernel/memory_layout.h"
 #include "kernel/pebble_tasks.h"
-#include "mcu/privilege.h"
+#include "pbl/mcu/privilege.h"
 #include "process_management/app_manager.h"
 #include "process_management/pebble_process_md.h"
 #include "process_management/process_loader.h"
@@ -14,7 +14,7 @@
 #include "syscall/syscall.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include "FreeRTOS.h"
 #include "task.h"

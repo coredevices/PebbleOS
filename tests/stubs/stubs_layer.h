@@ -5,7 +5,7 @@
 
 #include "applib/ui/layer.h"
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #include "stubs_unobstructed_area.h"
 

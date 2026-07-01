@@ -30,11 +30,11 @@
 #include "shell/system_theme.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/string.h"
+#include "pbl/util/string.h"
 
 #include <bluetooth/bluetooth_types.h>
 #include <bluetooth/sm_types.h>
-#include <btutil/bt_device.h>
+#include <pbl/btutil/bt_device.h>
 
 #include <stdio.h>
 #include <string.h>

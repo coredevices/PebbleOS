@@ -9,7 +9,7 @@
 #include "drivers/watchdog.h"
 #include "drivers/task_watchdog.h"
 
-#include "mcu/interrupts.h"
+#include "pbl/mcu/interrupts.h"
 
 #include "pbl/services/regular_timer.h"
 

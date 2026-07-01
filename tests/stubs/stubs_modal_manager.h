@@ -5,7 +5,7 @@
 
 #include "applib/ui/window_stack_private.h"
 #include "kernel/ui/modals/modal_manager.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 WindowStack *WEAK modal_manager_get_window_stack(ModalPriority priority) {
   return NULL;

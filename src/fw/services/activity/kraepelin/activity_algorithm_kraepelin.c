@@ -3,7 +3,7 @@
 
 #include "applib/accel_service.h"
 #include "applib/data_logging.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 #include "drivers/ambient_light.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/battery/battery_state.h"
@@ -17,9 +17,9 @@
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/base64.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 #include "util/shared_circular_buffer.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 #include "util/time/time.h"
 #include "util/units.h"
 

@@ -18,7 +18,7 @@
 #include "pbl/services/vibes/vibe_intensity.h"
 #include "shell/normal/watchface.h"
 #include "util/ratio.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 // The Battery UI state machine keeps track of when to notify the user of a
 // change in battery charge state, and when to automatically dismiss the status

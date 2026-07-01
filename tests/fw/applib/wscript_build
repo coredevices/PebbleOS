@@ -26,7 +26,7 @@ clar(ctx,
 
 clar(ctx,
      sources_ant_glob=(" src/fw/applib/cpu_cache.c"
-                       " src/libos/mcu/cache_arm.c"
+                       " lib/os/mcu/cache_arm.c"
                        ),
      test_sources_ant_glob="test_cpu_cache.c",
      defines=["UNITTEST_WITH_SYSCALL_PRIVILEGES=1"],

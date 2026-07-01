@@ -5,7 +5,7 @@
 
 #include "applib/graphics/gtypes.h"
 #include "applib/graphics/graphics.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #define LINE_WIDTH (2)
 #define LINE_SPACING (10)

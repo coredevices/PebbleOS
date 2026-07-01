@@ -6,7 +6,7 @@
 #include <inttypes.h>
 #include <stdint.h>
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "pebbleos/core_dump_structs.h"
 
 #include "portmacro.h"

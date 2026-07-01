@@ -7,7 +7,7 @@
 #include "clar.h"
 #include "util.h"
 
-#include <util/size.h>
+#include <pbl/util/size.h>
 
 #include <string.h>
 #include <stdio.h>

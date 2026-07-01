@@ -15,7 +15,7 @@
 #include "pbl/services/timeline/actions_endpoint.h"
 #include "pbl/services/timeline/timeline.h"
 #include "pbl/services/timeline/timeline_actions.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include "stubs_action_chaining_window.h"
 #include "stubs_action_menu.h"

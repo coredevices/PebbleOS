@@ -4,7 +4,7 @@
 #pragma once
 
 #include "applib/graphics/gtypes.h"
-#include "util/math_fixed.h"
+#include "pbl/util/math_fixed.h"
 
 #include <stdint.h>
 

@@ -2,9 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "util/dict.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 #include "util/net.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include "clar.h"
 

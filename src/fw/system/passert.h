@@ -5,8 +5,8 @@
 
 #include "logging.h"
 
-#include <util/attributes.h>
-#include <util/likely.h>
+#include <pbl/util/attributes.h>
+#include <pbl/util/likely.h>
 
 
 #ifdef CONFIG_LOG_HASHED

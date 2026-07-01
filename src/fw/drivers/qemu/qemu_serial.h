@@ -10,7 +10,7 @@
 #include "applib/compass_service.h"
 #include "applib/preferred_content_size.h"
 #include "drivers/button_id.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 // The QEMU protocols implemented
 typedef enum {

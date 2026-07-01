@@ -4,7 +4,7 @@
 #pragma once
 
 #include "pbl/services/activity/activity_private.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 bool WEAK activity_tracking_on(void) {
   return true;

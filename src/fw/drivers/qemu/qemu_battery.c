@@ -10,7 +10,7 @@
 #include "pbl/services/battery/battery_curve.h"
 #include "system/logging.h"
 
-#include "util/math.h"
+#include "pbl/util/math.h"
 #include "util/net.h"
 
 static uint16_t s_battery_mv = 4000;

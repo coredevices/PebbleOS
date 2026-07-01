@@ -9,14 +9,14 @@
 #include "drivers/touch/touch_sensor.h"
 #include "kernel/events.h"
 #include "kernel/util/sleep.h"
-#include "os/tick.h"
+#include "pbl/os/tick.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/regular_timer.h"
 #include "pbl/services/touch/touch.h"
 #include "pbl/services/system_task.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #include "cst816_fw.h"
 

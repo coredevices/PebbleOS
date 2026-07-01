@@ -11,7 +11,7 @@
 
 #include "comm/ble/gap_le_connection.h"
 #include "comm/ble/gatt_client_accessors.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 // -- Gatt Device/Server Events
 

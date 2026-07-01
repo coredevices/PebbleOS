@@ -20,10 +20,10 @@
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "system/passert.h"
-#include "util/attributes.h"
-#include "util/size.h"
-#include "util/struct.h"
-#include "util/uuid.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/size.h"
+#include "pbl/util/struct.h"
+#include "pbl/util/uuid.h"
 
 //! Cache twice the number of glances we'll show simultaneously in the launcher
 #define LAUNCHER_APP_GLANCE_SERVICE_CACHE_NUM_ENTRIES (2 * LAUNCHER_MENU_LAYER_NUM_VISIBLE_ROWS)

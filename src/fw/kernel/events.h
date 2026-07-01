@@ -34,7 +34,7 @@
 #include "pbl/services/timeline/peek.h"
 #include "pbl/services/timeline/reminders.h"
 #include "kernel/pebble_tasks.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #include "freertos_types.h"
 #include "portmacro.h"

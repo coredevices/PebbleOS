@@ -13,9 +13,9 @@
 #include "applib/ui/kino/kino_reel_custom.h"
 #include "applib/applib_malloc.auto.h"
 #include "syscall/syscall.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 #include "util/net.h"
-#include "util/struct.h"
+#include "pbl/util/struct.h"
 
 typedef struct {
   GRect layer_frame;

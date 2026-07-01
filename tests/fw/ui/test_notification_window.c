@@ -10,7 +10,7 @@
 #include "popups/notifications/notification_window_private.h"
 #include "resource/timeline_resource_ids.auto.h"
 #include "pbl/services/timeline/notification_layout.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 
 #include <stdio.h>
 

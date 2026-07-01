@@ -4,7 +4,7 @@
 #pragma once
 
 #include "applib/ui/animation_timing.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 AnimationProgress WEAK animation_timing_segmented(
     AnimationProgress time_normalized, int32_t index, uint32_t num_segments,
