@@ -35,6 +35,11 @@ extern const uint32_t INACTIVE_LIGHT_TIMEOUT_MS;
 extern const uint32_t LIGHT_FADE_TIME_MS;
 // number of fade-out steps
 extern const uint32_t LIGHT_FADE_STEPS;
+// breathing cycle timing
+extern const uint32_t BREATHE_FADE_TIME_MS;
+extern const uint8_t BREATHE_FADE_STEPS;
+extern const uint32_t BREATHE_HOLD_TIME_MS;
+extern const uint32_t BREATHE_OFF_TIME_MS;
 
 
 
@@ -298,4 +303,160 @@ void test_light__touch_hold_released_on_app_teardown(void) {
   light_reset_user_controlled();
 
   check_on_timed_and_consume();
+}
+
+// Breathe tests
+///////////////////////////////////////////////////////////
+
+static void fire_light_timer(void) {
+  stub_new_timer_fire(s_light_timer);
+}
+
+void test_light__breathe_fades_in_to_target(void) {
+  backlight_set_intensity(80);
+  light_start_charge_breathe();
+
+  // Initial state: brightness starts at 0, timer scheduled for first fade-in step
+  cl_assert_equal_i(s_backlight_brightness, 0);
+  cl_assert(stub_new_timer_is_scheduled(s_light_timer));
+
+  // Fire all fade-in steps; brightness should reach target
+  for (int i = 0; i < BREATHE_FADE_STEPS; i++) {
+    fire_light_timer();
+  }
+  // After fade-in completes, transitions to HOLD state at target intensity
+  cl_assert_equal_i(s_backlight_brightness, 80);
+  cl_assert(stub_new_timer_is_scheduled(s_light_timer));
+}
+
+void test_light__breathe_hold_then_fade_out(void) {
+  backlight_set_intensity(100);
+  light_start_charge_breathe();
+
+  // Advance through fade-in
+  for (int i = 0; i < BREATHE_FADE_STEPS; i++) {
+    fire_light_timer();
+  }
+  // Now in HOLD state at full brightness
+  cl_assert_equal_i(s_backlight_brightness, 100);
+
+  // Fire hold timer — transitions to FADE_OUT
+  fire_light_timer();
+  // Fire all fade-out steps to ramp brightness down to 0
+  for (int i = 0; i < BREATHE_FADE_STEPS; i++) {
+    fire_light_timer();
+  }
+
+  // After fade-out completes, transitions to BREATHE_OFF state at brightness 0
+  cl_assert_equal_i(s_backlight_brightness, 0);
+  cl_assert(stub_new_timer_is_scheduled(s_light_timer));
+}
+
+void test_light__breathe_cycle_repeats(void) {
+  backlight_set_intensity(60);
+  light_start_charge_breathe();
+
+  // Fade in
+  for (int i = 0; i < BREATHE_FADE_STEPS; i++) {
+    fire_light_timer();
+  }
+  // Hold
+  fire_light_timer();
+  // Fade out
+  for (int i = 0; i < BREATHE_FADE_STEPS; i++) {
+    fire_light_timer();
+  }
+  // Off period — fires timer to start next fade-in
+  cl_assert_equal_i(s_backlight_brightness, 0);
+  fire_light_timer();
+
+  // Should be back in FADE_IN, brightness starts ramping from 0
+  cl_assert(stub_new_timer_is_scheduled(s_light_timer));
+}
+
+void test_light__breathe_stop_mid_fade(void) {
+  backlight_set_intensity(100);
+  light_start_charge_breathe();
+
+  // Fire a few fade-in steps so brightness is somewhere in the middle
+  fire_light_timer();
+
+  // Stop mid-fade
+  light_stop_charge_breathe();
+
+  // Backlight should be off, no timer scheduled
+  cl_assert_equal_i(s_backlight_brightness, 0);
+  cl_assert(!stub_new_timer_is_scheduled(s_light_timer));
+}
+
+void test_light__breathe_stop_when_not_breathing(void) {
+  // Calling stop when not in a breathe cycle should be a no-op
+  light_button_pressed();
+  check_on();
+
+  light_stop_charge_breathe();
+
+  // Should still be on — stop had no effect
+  cl_assert_equal_i(s_backlight_brightness, get_expected_brightness());
+}
+
+void test_light__breathe_stop_during_hold(void) {
+  backlight_set_intensity(100);
+  light_start_charge_breathe();
+
+  // Advance to hold state
+  for (int i = 0; i < BREATHE_FADE_STEPS; i++) {
+    fire_light_timer();
+  }
+  cl_assert_equal_i(s_backlight_brightness, 100);
+
+  light_stop_charge_breathe();
+  cl_assert_equal_i(s_backlight_brightness, 0);
+  cl_assert(!stub_new_timer_is_scheduled(s_light_timer));
+}
+
+void test_light__breathe_stop_during_off_period(void) {
+  backlight_set_intensity(100);
+  light_start_charge_breathe();
+
+  // Advance through fade-in, hold, fade-out to reach off period
+  for (int i = 0; i < BREATHE_FADE_STEPS; i++) {
+    fire_light_timer();
+  }
+  fire_light_timer(); // hold -> fade_out
+  for (int i = 0; i < BREATHE_FADE_STEPS; i++) {
+    fire_light_timer();
+  }
+  // Now in BREATHE_OFF
+  cl_assert_equal_i(s_backlight_brightness, 0);
+
+  light_stop_charge_breathe();
+  cl_assert_equal_i(s_backlight_brightness, 0);
+  cl_assert(!stub_new_timer_is_scheduled(s_light_timer));
+}
+
+void test_light__breathe_off_period_reports_off(void) {
+  // The dark gap between breathe cycles must report as off so apps don't
+  // see the backlight as "on" while the screen is dark.
+  backlight_set_intensity(100);
+  light_start_charge_breathe();
+
+  // Lit phases report on
+  cl_assert(light_is_on());
+  for (int i = 0; i < BREATHE_FADE_STEPS; i++) {
+    fire_light_timer();
+  }
+  fire_light_timer(); // hold -> fade_out
+  cl_assert(light_is_on());
+
+  // Reach the dark gap (BREATHE_OFF)
+  for (int i = 0; i < BREATHE_FADE_STEPS; i++) {
+    fire_light_timer();
+  }
+  cl_assert_equal_i(s_backlight_brightness, 0);
+  cl_assert(!light_is_on());
+
+  // Firing the off-period timer returns to fade-in, which is on again
+  fire_light_timer();
+  cl_assert(light_is_on());
 }
