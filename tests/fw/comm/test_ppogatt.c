@@ -90,6 +90,12 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   callback(data);
 }
 
+void kernel_le_client_reset_service_instance_attempt(void) {
+}
+
+void kernel_le_client_advance_service_instance_attempt(void) {
+}
+
 // Helpers
 ///////////////////////////////////////////////////////////
 

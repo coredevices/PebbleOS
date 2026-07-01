@@ -205,37 +205,78 @@ static void prv_handle_all_services_invalidated(void) {
   }
 }
 
+//! Selects which instance of a duplicated service we hand to a client. Advanced
+//! by PPoGATT after a failed handshake and reset after a successful session, so
+//! that across reconnects we eventually try every instance. See
+//! prv_handle_services_added and kernel_le_client.h.
+static uint8_t s_service_instance_attempt;
+
+void kernel_le_client_reset_service_instance_attempt(void) {
+  s_service_instance_attempt = 0;
+}
+
+void kernel_le_client_advance_service_instance_attempt(void) {
+  s_service_instance_attempt++;
+}
+
 static void prv_handle_services_added(
     PebbleBLEGATTClientServicesAdded *added_services, BTDeviceInternal *device) {
-  // loop through the new services
-  for (int s = 0; s < added_services->num_services_added; s++) {
-    // get the uuid for the service
-    Uuid service_uuid = gatt_client_service_get_uuid(added_services->services[s]);
+  for (int c = 0; c < KernelLEClientNum; c++) {
+    const KernelLEClient * const client = &s_clients[c];
 
-    // are any clients looking for this uuid?
-    for (int c = 0; c < KernelLEClientNum; c++) {
-      const KernelLEClient * const client = &s_clients[c];
-
+    // Collect every complete instance of this client's service. Some peer GATT
+    // servers (notably buggy Android companions) leave a stale duplicate of a
+    // service behind -- same UUID, different handle range -- when they re-add
+    // services without removing the old one. We must hand the client exactly one
+    // instance: PPoGATT starts a handshake (meta read) per instance, and
+    // concurrent reads deadlock the shared ATT bearer when the stale instance
+    // never answers. The completeness check drops malformed/partial duplicates.
+    BLEService instances[MAX_SERVICE_INSTANCES];
+    int num_instances = 0;
+    for (int s = 0;
+         s < added_services->num_services_added && num_instances < MAX_SERVICE_INSTANCES; s++) {
+      const Uuid service_uuid = gatt_client_service_get_uuid(added_services->services[s]);
       if (!uuid_equal(&service_uuid, (const Uuid *)client->service_uuid)) {
         continue;
       }
 
-      // We have found a service that a client is looking for. Make sure the
-      // characteristics we want are present and if so notify the interested client about it
       BLECharacteristic characteristics[client->num_characteristics];
       const uint8_t num_characteristics =
           gatt_client_service_get_characteristics_matching_uuids(
               added_services->services[s], &characteristics[0], client->characteristic_uuids,
               client->num_characteristics);
-
       if (num_characteristics != client->num_characteristics) {
         PBL_LOG_ERR("Found %s, but only %u characteristics...",
                 client->debug_name, num_characteristics);
         continue;
       }
 
-      client->handle_service_discovered(characteristics);
+      instances[num_instances++] = added_services->services[s];
     }
+
+    if (num_instances == 0) {
+      continue;
+    }
+
+    // We can't tell which instance is live at discovery time, so try the newest
+    // (highest-handle) one first and rotate to the next on each reconnect after
+    // a failed handshake, cycling until the live one connects. Newest-first
+    // matches the Android re-add bug, where the server only retains a reference
+    // to the most recently added characteristics. Note: handing over a single
+    // instance also drops support for multiple concurrent instances of the same
+    // service UUID (legacy multi-app PPoGATT); the Core companion uses a single
+    // Hybrid server, so exactly one instance is expected.
+    const int chosen = num_instances - 1 - (s_service_instance_attempt % num_instances);
+    if (num_instances > 1) {
+      PBL_LOG_WRN("%d instances of %s; trying instance %d",
+              num_instances, client->debug_name, chosen);
+    }
+
+    BLECharacteristic characteristics[client->num_characteristics];
+    gatt_client_service_get_characteristics_matching_uuids(
+        instances[chosen], &characteristics[0], client->characteristic_uuids,
+        client->num_characteristics);
+    client->handle_service_discovered(characteristics);
   }
 }
 
