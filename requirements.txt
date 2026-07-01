@@ -25,6 +25,7 @@ protobuf
 grpcio-tools
 nanopb
 kconfiglib
+meson
 certifi
 libclang
 packaging

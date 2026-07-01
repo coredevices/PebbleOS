@@ -29,6 +29,23 @@ config LIBC_NEWLIB_NANO
       the firmware relies on, so a small C99-capable printf from
       lib/c/newlib is linked ahead of it.
 
+config LIBC_PICOLIBC
+    bool "Picolibc"
+    help
+      Picolibc: smallest footprint, C99-capable printf, TLS-based
+      reentrancy. Not shipped by the stock arm-none-eabi toolchain;
+      built from the third_party/picolibc submodule, or taken pre-built
+      from the PebbleOS SDK toolchain when available.
+
 endchoice
+
+config LIBC_PICOLIBC_FROM_SOURCE
+    bool "Build Picolibc from source"
+    depends on LIBC_PICOLIBC
+    default y
+    help
+      Build Picolibc from the third_party/picolibc submodule with meson.
+      Disable to use the pre-built Picolibc from the PebbleOS SDK
+      toolchain (once it ships one); configuration fails if none is found.
 
 endmenu
