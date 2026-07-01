@@ -4,10 +4,12 @@
 #include <bluetooth/bonding_sync.h>
 #include <bluetooth/gap_le_connect.h>
 #include <bluetooth/sm_types.h>
-#include <comm/bt_lock.h>
 #include <host/ble_hs.h>
 #include <host/ble_hs_hci.h>
 #include <host/ble_store.h>
+#include <kernel/event_loop.h>
+#include <kernel/pbl_malloc.h>
+#include <pbl/os/mutex.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <string.h>
 #include <system/logging.h>
@@ -41,6 +43,8 @@ typedef struct {
 static BleStoreValueSec *s_peer_value_secs;
 static BleStoreValueSec *s_our_value_secs;
 static BleStoreValueCCCD *s_cccds;
+
+static PebbleRecursiveMutex *s_store_mutex;
 
 static bool prv_nimble_store_find_sec_cb(ListNode *node, void *data) {
   BleStoreValueSec *s = (BleStoreValueSec *)node;
@@ -79,7 +83,7 @@ static int prv_nimble_store_read_sec(const int obj_type, const struct ble_store_
   int ret = 0;
   BleStoreValueSec *s;
 
-  bt_lock();
+  mutex_lock_recursive(s_store_mutex);
 
   s = prv_nimble_store_find_sec(obj_type, key_sec);
   if (s == NULL) {
@@ -90,7 +94,7 @@ static int prv_nimble_store_read_sec(const int obj_type, const struct ble_store_
   *value_sec = s->value_sec;
 
 unlock:
-  bt_unlock();
+  mutex_unlock_recursive(s_store_mutex);
 
   return ret;
 }
@@ -102,7 +106,7 @@ static BleStoreValueSec *prv_nimble_store_upsert_sec(const int obj_type,
   ble_store_key_from_value_sec(&key_sec, value_sec);
   ListNode **sec_list = prv_find_sec_list_for_obj_type(obj_type);
 
-  bt_lock();
+  mutex_lock_recursive(s_store_mutex);
 
   s = prv_nimble_store_find_sec(obj_type, &key_sec);
   if (s == NULL) {
@@ -116,7 +120,7 @@ static BleStoreValueSec *prv_nimble_store_upsert_sec(const int obj_type,
 
   s->value_sec = *value_sec;
 
-  bt_unlock();
+  mutex_unlock_recursive(s_store_mutex);
 
   return s;
 }
@@ -211,6 +215,24 @@ static void prv_notify_host_bonding_changed(const int obj_type,
   }
 }
 
+typedef struct {
+  int obj_type;
+  struct ble_store_value_sec value_sec;
+} NimbleStoreSecWrittenContext;
+
+static void prv_handle_sec_written_cb(void *data) {
+  NimbleStoreSecWrittenContext *ctx = data;
+
+  // inform about new IRK
+  if (ctx->obj_type == BLE_STORE_OBJ_TYPE_PEER_SEC && ctx->value_sec.irk_present) {
+    prv_notify_irk_updated(&ctx->value_sec);
+  }
+
+  prv_notify_host_bonding_changed(ctx->obj_type, &ctx->value_sec);
+
+  kernel_free(ctx);
+}
+
 static int prv_nimble_store_write_sec(const int obj_type,
                                       const struct ble_store_value_sec *value_sec) {
   if (value_sec->key_size != KEY_SIZE || value_sec->csrk_present) {
@@ -220,12 +242,12 @@ static int prv_nimble_store_write_sec(const int obj_type,
 
   prv_nimble_store_upsert_sec(obj_type, value_sec);
 
-  // inform about new IRK
-  if (obj_type == BLE_STORE_OBJ_TYPE_PEER_SEC && value_sec->irk_present) {
-    prv_notify_irk_updated(value_sec);
-  }
-
-  prv_notify_host_bonding_changed(obj_type, value_sec);
+  NimbleStoreSecWrittenContext *ctx = kernel_malloc_check(sizeof(*ctx));
+  *ctx = (NimbleStoreSecWrittenContext) {
+    .obj_type = obj_type,
+    .value_sec = *value_sec,
+  };
+  launcher_task_add_callback(prv_handle_sec_written_cb, ctx);
 
   return 0;
 }
@@ -235,10 +257,10 @@ static int prv_nimble_store_delete_sec(int obj_type, const struct ble_store_key_
   BleStoreValueSec *s;
   ListNode **sec_list = prv_find_sec_list_for_obj_type(obj_type);
 
-  bt_lock();
+  mutex_lock_recursive(s_store_mutex);
   s = prv_nimble_store_find_sec(obj_type, key_sec);
   if (s == NULL) {
-    bt_unlock();
+    mutex_unlock_recursive(s_store_mutex);
     return BLE_HS_ENOENT;
   }
 
@@ -248,7 +270,7 @@ static int prv_nimble_store_delete_sec(int obj_type, const struct ble_store_key_
   // the entry as a side-effect, but that reads the identity from SPRF which
   // may already be erased by a prior iteration, causing an infinite loop.
   list_remove((ListNode *)s, sec_list, NULL);
-  bt_unlock();
+  mutex_unlock_recursive(s_store_mutex);
 
   kernel_free(s);
 
@@ -294,7 +316,7 @@ static int prv_nimble_store_read_cccd(const struct ble_store_key_cccd *key_cccd,
   BleStoreValueCCCD *s;
   int ret;
 
-  bt_lock();
+  mutex_lock_recursive(s_store_mutex);
 
   s = prv_nimble_store_find_cccd(key_cccd);
   if (s == NULL) {
@@ -305,7 +327,7 @@ static int prv_nimble_store_read_cccd(const struct ble_store_key_cccd *key_cccd,
   *value_cccd = s->value_cccd;
 
 unlock:
-  bt_unlock();
+  mutex_unlock_recursive(s_store_mutex);
 
   return ret;
 }
@@ -332,9 +354,6 @@ static void prv_nimble_store_insert_cccd(const struct ble_store_value_cccd *valu
 static int prv_nimble_store_write_cccd(const struct ble_store_value_cccd *value_cccd) {
   BleCCCD cccd;
   BTCCCDID cccd_id;
-  int ret = 0;
-
-  bt_lock();
 
   nimble_addr_to_pebble_device(&value_cccd->peer_addr, &cccd.peer);
   cccd.chr_val_handle = value_cccd->chr_val_handle;
@@ -343,16 +362,14 @@ static int prv_nimble_store_write_cccd(const struct ble_store_value_cccd *value_
 
   cccd_id = bt_persistent_storage_store_cccd(&cccd);
   if (cccd_id == BT_CCCD_ID_INVALID) {
-    ret = BLE_HS_ESTORE_CAP;
-    goto unlock;
+    return BLE_HS_ESTORE_CAP;
   }
 
+  mutex_lock_recursive(s_store_mutex);
   prv_nimble_store_insert_cccd(value_cccd);
+  mutex_unlock_recursive(s_store_mutex);
 
-unlock:
-  bt_unlock();
-
-  return ret;
+  return 0;
 }
 
 static int prv_nimble_store_delete_cccd(const struct ble_store_key_cccd *key_cccd) {
@@ -361,14 +378,13 @@ static int prv_nimble_store_delete_cccd(const struct ble_store_key_cccd *key_ccc
   BTDeviceInternal peer;
   BleStoreValueCCCD *s;
 
-  bt_lock();
-
   nimble_addr_to_pebble_device(&key_cccd->peer_addr, &peer);
   res = bt_persistent_storage_delete_cccd(&peer, key_cccd->chr_val_handle);
   if (!res) {
-    ret = BLE_HS_ENOENT;
-    goto unlock;
+    return BLE_HS_ENOENT;
   }
+
+  mutex_lock_recursive(s_store_mutex);
 
   s = prv_nimble_store_find_cccd(key_cccd);
   if (s == NULL) {
@@ -380,7 +396,7 @@ static int prv_nimble_store_delete_cccd(const struct ble_store_key_cccd *key_ccc
   kernel_free(s);
 
 unlock:
-  bt_unlock();
+  mutex_unlock_recursive(s_store_mutex);
 
   return ret;
 }
@@ -451,6 +467,10 @@ static int prv_nimble_store_gen_key(uint8_t key, struct ble_store_gen_key *gen_k
 }
 
 void nimble_store_init(void) {
+  if (s_store_mutex == NULL) {
+    s_store_mutex = mutex_create_recursive();
+  }
+
   ble_hs_cfg.store_read_cb = prv_nimble_store_read;
   ble_hs_cfg.store_write_cb = prv_nimble_store_write;
   ble_hs_cfg.store_delete_cb = prv_nimble_store_delete;
@@ -463,7 +483,7 @@ static bool prv_store_value_free(ListNode *node, void *context) {
 }
 
 void nimble_store_unload(void) {
-  bt_lock();
+  mutex_lock_recursive(s_store_mutex);
 
   list_foreach((ListNode *)s_peer_value_secs, prv_store_value_free, NULL);
   list_foreach((ListNode *)s_our_value_secs, prv_store_value_free, NULL);
@@ -473,7 +493,7 @@ void nimble_store_unload(void) {
   s_our_value_secs = NULL;
   s_cccds = NULL;
 
-  bt_unlock();
+  mutex_unlock_recursive(s_store_mutex);
 }
 
 static void prv_convert_bonding_remote_to_store_val(const BleBonding *bonding,
@@ -536,7 +556,7 @@ void bt_driver_handle_host_removed_bonding(const BleBonding *bonding) {
   key_sec.idx = 0;
   pebble_device_to_nimble_addr(&bonding->pairing_info.identity, &key_sec.peer_addr);
 
-  bt_lock();
+  mutex_lock_recursive(s_store_mutex);
 
   s_sec = prv_nimble_store_find_sec(BLE_STORE_OBJ_TYPE_OUR_SEC, &key_sec);
   if (s_sec != NULL) {
@@ -550,7 +570,7 @@ void bt_driver_handle_host_removed_bonding(const BleBonding *bonding) {
     kernel_free(s_sec);
   }
 
-  bt_unlock();
+  mutex_unlock_recursive(s_store_mutex);
 }
 
 void bt_driver_handle_host_added_cccd(const BleCCCD *cccd) {
@@ -561,7 +581,9 @@ void bt_driver_handle_host_added_cccd(const BleCCCD *cccd) {
   value_cccd.flags = cccd->flags;
   value_cccd.value_changed = cccd->value_changed;
 
+  mutex_lock_recursive(s_store_mutex);
   prv_nimble_store_insert_cccd(&value_cccd);
+  mutex_unlock_recursive(s_store_mutex);
 }
 
 void bt_driver_handle_host_removed_cccd(const BleCCCD *cccd) {
@@ -572,7 +594,7 @@ void bt_driver_handle_host_removed_cccd(const BleCCCD *cccd) {
   key_cccd.chr_val_handle = cccd->chr_val_handle;
   key_cccd.idx = 0;
 
-  bt_lock();
+  mutex_lock_recursive(s_store_mutex);
 
   s = prv_nimble_store_find_cccd(&key_cccd);
   if (s != NULL) {
@@ -580,5 +602,5 @@ void bt_driver_handle_host_removed_cccd(const BleCCCD *cccd) {
     kernel_free(s);
   }
 
-  bt_unlock();
+  mutex_unlock_recursive(s_store_mutex);
 }
