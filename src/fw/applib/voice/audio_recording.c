@@ -24,9 +24,11 @@ AudioRecordingId audio_recording_start(void) {
 #endif
 }
 
-void audio_recording_stop(AudioRecordingId recording_id) {
+bool audio_recording_stop(AudioRecordingId recording_id) {
 #ifdef CONFIG_MIC
-  sys_audio_recording_stop(recording_id);
+  return sys_audio_recording_stop(recording_id);
+#else
+  return false;
 #endif
 }
 
@@ -39,6 +41,22 @@ void audio_recording_cancel(AudioRecordingId recording_id) {
 bool audio_recording_is_active(void) {
 #ifdef CONFIG_MIC
   return sys_audio_recording_is_active();
+#else
+  return false;
+#endif
+}
+
+uint32_t audio_recording_list(AudioRecordingInfo *recordings, uint32_t max_recordings) {
+#ifdef CONFIG_MIC
+  return sys_audio_recording_list(recordings, max_recordings);
+#else
+  return 0;
+#endif
+}
+
+bool audio_recording_delete(AudioRecordingId recording_id) {
+#ifdef CONFIG_MIC
+  return sys_audio_recording_delete(recording_id);
 #else
   return false;
 #endif
@@ -90,6 +108,10 @@ static void prv_transcription_destroy(AudioTranscription *transcription) {
 
 static void prv_handle_transcription_result(PebbleEvent *e, void *context) {
   AudioTranscription *transcription = context;
+  if (e->dictation.source_id != voice_window_get_event_id(transcription->voice_window)) {
+    // Result from another voice window (e.g. a concurrent dictation session)
+    return;
+  }
   transcription->callback(transcription->recording_id, e->dictation.result, e->dictation.text,
                           transcription->context);
   prv_transcription_destroy(transcription);

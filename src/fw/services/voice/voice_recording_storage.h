@@ -54,6 +54,10 @@ bool voice_recording_storage_get_metadata(VoiceRecordingId id,
 //! @return number of entries written to @p out.
 uint32_t voice_recording_storage_list(VoiceRecordingInfo *out, uint32_t max);
 
+//! Fill an array with metadata from recordings belonging to \a app_uuid.
+uint32_t voice_recording_storage_list_owned_by(VoiceRecordingInfo *out, uint32_t max,
+                                               const Uuid *app_uuid);
+
 //! @return total bytes occupied by valid stored recordings.
 uint32_t voice_recording_storage_total_bytes(void);
 

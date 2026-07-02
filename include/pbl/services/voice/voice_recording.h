@@ -40,8 +40,42 @@ typedef enum {
   VoiceRecordingError_Save,         //!< finalizing the recording failed
 } VoiceRecordingError;
 
+typedef enum {
+  VoiceRecordingQuality_Low = 0,
+  VoiceRecordingQuality_Medium,
+  VoiceRecordingQuality_High,
+} VoiceRecordingQuality;
+
+#define VOICE_RECORDING_GAIN_MIN (50)
+#define VOICE_RECORDING_GAIN_MAX (200)
+#define VOICE_RECORDING_GAIN_DEFAULT (100)
+
 //! @return the reason the most recent start/stop failed (cleared on success).
 VoiceRecordingError voice_recording_last_error(void);
+
+//! Get the quality used for new recordings.
+//! TODO: Remove with the temporary Voice Memos settings UI.
+VoiceRecordingQuality voice_recording_get_quality(void);
+
+//! Set the quality used for new recordings.
+//! TODO: Remove with the temporary Voice Memos settings UI.
+void voice_recording_set_quality(VoiceRecordingQuality quality);
+
+//! Get the recording input gain percentage.
+//! TODO: Remove with the temporary Voice Memos settings UI.
+uint16_t voice_recording_get_record_gain(void);
+
+//! Set the recording input gain percentage.
+//! TODO: Remove with the temporary Voice Memos settings UI.
+void voice_recording_set_record_gain(uint16_t gain);
+
+//! Get the recording playback gain percentage.
+//! TODO: Remove with the temporary Voice Memos settings UI.
+uint16_t voice_recording_get_playback_gain(void);
+
+//! Set the recording playback gain percentage.
+//! TODO: Remove with the temporary Voice Memos settings UI.
+void voice_recording_set_playback_gain(uint16_t gain);
 
 //! Metadata describing a stored recording.
 typedef struct {
@@ -62,7 +96,8 @@ void voice_recording_init(void);
 VoiceRecordingId voice_recording_start(void);
 
 //! Stop an in-progress recording and finalize the stored file.
-void voice_recording_stop(VoiceRecordingId id);
+//! @return true if the recording was finalized successfully.
+bool voice_recording_stop(VoiceRecordingId id);
 
 //! Stop whichever recording is currently active and finalize its file. Used when
 //! the caller cannot supply the originating id (e.g. a UI closing mid-recording).
@@ -71,8 +106,12 @@ void voice_recording_stop_active(void);
 //! Abort an in-progress recording and discard its data.
 void voice_recording_cancel(VoiceRecordingId id);
 
-//! Cancel a recording owned by a process that is being terminated.
+//! Cancel a recording owned by a process that is being terminated, and stop a playback that
+//! process started.
 void voice_recording_cleanup_task(PebbleTask task);
+
+//! @return true if the active playback was started by a (non-system) app.
+bool voice_recording_playback_owned_by_app(void);
 
 //! @return true if a recording is currently capturing.
 bool voice_recording_in_progress(void);
@@ -85,6 +124,9 @@ bool voice_recording_is_owned_by(VoiceRecordingId id, const Uuid *app_uuid);
 //! @param max  capacity of \a out
 //! @return number of recordings written to \a out
 uint32_t voice_recording_list(VoiceRecordingInfo *out, uint32_t max);
+
+//! Enumerate stored recordings belonging to \a app_uuid.
+uint32_t voice_recording_list_owned_by(VoiceRecordingInfo *out, uint32_t max, const Uuid *app_uuid);
 
 //! @return total bytes occupied on flash by stored recordings.
 uint32_t voice_recording_total_bytes(void);
