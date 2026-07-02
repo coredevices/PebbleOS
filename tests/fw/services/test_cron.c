@@ -4,6 +4,7 @@
 #include "clar.h"
 
 #include "pbl/services/cron.h"
+#include "pbl/services/new_timer/new_timer.h"
 #include "pbl/util/size.h"
 
 #include <pebbleos/cron.h>
@@ -11,8 +12,23 @@
 #include "stubs_logging.h"
 #include "stubs_mutex.h"
 #include "stubs_passert.h"
-#include "stubs_regular_timer.h"
 #include "fake_rtc.h"
+
+static uint32_t s_timer_timeout_ms;
+
+TimerID new_timer_create(void) {
+  return 1;
+}
+
+bool new_timer_start(TimerID timer, uint32_t timeout_ms, NewTimerCallback cb, void *cb_data,
+                     uint32_t flags) {
+  s_timer_timeout_ms = timeout_ms;
+  return true;
+}
+
+bool new_timer_stop(TimerID timer) {
+  return true;
+}
 
 // Tests
 ///////////////////////////////////////////////////////////
@@ -36,6 +52,7 @@ static const TimezoneInfo s_timezone_gmt = {
 };
 
 void test_cron__initialize(void) {
+  s_timer_timeout_ms = 0;
   cron_service_init();
 }
 
@@ -64,6 +81,24 @@ static void prv_clock_change(int32_t time_diff, int32_t gmt_diff, bool dst_trans
   g_timezone.tm_gmtoff += gmt_diff;
   time_util_update_timezone(&g_timezone);
   cron_service_handle_clock_change(&set_time_info);
+}
+
+void test_cron__timer_aligned_to_execute_second(void) {
+  CronJob job = {
+    .cb = prv_cron_callback,
+    .minute = 45,
+    .hour = CRON_HOUR_ANY,
+    .mday = CRON_MDAY_ANY,
+    .month = CRON_MONTH_ANY,
+  };
+  prv_set_rtc(s_2015_nov12_123456_gmt, &s_timezone_gmt);
+  fake_rtc_increment_time_ms(750);
+
+  const time_t execute_time = cron_job_schedule(&job);
+
+  cl_assert_equal_i(execute_time, 1447332300);
+  cl_assert_equal_i(s_timer_timeout_ms, 603250);
+  cl_assert(cron_job_unschedule(&job));
 }
 
 void test_cron__time_change_basic(void) {
