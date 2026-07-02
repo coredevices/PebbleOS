@@ -30,7 +30,6 @@ PBL_LOG_MODULE_DECLARE(service_voice, CONFIG_SERVICE_VOICE_LOG_LEVEL);
 #define VOICE_REC_MAX_DURATION_MS (120 * 1000)
 #define VOICE_REC_BYTES_PER_SEC (1600)
 #define VOICE_REC_TOTAL_STORAGE_BYTES (KiBYTES(512))
-#define VOICE_REC_MAX_ENCODED_FRAME (200)
 #define VOICE_REC_STAGING_SIZE (1024)
 
 typedef enum {
@@ -77,7 +76,7 @@ static void prv_data_handler(int16_t *samples, size_t sample_count, void *contex
     return;
   }
 
-  uint8_t encoded[VOICE_REC_MAX_ENCODED_FRAME];
+  uint8_t encoded[VOICE_SPEEX_MAX_ENCODED_FRAME_SIZE];
   const int encoded_bytes = voice_speex_encode_frame(samples, encoded, sizeof(encoded));
   if (encoded_bytes <= 0) {
     PBL_LOG_DBG("Failed to encode recording frame");
@@ -223,7 +222,7 @@ VoiceRecordingId voice_recording_start(void) {
   const uint32_t max_data_bytes = (VOICE_REC_MAX_DURATION_MS / 1000) * VOICE_REC_BYTES_PER_SEC;
   const uint32_t header_size = voice_recording_storage_header_size();
   const uint32_t remaining_budget = VOICE_REC_TOTAL_STORAGE_BYTES - stored_bytes;
-  if (remaining_budget <= header_size + VOICE_REC_MAX_ENCODED_FRAME + 1) {
+  if (remaining_budget <= header_size + VOICE_SPEEX_MAX_ENCODED_FRAME_SIZE + 1) {
     PBL_LOG_WRN("Recording storage budget exhausted");
     s_last_error = VoiceRecordingError_StorageFull;
     goto unlock;

@@ -36,9 +36,6 @@ PBL_LOG_MODULE_DEFINE(service_voice, CONFIG_SERVICE_VOICE_LOG_LEVEL);
 #define TIMEOUT_SESSION_SETUP (8000)
 #define TIMEOUT_SESSION_RESULT  (15000)
 
-// Buffer size
-#define MAX_ENCODED_FRAME_SIZE (200)
-
 // When streaming a stored recording for transcription, feed encoded frames at ~real-time
 // (each frame holds 20 ms of audio) so the audio endpoint send buffer never overflows and
 // drops frames, which would corrupt the transcription.
@@ -115,7 +112,7 @@ static void prv_audio_data_handler(int16_t *samples, size_t sample_count, void *
   }
 
   // Encode the audio frame
-  uint8_t encoded_buffer[MAX_ENCODED_FRAME_SIZE];  // Max encoded frame size
+  uint8_t encoded_buffer[VOICE_SPEEX_MAX_ENCODED_FRAME_SIZE];
   int encoded_bytes = voice_speex_encode_frame(samples, encoded_buffer, sizeof(encoded_buffer));
   
   if (encoded_bytes > 0) {
@@ -262,13 +259,14 @@ static void prv_feed_recording(void *unused) {
       break;
     }
     s_rec_sent++;
-    if ((len == 0) || (len > (s_rec_total - s_rec_sent)) || (len > MAX_ENCODED_FRAME_SIZE)) {
+    if ((len == 0) || (len > (s_rec_total - s_rec_sent)) ||
+        (len > VOICE_SPEEX_MAX_ENCODED_FRAME_SIZE)) {
       PBL_LOG_WRN("Corrupt recording frame (len=%u), ending stream", len);
       eof = true;
       break;
     }
 
-    uint8_t frame[MAX_ENCODED_FRAME_SIZE];
+    uint8_t frame[VOICE_SPEEX_MAX_ENCODED_FRAME_SIZE];
     if (pfs_read(s_rec_fd, frame, len) != (int)len) {
       eof = true;
       break;
