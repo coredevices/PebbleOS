@@ -86,14 +86,21 @@ class FontResourceGenerator(ResourceGenerator):
         # PBL-23964: it turns out that font generation is not thread-safe with freetype
         # 2.4 (and possibly later versions). To avoid running into this, we use a lock.
         with cls.lock:
-            height = getattr(
-                definition, "pixel_height", None
-            ) or FontResourceGenerator._get_font_height_from_name(definition.name)
+            name_height = cls._get_font_height_from_name(definition.name)
+            height = getattr(definition, "pixel_height", None) or name_height
             is_legacy = definition.compatibility == "2.7"
             max_glyphs = MAX_GLYPHS_EXTENDED if definition.extended else MAX_GLYPHS
 
+            # Extended fonts sit on the base font's baseline, not their render size.
+            baseline = name_height if definition.extended else None
+
             font = Font(
-                ttf_path, height, max_glyphs, definition.max_glyph_size, is_legacy
+                ttf_path,
+                height,
+                max_glyphs,
+                definition.max_glyph_size,
+                is_legacy,
+                baseline=baseline,
             )
 
             if definition.character_regex is not None:
