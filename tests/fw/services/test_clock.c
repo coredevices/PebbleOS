@@ -174,7 +174,7 @@ void test_clock__hourly_chime_only_on_the_hour(void) {
   prv_watch_dst((void *)false);  // arm
   cl_assert_equal_i(s_vibe_create_count, 0);
 
-  rtc_set_time(1262304000 + 42);  // not on the hour
+  rtc_set_time(1262304000 + SECONDS_PER_MINUTE + 42);  // not in the first minute of the hour
   prv_watch_dst((void *)false);
   cl_assert_equal_i(s_vibe_create_count, 0);
 
