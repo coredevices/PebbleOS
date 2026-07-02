@@ -58,6 +58,13 @@ static uint8_t s_staging[VOICE_REC_STAGING_SIZE];
 static size_t s_staging_used;
 static TimerID s_max_timer = TIMER_INVALID_ID;
 
+static void prv_stop_callback(void *data);
+
+static void prv_schedule_stop(void) {
+  s_capped = true;
+  launcher_task_add_callback(prv_stop_callback, (void *)(uintptr_t)s_active_id);
+}
+
 static bool prv_flush_staging(void) {
   if (s_staging_used == 0) {
     return true;
@@ -86,13 +93,13 @@ static void prv_data_handler(int16_t *samples, size_t sample_count, void *contex
 
   const size_t record_size = 1 + (size_t)encoded_bytes;
   if (s_data_bytes + record_size > s_cap_data_bytes) {
-    PBL_LOG_DBG("Recording reached capacity, dropping further audio");
-    s_capped = true;
+    PBL_LOG_DBG("Recording reached capacity, stopping");
+    prv_schedule_stop();
     return;
   }
 
   if ((s_staging_used + record_size > sizeof(s_staging)) && !prv_flush_staging()) {
-    s_capped = true;
+    prv_schedule_stop();
     return;
   }
 
@@ -175,12 +182,12 @@ static void prv_cancel_locked(VoiceRecordingId id) {
   PBL_LOG_DBG("Cancelled recording id=%u", (unsigned)id);
 }
 
-static void prv_max_duration_stop(void *data) {
+static void prv_stop_callback(void *data) {
   (void)voice_recording_stop((VoiceRecordingId)(uintptr_t)data);
 }
 
 static void prv_max_duration_timeout(void *data) {
-  launcher_task_add_callback(prv_max_duration_stop, data);
+  launcher_task_add_callback(prv_stop_callback, data);
 }
 
 void voice_recording_init(void) {
@@ -286,7 +293,13 @@ unlock:
 
 bool voice_recording_stop(VoiceRecordingId id) {
   mutex_lock(s_lock);
-  const bool stopped = prv_stop_locked(id);
+  bool stopped;
+  if (s_state == RecState_Idle) {
+    VoiceRecordingStorageMetadata metadata;
+    stopped = voice_recording_storage_get_metadata(id, &metadata);
+  } else {
+    stopped = prv_stop_locked(id);
+  }
   mutex_unlock(s_lock);
   return stopped;
 }
