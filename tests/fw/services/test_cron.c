@@ -11,7 +11,7 @@
 #include "stubs_logging.h"
 #include "stubs_mutex.h"
 #include "stubs_passert.h"
-#include "stubs_regular_timer.h"
+#include "stubs_new_timer.h"
 #include "fake_rtc.h"
 
 // Tests
