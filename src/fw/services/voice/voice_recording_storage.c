@@ -32,6 +32,15 @@ typedef struct PACKED {
   uint32_t data_bytes;
 } VoiceRecordingHeader;
 
+// Cached sum of bytes occupied by valid recordings. Computed once at init, then maintained
+// incrementally so voice_recording_start() need not re-open and header-read every file on each
+// capture: finalize adds the new file's exact size, deletes invalidate it (recomputed lazily).
+// All mutators run under the voice_recording lock.
+static uint32_t s_total_bytes;
+static bool s_total_bytes_valid;
+
+static uint32_t prv_compute_total_bytes(void);
+
 static void prv_make_name(char *buf, size_t len, const char *prefix, VoiceRecordingId id) {
   snprintf(buf, len, "%s%u", prefix, (unsigned)id);
 }
@@ -91,6 +100,9 @@ void voice_recording_storage_init(VoiceRecordingId *next_id_out) {
   }
   pfs_delete_file_list(list);
   *next_id_out = next_id;
+
+  s_total_bytes = prv_compute_total_bytes();
+  s_total_bytes_valid = true;
 }
 
 uint32_t voice_recording_storage_header_size(void) {
@@ -184,6 +196,8 @@ bool voice_recording_storage_finalize(VoiceRecordingId id,
   if (!ok) {
     *error_out = VoiceRecordingError_Write;
     pfs_remove(final_name);
+  } else if (s_total_bytes_valid) {
+    s_total_bytes += total;  // exact final file size
   }
   return ok;
 }
@@ -280,7 +294,7 @@ uint32_t voice_recording_storage_list(VoiceRecordingInfo *out, uint32_t max) {
   return count;
 }
 
-uint32_t voice_recording_storage_total_bytes(void) {
+static uint32_t prv_compute_total_bytes(void) {
   uint32_t total = 0;
   PFSFileListEntry *list = pfs_create_file_list(prv_is_recording_file);
   for (PFSFileListEntry *entry = list; entry; entry = (PFSFileListEntry *)entry->list_node.next) {
@@ -297,12 +311,26 @@ uint32_t voice_recording_storage_total_bytes(void) {
   return total;
 }
 
+uint32_t voice_recording_storage_total_bytes(void) {
+  if (!s_total_bytes_valid) {
+    s_total_bytes = prv_compute_total_bytes();
+    s_total_bytes_valid = true;
+  }
+  return s_total_bytes;
+}
+
 bool voice_recording_storage_delete(VoiceRecordingId id) {
   char name[VOICE_REC_NAME_MAX];
   prv_make_name(name, sizeof(name), VOICE_REC_PREFIX, id);
-  return pfs_remove(name) == S_SUCCESS;
+  const bool removed = (pfs_remove(name) == S_SUCCESS);
+  if (removed) {
+    s_total_bytes_valid = false;  // recomputed lazily on next query
+  }
+  return removed;
 }
 
 void voice_recording_storage_delete_all(void) {
   pfs_remove_files(prv_is_recording_file);
+  s_total_bytes = 0;
+  s_total_bytes_valid = true;
 }
