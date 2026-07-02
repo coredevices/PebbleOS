@@ -10,7 +10,7 @@
 #define KERNEL_READONLY_DATA SECTION(".kernel_unpriv_ro_bss")
 
 enum MemoryRegionAssignments {
-  // SF32LB52: SiFli's system_bf0_ap.c programs MPU regions 0..4 in
+  // SF32LB52: SiFli's system_bf0_ap.c programs MPU regions 0..4, 6 and 7 in
   // SystemInit() (flash, peripherals, .ramfunc, LPSYS RAM, HCPU<->LCPU
   // mailbox). Reserve four slots here so the per-task configurable
   // regions still land at indices 8..11 -- matching the FreeRTOS port's
@@ -18,6 +18,8 @@ enum MemoryRegionAssignments {
   // 4) shares its slot with the unused-on-SF32LB52 MemoryRegion_Flash
   // value; Pebble never programs region 4, so SiFli's mailbox config
   // stays intact.
+  // Regions 6 and 7 (non-cacheable kernel RAM) reuse the unused
+  // MemoryRegion_ReadOnlyData/IsrStackGuard slots.
 #ifdef CONFIG_SOC_SF32LB52
   MemoryRegion_Reserved0,
   MemoryRegion_Reserved1,

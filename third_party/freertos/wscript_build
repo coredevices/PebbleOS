@@ -20,8 +20,9 @@ freertos_sources = sum([bld.path.ant_glob(d + '/*.c')
                         for d in freertos_source_paths], [])
 freertos_defines = []
 
-# SF32LB52: SiFli's HAL programs MPU regions 0..4 and Pebble's static
-# MPU setup uses 5..7, so per-task configurable regions live at 8..11
+# SF32LB52: SiFli's HAL programs MPU regions 0..4, 6 and 7 (the last two
+# mark kernel RAM non-cacheable for DMA coherency) and Pebble's static MPU
+# setup uses region 5, so per-task configurable regions live at 8..11
 # (four slots: AppRAM, WorkerRAM, plus two NULL placeholders to satisfy
 # the FreeRTOS port's multiple-of-four invariant).
 if bld.env.CONFIG_SOC_SF32LB52:

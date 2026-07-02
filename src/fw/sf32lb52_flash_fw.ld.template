@@ -54,7 +54,9 @@ SECTIONS
 
         *freertos.*.o (.text* .rodata*)
 
-        . = ALIGN(4);
+        /* 32-byte aligned: the kernel-RAM non-cacheable MPU region starts
+         * here and the ARMv8-M MPU rounds region bounds to a 32-byte granule. */
+        . = ALIGN(32);
         __ramfunc_end = .;
     } >KERNEL_RAM AT>FLASH
     __ramfunc_load_start = LOADADDR(.ramfunc);

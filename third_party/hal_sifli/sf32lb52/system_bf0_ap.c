@@ -17,6 +17,9 @@ extern uint8_t __ramfunc_start[];
 extern uint8_t __ramfunc_end[];
 extern const uint32_t __FLASH_start__[];
 extern const uint32_t __FLASH_size__[];
+extern const uint32_t __unpriv_ro_bss_start__[];
+extern const uint32_t __unpriv_ro_bss_size__[];
+extern const uint32_t _heap_end[];
 
 void SystemCoreClockUpdate(void) {}
 
@@ -80,6 +83,17 @@ static void prv_mpu_config(void) {
   rbar = ARM_MPU_RBAR(0x2007fc00, ARM_MPU_SH_NON, 0, 0, 1);
   rlar = ARM_MPU_RLAR(0x2007ffff, ATTR_RAM_IDX);
   ARM_MPU_SetRegion(4U, rbar, rlar);
+
+  // Kernel RAM (.data/.bss/stacks/heap), regions 6 and 7, non-cacheable so
+  // flash/QSPI DMA stays coherent.
+  rbar = ARM_MPU_RBAR((uint32_t)__ramfunc_end, ARM_MPU_SH_NON, 0, 0, 1);
+  rlar = ARM_MPU_RLAR((uint32_t)__unpriv_ro_bss_start__ - 1U, ATTR_RAM_IDX);
+  ARM_MPU_SetRegion(6U, rbar, rlar);
+
+  rbar = ARM_MPU_RBAR((uint32_t)__unpriv_ro_bss_start__ + (uint32_t)__unpriv_ro_bss_size__,
+                      ARM_MPU_SH_NON, 0, 0, 1);
+  rlar = ARM_MPU_RLAR((uint32_t)_heap_end - 1U, ATTR_RAM_IDX);
+  ARM_MPU_SetRegion(7U, rbar, rlar);
 
   ARM_MPU_Enable(MPU_CTRL_HFNMIENA_Msk | MPU_CTRL_PRIVDEFENA_Msk);
 }
