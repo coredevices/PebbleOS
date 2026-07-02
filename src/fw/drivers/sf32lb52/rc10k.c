@@ -8,15 +8,32 @@
 #include "bf0_hal.h"
 
 #define RC10K_DEFAULT_FREQ_HZ 10000UL
-#define RC10K_CAL_PERIOD_MS 15000U
+
+// Calibrate frequently right after boot while the oscillator settles
+// thermally, then back off: on-wrist temperature moves slowly and the HAL
+// keeps a running average, so a stale-by-a-minute calibration stays well
+// within the accuracy the sleep-time math needs.
+#define RC10K_CAL_PERIOD_FAST_MS 15000U
+#define RC10K_CAL_PERIOD_SLOW_MS 60000U
+#define RC10K_CAL_FAST_COUNT 8U
 
 static TimerID s_rc10k_cal_timer;
+static uint8_t s_cal_count;
 
 static void prv_rc10k_cal_timer_cb(void *data) {
   uint8_t lp_cycle;
 
   lp_cycle = HAL_RC_CAL_GetLPCycle();
   HAL_RC_CAL_update_reference_cycle_on_48M(lp_cycle);
+
+  if (s_cal_count < RC10K_CAL_FAST_COUNT) {
+    s_cal_count++;
+    if (s_cal_count == RC10K_CAL_FAST_COUNT) {
+      bool success = new_timer_start(s_rc10k_cal_timer, RC10K_CAL_PERIOD_SLOW_MS,
+                                     prv_rc10k_cal_timer_cb, NULL, TIMER_START_FLAG_REPEATING);
+      PBL_ASSERTN(success);
+    }
+  }
 }
 
 void rc10k_init(void) {
@@ -25,14 +42,14 @@ void rc10k_init(void) {
   s_rc10k_cal_timer = new_timer_create();
   PBL_ASSERTN(s_rc10k_cal_timer != TIMER_INVALID_ID);
 
-  bool success = new_timer_start(s_rc10k_cal_timer, RC10K_CAL_PERIOD_MS, prv_rc10k_cal_timer_cb,
-                                 NULL, TIMER_START_FLAG_REPEATING);
+  bool success = new_timer_start(s_rc10k_cal_timer, RC10K_CAL_PERIOD_FAST_MS,
+                                 prv_rc10k_cal_timer_cb, NULL, TIMER_START_FLAG_REPEATING);
   PBL_ASSERTN(success);
 }
 
 uint32_t rc10k_get_freq_hz(void) {
   uint32_t hxt48_cyc;
-  
+
   hxt48_cyc = HAL_RC_CAL_get_average_cycle_on_48M();
   if (hxt48_cyc == 0UL) {
     return RC10K_DEFAULT_FREQ_HZ;
