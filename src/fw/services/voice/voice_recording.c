@@ -315,6 +315,22 @@ bool voice_recording_in_progress(void) {
   return recording;
 }
 
+bool voice_recording_is_owned_by(VoiceRecordingId id, const Uuid *app_uuid) {
+  mutex_lock(s_lock);
+
+  bool owned;
+  if ((s_state == RecState_Recording) && (id == s_active_id)) {
+    owned = uuid_equal(&s_app_uuid, app_uuid);
+  } else {
+    VoiceRecordingStorageMetadata metadata;
+    owned = voice_recording_storage_get_metadata(id, &metadata) &&
+            uuid_equal(&metadata.app_uuid, app_uuid);
+  }
+
+  mutex_unlock(s_lock);
+  return owned;
+}
+
 uint32_t voice_recording_list(VoiceRecordingInfo *out, uint32_t max) {
   return voice_recording_storage_list(out, max);
 }

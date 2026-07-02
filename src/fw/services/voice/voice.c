@@ -907,6 +907,12 @@ DEFINE_SYSCALL(VoiceSessionId, sys_voice_start_dictation, VoiceEndpointSessionTy
 
 DEFINE_SYSCALL(VoiceSessionId, sys_voice_start_dictation_from_recording,
                VoiceRecordingId recording_id) {
+  if (PRIVILEGE_WAS_ELEVATED) {
+    const PebbleProcessMd *app_md = app_manager_get_current_app_md();
+    if (!app_md || !voice_recording_is_owned_by(recording_id, &app_md->uuid)) {
+      return VOICE_SESSION_ID_INVALID;
+    }
+  }
   return voice_start_dictation_from_recording(recording_id);
 }
 
