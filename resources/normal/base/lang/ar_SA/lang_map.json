@@ -6,61 +6,61 @@
     },
     "fonts": [{
         "name": "GOTHIC_14_EXTENDED",
-        "file": "NotoSansArabic-Regular.ttf",
+        "file": "Vazirmatn-Regular.ttf",
         "characterList": "arabic_codepoints.json",
         "pixelHeight": 12,
         "extended": true
     }, {
         "name": "GOTHIC_14_BOLD_EXTENDED",
-        "file": "NotoSansArabic-Bold.ttf",
+        "file": "Vazirmatn-Bold.ttf",
         "characterList": "arabic_codepoints.json",
         "pixelHeight": 12,
         "extended": true
     }, {
         "name": "GOTHIC_18_EXTENDED",
-        "file": "NotoSansArabic-Regular.ttf",
+        "file": "Vazirmatn-Regular.ttf",
         "characterList": "arabic_codepoints.json",
         "pixelHeight": 14,
         "extended": true
     }, {
         "name": "GOTHIC_18_BOLD_EXTENDED",
-        "file": "NotoSansArabic-Bold.ttf",
+        "file": "Vazirmatn-Bold.ttf",
         "characterList": "arabic_codepoints.json",
         "pixelHeight": 14,
         "extended": true
     }, {
         "name": "GOTHIC_24_EXTENDED",
-        "file": "NotoSansArabic-Regular.ttf",
+        "file": "Vazirmatn-Regular.ttf",
         "characterList": "arabic_codepoints.json",
         "pixelHeight": 17,
         "extended": true
     }, {
         "name": "GOTHIC_24_BOLD_EXTENDED",
-        "file": "NotoSansArabic-Bold.ttf",
+        "file": "Vazirmatn-Bold.ttf",
         "characterList": "arabic_codepoints.json",
         "pixelHeight": 17,
         "extended": true
     }, {
         "name": "GOTHIC_28_EXTENDED",
-        "file": "NotoSansArabic-Regular.ttf",
+        "file": "Vazirmatn-Regular.ttf",
         "characterList": "arabic_codepoints.json",
         "pixelHeight": 20,
         "extended": true
     }, {
         "name": "GOTHIC_28_BOLD_EXTENDED",
-        "file": "NotoSansArabic-Bold.ttf",
+        "file": "Vazirmatn-Bold.ttf",
         "characterList": "arabic_codepoints.json",
         "pixelHeight": 20,
         "extended": true
     }, {
         "name": "GOTHIC_36_EXTENDED",
-        "file": "NotoSansArabic-Regular.ttf",
+        "file": "Vazirmatn-Regular.ttf",
         "characterList": "arabic_codepoints.json",
         "pixelHeight": 20,
         "extended": true
     }, {
         "name": "GOTHIC_36_BOLD_EXTENDED",
-        "file": "NotoSansArabic-Bold.ttf",
+        "file": "Vazirmatn-Bold.ttf",
         "characterList": "arabic_codepoints.json",
         "pixelHeight": 20,
         "extended": true
