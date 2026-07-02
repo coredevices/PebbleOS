@@ -40,6 +40,7 @@ static uint32_t s_total_bytes;
 static bool s_total_bytes_valid;
 
 static uint32_t prv_compute_total_bytes(void);
+static bool prv_read_header(int fd, VoiceRecordingHeader *header);
 
 static void prv_make_name(char *buf, size_t len, const char *prefix, VoiceRecordingId id) {
   snprintf(buf, len, "%s%u", prefix, (unsigned)id);
@@ -87,6 +88,17 @@ static void prv_fill_header(VoiceRecordingHeader *header,
   };
 }
 
+static bool prv_has_valid_header(const char *name) {
+  const int fd = pfs_open(name, OP_FLAG_READ, FILE_TYPE_STATIC, 0);
+  if (fd < 0) {
+    return false;
+  }
+  VoiceRecordingHeader header;
+  const bool ok = prv_read_header(fd, &header);
+  pfs_close(fd);
+  return ok;
+}
+
 void voice_recording_storage_init(VoiceRecordingId *next_id_out) {
   pfs_remove_files(prv_is_temp_file);
 
@@ -96,6 +108,12 @@ void voice_recording_storage_init(VoiceRecordingId *next_id_out) {
     VoiceRecordingId id;
     if (prv_parse_id(entry->name, &id) && (id >= next_id)) {
       next_id = (id == UINT16_MAX) ? 1 : (id + 1);
+    }
+    // An interrupted finalize (header written last) leaves a file with an invalid header:
+    // excluded from listing and the quota, but still occupying flash. Remove it.
+    if (!prv_has_valid_header(entry->name)) {
+      PBL_LOG_WRN("Removing invalid recording file %s", entry->name);
+      pfs_remove(entry->name);
     }
   }
   pfs_delete_file_list(list);
