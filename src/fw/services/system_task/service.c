@@ -115,7 +115,9 @@ void system_task_timer_init(void) {
   static RegularTimerInfo idle_watchdog_timer = {
     .cb = system_task_idle_timer_callback
   };
-  regular_timer_add_seconds_callback(&idle_watchdog_timer);
+  // 3s check-in leaves plenty of margin against the 10s hardware watchdog
+  // while cutting idle wakeups for this task by two thirds.
+  regular_timer_add_multisecond_callback(&idle_watchdog_timer, 3);
 }
 
 void system_task_watchdog_feed(void) {
