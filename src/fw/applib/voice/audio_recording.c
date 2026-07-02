@@ -75,7 +75,6 @@ typedef struct AudioTranscription {
   AudioTranscriptionCallback callback;
   void *context;
   AudioRecordingId recording_id;
-  bool in_progress;
   EventServiceInfo result_sub;
   EventServiceInfo app_focus_sub;
 } AudioTranscription;
@@ -91,7 +90,6 @@ static void prv_transcription_destroy(AudioTranscription *transcription) {
 
 static void prv_handle_transcription_result(PebbleEvent *e, void *context) {
   AudioTranscription *transcription = context;
-  transcription->in_progress = false;
   transcription->callback(transcription->recording_id, e->dictation.result, e->dictation.text,
                           transcription->context);
   prv_transcription_destroy(transcription);
@@ -172,7 +170,6 @@ bool audio_recording_transcribe(AudioRecordingId recording_id, uint32_t buffer_s
     return false;
   }
 
-  transcription->in_progress = true;
   event_service_client_subscribe(&transcription->result_sub);
   if (pebble_task_get_current() == PebbleTask_App) {
     event_service_client_subscribe(&transcription->app_focus_sub);
