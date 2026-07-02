@@ -50,6 +50,43 @@ DEFINE_SYSCALL(bool, sys_audio_recording_is_active, void) {
 #endif
 }
 
+DEFINE_SYSCALL(uint32_t, sys_audio_recording_list, AudioRecordingInfo *recordings,
+               uint32_t max_recordings) {
+#ifdef CONFIG_MIC
+  if (!recordings || (max_recordings == 0)) {
+    return 0;
+  }
+  if (max_recordings > SIZE_MAX / sizeof(*recordings)) {
+    syscall_failed();
+  }
+  if (PRIVILEGE_WAS_ELEVATED) {
+    syscall_assert_userspace_buffer(recordings, max_recordings * sizeof(*recordings));
+    const PebbleProcessMd *app_md = app_manager_get_current_app_md();
+    if (!app_md) {
+      return 0;
+    }
+    _Static_assert(sizeof(AudioRecordingInfo) == sizeof(VoiceRecordingInfo),
+                   "Recording info layouts must match");
+    return voice_recording_list_owned_by((VoiceRecordingInfo *)recordings, max_recordings,
+                                         &app_md->uuid);
+  }
+  return voice_recording_list((VoiceRecordingInfo *)recordings, max_recordings);
+#else
+  return 0;
+#endif
+}
+
+DEFINE_SYSCALL(bool, sys_audio_recording_delete, AudioRecordingId recording_id) {
+#ifdef CONFIG_MIC
+  if (PRIVILEGE_WAS_ELEVATED && !prv_current_app_owns_recording(recording_id)) {
+    return false;
+  }
+  return voice_recording_delete(recording_id);
+#else
+  return false;
+#endif
+}
+
 DEFINE_SYSCALL(bool, sys_audio_recording_play, AudioRecordingId recording_id) {
 #ifdef CONFIG_MIC
   if (PRIVILEGE_WAS_ELEVATED && !prv_current_app_owns_recording(recording_id)) {

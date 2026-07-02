@@ -336,6 +336,11 @@ uint32_t voice_recording_list(VoiceRecordingInfo *out, uint32_t max) {
   return voice_recording_storage_list(out, max);
 }
 
+uint32_t voice_recording_list_owned_by(VoiceRecordingInfo *out, uint32_t max,
+                                       const Uuid *app_uuid) {
+  return voice_recording_storage_list_owned_by(out, max, app_uuid);
+}
+
 uint32_t voice_recording_total_bytes(void) {
   return voice_recording_storage_total_bytes();
 }

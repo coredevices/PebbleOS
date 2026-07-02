@@ -44,6 +44,22 @@ bool audio_recording_is_active(void) {
 #endif
 }
 
+uint32_t audio_recording_list(AudioRecordingInfo *recordings, uint32_t max_recordings) {
+#ifdef CONFIG_MIC
+  return sys_audio_recording_list(recordings, max_recordings);
+#else
+  return 0;
+#endif
+}
+
+bool audio_recording_delete(AudioRecordingId recording_id) {
+#ifdef CONFIG_MIC
+  return sys_audio_recording_delete(recording_id);
+#else
+  return false;
+#endif
+}
+
 bool audio_recording_play(AudioRecordingId recording_id) {
 #ifdef CONFIG_MIC
   return sys_audio_recording_play(recording_id);

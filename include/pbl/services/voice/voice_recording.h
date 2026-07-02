@@ -86,6 +86,9 @@ bool voice_recording_is_owned_by(VoiceRecordingId id, const Uuid *app_uuid);
 //! @return number of recordings written to \a out
 uint32_t voice_recording_list(VoiceRecordingInfo *out, uint32_t max);
 
+//! Enumerate stored recordings belonging to \a app_uuid.
+uint32_t voice_recording_list_owned_by(VoiceRecordingInfo *out, uint32_t max, const Uuid *app_uuid);
+
 //! @return total bytes occupied on flash by stored recordings.
 uint32_t voice_recording_total_bytes(void);
 
