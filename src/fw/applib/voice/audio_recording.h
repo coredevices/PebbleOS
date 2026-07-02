@@ -50,7 +50,8 @@ AudioRecordingId audio_recording_start(void);
 
 //! Stop the active recording and store it for later use.
 //! @param recording_id  id returned by \ref audio_recording_start
-void audio_recording_stop(AudioRecordingId recording_id);
+//! @return true if the recording was stored successfully.
+bool audio_recording_stop(AudioRecordingId recording_id);
 
 //! Cancel the active recording and discard its audio.
 //! @param recording_id  id returned by \ref audio_recording_start

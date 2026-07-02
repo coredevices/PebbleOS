@@ -62,7 +62,8 @@ void voice_recording_init(void);
 VoiceRecordingId voice_recording_start(void);
 
 //! Stop an in-progress recording and finalize the stored file.
-void voice_recording_stop(VoiceRecordingId id);
+//! @return true if the recording was finalized successfully.
+bool voice_recording_stop(VoiceRecordingId id);
 
 //! Stop whichever recording is currently active and finalize its file. Used when
 //! the caller cannot supply the originating id (e.g. a UI closing mid-recording).

@@ -24,9 +24,11 @@ AudioRecordingId audio_recording_start(void) {
 #endif
 }
 
-void audio_recording_stop(AudioRecordingId recording_id) {
+bool audio_recording_stop(AudioRecordingId recording_id) {
 #ifdef CONFIG_MIC
-  sys_audio_recording_stop(recording_id);
+  return sys_audio_recording_stop(recording_id);
+#else
+  return false;
 #endif
 }
 

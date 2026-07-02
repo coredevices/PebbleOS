@@ -131,7 +131,7 @@ static void prv_select_cb(OptionMenu *option_menu, int row, void *context) {
 #if VOICE_REC_TEST_TRIGGER
   if (row == 0) {
     if (voice_recording_in_progress()) {
-      voice_recording_stop(data->active_id);
+      (void)voice_recording_stop(data->active_id);
       prv_reload(data);  // re-list: the finished recording now appears below
     } else {
       data->active_id = voice_recording_start();

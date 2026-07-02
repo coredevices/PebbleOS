@@ -133,9 +133,9 @@ static void prv_fill_metadata(VoiceRecordingStorageMetadata *metadata) {
   }
 }
 
-static void prv_stop_locked(VoiceRecordingId id) {
+static bool prv_stop_locked(VoiceRecordingId id) {
   if ((s_state != RecState_Recording) || (id != s_active_id)) {
-    return;
+    return false;
   }
 
   new_timer_stop(s_max_timer);
@@ -159,6 +159,7 @@ static void prv_stop_locked(VoiceRecordingId id) {
     s_last_error = VoiceRecordingError_None;
   }
   PBL_LOG_DBG("Stopped recording id=%u (%s)", (unsigned)id, ok ? "saved" : "failed");
+  return ok;
 }
 
 static void prv_cancel_locked(VoiceRecordingId id) {
@@ -175,7 +176,7 @@ static void prv_cancel_locked(VoiceRecordingId id) {
 }
 
 static void prv_max_duration_stop(void *data) {
-  voice_recording_stop((VoiceRecordingId)(uintptr_t)data);
+  (void)voice_recording_stop((VoiceRecordingId)(uintptr_t)data);
 }
 
 static void prv_max_duration_timeout(void *data) {
@@ -283,15 +284,16 @@ unlock:
   return id;
 }
 
-void voice_recording_stop(VoiceRecordingId id) {
+bool voice_recording_stop(VoiceRecordingId id) {
   mutex_lock(s_lock);
-  prv_stop_locked(id);
+  const bool stopped = prv_stop_locked(id);
   mutex_unlock(s_lock);
+  return stopped;
 }
 
 void voice_recording_stop_active(void) {
   mutex_lock(s_lock);
-  prv_stop_locked(s_active_id);
+  (void)prv_stop_locked(s_active_id);
   mutex_unlock(s_lock);
 }
 

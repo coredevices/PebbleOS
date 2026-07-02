@@ -24,12 +24,14 @@ DEFINE_SYSCALL(AudioRecordingId, sys_audio_recording_start, void) {
 #endif
 }
 
-DEFINE_SYSCALL(void, sys_audio_recording_stop, AudioRecordingId recording_id) {
+DEFINE_SYSCALL(bool, sys_audio_recording_stop, AudioRecordingId recording_id) {
 #ifdef CONFIG_MIC
   if (PRIVILEGE_WAS_ELEVATED && !prv_current_app_owns_recording(recording_id)) {
-    return;
+    return false;
   }
-  voice_recording_stop(recording_id);
+  return voice_recording_stop(recording_id);
+#else
+  return false;
 #endif
 }
 
