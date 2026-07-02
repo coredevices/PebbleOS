@@ -26,6 +26,18 @@ int battery_get_millivolts(void) {
   return s_battery_mv;
 }
 
+int battery_get_constants(BatteryConstants *constants) {
+  constants->v_mv = s_battery_mv;
+  constants->i_ua = 100;
+  constants->t_mc = 25000;
+  return 0;
+}
+
+int battery_charge_status_get(BatteryChargeStatus *status) {
+  *status = BatteryChargeStatusUnknown;
+  return 0;
+}
+
 bool battery_charge_controller_thinks_we_are_charging_impl(void) {
   return s_usb_connected && (s_percent < 100);
 }
