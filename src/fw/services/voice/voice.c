@@ -77,6 +77,7 @@ typedef enum {
 
 static VoiceAudioSource s_audio_source;
 static int s_rec_fd = -1;          // payload descriptor of the recording being streamed
+static VoiceRecordingId s_rec_id = VOICE_RECORDING_ID_INVALID;  // valid while s_rec_fd is open
 static uint32_t s_rec_total;       // total encoded payload bytes to stream
 static uint32_t s_rec_sent;        // encoded payload bytes streamed so far
 static uint8_t s_rec_last_pct;     // last reported upload progress (0-100)
@@ -140,6 +141,7 @@ static void prv_stop_feed(void) {
   if (s_rec_fd >= 0) {
     pfs_close(s_rec_fd);
     s_rec_fd = -1;
+    s_rec_id = VOICE_RECORDING_ID_INVALID;
   }
 }
 
@@ -191,6 +193,7 @@ static void prv_reset(void) {
     pfs_close(s_rec_fd);
     s_rec_fd = -1;
   }
+  s_rec_id = VOICE_RECORDING_ID_INVALID;
   s_audio_source = VoiceAudioSource_Mic;
   s_rec_total = 0;
   s_rec_sent = 0;
@@ -604,6 +607,7 @@ VoiceSessionId voice_start_dictation_from_recording(VoiceRecordingId recording_i
 
   s_audio_source = VoiceAudioSource_Recording;
   s_rec_fd = fd;
+  s_rec_id = recording_id;
   s_rec_total = data_bytes;
   s_rec_sent = 0;
   s_rec_last_pct = 0;
@@ -614,6 +618,13 @@ VoiceSessionId voice_start_dictation_from_recording(VoiceRecordingId recording_i
       prv_start_session(VoiceEndpointSessionTypeDictation, &meta.speex);
   mutex_unlock(s_lock);
   return session_id;
+}
+
+VoiceRecordingId voice_transcribing_recording_id(void) {
+  mutex_lock(s_lock);
+  const VoiceRecordingId id = (s_rec_fd >= 0) ? s_rec_id : VOICE_RECORDING_ID_INVALID;
+  mutex_unlock(s_lock);
+  return id;
 }
 
 // Calling this will end the recording, disable the mic and and stop the audio transfer session. We

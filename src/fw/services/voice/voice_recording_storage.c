@@ -39,6 +39,10 @@ typedef struct PACKED {
 static uint32_t s_total_bytes;
 static bool s_total_bytes_valid;
 
+// Recording excluded from the current voice_recording_storage_delete_all() pass (its file is
+// held open by a transcription stream). Only valid while that call runs.
+static VoiceRecordingId s_delete_all_skip_id = VOICE_RECORDING_ID_INVALID;
+
 static uint32_t prv_compute_total_bytes(void);
 static bool prv_read_header(int fd, VoiceRecordingHeader *header);
 
@@ -347,8 +351,23 @@ bool voice_recording_storage_delete(VoiceRecordingId id) {
   return removed;
 }
 
-void voice_recording_storage_delete_all(void) {
-  pfs_remove_files(prv_is_recording_file);
-  s_total_bytes = 0;
-  s_total_bytes_valid = true;
+static bool prv_is_deletable_recording_file(const char *name) {
+  if (!prv_is_recording_file(name)) {
+    return false;
+  }
+  VoiceRecordingId id;
+  return !((s_delete_all_skip_id != VOICE_RECORDING_ID_INVALID) && prv_parse_id(name, &id) &&
+           (id == s_delete_all_skip_id));
+}
+
+void voice_recording_storage_delete_all(VoiceRecordingId skip_id) {
+  s_delete_all_skip_id = skip_id;
+  pfs_remove_files(prv_is_deletable_recording_file);
+  s_delete_all_skip_id = VOICE_RECORDING_ID_INVALID;
+  if (skip_id == VOICE_RECORDING_ID_INVALID) {
+    s_total_bytes = 0;
+    s_total_bytes_valid = true;
+  } else {
+    s_total_bytes_valid = false;  // one file was kept; recompute lazily
+  }
 }

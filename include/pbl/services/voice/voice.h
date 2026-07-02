@@ -68,6 +68,11 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type);
 //! (busy, recording not found, or non-mono recording).
 VoiceSessionId voice_start_dictation_from_recording(VoiceRecordingId recording_id);
 
+//! @return the id of the recording whose file is held open by an active transcription stream, or
+//! \ref VOICE_RECORDING_ID_INVALID if none. Removing an open PFS file panics, so deletion paths
+//! must skip this recording.
+VoiceRecordingId voice_transcribing_recording_id(void);
+
 //! Call after a ready event has been received to end the audio streaming session and await the
 //! dictation response. A VoiceEvent will be created and sent to the subscriber when one of the
 //! following events occur:

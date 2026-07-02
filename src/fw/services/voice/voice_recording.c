@@ -14,6 +14,7 @@
 #include "os/mutex.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/new_timer/new_timer.h"
+#include "pbl/services/voice/voice.h"
 #include "pbl/services/voice/voice_speex.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/app_manager.h"
@@ -342,7 +343,14 @@ uint32_t voice_recording_total_bytes(void) {
 bool voice_recording_delete(VoiceRecordingId id) {
   mutex_lock(s_lock);
   voice_recording_playback_stop();
-  const bool deleted = voice_recording_storage_delete(id);
+  bool deleted = false;
+  // Removing an open PFS file panics; the transcription stream keeps the recording open
+  // for its whole (real-time) duration.
+  if (voice_transcribing_recording_id() == id) {
+    PBL_LOG_WRN("Recording %u is being transcribed, refusing to delete", (unsigned)id);
+  } else {
+    deleted = voice_recording_storage_delete(id);
+  }
   mutex_unlock(s_lock);
   return deleted;
 }
@@ -350,7 +358,8 @@ bool voice_recording_delete(VoiceRecordingId id) {
 void voice_recording_delete_all(void) {
   mutex_lock(s_lock);
   voice_recording_playback_stop();
-  voice_recording_storage_delete_all();
+  // Skip a recording held open by an active transcription stream (see voice_recording_delete).
+  voice_recording_storage_delete_all(voice_transcribing_recording_id());
   mutex_unlock(s_lock);
 }
 

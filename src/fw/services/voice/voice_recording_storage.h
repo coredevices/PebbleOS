@@ -60,5 +60,6 @@ uint32_t voice_recording_storage_total_bytes(void);
 //! Remove a closed stored recording.
 bool voice_recording_storage_delete(VoiceRecordingId id);
 
-//! Remove every closed stored recording.
-void voice_recording_storage_delete_all(void);
+//! Remove every closed stored recording, except \a skip_id (pass
+//! VOICE_RECORDING_ID_INVALID to remove them all).
+void voice_recording_storage_delete_all(VoiceRecordingId skip_id);
