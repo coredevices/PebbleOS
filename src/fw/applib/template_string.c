@@ -145,7 +145,7 @@ T_STATIC bool prv_template_predicate_match(TemplateStringState *state, Predicate
   if (*state->position == '=') {
     (*cond)++;
     state->position++;
-  } else if (!isdigit(*state->position)) {
+  } else if (!isdigit((unsigned char)*state->position)) {
     state->error->status = TemplateStringErrorStatus_InvalidTimeUnit;
     return false;
   }

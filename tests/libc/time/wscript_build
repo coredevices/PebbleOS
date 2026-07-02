@@ -11,4 +11,4 @@ clar(ctx,
     ),
     test_sources_ant_glob = "test_strftime.c",
     override_includes=['dummy_board'],
-    add_includes = ["src/libc"])
+    add_includes = ["lib/c/pebble"])
