@@ -106,12 +106,14 @@ static bool prv_has_valid_header(const char *name) {
 void voice_recording_storage_init(VoiceRecordingId *next_id_out) {
   pfs_remove_files(prv_is_temp_file);
 
-  VoiceRecordingId next_id = 1;
+  // Prime the allocator right past the highest stored id. This is only a hint: once the id
+  // space has wrapped, voice_recording_storage_id_in_use() is what guarantees a free id.
+  VoiceRecordingId max_id = 0;
   PFSFileListEntry *list = pfs_create_file_list(prv_is_recording_file);
   for (PFSFileListEntry *entry = list; entry; entry = (PFSFileListEntry *)entry->list_node.next) {
     VoiceRecordingId id;
-    if (prv_parse_id(entry->name, &id) && (id >= next_id)) {
-      next_id = (id == UINT16_MAX) ? 1 : (id + 1);
+    if (prv_parse_id(entry->name, &id) && (id > max_id)) {
+      max_id = id;
     }
     // An interrupted finalize (header written last) leaves a file with an invalid header:
     // excluded from listing and the quota, but still occupying flash. Remove it.
@@ -121,10 +123,21 @@ void voice_recording_storage_init(VoiceRecordingId *next_id_out) {
     }
   }
   pfs_delete_file_list(list);
-  *next_id_out = next_id;
+  *next_id_out = (max_id == UINT16_MAX) ? 1 : (max_id + 1);
 
   s_total_bytes = prv_compute_total_bytes();
   s_total_bytes_valid = true;
+}
+
+bool voice_recording_storage_id_in_use(VoiceRecordingId id) {
+  char name[VOICE_REC_NAME_MAX];
+  prv_make_name(name, sizeof(name), VOICE_REC_PREFIX, id);
+  const int fd = pfs_open(name, OP_FLAG_READ, FILE_TYPE_STATIC, 0);
+  if (fd < 0) {
+    return false;
+  }
+  pfs_close(fd);
+  return true;
 }
 
 uint32_t voice_recording_storage_header_size(void) {

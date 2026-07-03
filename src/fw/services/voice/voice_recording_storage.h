@@ -21,6 +21,9 @@ typedef struct {
 //! Remove abandoned temporary files and determine the next recording id.
 void voice_recording_storage_init(VoiceRecordingId *next_id_out);
 
+//! @return true if a stored recording file exists for \a id.
+bool voice_recording_storage_id_in_use(VoiceRecordingId id);
+
 //! @return bytes reserved for metadata at the start of each recording file.
 uint32_t voice_recording_storage_header_size(void);
 
