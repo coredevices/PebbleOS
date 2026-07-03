@@ -102,6 +102,10 @@ DEFINE_SYSCALL(bool, sys_audio_recording_play, AudioRecordingId recording_id) {
 
 DEFINE_SYSCALL(void, sys_audio_recording_stop_playback, void) {
 #ifdef CONFIG_MIC
+  // Apps may only stop a playback an app started, not one owned by the system.
+  if (PRIVILEGE_WAS_ELEVATED && !voice_recording_playback_owned_by_app()) {
+    return;
+  }
   voice_recording_stop_playback();
 #endif
 }

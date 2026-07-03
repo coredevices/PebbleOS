@@ -62,6 +62,10 @@ static uint8_t s_staging[VOICE_REC_STAGING_SIZE];
 static size_t s_staging_used;
 static TimerID s_max_timer = TIMER_INVALID_ID;
 
+// True while the active playback was started by a (non-system) app: it is stopped when that app
+// terminates, and only then may an elevated caller stop playback.
+static bool s_playback_owned_by_app;
+
 static void prv_stop_callback(void *data);
 
 static void prv_schedule_stop(void) {
@@ -328,6 +332,10 @@ void voice_recording_cleanup_task(PebbleTask task) {
   if (s_owner_task == task) {
     prv_cancel_locked(s_active_id);
   }
+  if ((task == PebbleTask_App) && s_playback_owned_by_app) {
+    voice_recording_playback_stop();
+    s_playback_owned_by_app = false;
+  }
   mutex_unlock(s_lock);
 }
 
@@ -393,8 +401,19 @@ void voice_recording_delete_all(void) {
 bool voice_recording_play(VoiceRecordingId id) {
   mutex_lock(s_lock);
   const bool started = (s_state == RecState_Idle) && voice_recording_playback_start(id);
+  if (started) {
+    s_playback_owned_by_app = (pebble_task_get_current() == PebbleTask_App) &&
+                              !app_install_id_from_system(app_manager_get_current_app_id());
+  }
   mutex_unlock(s_lock);
   return started;
+}
+
+bool voice_recording_playback_owned_by_app(void) {
+  mutex_lock(s_lock);
+  const bool owned = s_playback_owned_by_app && voice_recording_playback_is_active();
+  mutex_unlock(s_lock);
+  return owned;
 }
 
 void voice_recording_stop_playback(void) {

@@ -72,8 +72,12 @@ void voice_recording_stop_active(void);
 //! Abort an in-progress recording and discard its data.
 void voice_recording_cancel(VoiceRecordingId id);
 
-//! Cancel a recording owned by a process that is being terminated.
+//! Cancel a recording owned by a process that is being terminated, and stop a playback that
+//! process started.
 void voice_recording_cleanup_task(PebbleTask task);
+
+//! @return true if the active playback was started by a (non-system) app.
+bool voice_recording_playback_owned_by_app(void);
 
 //! @return true if a recording is currently capturing.
 bool voice_recording_in_progress(void);
