@@ -69,10 +69,14 @@ DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr)
 	if (cr) {
 		prv_assert_userspace_creation_record(cr, sizeof(cr->recordSize));
 		record_size = cr->recordSize;
-		if (record_size >= kModdableCreationRecordFlagsSize) {
-			prv_assert_userspace_creation_record(cr, kModdableCreationRecordFlagsSize);
-			flags = cr->flags;
+		if (record_size < kModdableCreationRecordMinSize) {
+			APP_LOG(APP_LOG_LEVEL_ERROR, "invalid recordSize");
+			return;
 		}
+
+		prv_assert_userspace_creation_record(cr, cr->recordSize);
+		if (record_size >= kModdableCreationRecordFlagsSize)
+			flags = cr->flags;
 	}
 
 	// Don't log instrumentation if nobody is listening to APP_LOG over BT
@@ -87,12 +91,7 @@ DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr)
 	(void)xsPreparationAndCreation(&defaultCreation);
 	struct xsCreationRecord creation = *defaultCreation;
 	if (NULL != cr) {
-		if (record_size < kModdableCreationRecordMinSize) {
-			APP_LOG(APP_LOG_LEVEL_ERROR, "invalid recordSize");
-			return;
-		}
-
-		prv_assert_userspace_creation_record(cr, kModdableCreationRecordMinSize);
+		APP_LOG(APP_LOG_LEVEL_ERROR, "evaluating creation record");
 		uint32_t stack = (cr->stack + 3) & ~3, slot = (cr->slot + 3) & ~3, chunk = (cr->chunk + 3) & ~3;
 		if (stack || slot || chunk) {
 			if (!stack || !slot || !chunk) {
@@ -100,10 +99,6 @@ DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr)
 				return;
 			}
 
-			xsCreation *defaultCreation;
-			extern void *xsPreparationAndCreation(xsCreation **creation);
-			(void)xsPreparationAndCreation(&defaultCreation);
-			struct xsCreationRecord creation = *defaultCreation;
 			creation.stackCount = stack / sizeof(xsSlot);
 			creation.initialHeapCount = slot / sizeof(xsSlot);
 			creation.initialChunkSize = chunk;
@@ -117,13 +112,13 @@ DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr)
 		}
 
 		if (record_size >= kModdableCreationRecordFFISize) {
-			prv_assert_userspace_creation_record(cr, kModdableCreationRecordFFISize);
 			fxBuildFFI = cr->fxBuildFFI;
 
 			if (fxBuildFFI && creation.staticSize) {
 				int available = creation.staticSize - (creation.stackCount * sizeof(xsSlot));
 				creation.initialHeapCount = (available >> 1) / sizeof(xsSlot);
-				creation.initialChunkSize = available >> 1;		
+				creation.initialChunkSize = available >> 1;
+				creation.staticSize = 0;
 			}
 		}
 	}
