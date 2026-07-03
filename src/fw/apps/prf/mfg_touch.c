@@ -18,7 +18,7 @@
 #include "applib/touch_service.h"
 #include "pbl/services/light.h"
 #include "pbl/services/touch/touch.h"
-#include "pbl/util/trig.h"
+#include "pbl/util/math.h"
 
 #include <stdio.h>
 
@@ -27,23 +27,9 @@
 #define TEST_TIMEOUT_S (30)
 #define WINDOW_POP_TIME_S (3)
 
-#if PBL_ROUND
-// Concentric rings joined by radial connectors: constant-radius arcs are
-// easy to follow on a circular panel and cover most of its surface. The
-// display splits into equal-width ring lanes around a central hub that
-// holds the status text; each guide circle runs along the middle of its
-// lane, with wall lines on the lane boundaries.
-#define NUM_RINGS (2)
-#define HUB_RADIUS_PX (40)
-#define RING_LANE_WIDTH_PX ((PBL_DISPLAY_WIDTH / 2 - HUB_RADIUS_PX) / NUM_RINGS)
-// Path vertex spacing along the arcs; gap left where a ring hands over to
-// the radial connector towards the next ring
-#define RING_ARC_STEP_PX (25)
-#define RING_GAP_ARC_PX (40)
-#define MAX_DOTS (72)
-// Wall lines sit on the lane boundaries: allow deviations right up to them
-#define PATH_TOLERANCE_PX (RING_LANE_WIDTH_PX / 2)
-#else
+// Boustrophedon (snake) grid on both display shapes. On round displays each
+// row only spans the chord of the circle at its height, so rows near the top
+// and bottom hold fewer columns and only the middle runs full width.
 #define GRID_ROWS (5)
 #define GRID_COLS (5)
 #define GRID_SPACING_X (PBL_DISPLAY_WIDTH / GRID_COLS)
@@ -51,6 +37,9 @@
 #define MAX_DOTS (GRID_ROWS * GRID_COLS)
 // Wall lines sit halfway between lanes: allow deviations right up to them
 #define PATH_TOLERANCE_PX (GRID_SPACING_X / 2)
+#if PBL_ROUND
+// Keep dots this far inside the circle edge, where touch gets unreliable
+#define ROUND_EDGE_INSET_PX (12)
 #endif
 
 #define DOT_RADIUS_PX (4)
@@ -67,10 +56,8 @@ typedef struct {
   GPoint dots[MAX_DOTS];
   uint8_t num_dots;
 #if PBL_ROUND
-  int16_t ring_radius[NUM_RINGS];
-  int32_t ring_angle[NUM_RINGS];
-  int32_t ring_sweep[NUM_RINGS];
-  uint8_t ring_first[NUM_RINGS];
+  GPoint wall_start[GRID_ROWS - 1];
+  GPoint wall_end[GRID_ROWS - 1];
 #endif
   GPoint trace[MAX_TRACE_POINTS];
   uint16_t trace_len;
@@ -164,54 +151,19 @@ static void prv_trace_append(AppData *data, GPoint p) {
   data->trace[data->trace_len++] = p;
 }
 
-//! Draw the guide path in the current stroke color/width: arcs plus radial
-//! connectors on round, the snake polyline on rect
+//! Draw the snake polyline guide path in the current stroke color/width
 static void prv_draw_guide_path(GContext *ctx, AppData *data) {
-#if PBL_ROUND
-  for (uint8_t r = 0; r < NUM_RINGS; r++) {
-    GRect rect = GRect(PBL_DISPLAY_WIDTH / 2 - data->ring_radius[r],
-                       PBL_DISPLAY_HEIGHT / 2 - data->ring_radius[r],
-                       2 * data->ring_radius[r] + 1, 2 * data->ring_radius[r] + 1);
-    // graphics_draw_arc measures angles from the top of the circle
-    graphics_draw_arc(ctx, rect, GOvalScaleModeFitCircle,
-                      data->ring_angle[r] + TRIG_MAX_ANGLE / 4,
-                      data->ring_angle[r] + data->ring_sweep[r] + TRIG_MAX_ANGLE / 4);
-  }
-  for (uint8_t r = 1; r < NUM_RINGS; r++) {
-    graphics_draw_line(ctx, data->dots[data->ring_first[r] - 1],
-                       data->dots[data->ring_first[r]]);
-  }
-#else
   for (uint8_t i = 0; i < data->num_dots - 1; i++) {
     graphics_draw_line(ctx, data->dots[i], data->dots[i + 1]);
   }
-#endif
 }
 
 //! Draw a single maze-style wall between each pair of adjacent lanes, with a
 //! gap where the path crosses over
 static void prv_draw_walls(GContext *ctx, AppData *data) {
 #if PBL_ROUND
-  for (uint8_t r = 1; r < NUM_RINGS; r++) {
-    int16_t wall_radius = (data->ring_radius[r - 1] + data->ring_radius[r]) / 2;
-    GRect rect = GRect(PBL_DISPLAY_WIDTH / 2 - wall_radius,
-                       PBL_DISPLAY_HEIGHT / 2 - wall_radius,
-                       2 * wall_radius + 1, 2 * wall_radius + 1);
-    // Gate opening centered on the radial connector
-    int32_t circumference = (2 * wall_radius * 6283) / 2000;
-    int32_t half_gate = (TRIG_MAX_ANGLE * PATH_TOLERANCE_PX) / circumference;
-    graphics_draw_arc(ctx, rect, GOvalScaleModeFitCircle,
-                      data->ring_angle[r] + half_gate + TRIG_MAX_ANGLE / 4,
-                      data->ring_angle[r] - half_gate + TRIG_MAX_ANGLE +
-                          TRIG_MAX_ANGLE / 4);
-  }
-  // Central hub wall around the status text, bounding the innermost lane
-  {
-    int16_t hub_radius = data->ring_radius[NUM_RINGS - 1] - RING_LANE_WIDTH_PX / 2;
-    GRect rect = GRect(PBL_DISPLAY_WIDTH / 2 - hub_radius,
-                       PBL_DISPLAY_HEIGHT / 2 - hub_radius,
-                       2 * hub_radius + 1, 2 * hub_radius + 1);
-    graphics_draw_arc(ctx, rect, GOvalScaleModeFitCircle, 0, TRIG_MAX_ANGLE);
+  for (uint8_t k = 0; k < GRID_ROWS - 1; k++) {
+    graphics_draw_line(ctx, data->wall_start[k], data->wall_end[k]);
   }
 #else
   for (uint8_t k = 1; k < GRID_ROWS; k++) {
@@ -248,18 +200,10 @@ static void prv_update_proc(struct Layer *layer, GContext* ctx) {
   graphics_context_set_stroke_color(ctx, GColorLightGray);
   prv_draw_guide_path(ctx, data);
 
-#if PBL_ROUND
-  // Ring vertices are dense; mark every other one
-  for (uint8_t i = 0; i < data->num_dots; i += 2) {
-    graphics_context_set_fill_color(ctx, i < data->next_dot ? GColorGreen : GColorBlack);
-    graphics_fill_circle(ctx, data->dots[i], DOT_RADIUS_PX);
-  }
-#else
   for (uint8_t i = 0; i < data->num_dots; i++) {
     graphics_context_set_fill_color(ctx, i < data->next_dot ? GColorGreen : GColorBlack);
     graphics_fill_circle(ctx, data->dots[i], DOT_RADIUS_PX);
   }
-#endif
 
   graphics_context_set_stroke_color(ctx, GColorBlack);
   for (uint16_t i = 1; i < data->trace_len; i++) {
@@ -350,31 +294,47 @@ static void prv_touch_event_handler(const TouchEvent *event, void *context) {
 
 static void prv_init_dots(AppData *data) {
 #if PBL_ROUND
-  GPoint center = GPoint(PBL_DISPLAY_WIDTH / 2, PBL_DISPLAY_HEIGHT / 2);
-  // Start at the top; each ring sweeps a full circle minus a gap, then the
-  // path drops radially to the next ring
-  int32_t angle = 3 * TRIG_MAX_ANGLE / 4;
+  const GPoint center = GPoint(PBL_DISPLAY_WIDTH / 2, PBL_DISPLAY_HEIGHT / 2);
+  const int32_t radius = MIN(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT) / 2;
+  const int32_t dot_radius = radius - ROUND_EDGE_INSET_PX;
+
   data->num_dots = 0;
+  for (uint8_t row = 0; row < GRID_ROWS; row++) {
+    int32_t y = GRID_SPACING_Y / 2 + row * GRID_SPACING_Y;
+    int32_t dy = y - center.y;
+    int32_t half_width = integer_sqrt(dot_radius * dot_radius - dy * dy);
+    // As many columns as the chord fits at the nominal spacing, at least the
+    // two chord ends
+    uint8_t cols = CLIP(1 + (2 * half_width) / GRID_SPACING_X, 2, GRID_COLS);
+    uint8_t first = data->num_dots;
 
-  for (uint8_t ring = 0; ring < NUM_RINGS; ring++) {
-    int32_t radius =
-        PBL_DISPLAY_WIDTH / 2 - RING_LANE_WIDTH_PX * ring - RING_LANE_WIDTH_PX / 2;
-    int32_t circumference = (2 * radius * 6283) / 2000;  // 2 * pi * r
-    int32_t sweep = (TRIG_MAX_ANGLE * (circumference - RING_GAP_ARC_PX)) / circumference;
-    uint8_t segments = (circumference - RING_GAP_ARC_PX) / RING_ARC_STEP_PX;
-
-    data->ring_radius[ring] = radius;
-    data->ring_angle[ring] = angle;
-    data->ring_sweep[ring] = sweep;
-    data->ring_first[ring] = data->num_dots;
-
-    for (uint8_t i = 0; i <= segments && data->num_dots < MAX_DOTS; i++) {
-      int32_t a = angle + (sweep * i) / segments;
-      data->dots[data->num_dots].x = center.x + (radius * cos_lookup(a)) / TRIG_MAX_RATIO;
-      data->dots[data->num_dots].y = center.y + (radius * sin_lookup(a)) / TRIG_MAX_RATIO;
+    for (uint8_t col = 0; col < cols; col++) {
+      uint8_t eff_col = (row % 2 == 0) ? col : cols - 1 - col;
+      data->dots[data->num_dots].x =
+          center.x - half_width + (2 * half_width * eff_col) / (cols - 1);
+      data->dots[data->num_dots].y = y;
       data->num_dots++;
     }
-    angle += sweep;
+
+    if (row > 0) {
+      // Wall on the row boundary spans its chord, leaving a gap around the
+      // connector between the two rows
+      int16_t wall_y = row * GRID_SPACING_Y;
+      int32_t wall_dy = wall_y - center.y;
+      int32_t wall_half = integer_sqrt(radius * radius - wall_dy * wall_dy);
+      GPoint prev_end = data->dots[first - 1];
+      GPoint row_start = data->dots[first];
+      if (row % 2 == 1) {
+        // Rows connect on the right: wall spans from the left chord end
+        int16_t gate_x = MIN(prev_end.x, row_start.x) - PATH_TOLERANCE_PX;
+        data->wall_start[row - 1] = GPoint(center.x - wall_half, wall_y);
+        data->wall_end[row - 1] = GPoint(gate_x, wall_y);
+      } else {
+        int16_t gate_x = MAX(prev_end.x, row_start.x) + PATH_TOLERANCE_PX;
+        data->wall_start[row - 1] = GPoint(gate_x, wall_y);
+        data->wall_end[row - 1] = GPoint(center.x + wall_half, wall_y);
+      }
+    }
   }
 #else
   int16_t spacing_x = PBL_DISPLAY_WIDTH / GRID_COLS;
