@@ -74,30 +74,15 @@ static void prv_feed(void *data) {
       }
     }
 
-    if (s_remaining < 1) {
-      eof = true;
-      break;
-    }
-
-    uint8_t len = 0;
-    if (pfs_read(s_fd, &len, 1) != 1) {
-      eof = true;
-      break;
-    }
-    s_remaining--;
-    if ((len == 0) || (len > s_remaining) || (len > VOICE_SPEEX_MAX_ENCODED_FRAME_SIZE)) {
-      eof = true;
-      break;
-    }
-
     uint8_t frame[VOICE_SPEEX_MAX_ENCODED_FRAME_SIZE];
-    if (pfs_read(s_fd, frame, len) != (int)len) {
+    const int frame_len =
+        voice_recording_storage_read_frame(s_fd, &s_remaining, frame, sizeof(frame));
+    if (frame_len <= 0) {
       eof = true;
       break;
     }
-    s_remaining -= len;
 
-    const int samples = voice_speex_decode_frame(frame, len, s_pcm);
+    const int samples = voice_speex_decode_frame(frame, frame_len, s_pcm);
     if (samples > 0) {
       const uint16_t gain = voice_recording_get_playback_gain();
       if (gain != VOICE_RECORDING_GAIN_DEFAULT) {

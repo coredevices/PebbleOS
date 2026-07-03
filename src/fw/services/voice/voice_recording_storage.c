@@ -266,6 +266,29 @@ int voice_recording_storage_open_payload(VoiceRecordingId id, uint32_t *data_byt
   return fd;
 }
 
+int voice_recording_storage_read_frame(int fd, uint32_t *remaining_bytes, uint8_t *frame_out,
+                                       size_t frame_out_size) {
+  if (*remaining_bytes < 1) {
+    return 0;
+  }
+
+  uint8_t len = 0;
+  if (pfs_read(fd, &len, 1) != 1) {
+    return 0;
+  }
+  (*remaining_bytes)--;
+  if ((len == 0) || (len > *remaining_bytes) || (len > frame_out_size)) {
+    PBL_LOG_WRN("Corrupt recording frame (len=%u), ending stream", len);
+    return 0;
+  }
+
+  if (pfs_read(fd, frame_out, len) != (int)len) {
+    return 0;
+  }
+  *remaining_bytes -= len;
+  return len;
+}
+
 bool voice_recording_storage_get_metadata(VoiceRecordingId id,
                                           VoiceRecordingStorageMetadata *out) {
   char name[VOICE_REC_NAME_MAX];

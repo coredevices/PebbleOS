@@ -272,31 +272,16 @@ static void prv_feed_recording(void *unused) {
 
   bool eof = false;
   for (int i = 0; i < VOICE_REC_FRAMES_PER_FEED; i++) {
-    if ((s_rec_total - s_rec_sent) < 1) {
-      eof = true;
-      break;
-    }
-
-    uint8_t len = 0;
-    if (pfs_read(s_rec_fd, &len, 1) != 1) {
-      eof = true;
-      break;
-    }
-    s_rec_sent++;
-    if ((len == 0) || (len > (s_rec_total - s_rec_sent)) ||
-        (len > VOICE_SPEEX_MAX_ENCODED_FRAME_SIZE)) {
-      PBL_LOG_WRN("Corrupt recording frame (len=%u), ending stream", len);
-      eof = true;
-      break;
-    }
-
     uint8_t frame[VOICE_SPEEX_MAX_ENCODED_FRAME_SIZE];
-    if (pfs_read(s_rec_fd, frame, len) != (int)len) {
+    uint32_t remaining = s_rec_total - s_rec_sent;
+    const int frame_len =
+        voice_recording_storage_read_frame(s_rec_fd, &remaining, frame, sizeof(frame));
+    s_rec_sent = s_rec_total - remaining;
+    if (frame_len <= 0) {
       eof = true;
       break;
     }
-    s_rec_sent += len;
-    audio_endpoint_add_frame(s_session_id, frame, len);
+    audio_endpoint_add_frame(s_session_id, frame, frame_len);
   }
 
   const uint8_t pct = (s_rec_total > 0)

@@ -48,6 +48,12 @@ bool voice_recording_storage_finalize(VoiceRecordingId id,
 //! @return an owned PFS descriptor, or a negative value on failure.
 int voice_recording_storage_open_payload(VoiceRecordingId id, uint32_t *data_bytes_out);
 
+//! Read the next length-prefixed encoded frame from an open payload descriptor and
+//! decrement \a remaining_bytes by the bytes consumed.
+//! @return the frame length in bytes, or 0 at end of payload or on a corrupt/truncated frame.
+int voice_recording_storage_read_frame(int fd, uint32_t *remaining_bytes, uint8_t *frame_out,
+                                       size_t frame_out_size);
+
 //! Read the stored metadata (header) of a valid recording without opening the payload.
 //! @return true on success.
 bool voice_recording_storage_get_metadata(VoiceRecordingId id,
