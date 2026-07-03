@@ -40,8 +40,25 @@ typedef enum {
   VoiceRecordingError_Save,         //!< finalizing the recording failed
 } VoiceRecordingError;
 
+typedef enum {
+  VoiceRecordingQuality_Low = 0,
+  VoiceRecordingQuality_Medium,
+  VoiceRecordingQuality_High,
+} VoiceRecordingQuality;
+
+#define VOICE_RECORDING_GAIN_MIN (50)
+#define VOICE_RECORDING_GAIN_MAX (200)
+#define VOICE_RECORDING_GAIN_DEFAULT (100)
+
 //! @return the reason the most recent start/stop failed (cleared on success).
 VoiceRecordingError voice_recording_last_error(void);
+
+VoiceRecordingQuality voice_recording_get_quality(void);
+void voice_recording_set_quality(VoiceRecordingQuality quality);
+uint16_t voice_recording_get_record_gain(void);
+void voice_recording_set_record_gain(uint16_t gain);
+uint16_t voice_recording_get_playback_gain(void);
+void voice_recording_set_playback_gain(uint16_t gain);
 
 //! Metadata describing a stored recording.
 typedef struct {

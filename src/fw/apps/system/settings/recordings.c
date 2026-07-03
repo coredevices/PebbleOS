@@ -12,6 +12,7 @@
 #include "applib/ui/dialogs/dialog.h"
 #include "applib/ui/dialogs/expandable_dialog.h"
 #include "applib/ui/option_menu_window.h"
+#include "applib/ui/number_window.h"
 #include "applib/ui/ui.h"
 #include "applib/voice/audio_recording.h"
 #include "kernel/pbl_malloc.h"
@@ -27,7 +28,14 @@
 
 #define SETTINGS_RECORDINGS_MAX_SHOWN (64)
 #define SETTINGS_RECORDINGS_REFRESH_MS (500)
-#define VOICE_REC_ROW_OFFSET (1)
+#define VOICE_REC_ROW_OFFSET (2)
+
+typedef enum {
+  RecordingSetting_Quality = 0,
+  RecordingSetting_RecordGain,
+  RecordingSetting_PlaybackGain,
+  RecordingSetting_Count,
+} RecordingSetting;
 
 typedef enum {
   RecordingAction_PlayStop = 0,
@@ -43,9 +51,13 @@ typedef struct {
   VoiceRecordingId active_id;
   VoiceRecordingId selected_id;
   OptionMenu *action_menu;
+  OptionMenu *settings_menu;
   AppTimer *refresh_timer;
+  RecordingSetting edited_setting;
   bool was_recording;
   char row_buf[40];
+  char setting_labels[RecordingSetting_Count][32];
+  const char *setting_rows[RecordingSetting_Count];
 } SettingsRecordingsData;
 
 static const char *s_action_labels[] = {
@@ -53,6 +65,28 @@ static const char *s_action_labels[] = {
     [RecordingAction_Transcribe] = i18n_noop("Transcribe"),
     [RecordingAction_Delete] = i18n_noop("Delete"),
 };
+
+static const char *prv_quality_label(VoiceRecordingQuality quality) {
+  static const char *s_labels[] = {
+      [VoiceRecordingQuality_Low] = i18n_noop("Low"),
+      [VoiceRecordingQuality_Medium] = i18n_noop("Medium"),
+      [VoiceRecordingQuality_High] = i18n_noop("High"),
+  };
+  return s_labels[quality];
+}
+
+static void prv_update_setting_labels(SettingsRecordingsData *data) {
+  snprintf(data->setting_labels[RecordingSetting_Quality],
+           sizeof(data->setting_labels[RecordingSetting_Quality]), "%s: %s",
+           i18n_get("Quality", data),
+           i18n_get(prv_quality_label(voice_recording_get_quality()), data));
+  snprintf(data->setting_labels[RecordingSetting_RecordGain],
+           sizeof(data->setting_labels[RecordingSetting_RecordGain]), "%s: %u%%",
+           i18n_get("Record volume", data), voice_recording_get_record_gain());
+  snprintf(data->setting_labels[RecordingSetting_PlaybackGain],
+           sizeof(data->setting_labels[RecordingSetting_PlaybackGain]), "%s: %u%%",
+           i18n_get("Playback volume", data), voice_recording_get_playback_gain());
+}
 
 static const char *prv_error_label(VoiceRecordingError error) {
   switch (error) {
@@ -222,6 +256,72 @@ static void prv_push_action_menu(SettingsRecordingsData *data) {
       &callbacks, RecordingAction_Count, false, s_action_labels, data);
 }
 
+static void prv_gain_selected_cb(NumberWindow *number_window, void *context) {
+  SettingsRecordingsData *data = context;
+  const uint16_t gain = (uint16_t)number_window_get_value(number_window);
+  if (data->edited_setting == RecordingSetting_RecordGain) {
+    voice_recording_set_record_gain(gain);
+  } else {
+    voice_recording_set_playback_gain(gain);
+  }
+  prv_update_setting_labels(data);
+  if (data->settings_menu) {
+    option_menu_reload_data(data->settings_menu);
+  }
+  app_window_stack_remove(&number_window->window, true);
+}
+
+static void prv_push_gain_window(SettingsRecordingsData *data, RecordingSetting setting) {
+  data->edited_setting = setting;
+  const char *title =
+      (setting == RecordingSetting_RecordGain) ? "Record volume" : "Playback volume";
+  NumberWindow *window = number_window_create(
+      i18n_get(title, data), (NumberWindowCallbacks){.selected = prv_gain_selected_cb}, data);
+  if (!window) {
+    return;
+  }
+  number_window_set_min(window, VOICE_RECORDING_GAIN_MIN);
+  number_window_set_max(window, VOICE_RECORDING_GAIN_MAX);
+  number_window_set_step_size(window, 10);
+  number_window_set_value(window, setting == RecordingSetting_RecordGain
+                                      ? voice_recording_get_record_gain()
+                                      : voice_recording_get_playback_gain());
+  app_window_stack_push(&window->window, true);
+}
+
+static void prv_settings_unload_cb(OptionMenu *option_menu, void *context) {
+  SettingsRecordingsData *data = prv_get_action_context(context);
+  data->settings_menu = NULL;
+}
+
+static void prv_settings_select_cb(OptionMenu *option_menu, int row, void *context) {
+  SettingsRecordingsData *data = prv_get_action_context(context);
+  const RecordingSetting setting = (RecordingSetting)row;
+  if (setting == RecordingSetting_Quality) {
+    const VoiceRecordingQuality quality =
+        (voice_recording_get_quality() + 1) % (VoiceRecordingQuality_High + 1);
+    voice_recording_set_quality(quality);
+    prv_update_setting_labels(data);
+    option_menu_reload_data(option_menu);
+  } else if (setting < RecordingSetting_Count) {
+    prv_push_gain_window(data, setting);
+  }
+}
+
+static void prv_push_settings_menu(SettingsRecordingsData *data) {
+  prv_update_setting_labels(data);
+  for (uint32_t i = 0; i < RecordingSetting_Count; i++) {
+    data->setting_rows[i] = data->setting_labels[i];
+  }
+  const OptionMenuCallbacks callbacks = {
+      .unload = prv_settings_unload_cb,
+      .select = prv_settings_select_cb,
+  };
+  data->settings_menu = settings_option_menu_push(
+      i18n_noop("Recording settings"), OptionMenuContentType_SingleLine, OPTION_MENU_CHOICE_NONE,
+      &callbacks, RecordingSetting_Count, false, data->setting_rows, data);
+}
+
 static uint16_t prv_get_num_rows_cb(OptionMenu *option_menu, void *context) {
   SettingsRecordingsData *data = context;
   return VOICE_REC_ROW_OFFSET + ((data->count == 0) ? 1 : data->count);
@@ -235,6 +335,8 @@ static void prv_draw_row_cb(OptionMenu *option_menu, GContext *ctx, const Layer 
   if (row == 0) {
     title = voice_recording_in_progress() ? i18n_get("Stop recording", data)
                                           : i18n_get("New recording", data);
+  } else if (row == 1) {
+    title = i18n_get("Recording settings", data);
   } else if (data->count == 0) {
     title = i18n_get("No voice memos", data);
   } else {
@@ -273,6 +375,11 @@ static void prv_select_cb(OptionMenu *option_menu, int row, void *context) {
     }
     data->was_recording = voice_recording_in_progress();
     prv_reload(data);
+    return;
+  }
+
+  if (row == 1) {
+    prv_push_settings_menu(data);
     return;
   }
 
@@ -330,7 +437,7 @@ static Window *prv_init(void) {
 
 const SettingsModuleMetadata *settings_recordings_get_info(void) {
   static const SettingsModuleMetadata s_module_info = {
-      .name = i18n_noop("Voice Memos"),
+      .name = i18n_noop("Voice Memos TEST"),
       .init = prv_init,
   };
 

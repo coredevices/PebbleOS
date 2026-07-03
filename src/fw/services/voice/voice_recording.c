@@ -14,6 +14,7 @@
 #include "os/mutex.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/new_timer/new_timer.h"
+#include "pbl/services/settings/settings_file.h"
 #include "pbl/services/voice/voice.h"
 #include "pbl/services/voice/voice_speex.h"
 #include "process_management/app_install_manager.h"
@@ -31,7 +32,9 @@ PBL_LOG_MODULE_DECLARE(service_voice, CONFIG_SERVICE_VOICE_LOG_LEVEL);
 #define VOICE_REC_MAX_DURATION_MS (120 * 1000)
 // Memos are encoded at a higher Speex quality than live dictation (whose bit rate is
 // constrained by the BT link); the default quality is restored when the recording ends.
-#define VOICE_REC_SPEEX_QUALITY (8)
+#define VOICE_REC_SETTINGS_FILE "voicerec"
+#define VOICE_REC_SETTINGS_KEY "config"
+#define VOICE_REC_SETTINGS_SIZE (128)
 // ~27.8 kbps at quality 8, plus one length byte per 20 ms frame, rounded up.
 #define VOICE_REC_BYTES_PER_SEC (3600)
 #define VOICE_REC_TOTAL_STORAGE_BYTES (KiBYTES(1024))
@@ -57,6 +60,18 @@ static uint32_t s_samples_per_frame;
 static uint32_t s_cap_data_bytes;
 static bool s_capped;
 static VoiceRecordingError s_last_error;
+
+typedef struct {
+  VoiceRecordingQuality quality;
+  uint16_t record_gain;
+  uint16_t playback_gain;
+} VoiceRecordingConfig;
+
+static VoiceRecordingConfig s_config = {
+    .quality = VoiceRecordingQuality_High,
+    .record_gain = VOICE_RECORDING_GAIN_DEFAULT,
+    .playback_gain = VOICE_RECORDING_GAIN_DEFAULT,
+};
 
 static uint8_t s_staging[VOICE_REC_STAGING_SIZE];
 static size_t s_staging_used;
@@ -90,6 +105,14 @@ static bool prv_flush_staging(void) {
 static void prv_data_handler(int16_t *samples, size_t sample_count, void *context) {
   if ((s_state != RecState_Recording) || s_capped) {
     return;
+  }
+
+  if (s_config.record_gain != VOICE_RECORDING_GAIN_DEFAULT) {
+    for (size_t i = 0; i < sample_count; i++) {
+      const int32_t amplified =
+          (int32_t)samples[i] * s_config.record_gain / VOICE_RECORDING_GAIN_DEFAULT;
+      samples[i] = (int16_t)MAX(INT16_MIN, MIN(INT16_MAX, amplified));
+    }
   }
 
   uint8_t encoded[VOICE_SPEEX_MAX_ENCODED_FRAME_SIZE];
@@ -201,6 +224,20 @@ static void prv_max_duration_timeout(void *data) {
 
 void voice_recording_init(void) {
   s_lock = mutex_create();
+  SettingsFile file = {{0}};
+  VoiceRecordingConfig config;
+  if ((settings_file_open(&file, VOICE_REC_SETTINGS_FILE, VOICE_REC_SETTINGS_SIZE) == S_SUCCESS)) {
+    if (settings_file_get(&file, VOICE_REC_SETTINGS_KEY, strlen(VOICE_REC_SETTINGS_KEY), &config,
+                          sizeof(config)) == S_SUCCESS &&
+        config.quality <= VoiceRecordingQuality_High &&
+        config.record_gain >= VOICE_RECORDING_GAIN_MIN &&
+        config.record_gain <= VOICE_RECORDING_GAIN_MAX &&
+        config.playback_gain >= VOICE_RECORDING_GAIN_MIN &&
+        config.playback_gain <= VOICE_RECORDING_GAIN_MAX) {
+      s_config = config;
+    }
+    settings_file_close(&file);
+  }
   voice_recording_storage_init(&s_next_id);
   voice_recording_playback_init();
 }
@@ -284,7 +321,8 @@ VoiceRecordingId voice_recording_start(void) {
     goto unlock;
   }
 
-  voice_speex_set_quality(VOICE_REC_SPEEX_QUALITY);
+  static const uint8_t s_speex_quality[] = {4, 6, 8};
+  voice_speex_set_quality(s_speex_quality[s_config.quality]);
 
   s_state = RecState_Recording;
   s_active_id = id;
@@ -429,4 +467,42 @@ VoiceRecordingError voice_recording_last_error(void) {
   const VoiceRecordingError error = s_last_error;
   mutex_unlock(s_lock);
   return error;
+}
+
+static void prv_save_config(void) {
+  SettingsFile file = {{0}};
+  if (settings_file_open(&file, VOICE_REC_SETTINGS_FILE, VOICE_REC_SETTINGS_SIZE) == S_SUCCESS) {
+    settings_file_set(&file, VOICE_REC_SETTINGS_KEY, strlen(VOICE_REC_SETTINGS_KEY), &s_config,
+                      sizeof(s_config));
+    settings_file_close(&file);
+  }
+}
+
+VoiceRecordingQuality voice_recording_get_quality(void) {
+  return s_config.quality;
+}
+
+void voice_recording_set_quality(VoiceRecordingQuality quality) {
+  if (quality <= VoiceRecordingQuality_High) {
+    s_config.quality = quality;
+    prv_save_config();
+  }
+}
+
+uint16_t voice_recording_get_record_gain(void) {
+  return s_config.record_gain;
+}
+
+void voice_recording_set_record_gain(uint16_t gain) {
+  s_config.record_gain = MIN(VOICE_RECORDING_GAIN_MAX, MAX(VOICE_RECORDING_GAIN_MIN, gain));
+  prv_save_config();
+}
+
+uint16_t voice_recording_get_playback_gain(void) {
+  return s_config.playback_gain;
+}
+
+void voice_recording_set_playback_gain(uint16_t gain) {
+  s_config.playback_gain = MIN(VOICE_RECORDING_GAIN_MAX, MAX(VOICE_RECORDING_GAIN_MIN, gain));
+  prv_save_config();
 }
