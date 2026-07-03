@@ -416,9 +416,8 @@ void test_light__breathe_reuses_target_between_cycles(void) {
 
   // Peak stays at the original target (60), scaled for hardware — not the
   // newly-set intensity (90).
-  cl_assert_equal_i(
-      s_backlight_brightness,
-      DIVIDE_CEIL(60 * (uint16_t)BOARD_CONFIG.backlight_on_percent, 100U));
+  cl_assert_equal_i(s_backlight_brightness,
+                    DIVIDE_CEIL(60 * (uint16_t)BOARD_CONFIG.backlight_on_percent, 100U));
 }
 
 void test_light__breathe_resumes_after_button_interrupt(void) {
@@ -455,6 +454,65 @@ void test_light__breathe_stop_while_interrupted_prevents_resume(void) {
   light_stop_charge_breathe();
   light_button_released();
   check_on_timed_and_consume();
+}
+
+void test_light__breathe_does_not_resume_while_disallowed(void) {
+  backlight_set_intensity(70);
+  light_start_charge_breathe();
+  fire_light_timer();
+
+  light_button_pressed();
+  check_on();
+
+  light_allow(false);
+  check_off();
+
+  light_allow(true);
+  cl_assert_equal_i(s_backlight_brightness, 0);
+  cl_assert(stub_new_timer_is_scheduled(s_light_timer));
+
+  fire_light_timer();
+  cl_assert(s_backlight_brightness > 0);
+}
+
+void test_light__breathe_waits_for_light_allow(void) {
+  light_allow(false);
+  backlight_set_intensity(70);
+
+  light_start_charge_breathe();
+  check_off();
+
+  light_allow(true);
+  cl_assert_equal_i(s_backlight_brightness, 0);
+  cl_assert(stub_new_timer_is_scheduled(s_light_timer));
+
+  fire_light_timer();
+  cl_assert(s_backlight_brightness > 0);
+}
+
+void test_light__breathe_ignores_backlight_enabled_setting(void) {
+  backlight_set_intensity(70);
+  light_start_charge_breathe();
+  fire_light_timer();
+
+  light_toggle_enabled();
+  cl_assert(!backlight_is_enabled());
+  cl_assert(s_backlight_brightness > 0);
+  cl_assert(stub_new_timer_is_scheduled(s_light_timer));
+}
+
+void test_light__breathe_starts_when_backlight_enabled_setting_is_off(void) {
+  light_toggle_enabled();
+  cl_assert(!backlight_is_enabled());
+  check_off();
+
+  backlight_set_intensity(70);
+  light_start_charge_breathe();
+  cl_assert_equal_i(s_backlight_brightness, 0);
+  cl_assert(stub_new_timer_is_scheduled(s_light_timer));
+
+  fire_light_timer();
+  cl_assert(s_backlight_brightness > 0);
 }
 
 void test_light__breathe_stop_mid_fade(void) {
