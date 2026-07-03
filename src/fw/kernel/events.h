@@ -521,10 +521,13 @@ typedef struct PACKED { // 7 bytes
   PebbleVoiceServiceEventData *data;
 } PebbleVoiceServiceEvent;
 
-typedef struct PACKED { // 9 bytes
+typedef struct PACKED { // 10 bytes
   DictationSessionStatus result;
   time_t timestamp;
   char *text;
+  //! id of the emitting VoiceWindow (voice_window_get_event_id()); subscribers must ignore
+  //! results coming from a window that is not theirs.
+  uint8_t source_id;
 } PebbleDictationEvent;
 
 //! Possible results that come back from the INSTALL_COMMAND

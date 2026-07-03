@@ -108,6 +108,10 @@ static void prv_transcription_destroy(AudioTranscription *transcription) {
 
 static void prv_handle_transcription_result(PebbleEvent *e, void *context) {
   AudioTranscription *transcription = context;
+  if (e->dictation.source_id != voice_window_get_event_id(transcription->voice_window)) {
+    // Result from another voice window (e.g. a concurrent dictation session)
+    return;
+  }
   transcription->callback(transcription->recording_id, e->dictation.result, e->dictation.text,
                           transcription->context);
   prv_transcription_destroy(transcription);

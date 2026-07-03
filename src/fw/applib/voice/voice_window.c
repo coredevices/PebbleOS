@@ -136,6 +136,7 @@ static void prv_exit_and_send_result_event(VoiceUiData *data, DictationSessionSt
       .result = result,
       .text = (result == DictationSessionStatusSuccess) ? data->message : NULL,
       .timestamp = (result == DictationSessionStatusSuccess) ? data->timestamp : 0,
+      .source_id = data->event_id,
     }
   };
   sys_send_pebble_event_to_kernel(&event);
@@ -1360,6 +1361,12 @@ VoiceWindow *voice_window_create(char *buffer, size_t buffer_size,
   if (!data) {
     return NULL;
   }
+
+  static uint8_t s_next_event_id = 1;
+  if (s_next_event_id == 0) {  // 0 is reserved as "no window"
+    s_next_event_id = 1;
+  }
+
   *data = (VoiceUiData) {
     .state = StateStart,
     .show_confirmation_dialog = true,
@@ -1367,9 +1374,14 @@ VoiceWindow *voice_window_create(char *buffer, size_t buffer_size,
     .message = buffer,
     .buffer_size = buffer_size,
     .session_type = session_type,
+    .event_id = s_next_event_id++,
   };
 
   return data;
+}
+
+uint8_t voice_window_get_event_id(VoiceWindow *voice_window) {
+  return voice_window ? voice_window->event_id : 0;
 }
 
 VoiceWindow *voice_window_create_for_recording(char *buffer, size_t buffer_size,
