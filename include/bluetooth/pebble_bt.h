@@ -4,7 +4,7 @@
 #pragma once
 
 #include <stdint.h>
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 //! @file This file contains Pebble-specific Bluetooth identifiers (numbers, UUIDs, etc.)
 //! Also see https://pebbletechnology.atlassian.net/wiki/display/DEV/Pebble+GATT+Services

@@ -3,7 +3,7 @@
 
 #include "flash_region/filesystem_regions.h"
 
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 void filesystem_regions_erase_all(void) {
   for (unsigned int i = 0; i < ARRAY_LENGTH(s_region_list); i++) {

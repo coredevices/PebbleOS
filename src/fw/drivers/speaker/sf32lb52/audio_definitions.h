@@ -5,8 +5,8 @@
 
 #include "board/board.h"
 #include "drivers/audio.h"
-#include <os/mutex.h>
-#include <util/circular_buffer.h>
+#include <pbl/os/mutex.h>
+#include <pbl/util/circular_buffer.h>
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -40,6 +40,7 @@ typedef struct AudioState {
   uint8_t *circ_buffer_storage;
   CircularBuffer circ_buffer;
   AudioTransCB trans_cb;
+  uint8_t volume;
   //! Raw (unaligned) pointer returned by kernel_malloc for the AUDCODEC DAC
   //! DMA buffer. haudcodec->buf[] is bumped up to a cache-line boundary so
   //! dcache_flush() of one half can't touch the other half's lines.

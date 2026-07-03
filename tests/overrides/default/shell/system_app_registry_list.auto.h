@@ -16,7 +16,6 @@ extern const PebbleProcessMd *quick_launch_setup_get_app_info(void);
 extern const PebbleProcessMd *timeline_get_app_info(void);
 extern const PebbleProcessMd *launcher_menu_app_get_app_info(void);;
 extern const PebbleProcessMd *weather_app_get_info(void);
-extern const PebbleProcessMd *shutdown_charging_get_app_info(void);
 extern const PebbleProcessMd *battery_critical_get_app_info(void);
 
 
@@ -97,11 +96,6 @@ static const AppRegistryEntry APP_RECORDS[] = {
     .id = APP_ID_WEATHER,
     .type = AppInstallStorageFw,
     .md_fn = &weather_app_get_info
-  },
-  {
-    .id = APP_ID_SHUTDOWN_CHARGING,
-    .type = AppInstallStorageFw,
-    .md_fn = &shutdown_charging_get_app_info
   },
   {
     .id = APP_ID_BATTERY_CRITICAL,

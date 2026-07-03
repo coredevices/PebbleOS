@@ -5,11 +5,11 @@
 #include "task_timer_manager.h"
 
 #include "kernel/pebble_tasks.h"
-#include "os/mutex.h"
-#include "os/tick.h"
+#include "pbl/os/mutex.h"
+#include "pbl/os/tick.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/list.h"
+#include "pbl/util/list.h"
 
 #include "FreeRTOS.h"
 #include "queue.h"

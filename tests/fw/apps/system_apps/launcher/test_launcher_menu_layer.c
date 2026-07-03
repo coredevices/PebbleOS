@@ -10,7 +10,7 @@
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/app_glances/app_glance_service.h"
 #include "pbl/services/blob_db/app_glance_db.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 static GContext s_ctx;
 

@@ -8,7 +8,7 @@
 #include "shell/prefs.h"
 #include "util/time/time.h"
 #include "util/units.h"
-#include "util/string.h"
+#include "pbl/util/string.h"
 
 #include <limits.h>
 #include <stdio.h>

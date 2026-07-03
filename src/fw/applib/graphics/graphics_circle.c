@@ -7,9 +7,9 @@
 #include "graphics_private.h"
 #include "kernel/pbl_malloc.h"
 #include "system/passert.h"
-#include "util/math.h"
-#include "util/size.h"
-#include "util/trig.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
+#include "pbl/util/trig.h"
 
 #if PBL_COLOR
 static Fixed_S16_3 prv_get_circle_border(int16_t y, uint16_t radius) {

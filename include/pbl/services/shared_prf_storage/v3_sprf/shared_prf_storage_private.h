@@ -6,7 +6,7 @@
 #include "pbl/services/shared_prf_storage/shared_prf_storage.h"
 
 #include <bluetooth/bluetooth_types.h>
-#include <util/attributes.h>
+#include <pbl/util/attributes.h>
 
 #include <inttypes.h>
 

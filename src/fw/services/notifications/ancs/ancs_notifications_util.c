@@ -6,11 +6,11 @@
 #include "drivers/rtc.h"
 #include "resource/timeline_resource_ids.auto.h"
 #include "system/passert.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "util/date.h"
 #include "util/pstring.h"
-#include "util/size.h"
-#include "util/string.h"
+#include "pbl/util/size.h"
+#include "pbl/util/string.h"
 
 const ANCSAppMetadata* ancs_notifications_util_get_app_metadata(const ANCSAttribute *app_id) {
   static const ANCSAppMetadata s_generic_app = {

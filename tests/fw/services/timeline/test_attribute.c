@@ -4,7 +4,7 @@
 #include "clar.h"
 
 #include "pbl/services/timeline/attribute.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include <stdint.h>
 

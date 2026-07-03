@@ -7,7 +7,7 @@
 #include "pbl/services/compositor/compositor_private.h"
 
 #include "applib/graphics/framebuffer.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 #include "applib/ui/animation_interpolate.h"
 #include "applib/graphics/gdraw_command_sequence.h"
 #include "apps/system/timeline/common.h"

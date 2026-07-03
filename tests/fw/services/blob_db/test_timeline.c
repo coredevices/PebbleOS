@@ -3,14 +3,14 @@
 
 #include "clar.h"
 
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/regular_timer.h"
 #include "pbl/services/blob_db/pin_db.h"
 #include "pbl/services/timeline/timeline.h"
 
-#include "util/list.h"
-#include "util/size.h"
+#include "pbl/util/list.h"
+#include "pbl/util/size.h"
 
 // Fixture
 ////////////////////////////////////////////////////////////////
@@ -103,6 +103,10 @@ void notification_storage_set_status(const Uuid *id, uint8_t status) {
 }
 
 void notifications_handle_notification_acted_upon(Uuid *notification_id) {
+  return;
+}
+
+void notifications_handle_notification_removed(Uuid *notification_id) {
   return;
 }
 

@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "os/mutex.h"
-#include "util/attributes.h"
+#include "pbl/os/mutex.h"
+#include "pbl/util/attributes.h"
 #include "util/shared_circular_buffer.h"
 
 #include <stdbool.h>

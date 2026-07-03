@@ -20,9 +20,9 @@
 #include "pbl/services/weather/weather_service.h"
 #include "pbl/services/weather/weather_types.h"
 #include "util/array.h"
-#include "util/attributes.h"
-#include "util/list.h"
-#include "util/math.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/list.h"
+#include "pbl/util/math.h"
 
 typedef struct WeatherAppData {
   Window window;

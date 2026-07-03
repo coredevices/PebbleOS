@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 #include "pbl/services/alarms/alarm.h"
 
 void alarm_pin_add(time_t alarm_time, AlarmId id, AlarmType type, AlarmKind kind, Uuid *uuid_out);

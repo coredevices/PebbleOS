@@ -4,7 +4,7 @@
 #include "clar.h"
 
 #include "pbl/services/blob_db/ios_notif_pref_db.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 // Fixture
 ////////////////////////////////////////////////////////////////

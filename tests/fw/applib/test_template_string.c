@@ -6,7 +6,7 @@
 #include "applib/template_string.h"
 #include "applib/template_string_private.h"
 
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include <limits.h>
 #include <string.h>

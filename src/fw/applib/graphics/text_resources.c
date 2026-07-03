@@ -12,8 +12,8 @@
 #include "system/logging.h"
 #include "system/passert.h"
 #include "system/profiler.h"
-#include "util/math.h"
-#include "util/size.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
 
 #include <stdint.h>
 #include <stdbool.h>

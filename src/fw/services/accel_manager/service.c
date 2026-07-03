@@ -8,8 +8,8 @@
 #include "drivers/vibe.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
-#include "mcu/interrupts.h"
-#include "os/mutex.h"
+#include "pbl/mcu/interrupts.h"
+#include "pbl/os/mutex.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/event_service.h"
 #include "pbl/services/system_task.h"
@@ -18,7 +18,7 @@
 #include "syscall/syscall_internal.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 #include "util/shared_circular_buffer.h"
 
 #include "FreeRTOS.h"
@@ -81,9 +81,10 @@ static uint8_t s_double_tap_subscribers_count = 0;
 
 //! Circular buffer that raw accel data is written into before being subsampled for each client
 static SharedCircularBuffer s_buffer;
-//! Storage for s_buffer
-//! 1600 bytes (~4s of data at 50Hz)
-static uint8_t s_buffer_storage[200 * sizeof(AccelManagerBufferData)];
+//! Storage for s_buffer, sized to hold ~2 batches plus headroom, with a floor
+//! that keeps buffering room for high-rate app subscribers.
+static uint8_t s_buffer_storage[MAX(200, 2 * CONFIG_SERVICE_ACCEL_MANAGER_BATCH_SAMPLES + 50) *
+                                sizeof(AccelManagerBufferData)];
 
 static uint64_t s_last_empty_timestamp_ms = 0;
 
@@ -768,6 +769,78 @@ void accel_cb_new_sample(AccelDriverSample const *data) {
   }
 
   PBL_ASSERTN(rv);
+
+  prv_dispatch_data(true /* post_event */);
+}
+
+static int16_t prv_scale_raw_axis(const uint8_t *sample, const AccelRawBatch *batch, uint8_t axis) {
+  const uint8_t *p = sample + batch->axis[axis].offset;
+  int16_t raw = (int16_t)((uint16_t)p[0] | ((uint16_t)p[1] << 8U));
+  int32_t mg = (int32_t)raw * batch->scale_num / batch->scale_den;
+  return (int16_t)(batch->axis[axis].sign * mg);
+}
+
+void accel_cb_new_samples(AccelRawBatch const *batch) {
+  if (!s_enabled || batch->num_samples == 0) {
+    return;
+  }
+
+  // The most recent sample is the last one in the batch.
+  const uint8_t *last = batch->data + (batch->num_samples - 1) * batch->stride;
+  AccelDriverSample last_sample = {
+    .x = prv_scale_raw_axis(last, batch, AXIS_X),
+    .y = prv_scale_raw_axis(last, batch, AXIS_Y),
+    .z = prv_scale_raw_axis(last, batch, AXIS_Z),
+    .timestamp_us = batch->first_timestamp_us +
+        (uint64_t)(batch->num_samples - 1) * batch->sampling_interval_us,
+  };
+  prv_update_last_accel_data(&last_sample);
+
+  PBL_ANALYTICS_ADD(accel_sample_count, batch->num_samples);
+
+  if (!s_buffer.clients) {
+    return; // no clients so don't buffer any data
+  }
+
+  if (prv_shared_buffer_empty()) {
+    s_last_empty_timestamp_ms = batch->first_timestamp_us / 1000;
+  }
+
+  // Reserve a contiguous run for the whole batch, then fill it in place. Falling
+  // behind triggers an eviction pass, matching the per-sample write path.
+  const uint16_t total = batch->num_samples * sizeof(AccelManagerBufferData);
+  uint8_t *seg1, *seg2;
+  uint16_t seg1_length;
+  bool rv = shared_circular_buffer_write_reserve(&s_buffer, total, false /*advance_slackers*/,
+                                                 &seg1, &seg1_length, &seg2);
+  if (!rv) {
+    PBL_LOG_WRN("Accel subscriber fell behind, truncating data");
+    rv = shared_circular_buffer_write_reserve(&s_buffer, total, true /*advance_slackers*/,
+                                              &seg1, &seg1_length, &seg2);
+  }
+  PBL_ASSERTN(rv);
+
+  // write_index stays aligned to sizeof(AccelManagerBufferData), so a wrap never
+  // splits a sample; seg1 holds the first seg1_items, seg2 the remainder.
+  AccelManagerBufferData *dst = (AccelManagerBufferData *)seg1;
+  const uint16_t seg1_items = seg1_length / sizeof(AccelManagerBufferData);
+  for (uint16_t i = 0U; i < batch->num_samples; ++i) {
+    if (i == seg1_items) {
+      dst = (AccelManagerBufferData *)seg2;
+    }
+    const uint8_t *s = batch->data + i * batch->stride;
+    uint64_t ts_ms = (batch->first_timestamp_us +
+                      (uint64_t)i * batch->sampling_interval_us) / 1000;
+    dst->rawdata.x = prv_scale_raw_axis(s, batch, AXIS_X);
+    dst->rawdata.y = prv_scale_raw_axis(s, batch, AXIS_Y);
+    dst->rawdata.z = prv_scale_raw_axis(s, batch, AXIS_Z);
+    // Note: the delta value overflows if the s_buffer is not drained for ~65s,
+    // but there should be more than enough time for it to drain in that window
+    dst->timestamp_delta_ms = (uint16_t)(ts_ms - s_last_empty_timestamp_ms);
+    ++dst;
+  }
+
+  shared_circular_buffer_write_commit(&s_buffer, total);
 
   prv_dispatch_data(true /* post_event */);
 }

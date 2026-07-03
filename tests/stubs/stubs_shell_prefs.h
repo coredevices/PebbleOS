@@ -4,7 +4,7 @@
 #pragma once
 
 #include "shell/prefs.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 static bool s_clock_24h;
 

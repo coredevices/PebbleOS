@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "kernel/events.h"
 #include "pbl/services/notifications/alerts_preferences.h"
 

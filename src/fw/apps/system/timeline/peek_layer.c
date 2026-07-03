@@ -3,7 +3,7 @@
 
 #include "peek_layer.h"
 
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 #include "applib/ui/kino/kino_reel/scale_segmented.h"
 #include "applib/ui/kino/kino_reel/transform.h"
 #include "applib/ui/kino/kino_reel/unfold.h"
@@ -13,7 +13,7 @@
 #include "pbl/services/timeline/notification_layout.h"
 #include "pbl/services/timeline/timeline_resources.h"
 #include "system/logging.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #include "resource/resource_ids.auto.h"
 

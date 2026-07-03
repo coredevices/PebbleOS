@@ -62,16 +62,16 @@ jobs:
       - name: Copy PRF artifacts
         run: |
           mkdir -p artifacts
-          cp build/src/fw/tintin_fw.hex artifacts/prf_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}.hex
-          cp build/src/fw/tintin_fw.bin artifacts/prf_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}.bin
-          cp build/src/fw/tintin_fw.elf artifacts/prf_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}.elf
+          cp build/pebbleos.hex artifacts/prf_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}.hex
+          cp build/pebbleos.bin artifacts/prf_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}.bin
+          cp build/pebbleos.elf artifacts/prf_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}.elf
           cp build/*.pbz artifacts
-          cp build/src/fw/tintin_fw_loghash_dict.json artifacts/prf_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}_loghash_dict.json
+          cp build/pebbleos_loghash_dict.json artifacts/prf_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}_loghash_dict.json
 
       - name: Get PRF Build ID
         id: prf_build_id
         run: |
-          echo "BUILD_ID=$(readelf -n build/src/fw/tintin_fw.elf | sed -n -e 's/^.*Build ID: //p')" >> "$GITHUB_OUTPUT"
+          echo "BUILD_ID=$(readelf -n build/pebbleos.elf | sed -n -e 's/^.*Build ID: //p')" >> "$GITHUB_OUTPUT"
 
       - name: Upload PRF log hash dictionary
         env:
@@ -80,7 +80,7 @@ jobs:
           AWS_DEFAULT_REGION: us-east-1
         run: |
           pip install awscli
-          aws s3 cp build/src/fw/tintin_fw_loghash_dict.json \
+          aws s3 cp build/pebbleos_loghash_dict.json \
             "s3://${{ vars.LOG_HASH_BUCKET_NAME }}/${{ steps.prf_build_id.outputs.BUILD_ID }}-${{ github.sha }}-prf.json" \
             --endpoint-url "${{ vars.LOG_HASH_BUCKET_ENDPOINT }}"
 
@@ -93,9 +93,9 @@ jobs:
       - name: Copy MFG PRF artifacts
         run: |
           mkdir -p artifacts
-          cp build/src/fw/tintin_fw.hex artifacts/prf_mfg_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}.hex
-          cp build/src/fw/tintin_fw.bin artifacts/prf_mfg_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}.bin
-          cp build/src/fw/tintin_fw.elf artifacts/prf_mfg_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}.elf
+          cp build/pebbleos.hex artifacts/prf_mfg_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}.hex
+          cp build/pebbleos.bin artifacts/prf_mfg_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}.bin
+          cp build/pebbleos.elf artifacts/prf_mfg_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}.elf
 
       - name: Store
         uses: actions/upload-artifact@v6
@@ -179,16 +179,16 @@ jobs:
       - name: Copy firmware artifacts
         run: |
           mkdir -p artifacts
-          cp build/src/fw/tintin_fw.hex artifacts/firmware_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.hex
-          cp build/src/fw/tintin_fw.bin artifacts/firmware_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.bin
-          cp build/src/fw/tintin_fw.elf artifacts/firmware_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.elf
+          cp build/pebbleos.hex artifacts/firmware_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.hex
+          cp build/pebbleos.bin artifacts/firmware_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.bin
+          cp build/pebbleos.elf artifacts/firmware_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.elf
           cp build/*.pbz artifacts
-          cp build/src/fw/tintin_fw_loghash_dict.json artifacts/firmware_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}_loghash_dict.json
+          cp build/pebbleos_loghash_dict.json artifacts/firmware_${{ steps.artifact_board.outputs.NAME }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}_loghash_dict.json
 
       - name: Get Build ID
         id: build_id
         run: |
-          echo "BUILD_ID=$(readelf -n build/src/fw/tintin_fw.elf | sed -n -e 's/^.*Build ID: //p')" >> "$GITHUB_OUTPUT"
+          echo "BUILD_ID=$(readelf -n build/pebbleos.elf | sed -n -e 's/^.*Build ID: //p')" >> "$GITHUB_OUTPUT"
 
       - name: Upload log hash dictionary
         if: ${{ github.repository == 'coredevices/PebbleOS' }}
@@ -198,7 +198,7 @@ jobs:
           AWS_DEFAULT_REGION: us-east-1
         run: |
           pip install awscli
-          aws s3 cp build/src/fw/tintin_fw_loghash_dict.json \
+          aws s3 cp build/pebbleos_loghash_dict.json \
             "s3://${{ vars.LOG_HASH_BUCKET_NAME }}/${{ steps.build_id.outputs.BUILD_ID }}-${{ github.sha }}-normal.json" \
             --endpoint-url "${{ vars.LOG_HASH_BUCKET_ENDPOINT }}"
 

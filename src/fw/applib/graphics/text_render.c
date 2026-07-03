@@ -9,7 +9,7 @@
 #include "system/passert.h"
 #include "text_resources.h"
 #include "util/bitset.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #if !defined(__clang__)
 #pragma GCC optimize ("O2")

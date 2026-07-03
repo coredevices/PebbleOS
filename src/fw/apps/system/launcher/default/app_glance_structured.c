@@ -14,9 +14,9 @@
 #include "pbl/services/timeline/attribute.h"
 #include "shell/prefs.h"
 #include "system/passert.h"
-#include "util/attributes.h"
-#include "util/string.h"
-#include "util/struct.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/string.h"
+#include "pbl/util/struct.h"
 #include "board/display.h"
 
 // Use display height to determine icon margins: larger displays use more margin

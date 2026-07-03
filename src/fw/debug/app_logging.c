@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "system/logging.h"
 #include "applib/app_logging.h"
 

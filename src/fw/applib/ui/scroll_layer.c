@@ -12,7 +12,7 @@
 #include "process_management/app_manager.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #include "animation_timing.h"
 

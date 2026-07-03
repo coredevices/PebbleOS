@@ -5,8 +5,8 @@
 
 #include "process_management/app_install_manager.h"
 #include "process_management/app_install_types.h"
-#include "util/attributes.h"
-#include "util/uuid.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/uuid.h"
 
 AppInstallId WEAK app_install_get_id_for_uuid(const Uuid *uuid) {
   return 1;

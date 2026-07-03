@@ -26,10 +26,10 @@ sources = ["../../src/fw/applib/vendor/uPNG/upng.c",
            "../../src/fw/applib/graphics/gdraw_command_image.c",
            "../../src/fw/applib/graphics/gdraw_command_frame.c",
            "../../src/fw/applib/graphics/gdraw_command_sequence.c",
-           "../../src/libutil/trig.c",
-           "../../src/libutil/keyed_circular_cache.c",
-           "../../src/libutil/math.c",
-           "../../src/libutil/platform.c",]
+           "../../lib/util/trig.c",
+           "../../lib/util/keyed_circular_cache.c",
+           "../../lib/util/math.c",
+           "../../lib/util/platform.c",]
 
 sources = [bld.path.find_node(s) for s in sources]
 sources.extend(bld.path.ant_glob('src/*.c'))
@@ -41,12 +41,10 @@ includes = ["../../tests/stubs",
             "../../tests/overrides/default/",
             "../../include",
             "../../src/fw",
-            "../../src/libutil/includes",
             "../../src/fw/util/time",
             "../../third_party/freertos",
             "../../third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
-            "../../third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
-            "../../src/libos/include"]
+            "../../third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3"]
 
 includes = [bld.path.find_node(i).abspath() for i in includes]
 
@@ -68,7 +66,7 @@ bld.program(source=sources,
                      # TODO: PBL-21014 Support arbitrary display sizes
                      'DISP_COLS=144', 'DISP_ROWS=168',
                      'DISPLAY_FRAMEBUFFER_BYTES=%d' % (144 * 168),
-                     'PBL_COLOR', 'PBL_RECT', 'CONFIG_BOARD_FAMILY_OBELIX=1',
+                     'PBL_COLOR', 'PBL_RECT', 'CONFIG_BOARD_OBELIX=1',
                      'CONFIG_PLATFORM_EMERY=1',
                      'CONFIG_FLASH_GD25Q256E=1',
                      'PBI2PNG_EXE="../../tools/pbi2png.py"'],

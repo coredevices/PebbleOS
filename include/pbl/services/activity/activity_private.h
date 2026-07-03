@@ -8,12 +8,12 @@
 
 #include "applib/event_service_client.h"
 #include "kernel/events.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "pbl/services/data_logging/data_logging_service.h"
 #include "pbl/services/settings/settings_file.h"
 #include "system/hexdump.h"
 #include "system/logging.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -536,3 +536,7 @@ ActivityScalarStore activity_metrics_prv_steps_per_minute(void);
 
 //! Set a metric's value. Used from BlobDB to honor requests from the phone
 void activity_metrics_prv_set_metric(ActivityMetric metric, DayInWeek day, int32_t value);
+
+//! Force the current day's value of a metric to an exact value (may decrease it). Intended for
+//! QEMU/test injection of health data.
+void activity_metrics_set_metric_exact(ActivityMetric metric, int32_t value);

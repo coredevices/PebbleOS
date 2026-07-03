@@ -16,7 +16,7 @@
 #include "drivers/ambient_light.h"
 #include "drivers/backlight.h"
 #include "mfg/mfg_info.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "popups/timeline/peek.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/process_manager.h"
@@ -36,8 +36,8 @@
 #include "kernel/event_loop.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/size.h"
-#include "util/uuid.h"
+#include "pbl/util/size.h"
+#include "pbl/util/uuid.h"
 
 #include "pbl/services/activity/activity.h"
 #include "pbl/services/activity/activity_insights.h"
@@ -72,7 +72,11 @@ static bool s_backlight_ambient_sensor_enabled = true;
 #define PREF_KEY_BACKLIGHT_TIMEOUT_MS "lightTimeoutMs"
 static uint32_t s_backlight_timeout_ms = DEFAULT_BACKLIGHT_TIMEOUT_MS;
 #define PREF_KEY_BACKLIGHT_INTENSITY "lightIntensity"
-static uint8_t s_backlight_intensity; // default pulled from BOARD_CONFIGs in shell_prefs_init()
+// Logical 0-100% brightness; the light service scales it to the HW maximum.
+#define BACKLIGHT_INTENSITY_MIN 1U
+#define BACKLIGHT_INTENSITY_MAX 100U
+#define BACKLIGHT_INTENSITY_DEFAULT 25U  // Medium
+static uint8_t s_backlight_intensity; // default set in shell_prefs_init()
 
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
 #define PREF_KEY_BACKLIGHT_COLOR "lightColor"
@@ -241,6 +245,7 @@ static uint8_t s_timeline_peek_unsupported_face_mode = TimelinePeekUnsupportedFa
 #define PREF_KEY_ACCEL_SHAKE_LOG_INFO "accelShakeLogInfo"
 #define PREF_KEY_VIBE_LOG_INFO "vibeLogInfo"
 #define PREF_KEY_SETTINGS_DBS_COMPACTED_V1 "settingsDbsCompactedV1"
+#define PREF_KEY_ALS_THRESHOLD_MIGRATED_V1 "alsThresholdMigratedV1"
 #ifdef CONFIG_APP_SCALING
 #define PREF_KEY_LEGACY_APP_RENDER_MODE "legacyAppRenderMode"
 #endif
@@ -249,6 +254,7 @@ static bool s_coredump_on_request_enabled = false;
 static bool s_accel_shake_log_info_enabled = false;
 static bool s_vibe_log_info_enabled = false;
 static bool s_settings_dbs_compacted_v1 = false;
+static bool s_als_threshold_migrated_v1 = false;
 #ifdef CONFIG_APP_SCALING
 static uint8_t s_legacy_app_render_mode = 1; // Default to scaled mode
 #endif
@@ -342,7 +348,16 @@ static bool prv_set_s_backlight_timeout_ms(uint32_t *timeout_ms) {
   return false;
 }
 
+static bool prv_backlight_intensity_is_valid(uint8_t intensity) {
+  return intensity >= BACKLIGHT_INTENSITY_MIN && intensity <= BACKLIGHT_INTENSITY_MAX;
+}
+
 static bool prv_set_s_backlight_intensity(uint8_t *intensity) {
+  // Reject out-of-range values
+  if (!prv_backlight_intensity_is_valid(*intensity)) {
+    s_backlight_intensity = BACKLIGHT_INTENSITY_DEFAULT;
+    return false;
+  }
   s_backlight_intensity = *intensity;
   return true;
 }
@@ -713,6 +728,11 @@ static bool prv_set_s_settings_dbs_compacted_v1(bool *done) {
   return true;
 }
 
+static bool prv_set_s_als_threshold_migrated_v1(bool *done) {
+  s_als_threshold_migrated_v1 = *done;
+  return true;
+}
+
 #ifdef CONFIG_APP_SCALING
 static bool prv_set_s_legacy_app_render_mode(uint8_t *mode) {
   if (*mode >= LegacyAppRenderModeCount) {
@@ -838,11 +858,13 @@ static void prv_convert_deprecated_backlight_behaviour_key(SettingsFile *file) {
 
 
 // ------------------------------------------------------------------------------------
+static void prv_pref_set(const char* key, const void *value, size_t val_len);
+
 void shell_prefs_init(void) {
 #ifdef CONFIG_QEMU
-  s_backlight_intensity = 100U; // Blinding
+  s_backlight_intensity = BACKLIGHT_INTENSITY_MAX; // Blinding
 #else
-  s_backlight_intensity = 25U; // Medium
+  s_backlight_intensity = BACKLIGHT_INTENSITY_DEFAULT; // Medium
 #endif
   s_backlight_ambient_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
@@ -877,6 +899,27 @@ void shell_prefs_init(void) {
 
   settings_file_close(&file);
   
+  if (!prv_backlight_intensity_is_valid(s_backlight_intensity)) {
+    s_backlight_intensity = BACKLIGHT_INTENSITY_DEFAULT;
+  }
+
+#if defined(CONFIG_AMBIENT_LIGHT_W1160)
+  // One-time: the W1160 scale rework left old-scale ambient thresholds far below
+  // current readings (backlight stuck off). Drop any stored override so the
+  // device follows the new board default.
+  if (!s_als_threshold_migrated_v1) {
+    s_backlight_ambient_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
+    SettingsFile mfile = {{0}};
+    if (settings_file_open(&mfile, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
+      settings_file_delete(&mfile, PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD,
+                           sizeof(PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD));
+      settings_file_close(&mfile);
+    }
+    const bool migrated = true;
+    prv_pref_set(PREF_KEY_ALS_THRESHOLD_MIGRATED_V1, &migrated, sizeof(migrated));
+  }
+#endif
+
   // Update the ambient light driver with the loaded threshold value
   ambient_light_set_dark_threshold(s_backlight_ambient_threshold);
   
@@ -1612,6 +1655,8 @@ uint32_t shell_prefs_get_language_resource_id(void) {
       return RESOURCE_ID_STRINGS_NL_NL;
     case ShellLanguagePortuguese:
       return RESOURCE_ID_STRINGS_PT_PT;
+    case ShellLanguagePolish:
+      return RESOURCE_ID_STRINGS_PL_PL;
     case ShellLanguageEnglish:
     case ShellLanguageInstalledPack:
     case ShellLanguageCount:
@@ -1950,6 +1995,7 @@ void pbl_analytics_external_collect_settings(void) {
   PBL_ANALYTICS_SET_UNSIGNED(settings_motion_sensitivity, shell_prefs_get_motion_sensitivity());
   PBL_ANALYTICS_SET_UNSIGNED(settings_backlight_intensity_pct, backlight_get_intensity());
   PBL_ANALYTICS_SET_UNSIGNED(settings_backlight_timeout_s, backlight_get_timeout_ms() / 1000);
+  PBL_ANALYTICS_SET_UNSIGNED(settings_touch_enabled, touch_is_globally_enabled());
 }
 
 bool shell_prefs_get_music_show_volume_controls(void) {

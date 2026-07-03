@@ -6,7 +6,7 @@
 #include "pbl/services/blob_db/watch_app_prefs_db.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/weather/weather_service_private.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 // Fixture
 ////////////////////////////////////////////////////////////////

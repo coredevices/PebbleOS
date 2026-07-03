@@ -3,7 +3,7 @@
 
 #include "clar.h"
 
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/blob_db/pin_db.h"
 #include "pbl/services/timeline/attribute.h"
@@ -97,6 +97,10 @@ void calendar_handle_pin_change(void) {
 }
 
 void notifications_handle_notification_acted_upon(Uuid *notification_id) {
+  return;
+}
+
+void notifications_handle_notification_removed(Uuid *notification_id) {
   return;
 }
 

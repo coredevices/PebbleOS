@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "util/list.h"
-#include "os/mutex.h"
+#include "pbl/util/list.h"
+#include "pbl/os/mutex.h"
 
 #include <stdbool.h>
 #include <stdint.h>

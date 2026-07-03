@@ -8,11 +8,11 @@
 #include "pbl/services/settings/settings_file.h"
 #include "pbl/services/contacts/attributes_address.h"
 #include "pbl/services/contacts/contacts.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "system/passert.h"
 #include "system/status_codes.h"
 #include "util/units.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 #define SETTINGS_FILE_NAME "contactsdb"
 #define SETTINGS_FILE_SIZE (KiBYTES(30))

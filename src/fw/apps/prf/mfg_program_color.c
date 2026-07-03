@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "applib/app.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 #include "applib/app_watch_info.h"
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/window.h"
@@ -17,17 +17,17 @@
 #include "process_state/app_state/app_state.h"
 #include "process_management/pebble_process_md.h"
 #include "util/bitset.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 
-#ifdef CONFIG_BOARD_FAMILY_ASTERIX
+#ifdef CONFIG_BOARD_ASTERIX
 const char *const s_model = "P2D";
-#elif defined(CONFIG_BOARD_FAMILY_OBELIX)
+#elif defined(CONFIG_BOARD_OBELIX)
 const char *const s_model = "PT2";
-#elif defined(CONFIG_BOARD_FAMILY_GETAFIX)
+#elif defined(CONFIG_BOARD_GETAFIX)
 const char *const s_model = "PR2";
 #else
 const char *const s_model = "Unknown";
@@ -40,7 +40,7 @@ typedef struct {
 } ColorTable;
 
 const ColorTable s_color_table[] = {
-#ifdef CONFIG_BOARD_FAMILY_ASTERIX
+#ifdef CONFIG_BOARD_ASTERIX
   {
     .color = WATCH_INFO_COLOR_COREDEVICES_P2D_BLACK,
     .name = "BLACK",
@@ -51,7 +51,7 @@ const ColorTable s_color_table[] = {
     .name = "WHITE",
     .short_name = "WH",
   }
-#elif defined(CONFIG_BOARD_FAMILY_OBELIX)
+#elif defined(CONFIG_BOARD_OBELIX)
   {
     .color = WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_GREY,
     .name = "BLACK/GREY",
@@ -72,7 +72,7 @@ const ColorTable s_color_table[] = {
     .name = "SILVER/GREY",
     .short_name = "SG",
   },
-#elif defined(CONFIG_BOARD_FAMILY_GETAFIX)
+#elif defined(CONFIG_BOARD_GETAFIX)
   {
     .color = WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK_20,
     .name = "BLACK-20MM",

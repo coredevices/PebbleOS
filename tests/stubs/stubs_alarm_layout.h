@@ -4,7 +4,7 @@
 #pragma once
 
 #include "pbl/services/timeline/alarm_layout.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 LayoutLayer * WEAK alarm_layout_create(const LayoutLayerConfig *config) {
   return NULL;

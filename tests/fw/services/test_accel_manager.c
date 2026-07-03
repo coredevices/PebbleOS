@@ -25,8 +25,8 @@
 
 #include "drivers/accel.h"
 #include "pbl/services/event_service.h"
-#include "util/math.h"
-#include "util/size.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
 
 #include <stdio.h>
 

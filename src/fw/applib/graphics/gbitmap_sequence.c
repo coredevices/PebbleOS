@@ -12,7 +12,7 @@
 #include "syscall/syscall.h"
 #include "system/passert.h"
 #include "util/bitset.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #define APNG_DECODE_ERROR "APNG decoding failed"
 #define APNG_MEMORY_ERROR "APNG memory allocation failed"

@@ -11,7 +11,7 @@
 #include "applib/ui/animation_private.h"
 #include "applib/ui/property_animation.h"
 #include "applib/ui/property_animation_private.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 Animation *WEAK animation_create(void) {
   Animation *animation = malloc(sizeof(AnimationPrivate));

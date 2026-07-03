@@ -7,7 +7,7 @@
 
 #include "kernel/pbl_malloc.h"
 #include "kernel/pebble_tasks.h"
-#include "mcu/privilege.h"
+#include "pbl/mcu/privilege.h"
 #include "process_management/process_manager.h"
 #include "system/passert.h"
 

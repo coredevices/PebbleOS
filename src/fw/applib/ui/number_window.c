@@ -8,7 +8,7 @@
 #include "applib/applib_malloc.auto.h"
 #include "kernel/ui/kernel_ui.h"
 #include "kernel/ui/system_icons.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include <stdio.h>
 #include <limits.h>

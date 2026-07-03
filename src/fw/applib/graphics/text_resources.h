@@ -5,7 +5,7 @@
 
 #include "applib/fonts/fonts_private.h"
 #include "applib/fonts/codepoint.h"
-#include "util/keyed_circular_cache.h"
+#include "pbl/util/keyed_circular_cache.h"
 
 #include <stdint.h>
 

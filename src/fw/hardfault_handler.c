@@ -5,10 +5,10 @@
 #include "system/die.h"
 #include "system/reboot_reason.h"
 #include "system/reset.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "util/bitset.h"
-#include "util/size.h"
-#include "util/string.h"
+#include "pbl/util/size.h"
+#include "pbl/util/string.h"
 
 #include <cmsis_core.h>
 

@@ -309,7 +309,7 @@ void alarm_detail_window_push(AlarmId alarm_id, AlarmInfo *alarm_info,
     AlarmTone_Reveille, AlarmTone_Beacon, AlarmTone_Bell, AlarmTone_Chime,
   };
   sound_level->items[0] = (ActionMenuItem) {
-    .label = i18n_get("Off", data),
+    .label = i18n_ctx_get("AlarmSound", "Off", data),
     .perform_action = prv_disable_sound_handler,
     .action_data = data,
   };

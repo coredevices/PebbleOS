@@ -8,6 +8,15 @@ config SERVICE_ACTIVITY
 
 if SERVICE_ACTIVITY
 
+config SERVICE_ACTIVITY_BATCH_SAMPLES
+    int "Accel samples batched per algorithm update"
+    default SERVICE_ACCEL_MANAGER_BATCH_SAMPLES
+    help
+      Number of accelerometer samples delivered to the activity algorithm
+      per callback. The algorithm runs in 5s epochs (125 samples at 25Hz);
+      batching a full epoch minimizes wakeups. Defaults to the accel manager
+      batch size, which is sized for the accelerometer FIFO depth.
+
 module = SERVICE_ACTIVITY
 module-str = Activity
 source "src/fw/Kconfig.template.log_level"

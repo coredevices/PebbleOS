@@ -7,7 +7,7 @@
 
 #include <stdarg.h>
 
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 // -------------------------------------------------------------------------------------------------
 // Parsing C-string with real number to an integer using a given multiplication factor

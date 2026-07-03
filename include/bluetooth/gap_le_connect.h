@@ -7,10 +7,10 @@
 #include <bluetooth/bluetooth_types.h>
 #include <bluetooth/sm_types.h>
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "bluetooth/hci_types.h"
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 typedef enum BleAddressType {
   BleAddressType_Public,

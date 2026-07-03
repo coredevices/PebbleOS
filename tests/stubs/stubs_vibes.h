@@ -4,7 +4,7 @@
 #pragma once
 
 #include "applib/ui/vibes.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 void WEAK vibes_long_pulse(void) {}
 

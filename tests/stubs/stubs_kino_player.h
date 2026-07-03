@@ -4,7 +4,7 @@
 #pragma once
 
 #include "applib/ui/kino/kino_player.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 void WEAK kino_player_deinit(KinoPlayer *player) {}
 

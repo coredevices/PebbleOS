@@ -12,7 +12,7 @@
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/process_management/app_order_storage.h"
 #include "system/passert.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include "apps/demo/activity_demo/activity_demo.h"
 #include "shell/prefs.h"

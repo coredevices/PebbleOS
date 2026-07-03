@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "util/attributes.h"
-#include "util/build_id.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/build_id.h"
 #include "system/status_codes.h"
 
 #include <stdbool.h>

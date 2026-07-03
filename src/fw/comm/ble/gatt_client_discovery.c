@@ -18,7 +18,7 @@
 
 #include <bluetooth/gatt.h>
 #include <bluetooth/gatt_discovery.h>
-#include <btutil/bt_device.h>
+#include <pbl/btutil/bt_device.h>
 
 #include <inttypes.h>
 

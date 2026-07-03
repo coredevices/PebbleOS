@@ -5,7 +5,7 @@
 
 #include "applib/applib_malloc.auto.h"
 #include "syscall/syscall.h"
-#include "util/struct.h"
+#include "pbl/util/struct.h"
 
 typedef struct {
   KinoReel base;

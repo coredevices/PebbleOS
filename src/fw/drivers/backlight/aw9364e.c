@@ -6,7 +6,7 @@
 #include "drivers/backlight.h"
 #include "kernel/util/delay.h"
 #include "system/logging.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 // AW9364E 1-wire dimming protocol implementation
 // The AW9364E uses pulse counting for brightness control:

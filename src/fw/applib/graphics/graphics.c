@@ -19,9 +19,9 @@
 #include "system/logging.h"
 #include "util/bitset.h"
 #include "util/graphics.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 #include "util/reverse.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 
 #include <stdio.h>
 #include <string.h>

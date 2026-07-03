@@ -29,8 +29,8 @@
 #include "syscall/syscall_internal.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/list.h"
-#include "util/math.h"
+#include "pbl/util/list.h"
+#include "pbl/util/math.h"
 #include "util/time/time.h"
 
 #include <stdbool.h>

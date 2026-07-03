@@ -5,9 +5,9 @@
 
 #include "kernel/logging_private.h"
 #include "system/passert.h"
-#include "util/math.h"
-#include "util/size.h"
-#include "util/string.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
+#include "pbl/util/string.h"
 
 #include <inttypes.h>
 #include <string.h>

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "util/heap.h"
+#include "pbl/util/heap.h"
 
 void heap_dump_malloc_instrumentation_to_dbgserial(Heap *heap) {}
 

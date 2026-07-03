@@ -4,7 +4,7 @@
 #pragma once
 
 #include "applib/ui/window.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 Window * WEAK app_window_stack_pop(bool animated) {
   return NULL;

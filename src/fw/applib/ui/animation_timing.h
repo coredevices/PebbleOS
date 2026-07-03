@@ -4,8 +4,8 @@
 #pragma once
 
 #include "applib/ui/animation.h"
-#include "util/math.h"
-#include "util/math_fixed.h"
+#include "pbl/util/math.h"
+#include "pbl/util/math_fixed.h"
 
 //! @file animation_timing.h
 

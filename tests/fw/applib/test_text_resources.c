@@ -9,7 +9,7 @@
 #include "resource/resource.h"
 #include "resource/resource_ids.auto.h"
 #include "resource/system_resource.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 // Fakes
 #include "fake_app_manager.h"

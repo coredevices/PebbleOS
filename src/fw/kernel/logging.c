@@ -14,12 +14,12 @@
 #include "drivers/rtc.h"
 #include "system/logging.h"
 
-#include "mcu/interrupts.h"
-#include "mcu/privilege.h"
+#include "pbl/mcu/interrupts.h"
+#include "pbl/mcu/privilege.h"
 
-#include "util/math.h"
+#include "pbl/util/math.h"
 #include "util/net.h"
-#include "util/string.h"
+#include "pbl/util/string.h"
 
 #include "FreeRTOS.h"
 #include "task.h"

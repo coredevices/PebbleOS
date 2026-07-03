@@ -8,7 +8,7 @@
 #include "kernel/core_dump.h"
 #include "kernel/core_dump_private.h"
 #include "system/status_codes.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #include <stdint.h>
 

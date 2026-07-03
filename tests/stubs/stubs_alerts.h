@@ -4,7 +4,7 @@
 #pragma once
 
 #include "pbl/services/notifications/alerts_private.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 AlertMask s_alert_mask;
 

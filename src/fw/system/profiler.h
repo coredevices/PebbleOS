@@ -19,7 +19,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "util/list.h"
+#include "pbl/util/list.h"
 
 #ifdef CONFIG_PROFILER
 #include <cmsis_core.h>

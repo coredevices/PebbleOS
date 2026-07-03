@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "pbl/services/i18n/i18n.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #include <string.h>
 
@@ -43,6 +43,10 @@ void WEAK sys_i18n_get_with_buffer(const char *string, char *buffer, size_t leng
 
 size_t WEAK sys_i18n_get_length(const char *string) {
   return i18n_get_length(string);
+}
+
+void WEAK sys_i18n_get_locale(char *buf) {
+  strncpy(buf, "en_US", ISO_LOCALE_LENGTH);
 }
 
 void WEAK i18n_enable(bool enable) { }

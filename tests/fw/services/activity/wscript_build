@@ -1,4 +1,4 @@
-from waftools.pebble_test import clar
+from tools.waf.pebble_test import clar
 
 clar(ctx,
      sources_ant_glob = \
@@ -30,7 +30,7 @@ clar(ctx,
      test_sources_ant_glob = "test_activity.c",
      override_includes=['dummy_board'],
      defines=["DUMA_DISABLED", "CAPABILITY_HAS_HEALTH_TRACKING=1",
-              "CONFIG_HRM"])
+              "CONFIG_HRM", "CONFIG_SERVICE_ACTIVITY_BATCH_SAMPLES=25"])
 
 clar(ctx,
      sources_ant_glob = \

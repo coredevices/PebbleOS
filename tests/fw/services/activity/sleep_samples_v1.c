@@ -5,7 +5,7 @@
 #include <string.h>
 
 #include "pbl/services/activity/activity_algorithm.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 
 // ----------------------------------------------------------------

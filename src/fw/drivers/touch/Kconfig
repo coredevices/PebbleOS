@@ -15,6 +15,7 @@ config TOUCH_CST816
 
 config TOUCH_QEMU
     bool "QEMU Touchscreen"
+    default y if SOC_QEMU
     help
       Support for the QEMU touchscreen peripheral.
 

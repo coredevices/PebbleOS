@@ -6,12 +6,12 @@
 #include "board/board.h"
 #include "kernel/kernel_heap.h"
 #include "kernel/pbl_malloc.h"
-#include "mcu/cache.h"
+#include "pbl/mcu/cache.h"
 #include "system/logging.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "system/passert.h"
-#include "util/circular_buffer.h"
-#include "util/heap.h"
+#include "pbl/util/circular_buffer.h"
+#include "pbl/util/heap.h"
 #include "kernel/util/sleep.h"
 #include "pbl/soc/sf32lb/sleep.h"
 #include "pdm_definitions.h"
@@ -21,7 +21,7 @@
 PBL_LOG_MODULE_DEFINE(driver_mic_sf32lb, CONFIG_DRIVER_MIC_LOG_LEVEL);
 
 // HACK alert, we need proper regulator abstraction
-#if defined(CONFIG_BOARD_FAMILY_OBELIX) || defined(CONFIG_BOARD_FAMILY_GETAFIX)
+#if defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX)
 #define PDM_POWER_NPM1300_LDO2 1
 #endif
 

@@ -5,7 +5,7 @@
 
 #include "kernel/pbl_malloc.h"
 #include "system/logging.h"
-#include "util/crc32.h"
+#include "pbl/util/crc32.h"
 #include "util/legacy_checksum.h"
 
 #include <stdint.h>

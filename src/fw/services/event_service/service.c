@@ -7,7 +7,7 @@
 #include "kernel/pebble_tasks.h"
 #include "process_management/app_manager.h"
 #include "process_management/worker_manager.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "pbl/services/event_service.h"
 #include "syscall/syscall_internal.h"
 #include "syscall/syscall.h"

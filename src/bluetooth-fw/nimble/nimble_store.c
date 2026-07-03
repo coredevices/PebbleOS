@@ -12,7 +12,7 @@
 #include <string.h>
 #include <system/logging.h>
 #include <system/passert.h>
-#include <util/list.h>
+#include <pbl/util/list.h>
 
 #include "nimble_type_conversions.h"
 

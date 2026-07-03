@@ -27,7 +27,7 @@
 #include "drivers/touch/touch_sensor.h"
 #include "pbl/services/vibe_pattern.h"
 #include "pbl/services/runlevel_impl.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 void services_common_init(void) {
   firmware_update_init();

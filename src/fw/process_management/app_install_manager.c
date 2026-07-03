@@ -27,11 +27,11 @@
 #include "pbl/services/process_management/app_storage.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/circular_cache.h"
-#include "util/size.h"
+#include "pbl/util/circular_cache.h"
+#include "pbl/util/size.h"
 
-#include <os/mutex.h>
-#include <util/attributes.h>
+#include <pbl/os/mutex.h>
+#include <pbl/util/attributes.h>
 
 typedef struct PACKED RecentApp {
   AppInstallId id;
@@ -321,7 +321,7 @@ static void prv_app_install_delete(AppInstallId id, Uuid *uuid, bool app_upgrade
   if (delete_cache) {
     // only log when we actually delete the cache entry. This is so we don't print out 100 logs
     // during an app cache clear
-    PBL_LOG_INFO("Deleting app with id %"PRId32"", id);
+    PBL_LOG_DBG("Deleting app with id %"PRId32"", id);
     app_cache_remove_entry(id);
   }
 }
@@ -614,7 +614,7 @@ static GColor prv_hard_coded_color_for_3rd_party_apps(Uuid *uuid) {
 
 
 static GColor prv_valid_color_from_uuid(GColor color, Uuid *uuid) {
-#ifdef CONFIG_BOARD_FAMILY_ASTERIX
+#ifdef CONFIG_BOARD_ASTERIX
   return GColorClear;
 #endif
 

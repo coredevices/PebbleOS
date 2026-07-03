@@ -14,7 +14,7 @@
 
 #include "FreeRTOS.h"
 #include "kernel/pbl_malloc.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "queue.h"
 #include "semphr.h"
 #include "pbl/services/new_timer/new_timer.h"

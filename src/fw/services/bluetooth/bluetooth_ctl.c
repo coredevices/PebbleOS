@@ -12,7 +12,7 @@
 #include "drivers/clocksource.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/bluetooth/ble_bas.h"
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"

@@ -6,7 +6,7 @@
 #include "pbl/services/comm_session/session.h"
 #include "pbl/services/comm_session/session_analytics.h"
 
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 #include "comm/bt_conn_mgr.h"
 

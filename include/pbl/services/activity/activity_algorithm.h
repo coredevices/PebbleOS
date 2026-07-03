@@ -8,8 +8,6 @@
 #include "applib/accel_service.h"
 #include "pbl/services/activity/activity.h"
 
-#define ACTIVITY_ALGORITHM_MAX_SAMPLES  25
-
 // Version of our minute file minute records
 // Version history:
 //   4: Initial version

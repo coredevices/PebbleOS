@@ -11,7 +11,7 @@
 #include "kernel/ui/kernel_ui.h"
 #include "system/passert.h"
 #include "util/buffer.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 //! Signature for callbacks provided to prv_content_indicator_iterate()
 //! @param content_indicator The current ContentIndicator in the iteration.

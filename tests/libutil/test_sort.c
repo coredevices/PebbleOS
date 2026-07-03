@@ -3,8 +3,8 @@
 
 #include "clar.h"
 
-#include <util/size.h>
-#include <util/sort.h>
+#include <pbl/util/size.h>
+#include <pbl/util/sort.h>
 
 #include <stdint.h>
 #include <stddef.h>

@@ -17,10 +17,10 @@
 #include "applib/graphics/gtypes.h"
 #include "process_management/app_install_types.h"
 #include "shell/system_theme.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 #if defined(CONFIG_APP_SCALING) && \
-    (defined(CONFIG_BOARD_FAMILY_OBELIX) || defined(CONFIG_BOARD_QEMU_EMERY))
+    (defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_QEMU_EMERY))
 #define TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED 1
 #else
 #define TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED 0
@@ -159,6 +159,7 @@ typedef enum ShellLanguage {
   ShellLanguageItalian,
   ShellLanguageDutch,
   ShellLanguagePortuguese,
+  ShellLanguagePolish,
   ShellLanguageCount,
 } ShellLanguage;
 

@@ -25,8 +25,8 @@
 #include "shell/normal/watchface.h"
 #include "system/passert.h"
 #include "system/profiler.h"
-#include "util/list.h"
-#include "util/size.h"
+#include "pbl/util/list.h"
+#include "pbl/util/size.h"
 
 #include "FreeRTOS.h"
 #include "semphr.h"

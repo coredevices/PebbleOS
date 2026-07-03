@@ -33,8 +33,8 @@
 #include "shell/prefs.h"
 #include "system/bootbits.h"
 #include "system/passert.h"
-#include "util/math.h"
-#include "util/size.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
 #include "util/time/time.h"
 #include "system/version.h"
 

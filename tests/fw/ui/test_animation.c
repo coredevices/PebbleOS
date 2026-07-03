@@ -11,7 +11,7 @@
 #include "applib/ui/animation.h"
 #include "applib/ui/animation_private.h"
 #include "applib/legacy2/ui/animation_private_legacy2.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #include <stdarg.h>
 #include <stdio.h>

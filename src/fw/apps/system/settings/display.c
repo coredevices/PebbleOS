@@ -19,7 +19,7 @@
 #include "shell/prefs.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -39,6 +39,7 @@ typedef struct SettingsBacklightData {
   char als_value_buffer[16];  // Buffer for ALS value display
   char backlight_percent_buffer[16];  // Buffer for backlight percentage display
   AppTimer *update_timer;  // Timer for live updating debug values
+  bool als_primed;  // Whether we currently hold an ambient_light_prime() ref
 } SettingsBacklightData;
 
 static const char *s_language_labels[] = {
@@ -51,6 +52,7 @@ static const char *s_language_labels[] = {
   [ShellLanguageItalian] = "Italiano",
   [ShellLanguageDutch] = "Nederlands",
   [ShellLanguagePortuguese] = "Português",
+  [ShellLanguagePolish] = "Polski",
 };
 
 static void prv_language_menu_select(OptionMenu *option_menu, int selection, void *context) {
@@ -122,7 +124,7 @@ static void prv_intensity_menu_push(SettingsBacklightData *data) {
 // Orientation Settings
 /////////////////////////////
 static const char *s_display_orientation_labels[] = {
-    i18n_noop("Default"),
+    i18n_ctx_noop("Orientation", "Default"),
     i18n_noop("Left-Handed"),
 };
 
@@ -198,7 +200,7 @@ static void prv_timeout_menu_push(SettingsBacklightData *data) {
 static const char *s_touch_wake_labels[] = {
     [BacklightTouchWake_DoubleTap] = i18n_noop("Double Tap"),
     [BacklightTouchWake_Tap] = i18n_noop("Tap"),
-    [BacklightTouchWake_Off] = i18n_noop("Off"),
+    [BacklightTouchWake_Off] = i18n_ctx_noop("TouchWake", "Off"),
 };
 
 static void prv_touch_wake_menu_select(OptionMenu *option_menu, int selection, void *context) {
@@ -339,16 +341,16 @@ static void prv_backlight_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
         if (backlight_is_dynamic_intensity_enabled()) {
           uint8_t current_percent = light_get_current_brightness_percent();
           snprintf(data->backlight_percent_buffer, sizeof(data->backlight_percent_buffer),
-                   "On - %"PRIu8"%%", current_percent);
+                   i18n_get("On - %d%%", data), (int)current_percent);
           subtitle = data->backlight_percent_buffer;
         } else {
-          subtitle = i18n_noop("On");
+          subtitle = i18n_ctx_noop("DeviceState", "On");
         }
 #else
-        subtitle = i18n_noop("On");
+        subtitle = i18n_ctx_noop("DeviceState", "On");
 #endif
       } else {
-        subtitle = i18n_noop("Off");
+        subtitle = i18n_ctx_noop("DeviceState", "Off");
       }
       break;
     case SettingsBacklightMotionWake:
@@ -366,10 +368,10 @@ static void prv_backlight_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       if (backlight_is_ambient_sensor_enabled()) {
         uint32_t als_value = ambient_light_get_light_level();
         snprintf(data->als_value_buffer, sizeof(data->als_value_buffer),
-                 "On (%"PRIu32")", als_value);
+                 i18n_get("On (%d)", data), (int)als_value);
         subtitle = data->als_value_buffer;
       } else {
-        subtitle = i18n_noop("Off");
+        subtitle = i18n_ctx_noop("DeviceState", "Off");
       }
       break;
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
@@ -426,6 +428,12 @@ static void prv_backlight_appear_cb(SettingsCallbacks *context) {
     data->update_timer = app_timer_register(UPDATE_INTERVAL_MS,
                                             prv_backlight_update_timer_cb, data);
   }
+  // Hold the ALS in continuous mode while this submenu is visible so the
+  // 500 ms refresh tick doesn't pay a full integration time per read.
+  if (!data->als_primed) {
+    ambient_light_prime();
+    data->als_primed = true;
+  }
 }
 
 static void prv_backlight_hide_cb(SettingsCallbacks *context) {
@@ -434,6 +442,10 @@ static void prv_backlight_hide_cb(SettingsCallbacks *context) {
     app_timer_cancel(data->update_timer);
     data->update_timer = NULL;
   }
+  if (data->als_primed) {
+    ambient_light_release();
+    data->als_primed = false;
+  }
 }
 
 static void prv_backlight_deinit_cb(SettingsCallbacks *context) {
@@ -441,6 +453,10 @@ static void prv_backlight_deinit_cb(SettingsCallbacks *context) {
   if (data->update_timer) {
     app_timer_cancel(data->update_timer);
     data->update_timer = NULL;
+  }
+  if (data->als_primed) {
+    ambient_light_release();
+    data->als_primed = false;
   }
   i18n_free_all(data);
   app_free(data);

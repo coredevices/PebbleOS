@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "util/iterator.h"
+#include "pbl/util/iterator.h"
 #include "utf8_test_data.h"
 #include "applib/graphics/utf8.h"
 

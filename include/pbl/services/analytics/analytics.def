@@ -38,6 +38,7 @@ PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(button_pressed_count)
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(touch_event_count)
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(gesture_tap_count)
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(gesture_double_tap_count)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(touch_driver_wake_cnt)
 
 // CPU usage
 PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(cpu_running_pct, 100)
@@ -111,6 +112,7 @@ PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(settings_power_mode)
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(settings_motion_sensitivity)
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(settings_backlight_intensity_pct)
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(settings_backlight_timeout_s)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(settings_touch_enabled)
 
 // Application
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(app_message_sent_count)

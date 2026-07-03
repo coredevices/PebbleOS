@@ -16,8 +16,9 @@
 #include "process_management/app_manager.h"
 #include "process_management/app_run_state.h"
 #include "process_management/process_manager.h"
+#include "pbl/services/vibe_pattern.h"
 #include "resource/resource_ids.auto.h"
-#include "util/heap.h"
+#include "pbl/util/heap.h"
 
 // Fakes
 #include "fake_new_timer.h"
@@ -297,7 +298,7 @@ void health_tracking_ui_register_app_launch(AppInstallId app_id) {
 void sys_vibe_history_stop_collecting(void) {
 }
 
-void sys_vibe_pattern_clear(void) {
+void vibe_pattern_clear_for_owner(VibePatternOwner owner) {
 }
 
 void speaker_service_stop_for_task(PebbleTask task) {

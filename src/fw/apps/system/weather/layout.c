@@ -29,8 +29,8 @@
 #include "pbl/services/weather/weather_types.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/size.h"
-#include "util/trig.h"
+#include "pbl/util/size.h"
+#include "pbl/util/trig.h"
 
 #include <stdio.h>
 

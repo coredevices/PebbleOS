@@ -8,9 +8,9 @@
 
 #include "drivers/display/display.h" // FIXME: Need display dimensions
 #include "resource/resource.h"
-#include "util/attributes.h"
-#include "util/math.h"
-#include "util/math_fixed.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/math.h"
+#include "pbl/util/math_fixed.h"
 
 #if !(defined(SDK) || defined(UNITTEST))
 #endif

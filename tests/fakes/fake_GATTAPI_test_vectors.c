@@ -4,7 +4,7 @@
 #include "fake_GATTAPI_test_vectors.h"
 #include "fake_GATTAPI.h"
 
-#include <btutil/bt_uuid.h>
+#include <pbl/btutil/bt_uuid.h>
 
 void fake_gatt_put_discovery_complete_event(uint8_t status,
                                             unsigned int connection_id) {

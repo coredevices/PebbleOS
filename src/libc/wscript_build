@@ -1,4 +1,4 @@
-import waftools.gitinfo
+import tools.waf.gitinfo
 
 # Collect all the files in the libc directory
 source_dirs = ['string', 'math', 'stub']

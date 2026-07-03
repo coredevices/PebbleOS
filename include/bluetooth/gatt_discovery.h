@@ -5,7 +5,7 @@
 
 #include <bluetooth/bluetooth_types.h>
 #include <bluetooth/gatt_service_types.h>
-#include <util/attributes.h>
+#include <pbl/util/attributes.h>
 
 #include <stdint.h>
 

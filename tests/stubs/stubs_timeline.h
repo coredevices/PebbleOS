@@ -5,7 +5,7 @@
 
 #include "pbl/services/timeline/item.h"
 #include "apps/system/timeline/timeline.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 void WEAK timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *action,
                                  const AttributeList *attributes) {}

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "mcu/cache.h"
+#include "pbl/mcu/cache.h"
 
 void icache_enable(void) {}
 void icache_disable(void) {}

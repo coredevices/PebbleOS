@@ -13,7 +13,7 @@
 #include "pbl/services/i18n/i18n.h"
 #include "system/passert.h"
 #include "shell/prefs.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #define SETTINGS_CATEGORY_MENU_CELL_UNFOCUSED_ROUND_VERTICAL_PADDING 14
 

@@ -8,7 +8,7 @@
 #include "system/bootbits.h"
 #include "kernel/core_dump.h"
 #include "kernel/util/fw_reset.h"
-#include "mcu/interrupts.h"
+#include "pbl/mcu/interrupts.h"
 
 #include "drivers/flash.h"
 #include "system/reboot_reason.h"

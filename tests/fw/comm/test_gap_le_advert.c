@@ -4,7 +4,7 @@
 #include "comm/ble/gap_le_advert.h"
 #include "comm/ble/gap_le_connection.h"
 #include "pbl/services/regular_timer.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include "clar.h"
 

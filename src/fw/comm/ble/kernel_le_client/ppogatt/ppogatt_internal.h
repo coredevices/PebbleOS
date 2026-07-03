@@ -7,9 +7,9 @@
 
 #include <stdint.h>
 
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 #include "mfg/mfg_serials.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #define PPOGATT_V1_DESIRED_RX_WINDOW_SIZE (4500 / MAX_ATT_WRITE_PAYLOAD_SIZE)
 #define PPOGATT_MIN_VERSION (0x00)

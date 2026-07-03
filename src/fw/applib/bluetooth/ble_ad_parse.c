@@ -8,10 +8,10 @@
 #include "syscall/syscall.h"
 #include "system/passert.h"
 
-#include "util/math.h"
+#include "pbl/util/math.h"
 #include "util/net.h"
 
-#include <btutil/bt_uuid.h>
+#include <pbl/btutil/bt_uuid.h>
 
 // -----------------------------------------------------------------------------
 //! Internal parsed advertisement data structures.

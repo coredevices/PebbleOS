@@ -13,10 +13,10 @@
 #include "pbl/services/timeline/timeline_resources.h"
 #include "util/buffer.h"
 #include "util/graphics.h"
-#include "util/hash.h"
-#include "util/math.h"
-#include "util/size.h"
-#include "util/trig.h"
+#include "pbl/util/hash.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
+#include "pbl/util/trig.h"
 
 #include "clar.h"
 

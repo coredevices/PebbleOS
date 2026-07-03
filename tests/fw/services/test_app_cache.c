@@ -13,9 +13,9 @@
 #include "pbl/services/process_management/app_storage.h"
 #include "pbl/services/settings/settings_file.h"
 #include "shell/normal/quick_launch.h"
-#include <util/size.h>
+#include <pbl/util/size.h>
 #include "system/logging.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include <stdio.h>
 
 // Fakes
@@ -58,6 +58,22 @@ AppInstallId quick_launch_get_app(ButtonId button) {
   } else {
     return s_test_id_ql_down;
   }
+}
+
+AppInstallId quick_launch_single_click_get_app(ButtonId button) {
+  if (button == BUTTON_ID_UP) {
+    return s_test_id_ql_up;
+  } else {
+    return s_test_id_ql_down;
+  }
+}
+
+AppInstallId quick_launch_combo_back_up_get_app(void) {
+  return s_test_id_ql_up;
+}
+
+AppInstallId quick_launch_combo_up_down_get_app(void) {
+  return s_test_id_ql_down;
 }
 
 AppInstallId watchface_get_default_install_id(void) {

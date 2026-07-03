@@ -15,12 +15,12 @@
 #include "pbl/services/filesystem/pfs.h"
 #include "system/hexdump.h"
 #include "system/logging.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 #include "util/net.h"
 
 #include <bluetooth/analytics.h>
 #include <bluetooth/conn_event_stats.h>
-#include <os/tick.h>
+#include <pbl/os/tick.h>
 
 #include "portmacro.h"
 
