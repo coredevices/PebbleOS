@@ -398,3 +398,20 @@ void voice_recording_storage_delete_all(VoiceRecordingId skip_id) {
     s_total_bytes_valid = false;  // one file was kept; recompute lazily
   }
 }
+
+void voice_recording_storage_delete_owned_by(const Uuid *app_uuid, VoiceRecordingId skip_id) {
+  PFSFileListEntry *list = pfs_create_file_list(prv_is_recording_file);
+  for (PFSFileListEntry *entry = list; entry; entry = (PFSFileListEntry *)entry->list_node.next) {
+    VoiceRecordingId id;
+    if ((skip_id != VOICE_RECORDING_ID_INVALID) && prv_parse_id(entry->name, &id) &&
+        (id == skip_id)) {
+      continue;
+    }
+    VoiceRecordingInfo info;
+    if (prv_read_info(entry->name, &info) && uuid_equal(&info.app_uuid, app_uuid)) {
+      pfs_remove(entry->name);
+      s_total_bytes_valid = false;  // recomputed lazily on next query
+    }
+  }
+  pfs_delete_file_list(list);
+}

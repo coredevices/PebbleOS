@@ -70,3 +70,6 @@ bool voice_recording_storage_delete(VoiceRecordingId id);
 //! Remove every closed stored recording, except \a skip_id (pass
 //! VOICE_RECORDING_ID_INVALID to remove them all).
 void voice_recording_storage_delete_all(VoiceRecordingId skip_id);
+
+//! Remove every stored recording belonging to \a app_uuid, except \a skip_id.
+void voice_recording_storage_delete_owned_by(const Uuid *app_uuid, VoiceRecordingId skip_id);

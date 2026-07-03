@@ -449,6 +449,18 @@ void voice_recording_delete_all(void) {
   mutex_unlock(s_lock);
 }
 
+void voice_recording_delete_owned_by(const Uuid *app_uuid) {
+  if (!app_uuid) {
+    return;
+  }
+  mutex_lock(s_lock);
+  // Playback may hold one of this app's files open; removing an open PFS file panics.
+  voice_recording_playback_stop();
+  // Skip a recording held open by an active transcription stream (see voice_recording_delete).
+  voice_recording_storage_delete_owned_by(app_uuid, voice_transcribing_recording_id());
+  mutex_unlock(s_lock);
+}
+
 bool voice_recording_play(VoiceRecordingId id) {
   mutex_lock(s_lock);
   const bool started = (s_state == RecState_Idle) && voice_recording_playback_start(id);
