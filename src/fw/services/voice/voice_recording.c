@@ -29,8 +29,12 @@
 PBL_LOG_MODULE_DECLARE(service_voice, CONFIG_SERVICE_VOICE_LOG_LEVEL);
 
 #define VOICE_REC_MAX_DURATION_MS (120 * 1000)
-#define VOICE_REC_BYTES_PER_SEC (1600)
-#define VOICE_REC_TOTAL_STORAGE_BYTES (KiBYTES(512))
+// Memos are encoded at a higher Speex quality than live dictation (whose bit rate is
+// constrained by the BT link); the default quality is restored when the recording ends.
+#define VOICE_REC_SPEEX_QUALITY (8)
+// ~27.8 kbps at quality 8, plus one length byte per 20 ms frame, rounded up.
+#define VOICE_REC_BYTES_PER_SEC (3600)
+#define VOICE_REC_TOTAL_STORAGE_BYTES (KiBYTES(1024))
 #define VOICE_REC_STAGING_SIZE (1024)
 
 typedef enum {
@@ -116,6 +120,7 @@ static void prv_close_temp(bool remove) {
 }
 
 static void prv_reset(void) {
+  voice_speex_set_quality(VOICE_SPEEX_QUALITY_DEFAULT);
   s_state = RecState_Idle;
   s_active_id = VOICE_RECORDING_ID_INVALID;
   s_owner_task = PebbleTask_Unknown;
@@ -274,6 +279,8 @@ VoiceRecordingId voice_recording_start(void) {
     id = VOICE_RECORDING_ID_INVALID;
     goto unlock;
   }
+
+  voice_speex_set_quality(VOICE_REC_SPEEX_QUALITY);
 
   s_state = RecState_Recording;
   s_active_id = id;

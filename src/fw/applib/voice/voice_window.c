@@ -1145,6 +1145,7 @@ static void prv_do_transition(VoiceUiData *data, VoiceUiState state) {
 
     case StateWaitForResponse:
       // pulse the microphone dot
+      prv_stop_fly_dot(data);
       prv_hide_unfold_animation(data);
       prv_show_mic_dot_pulse(data);
       prv_show_progress_bar(data, true /* animated */);
@@ -1520,4 +1521,3 @@ DEFINE_SYSCALL(char *, sys_voice_get_transcription_from_event, PebbleVoiceServic
 
   return sentence;
 }
-
