@@ -176,6 +176,10 @@ static bool prv_state_is_on(BacklightState state) {
   return state != LIGHT_STATE_OFF && state != LIGHT_STATE_BREATHE_OFF;
 }
 
+static bool prv_charge_breathe_can_run(void) {
+  return s_charge_breathe_requested && s_backlight_allowed;
+}
+
 //! Timer callback: holdoff expired, drop the prime so the W1160 stops
 //! integrating in the background. Runs on the new_timer task.
 static void prv_als_prime_release_callback(void *data) {
@@ -240,7 +244,8 @@ static void prv_breathe_timer_callback(void *data) {
         prv_change_state(LIGHT_STATE_BREATHE_HOLD);
       } else {
         uint8_t brightness =
-            (uint8_t)((uint16_t)s_breathe_target_intensity * s_breathe_step / (BREATHE_FADE_STEPS - 1));
+            (uint8_t)((uint16_t)s_breathe_target_intensity * s_breathe_step /
+                      (BREATHE_FADE_STEPS - 1));
         prv_change_brightness(brightness);
         new_timer_start(s_timer_id, BREATHE_FADE_TIME_MS / BREATHE_FADE_STEPS,
                         prv_breathe_timer_callback, NULL, 0);
@@ -417,7 +422,7 @@ static void prv_change_state(BacklightState new_state) {
 
       if (s_fade_step_size >= s_current_brightness) {
         new_brightness = 0;
-        if (s_charge_breathe_requested) {
+        if (prv_charge_breathe_can_run()) {
           s_light_state = LIGHT_STATE_BREATHE_FADE_IN;
           s_breathe_step = 0;
           new_timer_start(s_timer_id, BREATHE_FADE_TIME_MS / BREATHE_FADE_STEPS,
@@ -435,7 +440,7 @@ static void prv_change_state(BacklightState new_state) {
     case LIGHT_STATE_OFF:
       new_brightness = 0;
       new_timer_stop(s_timer_id);
-      if (s_charge_breathe_requested && !prv_state_is_breathe(old_state)) {
+      if (prv_charge_breathe_can_run() && !prv_state_is_breathe(old_state)) {
         s_light_state = LIGHT_STATE_BREATHE_FADE_IN;
         s_breathe_step = 0;
         new_timer_start(s_timer_id, BREATHE_FADE_TIME_MS / BREATHE_FADE_STEPS,
@@ -746,6 +751,10 @@ void light_toggle_enabled(void) {
   backlight_set_enabled(!backlight_is_enabled());
   if (prv_light_allowed()) {
     prv_change_state(LIGHT_STATE_ON_TIMED);
+  } else if (prv_charge_breathe_can_run()) {
+    if (!prv_state_is_breathe(s_light_state)) {
+      prv_change_state(LIGHT_STATE_BREATHE_FADE_IN);
+    }
   } else {
     prv_change_state(LIGHT_STATE_OFF);
   }
@@ -779,10 +788,19 @@ void light_toggle_dynamic_intensity_enabled(void) {
 }
 
 void light_allow(bool allowed) {
-  if (s_backlight_allowed && !allowed) {
-    prv_change_state(LIGHT_STATE_OFF);
-  }
+  mutex_lock(s_mutex);
+
+  const bool was_allowed = s_backlight_allowed;
   s_backlight_allowed = allowed;
+
+  if (was_allowed && !allowed) {
+    prv_change_state(LIGHT_STATE_OFF);
+  } else if (!was_allowed && allowed && prv_charge_breathe_can_run() &&
+             s_light_state == LIGHT_STATE_OFF) {
+    prv_change_state(LIGHT_STATE_BREATHE_FADE_IN);
+  }
+
+  mutex_unlock(s_mutex);
 }
 
 void light_start_charge_breathe(void) {
@@ -790,7 +808,9 @@ void light_start_charge_breathe(void) {
   s_charge_breathe_requested = true;
   s_breathe_step = 0;
   s_breathe_target_intensity = prv_backlight_get_intensity();
-  prv_change_state(LIGHT_STATE_BREATHE_FADE_IN);
+  if (prv_charge_breathe_can_run()) {
+    prv_change_state(LIGHT_STATE_BREATHE_FADE_IN);
+  }
   mutex_unlock(s_mutex);
 }
 

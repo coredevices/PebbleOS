@@ -13,17 +13,14 @@
 #include "kernel/util/standby.h"
 #include "pbl/services/battery/battery_curve.h"
 #include "pbl/services/light.h"
-#include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/notifications/do_not_disturb.h"
 #include "pbl/services/vibe_pattern.h"
 #include "pbl/services/vibes/vibe_intensity.h"
+#include "pbl/util/size.h"
 #include "process_management/app_manager.h"
 #include "shell/normal/watchface.h"
 #include "shell/prefs.h"
 #include "util/ratio.h"
-#include "util/size.h"
-#include "util/ratio.h"
-#include "pbl/util/size.h"
 
 // The Battery UI state machine keeps track of when to notify the user of a
 // change in battery charge state, and when to automatically dismiss the status
