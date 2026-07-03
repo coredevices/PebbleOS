@@ -23,10 +23,10 @@
 PBL_LOG_MODULE_DEFINE(service_light, CONFIG_SERVICE_LIGHT_LOG_LEVEL);
 
 typedef enum {
-  LIGHT_STATE_ON = 1,        // backlight on, no timeouts
-  LIGHT_STATE_ON_TIMED = 2,  // backlight on, will start fading after a period
-  LIGHT_STATE_ON_FADING = 3, // backlight in the process of fading out
-  LIGHT_STATE_OFF = 4,       // backlight off; idle state
+  LIGHT_STATE_ON = 1,               // backlight on, no timeouts
+  LIGHT_STATE_ON_TIMED = 2,         // backlight on, will start fading after a period
+  LIGHT_STATE_ON_FADING = 3,        // backlight in the process of fading out
+  LIGHT_STATE_OFF = 4,              // backlight off; idle state
   LIGHT_STATE_BREATHE_FADE_IN = 5,  // breathing: ramping brightness up
   LIGHT_STATE_BREATHE_HOLD = 6,     // breathing: holding at full brightness
   LIGHT_STATE_BREATHE_FADE_OUT = 7, // breathing: ramping brightness down
@@ -237,6 +237,10 @@ static bool prv_state_is_breathe(BacklightState state) {
   }
 }
 
+static bool prv_charge_breathe_can_run(void) {
+  return s_charge_breathe_requested && s_backlight_allowed;
+}
+
 static uint32_t prv_get_als_level(void) {
   RtcTicks now = rtc_get_ticks();
   const bool cache_valid =
@@ -284,8 +288,8 @@ static void prv_breathe_timer_callback(void *data) {
         prv_change_brightness(s_breathe_target_intensity);
         prv_change_state(LIGHT_STATE_BREATHE_HOLD);
       } else {
-        uint8_t brightness =
-            (uint8_t)((uint16_t)s_breathe_target_intensity * s_breathe_step / (BREATHE_FADE_STEPS - 1));
+        uint8_t brightness = (uint8_t)((uint16_t)s_breathe_target_intensity * s_breathe_step /
+                                       (BREATHE_FADE_STEPS - 1));
         prv_change_brightness(brightness);
         new_timer_start(s_timer_id, BREATHE_FADE_TIME_MS / BREATHE_FADE_STEPS,
                         prv_breathe_timer_callback, NULL, 0);
@@ -489,7 +493,7 @@ static void prv_change_state(BacklightState new_state) {
 
       if (s_fade_level_idx >= s_fade_level_count) {
         new_brightness = 0;
-        if (s_charge_breathe_requested) {
+        if (prv_charge_breathe_can_run()) {
           s_light_state = LIGHT_STATE_BREATHE_FADE_IN;
           s_breathe_step = 0;
           new_timer_start(s_timer_id, BREATHE_FADE_TIME_MS / BREATHE_FADE_STEPS,
@@ -507,7 +511,7 @@ static void prv_change_state(BacklightState new_state) {
     case LIGHT_STATE_OFF:
       new_brightness = 0;
       new_timer_stop(s_timer_id);
-      if (s_charge_breathe_requested && !prv_state_is_breathe(old_state)) {
+      if (prv_charge_breathe_can_run() && !prv_state_is_breathe(old_state)) {
         s_light_state = LIGHT_STATE_BREATHE_FADE_IN;
         s_breathe_step = 0;
         new_timer_start(s_timer_id, BREATHE_FADE_TIME_MS / BREATHE_FADE_STEPS,
@@ -522,8 +526,7 @@ static void prv_change_state(BacklightState new_state) {
       break;
     case LIGHT_STATE_BREATHE_HOLD:
       new_brightness = s_breathe_target_intensity;
-      new_timer_start(s_timer_id, BREATHE_HOLD_TIME_MS,
-                      prv_breathe_timer_callback, NULL, 0);
+      new_timer_start(s_timer_id, BREATHE_HOLD_TIME_MS, prv_breathe_timer_callback, NULL, 0);
       break;
     case LIGHT_STATE_BREATHE_FADE_OUT:
       s_breathe_step = 0;
@@ -533,8 +536,7 @@ static void prv_change_state(BacklightState new_state) {
       break;
     case LIGHT_STATE_BREATHE_OFF:
       new_brightness = 0;
-      new_timer_start(s_timer_id, BREATHE_OFF_TIME_MS,
-                      prv_breathe_timer_callback, NULL, 0);
+      new_timer_start(s_timer_id, BREATHE_OFF_TIME_MS, prv_breathe_timer_callback, NULL, 0);
       break;
   }
 
@@ -831,6 +833,10 @@ void light_toggle_enabled(void) {
   backlight_set_enabled(!backlight_is_enabled());
   if (prv_light_allowed()) {
     prv_change_state(LIGHT_STATE_ON_TIMED);
+  } else if (prv_charge_breathe_can_run()) {
+    if (!prv_state_is_breathe(s_light_state)) {
+      prv_change_state(LIGHT_STATE_BREATHE_FADE_IN);
+    }
   } else {
     prv_change_state(LIGHT_STATE_OFF);
   }
@@ -865,10 +871,19 @@ void light_set_dynamic_mode(BacklightDynamicMode mode) {
 #endif
 
 void light_allow(bool allowed) {
-  if (s_backlight_allowed && !allowed) {
-    prv_change_state(LIGHT_STATE_OFF);
-  }
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
+
+  const bool was_allowed = s_backlight_allowed;
   s_backlight_allowed = allowed;
+
+  if (was_allowed && !allowed) {
+    prv_change_state(LIGHT_STATE_OFF);
+  } else if (!was_allowed && allowed && prv_charge_breathe_can_run() &&
+             s_light_state == LIGHT_STATE_OFF) {
+    prv_change_state(LIGHT_STATE_BREATHE_FADE_IN);
+  }
+
+  pbl_mutex_unlock(&s_mutex);
 }
 
 void light_start_charge_breathe(void) {
@@ -876,7 +891,9 @@ void light_start_charge_breathe(void) {
   s_charge_breathe_requested = true;
   s_breathe_step = 0;
   s_breathe_target_intensity = prv_backlight_get_intensity();
-  prv_change_state(LIGHT_STATE_BREATHE_FADE_IN);
+  if (prv_charge_breathe_can_run()) {
+    prv_change_state(LIGHT_STATE_BREATHE_FADE_IN);
+  }
   pbl_mutex_unlock(&s_mutex);
 }
 

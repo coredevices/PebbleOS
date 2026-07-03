@@ -12,7 +12,6 @@
 #include "kernel/util/standby.h"
 #include "pbl/services/battery/battery_curve.h"
 #include "pbl/services/light.h"
-#include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/notifications/do_not_disturb.h"
 #include "pbl/services/vibe_pattern.h"
 #include "pbl/services/vibes/vibe_intensity.h"
