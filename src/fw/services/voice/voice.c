@@ -14,6 +14,7 @@
 #include "pbl/services/comm_session/session.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/new_timer/new_timer.h"
+#include "pbl/services/system_task.h"
 #include "pbl/services/audio_endpoint.h"
 #include "pbl/services/voice/transcription.h"
 #include "pbl/services/voice/voice_recording.h"
@@ -237,6 +238,26 @@ static void prv_audio_transfer_stopped_handler(AudioEndpointSessionId session_id
   mutex_unlock(s_lock);
 }
 
+// System-task callback scheduled by prv_feed_recording once the whole payload has been fed:
+// stops the transfer and starts the result timeout. The session generation guards against the
+// session having ended (or been replaced) between scheduling and execution.
+static void prv_finish_feed(void *data) {
+  const uint32_t generation = (uint32_t)(uintptr_t)data;
+  mutex_lock(s_lock);
+  if ((generation != s_session_generation) || s_teardown_in_progress ||
+      (s_state != SessionState_Recording) ||
+      (s_audio_source != VoiceAudioSource_Recording)) {
+    mutex_unlock(s_lock);
+    return;
+  }
+
+  PBL_LOG_DBG("Finished streaming recording, awaiting transcription result");
+  prv_stop_recording();
+  s_timeout_generation = s_session_generation;
+  prv_start_result_timeout();
+  mutex_unlock(s_lock);
+}
+
 // Timer callback that streams the stored recording to the phone, one small batch of encoded
 // frames per tick. Reports upload progress and, once the whole payload has been sent, stops the
 // transfer and waits for the transcription result.
@@ -287,10 +308,10 @@ static void prv_feed_recording(void *unused) {
   }
 
   if (eof) {
-    PBL_LOG_DBG("Finished streaming recording, awaiting transcription result");
-    prv_stop_recording();
-    s_timeout_generation = s_session_generation;
-    prv_start_result_timeout();
+    // Stopping the transfer sends a BT message that can block for seconds when the send buffer
+    // is congested (likely right after streaming the whole payload). Do it on the system task
+    // instead of stalling the timer-service task with s_lock held.
+    system_task_add_callback(prv_finish_feed, (void *)(uintptr_t)s_session_generation);
   } else {
     new_timer_start(s_feed_timer, VOICE_REC_FEED_MS, prv_feed_recording, NULL, 0);
   }
