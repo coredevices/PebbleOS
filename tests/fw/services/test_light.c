@@ -374,6 +374,68 @@ void test_light__breathe_cycle_repeats(void) {
   cl_assert(stub_new_timer_is_scheduled(s_light_timer));
 }
 
+void test_light__breathe_reuses_target_between_cycles(void) {
+  backlight_set_intensity(60);
+  light_start_charge_breathe();
+
+  // Fade in
+  for (int i = 0; i < BREATHE_FADE_STEPS; i++) {
+    fire_light_timer();
+  }
+  // Hold
+  fire_light_timer();
+  // Fade out
+  for (int i = 0; i < BREATHE_FADE_STEPS; i++) {
+    fire_light_timer();
+  }
+
+  // Changing the setting mid-notification must not re-sample the breathe target
+  // on every cycle.
+  backlight_set_intensity(90);
+  fire_light_timer();
+  for (int i = 0; i < BREATHE_FADE_STEPS; i++) {
+    fire_light_timer();
+  }
+
+  cl_assert_equal_i(s_backlight_brightness, 60);
+}
+
+void test_light__breathe_resumes_after_button_interrupt(void) {
+  backlight_set_intensity(70);
+  light_start_charge_breathe();
+  fire_light_timer();
+
+  light_button_pressed();
+  check_on();
+
+  light_button_released();
+  check_on_timed();
+
+  int guard = 100;
+  while (s_backlight_brightness > 0 && guard-- > 0) {
+    fire_light_timer();
+  }
+
+  cl_assert(guard > 0);
+  cl_assert_equal_i(s_backlight_brightness, 0);
+  cl_assert(stub_new_timer_is_scheduled(s_light_timer));
+
+  fire_light_timer();
+  cl_assert(s_backlight_brightness > 0);
+}
+
+void test_light__breathe_stop_while_interrupted_prevents_resume(void) {
+  backlight_set_intensity(100);
+  light_start_charge_breathe();
+
+  light_button_pressed();
+  check_on();
+
+  light_stop_charge_breathe();
+  light_button_released();
+  check_on_timed_and_consume();
+}
+
 void test_light__breathe_stop_mid_fade(void) {
   backlight_set_intensity(100);
   light_start_charge_breathe();
