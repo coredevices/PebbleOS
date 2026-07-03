@@ -83,3 +83,23 @@ MenuScrollVibeBehavior WEAK shell_prefs_get_menu_scroll_vibe_behavior(void) {
 void WEAK shell_prefs_set_menu_scroll_vibe_behavior(MenuScrollVibeBehavior behavior) {
   s_menu_scroll_vibe_behavior = behavior;
 }
+
+static bool s_charging_blink_when_full = true;
+
+bool WEAK charging_blink_when_full_enabled(void) {
+  return s_charging_blink_when_full;
+}
+
+void WEAK charging_set_blink_when_full_enabled(bool enable) {
+  s_charging_blink_when_full = enable;
+}
+
+static bool s_charging_vibe_when_full = true;
+
+bool WEAK charging_vibe_when_full_enabled(void) {
+  return s_charging_vibe_when_full;
+}
+
+void WEAK charging_set_vibe_when_full_enabled(bool enable) {
+  s_charging_vibe_when_full = enable;
+}

@@ -11,14 +11,16 @@
 #include "kernel/low_power.h"
 #include "kernel/ui/modals/modal_manager.h"
 #include "kernel/util/standby.h"
-#include "process_management/app_manager.h"
 #include "pbl/services/battery/battery_curve.h"
-#include "pbl/services/vibe_pattern.h"
+#include "pbl/services/light.h"
 #include "pbl/services/notifications/do_not_disturb.h"
+#include "pbl/services/vibe_pattern.h"
 #include "pbl/services/vibes/vibe_intensity.h"
-#include "shell/normal/watchface.h"
-#include "util/ratio.h"
 #include "pbl/util/size.h"
+#include "process_management/app_manager.h"
+#include "shell/normal/watchface.h"
+#include "shell/prefs.h"
+#include "util/ratio.h"
 
 // The Battery UI state machine keeps track of when to notify the user of a
 // change in battery charge state, and when to automatically dismiss the status
@@ -182,10 +184,17 @@ static void prv_dismiss_plugged(void) {
 }
 
 static void prv_display_fully_charged(void *data) {
+  if (charging_vibe_when_full_enabled()) {
+    vibes_short_pulse();
+  }
+  if (charging_blink_when_full_enabled()) {
+    light_start_charge_breathe();
+  }
   battery_ui_display_fully_charged();
 }
 
 static void prv_dismiss_fully_charged(void) {
+  light_stop_charge_breathe();
   battery_ui_dismiss_modal();
 }
 
