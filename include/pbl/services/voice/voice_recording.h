@@ -53,11 +53,28 @@ typedef enum {
 //! @return the reason the most recent start/stop failed (cleared on success).
 VoiceRecordingError voice_recording_last_error(void);
 
+//! Get the quality used for new recordings.
+//! TODO: Remove with the temporary Voice Memos settings UI.
 VoiceRecordingQuality voice_recording_get_quality(void);
+
+//! Set the quality used for new recordings.
+//! TODO: Remove with the temporary Voice Memos settings UI.
 void voice_recording_set_quality(VoiceRecordingQuality quality);
+
+//! Get the recording input gain percentage.
+//! TODO: Remove with the temporary Voice Memos settings UI.
 uint16_t voice_recording_get_record_gain(void);
+
+//! Set the recording input gain percentage.
+//! TODO: Remove with the temporary Voice Memos settings UI.
 void voice_recording_set_record_gain(uint16_t gain);
+
+//! Get the recording playback gain percentage.
+//! TODO: Remove with the temporary Voice Memos settings UI.
 uint16_t voice_recording_get_playback_gain(void);
+
+//! Set the recording playback gain percentage.
+//! TODO: Remove with the temporary Voice Memos settings UI.
 void voice_recording_set_playback_gain(uint16_t gain);
 
 //! Metadata describing a stored recording.
