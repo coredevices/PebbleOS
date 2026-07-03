@@ -210,6 +210,9 @@ static bool cst816_fw_update(void) {
         return false;
       }
 
+      PBL_LOG_INFO("Updated firmware to version 0x%02X (0x%04X)",
+                   app_bin[sizeof(app_bin) + CST816_FW_VER_INFO_INDEX], checksum_read);
+
       cst816_hw_reset();
       return true;
     }
