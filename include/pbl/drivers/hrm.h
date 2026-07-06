@@ -5,14 +5,19 @@
 
 #include "board/board.h"
 
+#include "pbl/services/hrm/hrm_manager.h"
+
 #include <stdbool.h>
 
 //! Initialize the HRM
 void hrm_init(HRMDevice *dev);
 
-//! Enable the HRM
+//! Enable the HRM, sampling the PPG functions needed for the requested features
+//! @param features bitmask of HRMFeature values the sensor should collect
+//! @param low_latency reserved for FIFO cadence control (see coredevices/PebbleOS#1607);
+//!   currently unused by this driver
 //! @return true if successfully enabled, false if initialization failed
-bool hrm_enable(HRMDevice *dev);
+bool hrm_enable(HRMDevice *dev, HRMFeature features, bool low_latency);
 
 //! Disable the HRM
 void hrm_disable(HRMDevice *dev);
