@@ -144,7 +144,7 @@ def summary(bld):
         def strip_non_ascii(s):
             return "".join(i for i in str(s) if ord(i) < 128)
 
-        test_case = junit_xml.TestCase("all")
+        test_case = junit_xml.TestCase(node.parent.name)
         if code:
             # Include stdout and stderr if test failed:
             test_case.stdout = strip_non_ascii(stdout.decode("utf-8"))
