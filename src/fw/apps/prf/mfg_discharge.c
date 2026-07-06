@@ -18,6 +18,7 @@
 #include "services/common/bluetooth/bluetooth_ctl.h"
 #include "services/common/light.h"
 #include "system/logging.h"
+#include "util/bitset.h"
 #include "util/time/time.h"
 
 #define CHARGE_TARGET_PERCENT 99
@@ -52,6 +53,9 @@ typedef struct {
 
   // Elapsed time in seconds
   uint32_t elapsed_seconds;
+
+  // Buttons currently held, used to detect the up+down skip combo
+  uint8_t buttons_held_bitset;
 } AppData;
 
 static void prv_render(AppData *data);
@@ -66,6 +70,27 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
     data->elapsed_seconds += SECONDS_PER_MINUTE;
     prv_render(data);
   }
+}
+
+static void prv_start_discharge_phase(AppData *data) {
+  BatteryConstants battery_const;
+  BatteryChargeState charge_state;
+
+  battery_get_constants(&battery_const);
+  charge_state = battery_get_charge_state();
+
+  light_enable(false);
+
+  // Discharge phase: drive updates from a once-a-minute tick rather than
+  // battery events to keep the elapsed clock accurate and minimize wake-ups
+  battery_state_service_unsubscribe();
+  tick_timer_service_subscribe(MINUTE_UNIT, prv_handle_tick);
+
+  data->test_state = DischargeStateDischarging;
+  data->elapsed_seconds = 0;
+  data->initial_voltage_mv = battery_const.v_mv;
+  data->initial_percent = charge_state.charge_percent;
+  prv_render(data);
 }
 
 static void prv_render(AppData *data) {
@@ -109,18 +134,7 @@ static void prv_render(AppData *data) {
         sniprintf(data->details_string, sizeof(data->details_string),
                   "Draining\n%" PRIu8 "%%", charge_state.charge_percent);
       } else {
-        light_enable(false);
-
-        // Discharge phase: drive updates from a once-a-minute tick rather than
-        // battery events to keep the elapsed clock accurate and minimize wake-ups
-        battery_state_service_unsubscribe();
-        tick_timer_service_subscribe(MINUTE_UNIT, prv_handle_tick);
-
-        data->test_state = DischargeStateDischarging;
-        data->elapsed_seconds = 0;
-        data->initial_voltage_mv = battery_const.v_mv;
-        data->initial_percent = charge_state.charge_percent;
-        prv_render(data);
+        prv_start_discharge_phase(data);
         return;
       }
       break;
@@ -158,8 +172,31 @@ static void prv_back_click_handler(ClickRecognizerRef recognizer, void *data) {
   app_window_stack_pop(true);
 }
 
+static void prv_raw_button_down_handler(ClickRecognizerRef recognizer, void *context) {
+  AppData *data = app_state_get_user_data();
+  bitset8_set(&data->buttons_held_bitset, click_recognizer_get_button_id(recognizer));
+
+  // Holding up+down together skips the charge phase; the drain phase still
+  // runs if the battery is above the drain target
+  const uint8_t up_down = (1 << BUTTON_ID_UP) | (1 << BUTTON_ID_DOWN);
+  if ((data->buttons_held_bitset & up_down) == up_down &&
+      data->test_state == DischargeStateChargeTo100) {
+    data->test_state = DischargeStateDrainTo70;
+    prv_render(data);
+  }
+}
+
+static void prv_raw_button_up_handler(ClickRecognizerRef recognizer, void *context) {
+  AppData *data = app_state_get_user_data();
+  bitset8_clear(&data->buttons_held_bitset, click_recognizer_get_button_id(recognizer));
+}
+
 static void prv_config_provider(void *data) {
   window_single_click_subscribe(BUTTON_ID_BACK, prv_back_click_handler);
+  window_raw_click_subscribe(BUTTON_ID_UP, prv_raw_button_down_handler,
+                             prv_raw_button_up_handler, NULL);
+  window_raw_click_subscribe(BUTTON_ID_DOWN, prv_raw_button_down_handler,
+                             prv_raw_button_up_handler, NULL);
 }
 
 static void app_init(void) {
