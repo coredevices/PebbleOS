@@ -71,6 +71,7 @@ jobs:
         with:
           report_paths: build/test/junit.xml
           annotate_only: true
+          detailed_summary: true
 
       - name: Store failed test images
         uses: actions/upload-artifact@v6
