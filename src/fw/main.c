@@ -120,7 +120,7 @@ static void print_splash_screen(void)
           (TINTIN_METADATA.is_dual_slot && !TINTIN_METADATA.is_recovery_firmware) ?
             (TINTIN_METADATA.is_slot_0 ? " (slot0)" : " (slot1)") :
             "");
-  PBL_LOG_ALWAYS("(c) 2013-2025 The PebbleOS contributors");
+  PBL_LOG_ALWAYS("(c) 2013-2026 The PebbleOS contributors");
   PBL_LOG_ALWAYS(" ");
 }
 
