@@ -51,6 +51,48 @@ typedef struct ConnectionMgrInfo {
 
 ResponseTimeState gap_le_connect_params_get_actual_state(GAPLEConnection *connection);
 
+static const char *prv_response_time_state_name(ResponseTimeState state) {
+  switch (state) {
+    case ResponseTimeMax:
+      return "Max";
+    case ResponseTimeMiddle:
+      return "Middle";
+    case ResponseTimeMin:
+      return "Min";
+    default:
+      return "?";
+  }
+}
+
+static const char *prv_consumer_name(BtConsumer consumer) {
+  static const char *const s_consumer_names[NumBtConsumer] = {
+    [BtConsumerNone] = "None",
+    [BtConsumerApp] = "App",
+    [BtConsumerLePairing] = "LePairing",
+    [BtConsumerLeServiceDiscovery] = "LeServiceDiscovery",
+    [BtConsumerMusicServiceIndefinite] = "MusicServiceIndefinite",
+    [BtConsumerMusicServiceMomentary] = "MusicServiceMomentary",
+    [BtConsumerPpAppFetch] = "PpAppFetch",
+    [BtConsumerPpAppMessage] = "PpAppMessage",
+    [BtConsumerPpAudioEndpoint] = "PpAudioEndpoint",
+    [BtConsumerPpGetBytes] = "PpGetBytes",
+    [BtConsumerPpLogDump] = "PpLogDump",
+    [BtConsumerPpPutBytes] = "PpPutBytes",
+    [BtConsumerPpScreenshot] = "PpScreenshot",
+    [BtConsumerPpVoiceEndpoint] = "PpVoiceEndpoint",
+    [BtConsumerPrompt] = "Prompt",
+    [BtConsumerTimelineActionMenu] = "TimelineActionMenu",
+    [BtConsumerPRF] = "PRF",
+    [BtConsumerPebblePairingServiceRemoteDevice] = "PebblePairingServiceRemoteDevice",
+    [BtConsumerUnitTests] = "UnitTests",
+  };
+
+  if (consumer >= NumBtConsumer || s_consumer_names[consumer] == NULL) {
+    return "?";
+  }
+  return s_consumer_names[consumer];
+}
+
 //! Walks through and finds the lowest latency requested for the given type of
 //! connection. Also detects the longest amount of time that interval has been
 //! requested. Also gets the consumer that is responsible for the lowest latency + longest timeout
@@ -143,8 +185,9 @@ static void prv_handle_response_latency_for_le_conn(GAPLEConnection *hdl) {
 
   // actually request the mode if it has changed:
   if (hdl->conn_mgr_info->curr_requested_state != state) {
-    PBL_LOG_INFO("LE: Requesting state %d for %d secs, due to %u",
-            state, secs_til_max_latency, responsible_consumer);
+    PBL_LOG_INFO("LE: Requesting state <%s> for %d secs, due to <%s>",
+            prv_response_time_state_name(state), secs_til_max_latency,
+            prv_consumer_name(responsible_consumer));
     gap_le_connect_params_request(hdl, state);
   }
 
