@@ -32,6 +32,12 @@ _NEWLIB_TIME_DEFINE = "-D_USE_LONG_TIME_T"
 # ones (pblibc did this in its headers; the toolchain libcs need it here).
 _SNIPRINTF_DEFINES = ["-Dsniprintf=snprintf", "-Dvsniprintf=vsnprintf"]
 
+# The firmware compiles with -std=c11 (strict ANSI) unless Memfault forces
+# gnu11. pblibc declares POSIX/BSD names (strnlen, strcasecmp, ...)
+# unconditionally, but the toolchain libcs hide them behind feature-test
+# macros under __STRICT_ANSI__; ask for the default surface explicitly.
+_DEFAULT_SOURCE_DEFINE = "-D_DEFAULT_SOURCE"
+
 _ARCH_PREFIXES = ("-mthumb", "-mcpu=", "-mfloat-abi=", "-mfpu=", "-march=")
 
 # picolibc build options: single arch, no crt0/semihosting (the firmware
@@ -69,7 +75,7 @@ def _select_newlib(conf, nano):
     if nano:
         # nano's printf lacks C99 length modifiers; link our shim ahead.
         conf.env.LIBC_USE.append("libc_printf")
-    _add(conf, [_NEWLIB_TIME_DEFINE] + _SNIPRINTF_DEFINES)
+    _add(conf, [_NEWLIB_TIME_DEFINE, _DEFAULT_SOURCE_DEFINE] + _SNIPRINTF_DEFINES)
 
 
 def _arch_flags(conf):
@@ -182,7 +188,7 @@ def _select_picolibc(conf):
     conf.env.LIBC_USE = ["libc_syscalls"]
     # picolibc.specs supplies headers (cpp -isystem) and the libc link, so
     # it must be on both the compile and link lines.
-    _add(conf, ["-specs=" + specs] + _SNIPRINTF_DEFINES)
+    _add(conf, ["-specs=" + specs, _DEFAULT_SOURCE_DEFINE] + _SNIPRINTF_DEFINES)
     return "pre-built" if prebuilt else "from source"
 
 
