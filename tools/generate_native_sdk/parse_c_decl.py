@@ -267,12 +267,16 @@ def parse_file(
     # with modified definition of struct tm, so disable accidental include of wrong time.h
     args.insert(0, r"-D_TIME_H_")
 
-    # Try and find our arm toolchain and use the headers from that.
-    gcc_path = (
-        subprocess.check_output(["which", "arm-none-eabi-gcc"]).decode("utf8").strip()
+    # Use the libc headers from the ARM toolchain. -print-sysroot resolves
+    # the real toolchain location even when the driver is reached through a
+    # symlink (e.g. the nix devShell's flat bin/), unlike a path derived
+    # from `which arm-none-eabi-gcc`.
+    sysroot = (
+        subprocess.check_output(["arm-none-eabi-gcc", "-print-sysroot"])
+        .decode("utf8")
+        .strip()
     )
-    include_path = os.path.join(os.path.dirname(gcc_path), "../arm-none-eabi/include")
-    args.append("-I%s" % include_path)
+    args.append("-I%s" % os.path.join(sysroot, "include"))
 
     # Find the arm-none-eabi-gcc libgcc path including stdbool.h
     cmd = ["arm-none-eabi-gcc"] + ["-E", "-v", "-xc", "-"]
