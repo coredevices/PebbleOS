@@ -474,10 +474,18 @@ static int prv_get_menu_layer_row(ActionMenuLayer *aml, int item_index) {
   }
 }
 
+static void prv_selection_changed(ActionMenuLayer *aml) {
+  const ActionMenuItem *item = prv_get_item_for_index(aml, aml->selected_index);
+  if (item && aml->callbacks.selection_changed) {
+    aml->callbacks.selection_changed(item, aml->context);
+  }
+}
+
 T_STATIC void prv_set_selected_index(ActionMenuLayer *aml, int new_selected_index, bool animated) {
   new_selected_index = CLIP(new_selected_index, 0, aml->num_items + aml->num_short_items - 1);
+  const bool selection_changed = (new_selected_index != aml->selected_index);
 
-  if (new_selected_index != aml->selected_index) {
+  if (selection_changed) {
     // Unschedule any running item animation but don't NULL the pointer, to prevent another
     // animation from being accidentally re-scheduled.
     animation_unschedule(aml->item_animation.animation);
@@ -493,6 +501,9 @@ T_STATIC void prv_set_selected_index(ActionMenuLayer *aml, int new_selected_inde
   const int menu_layer_index = prv_get_menu_layer_row(aml, new_selected_index);
   menu_layer_set_selected_index(&aml->menu_layer, MenuIndex(0, menu_layer_index),
                                 MenuRowAlignCenter, animated);
+  if (selection_changed && new_selected_index >= aml->num_items) {
+    prv_selection_changed(aml);
+  }
 }
 
 static void prv_scroll_handler(ClickRecognizerRef recognizer, void *context) {
@@ -505,8 +516,8 @@ static void prv_scroll_handler(ClickRecognizerRef recognizer, void *context) {
 static void prv_select_handler(ClickRecognizerRef recognizer, void *context) {
   ActionMenuLayer *aml = context;
   const ActionMenuItem *item = prv_get_item_for_index(aml, aml->selected_index);
-  if (item && aml->cb) {
-    aml->cb(item, aml->context);
+  if (item && aml->callbacks.select) {
+    aml->callbacks.select(item, aml->context);
   }
 }
 
@@ -646,6 +657,7 @@ static void prv_selection_changed_cb(struct MenuLayer *menu_layer, MenuIndex new
     // Enable a new item animation to be scheduled
     prv_unschedule_item_animation(aml);
     aml->selected_index = new_index.row;
+    prv_selection_changed(aml);
   }
 }
 
@@ -739,8 +751,21 @@ void action_menu_layer_click_config_provider(ActionMenuLayer *aml) {
 void action_menu_layer_set_callback(ActionMenuLayer *aml,
                                     ActionMenuLayerCallback cb,
                                     void *context) {
-  aml->cb = cb;
+  aml->callbacks = (ActionMenuLayerCallbacks) {
+    .select = cb,
+  };
   aml->context = context;
+}
+
+void action_menu_layer_set_callbacks(ActionMenuLayer *aml,
+                                     ActionMenuLayerCallbacks callbacks,
+                                     void *context) {
+  aml->callbacks = callbacks;
+  aml->context = context;
+}
+
+void action_menu_layer_notify_selection_changed(ActionMenuLayer *aml) {
+  prv_selection_changed(aml);
 }
 
 void action_menu_layer_init(ActionMenuLayer *aml, const GRect *frame) {
@@ -752,6 +777,7 @@ void action_menu_layer_init(ActionMenuLayer *aml, const GRect *frame) {
   aml->layout_cache = (ActionMenuLayoutCache){
     .font = prv_get_item_font()
   };
+  aml->callbacks = (ActionMenuLayerCallbacks){};
   aml->layer.property_changed_proc = prv_changed_proc;
   aml->layer.update_proc = prv_update_proc;
 

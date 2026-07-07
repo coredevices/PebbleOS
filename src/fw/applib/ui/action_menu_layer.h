@@ -20,6 +20,11 @@
 typedef void (*ActionMenuLayerCallback)(const ActionMenuItem *item, void *context);
 
 typedef struct {
+  ActionMenuLayerCallback select;
+  ActionMenuLayerCallback selection_changed;
+} ActionMenuLayerCallbacks;
+
+typedef struct {
   ActionMenuAlign align;
   GFont font;
   int16_t *item_heights;
@@ -41,7 +46,7 @@ typedef struct {
   MenuLayer menu_layer;
   int selected_index;
   unsigned separator_index;
-  ActionMenuLayerCallback cb;
+  ActionMenuLayerCallbacks callbacks;
 
   const ActionMenuItem* items;
   int num_items;
@@ -61,6 +66,12 @@ ActionMenuLayer *action_menu_layer_create(GRect frame);
 void action_menu_layer_set_callback(ActionMenuLayer *aml,
                                     ActionMenuLayerCallback cb,
                                     void *context);
+
+void action_menu_layer_set_callbacks(ActionMenuLayer *aml,
+                                     ActionMenuLayerCallbacks callbacks,
+                                     void *context);
+
+void action_menu_layer_notify_selection_changed(ActionMenuLayer *aml);
 
 void action_menu_layer_set_align(ActionMenuLayer *aml,
                                  ActionMenuAlign align);
