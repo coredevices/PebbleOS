@@ -17,7 +17,9 @@
 #include "system/logging.h"
 
 #ifdef CONFIG_SPEAKER
+#include "popups/alarm_popup.h"
 #include "services/alarms/alarm_tones.h"
+#include "pbl/services/speaker/speaker_service.h"
 #endif
 
 #include <stdio.h>
@@ -157,6 +159,32 @@ static void prv_select_tone_handler(ActionMenu *action_menu, const ActionMenuIte
     data->alarm_editor_callback(EDITED, data->alarm_id, data->callback_context);
   }
 }
+
+static void prv_stop_sound_preview(void) {
+  speaker_service_stop_for_task(PebbleTask_App);
+}
+
+static void prv_sound_highlight_handler(const ActionMenuItem *item, void *context) {
+  (void)context;
+
+  if (!item || !item->is_leaf || item->perform_action != prv_select_tone_handler) {
+    prv_stop_sound_preview();
+    return;
+  }
+
+  const SpeakerNote *notes = NULL;
+  uint32_t count = 0;
+  alarm_tones_get((AlarmTone)(uintptr_t)item->action_data, &notes, &count);
+  if (!notes || count == 0) {
+    prv_stop_sound_preview();
+    return;
+  }
+
+  prv_stop_sound_preview();
+  speaker_service_set_owner_task(PebbleTask_App);
+  speaker_service_play_note_seq(notes, count, SpeakerPriorityApp,
+                                ALARM_SPEAKER_VOLUME);
+}
 #endif
 
 static ActionMenuLevel *prv_create_main_menu(void) {
@@ -192,10 +220,23 @@ static ActionMenuLevel *prv_create_sound_menu(ActionMenuLevel *parent_level) {
     .num_items = NUM_SOUND_MENU_ITEMS,
     .parent_level = parent_level,
     .display_mode = ActionMenuLevelDisplayModeWide,
+    .selection_changed = prv_sound_highlight_handler,
   };
   return level;
 }
 #endif
+
+static void prv_alarm_detail_menu_will_close(ActionMenu *action_menu,
+                                             const ActionMenuItem *item,
+                                             void *context) {
+  (void)action_menu;
+  (void)item;
+  (void)context;
+
+#ifdef CONFIG_SPEAKER
+  prv_stop_sound_preview();
+#endif
+}
 
 void prv_cleanup_alarm_detail_menu(ActionMenu *action_menu,
                                    const ActionMenuItem *item,
@@ -224,6 +265,7 @@ void alarm_detail_window_push(AlarmId alarm_id, AlarmInfo *alarm_info,
     .menu_config = {
       .context = data,
       .colors.background = ALARMS_APP_HIGHLIGHT_COLOR,
+      .will_close = prv_alarm_detail_menu_will_close,
       .did_close = prv_cleanup_alarm_detail_menu,
     },
   };
