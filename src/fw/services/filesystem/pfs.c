@@ -481,7 +481,7 @@ static status_t locate_flash_file(const char *name, uint16_t *page) {
       if ((memcmp(name, file_name, namelen) == 0) && (!is_tmp_file(pg))) {
 
         if (read_header(pg, &pg_hdr, &file_hdr) == HdrCrcCorrupt) {
-          PBL_LOG_WRN("%d: CRC corrupt", pg);
+          PBL_LOG_WRN("CRC corrupt for page %d", pg);
           continue;
         }
 
