@@ -583,6 +583,9 @@ def _link_firmware(bld, sources):
     x.env.append_value('LINKFLAGS', fw_linkflags)
 
     if bld.env.CONFIG_PBLBOOT:
+        git_revision = tools.waf.gitinfo.get_git_revision(bld)
+        bld.env.PBLBOOT_PRIORITY = str(tools.waf.pblboot.boot_priority(
+            git_revision['TAG'], int(git_revision['TIMESTAMP'])))
         nohdr_hex_node = elf_node.change_ext('.nohdr.hex')
         bld(rule=tools.waf.objcopy.objcopy_hex, source=elf_node, target=nohdr_hex_node)
         hex_node = elf_node.change_ext('.hex')
