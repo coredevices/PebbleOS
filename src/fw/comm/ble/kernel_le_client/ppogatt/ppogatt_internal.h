@@ -37,6 +37,13 @@
 #define PPOGATT_META_READ_RETRY_DELAY_MS (500)
 
 typedef enum {
+  //! Watch is the GATT client; phone hosts the PPoG service.
+  PPoGATTRoleForward,
+  //! Watch hosts the PPoG service; phone is the GATT client.
+  PPoGATTRoleReversed,
+} PPoGATTRole;
+
+typedef enum {
   PPoGATTPacketTypeData = 0x0,
   PPoGATTPacketTypeAck = 0x1,
   PPoGATTPacketTypeResetRequest = 0x2,

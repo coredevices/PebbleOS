@@ -69,6 +69,7 @@ typedef struct PPoGATTClient {
   ListNode node;
   State state;
   uint8_t version;
+  PPoGATTRole role;
 
   // TODO: Save some memory and point to app metadata instead?
   Uuid app_uuid;
@@ -77,6 +78,12 @@ typedef struct PPoGATTClient {
     BLECharacteristic meta;
     BLECharacteristic data;
   } characteristics;
+
+  //! State for the reversed role (watch hosts the GATT service).
+  struct {
+    uint16_t conn_handle;
+    GAPLEConnection *connection;
+  } rev;
 
   //! Stuffs that deals with inbound data
   struct {
@@ -194,12 +201,18 @@ static bool prv_client_supports_enhanced_throughput_features(const PPoGATTClient
 
 // -------------------------------------------------------------------------------------------------
 
+static GAPLEConnection *prv_get_connection(const PPoGATTClient *client) {
+  if (client->role == PPoGATTRoleReversed) {
+    return client->rev.connection;
+  }
+  return gatt_client_characteristic_get_connection(client->characteristics.meta);
+}
+
 static void prv_set_connection_responsiveness(
     Transport *transport, BtConsumer consumer, ResponseTimeState state, uint16_t max_period_secs,
     ResponsivenessGrantedHandler granted_handler) {
   PPoGATTClient *client = (PPoGATTClient *) transport;
-  const BLECharacteristic characteristic = client->characteristics.meta;
-  GAPLEConnection *connection = gatt_client_characteristic_get_connection(characteristic);
+  GAPLEConnection *connection = prv_get_connection(client);
   conn_mgr_set_ble_conn_response_time_ext(connection, consumer, state, max_period_secs,
                                           granted_handler);
 }
@@ -384,10 +397,11 @@ static PPoGATTClient *prv_create_client(TimerID timer) {
 
 static void prv_delete_client(PPoGATTClient *client, bool is_disconnected, DeleteReason reason) {
   const uint32_t elapsed_ms = (rtc_get_ticks() - client->created_ticks) * 1000 / RTC_TICKS_HZ;
-  PBL_LOG_INFO("PPoGATT client deleted: state=%u reason=%u disconnected=%u after %"PRIu32"ms",
-          client->state, reason, is_disconnected, elapsed_ms);
-  // Unsubscribe from Data characteristic:
-  if (client->state > StateDisconnectedSubscribingData && !is_disconnected) {
+  PBL_LOG_INFO("PPoGATT client deleted: role=%u state=%u reason=%u disconnected=%u after %"PRIu32"ms",
+          client->role, client->state, reason, is_disconnected, elapsed_ms);
+  // Unsubscribe from the phone's Data characteristic (forward role only):
+  if (client->role == PPoGATTRoleForward &&
+      client->state > StateDisconnectedSubscribingData && !is_disconnected) {
     BLECharacteristic data_char = client->characteristics.data;
     // Release bt_lock before calling into NimBLE to avoid deadlock with ble_hs_mutex.
     bt_unlock();
@@ -455,8 +469,15 @@ static bool prv_is_client_valid(const PPoGATTClient *client) {
 // -------------------------------------------------------------------------------------------------
 
 static uint16_t prv_get_max_payload_size(const PPoGATTClient *client) {
-  const BTDeviceInternal device =
-        gatt_client_characteristic_get_device(client->characteristics.data);
+  BTDeviceInternal device;
+  if (client->role == PPoGATTRoleReversed) {
+    if (!client->rev.connection) {
+      return 0;
+    }
+    device = client->rev.connection->device;
+  } else {
+    device = gatt_client_characteristic_get_device(client->characteristics.data);
+  }
   const uint16_t mtu = gap_le_connection_get_gatt_mtu(&device);
   if (mtu < GATT_MTU_MINIMUM) {
     // Device got disconnected in the mean time
@@ -545,8 +566,7 @@ static void prv_start_reset(PPoGATTClient *client) {
     // Record the time of this disconnect request
 
     bt_lock();
-    const BLECharacteristic characteristic = client->characteristics.meta;
-    GAPLEConnection *connection = gatt_client_characteristic_get_connection(characteristic);
+    GAPLEConnection *connection = prv_get_connection(client);
     PBL_ASSERTN(connection != NULL);
     bt_unlock();
 
@@ -1012,6 +1032,7 @@ void ppogatt_handle_service_discovered(BLECharacteristic *characteristics) {
       new_timer_delete(timer);
       return;
     }
+    client->role = PPoGATTRoleForward;
     BLECharacteristic meta = characteristics[PPoGATTCharacteristicMeta];
     client->characteristics.meta = characteristics[PPoGATTCharacteristicMeta];
     client->characteristics.data = characteristics[PPoGATTCharacteristicData];
