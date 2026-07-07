@@ -120,6 +120,9 @@ typedef struct PPoGATTClient {
 
   bool disconnect_requested; //! True if the client requested a disconnect
 
+  //! Guards prv_send_next_packets against re-entry while bt_lock is dropped.
+  bool send_in_progress;
+
   TimerID rx_ack_timer;   //! Timer to ensure Acks for data are dispatched regularly
 
   //! Whether the PPoGATT server transports "System", "App" or "Hybrid" PP sessions.
@@ -1291,6 +1294,16 @@ static void prv_finalize_queued_packet(PPoGATTClient *client, uint16_t payload_s
 // -------------------------------------------------------------------------------------------------
 
 static void prv_send_next_packets(PPoGATTClient *client) {
+  if (client->send_in_progress) {
+    // Re-entered while the outer call dropped bt_lock; reschedule so queued
+    // data still gets flushed after the outer call exits.
+    if (client->session) {
+      comm_session_send_next(client->session);
+    }
+    return;
+  }
+  client->send_in_progress = true;
+
   uint16_t payload_size = 0;
   const PPoGATTPacket *packet = NULL;
   PPoGATTPacket *heap_packet = NULL;
@@ -1375,6 +1388,8 @@ static void prv_send_next_packets(PPoGATTClient *client) {
   }
 
   kernel_free(heap_packet);
+
+  client->send_in_progress = false;
 }
 
 // -------------------------------------------------------------------------------------------------
