@@ -129,10 +129,6 @@ static void prv_stop_vibes(void) {
 }
 
 #ifdef CONFIG_SPEAKER
-// Volume 60/100 is a moderate first cut; tunable, and a per-user volume
-// preference can be added in a follow-up.
-#define ALARM_SPEAKER_VOLUME 60
-
 static void prv_play_sound_loop_iteration(void) {
   speaker_service_play_note_seq(s_alarm_popup_data->sound_notes,
                                 s_alarm_popup_data->sound_count,
