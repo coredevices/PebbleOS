@@ -119,6 +119,9 @@ typedef struct GAPLEConnection {
   //! Opaque, used by gatt_client_discovery.c
   DiscoveryJobQueue *discovery_jobs;
 
+  //! Tick at which the current discovery job started, used by gatt_client_discovery.c
+  RtcTicks gatt_discovery_start_ticks;
+
   //! @see gap_le_connect_params.c
   struct {
     TimerID watchdog_timer;

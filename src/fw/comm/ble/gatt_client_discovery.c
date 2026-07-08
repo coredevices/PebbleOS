@@ -112,6 +112,10 @@ static BTErrno prv_run_next_job(GAPLEConnection *connection) {
   bt_lock();
 
   if (rv == BTErrnoOK) {
+    if (!connection->gatt_is_service_discovery_in_progress) {
+      // Fresh job (not a transparent watchdog retry), record the start time
+      connection->gatt_discovery_start_ticks = rtc_get_ticks();
+    }
     // if we are back here because a timeout occurred, let the
     // driver handle resetting the watchdog timer (cc2564x issue)
     connection->gatt_is_service_discovery_in_progress = true;
@@ -408,7 +412,7 @@ bool bt_driver_cb_gatt_client_discovery_complete(GAPLEConnection *connection, BT
 
     if (errno == BTErrnoOK) {
       const uint32_t discovery_ms =
-          (rtc_get_ticks() - connection->ticks_since_connection) * 1000 / RTC_TICKS_HZ;
+          (rtc_get_ticks() - connection->gatt_discovery_start_ticks) * 1000 / RTC_TICKS_HZ;
       PBL_LOG_INFO("GATT service discovery completed in %"PRIu32"ms", discovery_ms);
       // Completion of service discovery implies we are about to have more BLE
       // traffic (for example, ANCS notifications, PPoG communication). Keep the
