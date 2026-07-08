@@ -91,7 +91,10 @@ static bool prv_load_from_flash(const PebbleProcessMd *app_md, PebbleTask task,
   // We load the full binary (.text + .data) into ram as well as the relocation entries. These
   // relocation entries will overlap with the .bss section of the loaded app, but we'll fix that
   // up later.
-  const size_t load_size = app_storage_get_process_load_size(&info);
+  size_t load_size;
+  if (!app_storage_get_process_load_size(&info, &load_size)) {
+    return false;
+  }
 
   if (load_size > memory_segment_get_size(destination)) {
     PBL_LOG_ERR("App/Worker exceeds available program space: %"PRIu16" + (%"PRIu32" * 4) = %zu",
@@ -130,7 +133,10 @@ static bool prv_load_from_resource(const PebbleProcessMdResource *app_md,
   // We load the full binary (.text + .data) into ram as well as the relocation entries. These
   // relocation entries will overlap with the .bss section of the loaded app, but we'll fix that
   // up later.
-  const size_t load_size = app_storage_get_process_load_size(&info);
+  size_t load_size;
+  if (!app_storage_get_process_load_size(&info, &load_size)) {
+    return false;
+  }
 
   if (load_size > memory_segment_get_size(destination)) {
     PBL_LOG_ERR("App/Worker exceeds available program space: %"PRIu16" + (%"PRIu32" * 4) = %zu",
