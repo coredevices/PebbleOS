@@ -448,7 +448,7 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
       break;
 
     default:
-      PBL_LOG_DBG("Characteristic discovery error: %d",
+      PBL_LOG_ERR("Characteristic discovery error: %d",
                 error->status);
       if (error->status == BLE_HS_ETIMEOUT) {
         errno = BTErrnoServiceDiscoveryTimeout;
