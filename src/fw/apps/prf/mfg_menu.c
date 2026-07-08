@@ -13,6 +13,7 @@
 #include "apps/prf/mfg_info_qr.h"
 #include "apps/prf/mfg_test_menu.h"
 #include "apps/prf/mfg_test_result.h"
+#include "apps/prf/mfg_utilities.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/standby.h"
@@ -69,6 +70,10 @@ static void prv_select_ble_adv(int index, void *context) {
 
 static void prv_select_reset(int index, void *context) {
   system_reset();
+}
+
+static void prv_select_utilities(int index, void *context) {
+  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_utilities_app_get_info());
 }
 
 static void prv_select_shutdown(int index, void *context) {
@@ -172,6 +177,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
     { .title = "Reset Results",     .callback = prv_select_reset_results },
     { .title = "Load PRF",          .callback = prv_select_load_prf },
 #endif
+    { .title = "Utilities",         .callback = prv_select_utilities },
   };
 
   // Copy it into the heap so we can modify it.
