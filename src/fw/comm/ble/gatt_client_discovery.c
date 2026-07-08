@@ -350,9 +350,22 @@ void gatt_client_cleanup_discovery_jobs(GAPLEConnection *connection) {
 
 static void prv_finalize_discovery(GAPLEConnection *connection, BTErrno errno) {
   if (errno != BTErrnoOK) {
-    // Handle failure -- cleanup and dispatch event:
-    prv_free_service_nodes(connection);
-    gatt_client_subscriptions_cleanup_by_connection(connection, false /* should_unsubscribe */);
+    const DiscoveryJobQueue *job = connection->discovery_jobs;
+    const bool is_range_job =
+        (job && ((job->hdl.start != MIN_ATT_HANDLE) || (job->hdl.end != MAX_ATT_HANDLE)));
+    if (errno != BTErrnoServiceDiscoveryDatabaseChanged) {
+      PBL_LOG_ERR("GATT service discovery failed: errno=%d, range=0x%x-0x%x", errno,
+              job ? job->hdl.start : 0, job ? job->hdl.end : 0);
+    }
+    if (!is_range_job || (errno == BTErrnoServiceDiscoveryDatabaseChanged)) {
+      // Handle failure -- cleanup and dispatch event:
+      prv_free_service_nodes(connection);
+      gatt_client_subscriptions_cleanup_by_connection(connection, false /* should_unsubscribe */);
+    }
+    // A failed range job must leave services and subscriptions from earlier
+    // discoveries intact: the stale service for the range was already removed
+    // when the job was queued, so there is nothing to clean up and wiping
+    // connection-wide state would leave clients with dangling references.
   }
 
   prv_remove_current_discovery_job(connection);
