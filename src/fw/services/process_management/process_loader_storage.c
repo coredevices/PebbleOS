@@ -12,6 +12,8 @@
 #include "system/passert.h"
 #include "util/legacy_checksum.h"
 
+#include <inttypes.h>
+#include <stdint.h>
 #include <string.h>
 
 PBL_LOG_MODULE_DECLARE(service_process_management, CONFIG_SERVICE_PROCESS_MANAGEMENT_LOG_LEVEL);
@@ -21,7 +23,7 @@ extern const void* const g_pbl_system_tbl[];
 
 // ----------------------------------------------------------------------------------------------
 static bool prv_verify_checksum(const PebbleProcessInfo* app_info, const uint8_t* data) {
-  const uint8_t header_size = sizeof(PebbleProcessInfo);
+  const size_t header_size = sizeof(PebbleProcessInfo);
 
   const uint8_t *crc_data = data + header_size;
   const uint32_t app_size = app_info->load_size - header_size;
@@ -41,36 +43,172 @@ static void * prv_offset_to_address(MemorySegment *segment, size_t offset) {
   return (char *)segment->start + offset;
 }
 
+static bool prv_offset_range_fits(size_t offset, size_t size, size_t limit) {
+  return (offset <= limit) && (size <= (limit - offset));
+}
+
+static bool prv_offset_is_word_aligned(size_t offset) {
+  return ((offset & (sizeof(uint32_t) - 1)) == 0);
+}
+
+static bool prv_offset_is_halfword_aligned(size_t offset) {
+  return ((offset & (sizeof(uint16_t) - 1)) == 0);
+}
+
+static bool prv_validate_process_info(const PebbleProcessInfo *info,
+                                      MemorySegment *destination,
+                                      size_t *load_size_out) {
+  if (strncmp("PBLAPP", info->header, sizeof(info->header)) != 0) {
+    PBL_LOG_WRN("Invalid app header");
+    return false;
+  }
+
+  const size_t segment_size = memory_segment_get_size(destination);
+  const size_t header_size = sizeof(PebbleProcessInfo);
+  const size_t image_size = info->load_size;
+  const size_t virtual_size = info->virtual_size;
+
+  size_t load_size;
+  if (!app_storage_get_process_load_size(info, &load_size)) {
+    return false;
+  }
+
+  if (image_size < header_size) {
+    PBL_LOG_WRN("App image smaller than header: image=%zu header=%zu",
+                image_size, header_size);
+    return false;
+  }
+
+  if (image_size > virtual_size) {
+    PBL_LOG_WRN("App image exceeds virtual size: image=%zu virtual=%zu",
+                image_size, virtual_size);
+    return false;
+  }
+
+  if (virtual_size > segment_size) {
+    PBL_LOG_WRN("App virtual size exceeds segment: virtual=%zu segment=%zu",
+                virtual_size, segment_size);
+    return false;
+  }
+
+  if (load_size > segment_size) {
+    PBL_LOG_ERR("App/Worker exceeds available program space: %"PRIu16" + (%"PRIu32" * 4) = %zu",
+                info->load_size, info->num_reloc_entries, load_size);
+    return false;
+  }
+
+  if ((info->num_reloc_entries != 0) &&
+      !prv_offset_is_word_aligned(image_size)) {
+    PBL_LOG_WRN("Invalid app relocation table offset alignment: image=%zu",
+                image_size);
+    return false;
+  }
+
+  if (!prv_offset_is_halfword_aligned(info->offset) ||
+      !prv_offset_range_fits(info->offset, sizeof(uint16_t), image_size) ||
+      (info->offset < header_size)) {
+    PBL_LOG_WRN("Invalid app entry point offset: 0x%"PRIx32,
+                info->offset);
+    return false;
+  }
+
+  if (!prv_offset_is_word_aligned(info->sym_table_addr) ||
+      !prv_offset_range_fits(info->sym_table_addr, sizeof(uint32_t), virtual_size) ||
+      (info->sym_table_addr < header_size)) {
+    PBL_LOG_WRN("Invalid app jump table offset: 0x%"PRIx32,
+                info->sym_table_addr);
+    return false;
+  }
+
+  *load_size_out = load_size;
+  return true;
+}
+
+static bool prv_process_info_matches_md(const PebbleProcessInfo *info,
+                                        const PebbleProcessMd *app_md) {
+  if (process_metadata_get_size_bytes(app_md) != info->virtual_size) {
+    PBL_LOG_WRN("App metadata virtual size mismatch: md=%"PRIu32" info=%"PRIu16,
+                process_metadata_get_size_bytes(app_md), info->virtual_size);
+    return false;
+  }
+
+  if ((uint32_t)(uintptr_t)app_md->main_func != info->offset) {
+    PBL_LOG_WRN("App metadata entry point mismatch: md=0x%"PRIx32" info=0x%"PRIx32,
+                (uint32_t)(uintptr_t)app_md->main_func, info->offset);
+    return false;
+  }
+
+  return true;
+}
+
+static bool prv_verify_loaded_header(const PebbleProcessInfo *info, const uint8_t *data) {
+  if (memcmp(info, data, sizeof(PebbleProcessInfo)) == 0) {
+    return true;
+  }
+
+  PBL_LOG_WRN("App header changed while loading");
+  return false;
+}
+
+static bool prv_apply_relocations(const PebbleProcessInfo *info,
+                                  MemorySegment *destination) {
+  // Relocation entries point to uint32_t slots in the loaded image
+  // Slot values are still relative to the app image
+  uint32_t *reloc_array = prv_offset_to_address(destination, info->load_size);
+
+  for (uint32_t i = 0; i < info->num_reloc_entries; ++i) {
+    // A target has to land on a word boundary inside the image and past the header,
+    // otherwise the write below is an out of bounds write in a privileged context
+    const uint32_t reloc_offset = reloc_array[i];
+    if (!prv_offset_is_word_aligned(reloc_offset) ||
+        !prv_offset_range_fits(reloc_offset, sizeof(uint32_t), info->load_size) ||
+        (reloc_offset < sizeof(PebbleProcessInfo))) {
+      PBL_LOG_WRN("Invalid app relocation target[%"PRIu32"]: 0x%"PRIx32,
+                  i, reloc_offset);
+      return false;
+    }
+
+    uint32_t *addr_to_change = prv_offset_to_address(destination, reloc_offset);
+    const uint32_t app_relative_value = *addr_to_change;
+    // One past the end of an object is a valid pointer in C, you just cannot deref it
+    // A value of exactly virtual_size points there, which is safe here since we never do
+    if (app_relative_value > info->virtual_size) {
+      PBL_LOG_WRN("Invalid app relocation value[%"PRIu32"]: 0x%"PRIx32,
+                  i, app_relative_value);
+      return false;
+    }
+
+    *addr_to_change = (uint32_t)(uintptr_t)prv_offset_to_address(destination,
+                                                                app_relative_value);
+  }
+
+  // The reloc table is loaded over the start of .bss, so we have to restore the zeros the app expects
+  if (info->num_reloc_entries != 0) {
+    memset(reloc_array, 0, info->num_reloc_entries * sizeof(uint32_t));
+  }
+  return true;
+}
+
 // ---------------------------------------------------------------------------------------------
 static bool prv_intialize_sdk_process(PebbleTask task, const PebbleProcessInfo *info,
                                       MemorySegment *destination) {
+  if (!prv_verify_loaded_header(info, destination->start)) {
+    return false;
+  }
+
   if (!prv_verify_checksum(info, destination->start)) {
     PBL_LOG_DBG("Calculated CRC does not match, aborting...");
     return false;
   }
 
-  // Poke in the address of the OS's API jump table to an address known by the shims
-  uint32_t *pbl_jump_table_addr = prv_offset_to_address(destination, info->sym_table_addr);
-  *pbl_jump_table_addr = (uint32_t)&g_pbl_system_tbl;
-
-  //
-  // offset any relative addresses, as indicated by the reloc table
-  // TODO PBL-1627: insert link to the wiki page I'm about to write about PIC and relocatable
-  //                values
-  //
-
-  // an array of app-relative pointers to addresses needing an offset
-  uint32_t *reloc_array = prv_offset_to_address(destination, info->load_size);
-
-  for (uint32_t i = 0; i < info->num_reloc_entries; ++i) {
-    // an absolute pointer to an app-relative pointer which needs to be offset
-    uintptr_t *addr_to_change = prv_offset_to_address(destination, reloc_array[i]);
-    *addr_to_change = (uintptr_t) prv_offset_to_address(destination, *addr_to_change);
+  if (!prv_apply_relocations(info, destination)) {
+    return false;
   }
 
-  // Now fix up the part of RAM where the relocation table overwrote .bss. We don't need the table
-  // anymore so restore the zero values.
-  memset(reloc_array, 0, info->num_reloc_entries * 4);
+  // Write this after relocations so app relocations can't corrupt the pointer to the SDK table
+  uint32_t *pbl_jump_table_addr = prv_offset_to_address(destination, info->sym_table_addr);
+  *pbl_jump_table_addr = (uint32_t)(uintptr_t)&g_pbl_system_tbl;
+
   return true;
 }
 
@@ -92,13 +230,8 @@ static bool prv_load_from_flash(const PebbleProcessMd *app_md, PebbleTask task,
   // relocation entries will overlap with the .bss section of the loaded app, but we'll fix that
   // up later.
   size_t load_size;
-  if (!app_storage_get_process_load_size(&info, &load_size)) {
-    return false;
-  }
-
-  if (load_size > memory_segment_get_size(destination)) {
-    PBL_LOG_ERR("App/Worker exceeds available program space: %"PRIu16" + (%"PRIu32" * 4) = %zu",
-            info.load_size, info.num_reloc_entries, load_size);
+  if (!prv_validate_process_info(&info, destination, &load_size) ||
+      !prv_process_info_matches_md(&info, app_md)) {
     return false;
   }
 
@@ -134,13 +267,8 @@ static bool prv_load_from_resource(const PebbleProcessMdResource *app_md,
   // relocation entries will overlap with the .bss section of the loaded app, but we'll fix that
   // up later.
   size_t load_size;
-  if (!app_storage_get_process_load_size(&info, &load_size)) {
-    return false;
-  }
-
-  if (load_size > memory_segment_get_size(destination)) {
-    PBL_LOG_ERR("App/Worker exceeds available program space: %"PRIu16" + (%"PRIu32" * 4) = %zu",
-        info.load_size, info.num_reloc_entries, load_size);
+  if (!prv_validate_process_info(&info, destination, &load_size) ||
+      !prv_process_info_matches_md(&info, (const PebbleProcessMd *)app_md)) {
     return false;
   }
 
