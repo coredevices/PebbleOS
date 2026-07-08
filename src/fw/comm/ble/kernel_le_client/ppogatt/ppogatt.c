@@ -807,7 +807,8 @@ static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value,
     // GATT read failed - this is retriable since the mobile app may not be ready yet
     goto handle_retriable_error;
   }
-  PBL_LOG_INFO("PPoGATT meta read success after %"PRIu32"ms, len=%zu", elapsed_ms, value_length);
+  PBL_LOG_INFO("PPoGATT meta read success after %"PRIu32"ms, len=%u", elapsed_ms,
+               (unsigned int)value_length);
   if (value_length < sizeof(PPoGATTMetaV0)) {
     goto handle_error;
   }
