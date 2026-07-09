@@ -6,6 +6,7 @@
 
 #include "comm/ble/gap_le_connection.h"
 #include "comm/ble/gatt_client_operations.h"
+#include "comm/ble/kernel_le_client/kernel_le_client.h"
 #include "comm/bt_lock.h"
 
 #include <bluetooth/gatt.h>
@@ -383,6 +384,12 @@ static void prv_delete_client(PPoGATTClient *client, bool is_disconnected, Delet
   const uint32_t elapsed_ms = (rtc_get_ticks() - client->created_ticks) * 1000 / RTC_TICKS_HZ;
   PBL_LOG_INFO("PPoGATT client deleted: state=%u reason=%u disconnected=%u after %"PRIu32"ms",
           client->state, reason, is_disconnected, elapsed_ms);
+
+  // The handshake never completed for this instance. If the peer is exposing a
+  // stale duplicate, advance so the next reconnect tries a different instance.
+  if (client->state != StateConnectedOpen) {
+    kernel_le_client_advance_service_instance_attempt();
+  }
   // Unsubscribe from Data characteristic:
   if (client->state > StateDisconnectedSubscribingData && !is_disconnected) {
     BLECharacteristic data_char = client->characteristics.data;
@@ -599,6 +606,9 @@ static void prv_handle_reset_complete(PPoGATTClient *client, const PPoGATTPacket
   }
   client->state = StateConnectedOpen;
   client->session = session;
+
+  // Handshake succeeded: stop rotating through duplicate service instances.
+  kernel_le_client_reset_service_instance_attempt();
 
   if (prv_client_supports_enhanced_throughput_features(client)) {
     if (payload_length < sizeof(PPoGATTResetCompleteClientIDPayloadV1)) {

@@ -117,6 +117,10 @@ typedef enum {
   TestServiceInstanceComplete = 1,
   TestServiceInstanceIncomplete = 2,
   TestServiceInstanceUnsupported = 3,
+  // A second complete instance of the same service UUID, as a duplicate-leaving
+  // peer would expose. Listed after TestServiceInstanceComplete so it is the
+  // "newest" (highest-handle) instance.
+  TestServiceInstanceCompleteB = 4,
 } TestServiceInstance;
 
 static BLEService s_service_handles[] = {
@@ -130,12 +134,15 @@ typedef enum {
   TestCharacteristicInstanceCompleteTwo = 12,
   TestCharacteristicInstanceIncompleteOne = 21,
   TestCharacteristicInstanceUnsupported = 33,
+  TestCharacteristicInstanceCompleteBOne = 41,
+  TestCharacteristicInstanceCompleteBTwo = 42,
 } TestCharacteristicInstance;
 
 Uuid gatt_client_service_get_uuid(BLEService service_ref) {
   switch (service_ref) {
     case TestServiceInstanceComplete:
     case TestServiceInstanceIncomplete:
+    case TestServiceInstanceCompleteB:
       return s_test_service_uuid;
 
     case TestServiceInstanceUnsupported:
@@ -157,6 +164,10 @@ uint8_t gatt_client_service_get_characteristics_matching_uuids(BLEService servic
     case TestServiceInstanceIncomplete:
       characteristics_out[0] = TestCharacteristicInstanceIncompleteOne;
       return 1;
+    case TestServiceInstanceCompleteB:
+      characteristics_out[0] = TestCharacteristicInstanceCompleteBOne;
+      characteristics_out[1] = TestCharacteristicInstanceCompleteBTwo;
+      return 2;
     case TestCharacteristicInstanceUnsupported:
       characteristics_out[0] = TestCharacteristicInstanceUnsupported;
       return 1;
@@ -174,8 +185,10 @@ void gatt_client_consume_read_response(uintptr_t object_ref,
 }
 
 static int s_services_discovered_count;
+static BLECharacteristic s_last_discovered_first_char;
 void test_client_handle_service_discovered(BLECharacteristic *characteristics) {
   ++s_services_discovered_count;
+  s_last_discovered_first_char = characteristics[0];
 }
 
 void test_client_invalidate_all_references(void) {
@@ -276,6 +289,61 @@ void test_kernel_le_client__service_added(void) {
   cl_assert_equal_i(s_services_discovered_count, 1);
 
   kernel_free(info);
+}
+
+static void prv_fire_services_added(const BLEService *services, uint8_t count) {
+  PebbleBLEGATTClientServiceEventInfo *info =
+      kernel_malloc(sizeof(PebbleBLEGATTClientServiceEventInfo) + (count * sizeof(BLEService)));
+
+  *info = (PebbleBLEGATTClientServiceEventInfo) {
+    .status = BTErrnoOK,
+    .type = PebbleServicesAdded,
+    .device = s_test_device,
+  };
+  info->services_added_data.num_services_added = count;
+  memcpy(info->services_added_data.services, services, count * sizeof(BLEService));
+
+  PebbleEvent e = (PebbleEvent) {
+    .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
+    .bluetooth.le.gatt_client_service = {
+      .info = info,
+      .subtype = PebbleBLEGATTClientEventTypeServiceChange,
+    },
+  };
+
+  kernel_le_client_handle_event(&e);
+
+  kernel_free(info);
+}
+
+void test_kernel_le_client__duplicate_service_instance_rotates(void) {
+  // A peer exposing two complete instances of the same service UUID, newest last.
+  const BLEService services[] = {
+    TestServiceInstanceComplete,   // older instance, first characteristic == 11
+    TestServiceInstanceCompleteB,  // newest instance, first characteristic == 41
+  };
+
+  kernel_le_client_reset_service_instance_attempt();
+
+  // Exactly one instance is handed over, and the first attempt uses the newest.
+  s_services_discovered_count = 0;
+  prv_fire_services_added(services, ARRAY_LENGTH(services));
+  cl_assert_equal_i(s_services_discovered_count, 1);
+  cl_assert_equal_i(s_last_discovered_first_char, TestCharacteristicInstanceCompleteBOne);
+
+  // After a failed handshake, the next attempt rotates to the other instance.
+  kernel_le_client_advance_service_instance_attempt();
+  s_services_discovered_count = 0;
+  prv_fire_services_added(services, ARRAY_LENGTH(services));
+  cl_assert_equal_i(s_services_discovered_count, 1);
+  cl_assert_equal_i(s_last_discovered_first_char, TestCharacteristicInstanceCompleteOne);
+
+  // A successful handshake resets the rotation back to the newest instance.
+  kernel_le_client_reset_service_instance_attempt();
+  s_services_discovered_count = 0;
+  prv_fire_services_added(services, ARRAY_LENGTH(services));
+  cl_assert_equal_i(s_services_discovered_count, 1);
+  cl_assert_equal_i(s_last_discovered_first_char, TestCharacteristicInstanceCompleteBOne);
 }
 
 // FIXME: PBL-27751: Improve test coverage of kernel_le_client.c
