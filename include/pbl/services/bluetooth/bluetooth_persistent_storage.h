@@ -91,6 +91,21 @@ BTCCCDID bt_persistent_storage_store_cccd(const BleCCCD *cccd);
 
 bool bt_persistent_storage_delete_cccd(const BTDeviceInternal *peer, uint16_t chr_val_handle);
 
+//! Stores the GATT caching peer state table (opaque driver-defined blob).
+//! Pass data=NULL to delete the record.
+void bt_persistent_storage_set_ble_gatt_caching_state(const void *data, size_t len);
+
+//! Reads the GATT caching peer state table.
+//! @return the number of bytes read; 0 if absent or larger than the buffer
+int bt_persistent_storage_get_ble_gatt_caching_state(void *data_out, size_t buf_len);
+
+//! Stores the local GATT database hash.
+void bt_persistent_storage_set_ble_gatt_db_hash(const uint8_t hash[16]);
+
+//! Reads the local GATT database hash.
+//! @return true if a hash was stored
+bool bt_persistent_storage_get_ble_gatt_db_hash(uint8_t hash_out[16]);
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Local Device Info
 
