@@ -1288,6 +1288,7 @@ bool bt_persistent_storage_delete_cccd(const BTDeviceInternal *peer, uint16_t ch
     return false;
   }
 
+  cccd_id = itr_data.id;
   if (prv_file_set(&cccd_id, sizeof(cccd_id), NULL, 0) == GapBondingFileSetFail) {
     return false;
   }
