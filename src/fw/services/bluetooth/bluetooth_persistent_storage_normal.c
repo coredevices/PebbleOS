@@ -108,6 +108,10 @@ static const char AIRPLANE_MODE_KEY[] = "AIRPLANE_MODE";
 static const char SYSTEM_CAPABILITIES_KEY[] = "SYSTEM_CAPABILITIES";
 //! This key is used to access the BLE address that can be used for address pinning.
 static const char BLE_PINNED_ADDRESS_KEY[] = "BLE_PINNED_ADDRESS";
+//! This key is used to access the GATT caching peer state table (opaque driver blob)
+static const char BLE_GATT_CACHING_STATE_KEY[] = "BLE_GATT_CACHING";
+//! This key is used to access the local GATT database hash
+static const char BLE_GATT_DB_HASH_KEY[] = "BLE_GATT_DB_HASH";
 
 static uint8_t s_bt_persistent_storage_updates = 0;
 
@@ -1294,6 +1298,23 @@ bool bt_persistent_storage_delete_cccd(const BTDeviceInternal *peer, uint16_t ch
   }
 
   return true;
+}
+
+void bt_persistent_storage_set_ble_gatt_caching_state(const void *data, size_t len) {
+  prv_file_set(BLE_GATT_CACHING_STATE_KEY, sizeof(BLE_GATT_CACHING_STATE_KEY), data, len);
+}
+
+int bt_persistent_storage_get_ble_gatt_caching_state(void *data_out, size_t buf_len) {
+  return prv_file_get(BLE_GATT_CACHING_STATE_KEY, sizeof(BLE_GATT_CACHING_STATE_KEY), data_out,
+                      buf_len);
+}
+
+void bt_persistent_storage_set_ble_gatt_db_hash(const uint8_t hash[16]) {
+  prv_file_set(BLE_GATT_DB_HASH_KEY, sizeof(BLE_GATT_DB_HASH_KEY), hash, 16);
+}
+
+bool bt_persistent_storage_get_ble_gatt_db_hash(uint8_t hash_out[16]) {
+  return prv_file_get(BLE_GATT_DB_HASH_KEY, sizeof(BLE_GATT_DB_HASH_KEY), hash_out, 16) == 16;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
