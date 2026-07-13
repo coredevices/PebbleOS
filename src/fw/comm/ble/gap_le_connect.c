@@ -599,7 +599,8 @@ void bt_driver_handle_le_encryption_change_event(const BleEncryptionChange *even
   connection->is_encrypted = true;
 
   if (!local_is_master) {
-    PBL_LOG_INFO("LE encryption change: encrypted");
+    // The driver already logs encryption changes (status/encrypted/bonded)
+    PBL_LOG_DBG("LE encryption change: encrypted");
     bluetooth_analytics_handle_encryption_change();
     bt_driver_pebble_pairing_service_handle_status_change(connection);
   }

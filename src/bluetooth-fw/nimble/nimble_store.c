@@ -235,8 +235,18 @@ static void prv_handle_sec_written_cb(void *data) {
 
 static int prv_nimble_store_write_sec(const int obj_type,
                                       const struct ble_store_value_sec *value_sec) {
+  BTDeviceAddress addr;
+
+  nimble_addr_to_pebble_addr(&value_sec->peer_addr, &addr);
+  PBL_LOG_INFO("SEC write: obj=%d addr=" BT_DEVICE_ADDRESS_FMT, obj_type,
+               BT_DEVICE_ADDRESS_XPLODE(addr));
+  PBL_LOG_INFO("SEC write: atype=%u ltk=%u irk=%u csrk=%u sc=%u auth=%u ksz=%u",
+               value_sec->peer_addr.type, value_sec->ltk_present, value_sec->irk_present,
+               value_sec->csrk_present, value_sec->sc, value_sec->authenticated,
+               value_sec->key_size);
+
   if (value_sec->key_size != KEY_SIZE || value_sec->csrk_present) {
-    PBL_LOG_ERR("Unsupported security parameters");
+    PBL_LOG_ERR("Unsupported security parameters, dropping bonding keys");
     return BLE_HS_ENOTSUP;
   }
 
@@ -275,6 +285,8 @@ static int prv_nimble_store_delete_sec(int obj_type, const struct ble_store_key_
   kernel_free(s);
 
   nimble_addr_to_pebble_device(&key_sec->peer_addr, &device);
+  PBL_LOG_INFO("SEC delete: obj=%d addr=" BT_DEVICE_ADDRESS_FMT, obj_type,
+               BT_DEVICE_ADDRESS_XPLODE(device.address));
   bt_persistent_storage_delete_ble_pairing_by_addr(&device);
 
   return 0;
@@ -542,6 +554,14 @@ static void prv_convert_bonding_local_to_store_val(const BleBonding *bonding,
 void bt_driver_handle_host_added_bonding(const BleBonding *bonding) {
   struct ble_store_value_sec value_sec;
 
+  PBL_LOG_INFO("Host added bonding: addr=" BT_DEVICE_ADDRESS_FMT " random=%u",
+               BT_DEVICE_ADDRESS_XPLODE(bonding->pairing_info.identity.address),
+               bonding->pairing_info.identity.is_random_address);
+  PBL_LOG_INFO("Host added bonding: remote_enc=%u local_enc=%u irk=%u",
+               bonding->pairing_info.is_remote_encryption_info_valid,
+               bonding->pairing_info.is_local_encryption_info_valid,
+               bonding->pairing_info.is_remote_identity_info_valid);
+
   prv_convert_bonding_remote_to_store_val(bonding, &value_sec);
   prv_nimble_store_upsert_sec(BLE_STORE_OBJ_TYPE_PEER_SEC, &value_sec);
 
@@ -552,6 +572,10 @@ void bt_driver_handle_host_added_bonding(const BleBonding *bonding) {
 void bt_driver_handle_host_removed_bonding(const BleBonding *bonding) {
   BleStoreValueSec *s_sec;
   struct ble_store_key_sec key_sec;
+
+  PBL_LOG_INFO("Host removed bonding: addr=" BT_DEVICE_ADDRESS_FMT " random=%u",
+               BT_DEVICE_ADDRESS_XPLODE(bonding->pairing_info.identity.address),
+               bonding->pairing_info.identity.is_random_address);
 
   key_sec.idx = 0;
   pebble_device_to_nimble_addr(&bonding->pairing_info.identity, &key_sec.peer_addr);

@@ -85,6 +85,17 @@ static void prv_handle_connection_event(struct ble_gap_event *event) {
   // If OTA address != ID address, then the address must be resolved.
   // This happens for an already paired devices.
   complete_event.is_resolved = ble_addr_cmp(&desc.peer_id_addr, &desc.peer_ota_addr) != 0;
+
+  {
+    BTDeviceAddress ota_addr, id_addr;
+    nimble_addr_to_pebble_addr(&desc.peer_ota_addr, &ota_addr);
+    nimble_addr_to_pebble_addr(&desc.peer_id_addr, &id_addr);
+    PBL_LOG_DBG("Conn compl: ota=" BT_DEVICE_ADDRESS_FMT " atype=%u",
+                BT_DEVICE_ADDRESS_XPLODE(ota_addr), desc.peer_ota_addr.type);
+    PBL_LOG_DBG("Conn compl: id=" BT_DEVICE_ADDRESS_FMT " atype=%u",
+                BT_DEVICE_ADDRESS_XPLODE(id_addr), desc.peer_id_addr.type);
+  }
+
   if (complete_event.is_resolved) {
     int rc;
     struct ble_store_key_sec key_sec;
@@ -98,6 +109,7 @@ static void prv_handle_connection_event(struct ble_gap_event *event) {
       // We can get a resolved address in case of a repeated pairing event,
       // where peer security is deleted. An identity resolved event will be
       // received later after the new pairing is completed.
+      PBL_LOG_INFO("Address resolved but no stored peer security (rc=%d)", rc);
       complete_event.is_resolved = false;
     } else {
       memcpy(complete_event.irk.data, value_sec.irk, 16);
@@ -140,6 +152,10 @@ static void prv_handle_enc_change_event(struct ble_gap_event *event) {
     PBL_LOG_ERR("prv_handle_enc_change_event: Failed to find connection descriptor");
     return;
   }
+
+  PBL_LOG_INFO("Encryption change: status=0x%04x encrypted=%u bonded=%u",
+               (uint16_t)event->enc_change.status, desc.sec_state.encrypted,
+               desc.sec_state.bonded);
 
   struct BleEncryptionChange enc_change_event = {
       .encryption_enabled = desc.sec_state.encrypted,
@@ -209,6 +225,8 @@ static void prv_handle_passkey_event(struct ble_gap_event *event) {
 }
 
 static void prv_handle_pairing_complete_event(struct ble_gap_event *event) {
+  PBL_LOG_INFO("Pairing complete: status=0x%04x", (uint16_t)event->pairing_complete.status);
+
   if (!s_pairing_in_progress) {
     return;
   }
@@ -295,6 +313,7 @@ static int prv_handle_repeat_pairing_event(struct ble_gap_event *event) {
     return ret;
   }
 
+  PBL_LOG_INFO("Repeat pairing: deleting stored peer keys and retrying");
   ble_store_util_delete_peer(&desc.peer_id_addr);
 
   return BLE_GAP_REPEAT_PAIRING_RETRY;

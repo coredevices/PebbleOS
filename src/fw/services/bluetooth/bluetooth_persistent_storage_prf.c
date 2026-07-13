@@ -46,6 +46,13 @@ static BTBondingID prv_bt_persistent_storage_store_ble_pairing(
     const SMPairingInfo *new_pairing_info, bool is_gateway, bool requires_address_pinning,
     uint8_t flags, const char *device_name, BtPersistBondingOp op) {
   if (new_pairing_info && is_gateway) {
+    PBL_LOG_INFO("Storing BLE pairing: addr=" BT_DEVICE_ADDRESS_FMT " random=%u",
+                 BT_DEVICE_ADDRESS_XPLODE(new_pairing_info->identity.address),
+                 new_pairing_info->identity.is_random_address);
+    PBL_LOG_INFO("Storing BLE pairing: irk=%u remote_enc=%u local_enc=%u",
+                 new_pairing_info->is_remote_identity_info_valid,
+                 new_pairing_info->is_remote_encryption_info_valid,
+                 new_pairing_info->is_local_encryption_info_valid);
     shared_prf_storage_store_ble_pairing_data(new_pairing_info, device_name,
                                               requires_address_pinning,
                                               flags);
@@ -53,6 +60,7 @@ static BTBondingID prv_bt_persistent_storage_store_ble_pairing(
     return BLE_BONDING_ID;
   }
 
+  PBL_LOG_WRN("BLE pairing not stored (gateway=%u)", is_gateway);
   return BT_BONDING_ID_INVALID;
 }
 
@@ -132,6 +140,7 @@ static void prv_remove_ble_bonding_from_bt_driver(void) {
 }
 
 void bt_persistent_storage_delete_ble_pairing_by_id(BTBondingID bonding) {
+  PBL_LOG_INFO("Deleting stored BLE pairing");
   prv_remove_ble_bonding_from_bt_driver();
   shared_prf_storage_erase_ble_pairing_data();
   prv_call_ble_bonding_change_handlers(bonding, BtPersistBondingOpWillDelete);
@@ -200,6 +209,7 @@ void bt_persistent_storage_register_existing_ble_bondings(void) {
   BleBonding bonding = {};
   uint8_t flags;
   if (!shared_prf_storage_get_ble_pairing_data(&bonding.pairing_info, NULL, NULL, &flags)) {
+    PBL_LOG_INFO("No existing BLE bonding to register");
     return;
   }
   bonding.is_gateway = true;
