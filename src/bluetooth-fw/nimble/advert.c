@@ -10,10 +10,13 @@
 #include <comm/bt_lock.h>
 #include <host/ble_gap.h>
 #include <host/ble_hs_hci.h>
+#include <kernel/pbl_malloc.h>
+#include <os/os_mbuf.h>
 #include <system/logging.h>
 #include <system/passert.h>
 #include <pbl/util/math.h>
 
+#include "nimble_gattc_op_queue.h"
 #include "nimble_type_conversions.h"
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
@@ -24,13 +27,29 @@ static bool s_pairing_in_progress;
 
 static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
                                          struct ble_gatt_attr *attr, void *arg) {
-  if (error->status == 0) {
-    size_t len = MIN(attr->om->om_len, sizeof(s_device_name) - 1);
-    strncpy(s_device_name, (char *)attr->om->om_data, len);
-    s_device_name[len] = '\0';
+  if (error->status != 0) {
+    nimble_gattc_op_queue_complete();
+    return 0;
   }
 
+  size_t len = MIN(OS_MBUF_PKTLEN(attr->om), sizeof(s_device_name) - 1);
+  os_mbuf_copydata(attr->om, 0, len, s_device_name);
+  s_device_name[len] = '\0';
+
   return 0;
+}
+
+static int prv_device_name_read_op_start(void *ctx) {
+  const uint16_t conn_handle = *(uint16_t *)ctx;
+
+  int rc = ble_gattc_read_by_uuid(conn_handle, 1, UINT16_MAX,
+                                  (ble_uuid_t *)&s_device_name_chr_uuid,
+                                  prv_device_name_read_event_cb, NULL);
+  if (rc != 0) {
+    PBL_LOG_ERR("Pairing device name read failed to start (rc=0x%04x)", (uint16_t)rc);
+  }
+
+  return rc;
 }
 
 void bt_driver_advert_advertising_disable(void) {
@@ -118,9 +137,9 @@ static void prv_handle_connection_event(struct ble_gap_event *event) {
     // If the address is not resolved, pairing is gonna happen.
     // Trigger name read to have it ready for the pairing confirmation.
     memset(s_device_name, 0, sizeof(s_device_name));
-    ble_gattc_read_by_uuid(event->connect.conn_handle, 1, UINT16_MAX,
-                           (ble_uuid_t *)&s_device_name_chr_uuid, prv_device_name_read_event_cb,
-                           NULL);
+    uint16_t *conn_handle = kernel_malloc_check(sizeof(*conn_handle));
+    *conn_handle = event->connect.conn_handle;
+    nimble_gattc_op_queue_push(prv_device_name_read_op_start, conn_handle);
   }
 
   nimble_conn_params_to_pebble(&desc, &complete_event.conn_params);

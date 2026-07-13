@@ -30,6 +30,7 @@ static const uint32_t s_bt_stack_start_stop_timeout_ms = 10000;
 extern void pebble_pairing_service_init(void);
 extern void ppog_reversed_service_init(void);
 extern void nimble_discover_init(void);
+extern void nimble_gattc_op_queue_init(void);
 
 #if NIMBLE_CFG_CONTROLLER
 static TaskHandle_t s_ll_task_handle;
@@ -85,6 +86,7 @@ void bt_driver_init(void) {
   s_host_stopped = xSemaphoreCreateBinary();
 
   nimble_discover_init();
+  nimble_gattc_op_queue_init();
 
   nimble_port_init();
   nimble_store_init();

@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <bluetooth/gatt.h>
+#include <comm/bt_lock.h>
 #include <host/ble_hs.h>
 #include <system/logging.h>
 #include <pbl/util/math.h>
@@ -11,6 +12,7 @@
 #include <FreeRTOS.h>
 #include <semphr.h>
 
+#include "nimble_gattc_op_queue.h"
 #include "nimble_type_conversions.h"
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
@@ -18,6 +20,13 @@ PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 static bool s_discovery_in_progress;
 static bool s_stop_discovery_requested;
 static SemaphoreHandle_t s_discovery_stopped;
+
+//! Marks the end of a discovery run, letting the next queued GATT client
+//! procedure start. Every terminal path of the discovery chain must end here.
+static void prv_discovery_finished(void) {
+  s_discovery_in_progress = false;
+  nimble_gattc_op_queue_complete();
+}
 
 // -------------------------------------------------------------------------------------------------
 // Gatt Client Discovery API calls
@@ -322,7 +331,7 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
 
   if (s_stop_discovery_requested) {
     xSemaphoreGive(s_discovery_stopped);
-    s_discovery_in_progress = false;
+    prv_discovery_finished();
     prv_free_discovery_context(context);
     return BLE_HS_EDONE;
   }
@@ -368,7 +377,7 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
 
         if (context->current_service == NULL) {
           // we're done!
-          s_discovery_in_progress = false;
+          prv_discovery_finished();
           prv_convert_service_and_notify_os(conn_handle, context);
         }
       }
@@ -386,7 +395,7 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
         errno = BTErrnoInternalErrorBegin + error->status;
       }
 
-      s_discovery_in_progress = false;
+      prv_discovery_finished();
       bt_driver_cb_gatt_client_discovery_complete(context->connection, errno);
       prv_free_discovery_context(context);
       break;
@@ -402,7 +411,7 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
 
   if (s_stop_discovery_requested) {
     xSemaphoreGive(s_discovery_stopped);
-    s_discovery_in_progress = false;
+    prv_discovery_finished();
     prv_free_discovery_context(context);
     return BLE_HS_EDONE;
   }
@@ -440,7 +449,7 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
           prv_discover_next_dscs(conn_handle, context);
         } else {
           // No characteristics found, discovery complete
-          s_discovery_in_progress = false;
+          prv_discovery_finished();
           prv_convert_service_and_notify_os(conn_handle, context);
         }
       }
@@ -458,7 +467,7 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
         errno = BTErrnoInternalErrorBegin + error->status;
       }
 
-      s_discovery_in_progress = false;
+      prv_discovery_finished();
       bt_driver_cb_gatt_client_discovery_complete(context->connection, errno);
       prv_free_discovery_context(context);
       break;
@@ -474,7 +483,7 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
 
   if (s_stop_discovery_requested) {
     xSemaphoreGive(s_discovery_stopped);
-    s_discovery_in_progress = false;
+    prv_discovery_finished();
     prv_free_discovery_context(context);
     return BLE_HS_EDONE;
   }
@@ -505,7 +514,7 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
         prv_discover_next_chrs(conn_handle, context);
       } else {
         // no services found
-        s_discovery_in_progress = false;
+        prv_discovery_finished();
         bt_driver_cb_gatt_client_discovery_complete(context->connection, BTErrnoOK);
         prv_free_discovery_context(context);
       }
@@ -522,7 +531,7 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
         errno = BTErrnoInternalErrorBegin + error->status;
       }
 
-      s_discovery_in_progress = false;
+      prv_discovery_finished();
       bt_driver_cb_gatt_client_discovery_complete(context->connection, errno);
       prv_free_discovery_context(context);
       break;
@@ -534,8 +543,7 @@ void nimble_discover_init(void) {
   s_discovery_stopped = xSemaphoreCreateBinary();
 }
 
-BTErrno bt_driver_gatt_start_discovery_range(const GAPLEConnection *connection,
-                                             const ATTHandleRange *data) {
+static BTErrno prv_start_discovery(const GAPLEConnection *connection, const ATTHandleRange *data) {
   uint16_t conn_handle;
   if (!pebble_device_to_nimble_conn_handle(&connection->device, &conn_handle)) {
     return BTErrnoInvalidState;
@@ -547,11 +555,53 @@ BTErrno bt_driver_gatt_start_discovery_range(const GAPLEConnection *connection,
 
   int rc = ble_gattc_disc_all_svcs(conn_handle, prv_find_inc_svc_cb, (void *)context);
   if (rc != 0) {
+    prv_free_discovery_context(context);
     return BTErrnoInternalErrorBegin + rc;
   }
 
   s_discovery_in_progress = true;
   s_stop_discovery_requested = false;
+
+  return BTErrnoOK;
+}
+
+typedef struct {
+  GAPLEConnection *connection;
+  ATTHandleRange range;
+} DiscoveryOp;
+
+static int prv_discovery_op_start(void *ctx) {
+  DiscoveryOp *op = ctx;
+
+  bt_lock();
+  const bool valid = gap_le_connection_is_valid(op->connection);
+  bt_unlock();
+
+  BTErrno err = valid ? prv_start_discovery(op->connection, &op->range) : BTErrnoInvalidState;
+  if (err == BTErrnoOK) {
+    return 0;
+  }
+
+  PBL_LOG_WRN("Failed to start discovery (errno=%d)", err);
+  if (valid) {
+    // The firmware was told the start succeeded (see
+    // bt_driver_gatt_start_discovery_range); report the failure through the
+    // completion callback so it can finalize.
+    bt_driver_cb_gatt_client_discovery_complete(op->connection, err);
+  }
+  return -1;
+}
+
+BTErrno bt_driver_gatt_start_discovery_range(const GAPLEConnection *connection,
+                                             const ATTHandleRange *data) {
+  DiscoveryOp *op = kernel_zalloc_check(sizeof(*op));
+  op->connection = (GAPLEConnection *)connection;
+  op->range = *data;
+
+  // Queued so it never runs concurrently with another GATT client procedure
+  // (e.g. a device name read). Start errors are reported through
+  // bt_driver_cb_gatt_client_discovery_complete.
+  nimble_gattc_op_queue_push(prv_discovery_op_start, op);
 
   return BTErrnoOK;
 }
