@@ -18,6 +18,9 @@ const ble_uuid16_t device_name_chr_uuid = BLE_UUID16_INIT(GAP_DEVICE_NAME_CHR);
 
 static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
                                          struct ble_gatt_attr *attr, void *arg) {
+  bool changed;
+  GAPLEConnection *connection = (GAPLEConnection *)arg;
+
   if (error->status != 0) {
     if (error->status != BLE_HS_EDONE) {
       PBL_LOG_ERR("prv_device_name_read_event_cb error=%d",
@@ -26,18 +29,30 @@ static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_
     return 0;
   }
 
+  PBL_LOG_DBG("Device name read cb: conn=%u handle=%u len=%u", conn_handle, attr->handle,
+              attr->om->om_len);
+
   char *device_name = kernel_zalloc_check(attr->om->om_len + 1);
   strncpy(device_name, (char *)attr->om->om_data, attr->om->om_len);
 
   bt_lock();
 
-  GAPLEConnection *connection = (GAPLEConnection *)arg;
-  if (connection->device_name) {
-    kernel_free(connection->device_name);
+  changed = (connection->device_name == NULL) || strcmp(connection->device_name, device_name) != 0;
+  if (changed) {
+    if (connection->device_name) {
+      kernel_free(connection->device_name);
+    }
+    connection->device_name = device_name;
   }
-  connection->device_name = device_name;
 
   bt_unlock();
+
+  if (!changed) {
+    // Same name as before: don't re-persist it (each store rewrites the
+    // pairing storage and fires bonding change handlers).
+    kernel_free(device_name);
+    return 0;
+  }
 
   BTDeviceAddress *addr = kernel_zalloc_check(sizeof(BTDeviceAddress));
   *addr = connection->device.address;

@@ -113,11 +113,20 @@ BTBondingID bt_persistent_storage_store_ble_pairing(const SMPairingInfo *new_pai
 bool bt_persistent_storage_update_ble_device_name(BTBondingID bonding, const char *device_name) {
   // A device name has come in, update the name of our currently paired device
   SMPairingInfo data = {};
+  char existing_name[BT_DEVICE_NAME_BUFFER_SIZE] = {};
   bool requires_address_pinning = false;
   uint8_t flags = 0;
-  if (!shared_prf_storage_get_ble_pairing_data(&data, NULL, &requires_address_pinning, &flags)) {
+  if (!shared_prf_storage_get_ble_pairing_data(&data, existing_name, &requires_address_pinning,
+                                               &flags)) {
     PBL_LOG_ERR("Tried to store device name, but pairing no longer around.");
     return false;
+  }
+
+  if (strncmp(existing_name, device_name, BT_DEVICE_NAME_BUFFER_SIZE) == 0) {
+    // Unchanged: skip the flash rewrite and bonding change handlers. Returning
+    // true means the caller may still emit a name-updated event; that's
+    // harmless (the stored name is correct).
+    return true;
   }
   // In PRF, only the gateway should get paired, so default to "true":
   return (BT_BONDING_ID_INVALID !=
