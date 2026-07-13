@@ -254,27 +254,31 @@ static void prv_adjust_background_frame_for_state(BTPairingUIData *data) {
   GAlign alignment;
   const int16_t width_of_sidebar = data->action_bar_layer.layer.frame.size.w;
   const int16_t window_width = data->window.layer.bounds.size.w;
-  const int16_t config_width = window_width - width_of_sidebar + 10;
+  const int16_t config_width __attribute__((unused)) = window_width - width_of_sidebar + 10;
   int16_t x_offset, y_offset, width;
 
   switch (data->ui_state) {
     case BTPairingUIStateAwaitingUserConfirmation:
-      alignment = GAlignTopLeft;
 #if PBL_DISPLAY_HEIGHT >= 200
-      x_offset = 39;
+      // On large round displays center the icon on the full window width
+      alignment = PBL_IF_RECT_ELSE(GAlignTopLeft, GAlignTop);
+      x_offset = PBL_IF_RECT_ELSE(39, 0);
       y_offset = 85;
+      width = PBL_IF_RECT_ELSE(config_width, window_width);
 #else
+      alignment = GAlignTopLeft;
       x_offset = PBL_IF_RECT_ELSE(10, 31);
       y_offset = PBL_IF_RECT_ELSE(44, 46);
-#endif
       width = config_width;
+#endif
       break;
     case BTPairingUIStateAwaitingResult:
-      alignment = GAlignLeft;
 #if PBL_DISPLAY_HEIGHT >= 200
-      x_offset = 76;
-      y_offset = 30;
+      alignment = PBL_IF_RECT_ELSE(GAlignLeft, GAlignTop);
+      x_offset = PBL_IF_RECT_ELSE(76, 0);
+      y_offset = PBL_IF_RECT_ELSE(30, 69);
 #else
+      alignment = GAlignLeft;
       x_offset = PBL_IF_RECT_ELSE(49, 67);
       y_offset = PBL_IF_RECT_ELSE(22, 25);
 #endif
@@ -285,7 +289,7 @@ static void prv_adjust_background_frame_for_state(BTPairingUIData *data) {
       alignment = GAlignTop;
 #if PBL_DISPLAY_HEIGHT >= 200
       x_offset = 0;
-      y_offset = 59;
+      y_offset = PBL_IF_RECT_ELSE(59, 80);
 #else
       x_offset = 2;
       y_offset = PBL_IF_RECT_ELSE(30, 36);
@@ -370,10 +374,13 @@ static void prv_window_load(Window *window) {
 
   const int32_t width_of_action_bar_with_padding = ACTION_BAR_WIDTH + PBL_IF_RECT_ELSE(2, -4);
   const int32_t width = window->layer.bounds.size.w - width_of_action_bar_with_padding;
-  const int32_t x_offset = PBL_IF_RECT_ELSE(0, 22);
 #if PBL_DISPLAY_HEIGHT >= 200
+  // On large round displays center the text layers on the full window width
+  const int32_t x_offset =
+      PBL_IF_RECT_ELSE(0, (window->layer.bounds.size.w - width) / 2);
   const int32_t info_text_y_offset = 36;
 #else
+  const int32_t x_offset = PBL_IF_RECT_ELSE(0, 22);
   const int32_t info_text_y_offset = PBL_IF_RECT_ELSE(10, 12);
 #endif
 
@@ -428,9 +435,14 @@ static void prv_window_load(Window *window) {
 #endif
   // Device name:
   if (prv_has_device_name(data)) {
+#if PBL_DISPLAY_HEIGHT >= 200
+    const int32_t device_name_width = width;
+#else
+    const int32_t device_name_width = width - x_offset;
+#endif
     TextLayer *device_name_layer = &data->device_name_text_layer;
     text_layer_init_with_parameters(device_name_layer,
-                                    &GRect(x_offset, 122 + y_offset, width - x_offset, 30),
+                                    &GRect(x_offset, 122 + y_offset, device_name_width, 30),
                                     data->device_name_layer_buffer,
                                     fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
                                     GColorBlack, GColorClear, GTextAlignmentCenter,
