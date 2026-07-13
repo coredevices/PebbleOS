@@ -100,18 +100,18 @@ static const MusicAppSizeConfig s_music_size_config_medium = {
 static const MusicAppSizeConfig s_music_size_config_large = {
   .music_time_font_key = FONT_KEY_GOTHIC_18_BOLD,
   .no_music_font_key = FONT_KEY_GOTHIC_28,
-  .horizontal_margin = 10,
+  .horizontal_margin = PBL_IF_RECT_ELSE(10, 30),
 
   .artist_field = {
-    .origin_y = 30,
+    .origin_y = PBL_IF_RECT_ELSE(30, 48),
     .size_h = 21,
   },
   .title_field = {
-    .origin_y = 60,
+    .origin_y = PBL_IF_RECT_ELSE(60, 72),
     .size_h = 80,
   },
   .time_field = {
-    .origin_y = 146,
+    .origin_y = PBL_IF_RECT_ELSE(146, 158),
     .size_h = 20,
   },
 
@@ -120,14 +120,14 @@ static const MusicAppSizeConfig s_music_size_config_large = {
   .cassette_animation_time = 3 * ANIMATION_FRAME_MS,
 
   .track_field = {
-    .origin_y = 168,
+    .origin_y = PBL_IF_RECT_ELSE(168, 182),
     .size_h = 10,
   },
   .track_corner_radius = 4,
 
-  .no_music_img_pos = {57, 46},
+  .no_music_img_pos = {PBL_IF_RECT_ELSE(57, 72), PBL_IF_RECT_ELSE(46, 58)},
   .no_music_text_field = {
-    .origin_y = 131,
+    .origin_y = PBL_IF_RECT_ELSE(131, 143),
     .size_h = 58,
   },
 };
