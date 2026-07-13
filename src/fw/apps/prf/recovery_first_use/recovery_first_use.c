@@ -155,8 +155,14 @@ static void prv_update_name_text(RecoveryFUAppData *data) {
   } else if ((comm_session_get_system_session() != NULL) && (gap_conn != NULL)) {
     // If we have connected to a device and we have a connection to the mobile app, show the device
     // name (we are required to have a connection to mobile app to get the name).
+    data->name_text_buffer[0] = '\0';
     gap_le_connection_copy_device_name(gap_conn, data->name_text_buffer,
                                        BT_DEVICE_NAME_BUFFER_SIZE);
+    if (data->name_text_buffer[0] == '\0') {
+      // The remote name may not have been fetched yet: fall back to the local
+      // device name instead of showing a blank field.
+      bt_local_id_copy_device_name(data->name_text_buffer, false);
+    }
   } else {
     // If we aren't connected and/or don't have a session, display the name of the device
     // so it's easier for a user to figure out what they should be trying to connect to
