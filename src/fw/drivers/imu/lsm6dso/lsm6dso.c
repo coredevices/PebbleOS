@@ -937,6 +937,16 @@ void accel_enable_shake_detection(bool on) {
     return;
   }
 
+  if (on) {
+    uint8_t val;
+
+    // WU_IA may be latched from a previous enablement or an ODR startup
+    // transient; clear it so a phantom shake is not dispatched on enable
+    if (!prv_lsm6dso_read(LSM6DSO_ALL_INT_SRC, &val, 1)) {
+      PBL_LOG_ERR("Could not read ALL_INT_SRC register");
+    }
+  }
+
   // Configure INT1
   ret = prv_configure_int1(on, LSM6DSO->state->num_samples > 0U);
   if (!ret) {
