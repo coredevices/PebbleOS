@@ -355,6 +355,10 @@ static const LSM6DSOConfig s_lsm6dso_config = {
       .peripheral = hwp_gpio1,
       .gpio_pin = 38,
     },
+    .int1_in = {
+      .gpio = hwp_gpio1,
+      .gpio_pin = 38,
+    },
 #ifdef CONFIG_IS_BIGBOARD
     .axis_map = {
         [AXIS_X] = 0,

@@ -32,10 +32,12 @@ PBL_LOG_MODULE_DEFINE(driver_accel_lsm6dso, CONFIG_DRIVER_IMU_LOG_LEVEL);
 //   be changed depending on the sampling interval configuration. Value is NOT
 //   adjusted automatically when ODR changes, so it is possible to notice
 //   sensitivity changes when changing sampling interval.
-// - Like the LIS2DW12, INT1 can be left HIGH on FIFO overruns; a watchdog timer
-//   re-arms the FIFO if no samples have been read within the expected time
-//   window (FIFO reads are tracked instead of INT1 edges, which shake events
-//   would keep feeding).
+// - INT1 mixes level (FIFO threshold) and latched (wake-up) sources on a
+//   rising-edge EXTI, and (like the LIS2DW12) FIFO overruns can leave the pad
+//   latched HIGH, so edges can be lost. The work handler re-checks the pad
+//   level after servicing, and a watchdog timer recovers the stream if no
+//   FIFO samples have been read within the expected time window (FIFO reads
+//   are tracked instead of INT1 edges, which shake events would keep feeding).
 
 // Time to wait after reset (us)
 #define LSM6DSO_RESET_TIME_US 5
@@ -361,7 +363,9 @@ static void prv_lsm6dso_drain_fifo(void) {
 
 static void prv_lsm6dso_recover(void);
 
-static void prv_lsm6dso_int1_work_handler(void) {
+//! Single INT1 servicing pass; returns true if any INT source was handled.
+//! fifo_progress is set when FIFO data was consumed (samples or overrun).
+static bool prv_lsm6dso_service_int1(bool *fifo_progress) {
   bool ret;
   uint8_t val;
   bool action_taken = false;
@@ -378,7 +382,7 @@ static void prv_lsm6dso_int1_work_handler(void) {
     ret = prv_lsm6dso_read(LSM6DSO_FIFO_STATUS2, &val, 1);
     if (!ret) {
       PBL_LOG_ERR("Could not read FIFO_STATUS2 register");
-      return;
+      return false;
     }
 
     if ((val & LSM6DSO_FIFO_STATUS2_FIFO_OVR_IA) != 0U) {
@@ -388,7 +392,7 @@ static void prv_lsm6dso_int1_work_handler(void) {
 
       if (!prv_lsm6dso_read(LSM6DSO_FIFO_STATUS1, &status1, 1)) {
         PBL_LOG_ERR("Could not read FIFO_STATUS1 register");
-        return;
+        return false;
       }
 
       samples = (((uint16_t)(val & LSM6DSO_FIFO_STATUS2_DIFF_HI_MASK)) << 8U) | status1;
@@ -400,7 +404,7 @@ static void prv_lsm6dso_int1_work_handler(void) {
         if (!prv_lsm6dso_read(LSM6DSO_FIFO_DATA_OUT_TAG, LSM6DSO->state->raw_sample_buf,
                               samples * LSM6DSO_FIFO_WORD_SIZE_BYTES)) {
           PBL_LOG_ERR("Failed to read samples");
-          return;
+          return false;
         }
         timestamp_us = prv_get_curr_system_time_us();
         LSM6DSO->state->last_fifo_read_tick = rtc_get_ticks();
@@ -412,7 +416,7 @@ static void prv_lsm6dso_int1_work_handler(void) {
     ret = prv_lsm6dso_read(LSM6DSO_ALL_INT_SRC, &val, 1);
     if (!ret) {
       PBL_LOG_ERR("Could not read ALL_INT_SRC register");
-      return;
+      return false;
     }
 
     shake = (val & LSM6DSO_ALL_INT_SRC_WU_IA) != 0U;
@@ -422,25 +426,54 @@ static void prv_lsm6dso_int1_work_handler(void) {
     PBL_LOG_WRN("FIFO overrun detected, recovering");
     prv_lsm6dso_recover();
     action_taken = true;
+    *fifo_progress = true;
   } else if (samples > 0U) {
     prv_lsm6dso_process_samples(samples, timestamp_us);
     action_taken = true;
+    *fifo_progress = true;
   }
 
   if (shake) {
-    PBL_LOG_DBG("Shake detected");
-    // TODO: provide more info about the shake (axis, direction, etc.) or
-    // refactor shake to be non-dimensional
-    accel_cb_shake_detected(AXIS_Z, 0);
+    // WU_IA stays set while the wake-up condition persists (LIR), so only
+    // dispatch on its assertion to avoid flooding events
+    if (!LSM6DSO->state->wu_active) {
+      PBL_LOG_DBG("Shake detected");
+      // TODO: provide more info about the shake (axis, direction, etc.) or
+      // refactor shake to be non-dimensional
+      accel_cb_shake_detected(AXIS_Z, 0);
+    }
     action_taken = true;
   }
+  LSM6DSO->state->wu_active = shake;
 
   if (!action_taken) {
     PBL_LOG_WRN("INT1 triggered but no action taken");
   }
+
+  return action_taken;
+}
+
+static void prv_lsm6dso_int1_work_handler(void) {
+  bool fifo_progress = false;
+  bool action_taken = prv_lsm6dso_service_int1(&fifo_progress);
+
+  // Sources asserting while the pad is high produce no new edge: requeue on
+  // FIFO progress, recover when nothing was serviced (stuck pad). A pad held
+  // by a persistent wake-up condition is left to the stall watchdog.
+  if (!gpio_input_read(&LSM6DSO->int1_in)) {
+    return;
+  }
+
+  if (fifo_progress) {
+    accel_offload_work(prv_lsm6dso_int1_work_handler);
+  } else if (!action_taken) {
+    prv_lsm6dso_recover();
+  }
 }
 
 static void prv_lsm6dso_int1_irq_handler(bool *should_context_switch) {
+  // A rising edge proves the pad was low, i.e. the wake-up source deasserted
+  LSM6DSO->state->wu_active = false;
   accel_offload_work_from_isr(prv_lsm6dso_int1_work_handler, should_context_switch);
 }
 
@@ -579,6 +612,7 @@ static void prv_lsm6dso_recover(void) {
     return;
   }
 
+  LSM6DSO->state->wu_active = false;
   LSM6DSO->state->last_fifo_read_tick = rtc_get_ticks();
 }
 
@@ -894,6 +928,7 @@ void accel_enable_shake_detection(bool on) {
   }
 
   LSM6DSO->state->shake_detection_enabled = on;
+  LSM6DSO->state->wu_active = false;
 
   PBL_LOG_DBG("%s shake detection", on ? "Enabled" : "Disabled");
 }
