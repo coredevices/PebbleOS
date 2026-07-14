@@ -552,8 +552,12 @@ static uint32_t prv_stall_threshold_ms(void) {
              LIS2DW12_STALL_MIN_MS);
 }
 
+//! Shared by the INT1 watchdog and the accel_peek staleness trigger;
+//! re-validates the stall at execution time.
 static void prv_stall_check_work_cb(void) {
   uint32_t ms_since_last_read;
+
+  LIS2DW12->state->recovery_pending = false;
 
   // Sampling may have stopped between scheduling and execution
   if (LIS2DW12->state->num_samples == 0U) {
@@ -729,6 +733,9 @@ void accel_set_num_samples(uint32_t num_samples) {
   // Disable all INT1 before changing FIFO threshold
   prv_configure_int1(false, false);
 
+  // Config change invalidates any queued stall check; re-arm the peek trigger
+  LIS2DW12->state->recovery_pending = false;
+
   // Salvage queued samples
   if (LIS2DW12->state->num_samples > 0U) {
     prv_lis2dw12_drain_fifo();
@@ -784,6 +791,13 @@ int accel_peek(AccelDriverSample *data) {
 
   // If sampling is active, return the last obtained sample
   if (LIS2DW12->state->num_samples > 0U) {
+    // Self-heal: a stalled stream would otherwise freeze peek data forever
+    if (!LIS2DW12->state->recovery_pending &&
+        (prv_ms_since_last_fifo_read() >= prv_stall_threshold_ms())) {
+      LIS2DW12->state->recovery_pending = true;
+      accel_offload_work(prv_stall_check_work_cb);
+    }
+
     if (!LIS2DW12->state->last_sample_valid) {
       return E_ERROR;
     }
