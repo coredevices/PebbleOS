@@ -794,6 +794,11 @@ void accel_set_num_samples(uint32_t num_samples) {
   // Disable all INT1 before changing FIFO threshold
   prv_configure_int1(false, false);
 
+  // Salvage queued samples
+  if (LSM6DSO->state->num_samples > 0U) {
+    prv_lsm6dso_drain_fifo();
+  }
+
   if (num_samples == 0U) {
     // Bypass FIFO (disable)
     val = LSM6DSO_FIFO_CTRL4_MODE_BYPASS;
@@ -803,8 +808,6 @@ void accel_set_num_samples(uint32_t num_samples) {
 
     regular_timer_remove_callback(&LSM6DSO->state->int1_wdt_timer);
   } else {
-    // FIXME: we should ideally drain the FIFO here to not discard existing samples
-
     // Configure FIFO in continuous mode with threshold
     ret = prv_lsm6dso_enable_fifo((uint16_t)num_samples);
     if (!ret) {
