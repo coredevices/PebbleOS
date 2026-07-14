@@ -28,7 +28,7 @@ typedef struct LSM6DSOState {
   uint16_t num_samples;
   uint8_t raw_sample_buf[LSM6DSO_FIFO_SIZE * LSM6DSO_FIFO_WORD_SIZE_BYTES];
   RegularTimerInfo int1_wdt_timer;
-  RtcTicks last_int1_tick;
+  RtcTicks last_fifo_read_tick;
   uint32_t int1_period_ms;
   uint32_t num_recoveries;
   uint8_t wk_ths_curr;

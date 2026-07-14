@@ -33,8 +33,9 @@ PBL_LOG_MODULE_DEFINE(driver_accel_lsm6dso, CONFIG_DRIVER_IMU_LOG_LEVEL);
 //   adjusted automatically when ODR changes, so it is possible to notice
 //   sensitivity changes when changing sampling interval.
 // - Like the LIS2DW12, INT1 can be left HIGH on FIFO overruns; a watchdog timer
-//   re-arms the FIFO if no INT1 event is detected within the expected time
-//   window based on the ODR and FIFO threshold.
+//   re-arms the FIFO if no samples have been read within the expected time
+//   window (FIFO reads are tracked instead of INT1 edges, which shake events
+//   would keep feeding).
 
 // Time to wait after reset (us)
 #define LSM6DSO_RESET_TIME_US 5
@@ -42,6 +43,11 @@ PBL_LOG_MODULE_DEFINE(driver_accel_lsm6dso, CONFIG_DRIVER_IMU_LOG_LEVEL);
 // DRDY polling parameters for accel_peek single-shot mode
 #define LSM6DSO_DRDY_POLL_DELAY_MS   (5)   /* ms between data-ready polls */
 #define LSM6DSO_DRDY_POLL_TIMEOUT_MS (100) /* max wait (~5x 20ms at 52Hz ODR) */
+
+// FIFO threshold periods without a FIFO read before the stream is considered
+// stalled (>1x to tolerate scheduling jitter), and threshold lower bound
+#define LSM6DSO_STALL_MARGIN 2U
+#define LSM6DSO_STALL_MIN_MS 1000U
 
 // Scale range for 16-bit two's complement samples
 #define LSM6DSO_S16_SCALE_RANGE (1U << (16U - 1U))
@@ -369,6 +375,7 @@ static void prv_lsm6dso_int1_work_handler(void) {
           return;
         }
         timestamp_us = prv_get_curr_system_time_us();
+        LSM6DSO->state->last_fifo_read_tick = rtc_get_ticks();
       }
     }
   }
@@ -406,7 +413,6 @@ static void prv_lsm6dso_int1_work_handler(void) {
 }
 
 static void prv_lsm6dso_int1_irq_handler(bool *should_context_switch) {
-  LSM6DSO->state->last_int1_tick = rtc_get_ticks();
   accel_offload_work_from_isr(prv_lsm6dso_int1_work_handler, should_context_switch);
 }
 
@@ -504,34 +510,51 @@ static bool prv_configure_int1(bool shake_detection_enabled, bool fifo_enabled) 
   return true;
 }
 
-static void prv_int1_wdt_work_cb(void) {
-  RtcTicks now_tick = rtc_get_ticks();
-  RtcTicks ticks_since_last_int1 = now_tick - LSM6DSO->state->last_int1_tick;
-  uint32_t ms_since_last_int1 = (ticks_since_last_int1 * 1000) / RTC_TICKS_HZ;
+static uint32_t prv_ms_since_last_fifo_read(void) {
+  RtcTicks ticks = rtc_get_ticks() - LSM6DSO->state->last_fifo_read_tick;
+  return (uint32_t)((ticks * 1000) / RTC_TICKS_HZ);
+}
 
-  if (ms_since_last_int1 >= LSM6DSO->state->int1_period_ms) {
-    bool ret;
-    uint8_t val;
+static uint32_t prv_stall_threshold_ms(void) {
+  return MAX(LSM6DSO_STALL_MARGIN * LSM6DSO->state->int1_period_ms,
+             LSM6DSO_STALL_MIN_MS);
+}
 
-    PBL_LOG_WRN("INT1 not received in %" PRIu32 " ms", ms_since_last_int1);
+static void prv_stall_check_work_cb(void) {
+  bool ret;
+  uint8_t val;
+  uint32_t ms_since_last_read;
 
-    // Re-enable FIFO, and clear any event INT source
-    ret = prv_lsm6dso_enable_fifo(LSM6DSO->state->num_samples);
-    if (!ret) {
-      PBL_LOG_ERR("Failed to re-enable FIFO");
-      return;
-    }
-
-    ret = prv_lsm6dso_read(LSM6DSO_ALL_INT_SRC, &val, 1);
-    if (!ret) {
-      PBL_LOG_ERR("Could not read ALL_INT_SRC register");
-      return;
-    }
+  // Sampling may have stopped between scheduling and execution
+  if (LSM6DSO->state->num_samples == 0U) {
+    return;
   }
+
+  ms_since_last_read = prv_ms_since_last_fifo_read();
+  if (ms_since_last_read < prv_stall_threshold_ms()) {
+    return;
+  }
+
+  PBL_LOG_WRN("FIFO stream stalled for %" PRIu32 " ms", ms_since_last_read);
+
+  // Re-enable FIFO, and clear any event INT source
+  ret = prv_lsm6dso_enable_fifo(LSM6DSO->state->num_samples);
+  if (!ret) {
+    PBL_LOG_ERR("Failed to re-enable FIFO");
+    return;
+  }
+
+  ret = prv_lsm6dso_read(LSM6DSO_ALL_INT_SRC, &val, 1);
+  if (!ret) {
+    PBL_LOG_ERR("Could not read ALL_INT_SRC register");
+    return;
+  }
+
+  LSM6DSO->state->last_fifo_read_tick = rtc_get_ticks();
 }
 
 static void prv_int1_wdt_cb(void *data) {
-  accel_offload_work(prv_int1_wdt_work_cb);
+  accel_offload_work(prv_stall_check_work_cb);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -700,7 +723,7 @@ void accel_set_num_samples(uint32_t num_samples) {
     }
 
     LSM6DSO->state->last_sample_valid = false;
-    LSM6DSO->state->last_int1_tick = rtc_get_ticks();
+    LSM6DSO->state->last_fifo_read_tick = rtc_get_ticks();
     LSM6DSO->state->int1_period_ms = (LSM6DSO->state->sampling_interval_us * num_samples) / 1000;
     regular_timer_add_multisecond_callback(&LSM6DSO->state->int1_wdt_timer,
                                            DIVIDE_CEIL(LSM6DSO->state->int1_period_ms, 1000UL));
