@@ -266,7 +266,7 @@ def cmd_console(env, options):
     elif env.CONFIG_QEMU:
         inner = "%s ./tools/log_hashing/miniterm_co.py %s" % (sys.executable, tty)
     else:
-        baudrate = options.baudrate or 230400
+        baudrate = options.baudrate or 115200
         # Force RTS de-asserted: on some boards RTS resets the SoC.
         inner = "%s ./tools/log_hashing/miniterm_co.py %s %d --rts 0" % (
             sys.executable, tty, baudrate)

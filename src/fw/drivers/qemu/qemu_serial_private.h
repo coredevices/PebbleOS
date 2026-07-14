@@ -69,7 +69,7 @@ typedef struct {
 
 // -----------------------------------------------------------------------------------
 // Defines and private structures
-#define UART_SERIAL_BAUD_RATE 230400
+#define UART_SERIAL_BAUD_RATE 115200
 
 #define QEMU_ISR_RECV_HIGH_WATER_DELTA (128)
 #define QEMU_ISR_RECV_BUFFER_SIZE    (QEMU_MAX_DATA_LEN + QEMU_ISR_RECV_HIGH_WATER_DELTA)

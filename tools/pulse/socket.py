@@ -19,7 +19,7 @@ import stm32_crc
 
 logger = logging.getLogger(__name__)
 
-DBGSERIAL_PORT_SETTINGS = dict(baudrate=230400, timeout=0.1, interCharTimeout=0.01)
+DBGSERIAL_PORT_SETTINGS = dict(baudrate=115200, timeout=0.1, interCharTimeout=0.01)
 
 
 def frame_splitter(istream, size=1024, timeout=1, delimiter="\0"):
