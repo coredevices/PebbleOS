@@ -674,6 +674,8 @@ static void prv_handle_reset_complete(PPoGATTClient *client, const PPoGATTPacket
   client->state = StateConnectedOpen;
   client->session = session;
 
+  PBL_ANALYTICS_SET_UNSIGNED(ppog_reversed, (client->role == PPoGATTRoleReversed) ? 1 : 0);
+
   if (prv_client_supports_enhanced_throughput_features(client)) {
     if (payload_length < sizeof(PPoGATTResetCompleteClientIDPayloadV1)) {
       PBL_LOG_WRN("Unexpected PPoGatt Reset Complete Payload Size: %"PRIu16,

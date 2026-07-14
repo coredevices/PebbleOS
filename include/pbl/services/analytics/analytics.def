@@ -102,6 +102,7 @@ PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(ble_disconnect_conn_term_local_count)     /
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(ble_disconnect_lmp_ll_rsp_tmo_count)      // 0x22
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(ble_disconnect_conn_establishment_count)  // 0x3e
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(ble_disconnect_other_count)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(ppog_reversed)
 
 // Settings
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(settings_health_tracking_enabled)
