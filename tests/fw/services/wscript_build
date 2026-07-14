@@ -256,6 +256,17 @@ clar(ctx,
 
 clar(ctx,
     sources_ant_glob = " ".join([
+        " src/fw/services/speaker/speaker_service.c " \
+        " src/fw/services/speaker/note_sequence.c " \
+        " src/fw/services/speaker/pcm_stream.c " \
+        " src/fw/services/speaker/track_player.c " \
+        " tests/fakes/fake_events.c"]),
+    test_sources_ant_glob = "test_speaker_service.c",
+    defines=['CONFIG_SPEAKER=1'],
+    override_includes=['dummy_board'])
+
+clar(ctx,
+    sources_ant_glob = " ".join([
         " src/fw/services/voice/transcription.c"]),
     test_sources_ant_glob = "test_transcription.c")
 

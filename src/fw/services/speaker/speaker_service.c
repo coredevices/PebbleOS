@@ -29,6 +29,11 @@ PBL_LOG_MODULE_DEFINE(service_speaker, CONFIG_SERVICE_SPEAKER_LOG_LEVEL);
 #define SPEAKER_SAMPLE_RATE 16000
 #define SPEAKER_REFILL_SAMPLES 512
 
+// The audio drivers queue up to ~64 ms ahead of the DAC (double-buffered
+// DMA/I2S pipe + circular buffer). Once the source runs dry, pad with 80 ms
+// of silence before stopping so the queued audio actually plays.
+#define SPEAKER_PIPELINE_DRAIN_SAMPLES ((SPEAKER_SAMPLE_RATE * 80) / 1000)
+
 typedef struct {
   SpeakerState state;
   SpeakerSourceType source_type;
@@ -69,6 +74,12 @@ typedef struct {
   void *track_sample_data[SPEAKER_MAX_TRACKS];
   int32_t mix_buf[SPEAKER_REFILL_SAMPLES];
   int16_t track_scratch[SPEAKER_REFILL_SAMPLES];
+
+  // Pipeline drain: set once the source has no more samples to generate;
+  // we then emit drain_samples_remaining of silence before stopping so the
+  // driver's queued audio finishes playing.
+  bool pipeline_draining;
+  uint32_t drain_samples_remaining;
 
   // Finish-event delivery
   bool finish_enabled;
@@ -199,6 +210,7 @@ static void prv_stop_internal(SpeakerFinishReason reason) {
   s_state.state = SpeakerStateIdle;
   s_state.source_type = SpeakerSourceNone;
   s_state.owner_task = PebbleTask_Unknown;
+  s_state.pipeline_draining = false;
 
   if (reason == SpeakerFinishReasonPreempted) {
     PBL_ANALYTICS_ADD(speaker_preempted_count, 1);
@@ -228,6 +240,11 @@ static void prv_stop_internal(SpeakerFinishReason reason) {
 
 static bool prv_can_preempt(SpeakerPriority new_pri) {
   if (s_state.state == SpeakerStateIdle) {
+    return true;
+  }
+  if (s_state.pipeline_draining) {
+    // Only padding silence remains — let anyone start a new sound rather
+    // than rejecting it (matters for rapid re-triggers, e.g. a metronome).
     return true;
   }
   return new_pri > s_state.priority;
@@ -351,23 +368,19 @@ static void prv_refill_locked(void) {
   }
 
   uint32_t samples_generated = 0;
+  bool source_exhausted = false;
 
   if (s_state.source_type == SpeakerSourceNoteSeq) {
     samples_generated = note_seq_fill(&s_state.note_seq, s_state.refill_buf,
                                       SPEAKER_REFILL_SAMPLES);
-    if (samples_generated == 0) {
-      prv_stop_internal(SpeakerFinishReasonDone);
-      return;
-    }
+    source_exhausted = (samples_generated == 0);
   } else if (s_state.source_type == SpeakerSourceStream) {
     samples_generated = prv_read_and_convert_pcm(s_state.refill_buf,
                                                   SPEAKER_REFILL_SAMPLES);
     if (samples_generated == 0 && pcm_stream_is_done(&s_state.pcm_stream)) {
-      prv_stop_internal(SpeakerFinishReasonDone);
-      return;
-    }
-    // If no data but not done, write silence to keep DMA fed
-    if (samples_generated == 0) {
+      source_exhausted = true;
+    } else if (samples_generated == 0) {
+      // No data but not done — write silence to keep DMA fed
       PBL_ANALYTICS_ADD(speaker_stream_underrun_count, 1);
       memset(s_state.refill_buf, 0, SPEAKER_REFILL_SAMPLES * sizeof(int16_t));
       samples_generated = SPEAKER_REFILL_SAMPLES;
@@ -378,10 +391,8 @@ static void prv_refill_locked(void) {
       to_gen = SPEAKER_REFILL_SAMPLES;
     }
     if (to_gen == 0) {
-      prv_stop_internal(SpeakerFinishReasonDone);
-      return;
-    }
-    if (s_state.tone_phase_inc == 0) {
+      source_exhausted = true;
+    } else if (s_state.tone_phase_inc == 0) {
       memset(s_state.refill_buf, 0, to_gen * sizeof(int16_t));
     } else {
       for (uint32_t i = 0; i < to_gen; i++) {
@@ -408,8 +419,7 @@ static void prv_refill_locked(void) {
       }
     }
     if (max_generated == 0) {
-      prv_stop_internal(SpeakerFinishReasonDone);
-      return;
+      source_exhausted = true;
     }
     for (uint32_t j = 0; j < max_generated; j++) {
       int32_t v = s_state.mix_buf[j];
@@ -418,6 +428,26 @@ static void prv_refill_locked(void) {
       s_state.refill_buf[j] = (int16_t)v;
     }
     samples_generated = max_generated;
+  }
+
+  if (source_exhausted) {
+    // Drain: pad with silence so the driver's queued audio finishes playing.
+    if (!s_state.pipeline_draining) {
+      s_state.pipeline_draining = true;
+      s_state.drain_samples_remaining = SPEAKER_PIPELINE_DRAIN_SAMPLES;
+      s_state.state = SpeakerStateDraining;
+    }
+    uint32_t to_gen = s_state.drain_samples_remaining;
+    if (to_gen == 0) {
+      prv_stop_internal(SpeakerFinishReasonDone);
+      return;
+    }
+    if (to_gen > SPEAKER_REFILL_SAMPLES) {
+      to_gen = SPEAKER_REFILL_SAMPLES;
+    }
+    memset(s_state.refill_buf, 0, to_gen * sizeof(int16_t));
+    s_state.drain_samples_remaining -= to_gen;
+    samples_generated = to_gen;
   }
 
   if (samples_generated > 0) {
