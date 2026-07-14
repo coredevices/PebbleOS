@@ -729,6 +729,11 @@ void accel_set_num_samples(uint32_t num_samples) {
   // Disable all INT1 before changing FIFO threshold
   prv_configure_int1(false, false);
 
+  // Salvage queued samples
+  if (LIS2DW12->state->num_samples > 0U) {
+    prv_lis2dw12_drain_fifo();
+  }
+
   if (num_samples == 0U) {
     // Bypass FIFO (disable)
     val = LIS2DW12_FIFO_CTRL_FIFO_MODE_BYPASS;
@@ -738,8 +743,6 @@ void accel_set_num_samples(uint32_t num_samples) {
 
     regular_timer_remove_callback(&LIS2DW12->state->int1_wdt_timer);
   } else {
-    // FIXME: we should ideally drain the FIFO here to not discard existing samples
-
     // Configure FIFO in CONT mode with threshold
     ret = prv_lis2dw12_enable_fifo((uint8_t)num_samples);
     if (!ret) {
