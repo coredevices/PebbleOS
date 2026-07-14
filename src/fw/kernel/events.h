@@ -505,7 +505,8 @@ typedef enum {
   VoiceEventTypeSessionSetup,
   VoiceEventTypeSessionResult,
   VoiceEventTypeSilenceDetected,
-  VoiceEventTypeSpeechDetected
+  VoiceEventTypeSpeechDetected,
+  VoiceEventTypeSessionProgress,
 } VoiceEventType;
 
 typedef struct {
@@ -513,16 +514,20 @@ typedef struct {
   char sentence[];
 } PebbleVoiceServiceEventData;
 
-typedef struct PACKED { // 6 bytes
+typedef struct PACKED { // 7 bytes
   VoiceEventType type:8;
   VoiceStatus status:8;
+  uint8_t progress;  //!< 0-100 upload progress, valid for VoiceEventTypeSessionProgress
   PebbleVoiceServiceEventData *data;
 } PebbleVoiceServiceEvent;
 
-typedef struct PACKED { // 9 bytes
+typedef struct PACKED { // 10 bytes
   DictationSessionStatus result;
   time_t timestamp;
   char *text;
+  //! id of the emitting VoiceWindow (voice_window_get_event_id()); subscribers must ignore
+  //! results coming from a window that is not theirs.
+  uint8_t source_id;
 } PebbleDictationEvent;
 
 //! Possible results that come back from the INSTALL_COMMAND
