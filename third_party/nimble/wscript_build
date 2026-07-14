@@ -14,7 +14,6 @@ nimble_includes = [
     'mynewt-nimble/nimble/transport/include',
     'mynewt-nimble/nimble/transport/common/hci_h4/include',
     'mynewt-nimble/porting/nimble/include',
-    'mynewt-nimble/ext/tinycrypt/include',
     'port/include',
 ]
 
@@ -30,7 +29,6 @@ nimble_sources = bld.path.ant_glob(
         'mynewt-nimble/nimble/host/services/dis/src/*.c',
         'mynewt-nimble/nimble/transport/src/*.c',
         'mynewt-nimble/nimble/transport/common/hci_h4/src/*.c',
-        'mynewt-nimble/ext/tinycrypt/src/*.c',
         'port/src/npl_os_pebble.c',
     ],
     excl = [
@@ -54,6 +52,7 @@ nimble_export_defines = []
 nimble_use =[
     'fw_includes',
     'freertos',
+    'mbedtls',
 ]
 
 if bld.env.CONFIG_SOC_NRF52:
