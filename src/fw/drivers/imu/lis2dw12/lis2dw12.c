@@ -272,6 +272,33 @@ static bool prv_lis2dw12_enable_fifo(uint8_t num_samples) {
   return true;
 }
 
+//! Salvage and dispatch any samples queued in the FIFO
+static void prv_lis2dw12_drain_fifo(void) {
+  uint8_t val;
+  uint8_t samples;
+
+  if (!prv_lis2dw12_read(LIS2DW12_FIFO_SAMPLES, &val, 1)) {
+    PBL_LOG_ERR("Could not read FIFO_SAMPLES register");
+    return;
+  }
+
+  samples = MIN(LIS2DW12_FIFO_SAMPLES_DIFF_GET(val), LIS2DW12_FIFO_SIZE);
+  if (samples == 0U) {
+    return;
+  }
+
+  if (!prv_lis2dw12_read(LIS2DW12_OUT_X_L, LIS2DW12->state->raw_sample_buf,
+                         samples * LIS2DW12_SAMPLE_SIZE_BYTES)) {
+    PBL_LOG_ERR("Failed to read samples");
+    return;
+  }
+
+  prv_lis2dw12_process_samples(samples, prv_get_curr_system_time_us());
+  LIS2DW12->state->last_fifo_read_tick = rtc_get_ticks();
+}
+
+static void prv_lis2dw12_recover(void);
+
 static void prv_lis2dw12_int1_work_handler(void) {
   bool ret;
   uint8_t val;
@@ -319,8 +346,8 @@ static void prv_lis2dw12_int1_work_handler(void) {
   }
 
   if (fifo_overrun) {
-    PBL_LOG_WRN("FIFO overrun detected, re-arming");
-    prv_lis2dw12_enable_fifo(LIS2DW12->state->num_samples);
+    PBL_LOG_WRN("FIFO overrun detected, recovering");
+    prv_lis2dw12_recover();
     action_taken = true;
   } else if (samples > 0U) {
     prv_lis2dw12_process_samples(samples, timestamp_us);
@@ -437,6 +464,50 @@ static bool prv_configure_int1(bool shake_detection_enabled, bool fifo_enabled) 
   return true;
 }
 
+//! Recover a dead INT1/FIFO stream by re-asserting ODR, FIFO and INT routing.
+//! Routing is quiesced first so a latched-high pad produces a fresh edge.
+static void prv_lis2dw12_recover(void) {
+  uint8_t val;
+
+  LIS2DW12->state->num_recoveries++;
+  PBL_LOG_WRN("Recovering accel stream (count %" PRIu32 ")",
+          LIS2DW12->state->num_recoveries);
+
+  if (!prv_configure_int1(false, false)) {
+    return;
+  }
+
+  // Salvage queued samples
+  if (LIS2DW12->state->num_samples > 0U) {
+    prv_lis2dw12_drain_fifo();
+  }
+
+  // Clear any latched function INT source while routing is quiesced
+  if (!prv_lis2dw12_read(LIS2DW12_ALL_INT_SRC, &val, 1)) {
+    PBL_LOG_ERR("Could not read ALL_INT_SRC register");
+    return;
+  }
+
+  if (!prv_configure_odr(LIS2DW12->state->sampling_interval_us,
+                         LIS2DW12->state->shake_detection_enabled)) {
+    PBL_LOG_ERR("Could not configure ODR");
+    return;
+  }
+
+  if (LIS2DW12->state->num_samples > 0U) {
+    if (!prv_lis2dw12_enable_fifo(LIS2DW12->state->num_samples)) {
+      return;
+    }
+  }
+
+  if (!prv_configure_int1(LIS2DW12->state->shake_detection_enabled,
+                          LIS2DW12->state->num_samples > 0U)) {
+    return;
+  }
+
+  LIS2DW12->state->last_fifo_read_tick = rtc_get_ticks();
+}
+
 static uint32_t prv_ms_since_last_fifo_read(void) {
   RtcTicks ticks = rtc_get_ticks() - LIS2DW12->state->last_fifo_read_tick;
   return (uint32_t)((ticks * 1000) / RTC_TICKS_HZ);
@@ -448,8 +519,6 @@ static uint32_t prv_stall_threshold_ms(void) {
 }
 
 static void prv_stall_check_work_cb(void) {
-  bool ret;
-  uint8_t val;
   uint32_t ms_since_last_read;
 
   // Sampling may have stopped between scheduling and execution
@@ -463,21 +532,7 @@ static void prv_stall_check_work_cb(void) {
   }
 
   PBL_LOG_WRN("FIFO stream stalled for %" PRIu32 " ms", ms_since_last_read);
-
-  // Re-enable FIFO, and clear any event INT source
-  ret = prv_lis2dw12_enable_fifo(LIS2DW12->state->num_samples);
-  if (!ret) {
-    PBL_LOG_ERR("Failed to re-enable FIFO");
-    return;
-  }
-
-  ret = prv_lis2dw12_read(LIS2DW12_ALL_INT_SRC, &val, 1);
-  if (!ret) {
-    PBL_LOG_ERR("Could not read ALL_INT_SRC register");
-    return;
-  }
-
-  LIS2DW12->state->last_fifo_read_tick = rtc_get_ticks();
+  prv_lis2dw12_recover();
 }
 
 static void prv_int1_wdt_cb(void *data) {
