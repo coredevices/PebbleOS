@@ -1744,9 +1744,13 @@ static NOINLINE bool file_found_in_cache(const char *name, uint8_t op_flags, int
       // make sure the header is not corrupted
       PageHeader pg_hdr;
       FileHeader file_hdr;
-      if ((res = read_header(file->start_page, &pg_hdr, &file_hdr)) !=
-          PageAndFileHdrValid) {
-        mark_fd_free(fd); // file has been corrupted so clear fd
+      if (read_header(file->start_page, &pg_hdr, &file_hdr) != PageAndFileHdrValid) {
+        // Evict the entry and fall back to the flash scan (res stays >= 0 so
+        // the caller reuses this fd slot): the check may have hit a transient
+        // read glitch, and the scan can still find a valid copy.
+        PBL_LOG_WRN("Cached header check failed for '%s' (page %u), rescanning",
+                    name, file->start_page);
+        mark_fd_free(fd);
         goto cleanup;
       }
     }
