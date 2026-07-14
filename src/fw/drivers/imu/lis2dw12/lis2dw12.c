@@ -28,11 +28,13 @@ PBL_LOG_MODULE_DEFINE(driver_accel_lis2dw12, CONFIG_DRIVER_IMU_LOG_LEVEL);
 //   be changed depending on the sampling interval configuration. Value is NOT
 //   adjusted automatically when ODR changes (we just have 2 bits...), so it is
 //   possible to notice sensitivity changes when changing sampling interval.
-// - For some reason (needs more investigation), INT1 is sometimes left HIGH
-//   due to FIFO overruns, and without edge change, we cannot detect such
-//   events. To mitigate this, a watchdog timer re-arms FIFO if no samples
-//   have been read within the expected time window (FIFO reads are tracked
-//   instead of INT1 edges, which shake events would keep feeding).
+// - INT1 mixes level (FIFO threshold) and latched (wake-up) sources on a
+//   rising-edge EXTI, and FIFO overruns sometimes leave the pad latched HIGH
+//   (needs more investigation), so edges can be lost. The work handler
+//   re-checks the pad level after servicing, and a watchdog timer recovers
+//   the stream if no FIFO samples have been read within the expected time
+//   window (FIFO reads are tracked instead of INT1 edges, which shake events
+//   would keep feeding).
 
 // Time to wait after reset (us)
 #define LIS2DW12_RESET_TIME_US 5
@@ -299,7 +301,9 @@ static void prv_lis2dw12_drain_fifo(void) {
 
 static void prv_lis2dw12_recover(void);
 
-static void prv_lis2dw12_int1_work_handler(void) {
+//! Single INT1 servicing pass; returns true if any INT source was handled.
+//! fifo_progress is set when FIFO data was consumed (samples or overrun).
+static bool prv_lis2dw12_service_int1(bool *fifo_progress) {
   bool ret;
   uint8_t val;
   bool action_taken = false;
@@ -316,7 +320,7 @@ static void prv_lis2dw12_int1_work_handler(void) {
     ret = prv_lis2dw12_read(LIS2DW12_FIFO_SAMPLES, &val, 1);
     if (!ret) {
       PBL_LOG_ERR("Could not read FIFO_SAMPLES register");
-      return;
+      return false;
     }
 
     if ((val & LIS2DW12_FIFO_SAMPLES_FIFO_OVR) != 0U) {
@@ -327,7 +331,7 @@ static void prv_lis2dw12_int1_work_handler(void) {
         if (!prv_lis2dw12_read(LIS2DW12_OUT_X_L, LIS2DW12->state->raw_sample_buf,
                                samples * LIS2DW12_SAMPLE_SIZE_BYTES)) {
           PBL_LOG_ERR("Failed to read samples");
-          return;
+          return false;
         }
         timestamp_us = prv_get_curr_system_time_us();
         LIS2DW12->state->last_fifo_read_tick = rtc_get_ticks();
@@ -339,7 +343,7 @@ static void prv_lis2dw12_int1_work_handler(void) {
     ret = prv_lis2dw12_read(LIS2DW12_ALL_INT_SRC, &val, 1);
     if (!ret) {
       PBL_LOG_ERR("Could not read ALL_INT_SRC register");
-      return;
+      return false;
     }
 
     shake = (val & LIS2DW12_ALL_INT_SRC_WU_IA) != 0U;
@@ -349,25 +353,54 @@ static void prv_lis2dw12_int1_work_handler(void) {
     PBL_LOG_WRN("FIFO overrun detected, recovering");
     prv_lis2dw12_recover();
     action_taken = true;
+    *fifo_progress = true;
   } else if (samples > 0U) {
     prv_lis2dw12_process_samples(samples, timestamp_us);
     action_taken = true;
+    *fifo_progress = true;
   }
 
   if (shake) {
-    PBL_LOG_DBG("Shake detected");
-    // TODO: provide more info about the shake (axis, direction, etc.) or
-    // refactor shake to be non-dimensional
-    accel_cb_shake_detected(AXIS_Z, 0);
+    // WU_IA stays set while the wake-up condition persists (LIR), so only
+    // dispatch on its assertion to avoid flooding events
+    if (!LIS2DW12->state->wu_active) {
+      PBL_LOG_DBG("Shake detected");
+      // TODO: provide more info about the shake (axis, direction, etc.) or
+      // refactor shake to be non-dimensional
+      accel_cb_shake_detected(AXIS_Z, 0);
+    }
     action_taken = true;
   }
+  LIS2DW12->state->wu_active = shake;
 
   if (!action_taken) {
     PBL_LOG_WRN("INT1 triggered but no action taken");
   }
+
+  return action_taken;
+}
+
+static void prv_lis2dw12_int1_work_handler(void) {
+  bool fifo_progress = false;
+  bool action_taken = prv_lis2dw12_service_int1(&fifo_progress);
+
+  // Sources asserting while the pad is high produce no new edge: requeue on
+  // FIFO progress, recover when nothing was serviced (stuck pad). A pad held
+  // by a persistent wake-up condition is left to the stall watchdog.
+  if (!gpio_input_read(&LIS2DW12->int1_in)) {
+    return;
+  }
+
+  if (fifo_progress) {
+    accel_offload_work(prv_lis2dw12_int1_work_handler);
+  } else if (!action_taken) {
+    prv_lis2dw12_recover();
+  }
 }
 
 static void prv_lis2dw12_int1_irq_handler(bool *should_context_switch) {
+  // A rising edge proves the pad was low, i.e. the wake-up source deasserted
+  LIS2DW12->state->wu_active = false;
   accel_offload_work_from_isr(prv_lis2dw12_int1_work_handler, should_context_switch);
 }
 
@@ -505,6 +538,7 @@ static void prv_lis2dw12_recover(void) {
     return;
   }
 
+  LIS2DW12->state->wu_active = false;
   LIS2DW12->state->last_fifo_read_tick = rtc_get_ticks();
 }
 
@@ -844,6 +878,7 @@ void accel_enable_shake_detection(bool on) {
   }
 
   LIS2DW12->state->shake_detection_enabled = on;
+  LIS2DW12->state->wu_active = false;
 
   PBL_LOG_DBG("%s shake detection", on ? "Enabled" : "Disabled");
 }

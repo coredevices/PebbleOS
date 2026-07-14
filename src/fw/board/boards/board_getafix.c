@@ -291,6 +291,10 @@ static const LIS2DW12Config s_lis2dw12_config = {
       .peripheral = hwp_gpio1,
       .gpio_pin = 26,
     },
+    .int1_in = {
+      .gpio = hwp_gpio1,
+      .gpio_pin = 26,
+    },
     .axis_map = {
         [AXIS_X] = 0,
         [AXIS_Y] = 1,

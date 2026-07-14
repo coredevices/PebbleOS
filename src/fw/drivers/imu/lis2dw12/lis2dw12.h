@@ -28,6 +28,7 @@ typedef struct LIS2DW12State {
   uint8_t wk_ths_curr;
   AccelDriverSample last_sample;
   bool last_sample_valid;
+  bool wu_active;
 } LIS2DW12State;
 
 typedef struct LIS2DW12Config {
@@ -37,6 +38,8 @@ typedef struct LIS2DW12Config {
   I2CSlavePort i2c;
   //! INT1 EXTI configuration
   ExtiConfig int1;
+  //! INT1 input configuration (to read back the pad level)
+  InputConfig int1_in;
   //! Axis mapping (0: X, 1: Y, 2: Z)
   uint8_t axis_map[3];
   //! Axis direction (1 upside, -1 downside)
