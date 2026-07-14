@@ -887,6 +887,16 @@ void accel_enable_shake_detection(bool on) {
     return;
   }
 
+  if (on) {
+    uint8_t val;
+
+    // WU_IA latches even while unrouted (e.g. on ODR startup transients);
+    // clear it so a phantom shake is not dispatched on enable
+    if (!prv_lis2dw12_read(LIS2DW12_ALL_INT_SRC, &val, 1)) {
+      PBL_LOG_ERR("Could not read ALL_INT_SRC register");
+    }
+  }
+
   // Configure INT1
   ret = prv_configure_int1(on, LIS2DW12->state->num_samples > 0U);
   if (!ret) {
