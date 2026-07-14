@@ -30,9 +30,9 @@ PBL_LOG_MODULE_DEFINE(driver_accel_lis2dw12, CONFIG_DRIVER_IMU_LOG_LEVEL);
 //   possible to notice sensitivity changes when changing sampling interval.
 // - For some reason (needs more investigation), INT1 is sometimes left HIGH
 //   due to FIFO overruns, and without edge change, we cannot detect such
-//   events. To mitigate this, there is a watchdog timer that re-arms FIFO
-//   if no INT1 event is detected within the expected time window based on the
-//   ODR and FIFO threshold.
+//   events. To mitigate this, a watchdog timer re-arms FIFO if no samples
+//   have been read within the expected time window (FIFO reads are tracked
+//   instead of INT1 edges, which shake events would keep feeding).
 
 // Time to wait after reset (us)
 #define LIS2DW12_RESET_TIME_US 5
@@ -40,6 +40,11 @@ PBL_LOG_MODULE_DEFINE(driver_accel_lis2dw12, CONFIG_DRIVER_IMU_LOG_LEVEL);
 // DRDY polling parameters for accel_peek single-shot mode
 #define LIS2DW12_DRDY_POLL_DELAY_MS   (5)   /* ms between data-ready polls */
 #define LIS2DW12_DRDY_POLL_TIMEOUT_MS (100) /* max wait (~5x 20ms at 50Hz ODR) */
+
+// FIFO threshold periods without a FIFO read before the stream is considered
+// stalled (>1x to tolerate scheduling jitter), and threshold lower bound
+#define LIS2DW12_STALL_MARGIN 2U
+#define LIS2DW12_STALL_MIN_MS 1000U
 
 // Scale range when in 12-bit mode (low-power mode 1)
 #define LIS2DW12_S12_SCALE_RANGE (1U << (12U - 1U))
@@ -298,6 +303,7 @@ static void prv_lis2dw12_int1_work_handler(void) {
           return;
         }
         timestamp_us = prv_get_curr_system_time_us();
+        LIS2DW12->state->last_fifo_read_tick = rtc_get_ticks();
       }
     }
   }
@@ -335,7 +341,6 @@ static void prv_lis2dw12_int1_work_handler(void) {
 }
 
 static void prv_lis2dw12_int1_irq_handler(bool *should_context_switch) {
-  LIS2DW12->state->last_int1_tick = rtc_get_ticks();
   accel_offload_work_from_isr(prv_lis2dw12_int1_work_handler, should_context_switch);
 }
 
@@ -432,34 +437,51 @@ static bool prv_configure_int1(bool shake_detection_enabled, bool fifo_enabled) 
   return true;
 }
 
-static void prv_int1_wdt_work_cb(void) {
-  RtcTicks now_tick = rtc_get_ticks();
-  RtcTicks ticks_since_last_int1 = now_tick - LIS2DW12->state->last_int1_tick;
-  uint32_t ms_since_last_int1 = (ticks_since_last_int1 * 1000) / RTC_TICKS_HZ;
+static uint32_t prv_ms_since_last_fifo_read(void) {
+  RtcTicks ticks = rtc_get_ticks() - LIS2DW12->state->last_fifo_read_tick;
+  return (uint32_t)((ticks * 1000) / RTC_TICKS_HZ);
+}
 
-  if (ms_since_last_int1 >= LIS2DW12->state->int1_period_ms) {
-    bool ret;
-    uint8_t val;
+static uint32_t prv_stall_threshold_ms(void) {
+  return MAX(LIS2DW12_STALL_MARGIN * LIS2DW12->state->int1_period_ms,
+             LIS2DW12_STALL_MIN_MS);
+}
 
-    PBL_LOG_WRN("INT1 not received in %" PRIu32 " ms", ms_since_last_int1);
+static void prv_stall_check_work_cb(void) {
+  bool ret;
+  uint8_t val;
+  uint32_t ms_since_last_read;
 
-    // Re-enable FIFO, and clear any event INT source
-    ret = prv_lis2dw12_enable_fifo(LIS2DW12->state->num_samples);
-    if (!ret) {
-      PBL_LOG_ERR("Failed to re-enable FIFO");
-      return;
-    }
-
-    ret = prv_lis2dw12_read(LIS2DW12_ALL_INT_SRC, &val, 1);
-    if (!ret) {
-      PBL_LOG_ERR("Could not read ALL_INT_SRC register");
-      return;
-    }
+  // Sampling may have stopped between scheduling and execution
+  if (LIS2DW12->state->num_samples == 0U) {
+    return;
   }
+
+  ms_since_last_read = prv_ms_since_last_fifo_read();
+  if (ms_since_last_read < prv_stall_threshold_ms()) {
+    return;
+  }
+
+  PBL_LOG_WRN("FIFO stream stalled for %" PRIu32 " ms", ms_since_last_read);
+
+  // Re-enable FIFO, and clear any event INT source
+  ret = prv_lis2dw12_enable_fifo(LIS2DW12->state->num_samples);
+  if (!ret) {
+    PBL_LOG_ERR("Failed to re-enable FIFO");
+    return;
+  }
+
+  ret = prv_lis2dw12_read(LIS2DW12_ALL_INT_SRC, &val, 1);
+  if (!ret) {
+    PBL_LOG_ERR("Could not read ALL_INT_SRC register");
+    return;
+  }
+
+  LIS2DW12->state->last_fifo_read_tick = rtc_get_ticks();
 }
 
 static void prv_int1_wdt_cb(void *data) {
-  accel_offload_work(prv_int1_wdt_work_cb);
+  accel_offload_work(prv_stall_check_work_cb);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -637,7 +659,7 @@ void accel_set_num_samples(uint32_t num_samples) {
     }
 
     LIS2DW12->state->last_sample_valid = false;
-    LIS2DW12->state->last_int1_tick = rtc_get_ticks();
+    LIS2DW12->state->last_fifo_read_tick = rtc_get_ticks();
     LIS2DW12->state->int1_period_ms = (LIS2DW12->state->sampling_interval_us * num_samples) / 1000;
     regular_timer_add_multisecond_callback(&LIS2DW12->state->int1_wdt_timer,
                                            DIVIDE_CEIL(LIS2DW12->state->int1_period_ms, 1000UL));
