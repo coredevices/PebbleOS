@@ -74,6 +74,7 @@ static const char *s_syncable_settings[] = {
 
   // Language preferences
   "langEnglish",
+  "language",
 
   // App preferences
   "qlUp",

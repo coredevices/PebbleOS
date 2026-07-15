@@ -534,6 +534,8 @@ static bool prv_set_s_language(uint8_t *language) {
   }
 
   s_language = *language;
+  shell_prefs_set_language_english(s_language == ShellLanguageEnglish);
+  i18n_set_resource(shell_prefs_get_language_resource_id());
   return true;
 }
 
