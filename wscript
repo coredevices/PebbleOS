@@ -340,7 +340,8 @@ def _link_firmware(bld, sources):
                     '-Wl,--gc-sections',
                     '-Wl,--undefined=uxTopUsedPriority',
                     '-Wl,--build-id=sha1',
-                    '-Wl,--sort-section=alignment']
+                    '-Wl,--sort-section=alignment',
+                    '-Wl,--print-memory-usage']
 
     # C library link flags (-nostdlib / -specs=...), selected by lib/c via
     # tools/waf/libc.py. malloc/free are always redirected to pbl_malloc.
@@ -618,7 +619,6 @@ def build(bld):
     # values that the other build steps added.
     bld.recurse('resources')
 
-    bld.add_post_fun(size_fw)
     bld.add_post_fun(size_resources)
     if bld.env.CONFIG_LOG_HASHED:
         bld.add_post_fun(merge_loghash_dicts)
@@ -629,37 +629,6 @@ def merge_loghash_dicts(bld):
 
     import log_hashing.newlogging
     log_hashing.newlogging.merge_loghash_dict_json_files(loghash_dict, bld.LOGHASH_DICTS)
-
-
-class SizeFirmware(BuildContext):
-    cmd = 'size_fw'
-    fun = 'size_fw'
-
-def size_fw(ctx):
-    """prints size information of the firmware"""
-
-    fw_elf = ctx.get_pebbleos_node().change_ext('.elf')
-    if fw_elf is None:
-        ctx.fatal('No fw ELF found for size')
-
-    fw_bin = ctx.get_pebbleos_node()
-    if fw_bin is None:
-        ctx.fatal('No fw BIN found for size')
-
-    import binutils
-    text, data, bss = binutils.size(fw_elf.abspath())
-    total = text + data
-    output = ('{:>7}    {:>7}    {:>7}    {:>7}    {:>7} filename\n'
-              '{:7}    {:7}    {:7}    {:7}    {:7x} pebbleos.elf'.
-              format('text', 'data', 'bss', 'dec', 'hex', text, data, bss, total, total))
-    Logs.pprint('YELLOW', '\n' + output)
-
-    try:
-        space_left = _check_firmware_image_size(ctx, fw_bin.path_from(ctx.path))
-    except FirmwareTooLargeException as e:
-        ctx.fatal(str(e))
-    else:
-        Logs.pprint('CYAN', 'FW: ' + space_left)
 
 
 class SizeResources(BuildContext):
@@ -695,11 +664,6 @@ def size_resources(ctx):
     if pbpack_actual_size > max_size:
         ctx.fatal('Resources are too large for target board %d > %d'
                   % (pbpack_actual_size, max_size))
-
-
-def size(ctx):
-    from waflib import Options
-    Options.commands = ['size_fw', 'size_resources'] + Options.commands
 
 
 class test(BuildContext):
