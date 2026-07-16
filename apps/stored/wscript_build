@@ -42,7 +42,7 @@ def build_app(bld, app_name):
     # -----------------------------------------------------------------------------------
     # Generate the rule to compile and link the sources into an ELF
     includes = [sdk_folder.make_node('include'), app_name, '%s/src' % (app_name)]
-    link_flags = ['-mcpu=cortex-m3','-mthumb','-fPIE', '-Wl,--emit-relocs']
+    link_flags = ['-mcpu=cortex-m3','-mthumb','-nostdlib', '-fPIE', '-Wl,--emit-relocs']
     source = bld.path.ant_glob('%s/src/**/*.c' % (app_name)) + [appinfo_c_node]
     ld_script = bld.path.make_node('pebble_app.ld').path_from(bld.path)
     app_elf_file = bld.path.get_bld().make_node('%s/pebble-app.elf' % (app_name))
@@ -57,6 +57,9 @@ def build_app(bld, app_name):
 
     platform_defines = platform_info['DEFINES']
     c_flags = ['-fPIE'] + ['-D%s' % define for define in platform_defines]
+    if stored_apps_env.CONFIG_LIBC_PICOLIBC:
+        picolibc_include = bld.bldnode.make_node('picolibc/install/include').abspath()
+        c_flags.extend(['-isystem', picolibc_include])
 
     gen = bld.program(env=stored_apps_env,
                       source=source,
