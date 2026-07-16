@@ -34,6 +34,8 @@ typedef uint32_t Codepoint;
 #define MEDIUM_MATHEMATICAL_SPACE_CODEPOINT 0x205F
 #define WORD_JOINER_CODEPOINT 0x2060
 #define IDEOGRAPHIC_SPACE_CODEPOINT 0x3000
+// Generic substitute for regional-indicator flag pairs (white flag)
+#define FLAG_CODEPOINT 0x1F3F3
 
 bool codepoint_is_unicode_space(const Codepoint codepoint);
 
@@ -52,6 +54,18 @@ bool codepoint_is_zero_width(const Codepoint codepoint);
 bool codepoint_is_latin(const Codepoint codepoint);
 
 bool codepoint_is_emoji(const Codepoint codepoint);
+
+// Regional indicator symbol (U+1F1E6..U+1F1FF); a pair encodes a flag
+bool codepoint_is_regional_indicator(const Codepoint codepoint);
+
+// Fold a multi-codepoint emoji sequence into one glyph codepoint. A
+// regional-indicator pair (a flag) maps to the generic flag codepoint, and a
+// stray single indicator maps to the same. Returns the replacement codepoint
+// for curr_cp and sets *consumed_next when next_cp is folded into it; returns
+// curr_cp unchanged otherwise. Callers must give a consumed codepoint zero
+// width and must not draw it.
+Codepoint emoji_shape_pair(const Codepoint curr_cp, const Codepoint next_cp,
+                           bool *consumed_next);
 
 // This is a least dirty hack to enable special rendering when a special codepoint is hit in the
 // text being rendered

@@ -22,6 +22,8 @@
 #define MAX_MISC_ARROWS_CODEPOINT 0x2BFF
 #define MIN_ENCLOSED_EMOJI_CODEPOINT 0x1F100
 #define MAX_ENCLOSED_EMOJI_CODEPOINT 0x1F2FF
+#define MIN_REGIONAL_INDICATOR_CODEPOINT 0x1F1E6
+#define MAX_REGIONAL_INDICATOR_CODEPOINT 0x1F1FF
 #define MIN_SYMBOLS_CODEPOINT 0x2000
 #define MAX_SYMBOLS_CODEPOINT 0x2BFF
 #define MIN_IDEOGRAPH_CODEPOINT 0x2e80
@@ -191,6 +193,25 @@ bool codepoint_is_emoji(const Codepoint codepoint) {
           codepoint <= MAX_MISC_ARROWS_CODEPOINT) ||
          (codepoint >= MIN_ENCLOSED_EMOJI_CODEPOINT &&
           codepoint <= MAX_ENCLOSED_EMOJI_CODEPOINT);
+}
+
+bool codepoint_is_regional_indicator(const Codepoint codepoint) {
+  return (codepoint >= MIN_REGIONAL_INDICATOR_CODEPOINT &&
+          codepoint <= MAX_REGIONAL_INDICATOR_CODEPOINT);
+}
+
+Codepoint emoji_shape_pair(const Codepoint curr_cp, const Codepoint next_cp,
+                           bool *consumed_next) {
+  *consumed_next = false;
+
+  // A flag is a pair of regional indicators; the emoji font carries no
+  // per-country glyphs, so both draw as one generic flag.
+  if (codepoint_is_regional_indicator(curr_cp)) {
+    *consumed_next = codepoint_is_regional_indicator(next_cp);
+    return FLAG_CODEPOINT;
+  }
+
+  return curr_cp;
 }
 
 bool codepoint_is_special(const Codepoint codepoint) {

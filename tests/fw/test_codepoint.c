@@ -155,3 +155,34 @@ void test_codepoint__formatting_indicator_invisibles(void) {
   cl_assert(!codepoint_is_formatting_indicator('A'));
   cl_assert(!codepoint_is_formatting_indicator(0xFFFD));  // replacement char
 }
+
+// A regional-indicator pair (a flag) folds into the generic flag codepoint and
+// consumes the second indicator.
+void test_codepoint__flag_pair_folds(void) {
+  bool consumed = false;
+  // Regional indicators U (0x1F1FA) and S (0x1F1F8), the 🇺🇸 pair
+  Codepoint cp = emoji_shape_pair(0x1F1FA, 0x1F1F8, &consumed);
+  cl_assert_equal_i(cp, FLAG_CODEPOINT);
+  cl_assert(consumed);
+}
+
+// A stray single indicator maps to the flag codepoint without consuming the
+// codepoint after it.
+void test_codepoint__stray_indicator_maps_to_flag(void) {
+  bool consumed = true;
+  Codepoint cp = emoji_shape_pair(0x1F1E6, ' ', &consumed);
+  cl_assert_equal_i(cp, FLAG_CODEPOINT);
+  cl_assert(!consumed);
+}
+
+// Anything else passes through untouched.
+void test_codepoint__emoji_shape_pair_passthrough(void) {
+  bool consumed = true;
+  Codepoint cp = emoji_shape_pair('A', 0x1F1E6, &consumed);
+  cl_assert_equal_i(cp, 'A');
+  cl_assert(!consumed);
+
+  cp = emoji_shape_pair(0x1F600, 0x1F1E6, &consumed);  // non-indicator emoji
+  cl_assert_equal_i(cp, 0x1F600);
+  cl_assert(!consumed);
+}
