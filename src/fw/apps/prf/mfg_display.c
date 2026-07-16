@@ -21,7 +21,7 @@
 #include "resource/resource_ids.auto.h"
 #include "resource/system_resource.h"
 #include "pbl/services/light.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 typedef enum {
   TestPattern_Crosshair,

@@ -4,7 +4,7 @@
 #pragma once
 
 #include "applib/app.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 void WEAK app_request_render(void) {}
 

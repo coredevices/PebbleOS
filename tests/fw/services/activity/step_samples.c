@@ -5,7 +5,7 @@
 #include <string.h>
 
 #include "applib/accel_service.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 
 // ----------------------------------------------------------------

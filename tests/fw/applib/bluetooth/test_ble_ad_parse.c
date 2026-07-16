@@ -7,7 +7,7 @@
 
 #include "clar.h"
 
-#include <btutil/bt_uuid.h>
+#include <pbl/btutil/bt_uuid.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////

@@ -5,7 +5,7 @@
 
 #include <string.h>
 
-#include "util/circular_cache.h"
+#include "pbl/util/circular_cache.h"
 #include "kernel/pbl_malloc.h"
 #include "system/passert.h"
 

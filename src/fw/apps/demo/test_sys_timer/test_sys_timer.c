@@ -14,7 +14,7 @@
 #include "pbl/services/regular_timer.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #define NUM_MAX_TIMERS 10
 

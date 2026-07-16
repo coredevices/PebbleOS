@@ -11,13 +11,13 @@
 
 #include "applib/ui/kino/kino_reel.h"
 #include "applib/ui/menu_layer.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/pebble_process_info.h"
 #include "process_management/pebble_process_md.h"
 #include "pbl/services/process_management/app_order_storage.h"
-#include "util/attributes.h"
-#include "util/list.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/list.h"
 
 struct AppMenuDataSource;
 

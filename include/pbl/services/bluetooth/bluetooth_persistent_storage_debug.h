@@ -5,7 +5,7 @@
 
 #include <bluetooth/bluetooth_types.h>
 #include <bluetooth/sm_types.h>
-#include <btutil/sm_util.h>
+#include <pbl/btutil/sm_util.h>
 
 #define DISPLAY_BUF_LEN 160
 

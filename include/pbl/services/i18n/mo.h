@@ -30,7 +30,7 @@
 #include <inttypes.h>
 #include <unistd.h>
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 /* ==============
  * MO File Format            *

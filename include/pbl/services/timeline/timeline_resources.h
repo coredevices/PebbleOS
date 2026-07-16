@@ -5,7 +5,7 @@
 
 #include "applib/graphics/gtypes.h"
 #include "applib/graphics/gdraw_command_image.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 #if !defined(CONFIG_RECOVERY_FW)
 #include "resource/timeline_resource_ids.auto.h"

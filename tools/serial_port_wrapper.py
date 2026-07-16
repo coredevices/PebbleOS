@@ -5,7 +5,7 @@ import serial
 import threading
 import time
 
-PEBBLE_BAUD_RATE = 230400
+PEBBLE_BAUD_RATE = 115200
 SERIAL_READ_TIMEOUT = 0.1
 SERIAL_WRAPPER_READ_TIMEOUT = 0.5
 

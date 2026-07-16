@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "kernel/events.h"
 #include "pbl/services/notifications/alerts_preferences.h"
 
@@ -75,6 +75,10 @@ void do_not_disturb_toggle_scheduled(DoNotDisturbScheduleType type);
 void do_not_disturb_init(void);
 
 void do_not_disturb_handle_clock_change(void);
+
+//! Handle a DND state preference (manual/smart/schedule) written via phone settings sync.
+//! Re-evaluates the DND state so the change fires the usual event and schedule timer update.
+void do_not_disturb_handle_pref_synced(void);
 
 void do_not_disturb_handle_calendar_event(PebbleCalendarEvent *e);
 

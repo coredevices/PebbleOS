@@ -5,7 +5,7 @@
 
 #include "pbl/services/timeline/item.h"
 #include "pbl/services/timeline/timeline_actions.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 void WEAK timeline_actions_add_action_to_root_level(TimelineItemAction *action,
                                                     ActionMenuLevel *root_level) {}

@@ -111,6 +111,12 @@ static void prv_call_end_common(void) {
 static void prv_handle_incoming_call(const PebblePhoneEvent *event) {
   // Only 1 call at a time is supported
   if (s_call_in_progress) {
+    // An ANCS re-subscription mid-call makes iOS re-deliver the ongoing call under a new UID.
+    // Track the new identifier, otherwise the eventual hide event is rejected as a mismatch
+    // and the watch keeps ringing after the call was handled on the phone.
+    if (prv_call_is_ancs() && (event->source == PhoneCallSource_ANCS)) {
+      s_call_identifier = event->call_identifier;
+    }
     PBL_LOG_DBG("Ignoring incoming call. A call is already in progress");
     return;
   }

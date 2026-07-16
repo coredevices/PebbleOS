@@ -4,11 +4,11 @@
 #include "pbl/services/put_bytes/put_bytes.h"
 
 #include "pbl/services/comm_session/session_receive_router.h"
-#include "os/tick.h"
+#include "pbl/os/tick.h"
 #include "system/bootbits.h"
 #include "system/firmware_storage.h"
 #include "system/logging.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "util/net.h"
 
 #include <bluetooth/conn_event_stats.h>

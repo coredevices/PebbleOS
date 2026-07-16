@@ -10,7 +10,7 @@
 #include "pbl/services/process_management/app_storage.h"
 #include "system/bootbits.h"
 #include "system/logging.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include <stdlib.h>
 

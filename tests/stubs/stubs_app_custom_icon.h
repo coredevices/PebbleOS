@@ -4,7 +4,7 @@
 #pragma once
 
 #include "process_management/app_custom_icon.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 const char *WEAK app_custom_get_title(AppInstallId app_id) {
   return "";

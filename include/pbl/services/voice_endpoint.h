@@ -5,8 +5,8 @@
 
 #include "pbl/services/audio_endpoint.h"
 #include "pbl/services/voice/transcription.h"
-#include "util/attributes.h"
-#include "util/uuid.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/uuid.h"
 
 #include <inttypes.h>
 #include <stdlib.h>

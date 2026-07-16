@@ -11,7 +11,7 @@
 #include "pulse_protocol_impl.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/likely.h"
+#include "pbl/util/likely.h"
 
 #include "pbl/services/system_task.h"
 

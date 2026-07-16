@@ -9,7 +9,7 @@
 #include <inttypes.h>
 
 #include "flash_region/flash_region.h"
-#include "util/string.h"
+#include "pbl/util/string.h"
 
 void resource_storage_get_file_name(char *name, size_t buf_length, ResAppNum resource_bank) {
   concat_str_int("res_bank", resource_bank, name, buf_length);

@@ -16,6 +16,7 @@ config BATTERY_PMIC
 
 config BATTERY_QEMU
     bool "QEMU Battery"
+    default y if SOC_QEMU
     help
       Stub battery driver for QEMU (fixed values).
 

@@ -25,8 +25,8 @@
 #define ALS_MIN_VALUE 100
 #define ALS_MAX_VALUE 250
 #elif defined(CONFIG_BOARD_GETAFIX)
-#define ALS_MIN_VALUE 1000
-#define ALS_MAX_VALUE 3000
+#define ALS_MIN_VALUE 8500
+#define ALS_MAX_VALUE 11500
 #else
 #define ALS_MIN_VALUE 0
 #define ALS_MAX_VALUE 65535

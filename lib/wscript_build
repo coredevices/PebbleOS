@@ -1,0 +1,6 @@
+bld.recurse('c')
+bld.recurse('util')
+bld.recurse('btutil')
+bld.recurse('os')
+
+# vim:filetype=python

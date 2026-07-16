@@ -10,7 +10,7 @@
 #include "pbl/services/bluetooth/local_id.h"
 #include "pbl/services/bluetooth/pairability.h"
 #include "pbl/services/shared_prf_storage/shared_prf_storage.h"
-#include "util/string.h"
+#include "pbl/util/string.h"
 
 #include <bluetooth/bluetooth_types.h>
 #include <bluetooth/id.h>

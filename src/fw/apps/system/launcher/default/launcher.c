@@ -13,7 +13,7 @@
 #include "system/passert.h"
 #include "shell/prefs.h"
 #include "process_state/app_state/app_state.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 typedef struct LauncherAppWindowData {
   Window window;

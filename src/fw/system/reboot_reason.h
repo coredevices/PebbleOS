@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 #include "system/rtc_registers.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 // NOTE: We include the reboot reason in analytics and the tools we use to analyze the analytics are
 // dependent on the position and ordering of these enumerated values. To keep the analysis tools

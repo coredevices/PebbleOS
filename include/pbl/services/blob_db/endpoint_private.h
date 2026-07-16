@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 typedef uint16_t BlobDBToken;
 

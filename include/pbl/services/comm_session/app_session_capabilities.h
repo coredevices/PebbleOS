@@ -4,7 +4,7 @@
 #pragma once
 
 #include "pbl/services/comm_session/session.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 //! @param capability The capability to check for.
 //! @returns True if the session for the current application supports the capability of interest.

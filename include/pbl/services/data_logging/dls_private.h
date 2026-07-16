@@ -7,13 +7,13 @@
 #include "drivers/rtc.h"
 #include "flash_region/flash_region.h"
 #include "kernel/pebble_tasks.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "pbl/services/comm_session/protocol.h"
 #include "system/hexdump.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "util/shared_circular_buffer.h"
 #include "util/units.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 #include <stdint.h>
 #include <stdlib.h>

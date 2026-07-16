@@ -5,7 +5,7 @@
 
 #include "kernel/pbl_malloc.h"
 #include "system/passert.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 //! Skeleton implementation struct
 typedef struct GetBytesStorageImplementation {

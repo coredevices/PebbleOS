@@ -8,7 +8,7 @@
 
 #include "clar.h"
 
-#include <btutil/bt_device.h>
+#include <pbl/btutil/bt_device.h>
 
 extern void gatt_service_changed_server_init(void);
 

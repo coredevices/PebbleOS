@@ -15,7 +15,7 @@
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/system_task.h"
 #include "system/passert.h"
-#include <util/attributes.h>
+#include <pbl/util/attributes.h>
 #include <util/net.h>
 
 #include "FreeRTOS.h"

@@ -10,7 +10,7 @@
 #include "kernel/pbl_malloc.h"
 #include "resource/resource_ids.auto.h"
 #include "system/passert.h"
-#include "util/string.h"
+#include "pbl/util/string.h"
 
 void launcher_app_glance_init(LauncherAppGlance *glance, const Uuid *uuid, KinoReel *impl,
                               bool should_consider_slices,

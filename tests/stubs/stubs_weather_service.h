@@ -4,7 +4,7 @@
 #pragma once
 
 #include "pbl/services/weather/weather_service.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 WeatherLocationForecast * WEAK weather_service_create_default_forecast(void) {
   return NULL;

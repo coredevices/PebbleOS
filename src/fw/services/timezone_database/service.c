@@ -9,8 +9,8 @@
 #include "system/logging.h"
 #include "system/passert.h"
 
-#include <util/attributes.h>
-#include <util/size.h>
+#include <pbl/util/attributes.h>
+#include <pbl/util/size.h>
 
 #include <string.h>
 

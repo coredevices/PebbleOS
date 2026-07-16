@@ -8,6 +8,41 @@ config SERVICE_LIGHT
 
 if SERVICE_LIGHT
 
+config ALS_SCREEN_COMPENSATION
+    bool "Compensate ALS readings for on-screen luminance"
+    depends on AMBIENT_LIGHT && SCREEN_COLOR_DEPTH_BITS_8
+    help
+      For boards whose ambient light sensor sits under the display, correct the
+      raw ALS reading by the transmittance of the pixels in front of the sensor
+      (black pixels block ambient light, white pixels pass it). The sensor
+      region and black-scale clamp are configured below.
+
+if ALS_SCREEN_COMPENSATION
+
+config ALS_SENSOR_X
+    int "ALS sensor region X offset (px)"
+    default 0
+
+config ALS_SENSOR_Y
+    int "ALS sensor region Y offset (px)"
+    default 0
+
+config ALS_SENSOR_W
+    int "ALS sensor region width (px)"
+    default 0
+
+config ALS_SENSOR_H
+    int "ALS sensor region height (px)"
+    default 0
+
+config ALS_BLACK_SCALE_Q8
+    int "ALS gain when the sensor region is fully black, Q8 (256 = 1.0x)"
+    default 256
+    help
+      Inverse-luminance gain is clamped to this value where the region is black.
+
+endif # ALS_SCREEN_COMPENSATION
+
 module = SERVICE_LIGHT
 module-str = Light
 source "src/fw/Kconfig.template.log_level"

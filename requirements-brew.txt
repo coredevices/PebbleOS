@@ -3,5 +3,6 @@ gettext
 llvm
 cmake
 lcov
+ninja
 node
 librsvg

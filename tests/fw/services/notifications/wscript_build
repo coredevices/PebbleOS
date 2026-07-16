@@ -1,4 +1,4 @@
-from waftools.pebble_test import clar
+from tools.waf.pebble_test import clar
 
 clar(ctx,
     sources_ant_glob = "src/fw/services/notifications/notification_storage.c" \

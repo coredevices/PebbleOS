@@ -13,7 +13,7 @@
 #include "system/hexdump.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 

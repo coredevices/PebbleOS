@@ -11,7 +11,7 @@
 #include "memfault_pebble_coredump.h"
 
 #include "mfg/mfg_serials.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "pbl/services/clock.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include "system/logging.h"

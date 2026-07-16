@@ -6,7 +6,7 @@
 
 #include "window.h"
 #include "window_stack_animation.h"
-#include "util/list.h"
+#include "pbl/util/list.h"
 
 #include <stdbool.h>
 #include <stddef.h>

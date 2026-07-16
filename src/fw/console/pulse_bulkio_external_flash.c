@@ -8,7 +8,7 @@
 #include "flash_region/flash_region.h"
 #include "kernel/pbl_malloc.h"
 #include "system/status_codes.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #include <stdint.h>
 

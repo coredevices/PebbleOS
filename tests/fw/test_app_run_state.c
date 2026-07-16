@@ -8,8 +8,8 @@
 #include "pbl/services/comm_session/protocol.h"
 #include "system/passert.h"
 
-#include "util/attributes.h"
-#include "util/list.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/list.h"
 
 #include <stdlib.h>
 

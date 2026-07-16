@@ -7,7 +7,7 @@
 #include "applib/ui/click_internal.h"
 #include "applib/ui/window.h"
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 WEAK ButtonId click_recognizer_get_button_id(ClickRecognizerRef recognizer) {
   return 0;

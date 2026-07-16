@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "util/attributes.h"
-#include "util/uuid.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/uuid.h"
 
 typedef struct PACKED {
   Uuid contact_uuid;

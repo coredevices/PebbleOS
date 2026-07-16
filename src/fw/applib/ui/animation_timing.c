@@ -6,8 +6,8 @@
 
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/math_fixed.h"
-#include "util/size.h"
+#include "pbl/util/math_fixed.h"
+#include "pbl/util/size.h"
 
 //! @file animation_timing.c
 

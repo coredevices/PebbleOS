@@ -293,6 +293,16 @@ Codepoint arabic_shape_pair(Codepoint prev_cp, Codepoint curr_cp, Codepoint next
   return arabic_shape_codepoint(prev_cp, curr_cp, next_cp);
 }
 
+bool arabic_is_transparent(Codepoint cp) {
+  return (cp >= 0x0610 && cp <= 0x061A) ||
+         (cp >= 0x064B && cp <= 0x065F) ||
+         (cp == 0x0670) ||
+         (cp >= 0x06D6 && cp <= 0x06DC) ||
+         (cp >= 0x06DF && cp <= 0x06E4) ||
+         (cp >= 0x06E7 && cp <= 0x06E8) ||
+         (cp >= 0x06EA && cp <= 0x06ED);
+}
+
 size_t arabic_shape_text(const utf8_t *src, size_t src_len,
                          utf8_t *dest, size_t dest_size) {
   if (src == NULL || dest == NULL || src_len == 0 || dest_size == 0) {
@@ -324,28 +334,54 @@ size_t arabic_shape_text(const utf8_t *src, size_t src_len,
   size_t dest_offset = 0;
 
   for (size_t i = 0; i < num_codepoints; i++) {
-    Codepoint prev_cp = (i > 0) ? codepoints[i - 1] : 0;
     Codepoint curr_cp = codepoints[i];
-    Codepoint next_cp = (i + 1 < num_codepoints) ? codepoints[i + 1] : 0;
 
-    // Lam-Alef collapses two codepoints into one ligature glyph.
-    bool consumed_next = false;
-    Codepoint shaped_cp = arabic_shape_pair(prev_cp, curr_cp, next_cp, &consumed_next);
-    if (consumed_next) {
-      i++;  // skip the Alef
+    // Skip transparent marks so a diacritic between two letters does not break
+    // their join.
+    Codepoint prev_cp = 0;
+    for (size_t j = i; j > 0; j--) {
+      if (!arabic_is_transparent(codepoints[j - 1])) {
+        prev_cp = codepoints[j - 1];
+        break;
+      }
+    }
+    Codepoint next_cp = 0;
+    size_t next_idx = num_codepoints;
+    for (size_t j = i + 1; j < num_codepoints; j++) {
+      if (!arabic_is_transparent(codepoints[j])) {
+        next_cp = codepoints[j];
+        next_idx = j;
+        break;
+      }
     }
 
-    // Encode the shaped codepoint to UTF-8
-    // Ensure we have room for at least 4 bytes (max UTF-8 length)
+    // Lam-Alef collapses two letters into one ligature glyph.
+    bool consumed_next = false;
+    Codepoint shaped_cp = arabic_shape_pair(prev_cp, curr_cp, next_cp, &consumed_next);
+
+    // Encode the shaped codepoint to UTF-8. Ensure room for at least 4 bytes.
     if (dest_offset + 4 >= dest_size) {
       break;
     }
-
     size_t bytes_written = utf8_encode_codepoint(shaped_cp, dest + dest_offset);
-    if (bytes_written == 0) {
-      continue;
+    if (bytes_written != 0) {
+      dest_offset += bytes_written;
     }
-    dest_offset += bytes_written;
+
+    if (consumed_next) {
+      // Emit any marks between the pair so they stay on the ligature, then skip
+      // the consumed Alef.
+      for (size_t j = i + 1; j < next_idx; j++) {
+        if (dest_offset + 4 >= dest_size) {
+          break;
+        }
+        size_t n = utf8_encode_codepoint(codepoints[j], dest + dest_offset);
+        if (n != 0) {
+          dest_offset += n;
+        }
+      }
+      i = next_idx;
+    }
   }
 
   // Null-terminate if we have space

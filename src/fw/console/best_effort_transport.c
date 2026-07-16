@@ -11,7 +11,7 @@
 #include "console/pulse2_transport_impl.h"
 #include "console/pulse_control_message_protocol.h"
 #include "system/passert.h"
-#include <util/attributes.h>
+#include <pbl/util/attributes.h>
 #include <util/net.h>
 
 #include <stdbool.h>

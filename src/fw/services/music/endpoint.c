@@ -9,7 +9,7 @@
 #include "pbl/services/comm_session/session_remote_os.h"
 #include "pbl/services/music_internal.h"
 #include "system/logging.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 PBL_LOG_MODULE_DECLARE(service_music, CONFIG_SERVICE_MUSIC_LOG_LEVEL);
 

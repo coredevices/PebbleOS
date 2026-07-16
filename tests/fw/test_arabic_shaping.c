@@ -71,6 +71,18 @@ void test_arabic_shaping__salaam_has_ligature(void) {
   cl_assert_equal_i(cps[2], 0xFEE1);  // Meem isolated
 }
 
+// "مكمّلات" = Meem Kaf Meem shadda Lam Alef Teh. The shadda is transparent for
+// joining, so the Meem stays medial and the Lam-Alef keeps its final form
+// U+FEFC, not isolated U+FEFB.
+void test_arabic_shaping__diacritic_transparent_join(void) {
+  Codepoint cps[12];
+  size_t n = prv_shape("\xD9\x85\xD9\x83\xD9\x85\xD9\x91\xD9\x84\xD8\xA7\xD8\xAA", cps, 12);
+  cl_assert_equal_i(n, 6);            // seven letters, Lam-Alef ligates into one
+  cl_assert_equal_i(cps[2], 0xFEE4);  // Meem medial (joins forward through the shadda)
+  cl_assert_equal_i(cps[3], 0x0651);  // shadda preserved, in place
+  cl_assert_equal_i(cps[4], 0xFEFC);  // Lam-Alef final (connected), not isolated FEFB
+}
+
 // Alef with Hamza above (U+0623) maps to its own ligature pair (U+FEF7/FEF8).
 void test_arabic_shaping__lam_alef_hamza_variant(void) {
   Codepoint cps[8];

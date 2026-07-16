@@ -3,7 +3,7 @@
 
 #include "clar.h"
 
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 #include "fake_rtc.h"
 #include "stubs_passert.h"
 #include "stubs_rand_ptr.h"

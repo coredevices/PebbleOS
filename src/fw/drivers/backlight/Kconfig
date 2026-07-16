@@ -32,6 +32,7 @@ config BACKLIGHT_PWM
 
 config BACKLIGHT_QEMU
     bool "QEMU"
+    default y if SOC_QEMU
     help
       Emulated backlight controller that writes to the QEMU
       pebble-display MMIO registers.

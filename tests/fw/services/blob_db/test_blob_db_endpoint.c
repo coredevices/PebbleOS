@@ -7,7 +7,7 @@
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
 #include "pbl/services/blob_db/api.h"
 #include "pbl/services/blob_db/endpoint.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #include <stdio.h>
 

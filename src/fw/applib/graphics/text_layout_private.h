@@ -5,7 +5,7 @@
 
 //! Private layout interface (ie for unit testing)
 
-#include "util/iterator.h"
+#include "pbl/util/iterator.h"
 #include "applib/fonts/codepoint.h"
 #include "text.h"
 #include "gtypes.h"

@@ -13,7 +13,7 @@
 #include "pbl/services/regular_timer.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/list.h"
+#include "pbl/util/list.h"
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 

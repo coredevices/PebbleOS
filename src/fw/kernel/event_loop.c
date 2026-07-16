@@ -36,7 +36,7 @@
 #include "kernel/ui/kernel_ui.h"
 #include "kernel/ui/modals/modal_manager.h"
 #include "kernel/util/factory_reset.h"
-#include "mcu/fpu.h"
+#include "pbl/mcu/fpu.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/app_manager.h"
 #include "process_management/app_run_state.h"
@@ -81,7 +81,7 @@
 #include "system/reset.h"
 #include "system/testinfra.h"
 #include "util/bitset.h"
-#include "util/struct.h"
+#include "pbl/util/struct.h"
 #include "system/version.h"
 
 #include "FreeRTOS.h"

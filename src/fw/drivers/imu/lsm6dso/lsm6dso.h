@@ -28,12 +28,12 @@ typedef struct LSM6DSOState {
   uint16_t num_samples;
   uint8_t raw_sample_buf[LSM6DSO_FIFO_SIZE * LSM6DSO_FIFO_WORD_SIZE_BYTES];
   RegularTimerInfo int1_wdt_timer;
-  RtcTicks last_int1_tick;
+  RtcTicks last_fifo_read_tick;
   uint32_t int1_period_ms;
   uint32_t num_recoveries;
   uint8_t wk_ths_curr;
-  AccelDriverSample last_sample;
-  bool last_sample_valid;
+  bool recovery_pending;
+  bool wu_active;
 } LSM6DSOState;
 
 typedef struct LSM6DSOConfig {
@@ -43,6 +43,8 @@ typedef struct LSM6DSOConfig {
   I2CSlavePort i2c;
   //! INT1 EXTI configuration
   ExtiConfig int1;
+  //! INT1 input configuration (to read back the pad level)
+  InputConfig int1_in;
   //! Axis mapping (0: X, 1: Y, 2: Z)
   uint8_t axis_map[3];
   //! Axis direction (1 upside, -1 downside)

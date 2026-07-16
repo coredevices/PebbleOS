@@ -8,7 +8,7 @@
 #include "comm/ble/kernel_le_client/kernel_le_client.h"
 #include "comm/ble/kernel_le_client/test/test_definition.h"
 #include "kernel/events.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 // Stubs
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -75,7 +75,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #define NEW_LOG_VERSION "0102"
 

@@ -64,5 +64,6 @@ struct ActionMenuLevel {
   // Double check with design before using this for another purpose.
   unsigned separator_index;
   ActionMenuLevelDisplayMode display_mode;
+  ActionMenuLayerCallback selection_changed;
   ActionMenuItem items[];
 };

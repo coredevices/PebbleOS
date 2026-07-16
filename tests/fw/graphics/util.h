@@ -6,7 +6,7 @@
 #include "test_graphics.h"
 #include "applib/graphics/gbitmap_png.h"
 #include "util/graphics.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #include "clar.h"
 #include <stdio.h>

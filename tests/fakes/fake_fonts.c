@@ -7,8 +7,8 @@
 #include "font_resource_keys.auto.h"
 #include "applib/fonts/fonts_private.h"
 #include "applib/graphics/text_resources.h"
-#include "util/math.h"
-#include "util/size.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
 
 #include <string.h>
 

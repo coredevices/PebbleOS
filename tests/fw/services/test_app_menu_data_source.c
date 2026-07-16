@@ -15,8 +15,8 @@
 #include "pbl/services/app_cache.h"
 #include "pbl/services/blob_db/app_db.h"
 #include "pbl/services/filesystem/pfs.h"
-#include "util/build_id.h"
-#include "util/size.h"
+#include "pbl/util/build_id.h"
+#include "pbl/util/size.h"
 #include "fixtures/load_test_resources.h"
 
 // access it directly just to test things out

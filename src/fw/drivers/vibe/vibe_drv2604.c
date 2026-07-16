@@ -11,7 +11,7 @@
 #include "drivers/pwm.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #include <string.h>
 

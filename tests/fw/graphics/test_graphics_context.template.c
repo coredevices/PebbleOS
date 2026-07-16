@@ -3,7 +3,7 @@
 
 #include "applib/graphics/gtypes.h"
 #include "applib/graphics/graphics.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #include "clar.h"
 #include "util.h"

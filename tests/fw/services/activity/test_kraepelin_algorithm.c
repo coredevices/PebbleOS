@@ -11,9 +11,9 @@
 #include "pbl/services/activity/kraepelin/kraepelin_algorithm.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/list.h"
-#include "util/math.h"
-#include "util/size.h"
+#include "pbl/util/list.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
 #include "util/time/time.h"
 
 #include "clar.h"

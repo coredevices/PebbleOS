@@ -32,7 +32,7 @@
 
 #include "process_management/pebble_process_info.h"
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #include <bluetooth/bluetooth_types.h>
 

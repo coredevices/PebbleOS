@@ -9,10 +9,10 @@
 
 #include "comm/bt_lock.h"
 
-#include "util/likely.h"
+#include "pbl/util/likely.h"
 
-#include <btutil/bt_device.h>
-#include <btutil/bt_uuid.h>
+#include <pbl/btutil/bt_device.h>
+#include <pbl/btutil/bt_uuid.h>
 
 // -------------------------------------------------------------------------------------------------
 // Helpers to calculate the BLEService, BLECharacteristic and BLEDescriptor

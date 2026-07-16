@@ -11,8 +11,8 @@
 
 #include "clar_asserts.h"
 
-#include <btutil/bt_uuid.h>
-#include <util/uuid.h>
+#include <pbl/btutil/bt_uuid.h>
+#include <pbl/util/uuid.h>
 
 #include <string.h>
 

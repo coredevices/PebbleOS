@@ -15,8 +15,8 @@
 #include "process_management/pebble_process_info.h"
 #include "pbl/services/timeline/timeline_resources.h"
 #include "system/passert.h"
-#include "util/string.h"
-#include "util/struct.h"
+#include "pbl/util/string.h"
+#include "pbl/util/struct.h"
 
 #define APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MAJOR (PROCESS_INFO_FIRST_4X_SDK_VERSION_MAJOR)
 #define APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MINOR (PROCESS_INFO_FIRST_4X_SDK_VERSION_MINOR)

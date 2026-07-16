@@ -11,13 +11,13 @@
 #include "drivers/rtc.h"
 #include "FreeRTOS.h"
 #include "kernel/pbl_malloc.h"
-#include "os/tick.h"
+#include "pbl/os/tick.h"
 #include "kernel/util/sleep.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "semphr.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #ifdef CONFIG_PMIC
 #include "drivers/pmic.h"

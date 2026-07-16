@@ -9,15 +9,18 @@
 
 #include "applib/app_logging.h"
 #include "kernel/memory_layout.h"
-#include "mcu/privilege.h"
+#include "pbl/mcu/interrupts.h"
+#include "pbl/mcu/privilege.h"
 #include "pbl/services/system_task.h"
+#include "process_state/app_state/app_state.h"
+#include "process_state/worker_state/worker_state.h"
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
 #include "system/logging.h"
 #include "system/reboot_reason.h"
 #include "syscall/syscall.h"
 
-#include <util/heap.h>
+#include <pbl/util/heap.h>
 
 #include <cmsis_core.h>
 
@@ -157,19 +160,33 @@ NORETURN trigger_fault(RebootReasonCode reason_code, uint32_t lr) {
 }
 
 NORETURN trigger_oom_fault(size_t bytes, uint32_t lr, Heap *heap_ptr) {
-  if (mcu_state_is_privileged()) {
-      RebootReason reason = {
-        .code =  RebootReasonCode_OutOfMemory,
-        .heap_data = {
-          .heap_alloc_lr = lr,
-          .heap_ptr = (uint32_t)heap_ptr,
-        }
-      };
-      reboot_reason_set(&reason);
-      reset_due_to_software_failure();
-  } else {
+  // OOM on a process's own heap is the app's fault, not the kernel's: kill just
+  // that process even when privileged (Moddable apps run privileged inside the
+  // moddable_createMachine syscall). Only kernel-heap OOM reboots.
+  PebbleTask task = pebble_task_get_current();
+  bool process_heap_oom =
+      (task == PebbleTask_App && heap_ptr == app_state_get_heap()) ||
+      (task == PebbleTask_Worker && heap_ptr == worker_state_get_heap());
+
+  // sys_app_fault suspends this task for KernelMain to reap; only safe with the
+  // scheduler running and outside an ISR, else reboot.
+  bool can_kill_safely =
+      !mcu_state_is_isr() && (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING);
+
+  if (!mcu_state_is_privileged() || (process_heap_oom && can_kill_safely)) {
     sys_app_fault(lr);
   }
+
+  // Kernel-heap OOM (or OOM on a kernel task): unrecoverable, reboot.
+  RebootReason reason = {
+    .code =  RebootReasonCode_OutOfMemory,
+    .heap_data = {
+      .heap_alloc_lr = lr,
+      .heap_ptr = (uint32_t)heap_ptr,
+    }
+  };
+  reboot_reason_set(&reason);
+  reset_due_to_software_failure();
 }
 
 void NOINLINE app_crashed(void) {

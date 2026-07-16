@@ -4,7 +4,7 @@
 #include "profiler.h"
 
 #include "system/passert.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include <cmsis_core.h>
 

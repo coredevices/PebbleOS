@@ -6,7 +6,7 @@
 #include "mfg_serials.h"
 
 #include "console/prompt.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 static const uint8_t OTP_SERIAL_SLOT_INDICES[] = {
   OTP_SERIAL,

@@ -16,7 +16,7 @@
 #include "system/logging.h"
 #include "system/passert.h"
 #include "system/testinfra.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include "resource/resource_ids.auto.h"
 #include "resource/resource_version.auto.h"

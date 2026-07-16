@@ -10,10 +10,10 @@
 
 #include "kernel/pebble_tasks.h"
 
-#include "util/list.h"
-#include "util/math.h"
+#include "pbl/util/list.h"
+#include "pbl/util/math.h"
 
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/accel_manager.h"

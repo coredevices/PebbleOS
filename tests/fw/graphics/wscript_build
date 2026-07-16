@@ -1,4 +1,4 @@
-from waftools.pebble_test import clar, get_bitdepth_for_platform
+from tools.waf.pebble_test import clar, get_bitdepth_for_platform
 import waflib.Utils
 
 def _process_template(task):

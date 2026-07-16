@@ -5,7 +5,7 @@
 
 #include "popups/wakeup_ui.h"
 
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/app_manager.h"
 #include "pbl/services/process_management/app_storage.h"
@@ -17,8 +17,8 @@
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
 #include "system/logging.h"
-#include "util/attributes.h"
-#include "util/math.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/math.h"
 #include "util/units.h"
 
 #include "kernel/pbl_malloc.h"

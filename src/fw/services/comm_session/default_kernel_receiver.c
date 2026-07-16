@@ -9,7 +9,7 @@
 #include "pbl/services/system_task.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/slist.h"
+#include "pbl/util/slist.h"
 
 #include <inttypes.h>
 

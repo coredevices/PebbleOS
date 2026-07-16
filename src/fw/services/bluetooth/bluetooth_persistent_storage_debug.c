@@ -7,12 +7,12 @@
 #include "pbl/services/shared_prf_storage/shared_prf_storage_debug.h"
 #include "system/hexdump.h"
 #include "system/logging.h"
-#include "util/string.h"
+#include "pbl/util/string.h"
 
 #include <bluetooth/bluetooth_types.h>
 #include <bluetooth/sm_types.h>
-#include <btutil/bt_device.h>
-#include <btutil/sm_util.h>
+#include <pbl/btutil/bt_device.h>
+#include <pbl/btutil/sm_util.h>
 
 //
 // Strictly for debug. Pretty-prints most of the pairing information saved

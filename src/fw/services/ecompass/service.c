@@ -5,7 +5,7 @@
 
 #include "applib/accel_service.h"
 #include "applib/compass_service.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 #include "console/prompt.h"
 #include "drivers/mag.h"
 #include "kernel/event_loop.h"

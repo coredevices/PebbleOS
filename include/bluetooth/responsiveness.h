@@ -9,7 +9,7 @@
 #include <bluetooth/bluetooth_types.h>
 
 #include "bluetooth/gap_le_connect.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 typedef enum {
   BtConsumerNone = 0,

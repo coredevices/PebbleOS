@@ -4,10 +4,11 @@
 #include "pbl/services/process_management/app_storage.h"
 
 #include <inttypes.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 #include "drivers/flash.h"
 #include "flash_region/flash_region.h"
 #include "process_management/pebble_process_info.h"
@@ -17,7 +18,7 @@
 #include "system/logging.h"
 #include "system/passert.h"
 #include "system/hexdump.h"
-#include "util/build_id.h"
+#include "pbl/util/build_id.h"
 
 PBL_LOG_MODULE_DECLARE(service_process_management, CONFIG_SERVICE_PROCESS_MANAGEMENT_LOG_LEVEL);
 
@@ -25,8 +26,23 @@ PBL_LOG_MODULE_DECLARE(service_process_management, CONFIG_SERVICE_PROCESS_MANAGE
 // though there isn't enough memory for load more than 24k in practice on tintin.
 static const uint32_t APP_MAX_SIZE = 0x10000;
 
-uint32_t app_storage_get_process_load_size(PebbleProcessInfo *info) {
-  return (info->load_size + info->num_reloc_entries * 4);
+bool app_storage_get_process_load_size(const PebbleProcessInfo *info,
+                                       size_t *load_size_out) {
+  if (info->num_reloc_entries > (SIZE_MAX / sizeof(uint32_t))) {
+    PBL_LOG_WRN("App relocation table size overflows: entries=%"PRIu32,
+                info->num_reloc_entries);
+    return false;
+  }
+
+  const size_t reloc_size = info->num_reloc_entries * sizeof(uint32_t);
+  if (info->load_size > (SIZE_MAX - reloc_size)) {
+    PBL_LOG_WRN("App load size overflows: load=%"PRIu16" reloc=%zu",
+                info->load_size, reloc_size);
+    return false;
+  }
+
+  *load_size_out = info->load_size + reloc_size;
+  return true;
 }
 
 AppStorageGetAppInfoResult app_storage_get_process_info(PebbleProcessInfo* app_info,

@@ -6,7 +6,7 @@
 #include "applib/graphics/gdraw_command_image.h"
 #include "applib/graphics/gdraw_command_sequence.h"
 #include "applib/ui/animation_timing.h"
-#include "util/math_fixed.h"
+#include "pbl/util/math_fixed.h"
 
 // GDraw Command Transforms is a collection of draw command transforms.
 //

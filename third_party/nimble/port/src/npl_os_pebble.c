@@ -9,11 +9,11 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "mcu/interrupts.h"
+#include "pbl/mcu/interrupts.h"
 #include "nimble/nimble_npl.h"
 #include "nimble/nimble_port.h"
-#include "os/mutex.h"
-#include "os/tick.h"
+#include "pbl/os/mutex.h"
+#include "pbl/os/tick.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include "system/logging.h"
 #include "system/passert.h"

@@ -14,6 +14,10 @@ from waflib import Logs
 REQUIREMENTS = "requirements.txt"
 REQUIREMENTS_BREW = "requirements-brew.txt"
 
+# Packages only needed as executables (found via PATH, e.g. provided by nix),
+# so a pip install is not required if the binary is available.
+BINARY_PACKAGES = {"meson", "ninja"}
+
 VERSION_REGEX = r"^(?P<package>.*)(?P<comparator>==|<=|>=|<|>)(?P<version>.*)"
 VERSION_PATTERN = re.compile(VERSION_REGEX)
 
@@ -118,6 +122,8 @@ def text_to_req_list(req_list_text):
 
 def check_requirement(req, installed):
     if req[0] not in installed:
+        if req[0] in BINARY_PACKAGES and shutil.which(req[0]):
+            return
         Logs.pprint("RED", "Package '%s' not installed" % req[0])
         return
 

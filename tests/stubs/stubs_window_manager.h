@@ -6,7 +6,7 @@
 #include "applib/ui/click_internal.h"
 #include "applib/ui/window.h"
 #include "applib/ui/window_stack_private.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 Window *WEAK window_manager_get_top_window(void) {
   return NULL;

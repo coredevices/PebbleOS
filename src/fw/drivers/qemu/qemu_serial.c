@@ -12,14 +12,17 @@
 #include "popups/timeline/peek.h"
 #include "process_management/app_manager.h"
 #include "shell/system_theme.h"
+#include "pbl/services/activity/activity.h"
+#include "pbl/services/activity/activity_private.h"
 #include "pbl/services/clock.h"
+#include "pbl/services/hrm/hrm_manager.h"
 #include "pbl/services/system_task.h"
 #include "system/hexdump.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/likely.h"
+#include "pbl/util/likely.h"
 #include "util/net.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include "FreeRTOS.h"
 
@@ -153,6 +156,60 @@ static void prv_content_size_msg_callback(const uint8_t *data, uint32_t len) {
 
 
 // -----------------------------------------------------------------------------------------
+// Handle incoming health metric data (QemuProtocol_HealthMetric)
+static void prv_health_metric_msg_callback(const uint8_t *data, uint32_t len) {
+  QemuProtocolHealthMetricHeader *hdr = (QemuProtocolHealthMetricHeader *)data;
+  if (len != sizeof(*hdr)) {
+    PBL_LOG_ERR("Invalid packet length");
+    return;
+  }
+
+  const int32_t value = (int32_t)ntohl(hdr->value);
+  PBL_LOG_DBG("Got health metric msg: metric: %d, value: %"PRId32, hdr->metric, value);
+
+#if !defined(CONFIG_RECOVERY_FW)
+  ActivityMetric metric;
+  switch (hdr->metric) {
+    case QemuHealthMetric_Steps:               metric = ActivityMetricStepCount; break;
+    case QemuHealthMetric_ActiveSeconds:       metric = ActivityMetricActiveSeconds; break;
+    case QemuHealthMetric_RestingCalories:     metric = ActivityMetricRestingKCalories; break;
+    case QemuHealthMetric_ActiveCalories:      metric = ActivityMetricActiveKCalories; break;
+    case QemuHealthMetric_DistanceMeters:      metric = ActivityMetricDistanceMeters; break;
+    case QemuHealthMetric_SleepTotalSeconds:   metric = ActivityMetricSleepTotalSeconds; break;
+    case QemuHealthMetric_SleepRestfulSeconds: metric = ActivityMetricSleepRestfulSeconds; break;
+    default:
+      PBL_LOG_WRN("Unknown health metric: %d", hdr->metric);
+      return;
+  }
+  activity_metrics_set_metric_exact(metric, value);
+#endif
+}
+
+
+// -----------------------------------------------------------------------------------------
+// Handle incoming heart rate data (QemuProtocol_HeartRate)
+static void prv_heart_rate_msg_callback(const uint8_t *data, uint32_t len) {
+  QemuProtocolHeartRateHeader *hdr = (QemuProtocolHeartRateHeader *)data;
+  if (len != sizeof(*hdr)) {
+    PBL_LOG_ERR("Invalid packet length");
+    return;
+  }
+
+  PBL_LOG_DBG("Got heart rate msg: bpm: %d, quality: %d", hdr->bpm, hdr->quality);
+#if defined(CONFIG_HRM)
+  HRMData hrm_data = {
+    .features = HRMFeature_BPM,
+    .hrm_bpm = hdr->bpm,
+    .hrm_quality = (HRMQuality)hdr->quality,
+  };
+  hrm_manager_new_data_cb(&hrm_data);
+#else
+  PBL_LOG_WRN("Heart rate injection unsupported on this board (no HRM)");
+#endif
+}
+
+
+// -----------------------------------------------------------------------------------------
 // List of incoming message handlers
 static const QemuMessageHandler s_qemu_endpoints[] = {
   // IMPORTANT: These must be in sorted order!!
@@ -165,6 +222,8 @@ static const QemuMessageHandler s_qemu_endpoints[] = {
   { QemuProtocol_TimeFormat, prv_time_format_msg_callback },
   { QemuProtocol_TimelinePeek, prv_timeline_peek_msg_callback },
   { QemuProtocol_ContentSize, prv_content_size_msg_callback },
+  { QemuProtocol_HealthMetric, prv_health_metric_msg_callback },
+  { QemuProtocol_HeartRate, prv_heart_rate_msg_callback },
   // Button messages are handled by QEMU directly
 };
 

@@ -5,8 +5,8 @@
 
 #include "board/board.h"
 #include "drivers/audio.h"
-#include <os/mutex.h>
-#include <util/circular_buffer.h>
+#include <pbl/os/mutex.h>
+#include <pbl/util/circular_buffer.h>
 
 #include <stdbool.h>
 #include <stdint.h>

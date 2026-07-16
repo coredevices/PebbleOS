@@ -11,7 +11,7 @@
 #include "pbl/services/timeline/layout_layer.h"
 #include "pbl/services/timeline/timeline_resources.h"
 #include "shell/system_theme.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 //! LayoutNode is a compact TextNode constructor using packed structs. Using LayoutNode configs, a
 //! hierarchy of nested TextNodes can be described and instantiated with

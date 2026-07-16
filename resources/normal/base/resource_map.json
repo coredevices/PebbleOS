@@ -2425,6 +2425,11 @@
       "file": "normal/base/lang/pt_PT/tintin.po"
     },
     {
+      "type": "mo",
+      "name": "STRINGS_PL_PL",
+      "file": "normal/base/lang/pl_PL/tintin.po"
+    },
+    {
       "type": "pdc",
       "name": "SMART_ALARM_TINY",
       "file": "normal/snowy/images/Pebble_25x25_Smart_alarm.svg"

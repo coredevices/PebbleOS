@@ -16,9 +16,9 @@
 #include "shell/system_theme.h"
 #include "util/buffer.h"
 #include "util/graphics.h"
-#include "util/hash.h"
-#include "util/math.h"
-#include "util/size.h"
+#include "pbl/util/hash.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
 
 #include "clar.h"
 

@@ -6,9 +6,9 @@
 #include "flash_region/flash_region.h"
 #include "system/firmware_storage.h"
 #include "system/passert.h"
-#include "util/attributes.h"
-#include "util/build_id.h"
-#include "util/string.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/build_id.h"
+#include "pbl/util/string.h"
 
 #include <ctype.h>
 #include <stddef.h>

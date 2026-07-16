@@ -165,7 +165,7 @@ void activity_algorithm_minute_handler(time_t utc_sec, AlgMinuteRecord *record_o
 //! Return the current number of steps computed
 //! @param[out] steps the number of steps is returned in this variable
 //! @return true if success
-bool activity_algorithm_get_steps(uint16_t *steps);
+bool activity_algorithm_get_steps(uint32_t *steps);
 
 //! Tells the activity algorithm whether or not it should automatically track activities
 //! @param enable true to start tracking, false to stop tracking
@@ -190,7 +190,7 @@ bool activity_algorithm_metrics_changed_notification(void);
 //! a watch reboot.
 //! @param[in] steps set the number of steps to this
 //! @return true if success
-bool activity_algorithm_set_steps(uint16_t steps);
+bool activity_algorithm_set_steps(uint32_t steps);
 
 //! Return the timestamp of the last minute that was processed by the sleep detector.
 time_t activity_algorithm_get_last_sleep_utc(void);

@@ -39,7 +39,7 @@ class Config(object):
 
 class TintinElfConfig(Config):
     def rel_elf_path(self):
-        return "../build/src/fw/tintin_fw.elf"
+        return "../build/pebbleos.elf"
 
     def memory_region_to_analyze(self):
         FLASH_START = 0x8008000

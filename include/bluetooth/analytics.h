@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #include <bluetooth/bluetooth_types.h>
 #include <bluetooth/conn_event_stats.h>

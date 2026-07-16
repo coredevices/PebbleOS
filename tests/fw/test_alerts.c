@@ -34,6 +34,10 @@ void do_not_disturb_init(void) {
   return;
 }
 
+void do_not_disturb_handle_pref_synced(void) {
+  return;
+}
+
 void vibe_intensity_init(void) {
   return;
 }

@@ -12,7 +12,7 @@
 
 #include "pbl/services/system_task.h"
 #include "flash_region/flash_region.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 typedef struct GAPLEConnection GAPLEConnection;
 

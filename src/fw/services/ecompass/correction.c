@@ -3,10 +3,10 @@
 
 #include "pbl/services/ecompass.h"
 
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 #include "kernel/pbl_malloc.h"
 #include "system/logging.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #include <stdint.h>
 #include <stdio.h>

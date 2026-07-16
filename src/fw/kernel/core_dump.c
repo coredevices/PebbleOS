@@ -12,7 +12,12 @@
  * driver, etc.
  */
 
+#include <stdlib.h>
 #include <string.h>
+
+// itoa is a Pebble/newlib extension; newlib hides it under strict-ANSI
+// (-std=c11), so declare it explicitly for non-Pebble libcs.
+extern char *itoa(int value, char *str, int base);
 
 #include "kernel/core_dump.h"
 #include "kernel/core_dump_private.h"
@@ -39,12 +44,12 @@
 #include "system/logging.h"
 #include "system/version.h"
 
-#include "util/attributes.h"
-#include "util/build_id.h"
-#include "util/math.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/build_id.h"
+#include "pbl/util/math.h"
 #include "util/net.h"
-#include "util/size.h"
-#include "util/string.h"
+#include "pbl/util/size.h"
+#include "pbl/util/string.h"
 
 #include <cmsis_core.h>
 

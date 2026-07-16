@@ -7,7 +7,7 @@
 #include <string.h>
 #include <math.h>
 
-#include "util/math.h"
+#include "pbl/util/math.h"
 #include "applib/app.h"
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/text_layer.h"

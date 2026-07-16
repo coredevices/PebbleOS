@@ -6,7 +6,7 @@
 #include "pbl/services/clock.h"
 #include "pbl/services/i18n/i18n.h"
 #include "util/date.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #include <stdio.h>
 

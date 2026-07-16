@@ -13,7 +13,7 @@
 #include "applib/graphics/graphics.h"
 #include "applib/graphics/gpath.h"
 
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include "stubs_applib_resource.h"
 #include "stubs_memory_layout.h"

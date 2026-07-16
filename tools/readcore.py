@@ -249,7 +249,7 @@ class Coredump:
                         EI_CLASS="ELFCLASS32",
                         EI_DATA="ELFDATA2LSB",
                         EI_VERSION="EV_CURRENT",
-                        EI_OSABI="ELFOSABI_SYSV",  # 'ELFOSABI_ARM_AEABI' sounds better but tintin_fw is sysv...
+                        EI_OSABI="ELFOSABI_SYSV",  # 'ELFOSABI_ARM_AEABI' sounds better but pebbleos is sysv...
                         EI_ABIVERSION=0,
                     ),
                     e_type="ET_CORE",
@@ -409,7 +409,7 @@ class Coredump:
                     pr_ppid=0,
                     pr_pgrp=1,
                     pr_sid=1,
-                    pr_fname=zero_pad(b"tintin_fw.elf", 16),
+                    pr_fname=zero_pad(b"pebbleos.elf", 16),
                     pr_psargs=zero_pad(t.name.encode(), 80),
                 )
             )

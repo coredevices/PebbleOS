@@ -4,7 +4,7 @@
 #include "kernel/pbl_malloc.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #include <stdio.h>
 #include <stdlib.h>

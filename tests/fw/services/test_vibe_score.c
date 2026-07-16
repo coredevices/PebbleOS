@@ -132,6 +132,68 @@ void test_vibe_score__repeat_delay_is_valid(void) {
   vibe_score_destroy(score);
 }
 
+void test_vibe_score__repeat_delay_lpm_alarm_is_valid(void) {
+  // 50s repeat delay, as used by the LPM alarm score
+  uint8_t buffer[] = {
+      'V', 'I', 'B', 'E', // FourCC
+      1, 0, // version
+      0, 0, 0, 0, // reserved bytes
+      23, 0, // attr_list_size
+      3, // GenericAttributeList.num_attributes
+      VibeAttributeId_Notes,
+      8, 0, // GenericAttribute.length
+      15, 0, // VibeNote.vibe_duration_ms
+      9, // VibeNote.brake_duration_ms
+      100, // VibeNote.strength
+      100, 0, // VibeNote.vibe_duration_ms
+      0, // VibeNote.brake_duration_ms
+      0, // VibeNote.strength
+      VibeAttributeId_Pattern,
+      3, 0, // GenericAttribute.length
+      0,
+      1,
+      0,
+      VibeAttributeId_RepeatDelay,
+      2, 0, // GenericAttribute.length (2 bytes for a uint16)
+      0x50, 0xC3 // repeat_delay value (50000)
+  };
+  s_resource_buffer = buffer;
+  s_resource_buffer_size = sizeof(buffer);
+  VibeScore *score = vibe_score_create_with_resource_system(0, 0);
+  cl_assert(score);
+  cl_assert_equal_i(vibe_score_get_repeat_delay_ms(score), 50000);
+  vibe_score_destroy(score);
+}
+
+void test_vibe_score__repeat_delay_too_long_is_invalid(void) {
+  uint8_t buffer[] = {
+      'V', 'I', 'B', 'E', // FourCC
+      1, 0, // version
+      0, 0, 0, 0, // reserved bytes
+      23, 0, // attr_list_size
+      3, // GenericAttributeList.num_attributes
+      VibeAttributeId_Notes,
+      8, 0, // GenericAttribute.length
+      15, 0, // VibeNote.vibe_duration_ms
+      9, // VibeNote.brake_duration_ms
+      100, // VibeNote.strength
+      100, 0, // VibeNote.vibe_duration_ms
+      0, // VibeNote.brake_duration_ms
+      0, // VibeNote.strength
+      VibeAttributeId_Pattern,
+      3, 0, // GenericAttribute.length
+      0,
+      1,
+      0,
+      VibeAttributeId_RepeatDelay,
+      2, 0, // GenericAttribute.length (2 bytes for a uint16)
+      0x61, 0xEA // repeat_delay value (60001, above the cap)
+  };
+  s_resource_buffer = buffer;
+  s_resource_buffer_size = sizeof(buffer);
+  cl_assert(vibe_score_create_with_resource_system(0, 0) == NULL);
+}
+
 void test_vibe_score__test_get_duration_ms(void) {
   uint8_t buffer[] = {
       'V', 'I', 'B', 'E', // FourCC

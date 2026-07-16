@@ -5,7 +5,7 @@
 
 #include "applib/graphics/gtypes.h"
 #include "apps/system/timeline/peek_layer.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 PeekLayer * WEAK peek_layer_create(GRect frame) {
   return NULL;

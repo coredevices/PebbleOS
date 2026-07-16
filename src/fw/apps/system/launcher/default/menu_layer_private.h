@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "util/math.h"
+#include "pbl/util/math.h"
 #include "board/display.h"
 
 // Use display height to determine launcher cell height: larger displays use taller cells

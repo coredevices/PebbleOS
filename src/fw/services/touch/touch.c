@@ -13,7 +13,7 @@
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
 #include "system/logging.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "system/passert.h"
 
 PBL_LOG_MODULE_DEFINE(service_touch, CONFIG_SERVICE_TOUCH_LOG_LEVEL);
@@ -182,7 +182,7 @@ void touch_handle_update(TouchState touch_state, int16_t x, int16_t y) {
     s_last_y = y;
     mutex_unlock(s_touch_mutex);
 
-    PBL_LOG_VERBOSE("Touch: Position Update @ (%" PRId16 ", %" PRId16 ")", x, y);
+    PBL_LOG_DBG("Touch: Position Update @ (%" PRId16 ", %" PRId16 ")", x, y);
     prv_put_touch_event(TouchEvent_PositionUpdate, x, y);
     return;
   }
