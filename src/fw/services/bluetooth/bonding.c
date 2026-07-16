@@ -66,6 +66,7 @@ void bt_driver_cb_handle_create_bonding(const BleBonding *bonding,
                                                                    should_pin_address,
                                                                    flags);
   if (bonding_id == BT_BONDING_ID_INVALID) {
+    PBL_LOG_ERR("Failed to persist new bonding");
     return;
   }
 

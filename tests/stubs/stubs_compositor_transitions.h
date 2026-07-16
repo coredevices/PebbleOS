@@ -4,7 +4,7 @@
 #pragma once
 
 #include "pbl/services/compositor/compositor_transitions.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 const CompositorTransition *WEAK compositor_slide_transition_timeline_get(
     bool timeline_is_future, bool timeline_is_destination, bool timeline_is_empty) {

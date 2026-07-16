@@ -9,8 +9,8 @@
 #include <stdbool.h>
 
 #include "system/status_codes.h"
-#include "util/attributes.h"
-#include "util/list.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/list.h"
 #include "util/time/time.h"
 
 //! The BlobDB API is a single consistent API to a number of key/value stores on the watch.

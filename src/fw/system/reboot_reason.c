@@ -3,8 +3,8 @@
 
 #include "reboot_reason.h"
 
-#include "mcu/interrupts.h"
-#include "os/tick.h"
+#include "pbl/mcu/interrupts.h"
+#include "pbl/os/tick.h"
 #include "system/logging.h"
 #include "system/bootbits.h"
 

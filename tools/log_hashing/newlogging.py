@@ -215,7 +215,7 @@ def merge_dicts(dict1, dict2):
 
 
 """ Returns log dict (including build_id and new_logging_version keys) from specified
-    filename. Accepts either tintin_fw.elf or loghash_dict.json """
+    filename. Accepts either pebbleos.elf or loghash_dict.json """
 
 
 def get_log_dict_from_file(filename):

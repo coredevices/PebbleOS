@@ -16,7 +16,7 @@ jobs:
       BOARD_NAME: "asterix"
 
     container:
-      image: ghcr.io/coredevices/pebbleos-docker:v5
+      image: ghcr.io/coredevices/pebbleos-docker:v6
 
     steps:
       - name: Mark Github workspace as safe
@@ -40,7 +40,7 @@ jobs:
         run: ./waf build
 
       - name: Copy POT template
-        run: cp build/src/fw/tintin.pot resources/normal/base/lang/tintin.pot
+        run: cp build/pebbleos.pot resources/normal/base/lang/tintin.pot
 
       - name: Upload POT template to Crowdin
         uses: crowdin/github-action@v2

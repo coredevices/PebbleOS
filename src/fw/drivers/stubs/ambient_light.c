@@ -6,6 +6,18 @@
 void ambient_light_init(void) {
 }
 
+void ambient_light_prime(void) {
+}
+
+void ambient_light_release(void) {
+}
+
+void ambient_light_suspend(void) {
+}
+
+void ambient_light_resume(void) {
+}
+
 uint32_t ambient_light_get_light_level(void) {
   return 0;
 }
@@ -28,4 +40,12 @@ bool ambient_light_is_light(void) {
 
 AmbientLightLevel ambient_light_level_to_enum(uint32_t light_level) {
   return AmbientLightLevelUnknown;
+}
+
+bool ambient_light_lux_available(void) {
+  return false;
+}
+
+uint32_t ambient_light_level_to_lux(uint32_t light_level) {
+  return light_level;
 }

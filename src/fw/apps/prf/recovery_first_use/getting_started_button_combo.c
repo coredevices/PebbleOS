@@ -12,7 +12,7 @@
 #include "process_management/process_manager.h"
 #include "pbl/services/system_task.h"
 #include "system/logging.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 void getting_started_button_combo_init(GettingStartedButtonComboState *state,
                                        GettingStartedButtonComboCallback select_callback) {

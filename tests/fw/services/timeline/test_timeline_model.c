@@ -3,13 +3,13 @@
 
 #include "clar.h"
 
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/regular_timer.h"
 #include "pbl/services/blob_db/pin_db.h"
 #include "pbl/services/timeline/timeline.h"
 #include "apps/system/timeline/model.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 // Fixture
 ////////////////////////////////////////////////////////////////

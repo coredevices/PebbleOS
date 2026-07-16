@@ -6,7 +6,7 @@ import re
 import sh
 import sys
 import waflib
-from waftools.pebble_test import clar
+from tools.waf.pebble_test import clar
 
 def remove_old_coverage_files(bld):
     # Remove old .gcda files:

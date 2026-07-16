@@ -18,7 +18,7 @@
 #include "process_management/process_manager.h"
 #include "pbl/services/vibe_pattern.h"
 #include "resource/resource_ids.auto.h"
-#include "util/heap.h"
+#include "pbl/util/heap.h"
 
 // Fakes
 #include "fake_new_timer.h"

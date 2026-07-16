@@ -20,10 +20,10 @@
 #include "system/logging.h"
 #include "system/hexdump.h"
 #include "system/passert.h"
-#include "util/likely.h"
+#include "pbl/util/likely.h"
 #include "util/time/time.h"
 
-#include <btutil/bt_device.h>
+#include <pbl/btutil/bt_device.h>
 
 #include <string.h>
 

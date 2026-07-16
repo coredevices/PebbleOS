@@ -7,7 +7,7 @@
 #include "kernel/core_dump.h"
 #include "kernel/event_loop.h"
 #include "kernel/pebble_tasks.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "process_management/app_manager.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/system_task.h"
@@ -15,7 +15,7 @@
 #include "system/die.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include "FreeRTOS.h"
 #include "task.h"

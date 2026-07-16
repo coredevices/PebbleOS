@@ -67,6 +67,16 @@ def serialize(json_data):
     CURRENT_VERSION = 1
     NEGATIVE_VIBE_STRENGTH_MAX = -100
     POSITIVE_VIBE_STRENGTH_MAX = 100
+    # Keep in sync with VIBE_SCORE_MAX_REPEAT_DELAY_MS in vibe_score.c; the
+    # firmware refuses to load scores exceeding it.
+    MAX_REPEAT_DELAY_MS = 60000
+
+    if not 0 <= json_data.get("repeat_delay_ms", 0) <= MAX_REPEAT_DELAY_MS:
+        raise ValueError(
+            '"repeat_delay_ms" {} out of bounds. Values between 0 and {} only.'.format(
+                json_data["repeat_delay_ms"], MAX_REPEAT_DELAY_MS
+            )
+        )
 
     for note in json_data["notes"]:
         if not (

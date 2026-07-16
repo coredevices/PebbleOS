@@ -3,7 +3,7 @@
 
 #include "applib/accel_service.h"
 #include "applib/data_logging.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 #include "drivers/ambient_light.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/battery/battery_state.h"
@@ -17,14 +17,16 @@
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/base64.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 #include "util/shared_circular_buffer.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 #include "util/time/time.h"
 #include "util/units.h"
 
 #include "pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h"
 #include "pbl/services/activity/kraepelin/kraepelin_algorithm.h"
+
+#include "pbl/services/light.h"
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
@@ -920,9 +922,12 @@ static uint32_t NOINLINE prv_fill_minute_record(time_t utc_sec, AlgMinuteDLSSamp
 
   m_rec->base.steps = MIN(s_alg_state->minute_steps, UINT8_MAX);
 
-  // The light level readings we get are from 0 to 4095 (12 bits). We only have 8 bits of storage,
-  // so divide it down to fit into 8 bits.
-  m_rec->base.light = ROUND(ambient_light_get_light_level(), ALG_RAW_LIGHT_SENSOR_DIVIDE_BY);
+  // Scale the reading into the 8-bit light field; saturate rather than wrap so a
+  // sensor whose range exceeds the field doesn't alias bright light down to
+  // "dark". The light service value is screen-compensated and in lux, matching
+  // the domain ambient_light_level_to_enum() expects when reading back.
+  const uint32_t light_level = light_get_ambient_lux();
+  m_rec->base.light = MIN(ROUND(light_level, ALG_RAW_LIGHT_SENSOR_DIVIDE_BY), UINT8_MAX);
 
   // Are we connected to a charger?
   const BatteryChargeState charge_state = battery_get_charge_state();
@@ -1010,7 +1015,7 @@ void activity_algorithm_minute_handler(time_t utc_sec, AlgMinuteRecord *record_o
 
 
 // ------------------------------------------------------------------------------------
-bool activity_algorithm_get_steps(uint16_t *steps) {
+bool activity_algorithm_get_steps(uint32_t *steps) {
   if (!prv_lock()) {
     return false;
   }

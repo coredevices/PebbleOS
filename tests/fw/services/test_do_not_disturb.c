@@ -58,7 +58,9 @@ bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
 }
 
 void event_put(PebbleEvent* event) {
-  s_num_dnd_events_put++;
+  if (event->type == PEBBLE_DO_NOT_DISTURB_EVENT) {
+    s_num_dnd_events_put++;
+  }
 }
 
 // Thursday, March 12, 2015, 00:00 UTC
@@ -182,6 +184,37 @@ void test_do_not_disturb__manually_enable(void) {
   cl_assert(enabled == true);
   prv_assert_manually_dnd_setting_val(true);
   cl_assert_equal_i(s_num_dnd_events_put, 3);
+}
+
+//! Simulate the phone writing a pref through settings sync: the record lands in the
+//! settings file first, then the BlobDB insert event is handed to alerts_preferences.
+static void prv_sync_bool_pref_from_phone(const char *key, bool value) {
+  SettingsFile file;
+  cl_must_pass(settings_file_open(&file, "notifpref", 1024));
+  cl_must_pass(settings_file_set(&file, key, strlen(key), &value, sizeof(value)));
+  settings_file_close(&file);
+
+  PebbleBlobDBEvent event = {
+    .type = BlobDBEventTypeInsert,
+    .key = (uint8_t *)key,
+    .key_len = strlen(key),
+  };
+  alerts_preferences_handle_blob_db_event(&event);
+}
+
+void test_do_not_disturb__manual_pref_synced_from_phone(void) {
+  cl_assert(do_not_disturb_is_active() == false);
+  s_num_dnd_events_put = 0;
+
+  prv_sync_bool_pref_from_phone(PREF_KEY_DND_MANUALLY_ENABLED, true);
+  cl_assert(do_not_disturb_is_manually_enabled() == true);
+  cl_assert(do_not_disturb_is_active() == true);
+  cl_assert_equal_i(s_num_dnd_events_put, 1);
+
+  prv_sync_bool_pref_from_phone(PREF_KEY_DND_MANUALLY_ENABLED, false);
+  cl_assert(do_not_disturb_is_manually_enabled() == false);
+  cl_assert(do_not_disturb_is_active() == false);
+  cl_assert_equal_i(s_num_dnd_events_put, 2);
 }
 
 void test_do_not_disturb__manually_enable_active(void) {

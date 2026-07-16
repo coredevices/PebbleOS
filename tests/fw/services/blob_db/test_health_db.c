@@ -5,7 +5,7 @@
 
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/blob_db/health_db.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include <limits.h>
 

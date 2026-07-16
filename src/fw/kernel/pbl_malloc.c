@@ -10,7 +10,7 @@
 #include "process_state/app_state/app_state.h"
 #include "process_state/worker_state/worker_state.h"
 #include "system/passert.h"
-#include "util/heap.h"
+#include "pbl/util/heap.h"
 
 #include <string.h>
 

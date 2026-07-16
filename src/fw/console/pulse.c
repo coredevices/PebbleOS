@@ -16,15 +16,15 @@
 #include "console/pulse_llc.h"
 #include "console/pulse_protocol_impl.h"
 #include "kernel/pbl_malloc.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/system_task.h"
 #include "system/passert.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "util/legacy_checksum.h"
-#include "util/likely.h"
-#include "util/math.h"
-#include "util/size.h"
+#include "pbl/util/likely.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
 
 #define FRAME_POOL_SIZE (3)
 

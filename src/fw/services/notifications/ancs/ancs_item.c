@@ -11,7 +11,7 @@
 #include "pbl/services/i18n/i18n.h"
 #include "system/logging.h"
 #include "pbl/services/timeline/timeline_resources.h"
-#include "util/string.h"
+#include "pbl/util/string.h"
 
 #include <stdio.h>
 

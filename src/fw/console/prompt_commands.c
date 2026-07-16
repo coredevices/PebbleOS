@@ -35,9 +35,9 @@
 #include "system/passert.h"
 #include "system/reboot_reason.h"
 #include "system/reset.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 #include "util/net.h"
-#include "util/string.h"
+#include "pbl/util/string.h"
 
 #include <cmsis_core.h>
 

@@ -81,8 +81,12 @@ void light_toggle_enabled(void);
 //! @internal
 void light_toggle_ambient_sensor_enabled(void);
 
+#ifdef CONFIG_DYNAMIC_BACKLIGHT
 //! @internal
-void light_toggle_dynamic_intensity_enabled(void);
+//! Set the dynamic backlight mode and briefly turn the light on so the user
+//! sees the effect.
+void light_set_dynamic_mode(BacklightDynamicMode mode);
+#endif
 
 //! Switches for temporary disabling backlight (ie: low power mode)
 void light_allow(bool allowed);
@@ -95,6 +99,12 @@ uint8_t light_get_current_brightness_percent(void);
 //! @return true if the backlight is currently on in any form (on, timed, or
 //! fading out). Returns false only when the backlight is fully off.
 bool light_is_on(void);
+
+//! Ambient light level in lux: screen-compensated and converted with the
+//! board's calibration (raw counts pass through unchanged on boards without
+//! lux coefficients). Served from a short-lived cache; while the backlight is
+//! on, the last pre-backlight value is returned.
+uint32_t light_get_ambient_lux(void);
 
 //!   @} // group Light
 //! @} // group UI

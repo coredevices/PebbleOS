@@ -11,7 +11,7 @@
 #include "resource/resource_storage_flash.h"
 #include "pbl/services/comm_session/session.h"
 #include "system/firmware_storage.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 typedef struct MemoryLayout {
   //! The start address of the object's section in flash (inclusive)

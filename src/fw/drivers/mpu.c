@@ -3,7 +3,7 @@
 
 #include "mpu.h"
 
-#include "mcu/cache.h"
+#include "pbl/mcu/cache.h"
 #include "system/passert.h"
 
 #include "FreeRTOS.h"

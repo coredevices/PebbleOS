@@ -10,17 +10,20 @@ if UART
 
 config UART_NRF5
     bool "Nordic nRF5 UART Controller"
+    default y if SOC_NRF52
     help
       Support for the Nordic nRF5 UART controller.
 
 config UART_SF32LB
     bool "SiFli SF32LB UART Controller"
+    default y if SOC_SF32LB52
     select HAL_SIFLI_UART
     help
       Support for the SiFli SF32LB UART controller.
 
 config UART_QEMU
     bool "QEMU Simple UART"
+    default y if SOC_QEMU
     help
       Support for the QEMU simple UART peripheral.
 

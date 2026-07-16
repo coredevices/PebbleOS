@@ -14,7 +14,7 @@
 #include "pbl/soc/nrf/sleep.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #include <hal/nrf_qspi.h>
 #include <nrfx.h>

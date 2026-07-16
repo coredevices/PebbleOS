@@ -8,7 +8,7 @@
 #include "flash_region/flash_region.h"
 #include "system/passert.h"
 #include "system/status_codes.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 static const uint32_t prv_sec_regs[] = {
   0x00001000,

@@ -5,7 +5,7 @@
 
 #include "system/passert.h"
 
-// See waftools/sparse_length_encoding.py for more info on SLE encoding/decoding
+// See tools/waf/sparse_length_encoding.py for more info on SLE encoding/decoding
 
 void sle_decode_init(SLEDecodeContext *ctx, const void *sle_buffer) {
   PBL_ASSERTN(ctx && sle_buffer);

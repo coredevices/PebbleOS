@@ -9,7 +9,7 @@
 #include "system/passert.h"
 #include "util/bitset.h"
 #include "util/graphics.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 ALWAYS_INLINE void graphics_private_raw_blend_color_factor(const GContext *ctx, GColor *dst_color,
                                                            unsigned int data_offset,

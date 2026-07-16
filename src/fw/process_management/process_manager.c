@@ -17,7 +17,7 @@
 
 #include "pebble_process_md.h"
 #include "kernel/pebble_tasks.h"
-#include "os/tick.h"
+#include "pbl/os/tick.h"
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/animation_service.h"
 #include "pbl/services/analytics/analytics.h"
@@ -38,7 +38,7 @@
 
 #include "kernel/pbl_malloc.h"
 #include "kernel/ui/modals/modal_manager.h"
-#include "util/heap.h"
+#include "pbl/util/heap.h"
 
 #include "syscall/syscall_internal.h"
 

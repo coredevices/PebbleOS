@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 #include "applib/app_inbox.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 // Design goals of this module:
 //

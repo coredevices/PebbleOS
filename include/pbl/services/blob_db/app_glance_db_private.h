@@ -5,7 +5,7 @@
 
 #include "pbl/services/timeline/attribute.h"
 #include "pbl/services/timeline/attribute_private.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #define APP_GLANCE_DB_CURRENT_VERSION (1)
 

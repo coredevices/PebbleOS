@@ -11,7 +11,7 @@
 #include "syscall/syscall_internal.h"
 #include "system/reboot_reason.h"
 #include "system/version.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 #include "util/time/time.h"
 
 #define HEARTBEAT_PERIOD_SEC 3600

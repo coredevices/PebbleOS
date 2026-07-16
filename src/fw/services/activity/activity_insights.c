@@ -27,11 +27,11 @@
 #include "shell/system_app_ids.auto.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/attributes.h"
-#include "util/math.h"
-#include "util/size.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
 #include "util/stats.h"
-#include "util/string.h"
+#include "pbl/util/string.h"
 #include "util/time/time.h"
 #include "util/units.h"
 
@@ -677,7 +677,7 @@ T_STATIC void prv_calculate_metric_history_stats(ActivityMetric metric,
 
   kernel_free(history);
 
-  INSIGHTS_LOG_DEBUG("Metric history stats - med: %"PRIu16" mean: %"PRIu16" tot: %"PRIu8
+  INSIGHTS_LOG_DEBUG("Metric history stats - med: %"PRIu32" mean: %"PRIu32" tot: %"PRIu8
                      " cons: %"PRIu8, stats->median, stats->mean, stats->total_days,
                      stats->consecutive_days);
 }
@@ -711,7 +711,7 @@ static bool prv_validate_history_stats(const ActivityInsightMetricHistoryStats *
   // Make sure enough days have been above the target
   // (start at 1 since we don't care about today's metric)
   for (uint32_t i = 1; i < history_len; ++i) {
-    if (history[i] < target) {
+    if (history[i] < (int32_t)target) {
       INSIGHTS_LOG_DEBUG("History validation failed - not above target on day %"PRIu32
                          ": %"PRIi32, i, history[i]);
       return false;
@@ -786,7 +786,7 @@ static bool prv_reward_check_common(const ActivityInsightSettings *insight_setti
 
   int32_t cur_metric;
   activity_get_metric(metric_stats->metric, 1, &cur_metric);
-  if (cur_metric < target) {
+  if (cur_metric < (int32_t)target) {
     INSIGHTS_LOG_DEBUG("Not triggering reward - not over target: %"PRIi32,
                        cur_metric);
     return false;
@@ -1131,7 +1131,7 @@ static NOINLINE void prv_do_activity_reward(time_t now_utc) {
   if (s_activity_reward_state.active_minutes <
       s_activity_reward_settings.reward.activity.trigger_active_minutes) {
     INSIGHTS_LOG_DEBUG("Not showing activity reward - have only been currently active for "
-                       "%"PRIu16" minutes out of %"PRIu8, s_activity_reward_state.active_minutes,
+                       "%"PRIu32" minutes out of %"PRIu8, s_activity_reward_state.active_minutes,
                        s_activity_reward_settings.reward.activity.trigger_active_minutes);
     return;
   }
@@ -1512,7 +1512,7 @@ static NOINLINE void prv_do_activity_summary(time_t now_utc) {
   // Make sure we're overdue for an update (either time interval or change in steps)
   const time_t next_update_time = s_activity_pin_state.next_update_time;
   ActivityScalarStore next_step_count = s_activity_pin_state.next_step_count;
-  if ((now_utc < next_update_time) && (steps < next_step_count)) {
+  if ((now_utc < next_update_time) && (steps < (int32_t)next_step_count)) {
     INSIGHTS_LOG_DEBUG("Not updating activity pin - less than next update time and next steps");
     return;
   }

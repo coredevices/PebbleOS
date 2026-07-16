@@ -15,10 +15,10 @@
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/clock.h"
 #include "pbl/services/activity/health_util.h"
-#include "util/size.h"
-#include "util/string.h"
+#include "pbl/util/size.h"
+#include "pbl/util/string.h"
 #include "util/time/time.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 
 #include <string.h>
 

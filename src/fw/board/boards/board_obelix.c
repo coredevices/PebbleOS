@@ -9,6 +9,7 @@
 #include "drivers/sf32lb52/debounced_button_definitions.h"
 #include "drivers/hrm/gh3x2x.h"
 #include "system/passert.h"
+#include "kernel/util/delay.h"
 
 #include "bf0_hal.h"
 
@@ -354,6 +355,10 @@ static const LSM6DSOConfig s_lsm6dso_config = {
       .peripheral = hwp_gpio1,
       .gpio_pin = 38,
     },
+    .int1_in = {
+      .gpio = hwp_gpio1,
+      .gpio_pin = 38,
+    },
 #ifdef CONFIG_IS_BIGBOARD
     .axis_map = {
         [AXIS_X] = 0,
@@ -564,9 +569,13 @@ const BoardConfigPower BOARD_CONFIG_POWER = {
 
 const BoardConfig BOARD_CONFIG = {
   .backlight_on_percent = 45,
-  .ambient_light_dark_threshold = 150,
-  .ambient_k_delta_threshold = 25,
-  .dynamic_backlight_min_threshold = 5,
+  .ambient_light_dark_threshold = 800,
+  .ambient_k_delta_threshold = 100,
+  // Bench-calibrated on 3 production units (unit spread 1.3%); dark floor
+  // is <20 counts so no offset is needed.
+  .ambient_light_lux_dark_offset = 0,
+  .ambient_light_lux_num = 100,
+  .ambient_light_lux_den = 483,
   .backlight_default_color = BACKLIGHT_COLOR_WARM_WHITE,
 };
 
@@ -667,6 +676,15 @@ void board_init(void) {
   // (0x21) SOFT_RESET (bit 6) restores the part to its powered-down defaults.
   i2c_use((I2CSlavePort *)&s_i2c_lis2dw12);
   i2c_write_register((I2CSlavePort *)&s_i2c_lis2dw12, 0x21, (1U << 6U));
+#if defined(CONFIG_BOARD_OBELIX_DVT) || defined(CONFIG_BOARD_OBELIX_BB2)
+  // These revisions require the LIS2DW12 internal ADDR pull-up to be disabled.
+  // Register 0x17 (undocumented, provided by FAE) bit 6 disconnects it.
+  delay_us(5);  // wait for the soft-reset to complete
+  uint8_t undoc;
+  if (i2c_read_register((I2CSlavePort *)&s_i2c_lis2dw12, 0x17, &undoc)) {
+    i2c_write_register((I2CSlavePort *)&s_i2c_lis2dw12, 0x17, undoc | (1U << 6U));
+  }
+#endif
   i2c_release((I2CSlavePort *)&s_i2c_lis2dw12);
 
   mic_init(MIC);

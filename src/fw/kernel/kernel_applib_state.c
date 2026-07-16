@@ -4,8 +4,8 @@
 #include "kernel_applib_state.h"
 
 #include "applib/ui/layer.h"
-#include "mcu/interrupts.h"
-#include "os/mutex.h"
+#include "pbl/mcu/interrupts.h"
+#include "pbl/os/mutex.h"
 
 #include "FreeRTOS.h"
 #include "task.h"

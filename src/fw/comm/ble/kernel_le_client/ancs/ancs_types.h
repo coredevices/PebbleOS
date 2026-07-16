@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "util/pstring.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include <inttypes.h>
 #include <stdbool.h>

@@ -4,12 +4,12 @@
 #include "applib/graphics/graphics.h"
 #include "applib/graphics/graphics_circle_private.h"
 #include "applib/graphics/framebuffer.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 
 #include "applib/ui/window_private.h"
 #include "applib/ui/layer.h"
 
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include "clar.h"
 #include "util.h"

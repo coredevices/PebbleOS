@@ -11,7 +11,7 @@
 #include "bf0_hal_dma.h"
 #include "bf0_hal_uart.h"
 
-#include "util/misc.h"
+#include "pbl/util/misc.h"
 
 static void prv_init(UARTDevice *dev, uint32_t mode) {
   HAL_StatusTypeDef ret;

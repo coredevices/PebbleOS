@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "util/trig.h"
-#include "util/math.h"
+#include "pbl/util/trig.h"
+#include "pbl/util/math.h"
 
 #include <math.h>
 #include <inttypes.h>

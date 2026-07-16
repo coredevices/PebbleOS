@@ -10,6 +10,7 @@ if CPUMODE
 
 config CPUMODE_SF32LB
     bool "SF32LB"
+    default y if SOC_SF32LB52
     help
       CPU performance mode for SF32LB platforms.
 

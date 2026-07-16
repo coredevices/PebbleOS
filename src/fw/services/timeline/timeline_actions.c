@@ -41,8 +41,8 @@
 #include "pbl/services/timeline/timeline_resources.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/size.h"
-#include "util/struct.h"
+#include "pbl/util/size.h"
+#include "pbl/util/struct.h"
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 

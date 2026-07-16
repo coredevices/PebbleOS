@@ -187,11 +187,11 @@ if __name__ == "__main__":
         args.sections = "t"
 
     tintin_dir = os.path.join(os.path.dirname(__file__), "..")
-    elf_path = os.path.join(tintin_dir, "build", "src", "fw", "tintin_fw.elf")
+    elf_path = os.path.join(tintin_dir, "build", "pebbleos.elf")
 
     sections = analyze_elf(elf_path, args.sections, args.fast)
 
-    analyze_map(os.path.join(tintin_dir, "build", "tintin_fw.map"), sections)
+    analyze_map(os.path.join(tintin_dir, "build", "pebbleos.map"), sections)
 
     if args.text_groups:
         print_groups(sections["t"], args.verbose)

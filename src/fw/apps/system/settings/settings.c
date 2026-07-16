@@ -13,9 +13,16 @@
 #include "pbl/services/i18n/i18n.h"
 #include "system/passert.h"
 #include "shell/prefs.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #define SETTINGS_CATEGORY_MENU_CELL_UNFOCUSED_ROUND_VERTICAL_PADDING 14
+
+// Larger round displays fit two unfocused rows on each side of the focused row
+#if PBL_DISPLAY_HEIGHT >= 200
+#define SETTINGS_CATEGORY_MENU_NUM_UNFOCUSED_ROWS_PER_SIDE 2
+#else
+#define SETTINGS_CATEGORY_MENU_NUM_UNFOCUSED_ROWS_PER_SIDE 1
+#endif
 
 #ifdef CONFIG_SETTINGS_ICONS
 // Icon resource IDs for each settings menu item (RESOURCE_ID_INVALID means no icon)
@@ -88,8 +95,9 @@ static int16_t prv_get_cell_height_callback(MenuLayer *menu_layer,
 
   const int16_t focused_cell_height = MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT;
   const int16_t unfocused_cell_height =
-      ((DISP_ROWS - focused_cell_height) / 2) -
-          SETTINGS_CATEGORY_MENU_CELL_UNFOCUSED_ROUND_VERTICAL_PADDING;
+      (((DISP_ROWS - focused_cell_height) / 2) -
+          SETTINGS_CATEGORY_MENU_CELL_UNFOCUSED_ROUND_VERTICAL_PADDING) /
+      SETTINGS_CATEGORY_MENU_NUM_UNFOCUSED_ROWS_PER_SIDE;
   return menu_layer_is_index_selected(menu_layer, cell_index) ? focused_cell_height :
                                                                 unfocused_cell_height;
 #else

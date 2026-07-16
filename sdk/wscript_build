@@ -22,11 +22,11 @@ def _generate_sdk_waf(ctx):
         "tools/resources/waftools/generate_resource_ball.py",
         "tools/resources/waftools/generate_pbpack.py",
         "tools/resources/waftools/generate_resource_id_header.py",
-        "waftools/file_name_c_define.py",
-        "waftools/ldscript.py",
-        "waftools/objcopy.py",
-        "waftools/pebble_sdk_gcc.py",
-        "waftools/pebble_sdk_version.py",
+        "tools/waf/file_name_c_define.py",
+        "tools/waf/ldscript.py",
+        "tools/waf/objcopy.py",
+        "tools/waf/pebble_sdk_gcc.py",
+        "tools/waf/pebble_sdk_version.py",
     ]
 
     pebble_waf_tools = []

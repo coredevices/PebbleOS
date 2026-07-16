@@ -4,7 +4,7 @@
 #pragma once
 
 #include "applib/unobstructed_area_service_private.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 void WEAK unobstructed_area_service_get_area(UnobstructedAreaState *state, GRect *area) { }
 

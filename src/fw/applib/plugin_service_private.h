@@ -5,7 +5,7 @@
 #include "kernel/events.h"
 #include "event_service_client.h"
 #include "plugin_service.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 
 // We dynamically allocate one of these for every service we subscribe to

@@ -11,7 +11,7 @@
 #include "system/passert.h"
 #include "util/bitset.h"
 #include "util/graphics.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #define MAX_SUPPORTED_PALETTE_ENTRIES 4
 

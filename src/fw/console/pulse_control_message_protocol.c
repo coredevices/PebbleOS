@@ -5,7 +5,7 @@
 
 #include "pulse_control_message_protocol.h"
 
-#include <util/attributes.h>
+#include <pbl/util/attributes.h>
 
 #include <stdint.h>
 #include <string.h>

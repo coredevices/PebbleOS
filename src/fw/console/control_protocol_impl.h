@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "pbl/services/new_timer/new_timer.h"
-#include <util/attributes.h>
+#include <pbl/util/attributes.h>
 #include <util/net.h>
 
 #include <stdbool.h>

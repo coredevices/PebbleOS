@@ -15,9 +15,9 @@
 #include "kernel/event_loop.h"
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
 #include "pbl/services/regular_timer.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
-#include <btutil/bt_uuid.h>
+#include <pbl/btutil/bt_uuid.h>
 
 //! Reference to the reconnection advertising job.
 //! bt_lock() needs to be taken before accessing this variable.

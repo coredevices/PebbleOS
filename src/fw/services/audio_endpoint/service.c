@@ -9,7 +9,7 @@
 #include "pbl/services/new_timer/new_timer.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/circular_buffer.h"
+#include "pbl/util/circular_buffer.h"
 
 PBL_LOG_MODULE_DEFINE(service_audio_endpoint, CONFIG_SERVICE_AUDIO_ENDPOINT_LOG_LEVEL);
 

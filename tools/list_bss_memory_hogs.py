@@ -4,7 +4,7 @@
 import os
 from operator import itemgetter
 
-bash = """arm-none-eabi-objdump -x src/fw/tintin_fw.elf | grep '\.bss' | tail -n+2 | awk '{print $5, $6}' > /tmp/bss_symbols.txt"""
+bash = """arm-none-eabi-objdump -x pebbleos.elf | grep '\.bss' | tail -n+2 | awk '{print $5, $6}' > /tmp/bss_symbols.txt"""
 print(bash)
 os.system(bash)
 

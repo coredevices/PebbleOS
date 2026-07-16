@@ -7,7 +7,7 @@
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/timeline/timeline_resources.h"
 #include "system/passert.h"
-#include "util/struct.h"
+#include "pbl/util/struct.h"
 
 // Stubs
 /////////////////////////

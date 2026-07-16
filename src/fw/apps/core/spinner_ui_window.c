@@ -6,7 +6,7 @@
 #include "applib/graphics/gpath_builder.h"
 #include "applib/graphics/graphics.h"
 #include "applib/graphics/gtypes.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 #include "applib/ui/animation.h"
 #include "applib/ui/layer.h"
 #include "applib/ui/property_animation.h"

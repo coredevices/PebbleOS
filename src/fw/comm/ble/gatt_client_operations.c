@@ -9,7 +9,7 @@
 #include "comm/bt_lock.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
-#include "util/list.h"
+#include "pbl/util/list.h"
 #include "system/passert.h"
 
 // -------------------------------------------------------------------------------------------------

@@ -10,9 +10,9 @@
 #include "applib/app_logging.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 #include "util/swap.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 
 #include <string.h>
 #include <stdlib.h>

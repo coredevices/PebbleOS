@@ -18,8 +18,8 @@
 #include "pbl/services/timeline/timeline_resources.h"
 #include "shell/system_theme.h"
 #include "system/logging.h"
-#include "util/size.h"
-#include "util/string.h"
+#include "pbl/util/size.h"
+#include "pbl/util/string.h"
 
 #define ARROW_SIZE_PX \
     PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,     \

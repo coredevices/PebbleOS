@@ -15,7 +15,6 @@
 #define APP_ID_TIMELINE ((AppInstallId) -10)
 #define APP_ID_LAUNCHER_MENU ((AppInstallId) -54)
 #define APP_ID_WEATHER ((AppInstallId) -59)
-#define APP_ID_SHUTDOWN_CHARGING ((AppInstallId) -60)
 #define APP_ID_BATTERY_CRITICAL ((AppInstallId) -62)
 #define APP_ID_GOLF ((AppInstallId) -52)
 #define APP_ID_SPORTS ((AppInstallId) -53)

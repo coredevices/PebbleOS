@@ -12,7 +12,7 @@
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/i18n/i18n.h"
 
-#include <util/size.h>
+#include <pbl/util/size.h>
 
 #include <stdio.h>
 

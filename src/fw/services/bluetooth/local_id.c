@@ -5,10 +5,10 @@
 
 #include "mfg/mfg_serials.h"
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
-#include "util/attributes.h"
-#include "util/hash.h"
-#include "util/size.h"
-#include "util/string.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/hash.h"
+#include "pbl/util/size.h"
+#include "pbl/util/string.h"
 
 #include <stdbool.h>
 #include <stdio.h>

@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "tests.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 
 static GBitmap *s_gfx_rotated_bitmap_bitmap;
 static GBitmap *s_gfx_rotated_bitmap_64_bitmap;

@@ -4,9 +4,9 @@
 #include "applib/graphics/graphics.h"
 #include "applib/graphics/framebuffer.h"
 #include "applib/graphics/gtransform.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 
-#include "util/math_fixed.h"
+#include "pbl/util/math_fixed.h"
 
 #include "clar.h"
 

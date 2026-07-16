@@ -15,7 +15,7 @@
 #include "drivers/qemu/qemu_serial.h"
 #include "drivers/qemu/qemu_serial_private.h"
 
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #include <bluetooth/qemu_transport.h>
 

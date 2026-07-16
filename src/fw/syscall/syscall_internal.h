@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -41,6 +41,18 @@ void syscall_assert_userspace_buffer(const void* buf, size_t num_bytes);
 
 // Used to implement DEFINE_SYSCALL
 void syscall_internal_maybe_skip_privilege(void);
+
+
+//! Return true when @p caller_pc is the return PC from the private
+//! mcu_call_unprivileged() re-entry SVC and the current task is inside
+//! mcu_call_unprivileged(). This is only a predicate; it does not consume or
+//! change the saved call state.
+bool mcu_call_unprivileged_reentry_is_allowed(uint32_t caller_pc);
+
+//! Handle an authorized mcu_call_unprivileged() re-entry SVC. This rechecks the
+//! stacked return PC, consumes the saved call state, and redirects the exception
+//! frame to mcu_call_unprivileged_resume().
+bool mcu_call_unprivileged_reentry_setup(uintptr_t orig_sp, uintptr_t *lr_ptr);
 
 //! Unused bytes on the App/Worker syscall stacks (for sizing). Returns 0xFFFF
 //! when SYSCALL_PRIVILEGED_STACK is disabled.

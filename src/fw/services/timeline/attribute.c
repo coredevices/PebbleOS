@@ -8,7 +8,7 @@
 #include "system/passert.h"
 #include "kernel/pbl_malloc.h"
 #include "system/logging.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 

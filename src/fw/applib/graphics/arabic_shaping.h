@@ -23,6 +23,12 @@ typedef enum {
 //! @return true if the codepoint is a shapeable Arabic letter
 bool arabic_is_shapeable(Codepoint cp);
 
+//! Check if a codepoint is a transparent Arabic combining mark (harakat etc.).
+//! These marks sit on a base letter and must be skipped when picking the
+//! previous/next letter for cursive joining, so the layout/measurement path
+//! shapes the same forms the renderer draws.
+bool arabic_is_transparent(Codepoint cp);
+
 //! Shape a single Arabic codepoint based on its neighbors.
 //!
 //! Returns the contextual presentation form for `curr_cp` given the

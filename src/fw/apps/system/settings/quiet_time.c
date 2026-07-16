@@ -20,8 +20,8 @@
 #include "pbl/services/notifications/alerts_preferences_private.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/size.h"
-#include "util/string.h"
+#include "pbl/util/size.h"
+#include "pbl/util/string.h"
 #include "shell/prefs.h"
 
 #include <stdio.h>

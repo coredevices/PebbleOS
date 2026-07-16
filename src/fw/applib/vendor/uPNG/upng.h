@@ -41,7 +41,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "util/pack.h"
 
 // PNG files start with [137, 'P', 'N', 'G']

@@ -4,7 +4,7 @@
 #include "bitmap_layer.h"
 
 #include "applib/graphics/graphics.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 #include "applib/applib_malloc.auto.h"
 #include "process_management/process_manager.h"
 

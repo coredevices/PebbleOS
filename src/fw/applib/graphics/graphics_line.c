@@ -5,7 +5,7 @@
 #include "graphics_private.h"
 #include "graphics.h"
 #include "system/passert.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 #include "util/swap.h"
 
 #define MINIMUM_PRECISE_STROKE_WIDTH 2

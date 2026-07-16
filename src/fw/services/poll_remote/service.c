@@ -7,7 +7,7 @@
 #include "pbl/services/system_task.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #include <string.h>
 

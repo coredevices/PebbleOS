@@ -3,8 +3,8 @@
 
 #include "stringlist.h"
 
-#include "util/math.h"
-#include "util/string.h"
+#include "pbl/util/math.h"
+#include "pbl/util/string.h"
 
 #include <stdbool.h>
 #include <string.h>

@@ -27,11 +27,11 @@
 #include "pbl/services/process_management/app_storage.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/circular_cache.h"
-#include "util/size.h"
+#include "pbl/util/circular_cache.h"
+#include "pbl/util/size.h"
 
-#include <os/mutex.h>
-#include <util/attributes.h>
+#include <pbl/os/mutex.h>
+#include <pbl/util/attributes.h>
 
 typedef struct PACKED RecentApp {
   AppInstallId id;

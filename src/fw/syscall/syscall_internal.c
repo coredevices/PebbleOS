@@ -6,7 +6,7 @@
 #include "applib/app_logging.h"
 #include "kernel/memory_layout.h"
 #include "kernel/pebble_tasks.h"
-#include "mcu/privilege.h"
+#include "pbl/mcu/privilege.h"
 #include "process_management/app_manager.h"
 #include "process_management/pebble_process_md.h"
 #include "process_management/process_loader.h"
@@ -14,6 +14,7 @@
 #include "syscall/syscall.h"
 #include "system/logging.h"
 #include "system/passert.h"
+#include "pbl/util/size.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -21,6 +22,7 @@
 #include <cmsis_core.h>
 #include <stdint.h>
 #include <inttypes.h>
+#include <stddef.h>
 
 // Run App/Worker syscalls on a dedicated privileged stack instead of the
 // caller's small unprivileged one, so a task that exhausts its stack faults
@@ -55,55 +57,194 @@ static void prv_set_syscall_lr(uintptr_t new_lr) {
   vTaskSetThreadLocalStoragePointer(NULL, TLS_SYSCALL_LR_IDX, (void *)new_lr);
 }
 
-//! Public setter used by mcu_call_unprivileged() to restore the TLS LR slot
-//! after the nested SVC inside the trampoline clobbers it.
-USED void syscall_set_outer_lr(uintptr_t new_lr) {
-  prv_set_syscall_lr(new_lr);
+typedef struct McuUnprivilegedCallContext {
+  // Continuation state for mcu_call_unprivileged(). The callback runs as
+  // native app code, so keep the privileged return path out of its stack.
+  uint32_t saved_r4_r11[8];
+  uintptr_t caller_lr;
+  uintptr_t entry_sp;
+  uintptr_t outer_syscall_lr;
+  uintptr_t outer_syscall_sp;
+  bool active;
+  TaskHandle_t handle;
+} McuUnprivilegedCallContext;
+
+_Static_assert(sizeof(((McuUnprivilegedCallContext *)0)->saved_r4_r11) == 32,
+               "mcu_call_unprivileged asm assumes push {r4-r11} saves 32 bytes");
+_Static_assert(sizeof(uintptr_t) == sizeof(uint32_t),
+               "mcu_call_unprivileged asm assumes 32-bit pointers");
+
+static McuUnprivilegedCallContext s_unprivileged_call_ctx[NumPebbleTask];
+
+static McuUnprivilegedCallContext *prv_unprivileged_call_ctx_for_current_task(void) {
+  const PebbleTask task = pebble_task_get_current();
+  if (task >= NumPebbleTask) {
+    return NULL;
+  }
+  return &s_unprivileged_call_ctx[task];
+}
+
+static USED void mcu_call_unprivileged_enter(void (*fn)(void *), void *ctx,
+                                             uintptr_t caller_lr, uintptr_t entry_sp,
+                                             const uint32_t *saved_regs) {
+  (void)ctx;
+
+  PBL_ASSERTN(mcu_state_is_thread_privileged());
+  PBL_ASSERTN(fn != NULL);
+
+  McuUnprivilegedCallContext *state = prv_unprivileged_call_ctx_for_current_task();
+  PBL_ASSERTN(state != NULL);
+
+  const TaskHandle_t handle = xTaskGetCurrentTaskHandle();
+  if (state->active && state->handle != handle) {
+    // Slots are indexed by PebbleTask. If a task died mid-callback and a new
+    // FreeRTOS task reused the PebbleTask, discard the old call state first.
+    *state = (McuUnprivilegedCallContext) { 0 };
+  }
+
+  PBL_ASSERTN(!state->active);
+
+  *state = (McuUnprivilegedCallContext) {
+    .active = true,
+    .handle = handle,
+    .caller_lr = caller_lr,
+    .entry_sp = entry_sp,
+    .outer_syscall_lr = get_syscall_lr(),
+    .outer_syscall_sp = prv_get_syscall_sp(),
+  };
+
+  for (size_t i = 0; i < ARRAY_LENGTH(state->saved_r4_r11); ++i) {
+    state->saved_r4_r11[i] = saved_regs[i];
+  }
+}
+
+EXTERNALLY_VISIBLE void mcu_call_unprivileged_resume(void);
+
+static uintptr_t prv_mcu_call_unprivileged_reentry_return_pc(void) {
+  extern const uint16_t __mcu_call_unprivileged_svc[];
+
+  // A 16-bit SVC returns to the next halfword.
+  return (uintptr_t)__mcu_call_unprivileged_svc + sizeof(uint16_t);
+}
+
+static McuUnprivilegedCallContext *prv_active_unprivileged_call_ctx_for_current_task(void) {
+  McuUnprivilegedCallContext *state = prv_unprivileged_call_ctx_for_current_task();
+  if (state == NULL || !state->active ||
+      state->handle != xTaskGetCurrentTaskHandle()) {
+    return NULL;
+  }
+  return state;
+}
+
+bool mcu_call_unprivileged_reentry_is_allowed(uint32_t caller_pc) {
+  if (caller_pc != prv_mcu_call_unprivileged_reentry_return_pc()) {
+    return false;
+  }
+
+  return prv_active_unprivileged_call_ctx_for_current_task() != NULL;
+}
+
+bool mcu_call_unprivileged_reentry_setup(uintptr_t orig_sp, uintptr_t *lr_ptr) {
+  (void)orig_sp;
+
+  // lr_ptr is the saved LR field in the Cortex-M basic exception frame:
+  //   r0 r1 r2 r3 r12 lr pc xpsr
+  // Check the stacked return PC here too, so setup consumes state only for the
+  // same re-entry SVC that the SVC gate accepted.
+  uintptr_t *stacked_r0 = lr_ptr - 5;
+  uintptr_t *stacked_pc = lr_ptr + 1;
+  if ((uint32_t)*stacked_pc != prv_mcu_call_unprivileged_reentry_return_pc()) {
+    return false;
+  }
+
+  McuUnprivilegedCallContext *state = prv_active_unprivileged_call_ctx_for_current_task();
+  if (state == NULL) {
+    return false;
+  }
+
+  state->active = false;
+  state->handle = NULL;
+
+  // The inner SVC uses the same TLS slots as the app syscall that entered XS.
+  // Put them back before the runtime continues.
+  prv_set_syscall_lr(state->outer_syscall_lr);
+  prv_set_syscall_sp(state->outer_syscall_sp);
+
+  // Return from the exception into a fixed firmware continuation, not back
+  // into the callback. The continuation restores SP before using the stack.
+  *stacked_r0 = (uintptr_t)state;
+  *stacked_pc = (uintptr_t)&mcu_call_unprivileged_resume;
+  *lr_ptr = 0;
+
+  return true;
 }
 
 //! Run @p fn unprivileged for the duration of one call, then return to the
 //! caller still in privileged thread mode.
 //!
-//! Placed in .syscall_text so the SVC handler's xApplicationIsAllowed-
-//! ToRaisePrivilege() check permits the inner `svc 2` to re-elevate after
-//! @p fn returns. The inner SVC clobbers the per-task TLS LR slot that the
-//! outer syscall's drop-privilege return path reads from, so we snapshot and
-//! restore it across the bracket.
-EXTERNALLY_VISIBLE NAKED_FUNC USED SECTION(".syscall_text.run_unprivileged")
+//! Used when privileged firmware invokes an app-supplied callback that should
+//! run with app privileges. The callback runs as app code, so MPU violations
+//! stay in the app/worker task.
+//!
+//! The re-entry SVC is deliberately outside .syscall_text. It is only accepted
+//! while this call is active for the current task, and the SVC handler resumes
+//! through saved kernel state instead of the callback's stack.
+EXTERNALLY_VISIBLE NAKED_FUNC USED
 void mcu_call_unprivileged(void (*fn)(void *), void *ctx) {
   __asm volatile (
-    "  push {r4-r6, lr}                  \n"
-    "  mov r4, r0                        \n" // r4 = fn
-    "  mov r5, r1                        \n" // r5 = ctx
+    // Keep fn/ctx across the setup call. Copy r4-r11 too; native app code is
+    // not trusted to preserve the privileged caller's callee-saved registers.
+    "  push {r4-r11}                    \n"
+    "  push {r0, r1}                    \n"
+    "  mov r2, lr                       \n" // r2 = privileged caller LR
+    // These offsets are tied to the two pushes above:
+    //   push {r4-r11} = 32 bytes, push {r0,r1} = 8 bytes.
+    "  add r3, sp, #40                  \n" // r3 = entry SP before pushes
+    "  add r12, sp, #8                  \n" // r12 = saved r4-r11 pointer
+    "  sub sp, sp, #8                   \n" // keep stack 8-byte aligned for C call
+    "  str r12, [sp]                    \n" // 5th arg: saved_regs pointer
+    "  bl mcu_call_unprivileged_enter   \n"
+    "  add sp, sp, #8                   \n" // discard 5th arg + alignment pad
+    "  pop {r2, r3}                     \n" // r2 = fn, r3 = ctx
+    "  add sp, sp, #32                  \n" // saved r4-r11 copied to kernel state
 
-    // Snapshot outer syscall's TLS LR; the SVC below will overwrite it.
-    "  bl get_syscall_lr                 \n"
-    "  mov r6, r0                        \n" // r6 = outer TLS LR
-
-    // Drop privilege (CONTROL.nPRIV = 1).
-    "  mov r0, #0                        \n"
-    "  bl mcu_state_set_thread_privilege \n"
+    // Drop privilege inline (CONTROL.nPRIV = 1). Calling the C helper would
+    // clobber the app callback registers we just restored.
+    "  mrs r0, control                  \n"
+    "  orr r0, r0, #1                   \n"
+    "  msr control, r0                  \n"
+    "  isb                              \n"
 
     // Invoke fn(ctx) unprivileged. MPU-violating accesses fault here.
-    "  mov r0, r5                        \n"
-    "  blx r4                            \n"
+    "  mov r0, r3                       \n"
+    "  blx r2                           \n"
 
-    // Re-raise via svc 2. xApplicationIsAllowedToRaisePrivilege accepts this
-    // because we are in the .syscall_text region.
-    "  svc 2                             \n"
+    // Re-enter privileged mode. The handler accepts this exact callsite only
+    // while this mcu_call_unprivileged() call is active for the current task.
+    "  .global __mcu_call_unprivileged_svc \n"
+    "__mcu_call_unprivileged_svc:       \n"
+    "  svc 2                            \n"
+    // Deliberate fail-closed trap. If the SVC was denied or not rewritten, do
+    // not keep executing in the callback's control flow.
+    "  udf #0                           \n"
+  );
+}
 
-    // The SVC handler's vSetupSyscallRegisters() saved a return-into-this-
-    // function address into the TLS LR slot and stamped prv_drop_privilege
-    // onto our stacked LR. Restore the outer syscall's TLS LR so when *that*
-    // syscall eventually unwinds through prv_drop_privilege it returns to the
-    // right place.
-    "  mov r0, r6                        \n"
-    "  bl syscall_set_outer_lr           \n"
-
-    // Pop the real caller's LR (overwriting the prv_drop_privilege value left
-    // in the register by the SVC handler) and return.
-    "  pop {r4-r6, lr}                   \n"
-    "  bx lr                             \n"
+EXTERNALLY_VISIBLE NAKED_FUNC USED
+void mcu_call_unprivileged_resume(void) {
+  __asm volatile (
+    // r0 is the state pointer stamped into the frame by Handler mode. Restore
+    // SP before any stack use.
+    "  ldr r12, [r0, #%c[caller_lr_off]] \n"
+    "  ldr r1, [r0, #%c[entry_sp_off]]  \n"
+    "  mov sp, r1                       \n"
+    "  adds r0, r0, #%c[regs_off]       \n"
+    "  ldmia r0, {r4-r11}               \n"
+    "  bx r12                           \n"
+    :
+    : [caller_lr_off] "i" (offsetof(McuUnprivilegedCallContext, caller_lr)),
+      [entry_sp_off] "i" (offsetof(McuUnprivilegedCallContext, entry_sp)),
+      [regs_off] "i" (offsetof(McuUnprivilegedCallContext, saved_r4_r11))
   );
 }
 
@@ -319,6 +460,10 @@ bool syscall_internal_check_return_address(void * ret_addr) {
 // It then stores the SP and LR in thread local storage,
 // and updates the saved LR to point at the drop privilege code.
 void vSetupSyscallRegisters(uintptr_t orig_sp, uintptr_t *lr_ptr) {
+  if (mcu_call_unprivileged_reentry_setup(orig_sp, lr_ptr)) {
+    return;
+  }
+
   // These calls should be safe because the scheduler needs to call the svc handler
   // before the current task is changed. Since this function is called from the svc
   // handler, modifying the current task will always finish before a context switch

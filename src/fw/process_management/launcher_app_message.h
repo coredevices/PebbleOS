@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 //! Launcher App Message is deprecated and on Android >= 2.3 and other devices that pass the
 //! support flags for the AppRunState endpoint will use that endpoint (0x34) instead.  That

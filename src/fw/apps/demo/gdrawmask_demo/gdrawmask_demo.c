@@ -11,8 +11,8 @@
 #include "applib/ui/ui.h"
 #include "kernel/pbl_malloc.h"
 #include "syscall/syscall.h"
-#include "util/size.h"
-#include "util/trig.h"
+#include "pbl/util/size.h"
+#include "pbl/util/trig.h"
 
 typedef struct {
   Window window;

@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "util/list.h"
-#include "util/attributes.h"
+#include "pbl/util/list.h"
+#include "pbl/util/attributes.h"
 
 #include <stdbool.h>
 #include <stddef.h>

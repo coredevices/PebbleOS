@@ -5,7 +5,7 @@
 
 #include "pbl/services/audio_endpoint.h"
 #include "pbl/services/voice_endpoint.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "util/generic_attribute.h"
 
 // Shared message definitions with unit test

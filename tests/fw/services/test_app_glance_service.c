@@ -12,7 +12,7 @@
 #include "pbl/services/blob_db/app_glance_db.h"
 #include "pbl/services/blob_db/app_glance_db_private.h"
 #include "pbl/services/filesystem/pfs.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 // Fakes
 ////////////////////////////////////////////////////////////////

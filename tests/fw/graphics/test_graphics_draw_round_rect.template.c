@@ -7,7 +7,7 @@
 #include "applib/ui/window_private.h"
 #include "applib/ui/layer.h"
 
-#include "util/math.h"
+#include "pbl/util/math.h"
 #include "util.h"
 
 #include "clar.h"

@@ -10,11 +10,14 @@
 #include <comm/bt_lock.h>
 #include <host/ble_gap.h>
 #include <host/ble_hs_hci.h>
+#include <kernel/pbl_malloc.h>
+#include <os/os_mbuf.h>
 #include <system/logging.h>
 #include <system/passert.h>
-#include <util/math.h>
+#include <pbl/util/math.h>
 
 #include "nimble_pebble_pairing_service.h"
+#include "nimble_gattc_op_queue.h"
 #include "nimble_type_conversions.h"
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
@@ -25,13 +28,29 @@ static bool s_pairing_in_progress;
 
 static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
                                          struct ble_gatt_attr *attr, void *arg) {
-  if (error->status == 0) {
-    size_t len = MIN(attr->om->om_len, sizeof(s_device_name) - 1);
-    strncpy(s_device_name, (char *)attr->om->om_data, len);
-    s_device_name[len] = '\0';
+  if (error->status != 0) {
+    nimble_gattc_op_queue_complete();
+    return 0;
   }
 
+  size_t len = MIN(OS_MBUF_PKTLEN(attr->om), sizeof(s_device_name) - 1);
+  os_mbuf_copydata(attr->om, 0, len, s_device_name);
+  s_device_name[len] = '\0';
+
   return 0;
+}
+
+static int prv_device_name_read_op_start(void *ctx) {
+  const uint16_t conn_handle = *(uint16_t *)ctx;
+
+  int rc = ble_gattc_read_by_uuid(conn_handle, 1, UINT16_MAX,
+                                  (ble_uuid_t *)&s_device_name_chr_uuid,
+                                  prv_device_name_read_event_cb, NULL);
+  if (rc != 0) {
+    PBL_LOG_ERR("Pairing device name read failed to start (rc=0x%04x)", (uint16_t)rc);
+  }
+
+  return rc;
 }
 
 void bt_driver_advert_advertising_disable(void) {
@@ -86,6 +105,17 @@ static void prv_handle_connection_event(struct ble_gap_event *event) {
   // If OTA address != ID address, then the address must be resolved.
   // This happens for an already paired devices.
   complete_event.is_resolved = ble_addr_cmp(&desc.peer_id_addr, &desc.peer_ota_addr) != 0;
+
+  {
+    BTDeviceAddress ota_addr, id_addr;
+    nimble_addr_to_pebble_addr(&desc.peer_ota_addr, &ota_addr);
+    nimble_addr_to_pebble_addr(&desc.peer_id_addr, &id_addr);
+    PBL_LOG_DBG("Conn compl: ota=" BT_DEVICE_ADDRESS_FMT " atype=%u",
+                BT_DEVICE_ADDRESS_XPLODE(ota_addr), desc.peer_ota_addr.type);
+    PBL_LOG_DBG("Conn compl: id=" BT_DEVICE_ADDRESS_FMT " atype=%u",
+                BT_DEVICE_ADDRESS_XPLODE(id_addr), desc.peer_id_addr.type);
+  }
+
   if (complete_event.is_resolved) {
     int rc;
     struct ble_store_key_sec key_sec;
@@ -99,6 +129,7 @@ static void prv_handle_connection_event(struct ble_gap_event *event) {
       // We can get a resolved address in case of a repeated pairing event,
       // where peer security is deleted. An identity resolved event will be
       // received later after the new pairing is completed.
+      PBL_LOG_INFO("Address resolved but no stored peer security (rc=%d)", rc);
       complete_event.is_resolved = false;
     } else {
       memcpy(complete_event.irk.data, value_sec.irk, 16);
@@ -107,9 +138,9 @@ static void prv_handle_connection_event(struct ble_gap_event *event) {
     // If the address is not resolved, pairing is gonna happen.
     // Trigger name read to have it ready for the pairing confirmation.
     memset(s_device_name, 0, sizeof(s_device_name));
-    ble_gattc_read_by_uuid(event->connect.conn_handle, 1, UINT16_MAX,
-                           (ble_uuid_t *)&s_device_name_chr_uuid, prv_device_name_read_event_cb,
-                           NULL);
+    uint16_t *conn_handle = kernel_malloc_check(sizeof(*conn_handle));
+    *conn_handle = event->connect.conn_handle;
+    nimble_gattc_op_queue_push(prv_device_name_read_op_start, conn_handle);
   }
 
   nimble_conn_params_to_pebble(&desc, &complete_event.conn_params);
@@ -143,6 +174,10 @@ static void prv_handle_enc_change_event(struct ble_gap_event *event) {
     PBL_LOG_ERR("prv_handle_enc_change_event: Failed to find connection descriptor");
     return;
   }
+
+  PBL_LOG_INFO("Encryption change: status=0x%04x encrypted=%u bonded=%u",
+               (uint16_t)event->enc_change.status, desc.sec_state.encrypted,
+               desc.sec_state.bonded);
 
   struct BleEncryptionChange enc_change_event = {
       .encryption_enabled = desc.sec_state.encrypted,
@@ -212,6 +247,8 @@ static void prv_handle_passkey_event(struct ble_gap_event *event) {
 }
 
 static void prv_handle_pairing_complete_event(struct ble_gap_event *event) {
+  PBL_LOG_INFO("Pairing complete: status=0x%04x", (uint16_t)event->pairing_complete.status);
+
   if (!s_pairing_in_progress) {
     return;
   }
@@ -298,6 +335,7 @@ static int prv_handle_repeat_pairing_event(struct ble_gap_event *event) {
     return ret;
   }
 
+  PBL_LOG_INFO("Repeat pairing: deleting stored peer keys and retrying");
   ble_store_util_delete_peer(&desc.peer_id_addr);
 
   return BLE_GAP_REPEAT_PAIRING_RETRY;

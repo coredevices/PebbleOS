@@ -8,7 +8,7 @@
 
 #include "applib/accel_service_private.h"
 #include "applib/health_service.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "util/time/time.h"
 
 // Max # of days of history we store

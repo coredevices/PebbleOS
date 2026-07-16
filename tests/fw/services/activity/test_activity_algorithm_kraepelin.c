@@ -16,8 +16,8 @@
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/settings/settings_file.h"
 #include "pbl/services/system_task.h"
-#include "util/math.h"
-#include "util/size.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -79,7 +79,7 @@ static struct tm s_start_time_tm = {
 
 // ============================================================================================
 // Misc stubs
-uint32_t ambient_light_get_light_level(void) {
+uint32_t light_get_ambient_lux(void) {
   return s_alg_next_light << 4;
 }
 
@@ -842,9 +842,9 @@ void test_activity_algorithm_kraepelin__steps_during_sleep(void) {
   s_kalg_sleep_m = 0;
 
   activity_algorithm_metrics_changed_notification();
-  uint16_t steps_awake_60m;
-  uint16_t steps_awake_100m;
-  uint16_t steps_awake_120m;
+  uint32_t steps_awake_60m;
+  uint32_t steps_awake_100m;
+  uint32_t steps_awake_120m;
 
   // Call the minute handler, which should zero out steps that occur while sleeping
   prv_feed_minute_data(60, &minute_data[0], false /*simulate_bg_delays*/);
@@ -880,9 +880,9 @@ void test_activity_algorithm_kraepelin__steps_during_sleep(void) {
   s_kalg_sleep_m = 100;
 
   activity_algorithm_metrics_changed_notification();
-  uint16_t steps_asleep_60m;
-  uint16_t steps_asleep_100m;
-  uint16_t steps_asleep_120m;
+  uint32_t steps_asleep_60m;
+  uint32_t steps_asleep_100m;
+  uint32_t steps_asleep_120m;
 
   // Call the minute handler, which should zero out steps that occur while sleeping
   prv_feed_minute_data(60, &minute_data[0], false /*simulate_bg_delays*/);

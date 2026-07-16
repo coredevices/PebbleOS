@@ -30,9 +30,9 @@
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/array.h"
-#include "util/attributes.h"
-#include "util/size.h"
-#include "util/uuid.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/size.h"
+#include "pbl/util/uuid.h"
 
 // This is used to determine whether this app was launched as Timeline or Timeline Past.
 // See timeline_get_app_info, timeline_past_get_app_info, and the usage of sys_get_app_uuid.

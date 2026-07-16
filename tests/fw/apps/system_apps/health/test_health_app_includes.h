@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "applib/ui/window_private.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include "clar.h"
 

@@ -3,7 +3,7 @@
 
 #include "pbl/services/timeline/item.h"
 
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include "clar.h"
 

@@ -6,7 +6,7 @@
 #include "applib/graphics/gtypes.h"
 #include "applib/graphics/gcolor_definitions.h"
 #include "pbl/services/weather/weather_types.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 // Do NOT add entries to the following arrays. See weather_type_tuples.def
 static const char *s_weather_type_names[] = {
