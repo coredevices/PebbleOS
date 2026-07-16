@@ -1,3 +1,16 @@
+NOTICE OF MODIFICATION
+======================
+The EMOJI_14.pbf, EMOJI_18.pbf, EMOJI_24.pbf and EMOJI_28.pbf files have been
+extended with additional emoji glyphs so that codepoints absent from the
+original community set render a glyph instead of the missing-glyph box. The
+added glyphs are rendered from Noto Emoji, Copyright 2013 Google LLC, licensed
+under the SIL Open Font License, Version 1.1 — the full text is in the
+accompanying file EMOJI.NOTO.OFL.txt.
+
+The original community glyphs described below are retained unchanged and remain
+under the Apache License, Version 2.0.
+=============================================================================
+
 The files:
   - EMOJI_14.pbf
   - EMOJI_18.pbf
