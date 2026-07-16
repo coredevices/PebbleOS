@@ -21,6 +21,10 @@
 #include "applib/app_timer.h"
 #include "applib/app_launch_reason.h"
 #include "applib/ui/click_internal.h"
+#include "applib/ui/dialogs/dialog.h"
+#include "applib/ui/dialogs/expandable_dialog.h"
+#include "pbl/services/i18n/i18n.h"
+#include "resource/resource_ids.auto.h"
 #include "pbl/services/notifications/do_not_disturb.h"
 #include "system/logging.h"
 #include "system/passert.h"
@@ -62,6 +66,28 @@ static void prv_launch_app_via_button(AppLaunchEventConfig *config,
 
 static bool prv_is_combo_pressed(uint8_t combo_buttons) {
   return (s_buttons_pressed & combo_buttons) == combo_buttons;
+}
+
+// Shown when a quick launch button has an app assigned but the app is not on the watch,
+// e.g. the phone removed it to stay under the locker sync limit.
+static void prv_show_missing_app_dialog(void) {
+  ExpandableDialog *expandable_dialog = expandable_dialog_create("Quick Launch Missing App");
+  Dialog *dialog = expandable_dialog_get_dialog(expandable_dialog);
+  const char *text = i18n_noop("This app is no longer on your watch. Open the Pebble app on "
+                               "your phone to add it back.");
+  dialog_set_text(dialog, i18n_get(text, expandable_dialog));
+  dialog_set_icon(dialog, RESOURCE_ID_GENERIC_WARNING_SMALL);
+  i18n_free(text, expandable_dialog);
+  expandable_dialog_push(expandable_dialog, modal_manager_get_window_stack(ModalPriorityAlert));
+}
+
+static bool prv_handle_missing_app(AppInstallId app_id, ButtonId button) {
+  if (app_id != INSTALL_ID_INVALID) {
+    return false;
+  }
+  PBL_LOG_WRN("Quick launch app for button %d is not installed", button);
+  prv_show_missing_app_dialog();
+  return true;
 }
 
 static bool prv_combo_is_enabled(uint8_t combo_buttons) {
@@ -125,16 +151,17 @@ static void prv_combo_back_timer_callback(void *data) {
   const ButtonId source_button =
       (s_active_combo_buttons == COMBO_BACK_UP_BUTTONS) ? BUTTON_ID_BACK : BUTTON_ID_UP;
   s_active_combo_buttons = BIT_CLEAR;
-  if (app_id != INSTALL_ID_INVALID) {
-    // Reset all button states before launching app to prevent state corruption.
-    s_buttons_pressed = BIT_CLEAR;
-    app_manager_put_launch_app_event(&(AppLaunchEventConfig) {
-      .id = app_id,
-      .common.reason = APP_LAUNCH_QUICK_LAUNCH,
-      .common.button = source_button,
-      .common.args = (void*)APP_QUICK_LAUNCH_ACTION_COMBO,
-    });
+  // Reset all button states before launching app to prevent state corruption.
+  s_buttons_pressed = BIT_CLEAR;
+  if (prv_handle_missing_app(app_id, source_button)) {
+    return;
   }
+  app_manager_put_launch_app_event(&(AppLaunchEventConfig) {
+    .id = app_id,
+    .common.reason = APP_LAUNCH_QUICK_LAUNCH,
+    .common.button = source_button,
+    .common.args = (void*)APP_QUICK_LAUNCH_ACTION_COMBO,
+  });
 }
 
 static void prv_check_combo_back_hold(void) {
@@ -254,12 +281,18 @@ static void prv_quick_launch_handler(ClickRecognizerRef recognizer, void *data) 
     return;
   }
 
-  AppInstallId app_id = quick_launch_is_enabled(button) ? quick_launch_get_app(button)
-                                                        : INSTALL_ID_INVALID;
-  if (app_id == INSTALL_ID_INVALID) {
+  AppInstallId app_id = INSTALL_ID_INVALID;
+  s_buttons_pressed = BIT_CLEAR;  // Reset our own tracking
+  if (quick_launch_is_enabled(button)) {
+    app_id = quick_launch_get_app(button);
+    // An enabled button always has an app assigned, so a failed lookup means the app is
+    // missing from the watch, not unassigned
+    if (prv_handle_missing_app(app_id, button)) {
+      return;
+    }
+  } else {
     app_id = app_install_get_id_for_uuid(&quick_launch_setup_get_app_info()->uuid);
   }
-  s_buttons_pressed = BIT_CLEAR;  // Reset our own tracking
 
   prv_launch_quick_launch_app(app_id, recognizer, APP_LAUNCH_QUICK_LAUNCH,
                               (void*)APP_QUICK_LAUNCH_ACTION_HOLD);
@@ -274,6 +307,9 @@ static void prv_launch_up_down(ClickRecognizerRef recognizer, void *data) {
   
   if (!quick_launch_single_click_is_enabled(button)) return;
   const AppInstallId app_id = quick_launch_single_click_get_app(button);
+  if (prv_handle_missing_app(app_id, button)) {
+    return;
+  }
 
   prv_launch_quick_launch_app(app_id, recognizer, APP_LAUNCH_SYSTEM,
                               (void*)APP_QUICK_LAUNCH_ACTION_TAP);
