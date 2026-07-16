@@ -7,7 +7,7 @@
 #include "applib/graphics/gtypes.h"
 #include "applib/applib_malloc.auto.h"
 #include "syscall/syscall.h"
-#include "util/struct.h"
+#include "pbl/util/struct.h"
 
 static void prv_destructor(KinoReel *reel) {
   KinoReelImplGBitmap *bitmap_reel = (KinoReelImplGBitmap *)reel;

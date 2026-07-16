@@ -11,10 +11,10 @@
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/system_task.h"
 #include "system/passert.h"
-#include "util/attributes.h"
-#include "util/crc32.h"
-#include "util/math.h"
-#include "util/size.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/crc32.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
 
 // Defines how many PULSE file descriptors may be open concurrently
 // This is shared across all supported domains

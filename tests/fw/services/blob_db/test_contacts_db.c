@@ -6,7 +6,7 @@
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/blob_db/contacts_db.h"
 #include "pbl/services/contacts/contacts.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 // Fixture
 ////////////////////////////////////////////////////////////////

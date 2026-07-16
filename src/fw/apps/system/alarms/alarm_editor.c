@@ -20,7 +20,7 @@
 #include "shell/prefs.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include <string.h>
 
@@ -187,7 +187,7 @@ static void prv_time_picker_complete(TimeSelectionWindowData *time_picker_window
 
   if (data->creating_alarm) {
     DayPickerResult initial = {
-      .kind = DayPickerKindEveryday,
+      .kind = DayPickerKindJustOnce,
     };
     memset(initial.custom_days, 0, sizeof(initial.custom_days));
     DayPickerConfig config = {

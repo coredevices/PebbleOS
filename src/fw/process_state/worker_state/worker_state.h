@@ -18,7 +18,7 @@
 #include "applib/health_service_private.h"
 #include "applib/tick_timer_service_private.h"
 #include "applib/tick_timer_service.h"
-#include "util/heap.h"
+#include "pbl/util/heap.h"
 
 #include <stdbool.h>
 

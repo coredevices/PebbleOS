@@ -10,11 +10,13 @@ if MIC
 
 config MIC_NRF5
     bool "Nordic nRF5 PDM"
+    default y if SOC_NRF52
     help
       Support for the Nordic nRF5 PDM microphone interface.
 
 config MIC_SF32LB
     bool "SiFli SF32LB PDM"
+    default y if SOC_SF32LB52
     select HAL_SIFLI_AUDCODEC
     select HAL_SIFLI_PDM
     help
@@ -22,6 +24,7 @@ config MIC_SF32LB
 
 config MIC_QEMU
     bool "QEMU stub"
+    default y if SOC_QEMU
     help
       Software-only microphone stub for QEMU. Delivers silence at
       MIC_SAMPLE_RATE so the voice service can run end-to-end against

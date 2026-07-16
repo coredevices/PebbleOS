@@ -45,10 +45,10 @@
 
 #include "drivers/qemu/qemu_serial.h"
 #include "drivers/rtc.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 #include "util/net.h"
 
 #include <string.h>

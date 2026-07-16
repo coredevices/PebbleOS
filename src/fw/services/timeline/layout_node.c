@@ -7,8 +7,8 @@
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/i18n/i18n.h"
 #include "system/passert.h"
-#include "util/size.h"
-#include "util/string.h"
+#include "pbl/util/size.h"
+#include "pbl/util/string.h"
 
 static GTextNodeText *prv_create_text_node_buffer(const char *str) {
   const size_t str_length = str ? (strlen(str) + 1) : 0;

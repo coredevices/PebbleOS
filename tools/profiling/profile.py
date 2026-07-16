@@ -208,7 +208,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--elf",
         type=str,
-        default="build/src/fw/tintin_fw.elf",
+        default="build/pebbleos.elf",
         help="Path to the elf file to use to lookup method and file names",
     )
 

@@ -92,10 +92,11 @@ typedef struct {
   //ambient light config
   uint32_t ambient_light_dark_threshold;
   uint32_t ambient_k_delta_threshold;
-#ifdef CONFIG_DYNAMIC_BACKLIGHT
-  //dynamic backlight thresholds
-  uint32_t dynamic_backlight_min_threshold;
-#endif
+  // Raw-count -> lux conversion: lux = (level - offset) * num / den.
+  // den == 0 means no conversion available for this board.
+  uint32_t ambient_light_lux_dark_offset;
+  uint32_t ambient_light_lux_num;
+  uint32_t ambient_light_lux_den;
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
   // Default RGB backlight color (packed 0x00RRGGBB), applied when no app
   // override is set. User-preference overrides this via backlight_set_color().

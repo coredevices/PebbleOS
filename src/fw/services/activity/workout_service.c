@@ -21,7 +21,7 @@
 #include "util/time/time.h"
 #include "util/units.h"
 
-#include <os/mutex.h>
+#include <pbl/os/mutex.h>
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 

@@ -9,7 +9,7 @@
 
 #include <bluetooth/bluetooth_types.h>
 #include <bluetooth/id.h>
-#include <btutil/bt_device.h>
+#include <pbl/btutil/bt_device.h>
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 

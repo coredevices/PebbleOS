@@ -18,7 +18,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 #include "process_management/app_install_types.h"
 #include "system/status_codes.h"
 

@@ -13,7 +13,8 @@
     {
       "type": "raw",
       "name": "NO_EVENTS_LARGE",
-      "file": "normal/snowy/images/Pebble_80x80_No_events.pdc"
+      "file": "normal/snowy/images/Pebble_80x80_No_events.pdc",
+      "builtin": true
     },
     {
       "type": "raw",
@@ -55,7 +56,8 @@
     {
       "type": "raw",
       "name": "RESULT_MUTE_LARGE",
-      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Mute.pdc"
+      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Mute.pdc",
+      "builtin": true
     },
     {
       "type": "raw",

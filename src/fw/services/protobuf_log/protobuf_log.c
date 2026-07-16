@@ -9,7 +9,7 @@
 #include "drivers/rtc.h"
 #include "kernel/pbl_malloc.h"
 #include "mfg/mfg_serials.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "pb.h"
 #include "pb_decode.h"
 #include "pb_encode.h"
@@ -17,11 +17,11 @@
 #include "system/logging.h"
 #include "system/passert.h"
 #include "system/version.h"
-#include "util/math.h"
-#include "util/size.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
 #include "util/time/time.h"
 
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 #include <string.h>
 

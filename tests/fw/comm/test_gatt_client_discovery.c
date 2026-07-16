@@ -10,7 +10,7 @@
 
 #include "clar.h"
 
-#include <btutil/bt_device.h>
+#include <pbl/btutil/bt_device.h>
 
 // Fakes
 ///////////////////////////////////////////////////////////

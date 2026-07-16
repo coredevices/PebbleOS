@@ -9,11 +9,11 @@
 #include "drivers/rtc.h"
 #include "freertos_types.h"
 #include "kernel/events.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "process_management/app_install_types.h"
 #include "pbl/services/new_timer/new_timer.h"
-#include "util/list.h"
-#include "util/circular_buffer.h"
+#include "pbl/util/list.h"
+#include "pbl/util/circular_buffer.h"
 
 #include <stdint.h>
 

@@ -9,7 +9,7 @@
 #include "pbl/services/comm_session/session_internal.h"
 #include "system/passert.h"
 #include "util/dict.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 extern void launcher_app_message_reset(void);
 extern void launcher_app_message_protocol_msg_callback_deprecated(CommSession *session,

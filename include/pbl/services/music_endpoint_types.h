@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 typedef enum {
   // Watch -> Phone

@@ -4,7 +4,7 @@
 #pragma once
 
 #include "applib/app_launch_reason.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 uint32_t WEAK app_launch_get_args(void) {
   return 0;

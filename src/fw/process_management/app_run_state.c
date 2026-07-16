@@ -11,7 +11,7 @@
 #include "process_management/process_manager.h"
 #include "pbl/services/system_task.h"
 #include "system/logging.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #define PB_APP_STATE_ENDPOINT_ID       0x34
 

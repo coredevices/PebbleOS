@@ -10,17 +10,20 @@ if DISPLAY
 
 config DISPLAY_JDI_SF32LB
     bool "JDI (SiFli SF32LB)"
+    default y if SOC_SF32LB52
     select HAL_SIFLI_LCD
     help
       Support for JDI display via SiFli SF32LB.
 
 config DISPLAY_SHARP_LS013B7DH01_NRF5
     bool "Sharp LS013B7DH01 (nRF5)"
+    default y if SOC_NRF52
     help
       Support for the Sharp LS013B7DH01 display via nRF5.
 
 config DISPLAY_QEMU
     bool "QEMU Framebuffer Display"
+    default y if SOC_QEMU
     help
       Support for the QEMU framebuffer display peripheral.
 

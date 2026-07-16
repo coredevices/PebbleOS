@@ -14,7 +14,10 @@
 
 PBL_LOG_MODULE_DECLARE(service_vibes, CONFIG_SERVICE_VIBES_LOG_LEVEL);
 
-#define VIBE_SCORE_MAX_REPEAT_DELAY_MS (10000) // matches MAX_VIBE_DURATION_MS in vibe_pattern
+// The repeat delay is a passive wait between score playbacks (it never becomes
+// a hardware vibe step), so it is not bound by MAX_VIBE_DURATION_MS in
+// vibe_pattern. The LPM alarm score uses 50s. Keep in sync with json2vibe.py.
+#define VIBE_SCORE_MAX_REPEAT_DELAY_MS (60000)
 
 static VibeNote *prv_vibe_score_get_note_list(GenericAttribute *notes_attribute) {
   return (VibeNote *)notes_attribute->data;

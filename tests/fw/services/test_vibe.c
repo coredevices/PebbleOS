@@ -16,7 +16,7 @@
 
 #include "pbl/services/vibe_pattern.h"
 #include "applib/ui/vibes.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 //declarations
 bool sys_vibe_pattern_enqueue_step_raw(uint32_t step_duration_ms, int32_t strength);

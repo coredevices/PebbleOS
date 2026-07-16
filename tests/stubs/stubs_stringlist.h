@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "util/stringlist.h"
 
 int WEAK string_list_add_string(StringList *list, size_t max_list_size, const char *str,

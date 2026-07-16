@@ -4,7 +4,7 @@
 #pragma once
 
 #include "applib/battery_state_service.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 BatteryChargeState WEAK battery_state_service_peek(void) {
   return (BatteryChargeState) {};

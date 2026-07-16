@@ -7,7 +7,7 @@
 
 #include "applib/ui/kino/kino_reel.h"
 #include "pbl/services/app_glances/app_glance_service.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 //! Forward declaration
 typedef struct LauncherAppGlance LauncherAppGlance;

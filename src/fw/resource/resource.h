@@ -8,7 +8,7 @@
 #include <stdlib.h>
 
 #include "applib/applib_resource.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 //! @addtogroup Foundation
 //! @{

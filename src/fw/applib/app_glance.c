@@ -11,8 +11,8 @@
 #include "pbl/services/timeline/attribute.h"
 #include "pbl/services/timeline/timeline_resources.h"
 #include "syscall/syscall.h"
-#include "util/string.h"
-#include "util/uuid.h"
+#include "pbl/util/string.h"
+#include "pbl/util/uuid.h"
 
 AppGlanceResult app_glance_add_slice(AppGlanceReloadSession *session, AppGlanceSlice slice) {
   AppGlanceResult result = APP_GLANCE_RESULT_SUCCESS;

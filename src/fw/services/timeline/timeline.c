@@ -3,7 +3,7 @@
 
 #include "pbl/services/timeline/timeline.h"
 
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 #include "applib/ui/status_bar_layer.h"
 #include "apps/system_app_ids.h"
 #include "apps/system/timeline/timeline.h"
@@ -28,10 +28,10 @@
 #include "pbl/services/timeline/actions_endpoint.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/list.h"
-#include "util/math.h"
-#include "util/order.h"
-#include "util/size.h"
+#include "pbl/util/list.h"
+#include "pbl/util/math.h"
+#include "pbl/util/order.h"
+#include "pbl/util/size.h"
 #include "util/time/time.h"
 
 PBL_LOG_MODULE_DEFINE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);

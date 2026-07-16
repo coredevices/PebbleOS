@@ -2,8 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "applib/data_logging.h"
-#include "util/list.h"
-#include "util/uuid.h"
+#include "pbl/util/list.h"
+#include "pbl/util/uuid.h"
 
 #include "pbl/services/data_logging/data_logging_service.h"
 #include "pbl/services/data_logging/dls_endpoint.h"
@@ -24,10 +24,10 @@
 #include "pbl/services/system_task.h"
 #include "syscall/syscall.h"
 #include "system/logging.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "system/passert.h"
 #include "kernel/util/sleep.h"
-#include "util/string.h"
+#include "pbl/util/string.h"
 
 #include <string.h>
 #include <stdlib.h>

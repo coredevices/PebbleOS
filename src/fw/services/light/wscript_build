@@ -3,7 +3,8 @@
 
 bld.stlib(
     use=['fw_includes', 'services_analytics'],
-    source=['service.c'],
+    source=['als_screen_compensation_fb.c', 'als_screen_compensation_math.c',
+            'als_screen_compensation_region.c', 'console.c', 'service.c'],
     target='services_light',
 )
 bld.env.SERVICES.append('services_light')

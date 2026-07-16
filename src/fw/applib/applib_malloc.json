@@ -64,7 +64,7 @@
         "_comment": "Only for 3.x apps"
     }, {
         "name": "ActionMenuLevel",
-        "size_3x_padding": 12,
+        "size_3x_padding": 8,
         "size_3x": 32,
         "_comment": "Only for 3.x apps"
     }, {
@@ -74,7 +74,7 @@
         "_comment": "Only for 3.x apps"
     }, {
         "name": "ActionMenuData",
-        "size_3x_padding": 90,
+        "size_3x_padding": 86,
         "size_3x": 930,
         "dependencies": ["Window", "MenuLayer", "Layer", "Layer"],
         "_comment": "Only for 3.x apps"
@@ -287,4 +287,3 @@
         "_comment": "Not exported yet (only 3.x)"
     }]
 }
-

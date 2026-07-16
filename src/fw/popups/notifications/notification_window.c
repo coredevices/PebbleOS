@@ -21,7 +21,7 @@
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/ui/modals/modal_manager.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "process_state/app_state/app_state.h"
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/analytics/analytics.h"
@@ -51,8 +51,8 @@
 #include "pbl/services/timeline/timeline_resources.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/math.h"
-#include "util/trig.h"
+#include "pbl/util/math.h"
+#include "pbl/util/trig.h"
 
 #include <inttypes.h>
 #include <stdio.h>

@@ -14,7 +14,7 @@
 #include "kernel/util/sleep.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #define DA7212_CIF_CTRL              0x1D
 #define DA7212_DAI_CLK_MODE          0x28

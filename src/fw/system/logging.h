@@ -86,7 +86,7 @@ int pbl_log_get_bin_format(char* buffer, int buffer_len, const uint8_t log_level
 
 #if MEMFAULT && defined(CONFIG_LOG_HASHED) && __has_include("memfault/core/log.h")
   #include "memfault/core/log.h"
-  #include "mcu/privilege.h"
+  #include "pbl/mcu/privilege.h"
 
   #define PBL_TO_MFLT_LOG_LEVEL(level) \
     ((level) <= LOG_LEVEL_ERROR ? kMemfaultPlatformLogLevel_Error : \

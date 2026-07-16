@@ -6,7 +6,7 @@
 #include "process_management/process_manager.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/pebble_process_info.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 // Stubs
 #include "stubs_accel_service.h"

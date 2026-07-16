@@ -5,8 +5,8 @@
 #include "phone_formatting.h"
 
 #include "applib/fonts/fonts.h"
-#include "util/math.h"
-#include "util/trig.h"
+#include "pbl/util/math.h"
+#include "pbl/util/trig.h"
 #include "applib/ui/action_bar_layer.h"
 #include "applib/ui/kino/kino_layer.h"
 #include "applib/ui/kino/kino_reel_pdci.h"

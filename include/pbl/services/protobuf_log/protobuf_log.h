@@ -10,7 +10,7 @@
 #include "pbl/services/hrm/hrm_manager.h"
 #include "pbl/services/data_logging/dls_private.h"
 #include "system/version.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 #include <stdbool.h>
 #include <stdint.h>

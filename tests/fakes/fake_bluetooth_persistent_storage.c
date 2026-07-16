@@ -3,9 +3,9 @@
 
 #include "fake_bluetooth_persistent_storage.h"
 
-#include "util/list.h"
+#include "pbl/util/list.h"
 
-#include <btutil/bt_device.h>
+#include <pbl/btutil/bt_device.h>
 
 #include <stdlib.h>
 #include <string.h>

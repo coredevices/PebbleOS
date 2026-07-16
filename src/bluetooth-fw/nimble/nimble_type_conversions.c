@@ -3,7 +3,7 @@
 
 #include "nimble_type_conversions.h"
 
-#include <btutil/bt_uuid.h>
+#include <pbl/btutil/bt_uuid.h>
 #include <host/ble_gap.h>
 #include <string.h>
 #include <system/logging.h>

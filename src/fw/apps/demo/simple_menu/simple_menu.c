@@ -10,7 +10,7 @@
 #include "pbl/services/poll_remote.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 typedef struct {
   Window window;

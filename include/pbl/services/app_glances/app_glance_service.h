@@ -5,9 +5,9 @@
 
 #include "pbl/services/blob_db/app_glance_db_private.h"
 #include "pbl/services/timeline/attribute.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "util/time/time.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 typedef enum AppGlanceSliceType {
   AppGlanceSliceType_IconAndSubtitle = 0,

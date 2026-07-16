@@ -18,8 +18,8 @@
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
 #include "system/passert.h"
-#include "util/math.h"
-#include "util/string.h"
+#include "pbl/util/math.h"
+#include "pbl/util/string.h"
 
 typedef struct StatusBarTextFormat {
   GTextOverflowMode overflow_mode;

@@ -9,9 +9,9 @@
 #include "pbl/services/comm_session/session_send_buffer.h"
 #include "pbl/services/comm_session/session_send_queue.h"
 #include "system/logging.h"
-#include "util/attributes.h"
-#include "util/likely.h"
-#include "util/math.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/likely.h"
+#include "pbl/util/math.h"
 #include "util/net.h"
 
 #include "FreeRTOS.h"

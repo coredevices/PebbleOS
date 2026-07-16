@@ -160,7 +160,7 @@ def check_dict_log_strings(log_dict):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Check .elf log strings for errors")
 
-    parser.add_argument("elf_path", help="path to tintin_fw.elf to check")
+    parser.add_argument("elf_path", help="path to pebbleos.elf to check")
     args = parser.parse_args()
 
     output = check_elf_log_strings(args.elf_path)

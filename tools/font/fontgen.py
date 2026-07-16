@@ -106,10 +106,15 @@ def bits(x):
 
 
 class Font:
-    def __init__(self, ttf_path, height, max_glyphs, max_glyph_size, legacy):
+    def __init__(
+        self, ttf_path, height, max_glyphs, max_glyph_size, legacy, baseline=None
+    ):
         self.version = FONT_VERSION_3
         self.ttf_path = ttf_path
         self.max_height = int(height)
+        # Baseline row; defaults to max_height. Extended fonts pass the base
+        # font's baseline so both align on a mixed line.
+        self.baseline = int(baseline) if baseline is not None else self.max_height
         self.legacy = legacy
         self.face = freetype.Face(self.ttf_path)
         self.face.set_pixel_sizes(0, self.max_height)
@@ -321,7 +326,7 @@ class Font:
         width = bitmap.width
         height = bitmap.rows
         left = self.face.glyph.bitmap_left
-        bottom = self.max_height - self.face.glyph.bitmap_top
+        bottom = self.baseline - self.face.glyph.bitmap_top
         pixel_mode = self.face.glyph.bitmap.pixel_mode
 
         glyph_packed = []

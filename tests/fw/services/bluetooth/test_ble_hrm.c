@@ -7,8 +7,8 @@
 #include "pbl/services/hrm/hrm_manager_private.h"
 
 #include <bluetooth/hrm_service.h>
-#include <btutil/bt_device.h>
-#include <util/size.h>
+#include <pbl/btutil/bt_device.h>
+#include <pbl/util/size.h>
 
 #include <clar.h>
 

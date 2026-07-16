@@ -4,7 +4,7 @@
 #include "applib/graphics/perimeter.h"
 
 #include "system/passert.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #if PBL_ROUND
 static uint16_t prv_triangle_side(uint16_t hypotenuse, uint16_t side) {

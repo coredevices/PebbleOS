@@ -71,7 +71,14 @@ void ambient_light_init(void) {
     prv_write_register(OPT3001_CONFIG, OPT3001_CONFIG_RANGE_AUTO | OPT3001_CONFIG_CONVTIME_100MSEC | OPT3001_CONFIG_MODE_CONTINUOUS);
   }
 
+  ambient_light_common_init();
   s_initialized = true;
+}
+
+void ambient_light_driver_set_state(bool active, bool sampling) {
+  // OPT3001 is configured at boot per BOARD_CONFIG.als_always_on; no gate needed.
+  (void)active;
+  (void)sampling;
 }
 
 uint32_t ambient_light_get_light_level(void) {
@@ -109,7 +116,9 @@ void ambient_light_set_dark_threshold(uint32_t new_threshold) {
 
 bool ambient_light_is_light(void) {
   // if the sensor is not enabled, always return that it is dark
-  return s_initialized && ambient_light_get_light_level() > s_sensor_light_dark_threshold;
+  // The threshold lives in the lux domain (see ambient_light_level_to_lux).
+  return s_initialized && ambient_light_level_to_lux(ambient_light_get_light_level()) >
+                              s_sensor_light_dark_threshold;
 }
 
 AmbientLightLevel ambient_light_level_to_enum(uint32_t light_level) {

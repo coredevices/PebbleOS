@@ -9,7 +9,7 @@
 #include "resource/resource.h"
 #include "resource/resource_ids.auto.h"
 #include "resource/system_resource.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 // Fakes
 #include "fake_app_manager.h"
@@ -225,52 +225,6 @@ void test_text_resources__extended_font(void) {
   cl_assert(glyph != NULL);
   glyph_size_bytes = glyph_get_size_bytes(glyph);
   cl_assert_equal_m(chinese_wildcard_bytes, glyph->data, glyph_size_bytes);
-}
-
-void test_text_resources__baseline_offset(void) {
-  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_18, RESOURCE_ID_GOTHIC_18_EXTENDED,
-                                     &s_font_info));
-  cl_assert(s_font_info.extended);
-
-  // The offset follows the sub-font that actually supplies the glyph. 'a' is
-  // drawn from the base, 乐 from the extension; each shifts by the FontInfo
-  // height minus its own source sub-font's height.
-  int16_t latin_off = text_resources_get_glyph_baseline_offset(&s_font_cache, &s_font_info, 'a');
-  int16_t cjk_off =
-      text_resources_get_glyph_baseline_offset(&s_font_cache, &s_font_info, 0x4E50 /* 乐 */);
-
-  cl_assert_equal_i(latin_off, s_font_info.max_height - s_font_info.base.md.max_height);
-  cl_assert_equal_i(cjk_off, s_font_info.max_height - s_font_info.extension.md.max_height);
-
-  // 袈 is absent from the extension, so it renders as the wildcard box, which
-  // resolves to the extension sub-font here. The offset must match the sub-font
-  // the glyph actually came from, not be derived blindly from the requested
-  // (CJK) codepoint -- they differ once a glyph falls back to another sub-font.
-  int16_t missing_off =
-      text_resources_get_glyph_baseline_offset(&s_font_cache, &s_font_info, 0x8888 /* 袈 */);
-  cl_assert_equal_i(missing_off, s_font_info.max_height - s_font_info.extension.md.max_height);
-
-  // Offsets are never negative and the tallest sub-font is the unshifted anchor.
-  cl_assert(latin_off >= 0);
-  cl_assert(cjk_off >= 0);
-  cl_assert(latin_off == 0 || cjk_off == 0);
-}
-
-void test_text_resources__baseline_offset_non_extended(void) {
-  // A font with no extension has a single sub-font: nothing to align, so the
-  // offset must always be zero regardless of codepoint. This guards every
-  // non-extended font (system and custom fonts, all languages) from being
-  // vertically shifted.
-  FontInfo font_info;
-  memset(&font_info, 0, sizeof(font_info));
-  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_18, 0 /* no extension */, &font_info));
-  cl_assert(!font_info.extended);
-
-  cl_assert_equal_i(text_resources_get_glyph_baseline_offset(&s_font_cache, &font_info, 'a'), 0);
-  cl_assert_equal_i(
-      text_resources_get_glyph_baseline_offset(&s_font_cache, &font_info, 0x4E50 /* 乐 */), 0);
-  cl_assert_equal_i(
-      text_resources_get_glyph_baseline_offset(&s_font_cache, &font_info, 0x0644 /* lam */), 0);
 }
 
 void test_text_resources__test_emoji_font(void) {

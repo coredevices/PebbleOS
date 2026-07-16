@@ -5,7 +5,7 @@
 
 #include "pbl/services/activity/activity.h"
 #include "system/status_codes.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 
 //! Get the typical metric value for a given day.

@@ -5,7 +5,7 @@
 #include "console/prompt.h"
 #include "system/hexdump.h"
 #include "system/logging.h"
-#include "util/string.h"
+#include "pbl/util/string.h"
 
 #include "pbl/services/shared_prf_storage/shared_prf_storage.h"
 #include "pbl/services/bluetooth/bluetooth_persistent_storage_debug.h"
@@ -13,8 +13,8 @@
 
 #include <bluetooth/bluetooth_types.h>
 #include <bluetooth/sm_types.h>
-#include <btutil/bt_device.h>
-#include <btutil/sm_util.h>
+#include <pbl/btutil/bt_device.h>
+#include <pbl/btutil/sm_util.h>
 
 void shared_prf_storage_dump_contents(void) {
   prompt_send_response("---Shared PRF Contents---\n------------------------\n");

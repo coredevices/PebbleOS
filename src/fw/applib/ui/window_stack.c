@@ -21,7 +21,7 @@
 #include "syscall/syscall.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/struct.h"
+#include "pbl/util/struct.h"
 
 // Private API
 ////////////////////////////////////

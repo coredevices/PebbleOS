@@ -4,7 +4,7 @@
 #include "applib/pbl_std/pbl_std.h"
 #include "applib/pbl_std/locale.h"
 #include "pbl/services/i18n/i18n.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include "clar.h"
 

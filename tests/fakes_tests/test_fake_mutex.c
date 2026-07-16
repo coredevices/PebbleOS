@@ -5,7 +5,7 @@
 
 #include "fake_mutex.h"
 
-#include <os/mutex.h>
+#include <pbl/os/mutex.h>
 
 void test_fake_mutex__initialize(void) {
 }

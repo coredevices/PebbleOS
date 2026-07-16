@@ -5,7 +5,7 @@
 
 #include "pbl/services/comm_session/session_internal.h"
 #include "pbl/services/comm_session/session_send_queue.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 extern void comm_session_send_queue_cleanup(CommSession *session);
 

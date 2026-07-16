@@ -17,7 +17,7 @@
 #include "pbl/services/timeline/event.h"
 #include "pbl/services/timeline/health_layout.h"
 #include "pbl/services/timeline/weather_layout.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include <sys/cdefs.h>
 

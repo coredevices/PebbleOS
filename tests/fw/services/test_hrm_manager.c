@@ -4,10 +4,10 @@
 #include "clar.h"
 
 #include "drivers/hrm.h"
-#include "os/tick.h"
+#include "pbl/os/tick.h"
 #include "pbl/services/hrm/hrm_manager.h"
 #include "pbl/services/hrm/hrm_manager_private.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include "fake_app_manager.h"
 #include "fake_events.h"

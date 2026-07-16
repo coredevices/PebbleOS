@@ -14,7 +14,7 @@
 #include "system/passert.h"
 #include "util/net.h"
 #include "util/pack.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 #define RESOURCE_MAX_SIZE (700)
 

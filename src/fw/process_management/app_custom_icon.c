@@ -11,8 +11,8 @@
 #include "pbl/services/comm_session/session.h"
 #include "pbl/services/i18n/i18n.h"
 #include "system/logging.h"
-#include "util/attributes.h"
-#include "util/math.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/math.h"
 
 #include <string.h>
 #include <stddef.h>

@@ -5,8 +5,8 @@
 
 #include "applib/graphics/gdraw_command_image.h"
 #include "applib/graphics/gdraw_command_private.h"
-#include "util/attributes.h"
-#include "util/size.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/size.h"
 
 #define START_ICON_POINTS { { 0, -2 }, { 9, 4 }, { 0, 10 } }
 

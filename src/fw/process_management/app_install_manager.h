@@ -11,7 +11,7 @@
 #include "kernel/events.h"
 #include "pebble_process_md.h"
 #include "resource/resource.h"
-#include "util/list.h"
+#include "pbl/util/list.h"
 
 //////////////////////////////////////////////////////////////////////////////
 // This module is responsible for keeping track of what apps are installed,

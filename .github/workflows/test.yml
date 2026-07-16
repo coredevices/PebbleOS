@@ -23,6 +23,7 @@ jobs:
         with:
           filters: |
             src:
+              - '.github/actions/**'
               - '.github/workflows/test.yml'
               - 'platform/**'
               - 'resources/**'
@@ -32,7 +33,7 @@ jobs:
               - 'tests/**'
               - 'tools/**'
               - 'third_party/**'
-              - 'waftools/**'
+              - 'tools/waf/**'
               - 'waf'
               - 'wscript'
 
@@ -41,7 +42,7 @@ jobs:
     if: needs.changes-test.outputs.should-test == 'true'
     runs-on: ubuntu-24.04
     container:
-      image: ghcr.io/coredevices/pebbleos-docker:v5
+      image: ghcr.io/coredevices/pebbleos-docker:v6
     steps:
       - name: Mark Github workspace as safe
         run: git config --system --add safe.directory "${GITHUB_WORKSPACE}" 
@@ -50,6 +51,11 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          submodules: true
+
+      - name: Rebase onto target branch
+        uses: ./.github/actions/rebase
+        with:
           submodules: true
 
       - name: Install Python dependencies
@@ -71,13 +77,15 @@ jobs:
         with:
           report_paths: build/test/junit.xml
           annotate_only: true
+          detailed_summary: true
 
       - name: Store failed test images
         uses: actions/upload-artifact@v6
         if: (!cancelled())
         with:
-          name: failed_diff_images
-          path: build/test/tests/failed/*-diff.png
+          name: failed_test_images
+          path: build/test/tests/failed/
+          if-no-files-found: ignore
 
   test-status:
     needs: [changes-test, build-test]

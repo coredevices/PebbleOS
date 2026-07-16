@@ -8,7 +8,7 @@
 #include "resource/resource.h"
 #include "resource/resource_ids.auto.h"
 #include "util/graphics.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include "clar.h"
 

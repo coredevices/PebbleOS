@@ -9,10 +9,10 @@
 #include "kernel/pbl_malloc.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/crc32.h"
+#include "pbl/util/crc32.h"
 
-#include <btutil/sm_util.h>
-#include <os/mutex.h>
+#include <pbl/btutil/sm_util.h>
+#include <pbl/os/mutex.h>
 
 PBL_LOG_MODULE_DEFINE(service_shared_prf_storage, CONFIG_SERVICE_SHARED_PRF_STORAGE_LOG_LEVEL);
 

@@ -9,7 +9,7 @@
 #include "board/display.h"
 #include "pbl/services/clock.h"
 #include "pbl/services/i18n/i18n.h"
-#include "util/string.h"
+#include "pbl/util/string.h"
 #include "util/time/time.h"
 
 // Compile-time display offset calculations

@@ -29,8 +29,8 @@
 #include "syscall/syscall_internal.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/list.h"
-#include "util/math.h"
+#include "pbl/util/list.h"
+#include "pbl/util/math.h"
 #include "util/time/time.h"
 
 #include <stdbool.h>
@@ -318,6 +318,10 @@ void do_not_disturb_init(void) {
 }
 
 void do_not_disturb_handle_clock_change(void) {
+  prv_try_update_schedule_mode_callback(false);
+}
+
+void do_not_disturb_handle_pref_synced(void) {
   prv_try_update_schedule_mode_callback(false);
 }
 

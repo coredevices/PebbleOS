@@ -12,8 +12,8 @@
 #include "system/logging.h"
 #include "system/passert.h"
 #include "system/version.h"
-#include "util/math.h"
-#include "util/size.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
 
 static const ResourceStoreImplementation *s_resource_store_impls[] = {
 #define RESOURCE_IMPL(impl) &impl,

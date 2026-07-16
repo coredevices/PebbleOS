@@ -4,7 +4,7 @@
 #pragma once
 
 #include "pbl/services/comm_session/session.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #include <stdint.h>
 

@@ -32,8 +32,8 @@
 #include "shell/system_theme.h"
 #include "system/passert.h"
 #include "util/date.h"
-#include "util/list.h"
-#include "util/string.h"
+#include "pbl/util/list.h"
+#include "pbl/util/string.h"
 
 typedef struct LoadedNotificationNode {
   ListNode node;

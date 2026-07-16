@@ -4,7 +4,7 @@
 #pragma once
 
 #include "pbl/services/clock.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 void WEAK clock_get_since_time(char *buffer, int buf_size, time_t timestamp) {}
 

@@ -6,7 +6,7 @@
 
 #include "flash_region/flash_region.h"
 #include "pbl/services/filesystem/pfs.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include "clar.h"
 

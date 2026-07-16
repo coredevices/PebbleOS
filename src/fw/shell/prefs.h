@@ -17,7 +17,7 @@
 #include "applib/graphics/gtypes.h"
 #include "process_management/app_install_types.h"
 #include "shell/system_theme.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 #if defined(CONFIG_APP_SCALING) && \
     (defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_QEMU_EMERY))
@@ -112,14 +112,38 @@ bool touch_is_globally_enabled(void);
 void touch_set_globally_enabled(bool enable);
 
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
-// Dynamic backlight intensity based on ambient light sensor
-bool backlight_is_dynamic_intensity_enabled(void);
-void backlight_set_dynamic_intensity_enabled(bool enable);
+// Dynamic backlight: how aggressively brightness ramps with ambient light.
+// Every mode keeps the same dim floor; the mode selects the lux level at
+// which the ramp reaches the user's max intensity (Bright = earliest).
+typedef enum BacklightDynamicMode {
+  BacklightDynamicMode_Off = 0,
+  BacklightDynamicMode_Bright = 1,
+  BacklightDynamicMode_Standard = 2,
+  BacklightDynamicMode_Dim = 3,
+  BacklightDynamicModeCount,
+} BacklightDynamicMode;
 
-// Dynamic backlight thresholds (for debug menu)
-uint32_t backlight_get_dynamic_min_threshold(void);
-void backlight_set_dynamic_min_threshold(uint32_t threshold);
+BacklightDynamicMode backlight_get_dynamic_mode(void);
+void backlight_set_dynamic_mode(BacklightDynamicMode mode);
+// Convenience: mode != Off
+bool backlight_is_dynamic_intensity_enabled(void);
 #endif
+
+// Backlight presets bundle the ambient sensor, dynamic mode (where dynamic
+// backlight is available) and intensity settings into one user-facing mode;
+// Advanced exposes the settings individually. A stored preset only reports
+// as active while the underlying settings still match its values, otherwise
+// Advanced is reported.
+typedef enum BacklightPreset {
+  BacklightPreset_MaxBrightness = 0,
+  BacklightPreset_Standard = 1,
+  BacklightPreset_BatterySaver = 2,
+  BacklightPreset_Advanced = 3,
+  BacklightPresetCount,
+} BacklightPreset;
+
+BacklightPreset backlight_get_preset(void);
+void backlight_set_preset(BacklightPreset preset);
 
 // Motion sensitivity for accelerometer shake detection (0-100, lower = less sensitive)
 // Only available on platforms with LSM6DSO (Asterix, Obelix)
@@ -153,6 +177,7 @@ typedef enum ShellLanguage {
   ShellLanguageItalian,
   ShellLanguageDutch,
   ShellLanguagePortuguese,
+  ShellLanguagePolish,
   ShellLanguageCount,
 } ShellLanguage;
 

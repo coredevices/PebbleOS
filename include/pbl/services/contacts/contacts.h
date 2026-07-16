@@ -5,8 +5,8 @@
 
 #include "attributes_address.h"
 
-#include "util/attributes.h"
-#include "util/uuid.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/uuid.h"
 
 typedef struct {
   Uuid id;

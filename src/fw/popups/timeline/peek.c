@@ -16,8 +16,8 @@
 #include "syscall/syscall_internal.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/size.h"
-#include "util/struct.h"
+#include "pbl/util/size.h"
+#include "pbl/util/struct.h"
 
 #include <pebbleos/cron.h>
 

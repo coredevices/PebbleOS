@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "applib/app.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 #include "applib/app_watch_info.h"
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/window.h"
@@ -17,7 +17,7 @@
 #include "process_state/app_state/app_state.h"
 #include "process_management/pebble_process_md.h"
 #include "util/bitset.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include <stdbool.h>
 #include <stdint.h>

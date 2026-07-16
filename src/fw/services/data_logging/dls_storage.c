@@ -13,9 +13,9 @@
 #include "pbl/services/filesystem/pfs.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/attributes.h"
-#include "util/math.h"
-#include "util/string.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/math.h"
+#include "pbl/util/string.h"
 
 #include <inttypes.h>
 #include <stddef.h>

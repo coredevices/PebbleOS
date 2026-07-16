@@ -9,7 +9,7 @@
 #include "pbl/services/comm_session/session.h"
 #include "pbl/services/system_task.h"
 #include "system/logging.h"
-#include "util/list.h"
+#include "pbl/util/list.h"
 
 #include <stdlib.h>
 

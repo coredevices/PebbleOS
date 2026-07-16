@@ -31,14 +31,14 @@ Pebble App roject.
 #include <stdio.h>
 
 #include "applib/accel_service.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 #include "pbl/services/hrm/hrm_manager_private.h"
 #include "pbl/services/activity/activity.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/math.h"
-#include "util/math_fixed.h"
-#include "util/size.h"
+#include "pbl/util/math.h"
+#include "pbl/util/math_fixed.h"
+#include "pbl/util/size.h"
 
 #include "pbl/services/activity/kraepelin/kraepelin_algorithm.h"
 

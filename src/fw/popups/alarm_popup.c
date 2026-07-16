@@ -13,6 +13,7 @@
 #include "kernel/pbl_malloc.h"
 #include "kernel/ui/modals/modal_manager.h"
 #include "resource/resource_ids.auto.h"
+#include "system/logging.h"
 #include "pbl/services/clock.h"
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/light.h"
@@ -129,10 +130,6 @@ static void prv_stop_vibes(void) {
 }
 
 #ifdef CONFIG_SPEAKER
-// Volume 60/100 is a moderate first cut; tunable, and a per-user volume
-// preference can be added in a follow-up.
-#define ALARM_SPEAKER_VOLUME 60
-
 static void prv_play_sound_loop_iteration(void) {
   speaker_service_play_note_seq(s_alarm_popup_data->sound_notes,
                                 s_alarm_popup_data->sound_count,
@@ -219,7 +216,11 @@ static void prv_vibe_kernel_main_cb(void *callback_context) {
     if (s_alarm_popup_data->vibe_count < s_alarm_popup_data->max_vibes) {
       s_alarm_popup_data->vibe_count++;
       vibes_cancel();
-      vibe_score_do_vibe(s_alarm_popup_data->vibe_score);
+      if (s_alarm_popup_data->vibe_score) {
+        vibe_score_do_vibe(s_alarm_popup_data->vibe_score);
+      } else {
+        vibes_long_pulse();
+      }
 #ifdef CONFIG_SPEAKER
       if (s_alarm_popup_data->sound_active &&
           s_alarm_popup_data->sound_driven_by_vibe_timer) {
@@ -245,17 +246,28 @@ static void prv_vibe(void *unused) {
 
 static void prv_start_vibes(void) {
   s_alarm_popup_data->vibe_count = 0;
-  unsigned int vibe_repeat_interval_ms = TINTIN_VIBE_REPEAT_INTERVAL_MS;
   if (low_power_is_active()) {
     s_alarm_popup_data->vibe_score = vibe_client_get_score(VibeClient_AlarmsLPM);
   } else {
     s_alarm_popup_data->vibe_score = vibe_client_get_score(VibeClient_Alarms);
   }
-  if (!s_alarm_popup_data->vibe_score) {
-    return;
+  unsigned int vibe_repeat_interval_ms = 0;
+  if (s_alarm_popup_data->vibe_score) {
+    vibe_repeat_interval_ms = vibe_score_get_duration_ms(s_alarm_popup_data->vibe_score) +
+        vibe_score_get_repeat_delay_ms(s_alarm_popup_data->vibe_score);
   }
-  vibe_repeat_interval_ms = vibe_score_get_duration_ms(s_alarm_popup_data->vibe_score) +
-      vibe_score_get_repeat_delay_ms(s_alarm_popup_data->vibe_score);
+  if (vibe_repeat_interval_ms == 0) {
+    // Missing (e.g. resource load failure under memory pressure) or empty
+    // score: an alarm must never be silent, so pulse on a fixed cadence.
+    PBL_LOG_WRN("No usable alarm vibe score; falling back to fixed pulse");
+    if (s_alarm_popup_data->vibe_score) {
+      vibe_score_destroy(s_alarm_popup_data->vibe_score);
+      s_alarm_popup_data->vibe_score = NULL;
+    }
+    vibe_repeat_interval_ms = low_power_is_active()
+        ? (SECONDS_PER_MINUTE * MS_PER_SECOND / TINTIN_LPM_VIBES_PER_MINUTE)
+        : TINTIN_VIBE_REPEAT_INTERVAL_MS;
+  }
   s_alarm_popup_data->max_vibes = DIVIDE_CEIL(VIBE_DURATION, vibe_repeat_interval_ms);
   s_alarm_popup_data->vibe_timer = new_timer_create();
   prv_vibe(NULL);
@@ -363,7 +375,10 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
   }
 #ifdef CONFIG_SPEAKER
   if (have_info) {
-    prv_start_sound(alarm_id, vibe_on);
+    // The paired-tone piggyback assumes the timer runs at the score's cycle
+    // length; in fallback-pulse mode (score == NULL) it doesn't, so let the
+    // sound loop on its own.
+    prv_start_sound(alarm_id, vibe_on && (s_alarm_popup_data->vibe_score != NULL));
   }
 #endif
 

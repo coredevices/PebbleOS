@@ -13,7 +13,7 @@
 #include "pbl/services/timeline/timeline_resources.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #define SCROLL_OUT_MS 250
 #define BAR_HEIGHT PROGRESS_SUGGESTED_HEIGHT

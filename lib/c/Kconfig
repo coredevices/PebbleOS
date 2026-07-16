@@ -1,0 +1,50 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menu "C library"
+
+choice
+    prompt "C library"
+    default LIBC_PEBBLE
+    help
+      Which C library the firmware links against.
+
+config LIBC_PEBBLE
+    bool "Pebble (in-tree)"
+    help
+      The small in-tree C library (lib/c/pebble). Hand-written string,
+      math and printf tuned for the firmware; links with -nostdlib.
+
+config LIBC_NEWLIB
+    bool "Newlib (full)"
+    help
+      Full newlib from the toolchain. Largest, but complete C99
+      formatted I/O out of the box.
+
+config LIBC_NEWLIB_NANO
+    bool "Newlib nano"
+    help
+      Size-optimized newlib (nano.specs). Smaller than full newlib,
+      but its printf lacks the C99 length modifiers (%hhu, %zu, %llu)
+      the firmware relies on, so a small C99-capable printf from
+      lib/c/newlib is linked ahead of it.
+
+config LIBC_PICOLIBC
+    bool "Picolibc"
+    help
+      Picolibc: smallest footprint, C99-capable printf, TLS-based
+      reentrancy. Taken pre-built from the toolchain when available (the
+      PebbleOS SDK toolchain ships one), otherwise built from the
+      third_party/picolibc submodule with a warning.
+
+endchoice
+
+config LIBC_PICOLIBC_FROM_SOURCE
+    bool "Build Picolibc from source"
+    depends on LIBC_PICOLIBC
+    help
+      Always build Picolibc from the third_party/picolibc submodule with
+      meson, skipping any pre-built copy the toolchain ships. Useful when
+      hacking on picolibc itself or changing its build options.
+
+endmenu

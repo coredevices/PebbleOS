@@ -6,12 +6,12 @@
 #include "kernel/pbl_malloc.h"
 #include "kernel/pebble_tasks.h"
 #include "process_management/process_manager.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "syscall/syscall_internal.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/buffer.h"
-#include "util/list.h"
+#include "pbl/util/list.h"
 
 PBL_LOG_MODULE_DEFINE(service_app_inbox_service, CONFIG_SERVICE_APP_INBOX_SERVICE_LOG_LEVEL);
 

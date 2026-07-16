@@ -4,7 +4,7 @@
 #pragma once
 
 #include <stdbool.h>
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 //! @addtogroup Foundation
 //! @{

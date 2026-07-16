@@ -20,9 +20,9 @@
 #include "kernel/ui/modals/modal_manager.h"
 #include "kernel/util/segment.h"
 #include "kernel/util/task_init.h"
-#include "mcu/cache.h"
-#include "mcu/privilege.h"
-#include "os/mutex.h"
+#include "pbl/mcu/cache.h"
+#include "pbl/mcu/privilege.h"
+#include "pbl/os/mutex.h"
 #include "popups/health_tracking_ui.h"
 #include "popups/timeline/peek.h"
 #include "process_management/app_run_state.h"
@@ -54,8 +54,8 @@
 #include "syscall/syscall_internal.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/math.h"
-#include "util/size.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
 
 // FreeRTOS stuff
 #include "FreeRTOS.h"

@@ -17,8 +17,8 @@
 #include "system/passert.h"
 #include "system/logging.h"
 
-#include "util/attributes.h"
-#include "util/math.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/math.h"
 
 #include <string.h>
 

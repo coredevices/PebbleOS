@@ -5,10 +5,10 @@
 
 #include "applib/graphics/graphics.h"
 #include "applib/graphics/gtypes.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 #include "applib/applib_malloc.auto.h"
 #include "system/passert.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 
 #include <string.h>

@@ -7,7 +7,7 @@
 
 #include "HCIAPI.h"
 
-#include "util/list.h"
+#include "pbl/util/list.h"
 
 #include <stdlib.h>
 

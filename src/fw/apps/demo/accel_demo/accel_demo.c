@@ -8,7 +8,7 @@
 #include "applib/ui/ui.h"
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include <inttypes.h>
 #include <stdio.h>

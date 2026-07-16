@@ -10,7 +10,7 @@
 #include "kernel/pebble_tasks.h"
 #include "syscall/syscall.h"
 #include "system/logging.h"
-#include "util/heap.h"
+#include "pbl/util/heap.h"
 
 #include <string.h>
 #include <stdarg.h>

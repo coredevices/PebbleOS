@@ -14,7 +14,7 @@
 #include "applib/ui/text_layer.h"
 #include "applib/ui/menu_layer.h"
 #include "applib/fonts/fonts.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 #include "applib/graphics/gpath.h"
 
 #include <stdint.h>

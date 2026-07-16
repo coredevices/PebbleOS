@@ -6,7 +6,7 @@
 #include "process_management/app_manager.h"
 #include "process_management/pebble_process_md.h"
 #include "process_management/process_manager.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 bool WEAK app_manager_is_initialized(void) {
   return true;

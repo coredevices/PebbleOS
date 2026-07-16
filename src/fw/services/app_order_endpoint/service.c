@@ -8,7 +8,7 @@
 #include "system/logging.h"
 #include "system/passert.h"
 #include "system/status_codes.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 #include <stdbool.h>
 #include <string.h>

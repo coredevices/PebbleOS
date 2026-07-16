@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "applib/bluetooth/ble_ibeacon.h"
-#include <btutil/bt_device.h>
+#include <pbl/btutil/bt_device.h>
 
 #include "clar.h"
 
