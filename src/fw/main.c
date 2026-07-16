@@ -333,6 +333,10 @@ static NOINLINE void prv_main_task_init(void) {
 
   system_resource_init();
 
+#ifndef CONFIG_RECOVERY_FW
+  clock_hourly_chime_arm();
+#endif
+
 #ifdef CONFIG_HRM
   hrm_init(HRM);
 #endif

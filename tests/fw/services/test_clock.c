@@ -137,11 +137,8 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
 // Tests
 ///////////////////////////
 
-// FIRM-2072: on first boot after an OTA the RTC is snapped to a timestamp that
-// is exactly on the hour, and the per-second DST timer is registered before
-// resource_init() runs. The chime must not touch the (uninitialized) resource
-// subsystem on that first tick.
-void test_clock__hourly_chime_skips_first_tick_after_boot(void) {
+// The chime must not touch resources before initialization finishes.
+void test_clock__hourly_chime_waits_for_resources_after_boot(void) {
   s_prefs_24h_style = false;
   fake_rtc_init(0, 0);
   rtc_timezone_clear();
@@ -151,12 +148,29 @@ void test_clock__hourly_chime_skips_first_tick_after_boot(void) {
   s_should_vibrate = true;
   s_vibe_create_count = 0;
 
-  // First tick after boot: must not create a vibe score even though we are
-  // exactly on the hour.
+  // A callback before resources are ready must not create a vibe score.
   prv_watch_dst((void *)false);
   cl_assert_equal_i(s_vibe_create_count, 0);
 
-  // A later tick still on the hour chimes normally.
+  // Once resources are ready, the same minute may chime normally.
+  clock_hourly_chime_arm();
+  prv_watch_dst((void *)false);
+  cl_assert_equal_i(s_vibe_create_count, 1);
+}
+
+void test_clock__hourly_chime_first_minute_boundary_after_boot(void) {
+  static const time_t hour_timestamp = 1262304000 + SECONDS_PER_HOUR;
+  s_prefs_24h_style = false;
+  fake_rtc_init(0, 0);
+  rtc_timezone_clear();
+  rtc_set_time(hour_timestamp - 20);
+  clock_init();
+
+  s_should_vibrate = true;
+  s_vibe_create_count = 0;
+  clock_hourly_chime_arm();
+
+  rtc_set_time(hour_timestamp + 1);
   prv_watch_dst((void *)false);
   cl_assert_equal_i(s_vibe_create_count, 1);
 }
@@ -171,16 +185,33 @@ void test_clock__hourly_chime_only_on_the_hour(void) {
   s_should_vibrate = true;
   s_vibe_create_count = 0;
 
-  prv_watch_dst((void *)false);  // arm
+  clock_hourly_chime_arm();
   cl_assert_equal_i(s_vibe_create_count, 0);
 
-  rtc_set_time(1262304000 + SECONDS_PER_MINUTE + 42);  // not in the first minute of the hour
+  rtc_set_time(1262304000 + SECONDS_PER_MINUTE + 42);  // not near the hour
   prv_watch_dst((void *)false);
   cl_assert_equal_i(s_vibe_create_count, 0);
 
   rtc_set_time(1262304000 + SECONDS_PER_HOUR);  // top of the hour
   prv_watch_dst((void *)false);
   cl_assert_equal_i(s_vibe_create_count, 1);
+}
+
+void test_clock__hourly_chime_ignores_clock_adjustment_into_first_minute(void) {
+  static const time_t hour_timestamp = 1262304000 + SECONDS_PER_HOUR;
+  s_prefs_24h_style = false;
+  fake_rtc_init(0, 0);
+  rtc_timezone_clear();
+  rtc_set_time(hour_timestamp - SECONDS_PER_MINUTE);
+  clock_init();
+
+  s_should_vibrate = true;
+  s_vibe_create_count = 0;
+  clock_hourly_chime_arm();
+
+  rtc_set_time(hour_timestamp + 42);
+  prv_watch_dst((void *)false);
+  cl_assert_equal_i(s_vibe_create_count, 0);
 }
 
 void test_clock__hourly_chime_respects_vibrate_setting(void) {
@@ -193,7 +224,7 @@ void test_clock__hourly_chime_respects_vibrate_setting(void) {
   s_should_vibrate = false;
   s_vibe_create_count = 0;
 
-  prv_watch_dst((void *)false);  // arm
+  clock_hourly_chime_arm();
   prv_watch_dst((void *)false);  // on the hour but vibing disabled
   cl_assert_equal_i(s_vibe_create_count, 0);
 }
