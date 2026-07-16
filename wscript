@@ -656,10 +656,13 @@ def size_resources(ctx):
         max_size = 256 * 1024
 
     pbpack_actual_size = os.path.getsize(pbpack_path.path_from(ctx.path))
-    bytes_free = max_size - pbpack_actual_size
 
-    from waflib import Logs
-    Logs.pprint('CYAN', 'Resources: %d/%d (%d free)\n' % (pbpack_actual_size, max_size, bytes_free))
+    bar_width = 20
+    filled = min(bar_width, round(bar_width * pbpack_actual_size / max_size))
+    Logs.pprint('CYAN', 'Resources: [%-*s] %6.2f%% (%d/%d bytes)\n'
+                % (bar_width, '#' * filled,
+                   100 * pbpack_actual_size / max_size,
+                   pbpack_actual_size, max_size))
 
     if pbpack_actual_size > max_size:
         ctx.fatal('Resources are too large for target board %d > %d'
