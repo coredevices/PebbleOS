@@ -24,6 +24,8 @@ def extract_exported_functions(node, functions=[], types=[], defines=[]):
                 # than the one we may already have. This is to handle the case where we have typedef and
                 # a struct as part of the same definition, we want to make sure we get the outer typedef.
                 definition = parse_c_decl.get_string_from_file(node.extent)
+                if definition is None:
+                    continue
                 if e.full_definition is None or len(definition) > len(
                     e.full_definition
                 ):

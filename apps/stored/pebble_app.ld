@@ -35,10 +35,6 @@ SECTIONS
 
     DISCARD :
     {
-        libc.a ( * )
-        libm.a ( * )
-        libgcc.a ( * )
         *(.eh_frame)
     }
 }
-

@@ -56,11 +56,15 @@ def configure(conf):
         pebble_cflags.append("-D_TIME_H_")
         # Override time_t to be 32-bit for Pebble compatibility (newer toolchains default to 64-bit)
         pebble_cflags.append("-Dtime_t=long")
+    if conf.env.CONFIG_LIBC_PICOLIBC:
+        picolibc_include = conf.bldnode.make_node("picolibc/install/include").abspath()
+        pebble_cflags.extend(["-isystem", picolibc_include])
     pebble_cflags.extend(c_warnings)
 
     pebble_linkflags = [
         "-mcpu=cortex-m3",
         "-mthumb",
+        "-nostdlib",
         "-Wl,--gc-sections",
         "-Wl,--warn-common",
         "-fPIE",
