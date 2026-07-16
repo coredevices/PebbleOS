@@ -1,9 +1,10 @@
 name: Rebase onto target branch
 description: >
-  Rebase the checked-out PR branch onto the current target branch so CI
-  runs against up-to-date code. Fails if the rebase does not apply
+  Check out the PR head and rebase it onto the current target branch so
+  CI runs against up-to-date code. Fails if the rebase does not apply
   cleanly. No-op on non-PR events. Requires a full checkout
-  (fetch-depth: 0) of the PR head SHA.
+  (fetch-depth: 0) of the default (merge) ref, so this action resolves
+  from the merged tree regardless of the PR branch contents.
 
 inputs:
   submodules:
@@ -20,6 +21,7 @@ runs:
       shell: bash
       env:
         SUBMODULES: ${{ inputs.submodules }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
       run: |
         if [ "${GITHUB_EVENT_NAME}" != "pull_request" ]; then
           echo "Not a pull request, skipping rebase."
@@ -30,6 +32,8 @@ runs:
         git config --global user.name "PebbleOS CI"
 
         rm -rf .git/rebase-apply .git/rebase-merge
+
+        git checkout --force "${HEAD_SHA}"
 
         if ! git rebase "origin/${GITHUB_BASE_REF}"; then
           git rebase --abort || true
