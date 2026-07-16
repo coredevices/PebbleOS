@@ -360,7 +360,8 @@ static void prv_lsm6dso_recover(void);
 //! fifo_progress is set when FIFO data was consumed (samples or overrun).
 static bool prv_lsm6dso_service_int1(bool *fifo_progress) {
   bool ret;
-  uint8_t val;
+  uint8_t fifo_status2 = 0U;
+  uint8_t all_int_src = 0U;
   bool action_taken = false;
   bool fifo_overrun = false;
   bool shake = false;
@@ -372,15 +373,15 @@ static bool prv_lsm6dso_service_int1(bool *fifo_progress) {
   // on these reads, so deferring it avoids stretching the gap between the FIFO
   // read and the ALL_INT_SRC read if this task gets preempted mid-handler.
   if (LSM6DSO->state->num_samples > 0U) {
-    ret = prv_lsm6dso_read(LSM6DSO_FIFO_STATUS2, &val, 1);
+    ret = prv_lsm6dso_read(LSM6DSO_FIFO_STATUS2, &fifo_status2, 1);
     if (!ret) {
       PBL_LOG_ERR("Could not read FIFO_STATUS2 register");
       return false;
     }
 
-    if ((val & LSM6DSO_FIFO_STATUS2_FIFO_OVR_IA) != 0U) {
+    if ((fifo_status2 & LSM6DSO_FIFO_STATUS2_FIFO_OVR_IA) != 0U) {
       fifo_overrun = true;
-    } else if ((val & LSM6DSO_FIFO_STATUS2_FIFO_WTM_IA) != 0U) {
+    } else if ((fifo_status2 & LSM6DSO_FIFO_STATUS2_FIFO_WTM_IA) != 0U) {
       uint8_t status1;
 
       if (!prv_lsm6dso_read(LSM6DSO_FIFO_STATUS1, &status1, 1)) {
@@ -388,7 +389,7 @@ static bool prv_lsm6dso_service_int1(bool *fifo_progress) {
         return false;
       }
 
-      samples = (((uint16_t)(val & LSM6DSO_FIFO_STATUS2_DIFF_HI_MASK)) << 8U) | status1;
+      samples = (((uint16_t)(fifo_status2 & LSM6DSO_FIFO_STATUS2_DIFF_HI_MASK)) << 8U) | status1;
       if (samples > LSM6DSO_FIFO_SIZE) {
         samples = LSM6DSO_FIFO_SIZE;
       }
@@ -406,13 +407,13 @@ static bool prv_lsm6dso_service_int1(bool *fifo_progress) {
   }
 
   if (LSM6DSO->state->shake_detection_enabled) {
-    ret = prv_lsm6dso_read(LSM6DSO_ALL_INT_SRC, &val, 1);
+    ret = prv_lsm6dso_read(LSM6DSO_ALL_INT_SRC, &all_int_src, 1);
     if (!ret) {
       PBL_LOG_ERR("Could not read ALL_INT_SRC register");
       return false;
     }
 
-    shake = (val & LSM6DSO_ALL_INT_SRC_WU_IA) != 0U;
+    shake = (all_int_src & LSM6DSO_ALL_INT_SRC_WU_IA) != 0U;
   }
 
   if (fifo_overrun) {
@@ -440,7 +441,11 @@ static bool prv_lsm6dso_service_int1(bool *fifo_progress) {
   LSM6DSO->state->wu_active = shake;
 
   if (!action_taken) {
-    PBL_LOG_WRN("INT1 triggered but no action taken");
+    // Registers not read this pass (gated on num_samples/shake state) log as 0
+    PBL_LOG_WRN("INT1 triggered but no action taken (FIFO_STATUS2 0x%02" PRIx8
+                " ALL_INT_SRC 0x%02" PRIx8 " num_samples %" PRIu16 " shake_en %d)",
+                fifo_status2, all_int_src, LSM6DSO->state->num_samples,
+                LSM6DSO->state->shake_detection_enabled);
   }
 
   return action_taken;
@@ -586,6 +591,10 @@ static void prv_lsm6dso_recover(void) {
   if (!prv_lsm6dso_read(LSM6DSO_ALL_INT_SRC, &val, 1)) {
     PBL_LOG_ERR("Could not read ALL_INT_SRC register");
     return;
+  }
+
+  if (val != 0U) {
+    PBL_LOG_WRN("Discarded latched INT sources during recovery (ALL_INT_SRC 0x%02" PRIx8 ")", val);
   }
 
   if (!prv_configure_odr(LSM6DSO->state->sampling_interval_us,
