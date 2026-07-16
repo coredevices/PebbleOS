@@ -632,6 +632,14 @@
       ]
     },
     {
+      "id": -192,
+      "enum": "EMOJI_TEST",
+      "md_fn": "emoji_test_app_get_info",
+      "ifdefs": [
+        "CONFIG_DEMO_APP_EMOJI_TEST"
+      ]
+    },
+    {
       "id": -92,
       "enum": "QUIET_TIME_TOGGLE",
       "md_fn": "quiet_time_toggle_get_app_info"

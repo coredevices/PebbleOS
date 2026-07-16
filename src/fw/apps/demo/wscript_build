@@ -28,6 +28,8 @@ if bld.env.CONFIG_DEMO_APP_DIALOGS:
     bld.recurse('dialogs')
 if bld.env.CONFIG_DEMO_APP_DOUBLE_TAP_TEST:
     bld.recurse('double_tap_test')
+if bld.env.CONFIG_DEMO_APP_EMOJI_TEST:
+    bld.recurse('emoji_test')
 if bld.env.CONFIG_DEMO_APP_EVENT_SERVICE:
     bld.recurse('event_service')
 if bld.env.CONFIG_DEMO_APP_EXIT:
