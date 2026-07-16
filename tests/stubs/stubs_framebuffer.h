@@ -4,7 +4,7 @@
 #pragma once
 
 #include "applib/graphics/framebuffer.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 volatile const int FrameBuffer_MaxX = DISP_COLS;
 volatile const int FrameBuffer_MaxY = DISP_ROWS;

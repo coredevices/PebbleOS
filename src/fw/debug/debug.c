@@ -29,8 +29,8 @@
 #include "system/passert.h"
 #include "system/reboot_reason.h"
 #include "system/version.h"
-#include "util/attributes.h"
-#include "util/build_id.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/build_id.h"
 
 #include <inttypes.h>
 

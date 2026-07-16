@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include <util/uuid.h>
+#include <pbl/util/uuid.h>
 
 #include <stddef.h>
 #include <stdint.h>
 
-#include <util/attributes.h>
+#include <pbl/util/attributes.h>
 
 //! Below are the data structures to store information about a *remote* GATT
 //! service and its characteristics and descriptors.

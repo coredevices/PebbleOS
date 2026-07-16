@@ -11,7 +11,7 @@
 #include "console/pulse_internal.h"
 #include "drivers/mic.h"
 #include "drivers/watchdog.h"
-#include "os/tick.h"
+#include "pbl/os/tick.h"
 #include "system/logging.h"
 #include "system/passert.h"
 

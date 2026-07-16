@@ -22,7 +22,7 @@ typedef enum {
 typedef enum {
   SpeakerStateIdle = 0,
   SpeakerStatePlaying,
-  SpeakerStateDraining,    // stream closing, playing remaining buffered data
+  SpeakerStateDraining,    // source exhausted, playing remaining queued data
 } SpeakerState;
 
 typedef enum {

@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 //! These symbols are defined in the linker script for use in initializing
 //! the data sections.

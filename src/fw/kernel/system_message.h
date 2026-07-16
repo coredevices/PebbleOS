@@ -7,7 +7,7 @@
 
 #include "pbl/services/firmware_update.h"
 
-#include <util/attributes.h>
+#include <pbl/util/attributes.h>
 
 typedef enum SystemMessageType {
   SysMsgFirmwareAvailable_Deprecated = 0x00,

@@ -4,7 +4,7 @@
 #pragma once
 
 #include "kernel/events.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 void WEAK event_put(PebbleEvent* event) { }
 

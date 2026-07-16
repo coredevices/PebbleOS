@@ -6,7 +6,7 @@
 #include "applib/platform.h"
 #include "process_management/process_manager.h"
 #include "stubs_compiled_with_legacy2_sdk.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "stubs_compiled_with_legacy2_sdk.h"
 
 const PebbleProcessMd *WEAK sys_process_manager_get_current_process_md(void) {

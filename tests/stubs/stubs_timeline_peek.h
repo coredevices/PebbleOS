@@ -5,7 +5,7 @@
 
 #include "popups/timeline/peek.h"
 #include "pbl/services/timeline/peek.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 unsigned int WEAK timeline_peek_get_concurrent_height(unsigned int num_concurrent) {
   return 0;

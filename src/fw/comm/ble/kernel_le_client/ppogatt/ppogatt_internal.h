@@ -7,9 +7,9 @@
 
 #include <stdint.h>
 
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 #include "mfg/mfg_serials.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #define PPOGATT_V1_DESIRED_RX_WINDOW_SIZE (4500 / MAX_ATT_WRITE_PAYLOAD_SIZE)
 #define PPOGATT_MIN_VERSION (0x00)
@@ -35,6 +35,17 @@
 #define PPOGATT_META_READ_RETRY_COUNT_MAX (3)
 //! Delay in milliseconds before retrying a failed meta characteristic read
 #define PPOGATT_META_READ_RETRY_DELAY_MS (500)
+
+//! Delay in milliseconds before retrying a send that failed for lack of BT
+//! stack buffers (reversed role: NimBLE has no "buffers freed" event)
+#define PPOGATT_SEND_RETRY_DELAY_MS (20)
+
+typedef enum {
+  //! Watch is the GATT client; phone hosts the PPoG service.
+  PPoGATTRoleForward,
+  //! Watch hosts the PPoG service; phone is the GATT client.
+  PPoGATTRoleReversed,
+} PPoGATTRole;
 
 typedef enum {
   PPoGATTPacketTypeData = 0x0,

@@ -11,7 +11,7 @@
 #include "pbl/services/system_task.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 #include <inttypes.h>
 #include <stdlib.h>

@@ -10,7 +10,7 @@
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
 #include "system/logging.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #define PROGRESS_STEP 2
 

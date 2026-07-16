@@ -24,8 +24,8 @@
 #include "pbl/services/evented_timer.h"
 #include "pbl/services/hrm/hrm_manager.h"
 #include "util/bitset.h"
-#include "util/size.h"
-#include "util/trig.h"
+#include "pbl/util/size.h"
+#include "pbl/util/trig.h"
 
 #include <stdbool.h>
 #include <stdint.h>

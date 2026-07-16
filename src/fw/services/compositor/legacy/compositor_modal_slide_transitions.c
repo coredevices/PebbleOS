@@ -10,7 +10,7 @@
 #include "applib/graphics/graphics.h"
 #include "applib/ui/animation_interpolate.h"
 #include "kernel/ui/kernel_ui.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #include <string.h>
 

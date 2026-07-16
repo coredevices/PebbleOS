@@ -10,7 +10,7 @@
 #include "applib/compass_service.h"
 #include "applib/preferred_content_size.h"
 #include "drivers/button_id.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 // The QEMU protocols implemented
 typedef enum {
@@ -25,6 +25,8 @@ typedef enum {
   QemuProtocol_TimeFormat = 9,
   QemuProtocol_TimelinePeek = 10,
   QemuProtocol_ContentSize = 11,
+  QemuProtocol_HealthMetric = 12,
+  QemuProtocol_HeartRate = 13,
 } QemuProtocol;
 
 
@@ -112,6 +114,33 @@ typedef struct PACKED {
 _Static_assert(sizeof(PreferredContentSize) == sizeof(((QemuProtocolContentSizeHeader *)0)->size),
                "sizeof(PreferredContentSize) grew, need to update QemuContentSize in libpebble2 !");
 #endif
+
+
+// QemuProtocol_HealthMetric
+// Stable wire identifier for a health metric. Mapped to ActivityMetric on the
+// firmware side so reordering ActivityMetric can't silently change the protocol.
+// The host pebble tool uses the same numeric values.
+typedef enum {
+  QemuHealthMetric_Steps = 0,
+  QemuHealthMetric_ActiveSeconds = 1,
+  QemuHealthMetric_RestingCalories = 2,
+  QemuHealthMetric_ActiveCalories = 3,
+  QemuHealthMetric_DistanceMeters = 4,
+  QemuHealthMetric_SleepTotalSeconds = 5,
+  QemuHealthMetric_SleepRestfulSeconds = 6,
+} QemuHealthMetric;
+
+typedef struct PACKED {
+  uint8_t metric;   // QemuHealthMetric
+  int32_t value;    // metric value, big-endian
+} QemuProtocolHealthMetricHeader;
+
+
+// QemuProtocol_HeartRate
+typedef struct PACKED {
+  uint8_t bpm;
+  int8_t quality;  // HRMQuality (signed: HRMQuality_OffWrist is -1)
+} QemuProtocolHeartRateHeader;
 
 // ---------------------------------------------------------------------------------------
 // API

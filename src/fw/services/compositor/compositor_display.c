@@ -7,8 +7,8 @@
 #include "applib/graphics/gcolor_definitions.h"
 #include "applib/graphics/gtypes.h"
 #include "util/bitset.h"
-#include "util/math.h"
-#include "util/size.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
 
 #include <string.h>
 

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #include "resource.h"
 #include "resource_storage.h"

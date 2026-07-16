@@ -4,7 +4,7 @@
 #pragma once
 
 #include "applib/graphics/graphics.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 void WEAK graphics_fill_circle(GContext* ctx, GPoint p, uint16_t radius) {}
 

@@ -1,4 +1,4 @@
-from waftools.pebble_test import clar
+from tools.waf.pebble_test import clar
 
 clar(ctx,
     sources_ant_glob = (
@@ -11,4 +11,4 @@ clar(ctx,
     ),
     test_sources_ant_glob = "test_strftime.c",
     override_includes=['dummy_board'],
-    add_includes = ["src/libc"])
+    add_includes = ["lib/c/pebble"])

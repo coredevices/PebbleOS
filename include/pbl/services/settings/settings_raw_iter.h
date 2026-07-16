@@ -11,7 +11,7 @@
 #include <stdbool.h>
 
 #include "system/status_codes.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #define SETTINGS_FILE_MAGIC "set"
 #define SETTINGS_FILE_VERSION 1

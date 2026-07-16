@@ -4,7 +4,7 @@
 #pragma once
 
 #include "pbl/services/blob_db/pin_db.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 bool WEAK pin_db_has_entry_expired(time_t pin_end_timestamp) {
   return false;

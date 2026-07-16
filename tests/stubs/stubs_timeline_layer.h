@@ -4,7 +4,7 @@
 #pragma once
 
 #include "apps/system/timeline/layer.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 uint16_t WEAK timeline_layer_get_ideal_sidebar_width(void) {
   return 0;

@@ -21,7 +21,7 @@
 #include "memfault_pebble_coredump.h"
 
 #include "kernel/pbl_malloc.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #define COREDUMP_SECTOR_SIZE 4096
 

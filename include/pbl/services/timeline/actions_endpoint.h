@@ -7,7 +7,7 @@
 #include "item.h"
 
 #include "pbl/services/comm_session/session.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 #include <inttypes.h>
 #include <stdlib.h>

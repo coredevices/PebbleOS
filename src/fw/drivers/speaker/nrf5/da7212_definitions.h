@@ -5,7 +5,7 @@
 
 #include "board/board.h"
 #include "drivers/audio.h"
-#include "util/circular_buffer.h"
+#include "pbl/util/circular_buffer.h"
 
 #include <stdbool.h>
 #include <stdint.h>

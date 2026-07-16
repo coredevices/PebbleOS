@@ -3,7 +3,7 @@
 
 #include "pbl/services/regular_timer.h"
 
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include "system/logging.h"
 #include "system/passert.h"

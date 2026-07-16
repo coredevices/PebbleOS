@@ -3,7 +3,7 @@
 
 #include "clar.h"
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "util/pstring.h"
 
 #include "pbl/services/blob_db/weather_db.h"

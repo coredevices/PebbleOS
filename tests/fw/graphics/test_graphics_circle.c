@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "applib/graphics/graphics_circle.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 
 #include "clar.h"
 #include "pebble_asserts.h"

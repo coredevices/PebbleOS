@@ -12,7 +12,7 @@
  */
 
 #include "portmacro.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 // Structure of thread info stored within a CORE_DUMP_CHUNK_KEY_THREAD chunk in the core dump
 #define CORE_DUMP_THREAD_NAME_SIZE  16

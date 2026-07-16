@@ -10,7 +10,7 @@
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/generic_attribute.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 
 #include <sys/types.h>
 

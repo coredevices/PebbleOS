@@ -10,16 +10,19 @@ if WATCHDOG
 
 config WATCHDOG_NRF5
     bool "Nordic nRF5"
+    default y if SOC_NRF52
     help
       Support for the Nordic nRF5 watchdog.
 
 config WATCHDOG_SF32LB
     bool "SiFli SF32LB"
+    default y if SOC_SF32LB52
     help
       Support for the SiFli SF32LB watchdog.
 
 config WATCHDOG_QEMU
     bool "QEMU Watchdog"
+    default y if SOC_QEMU
     help
       Support for the QEMU watchdog (no-op).
 

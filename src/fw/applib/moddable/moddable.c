@@ -44,17 +44,40 @@ void moddable_cleanup(void)
 
 // Minimum recordSize for the original struct (without flags field)
 #define kModdableCreationRecordMinSize offsetof(ModdableCreationRecord, flags)
+#define kModdableCreationRecordFlagsSize \
+  (offsetof(ModdableCreationRecord, flags) + sizeof(((ModdableCreationRecord *)0)->flags))
+#define kModdableCreationRecordFFISize \
+  (offsetof(ModdableCreationRecord, fxBuildFFI) + sizeof(((ModdableCreationRecord *)0)->fxBuildFFI))
+
+// ALWAYS_INLINE: PRIVILEGE_WAS_ELEVATED is only valid inside the syscall body.
+static ALWAYS_INLINE void prv_assert_userspace_creation_record(ModdableCreationRecord *cr,
+                                                               size_t len) {
+	if (PRIVILEGE_WAS_ELEVATED) {
+		syscall_assert_userspace_buffer(cr, len);
+	}
+}
 
 DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr)
 {
 	uint32_t flags = 0;
+	uint32_t record_size = 0;
 
 	ModdablePebbleAppState state = task_zalloc_check(sizeof(ModdablePebbleAppStateRecord));
 	app_state_set_js_memory_api_context((void *)state);
 
 	// Read flags if the record is large enough to include them
-	if (cr && (cr->recordSize >= (offsetof(ModdableCreationRecord, flags) + sizeof(uint32_t))))
-		flags = cr->flags;
+	if (cr) {
+		prv_assert_userspace_creation_record(cr, sizeof(cr->recordSize));
+		record_size = cr->recordSize;
+		if (record_size < kModdableCreationRecordMinSize) {
+			APP_LOG(APP_LOG_LEVEL_ERROR, "invalid recordSize");
+			return;
+		}
+
+		prv_assert_userspace_creation_record(cr, cr->recordSize);
+		if (record_size >= kModdableCreationRecordFlagsSize)
+			flags = cr->flags;
+	}
 
 	// Don't log instrumentation if nobody is listening to APP_LOG over BT
 	if (!app_log_is_bt_enabled())
@@ -68,11 +91,7 @@ DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr)
 	(void)xsPreparationAndCreation(&defaultCreation);
 	struct xsCreationRecord creation = *defaultCreation;
 	if (NULL != cr) {
-		if (cr->recordSize < kModdableCreationRecordMinSize) {
-			APP_LOG(APP_LOG_LEVEL_ERROR, "invalid recordSize");
-			return;
-		}
-
+		APP_LOG(APP_LOG_LEVEL_ERROR, "evaluating creation record");
 		uint32_t stack = (cr->stack + 3) & ~3, slot = (cr->slot + 3) & ~3, chunk = (cr->chunk + 3) & ~3;
 		if (stack || slot || chunk) {
 			if (!stack || !slot || !chunk) {
@@ -80,10 +99,6 @@ DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr)
 				return;
 			}
 
-			xsCreation *defaultCreation;
-			extern void *xsPreparationAndCreation(xsCreation **creation);
-			(void)xsPreparationAndCreation(&defaultCreation);
-			struct xsCreationRecord creation = *defaultCreation;
 			creation.stackCount = stack / sizeof(xsSlot);
 			creation.initialHeapCount = slot / sizeof(xsSlot);
 			creation.initialChunkSize = chunk;
@@ -96,21 +111,17 @@ DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr)
 			}
 		}
 
-		if ((offsetof(ModdableCreationRecord, fxBuildFFI) + sizeof(fxBuildFFI)) <= cr->recordSize) {
+		if (record_size >= kModdableCreationRecordFFISize) {
 			fxBuildFFI = cr->fxBuildFFI;
 
 			if (fxBuildFFI && creation.staticSize) {
 				int available = creation.staticSize - (creation.stackCount * sizeof(xsSlot));
 				creation.initialHeapCount = (available >> 1) / sizeof(xsSlot);
-				creation.initialChunkSize = available >> 1;		
+				creation.initialChunkSize = available >> 1;
+				creation.staticSize = 0;
 			}
 		}
 	}
-
-	// FFI hands the app direct pointers into XS storage (string chunks, slot
-	// handles); keep the whole machine in app RAM so unprivileged dereferences
-	// don't MPU-fault.
-	modMachineAllowKernelHeap(NULL == fxBuildFFI);
 
 	xsMachine *the = modCloneMachine(&creation, NULL);
 	if (NULL == the) {

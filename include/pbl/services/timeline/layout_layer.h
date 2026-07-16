@@ -8,7 +8,7 @@
 #include "applib/graphics/gtypes.h"
 #include "applib/ui/animation.h"
 #include "applib/ui/layer.h"
-#include "util/uuid.h"
+#include "pbl/util/uuid.h"
 #include "util/time/time.h"
 
 typedef enum {

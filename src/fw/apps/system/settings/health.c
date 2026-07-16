@@ -12,7 +12,7 @@
 #include "pbl/services/activity/activity.h"
 #include "shell/prefs.h"
 #include "system/passert.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include <string.h>
 

@@ -8,7 +8,7 @@
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/app_message/app_message_sender.h"
 #include "system/logging.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 #include "util/net.h"
 
 PBL_LOG_MODULE_DEFINE(service_app_message, CONFIG_SERVICE_APP_MESSAGE_LOG_LEVEL);

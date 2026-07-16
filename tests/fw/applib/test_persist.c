@@ -13,7 +13,7 @@
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/persist.h"
 #include "system/logging.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 // Stubs
 ////////////////////////////////////

@@ -15,7 +15,7 @@
 #include "nanopb/measurements.pb.h"
 #include "system/passert.h"
 
-#include <util/uuid.h>
+#include <pbl/util/uuid.h>
 
 // -----------------------------------------------------------------------------------------
 // Callback used to decode uuid

@@ -8,7 +8,7 @@
 #include "system/reset.h"
 
 #include "kernel/pbl_malloc.h"
-#include "os/tick.h"
+#include "pbl/os/tick.h"
 
 #include "pbl/services/app_outbox_service.h"
 #include "syscall/syscall.h"

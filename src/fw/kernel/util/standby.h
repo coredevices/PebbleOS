@@ -4,7 +4,7 @@
 #pragma once
 
 #include "system/reboot_reason.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #if !UNITTEST
 NORETURN

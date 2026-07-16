@@ -10,7 +10,7 @@
 #include "applib/pbl_std/pbl_std.h"
 #include "applib/graphics/graphics.h"
 #include "applib/graphics/gtypes.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/window.h"
 #include "kernel/pbl_malloc.h"

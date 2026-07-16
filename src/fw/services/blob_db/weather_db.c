@@ -4,7 +4,7 @@
 #include "pbl/services/blob_db/weather_db.h"
 
 #include "kernel/pbl_malloc.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/settings/settings_file.h"
 #include "pbl/services/weather/weather_service.h"

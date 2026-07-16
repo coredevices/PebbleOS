@@ -7,8 +7,8 @@
 
 #include "applib/graphics/graphics_private_raw.h"
 #include "applib/graphics/framebuffer.h"
-#include "util/attributes.h"
-#include "util/trig.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/trig.h"
 #include "system/passert.h"
 
 //! Packed so we can squeeze this into a void* as the animation context

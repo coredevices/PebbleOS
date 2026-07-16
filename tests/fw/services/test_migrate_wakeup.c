@@ -8,7 +8,7 @@
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/settings/settings_file.h"
 #include "process_management/app_install_manager.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #include "clar.h"
 

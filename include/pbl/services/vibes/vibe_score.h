@@ -4,7 +4,7 @@
 #pragma once
 
 #include "resource/resource.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 #include "util/generic_attribute.h"
 #include "util/pack.h"
 

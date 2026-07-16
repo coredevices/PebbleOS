@@ -16,9 +16,9 @@
   PREFS_MACRO(PREF_KEY_TOUCH_ENABLED, s_touch_enabled)
   PREFS_MACRO(PREF_KEY_MOTION_SENSITIVITY, s_motion_sensitivity)
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
-  PREFS_MACRO(PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY, s_backlight_dynamic_intensity_enabled)
-  PREFS_MACRO(PREF_KEY_DYNAMIC_BACKLIGHT_MIN_THRESHOLD, s_dynamic_backlight_min_threshold)
+  PREFS_MACRO(PREF_KEY_BACKLIGHT_DYNAMIC_MODE, s_backlight_dynamic_mode)
 #endif
+  PREFS_MACRO(PREF_KEY_BACKLIGHT_PRESET, s_backlight_preset)
   PREFS_MACRO(PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD, s_backlight_ambient_threshold)
   PREFS_MACRO(PREF_KEY_STATIONARY, s_stationary_mode_enabled)
   PREFS_MACRO(PREF_KEY_DEFAULT_WORKER, s_default_worker)
@@ -59,6 +59,8 @@
   PREFS_MACRO(PREF_KEY_ACCEL_SHAKE_LOG_INFO, s_accel_shake_log_info_enabled)
   PREFS_MACRO(PREF_KEY_VIBE_LOG_INFO, s_vibe_log_info_enabled)
   PREFS_MACRO(PREF_KEY_SETTINGS_DBS_COMPACTED_V1, s_settings_dbs_compacted_v1)
+  PREFS_MACRO(PREF_KEY_ALS_THRESHOLD_MIGRATED_V1, s_als_threshold_migrated_v1)
+  PREFS_MACRO(PREF_KEY_ALS_THRESHOLD_MIGRATED_V2, s_als_threshold_migrated_v2)
 #ifdef CONFIG_APP_SCALING
   PREFS_MACRO(PREF_KEY_LEGACY_APP_RENDER_MODE, s_legacy_app_render_mode)
 #endif

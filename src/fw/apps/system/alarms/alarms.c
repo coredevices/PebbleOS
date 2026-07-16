@@ -25,9 +25,9 @@
 #include "shell/system_theme.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/string.h"
+#include "pbl/util/string.h"
 #include "util/time/time.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 
 #include <stdio.h>
 #include <string.h>

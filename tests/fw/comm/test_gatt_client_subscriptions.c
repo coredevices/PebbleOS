@@ -10,8 +10,8 @@
 
 #include "clar.h"
 
-#include <btutil/bt_device.h>
-#include <btutil/bt_uuid.h>
+#include <pbl/btutil/bt_device.h>
+#include <pbl/btutil/bt_uuid.h>
 
 #include "FreeRTOS.h"
 #include "semphr.h"

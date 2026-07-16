@@ -44,7 +44,7 @@
 #include "pbl/services/activity/activity.h"
 #include "pbl/services/voice/voice.h"
 
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 // Minimum valid time: January 1, 2020 00:00:00 UTC (timestamp: 1577836800)
 // This represents the minimum time we consider valid for activity initialization

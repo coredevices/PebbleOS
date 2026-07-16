@@ -11,8 +11,8 @@
 #include "applib/unobstructed_area_service_private.h"
 #include "process_state/app_state/app_state.h"
 #include "pbl/services/app_glances/app_glance_service.h"
-#include "util/attributes.h"
-#include "util/heap.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/heap.h"
 
 static Heap s_app_heap;
 

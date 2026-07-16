@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "util/likely.h"
+#include "pbl/util/likely.h"
 
 void cobs_streaming_decode_start(CobsDecodeContext * restrict ctx,
                                  void * restrict output_buffer,

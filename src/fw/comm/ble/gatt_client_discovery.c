@@ -18,7 +18,7 @@
 
 #include <bluetooth/gatt.h>
 #include <bluetooth/gatt_discovery.h>
-#include <btutil/bt_device.h>
+#include <pbl/btutil/bt_device.h>
 
 #include <inttypes.h>
 
@@ -112,6 +112,10 @@ static BTErrno prv_run_next_job(GAPLEConnection *connection) {
   bt_lock();
 
   if (rv == BTErrnoOK) {
+    if (!connection->gatt_is_service_discovery_in_progress) {
+      // Fresh job (not a transparent watchdog retry), record the start time
+      connection->gatt_discovery_start_ticks = rtc_get_ticks();
+    }
     // if we are back here because a timeout occurred, let the
     // driver handle resetting the watchdog timer (cc2564x issue)
     connection->gatt_is_service_discovery_in_progress = true;
@@ -346,9 +350,22 @@ void gatt_client_cleanup_discovery_jobs(GAPLEConnection *connection) {
 
 static void prv_finalize_discovery(GAPLEConnection *connection, BTErrno errno) {
   if (errno != BTErrnoOK) {
-    // Handle failure -- cleanup and dispatch event:
-    prv_free_service_nodes(connection);
-    gatt_client_subscriptions_cleanup_by_connection(connection, false /* should_unsubscribe */);
+    const DiscoveryJobQueue *job = connection->discovery_jobs;
+    const bool is_range_job =
+        (job && ((job->hdl.start != MIN_ATT_HANDLE) || (job->hdl.end != MAX_ATT_HANDLE)));
+    if (errno != BTErrnoServiceDiscoveryDatabaseChanged) {
+      PBL_LOG_ERR("GATT service discovery failed: errno=%d, range=0x%x-0x%x", errno,
+              job ? job->hdl.start : 0, job ? job->hdl.end : 0);
+    }
+    if (!is_range_job || (errno == BTErrnoServiceDiscoveryDatabaseChanged)) {
+      // Handle failure -- cleanup and dispatch event:
+      prv_free_service_nodes(connection);
+      gatt_client_subscriptions_cleanup_by_connection(connection, false /* should_unsubscribe */);
+    }
+    // A failed range job must leave services and subscriptions from earlier
+    // discoveries intact: the stale service for the range was already removed
+    // when the job was queued, so there is nothing to clean up and wiping
+    // connection-wide state would leave clients with dangling references.
   }
 
   prv_remove_current_discovery_job(connection);
@@ -408,7 +425,7 @@ bool bt_driver_cb_gatt_client_discovery_complete(GAPLEConnection *connection, BT
 
     if (errno == BTErrnoOK) {
       const uint32_t discovery_ms =
-          (rtc_get_ticks() - connection->ticks_since_connection) * 1000 / RTC_TICKS_HZ;
+          (rtc_get_ticks() - connection->gatt_discovery_start_ticks) * 1000 / RTC_TICKS_HZ;
       PBL_LOG_INFO("GATT service discovery completed in %"PRIu32"ms", discovery_ms);
       // Completion of service discovery implies we are about to have more BLE
       // traffic (for example, ANCS notifications, PPoG communication). Keep the

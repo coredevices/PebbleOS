@@ -19,9 +19,9 @@
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_manager.h"
 #include "util/date.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 #include "util/time/time.h"
-#include "util/string.h"
+#include "pbl/util/string.h"
 
 #include "pbl/services/clock.h"
 #include "pbl/services/i18n/i18n.h"

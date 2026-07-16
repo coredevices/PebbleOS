@@ -3,7 +3,7 @@
 
 #include "clar.h"
 
-#include "util/crc32.h"
+#include "pbl/util/crc32.h"
 
 #include <inttypes.h>
 #include <stdint.h>

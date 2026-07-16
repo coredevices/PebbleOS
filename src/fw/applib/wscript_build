@@ -65,8 +65,7 @@ bld(export_includes=['.'], name='applib_includes')
 # Build the stlib
 bld.stlib(source=sources,
           target='applib',
-          use=['libbtutil_includes',
-               'fw_includes',
+          use=['fw_includes',
                'upng',
                'qr_code_generator',
                'libxs',

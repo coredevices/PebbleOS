@@ -10,7 +10,7 @@
 #include "kernel/services/file.h"
 #include "system/filesystem.h"
 #include "system/logging.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include <ctype.h>
 #include <stdio.h>

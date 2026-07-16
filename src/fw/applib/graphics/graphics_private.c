@@ -7,7 +7,7 @@
 #include "gtypes.h"
 #include "system/passert.h"
 #include "util/bitset.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 // ## Point setting/blending functions
 

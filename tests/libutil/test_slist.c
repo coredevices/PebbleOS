@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "util/slist.h"
+#include "pbl/util/slist.h"
 
 #include <stdio.h>
 #include <stdlib.h>

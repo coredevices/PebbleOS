@@ -3,7 +3,7 @@
 
 #include "watch_model.h"
 
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 #include "applib/app_watch_info.h"
 #include "applib/pbl_std/pbl_std.h"
 #include "applib/tick_timer_service.h"

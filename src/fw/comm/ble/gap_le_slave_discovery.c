@@ -25,9 +25,9 @@
 #include <bluetooth/pebble_bt.h>
 #include <bluetooth/pebble_pairing_service.h>
 #include <bluetooth/bluetooth_types.h>
-#include <btutil/bt_uuid.h>
-#include <util/attributes.h>
-#include <util/size.h>
+#include <pbl/btutil/bt_uuid.h>
+#include <pbl/util/attributes.h>
+#include <pbl/util/size.h>
 
 static GAPLEAdvertisingJobRef s_discovery_advert_job;
 

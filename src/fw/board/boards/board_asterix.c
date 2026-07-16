@@ -191,6 +191,10 @@ static const LSM6DSOConfig s_lsm6dso_config = {
         .channel = 7,
         .gpio_pin = NRF_GPIO_PIN_MAP(1, 13),
     },
+    .int1_in = {
+        .gpio = NRF5_GPIO_RESOURCE_EXISTS,
+        .gpio_pin = NRF_GPIO_PIN_MAP(1, 13),
+    },
     .axis_map = {
         [AXIS_X] = 1,
         [AXIS_Y] = 0,

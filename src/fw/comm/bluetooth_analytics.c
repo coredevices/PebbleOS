@@ -11,7 +11,7 @@
 #include "pbl/services/comm_session/session.h"
 #include "system/logging.h"
 #include "util/bitset.h"
-#include "util/math.h"
+#include "pbl/util/math.h"
 
 #include <bluetooth/analytics.h>
 #include <bluetooth/gap_le_connect.h>

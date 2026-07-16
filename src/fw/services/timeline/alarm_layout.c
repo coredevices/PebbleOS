@@ -19,8 +19,8 @@
 #include "pbl/services/alarms/alarm.h"
 #include "system/logging.h"
 #include "system/hexdump.h"
-#include "util/size.h"
-#include "util/string.h"
+#include "pbl/util/size.h"
+#include "pbl/util/string.h"
 
 //////////////////////////////////////////
 //  Card Mode

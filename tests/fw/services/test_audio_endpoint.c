@@ -6,8 +6,8 @@
 #include "pbl/services/audio_endpoint.h"
 #include "pbl/services/audio_endpoint_private.h"
 
-#include "util/circular_buffer.h"
-#include "util/list.h"
+#include "pbl/util/circular_buffer.h"
+#include "pbl/util/list.h"
 
 #include "stubs_bt_lock.h"
 #include "stubs_hexdump.h"

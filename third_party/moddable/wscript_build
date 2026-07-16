@@ -12,8 +12,6 @@ else:
 
     if not bld.options.onlysdk:
         libxs_sources = [
-            'moddable/build/devices/esp/lib/bsearch/bsearch.c',
-            'moddable/build/devices/pebble/lib/qsort/qsort.c',
             'moddable/xs/platforms/mc/xsHosts.c',
             'moddable/xs/platforms/pebble/xsHost.c',
             'moddable/xs/platforms/pebble/xsPlatform.c',
@@ -158,6 +156,15 @@ else:
             'moddable/xs/sources/xsffi.c',
             'moddable/modules/base/ffi/pebble/ffi.c',
         ]
+
+        # pblibc has no qsort/bsearch, so the port bundles them. The
+        # toolchain libcs provide both (and their stdlib.h qsort_r
+        # declaration collides with the bundled qsort.c's definition).
+        if bld.env.CONFIG_LIBC_PEBBLE:
+            libxs_sources += [
+                'moddable/build/devices/esp/lib/bsearch/bsearch.c',
+                'moddable/build/devices/pebble/lib/qsort/qsort.c',
+            ]
 
         libxs_includes = [
             'moddable/xs/includes',

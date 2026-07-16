@@ -4,7 +4,7 @@
 #pragma once
 
 #include "applib/bluetooth/ble_client.h"
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 #include "gap_le_task.h"
 

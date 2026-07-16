@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 #include <bluetooth/bluetooth_types.h>
-#include <util/attributes.h>
+#include <pbl/util/attributes.h>
 
 typedef enum {
   SMRootKeyTypeEncryption,

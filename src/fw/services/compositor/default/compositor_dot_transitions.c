@@ -16,11 +16,11 @@
 #include "applib/graphics/graphics.h"
 #include "applib/graphics/gpath.h"
 #include "applib/graphics/gdraw_command_transforms.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 #include "system/passert.h"
-#include "util/attributes.h"
-#include "util/math.h"
-#include "util/size.h"
+#include "pbl/util/attributes.h"
+#include "pbl/util/math.h"
+#include "pbl/util/size.h"
 
 static CompositorTransitionDirection prv_flip_transition_direction(
   CompositorTransitionDirection direction) {

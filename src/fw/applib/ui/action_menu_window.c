@@ -52,11 +52,30 @@ static void prv_remove_window(Window *window) {
   window_stack_remove(window, false /* animated */);
 }
 
+static void prv_action_callback(const ActionMenuItem *item, void *context);
+static void prv_action_menu_layer_selection_changed(const ActionMenuItem *item, void *context);
+
+static void prv_invoke_level_selection_changed(ActionMenuData *data, const ActionMenuItem *item) {
+  const ActionMenuLevel *cur_level = data->view_model.cur_level;
+  if (cur_level->selection_changed) {
+    cur_level->selection_changed(item, data->config.context);
+  }
+}
+
+static void prv_set_action_menu_layer_callbacks(ActionMenuData *data,
+                                                bool enable_selection_changed) {
+  action_menu_layer_set_callbacks(&data->action_menu_layer, (ActionMenuLayerCallbacks) {
+    .select = prv_action_callback,
+    .selection_changed = enable_selection_changed ? prv_action_menu_layer_selection_changed : NULL,
+  }, data);
+}
+
 static void prv_view_model_did_change(ActionMenuData *data) {
   ActionMenuViewModel *vm = &data->view_model;
   const ActionMenuLevel *cur_level = vm->cur_level;
   GRect frame = grect_inset(data->action_menu.window.layer.frame, vm->menu_insets);
   layer_set_frame(&data->action_menu_layer.layer, &frame);
+  prv_set_action_menu_layer_callbacks(data, false);
   if (cur_level->display_mode == ActionMenuLevelDisplayModeThin) {
     action_menu_layer_set_items(&data->action_menu_layer, NULL, 0, 0, 0);
     action_menu_layer_set_short_items(&data->action_menu_layer,
@@ -68,6 +87,8 @@ static void prv_view_model_did_change(ActionMenuData *data) {
     action_menu_layer_set_items(&data->action_menu_layer, cur_level->items, cur_level->num_items,
         cur_level->default_selected_item, cur_level->separator_index);
   }
+  prv_set_action_menu_layer_callbacks(data, true);
+  action_menu_layer_notify_selection_changed(&data->action_menu_layer);
   crumbs_layer_set_level(&data->crumbs_layer, vm->num_dots);
 }
 
@@ -157,6 +178,8 @@ static void prv_set_level(ActionMenuData *data, const ActionMenuLevel *level) {
     return;
   }
 
+  prv_invoke_level_selection_changed(data, NULL);
+
   Animation *content_out = prv_create_content_out_animation(data, level);
   Animation *content_in = prv_create_content_in_animation(data, level);
 
@@ -165,8 +188,8 @@ static void prv_set_level(ActionMenuData *data, const ActionMenuLevel *level) {
 }
 
 static void prv_action_callback(const ActionMenuItem *item, void *context) {
-  ActionMenu *action_menu = context;
-  ActionMenuData *data = window_get_user_data(&action_menu->window);
+  ActionMenuData *data = context;
+  ActionMenu *action_menu = &data->action_menu;
   if (item->is_leaf && item->perform_action) {
     item->perform_action(action_menu, item, data->config.context);
     data->performed_item = item;
@@ -176,6 +199,10 @@ static void prv_action_callback(const ActionMenuItem *item, void *context) {
   } else if (item->next_level) {
     prv_set_level(data, item->next_level);
   }
+}
+
+static void prv_action_menu_layer_selection_changed(const ActionMenuItem *item, void *context) {
+  prv_invoke_level_selection_changed((ActionMenuData *)context, item);
 }
 
 static void prv_back_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -206,7 +233,7 @@ static void prv_action_window_load(Window *window) {
   // Init action menu layer
   ActionMenuLayer *action_menu_layer = &data->action_menu_layer;
   action_menu_layer_init(action_menu_layer, &GRectZero);
-  action_menu_layer_set_callback(action_menu_layer, prv_action_callback, (void *)window);
+  prv_set_action_menu_layer_callbacks(data, true);
   action_menu_layer_set_align(action_menu_layer, data->config.align);
   // Init crumbs layer
   CrumbsLayer *crumbs_layer = &data->crumbs_layer;

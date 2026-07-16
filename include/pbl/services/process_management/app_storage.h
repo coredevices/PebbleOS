@@ -56,8 +56,10 @@ bool app_storage_app_exists(AppInstallId id);
 //! @param task PebbleTask_App or PebbleTask_Worker
 void app_storage_get_file_name(char *name, size_t buf_length, AppInstallId app_id, PebbleTask task);
 
-//! Returns the size of the executable inside the given PebbleProcessInfo
-//! @param info pointer to a valid PebbleProcessInfo struct
-//! @return the size of the executable inside the given PebbleProcessInfo
-uint32_t app_storage_get_process_load_size(PebbleProcessInfo *info);
+//! Computes the process image and relocation table size
+//! @param info pointer to a PebbleProcessInfo struct
+//! @param load_size_out[out] receives the computed size on success
+//! @return true if the size can be computed safely
+bool app_storage_get_process_load_size(const PebbleProcessInfo *info,
+                                       size_t *load_size_out);
 

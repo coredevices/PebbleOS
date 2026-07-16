@@ -12,8 +12,8 @@
 #include "pbl/services/services_normal.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "util/size.h"
-#include "util/string.h"
+#include "pbl/util/size.h"
+#include "pbl/util/string.h"
 
 void services_early_init(void) {
 #ifndef CONFIG_RECOVERY_FW

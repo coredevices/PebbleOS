@@ -38,6 +38,7 @@ PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(button_pressed_count)
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(touch_event_count)
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(gesture_tap_count)
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(gesture_double_tap_count)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(touch_driver_wake_cnt)
 
 // CPU usage
 PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(cpu_running_pct, 100)
@@ -101,6 +102,7 @@ PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(ble_disconnect_conn_term_local_count)     /
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(ble_disconnect_lmp_ll_rsp_tmo_count)      // 0x22
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(ble_disconnect_conn_establishment_count)  // 0x3e
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(ble_disconnect_other_count)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(ppog_reversed)
 
 // Settings
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(settings_health_tracking_enabled)

@@ -9,7 +9,7 @@
 #include "pbl/services/comm_session/protocol.h"
 
 #include "util/net.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #include "FreeRTOS.h"
 #include "semphr.h"

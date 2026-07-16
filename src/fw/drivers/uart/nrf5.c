@@ -10,7 +10,7 @@
 
 #include "FreeRTOS.h"
 
-#include <mcu/interrupts.h>
+#include <pbl/mcu/interrupts.h>
 
 #include <nrfx_uarte.h>
 #include <nrfx_timer.h>

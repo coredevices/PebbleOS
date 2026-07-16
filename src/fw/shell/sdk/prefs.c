@@ -4,7 +4,7 @@
 #include "applib/preferred_content_size.h"
 #include "apps/system_app_ids.h"
 #include "board/board.h"
-#include "os/mutex.h"
+#include "pbl/os/mutex.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/process_manager.h"
 #include "pbl/services/activity/activity.h"

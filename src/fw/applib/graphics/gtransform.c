@@ -3,7 +3,7 @@
 
 #include "gtypes.h"
 #include "gtransform.h"
-#include "util/trig.h"
+#include "pbl/util/trig.h"
 
 #include <string.h>
 

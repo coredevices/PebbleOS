@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "util/attributes.h"
+#include "pbl/util/attributes.h"
 
 void WEAK light_enable_interaction(void) {}
 void WEAK light_system_color_request(void) {}

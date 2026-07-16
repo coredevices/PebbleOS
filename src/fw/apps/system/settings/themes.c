@@ -15,7 +15,7 @@
 #include "pbl/services/i18n/i18n.h"
 #include "shell/prefs.h"
 #include "system/passert.h"
-#include "util/size.h"
+#include "pbl/util/size.h"
 
 #ifdef CONFIG_THEMING
 
