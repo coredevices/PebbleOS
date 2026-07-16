@@ -141,7 +141,7 @@ static bool cst816_enter_bootmode(void) {
     rv &= prv_read_data(CST816_BOOT_FLAG_REG, &cmd, 1, 0);
     psleep(CST816_REG_WR_DELAY_TIME);
 
-    if (cmd == CST816_BOOT_FLAG_VAL) {
+    if (rv && cmd == CST816_BOOT_FLAG_VAL) {
       return true;
     }
   }
