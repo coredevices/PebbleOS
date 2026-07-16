@@ -54,6 +54,10 @@ SECTIONS
 
         *freertos.*.o (.text* .rodata*)
 
+        *.o (.text.LCDC1_IRQHandler)
+        *.o (.text.display_jdi_irq_handler)
+        *.o (.text.HAL_LCDC_IRQHandler)
+
         . = ALIGN(4);
         __ramfunc_end = .;
     } >KERNEL_RAM AT>FLASH

@@ -293,7 +293,6 @@ void display_jdi_irq_handler(DisplayJDIDevice *disp) {
   // coredump shows the interrupt interleaving behind the lost-EOF wedge.
   volatile DisplayIrqLogEntry *entry =
       &s_lcdc_irq_log.entries[s_lcdc_irq_log.write_count % DISPLAY_IRQ_LOG_ENTRIES];
-  entry->timestamp = (uint32_t)rtc_get_ticks();
   entry->irq_before = regs->IRQ;
   entry->jdi_par_ctrl = regs->JDI_PAR_CTRL;
   entry->status = regs->STATUS;
@@ -302,6 +301,8 @@ void display_jdi_irq_handler(DisplayJDIDevice *disp) {
   s_lcdc_eof_cb_fired = false;
   HAL_LCDC_IRQHandler(&state->hlcdc);
 
+  // After the handler: keeps rtc_get_ticks() (flash) off the reprogram path.
+  entry->timestamp = (uint32_t)rtc_get_ticks();
   entry->irq_after = regs->IRQ;
   if (s_lcdc_eof_cb_fired) {
     entry->flags |= 0x1u;
