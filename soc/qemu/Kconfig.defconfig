@@ -7,4 +7,26 @@ choice BT_FW
     default BT_FW_QEMU
 endchoice
 
+# 4 MiB of emulated flash, all of it available to the firmware.
+config FLASH_BASE
+    default 0x00000000
+
+config FLASH_SIZE
+    default 0x400000
+
+config FLASH_OFFSET
+    default 0x0
+
+config FW_FLASH_SIZE
+    default 0x400000
+
+# QEMU mirrors the SRAM layout of the platform it emulates.
+config SRAM_BASE
+    default 0x20000100 if PLATFORM_FLINT
+    default 0x20000000
+
+config SRAM_SIZE
+    default 0x3ff00 if PLATFORM_FLINT
+    default 0x7fc00
+
 endif # SOC_QEMU

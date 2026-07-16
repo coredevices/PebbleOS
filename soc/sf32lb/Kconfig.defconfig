@@ -10,4 +10,32 @@ choice BT_FW
     default BT_FW_NIMBLE
 endchoice
 
+# 32 MiB of external flash, memory-mapped through MPI. Layout: 64 KiB
+# partition table, 64 KiB bootloader, two 3 MiB firmware slots, two
+# 2 MiB resource areas, then the 576 KiB recovery firmware (PRF).
+config FLASH_BASE
+    default 0x12000000
+
+config FLASH_SIZE
+    default 0x2000000
+
+config FLASH_OFFSET
+    default 0xa20000 if RECOVERY_FW && !MFG && !RECOVERY_FW_AS_FW
+    default 0x320000 if FIRMWARE_SLOT = 1
+    default 0x20000
+
+config FW_FLASH_SIZE
+    default 0x90000 if RECOVERY_FW && !MFG && !RECOVERY_FW_AS_FW
+    default 0x300000
+
+# 512 KiB of SRAM, last 1 KiB reserved for LCPU IPC.
+config SRAM_BASE
+    default 0x20000000
+
+config SRAM_SIZE
+    default 0x7fc00
+
+config FIRMWARE_OFFSET
+    default 4096
+
 endif # SOC_SF32LB52

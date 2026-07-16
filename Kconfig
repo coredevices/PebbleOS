@@ -204,6 +204,67 @@ config APP_RAM_4X_RUNTIME_SIZE
     default APP_RAM_GABBRO_RUNTIME_SIZE if PLATFORM_GABBRO
     default 0
 
+config SRAM_BASE
+    hex
+    help
+      Base address of the SRAM available to PebbleOS (kernel + worker +
+      app). Defaulted per SoC in soc/*/Kconfig.defconfig.
+
+config SRAM_SIZE
+    hex
+    help
+      Size of the SRAM available to PebbleOS (kernel + worker + app).
+      Defaulted per SoC in soc/*/Kconfig.defconfig.
+
+config FLASH_BASE
+    hex
+    help
+      Base address of the memory-mapped flash the firmware is linked to
+      run from. Defaulted per SoC in soc/*/Kconfig.defconfig.
+
+config FLASH_SIZE
+    hex
+    help
+      Total size of the memory-mapped flash the firmware is linked to
+      run from. Defaulted per SoC in soc/*/Kconfig.defconfig.
+
+config FLASH_OFFSET
+    hex
+    help
+      Offset of the flash area this firmware image is linked to run
+      from, relative to FLASH_BASE (e.g. past the bootloader, or past
+      the first slot when linking for the second one). Defaulted per
+      SoC in soc/*/Kconfig.defconfig.
+
+config FIRMWARE_OFFSET
+    int
+    default 0
+    help
+      Offset of the firmware image within its flash slot, reserving room
+      for the image header. Defaulted per SoC in soc/*/Kconfig.defconfig.
+
+config FIRMWARE_SLOT
+    int "Firmware flash slot to link for"
+    range 0 1
+    default 0
+    help
+      On boards with multiple firmware slots (PBLBOOT), which slot this
+      image is linked for. Select with -DCONFIG_FIRMWARE_SLOT=1 at
+      configure time.
+
+config RECOVERY_FW_AS_FW
+    bool "Link the recovery firmware into the normal firmware area"
+    help
+      Build PRF linked to the normal firmware flash area instead of its
+      own. Select with -DCONFIG_RECOVERY_FW_AS_FW=y at configure time.
+
+config FW_FLASH_SIZE
+    hex
+    help
+      Flash space available to this firmware image. Defaulted per SoC or
+      board; a board may shrink it, e.g. when the recovery firmware
+      shares a flash bank with the normal firmware.
+
 choice
     prompt "Screen color depth"
 

@@ -7,4 +7,21 @@ choice BT_FW
     default BT_FW_NIMBLE
 endchoice
 
+# 1 MiB of internal flash; the bootloader occupies the first 32 KiB.
+config FLASH_BASE
+    default 0x00000000
+
+config FLASH_SIZE
+    default 0x100000
+
+config FLASH_OFFSET
+    default 0x8000
+
+# 256 KiB of SRAM, first 256 bytes reserved for the RETAINED region.
+config SRAM_BASE
+    default 0x20000100
+
+config SRAM_SIZE
+    default 0x3ff00
+
 endif # SOC_NRF52
