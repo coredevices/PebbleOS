@@ -1,0 +1,46 @@
+name: Rebase onto target branch
+description: >
+  Rebase the checked-out PR branch onto the current target branch so CI
+  runs against up-to-date code. Fails if the rebase does not apply
+  cleanly. No-op on non-PR events. Requires a full checkout
+  (fetch-depth: 0) of the PR head SHA.
+
+inputs:
+  submodules:
+    description: >
+      Update submodules after the rebase. Same semantics as
+      actions/checkout: 'false', 'true' or 'recursive'.
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - name: Rebase onto target branch
+      shell: bash
+      env:
+        SUBMODULES: ${{ inputs.submodules }}
+      run: |
+        if [ "${GITHUB_EVENT_NAME}" != "pull_request" ]; then
+          echo "Not a pull request, skipping rebase."
+          exit 0
+        fi
+
+        git config --global user.email "ci@repebble.com"
+        git config --global user.name "PebbleOS CI"
+
+        rm -rf .git/rebase-apply .git/rebase-merge
+
+        if ! git rebase "origin/${GITHUB_BASE_REF}"; then
+          git rebase --abort || true
+          echo "::error::Cannot rebase onto ${GITHUB_BASE_REF}. Rebase your branch locally, resolve conflicts and push again."
+          exit 1
+        fi
+
+        if [ "${SUBMODULES}" = "recursive" ]; then
+          git submodule update --init --recursive
+        elif [ "${SUBMODULES}" = "true" ]; then
+          git submodule update --init
+        fi
+
+        git log --oneline -10

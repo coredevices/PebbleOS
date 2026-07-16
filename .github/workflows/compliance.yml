@@ -13,11 +13,14 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
+      - name: Rebase onto target branch
+        uses: ./.github/actions/rebase
+
       - name: Install GitLint
         run: pip install gitlint
 
       - name: Run GitLint
-        run: gitlint --commits "${{ github.event.pull_request.base.sha }}..HEAD"
+        run: gitlint --commits "origin/${GITHUB_BASE_REF}..HEAD"
 
   ruff:
     runs-on: ubuntu-24.04
@@ -28,12 +31,15 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
+      - name: Rebase onto target branch
+        uses: ./.github/actions/rebase
+
       - name: Install ruff
         run: pip install ruff
 
       - name: Run ruff format check
         run: |
-          base="${{ github.event.pull_request.base.sha }}"
+          base="origin/${GITHUB_BASE_REF}"
 
           # collect submodule paths to skip
           submodules=$(git config --file .gitmodules --get-regexp '\.path$' \
@@ -65,9 +71,12 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
+      - name: Rebase onto target branch
+        uses: ./.github/actions/rebase
+
       - name: Check SPDX license headers
         run: |
-          base="${{ github.event.pull_request.base.sha }}"
+          base="origin/${GITHUB_BASE_REF}"
           failed_files=()
 
           # collect submodule paths to skip
