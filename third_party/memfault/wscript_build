@@ -63,3 +63,5 @@ else:
             "fw_includes",
         ],
     )
+
+    bld.linker_sources("footer", "port/memfault_compact_log.ld")

@@ -1,26 +1,7 @@
-MEMORY
-{
-    KERNEL_RAM  (xrw) : ORIGIN = @KERNEL_RAM_ADDR@, LENGTH = @KERNEL_RAM_SIZE@
-    WORKER_RAM (xrw)  : ORIGIN = @WORKER_RAM_ADDR@, LENGTH = @WORKER_RAM_SIZE@
-    APP_RAM (xrw)     : ORIGIN = @APP_RAM_ADDR@,    LENGTH = @APP_RAM_SIZE@
-
-    FLASH (rx) : ORIGIN = @FW_FLASH_ORIGIN@, LENGTH = @FW_FLASH_LENGTH@
-}
-
-__FLASH_start__ = @FLASH_ORIGIN@;
-__FLASH_size__ = @FLASH_SIZE@;
-
-REGION_ALIAS("REGION_ISR_STACK", KERNEL_RAM);
-REGION_ALIAS("REGION_KERNEL_STACKS", KERNEL_RAM);
-REGION_ALIAS("REGION_KERNEL_HEAP", KERNEL_RAM);
-
-SECTIONS
-{
-    .isr_vector : {
-        ASSERT(. == ORIGIN(FLASH), "Error: Vector table is offset from the start of the FLASH region");
-        PROVIDE(__ISR_VECTOR_TABLE__ = .);
-        KEEP(*(.isr_vector))            /* Startup code */
-    } >FLASH
+/*
+ * SPDX-FileCopyrightText: 2026 Core Devices LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
     .ramfunc : {
         . = ALIGN(4);
@@ -28,7 +9,7 @@ SECTIONS
         * (.*l1_ret_text_*)
         * (.*l1_ret_rodata_*)
 
-        *flash_table.*.o       (.text* .rodata*) 
+        *flash_table.*.o       (.text* .rodata*)
         *bf0_hal_mpi.*.o       (.text* .rodata*)
         *bf0_hal_mpi_ex.*.o    (.text* .rodata*)
         *bf0_hal_mpi_psram.*.o (.text* .rodata*)
@@ -58,4 +39,3 @@ SECTIONS
         __ramfunc_end = .;
     } >KERNEL_RAM AT>FLASH
     __ramfunc_load_start = LOADADDR(.ramfunc);
-}

@@ -1,4 +1,3 @@
-import collections
 import os
 import re
 import subprocess
@@ -335,149 +334,6 @@ def stop_build_timer(ctx):
         fout.write(str(int(round(t.total_seconds()))))
 
 
-def _generate_memory_layout(bld):
-
-    if bld.env.CONFIG_QEMU:
-        ldscript_template = bld.path.find_node('src/fw/qemu_flash_fw.ld.template')
-    elif bld.env.CONFIG_BOARD_ASTERIX:
-        ldscript_template = bld.path.find_node('src/fw/nrf52840_flash_fw.ld.template')
-    elif bld.env.CONFIG_BOARD_OBELIX or bld.env.CONFIG_BOARD_GETAFIX:
-        ldscript_template = bld.path.find_node('src/fw/sf32lb52_flash_fw.ld.template')
-
-    # Determine sizes so we can later calculate FLASH_LENGTH_*
-    if bld.env.CONFIG_QEMU:
-        flash_size = 4 * 1024 * 1024
-        offset_size = 0
-        fw_max_size = flash_size
-
-    elif bld.env.CONFIG_SOC_SF32LB52:
-        flash_size = 32 * 1024 * 1024
-        ptable_size = 64 * 1024
-        bootloader_size = 64 * 1024
-        slot_size = 3072 * 1024
-        resources_size = 2048 * 1024
-        prf_size = 576 * 1024
-        if bld.env.VARIANT == 'prf' and not (bld.env.CONFIG_MFG or bld.env.CONFIG_RECOVERY_FW_AS_FW):
-            offset_size = ptable_size + bootloader_size + 2 * slot_size + 2 * resources_size
-            fw_max_size = prf_size
-        else:
-            offset_size = ptable_size + bootloader_size
-            if bld.env.SLOT == 1:
-                offset_size += slot_size
-            offset_size = offset_size
-            fw_max_size = slot_size
-
-    elif bld.env.CONFIG_SOC_NRF52:
-        # Bootloader
-        offset_size = 32 * 1024
-        flash_size = 1024 * 1024
-        if bld.env.CONFIG_BOARD_ASTERIX and bld.env.VARIANT == 'prf' and not bld.env.CONFIG_MFG:
-            fw_max_size = flash_size // 2
-        else:
-            fw_max_size = flash_size
-
-    if bld.env.CONFIG_QEMU:
-        flash_size = 4 * 1024 * 1024
-        fw_max_size = flash_size
-
-    if bld.env.CONFIG_QEMU:
-        flash_origin = 0x00000000
-    elif bld.env.CONFIG_SOC_NRF52:
-        flash_origin = 0x00000000
-    elif bld.env.CONFIG_SOC_SF32LB52:
-        flash_origin = 0x12000000
-    else:
-        flash_origin = 0x08000000
-
-    firmware_offset = 0
-    if bld.env.CONFIG_SOC_SF32LB52:
-      firmware_offset = 4096
-
-    bld.env.FIRMWARE_OFFSET = firmware_offset
-    bld.env.append_value('DEFINES', [f'FIRMWARE_OFFSET={firmware_offset}'])
-
-    # Determine FLASH_LENGTH_*
-    fw_flash_length = '%(fw_max_size)d - %(firmware_offset)d' % locals()
-    fw_flash_origin = '0x%(flash_origin)08x + %(offset_size)d + %(firmware_offset)d' % locals()
-
-    # Determine ram layout
-
-    # Each tuple defines the amount of RAM we give to apps (stack + text + data
-    # + bss + heap) and the amount of RAM reserved for the application runtime
-    # (AppState) for each app execution environment, respectively. The values
-    # come from the CONFIG_APP_RAM_*X_* symbols, which are set per SDK platform
-    # in the top-level Kconfig.
-    AppRamSize = collections.namedtuple('AppRamSize',
-                                        'app_segment runtime_reserved')
-    app_ram_size_2x = AppRamSize(bld.env.CONFIG_APP_RAM_2X_SEGMENT_SIZE,
-                                 bld.env.CONFIG_APP_RAM_2X_RUNTIME_SIZE)
-    app_ram_size_3x = AppRamSize(bld.env.CONFIG_APP_RAM_3X_SEGMENT_SIZE,
-                                 bld.env.CONFIG_APP_RAM_3X_RUNTIME_SIZE)
-    app_ram_size_4x = AppRamSize(bld.env.CONFIG_APP_RAM_4X_SEGMENT_SIZE,
-                                 bld.env.CONFIG_APP_RAM_4X_RUNTIME_SIZE)
-
-    # The process loader enforces eight-byte alignment on all segments, so
-    # configuring a segment with a size that is not a multiple of eight will
-    # result in segments being smaller than expected. The runtime_reserved
-    # size is not checked as its value isn't currently used anywhere.
-    for name, sizes in (('2x', app_ram_size_2x), ('3x', app_ram_size_3x),
-                        ('4x', app_ram_size_4x)):
-        if sizes.app_segment % 8 != 0:
-            bld.fatal("The app_segment size for the %s app environment is not "
-                      "a multiple of eight bytes. You're gonna have a bad "
-                      "time." % name)
-
-    # Determine the board's total RAM layout.
-    if bld.env.CONFIG_PLATFORM_EMERY:
-        # We have 512K of SRAM, last 1K reserved for LCPU IPC
-        total_ram = (0x20000000, (512 - 1) * 1024)
-    elif bld.env.CONFIG_PLATFORM_FLINT:
-        retained_size = 256
-        total_ram = (0x20000000 + retained_size, 256 * 1024 - retained_size)
-    elif bld.env.CONFIG_PLATFORM_GABBRO:
-        # We have 512K of SRAM, last 1K reserved for LCPU IPC
-        total_ram = (0x20000000, (512 - 1) * 1024)
-    else:
-        bld.fatal("No set of supported SDK platforms defined for this board")
-
-    # Allocate RAM from the end to the start. Do the app first, then the worker, then give whatever
-    # is left to the kernel.
-    ram_end = sum(total_ram)  # The end of RAM is the start address plus the size.
-    all_app_ram_sizes = [app_ram_size_2x, app_ram_size_3x, app_ram_size_4x]
-    app_ram_size = max(sum(x) for x in all_app_ram_sizes)
-    app_runtime_size = max(x.runtime_reserved for x in all_app_ram_sizes)
-    if app_ram_size <= 0 or app_runtime_size <= 0:
-        bld.fatal("App RAM is too small!")
-    app_ram = (ram_end - app_ram_size, app_ram_size)
-    worker_ram_size = 12 * 1024  # The worker always gets 12k of RAM.
-    worker_ram = (ram_end - app_ram_size - worker_ram_size, worker_ram_size)
-    kernel_ram_size = total_ram[1] - app_ram_size - worker_ram_size
-    kernel_ram = (total_ram[0], kernel_ram_size)
-
-    # As a basic sanity check, make sure we're giving the kernel at least 64k.
-    if kernel_ram_size < 64 * 1024:
-        bld.fatal("Kernel RAM is too small!")
-
-    ldscript_result = ldscript_template.get_bld().change_ext('.ld', ext_in='.ld.template')
-
-    bld(features='subst',
-        path=bld.path,
-        source=ldscript_template,
-        target=ldscript_result,
-        KERNEL_RAM_ADDR="0x{:x}".format(kernel_ram[0]),
-        KERNEL_RAM_SIZE=kernel_ram[1],
-        APP_RAM_ADDR="0x{:x}".format(app_ram[0]),
-        APP_RAM_SIZE=app_ram[1],
-        WORKER_RAM_ADDR="0x{:x}".format(worker_ram[0]),
-        WORKER_RAM_SIZE=worker_ram[1],
-        FLASH_ORIGIN="0x{:x}".format(flash_origin),
-        FW_FLASH_ORIGIN=fw_flash_origin,
-        FW_FLASH_LENGTH=fw_flash_length,
-        FLASH_SIZE=flash_size)
-
-    return ldscript_result
-
-
 def _link_firmware(bld, sources):
     fw_linkflags = ['-Wl,--cref',
                     '-Wl,-Map=pebbleos.map',
@@ -540,12 +396,9 @@ def _link_firmware(bld, sources):
         fw_linkflags.append('-Wl,--require-defined=g_memfault_build_id')
         uses.append('memfault')
 
-    ldscript = _generate_memory_layout(bld)
-
-    ldscripts = [ldscript, 'src/fw/fw_common.ld']
-    if bld.env.CONFIG_MEMFAULT:
-        ldscripts.append(bld.srcnode.find_node(
-            'third_party/memfault/port/memfault_compact_log.ld'))
+    # Used by pblboot image tools; the C define mirrors the historical name.
+    bld.env.FIRMWARE_OFFSET = bld.env.CONFIG_FIRMWARE_OFFSET
+    bld.env.append_value('DEFINES', [f'FIRMWARE_OFFSET={bld.env.CONFIG_FIRMWARE_OFFSET}'])
 
     # Build and link the firmware ELF
     elf_node = bld.path.get_bld().make_node('pebbleos.elf')
@@ -555,7 +408,7 @@ def _link_firmware(bld, sources):
                 lib=bld.env.LIBC_LIBS,
                 target=elf_node,
                 includes='fonts',
-                ldscript=ldscripts,
+                ldscript='src/fw/linker/pebbleos.ld',
                 linkflags=fw_linkflags)
 
     x.env.append_value('LINKFLAGS', fw_linkflags)

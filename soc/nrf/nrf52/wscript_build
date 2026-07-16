@@ -12,3 +12,5 @@ bld.objects(
         'fw_includes',
     ],
 )
+
+bld.linker_sources('memory', 'linker.ld')

@@ -14,3 +14,5 @@ bld.objects(
         'hal_sifli',
     ],
 )
+
+bld.linker_sources('ram-sections', 'ramfunc.ld')
