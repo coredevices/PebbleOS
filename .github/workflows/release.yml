@@ -168,7 +168,7 @@ jobs:
           fi
 
       - name: Configure
-        run: ./waf configure --board '${{ matrix.board }}' --slot ${{ matrix.slot }} -DCONFIG_RELEASE=y
+        run: ./waf configure --board '${{ matrix.board }}' -DCONFIG_FIRMWARE_SLOT=${{ matrix.slot }} -DCONFIG_RELEASE=y
 
       - name: Build firmware
         run: ./waf build

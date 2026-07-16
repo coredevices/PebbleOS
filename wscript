@@ -121,21 +121,6 @@ def options(opt):
     opt.load('show_configure', tooldir='tools/waf')
     opt.load('kconfig', tooldir='tools/waf')
 
-    opt.add_option(
-        "--prf-as-firmware",
-        action='store_true',
-        help="Build PRF so that it links to the firmware region",
-    )
-
-    opt.add_option(
-        '--slot',
-        action='store',
-        type=int,
-        default=0,
-        choices=[0, 1],
-        help='Select for which slot to build the firmware. 0=primary, 1=secondary'
-    )
-
     gr = opt.add_option_group('test options')
     gr.add_option('-D', '--debug_test', action='store_true',
         help='Execute tests within GDB. Use alongside -M.')
@@ -248,15 +233,8 @@ def configure(conf):
     define = 'MAX_FONT_GLYPH_SIZE={}'.format(platform['MAX_FONT_GLYPH_SIZE'])
     conf.env.append_value('DEFINES', [define])
 
-    conf.env.PRF_AS_FIRMWARE = conf.options.prf_as_firmware
-    if conf.options.prf_as_firmware:
-        conf.env.append_value('DEFINES', 'RECOVERY_FW_AS_FW')
-
-    if conf.env.CONFIG_PBLBOOT:
-        conf.env.SLOT = conf.options.slot
-        conf.env.append_value('DEFINES', f'FIRMWARE_SLOT_{conf.options.slot}')
-    else:
-        conf.env.SLOT = -1
+    # Used for pblboot image naming; -1 when the board has no slots.
+    conf.env.SLOT = conf.env.CONFIG_FIRMWARE_SLOT if conf.env.CONFIG_PBLBOOT else -1
 
     # Save a baseline environment that we'll use for unit tests
     # Detach so operations against conf.env don't affect unit_test_env
@@ -379,7 +357,7 @@ def _generate_memory_layout(bld):
         slot_size = 3072 * 1024
         resources_size = 2048 * 1024
         prf_size = 576 * 1024
-        if bld.env.VARIANT == 'prf' and not (bld.env.CONFIG_MFG or bld.env.PRF_AS_FIRMWARE):
+        if bld.env.VARIANT == 'prf' and not (bld.env.CONFIG_MFG or bld.env.CONFIG_RECOVERY_FW_AS_FW):
             offset_size = ptable_size + bootloader_size + 2 * slot_size + 2 * resources_size
             fw_max_size = prf_size
         else:
