@@ -13,6 +13,35 @@ from waflib.Configure import conf
 import tools.waf.boards
 
 
+class HexInt(int):
+    """Int that formats as the original hex literal, so DEFINES mirroring hex
+    Kconfig symbols stays token-identical with the autoconf.h #define (which
+    preserves the literal as written, e.g. 0x00000000; a non-identical macro
+    redefinition is fatal under -Werror)."""
+
+    def __new__(cls, literal):
+        if isinstance(literal, str):
+            value = int(literal, 16)
+        else:
+            value = int(literal)
+            literal = hex(value)
+        obj = super().__new__(cls, value)
+        obj.literal = literal
+        return obj
+
+    def __getnewargs__(self):
+        # Reconstruct from the literal so copies keep its exact spelling.
+        return (self.literal,)
+
+    def __str__(self):
+        return self.literal
+
+    def __format__(self, spec):
+        if not spec:
+            return self.literal
+        return super().__format__(spec)
+
+
 def options(opt):
     opt.add_option(
         "--kconfig-override",
@@ -51,7 +80,7 @@ def load_kconfig(ctx, config_path):
                 elif val.startswith('"') and val.endswith('"'):
                     val = val[1:-1]
                 elif val.startswith("0x") or val.startswith("0X"):
-                    val = int(val, 16)
+                    val = HexInt(val)
                 else:
                     try:
                         val = int(val)
