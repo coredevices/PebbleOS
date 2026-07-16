@@ -145,6 +145,9 @@ void test_codepoint__formatting_indicator_invisibles(void) {
   cl_assert(codepoint_is_formatting_indicator(0x202C));
   cl_assert(codepoint_is_formatting_indicator(0x202D));
   cl_assert(codepoint_is_formatting_indicator(0x202E));
+  // Combining enclosing keycap (1️⃣ = digit + FE0F + 20E3): no font has the
+  // ring, so it must vanish and leave the plain digit.
+  cl_assert(codepoint_is_formatting_indicator(0x20E3));
   // Existing entries still recognised
   cl_assert(codepoint_is_formatting_indicator(0x7F));
   cl_assert(codepoint_is_formatting_indicator(0xFEFF));

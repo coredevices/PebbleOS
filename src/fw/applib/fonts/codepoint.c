@@ -82,6 +82,7 @@ static const Codepoint FORMATTING_CODEPOINTS[] = {
   0x202C, // bidirectional - pop direction
   0x202D, // left to right override
   0x202E, // right to left override
+  0x20E3, // combining enclosing keycap; no font has the ring, keep the base digit
   0xFE0E, // variation selector 1
   0xFE0F, // variation selector 2
   0xFEFF, // zero-width-no-break
