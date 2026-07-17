@@ -459,7 +459,22 @@ static void prv_lsm6dso_int1_work_handler(void) {
 
   if (fifo_progress) {
     accel_offload_work(prv_lsm6dso_int1_work_handler);
-  } else if (!action_taken) {
+    return;
+  }
+
+  if (action_taken) {
+    return;
+  }
+
+  // A source asserting between the status reads and the pad re-check is
+  // indistinguishable from a stuck pad, and recovering would discard it.
+  // Retry the servicing pass once (a latched wake-up or a fresh FIFO
+  // threshold is visible on re-read) and only recover if the pad is still
+  // high with nothing serviced.
+  action_taken = prv_lsm6dso_service_int1(&fifo_progress);
+  if (fifo_progress) {
+    accel_offload_work(prv_lsm6dso_int1_work_handler);
+  } else if (!action_taken && gpio_input_read(&LSM6DSO->int1_in)) {
     prv_lsm6dso_recover();
   }
 }
