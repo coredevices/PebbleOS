@@ -4,7 +4,7 @@
               "You should also make sure you are obeying our API design guidelines:",
               "https://pebbletechnology.atlassian.net/wiki/display/DEV/SDK+API+Design+Guidelines"
             ],
-  "revision" : "105",
+  "revision" : "106",
   "version" : "2.0",
   "files": [
     "fw/drivers/ambient_light.h",
@@ -31,6 +31,7 @@
     "fw/applib/app_worker.h",
     "fw/applib/backlight_service.h",
     "fw/applib/battery_state_service.h",
+    "fw/applib/music_service.h",
     "fw/applib/bluetooth/ble_ad_parse.h",
     "fw/applib/bluetooth/ble_central.h",
     "fw/applib/bluetooth/ble_characteristic.h",
@@ -434,6 +435,50 @@
                   "type": "function",
                   "name": "battery_state_service_peek",
                   "addedRevision": "0"
+                }
+              ]
+            }, {
+              "type": "group",
+              "name": "MusicService",
+              "appOnly": true,
+              "addedRevision": "106",
+              "exports": [
+                {
+                  "type": "define",
+                  "name": "MUSIC_SERVICE_BUFFER_LENGTH",
+                  "addedRevision": "106"
+                }, {
+                  "type": "type",
+                  "name": "MusicServicePlaybackState",
+                  "addedRevision": "106"
+                }, {
+                  "type": "type",
+                  "name": "MusicServiceEventType",
+                  "addedRevision": "106"
+                }, {
+                  "type": "type",
+                  "name": "MusicServiceEventHandler",
+                  "addedRevision": "106"
+                }, {
+                  "type": "function",
+                  "name": "music_service_has_now_playing",
+                  "addedRevision": "106"
+                }, {
+                  "type": "function",
+                  "name": "music_service_get_now_playing",
+                  "addedRevision": "106"
+                }, {
+                  "type": "function",
+                  "name": "music_service_get_playback_state",
+                  "addedRevision": "106"
+                }, {
+                  "type": "function",
+                  "name": "music_service_subscribe",
+                  "addedRevision": "106"
+                }, {
+                  "type": "function",
+                  "name": "music_service_unsubscribe",
+                  "addedRevision": "106"
                 }
               ]
             }, {
