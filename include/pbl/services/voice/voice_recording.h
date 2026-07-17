@@ -125,6 +125,14 @@ bool voice_recording_is_owned_by(VoiceRecordingId id, const Uuid *app_uuid);
 //! @return number of recordings written to \a out
 uint32_t voice_recording_list(VoiceRecordingInfo *out, uint32_t max);
 
+//! Enumerate a page of stored recordings.
+//! @param out       caller-provided array to fill
+//! @param max       capacity of \a out
+//! @param offset    number of valid recordings to skip
+//! @param has_more  set when at least one more recording follows this page
+uint32_t voice_recording_list_page(VoiceRecordingInfo *out, uint32_t max, uint32_t offset,
+                                   bool *has_more);
+
 //! Enumerate stored recordings belonging to \a app_uuid.
 uint32_t voice_recording_list_owned_by(VoiceRecordingInfo *out, uint32_t max, const Uuid *app_uuid);
 
