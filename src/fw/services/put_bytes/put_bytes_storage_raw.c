@@ -122,13 +122,6 @@ bool pb_storage_raw_init(PutBytesStorage *storage, PutBytesObjectType object_typ
 
   storage->current_offset = layout->start_offset;
 
-  // Reduce BLE activity for the duration of raw flash operations to help prevent stack overflow
-  // in NimbleHost task. Flash operations block and concurrent BLE mbuf handling can cause deep
-  // call stacks. Using ResponseTimeMiddle reduces the frequency of BLE events while still
-  // maintaining reasonable transfer speeds.
-  comm_session_set_responsiveness(comm_session_get_system_session(),
-                                  BtConsumerPpPutBytes, ResponseTimeMiddle, 0);
-
   // This erase operation will take awhile, so disable the task watchdog for the current task
   // while we're doing this.
   bool previous_system_task_watchdog_state = task_watchdog_mask_get(PebbleTask_KernelBackground);
@@ -137,10 +130,21 @@ bool pb_storage_raw_init(PutBytesStorage *storage, PutBytesObjectType object_typ
   }
 
   if (append_offset == 0) {
+    // Reduce BLE activity while the blocking erase runs, to lower stack pressure on the
+    // NimbleHost task. Scoped to the erase only: this shares BtConsumerPpPutBytes with the
+    // ResponseTimeMin request held during chunk streaming, so leaving it in place would cancel
+    // the fast connection interval.
+    comm_session_set_responsiveness(comm_session_get_system_session(), BtConsumerPpPutBytes,
+                                    ResponseTimeMiddle, MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS);
+
     // By erasing the entire region we make it more likely for 'pb_storage_raw_get_status' to
     // recover the correct location.
     flash_region_erase_optimal_range(layout->start_address, layout->start_address,
         layout->end_address, layout->end_address);
+
+    // Restore the fast interval so the init ACK isn't delayed by the slow connection parameters.
+    comm_session_set_responsiveness(comm_session_get_system_session(), BtConsumerPpPutBytes,
+                                    ResponseTimeMin, MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS);
   } else {
     // Some data we want has already been written, just continue from last valid location!
     storage->current_offset += append_offset;
