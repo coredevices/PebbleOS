@@ -151,6 +151,12 @@ BatteryStateServiceState* kernel_applib_get_battery_state_service_state(void) {
   return &s_battery_state_service_state;
 }
 
+// -----------------------------------------------------------------------------------------------------------
+MusicServiceState* kernel_applib_get_music_service_state(void) {
+  static MusicServiceState s_music_service_state;
+  return &s_music_service_state;
+}
+
 Layer** kernel_applib_get_layer_tree_stack(void) {
   static Layer* layer_tree_stack[LAYER_TREE_STACK_SIZE];
   return layer_tree_stack;
@@ -161,6 +167,7 @@ void kernel_applib_init(void) {
   s_log_state_mutex = mutex_create_recursive();
   connection_service_state_init(kernel_applib_get_connection_service_state());
   battery_state_service_state_init(kernel_applib_get_battery_state_service_state());
+  music_service_state_init(kernel_applib_get_music_service_state());
 }
 
 

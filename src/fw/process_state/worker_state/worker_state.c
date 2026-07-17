@@ -31,6 +31,8 @@ typedef struct {
 
   BatteryStateServiceState battery_state_service_state;
 
+  MusicServiceState music_service_state;
+
   BacklightServiceState backlight_service_state;
 
   TickTimerServiceState tick_timer_service_state;
@@ -56,6 +58,8 @@ void worker_state_init(void) {
   plugin_service_state_init(worker_state_get_plugin_service());
 
   battery_state_service_state_init(worker_state_get_battery_state_service_state());
+
+  music_service_state_init(worker_state_get_music_service_state());
 
   backlight_service_state_init(worker_state_get_backlight_service_state());
 
@@ -109,6 +113,10 @@ LogState *worker_state_get_log_state(void) {
 
 BatteryStateServiceState *worker_state_get_battery_state_service_state(void) {
   return &s_worker_state_ptr->battery_state_service_state;
+}
+
+MusicServiceState *worker_state_get_music_service_state(void) {
+  return &s_worker_state_ptr->music_service_state;
 }
 
 BacklightServiceState *worker_state_get_backlight_service_state(void) {

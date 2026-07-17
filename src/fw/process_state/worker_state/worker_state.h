@@ -12,6 +12,7 @@
 #include "applib/backlight_service_private.h"
 #include "applib/battery_state_service.h"
 #include "applib/battery_state_service_private.h"
+#include "applib/music_service_private.h"
 #include "applib/connection_service.h"
 #include "applib/connection_service_private.h"
 #include "applib/health_service.h"
@@ -48,6 +49,8 @@ PluginServiceState *worker_state_get_plugin_service(void);
 LogState *worker_state_get_log_state(void);
 
 BatteryStateServiceState *worker_state_get_battery_state_service_state(void);
+
+MusicServiceState *worker_state_get_music_service_state(void);
 
 BacklightServiceState *worker_state_get_backlight_service_state(void);
 

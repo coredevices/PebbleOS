@@ -12,6 +12,7 @@
 #include "applib/backlight_service_private.h"
 #include "applib/battery_state_service.h"
 #include "applib/battery_state_service_private.h"
+#include "applib/music_service_private.h"
 #include "applib/bluetooth/ble_app_support.h"
 #include "applib/compass_service_private.h"
 #include "applib/connection_service.h"
@@ -116,6 +117,8 @@ PluginServiceState *app_state_get_plugin_service(void);
 LogState *app_state_get_log_state(void);
 
 BatteryStateServiceState *app_state_get_battery_state_service_state(void);
+
+MusicServiceState *app_state_get_music_service_state(void);
 
 BacklightServiceState *app_state_get_backlight_service_state(void);
 

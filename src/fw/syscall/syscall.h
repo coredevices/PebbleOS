@@ -28,6 +28,7 @@
 #include "pbl/services/comm_session/session.h"
 #include "pbl/services/evented_timer.h"
 #include "pbl/services/activity/activity.h"
+#include "pbl/services/music.h"
 #include "pbl/services/app_glances/app_glance_service.h"
 
 #include "process_management/pebble_process_info.h"
@@ -315,3 +316,13 @@ bool sys_do_not_disturb_is_active(void);
 //! @param timestamp_out Set to the UTC time of the next enabled alarm.
 //! @return True if at least one enabled alarm is scheduled.
 bool sys_alarm_get_next_enabled(time_t *timestamp_out);
+
+//! @return True if now-playing music metadata is available.
+bool sys_music_has_now_playing(void);
+
+//! Copy the now-playing metadata into the given buffers, each of which must
+//! be at least MUSIC_BUFFER_LENGTH bytes and must not be NULL.
+void sys_music_get_now_playing(char *title, char *artist, char *album);
+
+//! @return The current music playback state.
+MusicPlayState sys_music_get_playback_state(void);

@@ -11,6 +11,7 @@
 #include "applib/compass_service_private.h"
 #include "applib/battery_state_service.h"
 #include "applib/battery_state_service_private.h"
+#include "applib/music_service_private.h"
 #include "applib/connection_service.h"
 #include "applib/connection_service_private.h"
 
@@ -33,6 +34,8 @@ TouchServiceState *kernel_applib_get_touch_service_state(void);
 ConnectionServiceState* kernel_applib_get_connection_service_state(void);
 
 BatteryStateServiceState* kernel_applib_get_battery_state_service_state(void);
+
+MusicServiceState* kernel_applib_get_music_service_state(void);
 
 struct Layer;
 typedef struct Layer Layer;
