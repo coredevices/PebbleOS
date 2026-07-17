@@ -20,6 +20,12 @@ typedef enum VibePatternOwner {
 void vibes_init();
 
 int32_t vibes_get_vibe_strength(void);
+
+//! Milliseconds since the motor was last active (on, or the moment it turned
+//! off). UINT32_MAX if it has not run this boot. Used to suppress
+//! vibration-induced false shake/tap detections.
+uint32_t vibes_get_time_since_last_vibe_ms(void);
+
 int32_t vibes_get_default_vibe_strength(void);
 void vibes_set_default_vibe_strength(int32_t vibe_strength_default);
 

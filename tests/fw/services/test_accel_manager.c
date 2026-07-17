@@ -44,6 +44,12 @@ void sys_vibe_history_stop_collecting(void) {}
 int32_t sys_vibe_get_vibe_strength(void) {
   return 0;
 }
+int32_t vibes_get_vibe_strength(void) {
+  return 0;
+}
+uint32_t vibes_get_time_since_last_vibe_ms(void) {
+  return UINT32_MAX;
+}
 void accel_set_shake_sensitivity_high(bool sensitivity_high) {}
 void accel_set_shake_sensitivity_percent(uint8_t percent) {}
 bool shell_prefs_get_accel_shake_log_info_enabled(void) {

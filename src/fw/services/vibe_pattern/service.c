@@ -168,6 +168,9 @@ static RtcTicks s_pattern_start_ticks = 0;
 static uint64_t s_pattern_deadline_ms = 0;
 // s_vibe_strength is the current vibration strength setting of the motor
 static int32_t s_vibe_strength = VIBE_STRENGTH_OFF;
+// Tick at which the motor was last active (turned on or last transitioned off).
+// Used to suppress vibration-induced false shake/tap detections. 0 = never.
+static RtcTicks s_last_vibe_active_tick = 0;
 // s_vibe_strength_default is the vibrations trength of the motor used when one is not specified
 // explicitly, and can be changed in the notification vibration strength setting.
 static int32_t s_vibe_strength_default = VIBE_STRENGTH_MAX;
@@ -236,6 +239,7 @@ static void prv_vibes_set_vibe_strength(int32_t new_strength) {
   if (new_strength != VIBE_STRENGTH_OFF) {
     vibe_set_strength(new_strength);
     vibe_ctl(true /* on */);
+    s_last_vibe_active_tick = rtc_get_ticks();
     if (s_vibe_strength == VIBE_STRENGTH_OFF) {
       // Transitioning from off to on
       PBL_ANALYTICS_TIMER_START(vibrator_on_time_ms);
@@ -244,7 +248,9 @@ static void prv_vibes_set_vibe_strength(int32_t new_strength) {
   } else {
     vibe_ctl(false /* on */);
     if (s_vibe_strength != VIBE_STRENGTH_OFF) {
-      // Transitioning from on to off
+      // Transitioning from on to off; stamp the end so the shake holdoff runs
+      // from when the motor actually stopped.
+      s_last_vibe_active_tick = rtc_get_ticks();
       PBL_ANALYTICS_TIMER_STOP(vibrator_on_time_ms);
       prv_vibe_history_end_event();
     }
@@ -324,6 +330,16 @@ void vibes_set_default_vibe_strength(int32_t vibe_strength_default) {
 
 DEFINE_SYSCALL(int32_t, sys_vibe_get_vibe_strength, void) {
   return vibes_get_vibe_strength();
+}
+
+uint32_t vibes_get_time_since_last_vibe_ms(void) {
+  if (s_last_vibe_active_tick == 0) {
+    // Motor has never run this boot.
+    return UINT32_MAX;
+  }
+  RtcTicks elapsed = rtc_get_ticks() - s_last_vibe_active_tick;
+  uint64_t elapsed_ms = (uint64_t)elapsed * 1000 / RTC_TICKS_HZ;
+  return (elapsed_ms > UINT32_MAX) ? UINT32_MAX : (uint32_t)elapsed_ms;
 }
 
 bool prv_vibe_pattern_enqueue_step_raw(uint32_t duration_ms, int32_t strength) {
