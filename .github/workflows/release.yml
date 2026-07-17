@@ -68,6 +68,7 @@ jobs:
 
       - name: Upload PRF log hash dictionary
         uses: Noelware/s3-action@2.3.1
+        if: ${{ github.repository == 'coredevices/PebbleOS' }}
         with:
           access-key-id: ${{ secrets.LOG_HASH_BUCKET_KEY_ID }}
           secret-key: ${{ secrets.LOG_HASH_BUCKET_SECRET }}
@@ -203,6 +204,7 @@ jobs:
           path: artifacts
 
       - name: Upload symbols to Memfault
+        if: ${{ github.repository == 'coredevices/PebbleOS' }}
         run: |
           pip install memfault-cli==${MEMFAULT_CLI_VERSION}
 
@@ -250,6 +252,7 @@ jobs:
           files: artifacts-*/*
 
       - name: Deploy Memfault release
+        if: ${{ github.repository == 'coredevices/PebbleOS' }}
         run: |
           pip install memfault-cli==${MEMFAULT_CLI_VERSION}
 
