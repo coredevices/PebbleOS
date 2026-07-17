@@ -74,6 +74,7 @@ jobs:
           echo "BUILD_ID=$(readelf -n build/pebbleos.elf | sed -n -e 's/^.*Build ID: //p')" >> "$GITHUB_OUTPUT"
 
       - name: Upload PRF log hash dictionary
+        if: ${{ github.repository == 'coredevices/PebbleOS' }}
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.LOG_HASH_BUCKET_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.LOG_HASH_BUCKET_SECRET }}
@@ -209,6 +210,7 @@ jobs:
           path: artifacts
 
       - name: Upload symbols to Memfault
+        if: ${{ github.repository == 'coredevices/PebbleOS' }}
         run: |
           pip install memfault-cli==${MEMFAULT_CLI_VERSION}
 
@@ -256,6 +258,7 @@ jobs:
           files: artifacts-*/*
 
       - name: Deploy Memfault release
+        if: ${{ github.repository == 'coredevices/PebbleOS' }}
         run: |
           pip install memfault-cli==${MEMFAULT_CLI_VERSION}
 
