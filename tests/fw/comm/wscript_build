@@ -23,6 +23,21 @@ clar(bld,
     override_includes=['dummy_board'])
 
 clar(bld,
+    sources_ant_glob = "src/fw/comm/ble/gap_le_slave_reconnect.c "
+                       "src/fw/comm/ble/gap_le_advert.c "
+                       "src/fw/applib/bluetooth/ble_ad_parse.c "
+                       "src/fw/services/regular_timer/service.c "
+                       "src/fw/util/rand/rand.c "
+                       "third_party/tinymt/TinyMT/tinymt/tinymt32.c "
+                       "src/fw/system/hexdump.c "
+                       "src/fw/util/buffer.c "
+                       "tests/fakes/fake_bt_driver_advert.c "
+                       "tests/fakes/fake_rtc.c ",
+    test_sources_ant_glob = "test_gap_le_slave_reconnect.c",
+    defines=['CONFIG_HRM'],
+    override_includes=['dummy_board'])
+
+clar(bld,
     sources_ant_glob = "src/fw/comm/internals/bt_conn_mgr.c "
                        "src/fw/services/regular_timer/service.c "
                        "tests/fakes/fake_gap_le_connect_params.c "

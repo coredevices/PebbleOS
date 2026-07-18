@@ -204,10 +204,8 @@ void vibe_score_do_vibe(VibeScore *score) {
   VibeNoteIndex *pattern_list = prv_vibe_score_get_pattern_list(pattern_attribute);
   unsigned int pattern_length = prv_vibe_score_get_pattern_length(pattern_attribute);
 
-  unsigned int total_duration_ms = 0;
   for (unsigned int i = 0; i < pattern_length; i++) {
     VibeNote *note = &note_list[pattern_list[i]];
-    total_duration_ms += note->vibe_duration_ms + note->brake_duration_ms;
     if (note->vibe_duration_ms > 0) {
       sys_vibe_pattern_enqueue_step_raw(note->vibe_duration_ms, note->strength);
     }

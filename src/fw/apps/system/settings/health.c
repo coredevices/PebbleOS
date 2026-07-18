@@ -40,6 +40,7 @@ enum SettingsHealthItem {
 #ifdef CONFIG_HRM
     SettingsHealthHRMonitoringInterval,
     SettingsHealthHRActivityTracking,
+    SettingsHealthBLEHRMWorkoutSharing,
 #endif
     NumSettingsHealthItems
 };
@@ -117,6 +118,12 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
                 ? i18n_noop("On") : i18n_noop("Off");
             break;
         }
+        case SettingsHealthBLEHRMWorkoutSharing: {
+            title = i18n_noop("Workout HR Sharing");
+            subtitle = activity_prefs_ble_hrm_workout_sharing_is_enabled()
+                ? i18n_noop("On") : i18n_noop("Off");
+            break;
+        }
 #endif
         default:
             WTF;
@@ -149,6 +156,10 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
         case SettingsHealthHRActivityTracking:
             activity_prefs_set_hrm_activity_tracking_enabled(
                 !activity_prefs_hrm_activity_tracking_is_enabled());
+            break;
+        case SettingsHealthBLEHRMWorkoutSharing:
+            activity_prefs_set_ble_hrm_workout_sharing_enabled(
+                !activity_prefs_ble_hrm_workout_sharing_is_enabled());
             break;
 #endif
         default:

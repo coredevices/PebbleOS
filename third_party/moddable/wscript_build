@@ -210,6 +210,12 @@ else:
             '-Wno-error=maybe-uninitialized',
             '-Wno-error=implicit-fallthrough']
 
+        if bld.env.CONFIG_LIBC_PICOLIBC:
+            libxs_flags.extend([
+                '-idirafter',
+                bld.srcnode.make_node('lib/c/pebble/include').abspath(),
+            ])
+
         bld(export_includes=libxs_includes, name='libxs_includes')
 
         xs_includes_use=['libxs_includes',

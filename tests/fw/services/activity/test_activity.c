@@ -96,6 +96,8 @@ void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context);
 void prv_minute_system_task_cb(void *data);
 
 void hrm_manager_handle_prefs_changed(void) { }
+void ble_hrm_handle_activity_prefs_heart_rate_is_enabled(bool is_enabled) { }
+void workout_service_handle_ble_hrm_workout_sharing_prefs_changed(void) { }
 
 #define ASSERT_EQUAL_I(i1,i2,file,line) \
         clar__assert_equal_i((i1),(i2),file,line,#i1 " != " #i2, 1)

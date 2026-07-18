@@ -155,9 +155,10 @@ def get_string_from_file(source_range):
 
     with open(source_range_file.name, "rb") as f:
         f.seek(source_range.start.offset)
-        return f.read(source_range.end.offset - source_range.start.offset).decode(
-            "utf8"
-        )
+        length = source_range.end.offset - source_range.start.offset
+        if length < 0:
+            return None
+        return f.read(length).decode("utf8")
 
 
 def dump_node(node, indent_level=0):
@@ -210,6 +211,21 @@ def extract_declarations(tu, filenames, func):
     for_each_node(tu.cursor, func, filter_func=filename_filter_func)
 
 
+def get_libc_include_args(root_dir):
+    autoconf_path = os.path.join(root_dir, "build/autoconf.h")
+    try:
+        with open(autoconf_path) as autoconf_file:
+            autoconf = autoconf_file.read()
+    except OSError:
+        autoconf = ""
+
+    if "CONFIG_LIBC_PICOLIBC" in autoconf:
+        return ["-I%s/build/picolibc/install/include" % root_dir]
+    if "CONFIG_LIBC_NEWLIB" in autoconf:
+        return []
+    return ["-I%s/lib/c/pebble/include" % root_dir]
+
+
 def parse_file(
     filename, filenames, func, internal_sdk_build=False, compiler_flags=None
 ):
@@ -222,11 +238,11 @@ def parse_file(
         "-I%s/fw" % src_dir,
         "-I%s/fw/applib/vendor/uPNG" % src_dir,
         "-I%s/fw/applib/vendor/tinflate" % src_dir,
-        "-I%s/libc/include" % src_dir,
         "-I%s/../build/src/fw" % src_dir,
         "-DSDK",
         "-fno-builtin-itoa",
     ]
+    args.extend(get_libc_include_args(root_dir))
 
     # Add header search paths, recursing subdirs:
     for inc_sub_dir in ["fw/util"]:
