@@ -153,6 +153,9 @@ static void prv_update_bondings(BTBondingID id, BtPersistBondingType type) {
 //! Returns the size of the data read. If the buffer provided is too small then 0 is returned
 static int prv_file_get(const void *key, size_t key_len, void *data_out, size_t buf_len) {
   unsigned int data_len = 0;
+  // Zero the output up front so callers that ignore the return value (a 0 length on
+  // open/read failure or an oversized record) read defined zeros, not stack garbage.
+  memset(data_out, 0, buf_len);
   prv_lock();
   {
     SettingsFile fd;
@@ -335,8 +338,8 @@ static bool prv_any_pinned_ble_pairings_itr(SettingsFile *file,
   BTBondingID key;
   info->get_key(file, (uint8_t*) &key, info->key_len);
 
-  BtPersistBondingData data;
-  info->get_val(file, &data, sizeof(data));
+  BtPersistBondingData data = {};
+  info->get_val(file, &data, MIN((unsigned)info->val_len, sizeof(data)));
   if (data.ble_data.requires_address_pinning) {
     bool *has_pinned_ble_pairings = context;
     *has_pinned_ble_pairings = true;
@@ -476,9 +479,11 @@ bool prv_has_active_gateway_by_type(BtPersistBondingType desired_type) {
 static void prv_update_active_gateway_if_needed(BTBondingID bonding, BtPersistBondingOp op) {
   // Invalidate the active gateway if it is getting deleted
   if (op == BtPersistBondingOpWillDelete) {
+    // get_active_gateway leaves the out param untouched when there is no active
+    // gateway, so only compare when it reports success.
     BTBondingID current_active_gateway;
-    bt_persistent_storage_get_active_gateway(&current_active_gateway, NULL);
-    if (current_active_gateway == bonding) {
+    if (bt_persistent_storage_get_active_gateway(&current_active_gateway, NULL) &&
+        current_active_gateway == bonding) {
       bt_persistent_storage_set_active_gateway(BT_BONDING_ID_INVALID);
     }
   }
