@@ -327,6 +327,64 @@ void test_menu_layer__center_focused_handles_skipped_rows(void) {
   cl_assert_equal_i(4 * basic_cell_height, l.selection.y);
 }
 
+// Not declared in menu_layer.h; normally reached via the window click config
+extern void menu_up_click_handler(ClickRecognizerRef recognizer, MenuLayer *menu_layer);
+extern void menu_down_click_handler(ClickRecognizerRef recognizer, MenuLayer *menu_layer);
+
+static void prv_redirect_off_last_row(struct MenuLayer *menu_layer,
+                                      MenuIndex *new_index,
+                                      MenuIndex old_index,
+                                      void *callback_context) {
+  if (new_index->row == s_num_rows - 1) {
+    new_index->row = s_num_rows - 2;
+  }
+}
+
+void test_menu_layer__wrap_around_honors_selection_will_change(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(10, 10, DISP_COLS, DISP_ROWS));
+  menu_layer_set_callbacks(&l, NULL, &(MenuLayerCallbacks) {
+    .draw_row = prv_draw_row,
+    .get_num_rows = prv_get_num_rows,
+    .selection_will_change = prv_redirect_off_last_row,
+  });
+  menu_layer_set_scroll_wrap_around(&l, true);
+  menu_layer_reload_data(&l);
+  cl_assert_equal_i(0, menu_layer_get_selected_index(&l).row);
+
+  // Wrapping up from the first row must honor the redirect away from the
+  // non-selectable last row
+  menu_up_click_handler(NULL, &l);
+  cl_assert_equal_i(s_num_rows - 2, menu_layer_get_selected_index(&l).row);
+
+  // Scrolling down from there stays put: not at the true last index, so no
+  // wrap, and normal scrolling is redirected back
+  menu_down_click_handler(NULL, &l);
+  cl_assert_equal_i(s_num_rows - 2, menu_layer_get_selected_index(&l).row);
+}
+
+static void prv_lock_selection(struct MenuLayer *menu_layer,
+                               MenuIndex *new_index,
+                               MenuIndex old_index,
+                               void *callback_context) {
+  *new_index = old_index;
+}
+
+void test_menu_layer__wrap_around_cancelled_when_selection_locked(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(10, 10, DISP_COLS, DISP_ROWS));
+  menu_layer_set_callbacks(&l, NULL, &(MenuLayerCallbacks) {
+    .draw_row = prv_draw_row,
+    .get_num_rows = prv_get_num_rows,
+    .selection_will_change = prv_lock_selection,
+  });
+  menu_layer_set_scroll_wrap_around(&l, true);
+  menu_layer_reload_data(&l);
+
+  menu_up_click_handler(NULL, &l);
+  cl_assert_equal_i(0, menu_layer_get_selected_index(&l).row);
+}
+
 void test_menu_layer__center_focused_handles_skipped_rows_animated(void) {
   MenuLayer l;
   menu_layer_init(&l, &GRect(10, 10, DISP_COLS, DISP_ROWS));

@@ -135,6 +135,20 @@ static bool prv_menu_scroll_handle_wrap_around(MenuLayer *menu_layer, ClickRecog
     return false;
   }
 
+  // Honor selection_will_change, like normal scrolling does, so the wrap
+  // destination can be redirected away from non-selectable rows.
+  MenuLayerSelectionWillChangeCallback will_change_cb =
+      menu_layer->callbacks.selection_will_change;
+  if (will_change_cb) {
+    MenuIndex new_index = *wraparound_dest_index;
+    will_change_cb(menu_layer, &new_index, current_index, menu_layer->callback_context);
+    if (menu_index_compare(&new_index, &current_index) == 0) {
+      // Callback locked the selection in place; don't wrap.
+      return false;
+    }
+    *wraparound_dest_index = new_index;
+  }
+
   const bool animated = true;
   menu_layer_set_selected_index(menu_layer, *wraparound_dest_index, MenuRowAlignCenter, animated);
   if (menu_layer->scroll_vibe_on_wrap_around) {
