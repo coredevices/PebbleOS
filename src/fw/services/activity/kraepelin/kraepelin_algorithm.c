@@ -34,7 +34,7 @@ Pebble App roject.
 #include "pbl/util/trig.h"
 #include "pbl/services/hrm/hrm_manager_private.h"
 #include "pbl/services/activity/activity.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/math.h"
 #include "pbl/util/math_fixed.h"

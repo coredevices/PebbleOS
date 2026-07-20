@@ -128,7 +128,7 @@ static int s_num_alarms_fired = 0;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Fakes
 
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 void prv_timer_kernel_bg_callback(void *data);
 

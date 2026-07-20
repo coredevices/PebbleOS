@@ -5,7 +5,7 @@
 
 #include "applib/ui/app_window_stack.h"
 #include "kernel/pbl_malloc.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/size.h"
 #include "system/profiler.h"

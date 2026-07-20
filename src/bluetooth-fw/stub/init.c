@@ -3,7 +3,7 @@
 
 #include "comm/bt_lock.h"
 #include "kernel/event_loop.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #include <bluetooth/init.h>
 

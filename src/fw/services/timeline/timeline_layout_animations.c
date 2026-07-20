@@ -15,7 +15,7 @@
 #include "process_state/app_state/app_state.h"
 #include "process_management/app_install_manager.h"
 #include "pbl/services/timeline/timeline_resources.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #define CARD_TRANSITION_ICON_EXPAND 5
 

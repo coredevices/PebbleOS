@@ -9,7 +9,7 @@
 #include "applib/graphics/gdraw_command_sequence.h"
 #include "resource/resource_ids.auto.h"
 #include "syscall/syscall.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "util/net.h"
 #include "pbl/util/struct.h"
 

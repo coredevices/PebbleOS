@@ -16,7 +16,7 @@
 #include "pbl/services/activity/activity_private.h"
 #include "pbl/services/timeline/timeline.h"
 #include "resource/resource_ids.auto.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 // Health app versions
 // 0: Invalid (app was never opened)

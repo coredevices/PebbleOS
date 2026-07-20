@@ -9,7 +9,7 @@
 #include "applib/applib_malloc.auto.h"
 #include "process_management/app_install_manager.h"
 #include "syscall/syscall.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 
 #include <string.h>

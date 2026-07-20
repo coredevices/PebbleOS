@@ -7,7 +7,7 @@
 #include <host/ble_uuid.h>
 #include <os/os_mbuf.h>
 #include <services/gatt/ble_svc_gatt.h>
-#include <system/logging.h>
+#include <pbl/logging/logging.h>
 
 #include "nimble_type_conversions.h"
 

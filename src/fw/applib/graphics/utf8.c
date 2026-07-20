@@ -1,7 +1,7 @@
 #include "utf8.h"
 
 #include "system/passert.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #include "pbl/util/iterator.h"
 #include "pbl/util/math.h"

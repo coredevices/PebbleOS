@@ -8,7 +8,7 @@
 #include "flash_region/flash_region.h"
 #include "kernel/core_dump.h"
 #include "kernel/pbl_malloc.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/status_codes.h"
 
 PBL_LOG_MODULE_DECLARE(service_get_bytes, CONFIG_SERVICE_GET_BYTES_LOG_LEVEL);

@@ -12,7 +12,7 @@
 #include "kernel/pbl_malloc.h"
 #include "pbl/os/mutex.h"
 #include "pbl/services/process_management/app_storage.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 
 // TODO: this may be replaced once apps become more dynamic

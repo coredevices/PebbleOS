@@ -8,7 +8,7 @@
 #include "pbl/services/comm_session/protocol.h"
 #include "pbl/services/comm_session/session_send_buffer.h"
 #include "pbl/services/comm_session/session_send_queue.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/attributes.h"
 #include "pbl/util/likely.h"
 #include "pbl/util/math.h"

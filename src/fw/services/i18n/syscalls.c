@@ -6,7 +6,7 @@
 #include "kernel/memory_layout.h"
 #include "kernel/pebble_tasks.h"
 #include "syscall/syscall_internal.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 PBL_LOG_MODULE_DECLARE(service_i18n, CONFIG_SERVICE_I18N_LOG_LEVEL);
 

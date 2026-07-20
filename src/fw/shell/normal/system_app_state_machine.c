@@ -14,7 +14,7 @@
 #include "resource/resource.h"
 #include "pbl/services/battery/battery_monitor.h"
 #include "system/bootbits.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "process_management/app_manager.h"
 
 //! @file system_app_state_machine.c

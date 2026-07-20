@@ -7,7 +7,7 @@
 #include "syscall/syscall.h"
 
 #include "system/passert.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "drivers/vibe.h"
 #include "applib/applib_malloc.auto.h"
 #include "util/net.h"

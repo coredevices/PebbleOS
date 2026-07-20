@@ -13,7 +13,7 @@
 #include "resource/resource_ids.auto.h"
 #include "syscall/syscall.h"
 #include "system/passert.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/list.h"
 #include "pbl/util/size.h"
 

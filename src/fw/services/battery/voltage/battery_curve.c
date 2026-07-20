@@ -4,7 +4,7 @@
 #include "pbl/services/battery/battery_curve.h"
 
 #include "board/board.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/math.h"
 #include "util/ratio.h"
 #include "pbl/util/size.h"

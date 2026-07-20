@@ -17,7 +17,7 @@
 
 #include "pbl/services/music_internal.h"
 
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/hexdump.h"
 #include "system/passert.h"
 #include "pbl/util/likely.h"

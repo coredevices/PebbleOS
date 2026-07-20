@@ -5,7 +5,7 @@
 #include "pbl/services/process_management/app_order_storage.h"
 #include "pbl/services/comm_session/session.h"
 #include "system/hexdump.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "system/status_codes.h"
 #include "pbl/util/uuid.h"

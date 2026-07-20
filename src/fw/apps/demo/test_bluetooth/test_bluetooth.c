@@ -11,7 +11,7 @@
 #include "pbl/services/comm_session/session.h"
 #include "pbl/services/comm_session/session_send_buffer.h"
 #include "pbl/services/system_task.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 
 #define NUM_MENU_ITEMS 2

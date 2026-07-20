@@ -23,7 +23,7 @@
 #include "pbl/services/regular_timer.h"
 #include "pbl/services/system_task.h"
 #include "syscall/syscall.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/os/mutex.h"
 #include "system/passert.h"
 #include "kernel/util/sleep.h"

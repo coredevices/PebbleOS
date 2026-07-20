@@ -5,7 +5,7 @@
 #include "applib/app_message/app_message_internal.h"
 #include "applib/app_inbox.h"
 #include "process_state/app_state/app_state.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // All these functions execute on App Task

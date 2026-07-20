@@ -4,7 +4,7 @@
 #include "pbl/services/bluetooth/local_addr.h"
 
 #include "comm/bt_lock.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 
 #include <bluetooth/bluetooth_types.h>

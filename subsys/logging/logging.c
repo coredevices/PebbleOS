@@ -12,7 +12,7 @@
 #include "console/serial_console.h"
 #include "debug/advanced_logging.h"
 #include "drivers/rtc.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #include "pbl/mcu/interrupts.h"
 #include "pbl/mcu/privilege.h"

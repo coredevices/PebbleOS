@@ -4,7 +4,7 @@
 #pragma once
 
 #include "system/hexdump.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #include <stdarg.h>
 #include <stddef.h>

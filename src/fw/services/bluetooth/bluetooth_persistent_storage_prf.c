@@ -15,7 +15,7 @@
 
 #include "comm/ble/kernel_le_client/kernel_le_client.h"
 
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #include <bluetooth/bluetooth_types.h>
 #include <bluetooth/bonding_sync.h>

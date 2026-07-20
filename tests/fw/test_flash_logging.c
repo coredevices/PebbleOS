@@ -20,7 +20,7 @@
 #include "stubs_sleep.h"
 #include "stubs_task_watchdog.h"
 
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 
 #include <stdbool.h>

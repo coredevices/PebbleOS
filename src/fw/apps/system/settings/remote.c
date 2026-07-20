@@ -21,7 +21,7 @@
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/bluetooth/ble_hrm.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 
 #include <stdio.h>

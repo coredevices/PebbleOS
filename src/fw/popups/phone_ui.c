@@ -37,7 +37,7 @@
 #include "pbl/services/timeline/timeline_actions.h"
 #include "pbl/services/timeline/timeline_resources.h"
 #include "shell/system_theme.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "util/time/time.h"
 

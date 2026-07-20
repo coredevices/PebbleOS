@@ -7,7 +7,7 @@
 #include "kernel/events.h"
 #include "kernel/util/sleep.h"
 #include "pbl/os/mutex.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/util/math.h"

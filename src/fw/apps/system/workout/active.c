@@ -22,7 +22,7 @@
 #include "pbl/services/activity/health_util.h"
 #include "pbl/services/activity/hr_util.h"
 #include "pbl/services/activity/workout_service.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/size.h"
 
 #include <stdio.h>

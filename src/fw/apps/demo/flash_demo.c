@@ -9,7 +9,7 @@
 
 #include "drivers/flash.h"
 #include "flash_region/flash_region.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 static Window *window;
 

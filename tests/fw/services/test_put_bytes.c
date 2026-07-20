@@ -7,7 +7,7 @@
 #include "pbl/os/tick.h"
 #include "system/bootbits.h"
 #include "system/firmware_storage.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/attributes.h"
 #include "util/net.h"
 

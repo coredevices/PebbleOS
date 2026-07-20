@@ -9,7 +9,7 @@
 #include "pbl/services/comm_session/session.h"
 #include "pbl/services/comm_session/session_receive_router.h"
 #include "pbl/services/app_inbox_service.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/math.h"
 
 #include <stdint.h>

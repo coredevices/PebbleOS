@@ -11,7 +11,7 @@
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/timeline/reminders.h"
 #include "system/passert.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "util/units.h"
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);

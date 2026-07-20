@@ -17,7 +17,7 @@
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/timeline/timeline_resources.h"
 #include "shell/system_theme.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/size.h"
 #include "pbl/util/string.h"
 

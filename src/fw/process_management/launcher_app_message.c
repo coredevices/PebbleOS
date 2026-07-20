@@ -6,7 +6,7 @@
 #include "app_run_state.h"
 #include "applib/app_message/app_message_internal.h"
 #include "process_management/app_install_manager.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 
 #include "util/dict.h"

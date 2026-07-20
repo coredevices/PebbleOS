@@ -11,7 +11,7 @@
 #include "pbl/services/notifications/alerts_preferences_private.h"
 #include "pbl/services/settings/settings_file.h"
 #include "shell/prefs_private.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/services/system_task.h"
 #include "pbl/util/list.h"

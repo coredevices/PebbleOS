@@ -5,7 +5,7 @@
 #include "drivers/uart.h"
 
 #include "drivers/gpio.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 
 #include "FreeRTOS.h"

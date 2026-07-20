@@ -14,7 +14,7 @@
 #include "pb_decode.h"
 #include "pb_encode.h"
 #include "pbl/services/data_logging/data_logging_service.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "system/version.h"
 #include "pbl/util/math.h"

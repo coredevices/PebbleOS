@@ -12,7 +12,7 @@
 #include "pbl/services/evented_timer.h"
 #include "pbl/services/timeline/notification_layout.h"
 #include "pbl/services/timeline/timeline_resources.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/math.h"
 
 #include "resource/resource_ids.auto.h"

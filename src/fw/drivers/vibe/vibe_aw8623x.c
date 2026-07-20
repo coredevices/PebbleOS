@@ -7,7 +7,7 @@
 #include "drivers/i2c.h"
 #include "drivers/vibe.h"
 #include "kernel/util/sleep.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 
 PBL_LOG_MODULE_DEFINE(driver_vibe_aw8623x, CONFIG_DRIVER_VIBE_LOG_LEVEL);

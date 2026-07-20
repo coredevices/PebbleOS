@@ -17,7 +17,7 @@
 #include "pbl/services/activity/insights_settings.h"
 #include "shell/system_app_ids.auto.h"
 #include "system/bootbits.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "system/version.h"
 #include "pbl/util/attributes.h"

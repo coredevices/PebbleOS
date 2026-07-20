@@ -14,7 +14,7 @@
 #include "kernel/pbl_malloc.h"
 #include "popups/crashed_ui.h"
 #include "pbl/services/analytics/analytics.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/reboot_reason.h"
 
 static RebootReasonCode s_last_reboot_reason_code = RebootReasonCode_Unknown;

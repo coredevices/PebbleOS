@@ -3,7 +3,7 @@
 
 #include <bluetooth/gatt.h>
 
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "comm/ble/gap_le_connection.h"
 #include "comm/ble/gatt_service_changed.h"
 #include "comm/bt_lock.h"

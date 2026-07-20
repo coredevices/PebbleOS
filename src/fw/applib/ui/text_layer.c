@@ -13,7 +13,7 @@
 #include "applib/preferred_content_size.h"
 #include "process_state/app_state/app_state.h"
 #include "shell/system_theme.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 
 #include <string.h>

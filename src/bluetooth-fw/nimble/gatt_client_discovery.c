@@ -4,7 +4,7 @@
 #include <bluetooth/gatt.h>
 #include <comm/bt_lock.h>
 #include <host/ble_hs.h>
-#include <system/logging.h>
+#include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
 
 #include <services/gatt/ble_svc_gatt.h>

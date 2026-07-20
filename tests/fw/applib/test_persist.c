@@ -12,7 +12,7 @@
 #include "process_management/pebble_process_md.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/persist.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/attributes.h"
 
 // Stubs

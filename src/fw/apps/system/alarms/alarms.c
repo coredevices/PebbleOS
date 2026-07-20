@@ -23,7 +23,7 @@
 #include "pbl/services/timeline/timeline.h"
 #include "shell/prefs.h"
 #include "shell/system_theme.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/string.h"
 #include "util/time/time.h"

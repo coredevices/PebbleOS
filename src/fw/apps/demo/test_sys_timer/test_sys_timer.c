@@ -12,7 +12,7 @@
 #include "process_state/app_state/app_state.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/regular_timer.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/size.h"
 

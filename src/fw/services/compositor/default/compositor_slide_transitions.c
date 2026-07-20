@@ -12,7 +12,7 @@
 #include "applib/graphics/gtypes.h"
 #include "applib/ui/animation_interpolate.h"
 #include "popups/timeline/peek.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 // TODO: PBL-31388 Factor out vertical compositor slide animations
 // This does a similar transition to the legacy modal slide transition

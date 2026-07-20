@@ -9,7 +9,7 @@
 #include "applib/fonts/fonts.h"
 #include "applib/fonts/fonts_private.h"
 #include "resource/resource_ids.auto.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "system/profiler.h"
 #include "pbl/util/math.h"

@@ -39,7 +39,7 @@
 #include "pbl/services/notifications/notification_storage.h"
 #include "pbl/services/timeline/timeline.h"
 #include "pbl/services/timeline/timeline_resources.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/size.h"
 #include "pbl/util/struct.h"

@@ -9,7 +9,7 @@
 
 #include "process_state/app_state/app_state.h"
 #include "process_state/worker_state/worker_state.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 
 // ---------------------------------------------------------------------------------------------------------------

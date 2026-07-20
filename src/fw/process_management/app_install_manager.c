@@ -25,7 +25,7 @@
 #include "pbl/services/blob_db/pin_db.h"
 #include "pbl/services/persist.h"
 #include "pbl/services/process_management/app_storage.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/circular_cache.h"
 #include "pbl/util/size.h"

@@ -20,7 +20,7 @@
 #include "pbl/services/system_task.h"
 
 #include "system/hexdump.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/likely.h"
 #include "pbl/util/list.h"

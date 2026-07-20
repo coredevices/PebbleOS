@@ -14,7 +14,7 @@
 #include "pbl/services/system_task.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "system/hexdump.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/math.h"
 #include "util/net.h"
 

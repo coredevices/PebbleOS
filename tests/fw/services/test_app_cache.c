@@ -14,7 +14,7 @@
 #include "pbl/services/settings/settings_file.h"
 #include "shell/normal/quick_launch.h"
 #include <pbl/util/size.h>
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/attributes.h"
 #include <stdio.h>
 

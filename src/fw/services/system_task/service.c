@@ -3,7 +3,7 @@
 
 #include "pbl/services/system_task.h"
 
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #include "drivers/task_watchdog.h"
 #include "kernel/pebble_tasks.h"

@@ -5,7 +5,7 @@
 
 #include "applib/app_message/app_message_internal.h"
 #include "kernel/events.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/attributes.h"
 #include "pbl/util/math.h"
 

@@ -15,7 +15,7 @@
 #include "pbl/os/mutex.h"
 #include "pbl/os/tick.h"
 #include "pbl/services/new_timer/new_timer.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 
 struct ble_npl_event *npl_pebble_eventq_get(struct ble_npl_eventq *evq, ble_npl_time_t tmo) {

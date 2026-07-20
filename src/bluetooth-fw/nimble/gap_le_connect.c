@@ -3,7 +3,7 @@
 
 #include <bluetooth/gap_le_connect.h>
 #include <host/ble_gap.h>
-#include <system/logging.h>
+#include <pbl/logging/logging.h>
 
 #include "nimble_type_conversions.h"
 

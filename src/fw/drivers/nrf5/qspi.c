@@ -12,7 +12,7 @@
 #include "kernel/util/delay.h"
 #include "kernel/util/sleep.h"
 #include "pbl/soc/nrf/sleep.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/math.h"
 

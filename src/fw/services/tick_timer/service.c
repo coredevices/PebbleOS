@@ -7,7 +7,7 @@
 #include "drivers/rtc.h"
 #include "pbl/services/regular_timer.h"
 #include "process_management/app_manager.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 
 PBL_LOG_MODULE_DEFINE(service_tick_timer, CONFIG_SERVICE_TICK_TIMER_LOG_LEVEL);

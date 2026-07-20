@@ -16,7 +16,7 @@
 #include "pbl/services/activity/activity.h"
 #include "syscall/syscall_internal.h"
 #include "system/hexdump.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/attributes.h"
 #include "pbl/util/math.h"

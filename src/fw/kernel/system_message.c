@@ -15,7 +15,7 @@
 #include "pbl/services/system_task.h"
 #include "pbl/services/runlevel.h"
 #include "system/bootbits.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "system/reboot_reason.h"
 #include "system/reset.h"

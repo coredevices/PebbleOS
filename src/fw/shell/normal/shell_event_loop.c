@@ -37,7 +37,7 @@
 #include "shell/normal/quick_launch.h"
 #include "shell/normal/watchface.h"
 #include "shell/prefs.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 
 extern void shell_prefs_init(void);

@@ -15,7 +15,7 @@
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/activity/activity_private.h"
 #include "pbl/services/timeline/health_layout.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "util/time/time.h"
 
 #define BACK_TO_WATCHFACE (-1)

@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "drivers/watchdog.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #include "bf0_hal.h"
 

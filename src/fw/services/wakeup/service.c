@@ -16,7 +16,7 @@
 #include "pbl/services/settings/settings_file.h"
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/attributes.h"
 #include "pbl/util/math.h"
 #include "util/units.h"

@@ -4,7 +4,7 @@
 #include "pbl/services/put_bytes/put_bytes_storage_internal.h"
 
 #include "kernel/pbl_malloc.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/size.h"
 

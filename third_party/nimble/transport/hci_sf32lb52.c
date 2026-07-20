@@ -9,7 +9,7 @@
 #include <bf0_hal.h>
 #include <kernel/pebble_tasks.h>
 #include <system/hexdump.h>
-#include <system/logging.h>
+#include <pbl/logging/logging.h>
 #include <system/passert.h>
 
 // NOTE: transport.h needs os_mbuf.h to be included first

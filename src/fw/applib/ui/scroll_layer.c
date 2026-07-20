@@ -10,7 +10,7 @@
 #include "applib/ui/shadows.h"
 #include "applib/ui/window.h"
 #include "process_management/app_manager.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/math.h"
 

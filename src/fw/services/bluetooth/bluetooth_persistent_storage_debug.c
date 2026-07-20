@@ -6,7 +6,7 @@
 #include "console/prompt.h"
 #include "pbl/services/shared_prf_storage/shared_prf_storage_debug.h"
 #include "system/hexdump.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/string.h"
 
 #include <bluetooth/bluetooth_types.h>

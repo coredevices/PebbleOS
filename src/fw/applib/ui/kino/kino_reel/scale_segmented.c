@@ -10,7 +10,7 @@
 #include "applib/ui/animation_interpolate.h"
 #include "applib/ui/animation_timing.h"
 #include "applib/ui/kino/kino_reel.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 typedef struct {
   GPoint bounce;

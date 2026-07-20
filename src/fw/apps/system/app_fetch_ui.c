@@ -26,7 +26,7 @@
 #include "shell/shell.h"
 #include "shell/system_app_state_machine.h"
 #include "pbl/services/compositor/compositor_transitions.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/services/evented_timer.h"
 

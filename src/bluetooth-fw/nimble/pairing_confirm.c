@@ -5,7 +5,7 @@
 #include <host/ble_hs.h>
 #include <host/ble_sm.h>
 #include <stdint.h>
-#include <system/logging.h>
+#include <pbl/logging/logging.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 

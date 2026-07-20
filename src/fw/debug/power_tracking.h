@@ -4,7 +4,7 @@
 #pragma once
 
 #include "drivers/rtc.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #include <inttypes.h>
 

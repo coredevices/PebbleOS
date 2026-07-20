@@ -194,7 +194,7 @@ static void mfg_print_feedback(const MfgSerialsResult result, const uint8_t inde
 
 #include <stdio.h>
 #include "drivers/rtc.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #ifndef CONFIG_SOC_NRF52
 static void prv_get_not_so_unique_serial(char *serial_number) {

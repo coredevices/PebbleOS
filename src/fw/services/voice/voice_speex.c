@@ -4,10 +4,10 @@
 #include "pbl/services/voice/voice_speex.h"
 
 #include "board/board.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "kernel/pbl_malloc.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/services/audio_endpoint.h"
 #include "drivers/mic.h"
 

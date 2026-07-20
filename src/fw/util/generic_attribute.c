@@ -3,7 +3,7 @@
 
 #include "generic_attribute.h"
 
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 GenericAttribute *generic_attribute_find_attribute(GenericAttributeList *attr_list, uint8_t id,
                                                    size_t size) {

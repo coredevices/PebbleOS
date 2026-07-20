@@ -27,7 +27,7 @@
 #include "pbl/services/timeline/timeline_resources.h"
 #include "pbl/services/weather/weather_service.h"
 #include "pbl/services/weather/weather_types.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/size.h"
 #include "pbl/util/trig.h"

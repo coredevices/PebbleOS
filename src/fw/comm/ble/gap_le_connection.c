@@ -10,7 +10,7 @@
 
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
 #include "system/passert.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #include "pbl/util/list.h"
 

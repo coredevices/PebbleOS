@@ -8,7 +8,7 @@
 #   source "subsys/logging/Kconfig.template.log_level"
 #
 # Defines CONFIG_<module>_LOG_LEVEL, consumed by PBL_LOG_MODULE_DEFINE /
-# PBL_LOG_MODULE_DECLARE (see system/logging.h). 0 means "use the default
+# PBL_LOG_MODULE_DECLARE (see pbl/logging/logging.h). 0 means "use the default
 # log level".
 
 choice

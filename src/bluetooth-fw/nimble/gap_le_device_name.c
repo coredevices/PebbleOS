@@ -9,7 +9,7 @@
 #include <kernel/pbl_malloc.h>
 #include <os/os_mbuf.h>
 #include <pbl/services/system_task.h>
-#include <system/logging.h>
+#include <pbl/logging/logging.h>
 
 #include "nimble_gattc_op_queue.h"
 #include "nimble_type_conversions.h"

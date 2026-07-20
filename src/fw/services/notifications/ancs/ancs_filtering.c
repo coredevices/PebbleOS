@@ -7,7 +7,7 @@
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/notifications/alerts_preferences.h"
 #include "pbl/services/timeline/attributes_actions.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "util/pstring.h"
 
 #include <string.h>

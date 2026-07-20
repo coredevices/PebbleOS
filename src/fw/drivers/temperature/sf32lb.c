@@ -6,7 +6,7 @@
 #include "bf0_hal.h"
 #include "board/board.h"
 #include "console/prompt.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "kernel/util/delay.h"
 

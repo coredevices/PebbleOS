@@ -21,7 +21,7 @@
 #include "process_management/process_manager.h"
 #include "process_state/app_state/app_state.h"
 #include "shell/prefs.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "system/profiler.h"
 #include "pbl/util/size.h"

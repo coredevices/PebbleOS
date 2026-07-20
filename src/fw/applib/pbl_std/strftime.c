@@ -26,7 +26,7 @@
 #include "applib/i18n.h"
 #include "pbl/services/i18n/i18n.h"
 #include "syscall/syscall.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/math.h"
 
 #define INTFMT_PADSPACE (0)

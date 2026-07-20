@@ -26,7 +26,7 @@
 #include "pbl/services/notifications/notifications.h"
 #include "pbl/services/phone_call_util.h"
 #include "pbl/services/timeline/actions_endpoint.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/list.h"
 #include "pbl/util/math.h"

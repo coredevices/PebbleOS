@@ -12,7 +12,7 @@
 #include <host/ble_hs_hci.h>
 #include <kernel/pbl_malloc.h>
 #include <os/os_mbuf.h>
-#include <system/logging.h>
+#include <pbl/logging/logging.h>
 #include <system/passert.h>
 #include <pbl/util/math.h>
 

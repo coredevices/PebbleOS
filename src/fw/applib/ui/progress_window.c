@@ -11,7 +11,7 @@
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/compositor/compositor_transitions.h"
 #include "pbl/services/timeline/timeline_resources.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/math.h"
 

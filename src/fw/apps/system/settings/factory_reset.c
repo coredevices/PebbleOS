@@ -18,7 +18,7 @@
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/system_task.h"
 #include "bluetooth.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #define MESSAGE_BUF_SIZE 96
 

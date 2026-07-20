@@ -11,7 +11,7 @@
 #include "process_management/app_manager.h"
 #include "process_state/app_state/app_state.h"
 #include "syscall/syscall.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/profiler.h"
 
 static void prv_render_app(void) {

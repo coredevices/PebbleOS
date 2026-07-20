@@ -13,7 +13,7 @@
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/new_timer/new_timer.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "util/time/time.h"
 
 #include <bluetooth/bluetooth_types.h>

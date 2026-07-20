@@ -18,7 +18,7 @@
 #include "pbl/services/voice/voice_speex.h"
 #include "pbl/services/voice_endpoint.h"
 #include "syscall/syscall_internal.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "system/profiler.h"
 #include "pbl/util/likely.h"

@@ -7,7 +7,7 @@
 #include "kernel/core_dump.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include "system/bootbits.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 
 #if !UNITTEST

@@ -3,7 +3,7 @@
 
 #include "../bitblt_private.h"
 
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "system/profiler.h"
 #include "util/graphics.h"

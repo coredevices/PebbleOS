@@ -20,7 +20,7 @@
 #include "pbl/services/notifications/notification_storage.h"
 #include "pbl/services/notifications/notifications.h"
 #include "pbl/services/timeline/timeline.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "util/pstring.h"
 

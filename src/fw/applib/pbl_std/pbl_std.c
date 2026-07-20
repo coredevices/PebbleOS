@@ -10,7 +10,7 @@
 #include "process_state/worker_state/worker_state.h"
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 // Time
 time_t pbl_override_time(time_t *tloc) {

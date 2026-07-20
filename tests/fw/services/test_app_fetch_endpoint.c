@@ -5,7 +5,7 @@
 
 #include "pbl/services/comm_session/session.h"
 #include "pbl/services/app_fetch_endpoint.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/attributes.h"
 
 

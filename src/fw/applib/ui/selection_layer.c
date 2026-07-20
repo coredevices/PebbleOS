@@ -9,7 +9,7 @@
 #include "applib/ui/window_private.h"
 #include "process_management/process_manager.h"
 #include "shell/system_theme.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 // Look and feel
 #define DEFAULT_CELL_PADDING 10

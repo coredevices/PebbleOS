@@ -17,7 +17,7 @@
 #endif
 #include "pbl/services/runlevel.h"
 #include "system/bootbits.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "system/reset.h"
 #include "pbl/util/math.h"

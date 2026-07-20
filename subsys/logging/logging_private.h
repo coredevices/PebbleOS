@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/attributes.h"
 
 #include <stdint.h>

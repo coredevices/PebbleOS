@@ -4,7 +4,7 @@
 #include "kernel/coredump_extra_regions.h"
 
 #include "kernel/core_dump_private.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 static CoredumpExtraRegion s_regions[COREDUMP_EXTRA_REGIONS_MAX];
 static size_t s_count;

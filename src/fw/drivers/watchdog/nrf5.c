@@ -4,7 +4,7 @@
 #include "drivers/watchdog.h"
 
 #include "util/bitset.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #include <nrfx.h>
 #include <helpers/nrfx_reset_reason.h>

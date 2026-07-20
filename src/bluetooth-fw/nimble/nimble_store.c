@@ -12,7 +12,7 @@
 #include <pbl/os/mutex.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <string.h>
-#include <system/logging.h>
+#include <pbl/logging/logging.h>
 #include <system/passert.h>
 #include <pbl/util/list.h>
 

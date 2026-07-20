@@ -10,7 +10,7 @@
 #include "pbl/services/compositor/compositor.h"
 #include "pbl/services/event_service.h"
 #include "syscall/syscall_internal.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 
 static void prv_put_event_from_process(PebbleTask task, PebbleEvent *event) {

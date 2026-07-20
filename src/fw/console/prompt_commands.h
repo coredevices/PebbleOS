@@ -6,7 +6,7 @@
 #include "console/prompt.h"
 #include "console/pulse_internal.h"
 #include "pbl/services/filesystem/pfs.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/size.h"
 
 extern void command_help(void);

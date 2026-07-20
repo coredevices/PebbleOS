@@ -3,7 +3,7 @@
 
 #include "shared_circular_buffer.h"
 
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/math.h"
 

@@ -9,7 +9,7 @@
 #include "process_management/app_manager.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/process_manager.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 static TestArgsData s_data;
 

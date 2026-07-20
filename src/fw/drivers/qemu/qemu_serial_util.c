@@ -8,7 +8,7 @@
 #include "drivers/qemu/qemu_serial_private.h"
 
 #include "system/passert.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #include "pbl/util/math.h"
 #include "util/net.h"

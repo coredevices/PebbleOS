@@ -8,7 +8,7 @@
 #include "board/board.h"
 #include "kernel/events.h"
 #include "pbl/mcu/interrupts.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 
 PBL_LOG_MODULE_DEFINE(driver_exti_sf32lb, CONFIG_DRIVER_EXTI_LOG_LEVEL);

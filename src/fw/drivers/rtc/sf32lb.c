@@ -11,7 +11,7 @@
 #include "pbl/mcu/interrupts.h"
 #include "system/passert.h"
 #include "util/time/time.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/services/new_timer/new_timer.h"
 
 #include "FreeRTOS.h"

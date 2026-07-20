@@ -7,7 +7,7 @@
 #include "kernel/pebble_tasks.h"
 #include "pbl/os/mutex.h"
 #include "pbl/os/tick.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/list.h"
 

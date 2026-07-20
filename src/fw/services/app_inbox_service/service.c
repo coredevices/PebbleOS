@@ -8,7 +8,7 @@
 #include "process_management/process_manager.h"
 #include "pbl/os/mutex.h"
 #include "syscall/syscall_internal.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "util/buffer.h"
 #include "pbl/util/list.h"

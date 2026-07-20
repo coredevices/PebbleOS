@@ -15,7 +15,7 @@
 #include "pbl/services/system_task.h"
 #include "pbl/services/notifications/alerts.h"
 #include "pbl/services/notifications/ancs/ancs_phone_call.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 PBL_LOG_MODULE_DEFINE(service_phone_call, CONFIG_SERVICE_PHONE_CALL_LOG_LEVEL);
 

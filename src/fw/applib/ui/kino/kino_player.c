@@ -6,7 +6,7 @@
 #include <limits.h>
 
 #include "applib/ui/animation_interpolate.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/math.h"
 
 //////////////////////////////////

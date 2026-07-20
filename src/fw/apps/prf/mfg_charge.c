@@ -13,7 +13,7 @@
 #include "process_state/app_state/app_state.h"
 #include "pbl/services/battery/battery_curve.h"
 #include "pbl/services/idle_watchdog.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #include <stdio.h>
 

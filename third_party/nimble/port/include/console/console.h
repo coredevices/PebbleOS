@@ -4,7 +4,7 @@
 #ifndef __CONSOLE_H__
 #define __CONSOLE_H__
 
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #define console_printf(_fmt, ...) PBL_LOG_D_INFO(LOG_DOMAIN_BT_STACK, _fmt, ##__VA_ARGS__)
 

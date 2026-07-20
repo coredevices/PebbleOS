@@ -6,7 +6,7 @@
 
 #include "constants_worker.h"
 #include "pbl/util/trig.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 
 int16_t pow_int(int16_t x, int16_t y);

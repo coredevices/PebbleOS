@@ -46,7 +46,7 @@
 #include "drivers/qemu/qemu_serial.h"
 #include "drivers/rtc.h"
 #include "pbl/os/mutex.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/math.h"
 #include "util/net.h"

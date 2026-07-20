@@ -3,14 +3,14 @@
 
 #pragma once
 
-#include "logging.h"
+#include <pbl/logging/logging.h>
 
 #include <pbl/util/attributes.h>
 #include <pbl/util/likely.h>
 
 
 #ifdef CONFIG_LOG_HASHED
-  #include <logging/log_hashing.h>
+  #include <pbl/logging/log_hashing.h>
 
 NORETURN passert_failed_hashed(uint32_t packed_loghash, ...);
 

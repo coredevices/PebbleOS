@@ -7,7 +7,7 @@
 #include "drivers/flash.h"
 #include "flash_region/flash_region.h"
 #include "kernel/pbl_malloc.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/crc32.h"
 

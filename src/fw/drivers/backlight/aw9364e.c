@@ -5,7 +5,7 @@
 #include "drivers/gpio.h"
 #include "drivers/backlight.h"
 #include "kernel/util/delay.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/math.h"
 
 // AW9364E 1-wire dimming protocol implementation

@@ -8,7 +8,7 @@
 
 #include "applib/applib_malloc.auto.h"
 #include "applib/app_logging.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/math.h"
 #include "util/swap.h"

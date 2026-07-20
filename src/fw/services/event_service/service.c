@@ -11,7 +11,7 @@
 #include "pbl/services/event_service.h"
 #include "syscall/syscall_internal.h"
 #include "syscall/syscall.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 
 #include "FreeRTOS.h"

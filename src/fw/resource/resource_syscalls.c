@@ -6,7 +6,7 @@
 #include "process_management/app_manager.h"
 #include "kernel/memory_layout.h"
 #include "syscall/syscall_internal.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 //! @file resource_syscalls.c
 //! The landing place for untrusted code to use resources.

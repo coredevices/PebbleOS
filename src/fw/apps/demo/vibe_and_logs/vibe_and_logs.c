@@ -11,7 +11,7 @@
 #include "kernel/events.h"
 #include "drivers/rtc.h"
 #include "drivers/vibe.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 Window s_window;
 static AppTimer *s_app_timer;

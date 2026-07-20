@@ -15,7 +15,7 @@
 #include "pbl/services/regular_timer.h"
 #include "syscall/syscall_internal.h"
 #include "syscall/syscall.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "kernel/util/sleep.h"
 

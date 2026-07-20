@@ -14,7 +14,7 @@
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/activity/health_util.h"
 #include "pbl/services/activity/workout_service.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/attributes.h"
 #include "pbl/util/string.h"

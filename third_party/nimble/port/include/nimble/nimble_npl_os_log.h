@@ -6,7 +6,7 @@
 
 #include <stdarg.h>
 
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 /* NimBLE to PebbleOS log level equivalences */
 #define NIMBLE_LOG_LEVEL_DEBUG LOG_LEVEL_DEBUG

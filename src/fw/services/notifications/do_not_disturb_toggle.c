@@ -7,7 +7,7 @@
 #include "applib/app_exit_reason.h"
 #include "applib/ui/action_toggle.h"
 #include "pbl/services/i18n/i18n.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 

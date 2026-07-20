@@ -7,7 +7,7 @@
 #include "pbl/services/comm_session/session_analytics.h"
 #include "pbl/services/comm_session/session_internal.h"
 #include "system/hexdump.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/math.h"
 #include "util/net.h"
 #include "pbl/util/size.h"

@@ -6,7 +6,7 @@
 #include "drivers/hrm.h"
 #include "board/board.h"
 #include "kernel/util/sleep.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #ifdef HRM_USE_GH3X2X
 #include "math.h"

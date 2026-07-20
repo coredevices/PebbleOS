@@ -8,7 +8,7 @@
 #include "pbl/services/phone_call.h"
 #include "pbl/services/phone_call_util.h"
 #include "system/hexdump.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/math.h"
 

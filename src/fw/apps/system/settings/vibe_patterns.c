@@ -15,7 +15,7 @@
 #include "pbl/services/vibes/vibe_intensity.h"
 #include "pbl/services/vibes/vibe_score.h"
 #include "pbl/services/vibes/vibe_score_info.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/string.h"
 

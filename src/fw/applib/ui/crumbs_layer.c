@@ -7,7 +7,7 @@
 #include "shell/system_theme.h"
 #include "applib/ui/property_animation.h"
 #include "process_management/process_manager.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/trig.h"
 
 typedef struct CrumbsLayerSizeConfig {

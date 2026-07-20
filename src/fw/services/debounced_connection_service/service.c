@@ -15,7 +15,7 @@
 #include "pbl/services/vibes/vibe_score.h"
 #endif
 
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 //! This module is responsible for propagating debounced connection events.
 //! Connection events are passed through right away to subscribers but

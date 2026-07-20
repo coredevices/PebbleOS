@@ -11,7 +11,7 @@
 #include "mfg/mfg_mode/mfg_factory_mode.h"
 #include "process_management/process_manager.h"
 #include "pbl/services/system_task.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/size.h"
 
 void getting_started_button_combo_init(GettingStartedButtonComboState *state,

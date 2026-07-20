@@ -9,7 +9,7 @@
 #include "gap_le_advert.h"
 #include "gap_le_connect.h"
 
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "comm/bt_lock.h"
 
 #include "drivers/rtc.h"

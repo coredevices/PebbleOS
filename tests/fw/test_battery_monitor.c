@@ -20,7 +20,7 @@
 #include "fake_rtc.h"
 
 #include "kernel/events.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/reboot_reason.h"
 
 static bool s_entered_standby;

@@ -81,7 +81,7 @@ int pbl_log_get_bin_format(char* buffer, int buffer_len, const uint8_t log_level
 #endif
 
 #ifdef CONFIG_LOG_HASHED
-  #include <logging/log_hashing.h>
+  #include <pbl/logging/log_hashing.h>
 #endif
 
 #if MEMFAULT && defined(CONFIG_LOG_HASHED) && __has_include("memfault/core/log.h")

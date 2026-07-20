@@ -3,7 +3,7 @@
 
 #include "process_management/pebble_process_md.h"
 #include "applib/app.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "drivers/flash.h"
 #include "drivers/rtc.h"
 #include "flash_region/flash_region.h"

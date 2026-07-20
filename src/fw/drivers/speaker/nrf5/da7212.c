@@ -12,7 +12,7 @@
 #include "pbl/os/mutex.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/system_task.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/circular_buffer.h"
 #include "pbl/util/math.h"

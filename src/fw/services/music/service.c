@@ -10,7 +10,7 @@
 #include "shell/system_app_ids.auto.h"
 #include "pbl/os/mutex.h"
 #include "pbl/os/tick.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/math.h"
 
 PBL_LOG_MODULE_DEFINE(service_music, CONFIG_SERVICE_MUSIC_LOG_LEVEL);

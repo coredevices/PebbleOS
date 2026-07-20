@@ -9,7 +9,7 @@
 #include "pbl/services/blob_db/api.h"
 #include "pbl/services/blob_db/settings_blob_db.h"
 #include "pbl/services/blob_db/sync.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 //! Prefs Sync using BlobDB
 //!

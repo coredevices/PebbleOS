@@ -16,7 +16,7 @@
 #include "shell/normal/app_idle_timeout.h"
 #include "system/bootbits.h"
 #include "system/firmware_storage.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/reboot_reason.h"
 #include "system/reset.h"
 #include "kernel/util/sleep.h"

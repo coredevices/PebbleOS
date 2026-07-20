@@ -5,7 +5,7 @@
 
 #include "board/board.h"
 #include "system/passert.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #include <string.h>
 #include <stdio.h>

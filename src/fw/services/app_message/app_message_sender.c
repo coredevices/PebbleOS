@@ -7,7 +7,7 @@
 #include "process_management/app_manager.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/app_message/app_message_sender.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/math.h"
 #include "util/net.h"
 

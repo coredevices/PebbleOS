@@ -16,7 +16,7 @@
 #include "pbl/services/compositor/compositor_transitions.h"
 #include "shell/sdk/shell_sdk.h"
 #include "shell/system_app_state_machine.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 
 typedef struct WatchfaceData {

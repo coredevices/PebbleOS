@@ -14,7 +14,7 @@
 #include "pbl/services/system_task.h"
 #include "process_management/app_manager.h"
 #include "system/bootbits.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "system/reset.h"
 

@@ -9,7 +9,7 @@
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/bluetooth/bluetooth_ctl.h"
 #include "pbl/services/comm_session/session.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "util/bitset.h"
 #include "pbl/util/math.h"
 

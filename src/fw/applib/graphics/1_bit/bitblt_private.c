@@ -7,7 +7,7 @@
 #include "applib/graphics/graphics.h"
 #include "applib/graphics/graphics_private.h"
 #include "applib/graphics/gtypes.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "util/bitset.h"
 #include "util/graphics.h"

@@ -15,7 +15,7 @@
 #include "process_state/app_state/app_state.h"
 #include "pbl/services/evented_timer.h"
 #include "pbl/services/light.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #include <stdint.h>
 #include <stdio.h>

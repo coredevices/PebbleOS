@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "pbl/util/attributes.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "applib/app_logging.h"
 
 #include <stdint.h>

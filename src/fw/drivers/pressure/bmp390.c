@@ -4,7 +4,7 @@
 #include "board/board.h"
 #include "drivers/pressure.h"
 #include "drivers/i2c.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 PBL_LOG_MODULE_DEFINE(driver_pressure_bmp390, CONFIG_DRIVER_PRESSURE_LOG_LEVEL);
 

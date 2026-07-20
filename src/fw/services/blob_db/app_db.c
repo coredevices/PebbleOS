@@ -10,7 +10,7 @@
 #include "pbl/services/settings/settings_file.h"
 #include "pbl/services/app_fetch_endpoint.h"
 #include "pbl/os/mutex.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "system/status_codes.h"
 #include "pbl/util/math.h"

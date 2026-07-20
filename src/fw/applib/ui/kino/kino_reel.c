@@ -15,7 +15,7 @@
 #include "resource/resource.h"
 #include "resource/resource_ids.auto.h"
 #include "syscall/syscall.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "util/net.h"
 
 KinoReel *kino_reel_create_with_resource(uint32_t resource_id) {

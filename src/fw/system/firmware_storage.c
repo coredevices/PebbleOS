@@ -5,7 +5,7 @@
 
 #include "drivers/flash.h"
 #include "flash_region/flash_region.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/math.h"
 
 #ifndef CONFIG_PBLBOOT

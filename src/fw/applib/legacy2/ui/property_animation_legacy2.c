@@ -9,7 +9,7 @@
 
 #include "kernel/pbl_malloc.h"
 #include "system/passert.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 /////////////////////
 // Property Animation

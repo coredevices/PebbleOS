@@ -14,7 +14,7 @@
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/activity/activity.h"
 #include "pbl/services/alarms/alarm.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #ifdef CONFIG_SPEAKER
 #include "popups/alarm_popup.h"

@@ -23,7 +23,7 @@
 #include "kernel/pbl_malloc.h"
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 
 #include <inttypes.h>

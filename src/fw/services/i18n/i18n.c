@@ -37,7 +37,7 @@
 #include "pbl/services/filesystem/pfs.h"
 #include "shell/normal/language_ui.h"
 #include "shell/prefs.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/list.h"
 

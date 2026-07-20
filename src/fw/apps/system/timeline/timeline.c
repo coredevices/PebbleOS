@@ -27,7 +27,7 @@
 #include "pbl/services/timeline/attribute.h"
 #include "shell/normal/watchface.h"
 #include "syscall/syscall.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "util/array.h"
 #include "pbl/util/attributes.h"

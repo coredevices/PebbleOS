@@ -8,8 +8,8 @@
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/system_task.h"
-#include "system/logging.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
+#include <pbl/logging/logging.h>
 #include "pbl/os/mutex.h"
 #include "system/passert.h"
 #include "pbl/util/iterator.h"

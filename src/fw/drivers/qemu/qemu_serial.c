@@ -18,7 +18,7 @@
 #include "pbl/services/hrm/hrm_manager.h"
 #include "pbl/services/system_task.h"
 #include "system/hexdump.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/likely.h"
 #include "util/net.h"

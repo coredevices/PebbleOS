@@ -6,7 +6,7 @@
 #include "drivers/flash.h"
 #include "drivers/task_watchdog.h"
 #include "kernel/util/sleep.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 
 #include <inttypes.h>

@@ -27,7 +27,7 @@
 #include "pbl/services/bluetooth/bluetooth_ctl.h"
 #include "pbl/services/light.h"
 #include "pbl/services/idle_watchdog.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "util/time/time.h"
 
 #include <stdio.h>

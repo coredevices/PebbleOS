@@ -8,7 +8,7 @@
 #include "kernel/util/sleep.h"
 #include "mfg/mfg_info.h"
 #include "pbl/os/mutex.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 
 #include <inttypes.h>

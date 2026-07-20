@@ -10,7 +10,7 @@
 #include "process_management/app_manager.h"
 #include "process_management/sdk_shims.h"
 #include "process_state/app_state/app_state.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 typedef struct AppState {
   Window window;

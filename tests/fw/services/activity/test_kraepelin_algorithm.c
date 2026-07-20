@@ -9,7 +9,7 @@
 #include "pbl/services/activity/activity_algorithm.h"
 #include "pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h"
 #include "pbl/services/activity/kraepelin/kraepelin_algorithm.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/list.h"
 #include "pbl/util/math.h"

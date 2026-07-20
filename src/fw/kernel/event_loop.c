@@ -77,7 +77,7 @@
 #include "shell/shell_event_loop.h"
 #include "shell/system_app_state_machine.h"
 #include "system/bootbits.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "system/reset.h"
 #include "system/testinfra.h"

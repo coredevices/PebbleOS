@@ -9,7 +9,7 @@
 #include "pbl/services/bluetooth/local_addr.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #include <bluetooth/bonding_sync.h>
 #include <bluetooth/bluetooth_types.h>

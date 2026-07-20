@@ -13,7 +13,7 @@
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/data_logging/data_logging_service.h"
 #include "kernel/pbl_malloc.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/attributes.h"
 #include "util/legacy_checksum.h"

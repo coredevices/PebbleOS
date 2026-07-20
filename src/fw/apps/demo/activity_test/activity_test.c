@@ -15,7 +15,7 @@
 #include "pbl/services/activity/activity_private.h"
 #include "pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h"
 #include "pbl/services/activity/insights_settings.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
 

@@ -5,7 +5,7 @@
 
 #include "board/board.h"
 #include "drivers/i2c.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 PBL_LOG_MODULE_DEFINE(driver_backlight_aw2016, CONFIG_DRIVER_BACKLIGHT_LOG_LEVEL);
 

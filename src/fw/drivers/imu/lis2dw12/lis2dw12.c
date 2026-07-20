@@ -9,7 +9,7 @@
 #include "drivers/gpio.h"
 #include "pbl/services/imu/units.h"
 #include "pbl/services/regular_timer.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/status_codes.h"
 #include "kernel/util/delay.h"
 #include "kernel/util/sleep.h"

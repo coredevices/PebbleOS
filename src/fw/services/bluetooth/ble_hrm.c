@@ -18,7 +18,7 @@
 #include "pbl/services/regular_timer.h"
 #include "pbl/services/activity/activity.h"
 #include "shell/system_app_ids.auto.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 
 #include <bluetooth/gap_le_connect.h>

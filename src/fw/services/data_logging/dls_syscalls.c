@@ -6,7 +6,7 @@
 
 #include "kernel/memory_layout.h"
 #include "syscall/syscall_internal.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #include <inttypes.h>
 

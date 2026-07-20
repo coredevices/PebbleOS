@@ -10,7 +10,7 @@
 #include "pbl/services/compositor/compositor_transitions.h"
 
 #include "resource/resource_ids.auto.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 typedef struct {
   CompositorTransitionDirection direction;

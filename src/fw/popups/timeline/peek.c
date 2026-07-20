@@ -14,7 +14,7 @@
 #include "kernel/ui/modals/modal_manager.h"
 #include "shell/prefs.h"
 #include "syscall/syscall_internal.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/size.h"
 #include "pbl/util/struct.h"

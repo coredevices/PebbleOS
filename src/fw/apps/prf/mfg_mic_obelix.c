@@ -10,7 +10,7 @@
 #include "applib/ui/window.h"
 #include "apps/prf/mfg_test_result.h"
 #include "kernel/pbl_malloc.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "board/board.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"

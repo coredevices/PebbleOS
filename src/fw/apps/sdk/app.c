@@ -18,7 +18,7 @@
 #include "pbl/services/clock.h"
 #include "shell/sdk/shell_sdk.h"
 #include "shell/sdk/watchface.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 typedef struct SdkAppData {
   Window window;

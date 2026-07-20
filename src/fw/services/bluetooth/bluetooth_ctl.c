@@ -23,7 +23,7 @@
 #include "pbl/services/regular_timer.h"
 #include "pbl/services/system_task.h"
 #include "pbl/services/bluetooth/ble_hrm.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 PBL_LOG_MODULE_DEFINE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 

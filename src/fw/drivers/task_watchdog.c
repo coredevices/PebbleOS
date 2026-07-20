@@ -13,7 +13,7 @@
 #include "pbl/services/system_task.h"
 #include "system/bootbits.h"
 #include "system/die.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/size.h"
 

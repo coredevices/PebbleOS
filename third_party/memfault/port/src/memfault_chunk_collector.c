@@ -7,7 +7,7 @@
 #include "pbl/services/system_task.h"
 #include "pbl/services/data_logging/data_logging_service.h"
 #include "pbl/services/new_timer/new_timer.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #define MAX_CHUNK_SIZE 250
 #define MEMFAULT_CHUNK_COLLECTION_INTERVAL_SECS (15 * 60)

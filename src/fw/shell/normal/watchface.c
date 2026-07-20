@@ -22,7 +22,7 @@
 #include "applib/app_launch_reason.h"
 #include "applib/ui/click_internal.h"
 #include "pbl/services/notifications/do_not_disturb.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #ifdef CONFIG_ORIENTATION_MANAGER
 #include "shell/prefs.h"

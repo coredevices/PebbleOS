@@ -6,7 +6,7 @@
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/blob_db/contacts_db.h"
 #include "pbl/services/timeline/attributes_actions.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 static Contact* prv_deserialize_contact(SerializedContact *serialized_contact,
                                         const size_t serialized_contact_data_len) {

@@ -8,7 +8,7 @@
 #include "drivers/task_watchdog.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/filesystem/pfs.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "util/crc8.h"
 

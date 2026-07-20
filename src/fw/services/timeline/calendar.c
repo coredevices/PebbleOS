@@ -10,7 +10,7 @@
 #include "kernel/pebble_tasks.h"
 #include "pbl/services/system_task.h"
 #include "pbl/services/blob_db/pin_db.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/status_codes.h"
 #include "util/time/time.h"
 

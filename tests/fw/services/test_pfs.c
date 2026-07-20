@@ -8,7 +8,7 @@
 #include "flash_region/flash_region.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/filesystem/flash_translation.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"

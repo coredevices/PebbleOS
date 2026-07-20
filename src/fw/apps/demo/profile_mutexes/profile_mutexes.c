@@ -8,7 +8,7 @@
 #include "applib/ui/window.h"
 #include "applib/ui/window_stack.h"
 
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/os/mutex.h"
 #include "system/profiler.h"
 

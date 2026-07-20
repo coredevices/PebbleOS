@@ -16,7 +16,7 @@
 #include "pbl/services/notifications/alerts_preferences_private.h"
 #include "kernel/ui/kernel_ui.h"
 #include "process_state/app_state/app_state.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/math.h"
 

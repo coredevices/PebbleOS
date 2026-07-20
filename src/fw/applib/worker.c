@@ -8,7 +8,7 @@
 #include "applib/event_service_client.h"
 #include "syscall/syscall.h"
 #include "pbl/services/event_service.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 
 // -------------------------------------------------------------------------------------------------

@@ -6,7 +6,7 @@
 #include <pbl/btutil/bt_uuid.h>
 #include <host/ble_gap.h>
 #include <string.h>
-#include <system/logging.h>
+#include <pbl/logging/logging.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 

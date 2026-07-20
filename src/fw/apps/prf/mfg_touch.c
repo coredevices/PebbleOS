@@ -14,7 +14,7 @@
 #include "kernel/pbl_malloc.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "applib/touch_service.h"
 #include "pbl/services/light.h"
 #include "pbl/services/touch/touch.h"

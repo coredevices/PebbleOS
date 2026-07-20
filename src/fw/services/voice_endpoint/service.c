@@ -7,7 +7,7 @@
 #include "pbl/services/comm_session/session.h"
 #include "pbl/services/audio_endpoint.h"
 #include "pbl/services/voice/voice.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "util/generic_attribute.h"
 #include "pbl/util/uuid.h"

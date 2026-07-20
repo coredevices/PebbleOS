@@ -7,7 +7,7 @@
 #include "drivers/gpio.h"
 #include "drivers/i2c.h"
 #include "drivers/vibe/vibe_aw86225.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "kernel/util/sleep.h"
 

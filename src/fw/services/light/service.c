@@ -18,7 +18,7 @@
 #include "pbl/util/math.h"
 #include "services/light/als_screen_compensation.h"
 #include "syscall/syscall_internal.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/os/mutex.h"
 #include "system/passert.h"
 

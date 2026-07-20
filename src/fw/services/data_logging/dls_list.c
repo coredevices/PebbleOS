@@ -9,7 +9,7 @@
 #include "kernel/pbl_malloc.h"
 #include "process_management/process_manager.h"
 #include "pbl/services/system_task.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/uuid.h"
 

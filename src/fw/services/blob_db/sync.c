@@ -8,7 +8,7 @@
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/comm_session/session.h"
 #include "pbl/services/system_task.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/util/list.h"
 
 #include <stdlib.h>

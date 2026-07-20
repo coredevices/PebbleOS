@@ -3,7 +3,7 @@
 
 #include <string.h>
 
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #include "kernel/pbl_malloc.h"
 #include "util/pstring.h"

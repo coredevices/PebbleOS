@@ -15,7 +15,7 @@
 #include "resource/resource_storage.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/filesystem/app_file.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "system/hexdump.h"
 #include "pbl/util/build_id.h"

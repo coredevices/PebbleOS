@@ -15,7 +15,7 @@
 #include "applib/ui/window.h"
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #define STEP_ROTATION_ANGLE (TRIG_MAX_ANGLE / 360) // 1 degree
 #define MIN_OPS 0

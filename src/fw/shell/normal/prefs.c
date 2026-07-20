@@ -34,7 +34,7 @@
 #include "pbl/services/timeline/peek.h"
 #include "kernel/events.h"
 #include "kernel/event_loop.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/size.h"
 #include "pbl/util/uuid.h"

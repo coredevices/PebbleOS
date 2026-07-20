@@ -11,7 +11,7 @@
 #include "kernel/util/sleep.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/filesystem/pfs.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/attributes.h"
 #include "pbl/util/math.h"

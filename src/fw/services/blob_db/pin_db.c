@@ -16,7 +16,7 @@
 #include "pbl/services/app_cache.h"
 #include "pbl/services/timeline/calendar.h"
 #include "pbl/services/timeline/timeline.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "util/units.h"
 #include "pbl/util/uuid.h"

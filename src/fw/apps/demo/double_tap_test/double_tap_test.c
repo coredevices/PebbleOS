@@ -12,7 +12,7 @@
 #include "process_state/app_state/app_state.h"
 #include "resource/resource_ids.auto.h"
 #include "resource/system_resource.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "kernel/pbl_malloc.h"
 
 typedef struct {

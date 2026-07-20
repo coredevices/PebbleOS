@@ -6,7 +6,7 @@
 #include "accel_service.h"
 #include "event_service_client.h"
 
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 typedef struct AccelServiceState {
   // Configuration for our data callback subscription to the accel manager

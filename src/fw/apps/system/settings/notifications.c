@@ -22,7 +22,7 @@
 #include "pbl/services/vibes/vibe_intensity.h"
 #include "shell/prefs.h"
 #include "shell/system_theme.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/size.h"
 #include "util/time/time.h"

@@ -7,7 +7,7 @@
 
 #include "applib/graphics/graphics.h"
 #include "pbl/services/timeline/timeline_layout.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #include <stdint.h>
 

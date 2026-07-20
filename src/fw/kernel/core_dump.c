@@ -41,7 +41,7 @@ extern char *itoa(int value, char *str, int base);
 #include "system/bootbits.h"
 #include "system/passert.h"
 #include "system/reset.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/version.h"
 
 #include "pbl/util/attributes.h"

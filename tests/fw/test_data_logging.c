@@ -20,7 +20,7 @@
 #include "pbl/services/data_logging/dls_storage.h"
 
 #include "pbl/services/regular_timer.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 
 #include "util/legacy_checksum.h"

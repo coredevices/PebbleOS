@@ -25,7 +25,7 @@
 #include "pbl/services/timeline/weather_layout.h"
 #include "shell/prefs.h"
 #include "shell/system_app_ids.auto.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/attributes.h"
 #include "pbl/util/math.h"

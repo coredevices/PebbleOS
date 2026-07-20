@@ -4,7 +4,7 @@
 #include "framebuffer.h"
 
 #include "drivers/display.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "util/bitset.h"
 

@@ -31,7 +31,7 @@
 #include "syscall/syscall.h"
 #include "system/bootbits.h"
 #include "system/hexdump.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "system/reboot_reason.h"
 #include "system/reset.h"

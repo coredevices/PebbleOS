@@ -22,7 +22,7 @@
 #include "pbl/services/activity/activity_private.h"
 #include "pbl/services/activity/health_util.h"
 #include "pbl/services/activity/workout_service.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "resource/resource_ids.auto.h"
 #include "popups/health_tracking_ui.h"
 

@@ -13,7 +13,7 @@
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "gatt_client_accessors.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "drivers/rtc.h"
 
 #include <bluetooth/gatt.h>

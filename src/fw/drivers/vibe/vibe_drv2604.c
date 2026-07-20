@@ -9,7 +9,7 @@
 #include "drivers/i2c.h"
 #include "drivers/pmic.h"
 #include "drivers/pwm.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/math.h"
 

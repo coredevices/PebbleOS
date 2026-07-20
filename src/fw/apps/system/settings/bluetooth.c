@@ -28,7 +28,7 @@
 #include "pbl/services/system_task.h"
 #include "pbl/services/bluetooth/ble_hrm.h"
 #include "shell/system_theme.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/string.h"
 

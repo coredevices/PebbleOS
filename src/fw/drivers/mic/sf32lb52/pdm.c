@@ -7,7 +7,7 @@
 #include "kernel/kernel_heap.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/mcu/cache.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "pbl/os/mutex.h"
 #include "system/passert.h"
 #include "pbl/util/circular_buffer.h"

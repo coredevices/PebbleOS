@@ -13,7 +13,7 @@
 #include "process_state/app_state/app_state.h"
 #include "pbl/services/clock.h"
 #include "pbl/services/i18n/i18n.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/hexdump.h"
 #include "pbl/util/size.h"
 

@@ -8,7 +8,7 @@
 #include "pbl/services/comm_session/session_transport.h"
 
 #include "system/passert.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #include "comm/bt_lock.h"
 

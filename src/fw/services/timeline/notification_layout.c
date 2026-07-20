@@ -23,7 +23,7 @@
 #include "pbl/services/timeline/timeline_resources.h"
 #include "shell/system_theme.h"
 #include "system/hexdump.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"

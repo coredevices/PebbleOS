@@ -6,7 +6,7 @@
 #include "pbl/services/timeline/event.h"
 #include "pbl/services/timeline/peek.h"
 #include "pbl/services/timeline/timeline.h"
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 #include "clar.h"
 #include "pebble_asserts.h"

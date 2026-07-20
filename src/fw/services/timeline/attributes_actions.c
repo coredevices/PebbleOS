@@ -5,7 +5,7 @@
 
 #include "pbl/services/timeline/attribute_group.h"
 
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 

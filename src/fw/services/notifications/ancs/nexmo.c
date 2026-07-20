@@ -7,7 +7,7 @@
 #include "comm/ble/kernel_le_client/ancs/ancs.h"
 #include "comm/ble/kernel_le_client/ancs/ancs_types.h"
 
-#include "system/logging.h"
+#include <pbl/logging/logging.h>
 
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 
