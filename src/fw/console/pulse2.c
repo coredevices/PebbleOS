@@ -383,7 +383,9 @@ static void prv_assert_tx_buffer(void *buf) {
 }
 
 void pulse_handle_character(char c, bool *should_context_switch) {
-  portBASE_TYPE tmp;
+  // FromISR calls only write pdTRUE when a higher-priority task is woken; they never
+  // write pdFALSE, so tmp must start as pdFALSE to avoid a spurious context switch.
+  portBASE_TYPE tmp = pdFALSE;
   xQueueSendToBackFromISR(s_pulse_task_queue, &c, &tmp);
   xSemaphoreGiveFromISR(s_pulse_task_service_semaphore, &tmp);
   *should_context_switch = (tmp == pdTRUE);
