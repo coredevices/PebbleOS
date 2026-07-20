@@ -1620,7 +1620,7 @@ void pfs_remove_files(PFSFilenameTestCallback callback) {
     if (rv >= FDAlreadyLoaded) { // the file is in the cache
       if (rv == FDBusy) {
         PBL_CROAK("Cannot delete %s, it is currently in use",
-                  s_pfs_avail_fd[fd].file.name);
+                  PFS_FD(fd).file.name);
       }
       mark_fd_free(fd);
     }
@@ -1952,7 +1952,9 @@ static status_t copy_or_recover_gc_data(int fd, GCData *gcdata, bool do_copy) {
   for (uint16_t pg = 0; pg < PFS_PAGES_PER_ERASE_SECTOR; pg++) {
     uint32_t base_addr = prv_page_to_flash_offset(sector_start_page + pg);
 
-    uint32_t data_len;
+    // Default to 0 so a failed recover-path pfs_read below skips the copy loop
+    // instead of writing an uninitialized length's worth of garbage to flash.
+    uint32_t data_len = 0;
     PageHeader hdr;
     if (do_copy) {
       // if the sector is not active we only need to copy the page header info
