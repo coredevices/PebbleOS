@@ -19,8 +19,7 @@
 #include "shell/system_theme.h"
 #include "pbl/util/uuid.h"
 
-#if defined(CONFIG_APP_SCALING) && \
-    (defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_QEMU_EMERY))
+#if defined(CONFIG_APP_SCALING)
 #define TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED 1
 #else
 #define TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED 0
