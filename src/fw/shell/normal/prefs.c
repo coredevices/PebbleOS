@@ -955,6 +955,21 @@ void shell_prefs_init(void) {
   prv_convert_deprecated_dynamic_intensity_key(&file);
 #endif
 
+#if !TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
+  {
+    // Discard any watchface-fit pref synced from a watch model that supports it.
+    // Check both key forms: locally-written keys include the null terminator,
+    // phone-originated BlobDB writes may not.
+    static const char *const fit_key = "timelineQuickViewWatchfaceFit";
+    for (size_t key_len = strlen(fit_key); key_len <= strlen(fit_key) + 1; key_len++) {
+      if (settings_file_get_len(&file, fit_key, key_len) > 0) {
+        PBL_LOG_INFO("Discarding unsupported pref: %s", fit_key);
+        settings_file_delete(&file, fit_key, key_len);
+      }
+    }
+  }
+#endif
+
   // Init state for each pref from our backing store
   uint32_t num_entries = ARRAY_LENGTH(s_prefs_table);
   const PrefsTableEntry *entry = s_prefs_table;

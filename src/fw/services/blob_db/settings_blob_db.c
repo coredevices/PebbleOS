@@ -10,6 +10,7 @@
 #include "pbl/services/comm_session/session.h"
 #include "pbl/services/notifications/alerts_preferences_private.h"
 #include "pbl/services/settings/settings_file.h"
+#include "shell/prefs.h"
 #include "shell/prefs_private.h"
 #include "system/logging.h"
 #include "system/passert.h"
@@ -94,7 +95,9 @@ static const char *s_syncable_settings[] = {
   // Timeline preferences
   "timelineQuickViewEnabled",
   "timelineQuickViewBeforeTimeMin",
+#if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
   "timelineQuickViewWatchfaceFit",
+#endif
   "timelineSettingsOpened",
 
   // Activity preferences
