@@ -12,6 +12,7 @@
 #include "system/logging.h"
 #include "comm/bt_lock.h"
 
+#include "drivers/rtc.h"
 #include "kernel/event_loop.h"
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
 #include "pbl/services/regular_timer.h"
@@ -30,6 +31,28 @@ typedef enum {
   ReconnectType_Plain, // Advertising for reconnection with empty payload
   ReconnectType_BleHrm // Advertising for reconnection with HRM payload
 } ReconnectType;
+
+//! When the master reconnects and drops repeatedly (e.g. supervision timeouts
+//! in bad RF conditions), skip the initial short-interval advertising term to
+//! bound the radio duty cycle. The window resets after
+//! RECONNECT_CHURN_WINDOW_SECS, so during sustained churn one attempt per
+//! window still gets the fast short-interval burst.
+#define RECONNECT_CHURN_WINDOW_SECS (60)
+#define RECONNECT_CHURN_THRESHOLD (3)
+
+//! bt_lock() needs to be taken before accessing these variables.
+static RtcTicks s_churn_window_start_ticks;
+static uint32_t s_churn_count;
+
+static bool prv_should_skip_short_interval(void) {
+  const RtcTicks now = rtc_get_ticks();
+  if ((now - s_churn_window_start_ticks) > (RECONNECT_CHURN_WINDOW_SECS * RTC_TICKS_HZ)) {
+    s_churn_window_start_ticks = now;
+    s_churn_count = 0;
+  }
+  ++s_churn_count;
+  return (s_churn_count > RECONNECT_CHURN_THRESHOLD);
+}
 
 // -----------------------------------------------------------------------------
 //! Static, internal helper functions
@@ -124,8 +147,17 @@ static void prv_evaluate(ReconnectType prev_type) {
         },
     };
 
+    const GAPLEAdvertisingJobTerm *terms = advert_terms;
+    uint8_t num_terms = ARRAY_LENGTH(advert_terms);
+    // HRM reconnection is user-initiated and time-bounded, don't back it off.
+    if (!use_hrm_payload && prv_should_skip_short_interval()) {
+      PBL_LOG_WRN("Reconnect churn: advertising at long interval only");
+      terms = &advert_terms[1];
+      num_terms = 1;
+    }
+
     s_reconnect_advert_job = gap_le_advert_schedule(
-        ad, advert_terms, sizeof(advert_terms) / sizeof(GAPLEAdvertisingJobTerm),
+        ad, terms, num_terms,
         prv_advert_job_unscheduled_callback, NULL, GAPLEAdvertisingJobTagReconnection);
 
     if (use_hrm_payload) {
