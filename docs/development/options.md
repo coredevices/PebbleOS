@@ -25,13 +25,13 @@ Keep in mind that some targets may not currently compile as-is.
 :`-DCONFIG_RELEASE=y`:
   Build a release-mode firmware. Strips debug aids, enables shipping
   defaults (e.g. Memfault crash reporting), and reduces battery usage
-  compared to a debug build. Pass this to `./waf configure`.
+  compared to a debug build. Pass this to `./pbl configure`.
 
 ## Main features
 
 :`-DCONFIG_MODDABLE_XS=y` / `-DCONFIG_MODDABLE_XS=n`:
   Force the Moddable SDK's XS JavaScript engine on or off, overriding
-  the board defconfig. Pass to `./waf configure`. See {doc}`moddable`.
+  the board defconfig. Pass to `./pbl configure`. See {doc}`moddable`.
   PRF (recovery) builds always disable the engine regardless of this
   value.
 
@@ -79,4 +79,4 @@ the OpenOCD runner, the probe and target configuration lives in the board's
   This will increase ROM usage, but will not require a dictionary file to decode logs.
 
 These and many more options can also be browsed and changed interactively with
-`./waf menuconfig` after configuring.
+`./pbl menuconfig` after configuring.

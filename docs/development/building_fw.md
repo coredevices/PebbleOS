@@ -1,9 +1,9 @@
 # Building firmware
 
-Before building, make sure you've configured {doc}`./waf <../development/options>`. Then, run the following:
+Before building, make sure you've configured {doc}`./pbl <../development/options>`. Then, run the following:
 
 ```shell
-./waf build
+./pbl build
 ```
 
 ## Loading firmware with a firmware development kit
@@ -41,7 +41,7 @@ If you don't have a firmware development kit, you may bundle a `.pbz` file for s
 onto your sealed watch:
 
 ```shell
-./waf bundle
+./pbl bundle
 ```
 
 The resulting `.pbz` file will be located in the `build/` directory. Transfer this file
