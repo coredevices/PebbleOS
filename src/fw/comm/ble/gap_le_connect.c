@@ -1012,6 +1012,7 @@ void gap_le_connect_handle_bonding_change(BTBondingID bonding_id, BtPersistBondi
                                               &updated_bonding.device, NULL)) {
       WTF;
     }
+    updated_bonding.id = bonding_id;
   }
 
   bt_lock();
