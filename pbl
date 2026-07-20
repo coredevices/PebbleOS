@@ -28,7 +28,7 @@ BUILD_DIR = os.path.join(REPO_ROOT, "build")
 LANG_DIR_REL = "resources/normal/base/lang"
 
 # Commands forwarded verbatim to ./waf (no build env / waflib needed).
-WAF_PASSTHROUGH = ("configure", "build", "bundle", "clean", "test", "waf")
+WAF_PASSTHROUGH = ("configure", "menuconfig", "build", "bundle", "clean", "test", "waf")
 
 # QEMU SDL decorations per board. The first entry is used as the default.
 QEMU_DECORATIONS = {
