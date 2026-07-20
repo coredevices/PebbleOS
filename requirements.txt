@@ -1,38 +1,34 @@
+# Resource/font/image generation
 pillow
 freetype-py
-ply==3.4
-pyusb==1.3.1
-pyserial
-sh
 pypng
-pexpect
-cobs==1.0.0
 svg.path
-requests
-GitPython==1.0.1
-pyelftools
-pycryptodome
-mock
-nose
-boto
-prompt_toolkit>=0.55
-enum34
 bitarray
-pep8
 polib
-intelhex>=2.1,<3
-protobuf
-grpcio-tools
-nanopb
-kconfiglib
-meson
-ninja
-certifi
-libclang
+
+# Build system (waf) tooling
+sh<2
 packaging
 PyYAML
+kconfiglib
+intelhex>=2.1,<3
+pyelftools
+libclang
+meson
+ninja
+
+# Protobuf codegen: nanopb_generator; grpcio-tools provides protoc where
+# there is no system protoc (e.g. brew setups)
+nanopb
+grpcio-tools
+
+# Device communication / debugging
+pyserial
+pexpect
+cobs
+prompt_toolkit>=3
+requests
 libpebble2>=0.0.16
-pathlib
 
 -e tools/libs/pebble-commander
 -e tools/libs/pulse2

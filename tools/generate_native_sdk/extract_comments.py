@@ -122,11 +122,9 @@ def test_handle_macro():
 
     scan_file_content_for_defines(test_input, defines)
 
-    from nose.tools import eq_
-
-    eq_(defines[0].comment, "//! This is a documented MACRO")
-    eq_(defines[1].comment, "//! This is a documented define")
-    eq_(defines[2].comment, "//! This is a multiline\n//! documented define.")
+    assert defines[0].comment == "//! This is a documented MACRO"
+    assert defines[1].comment == "//! This is a documented define"
+    assert defines[2].comment == "//! This is a multiline\n//! documented define."
     assert defines[3].comment is None
 
 
