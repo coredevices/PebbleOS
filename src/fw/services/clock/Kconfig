@@ -10,6 +10,6 @@ if SERVICE_CLOCK
 
 module = SERVICE_CLOCK
 module-str = Clock
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif

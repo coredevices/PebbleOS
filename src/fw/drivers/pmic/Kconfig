@@ -15,6 +15,6 @@ config PMIC_NPM1300
 
 module = DRIVER_PMIC
 module-str = PMIC
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif # PMIC

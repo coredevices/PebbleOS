@@ -10,6 +10,6 @@ if SERVICE_PHONE_PP
 
 module = SERVICE_PHONE_PP
 module-str = Phone (Pebble Protocol)
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif

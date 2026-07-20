@@ -21,6 +21,6 @@ config TOUCH_QEMU
 
 module = DRIVER_TOUCH
 module-str = Touchscreen
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif # TOUCH

@@ -15,6 +15,6 @@ config PRESSURE_BMP390
 
 module = DRIVER_PRESSURE
 module-str = Pressure Sensor
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif # PRESSURE

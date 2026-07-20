@@ -10,6 +10,6 @@ if SERVICE_COMPOSITOR
 
 module = SERVICE_COMPOSITOR
 module-str = Compositor
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif

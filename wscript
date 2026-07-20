@@ -368,6 +368,7 @@ def _link_firmware(bld, sources):
             'fw_services',
             'gcc',
             'kernel',
+            'logging',
             'mfg',
             'popups',
             'process_management',
@@ -491,6 +492,7 @@ def _build_fw(bld):
 
     # FIXME create applib_includes or something like that
     fw_includes_use=['pbl_includes',
+                     'subsys_includes',
                      'freertos_includes',
                      'idl_includes',
                      'nanopb_includes']
@@ -523,6 +525,7 @@ def _build_fw(bld):
         target=bld.path.get_bld().make_node('src/fw/git_version.auto.h'),
         **git_rev)
 
+    bld.recurse('subsys')
     bld.recurse('src/fw/startup')
     bld.recurse('src/fw/drivers')
     bld.recurse('src/fw/board')

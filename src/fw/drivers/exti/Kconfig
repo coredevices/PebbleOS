@@ -29,6 +29,6 @@ config EXTI_QEMU
 
 module = DRIVER_EXTI
 module-str = External Interrupt
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif # EXTI

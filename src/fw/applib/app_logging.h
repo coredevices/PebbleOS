@@ -11,7 +11,7 @@
 #include "pbl/util/uuid.h"
 
 // FIXME PBL-1629: move needed declarations into applib
-#include "kernel/logging_private.h"
+#include "logging/logging_private.h"
 #include "system/logging.h"
 
 #include <stdint.h>

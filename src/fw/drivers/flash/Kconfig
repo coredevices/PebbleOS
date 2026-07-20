@@ -26,6 +26,6 @@ config FLASH_QEMU
 
 module = DRIVER_FLASH
 module-str = Flash
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif # FLASH

@@ -33,6 +33,6 @@ config MIC_QEMU
 
 module = DRIVER_MIC
 module-str = Microphone
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif # MIC

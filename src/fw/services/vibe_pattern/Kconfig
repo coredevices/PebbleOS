@@ -10,6 +10,6 @@ if SERVICE_VIBE_PATTERN
 
 module = SERVICE_VIBE_PATTERN
 module-str = Vibe pattern
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif

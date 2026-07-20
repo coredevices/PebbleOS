@@ -11,6 +11,6 @@ if SERVICE_BLOB_DB
 
 module = SERVICE_BLOB_DB
 module-str = Blob DB
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif

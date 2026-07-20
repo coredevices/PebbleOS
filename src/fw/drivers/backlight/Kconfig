@@ -46,6 +46,6 @@ config BACKLIGHT_QEMU_COLOR
   
 module = DRIVER_BACKLIGHT
 module-str = Backlight
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif # BACKLIGHT

@@ -10,6 +10,6 @@ if SERVICE_SHARED_PRF_STORAGE
 
 module = SERVICE_SHARED_PRF_STORAGE
 module-str = Shared PRF storage
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif

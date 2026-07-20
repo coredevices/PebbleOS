@@ -10,6 +10,6 @@ if SERVICE_PRF_UPDATE
 
 module = SERVICE_PRF_UPDATE
 module-str = PRF update
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif

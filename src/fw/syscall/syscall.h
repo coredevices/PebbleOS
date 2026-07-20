@@ -23,7 +23,7 @@
 #include "drivers/rtc.h"
 
 #include "kernel/events.h"
-#include "kernel/logging_private.h"
+#include "logging/logging_private.h"
 #include "pbl/services/wakeup.h"
 #include "pbl/services/comm_session/session.h"
 #include "pbl/services/evented_timer.h"

@@ -3,7 +3,7 @@
 
 #include "clar.h"
 
-#include "kernel/pulse_logging.h"
+#include "logging/pulse_logging.h"
 
 // How many bytes are in a log message before the actual message content in pulse log messages
 const int LOG_METADATA_LENGTH = 29;

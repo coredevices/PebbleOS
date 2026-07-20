@@ -23,8 +23,8 @@ extern char *itoa(int value, char *str, int base);
 #include "kernel/core_dump_private.h"
 
 #include "console/dbgserial.h"
-#include "kernel/logging_private.h"
-#include "kernel/pulse_logging.h"
+#include "logging/logging_private.h"
+#include "logging/pulse_logging.h"
 
 #include "drivers/flash.h"
 #include "drivers/mpu.h"

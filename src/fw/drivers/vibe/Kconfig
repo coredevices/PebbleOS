@@ -25,6 +25,6 @@ config VIBE_DRV2604
 
 module = DRIVER_VIBE
 module-str = Vibration Motor
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif # VIBE

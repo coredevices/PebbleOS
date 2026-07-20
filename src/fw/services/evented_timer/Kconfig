@@ -10,6 +10,6 @@ if SERVICE_EVENTED_TIMER
 
 module = SERVICE_EVENTED_TIMER
 module-str = Evented timer
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif

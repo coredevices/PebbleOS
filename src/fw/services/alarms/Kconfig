@@ -10,6 +10,6 @@ if SERVICE_ALARMS
 
 module = SERVICE_ALARMS
 module-str = Alarms
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif

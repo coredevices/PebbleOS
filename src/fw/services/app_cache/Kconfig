@@ -10,6 +10,6 @@ if SERVICE_APP_CACHE
 
 module = SERVICE_APP_CACHE
 module-str = App cache
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif

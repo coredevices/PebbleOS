@@ -219,6 +219,7 @@ def parse_file(
     args = [
         "-I%s/core" % src_dir,
         "-I%s/include" % root_dir,
+        "-I%s/subsys" % root_dir,
         "-I%s/fw" % src_dir,
         "-I%s/fw/applib/vendor/uPNG" % src_dir,
         "-I%s/fw/applib/vendor/tinflate" % src_dir,

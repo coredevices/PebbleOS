@@ -26,7 +26,7 @@ endchoice
 
 module = BT
 module-str = Bluetooth
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 config GH3X2X_TUNING_SERVICE_ENABLED
     bool "GH3X2X tuning service"

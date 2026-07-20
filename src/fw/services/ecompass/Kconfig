@@ -11,6 +11,6 @@ if SERVICE_ECOMPASS
 
 module = SERVICE_ECOMPASS
 module-str = E-compass
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif

@@ -23,6 +23,6 @@ config I2C_SF32LB
 
 module = DRIVER_I2C
 module-str = I2C
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif # I2C

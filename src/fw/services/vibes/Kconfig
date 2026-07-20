@@ -10,6 +10,6 @@ if SERVICE_VIBES
 
 module = SERVICE_VIBES
 module-str = Vibes
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif

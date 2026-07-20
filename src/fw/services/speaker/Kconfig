@@ -10,6 +10,6 @@ if SERVICE_SPEAKER
 
 module = SERVICE_SPEAKER
 module-str = Speaker
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif

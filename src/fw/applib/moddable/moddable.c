@@ -2,7 +2,7 @@
 /* SPDX-FileCopyrightText: 2025-2026 Moddable Tech, Inc. */
 /* SPDX-License-Identifier: Apache-2.0 */
 #include "applib/app.h"
-#include "kernel/logging_private.h"
+#include "logging/logging_private.h"
 #include "pbl/services/evented_timer.h"
 #include "syscall/syscall_internal.h"
 #include "applib/app_logging.h"

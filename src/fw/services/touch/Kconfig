@@ -11,6 +11,6 @@ if SERVICE_TOUCH
 
 module = SERVICE_TOUCH
 module-str = Touch
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif

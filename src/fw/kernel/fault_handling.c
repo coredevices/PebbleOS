@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "kernel/core_dump.h"
-#include "kernel/logging_private.h"
+#include "logging/logging_private.h"
 #include "process_management/process_manager.h"
 #include "process_management/app_manager.h"
 #include "process_management/worker_manager.h"

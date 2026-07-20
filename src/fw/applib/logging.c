@@ -4,7 +4,7 @@
 #include "drivers/rtc.h"
 #include "syscall/syscall.h"
 
-#include "kernel/logging_private.h"
+#include "logging/logging_private.h"
 #include "kernel/kernel_applib_state.h"
 
 #include "process_state/app_state/app_state.h"

@@ -10,6 +10,6 @@ if SERVICE_DATA_LOGGING
 
 module = SERVICE_DATA_LOGGING
 module-str = Data logging
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif

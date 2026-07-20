@@ -10,6 +10,6 @@ if SERVICE_I18N
 
 module = SERVICE_I18N
 module-str = Internationalization
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif

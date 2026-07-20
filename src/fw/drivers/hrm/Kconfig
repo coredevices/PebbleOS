@@ -20,6 +20,6 @@ config HRM_STUB
 
 module = DRIVER_HRM
 module-str = Heart Rate Monitor
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif # HRM

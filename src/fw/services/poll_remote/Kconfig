@@ -10,6 +10,6 @@ if SERVICE_POLL_REMOTE
 
 module = SERVICE_POLL_REMOTE
 module-str = Poll remote
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif

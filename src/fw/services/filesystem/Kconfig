@@ -10,6 +10,6 @@ if SERVICE_FILESYSTEM
 
 module = SERVICE_FILESYSTEM
 module-str = Filesystem
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif

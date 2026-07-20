@@ -10,6 +10,6 @@ if SERVICE_TICK_TIMER
 
 module = SERVICE_TICK_TIMER
 module-str = Tick timer
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif

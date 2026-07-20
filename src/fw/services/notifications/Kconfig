@@ -10,6 +10,6 @@ if SERVICE_NOTIFICATIONS
 
 module = SERVICE_NOTIFICATIONS
 module-str = Notifications
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif

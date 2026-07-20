@@ -10,6 +10,6 @@ if SERVICE_APP_OUTBOX_SERVICE
 
 module = SERVICE_APP_OUTBOX_SERVICE
 module-str = App outbox
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif

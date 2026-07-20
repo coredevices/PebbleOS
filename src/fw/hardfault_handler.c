@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "kernel/logging_private.h"
+#include "logging/logging_private.h"
 #include "system/die.h"
 #include "system/reboot_reason.h"
 #include "system/reset.h"

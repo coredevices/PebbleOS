@@ -10,6 +10,6 @@ if SERVICE_PROCESS_MANAGEMENT
 
 module = SERVICE_PROCESS_MANAGEMENT
 module-str = Process management
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif

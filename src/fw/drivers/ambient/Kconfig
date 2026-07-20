@@ -29,6 +29,6 @@ config AMBIENT_LIGHT_BITS
 
 module = DRIVER_AMBIENT
 module-str = Ambient Light Sensor
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif # AMBIENT_LIGHT

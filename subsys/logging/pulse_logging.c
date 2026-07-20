@@ -4,7 +4,7 @@
 #include "pulse_logging.h"
 
 #include "logging_private.h"
-#include "pebble_tasks.h"
+#include "kernel/pebble_tasks.h"
 
 #include "console/pulse.h"
 #include "console/pulse_protocol_impl.h"

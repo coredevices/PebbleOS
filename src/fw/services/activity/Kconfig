@@ -19,6 +19,6 @@ config SERVICE_ACTIVITY_BATCH_SAMPLES
 
 module = SERVICE_ACTIVITY
 module-str = Activity
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif

@@ -11,6 +11,6 @@ if SERVICE_VOICE
 
 module = SERVICE_VOICE
 module-str = Voice
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif

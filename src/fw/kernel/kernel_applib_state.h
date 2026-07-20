@@ -4,7 +4,7 @@
 #pragma once
 
 #include "applib/ui/animation_private.h"
-#include "kernel/logging_private.h"
+#include "logging/logging_private.h"
 #include "applib/accel_service_private.h"
 #include "applib/tick_timer_service_private.h"
 #include "applib/touch_service_private.h"

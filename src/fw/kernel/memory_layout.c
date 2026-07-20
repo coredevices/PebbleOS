@@ -3,7 +3,7 @@
 
 #include "memory_layout.h"
 
-#include "kernel/logging_private.h"
+#include "logging/logging_private.h"
 #include "system/passert.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"

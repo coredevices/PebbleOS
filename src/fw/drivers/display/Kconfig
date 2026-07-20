@@ -29,6 +29,6 @@ config DISPLAY_QEMU
 
 module = DRIVER_DISPLAY
 module-str = Display
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif # DISPLAY

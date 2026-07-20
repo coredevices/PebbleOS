@@ -35,6 +35,6 @@ config BATTERY_WARNING_SECOND_PERCENT
 
 module = SERVICE_BATTERY
 module-str = Battery
-source "src/fw/Kconfig.template.log_level"
+source "subsys/logging/Kconfig.template.log_level"
 
 endif
