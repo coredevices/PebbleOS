@@ -88,6 +88,7 @@ development/options.md
 development/building_fw.md
 development/qemu.md
 development/moddable.md
+development/CONTRIBUTING.md
 ```
 
 ```{toctree}
@@ -98,6 +99,6 @@ boards/index.md
 
 ```{toctree}
 :hidden:
-:caption: 📖 Reference 
+:caption: 📖 Reference
 reference/external.md
 ```
