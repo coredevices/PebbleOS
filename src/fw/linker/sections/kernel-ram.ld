@@ -64,8 +64,9 @@
     } >REGION_KERNEL_STACKS
     __kernel_bg_stack_size__ = . - __kernel_bg_stack_start__;
 
+    /* The heap gets whatever is left. Keep the section empty so the memory
+       usage report shows static usage only. */
     .kernel_heap (NOLOAD) : {
         _heap_start = .;
-        . = ORIGIN(REGION_KERNEL_HEAP) + LENGTH(REGION_KERNEL_HEAP);
-        _heap_end = .;
     } >REGION_KERNEL_HEAP
+    _heap_end = ORIGIN(REGION_KERNEL_HEAP) + LENGTH(REGION_KERNEL_HEAP);
