@@ -22,7 +22,7 @@ extensions = [
     "sphinx_design",
 ]
 
-exclude_patterns = ["_build", "legacy", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 nitpicky = True
 
