@@ -134,8 +134,8 @@ void vibe_set_strength(int8_t strength) {
 
   scale = ((uint16_t)strength * AW8623X_CONTCFG7_DRV2_LVL_MAX) / 100U;
 
-  ret &= prv_write_register(AW8623X_CONTCFG6, scale | AW8623X_CONTCFG6_TRACK_EN);
-  ret = prv_write_register(AW8623X_CONTCFG7, scale);
+  ret = prv_write_register(AW8623X_CONTCFG6, scale | AW8623X_CONTCFG6_TRACK_EN);
+  ret &= prv_write_register(AW8623X_CONTCFG7, scale);
   PBL_ASSERTN(ret);
 }
 
