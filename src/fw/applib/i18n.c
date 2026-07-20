@@ -14,6 +14,10 @@ const char *app_get_system_locale(void) {
 }
 
 void app_i18n_get(const char *locale, const char *string, char *buffer, size_t length) {
+  if (length == 0) {
+    // Nothing fits, and buffer[length - 1] below would wrap to an OOB write.
+    return;
+  }
   const char *system_locale = app_get_system_locale();
   if (strncmp(locale, system_locale, ISO_LOCALE_LENGTH) != 0) {
     strncpy(buffer, string, length);

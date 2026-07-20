@@ -455,6 +455,10 @@ fail:
 }
 
 void i18n_get_with_buffer(const char *msgid, char *buffer, size_t length) {
+  if (length == 0) {
+    // Nothing fits, and buffer[length - 1] below would wrap to an OOB write.
+    return;
+  }
   if (msgid == NULL || msgid[0] == 0) {
     goto fail;
   }
