@@ -88,9 +88,10 @@ static uint8_t prv_ftl_get_layout_version(void) {
 
 void ftl_add_region(uint32_t region_start, uint32_t region_end, bool erase_new_region) {
   // check if this region equals the next region, if so, then add next region
-  if ((region_start == s_region_list[s_next_region_idx].start) &&
-      (region_end == s_region_list[s_next_region_idx].end) &&
-      (s_next_region_idx < TOTAL_NUM_FLASH_REGIONS)) {
+  // (bounds check first: the array reads below are only valid when idx is in range)
+  if ((s_next_region_idx < TOTAL_NUM_FLASH_REGIONS) &&
+      (region_start == s_region_list[s_next_region_idx].start) &&
+      (region_end == s_region_list[s_next_region_idx].end)) {
     s_next_region_idx++;
   // failure, should never happen
   } else {
