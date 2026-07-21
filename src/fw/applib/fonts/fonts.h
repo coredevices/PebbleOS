@@ -38,6 +38,9 @@ GFont fonts_get_fallback_font(void);
 //! @note This may load a font from the flash peripheral into RAM.
 GFont fonts_get_system_font(const char *font_key);
 
+//! @internal
+//! Gets the largest loadable system emoji font whose height is <= font_size.
+//! @return NULL if no such font could be loaded.
 GFont fonts_get_system_emoji_font_for_size(unsigned int font_size);
 
 //! Loads a custom font.
