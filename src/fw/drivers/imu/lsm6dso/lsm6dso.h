@@ -34,6 +34,7 @@ typedef struct LSM6DSOState {
   uint8_t wk_ths_curr;
   bool recovery_pending;
   bool wu_active;
+  bool int1_requeued;
 } LSM6DSOState;
 
 typedef struct LSM6DSOConfig {

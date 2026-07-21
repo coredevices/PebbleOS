@@ -355,10 +355,18 @@ static void prv_lsm6dso_drain_fifo(void) {
 }
 
 static void prv_lsm6dso_recover(void);
+static uint32_t prv_ms_since_last_fifo_read(void);
+
+//! INT1 servicing pass kind, logged by the no-action diagnostic
+typedef enum {
+  Lsm6dsoInt1PassInitial = 0,
+  Lsm6dsoInt1PassRequeue = 1,
+  Lsm6dsoInt1PassRetry = 2,
+} Lsm6dsoInt1Pass;
 
 //! Single INT1 servicing pass; returns true if any INT source was handled.
 //! fifo_progress is set when FIFO data was consumed (samples or overrun).
-static bool prv_lsm6dso_service_int1(bool *fifo_progress) {
+static bool prv_lsm6dso_service_int1(Lsm6dsoInt1Pass pass, bool *fifo_progress) {
   bool ret;
   uint8_t fifo_status[2] = {0U, 0U};
   uint8_t all_int_src = 0U;
@@ -439,9 +447,11 @@ static bool prv_lsm6dso_service_int1(bool *fifo_progress) {
   if (!action_taken) {
     // Registers not read this pass (gated on num_samples/shake state) log as 0
     PBL_LOG_WRN("INT1 triggered but no action taken (FIFO_STATUS2 0x%02" PRIx8
-                " ALL_INT_SRC 0x%02" PRIx8 " num_samples %" PRIu16 " shake_en %d)",
+                " ALL_INT_SRC 0x%02" PRIx8 " num_samples %" PRIu16 " shake_en %d pass %u"
+                " last_read %" PRIu32 "ms ago)",
                 fifo_status[1], all_int_src, LSM6DSO->state->num_samples,
-                LSM6DSO->state->shake_detection_enabled);
+                LSM6DSO->state->shake_detection_enabled, (unsigned int)pass,
+                prv_ms_since_last_fifo_read());
   }
 
   return action_taken;
@@ -449,7 +459,14 @@ static bool prv_lsm6dso_service_int1(bool *fifo_progress) {
 
 static void prv_lsm6dso_int1_work_handler(void) {
   bool fifo_progress = false;
-  bool action_taken = prv_lsm6dso_service_int1(&fifo_progress);
+  // Best-effort pass tagging: an ISR enqueue racing a pending requeue gets
+  // labeled as a requeue; diagnostic only
+  Lsm6dsoInt1Pass pass =
+      LSM6DSO->state->int1_requeued ? Lsm6dsoInt1PassRequeue : Lsm6dsoInt1PassInitial;
+  bool action_taken;
+
+  LSM6DSO->state->int1_requeued = false;
+  action_taken = prv_lsm6dso_service_int1(pass, &fifo_progress);
 
   // Sources asserting while the pad is high produce no new edge: requeue on
   // FIFO progress, recover when nothing was serviced (stuck pad). A pad held
@@ -459,6 +476,7 @@ static void prv_lsm6dso_int1_work_handler(void) {
   }
 
   if (fifo_progress) {
+    LSM6DSO->state->int1_requeued = true;
     accel_offload_work(prv_lsm6dso_int1_work_handler);
     return;
   }
@@ -472,8 +490,9 @@ static void prv_lsm6dso_int1_work_handler(void) {
   // Retry the servicing pass once (a latched wake-up or a fresh FIFO
   // threshold is visible on re-read) and only recover if the pad is still
   // high with nothing serviced.
-  action_taken = prv_lsm6dso_service_int1(&fifo_progress);
+  action_taken = prv_lsm6dso_service_int1(Lsm6dsoInt1PassRetry, &fifo_progress);
   if (fifo_progress) {
+    LSM6DSO->state->int1_requeued = true;
     accel_offload_work(prv_lsm6dso_int1_work_handler);
   } else if (!action_taken && gpio_input_read(&LSM6DSO->int1_in)) {
     prv_lsm6dso_recover();
