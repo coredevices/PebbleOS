@@ -106,8 +106,10 @@ typedef struct FontCache {
   const FontResource *cached_font;
 } FontCache;
 
+//! @param baseline_adjust_out optional: pixels to add to the glyph's top_offset when drawing,
+//! non-zero only when another font (emoji or system fallback) supplied the glyph
 const GlyphData *text_resources_get_glyph(FontCache *font_cache, Codepoint codepoint,
-                                          FontInfo *font_info);
+                                          FontInfo *font_info, int16_t *baseline_adjust_out);
 
 int8_t text_resources_get_glyph_horiz_advance(FontCache *font_cache, Codepoint codepoint,
                                               FontInfo *font_info);

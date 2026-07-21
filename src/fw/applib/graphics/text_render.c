@@ -60,11 +60,16 @@ void render_glyph(GContext* const ctx, const uint32_t codepoint, FontInfo* const
     return;
   }
 
-  const GlyphData* glyph = text_resources_get_glyph(&ctx->font_cache, codepoint, font);
+  int16_t baseline_adjust = 0;
+  const GlyphData* glyph = text_resources_get_glyph(&ctx->font_cache, codepoint, font,
+                                                    &baseline_adjust);
 
   PBL_ASSERTN(glyph);
   // Bitfiddle the metrics data:
   GRect glyph_metrics = get_glyph_rect(glyph);
+  // Sit a substituted glyph on the primary font's baseline. Must happen before the target and
+  // clipping rects are derived from it.
+  glyph_metrics.origin.y += baseline_adjust;
 
   // Calculate the box that we intend to draw to the screen, in screen coordinates
   GRect glyph_target = {

@@ -903,7 +903,7 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
             cursor.origin.x += walked_width_px;
 
             if (!codepoint_is_zero_width(rcp)) {
-              text_resources_get_glyph(&ctx->font_cache, rcp, text_box_params->font);
+              text_resources_get_glyph(&ctx->font_cache, rcp, text_box_params->font, NULL);
               render_glyph(ctx, rcp, text_box_params->font, cursor);
             }
 
@@ -949,7 +949,7 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
             cursor.origin.x += walked_width_px;
 
             if (!codepoint_is_zero_width(draw_cp)) {
-              text_resources_get_glyph(&ctx->font_cache, draw_cp, text_box_params->font);
+              text_resources_get_glyph(&ctx->font_cache, draw_cp, text_box_params->font, NULL);
               render_glyph(ctx, draw_cp, text_box_params->font, cursor);
             }
 
@@ -977,7 +977,8 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
         .size.h = fonts_get_font_height(text_box_params->font)
       };
       cursor.origin.x += walked_width_px;
-      text_resources_get_glyph(&ctx->font_cache, line->suffix_codepoint, text_box_params->font);
+      text_resources_get_glyph(&ctx->font_cache, line->suffix_codepoint, text_box_params->font,
+                               NULL);
       render_glyph(ctx, line->suffix_codepoint, text_box_params->font, cursor);
     }
 
@@ -1030,7 +1031,7 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
       if (is_render && !codepoint_is_zero_width(current_draw_cp) &&
           !codepoint_is_unicode_space(current_draw_cp)) {
         // Pre-load here so the deeper render_glyph() is a cache hit, not a deep flash read.
-        text_resources_get_glyph(&ctx->font_cache, current_draw_cp, text_box_params->font);
+        text_resources_get_glyph(&ctx->font_cache, current_draw_cp, text_box_params->font, NULL);
       }
 
       char_visitor_cb(ctx, text_box_params, line, cursor, current_draw_cp);
@@ -1115,7 +1116,8 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
     cursor.origin.x += walked_width_px;
     if (char_visitor_cb) {
       if (is_render) {
-        text_resources_get_glyph(&ctx->font_cache, line->suffix_codepoint, text_box_params->font);
+        text_resources_get_glyph(&ctx->font_cache, line->suffix_codepoint, text_box_params->font,
+                                 NULL);
       }
       char_visitor_cb(ctx, text_box_params, line, cursor, line->suffix_codepoint);
     }

@@ -533,24 +533,34 @@ static bool prv_load_font_res(ResAppNum app_num, uint32_t resource_id, FontResou
   return true;
 }
 
+// @param owner_out if non-NULL, receives the FontInfo owning the returned resource. It is a font
+// other than font_info only when the emoji font takes over.
 static const FontResource *prv_font_res_for_codepoint(Codepoint codepoint,
-                                                      const FontInfo *font_info) {
+                                                      const FontInfo *font_info,
+                                                      const FontInfo **owner_out) {
+  const FontInfo *owner = font_info;
+  const FontResource *font_res = &font_info->base;
+
   if (!codepoint_is_latin(codepoint) &&
       !codepoint_is_emoji(codepoint) &&
       !codepoint_is_special(codepoint) &&
       font_info->extended) {
     // Latin & emoji codepoints are in base, others are in extension
-    return (&font_info->extension);
+    font_res = &font_info->extension;
   } else if (codepoint_is_emoji(codepoint) &&
              font_info->base.app_num == SYSTEM_APP) {
-    // Assuming we are using base
-    FontInfo *emoji_font = fonts_get_system_emoji_font_for_size(font_info->max_height);
+    // Size against the base: that is the baseline emoji glyphs get aligned to when drawn
+    FontInfo *emoji_font = fonts_get_system_emoji_font_for_size(font_info->base.md.max_height);
     if (emoji_font) {
-      return &emoji_font->base;
+      owner = emoji_font;
+      font_res = &emoji_font->base;
     }
   }
 
-  return (&font_info->base);
+  if (owner_out) {
+    *owner_out = owner;
+  }
+  return font_res;
 }
 
 static void prv_resource_changed_callback(void *data) {
@@ -589,22 +599,44 @@ bool text_resources_init_font(ResAppNum app_num, uint32_t font_resource,
 // Leaf glyph lookup against a single font. This NEVER consults the fallback font, which is what
 // structurally bounds the fallback to depth 1: the fallback font is looked up with this helper, so
 // it can never trigger a further fallback and no recursion or cycle is possible.
+// @param owner_out if non-NULL, receives the FontInfo the glyph was looked up in
 static const GlyphData *prv_get_glyph_in_font(FontCache *font_cache, Codepoint codepoint,
-                                              FontInfo *font_info, bool need_bitmap) {
-  const FontResource *font_res = prv_font_res_for_codepoint(codepoint, font_info);
+                                              FontInfo *font_info, bool need_bitmap,
+                                              const FontInfo **owner_out) {
+  const FontResource *font_res = prv_font_res_for_codepoint(codepoint, font_info, owner_out);
   prv_check_font_cache(font_cache, font_res);
   return prv_get_glyph_metadata_from_spi(codepoint, font_cache, font_res, need_bitmap);
 }
 
+// A substitute font bakes top_offset against its own baseline (== base max_height for PBF), so
+// drop its glyphs onto ours. Our own base/extension are already aligned; never shift up.
+static int16_t prv_baseline_adjust(const FontInfo *font_info, const FontInfo *owner) {
+  if (owner == NULL || owner == font_info) {
+    return 0;
+  }
+  return MAX(0, (int16_t)font_info->base.md.max_height - (int16_t)owner->base.md.max_height);
+}
+
 static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint,
-                                      FontInfo *font_info, bool need_bitmap) {
+                                      FontInfo *font_info, bool need_bitmap,
+                                      int16_t *baseline_adjust_out) {
+  if (baseline_adjust_out) {
+    *baseline_adjust_out = 0;
+  }
+
   if (!font_info->loaded) {
     sys_font_reload_font(font_info);
   }
 
+  const FontInfo *owner = NULL;
+
   // (a) Requested codepoint in the primary font.
-  const GlyphData *data = prv_get_glyph_in_font(font_cache, codepoint, font_info, need_bitmap);
+  const GlyphData *data = prv_get_glyph_in_font(font_cache, codepoint, font_info, need_bitmap,
+                                                &owner);
   if (data) {
+    if (baseline_adjust_out) {
+      *baseline_adjust_out = prv_baseline_adjust(font_info, owner);
+    }
     return data;
   }
 
@@ -620,8 +652,12 @@ static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint
     if (!fallback->loaded) {
       sys_font_reload_font(fallback);
     }
-    data = prv_get_glyph_in_font(font_cache, codepoint, fallback, need_bitmap);
+    data = prv_get_glyph_in_font(font_cache, codepoint, fallback, need_bitmap, &owner);
     if (data) {
+      // Baseline is still the caller's font, not the fallback's
+      if (baseline_adjust_out) {
+        *baseline_adjust_out = prv_baseline_adjust(font_info, owner);
+      }
       return data;
     }
   }
@@ -633,8 +669,11 @@ static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint
   //     missing-glyph box is the correct indicator.
   const Codepoint substitutes[] = { font_info->base.md.wildcard_codepoint, ' ' };
   for (unsigned int i = 0; i < ARRAY_LENGTH(substitutes); i++) {
-    data = prv_get_glyph_in_font(font_cache, substitutes[i], font_info, need_bitmap);
+    data = prv_get_glyph_in_font(font_cache, substitutes[i], font_info, need_bitmap, &owner);
     if (data) {
+      if (baseline_adjust_out) {
+        *baseline_adjust_out = prv_baseline_adjust(font_info, owner);
+      }
       return data;
     }
   }
@@ -645,7 +684,8 @@ static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint
 int8_t text_resources_get_glyph_horiz_advance(FontCache *font_cache, const Codepoint codepoint,
                                               FontInfo *font_info) {
   // Metadata only: measuring must not pay the deep bitmap load; render pre-loads it in walk_line().
-  const GlyphData *g = prv_get_glyph(font_cache, codepoint, font_info, false /* need_bitmap */);
+  const GlyphData *g = prv_get_glyph(font_cache, codepoint, font_info, false /* need_bitmap */,
+                                     NULL);
   if (!g) {
     return 0;
   }
@@ -653,6 +693,7 @@ int8_t text_resources_get_glyph_horiz_advance(FontCache *font_cache, const Codep
 }
 
 const GlyphData *text_resources_get_glyph(FontCache *font_cache, const Codepoint codepoint,
-                                          FontInfo *font_info) {
-  return prv_get_glyph(font_cache, codepoint, font_info, true /* need_bitmap */);
+                                          FontInfo *font_info, int16_t *baseline_adjust_out) {
+  return prv_get_glyph(font_cache, codepoint, font_info, true /* need_bitmap */,
+                       baseline_adjust_out);
 }

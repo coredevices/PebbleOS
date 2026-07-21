@@ -11,9 +11,14 @@
 
 FontInfo *s_test_fallback_font;
 
+// The only named keys the code under test asks for are the system emoji fonts, requested through
+// fonts_get_system_emoji_font_for_size(); a test installs one by pointing s_test_emoji_font at its
+// own FontInfo.
+FontInfo *s_test_emoji_font;
+
 GFont sys_font_get_system_font(const char *key) {
   if (key == NULL) {
     return s_test_fallback_font;
   }
-  return NULL;
+  return s_test_emoji_font;
 }

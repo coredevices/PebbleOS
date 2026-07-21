@@ -20,7 +20,8 @@ GBitmap* graphics_context_get_bitmap(GContext* ctx) { return NULL; }
 void graphics_context_mark_dirty_rect(GContext* ctx, GRect rect) {}
 
 const GlyphData* text_resources_get_glyph(FontCache* font_cache, const Codepoint codepoint,
-                                          FontInfo* fontinfo) { return NULL; }
+                                          FontInfo* fontinfo,
+                                          int16_t *baseline_adjust_out) { return NULL; }
 
 
 extern int32_t prv_convert_1bit_addr_to_8bit_x(GBitmap *dest_bitmap, uint32_t *block_addr,
