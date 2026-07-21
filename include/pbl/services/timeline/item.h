@@ -97,8 +97,10 @@ typedef enum {
   TimelineItemFlagFromANCS = 1 << 4,
   /** The item stays in Timeline Peek for its whole duration. */
   TimelineItemFlagPersistent = 1 << 5,
+  /** The notification was silenced on the phone, e.g. by a Focus mode. */
+  TimelineItemFlagSilent = 1 << 6,
   /** Mask of the bits not covered above. */
-  TimelineItemFlagUnused = ~((1 << 6) - 1)
+  TimelineItemFlagUnused = ~((1 << 7) - 1)
 } TimelineItemFlag;
 
 /** @brief Types of actions, as used on the wire. */
@@ -239,6 +241,10 @@ typedef struct PBL_PACKED {
       uint8_t from_watch : 1;
       /** The notification was received through ANCS (iOS). */
       uint8_t ancs_notif : 1;
+      /** See TimelineItemFlagPersistent. */
+      uint8_t : 1;
+      /** The notification was silenced on the phone, e.g. by a Focus mode. */
+      uint8_t silent : 1;
     };
     /** All flags, see TimelineItemFlag. */
     uint8_t flags;
