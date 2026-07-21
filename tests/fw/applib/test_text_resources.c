@@ -467,6 +467,132 @@ void test_text_resources__fallback_miss_yields_primary_wildcard(void) {
   cl_assert_equal_m(gothic_wildcard, g->data, glyph_get_size_bytes(g));
 }
 
+// Glyph-presence-driven routing (in-font base<->extension rescue)
+////////////////////////////////////
+
+// Mirror of #1709: a codepoint whose Unicode class routes it to the EXTENSION but which lives only
+// in the BASE (e.g. pi U+03C0) must still resolve to the base glyph once an extension is loaded,
+// instead of degrading to the fallback/wildcard. Works on the shipped fixtures: GOTHIC_18 base
+// carries U+03C0, the CJK extension does not.
+void test_text_resources__extension_routed_miss_rescued_from_base(void) {
+  const Codepoint PI = 0x03C0;
+
+  // Reference: base-only GOTHIC_18 resolves U+03C0 to its own glyph (no extension, so it routes to
+  // base directly).
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_18, 0, &s_font_info));
+  const GlyphData *base_g = text_resources_get_glyph(&s_font_cache, PI, &s_font_info, NULL);
+  cl_assert(base_g != NULL);
+  uint8_t base_size = glyph_get_size_bytes(base_g);
+  uint8_t base_bytes[CACHE_GLYPH_SIZE];
+  cl_assert(base_size <= sizeof(base_bytes));
+  memcpy(base_bytes, base_g->data, base_size);
+
+  // Now load GOTHIC_18 + CJK extension. U+03C0 is not latin-classified, so it routes to the
+  // extension, which lacks it. Without the in-font rescue this misses and yields the wildcard.
+  memset(&s_font_info, 0, sizeof(s_font_info));
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_18,
+                                     RESOURCE_ID_GOTHIC_18_EXTENDED, &s_font_info));
+  cl_assert(s_font_info.extended);
+
+  memset(&s_font_cache, 0, sizeof(s_font_cache));
+  keyed_circular_cache_init(&s_font_cache.line_cache, s_font_cache.cache_keys,
+                            s_font_cache.cache_data, sizeof(LineCacheData), LINE_CACHE_SIZE);
+
+  int16_t adjust = -1;
+  const GlyphData *g = text_resources_get_glyph(&s_font_cache, PI, &s_font_info, &adjust);
+  cl_assert(g != NULL);
+  cl_assert_equal_i(glyph_get_size_bytes(g), base_size);
+  cl_assert_equal_m(base_bytes, g->data, base_size);  // rescued from base, not the wildcard
+  cl_assert_equal_i(adjust, 0);                        // owner is the primary font
+}
+
+// #1709 itself: a latin-classified codepoint absent from the base but present in the extension must
+// resolve from the extension. The shipped GOTHIC_18 base already carries the extension's only latin
+// codepoint (U+2026), so we pair the extension with a base font that lacks it — GOTHIC_18_EMOJI —
+// which faithfully exercises the base-routed -> extension rescue path.
+void test_text_resources__base_routed_miss_rescued_from_extension(void) {
+  const Codepoint ELLIPSIS = 0x2026;
+
+  // Reference: the extension's own U+2026 glyph, captured by loading the extension as a base font.
+  static FontInfo s_probe;
+  memset(&s_probe, 0, sizeof(s_probe));
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_18_EXTENDED, 0, &s_probe));
+  const GlyphData *ext_g = text_resources_get_glyph(&s_font_cache, ELLIPSIS, &s_probe, NULL);
+  cl_assert(ext_g != NULL);
+  uint8_t ext_size = glyph_get_size_bytes(ext_g);
+  uint8_t ext_bytes[CACHE_GLYPH_SIZE];
+  cl_assert(ext_size <= sizeof(ext_bytes));
+  memcpy(ext_bytes, ext_g->data, ext_size);
+
+  // Base = emoji font (lacks U+2026) + CJK extension (has U+2026). U+2026 is latin-classified, so
+  // it routes to base, misses, and must be rescued from the extension.
+  memset(&s_font_info, 0, sizeof(s_font_info));
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_18_EMOJI,
+                                     RESOURCE_ID_GOTHIC_18_EXTENDED, &s_font_info));
+  cl_assert(s_font_info.extended);
+
+  memset(&s_font_cache, 0, sizeof(s_font_cache));
+  keyed_circular_cache_init(&s_font_cache.line_cache, s_font_cache.cache_keys,
+                            s_font_cache.cache_data, sizeof(LineCacheData), LINE_CACHE_SIZE);
+
+  int16_t adjust = -1;
+  const GlyphData *g = text_resources_get_glyph(&s_font_cache, ELLIPSIS, &s_font_info, &adjust);
+  cl_assert(g != NULL);
+  cl_assert_equal_i(glyph_get_size_bytes(g), ext_size);
+  cl_assert_equal_m(ext_bytes, g->data, ext_size);  // rescued from extension, not the wildcard
+  cl_assert_equal_i(adjust, 0);                       // owner is the primary font
+}
+
+// Regression guards for the in-font rescue: (a) a codepoint present in the routed resource still
+// wins over the other resource, and (b) a codepoint absent from both still yields the wildcard.
+void test_text_resources__in_font_rescue_regressions(void) {
+  const Codepoint ELLIPSIS = 0x2026;
+  const Codepoint ABSENT = 0x8888;  // absent from base, extension and fallback
+
+  // Base-only references for U+2026 (base carries its own ellipsis) and the wildcard for U+8888.
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_18, 0, &s_font_info));
+
+  const GlyphData *base_ellipsis = text_resources_get_glyph(&s_font_cache, ELLIPSIS, &s_font_info,
+                                                            NULL);
+  cl_assert(base_ellipsis != NULL);
+  uint8_t base_ellipsis_size = glyph_get_size_bytes(base_ellipsis);
+  uint8_t base_ellipsis_bytes[CACHE_GLYPH_SIZE];
+  cl_assert(base_ellipsis_size <= sizeof(base_ellipsis_bytes));
+  memcpy(base_ellipsis_bytes, base_ellipsis->data, base_ellipsis_size);
+
+  const GlyphData *base_wildcard = text_resources_get_glyph(&s_font_cache, ABSENT, &s_font_info,
+                                                            NULL);
+  cl_assert(base_wildcard != NULL);
+  uint8_t wildcard_size = glyph_get_size_bytes(base_wildcard);
+  uint8_t wildcard_bytes[CACHE_GLYPH_SIZE];
+  cl_assert(wildcard_size <= sizeof(wildcard_bytes));
+  memcpy(wildcard_bytes, base_wildcard->data, wildcard_size);
+
+  // Load GOTHIC_18 + CJK extension. Both base and extension carry U+2026 (with different bitmaps),
+  // so the routed resource (base) must win.
+  memset(&s_font_info, 0, sizeof(s_font_info));
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_18,
+                                     RESOURCE_ID_GOTHIC_18_EXTENDED, &s_font_info));
+  cl_assert(s_font_info.extended);
+
+  memset(&s_font_cache, 0, sizeof(s_font_cache));
+  keyed_circular_cache_init(&s_font_cache.line_cache, s_font_cache.cache_keys,
+                            s_font_cache.cache_data, sizeof(LineCacheData), LINE_CACHE_SIZE);
+
+  // (a) routed resource wins: U+2026 resolves to the BASE bytes, not the extension's.
+  const GlyphData *g_ellipsis = text_resources_get_glyph(&s_font_cache, ELLIPSIS, &s_font_info,
+                                                         NULL);
+  cl_assert(g_ellipsis != NULL);
+  cl_assert_equal_i(glyph_get_size_bytes(g_ellipsis), base_ellipsis_size);
+  cl_assert_equal_m(base_ellipsis_bytes, g_ellipsis->data, base_ellipsis_size);
+
+  // (b) absent everywhere still yields the primary wildcard.
+  const GlyphData *g_absent = text_resources_get_glyph(&s_font_cache, ABSENT, &s_font_info, NULL);
+  cl_assert(g_absent != NULL);
+  cl_assert_equal_i(glyph_get_size_bytes(g_absent), wildcard_size);
+  cl_assert_equal_m(wildcard_bytes, g_absent->data, wildcard_size);
+}
+
 void test_text_resources__test_glyph_decompression(void) {
   // There is no way to get the list of glyphs present in a font with the existing API. This list
   // of ranges lists the 371 glyphs currently in fontname.ttf

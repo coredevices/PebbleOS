@@ -599,13 +599,33 @@ bool text_resources_init_font(ResAppNum app_num, uint32_t font_resource,
 // Leaf glyph lookup against a single font. This NEVER consults the fallback font, which is what
 // structurally bounds the fallback to depth 1: the fallback font is looked up with this helper, so
 // it can never trigger a further fallback and no recursion or cycle is possible.
+// Classification only picks which of the font's own resources to try FIRST: on a miss we retry the
+// font's other own resource, so a codepoint whose class routes it to base/extension is still found
+// in the other one. Skipped when the emoji font took over (owner != font_info).
 // @param owner_out if non-NULL, receives the FontInfo the glyph was looked up in
 static const GlyphData *prv_get_glyph_in_font(FontCache *font_cache, Codepoint codepoint,
                                               FontInfo *font_info, bool need_bitmap,
                                               const FontInfo **owner_out) {
-  const FontResource *font_res = prv_font_res_for_codepoint(codepoint, font_info, owner_out);
+  const FontInfo *owner = font_info;
+  const FontResource *font_res = prv_font_res_for_codepoint(codepoint, font_info, &owner);
   prv_check_font_cache(font_cache, font_res);
-  return prv_get_glyph_metadata_from_spi(codepoint, font_cache, font_res, need_bitmap);
+  const GlyphData *data = prv_get_glyph_metadata_from_spi(codepoint, font_cache, font_res,
+                                                          need_bitmap);
+  // Routed resource missed: try the font's other own resource. Classification is a lookup-order
+  // hint, not a hard partition. Skipped when the emoji font took over.
+  if (!data && owner == font_info) {
+    const FontResource *other = (font_res == &font_info->base)
+        ? (font_info->extended ? &font_info->extension : NULL)
+        : &font_info->base;
+    if (other) {
+      prv_check_font_cache(font_cache, other);
+      data = prv_get_glyph_metadata_from_spi(codepoint, font_cache, other, need_bitmap);
+    }
+  }
+  if (owner_out) {
+    *owner_out = owner;
+  }
+  return data;
 }
 
 // A substitute font bakes top_offset against its own baseline (== base max_height for PBF), so
