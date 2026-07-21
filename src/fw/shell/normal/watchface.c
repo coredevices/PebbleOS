@@ -13,6 +13,7 @@
 #include "kernel/event_loop.h"
 #include "kernel/low_power.h"
 #include "kernel/ui/modals/modal_manager.h"
+#include "popups/pin_lock/unlock_window.h"
 #include "popups/timeline/peek.h"
 #include "process_management/app_manager.h"
 #include "process_management/pebble_process_md.h"
@@ -109,6 +110,16 @@ static bool prv_is_any_combo_active(void) {
          prv_is_combo_pressed(COMBO_UP_DOWN_BUTTONS);
 }
 
+// When the watch is locked, present the PIN unlock modal instead of navigating
+// away from the watchface. Returns true if navigation must be blocked.
+static bool prv_blocked_by_lock(void) {
+  if (pin_lock_is_locked()) {
+    pin_unlock_window_push();
+    return true;
+  }
+  return false;
+}
+
 static void prv_combo_back_timer_callback(void *data) {
   s_combo_back_hold_timer = NULL;
   if (!prv_is_combo_pressed(s_active_combo_buttons)) {
@@ -128,6 +139,9 @@ static void prv_combo_back_timer_callback(void *data) {
   if (app_id != INSTALL_ID_INVALID) {
     // Reset all button states before launching app to prevent state corruption.
     s_buttons_pressed = BIT_CLEAR;
+    if (prv_blocked_by_lock()) {
+      return;
+    }
     app_manager_put_launch_app_event(&(AppLaunchEventConfig) {
       .id = app_id,
       .common.reason = APP_LAUNCH_QUICK_LAUNCH,
@@ -254,6 +268,10 @@ static void prv_quick_launch_handler(ClickRecognizerRef recognizer, void *data) 
     return;
   }
 
+  if (prv_blocked_by_lock()) {
+    return;
+  }
+
   AppInstallId app_id = quick_launch_is_enabled(button) ? quick_launch_get_app(button)
                                                         : INSTALL_ID_INVALID;
   if (app_id == INSTALL_ID_INVALID) {
@@ -271,7 +289,11 @@ static void prv_launch_up_down(ClickRecognizerRef recognizer, void *data) {
   if (prv_is_any_combo_active()) {
     return;
   }
-  
+
+  if (prv_blocked_by_lock()) {
+    return;
+  }
+
   if (!quick_launch_single_click_is_enabled(button)) return;
   const AppInstallId app_id = quick_launch_single_click_get_app(button);
 
@@ -287,6 +309,9 @@ static void prv_configure_click_handler(ButtonId button_id, ClickHandler single_
 }
 
 static void prv_launch_launcher_app(ClickRecognizerRef recognizer, void *data) {
+  if (prv_blocked_by_lock()) {
+    return;
+  }
   static const LauncherMenuArgs s_launcher_args = { .reset_scroll = true };
   prv_launch_app_via_button(&(AppLaunchEventConfig) {
     .id = APP_ID_LAUNCHER_MENU,

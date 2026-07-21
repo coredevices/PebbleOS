@@ -1211,6 +1211,12 @@ DEFINE_SYSCALL(bool, sys_activity_prefs_heart_rate_is_enabled, void) {
 
 
 // ------------------------------------------------------------------------------------------------
+DEFINE_SYSCALL(bool, sys_activity_prefs_tracking_is_enabled, void) {
+  return activity_prefs_tracking_is_enabled();
+}
+
+
+// ------------------------------------------------------------------------------------------------
 typedef struct {
   HealthMinuteData *minute_data;
   uint32_t *num_records;

@@ -73,4 +73,8 @@ clar(ctx,
      sources_ant_glob = "src/fw/util/sle.c",
      test_sources_ant_glob = "test_sle.c")
 
+clar(ctx,
+     sources_ant_glob = "src/fw/util/sha2.c",
+     test_sources_ant_glob = "test_sha2.c")
+
 # vim:filetype=python
