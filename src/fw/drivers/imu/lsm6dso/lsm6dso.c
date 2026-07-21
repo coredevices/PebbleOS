@@ -360,7 +360,7 @@ static void prv_lsm6dso_recover(void);
 //! fifo_progress is set when FIFO data was consumed (samples or overrun).
 static bool prv_lsm6dso_service_int1(bool *fifo_progress) {
   bool ret;
-  uint8_t fifo_status2 = 0U;
+  uint8_t fifo_status[2] = {0U, 0U};
   uint8_t all_int_src = 0U;
   bool action_taken = false;
   bool fifo_overrun = false;
@@ -373,23 +373,19 @@ static bool prv_lsm6dso_service_int1(bool *fifo_progress) {
   // on these reads, so deferring it avoids stretching the gap between the FIFO
   // read and the ALL_INT_SRC read if this task gets preempted mid-handler.
   if (LSM6DSO->state->num_samples > 0U) {
-    ret = prv_lsm6dso_read(LSM6DSO_FIFO_STATUS2, &fifo_status2, 1);
+    // WTM/OVR flags and DIFF must come from one burst read: a split read can
+    // catch the FIFO counter mid-update and see WTM_IA set with DIFF reading 0
+    ret = prv_lsm6dso_read(LSM6DSO_FIFO_STATUS1, fifo_status, 2);
     if (!ret) {
-      PBL_LOG_ERR("Could not read FIFO_STATUS2 register");
+      PBL_LOG_ERR("Could not read FIFO_STATUS registers");
       return false;
     }
 
-    if ((fifo_status2 & LSM6DSO_FIFO_STATUS2_FIFO_OVR_IA) != 0U) {
+    if ((fifo_status[1] & LSM6DSO_FIFO_STATUS2_FIFO_OVR_IA) != 0U) {
       fifo_overrun = true;
-    } else if ((fifo_status2 & LSM6DSO_FIFO_STATUS2_FIFO_WTM_IA) != 0U) {
-      uint8_t status1;
-
-      if (!prv_lsm6dso_read(LSM6DSO_FIFO_STATUS1, &status1, 1)) {
-        PBL_LOG_ERR("Could not read FIFO_STATUS1 register");
-        return false;
-      }
-
-      samples = (((uint16_t)(fifo_status2 & LSM6DSO_FIFO_STATUS2_DIFF_HI_MASK)) << 8U) | status1;
+    } else if ((fifo_status[1] & LSM6DSO_FIFO_STATUS2_FIFO_WTM_IA) != 0U) {
+      samples = (((uint16_t)(fifo_status[1] & LSM6DSO_FIFO_STATUS2_DIFF_HI_MASK)) << 8U) |
+                fifo_status[0];
       if (samples > LSM6DSO_FIFO_SIZE) {
         samples = LSM6DSO_FIFO_SIZE;
       }
@@ -444,7 +440,7 @@ static bool prv_lsm6dso_service_int1(bool *fifo_progress) {
     // Registers not read this pass (gated on num_samples/shake state) log as 0
     PBL_LOG_WRN("INT1 triggered but no action taken (FIFO_STATUS2 0x%02" PRIx8
                 " ALL_INT_SRC 0x%02" PRIx8 " num_samples %" PRIu16 " shake_en %d)",
-                fifo_status2, all_int_src, LSM6DSO->state->num_samples,
+                fifo_status[1], all_int_src, LSM6DSO->state->num_samples,
                 LSM6DSO->state->shake_detection_enabled);
   }
 
