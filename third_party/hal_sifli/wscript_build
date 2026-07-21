@@ -167,7 +167,7 @@ if bld.env.CONFIG_HAL_SIFLI_SF32LB52:
         micro_sources += [
             'SiFli-SDK/drivers/cmsis/sf32lb52x/bf0_lcpu_init.c',
             'SiFli-SDK/drivers/cmsis/sf32lb52x/lcpu_patch.c',
-            'SiFli-SDK/drivers/cmsis/sf32lb52x/lcpu_patch_rev_b.c',
+            '../nonfree/pebbleos-nonfree/sf32lb52/lcpu_patch_rev_b.c',
             'SiFli-SDK/drivers/cmsis/sf32lb52x/bt_rf_fulcal.c',
             'sf32lb52/lcpu_config.c',
         ]
