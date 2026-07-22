@@ -412,6 +412,7 @@ static void prv_sanity_check_block(Heap * const heap, HeapInfo_t *block) {
 }
 
 //! Finds a segment where data of the size n_units  will fit.
+//!     @param heap the heap to search.
 //!     @param n_units number of ALIGNMENT_SIZE units this segment requires.
 static HeapInfo_t *find_segment(Heap* const heap, unsigned long n_units) {
   HeapInfo_t *heap_info_ptr = NULL;
@@ -457,6 +458,8 @@ static HeapInfo_t *find_segment(Heap* const heap, unsigned long n_units) {
 //! Split a block into two smaller blocks, returning a pointer to the new second block.
 //! The first block will be available at the same location as before, but with a smaller size.
 //! Assumes the block is big enough to be split and is unallocated.
+//! @param heap the heap the block belongs to.
+//! @param block the block to split.
 //! @param first_part_size the size of the new block, in ALIGNMENT_SIZE units, including the beginer
 static HeapInfo_t* split_block(Heap *heap, HeapInfo_t* block, size_t first_part_size) {
   HeapInfo_t* second_block = (HeapInfo_t*) (((Alignment_t*) block) + first_part_size);
@@ -482,6 +485,7 @@ static HeapInfo_t* split_block(Heap *heap, HeapInfo_t* block, size_t first_part_
 }
 
 //! Allocated the block in the given HeapInfo_t segment.
+//!     @param heap the heap to allocate from.
 //!     @param n_units number of ALIGNMENT_SIZE units this segment requires (including space for the beginer).
 //!     @param heap_info_ptr the segment where the block should be allocated.
 static HeapInfo_t *allocate_block(Heap* const heap, unsigned long n_units, HeapInfo_t* heap_info_ptr) {
