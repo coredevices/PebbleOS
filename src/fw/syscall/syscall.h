@@ -315,3 +315,10 @@ bool sys_do_not_disturb_is_active(void);
 //! @param timestamp_out Set to the UTC time of the next enabled alarm.
 //! @return True if at least one enabled alarm is scheduled.
 bool sys_alarm_get_next_enabled(time_t *timestamp_out);
+
+#ifdef CONFIG_TOUCH_CLICK_SYNTHESIS
+#include "services/touch/touch_click_synth.h"
+//! Publish (or clear) the focused window's action bar descriptor to the
+//! touch-to-click synthesis bridge running on KernelMain.
+void sys_touch_click_synth_set_action_bar(const ActionBarSynthDescriptor *descriptor);
+#endif

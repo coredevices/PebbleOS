@@ -149,7 +149,21 @@ void test_touch_click_synth__initialize(void) {
   touch_service_set_globally_enabled(true);
   touch_click_synth_init();
 
+  // No action bar published by default.
+  ActionBarSynthDescriptor no_bar = { 0 };
+  touch_click_synth_set_action_bar(&no_bar);
+
   fake_event_set_callback(prv_capture);
+}
+
+// Publish an action bar occupying the right edge, with the given icon mask.
+static void prv_set_action_bar(int16_t x, int16_t y, int16_t w, int16_t h, uint8_t icon_mask) {
+  ActionBarSynthDescriptor desc = {
+    .present = true,
+    .frame = { .origin = { x, y }, .size = { w, h } },
+    .icon_mask = icon_mask,
+  };
+  touch_click_synth_set_action_bar(&desc);
 }
 
 void test_touch_click_synth__cleanup(void) {
@@ -320,4 +334,80 @@ void test_touch_click_synth__recheck_blocks_stale_active_at_watchface(void) {
 
   prv_tap(100, 100, 80);
   cl_assert_equal_i(s_cap_n, 0);
+}
+
+// --- action bar tap routing -------------------------------------------------
+
+// A right-edge action bar 34px wide, 168px tall, split into three 56px zones:
+// UP [0,56), SELECT [56,112), DOWN [112,168).
+#define AB_X 166
+#define AB_W 34
+#define AB_H 168
+#define AB_MASK_ALL (ACTION_BAR_SYNTH_ICON_UP | ACTION_BAR_SYNTH_ICON_SELECT | \
+                     ACTION_BAR_SYNTH_ICON_DOWN)
+
+void test_touch_click_synth__tap_on_action_bar_up_zone_synthesizes_up(void) {
+  prv_focus(true);
+  prv_set_action_bar(AB_X, 0, AB_W, AB_H, AB_MASK_ALL);
+  prv_tap(180, 20, 80);  // top zone
+  prv_assert_single_click(BUTTON_ID_UP);
+}
+
+void test_touch_click_synth__tap_on_action_bar_select_zone_synthesizes_select(void) {
+  prv_focus(true);
+  prv_set_action_bar(AB_X, 0, AB_W, AB_H, AB_MASK_ALL);
+  prv_tap(180, 84, 80);  // middle zone
+  prv_assert_single_click(BUTTON_ID_SELECT);
+}
+
+void test_touch_click_synth__tap_on_action_bar_down_zone_synthesizes_down(void) {
+  prv_focus(true);
+  prv_set_action_bar(AB_X, 0, AB_W, AB_H, AB_MASK_ALL);
+  prv_tap(180, 150, 80);  // bottom zone
+  prv_assert_single_click(BUTTON_ID_DOWN);
+}
+
+void test_touch_click_synth__tap_left_of_action_bar_synthesizes_select(void) {
+  prv_focus(true);
+  prv_set_action_bar(AB_X, 0, AB_W, AB_H, AB_MASK_ALL);
+  prv_tap(80, 20, 80);  // outside the bar (main content area)
+  prv_assert_single_click(BUTTON_ID_SELECT);
+}
+
+// A zone whose icon is absent falls back to SELECT rather than a dead tap.
+void test_touch_click_synth__tap_on_iconless_zone_falls_back_to_select(void) {
+  prv_focus(true);
+  prv_set_action_bar(AB_X, 0, AB_W, AB_H, ACTION_BAR_SYNTH_ICON_SELECT);  // only SELECT
+  prv_tap(180, 20, 80);  // UP zone, but no UP icon
+  prv_assert_single_click(BUTTON_ID_SELECT);
+}
+
+void test_touch_click_synth__no_action_bar_right_edge_tap_synthesizes_select(void) {
+  prv_focus(true);
+  // No action bar published (initialize cleared it).
+  prv_tap(180, 20, 80);  // right edge, but no bar
+  prv_assert_single_click(BUTTON_ID_SELECT);
+}
+
+// A swipe is unaffected by the action bar: it stays a full-screen UP/DOWN.
+void test_touch_click_synth__swipe_over_action_bar_still_scrolls(void) {
+  prv_focus(true);
+  prv_set_action_bar(AB_X, 0, AB_W, AB_H, AB_MASK_ALL);
+  prv_swipe(180, 150, 180, 100);  // finger up over the bar -> content down
+  prv_assert_single_click(BUTTON_ID_DOWN);
+}
+
+// Leaving the foreground clears the descriptor so it can't route later taps.
+void test_touch_click_synth__deactivation_clears_action_bar(void) {
+  prv_focus(true);
+  prv_set_action_bar(AB_X, 0, AB_W, AB_H, AB_MASK_ALL);
+
+  s_is_watchface = true;
+  prv_focus(false);   // back to the watchface -> bridge deactivates
+
+  // Re-enter a (different) app with no action bar; a right-edge tap is SELECT.
+  s_is_watchface = false;
+  prv_focus(true);
+  prv_tap(180, 20, 80);
+  prv_assert_single_click(BUTTON_ID_SELECT);
 }

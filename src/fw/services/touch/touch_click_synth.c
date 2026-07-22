@@ -34,6 +34,47 @@ static SynthState s_state;
 
 static EventServiceInfo s_focus_event_info;
 
+// Kernel-side copy of the focused window's action bar, published by applib via
+// syscall. Read when routing a tap to a bar zone.
+static ActionBarSynthDescriptor s_action_bar;
+
+void touch_click_synth_set_action_bar(const ActionBarSynthDescriptor *descriptor) {
+  s_action_bar = *descriptor;
+}
+
+// If the tap at (x, y) lands on the action bar, return the button for its
+// vertical zone (top -> UP, middle -> SELECT, bottom -> DOWN), falling back to
+// SELECT for a zone whose icon is absent. Returns false if there is no action
+// bar or the tap is outside it, leaving the caller's default (SELECT) in place.
+static bool prv_action_bar_button_for_tap(int16_t x, int16_t y, ButtonId *button_out) {
+  if (!s_action_bar.present) {
+    return false;
+  }
+  const GRect *f = &s_action_bar.frame;
+  if (x < f->origin.x || x >= f->origin.x + f->size.w ||
+      y < f->origin.y || y >= f->origin.y + f->size.h ||
+      f->size.h <= 0) {
+    return false;
+  }
+
+  // Split the bar into three equal vertical zones.
+  const int16_t zone = (int16_t)(((int32_t)(y - f->origin.y) * 3) / f->size.h);
+  ButtonId button;
+  uint8_t icon_bit;
+  if (zone <= 0) {
+    button = BUTTON_ID_UP;
+    icon_bit = ACTION_BAR_SYNTH_ICON_UP;
+  } else if (zone == 1) {
+    button = BUTTON_ID_SELECT;
+    icon_bit = ACTION_BAR_SYNTH_ICON_SELECT;
+  } else {
+    button = BUTTON_ID_DOWN;
+    icon_bit = ACTION_BAR_SYNTH_ICON_DOWN;
+  }
+  *button_out = (s_action_bar.icon_mask & icon_bit) ? button : BUTTON_ID_SELECT;
+  return true;
+}
+
 // A focused (non-unfocused) modal receives button events in
 // launcher_handle_button_event, so the bridge must synthesize for it too (e.g.
 // the notification-detail popup, action menus, dialogs). Mirrors the
@@ -61,6 +102,11 @@ static void prv_set_active(bool active) {
   s_state.active = active;
   s_state.finger_down = false;
   s_state.dragging = false;
+  if (!active) {
+    // Leaving the foreground (e.g. back to the watchface): drop any stale action
+    // bar descriptor so it can't route taps in the next context.
+    s_action_bar = (ActionBarSynthDescriptor) { 0 };
+  }
   // Hold or release the touch sensor. This subscription is excluded from
   // touch_has_app_subscribers() so it never suppresses our own synthesis.
   touch_set_synthesis_enabled(active);
@@ -137,11 +183,14 @@ void touch_click_synth_handle_touch(const TouchEvent *event) {
       }
 
       if (!s_state.dragging) {
-        // Tap -> SELECT, if it lifted off quickly enough.
+        // Tap: SELECT by default, or UP/SELECT/DOWN when it lands on the action
+        // bar (by vertical zone), if it lifted off quickly enough.
         const uint64_t elapsed_ms =
             ((uint64_t)(rtc_get_ticks() - s_state.down_ticks) * 1000) / RTC_TICKS_HZ;
         if (elapsed_ms < SYNTH_TAP_MAX_MS) {
-          prv_synthesize_click(BUTTON_ID_SELECT);
+          ButtonId button = BUTTON_ID_SELECT;
+          prv_action_bar_button_for_tap(s_state.start_x, s_state.start_y, &button);
+          prv_synthesize_click(button);
         }
         break;
       }
