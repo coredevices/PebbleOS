@@ -95,6 +95,12 @@ development/contributing.md
 
 ```{toctree}
 :hidden:
+:caption: 🏛️ Architecture
+architecture/activity/index.md
+```
+
+```{toctree}
+:hidden:
 :caption: ⌚ Boards
 boards/index.md
 ```
