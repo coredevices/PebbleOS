@@ -17,6 +17,14 @@ PebbleOS is the operating system running on Pebble smartwatches.
   console, etc.
 - `tools/waf`: scripts used by the waf build system
 
+## Documentation
+
+Contributor documentation lives in `docs/` (published at
+https://pebbleos-core.readthedocs.io). Prefer pointing to or extending those
+pages over duplicating knowledge here: `docs/development/contributing.md`
+(DCO, commit and AI-usage rules), `docs/development/sdk_export.md` (SDK
+export machinery), `docs/development/qemu.md` (emulator workflow).
+
 ## Code style
 
 - clang-format for C code
@@ -49,27 +57,11 @@ PebbleOS is the operating system running on Pebble smartwatches.
 
 ## Adding a new SDK function
 
-When exposing a new function to third-party apps (i.e. anything declared
-in an `applib/` header that user apps can call), three things must change
-together — the firmware build alone won't surface it to apps:
-
-1. **Implement the applib wrapper and syscall** — add the function to the
-   appropriate `src/fw/applib/.../<area>.c/.h`, declare the syscall in
-   `src/fw/syscall/syscall.h`, and define it with `DEFINE_SYSCALL` in
-   `src/fw/syscall/syscall_<area>.c`.
-2. **Register the symbol** in
-   `tools/generate_native_sdk/exported_symbols.json` under the matching
-   group, with an `addedRevision` matching the new SDK revision.
-3. **Bump the SDK revision** in
-   `src/fw/process_management/pebble_process_info.h`: increment
-   `PROCESS_INFO_CURRENT_SDK_VERSION_MINOR` and add a `// sdk.major:0xN
-   .minor:0xM -- <description> (rev <N+1>)` comment line above the
-   `#define`. The revision number in the comment must match
-   `addedRevision` from step 2.
-
-Forgetting steps 2 or 3 means the function compiles into the firmware
-but is invisible to the app SDK build, so third-party apps can't link
-against it.
+Exposing a function to third-party apps requires three coordinated changes
+(applib wrapper + syscall, `exported_symbols.json` registration, SDK
+revision bump) — the firmware build alone won't surface it to apps. Follow
+`docs/development/sdk_export.md` whenever an `applib/` function should
+become callable from user apps.
 
 ## Git rules
 
