@@ -215,6 +215,67 @@ void test_swap_layer_touch__touch_disabled_does_not_subscribe(void) {
   cl_assert(s_touch_handler == NULL);  // did not subscribe
 }
 
+// --- pull-to-swap (edge over-pull -> adjacent notification) -----------------
+
+// Over-pulling past the bottom edge swaps to the next notification.
+void test_swap_layer_touch__overpull_at_bottom_swaps_to_next(void) {
+  prv_setup(400, 168);  // max scroll offset 232
+  static LayoutLayer next_layout;
+  memset(&next_layout, 0, sizeof(next_layout));
+  next_layout.layer.frame = GRect(0, 0, 100, 300);
+  s_swap_layer.next = &next_layout;
+  prv_set_offset(232);  // already at the bottom
+
+  prv_touch(TouchEvent_Touchdown, 50, 200);
+  prv_touch(TouchEvent_PositionUpdate, 50, 100);  // finger up 100px past the edge
+  prv_touch(TouchEvent_Liftoff, 50, 100);
+
+  // Swap-down shifted current <- next.
+  cl_assert(s_swap_layer.current == &next_layout);
+}
+
+// A drag that only reaches the edge (no over-pull past the margin) does not swap.
+void test_swap_layer_touch__reaching_edge_without_overpull_does_not_swap(void) {
+  prv_setup(400, 168);
+  static LayoutLayer next_layout;
+  memset(&next_layout, 0, sizeof(next_layout));
+  s_swap_layer.next = &next_layout;
+  LayoutLayer *current_before = s_swap_layer.current;
+  prv_set_offset(200);  // near the bottom (max 232)
+
+  // Finger up 30px -> requested offset 230, still within [0, 232+overpull].
+  prv_touch(TouchEvent_Touchdown, 50, 150);
+  prv_touch(TouchEvent_PositionUpdate, 50, 120);
+  prv_touch(TouchEvent_Liftoff, 50, 120);
+
+  cl_assert(s_swap_layer.current == current_before);  // no swap
+}
+
+// Over-pulling past the top edge attempts a swap to the previous notification
+// (which fetches the -1 layout via the client's get_layout_handler).
+static int8_t s_last_fetch_rel;
+static int s_fetch_count;
+static LayoutLayer *prv_get_layout(SwapLayer *swap_layer, int8_t rel, void *context) {
+  s_last_fetch_rel = rel;
+  s_fetch_count++;
+  return NULL;  // no previous available -> graceful, but the attempt is observed
+}
+
+void test_swap_layer_touch__overpull_at_top_attempts_previous_swap(void) {
+  prv_setup(400, 168);
+  s_swap_layer.callbacks.get_layout_handler = prv_get_layout;
+  s_fetch_count = 0;
+  prv_set_offset(0);  // at the top
+
+  prv_touch(TouchEvent_Touchdown, 50, 100);
+  prv_touch(TouchEvent_PositionUpdate, 50, 200);  // finger down 100px past the edge
+  prv_touch(TouchEvent_Liftoff, 50, 200);
+
+  // The up-swap path fetched the previous (rel -1) layout.
+  cl_assert(s_fetch_count > 0);
+  cl_assert_equal_i(s_last_fetch_rel, -1);
+}
+
 // --- deinit -----------------------------------------------------------------
 
 void test_swap_layer_touch__deinit_unsubscribes(void) {

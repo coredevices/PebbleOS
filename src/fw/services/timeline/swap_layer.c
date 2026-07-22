@@ -650,6 +650,11 @@ T_STATIC void prv_attempt_scroll(SwapLayer *swap_layer, ScrollDirection directio
 // Distance (px) the finger must travel before a gesture is treated as a drag.
 #define SWAP_TOUCH_DRAG_THRESHOLD_PX 10
 
+// Extra distance (px) the finger must drag PAST a clamped scroll edge to trigger
+// a swap to the adjacent notification (pull-to-swap). Larger than the drag
+// threshold so a normal scroll to the edge doesn't accidentally swap.
+#define SWAP_TOUCH_SWAP_OVERPULL_PX 40
+
 //! Transient state for the in-progress touch drag. Only one touch gesture is
 //! ever in flight (touch events go to the single focused subscriber), so a
 //! single file-static instance is sufficient.
@@ -719,6 +724,22 @@ static void prv_swap_layer_touch_handler(const TouchEvent *event, void *context)
     case TouchEvent_Liftoff:
       if (s_touch_gesture.swap_layer != swap_layer) {
         break;
+      }
+      if (s_touch_gesture.dragging) {
+        // Pull-to-swap: if the finger was dragged past a clamped edge by more
+        // than the over-pull margin, swap to the adjacent notification, reusing
+        // the same path as the physical UP/DOWN buttons. Content-scroll
+        // convention: over-pulling at the top (finger down, offset below 0) goes
+        // to the previous notification; over-pulling at the bottom (finger up,
+        // offset above max) goes to the next.
+        const int16_t delta_y = event->y - s_touch_gesture.start_y;
+        const int16_t requested_offset = s_touch_gesture.start_offset - delta_y;
+        const int16_t max_dy = prv_get_max_scroll_dy(swap_layer);
+        if (requested_offset < -SWAP_TOUCH_SWAP_OVERPULL_PX) {
+          prv_handle_swap_attempt(swap_layer, ScrollDirectionUp, false /* is_repeating */);
+        } else if (requested_offset > max_dy + SWAP_TOUCH_SWAP_OVERPULL_PX) {
+          prv_handle_swap_attempt(swap_layer, ScrollDirectionDown, false /* is_repeating */);
+        }
       }
       s_touch_gesture.swap_layer = NULL;
       break;
