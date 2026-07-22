@@ -12,6 +12,8 @@ typedef struct __attribute__((packed)) TickTimerServiceState {
   struct tm last_time;
   bool first_tick;
   bool last_is_24h;
+  //! Whether this task has told the kernel it needs second-resolution ticks.
+  bool seconds_subscribed;
 
   EventServiceInfo tick_service_info;
 } TickTimerServiceState;
