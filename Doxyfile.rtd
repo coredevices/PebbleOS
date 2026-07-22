@@ -14,3 +14,4 @@ VERBATIM_HEADERS       = NO
 QUIET                  = YES
 HTML_COLORSTYLE        = LIGHT
 HTML_EXTRA_STYLESHEET  = doxygen-awesome-css/doxygen-awesome.css
+GENERATE_TAGFILE       = docs/_apidoc/apidoc/pebbleos.tag
