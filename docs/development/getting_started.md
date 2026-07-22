@@ -49,6 +49,7 @@ sudo apt install \
     libncurses-dev \
     librsvg2-bin \
     make \
+    nodejs \
     openocd \
     python3-dev \
     python3-venv
@@ -68,15 +69,23 @@ sudo dnf upgrade --refresh
 
 ```shell
 sudo dnf install \
+    bison \
     clang \
     dash \
+    flex \
     freetype-devel \
     gcc \
+    gettext \
+    git \
     glib2-devel \
+    gperf \
     gtk3-devel \
     librsvg2-tools \
+    make \
+    ncurses-devel \
     nodejs \
-    python-devel  
+    openocd \
+    python3-devel
 ```
 
 ::::
@@ -88,7 +97,7 @@ sudo dnf install \
 2. Install dependencies:
 
 ```shell
-brew install librsvg python openocd
+brew install python openocd $(cat requirements-brew.txt)
 ```
 
 3. Link `brew` Python:
@@ -141,4 +150,3 @@ Remember to activate the virtual environment before every time you start working
 ```shell
 pip install -r requirements.txt
 ```
-

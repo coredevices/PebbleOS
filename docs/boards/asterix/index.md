@@ -1,8 +1,8 @@
-# Asterix (Core 2 Duo)
+# Asterix (Pebble 2 Duo)
 
 ## Programming
 
-Asterix/Core 2 Duo mainboard has a B2B (Board-To-Board) connector that gives access to:
+The Asterix/Pebble 2 Duo (announced as Core 2 Duo) mainboard has a B2B (Board-To-Board) connector that gives access to:
 
 - MCU VDD, VUSB and GND
 - MCU SWCLK, SWDIO and RESET
@@ -17,7 +17,7 @@ Asterix B2B connector pinout
 The "Core B2B v2" board has been designed as a companion programming board.
 It is based on the [Raspberry Pi Debug Probe](https://www.raspberrypi.com/documentation/microcontrollers/debug-probe.html).
 Software for the `Core B2B v2` board is available in the [Core B2B v2 repository](https://github.com/coredevices/asterix_b2b2_fw).
-Below you can find a picture on how it is connected, and a list of its main features.
+Below you can find a picture of how it is connected, and a list of its main features.
 
 ```{figure} images/asterix-programming.webp
 Asterix and Core B2B v2
@@ -52,7 +52,6 @@ Do not use any adapter that does not operate at 1.8V, or there is a **risk of da
 
    - L: connected
    - R: disconnected
-
 
 ### Usage and tips
 

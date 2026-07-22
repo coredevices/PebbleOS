@@ -18,65 +18,59 @@ Keep in mind that some targets may not currently compile as-is.
 ## Variant
 
 :`--variant`:
-  Build variant, `normal` (main firmware) or `prf` (recovery firmware).
+Build variant, `normal` (main firmware) or `prf` (recovery firmware).
 
 ## Release build
 
 :`-DCONFIG_RELEASE=y`:
-  Build a release-mode firmware. Strips debug aids, enables shipping
-  defaults (e.g. Memfault crash reporting), and reduces battery usage
-  compared to a debug build. Pass this to `./pbl configure`.
+Build a release-mode firmware. Strips debug aids, enables shipping
+defaults (e.g. Memfault crash reporting), and reduces battery usage
+compared to a debug build. Pass this to `./pbl configure`.
 
 ## Main features
 
 :`-DCONFIG_MODDABLE_XS=y` / `-DCONFIG_MODDABLE_XS=n`:
-  Force the Moddable SDK's XS JavaScript engine on or off, overriding
-  the board defconfig. Pass to `./pbl configure`. See {doc}`moddable`.
-  PRF (recovery) builds always disable the engine regardless of this
-  value.
+Force the Moddable SDK's XS JavaScript engine on or off, overriding
+the board defconfig. Pass to `./pbl configure`. See {doc}`moddable`.
+PRF (recovery) builds always disable the engine regardless of this
+value.
 
 ## Manufacturing
 
 :`-DCONFIG_MFG=y`:
-  Enable manufacturing-only functionality in the PRF build.
+Enable manufacturing-only functionality in the PRF build.
 
 ## Debugging
 
 :`-DCONFIG_NO_WATCHDOG=y`:
-  Disable watchdog
-
-:`-DCONFIG_NOSTOP=y`:
-  Disable STOP mode
-
-:`-DCONFIG_NOSLEEP=y`:
-  Disable sleep mode
+Disable watchdog
 
 ## Flashing
 
 The `flash`, `run` and `debug` commands talk to a connected device through a
-*runner*. Each board declares its supported runners in its board manifest
+_runner_. Each board declares its supported runners in its board manifest
 (e.g. `boards/<board>/<board>.yml`) and the first one is used by default. For
 the OpenOCD runner, the probe and target configuration lives in the board's
 `support/openocd.cfg`.
 
 :`--runner`:
-  Override the board's default runner for `flash`/`run`/`debug`.
+Override the board's default runner for `flash`/`run`/`debug`.
 
 :`--tty`:
-  Serial port used by the `sftool` runner.
+Serial port used by the `sftool` runner.
 
 :`--resources`:
-  Also flash system resources alongside the firmware (`sftool` runner).
+Also flash system resources alongside the firmware (`sftool` runner).
 
 ## Logging
 
 :`-DCONFIG_DEFAULT_LOG_LEVEL_<LEVEL>=y`:
-  Default log level, where `<LEVEL>` is one of `ERROR`, `WARNING`,
-  `INFO`, `DEBUG` (default) or `DEBUG_VERBOSE`.
+Default log level, where `<LEVEL>` is one of `ERROR`, `WARNING`,
+`INFO` (default), `DEBUG` or `DEBUG_VERBOSE`.
 
 :`-DCONFIG_LOG_HASHED=n`:
-  Disable log messages hashing.
-  This will increase ROM usage, but will not require a dictionary file to decode logs.
+Disable log messages hashing.
+This will increase ROM usage, but will not require a dictionary file to decode logs.
 
 These and many more options can also be browsed and changed interactively with
 `./pbl menuconfig` after configuring.
