@@ -599,7 +599,10 @@ void launcher_main_loop(void) {
 
     // We make this PebbleEvent static to save stack space
     static PebbleEvent e;
-    if (event_take_timeout(&e, 1000)) {
+    // The timeout exists only to refresh the watchdog bit above; events wake
+    // the loop immediately. 3s keeps ~5s of margin against the shortest (8s)
+    // hardware watchdog while letting an idle KernelMain sleep 3x longer.
+    if (event_take_timeout(&e, 3000)) {
       const PebbleTaskBitset kernel_main_task_bit = (1 << PebbleTask_KernelMain);
       const bool is_not_masked_out_from_kernel_main = !(e.task_mask & kernel_main_task_bit);
       if (is_not_masked_out_from_kernel_main) {
