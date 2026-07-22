@@ -349,9 +349,6 @@ if bld.env.CONFIG_SOC_SF32LB52:
         ],
     )
 
-if bld.env.CONFIG_CPUMODE:
-    bld.recurse('cpumode')
-
 bld(
     name='drivers',
     use=bld.env.DRIVERS,
