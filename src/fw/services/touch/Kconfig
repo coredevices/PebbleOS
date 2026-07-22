@@ -9,6 +9,17 @@ config SERVICE_TOUCH
 
 if SERVICE_TOUCH
 
+config TOUCH_CLICK_SYNTHESIS
+    bool "Touch-to-click synthesis"
+    default n
+    help
+      Kernel-level bridge that synthesizes a SELECT button click from a touch
+      tap, so apps that use their own click handlers (rather than
+      ScrollLayer/MenuLayer) respond to touch. Only active while a watchapp is
+      in the foreground, and suppressed while the focused app consumes touch
+      directly. Experimental; can be disabled independently of the touch driver
+      as an escape hatch.
+
 module = SERVICE_TOUCH
 module-str = Touch
 source "subsys/logging/Kconfig.template.log_level"

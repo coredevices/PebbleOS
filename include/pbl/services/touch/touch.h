@@ -24,6 +24,11 @@ void touch_init(void);
 //! When disabled, the touch sensor is only active if apps have subscribed to touch events.
 void touch_set_backlight_enabled(bool enabled);
 
+//! Enable or disable the kernel's touch subscription used by the touch->click
+//! synthesis bridge. Like the backlight subscription, it powers the sensor but
+//! is not counted as an app subscriber by touch_has_app_subscribers().
+void touch_set_synthesis_enabled(bool enabled);
+
 //! @return true if at least one subscriber is currently registered for touch events.
 bool touch_has_app_subscribers(void);
 

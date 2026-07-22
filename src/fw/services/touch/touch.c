@@ -26,6 +26,7 @@ static PebbleMutex *s_touch_mutex;
 
 static uint8_t s_subscriber_count = 0;
 static bool s_backlight_subscribed = false;
+static bool s_synthesis_subscribed = false;
 static bool s_globally_enabled = true;
 static bool s_rotated = false;
 
@@ -66,10 +67,12 @@ void touch_init(void) {
 
 bool touch_has_app_subscribers(void) {
   mutex_lock(s_touch_mutex);
-  // The backlight gesture subscription is tracked in s_subscriber_count as
-  // well; exclude it so this only reflects real app subscribers.
-  const uint8_t backlight_count = s_backlight_subscribed ? 1 : 0;
-  const bool has_apps = s_subscriber_count > backlight_count;
+  // The backlight and touch->click synthesis subscriptions are tracked in
+  // s_subscriber_count as well; exclude them so this only reflects real app
+  // subscribers (both are kernel-internal holders of the sensor).
+  const uint8_t excluded = (s_backlight_subscribed ? 1 : 0) +
+                           (s_synthesis_subscribed ? 1 : 0);
+  const bool has_apps = s_subscriber_count > excluded;
   mutex_unlock(s_touch_mutex);
   return has_apps;
 }
@@ -115,6 +118,22 @@ void touch_set_backlight_enabled(bool enabled) {
     return;
   } else if (!enabled && s_backlight_subscribed) {
     s_backlight_subscribed = false;
+    mutex_unlock(s_touch_mutex);
+    prv_remove_subscriber_cb(PebbleTask_KernelMain);
+    return;
+  }
+  mutex_unlock(s_touch_mutex);
+}
+
+void touch_set_synthesis_enabled(bool enabled) {
+  mutex_lock(s_touch_mutex);
+  if (enabled && !s_synthesis_subscribed) {
+    s_synthesis_subscribed = true;
+    mutex_unlock(s_touch_mutex);
+    prv_add_subscriber_cb(PebbleTask_KernelMain);
+    return;
+  } else if (!enabled && s_synthesis_subscribed) {
+    s_synthesis_subscribed = false;
     mutex_unlock(s_touch_mutex);
     prv_remove_subscriber_cb(PebbleTask_KernelMain);
     return;
