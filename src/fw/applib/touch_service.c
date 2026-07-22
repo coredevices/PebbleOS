@@ -50,12 +50,18 @@ void touch_service_subscribe(TouchServiceHandler handler, void *context) {
   state->raw_handler = handler;
   state->raw_context = context;
 
-  state->raw_event_info = (EventServiceInfo) {
-    .type = PEBBLE_TOUCH_EVENT,
-    .handler = prv_handle_touch_event,
-  };
   sys_touch_reset();
   if (!state->raw_subscribed) {
+    // Initialize the event-service node only on the first subscribe. A
+    // click_config_provider re-runs on every window appear and re-subscribes;
+    // re-initializing here on every call would zero the embedded list_node
+    // while it is still linked in the per-task subscriber list, corrupting the
+    // list so a later unsubscribe fails to reach the kernel and leaks the
+    // touch subscriber count.
+    state->raw_event_info = (EventServiceInfo) {
+      .type = PEBBLE_TOUCH_EVENT,
+      .handler = prv_handle_touch_event,
+    };
     event_service_client_subscribe(&state->raw_event_info);
     state->raw_subscribed = true;
   }
