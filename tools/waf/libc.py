@@ -9,7 +9,8 @@ _link_firmware in the top-level wscript:
 
   LIBC_LINKFLAGS  extra link flags (-nostdlib / -nostartfiles / -specs=...)
   LIBC_LIBS       libraries passed to bld.program(lib=...)
-  LIBC_USE        extra use= targets (pblibc, _sbrk, the nano printf shim)
+  LIBC_USE        extra use= targets (pblibc, _sbrk, the assert hook,
+                  the nano printf shim)
 
 For a non-Pebble libc, compile/link also gain the flags that make the
 toolchain libc match the firmware's expectations (32-bit time_t, the
@@ -205,3 +206,7 @@ def configure(conf):
         conf.msg("libc", "picolibc (%s)" % origin)
     else:
         conf.fatal("No C library selected (see lib/c/Kconfig)")
+
+    # __assert_func override (lib/c/assert.c): routes the newlib-family
+    # assert() through PBL_LOG/PBL_ASSERT for every libc selection.
+    conf.env.append_value("LIBC_USE", ["libc_assert"])
