@@ -10,7 +10,7 @@ if not bld.env.CONFIG_BT_AMS_CLIENT:
 bld.objects(
     name='comm',
     source=bld.path.ant_glob('**/*.c', excl=excl),
-    use=['fw_includes', 'pblibc_includes'],
+    use=['fw_includes'],
 )
 
 # vim:filetype=python

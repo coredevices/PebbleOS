@@ -45,8 +45,7 @@ bld(export_includes=freertos_includes,
 
 bld.stlib(source=freertos_sources,
           target='freertos',
-          use=['pblibc',
-               'fw_includes',
+          use=['fw_includes',
                'freertos_includes',
                'cmsis_core'],
           export_defines='GCC_{}'.format(freertos_port_name))

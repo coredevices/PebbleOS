@@ -1,41 +1,25 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-if bld.variant == 'test':
-    # The firmware C library is not built for the host unit tests; the
-    # tests that exercise the Pebble libc compile its sources directly
-    # (see tests/libc).
-    pass
-else:
+if bld.variant != 'test':
     # __assert_func override: the assert() hook of the newlib-family
-    # headers. Needed for every libc selection — even with pblibc,
-    # third-party code includes the toolchain's <assert.h>.
+    # <assert.h> shared by all supported libcs.
     bld.objects(
         name='libc_assert',
         source=['assert.c'],
         use=['fw_includes'],
     )
 
-    if bld.env.CONFIG_LIBC_PEBBLE:
-        bld.recurse('pebble')
-    else:
-        # A toolchain/external libc is selected. The pblibc use= targets
-        # that third-party and firmware components still reference become
-        # empty shims, so those components pick up the toolchain (or
-        # picolibc) headers instead of pblibc's.
-        bld(name='pblibc_includes')
-        bld(name='pblibc')
+    # _sbrk override: the firmware owns all heaps via --wrap=malloc ->
+    # pbl_malloc, so the libc must never grow its own heap.
+    bld.objects(
+        name='libc_syscalls',
+        source=['syscalls.c'],
+        use=['fw_includes'],
+    )
 
-        # _sbrk override: the firmware owns all heaps via --wrap=malloc ->
-        # pbl_malloc, so the external libc must never grow its own heap.
-        bld.objects(
-            name='libc_syscalls',
-            source=['syscalls.c'],
-            use=['fw_includes'],
-        )
-
-        # newlib-nano's printf lacks C99 length modifiers; provide a shim.
-        if bld.env.CONFIG_LIBC_NEWLIB_NANO:
-            bld.recurse('newlib')
+    # newlib-nano's printf lacks C99 length modifiers; provide a shim.
+    if bld.env.CONFIG_LIBC_NEWLIB_NANO:
+        bld.recurse('newlib')
 
 # vim:filetype=python

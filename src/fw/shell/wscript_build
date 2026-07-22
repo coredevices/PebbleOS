@@ -185,7 +185,7 @@ bld(rule=generate_apps_table,
 bld.objects(
     name='shell',
     source=bld.path.ant_glob('*.c') + bld.path.ant_glob('%s/**/*.c' % shell_name),
-    use=['fw_includes', 'pblibc_includes'],
+    use=['fw_includes'],
 )
 
 # vim:filetype=python

@@ -197,7 +197,6 @@ if bld.env.CONFIG_BOARD_OBELIX or bld.env.CONFIG_BOARD_GETAFIX:
 bld.stlib(
     source=micro_sources,
     target='hal_sifli',
-    use=['pblibc'],
     includes=micro_includes,
     export_includes=micro_includes,
     defines=micro_defines,

@@ -4,7 +4,7 @@
 bld.objects(
     name='util',
     source=bld.path.ant_glob('**/*.c'),
-    use=['fw_includes', 'pblibc_includes', 'tinymt32'],
+    use=['fw_includes', 'tinymt32'],
 )
 
 # vim:filetype=python

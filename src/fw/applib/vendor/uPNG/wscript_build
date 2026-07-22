@@ -2,6 +2,6 @@ bld.stlib(source=['upng.c'],
           includes='.',
           target='upng',
           export_includes='.',
-          use='pblibc fw_includes tinflate')
+          use='fw_includes tinflate')
 
 # vim:filetype=python

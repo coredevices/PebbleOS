@@ -7,14 +7,14 @@ Picks the C library the firmware links against (see lib/c/Kconfig) and
 exposes the choice to the link step via three env vars, consumed by
 _link_firmware in the top-level wscript:
 
-  LIBC_LINKFLAGS  extra link flags (-nostdlib / -nostartfiles / -specs=...)
+  LIBC_LINKFLAGS  extra link flags (-nostartfiles / -specs=...)
   LIBC_LIBS       libraries passed to bld.program(lib=...)
-  LIBC_USE        extra use= targets (pblibc, _sbrk, the assert hook,
-                  the nano printf shim)
+  LIBC_USE        extra use= targets (_sbrk, the assert hook, the nano
+                  printf shim)
 
-For a non-Pebble libc, compile/link also gain the flags that make the
-toolchain libc match the firmware's expectations (32-bit time_t, the
-integer printf aliases). picolibc is taken pre-built from the toolchain
+Compile/link also gain the flags that make the toolchain libc match the
+firmware's expectations (32-bit time_t, the integer printf aliases).
+picolibc is taken pre-built from the toolchain
 when available (the PebbleOS SDK ships one built with the firmware ABI),
 otherwise built from the third_party/picolibc submodule. Runs at
 configure time, after pebble_arm_gcc has set the architecture flags.
@@ -30,13 +30,13 @@ from waflib import Logs
 _NEWLIB_TIME_DEFINE = "-D_USE_LONG_TIME_T"
 
 # The firmware calls the integer-only printf names; map them to the real
-# ones (pblibc did this in its headers; the toolchain libcs need it here).
+# ones (the historical in-tree libc aliased them in its headers).
 _SNIPRINTF_DEFINES = ["-Dsniprintf=snprintf", "-Dvsniprintf=vsnprintf"]
 
 # The firmware compiles with -std=c11 (strict ANSI) unless Memfault forces
-# gnu11. pblibc declares POSIX/BSD names (strnlen, strcasecmp, ...)
-# unconditionally, but the toolchain libcs hide them behind feature-test
-# macros under __STRICT_ANSI__; ask for the default surface explicitly.
+# gnu11, but it uses POSIX/BSD names (strnlen, strcasecmp, ...) that the
+# toolchain libcs hide behind feature-test macros under __STRICT_ANSI__;
+# ask for the default surface explicitly.
 _DEFAULT_SOURCE_DEFINE = "-D_DEFAULT_SOURCE"
 
 _ARCH_PREFIXES = ("-mthumb", "-mcpu=", "-mfloat-abi=", "-mfpu=", "-march=")
@@ -58,13 +58,6 @@ _PICOLIBC_MESON_OPTS = [
 def _add(conf, flags):
     conf.env.append_value("CFLAGS", flags)
     conf.env.append_value("LINKFLAGS", flags)
-
-
-def _select_pebble(conf):
-    # The in-tree libc: freestanding, only libgcc for compiler intrinsics.
-    conf.env.LIBC_LINKFLAGS = ["-nostdlib"]
-    conf.env.LIBC_LIBS = ["gcc"]
-    conf.env.LIBC_USE = ["pblibc"]
 
 
 def _select_newlib(conf, nano):
@@ -194,10 +187,7 @@ def _select_picolibc(conf):
 
 
 def configure(conf):
-    if conf.env.CONFIG_LIBC_PEBBLE:
-        _select_pebble(conf)
-        conf.msg("libc", "pebble")
-    elif conf.env.CONFIG_LIBC_NEWLIB or conf.env.CONFIG_LIBC_NEWLIB_NANO:
+    if conf.env.CONFIG_LIBC_NEWLIB or conf.env.CONFIG_LIBC_NEWLIB_NANO:
         nano = bool(conf.env.CONFIG_LIBC_NEWLIB_NANO)
         _select_newlib(conf, nano)
         conf.msg("libc", "newlib-nano" if nano else "newlib")

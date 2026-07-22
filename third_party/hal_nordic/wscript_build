@@ -44,6 +44,6 @@ else:
 bld.stlib(source=micro_sources,
           target='hal_nordic',
           cflags=['-Wno-unused-variable'],
-          use=['cmsis_core', 'pblibc'],
+          use=['cmsis_core'],
           includes=micro_includes,
           export_includes=micro_includes)

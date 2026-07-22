@@ -9,7 +9,7 @@ else:
     variant = 'default'
 
 bld.stlib(
-    use=['fw_includes', 'pblibc_includes'],
+    use=['fw_includes'],
     includes=['.'],
     source=['tictoc.c'] + bld.path.ant_glob('%s/*.c' % variant),
     target='watch_app_tictoc',

@@ -67,5 +67,4 @@ bld.stlib(source=speex_sources,
           export_includes=speex_includes,
           defines=speex_defines,
           cflags=speex_cflags,
-          target='speex',
-          use=['pblibc'])
+          target='speex')

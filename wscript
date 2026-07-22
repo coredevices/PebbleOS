@@ -390,7 +390,7 @@ def _link_firmware(bld, sources):
             'tinymt32',
             'upng']
     uses.extend(bld.env.FW_APPS)
-    # C library use targets (pblibc, or the newlib nano printf shim),
+    # C library use targets (the assert hook, _sbrk, the nano printf shim),
     # selected by lib/c via tools/waf/libc.py.
     uses.extend(bld.env.LIBC_USE)
 

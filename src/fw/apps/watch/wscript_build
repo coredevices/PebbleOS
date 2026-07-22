@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 bld.stlib(
-    use=['fw_includes', 'pblibc_includes'],
+    use=['fw_includes'],
     includes=['.'],
     source=['kickstart/kickstart.c'],
     target='watch_app_kickstart',
@@ -10,7 +10,7 @@ bld.stlib(
 bld.env.FW_APPS.append('watch_app_kickstart')
 
 bld.stlib(
-    use=['fw_includes', 'pblibc_includes'],
+    use=['fw_includes'],
     includes=['.'],
     source=['low_power/face.c'],
     target='watch_app_low_power',

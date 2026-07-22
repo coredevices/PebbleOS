@@ -11,7 +11,7 @@ else:
 bld.objects(
     name='popups',
     source=source,
-    use=['fw_includes', 'pblibc_includes'],
+    use=['fw_includes'],
 )
 
 # vim:filetype=python

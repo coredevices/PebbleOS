@@ -4,7 +4,7 @@
 bld.objects(
     name='flash_region',
     source=bld.path.ant_glob('*.c'),
-    use=['fw_includes', 'pblibc_includes'],
+    use=['fw_includes'],
 )
 
 # vim:filetype=python

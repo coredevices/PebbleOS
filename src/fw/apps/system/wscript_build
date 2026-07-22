@@ -12,7 +12,7 @@ else:
 bld.objects(
     name='apps_system',
     source=source,
-    use=['fw_includes', 'pblibc_includes'],
+    use=['fw_includes'],
 )
 bld.env.FW_APPS.append('apps_system')
 
