@@ -1,7 +1,7 @@
 # Moddable JS Engine
 
-PebbleOS supports the [Moddable SDK](https://github.com/pebble-dev/moddable)'s XS JavaScript engine.
-The Moddable integration provides a lightweight sandbox for runningJavaScript applications and watchfaces on Pebble hardware.
+PebbleOS supports the [Moddable SDK](https://github.com/coredevices/moddable)'s XS JavaScript engine.
+The Moddable integration provides a lightweight sandbox for running JavaScript applications and watchfaces on Pebble hardware.
 
 ## Building with Moddable
 

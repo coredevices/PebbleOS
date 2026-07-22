@@ -78,9 +78,9 @@ A summary of the frame structure is shown below. This figure does not
 include octets inserted for transparency. The fields are transmitted
 from left to right.
 
-Flag | Protocol | Information |    FCS   | Flag
------|----------|-------------|----------|-----
-0x55 | 2 octets |      *      | 4 octets | 0x55
+| Flag | Protocol | Information | FCS      | Flag |
+| ---- | -------- | ----------- | -------- | ---- |
+| 0x55 | 2 octets | *           | 4 octets | 0x55 |
 
 #### Flag field
 
@@ -152,9 +152,9 @@ Best-effort delivery with very little overhead, similar to PULSEv1.
 
 #### Packet format
 
-Application Protocol |  Length  | Information
----------------------|----------|------------
-      2 octets       | 2 octets |      *
+| Application Protocol | Length | Information |
+| -------------------- | ------ | ----------- |
+| 2 octets             | 2 octets | *         |
 
 All multibyte fields are in big-endian byte order.
 
@@ -177,15 +177,15 @@ silently discarded.
 BECP is exactly the same as the Link Control Protocol with the following
 exceptions:
 
-* Exactly one BECP packet is encapsulated in the Information field of
+- Exactly one BECP packet is encapsulated in the Information field of
   Link Layer frames where the Protocol field indicates type 0xBA29 hex.
 
-* Only codes 1 through 7 (Configure-Request, Configure-Ack,
+- Only codes 1 through 7 (Configure-Request, Configure-Ack,
   Configure-Nak, Configure-Reject, Terminate-Request, Terminate-Ack and
   Code-Reject) are used. Other codes should be treated as unrecognized
   and should result in Code-Rejects.
 
-* A distinct set of configure options are used. There are currently no
+- A distinct set of configure options are used. There are currently no
   options defined.
 
 #### Sending BEAT packets
@@ -203,9 +203,9 @@ is no NCP, no options, no negotiation.
 
 #### Packet format
 
-Application Protocol |  Length  | Information
----------------------|----------|------------
-      2 octets       | 2 octets |      *
+| Application Protocol | Length | Information |
+| -------------------- | ------ | ----------- |
+| 2 octets             | 2 octets | *         |
 
 All multibyte fields are in big-endian byte order.
 
@@ -236,15 +236,15 @@ packets.
 
 **Information command packets**
 
- Control | Application Protocol |  Length  | Information
----------|----------------------|----------|------------
-2 octets |      2 octets        | 2 octets |      *
+| Control  | Application Protocol | Length   | Information |
+| -------- | -------------------- | -------- | ----------- |
+| 2 octets | 2 octets             | 2 octets | *           |
 
 **Supervisory commands and responses**
 
- Control |
----------|
-2 octets |
+| Control  |
+| -------- |
+| 2 octets |
 
 ##### Control field
 
@@ -289,15 +289,15 @@ discarded.
 TRCP is exactly the same as the Link Control Protocol with the following
 exceptions:
 
-* Exactly one TRCP packet is encapsulated in the Information field of
+- Exactly one TRCP packet is encapsulated in the Information field of
   Link Layer frames where the Protocol field indicates type 0xBA33 hex.
 
-* Only codes 1 through 7 (Configure-Request, Configure-Ack,
+- Only codes 1 through 7 (Configure-Request, Configure-Ack,
   Configure-Nak, Configure-Reject, Terminate-Request, Terminate-Ack and
   Code-Reject) are used. Other codes should be treated as unrecognized
   and should result in Code-Rejects.
 
-* A distinct set of configure options are used. There are currently no
+- A distinct set of configure options are used. There are currently no
   options defined.
 
 The `V(S)` and `V(R)` state variables shall be reset to zero when the
@@ -361,9 +361,9 @@ context of the encapsulated transport protocol.
 
 #### Packet format
 
-  Code  | Information
---------|------------
-1 octet |      *
+| Code    | Information |
+| ------- | ----------- |
+| 1 octet | *           |
 
 #### Defined codes
 
@@ -395,25 +395,23 @@ A PCMP packet has been received with a Code field which is unknown to
 the recipient. The Information field must be filled with the Code field
 copied from the received packet.
 
-----
+---
 
 Useful Links
 ------------
 
-* [The design document for PULSEv2](https://docs.google.com/a/pulse-dev.net/document/d/1ZlSRz5-BSQDsmutLhUjiIiDfVXTcI53QmrqENJXuCu4/edit?usp=sharing),
+- [The design document for PULSEv2](https://docs.google.com/a/pulse-dev.net/document/d/1ZlSRz5-BSQDsmutLhUjiIiDfVXTcI53QmrqENJXuCu4/edit?usp=sharing),
   which includes a draft of this documentation along with a lot of
   notes about the design decisions.
-* [Python implementation of PULSEv2](https://github.com/pebble/pulse2)
-* [Wireshark plugin for dissecting PULSEv2 packet captures](https://github.com/pebble/pulse2-wireshark-plugin)
-* [RFC 1661 - The Point to Point Protocol (PPP)](https://tools.ietf.org/html/rfc1661)
-* [RFC 1662 - PPP in HDLC-like Framing](https://tools.ietf.org/html/rfc1662)
-* [RFC 1663 - PPP Reliable Transmission](https://tools.ietf.org/html/rfc1663)
-* [RFC 1570 - PPP LCP Extensions](https://tools.ietf.org/html/rfc1570)
-* [RFC 2153 - PPP Vendor Extensions](https://tools.ietf.org/html/rfc2153)
-* [RFC 3772 - Point-to-Point Protocol (PPP) Vendor Protocol](https://tools.ietf.org/html/rfc3772)
-* [PPP Consistent Overhead Byte Stuffing (COBS)](https://tools.ietf.org/html/draft-ietf-pppext-cobs)
-* [ITU-T Recommendation X.25](https://www.itu.int/rec/T-REC-X.25-199610-I/en)
-* [Digital Data Communications Message Protocol](http://www.ibiblio.org/pub/historic-linux/early-ports/Mips/doc/DEC/ddcmp-4.1.txt)
-
+- [Python implementation of PULSEv2](https://github.com/coredevices/PebbleOS/tree/main/tools/libs/pulse2)
+- [RFC 1661 - The Point to Point Protocol (PPP)](https://tools.ietf.org/html/rfc1661)
+- [RFC 1662 - PPP in HDLC-like Framing](https://tools.ietf.org/html/rfc1662)
+- [RFC 1663 - PPP Reliable Transmission](https://tools.ietf.org/html/rfc1663)
+- [RFC 1570 - PPP LCP Extensions](https://tools.ietf.org/html/rfc1570)
+- [RFC 2153 - PPP Vendor Extensions](https://tools.ietf.org/html/rfc2153)
+- [RFC 3772 - Point-to-Point Protocol (PPP) Vendor Protocol](https://tools.ietf.org/html/rfc3772)
+- [PPP Consistent Overhead Byte Stuffing (COBS)](https://tools.ietf.org/html/draft-ietf-pppext-cobs)
+- [ITU-T Recommendation X.25](https://www.itu.int/rec/T-REC-X.25-199610-I/en)
+- [Digital Data Communications Message Protocol](http://www.ibiblio.org/pub/historic-linux/early-ports/Mips/doc/DEC/ddcmp-4.1.txt)
 
 <!-- vim: set tw=72: -->
