@@ -86,7 +86,7 @@ void recognizer_set_simultaneous_with(Recognizer *recognizer,
 
 //! Check whether a recognizer should evaluate simultaneously with \a test
 //! @param recognizer recognizer to be tested against
-//! @param test check whether this recognizer is evaluated simultaneously with \ref recognizer
+//! @param test check whether this recognizer is evaluated simultaneously with @c recognizer
 //! @return true if the two recognizers will be evaluated simultaneously
 bool recognizer_should_evaluate_simultaneously(const Recognizer *recognizer,
                                                const Recognizer *test);
@@ -103,6 +103,7 @@ bool recognizer_has_triggered(const Recognizer *recognizer);
 
 //! Set the user data attached to the recognizer
 //! @param recognizer recognizer to modify
+//! @param data user data to attach
 void recognizer_set_user_data(Recognizer *recognizer, void *data);
 
 //! Get the user data attached to the recognizer

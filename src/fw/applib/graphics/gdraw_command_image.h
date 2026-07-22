@@ -65,7 +65,7 @@ void gdraw_command_image_draw(GContext *ctx, GDrawCommandImage *image, GPoint of
 //! @param ctx The destination graphics context in which to draw
 //! @param image Image to draw
 //! @param offset Offset from draw context origin to draw the image
-//! @param processors Contains function pointers to draw modified commands in the image
+//! @param processor Contains function pointers to draw modified commands in the image
 void gdraw_command_image_draw_processed(GContext *ctx, GDrawCommandImage *image, GPoint offset,
                                         GDrawCommandProcessor *processor);
 

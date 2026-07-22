@@ -106,6 +106,9 @@ typedef struct FontCache {
   const FontResource *cached_font;
 } FontCache;
 
+//! @param font_cache The font cache to look up the glyph in
+//! @param codepoint The codepoint to get the glyph for
+//! @param font_info The font to get the glyph from
 //! @param baseline_adjust_out optional: pixels to add to the glyph's top_offset when drawing,
 //! non-zero only when another font (emoji or system fallback) supplied the glyph
 const GlyphData *text_resources_get_glyph(FontCache *font_cache, Codepoint codepoint,
@@ -123,7 +126,7 @@ int8_t text_resources_get_glyph_horiz_advance(FontCache *font_cache, Codepoint c
 //! @param app_num the ResAppNum associated with this font (i.e. system or app?)
 //! @param font_resource the "base" resource id
 //! @param extension_resource the "extension" resource id
-//! @fontinfo a pointer to the fontinfo struct to initialize
+//! @param font_info a pointer to the fontinfo struct to initialize
 bool text_resources_init_font(ResAppNum app_num, uint32_t font_resource,
                               uint32_t extension_resource, FontInfo *font_info);
 

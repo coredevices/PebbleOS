@@ -51,8 +51,8 @@
 //! @see \ref gbitmap_create_from_png_data
 //! @see \ref gbitmap_create_with_resource
 //!
-//!       @{
-//!       @} // end addtogroup png_file_format
+//!   @{
+//!   @} // end addtogroup png_file_format
 //!     @} // end addtogroup FileFormats
 //!   @} // end addtogroup Resources
 //! @} // end addtogroup Foundation

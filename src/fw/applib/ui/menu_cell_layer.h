@@ -17,6 +17,7 @@
 //!   @addtogroup Layer Layers
 //!   @{
 //!     @addtogroup MenuLayer
+//!   @{
 
 //! @internal
 //! TODO: PBL-21467 Implement MenuCellLayer

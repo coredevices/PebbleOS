@@ -56,7 +56,7 @@ typedef struct {
 
 //! Subscribe to the focus event service. Once subscribed, the handlers get called every time the
 //! app gains or loses focus.
-//! @param handler Handlers which will be called on will-focus and did-focus events.
+//! @param handlers Handlers which will be called on will-focus and did-focus events.
 //! @see AppFocusHandlers
 void app_focus_service_subscribe_handlers(AppFocusHandlers handlers);
 

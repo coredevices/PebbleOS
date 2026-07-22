@@ -56,7 +56,7 @@ BTErrno ble_client_set_service_change_handler(BLEClientServiceChangeHandler hand
 //! @param service_uuids An array of the Service UUIDs that the application is
 //! interested in and the system should filter by. Passing NULL will discover
 //! all services on the device.
-//! @param num_uuids The number of Uuid`s in the service_uuids array. Ignored
+//! @param num_uuids The number of Uuids in the service_uuids array. Ignored
 //! when NULL is passed for the service_uuids argument.
 //! @return BTErrnoOK if the filter was set up successfully,
 //! or TODO....
@@ -120,7 +120,7 @@ typedef void (*BLEClientWriteHandler)(BLECharacteristic characteristic,
 //! (un)subscribed.
 //! @param subscription_type The type of subscription. If the client is now
 //! unsubscribed, the type will be BLESubscriptionNone.
-//! @param The error or status as returned by the remote server. If the
+//! @param error The error or status as returned by the remote server. If the
 //! (un)subscription was successful, this remote server is supposed to send
 //! BLEGATTErrorSuccess.
 typedef void (*BLEClientSubscribeHandler)(BLECharacteristic characteristic,

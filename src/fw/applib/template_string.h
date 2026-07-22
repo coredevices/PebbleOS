@@ -77,7 +77,7 @@ typedef struct TemplateStringError {
 //! @param reeval_cond Pointer to a structure that will be filled with information on when to
 //!                    re-evaluate the string. Maybe be NULL
 //! @param vars Pointer to variables that affect how the template string will be evaluated
-//! @param errors Pointer to a TemplateStringError that will be set to contain information about
+//! @param error Pointer to a TemplateStringError that will be set to contain information about
 //!               the first error detected in the template string upon failure
 //! @return True if the template string is successfully evaluated and the output written to the
 //!         provided output string buffer, false otherwise

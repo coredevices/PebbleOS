@@ -21,7 +21,7 @@
 //! Plug-in services are identified by UUID. The client of a service will get a pointer to an event structure
 //! param block whose content is unique to each service.
 //!
-//!     @{
+//!   @{
 
 
 //! Generic structure of a plug-in event that will be received by an app
@@ -50,6 +50,7 @@ bool plugin_service_unsubscribe(Uuid *uuid);
 
 
 //! Send an event for a plug-in service
+//! @param uuid The UUID of the plug-in service
 //! @param type the event type
 //! @param data the event data structure
 void plugin_service_send_event(Uuid *uuid, uint8_t type, PluginEventData *data);

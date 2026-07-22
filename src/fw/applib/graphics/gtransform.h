@@ -99,8 +99,8 @@
                        .d = GTransformNumberOne,      \
                        .tx = tx_v,        \
                        .ty = ty_v }
-//! @param tx_v X translation factor (type is char, int, float, etc)
-//! @param ty_v Y translation factor (type is char, int, float, etc)
+//! @param tx X translation factor (type is char, int, float, etc)
+//! @param ty Y translation factor (type is char, int, float, etc)
 #define GTransformTranslationFromNumber(tx, ty)  \
         GTransformTranslation(GTransformNumberFromNumber(tx), GTransformNumberFromNumber(ty))
 
@@ -239,7 +239,7 @@ bool gtransform_invert(GTransform *t_new, GTransform *t);
 GPointPrecise gpoint_transform(GPoint point, const GTransform * const t);
 
 //! Transforms a single GVector (dx,dy) based on the transformation matrix
-//! @param point GVector to be transformed
+//! @param vector GVector to be transformed
 //! @param t Pointer to transformation matrix to apply to the GVector
 //! @return GVectorPrecise after transforming the GVector; if t is NULL then just convert the
 //! GVector to a GVectorPrecise.

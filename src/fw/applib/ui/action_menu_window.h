@@ -35,7 +35,7 @@ struct ActionMenu;
 typedef struct ActionMenu ActionMenu;
 
 //! Callback executed after the ActionMenu has closed, so memory may be freed.
-//! @param root_level the root level passed to the ActionMenu
+//! @param menu the ActionMenu
 //! @param performed_action the ActionMenuItem for the action that was performed,
 //! NULL if the ActionMenu is closing without an action being selected by the user
 //! @param context the context passed to the ActionMenu
@@ -44,7 +44,7 @@ typedef void (*ActionMenuDidCloseCb)(ActionMenu *menu,
                                      void *context);
 
 //! Callback executed immediately before the ActionMenu closes.
-//! @param root_level the root ActionMenuLevel passed to the ActionMenu
+//! @param menu the ActionMenu
 //! @param performed_action the ActionMenuItem for the action that was performed,
 //! NULL if the ActionMenu is closing without an action being selected by the user
 //! @param context the context passed to the ActionMenu

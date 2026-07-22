@@ -10,7 +10,7 @@
 // Legacy2 Property Animations
 //
 
-//! @file property_animation_legacy2_legacy2.h
+//! @file property_animation_legacy2.h
 
 //! @addtogroup UI
 //! @{
@@ -122,7 +122,7 @@ void property_animation_legacy2_init(struct PropertyAnimationLegacy2 *property_a
 //! sense to pass in a `static const` struct pointer.
 //! @param subject Pointer to the "subject" being animated. This will be passed in when the
 //! getter/setter accessors are called,
-//! see \ref PropertyAnimationLegacy2Accessors, \ref GPointSetter, and friends. The value of this
+//! see \ref PropertyAnimationAccessors, \ref GPointSetter, and friends. The value of this
 //! pointer will be copied into the `.subject` field of the PropertyAnimationLegacy2 struct.
 //! @param from_value Pointer to the value that the subject should animate from
 //! @param to_value Pointer to the value that the subject should animate to

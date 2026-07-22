@@ -24,7 +24,7 @@ typedef void (*ActionMenuPerformActionCb)(ActionMenu *action_menu,
 
 //! Callback invoked for each item in an action menu hierarchy.
 //! @param item the current action menu item
-//! @param a caller-provided context callback
+//! @param context a caller-provided callback context
 typedef void (*ActionMenuEachItemCb)(const ActionMenuItem *item, void *context);
 
 //! enum value that controls whether menu items are displayed in a grid
@@ -39,7 +39,7 @@ typedef enum {
 //! @return a pointer to the string label. NULL if invalid.
 char *action_menu_item_get_label(const ActionMenuItem *item);
 
-//! Getter for the action_data pointer of a given \ref ActionMenuitem.
+//! Getter for the action_data pointer of a given \ref ActionMenuItem.
 //! @see action_menu_level_add_action
 //! @param item the \ref ActionMenuItem of interest
 //! @return a pointer to the data. NULL if invalid.

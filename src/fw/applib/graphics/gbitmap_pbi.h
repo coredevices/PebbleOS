@@ -23,7 +23,7 @@
 //! The metadata describes how long each row of pixels is in the buffer (the stride).
 //! The following restrictions on stride are in place for different formats:
 //!
-//! - \ref GBitmapFormat1Bit:
+//! - \ref GBitmapFormat1Bit "GBitmapFormat1Bit":
 //!   Each row must be a multiple of 32 pixels (4 bytes). Using the `bounds` field,
 //!   the area that is actually relevant can be specified.
 //!   For example, when the image is 29 by 5 pixels
@@ -40,12 +40,12 @@
 //!   it will result in a black pixel.
 //!   ![](pixel_bit_values.png)
 //!
-//! - \ref GBitmapFormat8Bit:
+//! - \ref GBitmapFormat8Bit "GBitmapFormat8Bit":
 //!   Each pixel in the bitmap is represented by 1 byte. The color value of that byte correspends to
 //!   a GColor.argb value.
 //!   There is no restriction on row_size_bytes / stride.
 //!
-//! - \ref GBitmapFormat1BitPalette, \ref GBitmapFormat2BitPalette, \ref GBitmapFormat4BitPalette:
+//! - \ref GBitmapFormat1BitPalette, \ref GBitmapFormat2BitPalette, \ref GBitmapFormat4BitPalette "GBitmapFormat4BitPalette":
 //!   Each pixel in the bitmap is represented by the number of bits the format specifies. Pixels
 //!   must be packed.
 //!   For example, in GBitmapFormat2BitPalette, each pixel uses 2 bits. This means 4 pixels / byte.
@@ -66,8 +66,8 @@
 //! @see \ref gbitmap_create_with_data
 //! @see \ref gbitmap_create_with_resource
 //!
-//!       @{
-//!       @} // end addtogroup pbi_file_format
+//!   @{
+//!   @} // end addtogroup pbi_file_format
 //!     @} // end addtogroup FileFormats
 //!   @} // end addtogroup Resources
 //! @} // end addtogroup Foundation

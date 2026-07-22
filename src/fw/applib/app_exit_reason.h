@@ -32,7 +32,7 @@ typedef enum AppExitReason {
 AppExitReason app_exit_reason_get(void);
 
 //! Set the app exit reason to a new reason.
-//! @param reason The new app exit reason
+//! @param exit_reason The new app exit reason
 void app_exit_reason_set(AppExitReason exit_reason);
 
 //!   @} // group ExitReason

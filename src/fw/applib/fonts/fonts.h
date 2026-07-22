@@ -45,7 +45,7 @@ GFont fonts_get_system_emoji_font_for_size(unsigned int font_size);
 
 //! Loads a custom font.
 //! @param handle The resource handle of the font to load. See resource_ids.auto.h
-//! for a list of resource IDs, and use \ref resource_get_handle() to obtain the resource handle.
+//! for a list of resource IDs, and use @c resource_get_handle() to obtain the resource handle.
 //! @return An opaque pointer to the loaded font, or a pointer to the default
 //! (fallback) font if the specified font cannot be loaded.
 //! @see Read the <a href="http://developer.getpebble.com/guides/pebble-apps/resources/">App

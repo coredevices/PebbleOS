@@ -11,7 +11,7 @@
 //! @{
 //!
 
-//! The default request timeout in milliseconds (see \ref smartstrap_set_timeout).
+//! The default request timeout in milliseconds (see @c smartstrap_set_timeout).
 #define SMARTSTRAP_TIMEOUT_DEFAULT 250
 
 //! The service_id to specify in order to read/write raw data to the smartstrap.
@@ -151,13 +151,13 @@ void app_smartstrap_attribute_destroy(SmartstrapAttribute *attribute);
 //! @returns Whether or not the service is available.
 bool app_smartstrap_service_is_available(SmartstrapServiceId service_id);
 
-//! Returns the ServiceId which the attribute was created for (see \ref
+//! Returns the ServiceId which the attribute was created for (see @c
 //! smartstrap_attribute_create).
 //! @param attribute The SmartstrapAttribute for which to obtain the service ID.
 //! @returns The SmartstrapServiceId which the attribute was created with.
 SmartstrapServiceId app_smartstrap_attribute_get_service_id(SmartstrapAttribute *attribute);
 
-//! Gets the AttributeId which the attribute was created for (see \ref smartstrap_attribute_create).
+//! Gets the AttributeId which the attribute was created for (see @c smartstrap_attribute_create).
 //! @param attribute The SmartstrapAttribute for which to obtain the attribute ID.
 //! @returns The SmartstrapAttributeId which the attribute was created with.
 SmartstrapAttributeId app_smartstrap_attribute_get_attribute_id(SmartstrapAttribute *attribute);

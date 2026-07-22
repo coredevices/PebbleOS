@@ -64,6 +64,8 @@ GPoint gpoint_attract_to_square(GPoint point, GSize size, int32_t normalized);
 
 //! Creates a GPointIndexLookup based on the angle to the center of an image
 //! Points in the image whose ray with the image's center has a smaller angle are animated first.
+//! @param list GDrawCommandList to create the lookup for
+//! @param origin Center point against which the angle of each point is measured
 //! @param angle Angle at which to consider zero. Points at this angle animate first.
 //! @see GPointIndexLookup
 GPointIndexLookup *gdraw_command_list_create_index_lookup_by_angle(GDrawCommandList *list,
@@ -76,6 +78,7 @@ GPointIndexLookup *gdraw_command_list_create_index_lookup_by_angle(GDrawCommandL
 //! is most closest to its destination animation point.
 //! Choosing a target in the image's perimeter opposite of the destination animation point results
 //! in a paper flipping effect.
+//! @param list GDrawCommandList to create the lookup for
 //! @param target Point to compare against in image coordinates. (0, 0) is top left.
 //! @see GPointIndexLookup
 GPointIndexLookup *gdraw_command_list_create_index_lookup_by_distance(GDrawCommandList *list,
@@ -84,8 +87,8 @@ GPointIndexLookup *gdraw_command_list_create_index_lookup_by_distance(GDrawComma
 //! Shifts the delay index of all points at or above a given delay index.
 //! \note This shifts the delay index up, so be sure to insert the last most delays first.
 //! @param lookup GPointIndexLookup to add delay to
-//! @param index Delay index to add delay to
-//! @param amount Amount of delay to add in index units
+//! @param delay_index Delay index to add delay to
+//! @param delay_amount Amount of delay to add in index units
 //! @see GPointIndexLookup
 void gpoint_index_lookup_add_at(GPointIndexLookup *lookup, int delay_index, int delay_amount);
 
@@ -101,6 +104,7 @@ void gpoint_index_lookup_set_groups(GPointIndexLookup *lookup, int num_groups,
 
 //! Performs a scaling and translation transform on a list with each point being delayed by delay
 //! segments assigned based on a GPointIndexLookup.
+//! @param list GDrawCommandList to transform
 //! @param size Native size of the points within the command list. This is used for scaling.
 //! @param from Position and size to start from in local drawing coordinates.
 //! @param to Position and size to end at in local drawing coordinates.
@@ -120,6 +124,7 @@ void gdraw_command_list_scale_segmented_to(
 
 //! Performs a scaling and translation transform on an image with each point being delayed by delay
 //! segments assigned based on a GPointIndexLookup.
+//! @param image GDrawCommandImage to transform
 //! @param from Position and size to start from in local drawing coordinates.
 //! @param to Position and size to end at from in local drawing coordinates.
 //! @param normalized Normalized animation position to transform to.

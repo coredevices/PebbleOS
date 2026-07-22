@@ -104,6 +104,7 @@ void progress_window_set_result_success(ProgressWindow *window);
 //! Tell the ProgressWindow it should animate in a way to show failure. When the animation is
 //! complete, .callbacks.finished will be called if previously provided.
 //!
+//! @param window ProgressWindow to modify
 //! @param timeline_res_id optional timeline resource, can be 0 if not desired
 //! @param message optional message, can be NULL
 //! @param delay duration of the progress bar shrinking animation in milliseconds

@@ -9,10 +9,10 @@
 //! paired devices (connected or not) and devices for which there is a Bluetooth
 //! connection to the system (but not necessarily paired and not necessarily
 //! connected to the application).
-//! @param[out] devices_out An array of BTDevice`s into which the known
+//! @param[out] devices_out An array of BTDevices into which the known
 //! devices will be copied.
 //! @param[in,out] num_devices_out In: the size of the devices_out array.
-//! Out: the number of BTDevice`s that were copied.
+//! Out: the number of BTDevices that were copied.
 //! @return The total number of known devices. This might be a larger
 //! number than num_devices_out will contain, if the passed array was not large
 //! enough to hold all the connected devices.

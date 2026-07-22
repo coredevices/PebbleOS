@@ -48,12 +48,12 @@ bool window_transition_context_has_legacy_window_to(WindowStack *stack, Window *
 
 //! Transitioning function called when the current visible window disappears.
 //! If there is no window_to pointer (it is NULL), then this is a no-op.
-//! @param context The \ref WindowTransitionContext of the transitioning window
+//! @param context The \ref WindowTransitioningContext of the transitioning window
 void window_transition_context_disappear(WindowTransitioningContext *context);
 
 //! Transitioning function called when the new window, window_to in the context, appears on
 //! the screen.  If there is no window_to pointer (it is NULL), then this is a no-op.
-//! @param context The \ref WindowTransitionContext of the transitioning window
+//! @param context The \ref WindowTransitioningContext of the transitioning window
 void window_transition_context_appear(WindowTransitioningContext *context);
 
 //! @internal

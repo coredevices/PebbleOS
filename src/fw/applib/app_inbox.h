@@ -20,6 +20,7 @@ typedef void (*AppInboxDroppedHandler)(uint32_t num_dropped_messages);
 //! Opaque reference to an app inbox.
 typedef struct AppInbox AppInbox;
 
+//! @param buffer_size The size in bytes of the buffer to allocate for incoming message payloads.
 //! @param min_num_messages The minimum number of messages that the inbox should be able to hold
 //! if the total payload size is exactly buffer_size. This is used to calculate how much additional
 //! buffer space has to be allocated for message header overhead.

@@ -23,7 +23,7 @@
 //! without a deflation and bounce back effect. The effects can be simultaneous or independent and
 //! are achieved by overlapping two invocations of \ref gdraw_command_image_scale_segmented_to.
 //! The unfold effect is achieved by using a GPointIndexLookup created by
-//! \ref gdraw_command_image_create_index_lookup_by_angle.
+//! \ref gdraw_command_list_create_index_lookup_by_angle.
 //! @param from_reel KinoReel to display and animate.
 //! @param take_ownership true if this KinoReel will free `image` when destroyed.
 //! @param screen_frame Position and size of the parent KinoLayer in absolute drawing coordinates.

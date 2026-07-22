@@ -42,7 +42,6 @@ void app_log_vargs(uint8_t log_level, const char *src_filename, int src_line_num
 //! @param src_line_number The line number in the source file where the log originates from
 //! @param fmt A C formatting string
 //! @param ... The arguments for the formatting string
-//! @param log_level
 //! \sa snprintf for details about the C formatting string.
 #if __clang__
 void app_log(uint8_t log_level, const char* src_filename, int src_line_number, const char* fmt,

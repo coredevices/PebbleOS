@@ -41,10 +41,11 @@ typedef struct RecognizerImpl {
 //! recognizers to instantiate a recognizer from the base class. A recognizer created from this
 //! function cannot be used without an implementation.
 //! @note A recognizer cannot be created without implementation details
+//! @param impl recognizer implementation
 //! @param data recognizer-specific data (copied into created recognizer)
-//! @param size data size
+//! @param data_size data size
 //! @param event_cb event callback
-//! @param event_context context to provide to event callback
+//! @param user_data context to provide to event callback
 //! @return NULL if an error occurs, otherwise a pointer to the newly created recognizer
 Recognizer *recognizer_create_with_data(const RecognizerImpl *impl, const void *data,
                                         size_t data_size, RecognizerEventCb event_cb,

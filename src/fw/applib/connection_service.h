@@ -34,7 +34,7 @@
 //! connection with the Pebble watch (since companion app messages are routed
 //! directly to the watch)
 //!
-//!     @{
+//!   @{
 //! Callback type for connection events
 //! @param connected true on connection, false on disconnection
 typedef void (*ConnectionHandler)(bool connected);
@@ -59,7 +59,7 @@ typedef struct {
 //! Subscribe to the connection event service. Once subscribed, the appropriate
 //! handler gets called based on the type of connection event and user provided
 //! handlers
-//! @param ConnectionHandlers A struct populated with the handlers to
+//! @param conn_handlers A struct populated with the handlers to
 //! be called when the specified connection event occurs. If a given handler is
 //! NULL, no function will be called.
 void connection_service_subscribe(ConnectionHandlers conn_handlers);

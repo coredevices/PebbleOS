@@ -139,7 +139,6 @@ typedef struct DataLayer {
 //! * `update_proc` : `NULL` (draws nothing)
 //! @param layer The layer to initialize
 //! @param frame The frame at which the layer should be initialized.
-//! @param data_size The size (in bytes) of memory to initialize after the layer struct.
 //! @see \ref layer_set_frame()
 //! @see \ref layer_set_bounds()
 void layer_init(Layer *layer, const GRect *frame);

@@ -263,7 +263,7 @@ typedef struct MenuLayerCallbacks {
 
   //! Callback that gets called to get the height of a cell.
   //! This can get called at various moments throughout the life of a menu.
-  //! @note When `NULL`, the default height of \ref MENU_CELL_BASIC_CELL_HEIGHT pixels is used.
+  //! @note When `NULL`, the default height of @c MENU_CELL_BASIC_CELL_HEIGHT pixels is used.
   //! Developers may wish to use \ref MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT
   //! and \ref MENU_CELL_ROUND_UNFOCUSED_SHORT_CELL_HEIGHT on a round display
   //! to respect the system aesthetic.
@@ -666,7 +666,7 @@ void menu_layer_set_scroll_vibe_on_wrap(MenuLayer *menu_layer, bool scroll_vibe_
 //! Controls if the \ref MenuLayer wil generate a vibe when blocked at the top or bottom.
 //! Defaults to false for every platform
 //! @param menu_layer The menu layer for which to enable or disable the behavior.
-//! @param scroll_vibe_on_wrap true = enable the vibe on cursor block, false = disable it.
+//! @param scroll_vibe_on_blocked true = enable the vibe on cursor block, false = disable it.
 //! @see \ref menu_layer_get_scroll_vibe_behavior
 //! @see \ref menu_layer_set_scroll_vibe_on_wrap
 void menu_layer_set_scroll_vibe_on_blocked(MenuLayer *menu_layer, bool scroll_vibe_on_blocked);

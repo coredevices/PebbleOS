@@ -49,28 +49,36 @@ KinoReel *kino_reel_scale_segmented_create(KinoReel *from_reel, bool take_owners
                                            GRect screen_frame);
 
 //! Sets a GPointIndexLookup
-//! @param index_lookup GPointIndexLookup with the assigned delay multiplier for each point
+//! @param reel KinoReel to modify
+//! @param creator Creator of a GPointIndexLookup with the assigned delay multiplier for each point
+//! @param context Context to pass to the creator
+//! @param take_ownership true if this KinoReel will free `context` when destroyed
 void kino_reel_scale_segmented_set_delay_lookup_creator(
     KinoReel *reel, GPointIndexLookupCreator creator, void *context, bool take_ownership);
 
 //! Sets a GPointIndexLookup based on the distance to a target
+//! @param reel KinoReel to modify
 //! @param target Position to pull and stretch the image from in image coordinates.
 bool kino_reel_scale_segmented_set_delay_by_distance(KinoReel *reel, GPoint target);
 
 //! Set the point duration
+//! @param reel KinoReel to modify
 //! @param point_duration Fraction of the total animation time a point should animate.
 void kino_reel_scale_segmented_set_point_duration(KinoReel *reel, Fixed_S32_16 point_duration);
 
 //! Set the effect duration. Ignored if expand and bounce are disabled
-//! @param effect_duration Fraction of the total animation time an effect should animate.
+//! @param reel KinoReel to modify
+//! @param point_duration Fraction of the total animation time an effect should animate.
 void kino_reel_scale_segmented_set_effect_duration(KinoReel *reel, Fixed_S32_16 point_duration);
 
 //! Set the magnitude of the deflate effect
+//! @param reel KinoReel to modify
 //! @param expand Expansion length of `to` in pixels that would result in a deflation animation.
 //! Set as 0 to disable.
 void kino_reel_scale_segmented_set_deflate_effect(KinoReel *reel, int16_t expand);
 
 //! Set the magnitude of the bounce back effect. Requires all frames to be set before use.
+//! @param reel KinoReel to modify
 //! @param bounce Overshoot length of `to` in pixels that would result in a bounce back animation.
 //! Set as 0 to disable.
 void kino_reel_scale_segmented_set_bounce_effect(KinoReel *reel, int16_t bounce);
@@ -80,6 +88,7 @@ void kino_reel_scale_segmented_set_interpolate(KinoReel *reel,
                                                InterpolateInt64Function interpolate);
 
 //! Set from stroke width
+//! @param reel KinoReel to modify
 //! @param from Fixed_S16_3 From stroke width operator value
 //! @param from_op GStrokeWidthOp operation to start with
 //! @see GStrokeWidthOp
@@ -87,6 +96,7 @@ void kino_reel_scale_segmented_set_from_stroke_width(KinoReel *reel, Fixed_S16_3
                                                      GStrokeWidthOp from_op);
 
 //! Set to stroke width
+//! @param reel KinoReel to modify
 //! @param to Fixed_S16_3 To stroke width operator value
 //! @param to_op GStrokeWidthOp operation to end with
 //! @see GStrokeWidthOp

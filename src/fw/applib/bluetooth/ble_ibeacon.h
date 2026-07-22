@@ -37,23 +37,23 @@ typedef struct {
 } BLEiBeacon;
 
 //! Gets the UUID of the iBeacon.
-//! @param The iBeacon
+//! @param ibeacon The iBeacon
 //! @return The UUID that the iBeacon advertised. In iOS' CoreBluetooth,
 //! this corresponds to the "proximityUUID" property of instances of CLBeacon.
 Uuid ble_ibeacon_get_uuid(const BLEiBeacon *ibeacon);
 
 //! Gets the major value of the iBeacon.
-//! @param The iBeacon
+//! @param ibeacon The iBeacon
 //! @return The major, custom value.
 uint16_t ble_ibeacon_get_major(const BLEiBeacon *ibeacon);
 
 //! Gets the minor value of the iBeacon.
-//! @param The iBeacon
+//! @param ibeacon The iBeacon
 //! @return The minor, custom value.
 uint16_t ble_ibeacon_get_minor(const BLEiBeacon *ibeacon);
 
 //! Gets the estimated distance to the iBeacon, in centimeters.
-//! @param The iBeacon
+//! @param ibeacon The iBeacon
 //! @return The estimated distance in centimeters.
 uint16_t ble_ibeacon_get_distance_cm(const BLEiBeacon *ibeacon);
 

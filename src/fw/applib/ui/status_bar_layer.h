@@ -129,8 +129,6 @@ typedef struct StatusBarLayer {
 //! * Frame: `GRect(0, 0, screen_width, STATUS_BAR_LAYER_HEIGHT)`
 //! The status bar is automatically marked dirty after this operation.
 //! You can call \ref layer_set_frame() to create a StatusBarLayer of a different width.
-//! @return A pointer to the StatusBarLayer, which will be allocated to the heap,
-//! `NULL` if the StatusBarLayer could not be created
 void status_bar_layer_init(StatusBarLayer *status_bar_layer);
 
 //! Creates a new StatusBarLayer on the heap and initializes it with the default values.
@@ -199,7 +197,7 @@ void status_bar_layer_set_title(StatusBarLayer *status_bar_layer, const char *te
 const char *status_bar_layer_get_title(const StatusBarLayer *status_bar_layer);
 
 //! Resets title text to clock text
-//! @param status_bar_layer The StatusBarLayer of which to reset the title to clock
+//! @param cb_data The StatusBarLayer of which to reset the title to clock
 void status_bar_layer_reset_title(void *cb_data);
 
 //! Sets the info section to display arbitrary text

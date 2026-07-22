@@ -38,7 +38,7 @@ bool window_has_status_bar(Window *window);
 
 //! @param window Pointer to the \ref Window to set
 //! @param overrides_back_button Boolean indicating if the back button has been overriden
-//!     in the \ref ClickConfigProvidier of the passed \ref Window
+//!     in the \ref ClickConfigProvider of the passed \ref Window
 void window_set_overrides_back_button(Window *window, bool overrides_back_button);
 
 //! @internal

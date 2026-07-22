@@ -68,7 +68,7 @@ void expandable_dialog_close_cb(ClickRecognizerRef recognizer, void *e_dialog);
 
 //! Intializes an ExpandableDialog
 //! @param expandable_dialog Pointer to an \ref ExpandableDialog
-//! param dialog_name The name to give the \ref ExpandableDialog
+//! @param dialog_name The name to give the \ref ExpandableDialog
 void expandable_dialog_init(ExpandableDialog *expandable_dialog, const char *dialog_name);
 
 //! Retrieves the internal Dialog object of the Expandable Dialog.
@@ -119,7 +119,7 @@ void expandable_dialog_set_body_font(ExpandableDialog *expandable_dialog, GFont 
 //! @param resource_id The resource id of the resource to be used to create the select bitmap
 //! @param select_click_handler Handler to call when the select handler is clicked in the
 //!     Expandable Dialog's action bar layer.
-//! @note Passing \ref RESOURCE_ID_INVALID as the resource_id to the function will allow you
+//! @note Passing @c RESOURCE_ID_INVALID as the resource_id to the function will allow you
 //!     to set an action with no icon appearing in the \ref ActionBarLayer
 void expandable_dialog_set_select_action(ExpandableDialog *expandable_dialog,
                                          uint32_t resource_id,

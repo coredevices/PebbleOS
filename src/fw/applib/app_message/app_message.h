@@ -214,7 +214,7 @@ typedef void (*AppMessageInboxReceived)(DictionaryIterator *iterator, void *cont
 
 //! Called after an incoming message is dropped.
 //!
-//! \param[in] result
+//! \param[in] reason
 //!   The reason why the message was dropped.  Some possibilities include \ref APP_MSG_BUSY and
 //!   \ref APP_MSG_BUFFER_OVERFLOW.
 //!
@@ -245,7 +245,7 @@ typedef void (*AppMessageOutboxSent)(DictionaryIterator *iterator, void *context
 //!   the iterator cannot be modified or saved off as the library will re-open the dictionary with dict_begin() after
 //!   this callback returns.
 //!
-//! \param[in] result
+//! \param[in] reason
 //!   The result of the operation.  Some possibilities for the value include \ref APP_MSG_SEND_TIMEOUT,
 //!   \ref APP_MSG_SEND_REJECTED, \ref APP_MSG_NOT_CONNECTED, \ref APP_MSG_APP_NOT_RUNNING, and the combination
 //!   `(APP_MSG_NOT_CONNECTED | APP_MSG_APP_NOT_RUNNING)`.

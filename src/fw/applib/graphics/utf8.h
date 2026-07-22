@@ -48,16 +48,16 @@ size_t utf8_copy_character(utf8_t *dest, utf8_t *origin, size_t length);
 //! @return Number of bytes written (1-4), or 0 on error (invalid codepoint)
 size_t utf8_encode_codepoint(Codepoint codepoint, utf8_t *dest);
 
-//! Returns the length of the string if this length is less than \ref max_size bytes. Otherwise, it
+//! Returns the length of the string if this length is less than @c max_size bytes. Otherwise, it
 //! returns the length of the string up until the end of the last valid codepoint that fits into
-//! \ref max_size bytes and \ref truncated is set to true (it is set to false if the string is not
+//! @c max_size bytes and @c truncated is set to true (it is set to false if the string is not
 //! truncated)
 //! @param text A null-terminated UTF-8 c-string.
 //! @param max_size maximum allowable size, in bytes, of the string (including null terminator)
-//! @return length of string in bytes (will always be less than \ref max_size)
+//! @return length of string in bytes (will always be less than @c max_size)
 size_t utf8_get_size_truncate(const char *text, size_t max_size);
 
-//! Truncates \ref in_string to at most \ref max_length bytes (including the null
+//! Truncates @c in_string to at most @c max_length bytes (including the null
 //! terminator) with ellipsis.
 //! @param in_string A null-terminated UTF-8 c-string.
 //! @param[out] out_buffer A buffer where the truncated string will be output,

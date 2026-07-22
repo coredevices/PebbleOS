@@ -28,7 +28,7 @@
 //!
 //!   The main window's unload handler is usually a good place to call \ref app_glance_reload.
 //!
-//!   @warning \ref PBL_PLATFORM_APLITE does not support App Glance.
+//!   @warning @c PBL_PLATFORM_APLITE does not support App Glance.
 //!
 //!   Example code:
 //!   \code{.c}

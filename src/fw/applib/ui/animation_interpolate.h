@@ -8,7 +8,7 @@
 
 #include <stdint.h>
 
-//! @file interpolate.h
+//! @file animation_interpolate.h
 //! Routines for interpolating between values and points. Useful for animations.
 
 typedef struct MoookConfig {
@@ -97,6 +97,8 @@ int64_t interpolate_moook_in_only(int32_t normalized, int64_t from, int64_t to);
 //! @param normalized Time of the point in the ease curve
 //! @param from Starting point in space of the animation
 //! @param to Ending point in space of the animation
+//! @param num_frames_from Number of frames in the animation that do not consist of the Moook
+//! ease out curve.
 //! @param bounce_back Whether to lead up to the end point from the opposite direction if we were
 //! to lead up from the start poing, which a normal Moook curve would do.
 int64_t interpolate_moook_out(int32_t normalized, int64_t from, int64_t to,

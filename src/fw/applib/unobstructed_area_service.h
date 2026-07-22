@@ -69,6 +69,7 @@
 //! the final unobstructed area passed into `will_change` to set up a \ref PropertyAnimation. A
 //! separate example would be to save the animation progress passed to your `change` handler for
 //! use in your own custom easing curve in your layer update procedure.
+//!   @{
 
 //! Handler that will be called just before the unobstructed area will begin changing
 //! @param final_unobstructed_screen_area The final unobstructed screen area after

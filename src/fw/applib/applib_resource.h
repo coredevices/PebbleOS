@@ -31,7 +31,7 @@
 #define RESOURCE_ID_FONT_FALLBACK RESOURCE_ID_GOTHIC_14
 
 //! Opaque reference to a resource.
-//! @see \ref resource_get_handle()
+//! @see @c resource_get_handle()
 typedef void * ResHandle;
 
 //! Gets the resource handle for a file identifier.

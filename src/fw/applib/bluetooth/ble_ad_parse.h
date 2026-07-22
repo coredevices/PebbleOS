@@ -27,7 +27,7 @@ bool ble_ad_includes_service(const BLEAdData *ad, const Uuid *service_uuid);
 
 //! If present, copies the Service UUIDs from the advertisement data.
 //! @param ad The advertisement data
-//! @param[out] uuids_out An array of Uuid`s into which the found Service UUIDs
+//! @param[out] uuids_out An array of Uuids into which the found Service UUIDs
 //! will be copied.
 //! @param num_uuids The size of the uuids_out array.
 //! @return The total number of found Service UUIDs. This might be a larger

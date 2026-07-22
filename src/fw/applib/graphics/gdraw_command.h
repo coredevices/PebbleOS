@@ -134,27 +134,27 @@ void gdraw_command_set_point(GDrawCommand *command, uint16_t point_idx, GPoint p
 GPoint gdraw_command_get_point(GDrawCommand *command, uint16_t point_idx);
 
 //! Set the radius of a circle command
-//! @note This only works for commands of type \ref GDrawCommandCircle
+//! @note This only works for commands of type \ref GDrawCommandTypeCircle
 //! @param command \ref GDrawCommand from which to set the circle radius
 //! @param radius The radius to set for the circle.
 void gdraw_command_set_radius(GDrawCommand *command, uint16_t radius);
 
 //! Get the radius of a circle command.
-//! @note this only works for commands of type\ref GDrawCommandCircle.
+//! @note this only works for commands of type \ref GDrawCommandTypeCircle.
 //! @param command \ref GDrawCommand from which to get the circle radius
-//! @return The radius in pixels if command is of type \ref GDrawCommandCircle
+//! @return The radius in pixels if command is of type \ref GDrawCommandTypeCircle
 uint16_t gdraw_command_get_radius(GDrawCommand *command);
 
 //! Set the path of a stroke command to be open
-//! @note This only works for commands of type \ref GDrawCommandPath and
-//! \ref GDrawCommandPrecisePath
+//! @note This only works for commands of type \ref GDrawCommandTypePath and
+//! \ref GDrawCommandTypePrecisePath
 //! @param command \ref GDrawCommand for which to set the path open status
 //! @param path_open true if path should be hidden
 void gdraw_command_set_path_open(GDrawCommand *command, bool path_open);
 
 //! Return whether a stroke command path is open
-//! @note This only works for commands of type \ref GDrawCommandPath and
-//! \ref GDrawCommandPrecisePath
+//! @note This only works for commands of type \ref GDrawCommandTypePath and
+//! \ref GDrawCommandTypePrecisePath
 //! @param command \ref GDrawCommand from which to get the path open status
 //! @return true if the path is open
 bool gdraw_command_get_path_open(GDrawCommand *command);
