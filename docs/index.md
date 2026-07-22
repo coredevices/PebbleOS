@@ -96,7 +96,7 @@ development/contributing.md
 ```{toctree}
 :hidden:
 :caption: 🏛️ Architecture
-architecture/activity/index.md
+architecture/index.md
 ```
 
 ```{toctree}
