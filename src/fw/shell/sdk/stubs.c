@@ -8,6 +8,7 @@
 #include "pbl/services/timeline/peek.h"
 #include "resource/resource_ids.auto.h"
 #include "shell/prefs.h"
+#include "util/time/time.h"
 #include "pbl/util/uuid.h"
 
 #include <stdlib.h>
@@ -38,6 +39,34 @@ uint32_t backlight_get_default_color(void) {
 }
 
 void backlight_set_default_color(uint32_t rgb_color) {
+}
+
+bool backlight_day_night_color_is_enabled(void) {
+  return false;
+}
+
+void backlight_day_night_color_set_enabled(bool enabled) {
+}
+
+uint32_t backlight_get_night_color(void) {
+  return BOARD_CONFIG.backlight_default_color;
+}
+
+void backlight_set_night_color(uint32_t rgb_color) {
+}
+
+uint16_t backlight_get_sunrise_minute(void) {
+  return 6 * MINUTES_PER_HOUR;
+}
+
+void backlight_set_sunrise_minute(uint16_t minute) {
+}
+
+uint16_t backlight_get_sunset_minute(void) {
+  return 18 * MINUTES_PER_HOUR;
+}
+
+void backlight_set_sunset_minute(uint16_t minute) {
 }
 #endif
 

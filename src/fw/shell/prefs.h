@@ -87,6 +87,18 @@ void backlight_set_intensity(uint8_t intensity);
 // Packed 0x00RRGGBB. Matches the BACKLIGHT_COLOR_* constants in drivers/backlight.h.
 uint32_t backlight_get_default_color(void);
 void backlight_set_default_color(uint32_t rgb_color);
+
+bool backlight_day_night_color_is_enabled(void);
+void backlight_day_night_color_set_enabled(bool enabled);
+
+uint32_t backlight_get_night_color(void);
+void backlight_set_night_color(uint32_t rgb_color);
+
+uint16_t backlight_get_sunrise_minute(void);
+void backlight_set_sunrise_minute(uint16_t minute);
+
+uint16_t backlight_get_sunset_minute(void);
+void backlight_set_sunset_minute(uint16_t minute);
 #endif
 
 // The backlight motion enabled setting is used by the kernel event loop.
