@@ -1,6 +1,6 @@
 #
-# This waf script is responsible for building the SDK which can be shipped off to users into
-# tintin/build/sdk/src_wscript is the file which app developers actually run to build their apps
+# This waf script assembles the shippable SDK into build/sdk.
+# See docs/development/sdk_export.md for how the SDK is generated.
 #
 
 import json
