@@ -53,6 +53,14 @@ html_theme_options = {
     "use_issues_button": True,
 }
 
+# -- Options for the linkcheck builder ----------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-the-linkcheck-builder
+
+# Sites that are alive but block automated requests
+linkcheck_ignore = [
+    r"https?://reveng\.sourceforge\.net/.*",
+]
+
 # -- Options for myst_parser extension -----------------------------------------
 # https://myst-parser.readthedocs.io/en/latest/configuration.html
 

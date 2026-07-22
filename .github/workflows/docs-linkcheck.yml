@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# Weekly sweep for dead external links in the documentation. Scheduled
+# rather than PR-gating so transient outages of third-party sites do not
+# block unrelated PRs.
+name: Docs Link Check
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  linkcheck:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install -r docs/requirements.txt
+
+      - name: Check links
+        run: sphinx-build -b linkcheck docs _linkcheck
