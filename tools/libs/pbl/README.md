@@ -1,21 +1,15 @@
-# pbl
-Like pebble-tool, but for internal things.
+# pbl-tool
 
-Not to be confused with pebble-tool-dev. This repository is for internal tools
-that don't make sense to ever be public; pebble-tool-dev is for public tools
-that can't be public yet.
+Internal developer commands for interacting with Pebble watches, built on
+`pebble-tool` and `libpebble2` (e.g. `install_firmware`, `install_lang`,
+`coredump`, `flash_logs`). Installs a `pbl` entry point:
 
-Not sure where to put something? Ask Katharine!
+    pip install ./tools/libs/pbl
 
-## Installation
+Not to be confused with the repo-root `./pbl` build wrapper.
 
-    pip install git+ssh://git@github.com/pebble/pbl.git
-
-## Adding commands
-
-Create a new file in pbl/commands. Add a class inheriting from `BaseCommand`
-(or `PebbleCommand` if it connects to a pebble). The docstring will be used as
-help. Include a `command` field that gives the name of the command. The class's
-`__call__` method will be called when you run the command.
-
-Many examples can be found [in pebble-tool](https://github.com/pebble/pebble-tool/tree/master/pebble_tool/commands).
+To add a command, create a file in `pbl/commands/` with a class inheriting
+from `BaseCommand` (or `PebbleCommand` if it connects to a watch): the
+docstring becomes the help text, the `command` field names the command, and
+`__call__` runs it. Examples can be found
+[in pebble-tool](https://github.com/pebble/pebble-tool/tree/master/pebble_tool/commands).

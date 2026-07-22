@@ -641,7 +641,6 @@ WARN_LOGFILE           =
 
 INPUT                  = \
 @TINTIN_ROOT@/sdk/docs/common.dox \
-@TINTIN_ROOT@/sdk/docs/mainpage_sdk.dox \
 @TINTIN_ROOT@/sdk/docs/external_refs \
 @PLATFORM_PATH@/include/pebble.h \
 @PLATFORM_PATH@/include/doxygen/pebble_worker.h \
