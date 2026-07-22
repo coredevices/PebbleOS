@@ -17,7 +17,7 @@ build:
       # Skip build if there are no doc changes in a PR
       # Ref. https://docs.readthedocs.com/platform/stable/build-customization.html#cancel-build-based-on-a-condition
       - |
-        if [ "$READTHEDOCS_VERSION_TYPE" = "external" ] && git diff --quiet origin/main -- docs/ src/ Doxyfile Doxyfile.rtd .readthedocs.yaml;
+        if [ "$READTHEDOCS_VERSION_TYPE" = "external" ] && git diff --quiet origin/main -- docs/ include/ lib/ src/ subsys/ Doxyfile Doxyfile.rtd .readthedocs.yaml;
         then
           exit 183;
         fi

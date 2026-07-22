@@ -15,7 +15,9 @@ Source tree overview:
 - @c src/fw/services — system services (bluetooth, filesystem, timers, ...)
 - @c src/fw/kernel — task management, events, memory
 - @c src/fw/drivers — hardware drivers
-- @c src/libbtutil, @c src/libutil, @c src/libos — shared libraries
+- @c include — public headers (@c pbl API surface)
+- @c lib — shared libraries (util, os, btutil, c)
+- @c subsys — OS subsystems (logging, ...)
 
 For guides and protocol specifications see the
 <a href="https://pebbleos-core.readthedocs.io/">PebbleOS documentation</a>.
