@@ -148,12 +148,14 @@ void touch_click_synth_handle_touch(const TouchEvent *event) {
 
       // A drag past the threshold is a swipe. A predominantly vertical swipe
       // maps to UP/DOWN; horizontal swipes are ignored for now (BACK is a
-      // later phase). Direct spatial mapping: a swipe toward the top of the
-      // screen is UP, toward the bottom is DOWN.
+      // later phase). Content-scroll convention (matches ScrollLayer/MenuLayer
+      // touch and common touch UIs): flicking the finger up reveals content
+      // further down -> DOWN button; flicking down reveals earlier content ->
+      // UP button. So the button is opposite the finger's travel direction.
       const int16_t dx = event->x - s_state.start_x;
       const int16_t dy = event->y - s_state.start_y;
       if (ABS(dy) > ABS(dx) && ABS(dy) >= SYNTH_TAP_MOVE_THRESHOLD_PX) {
-        prv_synthesize_click(dy < 0 ? BUTTON_ID_UP : BUTTON_ID_DOWN);
+        prv_synthesize_click(dy < 0 ? BUTTON_ID_DOWN : BUTTON_ID_UP);
       }
       break;
     }

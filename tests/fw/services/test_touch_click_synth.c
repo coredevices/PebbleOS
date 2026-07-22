@@ -204,16 +204,17 @@ void test_touch_click_synth__tap_synthesizes_one_select_click(void) {
 
 // --- vertical swipe -> UP / DOWN --------------------------------------------
 
-void test_touch_click_synth__swipe_up_synthesizes_up(void) {
+// Content-scroll convention: the button is opposite the finger's travel.
+void test_touch_click_synth__swipe_up_synthesizes_down(void) {
   prv_focus(true);
-  prv_swipe(100, 150, 100, 100);  // finger moves up (dy = -50)
-  prv_assert_single_click(BUTTON_ID_UP);
+  prv_swipe(100, 150, 100, 100);  // finger moves up (dy = -50) -> content down
+  prv_assert_single_click(BUTTON_ID_DOWN);
 }
 
-void test_touch_click_synth__swipe_down_synthesizes_down(void) {
+void test_touch_click_synth__swipe_down_synthesizes_up(void) {
   prv_focus(true);
-  prv_swipe(100, 100, 100, 150);  // finger moves down (dy = +50)
-  prv_assert_single_click(BUTTON_ID_DOWN);
+  prv_swipe(100, 100, 100, 150);  // finger moves down (dy = +50) -> content up
+  prv_assert_single_click(BUTTON_ID_UP);
 }
 
 void test_touch_click_synth__horizontal_swipe_ignored(void) {
@@ -288,12 +289,12 @@ void test_touch_click_synth__modal_focused_swipe_synthesizes_up_down(void) {
   s_modal_focused = true;
   prv_focus(false);
 
-  prv_swipe(100, 150, 100, 100);       // up
-  prv_assert_single_click(BUTTON_ID_UP);
+  prv_swipe(100, 150, 100, 100);       // finger up -> content down
+  prv_assert_single_click(BUTTON_ID_DOWN);
 
   s_cap_n = 0;
-  prv_swipe(100, 100, 100, 150);       // down
-  prv_assert_single_click(BUTTON_ID_DOWN);
+  prv_swipe(100, 100, 100, 150);       // finger down -> content up
+  prv_assert_single_click(BUTTON_ID_UP);
 }
 
 // The synthesis decision is a live re-check, so it does not depend on the modal
