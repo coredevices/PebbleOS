@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# Doxygen overrides for the Read the Docs build (see .readthedocs.yaml).
+# Drops the source browser to keep the published output small and applies
+# the doxygen-awesome-css theme cloned during the RTD pre_build step.
+
+@INCLUDE = Doxyfile
+
+OUTPUT_DIRECTORY       = docs/_apidoc
+HTML_OUTPUT            = apidoc
+SOURCE_BROWSER         = NO
+VERBATIM_HEADERS       = NO
+QUIET                  = YES
+HTML_COLORSTYLE        = LIGHT
+HTML_EXTRA_STYLESHEET  = doxygen-awesome-css/doxygen-awesome.css

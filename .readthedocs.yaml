@@ -10,15 +10,24 @@ build:
   os: ubuntu-24.04
   tools:
     python: "3.13"
+  apt_packages:
+    - doxygen
   jobs:
     post_checkout:
       # Skip build if there are no doc changes in a PR
       # Ref. https://docs.readthedocs.com/platform/stable/build-customization.html#cancel-build-based-on-a-condition
       - |
-        if [ "$READTHEDOCS_VERSION_TYPE" = "external" ] && git diff --quiet origin/main -- docs/ .readthedocs.yaml;
+        if [ "$READTHEDOCS_VERSION_TYPE" = "external" ] && git diff --quiet origin/main -- docs/ src/ Doxyfile Doxyfile.rtd .readthedocs.yaml;
         then
           exit 183;
         fi
+    pre_build:
+      # Build the Doxygen API reference, published under /apidoc/ via
+      # html_extra_path (see docs/conf.py)
+      # v2.4.2, pinned by commit
+      - git clone https://github.com/jothepro/doxygen-awesome-css.git &&
+        git -C doxygen-awesome-css checkout d52eafe3e9303399fda15661f3d7bb8fe3d7eabc
+      - doxygen Doxyfile.rtd
 
 sphinx:
     configuration: docs/conf.py

@@ -1,7 +1,15 @@
 # Reference
 
-Lookup material: external talks and documents about PebbleOS, and
-specifications for the protocols used by the firmware and its tooling.
+Lookup material: the firmware C API reference, external talks and documents
+about PebbleOS, and specifications for the protocols used by the firmware
+and its tooling.
+
+## C API reference
+
+The Doxygen-generated reference for the firmware sources (applib, services,
+kernel, drivers) is published alongside this site:
+
+<a href="../apidoc/index.html">PebbleOS API reference</a>
 
 ## External resources
 

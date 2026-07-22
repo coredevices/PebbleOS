@@ -6,6 +6,8 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import os
+
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
@@ -22,7 +24,7 @@ extensions = [
     "sphinx_design",
 ]
 
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "_apidoc", "Thumbs.db", ".DS_Store"]
 
 nitpicky = True
 
@@ -31,6 +33,12 @@ nitpicky = True
 
 html_theme = "sphinx_book_theme"
 html_static_path = ["_static"]
+
+# Doxygen output built by the RTD pre_build job (see .readthedocs.yaml),
+# published verbatim under /apidoc/
+if os.path.isdir(os.path.join(os.path.dirname(__file__), "_apidoc")):
+    html_extra_path = ["_apidoc"]
+
 html_logo = "_static/images/logo.svg"
 html_css_files = ["css/custom.css"]
 html_theme_options = {
