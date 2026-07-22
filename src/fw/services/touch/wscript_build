@@ -5,6 +5,9 @@ sources = [
     'touch.c',
 ]
 
+if bld.env.CONFIG_TOUCH_CLICK_SYNTHESIS:
+    sources.append('touch_click_synth.c')
+
 bld.stlib(
     use=['fw_includes'],
     source=sources,

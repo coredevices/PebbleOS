@@ -61,6 +61,9 @@
 #include "pbl/services/system_task.h"
 #ifdef CONFIG_TOUCH
 #include "pbl/services/touch/touch.h"
+#ifdef CONFIG_TOUCH_CLICK_SYNTHESIS
+#include "services/touch/touch_click_synth.h"
+#endif
 #endif
 #include "pbl/services/vibe_pattern.h"
 #include "pbl/services/alarms/alarm.h"
@@ -292,6 +295,11 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
 
 #ifdef CONFIG_TOUCH
     case PEBBLE_TOUCH_EVENT: {
+#ifdef CONFIG_TOUCH_CLICK_SYNTHESIS
+      // Feed the tap detector before the backlight early-returns below, so it
+      // sees every touch event type (touchdown/position/liftoff).
+      touch_click_synth_handle_touch(&e->touch.event);
+#endif
       // For touch-subscribed apps, tie the backlight to the touch: on while a
       // finger is down, timed out after liftoff. Release on liftoff ungated
       // so the refcount can't leak if the app unsubscribed or DnD turned on mid-touch.

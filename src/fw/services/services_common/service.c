@@ -24,6 +24,9 @@
 #include "pbl/services/put_bytes/put_bytes.h"
 #include "pbl/services/shared_prf_storage/shared_prf_storage.h"
 #include "pbl/services/touch/touch.h"
+#ifdef CONFIG_TOUCH_CLICK_SYNTHESIS
+#include "services/touch/touch_click_synth.h"
+#endif
 #include "drivers/touch/touch_sensor.h"
 #include "pbl/services/vibe_pattern.h"
 #include "pbl/services/runlevel_impl.h"
@@ -51,6 +54,9 @@ void services_common_init(void) {
 
 #ifdef CONFIG_TOUCH
   touch_init();
+#ifdef CONFIG_TOUCH_CLICK_SYNTHESIS
+  touch_click_synth_init();
+#endif
 #endif
 
 #ifdef CONFIG_HRM
