@@ -55,7 +55,8 @@ int sys_accel_manager_set_sampling_rate(AccelManagerState *state, AccelSamplingR
 //! Reconfigure an existing subscription to use a sampling rate that's the lowest the hardware
 //! can support without introducing jitter and is at least min_rate_hz.
 //!
-//! @param min_rate_hz The lowest desired sample rate in millihertz.
+//! @param state The subscription to reconfigure.
+//! @param min_rate_mHz The lowest desired sample rate in millihertz.
 //! @return The resulting sample rate in millihertz. 0 if it's not possible to get a rate high
 //!         enough.
 uint32_t accel_manager_set_jitterfree_sampling_rate(AccelManagerState *state,

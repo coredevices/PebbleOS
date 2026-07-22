@@ -152,7 +152,7 @@ bool activity_algorithm_set_user(uint32_t height_mm, uint32_t weight_g, Activity
 //! Process accel samples
 //! @param[in] data pointer to the accel samples
 //! @param[in] num_samples number of samples to process
-//! @param[in] timestamp timestamp of the first sample in ms
+//! @param[in] timestamp_ms timestamp of the first sample in ms
 void activity_algorithm_handle_accel(AccelRawData *data, uint32_t num_samples,
                                      uint64_t timestamp_ms);
 

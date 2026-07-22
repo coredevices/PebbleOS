@@ -26,7 +26,6 @@ void bt_driver_init(void);
 bool bt_driver_start(BTDriverConfig *config);
 
 //! Stops the Bluetooth stack.
-//! @return True if the stack stopped successfully.
 void bt_driver_stop(void);
 
 //! Powers down the BT controller if has yet to be used

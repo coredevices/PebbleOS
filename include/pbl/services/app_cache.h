@@ -9,7 +9,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-//! @file app_cache.c
+//! @file
 //! AppCache
 //!
 //! The AppCache keeps track of a cache of the applications that have binaries that reside on the

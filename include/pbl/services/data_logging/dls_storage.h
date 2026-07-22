@@ -35,12 +35,12 @@ int32_t dls_storage_read(DataLoggingSession *logging_session, uint8_t *buffer, i
 int32_t dls_storage_consume(DataLoggingSession *logging_session, int32_t num_bytes);
 
 //! Move the data from the circular buffer in memory to flash.
-//! @param[in] logging_session session to write to
+//! @param[in] session session to write to
 //! @return true on success, false on failure
 bool dls_storage_write_session(DataLoggingSession *session);
 
 //! Write data directly to logging session storage from a passed in buffer
-//! @param[in] logging_session session to write to
+//! @param[in] session session to write to
 //! @param[in] data buffer to write from
 //! @param[in] num_bytes number of bytes to write
 //! @return true on success, false on failure

@@ -90,15 +90,15 @@ typedef struct PACKED ActivityInsightSettings {
 
 
 //! Read a setting from the insights settings
-//! @param insights_name the name of the insight for which to get a setting
-//! @param[out] settings out an ActivityInsightSettings struct to which the data will be written
+//! @param insight_name the name of the insight for which to get a setting
+//! @param[out] settings_out an ActivityInsightSettings struct to which the data will be written
 //! @returns true if the setting was found and the data is valid, false otherwise
 //! @note if this function returns false, settings_out will be zeroed out.
 bool activity_insights_settings_read(const char *insight_name,
                                      ActivityInsightSettings *settings_out);
 
 //! Write a setting to the insights settings (used for testing)
-//! @param insights_name the name of the insight for which to get a setting
+//! @param insight_name the name of the insight for which to get a setting
 //! @param settings an ActivityInsightSettings struct which contains the data to be written
 //! @returns true if the setting was successfully saved
 bool activity_insights_settings_write(const char *insight_name,

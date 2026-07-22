@@ -76,5 +76,5 @@ extern void ecomp_corr_reset(void);
 bool sys_ecompass_service_subscribed(void);
 
 //! Populate the provided data struct with compass data from the service.
-//! @param data[out] The struct to populate
+//! @param[out] data The struct to populate
 void sys_ecompass_get_last_heading(CompassHeadingData *data);

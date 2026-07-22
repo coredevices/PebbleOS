@@ -47,6 +47,7 @@ typedef struct Heap {
 //! Initialize the heap inside the specified boundaries, zero-ing out the free
 //! list data structure.
 //!     @note Assumes 0 is not a valid address for allocation.
+//!     @param heap The heap to initialize
 //!     @param start The start of the heap will be the first int-aligned address >= start
 //!     @param end The end of the heap will be the last sizeof(HeaderBlock) aligned
 //!         address that is < end
@@ -70,6 +71,7 @@ void heap_set_corruption_handler(Heap *heap, CorruptionHandler corruption_handle
 //! endo of the buffer, while small fragments are taken from the start of the
 //! buffer.
 //! @note heap_init() must be called prior to using heap_malloc().
+//! @param heap The heap to allocate from
 //! @param nbytes Number of bytes to be allocated. Must be > 0.
 //! @param client_pc The PC register of the client who caused this malloc. Only used when
 //!                  CONFIG_MALLOC_INSTRUMENTATION is defined.
@@ -88,6 +90,7 @@ void heap_free(Heap* const heap, void* ptr, uintptr_t client_pc);
 //! Allocate a new block of the given size, and copy over the data at ptr into
 //! the new block. If the new size is smaller than the old size, will only copy
 //! over as much data as possible. Frees ptr.
+//! @param heap The heap to allocate from
 //! @param ptr Points to the memory region to re-allocate.
 //! @param nbytes The total number of bytes to allocate.
 //! @param client_pc The PC register of the client who caused this malloc. Only used when
@@ -116,6 +119,7 @@ uint32_t heap_get_minimum_headroom(Heap *heap);
 
 //! Used for debugging.
 //! Calculates and outputs the current memory usage on the given heap.
+//!     @param heap The heap to calculate the totals for
 //!     @param used Output, will contain the number of bytes currently
 //!         allocated and in use.
 //!     @param free Output, will contain the number of unallocated bytes.

@@ -55,14 +55,14 @@ int timezone_database_get_region_count(void);
 //! Note, this does not populate the actual bounds of the current DST period and instead leaves
 //! the .dst_start and .dst_end members in tz_info uninitialized.
 //!
-//! @param The region ID to look up
-//! @param tz_info[out] The TimezoneInfo strcuture to populate with the region
+//! @param region_id The region ID to look up
+//! @param[out] tz_info The TimezoneInfo strcuture to populate with the region
 bool timezone_database_load_region_info(uint16_t region_id, TimezoneInfo *tz_info);
 
 //! Load a timezone name for a given region ID.
 //!
 //! @param region_id The region ID to look up
-//! @param region_name[out] The resulting null-terminated name, including both the continent and
+//! @param[out] region_name The resulting null-terminated name, including both the continent and
 //!                         the city name. This buffer must be at least TIMEZONE_NAME_LENGTH long
 //!                         in bytes.
 //! @return True if successful, false if the region ID was invalid.
@@ -71,8 +71,8 @@ bool timezone_database_load_region_name(uint16_t region_id, char *region_name);
 //! Load a pair of DST rules for the given id.
 //!
 //! @param dst_id The DST rule ID to look up
-//! @param start[out] a TimezoneDSTRule structure to populate with the rule to enter DST
-//! @param start[out] a TimezoneDSTRule structure to populate with the rule to leave DST
+//! @param[out] start a TimezoneDSTRule structure to populate with the rule to enter DST
+//! @param[out] end a TimezoneDSTRule structure to populate with the rule to leave DST
 //! @return true if successful, false if the dst_id is invalid or the database is malformed
 bool timezone_database_load_dst_rule(uint8_t dst_id, TimezoneDSTRule *start, TimezoneDSTRule *end);
 

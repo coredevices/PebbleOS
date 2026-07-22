@@ -45,8 +45,8 @@ bool mutex_is_owned_recursive(PebbleRecursiveMutex *handle);
 
 void mutex_unlock_recursive(PebbleRecursiveMutex *handle);
 
-//! @return true if the calling task owns the mutex
+//! Asserts that the calling task's ownership of the mutex matches \c is_held
 void mutex_assert_held_by_curr_task(PebbleMutex *handle, bool is_held);
 
-//! @return true if the calling task owns the mutex
+//! Asserts that the calling task's ownership of the mutex matches \c is_held
 void mutex_assert_recursive_held_by_curr_task(PebbleRecursiveMutex *handle, bool is_held);

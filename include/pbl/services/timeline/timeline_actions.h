@@ -24,13 +24,14 @@ void timeline_actions_add_action_to_root_level(TimelineItemAction *action,
 //! Creates the root level for a Timeline ActionMenu, needed for holding timeline actions.
 //! @param num_actions The number of actions the root level will hold.
 //! @param separator_index See (struct ActionMenuLevel).
+//! @param source The window/app that creates the action menu
 //! @return A pointer to the root level of the action menu.
 ActionMenuLevel *timeline_actions_create_action_menu_root_level(uint8_t num_actions,
                                                                 uint8_t separator_index,
                                                                 TimelineItemActionSource source);
 
 //! Creates a Timeline ActionMenu and pushes it to the screen
-//! @param config The configuration info for this new ActionMenu. The config context must be a
+//! @param base_config The configuration info for this new ActionMenu. The config context must be a
 //! pointer to the TimelineItem associated with this menu.
 //! @param window_stack Window stack to push the action menu to
 ActionMenu *timeline_actions_push_action_menu(ActionMenuConfig *base_config,
@@ -60,5 +61,7 @@ void timeline_actions_dismiss_all(NotificationInfo *notif_list, int num_notifica
 //! Invokes a timeline action
 //! @param action The action to perform
 //! @param pin The pin associated with the action
+//! @param cb Callback invoked when the action completes
+//! @param cb_data Context pointer passed to the callback
 void timeline_actions_invoke_action(const TimelineItemAction *action, const TimelineItem *pin,
                                     ActionCompleteCallback cb, void *cb_data);

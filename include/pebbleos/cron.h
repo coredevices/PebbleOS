@@ -90,7 +90,7 @@ struct CronJob {
 //! Add a cron job. This will make the service hold a reference to the specified job, so it must
 //! not leave scope or be destroyed until it is unscheduled.
 //! The job only gets scheduled once. For re-scheduling, you can call this on the job again.
-//! @params job pointer to the CronJob struct to be scheduled.
+//! @param job pointer to the CronJob struct to be scheduled.
 //! @returns time_t for when the job is destined to go off.
 time_t cron_job_schedule(CronJob *job);
 
@@ -98,7 +98,7 @@ time_t cron_job_schedule(CronJob *job);
 //! This will make the service hold a reference to the new job, so it must
 //! not leave scope or be destroyed until it is unscheduled.
 //! @param job pointer to the CronJob after which we want our job to run. job must be scheduled.
-//! @params new_job pointer to the CronJob struct to be scheduled. new_job must be unscheduled.
+//! @param new_job pointer to the CronJob struct to be scheduled. new_job must be unscheduled.
 //! @returns time_t for when the job is destined to go off.
 //! @note This API makes no guarantee that the two jobs will be scheduled back to back,
 //! only that new_job will have the same scheduled time as job and that it will trigger
@@ -106,23 +106,23 @@ time_t cron_job_schedule(CronJob *job);
 time_t cron_job_schedule_after(CronJob *new_job, CronJob *job);
 
 //! Remove a scheduled cron job.
-//! @params job pointer to the CronJob struct to be unscheduled.
+//! @param job pointer to the CronJob struct to be unscheduled.
 //! @return true if the job was successfully removed (false may indicate no job was
 //!  scheduled at all or the cb is currently executing)
 bool cron_job_unschedule(CronJob *job);
 
 //! Check if a cron job is scheduled.
-//! @params job pointer to the CronJob struct to be checked for being scheduled.
+//! @param job pointer to the CronJob struct to be checked for being scheduled.
 //! @returns true if scheduled or pending deletion, false otherwise
 bool cron_job_is_scheduled(CronJob *job);
 
 //! Calculate cron job's destined execution time, from the current time.
-//! @params job pointer to the CronJob struct to get the execution time for.
+//! @param job pointer to the CronJob struct to get the execution time for.
 //! @returns time_t for when the job is destined to go off.
 time_t cron_job_get_execute_time(const CronJob *job);
 
 //! Calculate cron job's destined execution time if it were scheduled at the given time.
-//! @params job pointer to the CronJob struct to get the execution time for.
-//! @params local_epoch the epoch for getting the job's execution time.
+//! @param job pointer to the CronJob struct to get the execution time for.
+//! @param local_epoch the epoch for getting the job's execution time.
 //! @returns time_t for when the job is destined to go off.
 time_t cron_job_get_execute_time_from_epoch(const CronJob *job, time_t local_epoch);

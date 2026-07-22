@@ -90,6 +90,9 @@ typedef void (*AppOutboxMessageHandler)(AppOutboxMessage *message);
 bool app_outbox_service_is_message_cancelled(AppOutboxMessage *message);
 
 //! Registers a consumer for a specific app outbox service tag.
+//! @param service_tag Tag of the app outbox service to register for.
+//! @param message_handler Callback invoked when a message is added.
+//! @param consumer_task The task on which `message_handler` is invoked.
 //! @param consumer_data_size The additional space that will be allocated for context by the app
 //! outbox service, on behalf of the consumer. The extra space will be appended to the message that
 //! gets passed into `message_handler`.
@@ -101,6 +104,7 @@ void app_outbox_service_register(AppOutboxServiceTag service_tag,
 //! Will invoke the sender's `sent_handler` with the status on the app task.
 //! @param message Pointer to the message to be consumed. Note that this message will have been
 //! free'd after this function returns and should not be used thereafter.
+//! @param status The status to report to the sender's `sent_handler`.
 void app_outbox_service_consume_message(AppOutboxMessage *message, AppOutboxStatus status);
 
 //! Closes the outbox.

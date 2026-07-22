@@ -218,6 +218,7 @@ extern void bt_driver_cb_pebble_pairing_service_handle_ios_app_termination_detec
 
 //! Indicate to the FW that the Connection Parameters characteristic has been written to with a new
 //! values.
+//! @param device The device that wrote to the characteristic.
 //! @param conn_params The value as written to the Connection Parameters characteristic. The BT
 //! driver lib is expected to validate any written values and only call this function with valid
 //! values.

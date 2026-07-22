@@ -84,7 +84,7 @@ bool music_is_volume_reporting_supported(void);
 //! @see music_is_command_supported
 void music_command_send(MusicCommand command);
 
-//! @param The command to test.
+//! @param command The command to test.
 //! @return True if the command is supported by the connected server.
 bool music_is_command_supported(MusicCommand command);
 

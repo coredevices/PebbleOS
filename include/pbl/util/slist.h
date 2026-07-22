@@ -27,11 +27,13 @@ SingleListNode* slist_insert_after(SingleListNode *node, SingleListNode *new_nod
 
 //! Prepends new_node to the head of the list.
 //! @param head The current head of the list, can be NULL.
+//! @param new_node The node to prepend.
 //! Always returns the new head of the list.
 SingleListNode* slist_prepend(SingleListNode *head, SingleListNode *new_node);
 
 //! Appends new_node to the tail of the list that head is part of.
 //! @param head Any node in the list, can be NULL (will result in a list containing only new_node).
+//! @param new_node The node to append.
 //! Always returns the tail of the list.
 SingleListNode* slist_append(SingleListNode *head, SingleListNode *new_node);
 

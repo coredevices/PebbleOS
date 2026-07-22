@@ -166,8 +166,8 @@ bool attribute_copy(Attribute *dest, const Attribute *src, uint8_t **buffer,
 //! in the "out" list in a contiguous region of memory given by buffer
 //! @param out a pointer to the destination attribute list
 //! @param in a pointer to the source attribute list
-//! @param buffer a pointer to a region of memory at least \ref attribute_list_get_buffer_size(in)
-//! bytes
+//! @param buffer a pointer to a region of memory at least
+//! \ref attribute_list_get_buffer_size "attribute_list_get_buffer_size(in)" bytes
 //! @param buffer_end a pointer to the end of the buffer
 //! @return true if successful, false if buffer was not large enough
 bool attribute_list_copy(AttributeList *out, const AttributeList *in, uint8_t *buffer,
@@ -202,7 +202,7 @@ void attribute_list_add_uint32(AttributeList *list, AttributeId id, uint32_t uin
 //! Append an attribute or replace an existing one in an attribute list.
 //! @param list pointer to the attribute list
 //! @param id AttributeID of the attribute to add
-//! @param TimelineResourceId value to store as the content of the attribute
+//! @param resource_id value to store as the content of the attribute
 void attribute_list_add_resource_id(AttributeList *list, AttributeId id,
                                     uint32_t resource_id);
 
@@ -238,7 +238,7 @@ void attribute_list_add_attribute(AttributeList *list, const Attribute *new_attr
 
 //! Initializes an attribute list.
 //! @param num_attributes Number of attributes to initialize for this list
-//! @param list the attribute list to initialize
+//! @param list_out the attribute list to initialize
 void attribute_list_init_list(uint8_t num_attributes, AttributeList *list_out);
 
 //! Destroy an attribute list.
@@ -293,7 +293,7 @@ Uint32List *attribute_get_uint32_list(const AttributeList *attr_list, AttributeI
 //! @param attr_list a pointer to the list of attributes to serialize
 //! @param buffer a pointer to the buffer to write to
 //! @param buf_end the end of buffer
-//! @retuns the number of serialized bytes
+//! @returns the number of serialized bytes
 size_t attribute_list_serialize(const AttributeList *attr_list, uint8_t *buffer, uint8_t *buf_end);
 
 //! Calculate the required size for a buffer to store a list of attributes

@@ -101,7 +101,7 @@ bool settings_raw_iter_end(SettingsRawIter *iter);
 int settings_raw_iter_get_current_record_pos(SettingsRawIter *iter);
 
 //! Restore a previous record position from
-//! \ref setting_iter_get_current_record_pos
+//! \ref settings_raw_iter_get_current_record_pos
 void settings_raw_iter_set_current_record_pos(SettingsRawIter *iter, int pos);
 
 //! Return the resumed record position. This was set when we started searching for a record.

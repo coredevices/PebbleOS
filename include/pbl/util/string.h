@@ -35,8 +35,9 @@ uintptr_t str_to_address(const char *address_str);
 
 const char *bool_to_str(bool b);
 
-//! @param hex 12-digit hex string representing a BT address
-//! @param addr Points to a SS1 BD_ADDR_t as defined in BTBTypes.h
+//! @param hex_str 12-digit hex string representing a BT address
+//! @param bd_addr Points to a SS1 BD_ADDR_t as defined in BTBTypes.h
+//! @param bd_addr_size Size of the bd_addr buffer, in bytes
 //! @return True on success
 bool convert_bt_addr_hex_str_to_bd_addr(const char *hex_str, uint8_t *bd_addr, const unsigned int bd_addr_size);
 

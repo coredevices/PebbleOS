@@ -48,11 +48,13 @@ void list_remove(ListNode *node, ListNode **head, ListNode **tail);
 
 //! Appends new_node to the tail of the list that node is part of.
 //! @param node Any node in the list, can be NULL (will result in a list containing only new_node)
+//! @param new_node The node to append
 //! Always returns the tail of the list.
 ListNode* list_append(ListNode *node, ListNode *new_node);
 
 //! Appends new_node to the head of the list that node is part of.
 //! @param node Any node in the list, can be NULL (will result in a list containing only new_node)
+//! @param new_node The node to prepend
 //! Always returns the head of the list.
 ListNode* list_prepend(ListNode *node, ListNode *new_node);
 
@@ -83,7 +85,7 @@ uint32_t list_count_to_head_from(ListNode *node);
 //! Counts the number of nodes from head to tail
 uint32_t list_count(ListNode *node);
 
-//! Gets the node at <index> away, where positive index is towards the tail
+//! Gets the node at \c index away, where positive index is towards the tail
 ListNode* list_get_at(ListNode *node, int32_t index);
 
 //! Adds a node to a list ordered by given comparator.
@@ -104,7 +106,6 @@ bool list_contains(const ListNode *head, const ListNode *node);
 //! @param node The list node from which to depart the search
 //! @param filter_callback A function returning true in case the node that is passed in matches the
 //! filter criteria, and false if it doesn't and should be skipped.
-//! @param found_node The node to be evaluated by the filter callback
 //! @param data Optional callback data
 ListNode* list_find(ListNode *node, ListFilterCallback filter_callback, void *data);
 
@@ -112,7 +113,6 @@ ListNode* list_find(ListNode *node, ListFilterCallback filter_callback, void *da
 //! @param node The list node from which to depart the search
 //! @param filter_callback A function returning true in case the node that is passed in matches the
 //! filter criteria, and false if it doesn't and should be skipped.
-//! @param found_node The node to be evaluated by the filter callback
 //! @param wrap_around True if the search should continue from the head if the tail has been reached
 //! @param data Optional callback data
 ListNode* list_find_next(ListNode *node, ListFilterCallback filter_callback, bool wrap_around, void *data);
@@ -121,7 +121,6 @@ ListNode* list_find_next(ListNode *node, ListFilterCallback filter_callback, boo
 //! @param node The list node from which to depart the search
 //! @param filter_callback A function returning true in case the node that is passed in matches the
 //! filter criteria, and false if it doesn't and should be skipped.
-//! @param found_node The node to be evaluated by the filter callback
 //! @param wrap_around True if the search should continue from the tail if the head has been reached
 //! @param data Optional callback data
 ListNode* list_find_prev(ListNode *node, ListFilterCallback filter_callback, bool wrap_around, void *data);
@@ -135,7 +134,7 @@ ListNode* list_concatenate(ListNode *list_a, ListNode *list_b);
 //! Iterates over each node and passes it into callback given
 //! @param[in] head The head of the list that we want to iterate over.
 //! @param[in] each_cb The callback function to pass each node into
-//! @param[in] data Optional callback data
+//! @param[in] context Optional callback data
 void list_foreach(ListNode *head, ListForEachCallback each_cb, void *context);
 
 //! Dump a list to PBL_LOG

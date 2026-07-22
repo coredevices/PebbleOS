@@ -133,13 +133,13 @@ struct LayoutLayerConfig {
   void *context;
 };
 
-//! Call the correct \ref LayoutLayerConstructor for a given \ref LayoutId
+//! Call the correct \c LayoutLayerConstructor for a given \ref LayoutId
 LayoutLayer *layout_create(LayoutId id, const LayoutLayerConfig *config);
 
 //! Verify that the required attributes are there for the layout
 bool layout_verify(bool existing_attributes[], LayoutId id);
 
-//! Call the \ref LayoutLayerSizeGetter for a given layout
+//! Call the \c LayoutLayerSizeGetter for a given layout
 GSize layout_get_size(GContext *ctx, LayoutLayer *layout);
 
 const LayoutColors *layout_get_colors(const LayoutLayer *layout);

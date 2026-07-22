@@ -6,7 +6,7 @@
 #include "applib/ui/property_animation.h"
 #include "applib/ui/window.h"
 
-//! @file kernel/services/compositor.h
+//! @file
 //! This file manages what's currently shown on the screen of your Pebble!
 //! There are two main things that are managed by the compositor...
 //!
@@ -16,13 +16,12 @@
 //! animations requested by the window stack. The compositor will also draw in
 //! the status bar when the app is in fullscreen, and the app will adjust its
 //! framebuffer's destination frame vertically. The framebuffer is simply
-//! bitblt'ed into the appropriate position whenever compositor_flush is called.
+//! bitblt'ed into the appropriate position whenever the compositor flushes
+//! to the display.
 //!
-//! @see \ref compositor_get_child_entity
-//! @see \ref compositor_set_entity_framebuffer
 //! @see \ref compositor_transition
-//! @see \ref window_stack_animation_schedule
-//! @see \ref app_emit_render_ready_event
+//! @see \ref compositor_render_app
+//! @see \ref compositor_app_render_ready
 //!
 //! <h3>Modal Window</h3>
 //! A modal window is a Window that can be rendered on top of an app without
@@ -30,7 +29,10 @@
 //! we can trust its contents. The modal window is animated up and down the
 //! screen when its pushed and popped. Since the window doesn't have a framebuffer
 //! of its own, we render it to the main framebuffer on top of everything else
-//! whenever compositor_flush is called.
+//! whenever the compositor flushes to the display.
+//!
+//! @see \ref compositor_render_modal
+//! @see \ref compositor_modal_render_ready
 //!
 
 //! Transition direction, from the current position to the next.

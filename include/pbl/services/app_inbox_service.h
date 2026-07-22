@@ -60,8 +60,12 @@ void app_inbox_service_init(void);
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Owner / Receiver (App) API
 
+//! @param storage The buffer (in app space) used to store incoming messages.
 //! @param storage_size The size of the buffer (in app space). Note that a header will be appended
 //! to the data of sizeof(AppInboxMessageHeader) bytes.
+//! @param message_handler Handler called when a message has been received.
+//! @param dropped_handler Handler called when one or more messages have been dropped.
+//! @param tag Tag identifying the inbox service.
 //! @note The event handler will be executed on the task that called this function.
 //! @see app_inbox_create_and_register() for the applib invocation.
 bool app_inbox_service_register(uint8_t *storage, size_t storage_size,
@@ -78,6 +82,7 @@ void app_inbox_service_unregister_all(void);
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Sender (Kernel) API
 
+//! @param tag Tag identifying the inbox service to write to.
 //! @param required_free_length The length in bytes of the data that needs to be written. Note that
 //! this should not include the size of the AppInboxMessageHeader. However, there must be at least
 //! (required_free_length + sizeof(AppInboxMessageHeader)) bytes free in the buffer in order to

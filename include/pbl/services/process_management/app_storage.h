@@ -34,8 +34,8 @@ typedef enum AppStorageGetAppInfoResult {
 
 //! Retrieve the process metadata for a given app_bank and performs sanity checks
 //! to make sure that the process in the specified app_bank can be run by the current system.
-//! @param app_info[in,out] Structure to be populated with information from flash.
-//! @param build_id_out[out] Buffer into which the GNU build ID of the process its executable
+//! @param[in,out] app_info Structure to be populated with information from flash.
+//! @param[out] build_id_out Buffer into which the GNU build ID of the process its executable
 //! should be copied. The buffer must be at least BUILD_ID_EXPECTED_LEN bytes. OK to pass NULL.
 //! If no build ID was present, the buffer will be filled with zeroes.
 //! @param app_id The app id for which the app metadata needs to be fetched.
@@ -58,7 +58,7 @@ void app_storage_get_file_name(char *name, size_t buf_length, AppInstallId app_i
 
 //! Computes the process image and relocation table size
 //! @param info pointer to a PebbleProcessInfo struct
-//! @param load_size_out[out] receives the computed size on success
+//! @param[out] load_size_out receives the computed size on success
 //! @return true if the size can be computed safely
 bool app_storage_get_process_load_size(const PebbleProcessInfo *info,
                                        size_t *load_size_out);

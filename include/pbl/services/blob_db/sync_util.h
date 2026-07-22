@@ -11,9 +11,13 @@
 // be very careful.
 
 //! A settings file each callback which checks if the there are dirty records in the file
+//! @param file The settings file being iterated
+//! @param info Info about the current record
 //! @param context The address of a bool which will get set
 bool sync_util_is_dirty_cb(SettingsFile *file, SettingsRecordInfo *info, void *context);
 
 //! A settings file each callback which builds a BlobDBDirtyItem list
+//! @param file The settings file being iterated
+//! @param info Info about the current record
 //! @param context The address of an empty dirty list which will get built
 bool sync_util_build_dirty_list_cb(SettingsFile *file, SettingsRecordInfo *info, void *context);

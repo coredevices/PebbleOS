@@ -68,7 +68,7 @@ CommSession *comm_session_get_system_session(void);
 //! @note It is possible that the session becomes disconnected at any point in time.
 CommSession *comm_session_get_current_app_session(void);
 
-//! @param session_in_out[in, out] Pass in a pointer to session pointer to sanitize it. The current
+//! @param[in,out] session_in_out Pass in a pointer to session pointer to sanitize it. The current
 //! *session value can be NULL, to "auto-select" the session for the currently running app.
 //! After returning, if *session_in_out was non-NULL when passed in, it will be unchanged if the app
 //! is permitted to use it. If not, it *session_in_out will be set to NULL.
@@ -107,7 +107,7 @@ void comm_session_reset(CommSession *session);
 //! @param endpoint_id Which endpoint to send the pebble protocol message to.
 //! @param data Pointer to the buffer with data to send
 //! @param length The length of the data
-//! @param timeout The duration for how long the call is allowed to block. If the send buffer does
+//! @param timeout_ms The duration for how long the call is allowed to block. If the send buffer does
 //! not have enough space available to enqueue the data, this function will block up to timeout_ms.
 //! @return true if the data was successfully queued up for sending.
 bool comm_session_send_data(CommSession *session, uint16_t endpoint_id,

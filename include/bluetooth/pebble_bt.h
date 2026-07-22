@@ -6,7 +6,8 @@
 #include <stdint.h>
 #include "pbl/util/uuid.h"
 
-//! @file This file contains Pebble-specific Bluetooth identifiers (numbers, UUIDs, etc.)
+//! @file
+//! This file contains Pebble-specific Bluetooth identifiers (numbers, UUIDs, etc.)
 //! Also see https://pebbletechnology.atlassian.net/wiki/display/DEV/Pebble+GATT+Services
 
 //! Our Bluetooth-SIG-Registered 16-bit UUID:

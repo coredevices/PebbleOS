@@ -37,7 +37,7 @@ void ios_notif_pref_db_free_prefs(iOSNotifPrefs *prefs);
 //! @param app_id The iOS app id to check. ex com.apple.MobileSMS
 //! @param length The length of the app_id
 //! @param attr_list AttributeList for the app
-//! @param attr_list ActionGroup for the app
+//! @param action_group ActionGroup for the app
 status_t ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, AttributeList *attr_list,
                                        TimelineItemActionGroup *action_group);
 

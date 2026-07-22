@@ -151,5 +151,6 @@ time_t kalg_activity_last_processed_time(KAlgState *state, KAlgActivityType acti
 void kalg_get_sleep_stats(KAlgState *state, KAlgOngoingSleepStats *stats);
 
 //! Tells the algorithm whether or not it should automatically track activities
+//! @param kalg_state the state structure passed into kalg_init
 //! @param enable true to start tracking, false to stop tracking
 void kalg_enable_activity_tracking(KAlgState *kalg_state, bool enable);

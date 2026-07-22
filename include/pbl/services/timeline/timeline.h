@@ -29,7 +29,7 @@ typedef struct {
 status_t timeline_init(TimelineNode **timeline);
 
 //! Add a timeline pin we've created to the timeline.
-//! Call \ref timeline_destroy_item after this in order to free up the memory used by the item.
+//! Call \ref timeline_item_destroy after this in order to free up the memory used by the item.
 //! @return true on success, false otherwise
 bool timeline_add(TimelineItem *item);
 
@@ -62,6 +62,7 @@ bool timeline_nodes_equal(TimelineNode *a, TimelineNode *b);
 //! returns the first parent_id of the item, which is the app's UUID (for pins) or source ID
 //! (for notifications). For reminders, it will return the parent_id of the parent, which is the
 //! app UUID of the pin that created the reminder.
+//! @param item the timeline item to get the originator of
 //! @param [out] id pointer to storage for returned uuid. Set to UUID_INVALID when false
 //!   is returned
 //! @return true if success, false on failure
@@ -80,7 +81,7 @@ int timeline_item_time_comparator(CommonTimelineItemHeader *new_common,
 
 //! Whether a Timeline item should show up in the Timeline direction with the exception of all
 //! day events.
-//! @param common The common header of the item to consider.
+//! @param header The common header of the item to consider.
 //! @param direction The Timeline direction.
 //! @return true if the item would show up, false otherwise.
 bool timeline_item_should_show(CommonTimelineItemHeader *header, TimelineIterDirection direction);

@@ -126,7 +126,7 @@ bool bt_persistent_storage_get_local_device_name(char *local_device_name_out, si
 
 //! Stores the customized local device name
 //! @param local_device_name The device name to store
-//! @param size The size of the string
+//! @param max_size The size of the string
 void bt_persistent_storage_set_local_device_name(char *local_device_name, size_t max_size);
 
 //! Retrieve the airplane mode setting
@@ -134,7 +134,7 @@ void bt_persistent_storage_set_local_device_name(char *local_device_name, size_t
 bool bt_persistent_storage_get_airplane_mode_enabled(void);
 
 //! Store the airplane mode setting
-//! @param the airplane mode state to be saved
+//! @param enable the airplane mode state to be saved
 void bt_persistent_storage_set_airplane_mode_enabled(bool enable);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

@@ -88,7 +88,7 @@ bool timeline_resources_get_id_system(TimelineResourceId timeline_id, TimelineRe
 //! @param timeline_res pointer to TimelineResourceInfo which contains the timeline resource ID and
 //! corresponding app UUID
 //! @param size the TimelineResourceSize requested
-//! @param resource_id outparam pointer to AppResourceIdInfo containing the ID and
+//! @param res_info_out outparam pointer to AppResourceIdInfo containing the ID and
 //! ResAppNum for the requested timeline resource (both 0 if the resource could not be located)
 void timeline_resources_get_id(const TimelineResourceInfo *timeline_res, TimelineResourceSize size,
                                AppResourceInfo *res_info_out);

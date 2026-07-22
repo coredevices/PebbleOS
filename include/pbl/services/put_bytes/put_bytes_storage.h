@@ -73,6 +73,6 @@ void pb_storage_deinit(PutBytesStorage *storage, bool is_success);
 //! Some types of storage allow the state of a partial installation to be recovered (today, just
 //! firmware & resources).
 //! @param obj_type The type of resource to recover the install status of
-//! @param status[out] How many bytes have been written and their crc
+//! @param[out] status How many bytes have been written and their crc
 //! @return True iff the status struct was populated with valid data
 bool pb_storage_get_status(PutBytesObjectType obj_type, PbInstallStatus *status);

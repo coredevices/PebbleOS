@@ -43,6 +43,8 @@ int32_t sign_extend(uint32_t a, int bits);
 int32_t serial_distance32(uint32_t start, uint32_t end);
 
 //! Calculates the distance (end - start), taking a roll-over into account as good as it can get.
+//! @param start the start value
+//! @param end the end value
 //! @param bits the number of bits that are valid in start and end.
 int32_t serial_distance(uint32_t start, uint32_t end, int bits);
 

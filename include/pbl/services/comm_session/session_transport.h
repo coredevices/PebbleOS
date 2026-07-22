@@ -90,10 +90,9 @@ typedef enum TransportDestination {
 
 //! Called by a transport to open/create a Pebble Protocol session for it.
 //! @param transport Opaque reference to the underlying serial transport
-//! @param send_next Function pointer to the implementation for the transport to send data
-//! @param is_system True if the transport is connected to the Pebble App (either using
-//! "com.getpebble.private" iAP protocol identifier on iOS, or directly connected to the Android
-//! Pebble App), false if it was directly connected to a 3rd party application.
+//! @param implementation Function pointers implementing the transport (e.g. to send data)
+//! @param destination Whether the transport carries Pebble Protocol for the "system", a 3rd
+//! party app, or both (see \ref TransportDestination).
 //! @return True if the session was opened successfully, false if not
 //! bt_lock() is expected to be taken by the caller!
 CommSession * comm_session_open(Transport *transport, const TransportImplementation *implementation,
@@ -102,6 +101,7 @@ CommSession * comm_session_open(Transport *transport, const TransportImplementat
 //! Called by the transport to indicate that the session associated with the given transport needs
 //! to be closed and cleaned up.
 //! bt_lock() is expected to be taken by the caller!
+//! @param session The session to close.
 //! @param reason For analytics tracking.
 void comm_session_close(CommSession *session, CommSessionCloseReason reason);
 
@@ -121,7 +121,8 @@ void comm_session_receive_router_write(CommSession *session,
 size_t comm_session_send_queue_get_length(const CommSession *session);
 
 //! Copies bytes from the send buffer into another buffer.
-//! @param start_off The offset into the send buffer
+//! @param session The session whose send queue to copy from
+//! @param start_offset The offset into the send buffer
 //! @param length The number of bytes to copy
 //! @param[out] data_out Pointer to the buffer into which to copy the data
 //! @return The number of bytes copied
@@ -136,6 +137,7 @@ size_t comm_session_send_queue_copy(CommSession *session, uint32_t start_offset,
 //! @note Internally, a non-contiguous buffer is used, so it is possible that there is more data
 //! to read. To access the entire contents, call this function and comm_session_send_queue_consume()
 //! repeatedly until it returns zero.
+//! @param session The session whose send queue to read from
 //! @param data_out Pointer to the pointer to assign the read pointer to.
 //! @return The number of bytes that can be read starting at the read pointer.
 size_t comm_session_send_queue_get_read_pointer(const CommSession *session,

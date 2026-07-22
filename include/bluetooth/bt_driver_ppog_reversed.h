@@ -7,7 +7,8 @@
 
 #include <stdint.h>
 
-//! @file Kernel <-> BT driver API for the reversed PPoG GATT service: the
+//! @file
+//! Kernel <-> BT driver API for the reversed PPoG GATT service: the
 //! watch hosts the service and the phone is the GATT client.
 //! The bt_driver_cb_ppog_reversed_* callbacks are invoked from the BT driver
 //! task without bt_lock held.

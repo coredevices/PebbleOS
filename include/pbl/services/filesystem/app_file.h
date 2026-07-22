@@ -24,6 +24,10 @@
 
 //! Make an app-file name from the given app_id and suffix string.
 //!
+//! @param buffer Buffer to write the file name into
+//! @param buffer_len Size of the buffer, in bytes
+//! @param app_id The app install id to make the file name for
+//! @param suffix The suffix string
 //! @param suffix_len strlen(suffix)
 //!
 //! @note buffer_len must be > APP_FILE_NAME_PREFIX_LENGTH + suffix_len to fit

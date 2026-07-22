@@ -326,21 +326,21 @@ typedef enum ActivationDelayInsightType ActivationDelayInsightType;
 //! @return True if the activation delay insight has fired
 bool activity_prefs_has_activation_delay_insight_fired(ActivationDelayInsightType type);
 
-//! @return Mark an activation delay insight as having fired
+//! Mark an activation delay insight as having fired
 void activity_prefs_set_activation_delay_insight_fired(ActivationDelayInsightType type);
 
 //! @return Which version of the health app was last opened
 //! @note 0 is "never opened"
 uint8_t activity_prefs_get_health_app_opened_version(void);
 
-//! @return Record that the health app has been opened at a given version
+//! Record that the health app has been opened at a given version
 void activity_prefs_set_health_app_opened_version(uint8_t version);
 
 //! @return Which version of the workout app was last opened
 //! @note 0 is "never opened"
 uint8_t activity_prefs_get_workout_app_opened_version(void);
 
-//! @return Record that the workout app has been opened at a given version
+//! Record that the workout app has been opened at a given version
 void activity_prefs_set_workout_app_opened_version(uint8_t version);
 
 //! Enable/disable activity insights
@@ -555,6 +555,8 @@ bool activity_test_send_fake_dls_records(void);
 //! Used by test apps (running on firmware): Set the current step count
 //! Useful for testing the health app
 //! @param[in] new_steps the number of steps to set the current steps to
+//! @param[in] current_avg the value to set the current step average to
+//! @param[in] daily_avg the value to set the daily step average to
 void activity_test_set_steps_and_avg(int32_t new_steps, int32_t current_avg, int32_t daily_avg);
 
 //! Used by test apps (running on firmware): Set the past seven days of history

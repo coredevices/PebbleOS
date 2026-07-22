@@ -62,8 +62,8 @@ typedef struct {
 //! layer_set_hidden((Layer *)&swap_layer, true);
 //! \endcode
 //! @note However, there are a few caveats:
-//! * To add content layers, you must use \ref swap_layer_add_child().
-//! * To change the frame of a scroll layer, use \ref swap_layer_set_frame().
+//! * To add content layers, you must use \c swap_layer_add_child().
+//! * To change the frame of a scroll layer, use \c swap_layer_set_frame().
 typedef struct SwapLayer {
   Layer layer;
   ArrowLayer arrow_layer;

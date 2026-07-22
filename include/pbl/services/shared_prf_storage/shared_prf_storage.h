@@ -47,6 +47,8 @@ bool shared_prf_storage_get_ble_pairing_data(SMPairingInfo *pairing_info_out,
 
 //! @param pairing_info Data structure containing all the pairing info available.
 //! @param name Optional device name to store. Pass NULL if not available.
+//! @param requires_address_pinning Whether the pairing requires address pinning.
+//! @param flags Pairing flags to store.
 void shared_prf_storage_store_ble_pairing_data(const SMPairingInfo *pairing_info,
                                                const char *name,
                                                bool requires_address_pinning,

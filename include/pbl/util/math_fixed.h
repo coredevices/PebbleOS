@@ -164,9 +164,9 @@ static __inline__ Fixed_S16_3 Fixed_S16_3_S32_16_mul(Fixed_S16_3 a, Fixed_S32_16
 //!   num_input_coefficients
 //! @param[in] ca pointer to array of output side coefficients. Must be an array of size
 //!   num_output_coefficients
-//! @param[in|out] state_x pointer to array to hold the history of x. Must be an array
+//! @param[in,out] state_x pointer to array to hold the history of x. Must be an array
 //!   of size num_input_coefficients
-//! @param[in|out] state_y pointer to array to hold the history of y. Must be an array
+//! @param[in,out] state_y pointer to array to hold the history of y. Must be an array
 //!   of size num_output_coefficients
 //! @return the filtered output value, y[n]
 Fixed_S64_32 math_fixed_recursive_filter(Fixed_S64_32 x,

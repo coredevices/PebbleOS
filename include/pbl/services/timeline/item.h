@@ -201,8 +201,8 @@ TimelineItem *timeline_item_create_with_attributes(time_t timestamp, uint16_t du
 //!                                 in order corresponding to action order
 //! @param required_size_for_strings    total size of all attribute strings
 //! @param string_buffer    pointer to pointer to the start of the string buffer (where attribute
-//!                         strings must be appended. The alloc string will set \code *string_buffer
-//!                         if \param string buffer is not NULL)
+//!                         strings must be appended. The alloc string will set \c *string_buffer
+//!                         if \c string_buffer is not NULL)
 TimelineItem *timeline_item_create(int num_attributes, int num_actions,
     uint8_t attributes_per_action[], size_t required_size_for_strings, uint8_t **string_buffer);
 
@@ -246,7 +246,7 @@ void timeline_item_deserialize_header(TimelineItem *item,
 
 //! Get the UTC-to-localtime adjusted timestamp of a serialized or deserialized header.
 //! Just returns the timestamp if the item is not an all day event or floating.
-//! @param pointer to the header of the item
+//! @param hdr pointer to the header of the item
 //! @return the potentially adjusted timestamp
 time_t timeline_item_get_tz_timestamp(CommonTimelineItemHeader *hdr);
 
@@ -254,7 +254,7 @@ time_t timeline_item_get_tz_timestamp(CommonTimelineItemHeader *hdr);
 //! @param item a pointer to the item to serialize
 //! @param buffer a pointer to the buffer to write to
 //! @param buffer_size the size of the buffer in bytes
-//! @returns the number of bytes written to \ref buffer
+//! @returns the number of bytes written to \c buffer
 size_t timeline_item_serialize_payload(TimelineItem *item, uint8_t *buffer,
     size_t buffer_size);
 
@@ -263,10 +263,10 @@ size_t timeline_item_get_serialized_payload_size(TimelineItem *item);
 
 //! Deserialize actions & attributes from payload
 //! @param item pointer to the item to deserialize
-//! @string_buffer buffer to store the strings in
-//! @string_buffer_size size of the string buffer in bytes
-//! @payload serialized payload buffer
-//! @payload_size size of the payload buffer in bytes
+//! @param string_buffer buffer to store the strings in
+//! @param string_buffer_size size of the string buffer in bytes
+//! @param payload serialized payload buffer
+//! @param payload_size size of the payload buffer in bytes
 //! @return true on success
 bool timeline_item_deserialize_payload(TimelineItem *item,
     char *string_buffer, size_t string_buffer_size, const uint8_t *payload, size_t payload_size);

@@ -33,7 +33,7 @@ SendBuffer * comm_session_send_buffer_begin_write(CommSession *session, uint16_t
 //! Copies data into the send buffer of the session.
 //! @note The caller must have called comm_session_send_buffer_begin_write() first.
 //! @note bt_lock() may be held when making the call.
-//! @param session The session for which to enqueue data
+//! @param send_buffer The send buffer of the session for which to enqueue data
 //! @param data Pointer to the data to enqueue
 //! @param length Length of the data to enqueue
 //! @return true if the data was successfully queued up for sending, or false if there was not
@@ -47,5 +47,5 @@ bool comm_session_send_buffer_write(SendBuffer *send_buffer, const uint8_t *data
 //! to the session that was passed in the ..._begin_write() call.
 //! @note The caller must have called comm_session_send_buffer_begin_write() first.
 //! @note bt_lock() may be held when making the call.
-//! @param session The session for which to release the send buffer.
+//! @param send_buffer The send buffer to release.
 void comm_session_send_buffer_end_write(SendBuffer *send_buffer);

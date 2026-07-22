@@ -38,6 +38,7 @@ bool circular_buffer_write(CircularBuffer* buffer, const void* data, uint16_t le
 //! @note After the client is done writing data, it _must_ call circular_buffer_write_finish()
 //! so that the CircularBuffer can update the length of the data it contains and update its internal
 //! bookkeeping
+//! @param buffer The circular buffer to write to.
 //! @param[out] data_out Pointer to storage for the pointer that is set the the start of the
 //! writable area when the function returns, or NULL if there is no space available.
 //! @return The maximum number of bytes that can be written starting at the returned the pointer.
@@ -46,6 +47,7 @@ uint16_t circular_buffer_write_prepare(CircularBuffer *buffer, uint8_t **data_ou
 
 //! To be used after circular_buffer_write_prepare(), to make the CircularBuffer update the length
 //! of the data it contains.
+//! @param buffer The circular buffer that was written to.
 //! @param written_length The length that has just been writted at the pointer provided by
 //! circular_buffer_write_prepare().
 void circular_buffer_write_finish(CircularBuffer *buffer, uint16_t written_length);
@@ -86,7 +88,7 @@ uint16_t circular_buffer_copy_offset(const CircularBuffer* buffer, uint16_t star
 //! In case the requested length wraps around the edges of the circular buffer, a heap-allocated
 //! copy is made.
 //! @param buffer The buffer to read or copy from.
-//! @param[out] data_ptr_out After returning, it will point to the byte array with the data. NOTE:
+//! @param[out] data_out After returning, it will point to the byte array with the data. NOTE:
 //! This can be NULL in the case the malloc_imp wasn't able to allocate the buffer.
 //! @param[in] length The length of the data to read. If this is longer than what
 //! circular_buffer_get_read_space_remaining() returns, the function will return false.

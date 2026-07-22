@@ -12,6 +12,7 @@ void bt_local_id_configure_driver(void);
 void bt_local_id_set_device_name(const char *device_name);
 
 //! Copies the name of the local device into the given buffer.
+//! @param name_out Buffer into which the name is copied
 //! @param is_le Only consumed if the device used is dual mode. If so,
 //               this changes the name returned
 void bt_local_id_copy_device_name(char name_out[BT_DEVICE_NAME_BUFFER_SIZE], bool is_le);

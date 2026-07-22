@@ -132,7 +132,7 @@ extern void bt_driver_cb_gatt_handle_mtu_update(const GattDeviceMtuUpdateEvent *
 
 extern void bt_driver_cb_gatt_handle_notification(const GattServerNotifIndicEvent *event);
 
-//! @NOTE: The indication is unconditionally confirmed within the bt_driver as soon as one is
+//! @note The indication is unconditionally confirmed within the bt_driver as soon as one is
 //!        received.
 extern void bt_driver_cb_gatt_handle_indication(const GattServerNotifIndicEvent *event);
 

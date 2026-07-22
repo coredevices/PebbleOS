@@ -41,7 +41,7 @@ void regular_timer_add_multiminute_callback(RegularTimerInfo* cb, uint16_t minut
 bool regular_timer_remove_callback(RegularTimerInfo* cb);
 
 //! Check if a regular timer is currently scheduled
-//! @params cb pointer to the RegularTimerInfo struct for the timer
+//! @param cb pointer to the RegularTimerInfo struct for the timer
 //! @returns true if scheduled or pending deletion, false otherwise
 bool regular_timer_is_scheduled(RegularTimerInfo *cb);
 
@@ -50,7 +50,7 @@ bool regular_timer_is_scheduled(RegularTimerInfo *cb);
 //! TODO: It would probably make sense to just fold this into the logic
 //!       for _is_scheduled() once we verify no consumers are relying on
 //!       this odd behavior
-//! @params cb pointer to the RegularTimerInfo struct for the timer
+//! @param cb pointer to the RegularTimerInfo struct for the timer
 bool regular_timer_pending_deletion(RegularTimerInfo *cb);
 
 

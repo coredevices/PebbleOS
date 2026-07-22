@@ -46,7 +46,7 @@ _Static_assert(sizeof(SprfMagic) == 4, "SprfMagic unexpected size");
 //!   main_fw_scratch: A region for normal fw to stash info in the future if needed
 //!
 //! Each entry, or field, has its own crc which is written once the write of the field is complete.
-//! @NOTE: The CRC _must_ be the first member of a field. There are static asserts to catch
+//! @note The CRC _must_ be the first member of a field. There are static asserts to catch
 //! this for current, please add a static assert for this if you create a new field
 //!
 //! A field is 'valid' iff a CRC of its contents matches the crc in flash
