@@ -90,7 +90,9 @@ typedef enum DayInWeek {
 
 //! Obtain the number of seconds and milliseconds part since the epoch.
 //!   This is a non-standard C function provided for convenience.
-//!   Parameters are documented with the SDK declaration in pbl_std.h.
+//! @param tloc if provided receives the current UTC Unix Time seconds portion
+//! @param out_ms if provided receives the current Unix Time milliseconds portion
+//! @return Current Unix Time milliseconds portion
 uint16_t time_ms(time_t *tloc, uint16_t *out_ms);
 
 //!   @} // end addtogroup StandardTime
