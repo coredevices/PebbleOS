@@ -7,7 +7,7 @@
 #include "applib/ui/dialogs/confirmation_dialog.h"
 #include "applib/ui/window.h"
 #include "apps/prf/mfg_test_result.h"
-#include "drivers/backlight.h"
+#include <pbl/drivers/backlight.h>
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_manager.h"

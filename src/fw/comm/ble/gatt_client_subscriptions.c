@@ -11,7 +11,7 @@
 #include "gap_le_connection.h"
 
 #include "comm/bt_lock.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"

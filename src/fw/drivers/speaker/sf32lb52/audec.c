@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "audio_definitions.h"
+#include <pbl/drivers/speaker/sf32lb52/audio_definitions.h>
 #include "kernel/pbl_malloc.h"
 #include "pbl/mcu/cache.h"
 #include "system/passert.h"

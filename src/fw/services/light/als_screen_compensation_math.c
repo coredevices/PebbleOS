@@ -3,7 +3,7 @@
 
 #include "services/light/als_screen_compensation.h"
 
-#include "drivers/ambient_light.h"  // AMBIENT_LIGHT_LEVEL_MAX
+#include <pbl/drivers/ambient_light.h>  // AMBIENT_LIGHT_LEVEL_MAX
 
 #define ALS_COMP_UNITY_Q8 (256u)
 

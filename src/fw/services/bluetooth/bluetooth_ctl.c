@@ -9,7 +9,7 @@
 #include "comm/ble/gap_le.h"
 #include "comm/ble/gatt_client_subscriptions.h"
 #include "console/dbgserial.h"
-#include "drivers/clocksource.h"
+#include <pbl/drivers/clocksource.h>
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/os/mutex.h"

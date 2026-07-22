@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "da7212_definitions.h"
+#include <pbl/drivers/speaker/nrf5/da7212_definitions.h>
 
 #include "board/board.h"
-#include "drivers/audio.h"
-#include "drivers/clocksource.h"
-#include "drivers/i2c.h"
+#include <pbl/drivers/audio.h>
+#include <pbl/drivers/clocksource.h>
+#include <pbl/drivers/i2c.h>
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/sleep.h"
 #include "pbl/os/mutex.h"

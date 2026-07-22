@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "drivers/flash.h"
+#include <pbl/drivers/flash.h>
 #include "flash_region/flash_region.h"
 #include "kernel/util/sleep.h"
 #include "resource/resource_storage_flash.h"

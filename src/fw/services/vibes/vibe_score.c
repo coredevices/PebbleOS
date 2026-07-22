@@ -8,7 +8,7 @@
 
 #include "system/passert.h"
 #include <pbl/logging/logging.h>
-#include "drivers/vibe.h"
+#include <pbl/drivers/vibe.h>
 #include "applib/applib_malloc.auto.h"
 #include "util/net.h"
 

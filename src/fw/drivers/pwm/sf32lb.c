@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #include "board/board.h"
-#include "drivers/pwm.h"
+#include <pbl/drivers/pwm.h>
 #include "system/passert.h"
 #include "pbl/soc/sf32lb/sleep.h"
 

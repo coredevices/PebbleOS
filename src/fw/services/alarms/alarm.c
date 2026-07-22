@@ -5,7 +5,7 @@
 #include "pbl/services/alarms/alarm_pin.h"
 
 #include "apps/system_app_ids.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/os/mutex.h"

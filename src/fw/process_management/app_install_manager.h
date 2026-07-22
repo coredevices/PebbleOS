@@ -7,7 +7,7 @@
 
 #include "applib/graphics/gtypes.h"
 #include "applib/graphics/gcolor_definitions.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "kernel/events.h"
 #include "pebble_process_md.h"
 #include "resource/resource.h"

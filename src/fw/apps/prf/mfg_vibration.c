@@ -9,7 +9,7 @@
 #include "applib/ui/vibes.h"
 #include "applib/ui/window.h"
 #include "apps/prf/mfg_test_result.h"
-#include "drivers/vibe.h"
+#include <pbl/drivers/vibe.h>
 #include "kernel/pbl_malloc.h"
 #include "mfg/mfg_info.h"
 #include "process_management/pebble_process_md.h"

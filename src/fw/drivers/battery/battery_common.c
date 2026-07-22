@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/battery.h"
+#include <pbl/drivers/battery.h>
 
-#include "drivers/gpio.h"
+#include <pbl/drivers/gpio.h>
 
 static bool s_charging_forced_disable = false;
 

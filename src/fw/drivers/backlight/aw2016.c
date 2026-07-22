@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/backlight.h"
+#include <pbl/drivers/backlight.h>
 
 #include "board/board.h"
-#include "drivers/i2c.h"
+#include <pbl/drivers/i2c.h>
 #include <pbl/logging/logging.h>
 
 PBL_LOG_MODULE_DEFINE(driver_backlight_aw2016, CONFIG_DRIVER_BACKLIGHT_LOG_LEVEL);

@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "display_jdi.h"
+#include <pbl/drivers/display/sf32lb/display_jdi.h>
 
 #include "board/board.h"
 #include "board/display.h"
-#include "drivers/display/display.h"
-#include "drivers/gpio.h"
+#include <pbl/drivers/display/display.h>
+#include <pbl/drivers/gpio.h>
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/delay.h"
 #include "pbl/soc/sf32lb/sleep.h"
 #include "kernel/coredump_extra_regions.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "pbl/mcu/cache.h"
 #include "pbl/os/mutex.h"
 #include "pbl/services/new_timer/new_timer.h"

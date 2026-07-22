@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/qemu/qemu_accel.h"
-#include "drivers/qemu/qemu_battery.h"
-#include "drivers/qemu/qemu_serial.h"
-#include "drivers/qemu/qemu_serial_private.h"
-#include "drivers/qemu/qemu_settings.h"
-#include "drivers/uart.h"
+#include <pbl/drivers/qemu/qemu_accel.h>
+#include <pbl/drivers/qemu/qemu_battery.h>
+#include <pbl/drivers/qemu/qemu_serial.h>
+#include <pbl/drivers/qemu/qemu_serial_private.h>
+#include <pbl/drivers/qemu/qemu_settings.h>
+#include <pbl/drivers/uart.h>
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "popups/timeline/peek.h"

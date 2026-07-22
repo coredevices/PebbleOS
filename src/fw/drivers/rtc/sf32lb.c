@@ -4,8 +4,8 @@
 #include <stdint.h>
 
 #include "board/board.h"
-#include "drivers/flash.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/flash.h>
+#include <pbl/drivers/rtc.h>
 #include "flash_region/flash_region.h"
 #include "kernel/events.h"
 #include "pbl/mcu/interrupts.h"

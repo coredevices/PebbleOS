@@ -1,5 +1,5 @@
-#include "drivers/i2c_hal.h"
-#include "drivers/i2c_definitions.h"
+#include <pbl/drivers/i2c_hal.h>
+#include <pbl/drivers/i2c_definitions.h>
 
 void i2c_hal_init(I2CBus *bus) {
 }

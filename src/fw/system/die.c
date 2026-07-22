@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/vibe.h"
+#include <pbl/drivers/vibe.h>
 #include "kernel/core_dump.h"
 #include "logging/logging_private.h"
 #include "logging/pulse_logging.h"

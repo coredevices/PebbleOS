@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/uart.h"
-#include "drivers/uart/qemu.h"
+#include <pbl/drivers/uart.h>
+#include <pbl/drivers/uart/qemu.h>
 
 #include "board/board.h"
 #include "system/passert.h"

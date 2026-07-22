@@ -4,8 +4,8 @@
 #include "pbl/services/touch/touch.h"
 #include "pbl/services/touch/touch_event.h"
 
-#include "drivers/display/display.h"
-#include "drivers/touch/touch_sensor.h"
+#include <pbl/drivers/display/display.h>
+#include <pbl/drivers/touch/touch_sensor.h>
 #include "kernel/events.h"
 #include "kernel/pebble_tasks.h"
 #include "pbl/services/event_service.h"

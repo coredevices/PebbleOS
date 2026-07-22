@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "drivers/display/display.h" // FIXME: Need display dimensions
+#include <pbl/drivers/display/display.h> // FIXME: Need display dimensions
 #include "resource/resource.h"
 #include "pbl/util/attributes.h"
 #include "pbl/util/math.h"

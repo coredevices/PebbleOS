@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/mic.h"
-#include "drivers/mic/qemu/mic_definitions.h"
+#include <pbl/drivers/mic.h>
+#include <pbl/drivers/mic/qemu/mic_definitions.h>
 
 #include "board/board.h"
 #include "console/prompt.h"

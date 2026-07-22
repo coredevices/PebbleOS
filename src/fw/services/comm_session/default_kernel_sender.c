@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "comm/bt_lock.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/comm_session/protocol.h"

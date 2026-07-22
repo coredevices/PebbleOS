@@ -3,8 +3,8 @@
 
 #include "system/bootbits.h"
 
-#include "drivers/flash.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/flash.h>
+#include <pbl/drivers/rtc.h>
 #include "flash_region/flash_region.h"
 #include <pbl/logging/logging.h>
 #include "system/version.h"

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "syscall/syscall.h"
 
 #include "logging/logging_private.h"

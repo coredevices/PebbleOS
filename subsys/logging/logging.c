@@ -11,7 +11,7 @@
 #include "console/prompt.h"
 #include "console/serial_console.h"
 #include "debug/advanced_logging.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include <pbl/logging/logging.h>
 
 #include "pbl/mcu/interrupts.h"

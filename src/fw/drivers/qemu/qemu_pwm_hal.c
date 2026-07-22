@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/pwm.h"
+#include <pbl/drivers/pwm.h>
 
 #include "board/board.h"
 

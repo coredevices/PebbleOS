@@ -5,7 +5,7 @@
 #include "pbl/services/hrm/hrm_manager_private.h"
 
 #include "console/prompt.h"
-#include "drivers/hrm.h"
+#include <pbl/drivers/hrm.h>
 #include "kernel/pbl_malloc.h"
 #include "mfg/mfg_info.h"
 #include "pbl/os/tick.h"

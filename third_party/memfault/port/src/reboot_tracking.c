@@ -1,4 +1,4 @@
-#include "drivers/watchdog.h"
+#include <pbl/drivers/watchdog.h>
 #include "system/reboot_reason.h"
 #include "memfault/ports/reboot_reason.h"
 

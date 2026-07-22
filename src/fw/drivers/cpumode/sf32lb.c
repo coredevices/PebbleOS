@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/cpumode.h"
+#include <pbl/drivers/cpumode.h>
 
 #include <bf0_hal.h>
 

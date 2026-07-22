@@ -24,7 +24,7 @@
 #include "os/os_cputime.h"
 
 #if NRF52_SERIES
-#include "drivers/clocksource.h"
+#include <pbl/drivers/clocksource.h>
 #include "pbl/soc/nrf/sleep.h"
 #endif
 

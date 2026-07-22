@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "animation_interpolate.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "pbl/util/list.h"
 
 //! @file animation.h

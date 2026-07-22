@@ -26,10 +26,10 @@ extern char *itoa(int value, char *str, int base);
 #include "logging/logging_private.h"
 #include "logging/pulse_logging.h"
 
-#include "drivers/flash.h"
-#include "drivers/mpu.h"
-#include "drivers/watchdog.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/flash.h>
+#include <pbl/drivers/mpu.h>
+#include <pbl/drivers/watchdog.h>
+#include <pbl/drivers/rtc.h>
 
 #include "flash_region/flash_region.h"
 #include "kernel/pbl_malloc.h"

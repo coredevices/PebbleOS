@@ -3,8 +3,8 @@
 
 #include "applib/data_logging.h"
 #include "applib/health_service.h"
-#include "drivers/battery.h"
-#include "drivers/vibe.h"
+#include <pbl/drivers/battery.h>
+#include <pbl/drivers/vibe.h>
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "mfg/mfg_info.h"

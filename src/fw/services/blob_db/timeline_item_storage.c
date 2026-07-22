@@ -3,7 +3,7 @@
 
 #include "pbl/services/blob_db/timeline_item_storage.h"
 
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/settings/settings_raw_iter.h"

@@ -7,7 +7,7 @@
 #include "pbl/services/alarms/alarm.h"
 #include "pbl/services/alarms/alarm_pin.h"
 
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "resource/timeline_resource_ids.auto.h"
 #include "pbl/services/cron.h"
 #include "pbl/services/new_timer/new_timer.h"

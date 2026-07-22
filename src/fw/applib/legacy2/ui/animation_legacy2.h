@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "pbl/util/list.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "applib/ui/animation.h"
 
 //! @file animation.h

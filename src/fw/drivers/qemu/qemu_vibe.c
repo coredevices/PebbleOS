@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/vibe.h"
+#include <pbl/drivers/vibe.h>
 
-#include "drivers/qemu/qemu_serial.h"
+#include <pbl/drivers/qemu/qemu_serial.h>
 #include "console/prompt.h"
 
 #include <stdlib.h>

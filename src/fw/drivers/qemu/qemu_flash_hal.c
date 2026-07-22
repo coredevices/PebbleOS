@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/flash.h"
-#include "drivers/flash/flash_impl.h"
+#include <pbl/drivers/flash.h>
+#include <pbl/drivers/flash/flash_impl.h>
 
 #include "board/board.h"
 #include "system/passert.h"

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/watchdog.h"
+#include <pbl/drivers/watchdog.h>
 
 void watchdog_init(void) {
 }

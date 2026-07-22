@@ -5,7 +5,7 @@
 
 #include "display.h"
 
-#include "drivers/button_id.h"
+#include <pbl/drivers/button_id.h>
 #include "debug/power_tracking.h"
 
 #include <stdint.h>
@@ -209,6 +209,6 @@ typedef const struct AudioDevice AudioDevice;
 void board_early_init(void);
 void board_init(void);
 
-#include "drivers/i2c/definitions.h"
+#include <pbl/drivers/i2c/definitions.h>
 
 #include "board_definitions.h"

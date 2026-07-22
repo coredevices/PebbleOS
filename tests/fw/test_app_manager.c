@@ -9,7 +9,7 @@
 #include "applib/graphics/framebuffer.h"
 #include "applib/ui/window_stack.h"
 #include "applib/ui/window_stack_private.h"
-#include "drivers/mpu.h"
+#include <pbl/drivers/mpu.h>
 #include "kernel/util/segment.h"
 #include "popups/crashed_ui.h"
 #include "process_management/app_install_manager.h"

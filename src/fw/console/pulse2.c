@@ -13,8 +13,8 @@
 #include "console/control_protocol.h"
 #include "console/control_protocol_impl.h"
 #include "console/dbgserial.h"
-#include "drivers/rtc.h"
-#include "drivers/task_watchdog.h"
+#include <pbl/drivers/rtc.h>
+#include <pbl/drivers/task_watchdog.h>
 #include "kernel/pbl_malloc.h"
 #include "kernel/pebble_tasks.h"
 #include "pbl/mcu/interrupts.h"

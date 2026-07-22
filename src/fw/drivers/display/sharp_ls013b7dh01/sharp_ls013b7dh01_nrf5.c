@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "sharp_ls013b7dh01.h"
+#include <pbl/drivers/display/sharp_ls013b7dh01/sharp_ls013b7dh01.h>
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -9,7 +9,7 @@
 
 #include "applib/graphics/gtypes.h"
 #include "board/board.h"
-#include "drivers/gpio.h"
+#include <pbl/drivers/gpio.h>
 #include "kernel/events.h"
 #include "pbl/os/mutex.h"
 #include "system/passert.h"

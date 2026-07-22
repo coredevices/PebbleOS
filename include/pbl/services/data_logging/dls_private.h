@@ -4,7 +4,7 @@
 #pragma once
 
 #include "applib/data_logging.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "flash_region/flash_region.h"
 #include "kernel/pebble_tasks.h"
 #include "pbl/os/mutex.h"

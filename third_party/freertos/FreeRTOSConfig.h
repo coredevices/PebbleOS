@@ -71,7 +71,7 @@
  * See http://www.freertos.org/a00110.html.
  *----------------------------------------------------------*/
 
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 
 #include <cmsis_core.h>
 // Per-task newlib reentrancy needs newlib's struct _reent. picolibc uses

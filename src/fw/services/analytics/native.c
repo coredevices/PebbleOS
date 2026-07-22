@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "console/prompt.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "pbl/os/mutex.h"
 #include "pbl/services/analytics/backend.h"
 #include "pbl/services/system_task.h"

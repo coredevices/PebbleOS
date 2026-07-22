@@ -5,7 +5,7 @@
 
 #include "services/light/als_screen_compensation.h"
 #include "applib/graphics/gtypes.h"
-#include "drivers/ambient_light.h"  // AMBIENT_LIGHT_LEVEL_MAX
+#include <pbl/drivers/ambient_light.h>  // AMBIENT_LIGHT_LEVEL_MAX
 
 #include <string.h>
 

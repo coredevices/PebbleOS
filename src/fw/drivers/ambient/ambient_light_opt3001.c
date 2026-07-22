@@ -3,8 +3,8 @@
 
 #include "board/board.h"
 #include "console/prompt.h"
-#include "drivers/ambient_light.h"
-#include "drivers/i2c.h"
+#include <pbl/drivers/ambient_light.h>
+#include <pbl/drivers/i2c.h>
 #include "kernel/util/sleep.h"
 #include "mfg/mfg_info.h"
 #include <pbl/logging/logging.h>

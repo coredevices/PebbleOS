@@ -5,8 +5,8 @@
 
 #include "pbl/services/speaker/speaker_service.h"
 
-#include "drivers/audio.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/audio.h>
+#include <pbl/drivers/rtc.h>
 
 #include <string.h>
 

@@ -4,7 +4,7 @@
 #include "pbl/services/cron.h"
 #include <pebbleos/cron.h>
 
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "pbl/os/mutex.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include <pbl/logging/logging.h>

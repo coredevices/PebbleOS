@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "hal.h"
-#include "definitions.h"
-#include "nrf5.h"
+#include <pbl/drivers/i2c/hal.h>
+#include <pbl/drivers/i2c/definitions.h>
+#include <pbl/drivers/i2c/nrf5.h>
 
 #include "system/passert.h"
 

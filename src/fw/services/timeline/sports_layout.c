@@ -8,7 +8,7 @@
 #include "applib/graphics/gtypes.h"
 #include "applib/graphics/text.h"
 #include "applib/ui/ui.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "font_resource_keys.auto.h"
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"

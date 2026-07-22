@@ -5,7 +5,7 @@
 
 #include <pbl/logging/logging.h>
 
-#include "drivers/task_watchdog.h"
+#include <pbl/drivers/task_watchdog.h>
 #include "kernel/pebble_tasks.h"
 #include "kernel/util/task_init.h"
 #include "pbl/mcu/fpu.h"

@@ -2,11 +2,11 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "board/board.h"
-#include "drivers/exti.h"
-#include "drivers/gpio.h"
-#include "drivers/i2c.h"
-#include "drivers/rtc.h"
-#include "drivers/touch/touch_sensor.h"
+#include <pbl/drivers/exti.h>
+#include <pbl/drivers/gpio.h>
+#include <pbl/drivers/i2c.h>
+#include <pbl/drivers/rtc.h>
+#include <pbl/drivers/touch/touch_sensor.h>
 #include "kernel/events.h"
 #include "kernel/util/sleep.h"
 #include "pbl/os/tick.h"

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 
 #include <stdbool.h>
 #include <stdint.h>

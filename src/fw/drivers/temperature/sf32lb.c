@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 SiFli Technologies(Nanjing) Co., Ltd */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/temperature.h"
+#include <pbl/drivers/temperature.h>
 
 #include "bf0_hal.h"
 #include "board/board.h"

@@ -19,8 +19,8 @@
 
 #include "comm/ble/gap_le_scan.h"
 
-#include "drivers/mag.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/mag.h>
+#include <pbl/drivers/rtc.h>
 
 #include "kernel/events.h"
 #include "logging/logging_private.h"

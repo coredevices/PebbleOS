@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 #include "comm/ble/gatt_service_changed.h"
-#include "drivers/pmic.h"
+#include <pbl/drivers/pmic.h>
 #include "kernel/core_dump.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"

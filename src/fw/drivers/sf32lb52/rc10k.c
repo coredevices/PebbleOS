@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "pbl/services/new_timer/new_timer.h"
 #include "system/passert.h"
 

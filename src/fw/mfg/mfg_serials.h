@@ -6,7 +6,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "drivers/otp.h"
+#include <pbl/drivers/otp.h>
 
 // These sizes represent the number of characters in the version
 // strings and serial numbers. To store these, one additional byte is

@@ -1,4 +1,4 @@
-#include "drivers/otp.h"
+#include <pbl/drivers/otp.h>
 
 static char slot[32];
 

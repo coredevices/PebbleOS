@@ -12,7 +12,7 @@
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/progress_window.h"
 #include "applib/ui/ui.h"
-#include "drivers/battery.h"
+#include <pbl/drivers/battery.h>
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/app_manager.h"

@@ -6,7 +6,7 @@
 #include "applib/fonts/fonts.h"
 #include "applib/ui/simple_menu_layer.h"
 #include "applib/ui/ui.h"
-#include "drivers/temperature.h"
+#include <pbl/drivers/temperature.h>
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
 #include <pbl/logging/logging.h>

@@ -6,7 +6,7 @@
 #include "pbl/services/protobuf_log/protobuf_log_util.h"
 
 #include "applib/data_logging.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "kernel/pbl_malloc.h"
 #include "mfg/mfg_serials.h"
 #include "pbl/os/mutex.h"

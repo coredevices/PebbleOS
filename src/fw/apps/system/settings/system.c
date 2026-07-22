@@ -15,7 +15,7 @@
 #include "applib/ui/dialogs/expandable_dialog.h"
 #include "applib/ui/option_menu_window.h"
 #include "applib/ui/ui.h"
-#include "drivers/ambient_light.h"
+#include <pbl/drivers/ambient_light.h>
 #include "kernel/core_dump.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"

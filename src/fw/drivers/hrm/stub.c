@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "stub.h"
+#include <pbl/drivers/hrm/stub.h>
 
 void hrm_init(HRMDevice *dev) {
 }

@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/mic.h"
-#include "drivers/pmic/npm1300.h"
+#include <pbl/drivers/mic.h>
+#include <pbl/drivers/pmic/npm1300.h>
 #include "board/board.h"
 #include "kernel/kernel_heap.h"
 #include "kernel/pbl_malloc.h"
@@ -14,7 +14,7 @@
 #include "pbl/util/heap.h"
 #include "kernel/util/sleep.h"
 #include "pbl/soc/sf32lb/sleep.h"
-#include "pdm_definitions.h"
+#include <pbl/drivers/mic/sf32lb52/pdm_definitions.h>
 #include "pbl/services/system_task.h"
 #include "FreeRTOS.h"
 

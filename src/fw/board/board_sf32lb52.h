@@ -9,7 +9,7 @@
 #include <stdbool.h>
 
 #include "bf0_hal_pinmux.h"
-#include "drivers/button_id.h"
+#include <pbl/drivers/button_id.h>
 
 #define IRQ_PRIORITY_INVALID (1 << __NVIC_PRIO_BITS)
 
@@ -139,13 +139,13 @@ typedef struct {
   const MagConfig mag_config;
 } BoardConfigMag;
 
-#include "drivers/flash/qspi_flash.h"
-#include "drivers/flash/qspi_flash_definitions.h"
-#include "drivers/qspi_definitions.h"
-#include "drivers/uart/sf32lb.h"
-#include "drivers/display/sf32lb/display_jdi.h"
-#include "drivers/mic/sf32lb52/pdm_definitions.h"
-#include "drivers/speaker/sf32lb52/audio_definitions.h"
+#include <pbl/drivers/flash/qspi_flash.h>
+#include <pbl/drivers/flash/qspi_flash_definitions.h>
+#include <pbl/drivers/qspi_definitions.h>
+#include <pbl/drivers/uart/sf32lb.h>
+#include <pbl/drivers/display/sf32lb/display_jdi.h>
+#include <pbl/drivers/mic/sf32lb52/pdm_definitions.h>
+#include <pbl/drivers/speaker/sf32lb52/audio_definitions.h>
 
 typedef const struct UARTDevice UARTDevice;
 typedef const struct I2CBus I2CBus;
@@ -157,8 +157,8 @@ typedef const struct QSPIFlash QSPIFlash;
 typedef const struct DisplayJDIDevice DisplayJDIDevice;
 typedef const struct AudioDevice AudioDevice;
 
-#include "drivers/i2c/definitions.h"
-#include "drivers/i2c/sf32lb.h"
+#include <pbl/drivers/i2c/definitions.h>
+#include <pbl/drivers/i2c/sf32lb.h>
 
 void board_early_init(void);
 void board_init(void);

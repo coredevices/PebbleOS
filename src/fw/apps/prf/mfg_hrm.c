@@ -9,8 +9,8 @@
 #include "applib/ui/text_layer.h"
 #include "applib/ui/window.h"
 #include "applib/ui/window_private.h"
-#include "drivers/accel.h"
-#include "drivers/hrm.h"
+#include <pbl/drivers/accel.h>
+#include <pbl/drivers/hrm.h>
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/sleep.h"
 #include "mfg/mfg_info.h"

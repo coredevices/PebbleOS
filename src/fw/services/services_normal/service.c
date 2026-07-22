@@ -6,7 +6,7 @@
 #include <string.h>
 
 #include "applib/event_service_client.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "kernel/events.h"
 #include "process_management/app_install_manager.h" // FIXME: This should really be in services/
 #include "process_management/launcher_app_message.h" // FIXME: This should really be in services/

@@ -9,7 +9,7 @@
 #include "kernel/pbl_malloc.h"
 #include <pbl/logging/logging.h>
 #include "pbl/services/audio_endpoint.h"
-#include "drivers/mic.h"
+#include <pbl/drivers/mic.h>
 
 #include "speex/speex.h"
 #include "speex/speex_bits.h"

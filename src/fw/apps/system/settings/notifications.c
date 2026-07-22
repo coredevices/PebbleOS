@@ -12,7 +12,7 @@
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/option_menu_window.h"
 #include "applib/ui/ui.h"
-#include "drivers/battery.h"
+#include <pbl/drivers/battery.h>
 #include "kernel/pbl_malloc.h"
 #include "popups/notifications/notification_window.h"
 #include "pbl/services/analytics/analytics.h"

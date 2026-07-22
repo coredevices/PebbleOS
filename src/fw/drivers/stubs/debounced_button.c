@@ -1,4 +1,4 @@
-#include "drivers/debounced_button.h"
+#include <pbl/drivers/debounced_button.h>
 
 
 void debounced_button_init(void) {

@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "board/board.h"
-#include "drivers/touch/touch_sensor.h"
+#include <pbl/drivers/touch/touch_sensor.h>
 #include "pbl/services/system_task.h"
 #include "pbl/services/touch/touch.h"
 

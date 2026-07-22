@@ -6,7 +6,7 @@
 #include "applib/persist_map.h"
 #include "applib/persist_private.h"
 #include "comm/ble/app_profiles/ancs_app_storage.h"
-#include "drivers/crc.h"
+#include <pbl/drivers/crc.h>
 #include "kernel/services/file.h"
 #include "system/filesystem.h"
 #include <pbl/logging/logging.h>

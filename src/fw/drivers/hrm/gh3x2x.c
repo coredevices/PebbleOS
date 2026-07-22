@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "gh3x2x.h"
+#include <pbl/drivers/hrm/gh3x2x.h>
 
-#include "drivers/hrm.h"
+#include <pbl/drivers/hrm.h>
 #include "board/board.h"
 #include "kernel/util/sleep.h"
 #include <pbl/logging/logging.h>

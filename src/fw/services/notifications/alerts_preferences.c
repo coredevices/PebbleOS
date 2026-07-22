@@ -4,7 +4,7 @@
 #include "pbl/services/notifications/alerts_preferences.h"
 #include "pbl/services/notifications/alerts_preferences_private.h"
 
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "popups/notifications/notification_window.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/notifications/do_not_disturb.h"

@@ -3,9 +3,9 @@
 
 #include "kernel/pbl_malloc.h"
 
-#include "drivers/rtc.h"
-#include "drivers/qemu/qemu_serial.h"
-#include "drivers/qemu/qemu_serial_private.h"
+#include <pbl/drivers/rtc.h>
+#include <pbl/drivers/qemu/qemu_serial.h>
+#include <pbl/drivers/qemu/qemu_serial_private.h>
 
 #include "system/passert.h"
 #include <pbl/logging/logging.h>

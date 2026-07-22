@@ -3,8 +3,8 @@
 
 #include "board/board.h"
 #include "board/splash.h"
-#include "drivers/sf32lb52/debounced_button_definitions.h"
-#include "drivers/watchdog.h"
+#include <pbl/drivers/sf32lb52/debounced_button_definitions.h>
+#include <pbl/drivers/watchdog.h>
 #include "system/passert.h"
 
 #include "bf0_hal.h"

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "drivers/button_id.h"
+#include <pbl/drivers/button_id.h>
 
 #include <stdint.h>
 #include <stdbool.h>

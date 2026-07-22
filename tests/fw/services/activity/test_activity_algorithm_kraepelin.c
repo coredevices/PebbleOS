@@ -3,8 +3,8 @@
 
 #include "applib/accel_service.h"
 #include "applib/data_logging.h"
-#include "drivers/ambient_light.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/ambient_light.h>
+#include <pbl/drivers/rtc.h>
 #include "pbl/services/regular_timer.h"
 #include "pbl/services/battery/battery_state.h"
 #include "pbl/services/activity/activity.h"

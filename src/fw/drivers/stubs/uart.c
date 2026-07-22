@@ -1,4 +1,4 @@
-#include "drivers/uart.h"
+#include <pbl/drivers/uart.h>
 
 void uart_init(UARTDevice *dev) {
 }

@@ -3,7 +3,7 @@
 
 #include "interval_timer.h"
 
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "FreeRTOS.h"
 
 static uint64_t prv_get_curr_system_time_ms(void) {

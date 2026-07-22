@@ -10,10 +10,10 @@
 #include "applib/ui/window.h"
 #include "applib/ui/window_private.h"
 #include "apps/prf/mfg_test_result.h"
-#include "drivers/accel.h"
-#include "drivers/hrm.h"
-#include "drivers/rtc.h"
-#include "drivers/hrm/gh3x2x.h"
+#include <pbl/drivers/accel.h>
+#include <pbl/drivers/hrm.h>
+#include <pbl/drivers/rtc.h>
+#include <pbl/drivers/hrm/gh3x2x.h>
 #include "gh_demo.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/sleep.h"

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #include "console/prompt.h"
-#include "drivers/backlight.h"
+#include <pbl/drivers/backlight.h>
 
 void command_backlight_ctl(const char *arg) {
   const int bright_percent = atoi(arg);

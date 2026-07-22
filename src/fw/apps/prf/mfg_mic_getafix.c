@@ -18,11 +18,11 @@
 #include "board/board.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
-#include "drivers/mic.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/mic.h>
+#include <pbl/drivers/rtc.h>
 #include "mfg/mfg_info.h"
 #include "flash_region/flash_region.h"
-#include "drivers/flash.h"
+#include <pbl/drivers/flash.h>
 
 // Kiss FFT from Speex library - must include config and os_support before kiss_fft headers
 // Save and undefine ABS to avoid redefinition warning with Speex's arch.h

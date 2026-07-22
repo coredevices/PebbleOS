@@ -9,10 +9,10 @@
 #include "apps/prf/mfg_test_result.h"
 #include "kernel/pbl_malloc.h"
 #include "board/board.h"
-#include "drivers/pmic/npm1300.h"
+#include <pbl/drivers/pmic/npm1300.h>
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
-#include "drivers/audio.h"
+#include <pbl/drivers/audio.h>
 
 typedef struct {
   Window window;

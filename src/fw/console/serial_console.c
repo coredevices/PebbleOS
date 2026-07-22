@@ -9,8 +9,8 @@
 #include "prompt.h"
 
 #include "console/pulse_internal.h"
-#include "drivers/mic.h"
-#include "drivers/watchdog.h"
+#include <pbl/drivers/mic.h>
+#include <pbl/drivers/watchdog.h>
 #include "pbl/os/tick.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"

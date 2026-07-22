@@ -3,7 +3,7 @@
 
 #include <inttypes.h>
 
-#include "drivers/temperature.h"
+#include <pbl/drivers/temperature.h>
 #include "console/prompt.h"
 
 void temperature_init(void) {

@@ -4,9 +4,9 @@
 #include <math.h>
 
 #include "board/board.h"
-#include "drivers/battery.h"
-#include "drivers/pmic.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/battery.h>
+#include <pbl/drivers/pmic.h>
+#include <pbl/drivers/rtc.h>
 #include "kernel/events.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/battery/battery_state.h"
@@ -22,7 +22,7 @@
 #endif
 
 #ifdef CONFIG_MFG
-#include "drivers/flash.h"
+#include <pbl/drivers/flash.h>
 #include "flash_region/flash_region.h"
 #endif
 

@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "drivers/button.h"
+#include <pbl/drivers/button.h>
 #include "console/prompt.h"
 
 bool button_is_pressed(ButtonId id) {

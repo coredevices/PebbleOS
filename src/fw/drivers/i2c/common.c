@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/i2c.h"
-#include "definitions.h"
-#include "hal.h"
+#include <pbl/drivers/i2c.h>
+#include <pbl/drivers/i2c/definitions.h>
+#include <pbl/drivers/i2c/hal.h>
 
 #include "board/board.h"
 #include "debug/power_tracking.h"
-#include "drivers/gpio.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/gpio.h>
+#include <pbl/drivers/rtc.h>
 #include "FreeRTOS.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/os/tick.h"
@@ -20,7 +20,7 @@
 #include "pbl/util/size.h"
 
 #ifdef CONFIG_PMIC
-#include "drivers/pmic.h"
+#include <pbl/drivers/pmic.h>
 #endif
 
 #include <inttypes.h>

@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/debounced_button.h"
+#include <pbl/drivers/debounced_button.h>
 
 #include "board/board.h"
-#include "drivers/button.h"
-#include "drivers/exti.h"
-#include "drivers/gpio.h"
+#include <pbl/drivers/button.h>
+#include <pbl/drivers/exti.h>
+#include <pbl/drivers/gpio.h>
 #include "kernel/events.h"
 #include "system/bootbits.h"
 #include "system/reset.h"

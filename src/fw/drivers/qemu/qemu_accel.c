@@ -41,10 +41,10 @@
 //! replay from a phone will work in realtime with minimal latency
 //! without speeding up or slowing down the signal during replay.
 
-#include "drivers/accel.h"
+#include <pbl/drivers/accel.h>
 
-#include "drivers/qemu/qemu_serial.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/qemu/qemu_serial.h>
+#include <pbl/drivers/rtc.h>
 #include "pbl/os/mutex.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"

@@ -23,7 +23,7 @@
 #include "stubs_syscall_internal.h"
 #include "stubs_worker_manager.h"
 
-#include "drivers/accel.h"
+#include <pbl/drivers/accel.h>
 #include "pbl/services/event_service.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"

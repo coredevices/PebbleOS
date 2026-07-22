@@ -3,7 +3,7 @@
 
 #include "fake_otp.h"
 
-#include "drivers/otp.h"
+#include <pbl/drivers/otp.h>
 #include "system/passert.h"
 
 #include <stdint.h>

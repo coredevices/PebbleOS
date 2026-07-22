@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 SiFli Technologies(Nanjing) Co., Ltd */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/exti.h"
+#include <pbl/drivers/exti.h>
 
 #include <stdbool.h>
 

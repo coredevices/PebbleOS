@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "drivers/button_id.h"
+#include <pbl/drivers/button_id.h>
 
 //! Get the button id used to launch the app.
 //! Only valid if the launch reason is APP_LAUNCH_USER or APP_LAUNCH_QUICK_LAUNCH.

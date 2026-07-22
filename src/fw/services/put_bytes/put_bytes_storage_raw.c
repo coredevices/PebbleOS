@@ -4,8 +4,8 @@
 #include "pbl/services/put_bytes/put_bytes_storage_raw.h"
 
 #include "bluetooth/responsiveness.h"
-#include "drivers/flash.h"
-#include "drivers/task_watchdog.h"
+#include <pbl/drivers/flash.h>
+#include <pbl/drivers/task_watchdog.h>
 #include "flash_region/flash_region.h"
 #include "kernel/pbl_malloc.h"
 #include "resource/resource_storage_flash.h"

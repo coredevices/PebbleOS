@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 
 #include "session_receive_router.h"
 #include "session_transport.h"

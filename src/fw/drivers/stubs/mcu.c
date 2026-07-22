@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/mcu.h"
+#include <pbl/drivers/mcu.h>
 
 #include <cmsis_core.h>
 

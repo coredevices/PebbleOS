@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 SiFli Technologies(Nanjing) Co., Ltd */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/gpio.h"
+#include <pbl/drivers/gpio.h>
 #include "system/passert.h"
 #include "board/board.h"
 

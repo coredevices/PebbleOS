@@ -9,7 +9,7 @@
 #include <string.h>
 
 #include "pbl/util/uuid.h"
-#include "drivers/flash.h"
+#include <pbl/drivers/flash.h>
 #include "flash_region/flash_region.h"
 #include "process_management/pebble_process_info.h"
 #include "resource/resource_storage.h"

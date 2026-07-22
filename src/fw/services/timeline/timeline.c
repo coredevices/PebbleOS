@@ -10,7 +10,7 @@
 #include "apps/system/timeline/pin_window.h"
 #include "comm/ble/kernel_le_client/ancs/ancs.h"
 #include "comm/ble/kernel_le_client/ancs/ancs_types.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/ui/modals/modal_manager.h"

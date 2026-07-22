@@ -14,7 +14,7 @@
 #include "kernel/pbl_malloc.h"
 #include "gatt_client_accessors.h"
 #include <pbl/logging/logging.h>
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 
 #include <bluetooth/gatt.h>
 #include <bluetooth/gatt_discovery.h>

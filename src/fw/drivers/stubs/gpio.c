@@ -1,4 +1,4 @@
-#include "drivers/gpio.h"
+#include <pbl/drivers/gpio.h>
 
 void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype) {
 }

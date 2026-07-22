@@ -3,7 +3,7 @@
 
 #include "framebuffer.h"
 
-#include "drivers/display.h"
+#include <pbl/drivers/display.h>
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "util/bitset.h"

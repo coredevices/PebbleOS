@@ -5,7 +5,7 @@
 
 #include "comm/bt_conn_mgr_impl.h"
 
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 
 #include "gatt_client_accessors.h"
 #include "gatt_client_discovery.h"

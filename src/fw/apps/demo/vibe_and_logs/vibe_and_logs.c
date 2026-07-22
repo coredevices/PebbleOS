@@ -9,8 +9,8 @@
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/window_stack.h"
 #include "kernel/events.h"
-#include "drivers/rtc.h"
-#include "drivers/vibe.h"
+#include <pbl/drivers/rtc.h>
+#include <pbl/drivers/vibe.h>
 #include <pbl/logging/logging.h>
 
 Window s_window;

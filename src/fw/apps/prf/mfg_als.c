@@ -9,7 +9,7 @@
 #include "applib/ui/text_layer.h"
 #include "applib/ui/window_private.h"
 #include "apps/prf/mfg_test_result.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "kernel/pbl_malloc.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"

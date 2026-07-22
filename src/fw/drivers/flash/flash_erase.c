@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/flash.h"
-#include "drivers/flash/flash_internal.h"
+#include <pbl/drivers/flash.h>
+#include <pbl/drivers/flash/flash_internal.h>
 
 #include "flash_region/flash_region.h"
 #include "pbl/services/new_timer/new_timer.h"

@@ -4,8 +4,8 @@
 #include "pbl/services/get_bytes/get_bytes_private.h"
 
 #include "comm/bluetooth_analytics.h"
-#include "drivers/flash.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/flash.h>
+#include <pbl/drivers/rtc.h>
 #include "flash_region/flash_region.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"

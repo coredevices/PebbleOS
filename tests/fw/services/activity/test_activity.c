@@ -5,8 +5,8 @@
 #include "applib/data_logging.h"
 #include "applib/health_service.h"
 #include "applib/health_service_private.h"
-#include "drivers/rtc.h"
-#include "drivers/vibe.h"
+#include <pbl/drivers/rtc.h>
+#include <pbl/drivers/vibe.h>
 #include "kernel/events.h"
 #include "pbl/services/hrm/hrm_manager_private.h"
 #include "pbl/services/activity/activity.h"

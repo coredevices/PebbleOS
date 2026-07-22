@@ -13,7 +13,7 @@
 #include "applib/ui/kino/kino_reel/scale_segmented.h"
 #include "applib/ui/kino/kino_reel/unfold.h"
 #include "applib/ui/ui.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_manager.h"

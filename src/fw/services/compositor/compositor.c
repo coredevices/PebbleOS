@@ -10,7 +10,7 @@
 #include "applib/graphics/gtypes.h"
 #include "applib/ui/animation.h"
 #include "applib/ui/animation_private.h"
-#include "drivers/display/display.h"
+#include <pbl/drivers/display/display.h>
 #include "kernel/event_loop.h"
 #include "kernel/kernel_applib_state.h"
 #include "kernel/ui/kernel_ui.h"

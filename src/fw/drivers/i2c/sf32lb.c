@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "sf32lb.h"
-#include "definitions.h"
-#include "hal.h"
+#include <pbl/drivers/i2c/sf32lb.h>
+#include <pbl/drivers/i2c/definitions.h>
+#include <pbl/drivers/i2c/hal.h>
 
 #include "pbl/soc/sf32lb/sleep.h"
 #include "system/passert.h"

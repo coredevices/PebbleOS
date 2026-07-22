@@ -4,7 +4,7 @@
 #include "pbl/services/clock.h"
 
 #include "console/prompt.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/comm_session/session.h"

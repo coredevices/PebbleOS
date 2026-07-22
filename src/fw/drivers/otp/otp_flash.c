@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/otp.h"
-#include "drivers/flash.h"
+#include <pbl/drivers/otp.h>
+#include <pbl/drivers/flash.h>
 
 #define FLASH_ERASE_VAL 0xFFU
 #define OTP_SLOT_SIZE 32U

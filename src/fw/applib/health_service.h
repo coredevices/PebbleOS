@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "drivers/ambient_light.h"
+#include <pbl/drivers/ambient_light.h>
 #include "pbl/services/hrm/hrm_manager.h"
 #include "util/time/time.h"
 

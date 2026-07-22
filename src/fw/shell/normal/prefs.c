@@ -13,8 +13,8 @@
 #include "apps/system/toggle/quiet_time.h"
 #include "board/board.h"
 #include "applib/graphics/gtypes.h"
-#include "drivers/ambient_light.h"
-#include "drivers/backlight.h"
+#include <pbl/drivers/ambient_light.h>
+#include <pbl/drivers/backlight.h>
 #include "mfg/mfg_info.h"
 #include "pbl/os/mutex.h"
 #include "popups/timeline/peek.h"

@@ -3,7 +3,7 @@
 
 #include "pbl/services/comm_session/session_analytics.h"
 
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 
 #if MEMFAULT
 #include "memfault_chunk_collector.h"

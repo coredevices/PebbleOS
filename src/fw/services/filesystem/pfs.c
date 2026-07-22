@@ -10,9 +10,9 @@
 #include <string.h>
 
 #include "console/prompt.h"
-#include "drivers/flash.h"
-#include "drivers/rtc.h"
-#include "drivers/task_watchdog.h"
+#include <pbl/drivers/flash.h>
+#include <pbl/drivers/rtc.h>
+#include <pbl/drivers/task_watchdog.h>
 #include "flash_region/filesystem_regions.h"
 #include "flash_region/flash_region.h"
 #include "kernel/pbl_malloc.h"

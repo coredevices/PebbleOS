@@ -9,7 +9,7 @@
 #include "applib/ui/window_stack.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/events.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 
 typedef struct {
   Window window;

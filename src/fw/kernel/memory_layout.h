@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "drivers/mpu.h"
+#include <pbl/drivers/mpu.h>
 
 #include <stddef.h>
 

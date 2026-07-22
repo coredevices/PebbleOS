@@ -6,7 +6,7 @@
 #include "hrm_manager.h"
 
 #include "applib/event_service_client.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "freertos_types.h"
 #include "kernel/events.h"
 #include "pbl/os/mutex.h"

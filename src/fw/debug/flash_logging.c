@@ -3,7 +3,7 @@
 
 #include "debug/flash_logging.h"
 
-#include "drivers/flash.h"
+#include <pbl/drivers/flash.h>
 #include "flash_region/flash_region.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/system_task.h"

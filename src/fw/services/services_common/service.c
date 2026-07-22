@@ -24,7 +24,7 @@
 #include "pbl/services/put_bytes/put_bytes.h"
 #include "pbl/services/shared_prf_storage/shared_prf_storage.h"
 #include "pbl/services/touch/touch.h"
-#include "drivers/touch/touch_sensor.h"
+#include <pbl/drivers/touch/touch_sensor.h>
 #include "pbl/services/vibe_pattern.h"
 #include "pbl/services/runlevel_impl.h"
 #include "pbl/util/size.h"

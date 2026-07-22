@@ -4,15 +4,15 @@
 #include <inttypes.h>
 
 #include "console/prompt.h"
-#include "drivers/ambient_light.h"
+#include <pbl/drivers/ambient_light.h>
 #include "kernel/util/sleep.h"
 #include "pbl/services/light.h"
 
 #if defined(CONFIG_ALS_SCREEN_COMPENSATION)
 #include "applib/graphics/framebuffer.h"
 #include "applib/ui/animation_private.h"
-#include "drivers/task_watchdog.h"
-#include "drivers/watchdog.h"
+#include <pbl/drivers/task_watchdog.h>
+#include <pbl/drivers/watchdog.h>
 #include "kernel/event_loop.h"
 #include "pbl/services/compositor/compositor.h"
 #include "pbl/services/compositor/compositor_display.h"

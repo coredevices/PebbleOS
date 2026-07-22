@@ -15,8 +15,8 @@
 #include "stubs_task_watchdog.h"
 #include "stubs_worker_manager.h"
 
-#include "drivers/flash.h"
-#include "drivers/flash/flash_impl.h"
+#include <pbl/drivers/flash.h>
+#include <pbl/drivers/flash/flash_impl.h>
 
 void flash_api_reset_for_test(void);
 TimerID flash_api_get_erase_poll_timer_for_test(void);

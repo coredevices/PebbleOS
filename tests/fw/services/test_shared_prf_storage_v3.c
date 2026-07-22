@@ -4,7 +4,7 @@
 #include "pbl/services/shared_prf_storage/shared_prf_storage.h"
 #include "pbl/services/shared_prf_storage/v3_sprf/shared_prf_storage_private.h"
 #include "flash_region/flash_region.h"
-#include "drivers/flash.h"
+#include <pbl/drivers/flash.h>
 #include "pbl/util/size.h"
 
 #include <bluetooth/sm_types.h>

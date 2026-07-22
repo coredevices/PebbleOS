@@ -3,8 +3,8 @@
 
 #include "task_init.h"
 
-#include "drivers/rng.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rng.h>
+#include <pbl/drivers/rtc.h>
 
 #include <stdlib.h>
 

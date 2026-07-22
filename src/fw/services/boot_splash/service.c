@@ -7,7 +7,7 @@
 
 #include "board/display.h"
 #include "board/splash.h"
-#include "drivers/display/display.h"
+#include <pbl/drivers/display/display.h>
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/sleep.h"
 

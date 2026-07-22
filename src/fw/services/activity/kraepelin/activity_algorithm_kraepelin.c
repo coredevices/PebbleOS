@@ -4,7 +4,7 @@
 #include "applib/accel_service.h"
 #include "applib/data_logging.h"
 #include "pbl/util/uuid.h"
-#include "drivers/ambient_light.h"
+#include <pbl/drivers/ambient_light.h>
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/battery/battery_state.h"
 #include "pbl/services/system_task.h"

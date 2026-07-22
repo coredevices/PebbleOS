@@ -6,15 +6,15 @@
 
 #include <math.h>
 
-#include "drivers/pmic.h"
-#include "drivers/battery.h"
+#include <pbl/drivers/pmic.h>
+#include <pbl/drivers/battery.h>
 
 #include "board/board.h"
 #include "console/prompt.h"
-#include "drivers/battery.h"
-#include "drivers/exti.h"
-#include "drivers/gpio.h"
-#include "drivers/i2c.h"
+#include <pbl/drivers/battery.h>
+#include <pbl/drivers/exti.h>
+#include <pbl/drivers/gpio.h>
+#include <pbl/drivers/i2c.h>
 #include "kernel/events.h"
 #include "kernel/util/delay.h"
 #include "kernel/util/sleep.h"

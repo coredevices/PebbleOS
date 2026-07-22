@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "drivers/button_id.h"
+#include <pbl/drivers/button_id.h>
 #include "process_management/app_install_types.h"
 #include "pbl/util/uuid.h"
 

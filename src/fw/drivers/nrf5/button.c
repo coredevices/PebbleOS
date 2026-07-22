@@ -1,8 +1,8 @@
-#include "drivers/button.h"
+#include <pbl/drivers/button.h>
 
 #include "board/board.h"
 #include "console/prompt.h"
-#include "drivers/gpio.h"
+#include <pbl/drivers/gpio.h>
 #include "kernel/events.h"
 #include "system/passert.h"
 

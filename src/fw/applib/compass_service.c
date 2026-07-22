@@ -12,7 +12,7 @@
 #include "applib/app_timer.h"
 #include "applib/event_service_client.h"
 #include "pbl/util/trig.h"
-#include "drivers/mag.h"
+#include <pbl/drivers/mag.h>
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "syscall/syscall.h"

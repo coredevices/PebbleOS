@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/vibe.h"
+#include <pbl/drivers/vibe.h>
 
 #include "board/board.h"
 #include "console/prompt.h"
-#include "drivers/gpio.h"
-#include "drivers/i2c.h"
-#include "drivers/pmic.h"
-#include "drivers/pwm.h"
+#include <pbl/drivers/gpio.h>
+#include <pbl/drivers/i2c.h>
+#include <pbl/drivers/pmic.h>
+#include <pbl/drivers/pwm.h>
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/math.h"

@@ -4,7 +4,7 @@
 #include "dbgserial.h"
 
 #include "board/board.h"
-#include "drivers/uart.h"
+#include <pbl/drivers/uart.h>
 
 #include <stdarg.h>
 #include <stdio.h>

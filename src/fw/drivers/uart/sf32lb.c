@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "sf32lb.h"
+#include <pbl/drivers/uart/sf32lb.h>
 
-#include "drivers/uart.h"
+#include <pbl/drivers/uart.h>
 #include "pbl/soc/sf32lb/sleep.h"
 #include "system/passert.h"
 

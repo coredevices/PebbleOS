@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/flash.h"
-#include "drivers/flash/flash_internal.h"
+#include <pbl/drivers/flash.h>
+#include <pbl/drivers/flash/flash_internal.h>
 
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "drivers/flash/flash_impl.h"
-#include "drivers/task_watchdog.h"
-#include "drivers/watchdog.h"
+#include <pbl/drivers/flash/flash_impl.h>
+#include <pbl/drivers/task_watchdog.h>
+#include <pbl/drivers/watchdog.h>
 #include "flash_region/flash_region.h"
 #include "pbl/os/mutex.h"
 #include "pbl/os/tick.h"

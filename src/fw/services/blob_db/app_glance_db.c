@@ -6,7 +6,7 @@
 #include "pbl/services/blob_db/app_glance_db_private.h"
 
 #include "applib/app_glance.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/os/mutex.h"

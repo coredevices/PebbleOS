@@ -4,7 +4,7 @@
 #include "applib/ui/dialogs/dialog.h"
 #include "applib/ui/dialogs/simple_dialog.h"
 #include "console/prompt.h"
-#include "drivers/battery.h"
+#include <pbl/drivers/battery.h>
 #include "kernel/event_loop.h"
 #include "kernel/ui/modals/modal_manager.h"
 #include "pbl/services/accel_manager.h"

@@ -3,8 +3,8 @@
 
 #include "flash_region.h"
 
-#include "drivers/flash.h"
-#include "drivers/task_watchdog.h"
+#include <pbl/drivers/flash.h>
+#include <pbl/drivers/task_watchdog.h>
 #include "kernel/util/sleep.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"

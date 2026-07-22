@@ -16,7 +16,7 @@
 #include "comm/bt_lock.h"
 #include "comm/ble/gap_le_connection.h"
 #include "comm/ble/gap_le_device_name.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "kernel/pbl_malloc.h"
 #include "kernel/ui/system_icons.h"
 #include "resource/resource_ids.auto.h"

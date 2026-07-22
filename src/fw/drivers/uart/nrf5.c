@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "nrf5.h"
-#include "drivers/uart.h"
+#include <pbl/drivers/uart/nrf5.h>
+#include <pbl/drivers/uart.h>
 
-#include "drivers/gpio.h"
+#include <pbl/drivers/gpio.h>
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 

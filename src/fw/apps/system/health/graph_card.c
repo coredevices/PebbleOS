@@ -6,7 +6,7 @@
 #include "applib/graphics/graphics.h"
 #include "applib/graphics/text.h"
 #include "board/display.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/clock.h"
 #include "pbl/services/i18n/i18n.h"

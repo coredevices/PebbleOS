@@ -7,8 +7,8 @@
 #include <string.h>
 #include <time.h>
 
-#include "drivers/qemu/qemu_serial.h"
-#include "drivers/qemu/qemu_serial_private.h"
+#include <pbl/drivers/qemu/qemu_serial.h>
+#include <pbl/drivers/qemu/qemu_serial_private.h>
 #include "util/net.h"
 
 #include "clar.h"

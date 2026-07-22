@@ -11,7 +11,7 @@
 #include "applib/ui/text_layer.h"
 #include "applib/graphics/graphics.h"
 #include "apps/prf/mfg_test_result.h"
-#include "drivers/display/display.h"
+#include <pbl/drivers/display/display.h>
 #include "kernel/pbl_malloc.h"
 #include "mfg/mfg_info.h"
 #include "process_state/app_state/app_state.h"

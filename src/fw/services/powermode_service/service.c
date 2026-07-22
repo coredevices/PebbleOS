@@ -3,7 +3,7 @@
 
 #include "pbl/services/powermode_service.h"
 
-#include "drivers/cpumode.h"
+#include <pbl/drivers/cpumode.h>
 #include "pbl/os/mutex.h"
 #include "system/passert.h"
 

@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "board/board.h"
-#include "drivers/backlight.h"
+#include <pbl/drivers/backlight.h>
 #include "process_management/pebble_process_md.h"
 #include "pbl/services/activity/activity.h"
 #include "pbl/services/timeline/peek.h"

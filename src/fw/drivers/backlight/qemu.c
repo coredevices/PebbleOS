@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/backlight.h"
+#include <pbl/drivers/backlight.h>
 
 #include "board/board.h"
 #include "console/prompt.h"
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
-#include "drivers/backlight.h"
+#include <pbl/drivers/backlight.h>
 #endif
 
 #include <stdlib.h>

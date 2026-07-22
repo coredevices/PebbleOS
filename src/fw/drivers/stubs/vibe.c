@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "drivers/vibe.h"
+#include <pbl/drivers/vibe.h>
 #include "console/prompt.h"
 
 void vibe_init(void) {

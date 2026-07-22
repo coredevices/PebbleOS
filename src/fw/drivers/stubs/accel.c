@@ -1,4 +1,4 @@
-#include "drivers/accel.h"
+#include <pbl/drivers/accel.h>
 
 static uint32_t s_sampling_interval_ms;
 

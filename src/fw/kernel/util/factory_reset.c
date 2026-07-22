@@ -3,8 +3,8 @@
 
 #include "kernel/util/factory_reset.h"
 
-#include "drivers/rtc.h"
-#include "drivers/task_watchdog.h"
+#include <pbl/drivers/rtc.h>
+#include <pbl/drivers/task_watchdog.h>
 #include "flash_region/filesystem_regions.h"
 #include "kernel/event_loop.h"
 #include "kernel/util/standby.h"

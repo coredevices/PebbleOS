@@ -9,7 +9,7 @@
 
 #include "pbl/util/uuid.h"
 #include "board/board.h"
-#include "drivers/backlight.h"
+#include <pbl/drivers/backlight.h>
 #include "kernel/events.h"
 #include "popups/crashed_ui.h"
 #include "popups/notifications/notification_window.h"

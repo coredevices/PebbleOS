@@ -1,4 +1,4 @@
-#include "drivers/display/display.h"
+#include <pbl/drivers/display/display.h>
 
 void display_init(void) {
 }

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/backlight.h"
+#include <pbl/drivers/backlight.h>
 
 void backlight_init(void) {
 }

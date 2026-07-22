@@ -4,13 +4,13 @@
 #include "system/reset.h"
 
 #include "board/board.h"
-#include "drivers/pmic.h"
+#include <pbl/drivers/pmic.h>
 #include "system/bootbits.h"
 #include "kernel/core_dump.h"
 #include "kernel/util/fw_reset.h"
 #include "pbl/mcu/interrupts.h"
 
-#include "drivers/flash.h"
+#include <pbl/drivers/flash.h>
 #include "system/reboot_reason.h"
 
 #include <cmsis_core.h>

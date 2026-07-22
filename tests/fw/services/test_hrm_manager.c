@@ -3,7 +3,7 @@
 
 #include "clar.h"
 
-#include "drivers/hrm.h"
+#include <pbl/drivers/hrm.h>
 #include "pbl/os/tick.h"
 #include "pbl/services/hrm/hrm_manager.h"
 #include "pbl/services/hrm/hrm_manager_private.h"

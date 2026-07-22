@@ -4,12 +4,12 @@
 #include "pbl/services/battery/battery_state.h"
 
 #ifdef CONFIG_QEMU
-#include "drivers/qemu/qemu_battery.h"
+#include <pbl/drivers/qemu/qemu_battery.h>
 #endif
 
 #include "board/board.h"
 #include "debug/power_tracking.h"
-#include "drivers/battery.h"
+#include <pbl/drivers/battery.h>
 #include "kernel/events.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/battery/battery_curve.h"

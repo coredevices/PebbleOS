@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/exti.h"
+#include <pbl/drivers/exti.h>
 
 #include "board/board.h"
 #include "kernel/events.h"

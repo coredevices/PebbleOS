@@ -3,7 +3,7 @@
 
 #include "firmware_storage.h"
 
-#include "drivers/flash.h"
+#include <pbl/drivers/flash.h>
 #include "flash_region/flash_region.h"
 #include <pbl/logging/logging.h>
 #include "pbl/util/math.h"

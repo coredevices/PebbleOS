@@ -3,8 +3,8 @@
 
 #include "kernel/util/standby.h"
 
-#include "drivers/display/display.h"
-#include "drivers/pmic.h"
+#include <pbl/drivers/display/display.h>
+#include <pbl/drivers/pmic.h>
 #include "system/bootbits.h"
 #include <pbl/logging/logging.h>
 #include "system/reset.h"

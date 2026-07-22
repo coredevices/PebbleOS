@@ -4,11 +4,11 @@
 #include "board/board.h"
 
 // UART device for debug serial
-#include "drivers/uart/qemu.h"
-#include "drivers/speaker/qemu/audio.h"
-#include "drivers/backlight.h"
-#include "drivers/mic/qemu/mic_definitions.h"
-#include "drivers/hrm/stub.h"
+#include <pbl/drivers/uart/qemu.h>
+#include <pbl/drivers/speaker/qemu/audio.h>
+#include <pbl/drivers/backlight.h>
+#include <pbl/drivers/mic/qemu/mic_definitions.h>
+#include <pbl/drivers/hrm/stub.h>
 
 static UARTDeviceState s_dbg_uart_state = {};
 

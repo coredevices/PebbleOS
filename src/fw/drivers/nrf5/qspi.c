@@ -4,10 +4,10 @@
 #include <stdint.h>
 
 #include "board/board.h"
-#include "drivers/qspi.h"
-#include "drivers/flash/qspi_flash.h"
-#include "drivers/flash/flash_impl.h"
-#include "drivers/qspi_definitions.h"
+#include <pbl/drivers/qspi.h>
+#include <pbl/drivers/flash/qspi_flash.h>
+#include <pbl/drivers/flash/flash_impl.h>
+#include <pbl/drivers/qspi_definitions.h>
 #include "flash_region/flash_region.h"
 #include "kernel/util/delay.h"
 #include "kernel/util/sleep.h"

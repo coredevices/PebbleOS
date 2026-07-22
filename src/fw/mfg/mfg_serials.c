@@ -193,7 +193,7 @@ static void mfg_print_feedback(const MfgSerialsResult result, const uint8_t inde
 #if defined(CONFIG_IS_BIGBOARD)
 
 #include <stdio.h>
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include <pbl/logging/logging.h>
 
 #ifndef CONFIG_SOC_NRF52

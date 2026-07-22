@@ -9,8 +9,8 @@
 #include "pcm_stream.h"
 #include "track_player.h"
 
-#include "drivers/audio.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/audio.h>
+#include <pbl/drivers/rtc.h>
 #include "board/board.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"

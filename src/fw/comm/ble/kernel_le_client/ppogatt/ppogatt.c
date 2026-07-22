@@ -28,7 +28,7 @@
 
 #include <inttypes.h>
 
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 
 //! See https://pebbletechnology.atlassian.net/wiki/pages/viewpage.action?pageId=22511665
 //! for detailed information regarding the PPoGATT protocol state machine.

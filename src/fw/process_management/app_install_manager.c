@@ -11,7 +11,7 @@
 #include "applib/event_service_client.h"
 #include "apps/system_app_registry.h"
 #include "console/prompt.h"
-#include "drivers/task_watchdog.h"
+#include <pbl/drivers/task_watchdog.h>
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/pebble_tasks.h"

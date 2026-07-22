@@ -4,10 +4,10 @@
 #include "board/board.h"
 #include "board/display.h"
 #include "board/splash.h"
-#include "drivers/backlight.h"
-#include "drivers/pmic/npm1300.h"
-#include "drivers/sf32lb52/debounced_button_definitions.h"
-#include "drivers/hrm/gh3x2x.h"
+#include <pbl/drivers/backlight.h>
+#include <pbl/drivers/pmic/npm1300.h>
+#include <pbl/drivers/sf32lb52/debounced_button_definitions.h>
+#include <pbl/drivers/hrm/gh3x2x.h>
 #include "system/passert.h"
 #include "kernel/util/delay.h"
 

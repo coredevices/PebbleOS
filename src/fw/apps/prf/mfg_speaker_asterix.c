@@ -9,7 +9,7 @@
 #include "applib/ui/window.h"
 #include "apps/prf/mfg_test_result.h"
 #include "board/board.h"
-#include "drivers/i2c.h"
+#include <pbl/drivers/i2c.h>
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/sleep.h"
 #include "process_management/pebble_process_md.h"

@@ -5,7 +5,7 @@
 
 #include "comm/ble/gap_le_connection.h"
 #include "comm/bt_lock.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/bluetooth/bluetooth_ctl.h"
 #include "pbl/services/comm_session/session.h"

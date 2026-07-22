@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include "drivers/imu/lsm6dso/lsm6dso.h"
-#include "drivers/pmic/npm1300.h"
-#include "drivers/vibe/vibe_aw86225.h"
-#include "drivers/touch/cst816/touch_sensor_definitions.h"
+#include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
+#include <pbl/drivers/pmic/npm1300.h>
+#include <pbl/drivers/vibe/vibe_aw86225.h>
+#include <pbl/drivers/touch/cst816/touch_sensor_definitions.h>
 #include "pbl/services/imu/units.h"
 
 #define BT_VENDOR_ID 0x0EEA

@@ -14,10 +14,10 @@
 #include "board/board.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
-#include "drivers/audio.h"
-#include "drivers/pmic/npm1300.h"
+#include <pbl/drivers/audio.h>
+#include <pbl/drivers/pmic/npm1300.h>
 #include "flash_region/flash_region.h"
-#include "drivers/flash.h"
+#include <pbl/drivers/flash.h>
 #include "applib/ui/window_private.h"
 
 #define PCM_BUFFER_SIZE          1024

@@ -4,7 +4,7 @@
 #include "clar.h"
 
 #include "applib/app_glance.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_install_manager.h"
 #include "resource/resource_ids.auto.h"

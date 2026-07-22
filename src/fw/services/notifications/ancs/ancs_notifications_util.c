@@ -3,7 +3,7 @@
 
 #include "pbl/services/notifications/ancs/ancs_notifications_util.h"
 
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "resource/timeline_resource_ids.auto.h"
 #include "system/passert.h"
 #include "pbl/util/attributes.h"

@@ -13,7 +13,7 @@
 #include "applib/ui/vibes.h"
 #include "applib/ui/window_manager.h"
 #include "applib/ui/window_stack.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "kernel/events.h"
 #include "kernel/ui/modals/modal_manager.h"
 #include "process_state/app_state/app_state.h"

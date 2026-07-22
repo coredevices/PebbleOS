@@ -3,7 +3,7 @@
 
 #include "pbl/services/timeline/calendar.h"
 
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "kernel/event_loop.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"

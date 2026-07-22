@@ -12,7 +12,7 @@
 #include <pbl/logging/logging.h>
 #include "comm/bt_lock.h"
 
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "kernel/event_loop.h"
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
 #include "pbl/services/regular_timer.h"

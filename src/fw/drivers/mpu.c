@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "mpu.h"
+#include <pbl/drivers/mpu.h>
 
 #include "pbl/mcu/cache.h"
 #include "system/passert.h"

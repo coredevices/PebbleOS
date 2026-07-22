@@ -7,7 +7,7 @@
 #include "flash_logging.h"
 #include "debug_reboot_reason.h"
 
-#include "drivers/watchdog.h"
+#include <pbl/drivers/watchdog.h>
 #include "flash_region/flash_region.h"
 #include "kernel/events.h"
 #include "logging/logging_private.h"

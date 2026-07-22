@@ -3,7 +3,7 @@
 
 #include "mfg/mfg_serials.h"
 #include "console/prompt_commands.h"
-#include "drivers/otp.h"
+#include <pbl/drivers/otp.h>
 
 #include "clar.h"
 

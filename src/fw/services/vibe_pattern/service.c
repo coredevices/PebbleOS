@@ -3,10 +3,10 @@
 
 #include "pbl/services/vibe_pattern.h"
 
-#include "drivers/accel.h"
-#include "drivers/vibe.h"
-#include "drivers/battery.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/accel.h>
+#include <pbl/drivers/vibe.h>
+#include <pbl/drivers/battery.h>
+#include <pbl/drivers/rtc.h>
 
 #include "kernel/pebble_tasks.h"
 

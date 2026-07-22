@@ -4,7 +4,7 @@
 #include "clar.h"
 
 #include "board/board.h"
-#include "drivers/backlight.h"
+#include <pbl/drivers/backlight.h>
 #include "pbl/services/light.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"

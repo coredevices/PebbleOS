@@ -7,7 +7,7 @@
 
 #include "syscall_internal.h"
 
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "kernel/memory_layout.h"
 #include "kernel/pebble_tasks.h"
 #include "pbl/mcu/privilege.h"

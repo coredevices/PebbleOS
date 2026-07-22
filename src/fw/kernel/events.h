@@ -14,8 +14,8 @@
 #include "applib/voice/dictation_session.h"
 #include "applib/ui/click.h"
 #include "apps/system/app_fetch_ui.h"
-#include "drivers/battery.h"
-#include "drivers/button_id.h"
+#include <pbl/drivers/battery.h>
+#include <pbl/drivers/button_id.h>
 #include "process_management/app_install_types.h"
 #include "pbl/services/battery/battery_monitor.h"
 #include "pbl/services/bluetooth/bluetooth_ctl.h"

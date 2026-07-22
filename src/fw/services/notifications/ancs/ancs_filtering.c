@@ -3,7 +3,7 @@
 
 #include "pbl/services/notifications/ancs/ancs_filtering.h"
 
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/notifications/alerts_preferences.h"
 #include "pbl/services/timeline/attributes_actions.h"

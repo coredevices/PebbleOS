@@ -11,9 +11,9 @@
 #include "pbl/services/data_logging/dls_storage.h"
 
 #include "comm/bt_lock.h"
-#include "drivers/flash.h"
-#include "drivers/rtc.h"
-#include "drivers/watchdog.h"
+#include <pbl/drivers/flash.h>
+#include <pbl/drivers/rtc.h>
+#include <pbl/drivers/watchdog.h>
 #include "flash_region/flash_region.h"
 #include "kernel/pbl_malloc.h"
 #include "process_management/pebble_process_md.h"

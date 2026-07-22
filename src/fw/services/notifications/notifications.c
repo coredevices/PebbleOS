@@ -7,8 +7,8 @@
 #include "pbl/services/notifications/do_not_disturb.h"
 
 #include "applib/ui/vibes.h"
-#include "drivers/rtc.h"
-#include "drivers/battery.h"
+#include <pbl/drivers/rtc.h>
+#include <pbl/drivers/battery.h>
 #include "resource/resource_ids.auto.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"

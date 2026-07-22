@@ -11,8 +11,8 @@
 #include "console_internal.h"
 #include "dbgserial.h"
 #include "debug/flash_logging.h"
-#include "drivers/flash.h"
-#include "drivers/task_watchdog.h"
+#include <pbl/drivers/flash.h>
+#include <pbl/drivers/task_watchdog.h>
 #include "flash_region/flash_region.h"
 #include "kernel/event_loop.h"
 #include "logging/logging_private.h"
@@ -671,7 +671,7 @@ void command_stuck_timer(void) {
   new_timer_start(timer, 10, stuck_timer_cb, NULL, 0 /*flags*/);
 }
 
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 
 void command_assert_fail(void) {
   prompt_command_finish();
@@ -993,8 +993,8 @@ void command_log_dump_spam(void) {
 
 #ifdef TEST_FLASH_LOCK_PROTECTION
 #include "flash_region/flash_region.h"
-#include "drivers/task_watchdog.h"
-#include "drivers/watchdog.h"
+#include <pbl/drivers/task_watchdog.h>
+#include <pbl/drivers/watchdog.h>
 
 // This test attempts to write over every region of the flash.
 // If we can still boot PRF after running this, it means we have successfully
@@ -1105,7 +1105,7 @@ void command_audit_delay_us(void) {
 }
 
 #if !defined(CONFIG_RELEASE) && defined(CONFIG_DISPLAY_JDI_SF32LB)
-#include "drivers/display/sf32lb/display_jdi.h"
+#include <pbl/drivers/display/sf32lb/display_jdi.h>
 
 // Arms the JDI display driver to drop the next LCDC transfer-complete
 // callback, simulating the silent-loss failure mode (e.g. SiFli HAL ICB
@@ -1251,7 +1251,7 @@ void command_mflt_device_info(void) {
 
 #ifdef CONFIG_PERFORMANCE_TESTS
 // for task_watchdog_bit_set_all
-#include "drivers/task_watchdog.h"
+#include <pbl/drivers/task_watchdog.h>
 // For taskYIELD()
 #include "FreeRTOS.h"
 #include "task.h"

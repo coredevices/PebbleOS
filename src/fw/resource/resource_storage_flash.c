@@ -4,7 +4,7 @@
 #include "resource_storage_flash.h"
 #include "resource_storage_impl.h"
 
-#include "drivers/flash.h"
+#include <pbl/drivers/flash.h>
 #include "kernel/pbl_malloc.h"
 #include "resource/resource_version.auto.h"
 #include "pbl/services/process_management/app_storage.h"

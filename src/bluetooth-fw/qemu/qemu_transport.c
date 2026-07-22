@@ -12,8 +12,8 @@
 
 #include "comm/bt_lock.h"
 
-#include "drivers/qemu/qemu_serial.h"
-#include "drivers/qemu/qemu_serial_private.h"
+#include <pbl/drivers/qemu/qemu_serial.h>
+#include <pbl/drivers/qemu/qemu_serial_private.h>
 
 #include "pbl/util/math.h"
 

@@ -10,7 +10,7 @@
 #include "pbl/services/notifications/ancs/nexmo.h"
 
 #include "comm/ble/kernel_le_client/ancs/ancs_types.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/i18n/i18n.h"

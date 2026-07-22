@@ -4,8 +4,8 @@
 #include "pbl/services/notifications/alerts.h"
 #include "pbl/services/notifications/alerts_private.h"
 
-#include "drivers/battery.h"
-#include "drivers/rtc.h"
+#include <pbl/drivers/battery.h>
+#include <pbl/drivers/rtc.h>
 #include "kernel/low_power.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/firmware_update.h"

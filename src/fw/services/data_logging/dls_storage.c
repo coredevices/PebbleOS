@@ -5,7 +5,7 @@
 #include "pbl/services/data_logging/dls_storage.h"
 #include "pbl/services/data_logging/dls_list.h"
 
-#include "drivers/flash.h"
+#include <pbl/drivers/flash.h>
 #include "kernel/pbl_malloc.h"
 #include "kernel/pebble_tasks.h"
 #include "kernel/util/sleep.h"

@@ -10,7 +10,7 @@
 #include "comm/ble/gap_le_connection.h"
 #include "comm/ble/gap_le_device_name.h"
 #include "comm/ble/gap_le_connect.h"
-#include "drivers/backlight.h"
+#include <pbl/drivers/backlight.h>
 #include "mfg/mfg_info.h"
 #include "mfg/mfg_serials.h"
 #include "process_management/app_install_manager.h"

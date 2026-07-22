@@ -5,7 +5,7 @@
 
 #include "bluetooth/responsiveness.h"
 #include "board/board.h"
-#include "drivers/mic.h"
+#include <pbl/drivers/mic.h>
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/os/mutex.h"
