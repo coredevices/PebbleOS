@@ -6,6 +6,7 @@
 #include "applib/applib_malloc.auto.h"
 #include "applib/graphics/graphics.h"
 #include "applib/graphics/gtypes.h"
+#include "applib/touch_service.h"
 #include "applib/ui/property_animation.h"
 #include "applib/ui/status_bar_layer.h"
 #include "applib/ui/shadows.h"
@@ -642,6 +643,90 @@ T_STATIC void prv_attempt_scroll(SwapLayer *swap_layer, ScrollDirection directio
 }
 
 ///////////////////////
+// TOUCH HANDLERS
+///////////////////////
+
+#ifdef CONFIG_TOUCH
+// Distance (px) the finger must travel before a gesture is treated as a drag.
+#define SWAP_TOUCH_DRAG_THRESHOLD_PX 10
+
+//! Transient state for the in-progress touch drag. Only one touch gesture is
+//! ever in flight (touch events go to the single focused subscriber), so a
+//! single file-static instance is sufficient.
+typedef struct SwapTouchGesture {
+  SwapLayer *swap_layer;  // gesture target, NULL when idle
+  int16_t start_y;
+  int16_t start_offset;   // scroll offset of the current notification at touchdown
+  bool dragging;
+} SwapTouchGesture;
+
+static SwapTouchGesture s_touch_gesture;
+
+//! Set the current notification's scroll offset immediately (no animation),
+//! clamped to the notification's own bounds, for 1:1 touch following. The next
+//! (peeked) layout is kept attached directly below. Swapping to the adjacent
+//! notification is intentionally out of scope here.
+static void prv_set_scroll_offset_immediate(SwapLayer *swap_layer, int16_t offset) {
+  offset = CLIP(offset, (int16_t)0, prv_get_max_scroll_dy(swap_layer));
+
+  GRect current_frame = swap_layer->current->layer.frame;
+  current_frame.origin.y = -offset;
+  prv_layout_set_frame(swap_layer->current, &current_frame);
+
+  if (swap_layer->next) {
+    GRect next_frame = swap_layer->next->layer.frame;
+    next_frame.origin.y = current_frame.origin.y + current_frame.size.h;
+    prv_layout_set_frame(swap_layer->next, &next_frame);
+  }
+  // layer_set_frame marks the swap layer dirty; its update proc refreshes the
+  // arrow and status bar, so no extra bookkeeping is needed here.
+}
+
+static void prv_swap_layer_touch_handler(const TouchEvent *event, void *context) {
+  SwapLayer *swap_layer = context;
+  if (!swap_layer->current) {
+    return;
+  }
+  switch (event->type) {
+    case TouchEvent_Touchdown:
+      // Stop any running scroll animation and start following from here.
+      prv_finish_animation(swap_layer);
+      s_touch_gesture = (SwapTouchGesture) {
+        .swap_layer = swap_layer,
+        .start_y = event->y,
+        .start_offset = prv_get_current_notification_offset(swap_layer),
+        .dragging = false,
+      };
+      break;
+    case TouchEvent_PositionUpdate: {
+      if (s_touch_gesture.swap_layer != swap_layer) {
+        break;
+      }
+      const int16_t delta_y = event->y - s_touch_gesture.start_y;
+      if (!s_touch_gesture.dragging) {
+        // Hold off until the finger has clearly committed to a drag.
+        if (ABS(delta_y) < SWAP_TOUCH_DRAG_THRESHOLD_PX) {
+          break;
+        }
+        s_touch_gesture.dragging = true;
+        prv_announce_interaction(swap_layer);
+      }
+      // Content-scroll convention: dragging the finger up (delta_y < 0) reveals
+      // content further down, i.e. increases the scroll offset.
+      prv_set_scroll_offset_immediate(swap_layer, s_touch_gesture.start_offset - delta_y);
+      break;
+    }
+    case TouchEvent_Liftoff:
+      if (s_touch_gesture.swap_layer != swap_layer) {
+        break;
+      }
+      s_touch_gesture.swap_layer = NULL;
+      break;
+  }
+}
+#endif  // CONFIG_TOUCH
+
+///////////////////////
 // CLICK HANDLERS
 ///////////////////////
 
@@ -715,6 +800,17 @@ static void prv_swap_layer_click_config_provider(void *context) {
   if (swap_layer->callbacks.click_config_provider) {
     swap_layer->callbacks.click_config_provider(swap_layer->context);
   }
+
+#ifdef CONFIG_TOUCH
+  // Ride along on the existing click setup to also grab touch input. This runs
+  // on every window appear, so the focused swap layer re-subscribes as the
+  // single touch handler. Owning a touch subscription also makes
+  // touch_has_app_subscribers() true, so the touch-to-click synthesis bridge
+  // (if present) stops synthesizing for this window automatically.
+  if (touch_service_is_enabled()) {
+    touch_service_subscribe(prv_swap_layer_touch_handler, swap_layer);
+  }
+#endif
 }
 
 ///////////////////////
@@ -821,6 +917,14 @@ void swap_layer_init(SwapLayer *swap_layer, const GRect *frame) {
 
 void swap_layer_deinit(SwapLayer *swap_layer) {
   swap_layer->is_deiniting = true;
+#ifdef CONFIG_TOUCH
+  // Never let a destroyed swap layer be referenced by the active gesture, and
+  // release the touch subscription this window installed.
+  if (s_touch_gesture.swap_layer == swap_layer) {
+    s_touch_gesture.swap_layer = NULL;
+  }
+  touch_service_unsubscribe();
+#endif
   gbitmap_deinit(&swap_layer->arrow_layer.arrow_bitmap);
   layer_deinit(&swap_layer->arrow_layer.layer);
   prv_swap_layer_reset(swap_layer);
