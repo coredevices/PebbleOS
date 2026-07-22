@@ -13,6 +13,7 @@
 
 #include "kernel/events.h"
 #include "kernel/pebble_tasks.h"
+#include "kernel/ui/modals/modal_manager.h"
 #include "pbl/services/event_service.h"
 #include "pbl/services/touch/touch.h"
 #include "pbl/services/touch/touch_event.h"
@@ -59,6 +60,15 @@ void event_service_client_unsubscribe(EventServiceInfo *info) {}
 // --- controllable environment ---
 static bool s_is_watchface;
 bool app_manager_is_watchface_running(void) { return s_is_watchface; }
+
+// Modal focus state. s_modal_focused true models a focusing modal (a modal
+// exists and does not carry ModalProperty_Unfocused), e.g. the notification
+// popup; false models "no focused modal".
+static bool s_modal_focused;
+bool modal_manager_get_enabled(void) { return true; }
+ModalProperty modal_manager_get_properties(void) {
+  return s_modal_focused ? ModalProperty_Exists : ModalProperty_Unfocused;
+}
 
 static RtcTicks s_ticks;
 RtcTicks rtc_get_ticks(void) { return s_ticks; }
@@ -128,6 +138,7 @@ void test_touch_click_synth__initialize(void) {
   s_focus_handler = NULL;
   s_sensor_enabled = false;
   s_is_watchface = false;
+  s_modal_focused = false;
   s_ticks = 1000;
   s_cap_n = 0;
   s_net_app_subs = 0;
@@ -145,6 +156,8 @@ void test_touch_click_synth__cleanup(void) {
   fake_event_set_callback(NULL);
   // Release the bridge's sensor hold and any app subscription so touch.c's
   // module-static subscriber count doesn't leak into the next test.
+  s_modal_focused = false;
+  s_is_watchface = false;
   prv_focus(false);
   while (s_net_app_subs > 0) {
     prv_app_unsubscribe();
@@ -238,7 +251,72 @@ void test_touch_click_synth__app_touch_subscriber_suppresses(void) {
 // --- gate off ---------------------------------------------------------------
 
 void test_touch_click_synth__inactive_ignores_taps(void) {
-  // No focus event -> bridge inactive.
+  // At the watchface with no focused modal the live gate is closed.
+  s_is_watchface = true;
+  s_modal_focused = false;
+  prv_tap(100, 100, 80);
+  cl_assert_equal_i(s_cap_n, 0);
+}
+
+// --- focusing modal (notification popup, action menu, ...) -------------------
+
+void test_touch_click_synth__modal_focus_activates_sensor(void) {
+  // A focusing modal over the watchface: its did_focus reports in_focus=false,
+  // but the bridge must still hold the sensor.
+  s_is_watchface = true;
+  s_modal_focused = true;
+
+  prv_focus(false);              // the modal's did_focus(in_focus=false)
+  cl_assert(s_sensor_enabled);   // held via the modal_focused path
+
+  s_modal_focused = false;
+  prv_focus(false);              // modal dismissed, back to the watchface
+  cl_assert(!s_sensor_enabled);  // released
+}
+
+void test_touch_click_synth__modal_focused_tap_synthesizes_select(void) {
+  s_is_watchface = true;   // over the watchface...
+  s_modal_focused = true;  // ...but a focusing modal is up
+  prv_focus(false);
+
+  prv_tap(120, 140, 80);
+  prv_assert_single_click(BUTTON_ID_SELECT);
+}
+
+void test_touch_click_synth__modal_focused_swipe_synthesizes_up_down(void) {
+  s_is_watchface = true;
+  s_modal_focused = true;
+  prv_focus(false);
+
+  prv_swipe(100, 150, 100, 100);       // up
+  prv_assert_single_click(BUTTON_ID_UP);
+
+  s_cap_n = 0;
+  prv_swipe(100, 100, 100, 150);       // down
+  prv_assert_single_click(BUTTON_ID_DOWN);
+}
+
+// The synthesis decision is a live re-check, so it does not depend on the modal
+// having delivered a did_focus event first (its transition may still be
+// animating). With the sensor already on, a tap synthesizes regardless.
+void test_touch_click_synth__recheck_synthesizes_without_focus_event(void) {
+  s_is_watchface = true;
+  s_modal_focused = true;
+  // Deliberately no prv_focus() call: s_state.active is still false.
+
+  prv_tap(120, 140, 80);
+  prv_assert_single_click(BUTTON_ID_SELECT);
+}
+
+// The live re-check also blocks stale synthesis: if focus has already returned
+// to the watchface but the sensor lingers on, no click is synthesized.
+void test_touch_click_synth__recheck_blocks_stale_active_at_watchface(void) {
+  prv_focus(true);         // a watchapp was focused (sensor on)
+  cl_assert(s_sensor_enabled);
+
+  s_is_watchface = true;   // now at the watchface, no focused modal,
+  s_modal_focused = false; // but before the focus event was processed
+
   prv_tap(100, 100, 80);
   cl_assert_equal_i(s_cap_n, 0);
 }

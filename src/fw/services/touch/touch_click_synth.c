@@ -7,6 +7,7 @@
 #include "drivers/button_id.h"
 #include "drivers/rtc.h"
 #include "kernel/events.h"
+#include "kernel/ui/modals/modal_manager.h"
 #include "pbl/services/touch/touch.h"
 #include "process_management/app_manager.h"
 #include "pbl/util/math.h"
@@ -21,7 +22,7 @@
 // touchscreen means only one gesture is ever in flight, so a single
 // file-static instance suffices.
 typedef struct {
-  bool active;       // gate: a watchapp is the focused foreground process
+  bool active;       // sensor-hold state (driven by focus events)
   bool finger_down;
   bool dragging;     // moved past the tap threshold -> not a tap
   int16_t start_x;
@@ -32,6 +33,26 @@ typedef struct {
 static SynthState s_state;
 
 static EventServiceInfo s_focus_event_info;
+
+// A focused (non-unfocused) modal receives button events in
+// launcher_handle_button_event, so the bridge must synthesize for it too (e.g.
+// the notification-detail popup, action menus, dialogs). Mirrors the
+// is_modal_focused test there.
+static bool prv_modal_focused(void) {
+  return modal_manager_get_enabled() &&
+         !(modal_manager_get_properties() & ModalProperty_Unfocused);
+}
+
+// The synthesis gate. Re-evaluated live at touch time (not just cached from the
+// focus event) so a delayed or missed PEBBLE_APP_DID_CHANGE_FOCUS_EVENT can't
+// leave the bridge unable to respond while the sensor is on. Active whenever a
+// focused modal is up, or the foreground process is a watchapp (not a
+// watchface). Synthesized buttons route to whoever holds focus (app or modal)
+// via the normal kernel button path, so a bare "not the watchface" test here is
+// sufficient regardless of app/modal focus split.
+static bool prv_gate_ok(void) {
+  return prv_modal_focused() || !app_manager_is_watchface_running();
+}
 
 static void prv_set_active(bool active) {
   if (active == s_state.active) {
@@ -46,12 +67,15 @@ static void prv_set_active(bool active) {
 }
 
 static void prv_focus_handler(PebbleEvent *e, void *context) {
-  // Active only while a watchapp (not a watchface) is the focused foreground
-  // process. This matches the "on while viewing an app" power profile of the
-  // ScrollLayer/MenuLayer touch support: on a modal overlay or a return to the
-  // watchface, focus is lost and the sensor is released.
-  const bool active = e->app_focus.in_focus && !app_manager_is_watchface_running();
-  prv_set_active(active);
+  // Drive the sensor hold from focus changes. This matches the "on while
+  // viewing an app or a focusing modal" power profile of the
+  // ScrollLayer/MenuLayer touch support: on a return to the watchface with no
+  // focused modal, the sensor is released. A focusing modal (notification
+  // popup, action menu, ...) takes focus from the app -> in_focus is false for
+  // it, so it is included explicitly. The synthesis decision itself is a live
+  // re-check (prv_gate_ok), so this event only needs to be roughly right.
+  const bool watchapp_focused = e->app_focus.in_focus && !app_manager_is_watchface_running();
+  prv_set_active(watchapp_focused || prv_modal_focused());
 }
 
 static void prv_synthesize_click(ButtonId button_id) {
@@ -71,7 +95,13 @@ static void prv_synthesize_click(ButtonId button_id) {
 }
 
 void touch_click_synth_handle_touch(const TouchEvent *event) {
-  if (!s_state.active) {
+  // Live gate re-check: robust to focus-event timing (e.g. a focusing modal's
+  // did_focus fires only when its entrance transition completes) as long as the
+  // sensor is on. If it isn't a valid synthesis target right now, drop the event
+  // and any in-flight gesture state.
+  if (!prv_gate_ok()) {
+    s_state.finger_down = false;
+    s_state.dragging = false;
     return;
   }
 
