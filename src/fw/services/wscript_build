@@ -92,8 +92,6 @@ if bld.env.CONFIG_SERVICE_PING:
     bld.recurse('ping')
 if bld.env.CONFIG_SERVICE_POLL_REMOTE:
     bld.recurse('poll_remote')
-if bld.env.CONFIG_SERVICE_POWERMODE_SERVICE:
-    bld.recurse('powermode_service')
 if bld.env.CONFIG_SERVICE_PRF_UPDATE:
     bld.recurse('prf_update')
 if bld.env.CONFIG_SERVICE_PROCESS_MANAGEMENT:
