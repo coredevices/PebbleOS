@@ -11,7 +11,8 @@
 #include "process_management/app_manager.h"
 #include "pbl/util/math.h"
 
-// Tap thresholds mirror ScrollLayer's touch handling so the tap definition is
+// Movement threshold that separates a tap from a swipe, and the tap timeout.
+// Both mirror ScrollLayer's touch handling so the gesture definitions are
 // consistent across the codebase.
 #define SYNTH_TAP_MOVE_THRESHOLD_PX 10
 #define SYNTH_TAP_MAX_MS 300
@@ -53,17 +54,17 @@ static void prv_focus_handler(PebbleEvent *e, void *context) {
   prv_set_active(active);
 }
 
-static void prv_synthesize_select_click(void) {
+static void prv_synthesize_click(ButtonId button_id) {
   // A button down immediately followed by a button up registers as exactly one
-  // SELECT single-click in the click recognizer, and flows through the normal
-  // button path (kernel arbitration -> the focused app/modal click manager).
+  // single-click in the click recognizer, and flows through the normal button
+  // path (kernel arbitration -> the focused app/modal click manager).
   PebbleEvent down = {
     .type = PEBBLE_BUTTON_DOWN_EVENT,
-    .button = { .button_id = BUTTON_ID_SELECT },
+    .button = { .button_id = button_id },
   };
   PebbleEvent up = {
     .type = PEBBLE_BUTTON_UP_EVENT,
-    .button = { .button_id = BUTTON_ID_SELECT },
+    .button = { .button_id = button_id },
   };
   event_put(&down);
   event_put(&up);
@@ -97,21 +98,33 @@ void touch_click_synth_handle_touch(const TouchEvent *event) {
         break;
       }
       s_state.finger_down = false;
-      if (s_state.dragging) {
-        break;
-      }
-      const uint64_t elapsed_ms =
-          ((uint64_t)(rtc_get_ticks() - s_state.down_ticks) * 1000) / RTC_TICKS_HZ;
-      if (elapsed_ms >= SYNTH_TAP_MAX_MS) {
-        break;
-      }
-      // A tap. Only synthesize when the focused app does not consume touch
-      // itself (ScrollLayer/MenuLayer or a custom touch_service subscriber),
-      // to avoid a double action.
+
+      // Arbitration (shared by tap and swipe): if the focused app consumes
+      // touch itself (ScrollLayer/MenuLayer or a custom touch_service
+      // subscriber), don't synthesize anything, to avoid a double action.
       if (touch_has_app_subscribers()) {
         break;
       }
-      prv_synthesize_select_click();
+
+      if (!s_state.dragging) {
+        // Tap -> SELECT, if it lifted off quickly enough.
+        const uint64_t elapsed_ms =
+            ((uint64_t)(rtc_get_ticks() - s_state.down_ticks) * 1000) / RTC_TICKS_HZ;
+        if (elapsed_ms < SYNTH_TAP_MAX_MS) {
+          prv_synthesize_click(BUTTON_ID_SELECT);
+        }
+        break;
+      }
+
+      // A drag past the threshold is a swipe. A predominantly vertical swipe
+      // maps to UP/DOWN; horizontal swipes are ignored for now (BACK is a
+      // later phase). Direct spatial mapping: a swipe toward the top of the
+      // screen is UP, toward the bottom is DOWN.
+      const int16_t dx = event->x - s_state.start_x;
+      const int16_t dy = event->y - s_state.start_y;
+      if (ABS(dy) > ABS(dx) && ABS(dy) >= SYNTH_TAP_MOVE_THRESHOLD_PX) {
+        prv_synthesize_click(dy < 0 ? BUTTON_ID_UP : BUTTON_ID_DOWN);
+      }
       break;
     }
   }

@@ -105,6 +105,22 @@ static void prv_tap(int16_t x, int16_t y, uint32_t duration_ms) {
   prv_touch(TouchEvent_Liftoff, x + 1, y + 1);
 }
 
+// A swipe: touchdown at (sx,sy), a position update and liftoff at (ex,ey).
+static void prv_swipe(int16_t sx, int16_t sy, int16_t ex, int16_t ey) {
+  prv_touch(TouchEvent_Touchdown, sx, sy);
+  prv_touch(TouchEvent_PositionUpdate, ex, ey);
+  s_ticks += 50;
+  prv_touch(TouchEvent_Liftoff, ex, ey);
+}
+
+static void prv_assert_single_click(ButtonId button_id) {
+  cl_assert_equal_i(s_cap_n, 2);
+  cl_assert_equal_i(s_cap[0].type, PEBBLE_BUTTON_DOWN_EVENT);
+  cl_assert_equal_i(s_cap[0].button.button_id, button_id);
+  cl_assert_equal_i(s_cap[1].type, PEBBLE_BUTTON_UP_EVENT);
+  cl_assert_equal_i(s_cap[1].button.button_id, button_id);
+}
+
 void test_touch_click_synth__initialize(void) {
   fake_event_init();
   s_add_subscriber_cb = NULL;
@@ -173,15 +189,31 @@ void test_touch_click_synth__tap_synthesizes_one_select_click(void) {
   cl_assert_equal_i(s_cap[1].button.button_id, BUTTON_ID_SELECT);
 }
 
-void test_touch_click_synth__drag_does_not_synthesize(void) {
+// --- vertical swipe -> UP / DOWN --------------------------------------------
+
+void test_touch_click_synth__swipe_up_synthesizes_up(void) {
   prv_focus(true);
+  prv_swipe(100, 150, 100, 100);  // finger moves up (dy = -50)
+  prv_assert_single_click(BUTTON_ID_UP);
+}
 
-  prv_touch(TouchEvent_Touchdown, 100, 100);
-  prv_touch(TouchEvent_PositionUpdate, 100, 140);  // moved > 10px -> drag
-  s_ticks += 50;
-  prv_touch(TouchEvent_Liftoff, 100, 140);
+void test_touch_click_synth__swipe_down_synthesizes_down(void) {
+  prv_focus(true);
+  prv_swipe(100, 100, 100, 150);  // finger moves down (dy = +50)
+  prv_assert_single_click(BUTTON_ID_DOWN);
+}
 
-  cl_assert_equal_i(s_cap_n, 0);
+void test_touch_click_synth__horizontal_swipe_ignored(void) {
+  prv_focus(true);
+  prv_swipe(100, 100, 160, 105);  // predominantly horizontal (dx=60, dy=5)
+  cl_assert_equal_i(s_cap_n, 0);  // BACK is a later phase
+}
+
+void test_touch_click_synth__swipe_suppressed_by_app_subscriber(void) {
+  prv_focus(true);
+  prv_app_subscribe();            // app consumes touch itself
+  prv_swipe(100, 150, 100, 100);
+  cl_assert_equal_i(s_cap_n, 0);  // suppressed -> no double action
 }
 
 void test_touch_click_synth__slow_tap_does_not_synthesize(void) {

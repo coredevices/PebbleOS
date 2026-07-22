@@ -5,10 +5,12 @@
 
 #include "pbl/services/touch/touch_event.h"
 
-//! Touch-to-click synthesis bridge (Phase 1: tap -> SELECT).
+//! Touch-to-click synthesis bridge.
 //!
-//! Synthesizes a SELECT button click from a touch tap so apps that use their
-//! own click handlers (rather than ScrollLayer/MenuLayer) respond to touch.
+//! Synthesizes button clicks from touch gestures so apps that use their own
+//! click handlers (rather than ScrollLayer/MenuLayer) respond to touch:
+//!   - a tap        -> SELECT
+//!   - a vertical swipe -> UP / DOWN
 //! Runs on KernelMain, active only while a watchapp is the focused foreground
 //! process, and suppressed while the focused app consumes touch directly.
 
