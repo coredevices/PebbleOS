@@ -5,7 +5,7 @@ menu "C library"
 
 choice
     prompt "C library"
-    default LIBC_PEBBLE
+    default LIBC_PICOLIBC
     help
       Which C library the firmware links against.
 
