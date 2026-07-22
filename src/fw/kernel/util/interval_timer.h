@@ -46,11 +46,11 @@ typedef struct {
 //! @param timer The timer to initialize
 //! @param min_expected_ms The minimum number of milliseconds between samples
 //! @param max_expected_ms The maximum number of milliseconds between samples
-//! @param weighting_factory_inverted
+//! @param weighting_factor_inverted
 //!     1 / alpha. Specified as a inverted number to avoid dealing with floats. The higher the
 //!     number the less responsive to recent changes our average is.
 void interval_timer_init(IntervalTimer *timer, uint32_t min_expected_ms, uint32_t max_expected_ms,
-                         uint32_t weighting_factory_inverted);
+                         uint32_t weighting_factor_inverted);
 
 //! Record a sample that marks the start/end of an interval.
 //! Safe to call from an ISR.
