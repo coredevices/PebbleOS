@@ -13,6 +13,34 @@
 #include "system/passert.h"
 #include "pbl/util/trig.h"
 
+#ifdef CONFIG_TOUCH_CLICK_SYNTHESIS
+#include "services/touch/touch_click_synth.h"
+#include "syscall/syscall.h"
+
+// Publish the current action bar geometry and icon presence to the kernel-side
+// touch-to-click synthesis bridge, so a tap on the bar routes to UP/SELECT/DOWN
+// by vertical zone. Cleared (present=false) whenever the bar has no window.
+static void prv_publish_touch_descriptor(ActionBarLayer *action_bar) {
+  ActionBarSynthDescriptor desc = (ActionBarSynthDescriptor) { 0 };
+  if (action_bar->window) {
+    desc.present = true;
+    layer_get_global_frame(&action_bar->layer, &desc.frame);
+    if (action_bar->icons[0]) {
+      desc.icon_mask |= ACTION_BAR_SYNTH_ICON_UP;
+    }
+    if (action_bar->icons[1]) {
+      desc.icon_mask |= ACTION_BAR_SYNTH_ICON_SELECT;
+    }
+    if (action_bar->icons[2]) {
+      desc.icon_mask |= ACTION_BAR_SYNTH_ICON_DOWN;
+    }
+  }
+  sys_touch_click_synth_set_action_bar(&desc);
+}
+#else
+static void prv_publish_touch_descriptor(ActionBarLayer *action_bar) {}
+#endif
+
 const int16_t MAX_ICON_HEIGHT = 18;
 
 const int64_t PRESS_ANIMATION_DURATION_MS = 144;
@@ -339,6 +367,7 @@ void action_bar_layer_set_icon_animated(ActionBarLayer *action_bar, ButtonId but
     action_bar->icon_change_times[index] = 0;
   }
   layer_mark_dirty(&action_bar->layer);
+  prv_publish_touch_descriptor(action_bar);
 }
 
 void action_bar_layer_set_icon(ActionBarLayer *action_bar, ButtonId button_id,
@@ -369,6 +398,7 @@ void action_bar_layer_add_to_window(ActionBarLayer *action_bar, struct Window *w
 
   action_bar->window = window;
   action_bar_update_click_config_provider(action_bar);
+  prv_publish_touch_descriptor(action_bar);
 }
 
 void action_bar_layer_remove_from_window(ActionBarLayer *action_bar) {
@@ -378,6 +408,7 @@ void action_bar_layer_remove_from_window(ActionBarLayer *action_bar) {
   layer_remove_from_parent(&action_bar->layer);
   window_set_click_config_provider_with_context(action_bar->window, NULL, NULL);
   action_bar->window = NULL;
+  prv_publish_touch_descriptor(action_bar);
 }
 
 void action_bar_layer_set_background_color(ActionBarLayer *action_bar, GColor background_color) {

@@ -1046,6 +1046,9 @@ static void prv_handle_deinit(void) {
   music_request_reduced_latency(false);
 
   MusicAppData *data = app_state_get_user_data();
+  // Clear the touch-synthesis action bar descriptor so it can't route taps
+  // once we've left the app.
+  action_bar_layer_remove_from_window(&data->action_bar);
   if (data->temporarily_show_progress_timer) {
     app_timer_cancel(data->temporarily_show_progress_timer);
   }
