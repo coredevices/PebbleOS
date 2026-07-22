@@ -90,6 +90,7 @@ development/building_fw.md
 development/qemu.md
 development/moddable.md
 development/sdk_export.md
+development/contributing.md
 ```
 
 ```{toctree}
