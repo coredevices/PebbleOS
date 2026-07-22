@@ -5,6 +5,7 @@ Doxygen-generated reference for the PebbleOS firmware sources.
 
 Good starting points:
 
+- <a href="topics.html">Topics</a> — APIs grouped by subject (UI, Foundation, Graphics, ...)
 - <a href="annotated.html">Data Structures</a> — all structs and unions
 - <a href="files.html">Files</a> — browse by source tree layout
 - <a href="globals_func.html">Functions</a> — flat function index
