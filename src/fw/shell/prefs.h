@@ -203,15 +203,6 @@ void timeline_peek_prefs_set_unsupported_face_mode(TimelinePeekUnsupportedFaceMo
 TimelinePeekUnsupportedFaceMode timeline_peek_prefs_get_unsupported_face_mode(void);
 #endif
 
-typedef enum PowerMode {
-  PowerMode_HighPerformance = 0,
-  PowerMode_LowPower = 1,
-  PowerModeCount
-} PowerMode;
-
-PowerMode shell_prefs_get_power_mode(void);
-void shell_prefs_set_power_mode(PowerMode mode);
-
 bool shell_prefs_can_coredump_on_request(void);
 void shell_prefs_set_coredump_on_request(bool enabled);
 

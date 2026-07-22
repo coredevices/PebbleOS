@@ -53,7 +53,6 @@
 #if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
   PREFS_MACRO(PREF_KEY_TIMELINE_PEEK_WATCHFACE_FIT, s_timeline_peek_unsupported_face_mode)
 #endif
-  PREFS_MACRO(PREF_KEY_POWER_MODE, s_power_mode)
   PREFS_MACRO(PREF_KEY_COREDUMP_ON_REQUEST, s_coredump_on_request_enabled)
   PREFS_MACRO(PREF_KEY_ACCEL_SHAKE_LOG_INFO, s_accel_shake_log_info_enabled)
   PREFS_MACRO(PREF_KEY_VIBE_LOG_INFO, s_vibe_log_info_enabled)

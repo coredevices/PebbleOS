@@ -32,7 +32,6 @@
 #include "stubs_new_timer.h"
 #include "stubs_passert.h"
 #include "stubs_persist.h"
-#include "stubs_powermode_service.h"
 #include "stubs_plugin_service.h"
 #include "stubs_print.h"
 #include "stubs_process_manager.h"

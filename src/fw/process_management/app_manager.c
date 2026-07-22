@@ -36,10 +36,6 @@
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/light.h"
 #include "pbl/services/app_cache.h"
-#include "pbl/services/new_timer/new_timer.h"
-#ifndef CONFIG_RECOVERY_FW
-#include "pbl/services/powermode_service.h"
-#endif
 #include "pbl/services/app_inbox_service.h"
 #include "pbl/services/app_outbox_service.h"
 #include "pbl/services/vibe_pattern.h"
@@ -101,25 +97,12 @@ typedef struct {
 } AppCrashInfo;
 
 static NextApp s_next_app;
-#ifndef CONFIG_RECOVERY_FW
-static bool s_powermode_hp_requested;
-static TimerID s_powermode_release_timer;
-
-#define POWERMODE_WATCHFACE_RELEASE_DELAY_MS 5000
-#endif
 
 // ---------------------------------------------------------------------------------------------
 void app_manager_init(void) {
   s_to_app_event_queue = xQueueCreate(MAX_TO_APP_EVENTS, sizeof(PebbleEvent));
 
   s_app_task_context = (ProcessContext) { 0 };
-
-#ifndef CONFIG_RECOVERY_FW
-  // Start in high-performance mode; released when a watchface is loaded
-  powermode_service_request_hp();
-  s_powermode_hp_requested = true;
-  s_powermode_release_timer = new_timer_create();
-#endif
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -254,17 +237,6 @@ T_STATIC MemorySegment prv_get_app_ram_segment(void) {
 T_STATIC size_t prv_get_stack_guard_size(void) {
   return (uintptr_t)__stack_guard_size__;
 }
-
-#ifndef CONFIG_RECOVERY_FW
-// ---------------------------------------------------------------------------------------------
-static void prv_powermode_release_cb(void *data) {
-  (void)data;
-  if (s_powermode_hp_requested) {
-    powermode_service_release_hp();
-    s_powermode_hp_requested = false;
-  }
-}
-#endif
 
 // ---------------------------------------------------------------------------------------------
 //! @return True on success, False if:
@@ -416,21 +388,6 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
 
 #if !defined(CONFIG_RECOVERY_FW)
   health_tracking_ui_register_app_launch(s_app_task_context.install_id);
-#endif
-
-#ifndef CONFIG_RECOVERY_FW
-  if (app_md->process_type == ProcessTypeWatchface) {
-    if (s_powermode_hp_requested) {
-      new_timer_start(s_powermode_release_timer, POWERMODE_WATCHFACE_RELEASE_DELAY_MS,
-                      prv_powermode_release_cb, NULL, 0);
-    }
-  } else {
-    new_timer_stop(s_powermode_release_timer);
-    if (!s_powermode_hp_requested) {
-      powermode_service_request_hp();
-      s_powermode_hp_requested = true;
-    }
-  }
 #endif
 
   return true;

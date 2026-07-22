@@ -63,7 +63,6 @@ enum {
 enum {
   DebuggingItemCoreDumpNow = 0,
   DebuggingItemCoreDumpShortcut,
-  DebuggingItemPowerMode,
   DebuggingItemALSThreshold,
 #ifdef CONFIG_ACCEL_SENSITIVITY
   DebuggingItemMotionSensitivity,
@@ -481,31 +480,6 @@ static void prv_motion_sensitivity_menu_push(SettingsSystemData *data) {
 }
 #endif
 
-// Power mode option menu
-/////////////////////////
-
-static const char *s_power_mode_labels[] = {
-  i18n_noop("High performance"),
-  i18n_noop("Low power"),
-};
-
-static void prv_power_mode_menu_select(OptionMenu *option_menu, int selection, void *context) {
-  shell_prefs_set_power_mode((PowerMode)selection);
-  app_window_stack_remove(&option_menu->window, true /* animated */);
-}
-
-static void prv_power_mode_menu_push(SettingsSystemData *data) {
-  int index = (int)shell_prefs_get_power_mode();
-  const OptionMenuCallbacks callbacks = {
-    .select = prv_power_mode_menu_select,
-  };
-  const char *title = i18n_noop("Power Mode");
-  settings_option_menu_push(
-      title, OptionMenuContentType_SingleLine, index, &callbacks,
-      ARRAY_LENGTH(s_power_mode_labels),
-      true /* icons_enabled */, s_power_mode_labels, data);
-}
-
 // Compact growable settings DBs
 ////////////////////////////////
 
@@ -523,7 +497,6 @@ static void prv_compact_settings_dbs(void) {
 static const char* s_debugging_titles[DebuggingItem_Count] = {
   [DebuggingItemCoreDumpNow]      = i18n_noop("CoreDump now"),
   [DebuggingItemCoreDumpShortcut] = i18n_noop("CoreDump shortcut"),
-  [DebuggingItemPowerMode]          = i18n_noop("Power Mode"),
   [DebuggingItemALSThreshold]     = i18n_noop("ALS Threshold"),
 #ifdef CONFIG_ACCEL_SENSITIVITY
   [DebuggingItemMotionSensitivity] = i18n_noop("Motion Sensitivity"),
@@ -550,8 +523,6 @@ static void prv_debugging_draw_row_callback(GContext* ctx, const Layer *cell_lay
   const char *subtitle_text = NULL;
   if (cell_index->row == DebuggingItemCoreDumpShortcut) {
     subtitle_text = shell_prefs_can_coredump_on_request() ? i18n_get("10 back-button presses", data) : i18n_get("Disabled", data);
-  } else if (cell_index->row == DebuggingItemPowerMode) {
-    subtitle_text = i18n_get(s_power_mode_labels[shell_prefs_get_power_mode()], data);
   } else if (cell_index->row == DebuggingItemALSThreshold) {
     // Show current threshold value
     uint32_t current_threshold = backlight_get_ambient_threshold();
@@ -599,9 +570,6 @@ static void prv_debugging_select_callback(MenuLayer *menu_layer,
       break;
     case DebuggingItemCoreDumpShortcut:
       shell_prefs_set_coredump_on_request(!shell_prefs_can_coredump_on_request());
-      break;
-    case DebuggingItemPowerMode:
-      prv_power_mode_menu_push(data);
       break;
     case DebuggingItemALSThreshold:
       prv_als_threshold_menu_push(data);
