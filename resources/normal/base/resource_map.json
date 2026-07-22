@@ -402,6 +402,69 @@
       "characterRegex": "[ 0-9:/.,°ABPMHIK\\+\\-\\%]"
     },
     {
+      "type": "font",
+      "name": "GOTHIC_14_EXTENDED",
+      "file": "normal/base/lang/zh_CN/fireflyR14.bdf",
+      "characterList": "normal/base/lang/zh_CN/notification_codepoints.json",
+      "extended": true
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_14_BOLD_EXTENDED",
+      "file": "normal/base/lang/zh_CN/fireflyR14.bdf",
+      "alias": "GOTHIC_14_EXTENDED"
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_18_EXTENDED",
+      "file": "normal/base/lang/zh_CN/fireflysung.ttf",
+      "characterList": "normal/base/lang/zh_CN/notification_codepoints.json",
+      "extended": true
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_18_BOLD_EXTENDED",
+      "alias": "GOTHIC_18_EXTENDED"
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_24_EXTENDED",
+      "file": "normal/base/lang/zh_CN/fireflysung.ttf",
+      "characterList": "normal/base/lang/zh_CN/notification_codepoints.json",
+      "extended": true
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_24_BOLD_EXTENDED",
+      "alias": "GOTHIC_24_EXTENDED"
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_28_EXTENDED",
+      "alias": "GOTHIC_24_EXTENDED"
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_28_BOLD_EXTENDED",
+      "alias": "GOTHIC_24_EXTENDED"
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_36_EXTENDED",
+      "alias": "GOTHIC_24_EXTENDED"
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_36_BOLD_EXTENDED",
+      "alias": "GOTHIC_24_EXTENDED"
+    },
+    {
+      "type": "font",
+      "name": "ROBOTO_CONDENSED_21_EXTENDED",
+      "file": "normal/base/lang/zh_CN/NotoSansCJKsc-DemiLight.otf",
+      "characterList": "normal/base/lang/zh_CN/months.json"
+    },
+    {
       "type": "pbi8",
       "name": "MUSIC_ICON_SKIP_FORWARD",
       "file": "normal/base/images/music_icon_skip_forward.png"
@@ -2428,6 +2491,11 @@
       "type": "mo",
       "name": "STRINGS_PL_PL",
       "file": "normal/base/lang/pl_PL/tintin.po"
+    },
+    {
+      "type": "mo",
+      "name": "STRINGS_ZH_CN",
+      "file": "normal/base/lang/zh_CN/tintin.po"
     },
     {
       "type": "pdc",
