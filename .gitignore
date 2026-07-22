@@ -55,6 +55,7 @@ analyze_mcu_flash_usage_treemap.jsonp
 
 .vscode
 .venv
+.cache/
 *.egg-info
 
 waflib.zip
