@@ -8,7 +8,7 @@
 #include "applib/ui/ui.h"
 
 //! Creates a health hr detail window
-//! @param HealthData pointer to the health data to be given to this card
+//! @param health_data pointer to the health data to be given to this card
 //! @return A pointer to a newly allocated health hr detail window
 Window *health_hr_detail_card_create(HealthData *health_data);
 

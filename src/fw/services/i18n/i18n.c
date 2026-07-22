@@ -96,9 +96,11 @@ static uint32_t prv_next_index(uint32_t curidx, uint32_t hashsize, uint32_t step
 }
 
 //! Lookup a translated string.
-//! @param rlen[out] Can be NULL. If non-null will be populated with the length of the translated
+//! @param msgid The message id (original string) to look up.
+//! @param db The domain binding containing the translations.
+//! @param[out] rlen Can be NULL. If non-null will be populated with the length of the translated
 //!                  string.
-//! @param rstring[out] Can be NULL. If non-null this buffer will be populated with the translated
+//! @param[out] rstring Can be NULL. If non-null this buffer will be populated with the translated
 //!                     string. This buffer will be null-terminated.
 //! @param rstring_len The length of the rstring buffer.
 static void prv_lookup(const char *msgid, struct DomainBinding *db,

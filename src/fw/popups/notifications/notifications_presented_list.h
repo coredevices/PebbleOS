@@ -63,9 +63,11 @@ typedef void (*NotificationListEachCallback)(Uuid *id, NotificationType type, vo
 
 //! Executes the specified callback for each notificaiton in the presented list
 //! @param callback If null this function is a no-op
+//! @param cb_data Context passed to the callback
 void notifications_presented_list_each(NotificationListEachCallback callback, void *cb_data);
 
 //! Deinits the notification presented list
 //! @param callback - If non-null, notifies the caller what item is being removed.
 //!            The callback routine should not try to modify the notification list
+//! @param cb_data Context passed to the callback
 void notifications_presented_list_deinit(NotificationListEachCallback callback, void *cb_data);

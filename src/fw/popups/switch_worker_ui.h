@@ -9,8 +9,6 @@
 //! @param new_worker_id The new ID that we'd like to ask the user to switch to
 //! @param set_as_default Whether this new worker should become the default after being accepted
 //! @param window_stack Which window stack to push the dialog to
-//! @param exit_callback Callback to be called on dialog pop (may be NULL if not used)
-//! @param callback_context Context which is passed to provided callbacks
 void switch_worker_confirm(AppInstallId new_worker_id, bool set_as_default,
                            WindowStack *window_stack);
 

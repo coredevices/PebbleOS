@@ -35,6 +35,7 @@ bool version_copy_update_fw_metadata(FirmwareMetadata *out_metadata);
 //! dest_len_bytes - 1 before being null-terminated via strncpy()
 //!
 //! @param dest: char[dest_len_bytes]
+//! @param dest_len_bytes size of dest in bytes
 //! @returns true on success, false otherwise
 bool version_copy_recovery_fw_version(char* dest, const int dest_len_bytes);
 
@@ -50,7 +51,7 @@ const uint8_t * version_get_build_id(size_t *out_len);
 //! Copies a hex C-string of the build id into the supplied buffer.
 //! Get the build id from an elf, using `arm-none-eabi-readelf -n pebbleos.elf`
 //! @param[out] buffer The buffer into which the string should be copied.
-//! @param max_length The length of buffer.
+//! @param buffer_bytes_left The length of buffer.
 void version_copy_current_build_id_hex_string(char *buffer, size_t buffer_bytes_left);
 
 //! Like version_copy_current_build_id_hex_string, but is copied from the specified Elf section.

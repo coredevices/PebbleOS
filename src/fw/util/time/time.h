@@ -90,13 +90,7 @@ typedef enum DayInWeek {
 
 //! Obtain the number of seconds and milliseconds part since the epoch.
 //!   This is a non-standard C function provided for convenience.
-//! @param tloc Optionally points to an address of a time_t variable to store the time in.
-//!   You may pass NULL into tloc if you don't need a time_t variable to be set
-//!   with the seconds since the epoch
-//! @param out_ms Optionally points to an address of a uint16_t variable to store the
-//!   number of milliseconds since the last second in.
-//!   If you only want to use the return value, you may pass NULL into out_ms instead
-//! @return The number of milliseconds since the last second
+//!   Parameters are documented with the SDK declaration in pbl_std.h.
 uint16_t time_ms(time_t *tloc, uint16_t *out_ms);
 
 //!   @} // end addtogroup StandardTime
@@ -131,6 +125,7 @@ typedef struct TimezoneInfo {
 //! Provides the timezone abbreviation string for the given time. Uses the utc_time provided
 //! to correct the abbreviation for daylight savings time if applicable
 //! @param out_buf should have length TZ_LEN
+//! @param utc_time time used to determine whether daylight savings applies
 void time_get_timezone_abbr(char *out_buf, time_t utc_time);
 
 //! Provides the gmt offset
@@ -199,7 +194,7 @@ int time_util_get_minute_of_day(time_t utc_sec);
 //! Adds a delta to the minute of the day and will wrap to the next or previous day if the
 //! resulting minutes would have been out of bounds
 //! @param minute Minute to adjust
-//! @param delta Minutes to add to \ref minute
+//! @param delta Minutes to add to @c minute
 //! @return Adjusted minutes
 int time_util_minute_of_day_adjust(int minute, int delta);
 

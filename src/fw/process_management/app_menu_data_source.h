@@ -90,6 +90,7 @@ void app_menu_data_source_deinit(AppMenuDataSource *source);
 
 //! Will load the icons for each `AppMenuNode`. Will automatically be unloaded when
 //! `app_menu_data_source_deinit` is called.
+//! @param source The AppMenuDataSource to enable icons for
 //! @param fallback_icon_id The fallback resource id that should be used if the entry does not have
 //! an icon.
 void app_menu_data_source_enable_icons(AppMenuDataSource *source, uint32_t fallback_icon_id);

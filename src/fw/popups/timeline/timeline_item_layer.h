@@ -28,7 +28,7 @@ typedef struct {
 void timeline_item_layer_update_proc(Layer* layer, GContext* ctx);
 
 //! Initialize a timeline item layer
-//! @param layer a pointer to the TimelineItemLayer to initialize
+//! @param item_layer a pointer to the TimelineItemLayer to initialize
 //! @param frame the frame with which to initialize the layer
 void timeline_item_layer_init(TimelineItemLayer *item_layer, const GRect *frame);
 
@@ -36,8 +36,9 @@ void timeline_item_layer_init(TimelineItemLayer *item_layer, const GRect *frame)
 void timeline_item_layer_deinit(TimelineItemLayer *item_layer);
 
 //! Set the timeline item displayed by the TimelineItemLayer
-//! @param layer a pointer to the TimelineItemLayer
+//! @param item_layer a pointer to the TimelineItemLayer
 //! @param item a pointer to the item to use
+//! @param info a pointer to the TimelineLayoutInfo to use for the item
 void timeline_item_layer_set_item(TimelineItemLayer *item_layer, TimelineItem *item,
     TimelineLayoutInfo *info);
 

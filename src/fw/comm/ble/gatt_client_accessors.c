@@ -466,7 +466,11 @@ static bool prv_copy_included_service_refs_cb(const GATTServiceNode *inc_service
 }
 
 //! Copies object references associated with service_ref into refs_out.
-//! @param callback This callback determines references for what objects need to be copied out
+//! @param service_ref The service with which the objects are associated
+//! @param refs_out The array into which the references are copied
+//! @param num_refs_out The size of the refs_out array
+//! @param matching_uuids If not NULL, only copy references for objects with a matching Uuid
+//! @param callbacks These callbacks determine references for what objects need to be copied out
 //! (characteristics, descriptors or included services)
 static uint8_t prv_locked_copy_refs_with_service_ref(BLEService service_ref,
                                                      uintptr_t refs_out[],

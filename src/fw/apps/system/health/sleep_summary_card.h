@@ -29,6 +29,7 @@ Layer *health_sleep_summary_card_create(HealthData *health_data);
 void health_sleep_summary_card_select_click_handler(Layer *layer);
 
 //! Set the card to a given view
+//! @param layer A pointer to an existing layer with extra data
 //! @param view the view type to show
 void health_sleep_summary_card_set_view(Layer *layer, SleepSummaryView view);
 

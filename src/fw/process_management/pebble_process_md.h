@@ -50,7 +50,7 @@ typedef enum {
 
 //! This structure is used internally to describe the process. This struct here is actually a polymorphic base
 //! class, and can be casted to either \ref PebbleProcessMdSystem or \ref PebbleProcessMdFlash depending on the value
-//! of \ref is_flash_based. Clients shouldn't do this casting themselves though, and instead should use the
+//! of @c process_storage. Clients shouldn't do this casting themselves though, and instead should use the
 //! process_metadata_get_* functions to safely retreive values from this struct.
 typedef struct PebbleProcessMd {
   Uuid uuid;
@@ -117,7 +117,7 @@ typedef struct PebbleProcessMdFlash {
   Version sdk_version;
 
   //! The bank this process will get it's code and data from. This field is only valid if the
-  //! \ref process_storage is ProcessStorageFlash
+  //! @c process_storage is ProcessStorageFlash
   uint32_t code_bank_num;
 
   //! The bank this app will get its resources from
@@ -158,11 +158,18 @@ ResourceVersion process_metadata_get_res_version(const PebbleProcessMd *md);
 const uint8_t *process_metadata_get_build_id(const PebbleProcessMd *md);
 
 //! @param[out] md
+//! @param flash_header The process info header read from flash
+//! @param process_bank_num The flash bank the process binary is stored in
+//! @param task The task the process will run as
+//! @param build_id_buffer Optional buffer holding the build id to copy, may be NULL
 void process_metadata_init_with_flash_header(PebbleProcessMdFlash *md,
     const PebbleProcessInfo *flash_header, int process_bank_num, PebbleTask task,
     uint8_t *build_id_buffer);
 
 //! @param[out] md
+//! @param info The process info header
+//! @param bin_resource_id The resource id of the process binary
+//! @param task The task the process will run as
 void process_metadata_init_with_resource_header(PebbleProcessMdResource *md,
     const PebbleProcessInfo *info, int bin_resource_id, PebbleTask task);
 

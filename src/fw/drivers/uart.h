@@ -23,10 +23,10 @@ typedef struct UARTRXErrorFlags {
   };
 } UARTRXErrorFlags;
 
-//! The type of function which can be called from within the UART ISR (@see \Ref
+//! The type of function which can be called from within the UART ISR (@see
 //! uart_set_*_interrupt_handler)
 //! @return Whether or not the ISR should context switch at the end instead of resuming the previous
-//! task (@see \Ref portEND_SWITCHING_ISR)
+//! task (@see portEND_SWITCHING_ISR)
 typedef bool (*UARTRXInterruptHandler)(UARTDevice *dev, uint8_t data,
                                        const UARTRXErrorFlags *err_flags);
 typedef bool (*UARTTXInterruptHandler)(UARTDevice *dev);
@@ -75,6 +75,8 @@ uint8_t uart_read_byte(UARTDevice *dev);
 
 //! Starts the use of DMA for receiving (the DMARequest must be configured)
 //! @param[in] dev The UART device
+//! @param buffer The buffer into which received data is written
+//! @param length The size of the buffer in bytes
 void uart_start_rx_dma(UARTDevice *dev, void *buffer, uint32_t length);
 
 //! Stops the use of DMA for receiving (the DMARequest must be configured)

@@ -15,7 +15,8 @@
 
 PBL_LOG_MODULE_DEFINE(service_music, CONFIG_SERVICE_MUSIC_LOG_LEVEL);
 
-//! @file This module implements the music service. It provides an abstraction layer on top of the
+//! @file
+//! This module implements the music service. It provides an abstraction layer on top of the
 //! various underlying music metadata and control services: the Pebble Protocol
 //! music endpoint (see music_endpoint.c) and Apple Media Service (see ams.c).
 //! This module also caches the last known metadata and media player state.

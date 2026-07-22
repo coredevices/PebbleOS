@@ -70,7 +70,7 @@ typedef void (*GAPLEAdvertisingJobUnscheduleCallback)(GAPLEAdvertisingJobRef job
 //! Based on the given minimum and maximum interval values, an interval is
 //! used depending on other time related tasks the Bluetooth controller has to
 //! perform.
-//! @discussion Note that scheduled jobs will be unscheduled when the Bluetooth
+//! @note Scheduled jobs will be unscheduled when the Bluetooth
 //! stack is torn down (e.g. when going into Airplane Mode).
 //! @param payload The payload with the advertising and scan response data to
 //! be scheduled for air-time. @see ble_ad_parse.h for functions to build the
@@ -81,6 +81,7 @@ typedef void (*GAPLEAdvertisingJobUnscheduleCallback)(GAPLEAdvertisingJobRef job
 //! of seconds that the advertisement payload has to be on-air.
 //! The job is not guaranteed to get a consecutive period of air-time nor is it guaranteed that
 //! it will get air-time immediately after returning from this function.
+//! @param num_terms The number of terms in the terms array.
 //! @param callback Pointer to a function that should be called when the job
 //! is unscheduled. Note: bt_lock() *WILL* be held during the callback to
 //! prevent subtle concurrency problems that can cause out-of-order state
@@ -88,7 +89,6 @@ typedef void (*GAPLEAdvertisingJobUnscheduleCallback)(GAPLEAdvertisingJobRef job
 //! @see GAPLEAdvertisingJobUnscheduleCallback for more info.
 //! @param callback_data Pointer to arbitrary client data that is passed as an
 //! argument with the unschedule callback.
-
 //! @param tag A tag that will be used for debug logging.
 //! @return Reference to the scheduled job, or NULL if the parameters were not
 //! valid.
@@ -107,8 +107,8 @@ void gap_le_advert_unschedule(GAPLEAdvertisingJobRef advertisement_job);
 //! Unschedules existing advertisement jobs of particular tag types. Only
 //! reschedules advertisements after all the requested tag types have been
 //! removed
-//! @param types an array of tags for the Advertisement Types to remove
-//! @param num_types the length of the 'types' list
+//! @param tag_types an array of tags for the Advertisement Types to remove
+//! @param num_types the length of the 'tag_types' list
 void gap_le_advert_unschedule_job_types(
     GAPLEAdvertisingJobTag *tag_types, size_t num_types);
 

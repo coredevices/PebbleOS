@@ -141,7 +141,7 @@ typedef struct {
 typedef struct {
   GTextNode node;
   //! Pointer to a UTF-8 string for drawing. If the node was allocated with
-  //! \ref graphics_create_text_node having been called with a positive integer, text will be
+  //! \ref graphics_text_node_create_text having been called with a positive integer, text will be
   //! pointing to a writable text buffer that is pointing to the end of the node's memory.
   const char *text;
   GFont font;
@@ -166,10 +166,11 @@ typedef struct {
   GTextNodeTextDynamicUpdate update;
   void *user_data; //!< User data that will be passed to the user-defined update function
   //! Size of the buffer that will be passed to the update callback. If the node was allocated with
-  //! \ref graphics_create_text_node_dynamic, this is the buffer size that was passed to the buffer,
+  //! \ref graphics_text_node_create_text_dynamic, this is the buffer size that was passed to the
+  //! buffer,
   //! and the buffer it describes is at the end of the node's memory.
   size_t buffer_size;
-  //! If the node was created with \ref graphics_create_text_node_dynamic, this is the buffer
+  //! If the node was created with \ref graphics_text_node_create_text_dynamic, this is the buffer
   //! described by `.buffer_size`.
   union { uint32_t _align; } buffer[];
 } GTextNodeTextDynamic;

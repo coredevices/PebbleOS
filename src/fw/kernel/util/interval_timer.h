@@ -43,9 +43,10 @@ typedef struct {
 //! Intervals are averaged together in a moving average that includes the last n intervals. The
 //! number of intervals to average over is configurable.
 //!
+//! @param timer The timer to initialize
 //! @param min_expected_ms The minimum number of milliseconds between samples
-//! @param min_expected_ms The maximum number of milliseconds between samples
-//! @param weighting_factor_inverted
+//! @param max_expected_ms The maximum number of milliseconds between samples
+//! @param weighting_factory_inverted
 //!     1 / alpha. Specified as a inverted number to avoid dealing with floats. The higher the
 //!     number the less responsive to recent changes our average is.
 void interval_timer_init(IntervalTimer *timer, uint32_t min_expected_ms, uint32_t max_expected_ms,
@@ -55,6 +56,7 @@ void interval_timer_init(IntervalTimer *timer, uint32_t min_expected_ms, uint32_
 //! Safe to call from an ISR.
 void interval_timer_take_sample(IntervalTimer *timer);
 
+//! @param timer The timer to query
 //! @param[out] average_ms_out The average ms for the interval.
 //! @return The number of valid intervals that are in our moving average. Note that this value
 //!         will never be larger than num_intervals_in_average.

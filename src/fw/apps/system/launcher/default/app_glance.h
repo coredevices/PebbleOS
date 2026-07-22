@@ -14,7 +14,7 @@ typedef struct LauncherAppGlance LauncherAppGlance;
 
 //! Called when a launcher app glance's current slice has been updated. The glance will
 //! automatically be redrawn after this function is called.
-//! @param The glance whose current slice has been updated
+//! @param glance The glance whose current slice has been updated
 typedef void (*LauncherAppGlanceCurrentSliceUpdated)(LauncherAppGlance *glance);
 
 typedef struct LauncherAppGlanceHandlers {

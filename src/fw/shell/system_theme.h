@@ -62,7 +62,7 @@ typedef enum TextStyleFont {
 //! @return The font key of the font class using the user's preferred content size.
 const char *system_theme_get_font_key(TextStyleFont font);
 
-//! @param content_size The desired content size.
+//! @param size The desired content size.
 //! @param font The desired font class to obtain a font key of.
 //! @return The font key of the given content size and font class.
 const char *system_theme_get_font_key_for_size(PreferredContentSize size, TextStyleFont font);
@@ -71,7 +71,7 @@ const char *system_theme_get_font_key_for_size(PreferredContentSize size, TextSt
 //! @return The font of the font class using the user's preferred content size.
 GFont system_theme_get_font(TextStyleFont font);
 
-//! @param content_size The desired content size.
+//! @param size The desired content size.
 //! @param font The desired font class to obtain a font of.
 //! @return The font of the given content size and font class.
 GFont system_theme_get_font_for_size(PreferredContentSize size, TextStyleFont font);

@@ -15,7 +15,7 @@
 
 PBL_LOG_MODULE_DEFINE(service_app_order_endpoint, CONFIG_SERVICE_APP_ORDER_ENDPOINT_LOG_LEVEL);
 
-//! @file app_order_endpoint.c
+//! @file
 //! App Order Endpoint
 //!
 //! There is only 1 way to use this endpoint

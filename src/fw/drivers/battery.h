@@ -90,6 +90,7 @@ typedef struct ADCVoltageMonitorReading {
 ADCVoltageMonitorReading battery_read_voltage_monitor(void);
 
 //! Convert a ADCVoltageMonitorReading into a single mV reading using a given dividing ratio.
+//! @param reading The voltage monitor reading to convert.
 //! @param numerator The numerator to multiply the result by.
 //! @param denominator The denominator to divide the result by.
 uint32_t battery_convert_reading_to_millivolts(ADCVoltageMonitorReading reading,

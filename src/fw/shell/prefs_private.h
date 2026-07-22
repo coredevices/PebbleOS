@@ -18,7 +18,7 @@
 //! @param[in] key the preference's name, as defined in prefs.c
 //! @param[in] key_len the length of key
 //! @param[in] value pointer to the new value
-//! @param[in] length of the value
+//! @param[in] value_len the length of the value
 //! @return true on success, false if failure
 bool prefs_private_write_backing(const uint8_t *key, size_t key_len, const void *value,
                                int value_len);
@@ -33,7 +33,7 @@ int prefs_private_get_backing_len(const uint8_t *key, size_t key_len);
 //! @param[in] key the preference's name, as defined in prefs.c
 //! @param[in] key_len the length of key
 //! @param[out] value the value will be written into this pointer
-//! @param[in] length of the value
+//! @param[in] value_len the length of the value
 //! @return true on success, false if failure
 bool prefs_private_read_backing(const uint8_t *key, size_t key_len, void *value, int value_len);
 

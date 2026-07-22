@@ -102,10 +102,8 @@ void process_manager_init_context(ProcessContext* context,
 bool process_manager_check_SDK_compatible(const AppInstallId id);
 
 //! Request that a process be launched.
-//! @param id The app to launch. Note that this app may not be cached
-//! @param args The args to the app
-//! @param animation The animation that should be used to show the app
-//! @prama launch_reason The launch reason for the app starting
+//! @param config The launch configuration of the process to launch. Note that this app may not
+//! be cached
 void process_manager_launch_process(const ProcessLaunchConfig *config);
 
 //! Close the given process. This is the highest level call which transfers control to the manager of that type of
@@ -138,7 +136,7 @@ bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent* e);
 //! Get the number of messages currently waiting to be processed by the process
 uint32_t process_manager_process_events_waiting(PebbleTask task);
 
-//! Wrapper for \ref send_event_to_app to send callback events to the app
+//! Wrapper for \ref process_manager_send_event_to_process to send callback events to the app
 void process_manager_send_callback_event_to_process(PebbleTask task, void (*callback)(void *), void *data);
 
 //! Send a kill event for the given process to KernelMain

@@ -6,7 +6,8 @@
 #include <bluetooth/bluetooth_types.h>
 #include <bluetooth/gatt_service_types.h>
 
-//! @file This file contains functions to access any discovered GATT Services,
+//! @file
+//! This file contains functions to access any discovered GATT Services,
 //! Characteristics and Descriptors. The data structures are used internally
 //! in gatt_client_accessors.c and gatt_client_discovery.c.
 
@@ -42,9 +43,10 @@ uint8_t gatt_client_service_get_characteristics(BLEService service_ref,
 // TODO: add public API to applib
 //! Copies BLECharacteristic references associated with the service, filtered by an array of
 //! Characteristic UUIDs.
+//! @param service_ref The service of which to copy the characteristic references.
 //! @param characteristics_out The array into which the matching BLECharacteristic references
 //! will be copied.
-//! @param matching_characteristic_uuids The array of Characteristic Uuid`s that will be used to
+//! @param matching_characteristic_uuids The array of Characteristic Uuids that will be used to
 //! determine what references to copy. For every matching characteristic, the reference will be
 //! copied into the `characteristics_out` array, at the same index as the Uuid
 //! in the `matching_characteristic_uuids` array. The array must contain each Uuid only once.

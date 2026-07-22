@@ -82,7 +82,8 @@ typedef enum ModalProperty {
 void modal_manager_init(void);
 
 //! Sets whether modal windows are enabled.
-//! @param enabled Boolean indicating whether enabled or disabled
+//! @param priority The minimum priority of modal windows that can be pushed; stacks with a
+//! lower priority are locked.
 //! Note that this is usable before modal_manager_init is called and modal_manager_init will not
 //! reset this state.
 void modal_manager_set_min_priority(ModalPriority priority);
@@ -98,7 +99,7 @@ ClickManager *modal_manager_get_click_manager(void);
 //! Returns the first \ref WindowStack to pass the given filter callback.
 //! Iterates down from the highest priority to the lowest priority.
 //! @param filter_cb The \ref ModalContextFilterCallback
-//! @param context Context to pass to the callback
+//! @param ctx Context to pass to the callback
 //! @returns pointer to a \ref WindowStack
 WindowStack *modal_manager_find_window_stack(ModalContextFilterCallback filter_cb, void *ctx);
 
@@ -122,7 +123,7 @@ void modal_manager_handle_button_event(PebbleEvent *event);
 void modal_manager_pop_all(void);
 
 //! Pops all windows from modal stacks with priorities less than the given priority
-//! @param the max priorirty stack to pop all windows from
+//! @param priority The max priority stack to pop all windows from
 void modal_manager_pop_all_below_priority(ModalPriority priority);
 
 //! Called from the kernel event loop between events to handle any changes that have been made
@@ -137,7 +138,6 @@ ModalProperty modal_manager_get_properties(void);
 
 //! Renders the highest priority top opaque window and all windows with higher priority.
 //! @param ctx The \ref GContext in which to render.
-//! @return Modal properties such as whether the modals are transparent or unfocusable
 void modal_manager_render(GContext *ctx);
 
 //! Determines whether the given modal window is visible. Use window_manager_is_window_visible if

@@ -17,6 +17,11 @@ bool ancs_util_is_complete_notif_attr_response(const uint8_t* data, const size_t
 bool ancs_util_is_complete_app_attr_dict(const uint8_t* data, const size_t length, bool* out_error);
 
 //! Extract pointers to the start of each attribute in attr_list
+//! @param data The raw attribute dictionary data to parse
+//! @param length Length of data in bytes
+//! @param attr_list List of attributes to look for
+//! @param num_attrs Number of attributes in attr_list
+//! @param out_attr_ptrs Array that receives a pointer to each found attribute
 //! @param out_error Set if the dictionary was invalid and could not be parsed;
 //! if true, bail out!
 //! @return True if all requested attributes are present and complete; false if

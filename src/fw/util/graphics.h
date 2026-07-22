@@ -8,10 +8,9 @@
 //! This function extracts a value for a specific bit per pixel depth from an image buffer
 //! at a specific x y position.
 //! @note inlined to support performance requirements of iterating over every pixel in an image
-//! @param buffer pointer to a buffer containing pixel image data
+//! @param raw_image_buffer pointer to a buffer containing pixel image data
 //! @param x the x coordinates for the pixel to retrieve
 //! @param y the y coordinates for the pixel to retrieve
-//! @param width provides the image width
 //! @param row_stride_bytes the byte-aligned width in bytes
 //! @param bitdepth bits per pixel for the image (1,2,4 or 8 supported)
 //! @return The value from the image buffer at the specified coordinates

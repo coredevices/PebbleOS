@@ -3,7 +3,7 @@
 
 #pragma once
 
-//! @file mfg_vibe.h
+//! @file
 //!
 //! Boring test app that vibes 5 times and quits
 

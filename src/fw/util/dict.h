@@ -387,8 +387,7 @@ DictionaryResult dict_serialize_tuplets__deprecated(DictionarySerializeCallback 
 //! @param tuplets The array of tuplets
 //! @param tuplets_count The number of tuplets in the array
 //! @param buffer The buffer in which to write the serialized dictionary
-//! @param [in] size_in_out The available buffer size in bytes
-//! @param [out] size_in_out The number of bytes written
+//! @param [in,out] size_in_out In: the available buffer size in bytes. Out: the number of bytes written.
 //! @return \ref DICT_OK, \ref DICT_NOT_ENOUGH_STORAGE or \ref DICT_INVALID_ARGS
 DictionaryResult dict_serialize_tuplets_to_buffer(const Tuplet * const tuplets, const uint8_t tuplets_count, uint8_t *buffer, uint32_t *size_in_out);
 
@@ -400,8 +399,7 @@ DictionaryResult dict_serialize_tuplets_to_buffer__deprecated(const uint8_t tupl
 //! @param tuplets The array of tuplets
 //! @param tuplets_count The number of tuplets in the array
 //! @param buffer The buffer in which to write the serialized dictionary
-//! @param [in] size_in_out The available buffer size in bytes
-//! @param [out] size_in_out The number of bytes written
+//! @param [in,out] size_in_out In: the available buffer size in bytes. Out: the number of bytes written.
 //! @return \ref DICT_OK, \ref DICT_NOT_ENOUGH_STORAGE or \ref DICT_INVALID_ARGS
 DictionaryResult dict_serialize_tuplets_to_buffer_with_iter(DictionaryIterator *iter, const Tuplet * const tuplets, const uint8_t tuplets_count, uint8_t *buffer, uint32_t *size_in_out);
 
@@ -437,7 +435,7 @@ extern const Tuple * const NULL_TUPLE;
 //! Therefore the Tuple can be used after the callback returns, until the destination dictionary
 //! storage is free'd (by the application itself).
 //! @param old_tuple The values that will be replaced with `new_tuple`. The key, value and type will be
-//! equal to the previous tuple in the old destination dictionary, however the `old_tuple points
+//! equal to the previous tuple in the old destination dictionary, however the `old_tuple` points
 //! to a stack-allocated copy of the old data.
 //! @param context Pointer to application specific data
 //! The storage backing `old_tuple` can only be used during the callback and

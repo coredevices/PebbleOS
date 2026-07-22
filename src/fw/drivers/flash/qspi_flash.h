@@ -11,6 +11,8 @@
 #include "system/status_codes.h"
 
 //! Initialize the QSPI flash
+//! @param dev The QSPI flash device to initialize
+//! @param part The description of the QSPI flash part
 //! @param coredump_mode If true, don't use anything that might not be available mid-crash, such
 //!                      as FreeRTOS calls or other system services.
 void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode);

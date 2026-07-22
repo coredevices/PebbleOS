@@ -6,7 +6,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-//! @file This module contains the "Generic Attribute Profile Service" code, both the server and
+//! @file
+//! This module contains the "Generic Attribute Profile Service" code, both the server and
 //! client parts. Both ends can optionally implement this service (and client). iOS does for example
 //! and so does Pebble. The one characteristic this service has is called "Service Changed". Its
 //! purpose is to indicate to the other side whenever there are changes to the local GATT database

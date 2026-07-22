@@ -42,6 +42,7 @@ static bool prv_should_add_sender_attr(const ANCSAttribute *app_id, const ANCSAt
           title && title->length > 0);
 }
 
+//! @param pstring The pstring to copy into the buffer
 //! @param buffer The buffer into which to copy the pstring attr. The buffer
 //! is assumed to be large enough to contain the string plus an optional
 //! ellipsis plus the zero terminator.
@@ -116,6 +117,11 @@ static int prv_set_multimedia_action_msg(char *buffer, size_t length) {
 
 //! @param buffer Pointer to a buffer large enough to hold all attribute strings required by
 //! the action. If buffer points to null, a new buffer will be allocated
+//! @param action The timeline item action to fill in
+//! @param ancs_action_id The ANCS action id (positive or negative action)
+//! @param title The ANCS title attribute of the notification
+//! @param app_id The ANCS app id attribute of the notification
+//! @param properties The ANCS properties of the notification
 //! @return Pointer to the end of the buffer (*buffer + size of strings)
 static uint8_t *prv_fill_native_ancs_action(uint8_t **buffer,
                                             TimelineItemAction *action,

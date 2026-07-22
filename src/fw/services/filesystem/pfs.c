@@ -1002,6 +1002,8 @@ typedef enum {
   NoFDAvail = -1
 } AvailFdStatus;
 
+//! @param name the name of the file to look for
+//! @param[out] fdp populated with the fd that was found or is available
 //! @param is_tmp specified to indicate whether or not you are looking for
 //!        a tmp file
 static AvailFdStatus get_avail_fd(const char *name, int *fdp, bool is_tmp) {

@@ -20,7 +20,7 @@ void phone_format_caller_name(const char *full_name, char *destination, size_t l
 //! +55 408
 //! 555-1212
 //! @param phone_number String containing original phone number
-//! @param destination buffer to copy the formatted phone number into.
+//! @param formatted_phone_number buffer to copy the formatted phone number into.
 //! @param length Size of the destination buffer.
 void phone_format_phone_number(const char *phone_number, char *formatted_phone_number,
                                size_t length);

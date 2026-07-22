@@ -45,14 +45,16 @@ bool timeline_model_is_empty(void);
 int timeline_model_get_num_items(void);
 
 //! Iterate the model towards the "next" direction
-//! @new_idx Set the raw index of the new iterator if new_idx is not NULL
-//! @has_next, set to whether or not there is a new third item in the list, i.e. false = iterate but
-//! show no more new items
+//! @param new_idx Set the raw index of the new iterator if new_idx is not NULL
+//! @param has_next set to whether or not there is a new third item in the list, i.e. false =
+//! iterate but show no more new items
 //! @return whether or not the current item is at the end of the list, i.e. false = stop iterating
 bool timeline_model_iter_next(int *new_idx, bool *has_next);
 
 //! Iterate the model towards the "prev" direction
-//! @new_idx Set the raw index of the new iterator if new_idx is not NULL
+//! @param new_idx Set the raw index of the new iterator if new_idx is not NULL
+//! @param has_prev set to whether or not there is a new item in the list, i.e. false =
+//! iterate but show no more new items
 //! @return whether or not the current item is at the beginning of the list, i.e. stop iterating
 bool timeline_model_iter_prev(int *new_idx, bool *has_prev);
 

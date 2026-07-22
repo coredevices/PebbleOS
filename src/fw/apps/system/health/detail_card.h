@@ -101,7 +101,7 @@ void health_detail_card_configure(HealthDetailCard *detail_card,
 //! Sets the zones for any daily history (steps/sleep)
 //! @param zones pointer to the HealthDetailZone to be set
 //! @param num_zones number of zones in the pointer
-//! @wparam weekly_max pointer to the weekly max to be set
+//! @param weekly_max pointer to the weekly max to be set
 //! @param format_hours_and_minutes whether to a format the values for hours and minutes in label
 //! @param show_crown whether to set the `show_crown` in the zone with weekly max
 //! @param fill_color color to fill all the progress bars with except today

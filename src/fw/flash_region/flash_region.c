@@ -14,8 +14,8 @@
 //! Do some upkeep in between erases to keep the rest of the system stable since erases block
 //! the current task for so long.
 //!
-//! @param erase_count[in, out] Counter variable to track how many times we've run this upkeep
-//                              function
+//! @param[in, out] erase_count Counter variable to track how many times we've run this upkeep
+//!                             function
 //! @param feed_watchdog Whether we should feed the task_watchdog for the current task or not
 static void prv_erase_upkeep(int *erase_count, bool feed_watchdog) {
   (*erase_count)++;

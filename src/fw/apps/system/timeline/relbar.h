@@ -13,7 +13,8 @@ typedef enum {
 } RelationshipBarOffsetType;
 
 //! Create the animations for the relationship bars
-//! @param layer Pointer to the \ref TimelineLayer to create the relationship bar animation for
+//! @param timeline_layer Pointer to the \ref TimelineLayer to create the relationship bar
+//! animation for
 //! @param duration Duration in ms of the animation to create
 //! @param interpolate Custom interpolation function to use for the animation
 Animation *timeline_relbar_layer_create_animation(TimelineLayer *timeline_layer, uint32_t duration,

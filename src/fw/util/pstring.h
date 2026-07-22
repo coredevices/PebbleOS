@@ -33,10 +33,12 @@ PascalString16 *pstring_create_pstring16_from_string(char string[]);
 
 void pstring_destroy_pstring16(PascalString16 *pstring);
 
+//! @param pstring The pstring to convert.
 //! @param string_out Array of chars to hold the converted pstring.
 //!                   Must be at least size (pstring->length + 1).
 void pstring_pstring16_to_string(const PascalString16 *pstring, char *string_out);
 
+//! @param string The string to convert.
 //! @param pstring_out Array of chars to hold the converted string.
 //!                    Must be at least size (string + 1).
 void pstring_string_to_pstring16(char string[], PascalString16 *pstring_out);

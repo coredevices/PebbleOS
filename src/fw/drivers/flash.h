@@ -193,7 +193,7 @@ uint32_t flash_calculate_legacy_defective_checksum(uint32_t flash_addr,
 //! to increase the internal reference counter that prevents flash peripheral from powering down.
 void flash_use(void);
 
-//! Convenience for \ref flash_release_many(1)
+//! Convenience for \ref flash_release_many with num_locks = 1
 void flash_release(void);
 
 //! Call this after you finished accessing external flash

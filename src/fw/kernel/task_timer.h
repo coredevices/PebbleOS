@@ -48,6 +48,7 @@ TaskTimerID task_timer_create(TaskTimerManager *manager);
 
 //! Schedule an existing timer to execute in timeout_ms. If the timer was already started, it will
 //! be rescheduled for the new time.
+//! @param[in] manager The manager that owns the timer
 //! @param[in] timer ID
 //! @param[in] timeout_ms timeout in milliseconds
 //! @param[in] cb pointer to the user's callback procedure
@@ -60,11 +61,13 @@ bool task_timer_start(TaskTimerManager *manager, TaskTimerID timer, uint32_t tim
 
 //! Stop a timer. For repeating timers, even if this method returns false (callback is currently
 //! executing) the timer will not run again. Safe to call on timers that aren't currently started.
+//! @param[in] manager The manager that owns the timer
 //! @param[in] timer ID
 //! @return False if timer's callback is current executing, true if not.
 bool task_timer_stop(TaskTimerManager *manager, TaskTimerID timer);
 
 //! Get scheduled status of a timer
+//! @param[in] manager The manager that owns the timer
 //! @param[in] timer ID
 //! @param[out] expire_ms_p if not NULL, the number of milliseconds until this timer will fire is
 //!                         returned in *expire_ms_p. If the timer is not scheduled (return value
@@ -73,5 +76,6 @@ bool task_timer_stop(TaskTimerManager *manager, TaskTimerID timer);
 bool task_timer_scheduled(TaskTimerManager *manager, TaskTimerID timer, uint32_t *expire_ms_p);
 
 //! Delete a timer
+//! @param[in] manager The manager that owns the timer
 //! @param[in] timer ID
 void task_timer_delete(TaskTimerManager *manager, TaskTimerID timer);

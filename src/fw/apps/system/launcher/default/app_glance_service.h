@@ -35,7 +35,7 @@ typedef struct LauncherAppGlanceService {
   KinoReel *generic_glance_icon;
   //! The resource ID of the generic glance icon
   uint32_t generic_glance_icon_resource_id;
-  //! A \ref KinoReelPlayer for the currently selected glance
+  //! A \ref KinoPlayer for the currently selected glance
   KinoPlayer glance_reel_player;
 } LauncherAppGlanceService;
 

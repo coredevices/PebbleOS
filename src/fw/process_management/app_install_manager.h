@@ -174,7 +174,7 @@ bool app_install_get_uuid_for_install_id(AppInstallId install_id, Uuid *uuid_out
 
 //! Gets whether the app is a watchface given an AppInstallId. This loads an entry to obtain its
 //! information, use \ref app_install_entry_is_watchface if your context has an AppInstallEntry.
-//! @param install_id AppInstallId of the application
+//! @param app_id AppInstallId of the application
 //! @return true if the app is a watchface, false otherwise
 bool app_install_is_watchface(AppInstallId app_id);
 

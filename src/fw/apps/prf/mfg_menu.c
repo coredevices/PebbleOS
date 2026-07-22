@@ -128,7 +128,7 @@ static void prv_battery_state_handler(BatteryChargeState charge) {
   layer_mark_dirty(simple_menu_layer_get_layer(data->menu_layer));
 }
 
-//! @param[out] out_items
+//! @param[out] out_menu_items
 static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
 
   // Define a const blueprint on the stack.

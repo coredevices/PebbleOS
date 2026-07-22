@@ -3,7 +3,8 @@
 
 #pragma once
 
-//! @file This file contains adapter code between Bluetopia's GATT APIs and
+//! @file
+//! This file contains adapter code between Bluetopia's GATT APIs and
 //! Pebble's GATT/API code. The functions in this file take the the internal
 //! reference types BLECharacteristic and BLEDescriptor to perform operations
 //! upon those remote resources. The implementation uses the functions

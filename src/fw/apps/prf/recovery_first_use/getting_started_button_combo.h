@@ -7,7 +7,7 @@
 #include "pbl/services/new_timer/new_timer.h"
 #include "util/bitset.h"
 
-//! @file prf_button_combo.h
+//! @file
 //!
 //! This file implements a monitor that watches which buttons are held down. This file looks for
 //! 3 combinations.

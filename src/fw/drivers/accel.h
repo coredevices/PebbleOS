@@ -102,9 +102,9 @@ uint32_t accel_get_sampling_interval(void);
 
 //! Set the max number of samples the driver may batch.
 //!
-//! @param n Maximum number of samples the driver can batch
+//! @param num_samples Maximum number of samples the driver can batch
 //!
-//! When n=0, the accelerometer driver must not call accel_cb_new_sample().
+//! When num_samples=0, the accelerometer driver must not call accel_cb_new_sample().
 //!
 //! When n=1, the accelerometer driver must call accel_cb_new_sample() for
 //! each sample as soon as the hardware has acquired it.
@@ -215,12 +215,15 @@ extern void accel_cb_shake_detected(IMUCoordinateAxis axis, int32_t direction);
 //!        negative axis
 extern void accel_cb_double_tap_detected(IMUCoordinateAxis axis, int32_t direction);
 
+//! Callback to be invoked from a thread context to perform offloaded driver work.
+typedef void (*AccelOffloadCallback)(void);
+
 //! Function called by driver when it needs to offload work from an ISR context.
 //! It is up to the implementer to decide how this should work
 //!
 //! @param cb The callback to be invoked from a thread context
-//! @param data Data to be passed to the callback, NULL if none
-typedef void (*AccelOffloadCallback)(void);
+//! @param should_context_switch Set to true if a context switch should be
+//!        performed when returning from the ISR
 extern void accel_offload_work_from_isr(AccelOffloadCallback cb, bool *should_context_switch);
 
 //! Function called by driver when it needs to offload work.

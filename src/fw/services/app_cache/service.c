@@ -27,7 +27,7 @@
 
 PBL_LOG_MODULE_DEFINE(service_app_cache, CONFIG_SERVICE_APP_CACHE_LOG_LEVEL);
 
-//! @file app_cache.c
+//! @file
 //! App Cache
 
 //! The App Cache keeps track of the install date, last launch, launch count, and size of an

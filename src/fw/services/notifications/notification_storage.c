@@ -155,7 +155,7 @@ static void prv_reclaim_space(size_t size_needed, int fd) {
   }
 }
 
-//! Check whether there exists @ref size_needed available space in storage after compression
+//! Check whether there exists @c size_needed available space in storage after compression
 static bool prv_is_storage_full(size_t size_needed, size_t *size_available, int fd) {
   *size_available = 0;
   NotificationIterState iter_state = {

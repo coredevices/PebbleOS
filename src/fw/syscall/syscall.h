@@ -304,6 +304,7 @@ WatchInfoColor sys_watch_info_get_color(void);
 //! @} // end addtogroup Foundation
 
 //! @addtogroup Preferences
+//! @{
 
 //! Users can toggle Quiet Time manually or on schedule. Watchfaces and apps should respect this
 //! choice and avoid disturbing actions such as vibration if quiet time is active.
