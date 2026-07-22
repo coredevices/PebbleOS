@@ -15,3 +15,4 @@ QUIET                  = YES
 HTML_COLORSTYLE        = LIGHT
 HTML_EXTRA_STYLESHEET  = doxygen-awesome-css/doxygen-awesome.css
 GENERATE_TAGFILE       = docs/_apidoc/apidoc/pebbleos.tag
+WARN_AS_ERROR          = FAIL_ON_WARNINGS
