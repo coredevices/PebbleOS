@@ -80,6 +80,23 @@ monitor using the `sendkey` command. The key mapping is:
 | `up`     | `up`         |
 | `down`   | `down`       |
 
+## Touch
+
+On touch-capable boards you can inject touch events into a running QEMU.
+Coordinates are given in screen pixels; the display size is read from the
+emulated `pebble-touch` device and scaled automatically.
+
+```shell
+./pbl touch 130 130                          # tap at (130, 130)
+./pbl swipe 130 220 130 40                   # swipe up (finger bottom -> top)
+./pbl swipe 130 220 130 40 --steps 20 --duration 0.4
+```
+
+Requires QEMU to be running; `./pbl qemu` exposes the QMP socket used for
+injection. A tap is a finger down then up; a swipe streams intermediate moves
+so that drag gestures are seen as continuous. Injection uses the
+absolute-pointer input path; multi-touch is not wired up in the device.
+
 ## Debug
 
 You can debug with GDB using:
