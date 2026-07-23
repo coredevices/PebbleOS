@@ -97,3 +97,8 @@ Notes:
 - The generator errors out on exports it cannot find in the parsed headers
   and on inconsistent revision numbers, but it does not verify that the
   resulting `pebble.h` compiles — review its output.
+- The comment ledger above `PROCESS_INFO_CURRENT_SDK_VERSION_MINOR` is the
+  only mapping between SDK revisions and version minors: no formula relates
+  them (the minor once jumped `0x19` → `0x20` between revs 35 and 36, and a
+  few minors and revs are skipped or doubled up). Treat the ledger as
+  append-only history.
