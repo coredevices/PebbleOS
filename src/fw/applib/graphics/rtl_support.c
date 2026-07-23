@@ -77,6 +77,28 @@ static bool prv_codepoint_is_numeric_separator(Codepoint cp) {
   return cp == ':' || cp == '/' || cp == '.' || cp == ',';
 }
 
+// Bidi mirrored punctuation: when an RTL run is reversed, a bracket must swap to
+// its mirror so it still opens toward the text it encloses. Without this, "(نص)"
+// reverses to ")نص(", with the parentheses pointing the wrong way. Covers the
+// Bidi_Mirrored pairs that turn up in watch text.
+static Codepoint prv_mirror_codepoint(Codepoint cp) {
+  switch (cp) {
+    case '(': return ')';
+    case ')': return '(';
+    case '[': return ']';
+    case ']': return '[';
+    case '{': return '}';
+    case '}': return '{';
+    case '<': return '>';
+    case '>': return '<';
+    case 0x00AB: return 0x00BB;  // « -> »
+    case 0x00BB: return 0x00AB;  // » -> «
+    case 0x2039: return 0x203A;  // ‹ -> ›
+    case 0x203A: return 0x2039;  // › -> ‹
+    default: return cp;
+  }
+}
+
 utf8_t *rtl_segment_content_end(utf8_t *start, utf8_t *end) {
   utf8_t *content_end = start;
   utf8_t *scan = start;
@@ -194,7 +216,7 @@ size_t utf8_reverse_for_rtl(const utf8_t *src, size_t src_len,
       break;
     }
 
-    size_t bytes_written = utf8_encode_codepoint(cp, dest + dest_offset);
+    size_t bytes_written = utf8_encode_codepoint(prv_mirror_codepoint(cp), dest + dest_offset);
     if (bytes_written == 0) {
       reverse_ptr = cp_start;
       continue;
