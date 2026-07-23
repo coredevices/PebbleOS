@@ -184,7 +184,7 @@ static uint32_t prv_get_glyph_data_offset(Codepoint codepoint, FontCache *font_c
   // Compute the offset of the glyph data (relative to the beginning
   // of the font blob).
   //
-  // See: https://pebbletechnology.atlassian.net/wiki/display/DEV/Pebble+Resource+Pack+Format
+  // See: docs/reference/formats/font.md
   uint32_t address;
   const uint32_t version = FONT_VERSION(font_res->md.version);
   if (version == FONT_VERSION_1) {
