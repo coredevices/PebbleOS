@@ -152,20 +152,22 @@ static bool prv_apply_relocations(const PebbleProcessInfo *info,
   uint8_t *reloc_table = prv_offset_to_address(destination, info->load_size);
 
   for (uint32_t i = 0; i < info->num_reloc_entries; ++i) {
-    // A target has to land on a word boundary inside the image and past the header,
-    // otherwise the write below is an out of bounds write in a privileged context
+    // A target has to land inside the image and past the header, otherwise the
+    // write below is an out of bounds write in a privileged context.
+    // Legacy SDK apps can have targets at non-word-aligned offsets (pointer
+    // slots inside packed structs), so slots are accessed bytewise as well
     uint32_t reloc_offset;
     memcpy(&reloc_offset, &reloc_table[i * sizeof(uint32_t)], sizeof(reloc_offset));
-    if (!prv_offset_is_word_aligned(reloc_offset) ||
-        !prv_offset_range_fits(reloc_offset, sizeof(uint32_t), info->load_size) ||
+    if (!prv_offset_range_fits(reloc_offset, sizeof(uint32_t), info->load_size) ||
         (reloc_offset < sizeof(PebbleProcessInfo))) {
       PBL_LOG_WRN("Invalid app relocation target[%"PRIu32"]: 0x%"PRIx32,
                   i, reloc_offset);
       return false;
     }
 
-    uint32_t *addr_to_change = prv_offset_to_address(destination, reloc_offset);
-    const uint32_t app_relative_value = *addr_to_change;
+    uint8_t *addr_to_change = prv_offset_to_address(destination, reloc_offset);
+    uint32_t app_relative_value;
+    memcpy(&app_relative_value, addr_to_change, sizeof(app_relative_value));
     // One past the end of an object is a valid pointer in C, you just cannot deref it
     // A value of exactly virtual_size points there, which is safe here since we never do
     if (app_relative_value > info->virtual_size) {
@@ -174,8 +176,9 @@ static bool prv_apply_relocations(const PebbleProcessInfo *info,
       return false;
     }
 
-    *addr_to_change = (uint32_t)(uintptr_t)prv_offset_to_address(destination,
-                                                                app_relative_value);
+    const uint32_t relocated_value =
+        (uint32_t)(uintptr_t)prv_offset_to_address(destination, app_relative_value);
+    memcpy(addr_to_change, &relocated_value, sizeof(relocated_value));
   }
 
   // The reloc table is loaded over the start of .bss, so we have to restore the zeros the app expects
