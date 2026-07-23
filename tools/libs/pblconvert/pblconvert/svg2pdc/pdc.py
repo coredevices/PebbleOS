@@ -159,25 +159,10 @@ def convert_to_png(pdc_data):
 
 
 class Command:
-    """
-    Draw command serialized structure:
-    | Bytes | Field
-    | 1     | Draw command type
-    | 1     | Reserved byte
-    | 1     | Stroke color
-    | 1     | Stroke width
-    | 1     | Fill color
-    For Paths:
-    | 1     | Open path
-    | 1     | Unused/Reserved
-    For Circles:
-    | 2     | Radius
-    Common:
-    | 2     | Number of points (should always be 1 for circles)
-    | n * 4 | Array of n points in the format below:
-    Point:
-    | 2     | x
-    | 2     | y
+    """Serialized draw command.
+
+    Format spec: docs/reference/formats/pdc.md; the canonical serializers
+    live in tools/generate_pdcs/pebble_commands.py.
     """
 
     def __init__(

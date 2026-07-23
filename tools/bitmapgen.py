@@ -56,14 +56,16 @@ DEFAULT_COLOR_REDUCTION = NEAREST
 # Bitmap struct only contains a color palette for GBitmapFormat(1/2/4)BitPalette
 
 # Bitmap struct (NB: All fields are little-endian)
+# See docs/reference/formats/pbi.md for the rendered spec.
 #             (uint16_t) row_size_bytes
 #             (uint16_t) info_flags
 #                    bit      0 : is heap allocated (must be zero for bitmap files)
-#                    bits  1-5  : bitmap_format
-#                    bits  6-11 : reserved, must be 0
+#                    bits  1-3  : bitmap_format
+#                    bit      4 : is palette heap allocated (must be zero for bitmap files)
+#                    bits  5-11 : reserved, must be 0
 #                    bits 12-15 : file version
-#             (int16_t)  bounds.origin.x
-#             (int16_t)  bounds.origin.y
+#             (int16_t)  bounds.origin.x (legacy, ignored by the firmware)
+#             (int16_t)  bounds.origin.y (legacy, ignored by the firmware)
 #             (int16_t)  bounds.size.w
 #             (int16_t)  bounds.size.h
 #             (uint8_t)[] image data (row_size_bytes-aligned, 0-padded rows of bits)
