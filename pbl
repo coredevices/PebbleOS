@@ -324,16 +324,23 @@ def _qemu_launch(env, options):
     if os.path.exists(mon_sock):
         os.unlink(mon_sock)
 
+    # QMP socket for programmatic input injection (e.g. `./pbl touch/swipe`).
+    qmp_sock = os.path.join(BUILD_DIR, "qmp.sock")
+    if os.path.exists(qmp_sock):
+        os.unlink(qmp_sock)
+
     cmd_line = (
         shlex.quote(qemu_bin) + " "
         "-rtc base=localtime "
         "-monitor stdio "
         "-monitor unix:{mon_sock},server=on,wait=off "
+        "-qmp unix:{qmp_sock},server=on,wait=off "
         "-s "
         "-serial file:uart1.log "
         "-serial tcp::12344,server=on,wait=off "  # pebble-tool
         "-serial tcp::12345,server=on,wait=off "  # console
-    ).format(mon_sock=shlex.quote(mon_sock)) + " ".join(machine_dep_args)
+    ).format(mon_sock=shlex.quote(mon_sock),
+             qmp_sock=shlex.quote(qmp_sock)) + " ".join(machine_dep_args)
     _pprint("CYAN", "QEMU command: {}".format(cmd_line))
     _run_shell(cmd_line)
 
@@ -390,6 +397,99 @@ def cmd_screenshot(env, options):
                .format(out_path, response))
 
     _pprint("CYAN", "Wrote screenshot to {}".format(out_path))
+
+
+QMP_ABS_MAX = 32767  # QEMU absolute-axis range for input-send-event
+
+
+def _qmp_connect():
+    """Connect to the running QEMU's QMP socket and return a command sender."""
+    import socket
+    import json
+
+    sock_path = os.path.join(BUILD_DIR, "qmp.sock")
+    if not os.path.exists(sock_path):
+        _fatal("QEMU QMP socket not found at {} -- is './pbl qemu' "
+               "running?".format(sock_path))
+    sock = socket.socket(socket.AF_UNIX)
+    sock.settimeout(5)
+    sock.connect(sock_path)
+    stream = sock.makefile("rw")
+    stream.readline()  # greeting
+
+    def cmd(obj):
+        stream.write(json.dumps(obj) + "\n")
+        stream.flush()
+        return json.loads(stream.readline())
+
+    cmd({"execute": "qmp_capabilities"})
+    return cmd
+
+
+def _qmp_touch_display(cmd):
+    """Locate the pebble-touch device and return its (width, height) in pixels."""
+    stack = ["/machine"]
+    while stack:
+        path = stack.pop()
+        for entry in cmd({"execute": "qom-list",
+                          "arguments": {"path": path}}).get("return", []):
+            if not entry.get("type", "").startswith("child<"):
+                continue
+            child = path + "/" + entry["name"]
+            if "touch" in entry["name"].lower() or "touch" in entry.get("type", "").lower():
+                width = cmd({"execute": "qom-get", "arguments": {
+                    "path": child, "property": "display-width"}})["return"]
+                height = cmd({"execute": "qom-get", "arguments": {
+                    "path": child, "property": "display-height"}})["return"]
+                return width, height
+            stack.append(child)
+    _fatal("pebble-touch device not found in the QEMU machine")
+
+
+def _qmp_abs_events(width, height, px, py):
+    ax = int(px / width * QMP_ABS_MAX)
+    ay = int(py / height * QMP_ABS_MAX)
+    return [{"type": "abs", "data": {"axis": "x", "value": ax}},
+            {"type": "abs", "data": {"axis": "y", "value": ay}}]
+
+
+def _qmp_send(cmd, events):
+    cmd({"execute": "input-send-event", "arguments": {"events": events}})
+
+
+def cmd_touch(env, options):
+    """Inject a single touch tap (finger down then up) at a pixel coordinate."""
+    import time
+
+    cmd = _qmp_connect()
+    width, height = _qmp_touch_display(cmd)
+    _qmp_send(cmd, _qmp_abs_events(width, height, options.x, options.y) +
+              [{"type": "btn", "data": {"button": "left", "down": True}}])
+    time.sleep(0.05)
+    _qmp_send(cmd, [{"type": "btn", "data": {"button": "left", "down": False}}])
+    _pprint("CYAN", "Tapped ({}, {}) on {}x{}".format(
+        options.x, options.y, width, height))
+
+
+def cmd_swipe(env, options):
+    """Inject a touch swipe from (x1, y1) to (x2, y2)."""
+    import time
+
+    cmd = _qmp_connect()
+    width, height = _qmp_touch_display(cmd)
+    x1, y1, x2, y2 = options.x1, options.y1, options.x2, options.y2
+    steps = max(1, options.steps)
+    _qmp_send(cmd, _qmp_abs_events(width, height, x1, y1) +
+              [{"type": "btn", "data": {"button": "left", "down": True}}])
+    dt = options.duration / steps
+    for i in range(1, steps + 1):
+        px = x1 + (x2 - x1) * i // steps
+        py = y1 + (y2 - y1) * i // steps
+        _qmp_send(cmd, _qmp_abs_events(width, height, px, py))
+        time.sleep(dt)
+    _qmp_send(cmd, [{"type": "btn", "data": {"button": "left", "down": False}}])
+    _pprint("CYAN", "Swiped ({}, {}) -> ({}, {}) on {}x{}".format(
+        x1, y1, x2, y2, width, height))
 
 
 def cmd_openocd(env, options):
@@ -662,6 +762,8 @@ OPERATIONAL = {
     "debug": cmd_debug,
     "qemu": cmd_qemu,
     "screenshot": cmd_screenshot,
+    "touch": cmd_touch,
+    "swipe": cmd_swipe,
     "openocd": cmd_openocd,
     "reset": cmd_reset,
     "run": cmd_run,
@@ -714,6 +816,19 @@ def build_parser():
                    help="Keep the existing QEMU SPI flash image instead of rebuilding it")
     p.add_argument("--qemu-decoration", default=None, choices=QEMU_DECORATION_CHOICES,
                    help="SDL decoration for QEMU (defaults to the per-board default)")
+
+    p = sub.add_parser("touch", help="Inject a touch tap into running QEMU (pixels)")
+    p.add_argument("x", type=int, help="x coordinate in screen pixels")
+    p.add_argument("y", type=int, help="y coordinate in screen pixels")
+
+    p = sub.add_parser("swipe", help="Inject a touch swipe into running QEMU (pixels)")
+    p.add_argument("x1", type=int, help="start x in screen pixels")
+    p.add_argument("y1", type=int, help="start y in screen pixels")
+    p.add_argument("x2", type=int, help="end x in screen pixels")
+    p.add_argument("y2", type=int, help="end y in screen pixels")
+    p.add_argument("--steps", type=int, default=12, help="number of move steps")
+    p.add_argument("--duration", type=float, default=0.25,
+                   help="total swipe duration in seconds")
 
     p = sub.add_parser("screenshot", help="Capture a screenshot of running QEMU")
     p.add_argument("--screenshot-output", default=None,
