@@ -10,6 +10,7 @@
 #include "pbl/services/touch/touch_event.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #include "fake_events.h"
@@ -296,4 +297,87 @@ void test_touch__global_disable_sleeps_unsubscribed_sensor(void) {
   cl_assert(s_touch_sensor_disable_count >= 1);
 
   touch_service_set_globally_enabled(true);
+}
+
+void test_touch__wake_gate_formula(void) {
+  // (before=F, after=T) -> woke the screen -> latch.
+  cl_assert(touch_wake_gate_on_touchdown(true, false, false, true).latch);
+  // Already on (T, T) -> navigation.
+  cl_assert(!touch_wake_gate_on_touchdown(true, false, true, true).latch);
+  // Off and stayed off (F, F), no DnD (day/ALS) -> navigation.
+  cl_assert(!touch_wake_gate_on_touchdown(true, false, false, false).latch);
+  // DnD suppressed the wake while off -> still a wake tap -> latch.
+  cl_assert(touch_wake_gate_on_touchdown(true, true, false, false).latch);
+  // DnD but screen already on -> navigation.
+  cl_assert(!touch_wake_gate_on_touchdown(true, true, true, true).latch);
+}
+
+void test_touch__wake_gate_guard_matrix(void) {
+  // No backlight driver: never latches.
+  TouchWakeGateResult none = touch_wake_gate_on_touchdown(false, false, false, true);
+  cl_assert(!none.latch);
+
+  // Driven, no DnD: latch strictly by the formula.
+  TouchWakeGateResult driven = touch_wake_gate_on_touchdown(true, false, false, true);
+  cl_assert(driven.latch);
+
+  // Driven, DnD: latch == !before.
+  cl_assert(touch_wake_gate_on_touchdown(true, true, false, false).latch);
+  cl_assert(!touch_wake_gate_on_touchdown(true, true, true, true).latch);
+}
+
+void test_touch__wake_gate_latches_across_gesture(void) {
+  // A wake Touchdown stamps non_navigational and latches it for the gesture.
+  TouchWakeGateResult woke = touch_wake_gate_on_touchdown(true, false, false, true);
+  TouchEvent td = {.type = TouchEvent_Touchdown};
+  touch_wake_gate_stamp(&td, woke);
+  cl_assert(td.non_navigational);
+
+  // PositionUpdate and Liftoff carry the latch, regardless of their gate arg.
+  TouchEvent pu = {.type = TouchEvent_PositionUpdate};
+  touch_wake_gate_stamp(&pu, (TouchWakeGateResult){0});
+  cl_assert(pu.non_navigational);
+
+  TouchEvent lo = {.type = TouchEvent_Liftoff};
+  touch_wake_gate_stamp(&lo, (TouchWakeGateResult){0});
+  cl_assert(lo.non_navigational);
+
+  // A fresh navigational Touchdown clears the latch for the next gesture.
+  TouchWakeGateResult nav = touch_wake_gate_on_touchdown(true, false, false, false);
+  TouchEvent td2 = {.type = TouchEvent_Touchdown};
+  touch_wake_gate_stamp(&td2, nav);
+  cl_assert(!td2.non_navigational);
+
+  TouchEvent pu2 = {.type = TouchEvent_PositionUpdate};
+  touch_wake_gate_stamp(&pu2, (TouchWakeGateResult){0});
+  cl_assert(!pu2.non_navigational);
+}
+
+void test_touch__toggle_off_with_finger_down_emits_liftoff(void) {
+  // Finger down, then the global toggle goes off: a Liftoff must be synthesized
+  // with the last coordinates (not zeros) so the backlight hold unwinds.
+  touch_handle_update(TouchState_FingerDown, 30, 40);
+  fake_event_reset_count();
+
+  touch_service_set_globally_enabled(false);
+  cl_assert_equal_i(fake_event_get_count(), 1);
+  prv_assert_touch_event(TouchEvent_Liftoff, 30, 40);
+
+  touch_service_set_globally_enabled(true);
+}
+
+void test_touch__toggle_off_without_finger_no_liftoff(void) {
+  // No finger down: toggling off must not fabricate a Liftoff.
+  fake_event_reset_count();
+  touch_service_set_globally_enabled(false);
+  cl_assert_equal_i(fake_event_get_count(), 0);
+  touch_service_set_globally_enabled(true);
+}
+
+void test_touch__event_abi_unchanged(void) {
+  // The wake flag rides in the padding after type:8; x/y offsets and the
+  // overall size must not move, keeping the SDK struct app-compatible.
+  cl_assert_equal_i(offsetof(TouchEvent, x), 2);
+  cl_assert_equal_i(offsetof(TouchEvent, y), 4);
+  cl_assert(sizeof(TouchEvent) <= 9);
 }

@@ -54,6 +54,35 @@ void touch_handle_gesture(TouchGesture gesture, int16_t x, int16_t y);
 //! Reset the touch service.
 void touch_reset(void);
 
+//! Emit a synthetic Liftoff for an in-progress touch, using the last known
+//! coordinates, so backlight hold counters and gesture state unwind cleanly
+//! when touch is torn down with a finger still on the screen. No-op if no
+//! finger is currently down. Reused by the master-pref-off transaction.
+void touch_release_active(void);
+
+//! Outcome of the wake-gate decision made on a Touchdown.
+typedef struct TouchWakeGateResult {
+  //! true when the touch is a wake tap (or DnD-suppressed touch) that must not
+  //! drive navigation. false whenever nothing drives the backlight for this
+  //! touch, so no consumer needs a separate early-exit signal.
+  bool latch;
+} TouchWakeGateResult;
+
+//! Pure wake-gate decision, factored out so it is unit-testable independently
+//! of the kernel event loop. Given the backlight state sampled around the
+//! touch-driven wake, decide whether this Touchdown is non-navigational.
+//! @param backlight_driven whether a subscriber ties the backlight to touch
+//! @param dnd whether DnD suppresses the touch backlight for this touch
+//! @param before light_is_on() sampled before the touch-driven wake
+//! @param after light_is_on() sampled after the touch-driven wake
+TouchWakeGateResult touch_wake_gate_on_touchdown(bool backlight_driven, bool dnd, bool before,
+                                                 bool after);
+
+//! Stamp non_navigational onto a touch event, latching the Touchdown decision
+//! across the whole gesture. @p gate is only consulted on a Touchdown event;
+//! PositionUpdate and Liftoff carry the latched value.
+void touch_wake_gate_stamp(TouchEvent *event, TouchWakeGateResult gate);
+
 //! Set whether the display is rotated 180° (left-hand mode). When rotated,
 //! incoming touch coordinates are mirrored to match the rotated framebuffer
 //! before being dispatched to subscribers.

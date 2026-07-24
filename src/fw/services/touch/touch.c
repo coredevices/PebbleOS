@@ -86,6 +86,10 @@ void touch_service_set_globally_enabled(bool enabled) {
 
   touch_sensor_set_enabled(sensor_enabled);
   if (!enabled) {
+    // A finger down when touch is torn down never gets a Liftoff otherwise, so
+    // the backlight hold counter stays pinned. Synthesize one before the reset
+    // zeroes the last coordinates.
+    touch_release_active();
     // Avoid delivering stale position on re-enable.
     touch_reset();
   }
@@ -224,6 +228,41 @@ void touch_reset(void) {
   s_last_x = 0;
   s_last_y = 0;
   mutex_unlock(s_touch_mutex);
+}
+
+void touch_release_active(void) {
+  mutex_lock(s_touch_mutex);
+  const bool was_down = (s_touch_state == TouchState_FingerDown);
+  const int16_t x = s_last_x;
+  const int16_t y = s_last_y;
+  s_touch_state = TouchState_FingerUp;
+  mutex_unlock(s_touch_mutex);
+
+  if (was_down) {
+    PBL_LOG_DBG("Touch: synthetic Liftoff @ (%" PRId16 ", %" PRId16 ")", x, y);
+    prv_put_touch_event(TouchEvent_Liftoff, x, y);
+  }
+}
+
+TouchWakeGateResult touch_wake_gate_on_touchdown(bool backlight_driven, bool dnd, bool before,
+                                                 bool after) {
+  if (!backlight_driven) {
+    // Nothing drives the backlight for this touch: it never latches.
+    return (TouchWakeGateResult){.latch = false};
+  }
+  // Non-navigational when the screen was off and this touch woke it (or DnD
+  // suppressed the wake while it was off): the tap targets the wake, not the UI.
+  const bool latch = (!before && after) || (!before && dnd);
+  return (TouchWakeGateResult){.latch = latch};
+}
+
+static bool s_wake_gate_latch;
+
+void touch_wake_gate_stamp(TouchEvent *event, TouchWakeGateResult gate) {
+  if (event->type == TouchEvent_Touchdown) {
+    s_wake_gate_latch = gate.latch;
+  }
+  event->non_navigational = s_wake_gate_latch;
 }
 
 void touch_set_rotated(bool rotated) {
