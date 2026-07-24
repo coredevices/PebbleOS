@@ -5,7 +5,15 @@
 #include "pebble_asserts.h"
 
 #include "applib/ui/menu_layer.h"
+#include "applib/ui/menu_layer_private.h"
 #include "applib/ui/content_indicator_private.h"
+#include "applib/ui/recognizer/recognizer.h"
+#include "applib/ui/recognizer/recognizer_list.h"
+#include "applib/ui/recognizer/recognizer_manager.h"
+#include "applib/ui/recognizer/touch_nav.h"
+
+#include "fake_rtc.h"
+#include "pbl/drivers/rtc.h"
 
 // Stubs
 /////////////////////
@@ -21,6 +29,57 @@
 #include "stubs_process_manager.h"
 #include "stubs_unobstructed_area.h"
 #include "stubs_vibes.h"
+
+// ---------------------------------------------------------------------------------------------
+// Touch-navigation harness (CONFIG_TOUCH). menu_layer.c resolves the per-task touch-nav state
+// through these accessors; the recognizer manager needs a few window/layer collaborators to link.
+
+static bool s_nav_enabled = true;
+bool touch_nav_enabled(void) { return s_nav_enabled; }
+
+static TouchNavState s_touch_nav_state;
+struct TouchNavState *app_state_get_touch_nav_state(void) { return &s_touch_nav_state; }
+struct TouchNavState *modal_manager_get_touch_nav_state(void) { return &s_touch_nav_state; }
+
+static Layer s_root_layer;               // window root, holds the menu under test while driving pans
+static RecognizerManager s_recognizer_manager;
+static RecognizerList s_global_list;
+
+struct Layer *window_get_root_layer(const Window *window) { return &s_root_layer; }
+RecognizerList *window_get_recognizer_list(Window *window) { return NULL; }
+RecognizerManager *window_get_recognizer_manager(Window *window) { return &s_recognizer_manager; }
+
+// Fake bridge ops so swipe-left BACK is observable.
+typedef struct FakeBridgeOps {
+  bool overrides_back;
+  int pop_count;
+  int emit_count;
+  ButtonId last_emit;
+} FakeBridgeOps;
+static FakeBridgeOps s_bridge;
+static bool prv_bridge_top_overrides_back(void *ctx) { return ((FakeBridgeOps *)ctx)->overrides_back; }
+static void prv_bridge_pop_top(void *ctx) { ((FakeBridgeOps *)ctx)->pop_count++; }
+static void prv_bridge_emit_button(void *ctx, ButtonId b) {
+  FakeBridgeOps *o = ctx; o->emit_count++; o->last_emit = b;
+}
+static TouchNavOps s_bridge_ops;
+
+// Bring up a real per-task touch-nav state so menu_layer_init() registers into a live registry.
+static void prv_touch_nav_setup(void) {
+  s_bridge = (FakeBridgeOps){0};
+  s_bridge_ops = (TouchNavOps){
+    .top_overrides_back = prv_bridge_top_overrides_back,
+    .pop_top = prv_bridge_pop_top,
+    .emit_button = prv_bridge_emit_button,
+    .ctx = &s_bridge,
+  };
+  layer_init(&s_root_layer, &GRect(0, 0, 200, 400));
+  recognizer_list_init(&s_global_list);
+  recognizer_manager_init(&s_recognizer_manager);
+  s_recognizer_manager.window = (Window *)&s_root_layer;  // non-NULL sentinel
+  s_recognizer_manager.global_list = &s_global_list;
+  touch_nav_state_init(&s_touch_nav_state, &s_recognizer_manager, &s_bridge_ops);
+}
 
 
 // Fakes
@@ -83,6 +142,13 @@ static uint16_t s_num_rows;
 
 void test_menu_layer__initialize(void) {
   s_num_rows = 10;
+  fake_rtc_init(0, 0);
+  s_nav_enabled = true;
+  // A zeroed state has a NULL manager, so menu_layer_init() registration is inert for the tests
+  // that do not opt into the touch-nav harness (prv_touch_nav_setup()).
+  s_touch_nav_state = (TouchNavState){0};
+  process_manager_set_compiled_with_legacy2_sdk(false);
+  menu_layer_touch_nav_reset_all();
 }
 
 void test_menu_layer__cleanup(void) {
@@ -504,4 +570,720 @@ void test_menu_layer__center_focused_updates_height_on_reload(void) {
   menu_layer_reload_data(&l);
   cl_assert_equal_i(s_num_rows - 1, l.selection.index.row);
   cl_assert_equal_i(focused_height, l.selection.h);
+}
+
+// =============================================================================================
+// Tier-1 touch navigation
+// =============================================================================================
+
+// ---- Shared callbacks / observation for the touch handlers ----
+
+typedef enum {
+  WillChange_Passthrough,
+  WillChange_Veto,
+  WillChange_Redirect,
+} WillChangeMode;
+
+static int s_will_change_count;
+static MenuIndex s_will_change_candidate;   // value of *new_index observed on entry
+static MenuIndex s_will_change_old;
+static int s_selection_changed_count;
+static int s_select_click_count;
+static MenuIndex s_select_click_index;
+static WillChangeMode s_will_change_mode;
+static MenuIndex s_will_change_redirect;
+
+static void prv_reset_touch_counters(void) {
+  s_will_change_count = 0;
+  s_selection_changed_count = 0;
+  s_select_click_count = 0;
+  s_will_change_mode = WillChange_Passthrough;
+}
+
+static void prv_touch_will_change(struct MenuLayer *m, MenuIndex *new_index, MenuIndex old_index,
+                                  void *ctx) {
+  s_will_change_count++;
+  s_will_change_candidate = *new_index;
+  s_will_change_old = old_index;
+  switch (s_will_change_mode) {
+    case WillChange_Veto:     *new_index = old_index; break;
+    case WillChange_Redirect: *new_index = s_will_change_redirect; break;
+    case WillChange_Passthrough: break;
+  }
+}
+
+static void prv_touch_selection_changed(struct MenuLayer *m, MenuIndex new_index,
+                                        MenuIndex old_index, void *ctx) {
+  s_selection_changed_count++;
+}
+
+static void prv_touch_select_click(struct MenuLayer *m, MenuIndex *index, void *ctx) {
+  s_select_click_count++;
+  s_select_click_index = *index;
+}
+
+static void prv_set_touch_callbacks(MenuLayer *l) {
+  menu_layer_set_callbacks(l, NULL, &(MenuLayerCallbacks){
+    .draw_row = prv_draw_row,
+    .get_num_rows = prv_get_num_rows,
+    .selection_will_change = prv_touch_will_change,
+    .selection_changed = prv_touch_selection_changed,
+    .select_click = prv_touch_select_click,
+  });
+}
+
+// ---- Criterion 1: hit-test with section headers ----
+
+static uint16_t prv_two_sections(struct MenuLayer *m, void *ctx) { return 2; }
+static uint16_t prv_five_rows(struct MenuLayer *m, uint16_t s, void *ctx) { return 5; }
+static int16_t prv_header_20(struct MenuLayer *m, uint16_t s, void *ctx) { return 20; }
+static int16_t prv_sep_0(struct MenuLayer *m, MenuIndex *i, void *ctx) { return 0; }
+
+void test_menu_layer__touch_hit_test_with_headers(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 168));
+  menu_layer_set_callbacks(&l, NULL, &(MenuLayerCallbacks){
+    .draw_row = prv_draw_row,
+    .get_num_rows = prv_five_rows,
+    .get_num_sections = prv_two_sections,
+    .get_header_height = prv_header_20,
+    .draw_header = (MenuLayerDrawHeaderCallback)prv_draw_row,
+    .get_separator_height = prv_sep_0,
+  });
+  menu_layer_reload_data(&l);
+
+  // Use the real per-row geometry: focus a row in section 1 (past a header) and hit-test its centre.
+  menu_layer_set_selected_index(&l, MenuIndex(1, 2), MenuRowAlignNone, false);
+  const int16_t row_y = l.selection.y + l.selection.h / 2;
+  MenuIndex hit;
+  cl_assert(menu_layer_touch_find_row_at_content_y(&l, row_y, &hit));
+  cl_assert_equal_i(hit.section, 1);
+  cl_assert_equal_i(hit.row, 2);
+
+  // A y inside the section-1 header (just above the first row of section 1) is not a selectable row.
+  menu_layer_set_selected_index(&l, MenuIndex(1, 0), MenuRowAlignNone, false);
+  const int16_t header_y = l.selection.y - 10;  // within the 20px header above row (1, 0)
+  MenuIndex miss;
+  cl_assert(!menu_layer_touch_find_row_at_content_y(&l, header_y, &miss));
+
+  // The row boundary is half-open [top, bottom): a hit exactly on a row's bottom edge belongs to
+  // the NEXT row, not the current one (pins the < vs <= at the boundary).
+  menu_layer_set_selected_index(&l, MenuIndex(1, 2), MenuRowAlignNone, false);
+  const int16_t edge_y = l.selection.y + l.selection.h;  // exact bottom of row (1, 2) == top of (1, 3)
+  MenuIndex edge;
+  cl_assert(menu_layer_touch_find_row_at_content_y(&l, edge_y, &edge));
+  cl_assert_equal_i(edge.section, 1);
+  cl_assert_equal_i(edge.row, 3);
+}
+
+// The screen->content conversion accounts for the scroll offset (as under a status bar).
+void test_menu_layer__touch_tap_accounts_for_scroll_offset(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  // Scroll down two rows, then tap near the top of the frame: content_y = 22 - (-88) = 110 => row 2.
+  scroll_layer_set_content_offset(&l.scroll_layer, GPoint(0, -88), false);
+  prv_reset_touch_counters();
+  menu_layer_touch_handle_tap(&l, GPoint(72, 22));
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 2);
+}
+
+// A menu inset below the status bar: the tap point is in screen space, so it must be mapped through
+// the scroll layer's global frame. A tap at screen y = 56 on a menu whose frame starts at y = 16 is
+// frame-relative y = 40 -> row 0 (44px rows). Without the global-frame conversion content_y would be
+// 56 -> row 1, i.e. the bottom of every row would activate the next row down.
+void test_menu_layer__touch_tap_below_status_bar(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 16, 144, 180));
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  prv_reset_touch_counters();
+  menu_layer_touch_handle_tap(&l, GPoint(72, 56));
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 0);
+}
+
+// ---- Criterion 2: a pan (Liftoff) settles the offset only and NEVER moves the selection ----
+
+// Scrolling down then lifting off must leave the selection index exactly where it was (it may even
+// scroll off-screen) and must not run the selection contract or activate anything.
+void test_menu_layer__touch_snap_leaves_selection_unchanged(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  menu_layer_set_selected_index(&l, MenuIndex(0, 1), MenuRowAlignNone, false);
+  const MenuIndex before = menu_layer_get_selected_index(&l);
+  prv_reset_touch_counters();
+  // A downward pan of -88 (two rows) then Liftoff: offset settles, selection stays on row 1.
+  menu_layer_touch_handle_snap(&l, GPoint(0, 0), GPoint(0, -88));
+  const MenuIndex after = menu_layer_get_selected_index(&l);
+  cl_assert_equal_i(after.section, before.section);
+  cl_assert_equal_i(after.row, before.row);                    // selection unchanged
+  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, -88);  // offset settled
+  cl_assert_equal_i(s_will_change_count, 0);                   // no selection contract on a pan
+  cl_assert_equal_i(s_selection_changed_count, 0);
+  cl_assert_equal_i(s_select_click_count, 0);                  // no activation
+}
+
+// The same for an upward pan (scroll back toward the top): selection is still frozen.
+void test_menu_layer__touch_snap_up_leaves_selection_unchanged(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  menu_layer_set_selected_index(&l, MenuIndex(0, 4), MenuRowAlignCenter, false);
+  scroll_layer_set_content_offset(&l.scroll_layer, GPoint(0, -176), false);
+  const MenuIndex before = menu_layer_get_selected_index(&l);
+  prv_reset_touch_counters();
+  menu_layer_touch_handle_snap(&l, GPoint(0, -176), GPoint(0, 88));  // pan up two rows, Liftoff
+  const MenuIndex after = menu_layer_get_selected_index(&l);
+  cl_assert_equal_i(after.row, before.row);                    // selection unchanged
+  cl_assert_equal_i(s_will_change_count, 0);
+  cl_assert_equal_i(s_select_click_count, 0);
+}
+
+void test_menu_layer__touch_snap_center_focused_leaves_selection_unchanged(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  menu_layer_set_center_focused(&l, true);
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  menu_layer_set_selected_index(&l, MenuIndex(0, 3), MenuRowAlignCenter, false);
+  const MenuIndex before = menu_layer_get_selected_index(&l);
+  const int16_t base_offset = scroll_layer_get_content_offset(&l.scroll_layer).y;
+  prv_reset_touch_counters();
+
+  // #27 decision: free scroll everywhere, including center_focused. A pan Liftoff must only settle
+  // the offset, never re-centre the selection back to the middle.
+  menu_layer_touch_handle_snap(&l, GPoint(0, base_offset), GPoint(0, -50));
+  const MenuIndex after = menu_layer_get_selected_index(&l);
+  cl_assert_equal_i(after.row, before.row);                            // selection unchanged
+  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, base_offset - 50);  // settled
+  cl_assert_equal_i(s_will_change_count, 0);
+  cl_assert_equal_i(s_select_click_count, 0);
+}
+
+// ---- Criterion 3: tap selects, a second tap on the selected row activates ----
+
+// A tap on a row that is NOT the current selection only selects it (through the will_change
+// contract) and centres it — it must NOT activate. Activation is the second tap.
+void test_menu_layer__touch_tap_unselected_selects_no_activate(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  prv_reset_touch_counters();
+  s_will_change_mode = WillChange_Passthrough;
+  // Default selection is row 0; tap row 2 (unselected).
+  menu_layer_touch_handle_tap(&l, GPoint(72, 2 * 44 + 22));  // row 2, offset 0
+  cl_assert_equal_i(s_will_change_count, 1);                 // the full contract ran
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 2);  // selection moved to the tapped row
+  cl_assert_equal_i(s_select_click_count, 0);               // but it did NOT activate
+}
+
+// A tap on the row that IS the current selection activates it, without re-running the contract.
+void test_menu_layer__touch_tap_selected_activates(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  menu_layer_set_selected_index(&l, MenuIndex(0, 2), MenuRowAlignNone, false);  // select, no scroll
+  prv_reset_touch_counters();
+  menu_layer_touch_handle_tap(&l, GPoint(72, 2 * 44 + 22));  // tap the already-selected row 2
+  cl_assert_equal_i(s_select_click_count, 1);               // activated
+  cl_assert_equal_i(s_select_click_index.row, 2);
+  cl_assert_equal_i(s_will_change_count, 0);                // no reselection contract on the selected row
+}
+
+// Animation robustness: the "tapped == selection" check keys off the committed selection INDEX, not
+// the on-screen position. A selection can be committed to a row that is still off-centre (mid-flight
+// toward the centre); a tap landing on it must still ACTIVATE, so a fast double tap in one spot
+// launches the row even though it has not finished animating to the centre.
+void test_menu_layer__touch_tap_selected_offcentre_activates(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  // Commit selection to row 3 but leave it OFF-CENTRE (screen centre is 90; row 3 sits at ~154).
+  menu_layer_set_selected_index(&l, MenuIndex(0, 3), MenuRowAlignNone, false);
+  prv_reset_touch_counters();
+  menu_layer_touch_handle_tap(&l, GPoint(72, 3 * 44 + 22));  // tap where row 3 currently sits
+  cl_assert_equal_i(s_select_click_count, 1);               // activated despite not being centred
+  cl_assert_equal_i(s_select_click_index.row, 3);
+  cl_assert_equal_i(s_will_change_count, 0);
+}
+
+void test_menu_layer__touch_tap_veto_no_select_no_activate(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  prv_reset_touch_counters();
+  s_will_change_mode = WillChange_Veto;
+  menu_layer_touch_handle_tap(&l, GPoint(72, 2 * 44 + 22));  // taps row 2, but veto keeps row 0
+  cl_assert_equal_i(s_will_change_count, 1);
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 0);  // no selection change
+  cl_assert_equal_i(s_select_click_count, 0);                   // no activation
+}
+
+void test_menu_layer__touch_tap_redirect_selects_without_activating(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  prv_reset_touch_counters();
+  s_will_change_mode = WillChange_Redirect;
+  s_will_change_redirect = MenuIndex(0, 5);
+  menu_layer_touch_handle_tap(&l, GPoint(72, 2 * 44 + 22));  // taps row 2, redirected to row 5
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 5);  // selected the third row
+  cl_assert_equal_i(s_select_click_count, 0);                   // but did NOT activate
+}
+
+// ---- Criterion 3a: double-tap window (fast double tap in one spot on an animated menu) ----
+
+// The case the naive index compare CANNOT handle: on an animated (non-center_focused) menu, tap 1
+// selects a row and it starts sliding to the centre; tap 2 in the SAME screen spot now hit-tests a
+// DIFFERENT row, yet must ACTIVATE the row tap 1 selected (via the double-tap window), not re-select.
+void test_menu_layer__touch_double_tap_same_spot_activates(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));  // non-center_focused => animated selection
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  prv_reset_touch_counters();
+  s_will_change_mode = WillChange_Passthrough;
+
+  // Tap 1: selects row 3 and arms the window. No activation yet.
+  menu_layer_touch_handle_tap(&l, GPoint(72, 3 * 44 + 22));  // screen y 154, offset 0 => row 3
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 3);
+  cl_assert_equal_i(s_select_click_count, 0);
+
+  // Simulate row 3 sliding toward the centre: scroll so the SAME screen point sits on another row.
+  scroll_layer_set_content_offset(&l.scroll_layer, GPoint(0, -66), false);
+  MenuIndex probe;  // content_y = 154 - (-66) = 220 => row 5, a DIFFERENT row than the selected 3
+  cl_assert(menu_layer_touch_find_row_at_content_y(&l, 154 + 66, &probe));
+  cl_assert(probe.row != 3);
+
+  // Tap 2 in the same spot, well within the 300ms window: activates the RECORDED row 3, not the
+  // neighbour the tap now hit-tests, and runs no new will_change contract.
+  fake_rtc_increment_ticks((RtcTicks)100 * RTC_TICKS_HZ / 1000);  // +100ms < 300ms
+  prv_reset_touch_counters();
+  menu_layer_touch_handle_tap(&l, GPoint(72, 3 * 44 + 22));
+  cl_assert_equal_i(s_select_click_count, 1);
+  cl_assert_equal_i(s_select_click_index.row, 3);   // the selected row, NOT the hit-tested neighbour
+  cl_assert_equal_i(s_will_change_count, 0);
+}
+
+// A second tap AFTER the window (> 300ms) is a fresh single tap: it selects the newly tapped row and
+// does not activate the earlier one.
+void test_menu_layer__touch_tap_after_window_selects(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  prv_reset_touch_counters();
+  s_will_change_mode = WillChange_Passthrough;
+
+  menu_layer_touch_handle_tap(&l, GPoint(72, 1 * 44 + 22));  // tap row 1: selects + arms window
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 1);
+  cl_assert_equal_i(s_select_click_count, 0);
+
+  // Let the window lapse, then tap a different visible row from a clean offset.
+  fake_rtc_increment_ticks((RtcTicks)400 * RTC_TICKS_HZ / 1000);  // +400ms > 300ms
+  scroll_layer_set_content_offset(&l.scroll_layer, GPoint(0, 0), false);
+  prv_reset_touch_counters();
+  menu_layer_touch_handle_tap(&l, GPoint(72, 3 * 44 + 22));  // row 3
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 3);  // selected the new row
+  cl_assert_equal_i(s_select_click_count, 0);                   // did NOT activate the old one
+}
+
+void test_menu_layer__touch_double_tap_records_clamped_selection(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  prv_reset_touch_counters();
+
+  // Tap 1: will_change redirects to an out-of-range row; menu_layer_set_selected_index clamps it to
+  // the last valid row. The recorded double-tap index must be that CLAMPED selection, not the raw
+  // out-of-range will_change output.
+  s_will_change_mode = WillChange_Redirect;
+  s_will_change_redirect = MenuIndex(0, 999);
+  menu_layer_touch_handle_tap(&l, GPoint(72, 2 * 44 + 22));  // taps row 2, redirected out of range
+  const uint16_t clamped_row = menu_layer_get_selected_index(&l).row;
+  cl_assert(clamped_row < 999);                 // proved clamped to a valid row
+  cl_assert_equal_i(s_select_click_count, 0);   // selected, not activated
+
+  // Tap 2 inside the window: priority 1 activates the RECORDED index, which must be the clamped row,
+  // never the out-of-range 999 a client redirect asked for.
+  fake_rtc_increment_ticks((RtcTicks)100 * RTC_TICKS_HZ / 1000);  // +100ms < 300ms
+  prv_reset_touch_counters();
+  menu_layer_touch_handle_tap(&l, GPoint(72, 2 * 44 + 22));
+  cl_assert_equal_i(s_select_click_count, 1);
+  cl_assert_equal_i(s_select_click_index.row, clamped_row);  // clamped, NOT the out-of-range 999
+}
+
+// Fix B: a vetoed tap must change NOTHING — in particular it must not re-centre the (off-centre) old
+// selection. A vetoed tap on a visible other row must not call set_selected_index at all, so the
+// scroll offset stays exactly where it was and nothing activates.
+//
+// A center_focused menu is used so the re-centre would be SYNCHRONOUS (the tap passes
+// animated=!center_focused=false): set_selected_index's scroll is applied immediately instead of via
+// a deferred animation, making the "did it re-centre?" question observable in a unit test. The veto
+// early-return branch exercised here is the same one used by ordinary menus.
+void test_menu_layer__touch_tap_veto_does_not_recenter(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  menu_layer_set_center_focused(&l, true);
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  // Commit selection to row 3 (centred), then a free scroll pushes it off-centre.
+  menu_layer_set_selected_index(&l, MenuIndex(0, 3), MenuRowAlignCenter, false);
+  scroll_layer_set_content_offset(&l.scroll_layer, GPoint(0, -20), false);
+  const int16_t offset_before = scroll_layer_get_content_offset(&l.scroll_layer).y;
+  prv_reset_touch_counters();
+  s_will_change_mode = WillChange_Veto;
+  // Tap at screen y 22 => content_y 42 => row 0 (a visible row that is not the selected row 3).
+  menu_layer_touch_handle_tap(&l, GPoint(72, 22));
+  cl_assert_equal_i(s_will_change_count, 1);                    // the contract ran
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 3);  // veto kept the old selection
+  cl_assert_equal_i(s_select_click_count, 0);                   // no activation
+  // Offset unchanged: a re-centre would have snapped row 3 back to the middle (a different offset).
+  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, offset_before);
+}
+
+// A2: a non-tap selection move (button nav) between two taps disarms the double-tap window, so the
+// second in-window tap SELECTS the freshly hit-tested row instead of activating the stale recorded
+// one. Without the disarm at the selection choke point, this would wrongly activate the old row.
+void test_menu_layer__touch_button_nav_disarms_double_tap(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  prv_reset_touch_counters();
+  s_will_change_mode = WillChange_Passthrough;
+
+  // Tap row 3: selects it and arms the window (no activation yet).
+  menu_layer_touch_handle_tap(&l, GPoint(72, 3 * 44 + 22));  // content_y 154 => row 3
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 3);
+  cl_assert_equal_i(s_select_click_count, 0);
+
+  // Button DOWN moves the selection through the non-tap path -> must disarm the window.
+  menu_layer_set_selected_next(&l, false, MenuRowAlignCenter, false);
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 4);
+
+  // A tap within the 300ms window at the ORIGINAL screen point: the stale arm is gone, so it
+  // hit-tests row 3 and SELECTS it instead of activating the recorded row.
+  fake_rtc_increment_ticks((RtcTicks)100 * RTC_TICKS_HZ / 1000);  // +100ms < 300ms
+  scroll_layer_set_content_offset(&l.scroll_layer, GPoint(0, 0), false);
+  prv_reset_touch_counters();
+  menu_layer_touch_handle_tap(&l, GPoint(72, 3 * 44 + 22));  // content_y 154 => row 3
+  cl_assert_equal_i(s_select_click_count, 0);                   // SELECTED, not activated
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 3);  // the newly hit-tested row
+}
+
+// A2: menu_layer_reload_data disarms the window, so a reload that deletes the recorded row cannot let
+// a follow-up in-window tap activate a now out-of-range index (client OOB on select_click).
+void test_menu_layer__touch_reload_disarms_double_tap(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  prv_reset_touch_counters();
+  s_will_change_mode = WillChange_Passthrough;
+
+  // Tap row 5: selects it and arms the window.
+  menu_layer_touch_handle_tap(&l, GPoint(72, 5 * 44 + 22));  // content_y 242 => row 5
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 5);
+  cl_assert_equal_i(s_select_click_count, 0);
+
+  // Reload shrinking the list so the recorded row 5 no longer exists must disarm the window.
+  s_num_rows = 3;
+  menu_layer_reload_data(&l);
+
+  // A tap within the window must NOT activate the stale (now out-of-range) row 5.
+  fake_rtc_increment_ticks((RtcTicks)100 * RTC_TICKS_HZ / 1000);  // +100ms < 300ms
+  scroll_layer_set_content_offset(&l.scroll_layer, GPoint(0, 0), false);
+  prv_reset_touch_counters();
+  menu_layer_touch_handle_tap(&l, GPoint(72, 1 * 44 + 22));  // content_y 66 => row 1
+  cl_assert_equal_i(s_select_click_count, 0);                 // no stale activation
+}
+
+// ---- Criterion 4: during a pan the selection is frozen and no client callbacks fire ----
+
+void test_menu_layer__touch_pan_freezes_selection(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  menu_layer_set_selected_index(&l, MenuIndex(0, 3), MenuRowAlignNone, false);
+  prv_reset_touch_counters();
+  menu_layer_touch_handle_pan_update(&l, GPoint(0, 0), GPoint(0, -100));
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 3);            // unchanged
+  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, -100);  // content moved
+  cl_assert_equal_i(s_will_change_count, 0);
+  cl_assert_equal_i(s_selection_changed_count, 0);
+  cl_assert_equal_i(s_select_click_count, 0);
+}
+
+// ---- Criterion 5: offset stays within coarse bounds (short content + center_focused widening) ----
+
+void test_menu_layer__touch_clamp_content_shorter_than_viewport(void) {
+  MenuLayer l;
+  s_num_rows = 1;  // content shorter than the 180px viewport => lower bound is 0 via min()
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  menu_layer_touch_handle_pan_update(&l, GPoint(0, 0), GPoint(0, -100));
+  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, 0);
+  menu_layer_touch_handle_pan_update(&l, GPoint(0, 0), GPoint(0, 100));
+  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, 0);
+}
+
+void test_menu_layer__touch_clamp_center_focused_widens(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  menu_layer_set_center_focused(&l, true);
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  // center_focused widens the clamp by frame_h/2 (=90), so a positive offset up to +90 is allowed
+  // where a normal menu would clamp at 0.
+  menu_layer_touch_handle_pan_update(&l, GPoint(0, 0), GPoint(0, 300));
+  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, 90);
+
+  // The widen is symmetric: it also lowers the min bound by frame_h/2. A large negative pan reaches
+  // min(frame_h - content_h, 0) - frame_h/2; dropping the min_y widen would stop it at the un-widened
+  // min, so this pins the lower-bound widen the +90 case alone leaves untested.
+  const int16_t frame_h = l.scroll_layer.layer.frame.size.h;
+  const int16_t content_h = scroll_layer_get_content_size(&l.scroll_layer).h;
+  const int16_t expected_min = MIN((int16_t)(frame_h - content_h), (int16_t)0) - (int16_t)(frame_h / 2);
+  scroll_layer_set_content_offset(&l.scroll_layer, GPoint(0, 0), false);
+  menu_layer_touch_handle_pan_update(&l, GPoint(0, 0), GPoint(0, -3000));
+  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, expected_min);
+}
+
+// ---- Criterion 6: a cancelled pan leaves the selection alone and fires no client callback ----
+
+void test_menu_layer__touch_cancel_leaves_selection_unchanged(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  menu_layer_set_selected_index(&l, MenuIndex(0, 1), MenuRowAlignNone, false);
+  scroll_layer_set_content_offset(&l.scroll_layer, GPoint(0, -20), false);  // centre over row 2
+  prv_reset_touch_counters();
+  menu_layer_touch_handle_cancel(&l);
+  cl_assert_equal_i(s_will_change_count, 0);                     // no contract call
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 1);  // selection untouched by the cancel
+  cl_assert_equal_i(s_selection_changed_count, 0);
+  cl_assert_equal_i(s_select_click_count, 0);
+}
+
+// ---- Swipes: swapped horizontal convention (right = BACK, left = no-op) ----
+
+void test_menu_layer__touch_swipe_right_emits_back(void) {
+  prv_touch_nav_setup();
+  s_bridge.overrides_back = false;   // no back handler => the bridge pops the window
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  prv_reset_touch_counters();
+  menu_layer_touch_handle_swipe(&l, SwipeDirection_Right);
+  cl_assert_equal_i(s_bridge.pop_count, 1);       // right emits BACK
+  cl_assert_equal_i(s_bridge.emit_count, 0);
+  cl_assert_equal_i(s_select_click_count, 0);     // and does NOT activate
+  menu_layer_deinit(&l);
+}
+
+void test_menu_layer__touch_swipe_left_does_nothing(void) {
+  prv_touch_nav_setup();
+  s_bridge.overrides_back = false;
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  menu_layer_set_selected_index(&l, MenuIndex(0, 3), MenuRowAlignNone, false);
+  prv_reset_touch_counters();
+  menu_layer_touch_handle_swipe(&l, SwipeDirection_Left);
+  cl_assert_equal_i(s_select_click_count, 0);     // left no longer activates
+  cl_assert_equal_i(s_bridge.emit_count, 0);      // and emits nothing
+  cl_assert_equal_i(s_bridge.pop_count, 0);       // and does NOT pop / go BACK
+  menu_layer_deinit(&l);
+}
+
+// ---- Criterion 8: legacy-2.x menus are not registered; normal menus are ----
+
+void test_menu_layer__touch_legacy2_not_registered(void) {
+  prv_touch_nav_setup();
+  process_manager_set_compiled_with_legacy2_sdk(true);
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  cl_assert(s_touch_nav_state.menu_head == NULL);  // not a Tier-1 widget => falls back to the bridge
+  menu_layer_deinit(&l);
+}
+
+void test_menu_layer__touch_registered_and_deregistered(void) {
+  prv_touch_nav_setup();
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  cl_assert(s_touch_nav_state.menu_head != NULL);
+  menu_layer_deinit(&l);
+  cl_assert(s_touch_nav_state.menu_head == NULL);
+}
+
+// ---- Criterion 8a: init->init without deinit routes; double deinit is a no-op ----
+
+void test_menu_layer__touch_double_init_and_double_deinit(void) {
+  prv_touch_nav_setup();
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  prv_set_touch_callbacks(&l);
+  // Re-init the same menu without deinit: the registry stays a single entry (dedup by address).
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  prv_set_touch_callbacks(&l);
+  cl_assert(s_touch_nav_state.menu_head != NULL);
+  cl_assert(s_touch_nav_state.menu_head->next == NULL);
+  // The re-init zeroed the node while it was still registered; the registry must restore its layer
+  // so a gesture still ROUTES to this menu (routing matches by node->layer, which the earlier
+  // direct-handler assertion never exercised).
+  cl_assert_equal_p(s_touch_nav_state.menu_head->layer, menu_layer_get_layer(&l));
+  // And the handler still drives the scroll.
+  menu_layer_touch_handle_pan_update(&l, GPoint(0, 0), GPoint(0, -44));
+  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, -44);
+  // First deinit removes it from the registry and drains the shared recognizer set; the second
+  // touch-nav deregistration is a safe no-op (no animation is pending, so the base deinit is too).
+  menu_layer_deinit(&l);
+  cl_assert(s_touch_nav_state.menu_head == NULL);
+  menu_layer_deinit(&l);
+  cl_assert(s_touch_nav_state.menu_head == NULL);
+}
+
+// ---- Criterion 7: deinit mid-gesture cancels with no callbacks; the next gesture still works ----
+
+typedef struct { TouchEventType type; int16_t x; int16_t y; } DriveEvent;
+
+static void prv_drive(TouchEventType type, int16_t x, int16_t y) {
+  const TouchEvent e = { .type = type, .x = x, .y = y, .non_navigational = false };
+  touch_nav_dispatch(&e, &s_touch_nav_state);
+}
+
+static void prv_advance_ms(uint32_t ms) {
+  fake_rtc_increment_ticks((RtcTicks)ms * RTC_TICKS_HZ / 1000);
+}
+
+void test_menu_layer__touch_deinit_mid_gesture_cancels(void) {
+  prv_touch_nav_setup();
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 200, 300));
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  layer_add_child(&s_root_layer, menu_layer_get_layer(&l));
+
+  // Drive a vertical pan to Started through the dispatcher so the Tier-1 route latches and the menu
+  // becomes the gesture target.
+  prv_drive(TouchEvent_Touchdown, 100, 150);
+  prv_advance_ms(20);
+  prv_drive(TouchEvent_PositionUpdate, 100, 110);
+  prv_advance_ms(20);
+  prv_drive(TouchEvent_PositionUpdate, 100, 70);
+  cl_assert(menu_layer_touch_is_gesture_target(&l));
+
+  // Destroy the widget under a live window: the gesture is cancelled with NO client callbacks.
+  prv_reset_touch_counters();
+  menu_layer_deinit(&l);
+  cl_assert_equal_i(s_will_change_count, 0);
+  cl_assert_equal_i(s_selection_changed_count, 0);
+  cl_assert(!menu_layer_touch_is_gesture_target(&l));
+
+  // The next menu + touch still works (routing recovered).
+  MenuLayer l2;
+  menu_layer_init(&l2, &GRect(0, 0, 200, 300));
+  prv_set_touch_callbacks(&l2);
+  menu_layer_reload_data(&l2);
+  layer_add_child(&s_root_layer, menu_layer_get_layer(&l2));
+  prv_reset_touch_counters();
+  s_will_change_mode = WillChange_Passthrough;
+  // A tap on the unselected row 2 selects it (routing recovered); activation would be a second tap.
+  menu_layer_touch_handle_tap(&l2, GPoint(100, 2 * 44 + 22));
+  cl_assert_equal_i(menu_layer_get_selected_index(&l2).row, 2);
+  cl_assert_equal_i(s_will_change_count, 1);
+  menu_layer_deinit(&l2);
+}
+
+// ---- П4: UP/DOWN reconciliation after a free pixel scroll ----
+
+// After a free scroll pushes the selection OFF-screen, DOWN must step from the row nearest the
+// viewport centre (what the user actually sees), not from the off-screen selection. Otherwise the
+// selection teleports across the list.
+void test_menu_layer__step_reconciles_offscreen_selection(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));  // 10 rows * 44 = 440 content, max scroll -260
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  menu_layer_set_selected_index(&l, MenuIndex(0, 0), MenuRowAlignNone, false);
+  prv_reset_touch_counters();
+
+  // Free-scroll to the bottom: selection row 0 (content 0..44) is now well above the viewport.
+  scroll_layer_set_content_offset(&l.scroll_layer, GPoint(0, -260), false);
+  // Viewport-centre content_y = 90 - (-260) = 350 => row 7 (308..352).
+  MenuIndex center;
+  cl_assert(menu_layer_touch_find_row_at_content_y(&l, 350, &center));
+  cl_assert_equal_i(center.row, 7);
+
+  menu_down_click_handler(NULL, &l);
+  // Stepped from the CENTRE row 7 -> row 8, NOT selection+1 (row 1) of the off-screen row 0.
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 8);
+  cl_assert(menu_layer_get_selected_index(&l).row != 1);
+  cl_assert_equal_i(s_select_click_count, 0);  // reselect never activates
+}
+
+// The mandatory gate: when the selection is VISIBLE, UP/DOWN behaves exactly as a non-touch build
+// (steps from the real selection). No reconcile, no pull-to-centre.
+void test_menu_layer__step_visible_selection_unchanged(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 180));
+  prv_set_touch_callbacks(&l);
+  menu_layer_reload_data(&l);
+  menu_layer_set_selected_index(&l, MenuIndex(0, 0), MenuRowAlignNone, false);
+  scroll_layer_set_content_offset(&l.scroll_layer, GPoint(0, 0), false);
+  prv_reset_touch_counters();
+
+  // Selection row 0 is on screen; the viewport centre is row 2 (88..132). If the gate wrongly fired
+  // it would reselect row 2 and step to row 3. With the gate, DOWN simply steps 0 -> 1.
+  menu_down_click_handler(NULL, &l);
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 1);
+  cl_assert_equal_i(s_select_click_count, 0);
+}
+
+// Off-screen selection but the viewport centre lands on a section header/gap: reconcile must fall
+// back gracefully (step from the current selection as today), with no crash.
+void test_menu_layer__step_offscreen_center_on_header_falls_back(void) {
+  MenuLayer l;
+  menu_layer_init(&l, &GRect(0, 0, 144, 168));
+  menu_layer_set_callbacks(&l, NULL, &(MenuLayerCallbacks){
+    .draw_row = prv_draw_row,
+    .get_num_rows = prv_five_rows,
+    .get_num_sections = prv_two_sections,
+    .get_header_height = prv_header_20,
+    .draw_header = (MenuLayerDrawHeaderCallback)prv_draw_row,
+    .get_separator_height = prv_sep_0,
+    .select_click = prv_touch_select_click,
+  });
+  menu_layer_reload_data(&l);
+  menu_layer_set_selected_index(&l, MenuIndex(0, 0), MenuRowAlignNone, false);
+  prv_reset_touch_counters();
+
+  // Section-1 header spans content [240, 260). Offset -160 puts the viewport centre at
+  // content_y = 84 - (-160) = 244 (inside that header) while selection (0,0) at content [20,64) is
+  // off-screen (viewport shows content [160, 328]).
+  scroll_layer_set_content_offset(&l.scroll_layer, GPoint(0, -160), false);
+  MenuIndex miss;
+  cl_assert(!menu_layer_touch_find_row_at_content_y(&l, 244, &miss));  // centre is a header
+
+  menu_down_click_handler(NULL, &l);
+  // No reconcile (centre was a header): step from the current selection (0,0) -> (0,1).
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).section, 0);
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 1);
+  cl_assert_equal_i(s_select_click_count, 0);
 }

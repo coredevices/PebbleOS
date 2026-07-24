@@ -50,6 +50,9 @@ void touch_nav_registry_add(TouchNavState *state, TouchNavWidgetType type, Touch
   for (TouchNavWidgetNode *cur = *head; cur; cur = cur->next) {
     if (cur == node) {
       PBL_LOG_WRN("touch_nav: widget node %p re-added", (void *)node);
+      // A widget re-init zeroes the node while it is still threaded here; restore the layer so an
+      // init-without-deinit keeps routing to the widget instead of matching a NULL layer.
+      cur->layer = layer;
       return;
     }
   }

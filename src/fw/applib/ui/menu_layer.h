@@ -397,6 +397,34 @@ typedef struct MenuLayer {
   } animation;
 
   //! @internal
+  //! Intrusive Tier-1 touch-navigation registry node (layout-compatible with
+  //! \ref TouchNavWidgetNode: two pointers, \c next then \c layer). Embedding it here lets a
+  //! MenuLayer be registered as a Tier-1 touch widget without growing its size: the eight bytes
+  //! come out of \ref padding below. Declared unconditionally (not under \c CONFIG_TOUCH) so the
+  //! struct layout — and therefore \c sizeof(MenuLayer) — is identical on every board. It sits right
+  //! after the pointer-aligned \c animation struct so it introduces no alignment padding of its own.
+  //! A build-time assert in menu_layer.c keeps this node's layout in sync with \ref
+  //! TouchNavWidgetNode; the applib_malloc size check is what keeps \c sizeof(MenuLayer) unchanged.
+  struct {
+    void *next;
+    void *layer;
+  } touch_nav_node;
+
+  //! @internal
+  //! Tier-1 touch tap state for the "tap selects, second/double tap activates" behaviour: the last
+  //! row a tap-select committed and when (\ref rtc_get_ticks). A second tap within the double-tap
+  //! window activates that row without re-hit-testing (the row may have animated to the centre by
+  //! then). Declared unconditionally (not under \c CONFIG_TOUCH) so \c sizeof(MenuLayer) is identical
+  //! on every board, and carved from \ref padding below like \ref touch_nav_node. The timestamp is
+  //! split into two 32-bit halves rather than a single 8-byte \ref RtcTicks on purpose: a naturally
+  //! 8-byte-aligned member would raise the struct's alignment to 8 and its size past the fixed
+  //! applib-malloc budget (the size check pins \c sizeof(MenuLayer)). Reassemble via the accessors in
+  //! menu_layer.c. All three fields are 4-/2-byte aligned, so they introduce no alignment padding.
+  uint32_t last_select_ticks_hi;
+  uint32_t last_select_ticks_lo;
+  MenuIndex last_selected_index;
+
+  //! @internal
   //! If true, there will be padding after the bottom item in the menu
   //! Defaults to 'true'
   bool pad_bottom:1;
@@ -423,10 +451,17 @@ typedef struct MenuLayer {
   //! If True, a vibration will occur when cursor is getting blocked at the top or bottom
   bool scroll_vibe_on_blocked:1;
 
+  //! @internal
+  //! True once a tap has committed a selection and started the double-tap window (see
+  //! \ref last_selected_index). Explicit arm flag so the window is never mistaken as open right after
+  //! boot, when \ref rtc_get_ticks is still small. Packs into the byte already reserved by the flags
+  //! above, so it does not change \c sizeof(MenuLayer).
+  bool double_tap_armed:1;
+
   //! Add some padding to keep track of the \ref MenuLayer size budget.
   //! As long as the size stays within this budget, 2.x apps can safely use the 3.x MenuLayer type.
-  //! When padding is removed, the assertion below should also be removed.
-  uint8_t padding[40];
+  //! The actual size check is generated from applib_malloc.json, not asserted here.
+  uint8_t padding[20];
 } MenuLayer;
 
 //! Padding used below the last item in pixels
