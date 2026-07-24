@@ -577,12 +577,14 @@ RecognizerManager *window_get_recognizer_manager(Window *window) {
   if (!window || !window->parent_window_stack) {
     return NULL;
   }
-  // Modal windows do not yet have a recognizer manager
   if (window_manager_is_app_window(window)) {
     return app_state_get_recognizer_manager();
   }
-#endif
+  // A non-app (modal) window routes to the kernel (modal) recognizer manager.
+  return modal_manager_get_recognizer_manager();
+#else
   return NULL;
+#endif
 }
 
 void window_became_input_focus(Window *window) {

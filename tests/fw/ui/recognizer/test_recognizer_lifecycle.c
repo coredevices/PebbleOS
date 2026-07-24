@@ -53,9 +53,16 @@ GDrawState graphics_context_get_drawing_state(GContext *ctx) {
 void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {}
 
 static RecognizerManager s_manager;
+static RecognizerManager s_modal_manager;
 
 RecognizerManager *app_state_get_recognizer_manager(void) {
   return &s_manager;
+}
+
+// The kernel (modal) recognizer manager twin. window_get_recognizer_manager routes non-app (modal)
+// windows here.
+RecognizerManager *modal_manager_get_recognizer_manager(void) {
+  return &s_modal_manager;
 }
 
 void test_recognizer_lifecycle__initialize(void) {
@@ -82,10 +89,11 @@ void test_recognizer_lifecycle__get_manager_routing(void) {
   window.parent_window_stack = app_state_get_window_stack();
   cl_assert_equal_p(window_get_recognizer_manager(&window), &s_manager);
 
-  // Modal window (parent stack is not the app's window stack) -> NULL (until modals get a manager)
+  // Modal window (parent stack is not the app's window stack) -> the kernel (modal) manager, kept
+  // separate from the app manager so a focused modal's gestures never reach app recognizers.
   WindowStack modal_stack = {};
   window.parent_window_stack = &modal_stack;
-  cl_assert_equal_p(window_get_recognizer_manager(&window), NULL);
+  cl_assert_equal_p(window_get_recognizer_manager(&window), &s_modal_manager);
 }
 
 // window_became_input_focus / window_lost_input_focus

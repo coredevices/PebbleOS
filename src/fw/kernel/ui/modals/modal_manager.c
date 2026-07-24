@@ -171,10 +171,36 @@ TouchNavState *modal_manager_get_touch_nav_state(void) {
   return &s_modal_touch_nav_state;
 }
 
+// The focused-modal predicate: enabled and at least one focusable modal on top. This is the same
+// predicate the button path uses in the kernel event loop to decide whether to route input to the
+// modal twin instead of the app.
+static bool prv_modal_is_focused(void) {
+  return modal_manager_get_enabled() &&
+         !(modal_manager_get_properties() & ModalProperty_Unfocused);
+}
+
+// Point the kernel recognizer manager at \a window (NULL to unbind), dropping any in-flight gesture.
+// Mirrors window_became_input_focus / window_lost_input_focus for the app manager. Used for the
+// cross-stack modal focus changes that bypass the per-stack window transitions.
+static void prv_modal_recognizer_focus(Window *window) {
+  recognizer_manager_cancel_and_reset(&s_modal_recognizer_manager);
+  recognizer_manager_set_window(&s_modal_recognizer_manager, window);
+}
+
+// Kernel touch-slot handler. Gate the nav pipeline on a focused modal: without one the app twin
+// owns the gesture, and running the kernel manager too would double every counter/action for a
+// single gesture (an unfocusable modal such as Timeline Peek never passes this gate either).
+static void prv_modal_touch_nav_dispatch(const TouchEvent *touch_event, void *context) {
+  if (!prv_modal_is_focused()) {
+    return;
+  }
+  touch_nav_dispatch(touch_event, context);
+}
+
 void modal_touch_nav_subscribe(void) {
-  // Runs on KernelMain. touch_service_set_system_handler routes the kernel touch slot to the nav
-  // dispatcher for the modal twin.
-  touch_service_set_system_handler(touch_nav_dispatch, &s_modal_touch_nav_state);
+  // Runs on KernelMain. touch_service_set_system_handler routes the kernel touch slot to the gated
+  // nav dispatcher for the modal twin.
+  touch_service_set_system_handler(prv_modal_touch_nav_dispatch, &s_modal_touch_nav_state);
 }
 
 void modal_touch_nav_unsubscribe(void) {
@@ -309,6 +335,12 @@ static void prv_handle_modal_to_app_transition_focus(void) {
   // There are no more modal windows, so we need to cleanup the modal window state.
   click_manager_clear(modal_manager_get_click_manager());
 
+#ifdef CONFIG_TOUCH
+  // The last focusable modal is gone; unbind the kernel recognizer manager so no gesture state or
+  // active window survives into the app-focused period.
+  prv_modal_recognizer_focus(NULL);
+#endif
+
   prv_send_will_focus_event(true /* in_focus */);
 }
 
@@ -434,9 +466,20 @@ static bool prv_update_modal_stack_callback(ModalContext *modal, IterContext *it
   if (!window->is_click_configured && is_focused) {
     // Input is now exposed by a higher priority modal window stack emptying out, gain input
     window_setup_click_config_provider(window);
+#ifdef CONFIG_TOUCH
+    // Migrate the kernel recognizer manager onto the newly focused modal. A modal-over-modal focus
+    // change happens across priority stacks and bypasses the per-stack window transitions, so this
+    // is where the manager follows the focus.
+    prv_modal_recognizer_focus(window);
+#endif
   } else if (window->is_click_configured && !is_focused) {
     // A different modal window now has focus
     window->is_click_configured = false;
+#ifdef CONFIG_TOUCH
+    // This modal just lost focus to a higher priority one; unbind the kernel manager so its active
+    // layer and any in-flight gesture do not leak into the newly focused modal.
+    prv_modal_recognizer_focus(NULL);
+#endif
   }
 
   // Set the last highest visible modal priority
