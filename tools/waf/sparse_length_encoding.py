@@ -172,9 +172,9 @@ if __name__ == "__main__":
     elif len(sys.argv) == 2:
         # encode the specified file
         data = open(sys.argv[1], "rb").read()
-        encoded = "".join(encode(data))
-        if "".join(decode(encoded)) != data:
+        encoded = b"".join(encode(data))
+        if b"".join(decode(encoded)) != data:
             raise Exception("Invalid encoding")
-        sys.stdout.write("".join(encode(f)))
+        sys.stdout.buffer.write(encoded)
     else:
         raise Exception("Invalid arguments")
