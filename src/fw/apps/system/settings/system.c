@@ -21,6 +21,7 @@
 #include "kernel/pbl_malloc.h"
 #include "kernel/ui/modals/modal_manager.h"
 #include "kernel/util/sleep.h"
+#include "kernel/util/poweroff.h"
 #include "mfg/mfg_info.h"
 #include "mfg/mfg_serials.h"
 #include "resource/resource_ids.auto.h"
@@ -137,7 +138,7 @@ typedef struct SettingsSystemData {
   Window window;
   MenuLayer menu_layer;
   StatusBarLayer status_layer;
-  
+
   // ALS threshold data
   char als_threshold_buffer[16];  // Buffer for formatted ALS threshold
   char als_status_buffer[64];     // Buffer for NumberWindow label with status
@@ -150,6 +151,7 @@ typedef enum {
   SystemMenuItemStationaryToggle,
   SystemMenuItemDebugging,
   SystemMenuItemShutDown,
+  SystemMenuItemPowerOff,
   SystemMenuItemFactoryReset,
   SystemMenuItem_Count,
 } SystemMenuItem;
@@ -160,6 +162,7 @@ static const char *s_item_titles[SystemMenuItem_Count] = {
   [SystemMenuItemStationaryToggle] = i18n_noop("Stand-By Mode"),
   [SystemMenuItemDebugging]     = i18n_noop("Debugging"),
   [SystemMenuItemShutDown]      = i18n_noop("Shut Down"),
+  [SystemMenuItemPowerOff]      = i18n_noop("Power Off"),
   [SystemMenuItemFactoryReset]  = i18n_noop("Factory Reset"),
 };
 
@@ -360,11 +363,11 @@ static void prv_update_als_threshold_label(NumberWindow *number_window, Settings
   uint32_t current_reading = light_get_ambient_lux();
   uint32_t current_threshold = (uint32_t)number_window_get_value(number_window);
   bool would_backlight_be_on = current_reading <= current_threshold;
-  
-  snprintf(data->als_status_buffer, sizeof(data->als_status_buffer), 
+
+  snprintf(data->als_status_buffer, sizeof(data->als_status_buffer),
            "Backlight: %s",
            would_backlight_be_on ? "ON" : "OFF");
-  
+
   number_window_set_label(number_window, data->als_status_buffer);
 }
 
@@ -396,17 +399,17 @@ static void prv_als_threshold_menu_push(SettingsSystemData *data) {
   // If we don't do this, the text may say the false result
   // until the user changes the value
   psleep(200);
-  
+
   // Get current ambient light reading to show backlight status
   uint32_t current_reading = light_get_ambient_lux();
   uint32_t current_threshold = backlight_get_ambient_threshold();
   bool would_backlight_be_on = current_reading <= current_threshold;
-  
+
   // Create descriptive label with current status
-  snprintf(data->als_status_buffer, sizeof(data->als_status_buffer), 
+  snprintf(data->als_status_buffer, sizeof(data->als_status_buffer),
            "Backlight: %s",
            would_backlight_be_on ? "ON" : "OFF");
-  
+
   NumberWindow *number_window = number_window_create(
     data->als_status_buffer,
     (NumberWindowCallbacks) {
@@ -416,21 +419,21 @@ static void prv_als_threshold_menu_push(SettingsSystemData *data) {
     },
     data
   );
-  
+
   if (!number_window) {
     // Re-enable backlight if NumberWindow creation failed
     data->als_adjustment_active = false;
     light_allow(true);
     return;
   }
-  
-  
+
+
   // Set reasonable min/max values for ALS threshold (lux domain)
   number_window_set_min(number_window, 0);
   number_window_set_max(number_window, ambient_light_level_to_lux(AMBIENT_LIGHT_LEVEL_MAX));
   number_window_set_step_size(number_window, 1);
   number_window_set_value(number_window, (int32_t)current_threshold);
-  
+
   const bool animated = true;
   app_window_stack_push(&number_window->window, animated);
 }
@@ -452,7 +455,7 @@ static const char *s_motion_sensitivity_labels[] = {
 
 static int prv_motion_sensitivity_get_selection_index() {
   const uint8_t sensitivity = shell_prefs_get_motion_sensitivity();
-  
+
   // Find closest match
   for (int i = 0; i < (int)ARRAY_LENGTH(s_motion_sensitivity_values); i++) {
     if (sensitivity <= s_motion_sensitivity_values[i]) {
@@ -526,7 +529,7 @@ static void prv_debugging_draw_row_callback(GContext* ctx, const Layer *cell_lay
   } else if (cell_index->row == DebuggingItemALSThreshold) {
     // Show current threshold value
     uint32_t current_threshold = backlight_get_ambient_threshold();
-    snprintf(data->als_threshold_buffer, sizeof(data->als_threshold_buffer), 
+    snprintf(data->als_threshold_buffer, sizeof(data->als_threshold_buffer),
              "%"PRIu32, current_threshold);
     subtitle_text = data->als_threshold_buffer;
   }
@@ -563,7 +566,7 @@ static void prv_debugging_select_callback(MenuLayer *menu_layer,
                                           MenuIndex *cell_index,
                                           void *context) {
   SettingsSystemData *data = (SettingsSystemData *) context;
-  
+
   switch (cell_index->row) {
     case DebuggingItemCoreDumpNow:
       prv_maybe_trigger_core_dump();
@@ -652,7 +655,7 @@ static bool s_debugging_interstitial_confirmed = false;
 static void prv_debugging_confirm_cb(ClickRecognizerRef recognizer, void *context) {
   ConfirmationDialog *dialog = (ConfirmationDialog *)context;
   SettingsSystemData *data = (SettingsSystemData *)actionable_dialog_get_user_data((ActionableDialog *) dialog);
-  
+
   confirmation_dialog_pop(dialog);
 
   s_debugging_interstitial_confirmed = true;
@@ -1287,6 +1290,40 @@ static void prv_shutdown_cb(void* data) {
   actionable_dialog_push(a_dialog, modal_manager_get_window_stack(ModalPriorityGeneric));
 }
 
+// Power Off callbacks
+//////////////////////
+
+static void prv_poweroff_confirm_cb(ClickRecognizerRef recognizer, void *context) {
+  actionable_dialog_pop((ActionableDialog *) context);
+  sys_poweroff();
+}
+
+static void prv_poweroff_back_cb(ClickRecognizerRef recognizer, void *context) {
+  actionable_dialog_pop((ActionableDialog *) context);
+}
+
+static void prv_poweroff_click_provider(void *context) {
+  window_single_click_subscribe(BUTTON_ID_SELECT, prv_poweroff_confirm_cb);
+  window_single_click_subscribe(BUTTON_ID_BACK, prv_poweroff_back_cb);
+}
+
+static void prv_poweroff_cb(void* data) {
+  ActionableDialog *a_dialog = actionable_dialog_create("Power Off");
+  Dialog *dialog = actionable_dialog_get_dialog(a_dialog);
+
+  actionable_dialog_set_action_bar_type(a_dialog, DialogActionBarConfirm, NULL);
+  actionable_dialog_set_click_config_provider(a_dialog, prv_poweroff_click_provider);
+
+  dialog_set_text_color(dialog, GColorWhite);
+  dialog_set_background_color(dialog, GColorRed);
+  dialog_set_text(dialog, i18n_get("Do you want to power off?", a_dialog));
+  dialog_set_icon(dialog, RESOURCE_ID_GENERIC_QUESTION_LARGE);
+
+  i18n_free_all(a_dialog);
+
+  actionable_dialog_push(a_dialog, modal_manager_get_window_stack(ModalPriorityGeneric));
+}
+
 static void prv_deinit_cb(SettingsCallbacks *context) {
   SettingsSystemData *data = (SettingsSystemData *) context;
   i18n_free_all(data);
@@ -1302,6 +1339,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       subtitle = stationary_get_enabled() ? i18n_get("On", data) : i18n_get("Off", data);
       break;
     case SystemMenuItemShutDown:
+    case SystemMenuItemPowerOff:
     case SystemMenuItemInformation:
     case SystemMenuItemCertification:
     case SystemMenuItemDebugging:
@@ -1333,6 +1371,9 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       break;
     case SystemMenuItemShutDown:
       launcher_task_add_callback(prv_shutdown_cb, 0);
+      break;
+    case SystemMenuItemPowerOff:
+      launcher_task_add_callback(prv_poweroff_cb, 0);
       break;
     case SystemMenuItemDebugging:
       prv_debugging_interstitial_trigger(data);
