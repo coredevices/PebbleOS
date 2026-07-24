@@ -11,6 +11,17 @@ kernel, drivers) is published alongside this site:
 
 <a href="../apidoc/index.html">PebbleOS API reference</a>
 
+## App SDK guides
+
+Hand-written guides for app-facing APIs that need more than the per-function
+Doxygen reference.
+
+```{toctree}
+:maxdepth: 1
+
+recognizers.md
+```
+
 ## External resources
 
 Podcasts, presentations and developer documents from the Pebble community.

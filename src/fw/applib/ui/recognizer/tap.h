@@ -12,6 +12,11 @@
 
 typedef struct TapRecognizerData TapRecognizerData;
 
+//! @addtogroup UI
+//! @{
+//!   @addtogroup Recognizer
+//!   @{
+
 //! Create a tap recognizer. The default recognizer recognizes a single tap from a single finger
 //! @param event_cb event callback
 //! @param user_data user data associated with recognizer
@@ -41,6 +46,9 @@ const TapRecognizerData *tap_recognizer_get_data(const Recognizer *recognizer);
 //! @param recognizer recognizer from which to get the tap coordinate
 //! @return tap coordinate
 GPoint tap_recognizer_get_tap_point(const Recognizer *recognizer);
+
+//!   @} // end addtogroup Recognizer
+//! @} // end addtogroup UI
 
 // TODO: Add configuration methods & getters for state
 // https://pebbletechnology.atlassian.net/browse/PBL-28983

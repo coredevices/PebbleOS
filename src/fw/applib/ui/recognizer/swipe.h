@@ -10,6 +10,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+//! @addtogroup UI
+//! @{
+//!   @addtogroup Recognizer
+//!   @{
+
 typedef struct SwipeRecognizerData SwipeRecognizerData;
 
 //! Swipe direction, also used as a bitmask when configuring which directions a swipe recognizer
@@ -63,3 +68,6 @@ SwipeDirection swipe_recognizer_get_direction(const Recognizer *recognizer);
 //! @param recognizer recognizer from which to get the velocity
 //! @return velocity in px/s
 GPoint swipe_recognizer_get_velocity(const Recognizer *recognizer);
+
+//!   @} // end addtogroup Recognizer
+//! @} // end addtogroup UI

@@ -10,6 +10,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+//! @addtogroup UI
+//! @{
+//!   @addtogroup Recognizer
+//!   @{
+
 typedef struct PanRecognizerData PanRecognizerData;
 
 //! Axis to which a pan recognizer is locked. A pan is only recognized when the
@@ -72,3 +77,6 @@ GPoint pan_recognizer_get_delta_since_prev(const Recognizer *recognizer);
 //! @param recognizer recognizer from which to get the velocity
 //! @return velocity in px/s
 GPoint pan_recognizer_get_velocity(const Recognizer *recognizer);
+
+//!   @} // end addtogroup Recognizer
+//! @} // end addtogroup UI

@@ -42,13 +42,6 @@ bool window_has_status_bar(Window *window);
 void window_set_overrides_back_button(Window *window, bool overrides_back_button);
 
 //! @internal
-//! Disable the touch-nav Tier-2 bridge for a window. A Tier-1 widget sets this so the system
-//! bridge does not emulate buttons on top of the widget's own recognizers.
-//! @param window Pointer to the \ref Window to set
-//! @param disabled true to disable the bridge for this window
-void window_set_touch_bridge_disabled(Window *window, bool disabled);
-
-//! @internal
 //! Called to unload a window.
 //! @param window The \ref Window to unload
 void window_unload(Window *window);

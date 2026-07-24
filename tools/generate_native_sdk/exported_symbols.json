@@ -120,6 +120,10 @@
     "include/pbl/services/speaker/speaker_finish_reason.h",
     "include/pbl/services/speaker/speaker_pcm_format.h",
     "include/pbl/services/speaker/track.h",
+    "fw/applib/ui/recognizer/recognizer.h",
+    "fw/applib/ui/recognizer/tap.h",
+    "fw/applib/ui/recognizer/pan.h",
+    "fw/applib/ui/recognizer/swipe.h",
     "fw/applib/ui/window.h",
     "fw/applib/ui/app_window_stack.h",
     "fw/applib/legacy2/ui/animation_legacy2.h",
@@ -2958,6 +2962,88 @@
           ]
         }, {
           "type": "group",
+          "name": "Recognizer",
+          "appOnly": true,
+          "exports": [
+            {
+              "type": "forward_struct",
+              "name": "Recognizer"
+            }, {
+              "type": "type",
+              "name": "RecognizerEvent",
+              "addedRevision": "107"
+            }, {
+              "type": "type",
+              "name": "RecognizerEventCb",
+              "addedRevision": "107"
+            }, {
+              "type": "type",
+              "name": "RecognizerSimultaneousWithCb",
+              "addedRevision": "107"
+            }, {
+              "type": "type",
+              "name": "PanAxis",
+              "addedRevision": "107"
+            }, {
+              "type": "type",
+              "name": "SwipeDirection",
+              "addedRevision": "107"
+            }, {
+              "type": "function",
+              "name": "tap_recognizer_create",
+              "addedRevision": "107"
+            }, {
+              "type": "function",
+              "name": "pan_recognizer_create",
+              "addedRevision": "107"
+            }, {
+              "type": "function",
+              "name": "swipe_recognizer_create",
+              "addedRevision": "107"
+            }, {
+              "type": "function",
+              "name": "tap_recognizer_get_tap_point",
+              "addedRevision": "107"
+            }, {
+              "type": "function",
+              "name": "pan_recognizer_get_total_delta",
+              "addedRevision": "107"
+            }, {
+              "type": "function",
+              "name": "pan_recognizer_get_delta_since_start",
+              "addedRevision": "107"
+            }, {
+              "type": "function",
+              "name": "pan_recognizer_get_delta_since_prev",
+              "addedRevision": "107"
+            }, {
+              "type": "function",
+              "name": "pan_recognizer_get_velocity",
+              "addedRevision": "107"
+            }, {
+              "type": "function",
+              "name": "swipe_recognizer_get_direction",
+              "addedRevision": "107"
+            }, {
+              "type": "function",
+              "name": "swipe_recognizer_get_velocity",
+              "addedRevision": "107"
+            }, {
+              "type": "function",
+              "name": "recognizer_destroy",
+              "addedRevision": "107"
+            }, {
+              "type": "function",
+              "name": "recognizer_set_simultaneous_with",
+              "addedRevision": "107"
+            }, {
+              "type": "function",
+              "name": "recognizer_set_fail_after",
+              "addedRevision": "107"
+            }
+          ]
+        }, {
+          "type": "group",
           "name": "Window",
           "exports": [
             {
@@ -2993,6 +3079,18 @@
               "type": "function",
               "name": "window_get_click_config_context",
               "addedRevision": "11"
+            }, {
+              "type": "function",
+              "name": "window_attach_recognizer",
+              "addedRevision": "107"
+            }, {
+              "type": "function",
+              "name": "window_detach_recognizer",
+              "addedRevision": "107"
+            }, {
+              "type": "function",
+              "name": "window_set_touch_bridge_disabled",
+              "addedRevision": "107"
             }, {
               "type": "function",
               "name": "window_set_window_handlers",
