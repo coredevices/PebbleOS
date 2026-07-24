@@ -76,6 +76,19 @@ typedef struct SwapLayer {
   bool swap_in_progress;
   bool is_deiniting;
   void *context;
+#ifdef CONFIG_TOUCH
+  //! @internal
+  //! Intrusive Tier-1 touch-navigation registry node. Layout-compatible with \c TouchNavWidgetNode
+  //! (two pointers, \c next then \c layer); a build-time assert in swap_layer.c keeps it in sync.
+  //! Declared as two opaque pointers so this timeline header does not pull in the recognizer stack.
+  struct {
+    void *next;
+    void *layer;
+  } touch_nav_node;
+  //! True while this SwapLayer is threaded onto the Tier-1 registry (guards double add/remove and
+  //! makes the init/focus re-registration idempotent).
+  bool touch_registered;
+#endif
 } SwapLayer;
 
 //! Init. Contains no layouts at this point.
@@ -105,3 +118,45 @@ void swap_layer_set_click_config_onto_window(SwapLayer *swap_layer, struct Windo
 //! whether it got a "layout_will_appear" and "layout_did_appear" event.
 //! Returns whether the swap attempt was successful.
 bool swap_layer_attempt_layer_swap(SwapLayer *swap_layer, ScrollDirection direction);
+
+#ifdef CONFIG_TOUCH
+//! Directly offset the current notification frame by \a dy pixels of \c origin.y WITHOUT an
+//! animation (unlike \c prv_scroll, which always animates), clamped so the resulting scroll offset
+//! stays within [0, max_scroll]. A positive \a dy scrolls the content towards the top of the
+//! notification (offset decreases); a negative \a dy scrolls further into the content (offset
+//! increases). The \c next layout is pulled right under the current one so its peek tracks the
+//! finger. Also refreshes the auto-close interaction timer so a long notification cannot close under
+//! the finger mid-read. Used by the Tier-1 touch pan for live 1:1 scrolling.
+void swap_layer_touch_scroll_by(SwapLayer *swap_layer, int16_t dy);
+
+//! Release this SwapLayer's Tier-1 touch participation while it is covered by a higher modal: remove
+//! it from the touch-navigation registry (which detaches the shared recognizer set and clears the
+//! gesture target) so touch cannot leak into the now-hidden notification body. In our system-slot
+//! bridge architecture registry membership is what routes touch, so deregistering is the release.
+//! Idempotent and safe when touch is disabled. Re-registered by the click-config-provider on re-show.
+void swap_layer_touch_release(SwapLayer *swap_layer);
+
+//! @internal Test seam: zero the per-task Tier-1 gesture singletons for cross-test isolation.
+void swap_layer_touch_nav_reset_all(void);
+
+//! @internal Test seam: whether \a swap_layer is the current per-task gesture target.
+bool swap_layer_touch_is_gesture_target(const SwapLayer *swap_layer);
+
+//! @internal Test seam: register/deregister this SwapLayer as a Tier-1 touch widget. Normally driven
+//! by swap_layer_init / the click-config-provider / swap_layer_deinit; exposed for unit tests.
+void swap_layer_touch_register(SwapLayer *swap_layer);
+void swap_layer_touch_deregister(SwapLayer *swap_layer);
+
+//! @internal Test seam: the liftoff decision for a pan that started at \a base_offset and moved
+//! \a delta_y (finger travel; negative is up). Encodes the two-threshold logic (DRAG_THRESHOLD_PX
+//! and SWAP_OVERPULL_PX) independently of the animation/swap machinery.
+typedef enum SwapTouchLiftoffAction {
+  SwapTouchLiftoff_None,      //!< Sub-threshold drag: do nothing.
+  SwapTouchLiftoff_SwapPrev,  //!< Over-pull past the top: swap to the previous notification.
+  SwapTouchLiftoff_SwapNext,  //!< Over-pull past the bottom: swap to the next notification.
+  SwapTouchLiftoff_Settle,    //!< A normal scroll: settle to the clamped offset.
+} SwapTouchLiftoffAction;
+
+SwapTouchLiftoffAction swap_layer_touch_liftoff_action(int16_t base_offset, int16_t delta_y,
+                                                       int16_t max_dy);
+#endif  // CONFIG_TOUCH
