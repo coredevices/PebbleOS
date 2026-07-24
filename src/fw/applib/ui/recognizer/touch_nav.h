@@ -9,6 +9,7 @@
 #include "swipe.h"
 #include "tap.h"
 
+#include "applib/graphics/gtypes.h"
 #include "applib/ui/layer.h"
 #include "pbl/drivers/button_id.h"
 #include "pbl/services/touch/touch_event.h"
@@ -56,6 +57,20 @@ typedef struct TouchNavWidgetNode {
   struct TouchNavWidgetNode *next;
   struct Layer *layer;
 } TouchNavWidgetNode;
+
+//! Snapshot of the foreground ActionBarLayer, published from applib via a syscall on
+//! add_to_window / set_icon(_animated) / remove_from_window. Read when synthesising a tap so the
+//! tap is routed into the bar's UP / SELECT / DOWN zone instead of a plain SELECT.
+typedef struct TouchNavActionBar {
+  //! Bar geometry in GLOBAL (screen) coordinates.
+  GRect frame;
+  //! Bit i is set when button (i + 1) carries an icon: bit0 = UP, bit1 = SELECT, bit2 = DOWN.
+  //! A tap in a zone whose icon bit is clear falls back to SELECT.
+  uint8_t icon_mask;
+  //! True while a bar is on the foreground window; false clears the snapshot so no stale bar routes
+  //! taps after the owning window/app goes away.
+  bool present;
+} TouchNavActionBar;
 
 //! Task-specific side effects for the bridge. All pointers are consulted through `ctx`. Any may be
 //! NULL, in which case the effect is skipped (e.g. the app task has no idle-timeout refresh).
@@ -108,6 +123,9 @@ typedef struct TouchNavState {
   //! Route latched on the most recent Touchdown.
   TouchNavRoute route;
 
+  //! Latest foreground ActionBarLayer snapshot; consulted when synthesising a tap.
+  TouchNavActionBar action_bar;
+
   //! Observability counters.
   struct {
     uint16_t started;
@@ -136,6 +154,19 @@ void touch_nav_state_deinit(TouchNavState *state);
 //! Touch-service system-slot handler. Conforms to the touch service handler prototype
 //! (\ref TouchServiceHandler). \a context is the \ref TouchNavState.
 void touch_nav_dispatch(const TouchEvent *touch_event, void *context);
+
+//! Store the foreground ActionBarLayer snapshot into \a state. A NULL \a frame clears the snapshot
+//! (bar removed / no window); otherwise \a frame is the bar's global-coordinate rectangle and
+//! \a icon_mask its per-zone icon presence bits. Called from the \ref sys_touch_set_action_bar
+//! syscall handler on the task that owns the bar.
+void touch_nav_set_action_bar(TouchNavState *state, const GRect *frame, uint8_t icon_mask);
+
+//! Resolve a tap at \a point against the action-bar snapshot \a bar. Returns the zoned button when
+//! the bar is present and the point is inside its frame: the frame is split vertically into three
+//! equal zones (top = UP, middle = SELECT, bottom = DOWN). A zone whose icon bit is clear, a point
+//! outside the frame, or an absent snapshot all fall back to \ref BUTTON_ID_SELECT. Swipes are not
+//! zoned; only taps consult this.
+ButtonId touch_nav_action_bar_zone_button(const TouchNavActionBar *bar, GPoint point);
 
 //! Register a Tier-1 widget node under the given registry. Dedup-by-address (a re-add WARNs and is
 //! a no-op). Robust to a node zeroed by the widget's *_init.

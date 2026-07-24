@@ -5,6 +5,7 @@
 
 #ifdef CONFIG_TOUCH
 
+#include "applib/graphics/gtypes.h"
 #include "applib/ui/recognizer/touch_nav.h"
 #include "kernel/event_loop.h"
 #include "kernel/pebble_tasks.h"
@@ -12,6 +13,39 @@
 #include "pbl/services/touch/touch.h"
 #include "process_management/process_manager.h"
 #include "process_state/app_state/app_state.h"
+#include "syscall/syscall.h"
+#include "syscall/syscall_internal.h"
+
+// --- Action-bar snapshot publish (applib -> current task's nav state) --------------------------
+
+//! Resolve the touch-nav state of the task that owns the calling ActionBarLayer. Apps publish into
+//! their own nav twin; kernel modals into the modal twin. Other tasks have no bar.
+static TouchNavState *prv_current_touch_nav_state(void) {
+  switch (pebble_task_get_current()) {
+    case PebbleTask_App:
+      return app_state_get_touch_nav_state();
+    case PebbleTask_KernelMain:
+      return modal_manager_get_touch_nav_state();
+    default:
+      return NULL;
+  }
+}
+
+DEFINE_SYSCALL(void, sys_touch_set_action_bar, const GRect *frame, uint8_t icon_mask) {
+  if (PRIVILEGE_WAS_ELEVATED && frame) {
+    syscall_assert_userspace_buffer(frame, sizeof(*frame));
+  }
+  TouchNavState *state = prv_current_touch_nav_state();
+  if (!state) {
+    return;
+  }
+  // Copy the caller's frame out of (possibly user) memory before storing it.
+  GRect local_frame;
+  if (frame) {
+    local_frame = *frame;
+  }
+  touch_nav_set_action_bar(state, frame ? &local_frame : NULL, icon_mask);
+}
 
 // --- KernelMain-bound effects -----------------------------------------------------------------
 

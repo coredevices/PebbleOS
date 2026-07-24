@@ -10,9 +10,11 @@
 #include "swipe.h"
 #include "tap.h"
 
+#include "applib/graphics/gtypes.h"
 #include "applib/ui/layer.h"
 #include "pbl/logging/logging.h"
 #include "pbl/services/touch/touch.h"
+#include "pbl/util/math.h"
 #include "system/passert.h"
 
 #include <stddef.h>
@@ -110,6 +112,40 @@ static struct Layer *prv_registry_sole_widget(TouchNavState *state) {
     count++;
   }
   return (count == 1) ? sole : NULL;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Action-bar tap zoning
+
+void touch_nav_set_action_bar(TouchNavState *state, const GRect *frame, uint8_t icon_mask) {
+  if (!state) {
+    return;
+  }
+  if (frame) {
+    state->action_bar = (TouchNavActionBar){
+      .frame = *frame,
+      .icon_mask = icon_mask,
+      .present = true,
+    };
+  } else {
+    state->action_bar = (TouchNavActionBar){.present = false};
+  }
+}
+
+ButtonId touch_nav_action_bar_zone_button(const TouchNavActionBar *bar, GPoint point) {
+  // No bar (or a degenerate frame) / a tap outside the bar is a plain SELECT.
+  if (!bar->present || bar->frame.size.h <= 0 || !grect_contains_point(&bar->frame, &point)) {
+    return BUTTON_ID_SELECT;
+  }
+  // Split the bar vertically into three equal zones with half-open bounds: top = UP, middle =
+  // SELECT, bottom = DOWN. zone i maps to icon bit i and to button (BUTTON_ID_UP + i).
+  int zone = (point.y - bar->frame.origin.y) * 3 / bar->frame.size.h;
+  zone = CLIP(zone, 0, 2);
+  if (!(bar->icon_mask & (1 << zone))) {
+    // The zone has no icon: fall back to SELECT.
+    return BUTTON_ID_SELECT;
+  }
+  return (ButtonId)(BUTTON_ID_UP + zone);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -237,10 +273,14 @@ static void prv_recognizer_event(const Recognizer *recognizer, RecognizerEvent e
           break;
         }
         if (recognizer == state->swipe) {
+          // A swipe over the bar stays full-screen: only taps are zoned.
           const SwipeDirection dir = swipe_recognizer_get_direction((Recognizer *)recognizer);
           prv_emit_click(state, prv_swipe_button(dir));
         } else if (recognizer == state->tap) {
-          prv_emit_click(state, BUTTON_ID_SELECT);
+          // Route the tap into the action-bar UP/SELECT/DOWN zone if the tap point is inside a
+          // present bar; otherwise (no bar, or a tap outside it) this is a plain SELECT.
+          const GPoint tap_point = tap_recognizer_get_tap_point((Recognizer *)recognizer);
+          prv_emit_click(state, touch_nav_action_bar_zone_button(&state->action_bar, tap_point));
         }
       }
       break;

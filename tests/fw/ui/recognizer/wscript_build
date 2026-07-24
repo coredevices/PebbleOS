@@ -76,4 +76,5 @@ clar(ctx,
     defines = ['CONFIG_TOUCH'],
     test_sources_ant_glob = "test_touch_nav.c")
 
+
 # vim:filetype=python

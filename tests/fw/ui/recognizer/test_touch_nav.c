@@ -459,6 +459,118 @@ void test_touch_nav__idle_refresh_gated_by_navigation(void) {
 }
 
 // ---------------------------------------------------------------------------------------------
+// П1: ActionBarLayer tap zoning. The bar frame is in global coords; a tap is split vertically into
+// three equal zones (top = UP, middle = SELECT, bottom = DOWN). A zone with no icon, a tap outside
+// the bar, or an absent snapshot all fall back to SELECT. Swipes are never zoned.
+
+// Pure zone-math + fallback, tested directly on the helper (no dispatcher).
+void test_touch_nav__action_bar_zone_math(void) {
+  // Bar at x[100,140), y[20,110); h = 90 -> zones of 30px: [20,50) UP, [50,80) SELECT, [80,110) DOWN.
+  const TouchNavActionBar bar = {
+    .frame = GRect(100, 20, 40, 90),
+    .icon_mask = 0x7,  // all three zones have icons
+    .present = true,
+  };
+  // Top zone -> UP.
+  cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(120, 20)), BUTTON_ID_UP);
+  cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(120, 49)), BUTTON_ID_UP);
+  // Middle zone -> SELECT (half-open boundary at 50).
+  cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(120, 50)), BUTTON_ID_SELECT);
+  cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(120, 79)), BUTTON_ID_SELECT);
+  // Bottom zone -> DOWN (half-open boundary at 80; last pixel 109 inside).
+  cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(120, 80)), BUTTON_ID_DOWN);
+  cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(120, 109)), BUTTON_ID_DOWN);
+}
+
+// A zone whose icon bit is clear falls back to SELECT even though the point is in that zone.
+void test_touch_nav__action_bar_zone_without_icon_is_select(void) {
+  const TouchNavActionBar bar = {
+    .frame = GRect(100, 20, 40, 90),
+    .icon_mask = 0x6,  // SELECT (bit1) + DOWN (bit2), but no UP (bit0)
+    .present = true,
+  };
+  // UP zone has no icon -> SELECT.
+  cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(120, 30)), BUTTON_ID_SELECT);
+  // DOWN zone still has its icon.
+  cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(120, 95)), BUTTON_ID_DOWN);
+}
+
+// A tap outside the bar frame, or on an absent snapshot, is a plain SELECT.
+void test_touch_nav__action_bar_outside_and_absent_are_select(void) {
+  const TouchNavActionBar bar = {
+    .frame = GRect(100, 20, 40, 90),
+    .icon_mask = 0x7,
+    .present = true,
+  };
+  // Left of the bar (x < 100) -> SELECT.
+  cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(50, 30)), BUTTON_ID_SELECT);
+  // Above the bar (y < 20) -> SELECT.
+  cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(120, 10)), BUTTON_ID_SELECT);
+  // Absent snapshot -> SELECT regardless of the point.
+  const TouchNavActionBar absent = { .present = false };
+  cl_assert_equal_i(touch_nav_action_bar_zone_button(&absent, GPoint(120, 30)), BUTTON_ID_SELECT);
+}
+
+// Through the dispatcher: with a bar snapshot set, a tap inside a zone emulates that zone's button.
+void test_touch_nav__action_bar_tap_zones_through_dispatcher(void) {
+  const GRect frame = GRect(100, 20, 40, 90);
+  touch_nav_set_action_bar(&s_state, &frame, 0x7);
+
+  // Tap in the UP zone.
+  prv_tap(120, 30);
+  cl_assert_equal_i(s_fake.emit_count, 1);
+  cl_assert_equal_i(s_fake.last_emit, BUTTON_ID_UP);
+
+  // Tap in the SELECT zone.
+  prv_tap(120, 65);
+  cl_assert_equal_i(s_fake.emit_count, 2);
+  cl_assert_equal_i(s_fake.last_emit, BUTTON_ID_SELECT);
+
+  // Tap in the DOWN zone.
+  prv_tap(120, 95);
+  cl_assert_equal_i(s_fake.emit_count, 3);
+  cl_assert_equal_i(s_fake.last_emit, BUTTON_ID_DOWN);
+
+  // Tap outside the bar -> plain SELECT.
+  prv_tap(50, 65);
+  cl_assert_equal_i(s_fake.emit_count, 4);
+  cl_assert_equal_i(s_fake.last_emit, BUTTON_ID_SELECT);
+}
+
+// With no snapshot present, a tap is a plain SELECT (baseline, unchanged from the bar-less path).
+void test_touch_nav__action_bar_absent_tap_is_select(void) {
+  // No touch_nav_set_action_bar call: the snapshot is absent from init.
+  prv_tap(120, 30);
+  cl_assert_equal_i(s_fake.emit_count, 1);
+  cl_assert_equal_i(s_fake.last_emit, BUTTON_ID_SELECT);
+}
+
+// A swipe over the bar is NOT zoned: it stays a full-screen content-scroll (swipe up -> DOWN).
+void test_touch_nav__action_bar_swipe_stays_fullscreen(void) {
+  const GRect frame = GRect(100, 20, 40, 90);
+  touch_nav_set_action_bar(&s_state, &frame, 0x7);
+
+  // Swipe up entirely within the bar's x-column. Vertical swipe maps by content-scroll, not zone.
+  prv_swipe(120, 95, 120, 30);
+  cl_assert_equal_i(s_fake.emit_count, 1);
+  cl_assert_equal_i(s_fake.last_emit, BUTTON_ID_DOWN);
+}
+
+// Clearing the snapshot (bar removed) reverts taps to plain SELECT even inside the old frame.
+void test_touch_nav__action_bar_cleared_reverts_to_select(void) {
+  const GRect frame = GRect(100, 20, 40, 90);
+  touch_nav_set_action_bar(&s_state, &frame, 0x7);
+  prv_tap(120, 30);
+  cl_assert_equal_i(s_fake.last_emit, BUTTON_ID_UP);
+
+  // Clear (as remove_from_window would): a tap in the old UP zone is now a plain SELECT.
+  touch_nav_set_action_bar(&s_state, NULL, 0);
+  prv_tap(120, 30);
+  cl_assert_equal_i(s_fake.emit_count, 2);
+  cl_assert_equal_i(s_fake.last_emit, BUTTON_ID_SELECT);
+}
+
+// ---------------------------------------------------------------------------------------------
 // Criterion 9: the disable transaction cancel_and_resets both managers, drops the task refcount,
 // and runs in the mandated order (2)-(5). The order is recorded as a step sequence.
 

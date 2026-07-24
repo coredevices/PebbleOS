@@ -1049,6 +1049,8 @@ static void prv_handle_deinit(void) {
   if (data->temporarily_show_progress_timer) {
     app_timer_cancel(data->temporarily_show_progress_timer);
   }
+  // Detach the action bar so its touch-nav snapshot does not keep routing taps after the app exits.
+  action_bar_layer_remove_from_window(&data->action_bar);
   i18n_free_all(data);
 }
 
