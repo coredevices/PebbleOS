@@ -229,6 +229,13 @@ void window_set_overrides_back_button(Window *window, bool overrides_back_button
   window->overrides_back_button = overrides_back_button;
 }
 
+void window_set_touch_bridge_disabled(Window *window, bool disabled) {
+  if (!window || (disabled == window->touch_bridge_disabled)) {
+    return;
+  }
+  window->touch_bridge_disabled = disabled;
+}
+
 static ClickManager* prv_get_current_click_manager(void) {
   return window_manager_get_window_click_manager(window_manager_get_top_window());
 }

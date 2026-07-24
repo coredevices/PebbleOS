@@ -320,6 +320,17 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
       } else if (e->touch.event.type == TouchEvent_Liftoff) {
         light_touch_up();
       }
+      const bool is_modal_focused =
+          (modal_manager_get_enabled() &&
+           !(modal_manager_get_properties() & ModalProperty_Unfocused));
+      if (compositor_is_animating() || is_modal_focused) {
+        // Mask the app task while the compositor animates or a modal is focused. Otherwise a
+        // gesture over a focused modal reaches both the kernel (modal) twin and the app twin
+        // underneath, firing two actions for one gesture; masking the app leaves the modal twin
+        // as the sole handler (mirrors the button path above). Stamp WITHOUT returning so the
+        // wake-gate latch below still runs.
+        e->task_mask |= 1 << PebbleTask_App;
+      }
       // Stamp on every event so the whole gesture carries the Touchdown latch.
       touch_wake_gate_stamp(&e->touch.event, gate);
       return;

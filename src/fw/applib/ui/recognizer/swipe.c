@@ -219,6 +219,21 @@ Recognizer *swipe_recognizer_create(RecognizerEventCb event_cb, void *user_data,
                                      user_data);
 }
 
+Recognizer *swipe_recognizer_init_static(void *storage, RecognizerEventCb event_cb, void *user_data,
+                                         uint8_t direction_mask) {
+  _Static_assert(
+      RECOGNIZER_INSTANCE_SIZE + sizeof(SwipeRecognizerData) <= SWIPE_RECOGNIZER_STATIC_SIZE,
+      "SWIPE_RECOGNIZER_STATIC_SIZE too small for a static swipe recognizer");
+  SwipeRecognizerData data = {
+    .config = {
+      .direction_mask = direction_mask,
+    },
+  };
+
+  return recognizer_init_static_with_data(storage, &s_swipe_recognizer_impl, &data, sizeof(data),
+                                          event_cb, user_data);
+}
+
 const SwipeRecognizerData *swipe_recognizer_get_data(const Recognizer *recognizer) {
   return recognizer_get_impl_data((Recognizer *)recognizer, &s_swipe_recognizer_impl);
 }

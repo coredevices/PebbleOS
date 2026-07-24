@@ -13,6 +13,15 @@
 #include "applib/ui/layer.h"
 #include "applib/ui/recognizer/recognizer_list.h"
 #include "applib/ui/recognizer/recognizer_manager.h"
+#include "applib/ui/recognizer/touch_nav.h"
+#include "applib/ui/click.h"
+#include "applib/ui/click_internal.h"
+#include "applib/ui/window_private.h"
+#include "applib/ui/window_stack.h"
+#include "applib/touch_service.h"
+#include "applib/touch_service_private.h"
+#include "pbl/services/touch/touch.h"
+#include "pbl/drivers/button_id.h"
 #include "applib/unobstructed_area_service.h"
 #include "kernel/util/segment.h"
 #include "process_management/process_loader.h"
@@ -105,6 +114,7 @@ typedef struct {
 #ifdef CONFIG_TOUCH
   RecognizerList recognizer_list;
   RecognizerManager recognizer_manager;
+  TouchNavState touch_nav_state;
 #endif
 
   uint8_t *js_runtime_context_buffer;
@@ -171,6 +181,42 @@ bool app_state_configure(MemorySegment *app_state_ram,
   return true;
 }
 
+#ifdef CONFIG_TOUCH
+// Touch-nav bridge effects for the app task.
+static bool prv_app_touch_nav_is_animating(void *ctx) {
+  return window_stack_is_animating(app_state_get_window_stack());
+}
+
+static bool prv_app_touch_nav_top_overrides_back(void *ctx) {
+  Window *top = app_window_stack_get_top_window();
+  return top && top->overrides_back_button;
+}
+
+static bool prv_app_touch_nav_top_bridge_disabled(void *ctx) {
+  Window *top = app_window_stack_get_top_window();
+  return top && top->touch_bridge_disabled;
+}
+
+static void prv_app_touch_nav_pop_top(void *ctx) {
+  window_stack_pop_with_transition(app_state_get_window_stack(), NULL /* default pop transition */);
+}
+
+static void prv_app_touch_nav_emit_button(void *ctx, ButtonId button) {
+  ClickManager *cm = app_state_get_click_manager();
+  click_recognizer_handle_button_down(&cm->recognizers[button]);
+  click_recognizer_handle_button_up(&cm->recognizers[button]);
+}
+
+static const TouchNavOps s_app_touch_nav_ops = {
+  .is_animating = prv_app_touch_nav_is_animating,
+  .top_overrides_back = prv_app_touch_nav_top_overrides_back,
+  .top_bridge_disabled = prv_app_touch_nav_top_bridge_disabled,
+  .pop_top = prv_app_touch_nav_pop_top,
+  .emit_button = prv_app_touch_nav_emit_button,
+  .idle_refresh = NULL,  // the app task has no idle-timeout refresh; that is the kernel's job
+};
+#endif
+
 NOINLINE void app_state_init(void) {
   s_app_state_ptr->rand_seed.mat1 = 0; // Uninitialized
 
@@ -179,6 +225,8 @@ NOINLINE void app_state_init(void) {
 #ifdef CONFIG_TOUCH
   recognizer_manager_init(&s_app_state_ptr->recognizer_manager);
   s_app_state_ptr->recognizer_manager.global_list = &s_app_state_ptr->recognizer_list;
+  touch_nav_state_init(&s_app_state_ptr->touch_nav_state, &s_app_state_ptr->recognizer_manager,
+                       &s_app_touch_nav_ops);
 #endif
 
   animation_private_state_init(&s_app_state_ptr->animation_state);
@@ -216,6 +264,12 @@ NOINLINE void app_state_init(void) {
   tick_timer_service_state_init(app_state_get_tick_timer_service_state());
 
   touch_service_state_init(app_state_get_touch_service_state());
+
+#ifdef CONFIG_TOUCH
+  // Route this app's touch events through the nav bridge when the master pref is on. No-op for
+  // watchfaces (touch_service_set_system_handler declines them).
+  app_touch_nav_subscribe();
+#endif
 
   health_service_state_init(app_state_get_health_service_state());
 
@@ -416,6 +470,24 @@ RecognizerList *app_state_get_recognizer_list(void) {
 
 RecognizerManager *app_state_get_recognizer_manager(void) {
   return &s_app_state_ptr->recognizer_manager;
+}
+
+TouchNavState *app_state_get_touch_nav_state(void) {
+  return &s_app_state_ptr->touch_nav_state;
+}
+
+void app_touch_nav_subscribe(void) {
+  // Route the touch service system slot through the nav dispatcher. touch_service_set_system_handler
+  // no-ops for watchfaces, so watchfaces never receive emulation.
+  if (!touch_nav_enabled()) {
+    return;
+  }
+  touch_service_set_system_handler(touch_nav_dispatch, &s_app_state_ptr->touch_nav_state);
+}
+
+void app_touch_nav_unsubscribe(void) {
+  recognizer_manager_cancel_and_reset(&s_app_state_ptr->recognizer_manager);
+  touch_service_set_system_handler(NULL, NULL);
 }
 #endif
 

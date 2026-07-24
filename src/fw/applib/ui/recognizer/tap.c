@@ -118,6 +118,21 @@ Recognizer *tap_recognizer_create(RecognizerEventCb event_cb, void *user_data) {
                                      user_data);
 }
 
+Recognizer *tap_recognizer_init_static(void *storage, RecognizerEventCb event_cb, void *user_data) {
+  _Static_assert(RECOGNIZER_INSTANCE_SIZE + sizeof(TapRecognizerData) <= TAP_RECOGNIZER_STATIC_SIZE,
+                 "TAP_RECOGNIZER_STATIC_SIZE too small for a static tap recognizer");
+  TapRecognizerData data = {
+    .config = {
+      .taps_required = 1,
+      .fingers_required = 1,
+      .movement_threshold = GPoint(TAP_MOVEMENT_THRESHOLD_PX, TAP_MOVEMENT_THRESHOLD_PX),
+    },
+  };
+
+  return recognizer_init_static_with_data(storage, &s_tap_recognizer_impl, &data, sizeof(data),
+                                          event_cb, user_data);
+}
+
 const TapRecognizerData *tap_recognizer_get_data(const Recognizer *recognizer) {
   return recognizer_get_impl_data((Recognizer *)recognizer, &s_tap_recognizer_impl);
 }

@@ -29,6 +29,20 @@ typedef enum PanAxis {
 //! @return recognizer reference
 Recognizer *pan_recognizer_create(RecognizerEventCb event_cb, void *user_data, PanAxis axis);
 
+//! Bytes of pointer-aligned storage required to hold a static (by-value) pan recognizer plus its
+//! implementation data. A build-time assert in pan.c keeps it in sync with the real data size.
+#define PAN_RECOGNIZER_STATIC_SIZE (RECOGNIZER_INSTANCE_SIZE + 112)
+
+//! Initialize a pan recognizer locked to \a axis into caller-provided storage without heap
+//! allocation.
+//! @param storage storage of at least \ref PAN_RECOGNIZER_STATIC_SIZE bytes, pointer-aligned
+//! @param event_cb event callback
+//! @param user_data user data associated with recognizer
+//! @param axis axis to which the pan is locked
+//! @return recognizer reference (equal to \a storage), or NULL if \a event_cb is NULL
+Recognizer *pan_recognizer_init_static(void *storage, RecognizerEventCb event_cb, void *user_data,
+                                       PanAxis axis);
+
 //! Get the pan recognizer data from a recognizer. Should be used in the event callback to get the
 //! data for a pan recognizer event.
 //! @param recognizer recognizer from which to get data

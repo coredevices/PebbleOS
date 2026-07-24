@@ -3,6 +3,7 @@
 
 sources = [
     'touch.c',
+    'touch_nav_service.c',
 ]
 
 bld.stlib(

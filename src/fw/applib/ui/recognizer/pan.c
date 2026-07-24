@@ -223,6 +223,22 @@ Recognizer *pan_recognizer_create(RecognizerEventCb event_cb, void *user_data, P
                                      user_data);
 }
 
+Recognizer *pan_recognizer_init_static(void *storage, RecognizerEventCb event_cb, void *user_data,
+                                       PanAxis axis) {
+  _Static_assert(RECOGNIZER_INSTANCE_SIZE + sizeof(PanRecognizerData) <= PAN_RECOGNIZER_STATIC_SIZE,
+                 "PAN_RECOGNIZER_STATIC_SIZE too small for a static pan recognizer");
+  PanRecognizerData data = {
+    .config = {
+      .axis_lock = axis,
+      .start_threshold_px = PAN_START_THRESHOLD_PX,
+      .axis_dominance = PAN_AXIS_DOMINANCE,
+    },
+  };
+
+  return recognizer_init_static_with_data(storage, &s_pan_recognizer_impl, &data, sizeof(data),
+                                          event_cb, user_data);
+}
+
 const PanRecognizerData *pan_recognizer_get_data(const Recognizer *recognizer) {
   return recognizer_get_impl_data((Recognizer *)recognizer, &s_pan_recognizer_impl);
 }

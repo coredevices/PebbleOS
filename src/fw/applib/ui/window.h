@@ -112,6 +112,11 @@ typedef struct Window {
   bool in_click_config_provider:1;
 
   //! @internal
+  //! If set, the touch-nav bridge must not emulate buttons for this window (Tier-2 is off).
+  //! A Tier-1 widget sets this so its own recognizers, not the system bridge, drive the gesture.
+  bool touch_bridge_disabled:1;
+
+  //! @internal
   //! If a click config provider was changed while the window was covered by a modal,
   //! this flag is used to indicate that it should be called when uncovered.
   bool is_waiting_for_click_config:1;

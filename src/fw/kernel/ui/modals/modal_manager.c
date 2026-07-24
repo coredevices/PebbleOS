@@ -5,6 +5,11 @@
 
 #include "applib/ui/app_window_click_glue.h"
 #include "applib/ui/click_internal.h"
+#include "applib/ui/recognizer/recognizer_list.h"
+#include "applib/ui/recognizer/recognizer_manager.h"
+#include "applib/ui/recognizer/touch_nav.h"
+#include "applib/touch_service.h"
+#include "applib/touch_service_private.h"
 #include "applib/ui/window.h"
 #include "applib/ui/window_private.h"
 #include "applib/ui/window_stack.h"
@@ -45,6 +50,13 @@ static void prv_update_modal_stacks(UpdateContext *context);
 static ModalContext s_modal_window_stacks[NumModalPriorities];
 
 static ClickManager s_modal_window_click_manager;
+
+#ifdef CONFIG_TOUCH
+// Kernel twin of the per-task touch-nav bridge state (the app twin lives in AppState).
+static RecognizerList s_modal_recognizer_list;
+static RecognizerManager s_modal_recognizer_manager;
+static TouchNavState s_modal_touch_nav_state;
+#endif
 
 static ModalPriority s_modal_min_priority = ModalPriorityMin;
 
@@ -99,6 +111,78 @@ static void prv_send_will_focus_event(bool in_focus) {
   event_put(&event);
 }
 
+#ifdef CONFIG_TOUCH
+static Window *prv_get_visible_focused_window(void);
+
+// Touch-nav bridge effects for the kernel (modal) task.
+static bool prv_modal_touch_nav_is_animating(void *ctx) {
+  Window *window = prv_get_visible_focused_window();
+  return window && window_stack_is_animating(window->parent_window_stack);
+}
+
+static bool prv_modal_touch_nav_top_overrides_back(void *ctx) {
+  Window *window = prv_get_visible_focused_window();
+  return window && window->overrides_back_button;
+}
+
+static bool prv_modal_touch_nav_top_bridge_disabled(void *ctx) {
+  Window *window = prv_get_visible_focused_window();
+  // No focused modal window: keep the modal twin inert. The button path is
+  // likewise gated on a focused modal (and asserts a window), so report
+  // bridge-disabled here -> route resolves to None -> the whole set fails and
+  // nothing is emitted, instead of emitting into an unowned modal click manager.
+  if (!window) {
+    return true;
+  }
+  return window->touch_bridge_disabled;
+}
+
+static void prv_modal_touch_nav_pop_top(void *ctx) {
+  Window *window = prv_get_visible_focused_window();
+  if (window) {
+    window_stack_remove(window, true /* animated */);
+  }
+}
+
+static void prv_modal_touch_nav_emit_button(void *ctx, ButtonId button) {
+  ClickManager *cm = modal_manager_get_click_manager();
+  click_recognizer_handle_button_down(&cm->recognizers[button]);
+  click_recognizer_handle_button_up(&cm->recognizers[button]);
+}
+
+static void prv_modal_touch_nav_idle_refresh(void *ctx) {
+  app_idle_timeout_refresh();
+}
+
+static const TouchNavOps s_modal_touch_nav_ops = {
+  .is_animating = prv_modal_touch_nav_is_animating,
+  .top_overrides_back = prv_modal_touch_nav_top_overrides_back,
+  .top_bridge_disabled = prv_modal_touch_nav_top_bridge_disabled,
+  .pop_top = prv_modal_touch_nav_pop_top,
+  .emit_button = prv_modal_touch_nav_emit_button,
+  .idle_refresh = prv_modal_touch_nav_idle_refresh,
+};
+
+RecognizerManager *modal_manager_get_recognizer_manager(void) {
+  return &s_modal_recognizer_manager;
+}
+
+TouchNavState *modal_manager_get_touch_nav_state(void) {
+  return &s_modal_touch_nav_state;
+}
+
+void modal_touch_nav_subscribe(void) {
+  // Runs on KernelMain. touch_service_set_system_handler routes the kernel touch slot to the nav
+  // dispatcher for the modal twin.
+  touch_service_set_system_handler(touch_nav_dispatch, &s_modal_touch_nav_state);
+}
+
+void modal_touch_nav_unsubscribe(void) {
+  recognizer_manager_cancel_and_reset(&s_modal_recognizer_manager);
+  touch_service_set_system_handler(NULL, NULL);
+}
+#endif
+
 // Public API
 ////////////////////
 void modal_manager_init(void) {
@@ -107,6 +191,14 @@ void modal_manager_init(void) {
   // honour that setting.
 
   click_manager_init(&s_modal_window_click_manager);
+
+#ifdef CONFIG_TOUCH
+  recognizer_list_init(&s_modal_recognizer_list);
+  recognizer_manager_init(&s_modal_recognizer_manager);
+  s_modal_recognizer_manager.global_list = &s_modal_recognizer_list;
+  touch_nav_state_init(&s_modal_touch_nav_state, &s_modal_recognizer_manager,
+                       &s_modal_touch_nav_ops);
+#endif
 }
 
 void modal_manager_set_min_priority(ModalPriority priority) {

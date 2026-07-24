@@ -1612,3 +1612,29 @@ void command_console_disable_rx(const char *seconds_str) {
   new_timer_start(s_console_disable_rx_timer, seconds * 1000,
                   prv_console_disable_rx_timer_cb, NULL, 0 /*flags*/);
 }
+
+#ifdef CONFIG_TOUCH
+#include "applib/ui/recognizer/touch_nav.h"
+#include "kernel/ui/modals/modal_manager.h"
+
+void command_touch_nav_log(void) {
+  const TouchNavState *state = modal_manager_get_touch_nav_state();
+  char buf[96];
+  prompt_send_response_fmt(
+      buf, sizeof(buf),
+      "started=%u completed=%u failed=%u cancelled=%u dropped=%u gated=%u",
+      state->counters.started, state->counters.completed, state->counters.failed,
+      state->counters.cancelled, state->counters.dropped, state->counters.gated);
+
+  static const char *const kind_names[] = {"route", "emit", "drop", "gate"};
+  const uint8_t count = state->log_count;
+  for (uint8_t i = 0; i < count; i++) {
+    // Walk oldest to newest.
+    const uint8_t idx =
+        (uint8_t)((state->log_head + TOUCH_NAV_LOG_ENTRIES - count + i) % TOUCH_NAV_LOG_ENTRIES);
+    const TouchNavLogEntry *e = &state->log[idx];
+    const char *name = (e->kind < ARRAY_LENGTH(kind_names)) ? kind_names[e->kind] : "?";
+    prompt_send_response_fmt(buf, sizeof(buf), "  [%u] %s detail=%u", i, name, e->detail);
+  }
+}
+#endif

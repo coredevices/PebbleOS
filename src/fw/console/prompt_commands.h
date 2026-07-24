@@ -24,6 +24,9 @@ extern void command_put_button_event(const char*, const char*);
 extern void command_button_press(const char*, const char*);
 extern void command_button_press_multiple(const char *, const char *, const char *, const char *);
 extern void command_button_press_short(const char*);
+#ifdef CONFIG_TOUCH
+extern void command_touch_nav_log(void);
+#endif
 
 extern void command_stats_dump_now(void);
 extern void command_stats_dump_current(void);
@@ -307,6 +310,9 @@ static const Command s_prompt_commands[] = {
   { "click short", command_button_press_short, 1 },
   { "click multiple", command_button_press_multiple, 4 },
   { "click long", command_button_press, 2 },
+#ifdef CONFIG_TOUCH
+  { "touch nav log", command_touch_nav_log, 0 },
+#endif
   { "reset", command_reset, 0 },
   { "crash", command_crash, 0 },
   { "hard crash", command_hard_crash, 0 },

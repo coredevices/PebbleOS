@@ -22,6 +22,7 @@
 #include "process_management/process_manager.h"
 #include "pbl/services/accel_manager.h"
 #include "pbl/services/touch/touch.h"
+#include "pbl/services/touch/touch_nav_service.h"
 #include "pbl/services/hrm/hrm_manager.h"
 #include "pbl/services/i18n/i18n.h"
 #include "resource/resource_ids.auto.h"
@@ -92,6 +93,9 @@ static uint8_t s_backlight_touch_wake = BacklightTouchWake_DoubleTap;
 
 #define PREF_KEY_TOUCH_ENABLED "touchEnabled"
 static bool s_touch_enabled = true;
+
+#define PREF_KEY_TOUCH_NAVIGATION "touchNavEnabled"
+static bool s_touch_navigation_enabled = false;
 
 #define PREF_KEY_MOTION_SENSITIVITY "motionSensitivity"
 static uint8_t s_motion_sensitivity = 55; // Default to Medium
@@ -438,6 +442,14 @@ static bool prv_set_s_touch_enabled(bool *enabled) {
   s_touch_enabled = *enabled;
 #ifdef CONFIG_TOUCH
   touch_service_set_globally_enabled(*enabled);
+#endif
+  return true;
+}
+
+static bool prv_set_s_touch_navigation_enabled(bool *enabled) {
+  s_touch_navigation_enabled = *enabled;
+#ifdef CONFIG_TOUCH
+  touch_nav_set_enabled(*enabled);
 #endif
   return true;
 }
@@ -1035,6 +1047,7 @@ void shell_prefs_init(void) {
 #ifdef CONFIG_TOUCH
   touch_set_backlight_enabled(s_backlight_touch_wake != BacklightTouchWake_Off);
   touch_service_set_globally_enabled(s_touch_enabled);
+  touch_nav_set_enabled(s_touch_navigation_enabled);
 #endif
 }
 
@@ -1337,6 +1350,14 @@ bool touch_is_globally_enabled(void) {
 
 void touch_set_globally_enabled(bool enable) {
   prv_pref_set(PREF_KEY_TOUCH_ENABLED, &enable, sizeof(enable));
+}
+
+bool touch_navigation_is_enabled(void) {
+  return s_touch_navigation_enabled;
+}
+
+void touch_set_navigation_enabled(bool enable) {
+  prv_pref_set(PREF_KEY_TOUCH_NAVIGATION, &enable, sizeof(enable));
 }
 
 #ifdef CONFIG_DYNAMIC_BACKLIGHT

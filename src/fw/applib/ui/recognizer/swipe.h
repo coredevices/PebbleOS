@@ -32,6 +32,20 @@ typedef enum SwipeDirection {
 Recognizer *swipe_recognizer_create(RecognizerEventCb event_cb, void *user_data,
                                     uint8_t direction_mask);
 
+//! Bytes of pointer-aligned storage required to hold a static (by-value) swipe recognizer plus its
+//! implementation data. A build-time assert in swipe.c keeps it in sync with the real data size.
+#define SWIPE_RECOGNIZER_STATIC_SIZE (RECOGNIZER_INSTANCE_SIZE + 112)
+
+//! Initialize a swipe recognizer accepting \a direction_mask into caller-provided storage without
+//! heap allocation.
+//! @param storage storage of at least \ref SWIPE_RECOGNIZER_STATIC_SIZE bytes, pointer-aligned
+//! @param event_cb event callback
+//! @param user_data user data associated with recognizer
+//! @param direction_mask bitwise-OR of the \ref SwipeDirection values to accept
+//! @return recognizer reference (equal to \a storage), or NULL if \a event_cb is NULL
+Recognizer *swipe_recognizer_init_static(void *storage, RecognizerEventCb event_cb, void *user_data,
+                                         uint8_t direction_mask);
+
 //! Get the swipe recognizer data from a recognizer. Should be used in the event callback to get the
 //! data for a swipe recognizer event.
 //! @param recognizer recognizer from which to get data

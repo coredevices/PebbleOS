@@ -1,0 +1,522 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#include "clar.h"
+
+#include "applib/ui/layer.h"
+#include "applib/ui/window.h"
+#include "applib/ui/recognizer/recognizer.h"
+#include "applib/ui/recognizer/recognizer_impl.h"
+#include "applib/ui/recognizer/recognizer_list.h"
+#include "applib/ui/recognizer/recognizer_manager.h"
+#include "applib/ui/recognizer/recognizer_private.h"
+#include "applib/ui/recognizer/touch_nav.h"
+
+#include "pbl/drivers/rtc.h"
+
+// Fakes
+#include "fake_rtc.h"
+
+// Stubs
+#include "stubs_app_state.h"
+#include "stubs_gbitmap.h"
+#include "stubs_graphics.h"
+#include "stubs_heap.h"
+#include "stubs_logging.h"
+#include "stubs_passert.h"
+#include "stubs_pbl_malloc.h"
+#include "stubs_pebble_tasks.h"
+#include "stubs_process_manager.h"
+#include "stubs_ui_window.h"
+#include "stubs_unobstructed_area.h"
+
+// ---------------------------------------------------------------------------------------------
+// Collaborator stubs the recognizer manager needs (mirrors test_recognizer_manager.c).
+
+static Layer *s_active_layer;
+static RecognizerManager *s_manager;
+
+RecognizerList *window_get_recognizer_list(Window *window) {
+  // The window carries no window-level recognizers in these tests; only the task-global list.
+  return NULL;
+}
+
+RecognizerManager *window_get_recognizer_manager(Window *window) {
+  return s_manager;
+}
+
+struct Layer *window_get_root_layer(const Window *window) {
+  if (!window) {
+    return NULL;
+  }
+  return &((Window *)window)->layer;
+}
+
+Layer *layer_find_layer_containing_point(const Layer *node, const GPoint *point) {
+  return s_active_layer;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Master-pref gate, controlled by the tests.
+
+static bool s_nav_enabled;
+
+bool touch_nav_enabled(void) {
+  return s_nav_enabled;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Fake TouchNavOps, recording every effect.
+
+typedef struct FakeOps {
+  bool animating;
+  bool overrides_back;
+  bool bridge_disabled;
+  int pop_count;
+  int idle_refresh_count;
+  int emit_count;
+  ButtonId last_emit;
+} FakeOps;
+
+static FakeOps s_fake;
+
+static bool prv_is_animating(void *ctx) { return ((FakeOps *)ctx)->animating; }
+static bool prv_top_overrides_back(void *ctx) { return ((FakeOps *)ctx)->overrides_back; }
+static bool prv_top_bridge_disabled(void *ctx) { return ((FakeOps *)ctx)->bridge_disabled; }
+static void prv_pop_top(void *ctx) { ((FakeOps *)ctx)->pop_count++; }
+static void prv_idle_refresh(void *ctx) { ((FakeOps *)ctx)->idle_refresh_count++; }
+static void prv_emit_button(void *ctx, ButtonId button) {
+  FakeOps *ops = ctx;
+  ops->emit_count++;
+  ops->last_emit = button;
+}
+
+static TouchNavOps s_ops;
+
+// ---------------------------------------------------------------------------------------------
+// Fixture
+
+static Window s_window;
+static Layer s_child_layer;
+static RecognizerList s_global_list;
+static RecognizerManager s_recognizer_manager;
+static TouchNavState s_state;
+
+void test_touch_nav__initialize(void) {
+  fake_rtc_init(0, 0);
+  s_nav_enabled = true;
+  s_active_layer = NULL;
+  s_fake = (FakeOps){0};
+  s_ops = (TouchNavOps){
+    .is_animating = prv_is_animating,
+    .top_overrides_back = prv_top_overrides_back,
+    .top_bridge_disabled = prv_top_bridge_disabled,
+    .pop_top = prv_pop_top,
+    .emit_button = prv_emit_button,
+    .idle_refresh = prv_idle_refresh,
+    .ctx = &s_fake,
+  };
+
+  s_window = (Window){};
+  layer_init(&s_window.layer, &GRectZero);
+  layer_init(&s_child_layer, &GRectZero);
+  layer_add_child(&s_window.layer, &s_child_layer);
+
+  recognizer_list_init(&s_global_list);
+  recognizer_manager_init(&s_recognizer_manager);
+  s_recognizer_manager.window = &s_window;
+  s_recognizer_manager.global_list = &s_global_list;
+  s_manager = &s_recognizer_manager;
+
+  touch_nav_state_init(&s_state, &s_recognizer_manager, &s_ops);
+}
+
+void test_touch_nav__cleanup(void) {
+  touch_nav_state_deinit(&s_state);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Helpers
+
+static void prv_dispatch(TouchEventType type, int16_t x, int16_t y, bool non_navigational) {
+  const TouchEvent e = {
+    .type = type,
+    .x = x,
+    .y = y,
+    .non_navigational = non_navigational,
+  };
+  touch_nav_dispatch(&e, &s_state);
+}
+
+static void prv_advance_ms(uint32_t ms) {
+  fake_rtc_increment_ticks((RtcTicks)ms * RTC_TICKS_HZ / MS_PER_SECOND);
+}
+
+// Drive a straight fast flick from (sx, sy) to (ex, ey) through the dispatcher. The route is
+// resolved on the Touchdown.
+static void prv_swipe(int16_t sx, int16_t sy, int16_t ex, int16_t ey) {
+  prv_dispatch(TouchEvent_Touchdown, sx, sy, false);
+  prv_advance_ms(20);
+  prv_dispatch(TouchEvent_PositionUpdate, (int16_t)((sx + ex) / 2), (int16_t)((sy + ey) / 2), false);
+  prv_advance_ms(20);
+  prv_dispatch(TouchEvent_PositionUpdate, ex, ey, false);
+  prv_advance_ms(20);
+  prv_dispatch(TouchEvent_Liftoff, 0, 0, false);
+}
+
+// A quick, stationary tap through the dispatcher.
+static void prv_tap(int16_t x, int16_t y) {
+  prv_dispatch(TouchEvent_Touchdown, x, y, false);
+  prv_advance_ms(30);
+  prv_dispatch(TouchEvent_Liftoff, 0, 0, false);
+}
+
+static RecognizerState prv_state(Recognizer *r) {
+  return recognizer_get_state(r);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Criterion 7: Tier-2 → pan Failed immediately; swipe up → Completed.
+// Content-scroll convention (criterion 1/7): a swipe up emulates the DOWN button.
+
+void test_touch_nav__tier2_fails_pan_and_completes_swipe(void) {
+  // Touchdown below the dead zone, no Tier-1 widget, bridge enabled → Tier-2 route.
+  prv_dispatch(TouchEvent_Touchdown, 90, 90, false);
+  cl_assert_equal_i(s_state.route, TouchNavRoute_Tier2);
+  // pan is failed at routing time so it cannot Start at threshold and fail the swipe.
+  cl_assert_equal_i(prv_state(s_state.pan), RecognizerState_Failed);
+  cl_assert_equal_i(prv_state(s_state.tap), RecognizerState_Possible);
+  cl_assert_equal_i(prv_state(s_state.swipe), RecognizerState_Possible);
+
+  prv_advance_ms(20);
+  prv_dispatch(TouchEvent_PositionUpdate, 90, 60, false);
+  prv_advance_ms(20);
+  prv_dispatch(TouchEvent_PositionUpdate, 90, 30, false);
+  prv_advance_ms(20);
+  prv_dispatch(TouchEvent_Liftoff, 0, 0, false);
+
+  // The swipe Completed (observed via the bridge emulation and the completed counter). The manager
+  // resets the set to Possible immediately after completion, so state is asserted through the emit.
+  cl_assert_equal_i(s_state.counters.completed, 1);
+  cl_assert_equal_i(s_fake.emit_count, 1);
+  cl_assert_equal_i(s_fake.last_emit, BUTTON_ID_DOWN);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Criterion 1: direction mapping + BACK branch for a window with no BACK handler.
+// Content-scroll convention: the emulated button opposes finger travel (swipe up -> DOWN button,
+// swipe down -> UP button), matching native MenuLayer/ScrollLayer touch.
+
+void test_touch_nav__swipe_up_maps_to_down(void) {
+  prv_swipe(50, 90, 50, 20);
+  cl_assert_equal_i(s_fake.emit_count, 1);
+  cl_assert_equal_i(s_fake.last_emit, BUTTON_ID_DOWN);
+  cl_assert_equal_i(s_fake.pop_count, 0);
+}
+
+void test_touch_nav__swipe_down_maps_to_up(void) {
+  prv_swipe(50, 20, 50, 90);
+  cl_assert_equal_i(s_fake.emit_count, 1);
+  cl_assert_equal_i(s_fake.last_emit, BUTTON_ID_UP);
+}
+
+void test_touch_nav__swipe_right_no_back_handler_pops(void) {
+  s_fake.overrides_back = false;
+  prv_swipe(20, 90, 90, 90);
+  // Left-to-right (right) maps to BACK; with no back handler it pops the stack rather than
+  // feeding the click recognizer.
+  cl_assert_equal_i(s_fake.pop_count, 1);
+  cl_assert_equal_i(s_fake.emit_count, 0);
+}
+
+void test_touch_nav__swipe_right_with_back_handler_emits_click(void) {
+  s_fake.overrides_back = true;
+  prv_swipe(20, 90, 90, 90);
+  // The window handles BACK itself, so synthesize the button rather than popping.
+  cl_assert_equal_i(s_fake.pop_count, 0);
+  cl_assert_equal_i(s_fake.emit_count, 1);
+  cl_assert_equal_i(s_fake.last_emit, BUTTON_ID_BACK);
+}
+
+void test_touch_nav__tap_maps_to_select(void) {
+  prv_tap(50, 90);
+  cl_assert_equal_i(s_fake.emit_count, 1);
+  cl_assert_equal_i(s_fake.last_emit, BUTTON_ID_SELECT);
+}
+
+void test_touch_nav__swipe_left_maps_to_select(void) {
+  // Right-to-left (left) maps to SELECT; it never pops.
+  prv_swipe(90, 90, 20, 90);
+  cl_assert_equal_i(s_fake.emit_count, 1);
+  cl_assert_equal_i(s_fake.last_emit, BUTTON_ID_SELECT);
+  cl_assert_equal_i(s_fake.pop_count, 0);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Criterion 2: a gesture completing during window_stack_is_animating is dropped.
+
+void test_touch_nav__completion_during_animation_dropped(void) {
+  s_fake.animating = true;
+  prv_swipe(50, 90, 50, 20);
+  cl_assert_equal_i(s_fake.emit_count, 0);
+  cl_assert_equal_i(s_fake.pop_count, 0);
+  cl_assert_equal_i(s_state.counters.dropped, 1);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Criterion 3: a non_navigational Touchdown never reaches the bridge.
+
+void test_touch_nav__non_navigational_never_bridges(void) {
+  prv_dispatch(TouchEvent_Touchdown, 50, 90, true /* non_navigational */);
+  cl_assert_equal_i(s_state.counters.gated, 1);
+  // Feed the rest of a would-be swipe; nothing must be emulated.
+  prv_advance_ms(20);
+  prv_dispatch(TouchEvent_PositionUpdate, 50, 60, true);
+  prv_advance_ms(20);
+  prv_dispatch(TouchEvent_PositionUpdate, 50, 20, true);
+  prv_advance_ms(20);
+  prv_dispatch(TouchEvent_Liftoff, 0, 0, true);
+  cl_assert_equal_i(s_fake.emit_count, 0);
+  cl_assert_equal_i(s_fake.pop_count, 0);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Criterion 4: a touch_bridge_disabled window with no Tier-1 widget fails all three system
+// recognizers after the Touchdown.
+
+void test_touch_nav__bridge_disabled_fails_all(void) {
+  s_fake.bridge_disabled = true;
+  prv_dispatch(TouchEvent_Touchdown, 50, 90, false);
+  cl_assert_equal_i(s_state.route, TouchNavRoute_None);
+  cl_assert_equal_i(prv_state(s_state.tap), RecognizerState_Failed);
+  cl_assert_equal_i(prv_state(s_state.pan), RecognizerState_Failed);
+  cl_assert_equal_i(prv_state(s_state.swipe), RecognizerState_Failed);
+}
+
+// ---------------------------------------------------------------------------------------------
+// П5: anti-double arbitration — "one gesture → exactly one action, never double". The fake
+// emit_button op counts every emulation so we can assert exactly-one (never 0 or 2).
+
+// (a) A bridge-disabled window (the app owns touch): a full gesture emulates nothing.
+void test_touch_nav__arbitration_bridge_disabled_no_emit(void) {
+  s_fake.bridge_disabled = true;
+  prv_swipe(50, 90, 50, 20);
+  cl_assert_equal_i(s_fake.emit_count, 0);
+  cl_assert_equal_i(s_fake.pop_count, 0);
+}
+
+// (b) The persistent-sensor timing window: the window becomes bridge-disabled BETWEEN the Touchdown
+// (which latched Tier-2) and the Liftoff. The Liftoff re-check must catch the changed arbitration
+// and drop, so the bridge does not fire alongside the app -> no double action.
+void test_touch_nav__arbitration_persistent_sensor_timing_window(void) {
+  s_fake.bridge_disabled = false;
+  prv_dispatch(TouchEvent_Touchdown, 50, 90, false);
+  cl_assert_equal_i(s_state.route, TouchNavRoute_Tier2);
+
+  // The app takes over touch after the route already latched Tier-2.
+  s_fake.bridge_disabled = true;
+
+  prv_advance_ms(20);
+  prv_dispatch(TouchEvent_PositionUpdate, 50, 60, false);
+  prv_advance_ms(20);
+  prv_dispatch(TouchEvent_PositionUpdate, 50, 20, false);
+  prv_advance_ms(20);
+  prv_dispatch(TouchEvent_Liftoff, 0, 0, false);
+
+  // The swipe completed but the Liftoff re-check dropped it: exactly zero emulations.
+  cl_assert_equal_i(s_state.counters.completed, 1);
+  cl_assert_equal_i(s_fake.emit_count, 0);
+  cl_assert_equal_i(s_fake.pop_count, 0);
+  cl_assert_equal_i(s_state.counters.dropped, 1);
+}
+
+// (c) A normal Tier-2 gesture emulates EXACTLY ONE button — never zero, never twice.
+void test_touch_nav__arbitration_single_gesture_single_emit(void) {
+  prv_swipe(50, 90, 50, 20);
+  cl_assert_equal_i(s_fake.emit_count, 1);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Criterion 5: pref OFF → recognizers not activated, bridge synthesizes nothing even with a stale
+// subscription (the state remains subscribed but nav is disabled).
+
+void test_touch_nav__pref_off_is_inert(void) {
+  s_nav_enabled = false;
+  prv_swipe(50, 90, 50, 20);
+  // The manager never activated: the set stays Possible and nothing is emulated.
+  cl_assert_equal_i(s_recognizer_manager.state, RecognizerManagerState_WaitForTouchdown);
+  cl_assert_equal_i(prv_state(s_state.tap), RecognizerState_Possible);
+  cl_assert_equal_i(prv_state(s_state.pan), RecognizerState_Possible);
+  cl_assert_equal_i(prv_state(s_state.swipe), RecognizerState_Possible);
+  cl_assert_equal_i(s_fake.emit_count, 0);
+  cl_assert_equal_i(s_fake.pop_count, 0);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Criterion 8: a gated Touchdown skips routing/set_failed, leaves the set Possible, ticks `gated`,
+// and the next navigational Touchdown works from its first event.
+
+void test_touch_nav__gated_then_navigational(void) {
+  prv_dispatch(TouchEvent_Touchdown, 50, 90, true /* non_navigational */);
+  cl_assert_equal_i(s_state.counters.gated, 1);
+  // Routing/set_failed were skipped: the set is still Possible.
+  cl_assert_equal_i(prv_state(s_state.tap), RecognizerState_Possible);
+  cl_assert_equal_i(prv_state(s_state.pan), RecognizerState_Possible);
+  cl_assert_equal_i(prv_state(s_state.swipe), RecognizerState_Possible);
+  cl_assert_equal_i(s_recognizer_manager.state, RecognizerManagerState_WaitForTouchdown);
+
+  // The next navigational Touchdown routes normally, from its very first event.
+  prv_dispatch(TouchEvent_Touchdown, 50, 90, false);
+  cl_assert_equal_i(s_state.route, TouchNavRoute_Tier2);
+  cl_assert_equal_i(prv_state(s_state.pan), RecognizerState_Failed);
+  cl_assert_equal_i(s_recognizer_manager.state, RecognizerManagerState_RecognizersActive);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Tier-1 registry: a registered widget under the touched layer wins the route (all three system
+// recognizers are failed so the system set does not emulate).
+
+void test_touch_nav__tier1_widget_wins(void) {
+  static TouchNavWidgetNode node;
+  node = (TouchNavWidgetNode){0};
+  touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, &node, &s_child_layer);
+  s_active_layer = &s_child_layer;
+
+  prv_dispatch(TouchEvent_Touchdown, 50, 90, false);
+  cl_assert_equal_i(s_state.route, TouchNavRoute_Tier1);
+  cl_assert_equal_i(prv_state(s_state.tap), RecognizerState_Failed);
+  cl_assert_equal_i(prv_state(s_state.pan), RecognizerState_Failed);
+  cl_assert_equal_i(prv_state(s_state.swipe), RecognizerState_Failed);
+}
+
+// Registry dedup: re-adding the same node is a no-op (still a single entry), and remove unlinks it.
+void test_touch_nav__registry_dedup_and_remove(void) {
+  static TouchNavWidgetNode node;
+  node = (TouchNavWidgetNode){0};
+  touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, &node, &s_child_layer);
+  touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, &node, &s_child_layer);
+  // Sole widget only if exactly one is registered — proves the re-add did not double-insert.
+  s_active_layer = &s_child_layer;
+  prv_dispatch(TouchEvent_Touchdown, 50, 90, false);
+  cl_assert_equal_i(s_state.route, TouchNavRoute_Tier1);
+
+  // Removing a never-added node is a safe no-op.
+  static TouchNavWidgetNode other;
+  other = (TouchNavWidgetNode){0};
+  touch_nav_registry_remove(&s_state, TouchNavWidgetType_Menu, &other);
+
+  touch_nav_registry_remove(&s_state, TouchNavWidgetType_Menu, &node);
+  // With the widget gone the same Touchdown falls through to Tier-2.
+  prv_dispatch(TouchEvent_Liftoff, 0, 0, false);
+  s_active_layer = NULL;
+  prv_dispatch(TouchEvent_Touchdown, 50, 90, false);
+  cl_assert_equal_i(s_state.route, TouchNavRoute_Tier2);
+}
+
+// Status-bar dead zone with no sole widget → dropped.
+void test_touch_nav__dead_zone_dropped(void) {
+  prv_dispatch(TouchEvent_Touchdown, 50, 4 /* inside the dead zone */, false);
+  cl_assert_equal_i(s_state.route, TouchNavRoute_Dropped);
+  cl_assert_equal_i(prv_state(s_state.tap), RecognizerState_Failed);
+  cl_assert_equal_i(prv_state(s_state.pan), RecognizerState_Failed);
+  cl_assert_equal_i(prv_state(s_state.swipe), RecognizerState_Failed);
+}
+
+// Status-bar dead zone with exactly one registered widget (via the Swap registry) that is not
+// under the active layer routes to that sole widget (Tier-1), not Dropped. Pins the sole-widget
+// branch and the Swap-type registry walk that the y=90 registry tests never reach (they match on
+// the parent walk before the dead-zone check).
+void test_touch_nav__dead_zone_sole_widget_routes_tier1(void) {
+  static TouchNavWidgetNode node;
+  node = (TouchNavWidgetNode){0};
+  touch_nav_registry_add(&s_state, TouchNavWidgetType_Swap, &node, &s_child_layer);
+  s_active_layer = NULL;  // the parent walk finds nothing, so the dead-zone branch runs
+
+  prv_dispatch(TouchEvent_Touchdown, 50, 4 /* inside the dead zone */, false);
+  cl_assert_equal_i(s_state.route, TouchNavRoute_Tier1);
+
+  touch_nav_registry_remove(&s_state, TouchNavWidgetType_Swap, &node);
+}
+
+// The dead-zone boundary is exclusive at TOUCH_NAV_STATUS_BAR_DEAD_ZONE_PX: one pixel inside drops,
+// exactly at the threshold is a normal (Tier-2) route.
+void test_touch_nav__dead_zone_boundary(void) {
+  prv_dispatch(TouchEvent_Touchdown, 50, TOUCH_NAV_STATUS_BAR_DEAD_ZONE_PX - 1 /* inside */, false);
+  cl_assert_equal_i(s_state.route, TouchNavRoute_Dropped);
+  prv_dispatch(TouchEvent_Liftoff, 0, 0, false);
+
+  prv_dispatch(TouchEvent_Touchdown, 50, TOUCH_NAV_STATUS_BAR_DEAD_ZONE_PX /* at threshold */, false);
+  cl_assert_equal_i(s_state.route, TouchNavRoute_Tier2);
+}
+
+// The idle timeout is refreshed on a navigational Touchdown, but not on a gated one.
+void test_touch_nav__idle_refresh_gated_by_navigation(void) {
+  prv_dispatch(TouchEvent_Touchdown, 50, 90, false);
+  cl_assert_equal_i(s_fake.idle_refresh_count, 1);
+  prv_dispatch(TouchEvent_Liftoff, 0, 0, false);
+  prv_dispatch(TouchEvent_Touchdown, 50, 90, true /* gated */);
+  cl_assert_equal_i(s_fake.idle_refresh_count, 1);  // unchanged
+}
+
+// ---------------------------------------------------------------------------------------------
+// Criterion 9: the disable transaction cancel_and_resets both managers, drops the task refcount,
+// and runs in the mandated order (2)-(5). The order is recorded as a step sequence.
+
+typedef enum TxnStep {
+  Step_Persist,
+  Step_KernelSubscribe,
+  Step_TakeHold,
+  Step_SynthLiftoff,
+  Step_KernelCancelResetUnsub,
+  Step_AppUnsubscribe,
+  Step_ReleaseHold,
+} TxnStep;
+
+static TxnStep s_steps[16];
+static int s_step_count;
+static bool s_last_persist_enable;
+
+static void prv_step(TxnStep step) { s_steps[s_step_count++] = step; }
+static void prv_txn_persist(void *ctx, bool enable) {
+  s_last_persist_enable = enable;
+  prv_step(Step_Persist);
+}
+static void prv_txn_kernel_subscribe(void *ctx) { prv_step(Step_KernelSubscribe); }
+static void prv_txn_take_hold(void *ctx) { prv_step(Step_TakeHold); }
+static void prv_txn_synth_liftoff(void *ctx) { prv_step(Step_SynthLiftoff); }
+static void prv_txn_kernel_cancel(void *ctx) { prv_step(Step_KernelCancelResetUnsub); }
+static void prv_txn_app_unsub(void *ctx) { prv_step(Step_AppUnsubscribe); }
+static void prv_txn_release_hold(void *ctx) { prv_step(Step_ReleaseHold); }
+
+static const TouchNavTxnOps s_txn_ops = {
+  .persist = prv_txn_persist,
+  .kernel_subscribe = prv_txn_kernel_subscribe,
+  .take_system_hold = prv_txn_take_hold,
+  .synthesize_liftoff = prv_txn_synth_liftoff,
+  .kernel_cancel_reset_unsub = prv_txn_kernel_cancel,
+  .app_unsubscribe = prv_txn_app_unsub,
+  .release_system_hold = prv_txn_release_hold,
+};
+
+void test_touch_nav__enable_transaction_order(void) {
+  s_step_count = 0;
+  touch_nav_transaction_apply(&s_txn_ops, true);
+  cl_assert_equal_i(s_step_count, 3);
+  cl_assert_equal_i(s_steps[0], Step_Persist);
+  cl_assert(s_last_persist_enable);
+  cl_assert_equal_i(s_steps[1], Step_KernelSubscribe);
+  cl_assert_equal_i(s_steps[2], Step_TakeHold);
+}
+
+void test_touch_nav__disable_transaction_order(void) {
+  s_step_count = 0;
+  touch_nav_transaction_apply(&s_txn_ops, false);
+  cl_assert_equal_i(s_step_count, 5);
+  cl_assert_equal_i(s_steps[0], Step_Persist);
+  cl_assert(!s_last_persist_enable);
+  // The mandated (2)-(5) order: synth Liftoff, kernel cancel+unsub, app unsubscribe, release hold.
+  cl_assert_equal_i(s_steps[1], Step_SynthLiftoff);
+  cl_assert_equal_i(s_steps[2], Step_KernelCancelResetUnsub);
+  cl_assert_equal_i(s_steps[3], Step_AppUnsubscribe);
+  cl_assert_equal_i(s_steps[4], Step_ReleaseHold);
+}

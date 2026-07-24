@@ -63,4 +63,17 @@ clar(ctx,
     defines = ['CONFIG_TOUCH'],
     test_sources_ant_glob = "test_recognizer_lifecycle.c")
 
+clar(ctx,
+    sources_ant_glob = " src/fw/applib/graphics/gtypes.c" \
+                       " src/fw/applib/ui/layer.c" \
+                       " src/fw/applib/ui/recognizer/recognizer.c" \
+                       " src/fw/applib/ui/recognizer/recognizer_manager.c" \
+                       " src/fw/applib/ui/recognizer/pan.c" \
+                       " src/fw/applib/ui/recognizer/swipe.c" \
+                       " src/fw/applib/ui/recognizer/tap.c" \
+                       " src/fw/applib/ui/recognizer/touch_nav.c" \
+                       " tests/fakes/fake_rtc.c",
+    defines = ['CONFIG_TOUCH'],
+    test_sources_ant_glob = "test_touch_nav.c")
+
 # vim:filetype=python

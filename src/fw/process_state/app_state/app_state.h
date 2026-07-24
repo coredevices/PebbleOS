@@ -135,6 +135,15 @@ RecognizerList *app_state_get_recognizer_list(void);
 
 struct RecognizerManager *app_state_get_recognizer_manager(void);
 
+struct TouchNavState *app_state_get_touch_nav_state(void);
+
+//! Subscribe the app task's touch-service system slot to the nav dispatcher (no-op unless the
+//! master nav pref is on). Runs on the app task.
+void app_touch_nav_subscribe(void);
+
+//! Unsubscribe the app task's nav dispatcher and cancel any in-flight gesture. Runs on the app task.
+void app_touch_nav_unsubscribe(void);
+
 JsRuntimeContext *app_state_get_js_runtime_context(void);
 
 uint8_t *app_state_get_js_runtime_context_buffer(void);
