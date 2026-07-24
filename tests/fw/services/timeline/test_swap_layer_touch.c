@@ -475,14 +475,29 @@ static void prv_swipe(int16_t sx, int16_t sy, int16_t ex, int16_t ey) {
   prv_drive(TouchEvent_Liftoff, 0, 0);
 }
 
-// F3 fix: a horizontal swipe on the notification body now navigates. Right = SELECT (the same latent
-// bug as tap: the pre-refactor own-set never latched a target for a swipe).
-void test_swap_layer_touch__dispatch_swipe_right_emits_select(void) {
+// A horizontal swipe on the notification body navigates, matching the bridge convention:
+// right = BACK, which with no back-override pops the window.
+void test_swap_layer_touch__dispatch_swipe_right_emits_back(void) {
   prv_live_state_setup();
+  s_overrides_back = false;      // no back handler -> BACK pops the window
   FakeSwap fs;
   prv_attach_and_register(&fs, 168, 400, false);
 
   prv_swipe(20, 120, 90, 120);   // left-to-right = right swipe
+  cl_assert_equal_i(s_pop_count, 1);
+  cl_assert_equal_i(s_emit_count, 0);
+
+  swap_layer_touch_deregister(&fs.swap);
+}
+
+// A horizontal swipe on the notification body navigates, matching the bridge convention:
+// left = SELECT.
+void test_swap_layer_touch__dispatch_swipe_left_emits_select(void) {
+  prv_live_state_setup();
+  FakeSwap fs;
+  prv_attach_and_register(&fs, 168, 400, false);
+
+  prv_swipe(90, 120, 20, 120);   // right-to-left = left swipe
   cl_assert_equal_i(s_emit_count, 1);
   cl_assert_equal_i(s_last_emit, BUTTON_ID_SELECT);
   cl_assert_equal_i(s_pop_count, 0);
@@ -490,16 +505,37 @@ void test_swap_layer_touch__dispatch_swipe_right_emits_select(void) {
   swap_layer_touch_deregister(&fs.swap);
 }
 
-// F3 fix: swipe left = BACK, which with no back-override pops the window.
-void test_swap_layer_touch__dispatch_swipe_left_emits_back(void) {
+// The "no notification loaded" invariant for tap and swipe (symmetric to
+// pan_declined_when_no_current). can_start only gates the pan (tap/swipe have no Started), so the tap
+// and swipe ops must themselves early-return on current == NULL: a tap or horizontal swipe on a swap
+// with no notification loaded must emulate NO button (would otherwise feed a click to a not-yet-loaded
+// notification), matching the pre-refactor behaviour of doing nothing.
+void test_swap_layer_touch__tap_and_swipe_inert_when_no_current(void) {
   prv_live_state_setup();
-  s_overrides_back = false;      // no back handler -> BACK pops the window
-  FakeSwap fs;
-  prv_attach_and_register(&fs, 168, 400, false);
+  FakeSwap fs = {0};
+  layer_init(&fs.swap.layer, &GRect(0, 0, 144, 168));
+  fs.swap.callbacks.interaction_handler = prv_count_interaction;
+  cl_assert(fs.swap.current == NULL);   // no notification loaded yet
+  layer_add_child(&s_root_layer, &fs.swap.layer);
+  s_active_layer = &fs.swap.layer;
+  swap_layer_touch_register(&fs.swap);
 
-  prv_swipe(90, 120, 20, 120);   // right-to-left = left swipe
-  cl_assert_equal_i(s_pop_count, 1);
+  // A tap emulates nothing.
+  prv_drive(TouchEvent_Touchdown, 72, 120);
+  prv_advance_ms(30);
+  prv_drive(TouchEvent_Liftoff, 0, 0);
   cl_assert_equal_i(s_emit_count, 0);
+  cl_assert_equal_i(s_pop_count, 0);
+
+  // A right swipe (would be BACK -> pop) emulates nothing.
+  prv_swipe(20, 120, 90, 120);
+  cl_assert_equal_i(s_emit_count, 0);
+  cl_assert_equal_i(s_pop_count, 0);
+
+  // A left swipe (would be SELECT) emulates nothing.
+  prv_swipe(90, 120, 20, 120);
+  cl_assert_equal_i(s_emit_count, 0);
+  cl_assert_equal_i(s_pop_count, 0);
 
   swap_layer_touch_deregister(&fs.swap);
 }

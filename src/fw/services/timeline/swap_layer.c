@@ -801,7 +801,7 @@ bool swap_layer_attempt_layer_swap(SwapLayer *swap_layer, ScrollDirection direct
 // A pan drives the content offset live and 1:1 (base captured at pan Start, throttled by the core),
 // clamped to [0, max_scroll]. On liftoff a pull past the clamped edge by more than SWAP_OVERPULL_PX
 // swaps to the neighbouring notification through the same physical-button path
-// (prv_handle_swap_attempt); a normal drag settles. A tap or right swipe emulates SELECT; a left
+// (prv_handle_swap_attempt); a normal drag settles. A tap or left swipe emulates SELECT; a right
 // swipe emulates BACK. The notification body may not be loaded when the widget registers, so the
 // can_start op gates the gesture on a non-NULL current layout (prv_get_current_notification_offset
 // dereferences it), declining the whole gesture until a notification is present.
@@ -1002,17 +1002,29 @@ static void prv_swap_ops_pan_cancel(void *w) {
 }
 
 static void prv_swap_ops_tap(void *w, GPoint point_on_screen) {
+  SwapLayer *swap_layer = w;
+  // No notification loaded yet (registration can happen before the layout loads): the gesture does
+  // nothing, mirroring can_start's pan gate so "no notification -> gesture is inert" holds for tap
+  // too (tap/swipe have no Started, so can_start cannot gate them).
+  if (!swap_layer->current) {
+    return;
+  }
   // A tap on the notification body emulates SELECT (the default action / action menu).
-  prv_swap_touch_emit((SwapLayer *)w, BUTTON_ID_SELECT);
+  prv_swap_touch_emit(swap_layer, BUTTON_ID_SELECT);
 }
 
 static void prv_swap_ops_swipe(void *w, SwipeDirection dir) {
+  SwapLayer *swap_layer = w;
+  // As with tap: no notification loaded -> the gesture is inert.
+  if (!swap_layer->current) {
+    return;
+  }
   // Called only for horizontal swipes (the unified set masks vertical swipes into pans): swiping
-  // right = SELECT, left = BACK.
+  // right = BACK, left = SELECT.
   if (dir == SwipeDirection_Right) {
-    prv_swap_touch_emit((SwapLayer *)w, BUTTON_ID_SELECT);
+    prv_swap_touch_emit(swap_layer, BUTTON_ID_BACK);
   } else if (dir == SwipeDirection_Left) {
-    prv_swap_touch_emit((SwapLayer *)w, BUTTON_ID_BACK);
+    prv_swap_touch_emit(swap_layer, BUTTON_ID_SELECT);
   }
 }
 
@@ -1073,10 +1085,10 @@ void swap_layer_touch_deregister(SwapLayer *swap_layer) {
 
 void swap_layer_touch_release(SwapLayer *swap_layer) {
   // Covered by a higher modal: deregister from the Tier-1 registry (removing the swap node and
-  // detaching the recognizer set) and resolve the gesture target to NULL. In our system-slot
-  // architecture the bridge lives on the touch-service system handler, so removing the widget from
-  // the registry is what stops touch from routing into the now-hidden notification body; the
-  // now-focused modal owns touch through the same system-slot bridge.
+  // clearing the gesture latch). In our system-slot architecture the bridge lives on the
+  // touch-service system handler and the unified widget set is owned by TouchNavState, so removing
+  // the widget from the registry is what stops touch from routing into the now-hidden notification
+  // body; the now-focused modal owns touch through the same system-slot bridge.
   swap_layer_touch_deregister(swap_layer);
 }
 #endif  // CONFIG_TOUCH
