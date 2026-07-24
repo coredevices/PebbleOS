@@ -404,11 +404,11 @@ def zoneinfo_to_bin(zoneinfo_list, dstrule_list, zonelink_list, output_bin):
     # Continent_index City gmt_offset_minutes tz_abbr dst_id
 
     # Unsigned short - count of entries
-    output_bin.write(struct.pack("H", len(zoneinfo_list)))
+    output_bin.write(struct.pack("<H", len(zoneinfo_list)))
     # Unsigned short - count of DST rules
-    output_bin.write(struct.pack("H", len(dstzone_dict.values())))
+    output_bin.write(struct.pack("<H", len(dstzone_dict.values())))
     # Unsigned short - count of links
-    output_bin.write(struct.pack("H", len(zonelink_list)))
+    output_bin.write(struct.pack("<H", len(zonelink_list)))
 
     region_id_list = []
     # write all the timezones to file
@@ -437,7 +437,7 @@ def zoneinfo_to_bin(zoneinfo_list, dstrule_list, zonelink_list, output_bin):
         else:
             gmt_offset_minutes = int(hours) * 60 + int(minutes)
         # signed short, for negative gmtoffsets
-        output_bin.write(struct.pack("h", gmt_offset_minutes))
+        output_bin.write(struct.pack("<h", gmt_offset_minutes))
 
         # fix timezone abbreviations that no longer have a DST mode
         if dst_zone not in dstzone_dict:
@@ -499,7 +499,7 @@ def zoneinfo_to_bin(zoneinfo_list, dstrule_list, zonelink_list, output_bin):
         except ValueError as e:
             print("Couldn't find region, skipping:", e)
             continue
-        output_bin.write(struct.pack("H", region_id))
+        output_bin.write(struct.pack("<H", region_id))
         output_bin.write(linkname.ljust(TIMEZONE_LINK_NAME_LENGTH, "\0").encode("utf8"))
 
 

@@ -192,7 +192,7 @@ class Command:
         )
 
     def serialize_points(self):
-        s = pack("H", len(self.points))  # number of points (16-bit)
+        s = pack("<H", len(self.points))  # number of points (16-bit)
         for p in self.points:
             s += pack(
                 "<hh",
@@ -283,7 +283,7 @@ class CircleCommand(Command):
     def serialize(self):
         s = pack("B", DRAW_COMMAND_TYPE_CIRCLE)  # command type
         s += self.serialize_common()
-        s += pack("H", int(self.radius))  # circle radius (16-bit)
+        s += pack("<H", int(self.radius))  # circle radius (16-bit)
         s += self.serialize_points()
         return s
 
@@ -298,7 +298,7 @@ class CircleCommand(Command):
 
 
 def serialize(commands):
-    output = pack("H", len(commands))  # number of commands in list
+    output = pack("<H", len(commands))  # number of commands in list
     for c in commands:
         output += c.serialize()
 
@@ -317,7 +317,7 @@ def print_frames(frames):
 
 
 def serialize_frame(frame, duration):
-    return pack("H", duration) + serialize(frame)  # Frame duration
+    return pack("<H", duration) + serialize(frame)  # Frame duration
 
 
 def pack_header(size):
@@ -327,12 +327,12 @@ def pack_header(size):
 
 
 def serialize_sequence(frames, size, duration, play_count):
-    s = pack_header(size) + pack("H", play_count) + pack("H", len(frames))
+    s = pack_header(size) + pack("<H", play_count) + pack("<H", len(frames))
     for f in frames:
         s += serialize_frame(f, duration)
 
     output = b"PDCS"
-    output += pack("I", len(s))
+    output += pack("<I", len(s))
     output += s
     return output
 
@@ -342,6 +342,6 @@ def serialize_image(commands, size):
     s += serialize(commands)
 
     output = b"PDCI"
-    output += pack("I", len(s))
+    output += pack("<I", len(s))
     output += s
     return output
