@@ -27,6 +27,16 @@ Path points are whole pixels; precise-path points are 13.3 fixed-point
 (eighths of a pixel). A command list is a `uint16_t` command count
 followed by that many commands.
 
+## Coordinate grid
+
+The SVG converters translate input coordinates by (-0.5, -0.5) and round,
+so source coordinates must sit on the half-pixel grid: multiples of
+0.5 px for paths and circles, 0.125 px (1/8) for precise paths. Off-grid
+points are snapped to the nearest supported coordinate and flagged
+(`convert_to_pebble_coordinates` in
+`tools/generate_pdcs/pebble_commands.py` and the annotation emitted by
+`tools/libs/pblconvert/pblconvert/svg2pdc/pdc.py`).
+
 ## File containers
 
 **PDCI (image)**:
