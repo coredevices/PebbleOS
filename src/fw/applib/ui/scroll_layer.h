@@ -125,6 +125,22 @@ typedef struct ScrollLayer {
   //! Application supplied callback context.
   //! Use \ref scroll_layer_set_context() to assign the callback context.
   void *context;
+
+  //! @internal
+  //! Intrusive Tier-1 touch-navigation registry node (layout-compatible with
+  //! \ref TouchNavWidgetNode: four pointers — \c next, \c layer, \c ops, \c widget). Embedding it
+  //! here lets a bare ScrollLayer be registered as a Tier-1 touch widget so a finger pan scrolls its
+  //! content 1:1. Declared unconditionally (not under \c CONFIG_TOUCH) so the struct layout — and
+  //! therefore \c sizeof(ScrollLayer) — is identical on every board and the applib-malloc budget is
+  //! board-independent. It sits at the pointer-aligned tail, introducing no alignment padding of its
+  //! own. A build-time assert in scroll_layer.c keeps this node's layout in sync with
+  //! \ref TouchNavWidgetNode; the applib_malloc size check pins the (grown) \c sizeof(ScrollLayer).
+  struct {
+    void *next;
+    void *layer;
+    void *ops;
+    void *widget;
+  } touch_nav_node;
 } ScrollLayer;
 
 #ifndef __clang__

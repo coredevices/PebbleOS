@@ -315,9 +315,21 @@ GRect layer_get_unobstructed_bounds_by_value(const Layer *layer) {
   return bounds;
 }
 
+#ifdef CONFIG_TOUCH
+static bool prv_register_recognizer_cb(Recognizer *recognizer, void *context) {
+  recognizer_manager_register_recognizer(context, recognizer);
+  return true;
+}
+#endif
+
 //! Sets the window on the layer and on all of its children
 static void layer_set_window(Layer *layer, Window *window) {
   layer->window = window;
+#ifdef CONFIG_TOUCH
+  // Register recognizers that were attached while the layer had no window (NULL manager is a no-op)
+  recognizer_list_iterate(&layer->recognizer_list, prv_register_recognizer_cb,
+                          window_get_recognizer_manager(window));
+#endif
   Layer *child = layer->first_child;
   while (child) {
     layer_set_window(child, window);

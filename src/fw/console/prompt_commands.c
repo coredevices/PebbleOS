@@ -1612,3 +1612,83 @@ void command_console_disable_rx(const char *seconds_str) {
   new_timer_start(s_console_disable_rx_timer, seconds * 1000,
                   prv_console_disable_rx_timer_cb, NULL, 0 /*flags*/);
 }
+
+#ifdef CONFIG_TOUCH
+#include "applib/ui/recognizer/touch_nav.h"
+#include "kernel/ui/modals/modal_manager.h"
+#include "pbl/services/touch/touch_nav_service.h"
+#include "pbl/services/notifications/notifications.h"
+#include "pbl/services/timeline/timeline.h"
+#include <pbl/drivers/rtc.h>
+
+// TEST: inject a long scrollable notification so the modal notification touch path can be exercised
+// in QEMU (no companion needed). Includes a Dismiss action so the full-window action-bar overlay is
+// shown — that is the overlay the swap-touch fix routes around.
+// Notifications/timeline are unavailable in the recovery firmware, so this is normal-fw only.
+#ifndef CONFIG_RECOVERY_FW
+void command_notif_test(void) {
+  AttributeList attr_list = {};
+  attribute_list_add_cstring(&attr_list, AttributeIdTitle, "Touch Test");
+  attribute_list_add_cstring(
+      &attr_list, AttributeIdBody,
+      "Swipe up/down to scroll this body. Line 2. Line 3. Line 4. Line 5. Line 6. Line 7. Line 8. "
+      "Line 9. Line 10. Line 11. Line 12. Line 13. Line 14. Swipe left=BACK, right=SELECT.");
+
+  AttributeList dismiss_attr = {};
+  attribute_list_add_cstring(&dismiss_attr, AttributeIdTitle, "Dismiss");
+  TimelineItemActionGroup action_group = {
+    .num_actions = 1,
+    .actions = (TimelineItemAction[]){
+      { .id = 0, .type = TimelineItemActionTypeDismiss, .attr_list = dismiss_attr },
+    },
+  };
+
+  TimelineItem *item = timeline_item_create_with_attributes(
+      rtc_get_time(), 0, TimelineItemTypeNotification, LayoutIdNotification, &attr_list,
+      &action_group);
+  attribute_list_destroy_list(&attr_list);
+  attribute_list_destroy_list(&dismiss_attr);
+  notifications_add_notification(item);
+  timeline_item_destroy(item);
+
+  char buf[32];
+  prompt_send_response_fmt(buf, sizeof(buf), "test notification added");
+}
+#endif  // CONFIG_RECOVERY_FW
+
+void command_touch_nav_enable(void) {
+  // Run the full enable transaction (subscribe kernel/app slots + take the sensor hold), the same
+  // path the Settings toggle drives. Runtime only; not persisted. Lets QEMU/HW test the navigation
+  // itself, not just raw touch delivery.
+  touch_nav_set_enabled(true);
+  char buf[32];
+  prompt_send_response_fmt(buf, sizeof(buf), "touch nav enabled");
+}
+
+void command_touch_nav_disable(void) {
+  touch_nav_set_enabled(false);
+  char buf[32];
+  prompt_send_response_fmt(buf, sizeof(buf), "touch nav disabled");
+}
+
+void command_touch_nav_log(void) {
+  const TouchNavState *state = modal_manager_get_touch_nav_state();
+  char buf[96];
+  prompt_send_response_fmt(
+      buf, sizeof(buf),
+      "started=%u completed=%u failed=%u cancelled=%u dropped=%u gated=%u",
+      state->counters.started, state->counters.completed, state->counters.failed,
+      state->counters.cancelled, state->counters.dropped, state->counters.gated);
+
+  static const char *const kind_names[] = {"route", "emit", "drop", "gate"};
+  const uint8_t count = state->log_count;
+  for (uint8_t i = 0; i < count; i++) {
+    // Walk oldest to newest.
+    const uint8_t idx =
+        (uint8_t)((state->log_head + TOUCH_NAV_LOG_ENTRIES - count + i) % TOUCH_NAV_LOG_ENTRIES);
+    const TouchNavLogEntry *e = &state->log[idx];
+    const char *name = (e->kind < ARRAY_LENGTH(kind_names)) ? kind_names[e->kind] : "?";
+    prompt_send_response_fmt(buf, sizeof(buf), "  [%u] %s detail=%u", i, name, e->detail);
+  }
+}
+#endif

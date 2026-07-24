@@ -13,6 +13,10 @@
 #include "system/passert.h"
 #include "pbl/util/trig.h"
 
+#ifdef CONFIG_TOUCH
+#include "syscall/syscall.h"
+#endif
+
 const int16_t MAX_ICON_HEIGHT = 18;
 
 const int64_t PRESS_ANIMATION_DURATION_MS = 144;
@@ -228,6 +232,29 @@ void action_bar_update_proc(ActionBarLayer *action_bar, GContext* ctx) {
   }
 }
 
+// Publish (or clear) the touch-nav action-bar snapshot for this bar. On a bar that is on a window,
+// the bar's global frame and per-button icon-presence mask are sent so a tap can be zoned into
+// UP/SELECT/DOWN; off a window it clears the snapshot so a stale bar does not route taps.
+static void prv_publish_touch_nav_snapshot(ActionBarLayer *action_bar) {
+#ifndef CONFIG_TOUCH
+  (void)action_bar;  // No touch bridge in this build: nothing to publish.
+#else
+  if (!action_bar->window) {
+    sys_touch_set_action_bar(NULL, 0);
+    return;
+  }
+  uint8_t icon_mask = 0;
+  for (unsigned int i = 0; i < NUM_ACTION_BAR_ITEMS; ++i) {
+    if (action_bar->icons[i]) {
+      icon_mask |= (uint8_t)(1 << i);
+    }
+  }
+  GRect global_frame;
+  layer_get_global_frame(&action_bar->layer, &global_frame);
+  sys_touch_set_action_bar(&global_frame, icon_mask);
+#endif
+}
+
 void action_bar_layer_init(ActionBarLayer *action_bar) {
   *action_bar = (ActionBarLayer){};
   layer_set_clips(&action_bar->layer, true);
@@ -249,6 +276,11 @@ ActionBarLayer* action_bar_layer_create(void) {
 }
 
 void action_bar_layer_deinit(ActionBarLayer *action_bar_layer) {
+  // Clear the touch-nav snapshot on any teardown path, not just an explicit
+  // remove_from_window: otherwise a bar torn down via deinit/destroy while still on a window (the
+  // common path for phone/alarm/dialog action bars) leaves a stale rect that mis-routes later taps.
+  // Safe no-op when the bar is not on a window.
+  action_bar_layer_remove_from_window(action_bar_layer);
   if (action_bar_layer->redraw_timer) {
     app_timer_cancel(action_bar_layer->redraw_timer);
   }
@@ -339,6 +371,8 @@ void action_bar_layer_set_icon_animated(ActionBarLayer *action_bar, ButtonId but
     action_bar->icon_change_times[index] = 0;
   }
   layer_mark_dirty(&action_bar->layer);
+  // The zone icon mask changed; refresh the touch-nav snapshot.
+  prv_publish_touch_nav_snapshot(action_bar);
 }
 
 void action_bar_layer_set_icon(ActionBarLayer *action_bar, ButtonId button_id,
@@ -369,6 +403,8 @@ void action_bar_layer_add_to_window(ActionBarLayer *action_bar, struct Window *w
 
   action_bar->window = window;
   action_bar_update_click_config_provider(action_bar);
+  // Publish the bar geometry + icon mask so taps on it are zoned to UP/SELECT/DOWN.
+  prv_publish_touch_nav_snapshot(action_bar);
 }
 
 void action_bar_layer_remove_from_window(ActionBarLayer *action_bar) {
@@ -378,6 +414,8 @@ void action_bar_layer_remove_from_window(ActionBarLayer *action_bar) {
   layer_remove_from_parent(&action_bar->layer);
   window_set_click_config_provider_with_context(action_bar->window, NULL, NULL);
   action_bar->window = NULL;
+  // Clear the touch-nav snapshot so a stale bar does not route taps after removal.
+  prv_publish_touch_nav_snapshot(action_bar);
 }
 
 void action_bar_layer_set_background_color(ActionBarLayer *action_bar, GColor background_color) {

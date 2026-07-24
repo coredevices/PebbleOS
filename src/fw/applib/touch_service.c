@@ -37,9 +37,43 @@ static TouchServiceState *prv_get_state(void) {
 
 static void prv_handle_touch_event(PebbleEvent *e, void *context) {
   TouchServiceState *state = prv_get_state();
-  if (state->raw_handler && e->type == PEBBLE_TOUCH_EVENT) {
+  if (!state || e->type != PEBBLE_TOUCH_EVENT) {
+    return;
+  }
+  // The system slot sees each event first, then the app-facing raw slot.
+  if (state->system_handler) {
+    state->system_handler(&e->touch.event, state->system_context);
+  }
+  if (state->raw_handler) {
     state->raw_handler(&e->touch.event, state->raw_context);
   }
+}
+
+//! Bring the shared event-service subscription in line with the slots: keep it
+//! while either slot is occupied, drop it once both are empty.
+static void prv_update_subscription(TouchServiceState *state) {
+  const bool want = (state->system_handler != NULL) || (state->raw_handler != NULL);
+  if (want && !state->subscribed) {
+    state->event_info = (EventServiceInfo) {
+      .type = PEBBLE_TOUCH_EVENT,
+      .handler = prv_handle_touch_event,
+    };
+    event_service_client_subscribe(&state->event_info);
+    state->subscribed = true;
+  } else if (!want && state->subscribed) {
+    event_service_client_unsubscribe(&state->event_info);
+    state->subscribed = false;
+  }
+}
+
+void touch_service_set_system_handler(TouchServiceHandler handler, void *context) {
+  TouchServiceState *state = prv_get_state();
+  if (!state) {
+    return;
+  }
+  state->system_handler = handler;
+  state->system_context = context;
+  prv_update_subscription(state);
 }
 
 void touch_service_subscribe(TouchServiceHandler handler, void *context) {
@@ -49,16 +83,8 @@ void touch_service_subscribe(TouchServiceHandler handler, void *context) {
   }
   state->raw_handler = handler;
   state->raw_context = context;
-
-  state->raw_event_info = (EventServiceInfo) {
-    .type = PEBBLE_TOUCH_EVENT,
-    .handler = prv_handle_touch_event,
-  };
   sys_touch_reset();
-  if (!state->raw_subscribed) {
-    event_service_client_subscribe(&state->raw_event_info);
-    state->raw_subscribed = true;
-  }
+  prv_update_subscription(state);
 }
 
 void touch_service_unsubscribe(void) {
@@ -66,16 +92,18 @@ void touch_service_unsubscribe(void) {
   if (!state) {
     return;
   }
-  if (state->raw_subscribed) {
-    event_service_client_unsubscribe(&state->raw_event_info);
-    state->raw_subscribed = false;
-  }
+  // Clear only the app-facing raw slot; the system slot persists.
   state->raw_handler = NULL;
   state->raw_context = NULL;
+  prv_update_subscription(state);
 }
 
 bool touch_service_is_enabled(void) {
   return sys_touch_service_is_enabled();
+}
+
+void app_touch_navigation_enable(bool enable) {
+  sys_app_touch_navigation_enable(enable);
 }
 
 void touch_service_state_init(TouchServiceState *state) {

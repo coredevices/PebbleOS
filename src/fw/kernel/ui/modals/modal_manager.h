@@ -96,6 +96,21 @@ bool modal_manager_get_enabled(void);
 //! @returns pointer to a \ref ClickManager
 ClickManager *modal_manager_get_click_manager(void);
 
+#ifdef CONFIG_TOUCH
+//! @return the kernel (modal) twin of the touch-nav recognizer manager.
+struct RecognizerManager *modal_manager_get_recognizer_manager(void);
+
+//! @return the kernel (modal) twin of the touch-nav state (counters + ring buffer for `touch nav
+//! log`).
+struct TouchNavState *modal_manager_get_touch_nav_state(void);
+
+//! Subscribe the kernel touch slot to the nav dispatcher. Runs on KernelMain.
+void modal_touch_nav_subscribe(void);
+
+//! Unsubscribe the kernel nav dispatcher and cancel any in-flight modal gesture. Runs on KernelMain.
+void modal_touch_nav_unsubscribe(void);
+#endif
+
 //! Returns the first \ref WindowStack to pass the given filter callback.
 //! Iterates down from the highest priority to the lowest priority.
 //! @param filter_cb The \ref ModalContextFilterCallback

@@ -26,6 +26,26 @@ clar(ctx,
     test_sources_ant_glob="test_scroll_layer.c")
 
 clar(ctx,
+    sources_ant_glob = "src/fw/applib/graphics/gtypes.c "
+                       "src/fw/applib/graphics/gcolor_definitions.c "
+                       "tests/fakes/fake_gbitmap_png.c "
+                       "src/fw/applib/ui/animation_interpolate.c "
+                       "src/fw/applib/ui/animation_timing.c "
+                       "src/fw/applib/ui/layer.c "
+                       "src/fw/applib/ui/shadows.c "
+                       "src/fw/applib/ui/scroll_layer.c "
+                       "src/fw/applib/ui/recognizer/recognizer.c "
+                       "src/fw/applib/ui/recognizer/recognizer_manager.c "
+                       "src/fw/applib/ui/recognizer/pan.c "
+                       "src/fw/applib/ui/recognizer/swipe.c "
+                       "src/fw/applib/ui/recognizer/tap.c "
+                       "src/fw/applib/ui/recognizer/touch_nav.c "
+                       "tests/fakes/fake_rtc.c "
+                       "tests/stubs/stubs_animation.c ",
+    defines=['CONFIG_TOUCH'],
+    test_sources_ant_glob="test_scroll_layer_touch.c")
+
+clar(ctx,
     sources_ant_glob = \
         " src/fw/applib/graphics/8_bit/framebuffer.c"
         " src/fw/applib/graphics/framebuffer.c"
@@ -151,6 +171,30 @@ clar(ctx,
     override_includes=['dummy_board'])
 
 clar(ctx,
+    sources_ant_glob =
+        " src/fw/applib/graphics/gcolor_definitions.c"
+        " src/fw/applib/graphics/gtypes.c"
+        " src/fw/applib/ui/app_window_stack.c"
+        " src/fw/applib/ui/layer.c"
+        " src/fw/applib/ui/window.c"
+        " src/fw/applib/ui/window_manager.c"
+        " src/fw/applib/ui/window_stack.c"
+        " src/fw/applib/ui/recognizer/recognizer.c"
+        " src/fw/applib/ui/recognizer/recognizer_manager.c"
+        " src/fw/applib/ui/recognizer/tap.c"
+        " src/fw/applib/ui/recognizer/pan.c"
+        " src/fw/applib/ui/recognizer/swipe.c"
+        " src/fw/applib/ui/recognizer/touch_nav.c"
+        " src/fw/kernel/ui/modals/modal_manager.c"
+        " tests/fakes/fake_animation.c"
+        " tests/fakes/fake_events.c"
+        " tests/fakes/fake_rtc.c"
+        " tests/stubs/stubs_click.c",
+    test_sources_ant_glob = "test_modal_touch_nav.c",
+    defines=['CONFIG_SCREEN_COLOR_DEPTH_BITS=8', 'CONFIG_TOUCH'],
+    override_includes=['dummy_board'])
+
+clar(ctx,
     sources_ant_glob = "src/fw/applib/graphics/gtypes.c"
         " src/fw/util/buffer.c"
         " src/fw/applib/ui/layer.c"
@@ -165,9 +209,17 @@ clar(ctx,
                        " src/fw/applib/ui/shadows.c" \
                        " src/fw/applib/ui/animation_interpolate.c "
                        " src/fw/applib/ui/animation_timing.c" \
+                       " src/fw/applib/ui/recognizer/recognizer.c" \
+                       " src/fw/applib/ui/recognizer/recognizer_manager.c" \
+                       " src/fw/applib/ui/recognizer/pan.c" \
+                       " src/fw/applib/ui/recognizer/swipe.c" \
+                       " src/fw/applib/ui/recognizer/tap.c" \
+                       " src/fw/applib/ui/recognizer/touch_nav.c" \
                        " src/fw/applib/graphics/gcolor_definitions.c" \
                        " src/fw/applib/graphics/gtypes.c" \
+                       " tests/fakes/fake_rtc.c" \
                        " tests/stubs/stubs_animation.c",
+    defines = ['CONFIG_TOUCH'],
     test_sources_ant_glob = "test_menu_layer.c")
 
 menu_layer_system_cell_rendering_sources = \

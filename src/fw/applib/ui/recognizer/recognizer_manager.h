@@ -21,6 +21,9 @@ typedef struct RecognizerManager {
   Layer *active_layer;
   RecognizerManagerState state;
   Recognizer *triggered;
+  //! Task-global recognizer list processed before window/layer recognizers. NULL is valid.
+  //! Not set by recognizer_manager_init; wire it up after init.
+  RecognizerList *global_list;
 } RecognizerManager;
 
 void recognizer_manager_init(RecognizerManager *manager);
@@ -37,6 +40,10 @@ void recognizer_manager_cancel_touches(RecognizerManager *manager);
 
 //! Reset the state of the recognizer manager.
 void recognizer_manager_reset(RecognizerManager *manager);
+
+//! Cancel any ongoing gesture and reset the manager to its idle state. Does not touch the window
+//! that the manager points to.
+void recognizer_manager_cancel_and_reset(RecognizerManager *manager);
 
 //! Register a recognizer with the recognizer manager. This will force the recognizer into the
 //! correct state, depending on the state of other recognizers being managed by the recognizer

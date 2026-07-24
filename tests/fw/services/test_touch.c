@@ -10,6 +10,7 @@
 #include "pbl/services/touch/touch_event.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #include "fake_events.h"
@@ -58,6 +59,8 @@ void test_touch__initialize(void) {
   // Make sure the global kill switch is reset between tests — it's a module
   // static in touch.c and a failed test could otherwise leak its state.
   touch_service_set_globally_enabled(true);
+  // Nav pref is a module static too; default it off between tests.
+  touch_set_nav_enabled(false);
 }
 
 void test_touch__cleanup(void) {
@@ -211,6 +214,55 @@ void test_touch__has_app_subscribers_backlight(void) {
   cl_assert(!touch_has_app_subscribers());
 }
 
+void test_touch__has_app_subscribers_nav(void) {
+  // Nav off + only the backlight hold: the backlight subscription must not
+  // register as an app subscriber.
+  touch_set_backlight_enabled(true);
+  cl_assert(!touch_has_app_subscribers());
+
+  // Nav on reports app subscribers regardless of the actual subscriber set.
+  touch_set_nav_enabled(true);
+  cl_assert(touch_has_app_subscribers());
+
+  // Back off, and with only the backlight hold it's false again.
+  touch_set_nav_enabled(false);
+  cl_assert(!touch_has_app_subscribers());
+
+  // Nav off + the nav system hold (on top of backlight): the hold must be
+  // excluded too, otherwise tap-to-wake is wrongly suppressed once the shell
+  // decouples the pref from the hold.
+  touch_set_system_hold(true);
+  cl_assert(!touch_has_app_subscribers());
+  touch_set_system_hold(false);
+
+  // Nav off + a real raw subscriber → true.
+  s_add_subscriber_cb(PebbleTask_App);
+  cl_assert(touch_has_app_subscribers());
+
+  s_remove_subscriber_cb(PebbleTask_App);
+  touch_set_backlight_enabled(false);
+}
+
+void test_touch__system_hold_holds_sensor(void) {
+  // The permanent hold powers the sensor directly, without an event-service
+  // subscription.
+  touch_set_system_hold(true);
+  cl_assert_equal_i(s_touch_sensor_enable_count, 1);
+  cl_assert(s_touch_sensor_enabled);
+
+  // Idempotent: holding again is a no-op.
+  touch_set_system_hold(true);
+  cl_assert_equal_i(s_touch_sensor_enable_count, 1);
+
+  touch_set_system_hold(false);
+  cl_assert_equal_i(s_touch_sensor_disable_count, 1);
+  cl_assert(!s_touch_sensor_enabled);
+
+  // Idempotent: releasing again is a no-op.
+  touch_set_system_hold(false);
+  cl_assert_equal_i(s_touch_sensor_disable_count, 1);
+}
+
 void test_touch__globally_enabled_default_true(void) {
   // Default state after init is enabled; no setter call required.
   cl_assert(touch_service_is_globally_enabled());
@@ -296,4 +348,87 @@ void test_touch__global_disable_sleeps_unsubscribed_sensor(void) {
   cl_assert(s_touch_sensor_disable_count >= 1);
 
   touch_service_set_globally_enabled(true);
+}
+
+void test_touch__wake_gate_formula(void) {
+  // (before=F, after=T) -> woke the screen -> latch.
+  cl_assert(touch_wake_gate_on_touchdown(true, false, false, true).latch);
+  // Already on (T, T) -> navigation.
+  cl_assert(!touch_wake_gate_on_touchdown(true, false, true, true).latch);
+  // Off and stayed off (F, F), no DnD (day/ALS) -> navigation.
+  cl_assert(!touch_wake_gate_on_touchdown(true, false, false, false).latch);
+  // DnD suppressed the wake while off -> still a wake tap -> latch.
+  cl_assert(touch_wake_gate_on_touchdown(true, true, false, false).latch);
+  // DnD but screen already on -> navigation.
+  cl_assert(!touch_wake_gate_on_touchdown(true, true, true, true).latch);
+}
+
+void test_touch__wake_gate_guard_matrix(void) {
+  // No backlight driver: never latches.
+  TouchWakeGateResult none = touch_wake_gate_on_touchdown(false, false, false, true);
+  cl_assert(!none.latch);
+
+  // Driven, no DnD: latch strictly by the formula.
+  TouchWakeGateResult driven = touch_wake_gate_on_touchdown(true, false, false, true);
+  cl_assert(driven.latch);
+
+  // Driven, DnD: latch == !before.
+  cl_assert(touch_wake_gate_on_touchdown(true, true, false, false).latch);
+  cl_assert(!touch_wake_gate_on_touchdown(true, true, true, true).latch);
+}
+
+void test_touch__wake_gate_latches_across_gesture(void) {
+  // A wake Touchdown stamps non_navigational and latches it for the gesture.
+  TouchWakeGateResult woke = touch_wake_gate_on_touchdown(true, false, false, true);
+  TouchEvent td = {.type = TouchEvent_Touchdown};
+  touch_wake_gate_stamp(&td, woke);
+  cl_assert(td.non_navigational);
+
+  // PositionUpdate and Liftoff carry the latch, regardless of their gate arg.
+  TouchEvent pu = {.type = TouchEvent_PositionUpdate};
+  touch_wake_gate_stamp(&pu, (TouchWakeGateResult){0});
+  cl_assert(pu.non_navigational);
+
+  TouchEvent lo = {.type = TouchEvent_Liftoff};
+  touch_wake_gate_stamp(&lo, (TouchWakeGateResult){0});
+  cl_assert(lo.non_navigational);
+
+  // A fresh navigational Touchdown clears the latch for the next gesture.
+  TouchWakeGateResult nav = touch_wake_gate_on_touchdown(true, false, false, false);
+  TouchEvent td2 = {.type = TouchEvent_Touchdown};
+  touch_wake_gate_stamp(&td2, nav);
+  cl_assert(!td2.non_navigational);
+
+  TouchEvent pu2 = {.type = TouchEvent_PositionUpdate};
+  touch_wake_gate_stamp(&pu2, (TouchWakeGateResult){0});
+  cl_assert(!pu2.non_navigational);
+}
+
+void test_touch__toggle_off_with_finger_down_emits_liftoff(void) {
+  // Finger down, then the global toggle goes off: a Liftoff must be synthesized
+  // with the last coordinates (not zeros) so the backlight hold unwinds.
+  touch_handle_update(TouchState_FingerDown, 30, 40);
+  fake_event_reset_count();
+
+  touch_service_set_globally_enabled(false);
+  cl_assert_equal_i(fake_event_get_count(), 1);
+  prv_assert_touch_event(TouchEvent_Liftoff, 30, 40);
+
+  touch_service_set_globally_enabled(true);
+}
+
+void test_touch__toggle_off_without_finger_no_liftoff(void) {
+  // No finger down: toggling off must not fabricate a Liftoff.
+  fake_event_reset_count();
+  touch_service_set_globally_enabled(false);
+  cl_assert_equal_i(fake_event_get_count(), 0);
+  touch_service_set_globally_enabled(true);
+}
+
+void test_touch__event_abi_unchanged(void) {
+  // The wake flag rides in the padding after type:8; x/y offsets and the
+  // overall size must not move, keeping the SDK struct app-compatible.
+  cl_assert_equal_i(offsetof(TouchEvent, x), 2);
+  cl_assert_equal_i(offsetof(TouchEvent, y), 4);
+  cl_assert(sizeof(TouchEvent) <= 9);
 }

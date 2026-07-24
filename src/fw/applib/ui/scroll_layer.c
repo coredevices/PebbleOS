@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "scroll_layer.h"
+#include "scroll_layer_private.h"
 
 #include "applib/applib_malloc.auto.h"
 #include "applib/graphics/gtypes.h"
@@ -17,6 +18,20 @@
 #include "animation_timing.h"
 
 #include <string.h>
+
+#ifdef CONFIG_TOUCH
+#include "applib/ui/recognizer/touch_nav.h"
+#include "applib/ui/recognizer/recognizer_manager.h"
+#include "applib/ui/recognizer/pan.h"
+#include "applib/ui/recognizer/swipe.h"
+#include "kernel/pebble_tasks.h"
+#include "pbl/drivers/rtc.h"
+
+// Provided by the owning task; forward-declared (as in menu_layer.c) to avoid pulling kernel
+// app-state / modal-manager headers into this applib translation unit.
+struct TouchNavState *app_state_get_touch_nav_state(void);
+struct TouchNavState *modal_manager_get_touch_nav_state(void);
+#endif
 
 T_STATIC bool prv_scroll_layer_is_paging_enabled(ScrollLayer *scroll_layer) {
   PBL_ASSERTN(scroll_layer);
@@ -87,6 +102,180 @@ static void scroll_layer_property_changed_proc(Layer *layer) {
   layer_set_frame(&scroll_layer->content_sublayer, &internal_rect);
 }
 
+#ifdef CONFIG_TOUCH
+// ---------------------------------------------------------------------------------------------
+// Tier-1 touch navigation
+//
+// A ScrollLayer registers itself as a Tier-1 touch widget in scroll_layer_init(). Like MenuLayer,
+// the recognizers and gesture state are NOT owned per-widget: the unified widget (tap, pan, swipe)
+// set, owned by TouchNavState, drives whichever migrated widget the finger lands on through a
+// per-node apply vtable. A ScrollLayer supplies that vtable (s_scroll_touch_nav_ops) at
+// registration; the apply functions below stay the public per-scroll gesture surface (and the
+// unit-test entry points). A ScrollLayer is a pure scroll container (no selection model): a vertical
+// pan drags the content 1:1 and a horizontal swipe navigates (right = BACK, left = SELECT); it has
+// no tap action (tap op is NULL, so a tap on it is dropped, never a bridge SELECT). A ScrollLayer
+// embedded in a composite that drives its own scrolling (e.g. MenuLayer) deregisters via
+// scroll_layer_touch_nav_deregister() so the same layer never has two gesture drivers.
+
+_Static_assert(sizeof(((ScrollLayer *)0)->touch_nav_node) == sizeof(TouchNavWidgetNode),
+               "ScrollLayer touch_nav_node must match TouchNavWidgetNode layout");
+
+static bool prv_is_app_task(void) {
+  return pebble_task_get_current() == PebbleTask_App;
+}
+
+static TouchNavState *prv_task_touch_nav_state(void) {
+  return prv_is_app_task() ? app_state_get_touch_nav_state() : modal_manager_get_touch_nav_state();
+}
+
+// Test seam (declared in scroll_layer_private.h under CONFIG_TOUCH). The unified widget set holds no
+// per-task singleton to reset; the touch-nav state is owned by TouchNavState, so this is a no-op
+// kept for source compatibility with tests that call it in their setup.
+void scroll_layer_touch_nav_reset_all(void) {
+}
+
+bool scroll_layer_touch_is_gesture_target(const ScrollLayer *scroll_layer) {
+  const TouchNavState *state = prv_task_touch_nav_state();
+  return state && state->latched_target && state->latched_target->widget == scroll_layer;
+}
+
+// Coarse clamp: [min(frame_h - content_h, 0), 0]. With content shorter than the viewport the lower
+// bound collapses to 0 (via the min()), so a short page cannot be dragged off its top.
+static int16_t prv_scroll_touch_clamp_offset_y(ScrollLayer *scroll_layer, int16_t y) {
+  const int16_t frame_h = scroll_layer->layer.frame.size.h;
+  const int16_t content_h = scroll_layer_get_content_size(scroll_layer).h;
+  const int16_t min_y = MIN((int16_t)(frame_h - content_h), (int16_t)0);
+  return CLIP(y, min_y, (int16_t)0);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Gesture handlers (also the unit-test entry surface)
+
+void scroll_layer_touch_handle_pan_update(ScrollLayer *scroll_layer, GPoint base,
+                                          GPoint delta_since_start) {
+  const int16_t new_y = prv_scroll_touch_clamp_offset_y(scroll_layer, base.y + delta_since_start.y);
+  scroll_layer_set_content_offset(scroll_layer, GPoint(0, new_y), false);
+}
+
+void scroll_layer_touch_handle_swipe(ScrollLayer *scroll_layer, SwipeDirection direction) {
+  (void)scroll_layer;
+  // Horizontal swipe navigation, mirroring the Tier-2 bridge and MenuLayer: right = BACK (pop the
+  // top window when it has no back handler), left = SELECT. Guarded against a mid-transition drop.
+  const TouchNavState *state = prv_task_touch_nav_state();
+  if (!state || !state->ops) {
+    return;
+  }
+  const TouchNavOps *ops = state->ops;
+  if (ops->is_animating && ops->is_animating(ops->ctx)) {
+    return;
+  }
+  switch (direction) {
+    case SwipeDirection_Right:
+      if (!(ops->top_overrides_back && ops->top_overrides_back(ops->ctx))) {
+        if (ops->pop_top) {
+          ops->pop_top(ops->ctx);
+        }
+      } else if (ops->emit_button) {
+        ops->emit_button(ops->ctx, BUTTON_ID_BACK);
+      }
+      break;
+    case SwipeDirection_Left:
+      if (ops->emit_button) {
+        ops->emit_button(ops->ctx, BUTTON_ID_SELECT);
+      }
+      break;
+    default:
+      break;
+  }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Unified widget-set ops
+
+// Thin void*->ScrollLayer* wrappers over the public apply functions. The unified widget set (owned
+// by TouchNavState) drives the scroll layer through these; direct assignment of the apply functions
+// would not compile because their first parameter is ScrollLayer*, not void*.
+
+static void prv_scroll_ops_pan_started(void *w) {
+  // Touchdown-equivalent for the pan: stop any running scroll animation so the finger takes over
+  // from a fling/settle cleanly. The base offset is latched by the core via get_base_offset next.
+  ScrollLayer *scroll_layer = w;
+  Animation *anim = property_animation_get_animation(scroll_layer->animation);
+  if (anim && animation_is_scheduled(anim)) {
+    animation_unschedule(anim);
+  }
+}
+
+static GPointReturn prv_scroll_ops_get_base_offset(void *w) {
+  return scroll_layer_get_content_offset((ScrollLayer *)w);
+}
+
+static void prv_scroll_ops_pan_update(void *w, GPoint base, GPoint delta) {
+  scroll_layer_touch_handle_pan_update((ScrollLayer *)w, base, delta);
+}
+
+static void prv_scroll_ops_pan_snap(void *w, GPoint base, GPoint final_delta) {
+  // Scroll has no separate settle: the final (unthrottled) offset is the same 1:1 clamp applied on
+  // liftoff as during the pan.
+  scroll_layer_touch_handle_pan_update((ScrollLayer *)w, base, final_delta);
+}
+
+static void prv_scroll_ops_pan_cancel(void *w) {
+  // The content is already settled from the last Updated; a cancelled pan has nothing to undo.
+  (void)w;
+}
+
+static void prv_scroll_ops_swipe(void *w, SwipeDirection dir) {
+  scroll_layer_touch_handle_swipe((ScrollLayer *)w, dir);
+}
+
+// can_start is NULL: a ScrollLayer's content is always valid, so a pan may always start. tap is
+// NULL: a ScrollLayer has no tap action, so a tap on it is dropped (never a bridge SELECT).
+static const TouchNavWidgetOps s_scroll_touch_nav_ops = {
+  .can_start = NULL,
+  .pan_started = prv_scroll_ops_pan_started,
+  .get_base_offset = prv_scroll_ops_get_base_offset,
+  .pan_update = prv_scroll_ops_pan_update,
+  .pan_snap = prv_scroll_ops_pan_snap,
+  .pan_cancel = prv_scroll_ops_pan_cancel,
+  .tap = NULL,
+  .swipe = prv_scroll_ops_swipe,
+};
+
+static void prv_scroll_touch_nav_register(ScrollLayer *scroll_layer) {
+  TouchNavState *state = prv_task_touch_nav_state();
+  if (!state || !state->manager) {
+    return;
+  }
+
+  // Register the scroll layer as a migrated Tier-1 widget: the unified widget set drives it through
+  // s_scroll_touch_nav_ops. The registry add dedups by address and re-applies the ops/layer, so a
+  // repeated init on the same scroll layer (no intervening deinit) keeps routing to and driving it.
+  touch_nav_registry_add(state, TouchNavWidgetType_Scroll,
+                         (TouchNavWidgetNode *)&scroll_layer->touch_nav_node, &scroll_layer->layer,
+                         &s_scroll_touch_nav_ops, scroll_layer);
+}
+
+void scroll_layer_touch_nav_deregister(ScrollLayer *scroll_layer) {
+  TouchNavState *state = prv_task_touch_nav_state();
+  if (!state) {
+    return;
+  }
+  // If this scroll layer is the live gesture target and is about to go away under a live window,
+  // cancel the gesture with NO client callbacks so a settle cannot reach freed state.
+  // touch_nav_registry_remove clears the latched target BEFORE we cancel (its UAF hook), so the
+  // resulting Cancelled dispatch finds no target and re-enters nothing.
+  const bool was_target = scroll_layer_touch_is_gesture_target(scroll_layer);
+  // Idempotent: removing a node that is not in the registry (double deinit, or a never-registered
+  // layer) is a safe no-op.
+  touch_nav_registry_remove(state, TouchNavWidgetType_Scroll,
+                            (TouchNavWidgetNode *)&scroll_layer->touch_nav_node);
+  if (was_target && state->manager) {
+    recognizer_manager_cancel_and_reset(state->manager);
+  }
+}
+#endif  // CONFIG_TOUCH
+
 void scroll_layer_init(ScrollLayer *scroll_layer, const GRect *frame) {
   *scroll_layer = (ScrollLayer){};
 
@@ -98,6 +287,10 @@ void scroll_layer_init(ScrollLayer *scroll_layer, const GRect *frame) {
   layer_add_child(&scroll_layer->layer, &scroll_layer->content_sublayer);
 
   prv_setup_shadow_layer(scroll_layer);
+
+#ifdef CONFIG_TOUCH
+  prv_scroll_touch_nav_register(scroll_layer);
+#endif
 }
 
 ScrollLayer* scroll_layer_create(GRect frame) {
@@ -113,6 +306,11 @@ bool scroll_layer_is_instance(const Layer *layer) {
 }
 
 void scroll_layer_deinit(ScrollLayer *scroll_layer) {
+#ifdef CONFIG_TOUCH
+  // Deregister from the Tier-1 touch registry first so a gesture in flight on this widget is
+  // cancelled with no client callbacks before its state is torn down (double-deinit safe).
+  scroll_layer_touch_nav_deregister(scroll_layer);
+#endif
   animation_destroy(property_animation_get_animation(scroll_layer->animation));
   content_indicator_destroy_for_scroll_layer(scroll_layer);
   layer_deinit(&scroll_layer->layer);

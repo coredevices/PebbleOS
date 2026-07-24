@@ -295,24 +295,44 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
       // For touch-subscribed apps, tie the backlight to the touch: on while a
       // finger is down, timed out after liftoff. Release on liftoff ungated
       // so the refcount can't leak if the app unsubscribed or DnD turned on mid-touch.
-      if (e->touch.event.type == TouchEvent_Liftoff) {
-        light_touch_up();
-        return;
-      }
-      if (e->touch.event.type != TouchEvent_Touchdown) {
-        return;
-      }
-      if (!touch_has_app_subscribers()) {
-        return;
-      }
+      TouchWakeGateResult gate = {0};
+      if (e->touch.event.type == TouchEvent_Touchdown) {
+        // Wake gate: sample the backlight around the touch-driven wake so a
+        // wake tap can be told apart from navigation. before must come first.
+        const bool before = light_is_on();
+        const bool backlight_driven = touch_has_app_subscribers();
+        bool dnd_suppresses_backlight = false;
 #ifndef CONFIG_RECOVERY_FW
-      const bool dnd_suppresses_backlight = do_not_disturb_is_active() &&
-                                           !alerts_preferences_dnd_get_touch_backlight();
-      if (dnd_suppresses_backlight) {
-        return;
-      }
+        dnd_suppresses_backlight =
+            do_not_disturb_is_active() && !alerts_preferences_dnd_get_touch_backlight();
 #endif
-      light_touch_down();
+        // Also gate on the global touch switch: a Touchdown that raced past a
+        // global-off toggle (different queues, no global FIFO) must not grab an
+        // unreleasable backlight hold once touch is disabled. Both the toggle
+        // and this handler run on KernelMain, so the switch is already settled.
+        if (backlight_driven && !dnd_suppresses_backlight &&
+            touch_service_is_globally_enabled()) {
+          light_touch_down();
+        }
+        const bool after = light_is_on();
+        gate =
+            touch_wake_gate_on_touchdown(backlight_driven, dnd_suppresses_backlight, before, after);
+      } else if (e->touch.event.type == TouchEvent_Liftoff) {
+        light_touch_up();
+      }
+      const bool is_modal_focused =
+          (modal_manager_get_enabled() &&
+           !(modal_manager_get_properties() & ModalProperty_Unfocused));
+      if (compositor_is_animating() || is_modal_focused) {
+        // Mask the app task while the compositor animates or a modal is focused. Otherwise a
+        // gesture over a focused modal reaches both the kernel (modal) twin and the app twin
+        // underneath, firing two actions for one gesture; masking the app leaves the modal twin
+        // as the sole handler (mirrors the button path above). Stamp WITHOUT returning so the
+        // wake-gate latch below still runs.
+        e->task_mask |= 1 << PebbleTask_App;
+      }
+      // Stamp on every event so the whole gesture carries the Touchdown latch.
+      touch_wake_gate_stamp(&e->touch.event, gate);
       return;
     }
 #endif

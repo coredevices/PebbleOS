@@ -75,9 +75,9 @@
     }, {
         "name": "ActionMenuData",
         "size_3x_padding": 86,
-        "size_3x": 930,
+        "size_3x": 954,
         "dependencies": ["Window", "MenuLayer", "Layer", "Layer"],
-        "_comment": "Only for 3.x apps"
+        "_comment": "Only for 3.x apps. size_3x includes +16 for the embedded MenuLayer's two grown TouchNavWidgetNodes."
     }, {
         "name": "AnimationLegacy2",
         "size_2x": 40,
@@ -139,11 +139,11 @@
         "size_3x": 60
     }, {
         "name": "MenuLayer",
-        "size_2x": 380,
+        "size_2x": 404,
         "size_3x_padding": 32,
-        "size_3x": 452,
+        "size_3x": 476,
         "dependencies": ["ScrollLayer", "InverterLayer"],
-        "_comment": "FIXME: MenuLayer has internal padding that needs removing"
+        "_comment": "FIXME: MenuLayer has internal padding that needs removing. size_2x/size_3x include +16 for the MenuLayer's own grown TouchNavWidgetNode and the embedded ScrollLayer's grown TouchNavWidgetNode."
     }, {
         "name": "NumberWindow",
         "size_2x": 352,
@@ -169,15 +169,16 @@
         "dependencies": ["Layer"]
     }, {
         "name": "ScrollLayer",
-        "size_2x": 204,
+        "size_2x": 220,
         "size_3x_padding": 16,
-        "size_3x": 212,
-        "dependencies": ["Layer", "Layer", "Layer"]
+        "size_3x": 228,
+        "dependencies": ["Layer", "Layer", "Layer"],
+        "_comment": "size_2x/size_3x include +16 for the intrusive TouchNavWidgetNode (Tier-1 touch), grown to four pointers."
     }, {
         "name": "SimpleMenuLayer",
-        "size_2x": 392,
+        "size_2x": 416,
         "size_3x_padding": 32,
-        "size_3x": 496,
+        "size_3x": 520,
         "dependencies": ["MenuLayer"]
     }, {
         "name": "StatusBarLayer",
@@ -243,19 +244,19 @@
     }, {
         "name": "ExpandableDialog",
         "size_3x_padding": 36,
-        "size_3x": 1280,
+        "size_3x": 1296,
         "dependencies": ["Dialog", "TextLayer", "ScrollLayer", "ActionBarLayer", "Layer"],
         "_comment": "Generously padded because it's not feature complete yet (only 3.x)"
     }, {
         "name": "TranscriptionDialog",
         "size_3x_padding": 40,
-        "size_3x": 1352,
+        "size_3x": 1368,
         "dependencies": ["ExpandableDialog"],
         "_comment": "Generously padded because it's not feature complete yet (only 3.x)"
     }, {
         "name": "VoiceWindow",
         "size_3x_padding": 36,
-        "size_3x": 2368,
+        "size_3x": 2384,
         "dependencies": ["TranscriptionDialog", "Layer", "Layer", "StatusBarLayer", "TextLayer", 
                          "KinoLayer", "Window", "EventServiceInfo"],
         "_comment": "Generously padded because it's not feature complete yet (only 3.x)"
@@ -274,9 +275,9 @@
         "_comment": ["Cache to speed up frequent health service API calls (only 3.9+)"]
     }, {
         "name": "OptionMenu",
-        "size_2x": 684,
+        "size_2x": 708,
         "size_3x_padding": 12,
-        "size_3x": 880,
+        "size_3x": 904,
         "dependencies": ["Window", "StatusBarLayer", "MenuLayer", "GBitmap", "GBitmap"],
         "_comment": "Not exported yet (only 3.x)"
     }, {

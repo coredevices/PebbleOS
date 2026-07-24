@@ -12,8 +12,20 @@
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/layer.h"
 #include "applib/ui/recognizer/recognizer_list.h"
+#include "applib/ui/recognizer/recognizer_manager.h"
+#include "applib/ui/recognizer/touch_nav.h"
+#include "applib/ui/click.h"
+#include "applib/ui/click_internal.h"
+#include "applib/ui/window_private.h"
+#include "applib/ui/window_stack.h"
+#include "applib/touch_service.h"
+#include "applib/touch_service_private.h"
+#include "pbl/services/touch/touch.h"
+#include "pbl/drivers/button_id.h"
 #include "applib/unobstructed_area_service.h"
 #include "kernel/util/segment.h"
+#include "process_management/app_install_types.h"
+#include "process_management/app_manager.h"
 #include "process_management/process_loader.h"
 #include "process_management/process_manager.h"
 #include "pbl/services/i18n/i18n.h"
@@ -103,6 +115,11 @@ typedef struct {
 
 #ifdef CONFIG_TOUCH
   RecognizerList recognizer_list;
+  RecognizerManager recognizer_manager;
+  TouchNavState touch_nav_state;
+  //! Whether this app participates in touch navigation. Set at launch to whether the current app is
+  //! a system app; a third-party app can opt in at runtime via app_touch_navigation_enable().
+  bool touch_nav_participating;
 #endif
 
   uint8_t *js_runtime_context_buffer;
@@ -169,10 +186,87 @@ bool app_state_configure(MemorySegment *app_state_ram,
   return true;
 }
 
+#ifdef CONFIG_TOUCH
+// Touch-nav bridge effects for the app task.
+static bool prv_app_touch_nav_is_animating(void *ctx) {
+  return window_stack_is_animating(app_state_get_window_stack());
+}
+
+static bool prv_app_touch_nav_top_overrides_back(void *ctx) {
+  Window *top = app_window_stack_get_top_window();
+  return top && top->overrides_back_button;
+}
+
+static bool prv_app_touch_nav_top_bridge_disabled(void *ctx) {
+  Window *top = app_window_stack_get_top_window();
+  const bool window_opt_out = top && top->touch_bridge_disabled;
+  // The raw slot reflects only a genuine app raw subscription (touch_service_subscribe): the app
+  // twin installs into the separate system slot, and the backlight / nav system-hold live in the
+  // touch service layer, not this slot. So a set raw_handler means the app owns touch and must not
+  // also receive synthesized buttons.
+  const TouchServiceState *touch_state = app_state_get_touch_service_state();
+  const bool app_has_raw_subscriber = touch_state && (touch_state->raw_handler != NULL);
+  return touch_nav_app_bridge_disabled(window_opt_out, app_has_raw_subscriber);
+}
+
+static void prv_app_touch_nav_pop_top(void *ctx) {
+  window_stack_pop_with_transition(app_state_get_window_stack(), NULL /* default pop transition */);
+}
+
+static void prv_app_touch_nav_emit_button(void *ctx, ButtonId button) {
+  ClickManager *cm = app_state_get_click_manager();
+  click_recognizer_handle_button_down(&cm->recognizers[button]);
+  click_recognizer_handle_button_up(&cm->recognizers[button]);
+}
+
+static const TouchNavOps s_app_touch_nav_ops = {
+  .is_animating = prv_app_touch_nav_is_animating,
+  .top_overrides_back = prv_app_touch_nav_top_overrides_back,
+  .top_bridge_disabled = prv_app_touch_nav_top_bridge_disabled,
+  .pop_top = prv_app_touch_nav_pop_top,
+  .emit_button = prv_app_touch_nav_emit_button,
+  .idle_refresh = NULL,  // the app task has no idle-timeout refresh; that is the kernel's job
+};
+
+// Twin subscription effects for the app task. The subscribe/reconcile state machine lives in
+// touch_nav.c; these ops bind it to the app task's touch service slot and nav state.
+static bool prv_app_twin_pref_enabled(void *ctx) {
+  return touch_nav_enabled();
+}
+
+static void prv_app_twin_install_handler(void *ctx) {
+  // touch_service_set_system_handler also no-ops for watchfaces, so they never receive emulation.
+  touch_service_set_system_handler(touch_nav_dispatch, &s_app_state_ptr->touch_nav_state);
+}
+
+static void prv_app_twin_remove_handler(void *ctx) {
+  recognizer_manager_cancel_and_reset(&s_app_state_ptr->recognizer_manager);
+  touch_service_set_system_handler(NULL, NULL);
+}
+
+static const TouchNavTwinOps s_app_twin_ops = {
+  .pref_enabled = prv_app_twin_pref_enabled,
+  .install_handler = prv_app_twin_install_handler,
+  .remove_handler = prv_app_twin_remove_handler,
+};
+#endif
+
 NOINLINE void app_state_init(void) {
   s_app_state_ptr->rand_seed.mat1 = 0; // Uninitialized
 
   click_manager_init(&s_app_state_ptr->click_manager);
+
+#ifdef CONFIG_TOUCH
+  recognizer_manager_init(&s_app_state_ptr->recognizer_manager);
+  s_app_state_ptr->recognizer_manager.global_list = &s_app_state_ptr->recognizer_list;
+  touch_nav_state_init(&s_app_state_ptr->touch_nav_state, &s_app_state_ptr->recognizer_manager,
+                       &s_app_touch_nav_ops);
+  // Participate only when this is positively a system/built-in app (negative install id). Third-party
+  // app-DB apps (positive id) and unresolved/INSTALL_ID_INVALID (0) are inert by default and must opt
+  // in via app_touch_navigation_enable(), so the unsafe direction (unknown -> on) cannot happen.
+  s_app_state_ptr->touch_nav_participating =
+      app_install_id_from_system(app_manager_get_current_app_id());
+#endif
 
   animation_private_state_init(&s_app_state_ptr->animation_state);
 
@@ -209,6 +303,12 @@ NOINLINE void app_state_init(void) {
   tick_timer_service_state_init(app_state_get_tick_timer_service_state());
 
   touch_service_state_init(app_state_get_touch_service_state());
+
+#ifdef CONFIG_TOUCH
+  // Route this app's touch events through the nav bridge when the master pref is on. No-op for
+  // watchfaces (touch_service_set_system_handler declines them).
+  app_touch_nav_subscribe();
+#endif
 
   health_service_state_init(app_state_get_health_service_state());
 
@@ -405,6 +505,32 @@ GBitmap* app_state_legacy2_get_2bit_framebuffer(void) {
 #ifdef CONFIG_TOUCH
 RecognizerList *app_state_get_recognizer_list(void) {
   return &s_app_state_ptr->recognizer_list;
+}
+
+RecognizerManager *app_state_get_recognizer_manager(void) {
+  return &s_app_state_ptr->recognizer_manager;
+}
+
+TouchNavState *app_state_get_touch_nav_state(void) {
+  return &s_app_state_ptr->touch_nav_state;
+}
+
+void app_touch_nav_subscribe(void) {
+  // Install the nav dispatcher into the touch service system slot only when the master pref is on
+  // AND this app participates: a third-party app that has not opted in stays inert even with the
+  // pref on. The gate/decision lives in touch_nav.c (unit-testable via s_app_twin_ops).
+  touch_nav_app_twin_subscribe(&s_app_twin_ops, s_app_state_ptr->touch_nav_participating);
+}
+
+void app_touch_nav_unsubscribe(void) {
+  prv_app_twin_remove_handler(NULL);
+}
+
+void app_touch_nav_set_participating(bool enable) {
+  // Reconcile the subscription with the new participation state: subscribe on opt-in (a no-op while
+  // the master pref is off, until the pref turns on and the app resubscribes), unsubscribe on
+  // opt-out. Idempotent when the value is unchanged.
+  touch_nav_app_twin_reconcile(&s_app_twin_ops, &s_app_state_ptr->touch_nav_participating, enable);
 }
 #endif
 

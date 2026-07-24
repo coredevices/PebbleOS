@@ -111,6 +111,13 @@ void backlight_set_touch_wake(BacklightTouchWake wake);
 bool touch_is_globally_enabled(void);
 void touch_set_globally_enabled(bool enable);
 
+// Master touch-navigation pref. When true, the touch service drives system
+// navigation (button emulation via the touch-nav bridge). Defaults to off.
+// Not exported to the SDK. Toggling it runs the enable/disable transaction
+// (kernel/app subscription + permanent sensor hold).
+bool touch_navigation_is_enabled(void);
+void touch_set_navigation_enabled(bool enable);
+
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
 // Dynamic backlight: how aggressively brightness ramps with ambient light.
 // Every mode keeps the same dim floor; the mode selects the lux level at

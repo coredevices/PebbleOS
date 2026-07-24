@@ -10,6 +10,7 @@
 #include "applib/ui/click.h"
 #include "applib/ui/layer.h"
 #include "applib/ui/layer_private.h"
+#include "applib/ui/recognizer/recognizer_manager.h"
 #include "applib/ui/window_manager.h"
 #include "applib/ui/window_stack.h"
 #include "applib/applib_malloc.auto.h"
@@ -210,6 +211,9 @@ void window_destroy(Window* window) {
 void window_deinit(Window *window) {
   PBL_ASSERTN(window);
 
+  // Drop the recognizer manager's pointer to this window before it is torn down
+  window_lost_input_focus(window);
+
   // FIXME: is there a way to cancel a pending render event?
   window_set_on_screen(window, false, true);
 
@@ -223,6 +227,13 @@ void window_set_overrides_back_button(Window *window, bool overrides_back_button
     return;
   }
   window->overrides_back_button = overrides_back_button;
+}
+
+void window_set_touch_bridge_disabled(Window *window, bool disabled) {
+  if (!window || (disabled == window->touch_bridge_disabled)) {
+    return;
+  }
+  window->touch_bridge_disabled = disabled;
 }
 
 static ClickManager* prv_get_current_click_manager(void) {
@@ -562,7 +573,39 @@ RecognizerList *window_get_recognizer_list(Window *window) {
 }
 
 RecognizerManager *window_get_recognizer_manager(Window *window) {
-  // TODO return the app's recognizer manager
-  // https://pebbletechnology.atlassian.net/browse/PBL-30957
+#ifdef CONFIG_TOUCH
+  if (!window || !window->parent_window_stack) {
+    return NULL;
+  }
+  if (window_manager_is_app_window(window)) {
+    return app_state_get_recognizer_manager();
+  }
+  // A non-app (modal) window routes to the kernel (modal) recognizer manager.
+  return modal_manager_get_recognizer_manager();
+#else
   return NULL;
+#endif
+}
+
+void window_became_input_focus(Window *window) {
+#ifdef CONFIG_TOUCH
+  RecognizerManager *manager = window_get_recognizer_manager(window);
+  if (!manager) {
+    return;
+  }
+  recognizer_manager_cancel_and_reset(manager);
+  recognizer_manager_set_window(manager, window);
+#endif
+}
+
+void window_lost_input_focus(Window *window) {
+#ifdef CONFIG_TOUCH
+  RecognizerManager *manager = window_get_recognizer_manager(window);
+  if (!manager || (manager->window != window)) {
+    // No-op unless this window currently holds the input focus
+    return;
+  }
+  recognizer_manager_cancel_and_reset(manager);
+  recognizer_manager_set_window(manager, NULL);
+#endif
 }

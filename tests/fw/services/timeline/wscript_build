@@ -223,4 +223,22 @@ clar(ctx,
      override_includes=['dummy_board'],
      platforms=['obelix', 'gabbro'])
 
+clar(ctx,
+    sources_ant_glob = \
+        " src/fw/applib/graphics/gcolor_definitions.c" \
+        " src/fw/applib/graphics/gtypes.c" \
+        " src/fw/applib/ui/layer.c" \
+        " src/fw/applib/ui/recognizer/recognizer.c" \
+        " src/fw/applib/ui/recognizer/recognizer_manager.c" \
+        " src/fw/applib/ui/recognizer/tap.c" \
+        " src/fw/applib/ui/recognizer/pan.c" \
+        " src/fw/applib/ui/recognizer/swipe.c" \
+        " src/fw/applib/ui/recognizer/touch_nav.c" \
+        " src/fw/services/timeline/swap_layer.c" \
+        " tests/fakes/fake_animation.c" \
+        " tests/fakes/fake_rtc.c",
+    defines=['CONFIG_SCREEN_COLOR_DEPTH_BITS=8', 'CONFIG_TOUCH'],
+    test_sources_ant_glob = "test_swap_layer_touch.c",
+    override_includes=['dummy_board'])
+
 # vim:filetype=python

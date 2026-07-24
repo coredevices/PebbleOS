@@ -14,6 +14,9 @@
 
 #include <stddef.h>
 
+_Static_assert(RECOGNIZER_INSTANCE_SIZE >= sizeof(Recognizer),
+               "RECOGNIZER_INSTANCE_SIZE too small for Recognizer");
+
 static void prv_set_state(Recognizer *recognizer, RecognizerState new_state) {
   switch (recognizer->state) {
     case RecognizerState_Possible:
@@ -92,6 +95,20 @@ static void prv_send_subscriber_event(Recognizer *recognizer) {
 // data/transitions are not triggered. I'd like to preserve them for internal use to quickly catch
 // errors (https://pebbletechnology.atlassian.net/browse/PBL-31359)
 
+static void prv_init_recognizer(Recognizer *recognizer, const RecognizerImpl *impl,
+                                const void *data, size_t data_size, RecognizerEventCb event_cb,
+                                void *user_data) {
+  *recognizer = (Recognizer) {
+    .state = RecognizerState_Possible,
+    .impl = impl,
+    .subscriber = {
+      .event = event_cb,
+      .data = user_data,
+    }
+  };
+  memcpy(recognizer->impl_data, data, data_size);
+}
+
 Recognizer *recognizer_create_with_data(const RecognizerImpl *impl, const void *data,
                                         size_t data_size, RecognizerEventCb event_cb,
                                         void *user_data) {
@@ -112,15 +129,26 @@ Recognizer *recognizer_create_with_data(const RecognizerImpl *impl, const void *
   if (!recognizer) {
     return NULL;
   }
-  *recognizer = (Recognizer) {
-    .state = RecognizerState_Possible,
-    .impl = impl,
-    .subscriber = {
-      .event = event_cb,
-      .data = user_data,
-    }
-  };
-  memcpy(recognizer->impl_data, data, data_size);
+  prv_init_recognizer(recognizer, impl, data, data_size, event_cb, user_data);
+
+  return recognizer;
+}
+
+Recognizer *recognizer_init_static_with_data(void *storage, const RecognizerImpl *impl,
+                                             const void *data, size_t data_size,
+                                             RecognizerEventCb event_cb, void *user_data) {
+  PBL_ASSERTN(storage);
+  PBL_ASSERTN(impl);
+  PBL_ASSERTN(impl->handle_touch_event && impl->cancel && impl->reset);
+  PBL_ASSERTN(data && (data_size > 0));
+
+  if (!event_cb) {
+    return NULL;
+  }
+
+  Recognizer *recognizer = storage;
+  prv_init_recognizer(recognizer, impl, data, data_size, event_cb, user_data);
+  recognizer->is_static = true;
 
   return recognizer;
 }
@@ -171,7 +199,9 @@ void recognizer_reset(Recognizer *recognizer) {
 
   recognizer->impl->reset(recognizer);
   prv_set_state(recognizer, RecognizerState_Possible);
-  recognizer->flags = 0;
+  // Only clear the touch-handling flag; preserve is_owned so the recognizer stays linked to its
+  // list and is not freed while owned
+  recognizer->handling_touch_event = false;
 }
 
 void recognizer_cancel(Recognizer *recognizer) {
@@ -312,7 +342,9 @@ void recognizer_destroy(Recognizer *recognizer) {
     recognizer->impl->on_destroy(recognizer);
   }
 
-  applib_free(recognizer);
+  if (!recognizer->is_static) {
+    applib_free(recognizer);
+  }
 }
 
 bool recognizer_is_owned(Recognizer *recognizer) {

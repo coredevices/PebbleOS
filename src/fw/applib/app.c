@@ -90,11 +90,13 @@ static void prv_app_will_focus_handler(PebbleEvent *e, void *context) {
   click_manager_reset(app_state_get_click_manager());
   if (e->app_focus.in_focus) {
     if (window) {
+      window_became_input_focus(window);
       // Do not call 'appear' handler on window displacing modal window
       window_set_on_screen(window, true, false);
       window_render(window, app_state_get_graphics_context());
     }
   } else if (window) {
+    window_lost_input_focus(window);
     // Do not call 'disappear' handler on window displaced by modal window
     window_set_on_screen(window, false, false);
   }

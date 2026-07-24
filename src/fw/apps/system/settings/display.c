@@ -425,7 +425,9 @@ static void prv_backlight_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
 #ifdef CONFIG_TOUCH
     case SettingsBacklightTouchWake:
       title = i18n_noop("Wake on touch");
-      subtitle = s_touch_wake_labels[backlight_get_touch_wake()];
+      // Touch navigation already wakes on every touch, so this setting is superseded while it is on.
+      subtitle = touch_navigation_is_enabled() ? i18n_noop("On (nav)")
+                                               : s_touch_wake_labels[backlight_get_touch_wake()];
       break;
 #endif
     case SettingsBacklightAmbientSensor:
@@ -549,7 +551,7 @@ enum SettingsDisplayItem {
   SettingsDisplayBacklight,
   SettingsDisplayBacklightSettings,
 #ifdef CONFIG_TOUCH
-  SettingsDisplayTouch,
+  SettingsDisplayTouchNav,
 #endif
 #ifdef CONFIG_ORIENTATION_MANAGER
   SettingsDisplayOrientation,
@@ -593,8 +595,8 @@ static void prv_display_select_click_cb(SettingsCallbacks *context, uint16_t row
       prv_backlight_submenu_push();
       break;
 #ifdef CONFIG_TOUCH
-    case SettingsDisplayTouch:
-      touch_set_globally_enabled(!touch_is_globally_enabled());
+    case SettingsDisplayTouchNav:
+      touch_set_navigation_enabled(!touch_navigation_is_enabled());
       break;
 #endif
 #ifdef CONFIG_ORIENTATION_MANAGER
@@ -632,9 +634,9 @@ static void prv_display_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       title = i18n_noop("Backlight Settings");
       break;
 #ifdef CONFIG_TOUCH
-    case SettingsDisplayTouch:
+    case SettingsDisplayTouchNav:
       title = i18n_noop("Touch");
-      subtitle = touch_is_globally_enabled() ? i18n_noop("On") : i18n_noop("Off");
+      subtitle = touch_navigation_is_enabled() ? i18n_noop("On") : i18n_noop("Off");
       break;
 #endif
 #ifdef CONFIG_ORIENTATION_MANAGER

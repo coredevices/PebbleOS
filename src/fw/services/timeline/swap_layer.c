@@ -19,6 +19,12 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/math.h"
+#include "pbl/util/size.h"
+
+#ifdef CONFIG_TOUCH
+#include "applib/ui/recognizer/touch_nav.h"
+#include "kernel/pebble_tasks.h"
+#endif
 
 #include <string.h>
 
@@ -712,6 +718,12 @@ static void prv_swap_layer_click_config_provider(void *context) {
   window_multi_click_subscribe(BUTTON_ID_DOWN, 2, 2, 100, false, prv_down_multi_click_handler);
 
   SwapLayer *swap_layer = context;
+#ifdef CONFIG_TOUCH
+  // Re-registering here (idempotent) makes the click-config-provider the re-show hook: after a higher
+  // modal that released touch is dismissed and this window regains input focus, the swap layer is
+  // re-subscribed as the sole Tier-1 touch handler.
+  swap_layer_touch_register(swap_layer);
+#endif
   if (swap_layer->callbacks.click_config_provider) {
     swap_layer->callbacks.click_config_provider(swap_layer->context);
   }
@@ -774,6 +786,313 @@ bool swap_layer_attempt_layer_swap(SwapLayer *swap_layer, ScrollDirection direct
   return prv_attempt_swap(swap_layer, direction, true /* to_top */);
 }
 
+#ifdef CONFIG_TOUCH
+///////////////////////
+// TIER-1 TOUCH NAVIGATION
+//
+// A SwapLayer registers itself as a Tier-1 touch widget in swap_layer_init() / the
+// click-config-provider and deregisters in swap_layer_deinit() (and, while covered by a higher
+// modal, in swap_layer_touch_release()). The recognizers and gesture state are not owned per-widget:
+// the unified widget (tap, pan, swipe) set, owned by TouchNavState, drives whichever migrated widget
+// the finger lands on through a per-node apply vtable. A SwapLayer supplies that vtable
+// (s_swap_touch_nav_ops) at registration; the apply functions below stay the per-swap gesture
+// surface (and the unit-test entry points).
+//
+// A pan drives the content offset live and 1:1 (base captured at pan Start, throttled by the core),
+// clamped to [0, max_scroll]. On liftoff a pull past the clamped edge by more than SWAP_OVERPULL_PX
+// swaps to the neighbouring notification through the same physical-button path
+// (prv_handle_swap_attempt); a normal drag settles. A tap or left swipe emulates SELECT; a right
+// swipe emulates BACK. The notification body may not be loaded when the widget registers, so the
+// can_start op gates the gesture on a non-NULL current layout (prv_get_current_notification_offset
+// dereferences it), declining the whole gesture until a notification is present.
+///////////////////////
+
+// Finger travel, in pixels, before a pan counts as a drag. Below this a liftoff is a no-op, so a
+// normal scroll to the edge (or a jittery tap) cannot accidentally scroll or swap.
+#define DRAG_THRESHOLD_PX 10
+// How far the finger must pull PAST the clamped edge to swap to the neighbouring notification. Kept
+// separate from DRAG_THRESHOLD_PX so reaching the edge without over-pulling never swaps.
+#define SWAP_OVERPULL_PX 40
+
+// Provided by the owning shells; forward-declared to avoid pulling the kernel modal header in.
+struct TouchNavState *modal_manager_get_touch_nav_state(void);
+
+_Static_assert(sizeof(((SwapLayer *)0)->touch_nav_node) == sizeof(TouchNavWidgetNode),
+               "SwapLayer touch_nav_node must match TouchNavWidgetNode layout");
+
+static bool prv_is_app_task(void) {
+  return pebble_task_get_current() == PebbleTask_App;
+}
+
+static TouchNavState *prv_task_touch_nav_state(void) {
+  return prv_is_app_task() ? app_state_get_touch_nav_state() : modal_manager_get_touch_nav_state();
+}
+
+// Test seam (declared in swap_layer.h under CONFIG_TOUCH). The unified widget set holds no per-task
+// singleton to reset; the touch-nav state is owned by TouchNavState, so this is a no-op kept for
+// source compatibility with tests that call it in their setup.
+void swap_layer_touch_nav_reset_all(void) {
+}
+
+bool swap_layer_touch_is_gesture_target(const SwapLayer *swap_layer) {
+  const TouchNavState *state = prv_task_touch_nav_state();
+  return state && state->latched_target && state->latched_target->widget == swap_layer;
+}
+
+// ---------------------------------------------------------------------------------------------
+// The scroll point and the two-threshold liftoff decision
+
+void swap_layer_touch_scroll_by(SwapLayer *swap_layer, int16_t dy) {
+  if (!swap_layer || !swap_layer->current) {
+    return;
+  }
+  prv_finish_animation(swap_layer);
+
+  const int16_t offset = prv_get_current_notification_offset(swap_layer);  // >= 0
+  const int16_t max_dy = prv_get_max_scroll_dy(swap_layer);                // >= 0
+  // offset == -origin.y; dy is the requested change to origin.y, so the new offset is offset - dy.
+  const int16_t new_offset = CLIP(offset - dy, 0, max_dy);
+
+  GRect current_frame = swap_layer->current->layer.frame;
+  current_frame.origin.y = -new_offset;
+  prv_layout_set_frame(swap_layer->current, &current_frame);
+
+  // Pull the next layout right under the current one so its peek tracks the finger.
+  if (swap_layer->next) {
+    GRect next_frame = swap_layer->next->layer.frame;
+    next_frame.origin.y = current_frame.origin.y + current_frame.size.h;
+    prv_layout_set_frame(swap_layer->next, &next_frame);
+  }
+
+  // Refresh the auto-close timer: without this a long notification closes under the finger mid-read.
+  prv_announce_interaction(swap_layer);
+}
+
+SwapTouchLiftoffAction swap_layer_touch_liftoff_action(int16_t base_offset, int16_t delta_y,
+                                                       int16_t max_dy) {
+  if (ABS(delta_y) < DRAG_THRESHOLD_PX) {
+    // Sub-threshold: not a drag, so neither scroll nor swap.
+    return SwapTouchLiftoff_None;
+  }
+  // Content-scroll convention: finger up (delta_y < 0) scrolls into the content (offset increases).
+  const int16_t requested_offset = base_offset - delta_y;
+  if (requested_offset < -SWAP_OVERPULL_PX) {
+    return SwapTouchLiftoff_SwapPrev;  // over-pull at the top (finger down) -> previous notification
+  }
+  if (requested_offset > max_dy + SWAP_OVERPULL_PX) {
+    return SwapTouchLiftoff_SwapNext;  // over-pull at the bottom (finger up) -> next notification
+  }
+  return SwapTouchLiftoff_Settle;
+}
+
+// Apply a live drag: move to clamp(base_offset - delta_y). Sub-threshold movement is a no-op so the
+// notification does not creep on a tap.
+static void prv_swap_touch_apply_drag(SwapLayer *swap_layer, int16_t base_offset, int16_t delta_y) {
+  if (!swap_layer->current || ABS(delta_y) < DRAG_THRESHOLD_PX) {
+    // No notification loaded yet (registration can happen before the layout loads), or sub-threshold.
+    return;
+  }
+  const int16_t requested_offset = base_offset - delta_y;
+  const int16_t cur = prv_get_current_notification_offset(swap_layer);
+  // dy is in origin.y units so the resulting offset lands on requested_offset (before the point's
+  // own clamp handles an over-pull).
+  swap_layer_touch_scroll_by(swap_layer, cur - requested_offset);
+}
+
+// Liftoff: swap to a neighbour on over-pull (same path as the physical UP/DOWN buttons), otherwise
+// settle (animated) to the clamped offset.
+static void prv_swap_touch_liftoff(SwapLayer *swap_layer, int16_t base_offset, int16_t delta_y) {
+  if (!swap_layer->current) {
+    return;
+  }
+  const int16_t max_dy = prv_get_max_scroll_dy(swap_layer);
+  switch (swap_layer_touch_liftoff_action(base_offset, delta_y, max_dy)) {
+    case SwapTouchLiftoff_SwapPrev:
+      prv_handle_swap_attempt(swap_layer, ScrollDirectionUp, false /* is_repeating */);
+      break;
+    case SwapTouchLiftoff_SwapNext:
+      prv_handle_swap_attempt(swap_layer, ScrollDirectionDown, false /* is_repeating */);
+      break;
+    case SwapTouchLiftoff_Settle: {
+      const int16_t target_offset = CLIP(base_offset - delta_y, 0, max_dy);
+      const int16_t cur = prv_get_current_notification_offset(swap_layer);
+      prv_scroll(swap_layer, cur - target_offset, AnimationCurveEaseOut);
+      break;
+    }
+    case SwapTouchLiftoff_None:
+      break;
+  }
+  prv_announce_interaction(swap_layer);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Button emulation for tap / swipe, mirroring the Tier-2 bridge through the task's TouchNavOps.
+
+static void prv_swap_touch_emit(SwapLayer *swap_layer, ButtonId button) {
+  const TouchNavState *state = prv_task_touch_nav_state();
+  if (!state || !state->ops) {
+    return;
+  }
+  const TouchNavOps *ops = state->ops;
+  // A gesture that lands mid-transition is dropped, matching the bridge.
+  if (ops->is_animating && ops->is_animating(ops->ctx)) {
+    return;
+  }
+  if (button == BUTTON_ID_BACK &&
+      !(ops->top_overrides_back && ops->top_overrides_back(ops->ctx))) {
+    // BACK on a window with no back handler pops the stack rather than feeding the click recognizer.
+    if (ops->pop_top) {
+      ops->pop_top(ops->ctx);
+    }
+  } else if (ops->emit_button) {
+    ops->emit_button(ops->ctx, button);
+  }
+  prv_announce_interaction(swap_layer);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Unified widget-set ops
+//
+// Thin void*->SwapLayer* wrappers over the apply functions above. The unified widget set (owned by
+// TouchNavState) drives the swap layer through these; direct assignment of the apply functions would
+// not compile because their first parameter is SwapLayer*, not void*. Swap's content axis is
+// vertical, so the GPoint base/delta carried by the vtable use only the .y component.
+
+// The notification body may not be loaded yet (registration can happen before the layout loads) and
+// prv_get_current_notification_offset dereferences current, so gate the whole gesture on a present
+// layout. A declined gesture never Starts the pan, so no base offset is latched or applied.
+static bool prv_swap_ops_can_start(void *w) {
+  return ((SwapLayer *)w)->current != NULL;
+}
+
+static void prv_swap_ops_pan_started(void *w) {
+  SwapLayer *swap_layer = w;
+  // Stop any running swap/scroll animation so the finger takes over, and refresh the auto-close timer
+  // so a long notification cannot close under the finger while it is being dragged. The base offset
+  // is latched by the core via get_base_offset next.
+  prv_finish_animation(swap_layer);
+  prv_announce_interaction(swap_layer);
+}
+
+static GPointReturn prv_swap_ops_get_base_offset(void *w) {
+  // Vertical-only: carry the notification scroll offset in .y (current is non-NULL, gated by
+  // can_start above).
+  return GPoint(0, prv_get_current_notification_offset((SwapLayer *)w));
+}
+
+static void prv_swap_ops_pan_update(void *w, GPoint base, GPoint delta) {
+  prv_swap_touch_apply_drag((SwapLayer *)w, base.y, delta.y);
+}
+
+static void prv_swap_ops_pan_snap(void *w, GPoint base, GPoint final_delta) {
+  prv_swap_touch_liftoff((SwapLayer *)w, base.y, final_delta.y);
+}
+
+static void prv_swap_ops_pan_cancel(void *w) {
+  // Settle to the clamped offset with no swap (the live drag already left it clamped). Per the pan
+  // engine this does not fire on pre-emption (the pan recognizer never emits Cancelled there), which
+  // preserves the pre-refactor behaviour; it is reached only on an explicit mid-gesture cancel.
+  SwapLayer *swap_layer = w;
+  if (!swap_layer->current) {
+    return;
+  }
+  const int16_t cur = prv_get_current_notification_offset(swap_layer);
+  const int16_t max_dy = prv_get_max_scroll_dy(swap_layer);
+  prv_scroll(swap_layer, cur - CLIP(cur, 0, max_dy), AnimationCurveEaseOut);
+}
+
+static void prv_swap_ops_tap(void *w, GPoint point_on_screen) {
+  SwapLayer *swap_layer = w;
+  // No notification loaded yet (registration can happen before the layout loads): the gesture does
+  // nothing, mirroring can_start's pan gate so "no notification -> gesture is inert" holds for tap
+  // too (tap/swipe have no Started, so can_start cannot gate them).
+  if (!swap_layer->current) {
+    return;
+  }
+  // A tap on the notification body emulates SELECT (the default action / action menu).
+  prv_swap_touch_emit(swap_layer, BUTTON_ID_SELECT);
+}
+
+static void prv_swap_ops_swipe(void *w, SwipeDirection dir) {
+  SwapLayer *swap_layer = w;
+  // As with tap: no notification loaded -> the gesture is inert.
+  if (!swap_layer->current) {
+    return;
+  }
+  // Called only for horizontal swipes (the unified set masks vertical swipes into pans): swiping
+  // right = BACK, left = SELECT.
+  if (dir == SwipeDirection_Right) {
+    prv_swap_touch_emit(swap_layer, BUTTON_ID_BACK);
+  } else if (dir == SwipeDirection_Left) {
+    prv_swap_touch_emit(swap_layer, BUTTON_ID_SELECT);
+  }
+}
+
+static const TouchNavWidgetOps s_swap_touch_nav_ops = {
+  .can_start = prv_swap_ops_can_start,
+  .pan_started = prv_swap_ops_pan_started,
+  .get_base_offset = prv_swap_ops_get_base_offset,
+  .pan_update = prv_swap_ops_pan_update,
+  .pan_snap = prv_swap_ops_pan_snap,
+  .pan_cancel = prv_swap_ops_pan_cancel,
+  .tap = prv_swap_ops_tap,
+  .swipe = prv_swap_ops_swipe,
+};
+
+// ---------------------------------------------------------------------------------------------
+// Registration lifecycle
+
+void swap_layer_touch_register(SwapLayer *swap_layer) {
+  if (!swap_layer || swap_layer->touch_registered) {
+    return;
+  }
+  TouchNavState *state = prv_task_touch_nav_state();
+  if (!state || !state->manager) {
+    // Touch is not available on this task (nav disabled / no manager): stay on the button path.
+    return;
+  }
+
+  // Register the swap layer as a migrated Tier-1 widget: the unified widget set drives it through
+  // s_swap_touch_nav_ops. The registry add dedups by address and re-applies the ops/layer, so a
+  // repeated init/re-show on the same swap layer (no intervening deinit) keeps routing to and
+  // driving it.
+  touch_nav_registry_add(state, TouchNavWidgetType_Swap,
+                         (TouchNavWidgetNode *)&swap_layer->touch_nav_node, &swap_layer->layer,
+                         &s_swap_touch_nav_ops, swap_layer);
+  swap_layer->touch_registered = true;
+}
+
+void swap_layer_touch_deregister(SwapLayer *swap_layer) {
+  if (!swap_layer || !swap_layer->touch_registered) {
+    return;
+  }
+  TouchNavState *state = prv_task_touch_nav_state();
+  if (state) {
+    // If this swap layer is the live gesture target and is about to go away under a live window,
+    // cancel the gesture with NO client callbacks so a settle cannot reach freed state.
+    // touch_nav_registry_remove clears the latched target BEFORE we cancel (its UAF hook), so the
+    // resulting Cancelled dispatch finds no target and re-enters nothing.
+    const bool was_target = swap_layer_touch_is_gesture_target(swap_layer);
+    // Idempotent: removing a node that is not in the registry (double deinit) is a safe no-op.
+    touch_nav_registry_remove(state, TouchNavWidgetType_Swap,
+                              (TouchNavWidgetNode *)&swap_layer->touch_nav_node);
+    if (was_target && state->manager) {
+      recognizer_manager_cancel_and_reset(state->manager);
+    }
+  }
+  swap_layer->touch_registered = false;
+}
+
+void swap_layer_touch_release(SwapLayer *swap_layer) {
+  // Covered by a higher modal: deregister from the Tier-1 registry (removing the swap node and
+  // clearing the gesture latch). In our system-slot architecture the bridge lives on the
+  // touch-service system handler and the unified widget set is owned by TouchNavState, so removing
+  // the widget from the registry is what stops touch from routing into the now-hidden notification
+  // body; the now-focused modal owns touch through the same system-slot bridge.
+  swap_layer_touch_deregister(swap_layer);
+}
+#endif  // CONFIG_TOUCH
+
 ///////////////////////
 // ACCESSOR FUNCTIONS
 ///////////////////////
@@ -817,10 +1136,20 @@ void swap_layer_init(SwapLayer *swap_layer, const GRect *frame) {
   layer_init(&swap_layer->arrow_layer.layer, &arrow_frame);
   layer_set_update_proc(&swap_layer->arrow_layer.layer, prv_arrow_layer_update_proc);
   layer_add_child(layer, &swap_layer->arrow_layer.layer);
+
+#ifdef CONFIG_TOUCH
+  swap_layer_touch_register(swap_layer);
+#endif
 }
 
 void swap_layer_deinit(SwapLayer *swap_layer) {
   swap_layer->is_deiniting = true;
+#ifdef CONFIG_TOUCH
+  // Deinit-safety: deregister removes the swap node from the Tier-1 registry, detaches the shared
+  // recognizer set, and clears the active-gesture pointer (cancelling the in-flight gesture) if it
+  // targets this layer, so a torn-down widget cannot be reached by a later touch event.
+  swap_layer_touch_deregister(swap_layer);
+#endif
   gbitmap_deinit(&swap_layer->arrow_layer.arrow_bitmap);
   layer_deinit(&swap_layer->arrow_layer.layer);
   prv_swap_layer_reset(swap_layer);

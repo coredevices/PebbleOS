@@ -273,6 +273,112 @@ void test_recognizer__reset(void) {
   cl_assert_equal_b(cancelled, true);
 }
 
+void test_recognizer__reset_preserves_owned(void) {
+  RecognizerList list = { NULL };
+  NEW_RECOGNIZER(r) = test_recognizer_create(&s_test_impl_data, NULL);
+
+  recognizer_add_to_list(r, &list);
+  cl_assert(r->is_owned);
+  cl_assert(list_contains(list.node, &r->node));
+
+  // Reset must not clear is_owned (it used to wipe the whole flags word)
+  recognizer_reset(r);
+  cl_assert(r->is_owned);
+  cl_assert(list_contains(list.node, &r->node));
+
+  // With ownership preserved, removal actually unlinks the node
+  recognizer_remove_from_list(r, &list);
+  cl_assert(!r->is_owned);
+  cl_assert(!list_contains(list.node, &r->node));
+  cl_assert_equal_p(list.node, NULL);
+}
+
+void test_recognizer__reset_owned_not_freed_on_destroy(void) {
+  bool impl_destroyed = false;
+  s_test_impl_data.destroyed = &impl_destroyed;
+
+  RecognizerList list = { NULL };
+  Recognizer *r = test_recognizer_create(&s_test_impl_data, NULL);
+  test_recognizer_enable_on_destroy();
+
+  recognizer_add_to_list(r, &list);
+
+  // Reset while owned used to clear is_owned, letting destroy free a still-linked node
+  recognizer_reset(r);
+  recognizer_destroy(r);
+  cl_assert_equal_b(impl_destroyed, false);
+  cl_assert(r->is_owned);
+  cl_assert(list_contains(list.node, &r->node));
+
+  // Detaching first leaves no freed-but-linked node behind
+  recognizer_remove_from_list(r, &list);
+  cl_assert_equal_p(list.node, NULL);
+  recognizer_destroy(r);
+  cl_assert_equal_b(impl_destroyed, true);
+}
+
+static void prv_static_event(const Recognizer *recognizer, RecognizerEvent event) {
+}
+
+static bool s_static_impl_destroyed;
+static void prv_static_impl_on_destroy(Recognizer *recognizer) {
+  s_static_impl_destroyed = true;
+}
+
+static void prv_static_sub_on_destroy(const Recognizer *recognizer) {
+  bool *destroyed = recognizer_get_user_data(recognizer);
+  *destroyed = true;
+}
+
+static void prv_static_handle(Recognizer *recognizer, const TouchEvent *touch_event) {
+}
+
+static bool prv_static_cancel(Recognizer *recognizer) {
+  return false;
+}
+
+static void prv_static_reset(Recognizer *recognizer) {
+}
+
+void test_recognizer__init_static(void) {
+  RecognizerImpl impl = {
+    .handle_touch_event = prv_static_handle,
+    .cancel = prv_static_cancel,
+    .reset = prv_static_reset,
+    .on_destroy = prv_static_impl_on_destroy,
+  };
+  int impl_data = 42;
+  bool sub_destroyed = false;
+  s_static_impl_destroyed = false;
+
+  // Stack storage - if destroy erroneously frees it, free() would abort the test
+  RECOGNIZER_STATIC_STORAGE(storage, sizeof(impl_data));
+  Recognizer *r = recognizer_init_static_with_data(storage, &impl, &impl_data, sizeof(impl_data),
+                                                   prv_static_event, &sub_destroyed);
+  cl_assert(r != NULL);
+  cl_assert_equal_p(r, (Recognizer *)storage);
+  cl_assert_equal_i(r->state, RecognizerState_Possible);
+  cl_assert(r->is_static);
+  cl_assert(!r->is_owned);
+  cl_assert_equal_p(r->impl, &impl);
+  cl_assert_equal_i(*(int *)recognizer_get_impl_data(r, &impl), 42);
+
+  recognizer_set_on_destroy(r, prv_static_sub_on_destroy);
+
+  // Both destructors run, but the caller storage is not freed
+  recognizer_destroy(r);
+  cl_assert(s_static_impl_destroyed);
+  cl_assert(sub_destroyed);
+  // Storage still valid (not freed/scrubbed)
+  cl_assert_equal_p(r->impl, &impl);
+
+  // Invalid args are still rejected
+  cl_assert_passert(recognizer_init_static_with_data(NULL, &impl, &impl_data, sizeof(impl_data),
+                                                     prv_static_event, NULL));
+  cl_assert_equal_p(NULL, recognizer_init_static_with_data(storage, &impl, &impl_data,
+                                                           sizeof(impl_data), NULL, NULL));
+}
+
 void test_recognizer__cancel(void) {
   bool cancelled = false;
   s_test_impl_data.cancelled = &cancelled;

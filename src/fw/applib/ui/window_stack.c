@@ -5,6 +5,7 @@
 
 #include "animation_private.h"
 #include "app_window_click_glue.h"
+#include "recognizer/recognizer_manager.h"
 #include "window_manager.h"
 #include "window_private.h"
 #include "window_stack_animation.h"
@@ -90,6 +91,9 @@ static void prv_unload_removed_windows(WindowStack *window_stack) {
     if (context->window_from == items_to_unload[i]->window) {
       context->window_from = NULL;
     }
+
+    // Reset the recognizer manager before the window is destroyed so it drops any dangling pointer
+    window_lost_input_focus(items_to_unload[i]->window);
 
     window_unload(items_to_unload[i]->window);
     applib_free(items_to_unload[i]);
@@ -484,6 +488,21 @@ void window_transition_context_appear(WindowTransitioningContext *context) {
     // Either this or app_click_config_setup_with_window should be calling
     // window_setup_click_config_provider instead
     app_click_config_setup_with_window(click_manager, window_to);
+
+#ifdef CONFIG_TOUCH
+    if (window_stack_is_animating(window_to->parent_window_stack)) {
+      // The appear hook fires at the start of the transition and there is no end-of-transition
+      // hook. Drop any in-flight gesture but keep the window bound so navigation still works when
+      // the animation settles.
+      RecognizerManager *manager = window_get_recognizer_manager(window_to);
+      if (manager) {
+        recognizer_manager_set_window(manager, window_to);
+        recognizer_manager_cancel_and_reset(manager);
+      }
+    } else {
+      window_became_input_focus(window_to);
+    }
+#endif
   }
 }
 

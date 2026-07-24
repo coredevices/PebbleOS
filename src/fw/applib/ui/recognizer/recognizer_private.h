@@ -36,6 +36,9 @@ struct Recognizer {
     uint32_t flags;
   };
 
+  // Kept outside the flags union so that recognizer_reset() never clears it
+  bool is_static:1;
+
   struct Recognizer *fail_after;
   RecognizerSimultaneousWithCb simultaneous_with_cb;
 

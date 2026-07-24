@@ -26,6 +26,8 @@ static PebbleMutex *s_touch_mutex;
 
 static uint8_t s_subscriber_count = 0;
 static bool s_backlight_subscribed = false;
+static bool s_system_hold_subscribed = false;
+static bool s_nav_enabled = false;
 static bool s_globally_enabled = true;
 static bool s_rotated = false;
 
@@ -43,6 +45,7 @@ static void prv_add_subscriber_cb(PebbleTask task) {
   if (++s_subscriber_count == 1 && s_globally_enabled) {
     touch_sensor_set_enabled(true);
   }
+  PBL_LOG_DBG("Touch: subscriber added, count=%" PRIu8, s_subscriber_count);
   mutex_unlock(s_touch_mutex);
 }
 
@@ -52,6 +55,7 @@ static void prv_remove_subscriber_cb(PebbleTask task) {
   if (--s_subscriber_count == 0 && s_globally_enabled) {
     touch_sensor_set_enabled(false);
   }
+  PBL_LOG_DBG("Touch: subscriber removed, count=%" PRIu8, s_subscriber_count);
   mutex_unlock(s_touch_mutex);
 }
 
@@ -64,12 +68,32 @@ void touch_init(void) {
       &prv_remove_subscriber_cb);
 }
 
-bool touch_has_app_subscribers(void) {
+bool touch_nav_enabled(void) {
   mutex_lock(s_touch_mutex);
-  // The backlight gesture subscription is tracked in s_subscriber_count as
-  // well; exclude it so this only reflects real app subscribers.
-  const uint8_t backlight_count = s_backlight_subscribed ? 1 : 0;
-  const bool has_apps = s_subscriber_count > backlight_count;
+  const bool enabled = s_nav_enabled;
+  mutex_unlock(s_touch_mutex);
+  return enabled;
+}
+
+void touch_set_nav_enabled(bool enabled) {
+  mutex_lock(s_touch_mutex);
+  s_nav_enabled = enabled;
+  mutex_unlock(s_touch_mutex);
+}
+
+bool touch_has_app_subscribers(void) {
+  // When nav is enabled the shell always wants touch treated as active, so
+  // short-circuit before inspecting the raw subscriber arithmetic. Evaluated
+  // outside the lock to avoid re-entering the non-recursive touch mutex.
+  if (touch_nav_enabled()) {
+    return true;
+  }
+  mutex_lock(s_touch_mutex);
+  // The backlight gesture subscription and the nav system hold are both tracked
+  // in s_subscriber_count; exclude them so this only reflects real app subscribers.
+  const uint8_t held_count =
+      (s_backlight_subscribed ? 1 : 0) + (s_system_hold_subscribed ? 1 : 0);
+  const bool has_apps = s_subscriber_count > held_count;
   mutex_unlock(s_touch_mutex);
   return has_apps;
 }
@@ -86,6 +110,10 @@ void touch_service_set_globally_enabled(bool enabled) {
 
   touch_sensor_set_enabled(sensor_enabled);
   if (!enabled) {
+    // A finger down when touch is torn down never gets a Liftoff otherwise, so
+    // the backlight hold counter stays pinned. Synthesize one before the reset
+    // zeroes the last coordinates.
+    touch_release_active();
     // Avoid delivering stale position on re-enable.
     touch_reset();
   }
@@ -115,6 +143,25 @@ void touch_set_backlight_enabled(bool enabled) {
     return;
   } else if (!enabled && s_backlight_subscribed) {
     s_backlight_subscribed = false;
+    mutex_unlock(s_touch_mutex);
+    prv_remove_subscriber_cb(PebbleTask_KernelMain);
+    return;
+  }
+  mutex_unlock(s_touch_mutex);
+}
+
+void touch_set_system_hold(bool held) {
+  // Permanent sensor hold for the nav feature: hold the sensor directly via the
+  // subscriber refcount (no event-service subscription). Taken when the master
+  // nav pref turns on, released when it turns off.
+  mutex_lock(s_touch_mutex);
+  if (held && !s_system_hold_subscribed) {
+    s_system_hold_subscribed = true;
+    mutex_unlock(s_touch_mutex);
+    prv_add_subscriber_cb(PebbleTask_KernelMain);
+    return;
+  } else if (!held && s_system_hold_subscribed) {
+    s_system_hold_subscribed = false;
     mutex_unlock(s_touch_mutex);
     prv_remove_subscriber_cb(PebbleTask_KernelMain);
     return;
@@ -224,6 +271,41 @@ void touch_reset(void) {
   s_last_x = 0;
   s_last_y = 0;
   mutex_unlock(s_touch_mutex);
+}
+
+void touch_release_active(void) {
+  mutex_lock(s_touch_mutex);
+  const bool was_down = (s_touch_state == TouchState_FingerDown);
+  const int16_t x = s_last_x;
+  const int16_t y = s_last_y;
+  s_touch_state = TouchState_FingerUp;
+  mutex_unlock(s_touch_mutex);
+
+  if (was_down) {
+    PBL_LOG_DBG("Touch: synthetic Liftoff @ (%" PRId16 ", %" PRId16 ")", x, y);
+    prv_put_touch_event(TouchEvent_Liftoff, x, y);
+  }
+}
+
+TouchWakeGateResult touch_wake_gate_on_touchdown(bool backlight_driven, bool dnd, bool before,
+                                                 bool after) {
+  if (!backlight_driven) {
+    // Nothing drives the backlight for this touch: it never latches.
+    return (TouchWakeGateResult){.latch = false};
+  }
+  // Non-navigational when the screen was off and this touch woke it (or DnD
+  // suppressed the wake while it was off): the tap targets the wake, not the UI.
+  const bool latch = (!before && after) || (!before && dnd);
+  return (TouchWakeGateResult){.latch = latch};
+}
+
+static bool s_wake_gate_latch;
+
+void touch_wake_gate_stamp(TouchEvent *event, TouchWakeGateResult gate) {
+  if (event->type == TouchEvent_Touchdown) {
+    s_wake_gate_latch = gate.latch;
+  }
+  event->non_navigational = s_wake_gate_latch;
 }
 
 void touch_set_rotated(bool rotated) {

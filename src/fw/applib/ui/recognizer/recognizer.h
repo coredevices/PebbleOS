@@ -10,7 +10,84 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+//! @addtogroup UI
+//! @{
+//!   @addtogroup Recognizer Gesture Recognizers
+//! \brief Low-level touch-gesture recognizers for building fully custom touch
+//! interactions on touch-capable hardware.
+//!
+//! A recognizer watches the raw touch stream for one gesture — a tap, a pan
+//! (single-axis drag) or a swipe — and calls a \ref RecognizerEventCb as the
+//! gesture progresses. Create one with a per-gesture constructor
+//! (\ref tap_recognizer_create, \ref pan_recognizer_create,
+//! \ref swipe_recognizer_create), attach it to a \ref Window, and read the
+//! current gesture data from the event callback. Recognizers are the building
+//! block for a custom scroll or drag.
+//!
+//! For an ordinary scrollable list you do not need recognizers at all: on touch
+//! hardware \ref MenuLayer already scrolls by touch. Reach for recognizers to
+//! build an interaction the built-in list does not give you — a custom menu, a
+//! drag, or acting on a raw tap or swipe. Note that a bare \ref ScrollLayer does
+//! not scroll by touch on its own; you drive it with a pan recognizer, as below.
+//!
+//! <h3>Usage example: scrolling a custom menu</h3>
+//! A \ref ScrollLayer holds your own content but does not scroll by touch by
+//! itself. Attach a vertical pan recognizer to the window and feed its delta into
+//! \ref scroll_layer_set_content_offset() to scroll the content by finger:
+//! \code{.c}
+//! static ScrollLayer *s_scroll;
+//! static int16_t s_base;  // content offset committed on Complete
+//!
+//! static void pan_handler(const Recognizer *recognizer, RecognizerEvent event) {
+//!   switch (event) {
+//!     case RecognizerEvent_Updated: {
+//!       // delta_since_start is (0, 0) at Start, so the content does not jump.
+//!       GPoint d = pan_recognizer_get_delta_since_start(recognizer);
+//!       scroll_layer_set_content_offset(s_scroll, GPoint(0, s_base + d.y), false);
+//!       break;
+//!     }
+//!     case RecognizerEvent_Completed:
+//!       s_base = scroll_layer_get_content_offset(s_scroll).y;  // commit
+//!       break;
+//!     case RecognizerEvent_Cancelled:
+//!       scroll_layer_set_content_offset(s_scroll, GPoint(0, s_base), true);  // roll back
+//!       break;
+//!     default:
+//!       break;
+//!   }
+//! }
+//!
+//! static void window_load(Window *window) {
+//!   Layer *root = window_get_root_layer(window);
+//!   s_scroll = scroll_layer_create(layer_get_bounds(root));
+//!   scroll_layer_set_content_size(s_scroll, GSize(layer_get_bounds(root).size.w,
+//!                                                 total_content_height));
+//!   // Add your custom row layers as children of s_scroll here.
+//!   layer_add_child(root, scroll_layer_get_layer(s_scroll));
+//!
+//!   // The window owns the recognizer and destroys it when the window unloads.
+//!   Recognizer *pan = pan_recognizer_create(pan_handler, NULL, PanAxis_Vertical);
+//!   window_attach_recognizer(window, pan);
+//! }
+//! \endcode
+//! While the global system recognizer set is live, attaching alone is not enough:
+//! a window opts out of it with window_set_touch_bridge_disabled() (added by the
+//! touch-bridge change) so its own recognizers receive the touch stream.
+//!   @{
+
 typedef struct Recognizer Recognizer;
+
+//! Size, in bytes, of the opaque Recognizer instance. Used to reserve static storage for a
+//! recognizer without exposing the struct layout. A build-time assert in recognizer.c keeps this
+//! value in sync with the real struct size.
+#define RECOGNIZER_INSTANCE_SIZE 96
+
+//! Declare pointer-aligned static storage capable of holding a Recognizer instance plus its
+//! implementation data. Pass the resulting buffer to \ref recognizer_init_static_with_data.
+//! @param name name of the storage variable to declare
+//! @param impl_data_size size of the implementation-specific data
+#define RECOGNIZER_STATIC_STORAGE(name, impl_data_size) \
+  _Alignas(void *) uint8_t name[RECOGNIZER_INSTANCE_SIZE + (impl_data_size)]
 
 typedef enum RecognizerState {
   RecognizerState_Failed,
@@ -145,3 +222,6 @@ void recognizer_destroy(Recognizer *recognizer);
 //! @param recognizer \ref Recognizer to check
 //! @return true if recognizer is owned
 bool recognizer_is_owned(Recognizer *recognizer);
+
+//!   @} // end addtogroup Recognizer
+//! @} // end addtogroup UI
