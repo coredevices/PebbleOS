@@ -59,6 +59,8 @@ void test_touch__initialize(void) {
   // Make sure the global kill switch is reset between tests — it's a module
   // static in touch.c and a failed test could otherwise leak its state.
   touch_service_set_globally_enabled(true);
+  // Nav pref is a module static too; default it off between tests.
+  touch_set_nav_enabled(false);
 }
 
 void test_touch__cleanup(void) {
@@ -210,6 +212,55 @@ void test_touch__has_app_subscribers_backlight(void) {
 
   s_remove_subscriber_cb(PebbleTask_App);
   cl_assert(!touch_has_app_subscribers());
+}
+
+void test_touch__has_app_subscribers_nav(void) {
+  // Nav off + only the backlight hold: the backlight subscription must not
+  // register as an app subscriber.
+  touch_set_backlight_enabled(true);
+  cl_assert(!touch_has_app_subscribers());
+
+  // Nav on reports app subscribers regardless of the actual subscriber set.
+  touch_set_nav_enabled(true);
+  cl_assert(touch_has_app_subscribers());
+
+  // Back off, and with only the backlight hold it's false again.
+  touch_set_nav_enabled(false);
+  cl_assert(!touch_has_app_subscribers());
+
+  // Nav off + the nav system hold (on top of backlight): the hold must be
+  // excluded too, otherwise tap-to-wake is wrongly suppressed once the shell
+  // decouples the pref from the hold.
+  touch_set_system_hold(true);
+  cl_assert(!touch_has_app_subscribers());
+  touch_set_system_hold(false);
+
+  // Nav off + a real raw subscriber → true.
+  s_add_subscriber_cb(PebbleTask_App);
+  cl_assert(touch_has_app_subscribers());
+
+  s_remove_subscriber_cb(PebbleTask_App);
+  touch_set_backlight_enabled(false);
+}
+
+void test_touch__system_hold_holds_sensor(void) {
+  // The permanent hold powers the sensor directly, without an event-service
+  // subscription.
+  touch_set_system_hold(true);
+  cl_assert_equal_i(s_touch_sensor_enable_count, 1);
+  cl_assert(s_touch_sensor_enabled);
+
+  // Idempotent: holding again is a no-op.
+  touch_set_system_hold(true);
+  cl_assert_equal_i(s_touch_sensor_enable_count, 1);
+
+  touch_set_system_hold(false);
+  cl_assert_equal_i(s_touch_sensor_disable_count, 1);
+  cl_assert(!s_touch_sensor_enabled);
+
+  // Idempotent: releasing again is a no-op.
+  touch_set_system_hold(false);
+  cl_assert_equal_i(s_touch_sensor_disable_count, 1);
 }
 
 void test_touch__globally_enabled_default_true(void) {

@@ -135,6 +135,11 @@ clar(ctx,
      override_includes=['dummy_board'])
 
 clar(ctx,
+     sources_ant_glob="src/fw/applib/touch_service.c",
+     test_sources_ant_glob="test_touch_service.c",
+     override_includes=['dummy_board'])
+
+clar(ctx,
      sources_ant_glob=(
          " src/fw/applib/app_glance.c"
          " src/fw/applib/template_string.c"

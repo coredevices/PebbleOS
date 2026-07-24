@@ -26,6 +26,8 @@ static PebbleMutex *s_touch_mutex;
 
 static uint8_t s_subscriber_count = 0;
 static bool s_backlight_subscribed = false;
+static bool s_system_hold_subscribed = false;
+static bool s_nav_enabled = false;
 static bool s_globally_enabled = true;
 static bool s_rotated = false;
 
@@ -43,6 +45,7 @@ static void prv_add_subscriber_cb(PebbleTask task) {
   if (++s_subscriber_count == 1 && s_globally_enabled) {
     touch_sensor_set_enabled(true);
   }
+  PBL_LOG_DBG("Touch: subscriber added, count=%" PRIu8, s_subscriber_count);
   mutex_unlock(s_touch_mutex);
 }
 
@@ -52,6 +55,7 @@ static void prv_remove_subscriber_cb(PebbleTask task) {
   if (--s_subscriber_count == 0 && s_globally_enabled) {
     touch_sensor_set_enabled(false);
   }
+  PBL_LOG_DBG("Touch: subscriber removed, count=%" PRIu8, s_subscriber_count);
   mutex_unlock(s_touch_mutex);
 }
 
@@ -64,12 +68,32 @@ void touch_init(void) {
       &prv_remove_subscriber_cb);
 }
 
-bool touch_has_app_subscribers(void) {
+bool touch_nav_enabled(void) {
   mutex_lock(s_touch_mutex);
-  // The backlight gesture subscription is tracked in s_subscriber_count as
-  // well; exclude it so this only reflects real app subscribers.
-  const uint8_t backlight_count = s_backlight_subscribed ? 1 : 0;
-  const bool has_apps = s_subscriber_count > backlight_count;
+  const bool enabled = s_nav_enabled;
+  mutex_unlock(s_touch_mutex);
+  return enabled;
+}
+
+void touch_set_nav_enabled(bool enabled) {
+  mutex_lock(s_touch_mutex);
+  s_nav_enabled = enabled;
+  mutex_unlock(s_touch_mutex);
+}
+
+bool touch_has_app_subscribers(void) {
+  // When nav is enabled the shell always wants touch treated as active, so
+  // short-circuit before inspecting the raw subscriber arithmetic. Evaluated
+  // outside the lock to avoid re-entering the non-recursive touch mutex.
+  if (touch_nav_enabled()) {
+    return true;
+  }
+  mutex_lock(s_touch_mutex);
+  // The backlight gesture subscription and the nav system hold are both tracked
+  // in s_subscriber_count; exclude them so this only reflects real app subscribers.
+  const uint8_t held_count =
+      (s_backlight_subscribed ? 1 : 0) + (s_system_hold_subscribed ? 1 : 0);
+  const bool has_apps = s_subscriber_count > held_count;
   mutex_unlock(s_touch_mutex);
   return has_apps;
 }
@@ -119,6 +143,25 @@ void touch_set_backlight_enabled(bool enabled) {
     return;
   } else if (!enabled && s_backlight_subscribed) {
     s_backlight_subscribed = false;
+    mutex_unlock(s_touch_mutex);
+    prv_remove_subscriber_cb(PebbleTask_KernelMain);
+    return;
+  }
+  mutex_unlock(s_touch_mutex);
+}
+
+void touch_set_system_hold(bool held) {
+  // Permanent sensor hold for the nav feature: hold the sensor directly via the
+  // subscriber refcount (no event-service subscription). Taken when the master
+  // nav pref turns on, released when it turns off.
+  mutex_lock(s_touch_mutex);
+  if (held && !s_system_hold_subscribed) {
+    s_system_hold_subscribed = true;
+    mutex_unlock(s_touch_mutex);
+    prv_add_subscriber_cb(PebbleTask_KernelMain);
+    return;
+  } else if (!held && s_system_hold_subscribed) {
+    s_system_hold_subscribed = false;
     mutex_unlock(s_touch_mutex);
     prv_remove_subscriber_cb(PebbleTask_KernelMain);
     return;
