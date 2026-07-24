@@ -49,6 +49,7 @@ typedef enum TouchNavRoute {
 typedef enum TouchNavWidgetType {
   TouchNavWidgetType_Menu,
   TouchNavWidgetType_Swap,
+  TouchNavWidgetType_Scroll,
 } TouchNavWidgetType;
 
 //! 8-byte intrusive registry node embedded in a Tier-1 widget (no size growth on the widget).
@@ -119,6 +120,7 @@ typedef struct TouchNavState {
   //! Tier-1 widget registry heads; the type is implied by which head a node hangs off.
   TouchNavWidgetNode *menu_head;
   TouchNavWidgetNode *swap_head;
+  TouchNavWidgetNode *scroll_head;
 
   //! Route latched on the most recent Touchdown.
   TouchNavRoute route;

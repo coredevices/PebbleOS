@@ -32,6 +32,7 @@
 #include "applib/ui/recognizer/pan.h"
 #include "applib/ui/recognizer/swipe.h"
 #include "applib/ui/recognizer/tap.h"
+#include "applib/ui/scroll_layer_private.h"
 #include "kernel/pebble_tasks.h"
 #include "pbl/drivers/rtc.h"
 
@@ -768,6 +769,12 @@ void menu_layer_init(MenuLayer *menu_layer, const GRect *frame) {
 
   ScrollLayer *scroll_layer = &menu_layer->scroll_layer;
   scroll_layer_init(scroll_layer, frame);
+#ifdef CONFIG_TOUCH
+  // scroll_layer_init() registered the embedded scroll layer as a bare Tier-1 Scroll widget. The
+  // MenuLayer drives scrolling through its own Menu registration, so drop the redundant Scroll node
+  // to avoid two gesture drivers competing on the same layer.
+  scroll_layer_touch_nav_deregister(scroll_layer);
+#endif
   menu_layer_init_scroll_layer_callbacks(menu_layer);
   scroll_layer_set_shadow_hidden(scroll_layer, true);
   scroll_layer_set_context(scroll_layer, menu_layer);

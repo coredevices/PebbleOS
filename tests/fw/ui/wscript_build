@@ -26,6 +26,26 @@ clar(ctx,
     test_sources_ant_glob="test_scroll_layer.c")
 
 clar(ctx,
+    sources_ant_glob = "src/fw/applib/graphics/gtypes.c "
+                       "src/fw/applib/graphics/gcolor_definitions.c "
+                       "tests/fakes/fake_gbitmap_png.c "
+                       "src/fw/applib/ui/animation_interpolate.c "
+                       "src/fw/applib/ui/animation_timing.c "
+                       "src/fw/applib/ui/layer.c "
+                       "src/fw/applib/ui/shadows.c "
+                       "src/fw/applib/ui/scroll_layer.c "
+                       "src/fw/applib/ui/recognizer/recognizer.c "
+                       "src/fw/applib/ui/recognizer/recognizer_manager.c "
+                       "src/fw/applib/ui/recognizer/pan.c "
+                       "src/fw/applib/ui/recognizer/swipe.c "
+                       "src/fw/applib/ui/recognizer/tap.c "
+                       "src/fw/applib/ui/recognizer/touch_nav.c "
+                       "tests/fakes/fake_rtc.c "
+                       "tests/stubs/stubs_animation.c ",
+    defines=['CONFIG_TOUCH'],
+    test_sources_ant_glob="test_scroll_layer_touch.c")
+
+clar(ctx,
     sources_ant_glob = \
         " src/fw/applib/graphics/8_bit/framebuffer.c"
         " src/fw/applib/graphics/framebuffer.c"

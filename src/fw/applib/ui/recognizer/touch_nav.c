@@ -38,7 +38,15 @@ static void prv_log_push(TouchNavState *state, TouchNavLogKind kind, uint8_t det
 // Tier-1 widget registry (intrusive, no limit)
 
 static TouchNavWidgetNode **prv_registry_head(TouchNavState *state, TouchNavWidgetType type) {
-  return (type == TouchNavWidgetType_Menu) ? &state->menu_head : &state->swap_head;
+  switch (type) {
+    case TouchNavWidgetType_Menu:
+      return &state->menu_head;
+    case TouchNavWidgetType_Scroll:
+      return &state->scroll_head;
+    case TouchNavWidgetType_Swap:
+    default:
+      return &state->swap_head;
+  }
 }
 
 void touch_nav_registry_add(TouchNavState *state, TouchNavWidgetType type, TouchNavWidgetNode *node,
@@ -95,6 +103,11 @@ static bool prv_registry_contains_layer(TouchNavState *state, const struct Layer
       return true;
     }
   }
+  for (TouchNavWidgetNode *n = state->scroll_head; n; n = n->next) {
+    if (n->layer == layer) {
+      return true;
+    }
+  }
   return false;
 }
 
@@ -108,6 +121,10 @@ static struct Layer *prv_registry_sole_widget(TouchNavState *state) {
     count++;
   }
   for (TouchNavWidgetNode *n = state->swap_head; n; n = n->next) {
+    sole = n->layer;
+    count++;
+  }
+  for (TouchNavWidgetNode *n = state->scroll_head; n; n = n->next) {
     sole = n->layer;
     count++;
   }
