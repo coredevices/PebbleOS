@@ -4,17 +4,12 @@
 # Handy gdb python extensions
 #
 # To load these, use the gdb source command:
-#  (gdb) source tools/gdb_tintin.py
+#  (gdb) source tools/gdb_scripts/gdb_tintin.py
 #
 # Or, this script can be setup to auto-load into gdb by placing a link to it into the
 #  <data-directory>/python/gdb/command directory
 #
-# For example:
-#   (gdb) show data-directory
-#   GDB's data directory is "/Users/foo/arm-cs-tools/share/gdb"
-#
-#   > cd /Users/foo/arm-cs-tools/share/gdb
-#   > ln -s ~/Projects/pebble/tintin/tools/gdb_tintin.py
+# See https://pebbleos-core.readthedocs.io/en/latest/development/debugging.html
 
 import collections
 import json
