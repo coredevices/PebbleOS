@@ -441,7 +441,7 @@ def zoneinfo_to_bin(zoneinfo_list, dstrule_list, zonelink_list, output_bin):
 
         # fix timezone abbreviations that no longer have a DST mode
         if dst_zone not in dstzone_dict:
-            tz_abbr.replace("*", "S")  # remove
+            tz_abbr = tz_abbr.replace("*", "S")
         if len(tz_abbr) > 5:
             raise Exception(f"Timezone abbreviation too long: {tz_abbr}")
         output_bin.write(
