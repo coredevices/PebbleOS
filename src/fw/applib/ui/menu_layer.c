@@ -29,6 +29,10 @@
 //! @return True if there was an animation to cancel, false otherwise
 static bool prv_cancel_selection_animation(MenuLayer *menu_layer);
 
+#ifdef CONFIG_TOUCH
+static void prv_menu_layer_handle_tap(ScrollLayer *scroll_layer, GPoint point, void *context);
+#endif
+
 //////////////////////
 // Menu Layer
 //
@@ -205,6 +209,10 @@ static void prv_menu_click_config_provider(MenuLayer *menu_layer) {
   }
   window_single_repeating_click_subscribe(BUTTON_ID_DOWN, 100 /*ms*/,
       (ClickHandler)menu_down_click_handler);
+#ifdef CONFIG_TOUCH
+  // Route touch taps (as opposed to drag-scrolls) to row selection.
+  scroll_layer_set_touch_tap_handler(&menu_layer->scroll_layer, prv_menu_layer_handle_tap);
+#endif
 }
 
 static inline uint16_t prv_menu_layer_get_num_sections(MenuLayer *menu_layer) {
@@ -683,6 +691,87 @@ void menu_layer_update_proc(Layer *scroll_content_layer, GContext* ctx) {
 
   task_free(render_iter);
 }
+
+#ifdef CONFIG_TOUCH
+typedef struct MenuHitTestIterator {
+  MenuIterator it;
+  int16_t target_y;  // content-space Y coordinate to locate
+  MenuIndex found_index;
+  bool found;
+  bool is_header;
+} MenuHitTestIterator;
+
+static void prv_menu_hit_test_row_callback(MenuIterator *iterator) {
+  MenuHitTestIterator *it = (MenuHitTestIterator *)iterator;
+  const int16_t top = it->it.cursor.y;
+  if (it->target_y >= top && it->target_y < top + it->it.cursor.h) {
+    it->found = true;
+    it->is_header = false;
+    it->found_index = it->it.cursor.index;
+    it->it.should_continue = false;
+  }
+}
+
+static void prv_menu_hit_test_section_callback(MenuIterator *iterator) {
+  MenuHitTestIterator *it = (MenuHitTestIterator *)iterator;
+  const int16_t top = it->it.cursor.y;
+  if (it->target_y >= top && it->target_y < top + it->it.cursor.h) {
+    it->found = true;
+    it->is_header = true;
+    it->it.should_continue = false;
+  }
+}
+
+//! Locate the row whose cell spans the given content-space Y coordinate.
+//! @return true and fill *index_out if a normal row is hit; false for a section
+//! header, a separator gap, or out of bounds.
+static bool prv_menu_layer_find_row_at_content_y(MenuLayer *menu_layer, int16_t content_y,
+                                                 MenuIndex *index_out) {
+  MenuHitTestIterator it = {
+    .it = {
+      .menu_layer = menu_layer,
+      .cursor = menu_layer->cache.cursor,
+      .row_callback_after_geometry = prv_menu_hit_test_row_callback,
+      .section_callback = prv_menu_hit_test_section_callback,
+      .should_continue = true,
+    },
+    .target_y = content_y,
+  };
+
+  // Walk down from the cached anchor, then up, mirroring the render pass, so we
+  // cover the anchor row plus everything above and below it.
+  prv_menu_layer_walk_downward_from_iterator(&it.it);
+  if (!it.found) {
+    it.it.cursor = menu_layer->cache.cursor;
+    it.it.should_continue = true;
+    prv_menu_layer_walk_upward_from_iterator(&it.it);
+  }
+
+  if (it.found && !it.is_header) {
+    *index_out = it.found_index;
+    return true;
+  }
+  return false;
+}
+
+static void prv_menu_layer_handle_tap(ScrollLayer *scroll_layer, GPoint point, void *context) {
+  MenuLayer *menu_layer = context;
+  const int16_t content_y = point.y - scroll_layer_get_content_offset(scroll_layer).y;
+
+  MenuIndex index;
+  if (!prv_menu_layer_find_row_at_content_y(menu_layer, content_y, &index)) {
+    return;
+  }
+
+  // Move the selection to the tapped row, then fire the same callback as a
+  // physical SELECT press.
+  menu_layer_set_selected_index(menu_layer, index, MenuRowAlignNone, false /*animated*/);
+  if (menu_layer->callbacks.select_click) {
+    menu_layer->callbacks.select_click(menu_layer, &menu_layer->selection.index,
+                                       menu_layer->callback_context);
+  }
+}
+#endif  // CONFIG_TOUCH
 
 void menu_layer_init_scroll_layer_callbacks(MenuLayer *menu_layer) {
   ScrollLayer *scroll_layer = &menu_layer->scroll_layer;
