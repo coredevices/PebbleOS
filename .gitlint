@@ -11,3 +11,6 @@ regex=[a-z0-9/]+: .*
 
 [title-max-length]
 line-length=100
+
+[body-max-line-length]
+line-length=100
