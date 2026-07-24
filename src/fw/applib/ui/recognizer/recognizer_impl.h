@@ -51,6 +51,22 @@ Recognizer *recognizer_create_with_data(const RecognizerImpl *impl, const void *
                                         size_t data_size, RecognizerEventCb event_cb,
                                         void *user_data);
 
+//! Initialize a recognizer in caller-provided storage. Same initialization as
+//! \ref recognizer_create_with_data but performs no allocation. The storage must be large enough to
+//! hold a Recognizer instance plus \a data_size bytes and be suitably aligned (see
+//! \ref RECOGNIZER_STATIC_STORAGE). A recognizer initialized this way is marked static and will not
+//! be freed by \ref recognizer_destroy.
+//! @param storage caller-provided storage for the recognizer
+//! @param impl recognizer implementation
+//! @param data recognizer-specific data (copied into the recognizer)
+//! @param data_size data size
+//! @param event_cb event callback
+//! @param user_data context to provide to event callback
+//! @return NULL if an error occurs, otherwise a pointer to the initialized recognizer
+Recognizer *recognizer_init_static_with_data(void *storage, const RecognizerImpl *impl,
+                                             const void *data, size_t data_size,
+                                             RecognizerEventCb event_cb, void *user_data);
+
 //! Get the implementation specific data for the recognizer. If the implementation specified does
 //! not match the implementation belonging to the recognizer, NULL is returned
 //! @param recognizer recognizer

@@ -811,6 +811,62 @@ void test_recognizer_manager__deregister_recognizer(void) {
   cl_assert(!recognizer_get_manager(r1));
 }
 
+void test_recognizer_manager__null_manager_register(void) {
+  NEW_RECOGNIZER(r) = test_recognizer_create(&s_test_impl_data, NULL);
+  recognizer_set_manager(r, NULL);
+
+  // A NULL manager is a soft no-op (layer attached before it is added to a window)
+  recognizer_manager_register_recognizer(NULL, r);
+  recognizer_manager_deregister_recognizer(NULL, r);
+  cl_assert_equal_p(recognizer_get_manager(r), NULL);
+
+  // The assert on the recognizer argument is preserved
+  RecognizerManager manager;
+  recognizer_manager_init(&manager);
+  cl_assert_passert(recognizer_manager_register_recognizer(&manager, NULL));
+  cl_assert_passert(recognizer_manager_deregister_recognizer(&manager, NULL));
+}
+
+void test_recognizer_manager__null_manager_state_change(void) {
+  NEW_RECOGNIZER(r) = test_recognizer_create(&s_test_impl_data, NULL);
+
+  // Must not crash with a NULL manager or a NULL changed recognizer
+  recognizer_manager_handle_state_change(NULL, r);
+  recognizer_manager_handle_state_change(NULL, NULL);
+
+  RecognizerManager manager;
+  recognizer_manager_init(&manager);
+  recognizer_manager_handle_state_change(&manager, NULL);
+}
+
+void test_recognizer_manager__cancel_touches(void) {
+  const int k_rec_count = 2;
+  Recognizer **recognizers = prv_create_recognizers(k_rec_count);
+
+  Window window = {};
+  layer_init(&window.layer, &GRectZero);
+  RecognizerManager manager;
+  recognizer_manager_init(&manager);
+  manager.window = &window;
+
+  Layer layer_a;
+  layer_init(&layer_a, &GRectZero);
+  layer_add_child(&window.layer, &layer_a);
+  manager.active_layer = &layer_a;
+
+  recognizer_add_to_list(recognizers[0], &layer_a.recognizer_list);
+  recognizer_add_to_list(recognizers[1], &layer_a.recognizer_list);
+  recognizers[0]->state = RecognizerState_Started;
+  recognizers[1]->state = RecognizerState_Possible;
+
+  // Must not crash even though the cancel path dispatches with a NULL context
+  recognizer_manager_cancel_touches(&manager);
+  cl_assert_equal_i(recognizers[0]->state, RecognizerState_Cancelled);
+  cl_assert_equal_i(recognizers[1]->state, RecognizerState_Failed);
+
+  prv_destroy_recognizers(recognizers, k_rec_count);
+}
+
 void test_recognizer_manager__handle_state_change(void) {
   const int k_rec_count = 2;
   s_dummy_impl.handle_touch_event = prv_handle_touch_event_test;

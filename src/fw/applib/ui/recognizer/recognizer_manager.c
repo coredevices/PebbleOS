@@ -148,7 +148,7 @@ static void prv_set_triggered(RecognizerManager *manager, Recognizer *triggered)
 
 static bool prv_cancel_or_fail_recognizer(Recognizer *recognizer, void *context) {
   RecognizerManager *manager = context;
-  if (manager->triggered == recognizer) {
+  if (manager && (manager->triggered == recognizer)) {
     prv_set_triggered(manager, NULL);
   }
   if (recognizer_get_state(recognizer) == RecognizerState_Possible) {
@@ -319,7 +319,10 @@ void recognizer_manager_reset(RecognizerManager *manager) {
 }
 
 void recognizer_manager_register_recognizer(RecognizerManager *manager, Recognizer *recognizer) {
-  PBL_ASSERTN(manager);
+  // A layer may be attached before it is added to a window, so a NULL manager is a soft no-op
+  if (!manager) {
+    return;
+  }
   PBL_ASSERTN(recognizer);
 
   if (recognizer->manager == manager) {
@@ -336,7 +339,10 @@ void recognizer_manager_register_recognizer(RecognizerManager *manager, Recogniz
 }
 
 void recognizer_manager_deregister_recognizer(RecognizerManager *manager, Recognizer *recognizer) {
-  PBL_ASSERTN(manager);
+  // A layer may be detached after its window is gone, so a NULL manager is a soft no-op
+  if (!manager) {
+    return;
+  }
   PBL_ASSERTN(recognizer);
 
   if (recognizer->manager != manager) {
@@ -353,8 +359,9 @@ void recognizer_manager_deregister_recognizer(RecognizerManager *manager, Recogn
 }
 
 void recognizer_manager_handle_state_change(RecognizerManager *manager, Recognizer *changed) {
-  PBL_ASSERTN(manager);
-  PBL_ASSERTN(changed);
+  if (!manager || !changed) {
+    return;
+  }
   PBL_ASSERTN(recognizer_get_manager(changed) == manager);
 
   Recognizer *triggered = recognizer_has_triggered(changed) ? changed : NULL;

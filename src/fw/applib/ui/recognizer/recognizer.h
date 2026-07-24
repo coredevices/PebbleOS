@@ -12,6 +12,18 @@
 
 typedef struct Recognizer Recognizer;
 
+//! Size, in bytes, of the opaque Recognizer instance. Used to reserve static storage for a
+//! recognizer without exposing the struct layout. A build-time assert in recognizer.c keeps this
+//! value in sync with the real struct size.
+#define RECOGNIZER_INSTANCE_SIZE 96
+
+//! Declare pointer-aligned static storage capable of holding a Recognizer instance plus its
+//! implementation data. Pass the resulting buffer to \ref recognizer_init_static_with_data.
+//! @param name name of the storage variable to declare
+//! @param impl_data_size size of the implementation-specific data
+#define RECOGNIZER_STATIC_STORAGE(name, impl_data_size) \
+  _Alignas(void *) uint8_t name[RECOGNIZER_INSTANCE_SIZE + (impl_data_size)]
+
 typedef enum RecognizerState {
   RecognizerState_Failed,
   RecognizerState_Possible,
