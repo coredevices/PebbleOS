@@ -131,7 +131,7 @@ bool timezone_database_load_region_info(uint16_t region_id, TimezoneInfo *tz_inf
 }
 
 bool timezone_database_load_region_name(uint16_t region_id, char *region_name) {
-  if (region_id > timezone_database_get_region_count()) {
+  if (region_id >= timezone_database_get_region_count()) {
     return false;
   }
 
