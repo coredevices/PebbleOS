@@ -42,7 +42,7 @@ class gpathInfoPrinter:
         points_code = ""
         num_points = int(self.val["num_points"])
         array_val = self.val["points"]
-        for i in xrange(0, num_points):
+        for i in range(0, num_points):
             point_val = array_val[i]
             if points_code:
                 points_code += ", "
@@ -55,8 +55,8 @@ class UuidPrinter(object):
     """Print a UUID."""
 
     def __init__(self, val):
-        bytes = "".join(chr(int(val["byte%d" % n])) for n in xrange(16))
-        self.uuid = uuid.UUID(bytes=bytes)
+        data = bytes(int(val["byte%d" % n]) for n in range(16))
+        self.uuid = uuid.UUID(bytes=data)
 
     def to_string(self):
         return "{%s}" % self.uuid
