@@ -126,9 +126,10 @@ static void prv_ops_emit_button(void *ctx, ButtonId button) {
 static TouchNavOps s_ops;
 
 // Bring up a live per-task touch-nav state with a real recognizer manager so a registered SwapLayer
-// threads onto a live registry and the shared recognizer set attaches. The system (tap, pan, swipe)
-// set is intentionally NOT initialised here (touch_nav_state_init is skipped) so only the swap set
-// competes for a gesture in the recognizer-driven tests.
+// threads onto a live registry and is driven end to end through touch_nav_dispatch. Unlike the
+// pre-Ф3 harness, this now initialises the FULL touch-nav state (touch_nav_state_init): both the
+// Tier-2 system set and the unified widget set are attached to the global list, and the unified set
+// drives the migrated SwapLayer through its ops vtable.
 static void prv_live_state_setup(void) {
   layer_init(&s_root_layer, &GRect(0, 0, 200, 200));
   recognizer_list_init(&s_global_list);
@@ -142,10 +143,18 @@ static void prv_live_state_setup(void) {
     .pop_top = prv_ops_pop_top,
     .emit_button = prv_ops_emit_button,
   };
-  s_touch_nav_state = (TouchNavState){
-    .manager = &s_manager,
-    .ops = &s_ops,
-  };
+  touch_nav_state_init(&s_touch_nav_state, &s_manager, &s_ops);
+}
+
+// Drive a touch event through the dispatcher (the unified routing entry point), not the recognizer
+// manager directly, so tests exercise the same Touchdown-latch / tier-exclusion path as production.
+static void prv_drive(TouchEventType type, int16_t x, int16_t y) {
+  const TouchEvent e = { .type = type, .x = x, .y = y, .non_navigational = false };
+  touch_nav_dispatch(&e, &s_touch_nav_state);
+}
+
+static void prv_advance_ms(uint32_t ms) {
+  fake_rtc_increment_ticks((RtcTicks)ms * RTC_TICKS_HZ / 1000);
 }
 
 void test_swap_layer_touch__initialize(void) {
@@ -358,69 +367,156 @@ void test_swap_layer_touch__scroll_extends_autoclose(void) {
 }
 
 // =============================================================================================
-// Recognizer-driven integration: a real pan through the manager scrolls the notification, keeps the
-// gesture target while the finger is down, and ignores a stray position update after liftoff.
+// Recognizer-driven integration THROUGH touch_nav_dispatch: the unified widget set drives the
+// migrated SwapLayer via its ops vtable (Touchdown latch, tier-exclusion, throttled live pan).
 // =============================================================================================
 
-static void prv_feed(TouchEventType type, int16_t x, int16_t y) {
-  // Advance the clock so the live-scroll throttle admits each position update.
-  fake_rtc_increment_ticks(20);
-  const TouchEvent e = {
-    .type = type,
-    .x = x,
-    .y = y,
-  };
-  recognizer_manager_handle_touch_event(&e, &s_manager);
+// Parent the current layout under the swap layer and the swap layer under the window root, point the
+// hit-test at it, and register it so the dispatcher resolves it as the migrated widget target.
+static void prv_attach_and_register(FakeSwap *fs, int16_t viewport_h, int16_t content_h,
+                                    bool has_next) {
+  prv_build_swap(fs, viewport_h, content_h, has_next);
+  layer_add_child(&fs->swap.layer, &fs->current.layer);
+  layer_add_child(&s_root_layer, &fs->swap.layer);
+  s_active_layer = &fs->swap.layer;
+  swap_layer_touch_register(&fs->swap);
 }
 
-void test_swap_layer_touch__pan_scrolls_and_post_liftoff_ignored(void) {
+void test_swap_layer_touch__dispatch_pan_scrolls_and_post_liftoff_ignored(void) {
   prv_live_state_setup();
   FakeSwap fs;
-  prv_build_swap(&fs, 168, 400, false);
-  // Parent the current layout under the swap layer so the widget's Layer is the resolved target.
-  layer_add_child(&fs.swap.layer, &fs.current.layer);
-  layer_add_child(&s_root_layer, &fs.swap.layer);
-  s_active_layer = &fs.swap.layer;
+  prv_attach_and_register(&fs, 168, 400, false);
 
-  swap_layer_touch_register(&fs.swap);
-
-  // Finger down, then drag up 60px (into the content) and lift off.
-  prv_feed(TouchEvent_Touchdown, 72, 120);
-  prv_feed(TouchEvent_PositionUpdate, 72, 90);
-  // Mid-gesture the swap layer is the live gesture target.
+  // The Touchdown latches the swap layer as the unified gesture target (routing fixed for the
+  // gesture). The pan Starts on the first update (latch + base) and live-scrolls on the next.
+  prv_drive(TouchEvent_Touchdown, 72, 120);
   cl_assert(swap_layer_touch_is_gesture_target(&fs.swap));
-  prv_feed(TouchEvent_PositionUpdate, 72, 60);
+  prv_advance_ms(20);
+  prv_drive(TouchEvent_PositionUpdate, 72, 90);   // 30px up -> pan Started (base latched)
+  prv_advance_ms(20);
+  prv_drive(TouchEvent_PositionUpdate, 72, 60);   // -> Updated -> live scroll
   const int16_t scrolled_offset = prv_offset(&fs);
   // The content scrolled into view (offset increased from 0) as the finger moved up.
   cl_assert(scrolled_offset > 0);
   // The pan refreshed the auto-close timer while the finger was still down (the #1266 fix).
   cl_assert(s_interaction_count > 0);
 
-  prv_feed(TouchEvent_Liftoff, 0, 0);
-  // After liftoff the gesture target is cleared.
+  prv_drive(TouchEvent_Liftoff, 0, 0);
+  // After liftoff the gesture target is cleared and no button was emulated by the pan.
   cl_assert(!swap_layer_touch_is_gesture_target(&fs.swap));
+  cl_assert_equal_i(s_emit_count, 0);
 
   // A stray position update after liftoff is ignored: the offset does not change further.
   const int16_t after_liftoff = prv_offset(&fs);
-  prv_feed(TouchEvent_PositionUpdate, 72, 20);
+  prv_advance_ms(20);
+  prv_drive(TouchEvent_PositionUpdate, 72, 20);
   cl_assert_equal_i(prv_offset(&fs), after_liftoff);
+
+  swap_layer_touch_deregister(&fs.swap);
 }
 
-// UAF-safety: deregistering a swap layer WHILE it is the live gesture target (before liftoff), e.g.
-// the notification is torn down under a live window, must clear the gesture target before cancelling
-// the recognizers, so a synchronous Cancelled callback cannot re-enter the freed swap layer.
-void test_swap_layer_touch__deregister_mid_gesture_clears_target(void) {
+// CRITICAL (round-2/3 F1): a pan on a swap layer whose current notification is not loaded
+// (current == NULL) must NOT dereference it. can_start declines the whole gesture BEFORE
+// pan_started / get_base_offset (which read current and would crash), so nothing scrolls, no button
+// is emulated, and nothing crashes.
+void test_swap_layer_touch__pan_declined_when_no_current(void) {
   prv_live_state_setup();
-  FakeSwap fs;
-  prv_build_swap(&fs, 168, 400, false);
-  layer_add_child(&fs.swap.layer, &fs.current.layer);
+  FakeSwap fs = {0};
+  layer_init(&fs.swap.layer, &GRect(0, 0, 144, 168));
+  fs.swap.callbacks.interaction_handler = prv_count_interaction;
+  cl_assert(fs.swap.current == NULL);   // no notification loaded yet (registration before layout)
   layer_add_child(&s_root_layer, &fs.swap.layer);
   s_active_layer = &fs.swap.layer;
   swap_layer_touch_register(&fs.swap);
 
+  prv_drive(TouchEvent_Touchdown, 72, 120);
+  cl_assert(swap_layer_touch_is_gesture_target(&fs.swap));  // the node is latched...
+  prv_advance_ms(20);
+  prv_drive(TouchEvent_PositionUpdate, 72, 80);   // 40px up -> pan Starts -> can_start() == false
+  cl_assert(s_touch_nav_state.declined);          // ...but the gesture is declined, not driven
+  cl_assert_equal_i(s_interaction_count, 0);      // pan_started (announce_interaction) never ran
+  prv_advance_ms(20);
+  prv_drive(TouchEvent_PositionUpdate, 72, 40);   // gated by `declined`: drives nothing (no deref)
+  prv_drive(TouchEvent_Liftoff, 0, 0);
+  cl_assert(!s_touch_nav_state.declined);         // reset for the next gesture
+  cl_assert(!swap_layer_touch_is_gesture_target(&fs.swap));
+  cl_assert_equal_i(s_emit_count, 0);
+
+  swap_layer_touch_deregister(&fs.swap);
+}
+
+// F3 fix: a tap on the notification body now emits SELECT. Pre-refactor the swap own-set latched its
+// target only on pan Started, so a tap (which never Starts) reached Completed with target == NULL and
+// did NOTHING. The unified Touchdown-latch gives tap Completed a target, so SELECT is emitted.
+void test_swap_layer_touch__dispatch_tap_emits_select(void) {
+  prv_live_state_setup();
+  FakeSwap fs;
+  prv_attach_and_register(&fs, 168, 400, false);
+
+  prv_drive(TouchEvent_Touchdown, 72, 120);
+  prv_advance_ms(30);
+  prv_drive(TouchEvent_Liftoff, 0, 0);
+  cl_assert_equal_i(s_emit_count, 1);
+  cl_assert_equal_i(s_last_emit, BUTTON_ID_SELECT);
+  cl_assert_equal_i(s_pop_count, 0);
+  cl_assert(!swap_layer_touch_is_gesture_target(&fs.swap));
+
+  swap_layer_touch_deregister(&fs.swap);
+}
+
+// Drive a straight fast flick from (sx, sy) to (ex, ey) through the dispatcher.
+static void prv_swipe(int16_t sx, int16_t sy, int16_t ex, int16_t ey) {
+  prv_drive(TouchEvent_Touchdown, sx, sy);
+  prv_advance_ms(20);
+  prv_drive(TouchEvent_PositionUpdate, (int16_t)((sx + ex) / 2), (int16_t)((sy + ey) / 2));
+  prv_advance_ms(20);
+  prv_drive(TouchEvent_PositionUpdate, ex, ey);
+  prv_advance_ms(20);
+  prv_drive(TouchEvent_Liftoff, 0, 0);
+}
+
+// F3 fix: a horizontal swipe on the notification body now navigates. Right = SELECT (the same latent
+// bug as tap: the pre-refactor own-set never latched a target for a swipe).
+void test_swap_layer_touch__dispatch_swipe_right_emits_select(void) {
+  prv_live_state_setup();
+  FakeSwap fs;
+  prv_attach_and_register(&fs, 168, 400, false);
+
+  prv_swipe(20, 120, 90, 120);   // left-to-right = right swipe
+  cl_assert_equal_i(s_emit_count, 1);
+  cl_assert_equal_i(s_last_emit, BUTTON_ID_SELECT);
+  cl_assert_equal_i(s_pop_count, 0);
+
+  swap_layer_touch_deregister(&fs.swap);
+}
+
+// F3 fix: swipe left = BACK, which with no back-override pops the window.
+void test_swap_layer_touch__dispatch_swipe_left_emits_back(void) {
+  prv_live_state_setup();
+  s_overrides_back = false;      // no back handler -> BACK pops the window
+  FakeSwap fs;
+  prv_attach_and_register(&fs, 168, 400, false);
+
+  prv_swipe(90, 120, 20, 120);   // right-to-left = left swipe
+  cl_assert_equal_i(s_pop_count, 1);
+  cl_assert_equal_i(s_emit_count, 0);
+
+  swap_layer_touch_deregister(&fs.swap);
+}
+
+// UAF-safety: deregistering a swap layer WHILE it is the live gesture target (before liftoff), e.g.
+// the notification is torn down under a live window, clears the latched target before cancelling the
+// recognizers (the touch_nav_registry_remove UAF hook), so a synchronous Cancelled callback cannot
+// re-enter the freed swap layer.
+void test_swap_layer_touch__deregister_mid_gesture_clears_target(void) {
+  prv_live_state_setup();
+  FakeSwap fs;
+  prv_attach_and_register(&fs, 168, 400, false);
+
   // Finger down + a move so the swap layer becomes the live gesture target.
-  prv_feed(TouchEvent_Touchdown, 72, 120);
-  prv_feed(TouchEvent_PositionUpdate, 72, 90);
+  prv_drive(TouchEvent_Touchdown, 72, 120);
+  prv_advance_ms(20);
+  prv_drive(TouchEvent_PositionUpdate, 72, 90);
   cl_assert(swap_layer_touch_is_gesture_target(&fs.swap));
 
   // Deregister mid-gesture: the target is cleared (before the recognizer cancel), and the node is

@@ -12,9 +12,11 @@
 
 #include "applib/graphics/gtypes.h"
 #include "applib/ui/layer.h"
+#include "pbl/drivers/rtc.h"
 #include "pbl/logging/logging.h"
 #include "pbl/services/touch/touch.h"
 #include "pbl/util/math.h"
+#include "pbl/util/size.h"
 #include "system/passert.h"
 
 #include <stddef.h>
@@ -22,6 +24,14 @@
 // All four directions are accepted by the system swipe recognizer; the bridge maps each one.
 #define TOUCH_NAV_SWIPE_MASK \
   (SwipeDirection_Up | SwipeDirection_Down | SwipeDirection_Left | SwipeDirection_Right)
+
+// The unified widget set is a content scroller (vertical pan) with horizontal-only swipe navigation;
+// vertical swipes stay pans so a flick scrolls/flings instead of being eaten by a swipe.
+#define TOUCH_NAV_WIDGET_SWIPE_MASK (SwipeDirection_Left | SwipeDirection_Right)
+
+// Minimum wall-clock spacing between live-scroll updates applied from pan Updated events, matching
+// the per-widget sets this unifies.
+#define TOUCH_NAV_WIDGET_PAN_UPDATE_MIN_INTERVAL_MS 16
 
 // ---------------------------------------------------------------------------------------------
 // Observability
@@ -50,7 +60,7 @@ static TouchNavWidgetNode **prv_registry_head(TouchNavState *state, TouchNavWidg
 }
 
 void touch_nav_registry_add(TouchNavState *state, TouchNavWidgetType type, TouchNavWidgetNode *node,
-                            struct Layer *layer) {
+                            struct Layer *layer, const TouchNavWidgetOps *ops, void *widget) {
   if (!state || !node) {
     return;
   }
@@ -60,13 +70,18 @@ void touch_nav_registry_add(TouchNavState *state, TouchNavWidgetType type, Touch
   for (TouchNavWidgetNode *cur = *head; cur; cur = cur->next) {
     if (cur == node) {
       PBL_LOG_WRN("touch_nav: widget node %p re-added", (void *)node);
-      // A widget re-init zeroes the node while it is still threaded here; restore the layer so an
-      // init-without-deinit keeps routing to the widget instead of matching a NULL layer.
+      // A widget re-init zeroes the node while it is still threaded here; restore the layer/vtable so
+      // an init-without-deinit keeps routing to and driving the widget instead of matching a NULL
+      // layer or dispatching through a NULL vtable.
       cur->layer = layer;
+      cur->ops = ops;
+      cur->widget = widget;
       return;
     }
   }
   node->layer = layer;
+  node->ops = ops;
+  node->widget = widget;
   node->next = *head;
   *head = node;
 }
@@ -75,6 +90,12 @@ void touch_nav_registry_remove(TouchNavState *state, TouchNavWidgetType type,
                                TouchNavWidgetNode *node) {
   if (!state || !node) {
     return;
+  }
+  // UAF hook: if the node being removed is the latched widget target, drop the weak ref BEFORE the
+  // caller cancels any in-flight gesture, so the resulting Cancelled dispatch cannot reach the
+  // widget's (now torn-down) apply logic.
+  if (state->latched_target == node) {
+    state->latched_target = NULL;
   }
   TouchNavWidgetNode **head = prv_registry_head(state, type);
   TouchNavWidgetNode *prev = NULL;
@@ -90,6 +111,20 @@ void touch_nav_registry_remove(TouchNavState *state, TouchNavWidgetType type,
     }
   }
   // Not present: a safe no-op (e.g. the node was zeroed by *_init and never added).
+}
+
+// Whether \a node is still threaded onto any registry list (weak-ref re-validation for the latched
+// widget target). A node zeroed/removed by a widget deinit mid-gesture will not be found.
+static bool prv_registry_contains_node(TouchNavState *state, const TouchNavWidgetNode *node) {
+  const TouchNavWidgetNode *const heads[] = {state->menu_head, state->swap_head, state->scroll_head};
+  for (unsigned i = 0; i < ARRAY_LENGTH(heads); i++) {
+    for (const TouchNavWidgetNode *n = heads[i]; n; n = n->next) {
+      if (n == node) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 static bool prv_registry_contains_layer(TouchNavState *state, const struct Layer *layer) {
@@ -163,6 +198,118 @@ ButtonId touch_nav_action_bar_zone_button(const TouchNavActionBar *bar, GPoint p
     return BUTTON_ID_SELECT;
   }
   return (ButtonId)(BUTTON_ID_UP + zone);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Unified widget routing
+
+// Resolve the migrated widget the current gesture belongs to, or NULL.
+//
+// Walk the latched active layer up its parent chain (leaf -> root). At EACH layer, check the
+// registry heads in menu -> scroll -> swap order and stop at the FIRST registered node found: the
+// first registered node on the walk wins, and the head order is only a same-layer tiebreak, never a
+// cross-depth precedence (a deeper widget always beats a shallower one). This deliberately replaces
+// the old attach-order arbitration. If that winning node is un-migrated (ops == NULL) the gesture
+// belongs to the widget's own recognizer set, so return NULL and let that set drive it -- the
+// unified set only ever drives ops-bearing (migrated) widgets.
+static TouchNavWidgetNode *prv_resolve_widget_target(TouchNavState *state) {
+  if (!state || !state->manager) {
+    return NULL;
+  }
+  TouchNavWidgetNode *const heads[] = {state->menu_head, state->scroll_head, state->swap_head};
+  for (struct Layer *layer = state->manager->active_layer; layer; layer = layer->parent) {
+    for (unsigned i = 0; i < ARRAY_LENGTH(heads); i++) {
+      for (TouchNavWidgetNode *n = heads[i]; n; n = n->next) {
+        if (n->layer == layer) {
+          return n->ops ? n : NULL;
+        }
+      }
+    }
+  }
+  return NULL;
+}
+
+// Touch filter for the unified widget set: handle a gesture only when the latched active layer
+// resolves to a migrated (ops-bearing) widget. A filtered-out recognizer returns without advancing,
+// so on a bridge / un-migrated-widget route it never Starts and never competes with the bridge set
+// or an un-migrated widget's own set on this task's global recognizer list.
+static bool prv_widget_touch_filter(const Recognizer *recognizer, const TouchEvent *touch_event) {
+  TouchNavState *state = recognizer_get_user_data(recognizer);
+  return prv_resolve_widget_target(state) != NULL;
+}
+
+// Unified widget dispatch. Mirrors the per-widget recognizer callbacks this replaces, but drives the
+// latched target through its \ref TouchNavWidgetOps vtable instead of a concrete widget type. The
+// target is latched on Touchdown (in touch_nav_dispatch) and re-validated as a weak ref here on
+// every later event so a widget torn down mid-gesture is dropped with no callback into freed state.
+static void prv_widget_recognizer_event(const Recognizer *recognizer, RecognizerEvent event) {
+  TouchNavState *state = recognizer_get_user_data(recognizer);
+  if (!state) {
+    return;
+  }
+  TouchNavWidgetNode *node = state->latched_target;
+  // Weak-ref re-validation: a NULL or no-longer-registered target means the widget went away
+  // (UAF hook / deinit). Drop every event; nothing to clear (the latch is already gone).
+  if (!node || !prv_registry_contains_node(state, node)) {
+    return;
+  }
+  const TouchNavWidgetOps *ops = node->ops;
+  void *w = node->widget;
+
+  switch (event) {
+    case RecognizerEvent_Started:
+      if (recognizer == state->widget_pan) {
+        if (ops->can_start && !ops->can_start(w)) {
+          // The widget is not ready (e.g. its layout has not loaded). Decline the whole gesture
+          // WITHOUT set_failed (the pan is already Started, not Possible) or cancel (we are inside a
+          // Started callback -- re-entrancy). Every later vtable call is gated on `declined`.
+          state->declined = true;
+          return;
+        }
+        ops->pan_started(w);
+        state->gesture_base = ops->get_base_offset(w);
+        state->last_update_ticks = 0;
+      }
+      break;
+    case RecognizerEvent_Updated:
+      if (!state->declined && recognizer == state->widget_pan) {
+        const RtcTicks now = rtc_get_ticks();
+        const RtcTicks min_ticks =
+            (RtcTicks)TOUCH_NAV_WIDGET_PAN_UPDATE_MIN_INTERVAL_MS * RTC_TICKS_HZ / 1000;
+        if (now - state->last_update_ticks >= min_ticks) {
+          state->last_update_ticks = now;
+          ops->pan_update(w, state->gesture_base,
+                          pan_recognizer_get_delta_since_start((Recognizer *)recognizer));
+        }
+      }
+      break;
+    case RecognizerEvent_Completed:
+      if (!state->declined) {
+        if (recognizer == state->widget_pan) {
+          ops->pan_snap(w, state->gesture_base,
+                        pan_recognizer_get_delta_since_start((Recognizer *)recognizer));
+        } else if (recognizer == state->widget_tap) {
+          if (ops->tap) {
+            ops->tap(w, tap_recognizer_get_tap_point((Recognizer *)recognizer));
+          }
+        } else if (recognizer == state->widget_swipe) {
+          const SwipeDirection dir = swipe_recognizer_get_direction((Recognizer *)recognizer);
+          if (dir == SwipeDirection_Left || dir == SwipeDirection_Right) {
+            ops->swipe(w, dir);
+          }
+        }
+      }
+      state->latched_target = NULL;
+      state->declined = false;
+      break;
+    case RecognizerEvent_Cancelled:
+      if (!state->declined && recognizer == state->widget_pan) {
+        ops->pan_cancel(w);
+      }
+      state->latched_target = NULL;
+      state->declined = false;
+      break;
+  }
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -329,6 +476,15 @@ void touch_nav_dispatch(const TouchEvent *touch_event, void *context) {
       // fresh from its first event.
       state->counters.gated++;
       state->route = TouchNavRoute_Dropped;
+      // Drop the latch BEFORE unwinding the gesture (the UAF-safe idiom shared with the deregister
+      // path). This intentionally does NOT run ops->pan_cancel: the pan recognizer's cancel op
+      // returns false (see pan.c prv_cancel) and it never self-transitions to Cancelled, so
+      // cancel_and_reset delivers no RecognizerEvent_Cancelled to the unified pan on any pre-emption
+      // (gated or navigational) -- exactly as the per-widget sets behaved before this refactor.
+      // Synthesising a pan_cancel here would be a new side effect (Ф1 is a no-behaviour-change
+      // rebuild), so a mid-pan wake/DnD tap unwinds the gesture silently, as it always has.
+      state->latched_target = NULL;
+      state->declined = false;
       prv_log_push(state, TouchNavLog_Gated, 0);
       recognizer_manager_cancel_and_reset(manager);
       return;
@@ -345,11 +501,31 @@ void touch_nav_dispatch(const TouchEvent *touch_event, void *context) {
     if (manager->state == RecognizerManagerState_WaitForTouchdown) {
       // The manager declined to activate (should not happen for a navigational fresh Touchdown).
       state->route = TouchNavRoute_None;
+      state->latched_target = NULL;
+      state->declined = false;
       return;
     }
     state->route = prv_resolve_route(state, touch_event);
     prv_log_push(state, TouchNavLog_Route, (uint8_t)state->route);
+    // tier-exclusion stays BRIDGE-ONLY: it governs the bridge (tap, pan, swipe) set by route. The
+    // unified widget set is governed solely by its filter plus the fail-at-latch below.
     prv_apply_tier_exclusion(state, state->route);
+
+    // Latch the unified widget target for the whole gesture, mirroring the bridge route latch. Do
+    // NOT read latched_target during this Touchdown dispatch: it is set AFTER the manager processed
+    // the Touchdown and is only consumed by later events.
+    state->latched_target = prv_resolve_widget_target(state);
+    state->declined = false;
+    if (!state->latched_target) {
+      // The gesture belongs to the bridge or an un-migrated widget's own set, not the unified set:
+      // fail the unified tap/pan/swipe now, symmetrically to the bridge exclusion. On a fresh
+      // Touchdown these three are provably still Possible (no recognizer triggers on Touchdown), and
+      // prv_fail only fails a Possible recognizer, so the manager returns to idle by construction
+      // after the gesture instead of leaving a filtered-out recognizer stuck Possible.
+      prv_fail(state, state->widget_tap);
+      prv_fail(state, state->widget_pan);
+      prv_fail(state, state->widget_swipe);
+    }
   } else {
     recognizer_manager_handle_touch_event(touch_event, manager);
   }
@@ -373,10 +549,27 @@ void touch_nav_state_init(TouchNavState *state, RecognizerManager *manager,
   state->swipe = swipe_recognizer_init_static(state->swipe_storage, prv_recognizer_event, state,
                                               TOUCH_NAV_SWIPE_MASK);
 
+  // The unified widget set: one (tap, pan, swipe) set per twin that drives every migrated Tier-1
+  // widget through its vtable. Scoped by prv_widget_touch_filter so it only handles gestures that
+  // resolve to a migrated widget and never competes with the bridge set or an un-migrated widget's
+  // own set on this shared global list.
+  state->widget_tap =
+      tap_recognizer_init_static(state->widget_tap_storage, prv_widget_recognizer_event, state);
+  state->widget_pan = pan_recognizer_init_static(
+      state->widget_pan_storage, prv_widget_recognizer_event, state, PanAxis_Vertical);
+  state->widget_swipe = swipe_recognizer_init_static(
+      state->widget_swipe_storage, prv_widget_recognizer_event, state, TOUCH_NAV_WIDGET_SWIPE_MASK);
+  recognizer_set_touch_filter(state->widget_tap, prv_widget_touch_filter);
+  recognizer_set_touch_filter(state->widget_pan, prv_widget_touch_filter);
+  recognizer_set_touch_filter(state->widget_swipe, prv_widget_touch_filter);
+
   RecognizerList *global_list = manager->global_list;
   recognizer_add_to_list(state->tap, global_list);
   recognizer_add_to_list(state->pan, global_list);
   recognizer_add_to_list(state->swipe, global_list);
+  recognizer_add_to_list(state->widget_tap, global_list);
+  recognizer_add_to_list(state->widget_pan, global_list);
+  recognizer_add_to_list(state->widget_swipe, global_list);
 }
 
 void touch_nav_transaction_apply(const TouchNavTxnOps *ops, bool enable) {
@@ -419,6 +612,12 @@ bool touch_nav_app_twin_active(bool pref_enabled, bool participating) {
   return pref_enabled && participating;
 }
 
+bool touch_nav_app_bridge_disabled(bool window_opt_out, bool app_has_raw_subscriber) {
+  // Either path disables the Tier-2 bridge: the window explicitly opted out, or the app owns touch
+  // through its own raw subscriber and must not be handed synthesized buttons on top of it.
+  return window_opt_out || app_has_raw_subscriber;
+}
+
 void touch_nav_app_twin_subscribe(const TouchNavTwinOps *ops, bool participating) {
   PBL_ASSERTN(ops && ops->pref_enabled && ops->install_handler);
   if (touch_nav_app_twin_active(ops->pref_enabled(ops->ctx), participating)) {
@@ -452,8 +651,15 @@ void touch_nav_state_deinit(TouchNavState *state) {
   recognizer_remove_from_list(state->tap, global_list);
   recognizer_remove_from_list(state->pan, global_list);
   recognizer_remove_from_list(state->swipe, global_list);
+  recognizer_remove_from_list(state->widget_tap, global_list);
+  recognizer_remove_from_list(state->widget_pan, global_list);
+  recognizer_remove_from_list(state->widget_swipe, global_list);
   state->tap = NULL;
   state->pan = NULL;
   state->swipe = NULL;
+  state->widget_tap = NULL;
+  state->widget_pan = NULL;
+  state->widget_swipe = NULL;
+  state->latched_target = NULL;
   state->manager = NULL;
 }

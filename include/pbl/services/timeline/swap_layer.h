@@ -79,11 +79,14 @@ typedef struct SwapLayer {
 #ifdef CONFIG_TOUCH
   //! @internal
   //! Intrusive Tier-1 touch-navigation registry node. Layout-compatible with \c TouchNavWidgetNode
-  //! (two pointers, \c next then \c layer); a build-time assert in swap_layer.c keeps it in sync.
-  //! Declared as two opaque pointers so this timeline header does not pull in the recognizer stack.
+  //! (four pointers — \c next, \c layer, \c ops, \c widget); a build-time assert in swap_layer.c
+  //! keeps it in sync. Declared as opaque pointers so this timeline header does not pull in the
+  //! recognizer stack.
   struct {
     void *next;
     void *layer;
+    void *ops;
+    void *widget;
   } touch_nav_node;
   //! True while this SwapLayer is threaded onto the Tier-1 registry (guards double add/remove and
   //! makes the init/focus re-registration idempotent).

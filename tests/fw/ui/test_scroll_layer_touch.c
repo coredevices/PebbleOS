@@ -204,12 +204,13 @@ void test_scroll_layer_touch__subthreshold_pan_does_not_scroll(void) {
   prv_make_tall_scroll(&sl, GRect(0, 0, 200, 300), 900);
   layer_add_child(&s_root_layer, scroll_layer_get_layer(&sl));
 
-  // Touchdown then a 3px move: below PAN_START_THRESHOLD_PX (10) so the pan never Starts.
+  // Touchdown then a 3px move: below PAN_START_THRESHOLD_PX (10) so the pan never Starts. The
+  // Touchdown latches the scroll layer as the unified target (routing is fixed for the gesture), but
+  // with the pan never Starting no content moves.
   prv_drive(TouchEvent_Touchdown, 100, 150);
   prv_advance_ms(20);
   prv_drive(TouchEvent_PositionUpdate, 100, 147);
   cl_assert_equal_i(scroll_layer_get_content_offset(&sl).y, 0);   // no scroll
-  cl_assert(!scroll_layer_touch_is_gesture_target(&sl));
   prv_drive(TouchEvent_Liftoff, 100, 147);
 
   // A real pan (well past threshold) does scroll, confirming the widget is otherwise live. The pan
@@ -369,6 +370,101 @@ void test_scroll_layer_touch__swipe_dropped_while_animating(void) {
   scroll_layer_touch_handle_swipe(&sl, SwipeDirection_Left);
   cl_assert_equal_i(s_bridge.pop_count, 0);
   cl_assert_equal_i(s_bridge.emit_count, 0);
+  scroll_layer_deinit(&sl);
+}
+
+// =============================================================================================
+// Unified widget set: gestures driven THROUGH touch_nav_dispatch (not the apply functions).
+// These exercise the Ф2 vtable path end to end: Touchdown latches the ScrollLayer as the migrated
+// widget target, and the unified (tap, pan, swipe) set drives it via s_scroll_touch_nav_ops.
+
+// A quick, stationary tap through the dispatcher (Touchdown then Liftoff, no movement).
+static void prv_scroll_dispatch_tap(int16_t x, int16_t y) {
+  prv_drive(TouchEvent_Touchdown, x, y);
+  prv_advance_ms(30);
+  prv_drive(TouchEvent_Liftoff, x, y);
+}
+
+// ---- A bare pan through the dispatcher scrolls 1:1 and settles on liftoff ----
+
+void test_scroll_layer_touch__dispatch_pan_scrolls_1to1_and_snaps(void) {
+  prv_touch_nav_setup();
+  ScrollLayer sl;
+  prv_make_tall_scroll(&sl, GRect(0, 0, 200, 300), 900);  // min offset = 300 - 900 = -600
+  layer_add_child(&s_root_layer, scroll_layer_get_layer(&sl));
+
+  // Touchdown, then a first update 40px up crosses the pan threshold: the pan Starts and only latches
+  // the base (offset unchanged). delta_since_start is re-anchored to (0,0) at Start.
+  prv_drive(TouchEvent_Touchdown, 100, 200);
+  prv_advance_ms(20);
+  prv_drive(TouchEvent_PositionUpdate, 100, 160);   // pan Started at y=160, base latched
+  cl_assert(scroll_layer_touch_is_gesture_target(&sl));
+  cl_assert_equal_i(scroll_layer_get_content_offset(&sl).y, 0);
+
+  // A second update 30px further up live-scrolls the content 1:1 (base 0 + delta -30).
+  prv_advance_ms(20);
+  prv_drive(TouchEvent_PositionUpdate, 100, 130);
+  cl_assert_equal_i(scroll_layer_get_content_offset(&sl).y, -30);
+
+  // Liftoff settles to the final (unthrottled) offset, still -30, and clears the latch.
+  prv_drive(TouchEvent_Liftoff, 100, 130);
+  cl_assert_equal_i(scroll_layer_get_content_offset(&sl).y, -30);
+  cl_assert(!scroll_layer_touch_is_gesture_target(&sl));
+  cl_assert_equal_i(s_bridge.emit_count, 0);   // a pan is never a bridge button
+  cl_assert_equal_i(s_bridge.pop_count, 0);
+
+  scroll_layer_deinit(&sl);
+}
+
+// ---- A tap on a bare ScrollLayer does NOTHING (tap op is NULL, no bridge SELECT) ----
+
+void test_scroll_layer_touch__dispatch_tap_does_nothing(void) {
+  prv_touch_nav_setup();
+  ScrollLayer sl;
+  prv_make_tall_scroll(&sl, GRect(0, 0, 200, 300), 900);
+  layer_add_child(&s_root_layer, scroll_layer_get_layer(&sl));
+
+  // A stationary tap on the scroll routes to the unified set (the bridge set is failed on the Tier-1
+  // route). ScrollLayer's tap op is NULL, so the tap is dropped: no scroll, and crucially NO bridge
+  // SELECT (the tap must not fall through to the Tier-2 bridge).
+  prv_scroll_dispatch_tap(100, 150);
+  cl_assert_equal_i(scroll_layer_get_content_offset(&sl).y, 0);   // no scroll
+  cl_assert_equal_i(s_bridge.emit_count, 0);                      // no SELECT emitted
+  cl_assert_equal_i(s_bridge.pop_count, 0);
+  cl_assert(!scroll_layer_touch_is_gesture_target(&sl));          // latch cleared on completion
+  // The manager returns to idle after the dropped tap.
+  cl_assert_equal_i(s_recognizer_manager.state, RecognizerManagerState_WaitForTouchdown);
+
+  scroll_layer_deinit(&sl);
+}
+
+// ---- A no-trigger gesture on a scroll-only route leaves the manager idle ----
+//
+// The app's only widget is a ScrollLayer, but the finger lands off it: the resolver finds no
+// migrated widget under the active layer, so the unified set is failed at the Touchdown latch
+// (symmetric to the bridge exclusion). A gesture that then triggers nothing leaves no recognizer
+// stuck Possible -- the manager is idle by construction after liftoff.
+void test_scroll_layer_touch__dispatch_no_trigger_leaves_manager_idle(void) {
+  prv_touch_nav_setup();
+  ScrollLayer sl;
+  // Register the scroll away from the top status-bar dead zone so a dead-zone Touchdown does not get
+  // routed to it as the sole widget.
+  scroll_layer_init(&sl, &GRect(0, 100, 200, 200));
+  scroll_layer_set_content_size(&sl, GSize(200, 600));
+  layer_add_child(&s_root_layer, scroll_layer_get_layer(&sl));
+
+  // A Touchdown in the top dead zone resolves no widget under the active layer: the unified set is
+  // failed at the latch.
+  prv_drive(TouchEvent_Touchdown, 100, 4);
+  cl_assert(!scroll_layer_touch_is_gesture_target(&sl));
+  cl_assert_equal_i(recognizer_get_state(s_touch_nav_state.widget_tap), RecognizerState_Failed);
+  cl_assert_equal_i(recognizer_get_state(s_touch_nav_state.widget_pan), RecognizerState_Failed);
+  cl_assert_equal_i(recognizer_get_state(s_touch_nav_state.widget_swipe), RecognizerState_Failed);
+
+  // Liftoff with nothing triggered returns the manager to idle: no stuck Possible recognizer.
+  prv_drive(TouchEvent_Liftoff, 100, 4);
+  cl_assert_equal_i(s_recognizer_manager.state, RecognizerManagerState_WaitForTouchdown);
+
   scroll_layer_deinit(&sl);
 }
 

@@ -6,6 +6,7 @@
 
 #include "applib/ui/menu_layer.h"
 #include "applib/ui/menu_layer_private.h"
+#include "applib/ui/scroll_layer_private.h"
 #include "applib/ui/content_indicator_private.h"
 #include "applib/ui/recognizer/recognizer.h"
 #include "applib/ui/recognizer/recognizer_list.h"
@@ -1211,6 +1212,82 @@ void test_menu_layer__touch_deinit_mid_gesture_cancels(void) {
   menu_layer_deinit(&l2);
 }
 
+// ---- Recognizer-set arbitration: the per-type touch filter scopes each set to its type ----
+//
+// A MenuLayer and an independent ScrollLayer registered on the SAME task share one global
+// recognizer
+// list, so their pan recognizers would otherwise compete: whichever crosses the pan threshold first
+// triggers and FAILS the other, regardless of which widget the finger is on. Registering the menu
+// first puts its pan ahead of the scroll pan on the list, the ordering under which the pre-fix bug
+// has the menu pan win a scroll gesture (resolving no menu target, a no-op) while the scroll pan is
+// failed -> the ScrollLayer scrolls by NEITHER finger nor the old bridge. The per-type touch filter
+// fixes this by gating each set on the gesture's latched active layer.
+
+// Bring up a menu (registered first) and an independent scroll layer on disjoint regions of one
+// root,
+// so the recognizer manager's active-layer hit-test resolves a touch to exactly one of them.
+static void prv_make_menu_and_scroll(MenuLayer *menu, ScrollLayer *scroll) {
+  menu_layer_init(menu, &GRect(0, 0, 200, 180));
+  prv_set_touch_callbacks(menu);
+  menu_layer_reload_data(menu);
+  layer_add_child(&s_root_layer, menu_layer_get_layer(menu));
+
+  scroll_layer_init(scroll, &GRect(0, 200, 200, 180));
+  scroll_layer_set_content_size(scroll, GSize(200, 600));
+  layer_add_child(&s_root_layer, scroll_layer_get_layer(scroll));
+
+  cl_assert(s_touch_nav_state.menu_head != NULL);
+  cl_assert(s_touch_nav_state.scroll_head != NULL);
+}
+
+// The key regression: a pan whose active layer is the ScrollLayer scrolls it 1:1 and is NOT
+// eaten by
+// the menu set. (Fails on the pre-filter code; passes with the filter.)
+void test_menu_layer__scroll_gesture_not_eaten_by_menu(void) {
+  prv_touch_nav_setup();
+  MenuLayer menu;
+  ScrollLayer scroll;
+  prv_make_menu_and_scroll(&menu, &scroll);
+
+  prv_drive(TouchEvent_Touchdown, 100, 300);         // active layer -> the standalone ScrollLayer
+  prv_advance_ms(20);
+  prv_drive(TouchEvent_PositionUpdate, 100, 260);    // 40px up -> pan Started on the scroll set
+  cl_assert(scroll_layer_touch_is_gesture_target(&scroll));
+  cl_assert(!menu_layer_touch_is_gesture_target(&menu));
+  prv_advance_ms(20);
+  prv_drive(TouchEvent_PositionUpdate, 100, 230);    // Updated -> live scroll
+  prv_drive(TouchEvent_Liftoff, 100, 230);           // Completed -> final commit
+
+  cl_assert(scroll_layer_get_content_offset(&scroll).y < 0);            // scrolled by finger
+  cl_assert_equal_i(scroll_layer_get_content_offset(&menu.scroll_layer).y, 0);  // menu inert
+
+  scroll_layer_deinit(&scroll);
+  menu_layer_deinit(&menu);
+}
+
+// Symmetric: a pan whose active layer is the MenuLayer scrolls the menu; the scroll set bows out.
+void test_menu_layer__menu_gesture_not_eaten_by_scroll(void) {
+  prv_touch_nav_setup();
+  MenuLayer menu;
+  ScrollLayer scroll;
+  prv_make_menu_and_scroll(&menu, &scroll);
+
+  prv_drive(TouchEvent_Touchdown, 100, 90);          // active layer -> the MenuLayer
+  prv_advance_ms(20);
+  prv_drive(TouchEvent_PositionUpdate, 100, 50);     // 40px up -> pan Started on the menu set
+  cl_assert(menu_layer_touch_is_gesture_target(&menu));
+  cl_assert(!scroll_layer_touch_is_gesture_target(&scroll));
+  prv_advance_ms(20);
+  prv_drive(TouchEvent_PositionUpdate, 100, 20);     // Updated -> live scroll
+  prv_drive(TouchEvent_Liftoff, 100, 20);            // Completed -> final commit
+
+  cl_assert(scroll_layer_get_content_offset(&menu.scroll_layer).y < 0);   // menu scrolled
+  cl_assert_equal_i(scroll_layer_get_content_offset(&scroll).y, 0);       // scroll set inert
+
+  scroll_layer_deinit(&scroll);
+  menu_layer_deinit(&menu);
+}
+
 // ---- П4: UP/DOWN reconciliation after a free pixel scroll ----
 
 // After a free scroll pushes the selection OFF-screen, DOWN must step from the row nearest the
@@ -1286,4 +1363,168 @@ void test_menu_layer__step_offscreen_center_on_header_falls_back(void) {
   cl_assert_equal_i(menu_layer_get_selected_index(&l).section, 0);
   cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 1);
   cl_assert_equal_i(s_select_click_count, 0);
+}
+
+// =============================================================================================
+// Unified widget set: gestures driven THROUGH touch_nav_dispatch (not the apply functions).
+// These exercise the Ф1 vtable path end to end: Touchdown latches the menu as the migrated widget
+// target, and the unified (tap, pan, swipe) set drives it via s_menu_touch_nav_ops.
+
+// A quick, stationary tap through the dispatcher (Touchdown then Liftoff, no movement).
+static void prv_menu_dispatch_tap(int16_t x, int16_t y) {
+  prv_drive(TouchEvent_Touchdown, x, y);
+  prv_advance_ms(30);
+  prv_drive(TouchEvent_Liftoff, x, y);
+}
+
+static MenuLayer *prv_dispatch_menu_setup(MenuLayer *l) {
+  menu_layer_init(l, &GRect(0, 0, 200, 300));
+  prv_set_touch_callbacks(l);
+  menu_layer_reload_data(l);
+  layer_add_child(&s_root_layer, menu_layer_get_layer(l));
+  return l;
+}
+
+// ---- Tap through the dispatcher honours the full selection_will_change contract ----
+
+// (a) Passthrough: a tap on an unselected row runs the contract and selects it, without activating.
+void test_menu_layer__dispatch_tap_passthrough_selects(void) {
+  prv_touch_nav_setup();
+  MenuLayer l;
+  prv_dispatch_menu_setup(&l);
+  prv_reset_touch_counters();
+  s_will_change_mode = WillChange_Passthrough;
+  prv_menu_dispatch_tap(100, 2 * 44 + 22);  // row 2 (offset 0)
+  cl_assert_equal_i(s_will_change_count, 1);                     // the contract ran through dispatch
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 2);   // selection moved to the tapped row
+  cl_assert_equal_i(s_select_click_count, 0);                    // but did NOT activate
+  menu_layer_deinit(&l);
+}
+
+// (b) Veto: a tap the client vetoes changes nothing (selection stays, no activate).
+void test_menu_layer__dispatch_tap_veto_changes_nothing(void) {
+  prv_touch_nav_setup();
+  MenuLayer l;
+  prv_dispatch_menu_setup(&l);
+  prv_reset_touch_counters();
+  s_will_change_mode = WillChange_Veto;
+  prv_menu_dispatch_tap(100, 2 * 44 + 22);  // taps row 2, veto keeps the default row 0
+  cl_assert_equal_i(s_will_change_count, 1);
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 0);   // veto kept the old selection
+  cl_assert_equal_i(s_select_click_count, 0);
+  menu_layer_deinit(&l);
+}
+
+// (c) Redirect: a tap the client redirects selects the redirected row, without activating.
+void test_menu_layer__dispatch_tap_redirect_selects_target(void) {
+  prv_touch_nav_setup();
+  MenuLayer l;
+  prv_dispatch_menu_setup(&l);
+  prv_reset_touch_counters();
+  s_will_change_mode = WillChange_Redirect;
+  s_will_change_redirect = MenuIndex(0, 5);
+  prv_menu_dispatch_tap(100, 2 * 44 + 22);  // taps row 2, redirected to row 5
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 5);   // selected the redirect target
+  cl_assert_equal_i(s_select_click_count, 0);
+  menu_layer_deinit(&l);
+}
+
+// ---- Pan through the dispatcher scrolls 1:1 and snaps on liftoff, selection frozen ----
+
+void test_menu_layer__dispatch_pan_scrolls_1to1_and_snaps(void) {
+  prv_touch_nav_setup();
+  MenuLayer l;
+  prv_dispatch_menu_setup(&l);
+  menu_layer_set_selected_index(&l, MenuIndex(0, 2), MenuRowAlignNone, false);
+  prv_reset_touch_counters();
+
+  // Touchdown, then a first update 40px up crosses the pan threshold: the pan Starts and only latches
+  // the base (offset unchanged). delta_since_start is re-anchored to (0,0) at Start.
+  prv_drive(TouchEvent_Touchdown, 100, 200);
+  prv_advance_ms(20);
+  prv_drive(TouchEvent_PositionUpdate, 100, 160);   // pan Started at y=160, base latched
+  cl_assert(menu_layer_touch_is_gesture_target(&l));
+  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, 0);
+
+  // A second update 30px further up live-scrolls the content 1:1 (base 0 + delta -30).
+  prv_advance_ms(20);
+  prv_drive(TouchEvent_PositionUpdate, 100, 130);
+  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, -30);
+
+  // Liftoff snaps to the final (unthrottled) offset, still -30, and the selection never moved.
+  prv_drive(TouchEvent_Liftoff, 100, 130);
+  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, -30);
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 2);   // selection frozen for the pan
+  cl_assert_equal_i(s_will_change_count, 0);
+  cl_assert_equal_i(s_select_click_count, 0);
+  cl_assert(!menu_layer_touch_is_gesture_target(&l));            // latch cleared on completion
+  menu_layer_deinit(&l);
+}
+
+// A pan pre-empted mid-gesture (a fresh navigational Touchdown) is dropped cleanly: it never moves
+// the selection or fires a client callback. (The pan recognizer delivers no Cancelled event on a
+// reset -- see pan.c prv_cancel -- so the widget's cancel handler does not run; the point here is
+// that the pre-emption is side-effect free, exactly as before the refactor.)
+void test_menu_layer__dispatch_pan_cancel_is_clean(void) {
+  prv_touch_nav_setup();
+  MenuLayer l;
+  prv_dispatch_menu_setup(&l);
+  menu_layer_set_selected_index(&l, MenuIndex(0, 2), MenuRowAlignNone, false);
+
+  prv_drive(TouchEvent_Touchdown, 100, 200);
+  prv_advance_ms(20);
+  prv_drive(TouchEvent_PositionUpdate, 100, 160);   // pan Started
+  prv_advance_ms(20);
+  prv_drive(TouchEvent_PositionUpdate, 100, 130);   // live scroll
+  cl_assert(menu_layer_touch_is_gesture_target(&l));
+  cl_assert(scroll_layer_get_content_offset(&l.scroll_layer).y < 0);
+  prv_reset_touch_counters();
+
+  // A new navigational Touchdown pre-empts the in-flight pan: the manager resets and unwinds the pan
+  // with no snap. The selection is untouched and no client callback fires.
+  prv_drive(TouchEvent_Touchdown, 100, 200);
+  cl_assert_equal_i(s_will_change_count, 0);
+  cl_assert_equal_i(s_selection_changed_count, 0);
+  cl_assert_equal_i(s_select_click_count, 0);
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 2);   // selection survived the cancel
+  menu_layer_deinit(&l);
+}
+
+// A fast vertical flick scrolls/flings the menu: the unified swipe mask is Left|Right, so a vertical
+// gesture is a pan, never a swipe, and emits no navigation button.
+void test_menu_layer__dispatch_vertical_flick_scrolls_not_swipe(void) {
+  prv_touch_nav_setup();
+  s_bridge.overrides_back = false;
+  MenuLayer l;
+  prv_dispatch_menu_setup(&l);
+  prv_reset_touch_counters();
+
+  prv_drive(TouchEvent_Touchdown, 100, 220);
+  prv_advance_ms(20);
+  prv_drive(TouchEvent_PositionUpdate, 100, 140);   // fast upward move -> pan Started
+  prv_advance_ms(20);
+  prv_drive(TouchEvent_PositionUpdate, 100, 80);    // live scroll
+  prv_drive(TouchEvent_Liftoff, 100, 80);
+  cl_assert(scroll_layer_get_content_offset(&l.scroll_layer).y < 0);   // scrolled by the flick
+  cl_assert_equal_i(s_bridge.emit_count, 0);                           // NOT emitted as a swipe
+  cl_assert_equal_i(s_bridge.pop_count, 0);
+  cl_assert_equal_i(s_select_click_count, 0);
+  menu_layer_deinit(&l);
+}
+
+// A no-trigger gesture (a dead-zone Touchdown with no widget under the finger) leaves the manager
+// idle: the unified set is failed at the latch, so no filtered-out recognizer lingers Possible.
+void test_menu_layer__dispatch_no_trigger_leaves_manager_idle(void) {
+  prv_touch_nav_setup();
+  // Status-bar dead zone, no registered widget -> route Dropped: the bridge set is failed AND the
+  // unified set is failed at latch (the resolver found no migrated widget).
+  prv_drive(TouchEvent_Touchdown, 100, 4);
+  cl_assert_equal_i(s_touch_nav_state.route, TouchNavRoute_Dropped);
+  cl_assert_equal_i(recognizer_get_state(s_touch_nav_state.widget_tap), RecognizerState_Failed);
+  cl_assert_equal_i(recognizer_get_state(s_touch_nav_state.widget_pan), RecognizerState_Failed);
+  cl_assert_equal_i(recognizer_get_state(s_touch_nav_state.widget_swipe), RecognizerState_Failed);
+
+  // Liftoff with nothing triggered returns the manager to idle: no stuck Possible recognizer (wart).
+  prv_drive(TouchEvent_Liftoff, 100, 4);
+  cl_assert_equal_i(s_recognizer_manager.state, RecognizerManagerState_WaitForTouchdown);
 }

@@ -72,7 +72,8 @@ bool touch_nav_enabled(void) {
 typedef struct FakeOps {
   bool animating;
   bool overrides_back;
-  bool bridge_disabled;
+  bool bridge_disabled;         // the top window opted out (window_set_touch_bridge_disabled)
+  bool app_has_raw_subscriber;  // the app installed its own raw touch subscriber
   int pop_count;
   int idle_refresh_count;
   int emit_count;
@@ -83,7 +84,12 @@ static FakeOps s_fake;
 
 static bool prv_is_animating(void *ctx) { return ((FakeOps *)ctx)->animating; }
 static bool prv_top_overrides_back(void *ctx) { return ((FakeOps *)ctx)->overrides_back; }
-static bool prv_top_bridge_disabled(void *ctx) { return ((FakeOps *)ctx)->bridge_disabled; }
+static bool prv_top_bridge_disabled(void *ctx) {
+  // Exercise the real app-task gate helper (window opt-out OR app raw subscriber), exactly as
+  // app_state.c's top_bridge_disabled op does.
+  const FakeOps *f = ctx;
+  return touch_nav_app_bridge_disabled(f->bridge_disabled, f->app_has_raw_subscriber);
+}
 static void prv_pop_top(void *ctx) { ((FakeOps *)ctx)->pop_count++; }
 static void prv_idle_refresh(void *ctx) { ((FakeOps *)ctx)->idle_refresh_count++; }
 static void prv_emit_button(void *ctx, ButtonId button) {
@@ -363,6 +369,90 @@ void test_touch_nav__arbitration_single_gesture_single_emit(void) {
 }
 
 // ---------------------------------------------------------------------------------------------
+// Raw-subscriber arbitration gate: an app that installed its own raw touch subscriber
+// (touch_service_subscribe) must keep its raw handler AND never receive synthesized buttons —
+// touch nav must not change existing runtime behavior for a third-party app. The app-task gate
+// (app_state.c's top_bridge_disabled op) routes such an app to TouchNavRoute_None. Tier-1 native
+// widgets still win before the gate is consulted.
+
+// The pure gate helper: window opt-out OR a genuine app raw subscriber disables the Tier-2 bridge.
+void test_touch_nav__app_bridge_disabled_helper(void) {
+  cl_assert(!touch_nav_app_bridge_disabled(false, false));  // neither -> bridge active (Tier-2)
+  cl_assert(touch_nav_app_bridge_disabled(true, false));    // window opted out -> disabled
+  cl_assert(touch_nav_app_bridge_disabled(false, true));    // app owns raw touch -> disabled
+  cl_assert(touch_nav_app_bridge_disabled(true, true));     // both -> disabled
+}
+
+// (a) A participating app WITH a raw touch subscriber, master pref ON: a full swipe and a tap both
+// synthesize NOTHING (route None), so the app's own raw handler is the only thing that runs.
+void test_touch_nav__raw_subscriber_suppresses_synthesis(void) {
+  s_nav_enabled = true;
+  s_fake.bridge_disabled = false;      // window did NOT call window_set_touch_bridge_disabled
+  s_fake.app_has_raw_subscriber = true;  // but the app called touch_service_subscribe
+
+  prv_dispatch(TouchEvent_Touchdown, 50, 90, false);
+  cl_assert_equal_i(s_state.route, TouchNavRoute_None);
+  prv_dispatch(TouchEvent_Liftoff, 0, 0, false);
+
+  prv_swipe(50, 90, 50, 20);
+  prv_tap(50, 90);
+  cl_assert_equal_i(s_fake.emit_count, 0);
+  cl_assert_equal_i(s_fake.pop_count, 0);
+}
+
+// (b) A participating app WITHOUT a raw subscriber synthesizes as before (Tier-2 unchanged).
+void test_touch_nav__no_raw_subscriber_synthesizes_as_before(void) {
+  s_nav_enabled = true;
+  s_fake.bridge_disabled = false;
+  s_fake.app_has_raw_subscriber = false;
+
+  // A swipe up routes Tier-2 on the Touchdown and completes to exactly one synthesized DOWN.
+  prv_dispatch(TouchEvent_Touchdown, 50, 90, false);
+  cl_assert_equal_i(s_state.route, TouchNavRoute_Tier2);
+  prv_advance_ms(20);
+  prv_dispatch(TouchEvent_PositionUpdate, 50, 55, false);
+  prv_advance_ms(20);
+  prv_dispatch(TouchEvent_PositionUpdate, 50, 20, false);
+  prv_advance_ms(20);
+  prv_dispatch(TouchEvent_Liftoff, 0, 0, false);
+  cl_assert_equal_i(s_fake.emit_count, 1);
+  cl_assert_equal_i(s_fake.last_emit, BUTTON_ID_DOWN);
+}
+
+// (c) A Tier-1 native widget wins before the raw-subscriber gate is ever consulted: even with a raw
+// subscriber installed, the registered widget owns the gesture (Tier-1, not None).
+void test_touch_nav__tier1_wins_over_raw_subscriber_gate(void) {
+  s_fake.app_has_raw_subscriber = true;
+  static TouchNavWidgetNode node;
+  node = (TouchNavWidgetNode){0};
+  touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, &node, &s_child_layer, NULL, NULL);
+  s_active_layer = &s_child_layer;
+
+  prv_dispatch(TouchEvent_Touchdown, 50, 90, false);
+  cl_assert_equal_i(s_state.route, TouchNavRoute_Tier1);
+  cl_assert_equal_i(prv_state(s_state.tap), RecognizerState_Failed);
+  cl_assert_equal_i(prv_state(s_state.pan), RecognizerState_Failed);
+  cl_assert_equal_i(prv_state(s_state.swipe), RecognizerState_Failed);
+
+  touch_nav_registry_remove(&s_state, TouchNavWidgetType_Menu, &node);
+}
+
+// (d) Backlight / nav system-hold alone must NOT count as an app raw subscriber. Those holds live
+// in the touch service layer and the app twin installs into the separate system slot; only
+// touch_service_subscribe sets the raw handler. So with app_has_raw_subscriber=false the bridge
+// stays active and synthesis proceeds — no false suppression.
+void test_touch_nav__system_hold_alone_does_not_suppress(void) {
+  s_nav_enabled = true;
+  s_fake.bridge_disabled = false;
+  s_fake.app_has_raw_subscriber = false;  // twin/backlight/system-hold do not set the raw slot
+  cl_assert(!touch_nav_app_bridge_disabled(false, false));
+
+  prv_swipe(50, 90, 50, 20);
+  cl_assert_equal_i(s_fake.emit_count, 1);
+  cl_assert_equal_i(s_fake.last_emit, BUTTON_ID_DOWN);
+}
+
+// ---------------------------------------------------------------------------------------------
 // Criterion 5: pref OFF → recognizers not activated, bridge synthesizes nothing even with a stale
 // subscription (the state remains subscribed but nav is disabled).
 
@@ -548,7 +638,7 @@ void test_touch_nav__gated_then_navigational(void) {
 void test_touch_nav__tier1_widget_wins(void) {
   static TouchNavWidgetNode node;
   node = (TouchNavWidgetNode){0};
-  touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, &node, &s_child_layer);
+  touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, &node, &s_child_layer, NULL, NULL);
   s_active_layer = &s_child_layer;
 
   prv_dispatch(TouchEvent_Touchdown, 50, 90, false);
@@ -562,8 +652,8 @@ void test_touch_nav__tier1_widget_wins(void) {
 void test_touch_nav__registry_dedup_and_remove(void) {
   static TouchNavWidgetNode node;
   node = (TouchNavWidgetNode){0};
-  touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, &node, &s_child_layer);
-  touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, &node, &s_child_layer);
+  touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, &node, &s_child_layer, NULL, NULL);
+  touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, &node, &s_child_layer, NULL, NULL);
   // Sole widget only if exactly one is registered — proves the re-add did not double-insert.
   s_active_layer = &s_child_layer;
   prv_dispatch(TouchEvent_Touchdown, 50, 90, false);
@@ -598,7 +688,7 @@ void test_touch_nav__dead_zone_dropped(void) {
 void test_touch_nav__dead_zone_sole_widget_routes_tier1(void) {
   static TouchNavWidgetNode node;
   node = (TouchNavWidgetNode){0};
-  touch_nav_registry_add(&s_state, TouchNavWidgetType_Swap, &node, &s_child_layer);
+  touch_nav_registry_add(&s_state, TouchNavWidgetType_Swap, &node, &s_child_layer, NULL, NULL);
   s_active_layer = NULL;  // the parent walk finds nothing, so the dead-zone branch runs
 
   prv_dispatch(TouchEvent_Touchdown, 50, 4 /* inside the dead zone */, false);
@@ -800,4 +890,159 @@ void test_touch_nav__disable_transaction_order(void) {
   cl_assert_equal_i(s_steps[2], Step_KernelCancelResetUnsub);
   cl_assert_equal_i(s_steps[3], Step_AppUnsubscribe);
   cl_assert_equal_i(s_steps[4], Step_ReleaseHold);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Unified widget set: the can_start / declined path (round-3 F1) and gated-pre-emption pan_cancel.
+// A fake migrated widget records every vtable call through counters so the exact call sequence is
+// observable end to end through touch_nav_dispatch.
+
+typedef struct FakeWidget {
+  bool can_start_result;
+  int can_start_calls;
+  int pan_started_calls;
+  int get_base_offset_calls;
+  int pan_update_calls;
+  int pan_snap_calls;
+  int pan_cancel_calls;
+  int tap_calls;
+  int swipe_calls;
+  GPoint base;
+} FakeWidget;
+
+static FakeWidget s_widget;
+
+static bool prv_w_can_start(void *w) {
+  FakeWidget *fw = w;
+  fw->can_start_calls++;
+  return fw->can_start_result;
+}
+static void prv_w_pan_started(void *w) { ((FakeWidget *)w)->pan_started_calls++; }
+static GPointReturn prv_w_get_base_offset(void *w) {
+  FakeWidget *fw = w;
+  fw->get_base_offset_calls++;
+  return fw->base;
+}
+static void prv_w_pan_update(void *w, GPoint base, GPoint delta) {
+  ((FakeWidget *)w)->pan_update_calls++;
+}
+static void prv_w_pan_snap(void *w, GPoint base, GPoint final_delta) {
+  ((FakeWidget *)w)->pan_snap_calls++;
+}
+static void prv_w_pan_cancel(void *w) { ((FakeWidget *)w)->pan_cancel_calls++; }
+static void prv_w_tap(void *w, GPoint pt) { ((FakeWidget *)w)->tap_calls++; }
+static void prv_w_swipe(void *w, SwipeDirection dir) { ((FakeWidget *)w)->swipe_calls++; }
+
+static const TouchNavWidgetOps s_fake_widget_ops = {
+  .can_start = prv_w_can_start,
+  .pan_started = prv_w_pan_started,
+  .get_base_offset = prv_w_get_base_offset,
+  .pan_update = prv_w_pan_update,
+  .pan_snap = prv_w_pan_snap,
+  .pan_cancel = prv_w_pan_cancel,
+  .tap = prv_w_tap,
+  .swipe = prv_w_swipe,
+};
+
+// Register the fake widget as a migrated (ops-bearing) node under the touched layer.
+static void prv_register_fake_widget(TouchNavWidgetNode *node) {
+  s_widget = (FakeWidget){0};
+  *node = (TouchNavWidgetNode){0};
+  touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, node, &s_child_layer, &s_fake_widget_ops,
+                         &s_widget);
+  s_active_layer = &s_child_layer;
+}
+
+// can_start returning false declines the WHOLE gesture: no pan_started/get_base_offset, the unified
+// pan is NOT set_failed/cancelled, later events drive nothing and never re-latch, and `declined`
+// resets on the next Touchdown so a following can_start=true gesture drives the widget normally.
+void test_touch_nav__widget_can_start_decline_then_accept(void) {
+  static TouchNavWidgetNode node;
+  prv_register_fake_widget(&node);
+
+  // Gesture 1: the widget refuses to start.
+  s_widget.can_start_result = false;
+  prv_dispatch(TouchEvent_Touchdown, 50, 90, false);
+  cl_assert_equal_i(s_state.route, TouchNavRoute_Tier1);
+  cl_assert_equal_p(s_state.latched_target, &node);
+  cl_assert(!s_state.declined);
+
+  prv_advance_ms(20);
+  prv_dispatch(TouchEvent_PositionUpdate, 50, 55, false);  // 35px up -> pan Starts -> can_start()
+  cl_assert(s_state.declined);
+  cl_assert_equal_i(s_widget.can_start_calls, 1);
+  // (a) no set_failed / cancel of the unified pan: it is still live (Started/Updated), not Failed.
+  cl_assert(prv_state(s_state.widget_pan) != RecognizerState_Failed);
+  // (b) no pan_started / get_base_offset ran (declined before either).
+  cl_assert_equal_i(s_widget.pan_started_calls, 0);
+  cl_assert_equal_i(s_widget.get_base_offset_calls, 0);
+
+  prv_advance_ms(20);
+  prv_dispatch(TouchEvent_PositionUpdate, 50, 25, false);  // Updated: gated by `declined`
+  // (b) no pan_update; (c) the target is NOT re-resolved/re-latched (no teleport).
+  cl_assert_equal_i(s_widget.pan_update_calls, 0);
+  cl_assert_equal_p(s_state.latched_target, &node);
+
+  prv_dispatch(TouchEvent_Liftoff, 0, 0, false);           // Completed: dropped
+  cl_assert_equal_i(s_widget.pan_snap_calls, 0);
+  cl_assert_equal_i(s_widget.pan_cancel_calls, 0);
+  cl_assert_equal_p(s_state.latched_target, NULL);         // cleared on completion
+  cl_assert(!s_state.declined);                            // reset for the next gesture
+
+  // (d) Gesture 2: can_start now accepts -> a full pan drives the widget.
+  s_widget.can_start_result = true;
+  s_widget.base = GPoint(0, -5);
+  prv_dispatch(TouchEvent_Touchdown, 50, 90, false);
+  cl_assert(!s_state.declined);
+  prv_advance_ms(20);
+  prv_dispatch(TouchEvent_PositionUpdate, 50, 55, false);  // pan Starts -> accepted
+  cl_assert_equal_i(s_widget.can_start_calls, 2);
+  cl_assert_equal_i(s_widget.pan_started_calls, 1);
+  cl_assert_equal_i(s_widget.get_base_offset_calls, 1);
+  prv_advance_ms(20);
+  prv_dispatch(TouchEvent_PositionUpdate, 50, 25, false);  // Updated -> live pan_update
+  cl_assert_equal_i(s_widget.pan_update_calls, 1);
+  prv_dispatch(TouchEvent_Liftoff, 0, 0, false);           // Completed -> pan_snap
+  cl_assert_equal_i(s_widget.pan_snap_calls, 1);
+
+  touch_nav_registry_remove(&s_state, TouchNavWidgetType_Menu, &node);
+}
+
+// A non-navigational (wake / DnD) Touchdown pre-empting an in-flight pan drops the gesture cleanly:
+// the latch and `declined` are cleared and NO snap runs, so the pan is not committed. It does NOT run
+// ops->pan_cancel -- the pan recognizer's cancel op returns false (pan.c) and it never
+// self-transitions to Cancelled, so cancel_and_reset delivers no Cancelled event to the unified pan;
+// this matches the per-widget behaviour before the refactor (Ф1 is no-behaviour-change). The next
+// gesture still drives the widget, proving routing recovered.
+void test_touch_nav__gated_preemption_drops_active_pan(void) {
+  static TouchNavWidgetNode node;
+  prv_register_fake_widget(&node);
+  s_widget.can_start_result = true;
+
+  prv_dispatch(TouchEvent_Touchdown, 50, 90, false);
+  prv_advance_ms(20);
+  prv_dispatch(TouchEvent_PositionUpdate, 50, 55, false);  // pan Started, widget is the live target
+  cl_assert_equal_i(s_widget.pan_started_calls, 1);
+  cl_assert_equal_p(s_state.latched_target, &node);
+
+  // Gated pre-emption mid-pan: the gesture is unwound with no snap and no (unreachable) pan_cancel.
+  prv_dispatch(TouchEvent_Touchdown, 50, 90, true /* non_navigational */);
+  cl_assert_equal_i(s_widget.pan_snap_calls, 0);
+  cl_assert_equal_i(s_widget.pan_cancel_calls, 0);
+  cl_assert_equal_p(s_state.latched_target, NULL);  // latch cleared
+  cl_assert(!s_state.declined);
+  cl_assert_equal_i(s_recognizer_manager.state, RecognizerManagerState_WaitForTouchdown);
+
+  // Routing recovered: a fresh gesture drives the widget normally.
+  prv_dispatch(TouchEvent_Touchdown, 50, 90, false);
+  prv_advance_ms(20);
+  prv_dispatch(TouchEvent_PositionUpdate, 50, 55, false);  // pan Started again
+  cl_assert_equal_i(s_widget.pan_started_calls, 2);
+  prv_advance_ms(20);
+  prv_dispatch(TouchEvent_PositionUpdate, 50, 25, false);  // Updated -> live pan
+  cl_assert_equal_i(s_widget.pan_update_calls, 1);
+  prv_dispatch(TouchEvent_Liftoff, 0, 0, false);
+  cl_assert_equal_i(s_widget.pan_snap_calls, 1);
+
+  touch_nav_registry_remove(&s_state, TouchNavWidgetType_Menu, &node);
 }

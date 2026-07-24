@@ -398,16 +398,18 @@ typedef struct MenuLayer {
 
   //! @internal
   //! Intrusive Tier-1 touch-navigation registry node (layout-compatible with
-  //! \ref TouchNavWidgetNode: two pointers, \c next then \c layer). Embedding it here lets a
-  //! MenuLayer be registered as a Tier-1 touch widget without growing its size: the eight bytes
-  //! come out of \ref padding below. Declared unconditionally (not under \c CONFIG_TOUCH) so the
-  //! struct layout — and therefore \c sizeof(MenuLayer) — is identical on every board. It sits right
-  //! after the pointer-aligned \c animation struct so it introduces no alignment padding of its own.
-  //! A build-time assert in menu_layer.c keeps this node's layout in sync with \ref
-  //! TouchNavWidgetNode; the applib_malloc size check is what keeps \c sizeof(MenuLayer) unchanged.
+  //! \ref TouchNavWidgetNode: four pointers — \c next, \c layer, \c ops, \c widget). Embedding it
+  //! here lets a MenuLayer be registered as a Tier-1 touch widget and driven through its apply
+  //! vtable. Declared unconditionally (not under \c CONFIG_TOUCH) so the struct layout — and
+  //! therefore \c sizeof(MenuLayer) — is identical on every board. It sits right after the
+  //! pointer-aligned \c animation struct so it introduces no alignment padding of its own. A
+  //! build-time assert in menu_layer.c keeps this node's layout in sync with \ref TouchNavWidgetNode;
+  //! the applib_malloc size check tracks the (grown) \c sizeof(MenuLayer).
   struct {
     void *next;
     void *layer;
+    void *ops;
+    void *widget;
   } touch_nav_node;
 
   //! @internal

@@ -1536,16 +1536,14 @@ void menu_layer_set_scroll_vibe_on_blocked(MenuLayer *menu_layer, bool scroll_vi
 //
 // A MenuLayer registers itself as a Tier-1 touch widget in menu_layer_init() (never the legacy-2.x
 // path, which falls back to the Tier-2 button bridge). The recognizers and gesture state are NOT
-// owned per-widget: a single (tap, pan, swipe) set lives per task and drives whichever registered
-// MenuLayer the finger lands on. On a Tier-1 route the per-task system set is failed by the bridge,
-// so this set wins the gesture; on any other route this set resolves no target and stays inert.
+// owned per-widget: the unified widget (tap, pan, swipe) set, owned by TouchNavState, drives
+// whichever migrated widget the finger lands on through a per-node apply vtable. A MenuLayer
+// supplies that vtable (s_menu_touch_nav_ops) at registration; the apply functions below stay the
+// public per-menu gesture surface (and the unit-test entry points).
 //
 // Live scrolling happens on pan Updated. The selection is frozen for the whole pan (cell height can
 // depend on the selection, so moving it would reflow the content under the finger) and only changes
 // on liftoff, through the full selection_will_change contract.
-
-// Minimum wall-clock spacing between live-scroll updates applied from pan Updated events.
-#define PAN_UPDATE_MIN_INTERVAL_MS 16
 
 // Two independent taps within this window on the same menu count as a "double tap" and activate the
 // last tap-selected row (there is no dedicated double-tap recognizer). CALIBRATION: ~300ms is the
@@ -1555,45 +1553,23 @@ void menu_layer_set_scroll_vibe_on_blocked(MenuLayer *menu_layer, bool scroll_vi
 _Static_assert(sizeof(((MenuLayer *)0)->touch_nav_node) == sizeof(TouchNavWidgetNode),
                "MenuLayer touch_nav_node must match TouchNavWidgetNode layout");
 
-// Per-task singleton: recognizer set + gesture state. Selected by task so the app and the kernel
-// (modal) twins never share state. Slot 0 = KernelMain/other, slot 1 = the app task.
-typedef struct MenuTouchNav {
-  bool initialized;
-  RecognizerManager *manager;   //!< Manager the recognizers are attached to (this task's).
-  MenuLayer *target;            //!< MenuLayer currently driving the gesture, or NULL when idle.
-  GPoint base;                  //!< Content offset captured when the pan Started.
-  RtcTicks last_update_ticks;   //!< Throttle stamp for live-scroll updates.
-  _Alignas(void *) uint8_t tap_storage[TAP_RECOGNIZER_STATIC_SIZE];
-  _Alignas(void *) uint8_t pan_storage[PAN_RECOGNIZER_STATIC_SIZE];
-  _Alignas(void *) uint8_t swipe_storage[SWIPE_RECOGNIZER_STATIC_SIZE];
-  Recognizer *tap;
-  Recognizer *pan;
-  Recognizer *swipe;
-} MenuTouchNav;
-
-static MenuTouchNav s_menu_touch_nav[2];
-
 static bool prv_is_app_task(void) {
   return pebble_task_get_current() == PebbleTask_App;
-}
-
-static MenuTouchNav *prv_task_menu_touch_nav(void) {
-  return &s_menu_touch_nav[prv_is_app_task() ? 1 : 0];
 }
 
 static TouchNavState *prv_task_touch_nav_state(void) {
   return prv_is_app_task() ? app_state_get_touch_nav_state() : modal_manager_get_touch_nav_state();
 }
 
-// Test seams (not part of the public API; declared in menu_layer_private.h under CONFIG_TOUCH).
+// Test seam (declared in menu_layer_private.h under CONFIG_TOUCH). The unified widget set holds no
+// per-task singleton to reset; the touch-nav state is owned by TouchNavState, so this is a no-op
+// kept for source compatibility with tests that call it in their setup.
 void menu_layer_touch_nav_reset_all(void) {
-  for (unsigned i = 0; i < ARRAY_LENGTH(s_menu_touch_nav); i++) {
-    s_menu_touch_nav[i] = (MenuTouchNav){0};
-  }
 }
 
 bool menu_layer_touch_is_gesture_target(const MenuLayer *menu_layer) {
-  return prv_task_menu_touch_nav()->target == menu_layer;
+  const TouchNavState *state = prv_task_touch_nav_state();
+  return state && state->latched_target && state->latched_target->widget == menu_layer;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1819,93 +1795,54 @@ void menu_layer_touch_handle_swipe(MenuLayer *menu_layer, SwipeDirection directi
 }
 
 // ---------------------------------------------------------------------------------------------
-// Recognizer wiring
+// Unified widget-set ops
 
-// Resolve the registered MenuLayer under the manager's active layer, or NULL if the current gesture
-// is not on a menu. Walks parents from the active layer and matches against the menu registry.
-static MenuLayer *prv_menu_touch_resolve_target(MenuTouchNav *mtn) {
-  if (!mtn->manager) {
-    return NULL;
-  }
-  TouchNavState *state = prv_task_touch_nav_state();
-  if (!state) {
-    return NULL;
-  }
-  for (Layer *layer = mtn->manager->active_layer; layer; layer = layer->parent) {
-    for (TouchNavWidgetNode *node = state->menu_head; node; node = node->next) {
-      if (node->layer == layer) {
-        // The registry node's layer is the MenuLayer's root (scroll) layer, which is the first
-        // member of MenuLayer, so the layer pointer is also the MenuLayer pointer.
-        return (MenuLayer *)layer;
-      }
-    }
-  }
-  return NULL;
+// Thin void*->MenuLayer* wrappers over the public apply functions. The unified widget set (owned by
+// TouchNavState) drives the menu through these; direct assignment of the apply functions would not
+// compile because their first parameter is MenuLayer*, not void*.
+
+static void prv_menu_ops_pan_started(void *w) {
+  // Touchdown-equivalent for the pan: stop any in-flight selection animation so the finger takes
+  // over. The base offset is latched by the core via get_base_offset immediately after.
+  prv_cancel_selection_animation((MenuLayer *)w);
 }
 
-static MenuLayer *prv_menu_touch_ensure_target(MenuTouchNav *mtn) {
-  if (!mtn->target) {
-    mtn->target = prv_menu_touch_resolve_target(mtn);
-  }
-  return mtn->target;
+static GPointReturn prv_menu_ops_get_base_offset(void *w) {
+  return scroll_layer_get_content_offset(&((MenuLayer *)w)->scroll_layer);
 }
 
-static void prv_menu_touch_recognizer_event(const Recognizer *recognizer, RecognizerEvent event) {
-  MenuTouchNav *mtn = recognizer_get_user_data(recognizer);
-  if (!mtn) {
-    return;
-  }
-
-  switch (event) {
-    case RecognizerEvent_Started: {
-      MenuLayer *target = prv_menu_touch_ensure_target(mtn);
-      if (target && recognizer == mtn->pan) {
-        // Touchdown-equivalent for the pan: stop any selection animation and latch the base offset.
-        prv_cancel_selection_animation(target);
-        mtn->base = scroll_layer_get_content_offset(&target->scroll_layer);
-        mtn->last_update_ticks = 0;
-      }
-      break;
-    }
-    case RecognizerEvent_Updated: {
-      MenuLayer *target = prv_menu_touch_ensure_target(mtn);
-      if (target && recognizer == mtn->pan) {
-        const RtcTicks now = rtc_get_ticks();
-        const RtcTicks min_ticks = (RtcTicks)PAN_UPDATE_MIN_INTERVAL_MS * RTC_TICKS_HZ / 1000;
-        if (now - mtn->last_update_ticks >= min_ticks) {
-          mtn->last_update_ticks = now;
-          menu_layer_touch_handle_pan_update(
-              target, mtn->base, pan_recognizer_get_delta_since_start((Recognizer *)recognizer));
-        }
-      }
-      break;
-    }
-    case RecognizerEvent_Completed: {
-      MenuLayer *target = prv_menu_touch_ensure_target(mtn);
-      if (target) {
-        if (recognizer == mtn->pan) {
-          menu_layer_touch_handle_snap(
-              target, mtn->base, pan_recognizer_get_delta_since_start((Recognizer *)recognizer));
-        } else if (recognizer == mtn->tap) {
-          menu_layer_touch_handle_tap(target, tap_recognizer_get_tap_point((Recognizer *)recognizer));
-        } else if (recognizer == mtn->swipe) {
-          menu_layer_touch_handle_swipe(target,
-                                        swipe_recognizer_get_direction((Recognizer *)recognizer));
-        }
-      }
-      mtn->target = NULL;
-      break;
-    }
-    case RecognizerEvent_Cancelled: {
-      MenuLayer *target = mtn->target;
-      if (target && recognizer == mtn->pan) {
-        menu_layer_touch_handle_cancel(target);
-      }
-      mtn->target = NULL;
-      break;
-    }
-  }
+static void prv_menu_ops_pan_update(void *w, GPoint base, GPoint delta) {
+  menu_layer_touch_handle_pan_update((MenuLayer *)w, base, delta);
 }
+
+static void prv_menu_ops_pan_snap(void *w, GPoint base, GPoint final_delta) {
+  menu_layer_touch_handle_snap((MenuLayer *)w, base, final_delta);
+}
+
+static void prv_menu_ops_pan_cancel(void *w) {
+  menu_layer_touch_handle_cancel((MenuLayer *)w);
+}
+
+static void prv_menu_ops_tap(void *w, GPoint point_on_screen) {
+  // Keeps the full selection_will_change veto/redirect/double-tap contract.
+  menu_layer_touch_handle_tap((MenuLayer *)w, point_on_screen);
+}
+
+static void prv_menu_ops_swipe(void *w, SwipeDirection dir) {
+  menu_layer_touch_handle_swipe((MenuLayer *)w, dir);
+}
+
+// can_start is NULL: a MenuLayer is always ready to start a pan.
+static const TouchNavWidgetOps s_menu_touch_nav_ops = {
+  .can_start = NULL,
+  .pan_started = prv_menu_ops_pan_started,
+  .get_base_offset = prv_menu_ops_get_base_offset,
+  .pan_update = prv_menu_ops_pan_update,
+  .pan_snap = prv_menu_ops_pan_snap,
+  .pan_cancel = prv_menu_ops_pan_cancel,
+  .tap = prv_menu_ops_tap,
+  .swipe = prv_menu_ops_swipe,
+};
 
 static void prv_menu_touch_nav_register(MenuLayer *menu_layer) {
   // The legacy-2.x MenuLayer path is not a Tier-1 widget; it falls back to the Tier-2 bridge.
@@ -1917,58 +1854,31 @@ static void prv_menu_touch_nav_register(MenuLayer *menu_layer) {
     return;
   }
 
-  // The registry add dedups by address and restores the node's layer, so a repeated init on the
-  // same menu (no intervening deinit) keeps routing to it. The shared recognizer set is attached
-  // the first time any menu on this task registers and stays attached until the registry drains
-  // (see the deregister path).
+  // Register the menu as a migrated Tier-1 widget: the unified widget set drives it through
+  // s_menu_touch_nav_ops. The registry add dedups by address and re-applies the ops/layer, so a
+  // repeated init on the same menu (no intervening deinit) keeps routing to and driving it.
   Layer *layer = menu_layer_get_layer(menu_layer);
   touch_nav_registry_add(state, TouchNavWidgetType_Menu,
-                         (TouchNavWidgetNode *)&menu_layer->touch_nav_node, layer);
-
-  MenuTouchNav *mtn = prv_task_menu_touch_nav();
-  if (!mtn->initialized) {
-    mtn->manager = state->manager;
-    mtn->target = NULL;
-    mtn->tap = tap_recognizer_init_static(mtn->tap_storage, prv_menu_touch_recognizer_event, mtn);
-    mtn->pan = pan_recognizer_init_static(mtn->pan_storage, prv_menu_touch_recognizer_event, mtn,
-                                          PanAxis_Vertical);
-    mtn->swipe = swipe_recognizer_init_static(mtn->swipe_storage, prv_menu_touch_recognizer_event,
-                                              mtn, SwipeDirection_Left | SwipeDirection_Right);
-    recognizer_add_to_list(mtn->tap, state->manager->global_list);
-    recognizer_add_to_list(mtn->pan, state->manager->global_list);
-    recognizer_add_to_list(mtn->swipe, state->manager->global_list);
-    mtn->initialized = true;
-  }
+                         (TouchNavWidgetNode *)&menu_layer->touch_nav_node, layer,
+                         &s_menu_touch_nav_ops, menu_layer);
 }
 
 static void prv_menu_touch_nav_deregister(MenuLayer *menu_layer) {
-  MenuTouchNav *mtn = prv_task_menu_touch_nav();
-  if (mtn->target == menu_layer) {
-    // This widget is the live gesture target and is about to be destroyed under a live window:
-    // cancel the gesture with NO client callbacks so a snap cannot reach freed client state. Clear
-    // the target first so the resulting Cancelled event does not re-enter a handler on this widget.
-    mtn->target = NULL;
-    if (mtn->manager) {
-      recognizer_manager_cancel_and_reset(mtn->manager);
-    }
-  }
-
   TouchNavState *state = prv_task_touch_nav_state();
   if (!state) {
     return;
   }
+  // If this menu is the live gesture target and is about to be destroyed under a live window, cancel
+  // the gesture with NO client callbacks so a snap cannot reach freed client state.
+  // touch_nav_registry_remove clears the latched target BEFORE we cancel (its UAF hook), so the
+  // resulting Cancelled dispatch finds no target and re-enters nothing.
+  const bool was_target = menu_layer_touch_is_gesture_target(menu_layer);
   // Idempotent: removing a node that is not in the registry (double deinit, or a never-registered
   // legacy-2.x menu) is a safe no-op.
   touch_nav_registry_remove(state, TouchNavWidgetType_Menu,
                             (TouchNavWidgetNode *)&menu_layer->touch_nav_node);
-
-  // Detach the shared recognizer set once no menu remains registered on this task.
-  if (state->menu_head == NULL && mtn->initialized && mtn->manager && mtn->manager->global_list) {
-    recognizer_remove_from_list(mtn->tap, mtn->manager->global_list);
-    recognizer_remove_from_list(mtn->pan, mtn->manager->global_list);
-    recognizer_remove_from_list(mtn->swipe, mtn->manager->global_list);
-    mtn->initialized = false;
-    mtn->manager = NULL;
+  if (was_target && state->manager) {
+    recognizer_manager_cancel_and_reset(state->manager);
   }
 }
 #endif  // CONFIG_TOUCH

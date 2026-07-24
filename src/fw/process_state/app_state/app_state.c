@@ -199,7 +199,14 @@ static bool prv_app_touch_nav_top_overrides_back(void *ctx) {
 
 static bool prv_app_touch_nav_top_bridge_disabled(void *ctx) {
   Window *top = app_window_stack_get_top_window();
-  return top && top->touch_bridge_disabled;
+  const bool window_opt_out = top && top->touch_bridge_disabled;
+  // The raw slot reflects only a genuine app raw subscription (touch_service_subscribe): the app
+  // twin installs into the separate system slot, and the backlight / nav system-hold live in the
+  // touch service layer, not this slot. So a set raw_handler means the app owns touch and must not
+  // also receive synthesized buttons.
+  const TouchServiceState *touch_state = app_state_get_touch_service_state();
+  const bool app_has_raw_subscriber = touch_state && (touch_state->raw_handler != NULL);
+  return touch_nav_app_bridge_disabled(window_opt_out, app_has_raw_subscriber);
 }
 
 static void prv_app_touch_nav_pop_top(void *ctx) {

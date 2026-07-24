@@ -12,6 +12,7 @@
 #include "applib/graphics/gtypes.h"
 #include "applib/ui/layer.h"
 #include "pbl/drivers/button_id.h"
+#include "pbl/drivers/rtc.h"
 #include "pbl/services/touch/touch_event.h"
 
 #include <stdbool.h>
@@ -52,11 +53,41 @@ typedef enum TouchNavWidgetType {
   TouchNavWidgetType_Scroll,
 } TouchNavWidgetType;
 
-//! 8-byte intrusive registry node embedded in a Tier-1 widget (no size growth on the widget).
-//! `layer` identifies the widget for the parent-walk match; `next` links the registry list.
+//! Polymorphic apply-logic for a migrated Tier-1 widget. The unified widget recognizer set (see
+//! \ref TouchNavState) drives whichever registered widget the finger lands on entirely through this
+//! vtable, so the touch-nav core (in applib/ui/recognizer/) never casts to a concrete widget type
+//! and never depends on services/. `w` is the opaque widget pointer stored in the node.
+typedef struct TouchNavWidgetOps {
+  //! Optional readiness gate consulted before a pan Starts. NULL means always ready. When it returns
+  //! false the gesture is declined for its whole lifetime (no pan_started/get_base_offset is called).
+  bool (*can_start)(void *w);
+  //! Pan Started: cancel any of the widget's own running animation so the finger takes over.
+  void (*pan_started)(void *w);
+  //! @return the widget's content offset at pan Start, latched as the base for the whole gesture.
+  //! Uses \ref GPointReturn (a plain alias for GPoint) so the `GPoint (*` here does not collide with
+  //! the function-like \c GPoint(x, y) constructor macro.
+  GPointReturn (*get_base_offset)(void *w);
+  //! Live pan: apply `base + delta` to the widget's content offset (throttled by the core).
+  void (*pan_update)(void *w, GPoint base, GPoint delta);
+  //! Liftoff after a pan: settle the final (unthrottled) offset.
+  void (*pan_snap)(void *w, GPoint base, GPoint final_delta);
+  //! A pan cancelled mid-gesture (e.g. the widget is torn down): the core clears its latch first.
+  void (*pan_cancel)(void *w);
+  //! A tap completed on the widget. NULL means the widget has no tap action and the tap is dropped.
+  void (*tap)(void *w, GPoint point_on_screen);
+  //! A horizontal swipe completed. Called only for SwipeDirection_Left / SwipeDirection_Right.
+  void (*swipe)(void *w, SwipeDirection dir);
+} TouchNavWidgetOps;
+
+//! Intrusive registry node embedded by value in a Tier-1 widget. `layer` identifies the widget for
+//! the parent-walk match; `next` links the registry list. A migrated widget also supplies `ops` (its
+//! apply-vtable) and `widget` (its opaque self pointer) so the unified widget set can drive it; an
+//! un-migrated widget leaves `ops`/`widget` NULL and is driven by its own recognizer set instead.
 typedef struct TouchNavWidgetNode {
   struct TouchNavWidgetNode *next;
   struct Layer *layer;
+  const TouchNavWidgetOps *ops;
+  void *widget;
 } TouchNavWidgetNode;
 
 //! Snapshot of the foreground ActionBarLayer, published from applib via a syscall on
@@ -117,10 +148,30 @@ typedef struct TouchNavState {
   Recognizer *pan;
   Recognizer *swipe;
 
+  //! The unified widget (tap, pan, swipe) recognizer set, by value. One set per twin drives every
+  //! migrated Tier-1 widget through its \ref TouchNavWidgetOps vtable; the set is scoped by a filter
+  //! that only matches a Touchdown resolving to a migrated (ops-bearing) widget.
+  _Alignas(void *) uint8_t widget_tap_storage[TAP_RECOGNIZER_STATIC_SIZE];
+  _Alignas(void *) uint8_t widget_pan_storage[PAN_RECOGNIZER_STATIC_SIZE];
+  _Alignas(void *) uint8_t widget_swipe_storage[SWIPE_RECOGNIZER_STATIC_SIZE];
+  Recognizer *widget_tap;
+  Recognizer *widget_pan;
+  Recognizer *widget_swipe;
+
   //! Tier-1 widget registry heads; the type is implied by which head a node hangs off.
   TouchNavWidgetNode *menu_head;
   TouchNavWidgetNode *swap_head;
   TouchNavWidgetNode *scroll_head;
+
+  //! Per-gesture state for the unified widget set. `latched_target` is the migrated widget node the
+  //! gesture is bound to (resolved on Touchdown, re-validated as a weak ref on every later event);
+  //! `gesture_base` is the widget content offset latched on pan Start; `last_update_ticks` throttles
+  //! live pan updates; `declined` is set when `can_start` refused the gesture, gating every later
+  //! vtable call until the gesture ends.
+  TouchNavWidgetNode *latched_target;
+  GPoint gesture_base;
+  RtcTicks last_update_ticks;
+  bool declined;
 
   //! Route latched on the most recent Touchdown.
   TouchNavRoute route;
@@ -171,9 +222,12 @@ void touch_nav_set_action_bar(TouchNavState *state, const GRect *frame, uint8_t 
 ButtonId touch_nav_action_bar_zone_button(const TouchNavActionBar *bar, GPoint point);
 
 //! Register a Tier-1 widget node under the given registry. Dedup-by-address (a re-add WARNs and is
-//! a no-op). Robust to a node zeroed by the widget's *_init.
+//! a no-op). Robust to a node zeroed by the widget's *_init. \a ops and \a widget are the migrated
+//! widget's apply-vtable and opaque self pointer (both NULL for an un-migrated widget still driven
+//! by its own recognizer set); they are re-applied on a re-add so an init-without-deinit keeps
+//! routing to the widget.
 void touch_nav_registry_add(TouchNavState *state, TouchNavWidgetType type, TouchNavWidgetNode *node,
-                            struct Layer *layer);
+                            struct Layer *layer, const TouchNavWidgetOps *ops, void *widget);
 
 //! Remove a Tier-1 widget node from its registry by predecessor traversal. A node that is not
 //! present (e.g. zeroed by *_init and never added) is a safe no-op.
@@ -215,6 +269,15 @@ void touch_nav_transaction_apply(const TouchNavTxnOps *ops, bool enable);
 //! third-party app never gets touch nav merely because the master pref is on. Factored here (out of
 //! app_state.c) so the gate is unit-testable without the kernel app-state singleton.
 bool touch_nav_app_twin_active(bool pref_enabled, bool participating);
+
+//! Gate for the app-task Tier-2 bridge (feeds the \ref TouchNavOps top_bridge_disabled op). Reports
+//! the bridge as disabled -- routing the gesture to \ref TouchNavRoute_None so NO button is
+//! synthesized -- when the top window opted out (\a window_opt_out) OR the app installed its own
+//! raw touch subscriber (\a app_has_raw_subscriber, via touch_service_subscribe). An app that
+//! handles raw touch itself must never also receive synthesized button clicks: that would change
+//! existing runtime behavior for a third-party app. Factored here (out of app_state.c) so it is
+//! unit-testable without the kernel app-state singleton.
+bool touch_nav_app_bridge_disabled(bool window_opt_out, bool app_has_raw_subscriber);
 
 //! Concrete effects of the app-task touch-nav twin subscription. The owning task provides these so
 //! the subscribe/reconcile state machine is unit-testable independently of the kernel app-state
