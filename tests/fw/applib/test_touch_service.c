@@ -61,6 +61,10 @@ bool sys_touch_service_is_enabled(void) {
   return true;
 }
 
+void sys_app_touch_navigation_enable(bool enable) {
+  (void)enable;
+}
+
 // Handler bookkeeping
 //////////////////////////////////////////
 typedef struct HandlerRecord {

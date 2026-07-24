@@ -4,7 +4,7 @@
               "You should also make sure you are obeying our API design guidelines:",
               "https://pebbletechnology.atlassian.net/wiki/display/DEV/SDK+API+Design+Guidelines"
             ],
-  "revision" : "106",
+  "revision" : "107",
   "version" : "2.0",
   "files": [
     "include/pbl/drivers/ambient_light.h",
@@ -624,6 +624,10 @@
                   "type": "function",
                   "name": "touch_service_is_enabled",
                   "addedRevision": "95"
+                }, {
+                  "type": "function",
+                  "name": "app_touch_navigation_enable",
+                  "addedRevision": "108"
                 }
               ]
             }, {

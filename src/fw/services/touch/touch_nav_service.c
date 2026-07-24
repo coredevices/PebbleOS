@@ -47,6 +47,16 @@ DEFINE_SYSCALL(void, sys_touch_set_action_bar, const GRect *frame, uint8_t icon_
   touch_nav_set_action_bar(state, frame ? &local_frame : NULL, icon_mask);
 }
 
+// --- App opt-in (applib app_touch_navigation_enable -> app-task participation) -----------------
+
+DEFINE_SYSCALL(void, sys_app_touch_navigation_enable, bool enable) {
+  // App-facing opt-in: only the app task has a per-app participation flag / nav twin to reconcile.
+  if (pebble_task_get_current() != PebbleTask_App) {
+    return;
+  }
+  app_touch_nav_set_participating(enable);
+}
+
 // --- KernelMain-bound effects -----------------------------------------------------------------
 
 static void prv_kernel_subscribe_cb(void *unused) {

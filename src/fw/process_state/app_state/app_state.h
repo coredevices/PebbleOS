@@ -144,6 +144,12 @@ void app_touch_nav_subscribe(void);
 //! Unsubscribe the app task's nav dispatcher and cancel any in-flight gesture. Runs on the app task.
 void app_touch_nav_unsubscribe(void);
 
+//! Privileged setter behind the app_touch_navigation_enable() SDK call (invoked via the
+//! sys_app_touch_navigation_enable syscall). Sets this app's touch-nav participation and reconciles
+//! the app twin's subscription with the master pref (subscribe when enabling with the pref on,
+//! unsubscribe when disabling). Idempotent. Runs on the app task.
+void app_touch_nav_set_participating(bool enable);
+
 JsRuntimeContext *app_state_get_js_runtime_context(void);
 
 uint8_t *app_state_get_js_runtime_context_buffer(void);

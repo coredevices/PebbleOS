@@ -26,3 +26,11 @@ void touch_service_unsubscribe(void);
 //! disabled system-wide (future feature). Apps can poll this (for example on
 //! window appear) to avoid looking broken when touch is unavailable.
 bool touch_service_is_enabled(void);
+
+//! Opt this app into (or out of) touch navigation: the system gesture bridge that maps
+//! swipes/taps on a MenuLayer/ScrollLayer to button presses. Third-party apps are opt-out by
+//! default and receive no touch navigation even when the user has enabled it system-wide; call
+//! this with \a enable true to participate. Takes effect immediately when touch navigation is
+//! enabled system-wide, otherwise once the user enables it.
+//! @param enable true to participate in touch navigation, false to stop participating.
+void app_touch_navigation_enable(bool enable);

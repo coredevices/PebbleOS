@@ -18,6 +18,7 @@
 #include "fake_rtc.h"
 
 // Stubs
+#include "stubs_app_install_manager.h"
 #include "stubs_app_state.h"
 #include "stubs_gbitmap.h"
 #include "stubs_graphics.h"
@@ -94,6 +95,23 @@ static void prv_emit_button(void *ctx, ButtonId button) {
 static TouchNavOps s_ops;
 
 // ---------------------------------------------------------------------------------------------
+// Fake TouchNavTwinOps for the app-twin subscribe/reconcile state machine (the real logic app_state
+// delegates to). Records install/remove and reports a controllable master pref.
+
+typedef struct FakeTwin {
+  bool pref;
+  int install_count;
+  int remove_count;
+} FakeTwin;
+
+static FakeTwin s_twin;
+static TouchNavTwinOps s_twin_ops;
+
+static bool prv_twin_pref(void *ctx) { return ((FakeTwin *)ctx)->pref; }
+static void prv_twin_install(void *ctx) { ((FakeTwin *)ctx)->install_count++; }
+static void prv_twin_remove(void *ctx) { ((FakeTwin *)ctx)->remove_count++; }
+
+// ---------------------------------------------------------------------------------------------
 // Fixture
 
 static Window s_window;
@@ -115,6 +133,14 @@ void test_touch_nav__initialize(void) {
     .emit_button = prv_emit_button,
     .idle_refresh = prv_idle_refresh,
     .ctx = &s_fake,
+  };
+
+  s_twin = (FakeTwin){0};
+  s_twin_ops = (TouchNavTwinOps){
+    .pref_enabled = prv_twin_pref,
+    .install_handler = prv_twin_install,
+    .remove_handler = prv_twin_remove,
+    .ctx = &s_twin,
   };
 
   s_window = (Window){};
@@ -350,6 +376,149 @@ void test_touch_nav__pref_off_is_inert(void) {
   cl_assert_equal_i(prv_state(s_state.swipe), RecognizerState_Possible);
   cl_assert_equal_i(s_fake.emit_count, 0);
   cl_assert_equal_i(s_fake.pop_count, 0);
+}
+
+// ---------------------------------------------------------------------------------------------
+// App-twin participation gate: the app-task twin installs its touch handler only when the master
+// pref is on AND the app participates. System apps participate by default; third-party apps are
+// inert unless they opt in. Modeled here by driving the dispatcher only when the twin is active,
+// exactly as app_touch_nav_subscribe() would gate the handler installation.
+
+// Drive a full swipe through the dispatcher only if the app twin would be subscribed. An inert twin
+// (handler never installed) means the dispatcher is never reached, so nothing is emulated.
+static void prv_twin_swipe(bool participating, int16_t sx, int16_t sy, int16_t ex, int16_t ey) {
+  if (!touch_nav_app_twin_active(s_nav_enabled, participating)) {
+    return;
+  }
+  prv_swipe(sx, sy, ex, ey);
+}
+
+// (a) A third-party app (does not participate) with the master pref ON is inert: no emulation.
+void test_touch_nav__app_twin_third_party_inert_with_pref_on(void) {
+  s_nav_enabled = true;
+  const bool participating = false;  // third-party app, no opt-in
+  cl_assert(!touch_nav_app_twin_active(s_nav_enabled, participating));
+  prv_twin_swipe(participating, 50, 90, 50, 20);
+  cl_assert_equal_i(s_fake.emit_count, 0);
+  cl_assert_equal_i(s_fake.pop_count, 0);
+}
+
+// (b) A system app (participates by default) with the master pref ON gets touch nav.
+void test_touch_nav__app_twin_system_app_active_with_pref_on(void) {
+  s_nav_enabled = true;
+  const bool participating = true;  // system app
+  cl_assert(touch_nav_app_twin_active(s_nav_enabled, participating));
+  prv_twin_swipe(participating, 50, 90, 50, 20);
+  cl_assert_equal_i(s_fake.emit_count, 1);
+  cl_assert_equal_i(s_fake.last_emit, BUTTON_ID_DOWN);
+}
+
+// (c) A third-party app that opts in participates and gets touch nav while the pref is on.
+void test_touch_nav__app_twin_third_party_optin_activates(void) {
+  s_nav_enabled = true;
+  bool participating = false;  // third-party app, initially inert
+  cl_assert(!touch_nav_app_twin_active(s_nav_enabled, participating));
+  prv_twin_swipe(participating, 50, 90, 50, 20);
+  cl_assert_equal_i(s_fake.emit_count, 0);
+
+  // app_touch_navigation_enable(true) flips participation.
+  participating = true;
+  cl_assert(touch_nav_app_twin_active(s_nav_enabled, participating));
+  prv_twin_swipe(participating, 50, 90, 50, 20);
+  cl_assert_equal_i(s_fake.emit_count, 1);
+  cl_assert_equal_i(s_fake.last_emit, BUTTON_ID_DOWN);
+}
+
+// The master pref still dominates: even a participating (system) app is inert when the pref is off.
+void test_touch_nav__app_twin_pref_off_dominates_participation(void) {
+  s_nav_enabled = false;
+  cl_assert(!touch_nav_app_twin_active(s_nav_enabled, true /* participating */));
+  prv_twin_swipe(true, 50, 90, 50, 20);
+  cl_assert_equal_i(s_fake.emit_count, 0);
+}
+
+// ---------------------------------------------------------------------------------------------
+// App-twin subscribe/reconcile state machine — the REAL logic app_state.c delegates to
+// (touch_nav_app_twin_subscribe / touch_nav_app_twin_reconcile), driven through fake install/remove
+// ops so the actual wiring (not just the predicate) is exercised.
+
+// (a) subscribe installs the system handler only when pref-on AND participating.
+void test_touch_nav__app_twin_subscribe_gate(void) {
+  // pref off + participating -> no install.
+  s_twin.pref = false;
+  touch_nav_app_twin_subscribe(&s_twin_ops, true);
+  cl_assert_equal_i(s_twin.install_count, 0);
+
+  // pref on + not participating -> no install (third-party default).
+  s_twin.pref = true;
+  touch_nav_app_twin_subscribe(&s_twin_ops, false);
+  cl_assert_equal_i(s_twin.install_count, 0);
+
+  // pref on + participating -> install exactly once.
+  touch_nav_app_twin_subscribe(&s_twin_ops, true);
+  cl_assert_equal_i(s_twin.install_count, 1);
+  cl_assert_equal_i(s_twin.remove_count, 0);
+}
+
+// (b) The launch-time classification (participate iff a system/negative install id) leaves an
+// INSTALL_ID_INVALID (unresolved) app non-participating, so the twin never installs for it.
+void test_touch_nav__app_twin_invalid_install_id_is_inert(void) {
+  // The exact rule app_state_init uses: app_install_id_from_system(app_manager_get_current_app_id()).
+  cl_assert(!app_install_id_from_system(INSTALL_ID_INVALID));  // 0 -> not a system app
+  cl_assert(!app_install_id_from_system(5));                   // third-party app-DB id -> not system
+  cl_assert(app_install_id_from_system(-3));                   // system/built-in -> participates
+
+  s_twin.pref = true;
+  const bool participating = app_install_id_from_system(INSTALL_ID_INVALID);
+  touch_nav_app_twin_subscribe(&s_twin_ops, participating);
+  cl_assert_equal_i(s_twin.install_count, 0);
+}
+
+// (c1) reconcile is idempotent, honors pref-off, and never double-subscribes.
+void test_touch_nav__app_twin_reconcile_subscribe_rules(void) {
+  bool participating;
+
+  // No transition (already true) -> no install, no remove: never double-subscribe.
+  s_twin = (FakeTwin){.pref = true};
+  participating = true;
+  touch_nav_app_twin_reconcile(&s_twin_ops, &participating, true);
+  cl_assert(participating);
+  cl_assert_equal_i(s_twin.install_count, 0);
+  cl_assert_equal_i(s_twin.remove_count, 0);
+
+  // Opt in while the master pref is off: participation flips but nothing installs yet.
+  s_twin = (FakeTwin){.pref = false};
+  participating = false;
+  touch_nav_app_twin_reconcile(&s_twin_ops, &participating, true);
+  cl_assert(participating);
+  cl_assert_equal_i(s_twin.install_count, 0);
+
+  // Opt in while the pref is on: installs exactly once; a second enable(true) is a no-op.
+  s_twin = (FakeTwin){.pref = true};
+  participating = false;
+  touch_nav_app_twin_reconcile(&s_twin_ops, &participating, true);
+  cl_assert_equal_i(s_twin.install_count, 1);
+  touch_nav_app_twin_reconcile(&s_twin_ops, &participating, true);
+  cl_assert_equal_i(s_twin.install_count, 1);
+}
+
+// (c2) reconcile only unsubscribes on a real opt-out, never when it was never subscribed.
+void test_touch_nav__app_twin_reconcile_unsubscribe_rules(void) {
+  bool participating;
+
+  // Disable from an already-non-participating flag: no transition -> no unsubscribe.
+  s_twin = (FakeTwin){.pref = true};
+  participating = false;
+  touch_nav_app_twin_reconcile(&s_twin_ops, &participating, false);
+  cl_assert(!participating);
+  cl_assert_equal_i(s_twin.remove_count, 0);
+
+  // Opt out from participating: exactly one remove.
+  s_twin = (FakeTwin){.pref = true};
+  participating = true;
+  touch_nav_app_twin_reconcile(&s_twin_ops, &participating, false);
+  cl_assert(!participating);
+  cl_assert_equal_i(s_twin.remove_count, 1);
 }
 
 // ---------------------------------------------------------------------------------------------

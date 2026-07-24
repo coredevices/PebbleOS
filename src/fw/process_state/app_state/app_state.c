@@ -24,6 +24,8 @@
 #include "pbl/drivers/button_id.h"
 #include "applib/unobstructed_area_service.h"
 #include "kernel/util/segment.h"
+#include "process_management/app_install_types.h"
+#include "process_management/app_manager.h"
 #include "process_management/process_loader.h"
 #include "process_management/process_manager.h"
 #include "pbl/services/i18n/i18n.h"
@@ -115,6 +117,9 @@ typedef struct {
   RecognizerList recognizer_list;
   RecognizerManager recognizer_manager;
   TouchNavState touch_nav_state;
+  //! Whether this app participates in touch navigation. Set at launch to whether the current app is
+  //! a system app; a third-party app can opt in at runtime via app_touch_navigation_enable().
+  bool touch_nav_participating;
 #endif
 
   uint8_t *js_runtime_context_buffer;
@@ -215,6 +220,28 @@ static const TouchNavOps s_app_touch_nav_ops = {
   .emit_button = prv_app_touch_nav_emit_button,
   .idle_refresh = NULL,  // the app task has no idle-timeout refresh; that is the kernel's job
 };
+
+// Twin subscription effects for the app task. The subscribe/reconcile state machine lives in
+// touch_nav.c; these ops bind it to the app task's touch service slot and nav state.
+static bool prv_app_twin_pref_enabled(void *ctx) {
+  return touch_nav_enabled();
+}
+
+static void prv_app_twin_install_handler(void *ctx) {
+  // touch_service_set_system_handler also no-ops for watchfaces, so they never receive emulation.
+  touch_service_set_system_handler(touch_nav_dispatch, &s_app_state_ptr->touch_nav_state);
+}
+
+static void prv_app_twin_remove_handler(void *ctx) {
+  recognizer_manager_cancel_and_reset(&s_app_state_ptr->recognizer_manager);
+  touch_service_set_system_handler(NULL, NULL);
+}
+
+static const TouchNavTwinOps s_app_twin_ops = {
+  .pref_enabled = prv_app_twin_pref_enabled,
+  .install_handler = prv_app_twin_install_handler,
+  .remove_handler = prv_app_twin_remove_handler,
+};
 #endif
 
 NOINLINE void app_state_init(void) {
@@ -227,6 +254,11 @@ NOINLINE void app_state_init(void) {
   s_app_state_ptr->recognizer_manager.global_list = &s_app_state_ptr->recognizer_list;
   touch_nav_state_init(&s_app_state_ptr->touch_nav_state, &s_app_state_ptr->recognizer_manager,
                        &s_app_touch_nav_ops);
+  // Participate only when this is positively a system/built-in app (negative install id). Third-party
+  // app-DB apps (positive id) and unresolved/INSTALL_ID_INVALID (0) are inert by default and must opt
+  // in via app_touch_navigation_enable(), so the unsafe direction (unknown -> on) cannot happen.
+  s_app_state_ptr->touch_nav_participating =
+      app_install_id_from_system(app_manager_get_current_app_id());
 #endif
 
   animation_private_state_init(&s_app_state_ptr->animation_state);
@@ -477,17 +509,21 @@ TouchNavState *app_state_get_touch_nav_state(void) {
 }
 
 void app_touch_nav_subscribe(void) {
-  // Route the touch service system slot through the nav dispatcher. touch_service_set_system_handler
-  // no-ops for watchfaces, so watchfaces never receive emulation.
-  if (!touch_nav_enabled()) {
-    return;
-  }
-  touch_service_set_system_handler(touch_nav_dispatch, &s_app_state_ptr->touch_nav_state);
+  // Install the nav dispatcher into the touch service system slot only when the master pref is on
+  // AND this app participates: a third-party app that has not opted in stays inert even with the
+  // pref on. The gate/decision lives in touch_nav.c (unit-testable via s_app_twin_ops).
+  touch_nav_app_twin_subscribe(&s_app_twin_ops, s_app_state_ptr->touch_nav_participating);
 }
 
 void app_touch_nav_unsubscribe(void) {
-  recognizer_manager_cancel_and_reset(&s_app_state_ptr->recognizer_manager);
-  touch_service_set_system_handler(NULL, NULL);
+  prv_app_twin_remove_handler(NULL);
+}
+
+void app_touch_nav_set_participating(bool enable) {
+  // Reconcile the subscription with the new participation state: subscribe on opt-in (a no-op while
+  // the master pref is off, until the pref turns on and the app resubscribes), unsubscribe on
+  // opt-out. Idempotent when the value is unchanged.
+  touch_nav_app_twin_reconcile(&s_app_twin_ops, &s_app_state_ptr->touch_nav_participating, enable);
 }
 #endif
 

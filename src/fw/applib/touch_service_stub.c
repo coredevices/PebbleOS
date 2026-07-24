@@ -26,3 +26,7 @@ void touch_service_unsubscribe(void) {
 bool touch_service_is_enabled(void) {
   return false;
 }
+
+void app_touch_navigation_enable(bool enable) {
+  (void)enable;
+}

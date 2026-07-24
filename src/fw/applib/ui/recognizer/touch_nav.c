@@ -396,6 +396,33 @@ void touch_nav_transaction_apply(const TouchNavTxnOps *ops, bool enable) {
   }
 }
 
+bool touch_nav_app_twin_active(bool pref_enabled, bool participating) {
+  // Both conditions are required: the master pref gates the whole feature, and participation keeps
+  // third-party apps inert by default. Either one false leaves the app twin unsubscribed.
+  return pref_enabled && participating;
+}
+
+void touch_nav_app_twin_subscribe(const TouchNavTwinOps *ops, bool participating) {
+  PBL_ASSERTN(ops && ops->pref_enabled && ops->install_handler);
+  if (touch_nav_app_twin_active(ops->pref_enabled(ops->ctx), participating)) {
+    ops->install_handler(ops->ctx);
+  }
+}
+
+void touch_nav_app_twin_reconcile(const TouchNavTwinOps *ops, bool *participating, bool enable) {
+  PBL_ASSERTN(ops && participating && ops->remove_handler);
+  if (*participating == enable) {
+    // No transition: never double-subscribe, never unsubscribe a twin we did not subscribe.
+    return;
+  }
+  *participating = enable;
+  if (enable) {
+    touch_nav_app_twin_subscribe(ops, true);
+  } else {
+    ops->remove_handler(ops->ctx);
+  }
+}
+
 void touch_nav_state_deinit(TouchNavState *state) {
   if (!state || !state->manager) {
     return;
