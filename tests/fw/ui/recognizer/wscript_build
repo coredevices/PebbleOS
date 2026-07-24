@@ -15,6 +15,14 @@ clar(ctx,
     test_sources_ant_glob = "test_recognizer_manager.c")
 
 clar(ctx,
+    sources_ant_glob = " src/fw/applib/ui/recognizer/recognizer.c" \
+                       " src/fw/applib/ui/recognizer/tap.c" \
+                       " tests/fw/ui/recognizer/test_recognizer_impl.c" \
+                       " tests/fakes/fake_rtc.c",
+    defines = ['CONFIG_TOUCH'],
+    test_sources_ant_glob = "test_tap.c")
+
+clar(ctx,
     sources_ant_glob = " src/fw/applib/graphics/gtypes.c" \
                        " src/fw/applib/graphics/gcolor_definitions.c" \
                        " src/fw/applib/ui/layer.c" \

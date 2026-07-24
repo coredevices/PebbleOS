@@ -24,5 +24,11 @@ Recognizer *tap_recognizer_create(RecognizerEventCb event_cb, void *user_data);
 //! @return \ref TapRecognizerData reference
 const TapRecognizerData *tap_recognizer_get_data(const Recognizer *recognizer);
 
+//! Get the coordinate of the recognized tap. The coordinate is taken from the last position update,
+//! not the liftoff. Valid once the recognizer has completed.
+//! @param recognizer recognizer from which to get the tap coordinate
+//! @return tap coordinate
+GPoint tap_recognizer_get_tap_point(const Recognizer *recognizer);
+
 // TODO: Add configuration methods & getters for state
 // https://pebbletechnology.atlassian.net/browse/PBL-28983
