@@ -4,7 +4,7 @@
               "You should also make sure you are obeying our API design guidelines:",
               "https://pebbletechnology.atlassian.net/wiki/display/DEV/SDK+API+Design+Guidelines"
             ],
-  "revision" : "105",
+  "revision" : "106",
   "version" : "2.0",
   "files": [
     "include/pbl/drivers/ambient_light.h",
