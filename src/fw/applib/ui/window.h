@@ -407,5 +407,13 @@ RecognizerList *window_get_recognizer_list(Window *window);
 //! attached to the window
 RecognizerManager *window_get_recognizer_manager(Window *window);
 
+//! Give the window's recognizer manager input focus: cancel and reset any ongoing gesture and point
+//! the manager at this window.
+void window_became_input_focus(Window *window);
+
+//! Take input focus away from the window: cancel and reset any ongoing gesture and clear the
+//! manager's window pointer. A no-op unless the window currently holds input focus.
+void window_lost_input_focus(Window *window);
+
 //!   @} // end addtogroup Window
 //! @} // end addtogroup UI

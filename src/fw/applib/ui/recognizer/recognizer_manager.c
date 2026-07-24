@@ -8,7 +8,7 @@
 
 #include "applib/applib_malloc.auto.h"
 #include "applib/ui/layer.h"
-#include "process_state/app_state/app_state.h"
+#include "applib/ui/window.h"
 #include "pbl/services/touch/touch_event.h"
 #include "system/passert.h"
 #include "pbl/util/list.h"
@@ -18,10 +18,8 @@
 T_STATIC bool prv_process_all_recognizers(RecognizerManager *manager,
                                           RecognizerListIteratorCb iter_cb, void *context) {
 
-  // Process app recognizers first
-  // TODO: This will change to using an app-wrapper like object to get the recognizer list when we
-  // have implemented such a thing
-  if (!recognizer_list_iterate(app_state_get_recognizer_list(), iter_cb, context)) {
+  // Process the task-global recognizers first (NULL list is a no-op)
+  if (!recognizer_list_iterate(manager->global_list, iter_cb, context)) {
     return false;
   }
 
@@ -163,12 +161,6 @@ static void prv_cancel_all_recognizers(RecognizerManager *manager) {
   prv_process_all_recognizers(manager, prv_cancel_or_fail_recognizer, NULL);
 }
 
-T_STATIC void prv_cancel_layer_tree_recognizers(RecognizerManager *manager, Layer *top_layer,
-                                                Layer *bottom_layer) {
-  prv_process_layer_tree_recognizers(manager, top_layer, bottom_layer,
-                                     prv_cancel_or_fail_recognizer);
-}
-
 static bool prv_reset_recognizer(Recognizer *recognizer, void *context) {
   recognizer_reset(recognizer);
   return true;
@@ -199,67 +191,6 @@ static void prv_fail_then_reset_if_no_active_recognizers(RecognizerManager *mana
   }
 }
 
-static void prv_handle_active_layer_change(RecognizerManager *manager, Layer *new_active_layer) {
-  if (manager->active_layer) {
-    if (layer_is_descendant(new_active_layer, manager->active_layer)) {
-      // Currently active layer is an ancestor of the new active layer
-
-      if (manager->state == RecognizerManagerState_RecognizersTriggered) {
-        // Cancel recognizers on tree below currently active layer so they don't handle events
-        prv_cancel_layer_tree_recognizers(manager, manager->active_layer, new_active_layer);
-      } else {
-        // Reset recognizers on tree below currently active layer (may be in a cancelled or failed
-        // state)
-        prv_reset_layer_tree_recognizers(manager, manager->active_layer, new_active_layer);
-      }
-    } else {
-      // Cancel all active layer recognizers if:
-      //  - we can't find a new active layer (i.e. point is off screen or not attached to any child
-      //    layers of the window)
-      //  - we're in a different layer which is not a child of the previous active layer and there
-      //    are recognizers actively looking for gestures
-
-      // Cancel recognizers that were previously active or triggered
-      prv_cancel_layer_tree_recognizers(manager, new_active_layer, manager->active_layer);
-
-      bool new_active_layer_is_ancestor =
-          layer_is_descendant(manager->active_layer, new_active_layer);
-
-      manager->active_layer = new_active_layer_is_ancestor ? new_active_layer : NULL;
-      if (manager->state == RecognizerManagerState_RecognizersTriggered) {
-        if (!manager->triggered) {
-          // Look for triggered recognizers in remaining recognizer lists
-          prv_set_triggered(manager, prv_any_recognizers_active_triggered(manager));
-        }
-        if (manager->triggered) {
-          if (!new_active_layer_is_ancestor) {
-            prv_cancel_layer_tree_recognizers(manager, NULL, new_active_layer);
-          }
-        } else {
-          // We cancelled all the triggered recognizers, time to reset everything
-          manager->active_layer = new_active_layer;
-          prv_reset_all_recognizers(manager);
-          manager->state = RecognizerManagerState_RecognizersActive;
-        }
-      } else /* manager->state == RecognizerManagerState_RecognizersActive */ {
-        if (!new_active_layer_is_ancestor) {
-          // Make sure new recognizers are reset to possible state
-          prv_reset_layer_tree_recognizers(manager, NULL, new_active_layer);
-        }
-      }
-    }
-  } else /* manager->active_layer == NULL */ {
-    if (manager->state == RecognizerManagerState_RecognizersTriggered) {
-      // Cancel new recognizers because we have triggered recognizers already
-      prv_cancel_layer_tree_recognizers(manager, NULL, new_active_layer);
-    } else /* manager->state == RecognizerManagerState_RecognizersActive */ {
-      // Reset recognizers in new layer tree so that they can handle events
-      prv_reset_layer_tree_recognizers(manager, NULL, new_active_layer);
-    }
-  }
-  manager->active_layer = new_active_layer;
-}
-
 static void prv_cleanup_state_change(RecognizerManager *manager, Recognizer *triggered) {
   if (triggered) {
     prv_set_triggered(manager, triggered);
@@ -285,8 +216,17 @@ void recognizer_manager_handle_touch_event(const TouchEvent *touch_event, void *
     if (manager->state == RecognizerManagerState_WaitForTouchdown) {
       manager->state = RecognizerManagerState_RecognizersActive;
       manager->active_layer = new_active_layer;
-    } else if (new_active_layer != manager->active_layer) {
-      prv_handle_active_layer_change(manager, new_active_layer);
+    } else {
+      // A new touchdown arrived mid-gesture. Reset first to complete the cancelled-snap of any
+      // stuck recognizer, then decide whether to start fresh.
+      prv_reset(manager);
+      if (touch_event->non_navigational) {
+        // The touch must not drive navigation, so stay idle.
+        return;
+      }
+      manager->state = RecognizerManagerState_RecognizersActive;
+      manager->active_layer = new_active_layer;
+      prv_reset_layer_tree_recognizers(manager, NULL, new_active_layer);
     }
   }
 
@@ -316,6 +256,11 @@ void recognizer_manager_cancel_touches(RecognizerManager *manager) {
 void recognizer_manager_reset(RecognizerManager *manager) {
   PBL_ASSERTN(manager);
   prv_reset_all_recognizers(manager);
+}
+
+void recognizer_manager_cancel_and_reset(RecognizerManager *manager) {
+  PBL_ASSERTN(manager);
+  prv_reset(manager);
 }
 
 void recognizer_manager_register_recognizer(RecognizerManager *manager, Recognizer *recognizer) {

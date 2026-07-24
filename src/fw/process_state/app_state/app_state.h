@@ -133,6 +133,8 @@ HealthServiceState *app_state_get_health_service_state(void);
 
 RecognizerList *app_state_get_recognizer_list(void);
 
+struct RecognizerManager *app_state_get_recognizer_manager(void);
+
 JsRuntimeContext *app_state_get_js_runtime_context(void);
 
 uint8_t *app_state_get_js_runtime_context_buffer(void);

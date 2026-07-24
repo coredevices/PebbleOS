@@ -12,6 +12,7 @@
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/layer.h"
 #include "applib/ui/recognizer/recognizer_list.h"
+#include "applib/ui/recognizer/recognizer_manager.h"
 #include "applib/unobstructed_area_service.h"
 #include "kernel/util/segment.h"
 #include "process_management/process_loader.h"
@@ -103,6 +104,7 @@ typedef struct {
 
 #ifdef CONFIG_TOUCH
   RecognizerList recognizer_list;
+  RecognizerManager recognizer_manager;
 #endif
 
   uint8_t *js_runtime_context_buffer;
@@ -173,6 +175,11 @@ NOINLINE void app_state_init(void) {
   s_app_state_ptr->rand_seed.mat1 = 0; // Uninitialized
 
   click_manager_init(&s_app_state_ptr->click_manager);
+
+#ifdef CONFIG_TOUCH
+  recognizer_manager_init(&s_app_state_ptr->recognizer_manager);
+  s_app_state_ptr->recognizer_manager.global_list = &s_app_state_ptr->recognizer_list;
+#endif
 
   animation_private_state_init(&s_app_state_ptr->animation_state);
 
@@ -405,6 +412,10 @@ GBitmap* app_state_legacy2_get_2bit_framebuffer(void) {
 #ifdef CONFIG_TOUCH
 RecognizerList *app_state_get_recognizer_list(void) {
   return &s_app_state_ptr->recognizer_list;
+}
+
+RecognizerManager *app_state_get_recognizer_manager(void) {
+  return &s_app_state_ptr->recognizer_manager;
 }
 #endif
 
