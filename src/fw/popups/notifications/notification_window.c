@@ -7,6 +7,7 @@
 #include "notification_window_private.h"
 
 #include "applib/fonts/fonts.h"
+#include "applib/touch_service.h"
 #include "applib/ui/action_button.h"
 #include "applib/ui/action_menu_window.h"
 #include "applib/ui/app_window_stack.h"
@@ -1101,6 +1102,15 @@ static void prv_window_appear(Window *window) {
 static void prv_window_disappear(Window *window) {
   NotificationWindowData *data = window_get_user_data(window);
   prv_cleanup_timer(&data->pop_timer_id);
+#ifdef CONFIG_TOUCH
+  // When covered by a higher modal (e.g. the action menu opened via SELECT),
+  // release the swap layer's touch subscription. Otherwise it would keep
+  // touch_has_app_subscribers() true and suppress the touch-to-click synthesis
+  // bridge for the now-focused modal, and touch events would still be delivered
+  // to the hidden notification body. On re-expose, the modal manager re-runs our
+  // click config provider, which re-subscribes the swap layer.
+  touch_service_unsubscribe();
+#endif
 }
 
 static void prv_handle_presented_notif_deinit(Uuid *id, NotificationType type, void *not_used) {

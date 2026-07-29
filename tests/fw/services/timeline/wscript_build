@@ -223,4 +223,15 @@ clar(ctx,
      override_includes=['dummy_board'],
      platforms=['obelix', 'gabbro'])
 
+clar(ctx,
+     sources_ant_glob=(
+         " src/fw/services/timeline/swap_layer.c"
+         " tests/stubs/stubs_animation.c"
+         " tests/stubs/stubs_click.c"
+     ),
+     test_sources_ant_glob = "test_swap_layer_touch.c",
+     defines=["CONFIG_TOUCH=1"],
+     override_includes=['dummy_board'],
+     platforms=['obelix'])
+
 # vim:filetype=python
