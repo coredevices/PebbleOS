@@ -6,6 +6,8 @@
 #include "applib/applib_malloc.auto.h"
 #include "applib/graphics/gtypes.h"
 #include "applib/graphics/graphics.h"
+#include "applib/pbl_std/pbl_std.h"
+#include "applib/touch_service.h"
 #include "applib/ui/content_indicator_private.h"
 #include "applib/ui/shadows.h"
 #include "applib/ui/window.h"
@@ -112,7 +114,41 @@ bool scroll_layer_is_instance(const Layer *layer) {
   return layer && layer->property_changed_proc == scroll_layer_property_changed_proc;
 }
 
+#ifdef CONFIG_TOUCH
+// Distance (px) the finger must travel before a gesture is treated as a drag
+// rather than a tap.
+#define SCROLL_TOUCH_DRAG_THRESHOLD_PX 10
+// A gesture below the drag threshold that lifts off within this many ms is a tap.
+#define SCROLL_TOUCH_TAP_MAX_MS 300
+
+//! Transient state for the in-progress touch gesture. Only one touch gesture is
+//! ever in flight (touch events are delivered to the single focused
+//! subscriber), so a single file-static instance is sufficient.
+typedef struct ScrollTouchGesture {
+  ScrollLayer *scroll_layer;  // gesture target, NULL when idle
+  int16_t start_y;
+  int16_t start_offset_y;
+  int64_t down_time_ms;
+  bool dragging;
+} ScrollTouchGesture;
+
+static ScrollTouchGesture s_touch_gesture;
+
+//! Tap handler of the scroll layer currently set up for touch. Captured while
+//! its click config provider runs (see scroll_layer_click_config_provider), so
+//! it always reflects the single focused/subscribed scroll layer.
+static ScrollLayerTapHandler s_active_tap_handler;
+#endif  // CONFIG_TOUCH
+
 void scroll_layer_deinit(ScrollLayer *scroll_layer) {
+#ifdef CONFIG_TOUCH
+  // Never let a destroyed scroll layer be referenced by the active gesture or a
+  // pending touch event.
+  if (s_touch_gesture.scroll_layer == scroll_layer) {
+    s_touch_gesture.scroll_layer = NULL;
+  }
+  touch_service_unsubscribe();
+#endif
   animation_destroy(property_animation_get_animation(scroll_layer->animation));
   content_indicator_destroy_for_scroll_layer(scroll_layer);
   layer_deinit(&scroll_layer->layer);
@@ -282,7 +318,80 @@ void scroll_layer_scroll_down_click_handler(ClickRecognizerRef recognizer, void 
   (void)recognizer;
 }
 
+#ifdef CONFIG_TOUCH
+static int64_t prv_touch_now_ms(void) {
+  time_t seconds;
+  uint16_t milliseconds;
+  time_ms(&seconds, &milliseconds);
+  return ((int64_t)seconds * 1000) + milliseconds;
+}
+
+static void prv_scroll_layer_stop_animation(ScrollLayer *scroll_layer) {
+  Animation *animation = property_animation_get_animation(scroll_layer->animation);
+  if (animation && animation_is_scheduled(animation)) {
+    animation_unschedule(animation);
+  }
+}
+
+static void prv_scroll_layer_touch_handler(const TouchEvent *event, void *context) {
+  ScrollLayer *scroll_layer = context;
+  switch (event->type) {
+    case TouchEvent_Touchdown:
+      // Stop any running scroll animation and start following from here.
+      prv_scroll_layer_stop_animation(scroll_layer);
+      s_touch_gesture = (ScrollTouchGesture) {
+        .scroll_layer = scroll_layer,
+        .start_y = event->y,
+        .start_offset_y = scroll_layer_get_content_offset(scroll_layer).y,
+        .down_time_ms = prv_touch_now_ms(),
+        .dragging = false,
+      };
+      break;
+    case TouchEvent_PositionUpdate: {
+      if (s_touch_gesture.scroll_layer != scroll_layer) {
+        break;
+      }
+      const int16_t delta_y = event->y - s_touch_gesture.start_y;
+      if (!s_touch_gesture.dragging) {
+        // Hold off until the finger has clearly committed to a drag.
+        if (ABS(delta_y) < SCROLL_TOUCH_DRAG_THRESHOLD_PX) {
+          break;
+        }
+        s_touch_gesture.dragging = true;
+      }
+      // The internal setter hard-clamps to the content bounds (honoring
+      // clips_content_offset), matching button scrolling.
+      prv_scroll_layer_set_content_offset_internal(
+          scroll_layer, GPoint(0, s_touch_gesture.start_offset_y + delta_y));
+      break;
+    }
+    case TouchEvent_Liftoff: {
+      if (s_touch_gesture.scroll_layer != scroll_layer) {
+        break;
+      }
+      const bool was_dragging = s_touch_gesture.dragging;
+      const int64_t elapsed_ms = prv_touch_now_ms() - s_touch_gesture.down_time_ms;
+      s_touch_gesture.scroll_layer = NULL;
+      if (!was_dragging && elapsed_ms < SCROLL_TOUCH_TAP_MAX_MS && s_active_tap_handler) {
+        GRect global_frame;
+        layer_get_global_frame(&scroll_layer->layer, &global_frame);
+        const GPoint local = GPoint(event->x - global_frame.origin.x,
+                                    event->y - global_frame.origin.y);
+        s_active_tap_handler(scroll_layer, local, get_callback_context(scroll_layer));
+      }
+      break;
+    }
+  }
+}
+#endif  // CONFIG_TOUCH
+
 static void scroll_layer_click_config_provider(ScrollLayer *scroll_layer) {
+#ifdef CONFIG_TOUCH
+  // Reset before the client provider runs; it may (re)register a tap handler via
+  // scroll_layer_set_touch_tap_handler().
+  s_active_tap_handler = NULL;
+#endif
+
   // Config UP / DOWN button behavior:
   window_single_repeating_click_subscribe(BUTTON_ID_UP, 100, scroll_layer_scroll_up_click_handler);
   window_single_repeating_click_subscribe(BUTTON_ID_DOWN, 100, scroll_layer_scroll_down_click_handler);
@@ -293,6 +402,26 @@ static void scroll_layer_click_config_provider(ScrollLayer *scroll_layer) {
   if (scroll_layer->callbacks.click_config_provider) {
     scroll_layer->callbacks.click_config_provider(get_callback_context(scroll_layer));
   }
+
+#ifdef CONFIG_TOUCH
+  // Ride along on the existing click setup to also grab touch input. This runs
+  // on every window appear, so the focused scroll layer re-subscribes as the
+  // single touch handler. Only the (single, per-task) most recent subscriber
+  // receives events; coordinating touch across concurrent scroll layers or an
+  // app's own touch subscription is out of scope for now.
+  if (touch_service_is_enabled()) {
+    touch_service_subscribe(prv_scroll_layer_touch_handler, scroll_layer);
+  }
+#endif
+}
+
+void scroll_layer_set_touch_tap_handler(ScrollLayer *scroll_layer, ScrollLayerTapHandler handler) {
+  (void)scroll_layer;
+#ifdef CONFIG_TOUCH
+  s_active_tap_handler = handler;
+#else
+  (void)handler;
+#endif
 }
 
 void scroll_layer_set_click_config_onto_window(ScrollLayer *scroll_layer, struct Window *window) {

@@ -52,6 +52,13 @@ struct ScrollLayer;
 //! Function signature for the `.content_offset_changed_handler` callback.
 typedef void (*ScrollLayerCallback)(struct ScrollLayer *scroll_layer, void *context);
 
+//! @internal
+//! Signature for the internal handler invoked when a touch tap (as opposed to a
+//! drag) is detected on a touch-enabled platform. `point` is in the scroll
+//! layer's frame coordinates.
+typedef void (*ScrollLayerTapHandler)(struct ScrollLayer *scroll_layer, GPoint point,
+                                      void *context);
+
 //! All the callbacks that the ScrollLayer exposes for use by applications.
 //! @note The context parameter can be set using scroll_layer_set_context() and
 //! gets passed in as context with all of these callbacks.
@@ -328,6 +335,13 @@ bool scroll_layer_get_clips_content_offset(ScrollLayer *scroll_layer);
 //! @internal
 //! True, if the passed layer is a scroll_layer; false otherwise.
 bool scroll_layer_is_instance(const Layer *layer);
+
+//! @internal
+//! Register the handler invoked when a touch tap (not a drag) is detected on the
+//! scroll layer currently being configured. Higher-level layers (e.g. MenuLayer)
+//! call this from their click config provider. Pass NULL to opt out. No-op on
+//! platforms without a touchscreen.
+void scroll_layer_set_touch_tap_handler(ScrollLayer *scroll_layer, ScrollLayerTapHandler handler);
 
 //!     @} // end addtogroup ScrollLayer
 //!   @} // end addtogroup Layer
