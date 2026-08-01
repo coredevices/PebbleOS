@@ -2260,6 +2260,10 @@ msgstr "Snooze for %d minutes"
 msgid "Alarm dismissed"
 msgstr "Alarm dismissed"
 
+#: ../src/fw/popups/alarm_popup.c:71
+msgid "Alarm deleted"
+msgstr "Alarm deleted"
+
 #: ../src/fw/popups/ble_hrm/ble_hrm_reminder_popup.c:17
 msgid ""
 "Your heart rate has been shared with an app on your phone for several hours. "
@@ -2992,6 +2996,10 @@ msgstr "Alarm"
 msgid "Just Once"
 msgstr "Just Once"
 
+#: ../src/fw/applib/ui/day_picker.c:51
+msgid "Just Once Then Delete"
+msgstr "Just Once Then Delete"
+
 #. / A frequency option for alarms, i.e. the alarm would go off every day. Respect
 #. / capitalization!
 #: ../src/fw/services/alarms/alarm.c:1243
@@ -3027,6 +3035,18 @@ msgstr "ONCE"
 #: ../src/fw/services/alarms/alarm.c:1274
 msgid "Once"
 msgstr "Once"
+
+#. / A frequency option for alarms, i.e. the alarm would fire once and then be deleted automatically. Respect
+#. / capitalization!
+#: ../src/fw/services/alarms/alarm.c:1315
+msgid "Once then delete"
+msgstr "Once then delete"
+
+#. / A frequency option for alarms, i.e. the alarm would fire once and then be deleted automatically. Respect
+#. / capitalization!
+#: ../src/fw/services/alarms/alarm.c:1312
+msgid "ONCE THEN DELETE"
+msgstr "ONCE THEN DELETE"
 
 #. / A frequency option for alarms, i.e. the alarm would only go off on a custom choice of
 #. / days. Respect capitalization!
