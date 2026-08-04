@@ -104,6 +104,16 @@ bool do_not_disturb_is_smart_dnd_enabled(void);
 void do_not_disturb_toggle_smart_dnd(void);
 
 /**
+ * @brief Check whether sleep-aware DND is enabled.
+ *
+ * @return true if enabled.
+ */
+bool do_not_disturb_is_sleep_dnd_enabled(void);
+
+/** @brief Toggle sleep-aware DND. */
+void do_not_disturb_toggle_sleep_dnd(void);
+
+/**
  * @brief Get a DND schedule.
  *
  * @param type Schedule to get.
@@ -161,6 +171,13 @@ void do_not_disturb_handle_pref_synced(void);
  * @param e Calendar event.
  */
 void do_not_disturb_handle_calendar_event(PebbleCalendarEvent *e);
+
+/**
+ * @brief Re-evaluate sleep-aware DND after an activity event.
+ *
+ * @param e Activity event.
+ */
+void do_not_disturb_handle_activity_event(PebbleActivityEvent *e);
 
 /** @brief Push the manual DND toggle prompt, which sets manual DND to the opposite state. */
 void do_not_disturb_manual_toggle_with_dialog(void);

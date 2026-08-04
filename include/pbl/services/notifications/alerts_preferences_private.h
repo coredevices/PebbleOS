@@ -302,6 +302,20 @@ bool alerts_preferences_dnd_is_smart_enabled(void);
 void alerts_preferences_dnd_set_smart_enabled(bool enable);
 
 /**
+ * @brief Get whether sleep-aware DND is enabled.
+ *
+ * @return true if enabled.
+ */
+bool alerts_preferences_dnd_is_sleep_enabled(void);
+
+/**
+ * @brief Store whether sleep-aware DND is enabled.
+ *
+ * @param enable true to enable.
+ */
+void alerts_preferences_dnd_set_sleep_enabled(bool enable);
+
+/**
  * @brief Lock the alerts preferences mutex.
  *
  * Must be paired with alerts_preferences_unlock().
