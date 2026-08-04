@@ -93,6 +93,7 @@ static void prv_handle_stop_transition(VoiceUiData *data);
 static void prv_voice_window_push(VoiceUiData *data);
 char *sys_voice_get_transcription_from_event(PebbleVoiceServiceEvent *e, char *buffer,
                                              size_t buffer_size, size_t *sentence_len);
+uint8_t sys_voice_get_next_event_id(void);
 
 
 
@@ -1362,11 +1363,6 @@ VoiceWindow *voice_window_create(char *buffer, size_t buffer_size,
     return NULL;
   }
 
-  static uint8_t s_next_event_id = 1;
-  if (s_next_event_id > 0xf) {  // 0 is reserved as "no window"
-    s_next_event_id = 1;
-  }
-
   *data = (VoiceUiData) {
     .state = StateStart,
     .show_confirmation_dialog = true,
@@ -1374,7 +1370,7 @@ VoiceWindow *voice_window_create(char *buffer, size_t buffer_size,
     .message = buffer,
     .buffer_size = buffer_size,
     .session_type = session_type,
-    .event_id = s_next_event_id++,
+    .event_id = sys_voice_get_next_event_id(),
   };
 
   return data;
@@ -1483,6 +1479,15 @@ void voice_window_reset(VoiceWindow *voice_window) {
 
 // Syscalls
 /////////////////////////////////////////////////////////////////////////////////
+
+DEFINE_SYSCALL(uint8_t, sys_voice_get_next_event_id, void) {
+  static uint8_t s_next_event_id = 1;
+  const uint8_t event_id = s_next_event_id++;
+  if (s_next_event_id > 0xf) {  // 0 is reserved as "no window"
+    s_next_event_id = 1;
+  }
+  return event_id;
+}
 
 DEFINE_SYSCALL(char *, sys_voice_get_transcription_from_event, PebbleVoiceServiceEvent *e,
                char *buffer, size_t buffer_size, size_t *sentence_len) {
