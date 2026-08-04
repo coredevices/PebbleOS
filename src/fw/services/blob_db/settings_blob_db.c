@@ -137,6 +137,7 @@ static const char *s_syncable_notif_prefs[] = {
   "vibeScoreAlarms",
   "dndManuallyEnabled",
   "dndSmartEnabled",
+  "dndSleepEnabled",
   "dndWeekdaySchedule",
   "dndWeekdayScheduleEnabled",
   "dndWeekendSchedule",
