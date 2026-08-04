@@ -21,6 +21,8 @@
  *   period ends.
  * - Scheduled: a daily period, with separate schedules for weekdays and weekends.
  * - Smart (calendar aware): active while a calendar event is ongoing.
+ * - Sleep aware: active while activity tracking reports confirmed sleep.
+ * - Until wake: active immediately, ends after confirmed sleep followed by waking.
  *
  * Every change of the active state posts a @c PEBBLE_DO_NOT_DISTURB_EVENT.
  * @{
@@ -63,7 +65,7 @@ typedef enum ManualDNDFirstUseSource {
 /**
  * @brief Check whether DND is in effect.
  *
- * @return true if manual, scheduled or smart DND is active.
+ * @return true if any DND mode is active.
  */
 bool do_not_disturb_is_active(void);
 
@@ -112,6 +114,20 @@ bool do_not_disturb_is_sleep_dnd_enabled(void);
 
 /** @brief Toggle sleep-aware DND. */
 void do_not_disturb_toggle_sleep_dnd(void);
+
+/**
+ * @brief Check whether Until Wake DND is on.
+ *
+ * @return true if enabled.
+ */
+bool do_not_disturb_is_until_wake_enabled(void);
+
+/**
+ * @brief Turn Until Wake DND on or off and re-evaluate the DND state.
+ *
+ * @param enable true to turn it on.
+ */
+void do_not_disturb_set_until_wake_enabled(bool enable);
 
 /**
  * @brief Get a DND schedule.
