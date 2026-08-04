@@ -253,6 +253,14 @@ VoiceRecordingId voice_recording_start(void) {
     goto unlock;
   }
 
+  // Capturing a new memo is a direct user action and must not be blocked by a
+  // phone transfer that stalled or was abandoned. The next export request can
+  // restart decoding from offset zero.
+  if (s_pcm_export_fd >= 0) {
+    PBL_LOG_DBG("Cancelling unfinished PCM export to start recording");
+    prv_pcm_export_cleanup_locked();
+  }
+
   if (mic_is_running(MIC)) {
     PBL_LOG_WRN("Microphone busy, cannot start recording");
     s_last_error = VoiceRecordingError_MicBusy;
