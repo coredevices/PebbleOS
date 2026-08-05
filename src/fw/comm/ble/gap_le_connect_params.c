@@ -107,6 +107,8 @@ static void prv_analytics_stop_conn_interval_timers(void) {
   PBL_ANALYTICS_TIMER_STOP(ble_conn_itvl_min_time_ms);
   PBL_ANALYTICS_TIMER_STOP(ble_conn_itvl_mid_time_ms);
   PBL_ANALYTICS_TIMER_STOP(ble_conn_itvl_max_time_ms);
+  PBL_ANALYTICS_TIMER_STOP(ble_conn_itvl_other_time_ms);
+  PBL_ANALYTICS_TIMER_STOP(ble_conn_slave_lat0_time_ms);
 }
 
 //! Classify the actual connection interval into a ResponseTimeState based on
@@ -120,11 +122,12 @@ static ResponseTimeState prv_classify_conn_interval(uint16_t conn_interval_1_25m
       return (ResponseTimeState)state;
     }
   }
-  // Outside all known ranges, assume Max (slowest)
-  return ResponseTimeMax;
+  // Outside all known ranges (only used for analytics bucketing)
+  return ResponseTimeInvalid;
 }
 
-static void prv_analytics_update_conn_interval(uint16_t conn_interval_1_25ms) {
+static void prv_analytics_update_conn_params(uint16_t conn_interval_1_25ms,
+                                             uint16_t slave_latency_events) {
   prv_analytics_stop_conn_interval_timers();
 
   switch (prv_classify_conn_interval(conn_interval_1_25ms)) {
@@ -138,7 +141,14 @@ static void prv_analytics_update_conn_interval(uint16_t conn_interval_1_25ms) {
       PBL_ANALYTICS_TIMER_START(ble_conn_itvl_max_time_ms);
       break;
     default:
+      PBL_ANALYTICS_TIMER_START(ble_conn_itvl_other_time_ms);
       break;
+  }
+
+  // Interval buckets alone cannot distinguish a link that never got its slave
+  // latency applied (~Nx the connection-event duty at the same interval).
+  if (slave_latency_events == 0U) {
+    PBL_ANALYTICS_TIMER_START(ble_conn_slave_lat0_time_ms);
   }
 }
 
@@ -328,7 +338,8 @@ void bt_driver_handle_le_conn_params_update_event(const BleConnectionUpdateCompl
   const bool local_is_master = connection->local_is_master;
   if (!local_is_master) {
      bluetooth_analytics_handle_connection_params_update(params);
-     prv_analytics_update_conn_interval(params->conn_interval_1_25ms);
+     prv_analytics_update_conn_params(params->conn_interval_1_25ms, params->slave_latency_events);
+     PBL_ANALYTICS_ADD(ble_conn_param_update_count, 1);
   }
 
   prv_evaluate(connection, desired_state);
