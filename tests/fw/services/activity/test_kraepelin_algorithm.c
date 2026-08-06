@@ -2208,3 +2208,202 @@ void test_kraepelin_algorithm__sleep_stats(void) {
 }
 
 
+
+
+// =============================================================================================
+// Synthetic-night tests for sleep cycles separated by brief mid-night wakes (FIRM-3473).
+//
+// A real night can fragment into cycles when the sleeper briefly stirs. Cycles shorter
+// than min_sleep_cycle_len_minutes used to be discarded outright, so genuinely slept
+// time displayed as "awake". A short cycle is now kept when it is sandwiched between
+// other sleep (starts soon after the previous cycle ended AND more sleep follows it)
+// and still passes the not-worn checks.
+
+static time_t s_synth_now;
+
+static void prv_synth_start(void) {
+  rtc_set_time(0);
+  s_synth_now = 0;
+  s_kalg_state = kernel_zalloc(kalg_state_size());
+  kalg_init(s_kalg_state, prv_stats_cb);
+  s_num_captured_sleep_sessions = 0;
+}
+
+static void prv_synth_end(void) {
+  kernel_free(s_kalg_state);
+  s_kalg_state = NULL;
+}
+
+static void prv_synth_minute(uint16_t vmc, uint8_t orientation) {
+  kalg_activities_update(s_kalg_state, s_synth_now, 0 /*steps*/, vmc, orientation,
+                         false /*definitely_not_worn*/, 0 /*rest_cals*/, 0 /*active_cals*/,
+                         0 /*distance*/, false /*shutting_down*/,
+                         prv_sleep_session_callback, NULL);
+  s_synth_now += SECONDS_PER_MINUTE;
+  rtc_set_time(s_synth_now);
+}
+
+// Worn and asleep: mostly tiny VMCs, with a small position shift (orientation change
+// plus modest movement) every ~17 minutes like a typical sleeper
+static void prv_synth_sleep(int minutes) {
+  static const uint16_t k_vmc[13] = {20, 0, 0, 45, 0, 10, 0, 90, 0, 0, 30, 0, 0};
+  static const uint8_t k_orient[5] = {0x53, 0x64, 0x75, 0x46, 0x57};
+  for (int i = 0; i < minutes; i++) {
+    int m = s_synth_now / SECONDS_PER_MINUTE;
+    uint16_t vmc = k_vmc[m % 13];
+    if ((m % 17) == 0) {
+      vmc = 45;
+    }
+    prv_synth_minute(vmc, k_orient[(m / 17) % 5]);
+  }
+}
+
+// Worn and awake: high VMC, orientation changing minute to minute
+static void prv_synth_motion(int minutes) {
+  static const uint8_t k_orient[4] = {0x41, 0x62, 0x73, 0x54};
+  for (int i = 0; i < minutes; i++) {
+    int m = s_synth_now / SECONDS_PER_MINUTE;
+    prv_synth_minute(2500 + (m % 3) * 700, k_orient[m % 4]);
+  }
+}
+
+// Not worn: dead still, flat orientation (watch on a nightstand)
+static void prv_synth_table(int minutes) {
+  for (int i = 0; i < minutes; i++) {
+    prv_synth_minute(0, 0x05);
+  }
+}
+
+static int prv_synth_count_containers(void) {
+  int count = 0;
+  for (int i = 0; i < s_num_captured_sleep_sessions; i++) {
+    if (s_captured_sleep_sessions[i].activity == KAlgActivityType_Sleep) {
+      printf("\ncontainer session: start_m: %d, len_m: %d",
+             (int)(s_captured_sleep_sessions[i].start_utc / SECONDS_PER_MINUTE),
+             (int)s_captured_sleep_sessions[i].len_m);
+      count++;
+    }
+  }
+  printf("\n");
+  return count;
+}
+
+// Returns the length of the container session starting within tolerance_m of start_m,
+// or -1 if none
+static int prv_synth_container_len_near(int start_m, int tolerance_m) {
+  for (int i = 0; i < s_num_captured_sleep_sessions; i++) {
+    if (s_captured_sleep_sessions[i].activity != KAlgActivityType_Sleep) {
+      continue;
+    }
+    int session_start_m = s_captured_sleep_sessions[i].start_utc / SECONDS_PER_MINUTE;
+    if (session_start_m >= start_m - tolerance_m && session_start_m <= start_m + tolerance_m) {
+      return s_captured_sleep_sessions[i].len_m;
+    }
+  }
+  return -1;
+}
+
+
+// ---------------------------------------------------------------------------------------
+// The FIRM-3473 night: 90 min sleep, 12 min restless, 45 min sleep, 16 min restless,
+// 150 min sleep. The middle 45-minute cycle is shorter than min_sleep_cycle_len_minutes
+// but starts a few minutes after the first cycle ended -- it is a continuation of the
+// night and must be kept.
+void test_kraepelin_algorithm__short_mid_night_cycle_kept(void) {
+  prv_synth_start();
+
+  prv_synth_motion(20);
+  prv_synth_sleep(90);     // cycle 1: accepted (>= 60 min)
+  prv_synth_motion(12);    // brief mid-night restlessness (>= 11 ends cycle 1)
+  prv_synth_sleep(45);     // cycle 2: short, adjacent -- previously discarded
+  prv_synth_motion(16);    // >= 14 ends the early-phase cycle 2
+  prv_synth_sleep(150);    // cycle 3: accepted
+  prv_synth_motion(40);
+
+  cl_assert_equal_i(prv_synth_count_containers(), 3);
+  // The short cycle is registered roughly where it was slept
+  int len_m = prv_synth_container_len_near(122, 10);
+  cl_assert(len_m >= 30);
+  cl_assert(len_m <= 50);
+
+  prv_synth_end();
+}
+
+
+// ---------------------------------------------------------------------------------------
+// Same night shape, but the "short cycle" is the watch lying flat and dead still on a
+// nightstand (FIRM-1533 / FIRM-1121 shape). The not-worn checks must still veto it.
+void test_kraepelin_algorithm__short_cycle_on_table_rejected(void) {
+  prv_synth_start();
+
+  prv_synth_motion(20);
+  prv_synth_sleep(90);
+  prv_synth_motion(12);
+  prv_synth_table(45);     // watch on nightstand: still + flat orientation
+  prv_synth_motion(16);
+  prv_synth_sleep(150);
+  prv_synth_motion(40);
+
+  cl_assert_equal_i(prv_synth_count_containers(), 2);
+  cl_assert_equal_i(prv_synth_container_len_near(122, 10), -1);
+
+  prv_synth_end();
+}
+
+
+// ---------------------------------------------------------------------------------------
+// A short cycle that does NOT closely follow accepted sleep (40 min gap) stays rejected.
+void test_kraepelin_algorithm__short_cycle_far_from_sleep_rejected(void) {
+  prv_synth_start();
+
+  prv_synth_motion(20);
+  prv_synth_sleep(90);
+  prv_synth_motion(40);    // long awake gap: the night is over
+  prv_synth_sleep(45);
+  prv_synth_motion(20);
+
+  cl_assert_equal_i(prv_synth_count_containers(), 1);
+
+  prv_synth_end();
+}
+
+
+// ---------------------------------------------------------------------------------------
+// A too-short adjacent cycle (10 min) stays rejected: adjacency does not admit noise.
+void test_kraepelin_algorithm__tiny_adjacent_cycle_rejected(void) {
+  prv_synth_start();
+
+  prv_synth_motion(20);
+  prv_synth_sleep(90);
+  prv_synth_motion(12);
+  prv_synth_sleep(10);
+  prv_synth_motion(16);
+  prv_synth_sleep(150);
+  prv_synth_motion(40);
+
+  cl_assert_equal_i(prv_synth_count_containers(), 2);
+
+  prv_synth_end();
+}
+
+
+// ---------------------------------------------------------------------------------------
+// A genuinely broken night: repeated short cycles each following the previous one. Each
+// short cycle re-anchors adjacency and is registered once the next one appears. The final
+// short cycle is never followed by more sleep, so it is (conservatively) dropped -- at the
+// end of the night a short still period is indistinguishable from post-wake dozing.
+void test_kraepelin_algorithm__chained_short_cycles_kept(void) {
+  prv_synth_start();
+
+  prv_synth_motion(20);
+  prv_synth_sleep(90);
+  for (int i = 0; i < 3; i++) {
+    prv_synth_motion(16);
+    prv_synth_sleep(35);
+  }
+  prv_synth_motion(40);
+
+  cl_assert_equal_i(prv_synth_count_containers(), 3);
+
+  prv_synth_end();
+}
