@@ -99,3 +99,29 @@ void music_request_low_latency_for_period(uint32_t period_seconds);
 
 //! For testing purposes.
 const char * music_get_connected_server_debug_name(void);
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Album art
+
+struct GBitmap;
+
+
+//! @return An 8-bit generation token that changes whenever the current track changes (title, artist
+//! or album). The Music app re-requests art when it changes; servers echo it in album-art transfers
+//! so the service can discard art that arrived after a track change. @see music_set_album_art
+uint8_t music_get_now_playing_generation(void);
+
+//! @return True if the album art currently held matches the current track (i.e. we've received a
+//! response — art or "no art" — for this generation). The previous track's art stays on screen
+//! until the new track's art arrives, so callers must use this rather than "is any art present" to
+//! decide whether to (re-)request art for the current track.
+bool music_album_art_is_current(void);
+
+//! Borrow the current album art for drawing. Returns NULL if there is no art for the current track.
+//! The returned bitmap is owned by the music service and remains valid until music_album_art_unlock
+//! is called; the caller MUST call music_album_art_unlock when done, and MUST NOT retain the pointer
+//! past that point.
+const struct GBitmap *music_album_art_lock(void);
+
+//! Release the album art borrowed with music_album_art_lock.
+void music_album_art_unlock(void);

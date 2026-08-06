@@ -28,12 +28,14 @@
 #include "stubs_pbl_malloc.h"
 #include "stubs_bt_lock.h"
 #include "stubs_hexdump.h"
+#include "stubs_imaging.h"
 #include "stubs_logging.h"
 #include "stubs_mutex.h"
 #include "stubs_serial.h"
 #include "stubs_tick.h"
 
 void ams_music_disconnect(void) {}
+
 
 extern void music_protocol_msg_callback(CommSession *session, const uint8_t* msg, size_t length);
 
