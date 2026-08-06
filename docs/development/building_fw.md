@@ -45,5 +45,28 @@ onto your sealed watch:
 ```
 
 The resulting `.pbz` file will be located in the `build/` directory. Transfer this file
-to the device paired to your watch, then, in the Pebble app, enable `Settings -> Show debug options`.
+to the device paired to your watch, then, in the Pebble app, enable `Settings -> Developer mode`.
 Go back to the Devices tab, tap your watch, then `Firmware Update Debug -> Sideload FW`, and select the `.pbz` file.
+
+On Android you can also open the transferred `.pbz` from a file manager, which asks the
+app to confirm and then starts the update, with no settings changed. Not every file
+manager offers an app for an unfamiliar extension, so use one that does, such as
+[Material Files](https://github.com/zhanghai/MaterialFiles).
+
+Flashing repeatedly is better scripted over adb, which installs without asking. This route
+is open to an adb shell, which holds the `android.permission.DUMP` the broadcast requires,
+and it needs `Developer mode` on in the app. `$PBZ` is the file from `build/`:
+
+```shell
+adb push $PBZ /data/local/tmp/firmware.pbz
+adb shell am broadcast -a coredevices.pebble.SIDELOAD_FIRMWARE \
+    -n coredevices.coreapp/coredevices.pebble.firmware.FirmwareSideloadReceiver \
+    --es path /data/local/tmp/firmware.pbz
+```
+
+The app waits up to a minute for the watch to be connected, then starts the update and
+shows its progress on the watch card in the Devices tab.
+
+Not every Android version lets an app read `/data/local/tmp`. If the app reports the file
+as missing, create `/sdcard/Android/data/coredevices.coreapp/cache` and push it there
+instead.
