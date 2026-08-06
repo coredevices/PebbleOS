@@ -91,6 +91,13 @@ void tick_timer_service_subscribe(TimeUnits tick_units, TickHandler handler) {
   state->tick_units = tick_units;
   state->first_tick = true;
   event_service_client_subscribe(&state->tick_service_info);
+  // Tell the kernel whether we need second-resolution ticks so it can fall back
+  // to minute-granularity broadcasts (and let this task sleep) when we don't.
+  const bool needs_seconds = (tick_units & SECOND_UNIT) != 0;
+  if (needs_seconds != state->seconds_subscribed) {
+    state->seconds_subscribed = needs_seconds;
+    sys_tick_timer_set_seconds_subscribed(needs_seconds);
+  }
   if (pebble_task_get_current() == PebbleTask_App && sys_app_is_watchface()) {
     PBL_ANALYTICS_SET_UNSIGNED(app_tick_timer_second_subscribed,
                                (tick_units & SECOND_UNIT) ? 1 : 0);
@@ -102,6 +109,10 @@ void tick_timer_service_unsubscribe(void) {
   TickTimerServiceState *state = prv_get_state(PebbleTask_Unknown);
   event_service_client_unsubscribe(&state->tick_service_info);
   state->handler = NULL;
+  if (state->seconds_subscribed) {
+    state->seconds_subscribed = false;
+    sys_tick_timer_set_seconds_subscribed(false);
+  }
   if (pebble_task_get_current() == PebbleTask_App && sys_app_is_watchface()) {
     PBL_ANALYTICS_SET_UNSIGNED(app_tick_timer_second_subscribed, 0);
   }
