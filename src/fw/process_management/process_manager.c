@@ -30,6 +30,7 @@
 #include "pbl/services/data_logging/data_logging_service.h"
 #include "pbl/services/persist.h"
 #include "pbl/services/voice/voice.h"
+#include "pbl/services/voice/voice_recording.h"
 #include "shell/normal/watchface.h"
 
 #include "syscall/syscall.h"
@@ -551,8 +552,9 @@ void process_manager_process_cleanup(PebbleTask task) {
 #endif
   dls_inactivate_sessions(task);
 
-  if (task == PebbleTask_App) {
-  }
+#ifdef CONFIG_MIC
+  voice_recording_cleanup_task(task);
+#endif
 #endif // CONFIG_RECOVERY_FW
 
   // Unregister the task
