@@ -40,9 +40,32 @@ typedef struct {
   unsigned int skipped;
 } BleStoreCCCDFindContext;
 
+typedef struct {
+  ListNode node;
+  struct ble_store_value_csfc value_csfc;
+} BleStoreValueCSFC;
+
+typedef struct {
+  const struct ble_store_key_csfc *key;
+  unsigned int skipped;
+} BleStoreCSFCFindContext;
+
+//! Persisted layout of one GATT caching peer state record. Kept independent
+//! of the NimBLE struct so persisted data survives NimBLE layout changes.
+typedef struct PACKED {
+  uint8_t addr_type;
+  uint8_t addr[6];
+  uint8_t csfc;
+  uint8_t change_aware;
+} NimbleStoreCSFCRecord;
+
+#define CSFC_MAX_RECORDS MYNEWT_VAL(BLE_STORE_MAX_BONDS)
+
 static BleStoreValueSec *s_peer_value_secs;
 static BleStoreValueSec *s_our_value_secs;
 static BleStoreValueCCCD *s_cccds;
+static BleStoreValueCSFC *s_csfcs;
+static bool s_csfcs_loaded;
 
 static PebbleRecursiveMutex *s_store_mutex;
 
@@ -413,6 +436,200 @@ unlock:
   return ret;
 }
 
+static void prv_nimble_store_csfc_insert(const struct ble_store_value_csfc *value_csfc);
+
+//! Loads the persisted GATT caching peer state table on first use. Must be
+//! called without the store mutex held: bt_persistent_storage holds its own
+//! lock while iterating records into this store, so the storage read must not
+//! happen under the store mutex (lock ordering).
+static void prv_nimble_store_csfc_ensure_loaded(void) {
+  NimbleStoreCSFCRecord records[CSFC_MAX_RECORDS];
+  bool loaded;
+  int len;
+
+  mutex_lock_recursive(s_store_mutex);
+  loaded = s_csfcs_loaded;
+  mutex_unlock_recursive(s_store_mutex);
+
+  if (loaded) {
+    return;
+  }
+
+  len = bt_persistent_storage_get_ble_gatt_caching_state(records, sizeof(records));
+
+  mutex_lock_recursive(s_store_mutex);
+  if (!s_csfcs_loaded) {
+    s_csfcs_loaded = true;
+
+    for (int i = 0; i < len / (int)sizeof(NimbleStoreCSFCRecord); i++) {
+      struct ble_store_value_csfc value = {
+        .peer_addr = {
+          .type = records[i].addr_type,
+        },
+        .csfc = { records[i].csfc },
+        .change_aware = records[i].change_aware,
+      };
+      memcpy(value.peer_addr.val, records[i].addr, sizeof(value.peer_addr.val));
+      prv_nimble_store_csfc_insert(&value);
+    }
+  }
+  mutex_unlock_recursive(s_store_mutex);
+}
+
+//! Serializes the GATT caching peer state table. Must be called with the
+//! store mutex held; the returned length is persisted by the caller after
+//! releasing the mutex.
+static size_t prv_nimble_store_csfc_serialize(NimbleStoreCSFCRecord *records) {
+  size_t num = 0;
+
+  for (BleStoreValueCSFC *s = s_csfcs; s != NULL && num < CSFC_MAX_RECORDS;
+       s = (BleStoreValueCSFC *)list_get_next((ListNode *)s)) {
+    records[num].addr_type = s->value_csfc.peer_addr.type;
+    memcpy(records[num].addr, s->value_csfc.peer_addr.val, sizeof(records[num].addr));
+    records[num].csfc = s->value_csfc.csfc[0];
+    records[num].change_aware = s->value_csfc.change_aware;
+    num++;
+  }
+
+  return num * sizeof(NimbleStoreCSFCRecord);
+}
+
+static bool prv_nimble_store_find_csfc_cb(ListNode *node, void *data) {
+  BleStoreValueCSFC *s = (BleStoreValueCSFC *)node;
+  BleStoreCSFCFindContext *ctx = data;
+
+  if ((ble_addr_cmp(&ctx->key->peer_addr, BLE_ADDR_ANY) != 0) &&
+      (ble_addr_cmp(&s->value_csfc.peer_addr, &ctx->key->peer_addr) != 0)) {
+    return false;
+  }
+
+  if (ctx->key->idx > ctx->skipped) {
+    ctx->skipped++;
+    return false;
+  }
+
+  return true;
+}
+
+static BleStoreValueCSFC *prv_nimble_store_find_csfc(const struct ble_store_key_csfc *key_csfc) {
+  BleStoreCSFCFindContext ctx = {
+    .key = key_csfc,
+    .skipped = 0U,
+  };
+
+  return (BleStoreValueCSFC *)list_find((ListNode *)s_csfcs, prv_nimble_store_find_csfc_cb, &ctx);
+}
+
+static void prv_nimble_store_csfc_insert(const struct ble_store_value_csfc *value_csfc) {
+  struct ble_store_key_csfc key_csfc;
+  BleStoreValueCSFC *s;
+
+  ble_store_key_from_value_csfc(&key_csfc, value_csfc);
+
+  s = prv_nimble_store_find_csfc(&key_csfc);
+  if (s == NULL) {
+    s = kernel_zalloc_check(sizeof(BleStoreValueCSFC));
+    if (s_csfcs == NULL) {
+      s_csfcs = s;
+    } else {
+      list_append((ListNode *)s_csfcs, (ListNode *)s);
+    }
+  }
+
+  s->value_csfc = *value_csfc;
+}
+
+static int prv_nimble_store_read_csfc(const struct ble_store_key_csfc *key_csfc,
+                                      struct ble_store_value_csfc *value_csfc) {
+  BleStoreValueCSFC *s;
+  int ret = 0;
+
+  prv_nimble_store_csfc_ensure_loaded();
+
+  mutex_lock_recursive(s_store_mutex);
+
+  s = prv_nimble_store_find_csfc(key_csfc);
+  if (s == NULL) {
+    ret = BLE_HS_ENOENT;
+    goto unlock;
+  }
+
+  *value_csfc = s->value_csfc;
+
+unlock:
+  mutex_unlock_recursive(s_store_mutex);
+
+  return ret;
+}
+
+static int prv_nimble_store_write_csfc(const struct ble_store_value_csfc *value_csfc) {
+  NimbleStoreCSFCRecord records[CSFC_MAX_RECORDS];
+  size_t len;
+
+  prv_nimble_store_csfc_ensure_loaded();
+
+  mutex_lock_recursive(s_store_mutex);
+
+  if (list_count((ListNode *)s_csfcs) >= CSFC_MAX_RECORDS) {
+    struct ble_store_key_csfc key_csfc;
+
+    ble_store_key_from_value_csfc(&key_csfc, value_csfc);
+    if (prv_nimble_store_find_csfc(&key_csfc) == NULL) {
+      mutex_unlock_recursive(s_store_mutex);
+      return BLE_HS_ESTORE_CAP;
+    }
+  }
+
+  prv_nimble_store_csfc_insert(value_csfc);
+  len = prv_nimble_store_csfc_serialize(records);
+
+  mutex_unlock_recursive(s_store_mutex);
+
+  bt_persistent_storage_set_ble_gatt_caching_state(records, len);
+
+  return 0;
+}
+
+static int prv_nimble_store_delete_csfc(const struct ble_store_key_csfc *key_csfc) {
+  NimbleStoreCSFCRecord records[CSFC_MAX_RECORDS];
+  BleStoreValueCSFC *s;
+  size_t len;
+
+  prv_nimble_store_csfc_ensure_loaded();
+
+  mutex_lock_recursive(s_store_mutex);
+
+  s = prv_nimble_store_find_csfc(key_csfc);
+  if (s == NULL) {
+    mutex_unlock_recursive(s_store_mutex);
+    return BLE_HS_ENOENT;
+  }
+
+  list_remove((ListNode *)s, (ListNode **)&s_csfcs, NULL);
+  kernel_free(s);
+  len = prv_nimble_store_csfc_serialize(records);
+
+  mutex_unlock_recursive(s_store_mutex);
+
+  bt_persistent_storage_set_ble_gatt_caching_state(records, len);
+
+  return 0;
+}
+
+static int prv_nimble_store_read_db_hash(struct ble_store_value_db_hash *value_db_hash) {
+  if (!bt_persistent_storage_get_ble_gatt_db_hash(value_db_hash->hash)) {
+    return BLE_HS_ENOENT;
+  }
+
+  return 0;
+}
+
+static int prv_nimble_store_write_db_hash(const struct ble_store_value_db_hash *value_db_hash) {
+  bt_persistent_storage_set_ble_gatt_db_hash(value_db_hash->hash);
+
+  return 0;
+}
+
 static int prv_nimble_store_read(const int obj_type, const union ble_store_key *key,
                                  union ble_store_value *value) {
   switch (obj_type) {
@@ -421,6 +638,10 @@ static int prv_nimble_store_read(const int obj_type, const union ble_store_key *
       return prv_nimble_store_read_sec(obj_type, &key->sec, &value->sec);
     case BLE_STORE_OBJ_TYPE_CCCD:
       return prv_nimble_store_read_cccd(&key->cccd, &value->cccd);
+    case BLE_STORE_OBJ_TYPE_CSFC:
+      return prv_nimble_store_read_csfc(&key->csfc, &value->csfc);
+    case BLE_STORE_OBJ_TYPE_DB_HASH:
+      return prv_nimble_store_read_db_hash(&value->db_hash);
     default:
       return BLE_HS_ENOTSUP;
   }
@@ -433,6 +654,10 @@ static int prv_nimble_store_write(int obj_type, const union ble_store_value *val
       return prv_nimble_store_write_sec(obj_type, &val->sec);
     case BLE_STORE_OBJ_TYPE_CCCD:
       return prv_nimble_store_write_cccd(&val->cccd);
+    case BLE_STORE_OBJ_TYPE_CSFC:
+      return prv_nimble_store_write_csfc(&val->csfc);
+    case BLE_STORE_OBJ_TYPE_DB_HASH:
+      return prv_nimble_store_write_db_hash(&val->db_hash);
     default:
       return BLE_HS_ENOTSUP;
   }
@@ -445,6 +670,8 @@ static int prv_nimble_store_delete(int obj_type, const union ble_store_key *key)
       return prv_nimble_store_delete_sec(obj_type, &key->sec);
     case BLE_STORE_OBJ_TYPE_CCCD:
       return prv_nimble_store_delete_cccd(&key->cccd);
+    case BLE_STORE_OBJ_TYPE_CSFC:
+      return prv_nimble_store_delete_csfc(&key->csfc);
     default:
       return BLE_HS_ENOTSUP;
   }
@@ -500,10 +727,13 @@ void nimble_store_unload(void) {
   list_foreach((ListNode *)s_peer_value_secs, prv_store_value_free, NULL);
   list_foreach((ListNode *)s_our_value_secs, prv_store_value_free, NULL);
   list_foreach((ListNode *)s_cccds, prv_store_value_free, NULL);
+  list_foreach((ListNode *)s_csfcs, prv_store_value_free, NULL);
 
   s_peer_value_secs = NULL;
   s_our_value_secs = NULL;
   s_cccds = NULL;
+  s_csfcs = NULL;
+  s_csfcs_loaded = false;
 
   mutex_unlock_recursive(s_store_mutex);
 }
