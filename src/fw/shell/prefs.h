@@ -191,6 +191,7 @@ typedef enum ShellLanguage {
   ShellLanguageDutch,
   ShellLanguagePortuguese,
   ShellLanguagePolish,
+  ShellLanguageChinese,
   ShellLanguageCount,
 } ShellLanguage;
 
