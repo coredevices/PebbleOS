@@ -283,13 +283,28 @@ void rtc_set_time(time_t time) {
   prv_rtc_set_time_no_cal_reset(time);
 }
 
+// RSF sync completes within a few RTC clock cycles (~0.5 ms at RC10K); a
+// wedged low-power domain can leave it stuck low forever, so bound the wait
+// well above the genuine sync time (~40-200 ms depending on HCLK).
+#define RTC_RSF_SYNC_MAX_SPINS 1000000UL
+
 void rtc_get_time_ms(time_t* out_seconds, uint16_t* out_ms) {
   RTC_DateTypeDef rtc_date;
   RTC_TimeTypeDef rtc_time;
 
   if (s_initialized) {
+    uint32_t spins = 0;
     while((RTC_Handler.Instance->ISR & RTC_ISR_RSF) == (uint32_t)RESET) {
       // Wait for RTC registers to synchronize
+      if (++spins > RTC_RSF_SYNC_MAX_SPINS) {
+        static bool s_rsf_timeout_logged = false;
+        if (!s_rsf_timeout_logged) {
+          // Set before logging: PBL_LOG timestamps re-enter rtc_get_time_ms
+          s_rsf_timeout_logged = true;
+          PBL_LOG_ERR("RSF sync timeout, reading stale RTC shadow registers");
+        }
+        break;
+      }
     }
   }
 
