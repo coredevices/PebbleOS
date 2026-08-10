@@ -383,17 +383,22 @@ void audec_start(AudioDevice* audio_device, AudioTransCB cb) {
     HAL_NVIC_EnableIRQ(audio_device->audec_dma_irq);
     state->tx_instanc = HAL_AUDCODEC_DAC_CH0;
 
+    // Digital gain must be programmed before the DAC path opens, otherwise
+    // startup transients escape at the codec's default 0 dB gain.
+    prv_apply_volume(audio_device);
+
     /* enable AUDCODEC at last*/
     __HAL_AUDCODEC_DAC_ENABLE(haudcodec);
 
     HAL_AUDCODEC_Config_DACPath(haudcodec, 1);
     HAL_AUDCODEC_Config_Analog_DACPath(haudcodec->Init.dac_cfg.dac_clk);
-    HAL_AUDCODEC_Config_DACPath(haudcodec, 0);
+    // Volume 0 muted the path in prv_apply_volume(); don't reopen it.
+    if (state->volume != 0) {
+        HAL_AUDCODEC_Config_DACPath(haudcodec, 0);
+    }
 
     hwp_audcodec->DAC_CH0_CFG_EXT &= ~AUDCODEC_DAC_CH0_CFG_EXT_RAMP_EN_Msk;
     hwp_audcodec->DAC_CH1_CFG_EXT &= ~AUDCODEC_DAC_CH1_CFG_EXT_RAMP_EN_Msk;
-
-    prv_apply_volume(audio_device);
 }
 
 uint32_t audec_write(AudioDevice* audio_device, void *writeBuf, uint32_t size) {
@@ -479,11 +484,13 @@ static void prv_dma_request_processing(AudioDeviceState* state) {
     // Only one refill callback may be in flight: this ISR fires every half
     // buffer, and enqueueing on each one floods the system task queue when
     // KernelBG is starved, tripping the Event Queue Full reset.
+    // A dropped refill is retried on the next half-buffer IRQ; a momentary
+    // underrun beats resetting the system over a full queue.
     if(state->trans_cb && !state->callback_pending &&
        free_size >= CFG_AUDIO_PLAYBACK_PIPE_SIZE) {
         bool system_task_switch_context = false;
         state->callback_pending = true;
-        if (!system_task_add_callback_from_isr(prv_audio_trans_bg, (void*)state,
+        if (!system_task_add_callback_from_isr_droppable(prv_audio_trans_bg, (void*)state,
                 &system_task_switch_context)) {
             state->callback_pending = false;
         }
