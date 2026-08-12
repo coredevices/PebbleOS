@@ -7,6 +7,7 @@
 #include "workout.h"
 
 #include "applib/app.h"
+#include "applib/ui/action_bar_layer_private.h"
 #include "applib/ui/action_menu_window.h"
 #include "applib/ui/ui.h"
 #include "applib/ui/window_manager.h"
@@ -816,7 +817,7 @@ static void prv_create_window_common(WorkoutActiveWindow *active_window,
 
   GRect base_layer_bounds = window->layer.bounds;
 #if PBL_RECT
-  base_layer_bounds.size.w -= ACTION_BAR_WIDTH;
+  base_layer_bounds = action_bar_layer_inset_bounds(base_layer_bounds);
 #endif
 
   base_layer_bounds.origin.y = STATUS_BAR_LAYER_HEIGHT;
@@ -885,8 +886,7 @@ static void prv_create_window_common(WorkoutActiveWindow *active_window,
   layer_add_child(&window->layer, status_bar_layer_get_layer(status_layer));
 
 #if PBL_RECT
-  GRect status_layer_bounds = window->layer.bounds;
-  status_layer_bounds.size.w -= ACTION_BAR_WIDTH;
+  GRect status_layer_bounds = action_bar_layer_inset_bounds(window->layer.bounds);
   layer_set_frame(&status_layer->layer, &status_layer_bounds);
 #endif
 
