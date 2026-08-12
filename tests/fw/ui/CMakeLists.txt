@@ -10,6 +10,16 @@ pbl_clar_test(test_layer
   DEFINES CONFIG_TOUCH
 )
 
+pbl_clar_test(test_action_bar_layer
+  SOURCES
+    fw/applib/graphics/gtypes.c
+    fw/applib/graphics/gcolor_definitions.c
+    tests/fakes/fake_gbitmap_png.c
+    fw/applib/ui/layer.c
+    fw/applib/ui/action_bar_layer.c
+  DEFINES CONFIG_ORIENTATION_MANAGER
+)
+
 pbl_clar_test(test_layer_rect
   SOURCES
     fw/applib/graphics/graphics_private_raw.c
