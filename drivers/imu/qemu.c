@@ -223,8 +223,16 @@ static int prv_peek(const struct pbl_accel *accel, AccelDriverSample *sample) {
   return 0;
 }
 
+static int prv_set_rotated(const struct pbl_accel *accel, bool rotated) {
+  (void)accel;
+  (void)rotated;
+
+  return 0;
+}
+
 static const struct pbl_accel_ops s_ops = {
   .init = prv_init,
+  .set_rotated = prv_set_rotated,
   .set_sampling_interval = prv_set_sampling_interval,
   .get_sampling_interval = prv_get_sampling_interval,
   .set_num_samples = prv_set_num_samples,
