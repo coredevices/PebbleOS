@@ -16,3 +16,7 @@ uint16_t PBL_WEAK timeline_layer_get_sidebar_arrow_width(void) {
 int16_t PBL_WEAK timeline_layer_get_icon_offset_y(void) {
   return 0;
 }
+
+bool PBL_WEAK timeline_layer_sidebar_is_on_right(void) {
+  return true;
+}
