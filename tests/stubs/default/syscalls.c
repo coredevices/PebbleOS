@@ -70,3 +70,7 @@ bool PBL_WEAK sys_mic_banner_get_accessory_area(GRect *area_out) {
   *area_out = GRectZero;
   return false;
 }
+
+bool PBL_WEAK action_bar_layer_is_on_right(void) {
+  return true;
+}
