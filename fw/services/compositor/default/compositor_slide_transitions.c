@@ -10,6 +10,7 @@
 #include <applib/graphics/framebuffer.h>
 #include <applib/graphics/gtypes.h>
 #include <applib/ui/action_bar_layer.h>
+#include <applib/ui/action_bar_layer_private.h>
 #include <applib/ui/animation_interpolate.h>
 #include <apps/system/timeline/common.h>
 #include <popups/timeline/peek.h>
