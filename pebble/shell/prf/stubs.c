@@ -328,6 +328,15 @@ void shell_prefs_get_dark_mode_schedule(DarkModeSchedule *schedule_out) {
 void shell_prefs_set_dark_mode_schedule(const DarkModeSchedule *schedule) {
 }
 
+#ifdef CONFIG_ORIENTATION_MANAGER
+bool display_orientation_is_left(void) {
+  return false;
+}
+
+void display_orientation_set_left(bool left) {
+}
+#endif
+
 FontInfo *fonts_get_system_emoji_font_for_size(unsigned int font_height) {
   return nullptr;
 }
