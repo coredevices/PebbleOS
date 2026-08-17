@@ -3,7 +3,7 @@ from tools.waf.pebble_test import clar
 rendering_sources = \
     " src/fw/applib/fonts/codepoint.c" \
     " src/fw/applib/graphics/${BITDEPTH}_bit/framebuffer.c" \
-    " src/fw/applib/graphics/8_bit/bitblt_private.c" \
+    " src/fw/applib/graphics/${BITDEPTH}_bit/bitblt_private.c" \
     " src/fw/applib/graphics/bitblt.c" \
     " src/fw/applib/graphics/framebuffer.c" \
     " src/fw/applib/graphics/gbitmap.c" \
@@ -79,15 +79,18 @@ clar(ctx,
                         " src/fw/applib/ui/content_indicator.c" \
                         " tests/fakes/fake_fonts.c" \
                         " src/fw/applib/ui/shadows.c" \
-                        " src/fw/apps/system/weather/layout.c" \
+                        " src/fw/applib/ui/bitmap_layer.c" \
+                        " src/fw/applib/graphics/gdraw_command_transforms.c" \
+                        " src/fw/apps/system/weather/weather_app_layout.c" \
+                        " src/fw/apps/system/weather/weather_math.c" \
                         " src/fw/services/timeline/timeline_resources.c" \
-                        " src/fw/services/weather/weather_types.c" \
+                        " src/fw/apps/system/weather/weather_types.c" \
                         " src/fw/util/buffer.c" \
                         " tests/fixtures/resources/timeline_resource_table.auto.c",
      test_sources_ant_glob = "test_weather_app_layout.c",
      defines=ctx.env.test_image_defines + ["USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1"],
      runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
      override_includes=['dummy_board'],
-     platforms=['obelix', 'gabbro'])
+     platforms=['obelix', 'gabbro', 'asterix'])
 
 # vim:filetype=python
