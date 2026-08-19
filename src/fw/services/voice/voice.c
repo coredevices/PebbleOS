@@ -132,9 +132,11 @@ static void prv_stop_feed(void) {
     new_timer_stop(s_feed_timer);
   }
   if (s_rec_fd >= 0) {
+    const VoiceRecordingId recording_id = s_rec_id;
     pfs_close(s_rec_fd);
     s_rec_fd = -1;
     s_rec_id = VOICE_RECORDING_ID_INVALID;
+    voice_recording_transcription_release(recording_id);
   }
 }
 
@@ -545,41 +547,41 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
 // result comes back through the same path (voice_handle_dictation_result).
 VoiceSessionId voice_start_dictation_from_recording(VoiceRecordingId recording_id) {
   PBL_LOG_DBG("voice_start_dictation_from_recording called for id %u", (unsigned)recording_id);
+  if (!voice_recording_transcription_reserve(recording_id)) {
+    PBL_LOG_DBG("Another recording is already reserved for transcription");
+    return VOICE_SESSION_ID_INVALID;
+  }
+
   mutex_lock(s_lock);
 
   if (s_state != SessionState_Idle) {
     PBL_LOG_DBG("Voice service not idle (state: %d), cannot transcribe", s_state);
-    mutex_unlock(s_lock);
-    return VOICE_SESSION_ID_INVALID;
+    goto fail;
   }
 
   // Dictation, transcription and on-device recording share the single microphone/encoder.
   if (mic_is_running(MIC)) {
     PBL_LOG_WRN("Microphone busy (recording?), cannot transcribe");
-    mutex_unlock(s_lock);
-    return VOICE_SESSION_ID_INVALID;
+    goto fail;
   }
 
   VoiceRecordingStorageMetadata meta;
   if (!voice_recording_storage_get_metadata(recording_id, &meta)) {
     PBL_LOG_WRN("Recording %u not found", (unsigned)recording_id);
-    mutex_unlock(s_lock);
-    return VOICE_SESSION_ID_INVALID;
+    goto fail;
   }
 
   // Transcription (speech-to-text) is mono only.
   if (meta.channels != 1) {
     PBL_LOG_WRN("Cannot transcribe recording with %u channels", meta.channels);
-    mutex_unlock(s_lock);
-    return VOICE_SESSION_ID_INVALID;
+    goto fail;
   }
 
   uint32_t data_bytes = 0;
   const int fd = voice_recording_storage_open_payload(recording_id, &data_bytes);
   if (fd < 0) {
     PBL_LOG_WRN("Failed to open recording %u payload", (unsigned)recording_id);
-    mutex_unlock(s_lock);
-    return VOICE_SESSION_ID_INVALID;
+    goto fail;
   }
 
   s_rec_fd = fd;
@@ -592,6 +594,11 @@ VoiceSessionId voice_start_dictation_from_recording(VoiceRecordingId recording_i
       prv_start_session(VoiceEndpointSessionTypeDictation, &meta.speex);
   mutex_unlock(s_lock);
   return session_id;
+
+fail:
+  mutex_unlock(s_lock);
+  voice_recording_transcription_release(recording_id);
+  return VOICE_SESSION_ID_INVALID;
 }
 
 bool voice_session_is_active(void) {

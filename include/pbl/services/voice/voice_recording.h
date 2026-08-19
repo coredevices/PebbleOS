@@ -125,6 +125,12 @@ bool voice_recording_in_progress(void);
 //! @return true if the active or stored recording belongs to \a app_uuid.
 bool voice_recording_is_owned_by(VoiceRecordingId id, const Uuid *app_uuid);
 
+//! Reserve a stored recording against deletion while it is transcribed.
+bool voice_recording_transcription_reserve(VoiceRecordingId id);
+
+//! Release a transcription reservation.
+void voice_recording_transcription_release(VoiceRecordingId id);
+
 //! Enumerate stored recordings.
 //! @param out  caller-provided array to fill
 //! @param max  capacity of \a out

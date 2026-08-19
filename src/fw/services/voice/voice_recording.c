@@ -16,7 +16,6 @@
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/settings/settings_file.h"
-#include "pbl/services/voice/voice.h"
 #include "pbl/services/voice/voice_speex.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/app_manager.h"
@@ -46,6 +45,7 @@ PBL_LOG_MODULE_DECLARE(service_voice, CONFIG_SERVICE_VOICE_LOG_LEVEL);
 static PebbleMutex *s_lock;
 static VoiceRecordingId s_active_id = VOICE_RECORDING_ID_INVALID;
 static VoiceRecordingId s_next_id = 1;
+static VoiceRecordingId s_transcribing_id = VOICE_RECORDING_ID_INVALID;
 static PebbleTask s_owner_task = PebbleTask_Unknown;
 
 static int s_temp_fd = -1;
@@ -318,6 +318,7 @@ VoiceRecordingId voice_recording_start(void) {
     goto unlock;
   }
 
+  // Tag third-party recordings with their creator; system recordings stay unowned.
   const bool from_app = (pebble_task_get_current() == PebbleTask_App) &&
                         !app_install_id_from_system(app_manager_get_current_app_id());
   s_app_uuid = from_app ? app_manager_get_current_app_md()->uuid : UUID_INVALID;
@@ -401,6 +402,7 @@ bool voice_recording_in_progress(void) {
 }
 
 static bool prv_is_owned_by_locked(VoiceRecordingId id, const Uuid *app_uuid) {
+  // An active recording has no finalized file header yet, so use its cached creator.
   if ((s_active_id != VOICE_RECORDING_ID_INVALID) && (id == s_active_id)) {
     return uuid_equal(&s_app_uuid, app_uuid);
   }
@@ -416,6 +418,28 @@ bool voice_recording_is_owned_by(VoiceRecordingId id, const Uuid *app_uuid) {
   return owned;
 }
 
+bool voice_recording_transcription_reserve(VoiceRecordingId id) {
+  if (id == VOICE_RECORDING_ID_INVALID) {
+    return false;
+  }
+
+  mutex_lock(s_lock);
+  const bool reserved = (s_transcribing_id == VOICE_RECORDING_ID_INVALID);
+  if (reserved) {
+    s_transcribing_id = id;
+  }
+  mutex_unlock(s_lock);
+  return reserved;
+}
+
+void voice_recording_transcription_release(VoiceRecordingId id) {
+  mutex_lock(s_lock);
+  if (s_transcribing_id == id) {
+    s_transcribing_id = VOICE_RECORDING_ID_INVALID;
+  }
+  mutex_unlock(s_lock);
+}
+
 uint32_t voice_recording_list(VoiceRecordingInfo *out, uint32_t max) {
   return voice_recording_storage_list(out, max);
 }
@@ -425,6 +449,7 @@ uint32_t voice_recording_list_summaries(VoiceRecordingSummary *out, uint32_t max
   return voice_recording_storage_list_summaries(out, max, has_more);
 }
 
+// Paginate recordings sent to the phone to keep Bluetooth responses bounded.
 uint32_t voice_recording_list_page(VoiceRecordingInfo *out, uint32_t max, uint32_t offset,
                                    bool *has_more) {
   return voice_recording_storage_list_page(out, max, offset, has_more);
@@ -441,9 +466,8 @@ bool voice_recording_delete(VoiceRecordingId id) {
     voice_recording_playback_stop();
   }
   bool deleted = false;
-  // Removing an open PFS file panics; the transcription stream keeps the recording open
-  // for its whole (real-time) duration.
-  if (voice_transcribing_recording_id() == id) {
+  // The reservation is set before the transcription opens the file under this same lock.
+  if (s_transcribing_id == id) {
     PBL_LOG_WRN("Recording %u is being transcribed, refusing to delete", (unsigned)id);
   } else {
     deleted = voice_recording_storage_delete(id);
@@ -467,7 +491,7 @@ void voice_recording_delete_owned_by(const Uuid *app_uuid) {
     voice_recording_playback_stop();
   }
   // Skip a recording held open by an active transcription stream (see voice_recording_delete).
-  voice_recording_storage_delete_owned_by(app_uuid, voice_transcribing_recording_id());
+  voice_recording_storage_delete_owned_by(app_uuid, s_transcribing_id);
   mutex_unlock(s_lock);
 }
 

@@ -382,6 +382,7 @@ static void prv_select_cb(OptionMenu *option_menu, int row, void *context) {
       }
       data->active_id = VOICE_RECORDING_ID_INVALID;
     } else {
+      // TODO: Remove system recording creation and keep this screen for management only.
       data->active_id = voice_recording_start();
       if (data->active_id == VOICE_RECORDING_ID_INVALID) {
         prv_show_dialog(i18n_noop("Recording unavailable"),
@@ -421,6 +422,7 @@ static void prv_unload_cb(OptionMenu *option_menu, void *context) {
 }
 
 static Window *prv_init(void) {
+  // TODO: Show used and available recording storage in this menu.
   SettingsRecordingsData *data = app_zalloc_check(sizeof(SettingsRecordingsData));
 
   const OptionMenuCallbacks callbacks = {
