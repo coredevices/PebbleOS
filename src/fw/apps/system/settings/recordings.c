@@ -6,7 +6,6 @@
 #include "option_menu.h"
 
 #include "applib/app.h"
-#include "applib/app_timer.h"
 #include "applib/ui/dialogs/actionable_dialog.h"
 #include "applib/ui/dialogs/confirmation_dialog.h"
 #include "applib/ui/dialogs/dialog.h"
@@ -27,7 +26,6 @@
 #ifdef CONFIG_MIC
 
 #define SETTINGS_RECORDINGS_MAX_SHOWN (64)
-#define SETTINGS_RECORDINGS_REFRESH_MS (500)
 #define VOICE_REC_ROW_OFFSET (2)
 
 typedef enum {
@@ -52,9 +50,7 @@ typedef struct {
   VoiceRecordingId selected_id;
   OptionMenu *action_menu;
   OptionMenu *settings_menu;
-  AppTimer *refresh_timer;
   RecordingSetting edited_setting;
-  bool was_recording;
   char row_buf[40];
   // Sized for translated labels (UTF-8 can take several bytes per character)
   char setting_labels[RecordingSetting_Count][64];
@@ -145,18 +141,6 @@ static void prv_reload(SettingsRecordingsData *data) {
                 SETTINGS_RECORDINGS_MAX_SHOWN);
   }
   option_menu_reload_data(&data->option_menu);
-}
-
-static void prv_refresh_timer_cb(void *context) {
-  SettingsRecordingsData *data = context;
-  const bool recording = voice_recording_in_progress();
-  if (recording != data->was_recording) {
-    data->was_recording = recording;
-    if (!recording) {
-      data->active_id = VOICE_RECORDING_ID_INVALID;
-    }
-    prv_reload(data);
-  }
 }
 
 static void prv_transcription_cb(AudioRecordingId recording_id, DictationSessionStatus status,
@@ -366,11 +350,6 @@ static void prv_draw_row_cb(OptionMenu *option_menu, GContext *ctx, const Layer 
   option_menu_system_draw_row(option_menu, ctx, cell_layer, text_frame, title, false, NULL);
 }
 
-static uint16_t prv_row_height_cb(OptionMenu *option_menu, uint16_t row, bool is_selected,
-                                  void *context) {
-  return option_menu_default_cell_height(option_menu->content_type, is_selected);
-}
-
 static void prv_select_cb(OptionMenu *option_menu, int row, void *context) {
   SettingsRecordingsData *data = context;
 
@@ -389,7 +368,6 @@ static void prv_select_cb(OptionMenu *option_menu, int row, void *context) {
                         prv_error_label(voice_recording_last_error()), false, true);
       }
     }
-    data->was_recording = voice_recording_in_progress();
     prv_reload(data);
     return;
   }
@@ -409,9 +387,6 @@ static void prv_select_cb(OptionMenu *option_menu, int row, void *context) {
 
 static void prv_unload_cb(OptionMenu *option_menu, void *context) {
   SettingsRecordingsData *data = context;
-  if (data->refresh_timer) {
-    app_timer_cancel(data->refresh_timer);
-  }
   voice_recording_stop_playback();
   if (voice_recording_in_progress()) {
     voice_recording_stop_active();
@@ -430,7 +405,6 @@ static Window *prv_init(void) {
       .draw_row = prv_draw_row_cb,
       .select = prv_select_cb,
       .get_num_rows = prv_get_num_rows_cb,
-      .get_cell_height = prv_row_height_cb,
   };
 
   option_menu_init(&data->option_menu);
@@ -444,9 +418,6 @@ static Window *prv_init(void) {
 
   data->active_id = VOICE_RECORDING_ID_INVALID;
   data->selected_id = VOICE_RECORDING_ID_INVALID;
-  data->was_recording = voice_recording_in_progress();
-  data->refresh_timer = app_timer_register_repeatable(SETTINGS_RECORDINGS_REFRESH_MS,
-                                                      prv_refresh_timer_cb, data, true);
   prv_reload(data);
 
   return &data->option_menu.window;
