@@ -29,6 +29,7 @@ static int16_t *s_pcm;
 static uint32_t s_pcm_bytes;
 static uint32_t s_pcm_offset;
 static uint32_t s_remaining;
+// Prevent timer callbacks from touching a stream that replaced this playback.
 static SpeakerStreamId s_stream_id = SPEAKER_STREAM_ID_INVALID;
 static VoiceRecordingId s_playback_id = VOICE_RECORDING_ID_INVALID;
 
