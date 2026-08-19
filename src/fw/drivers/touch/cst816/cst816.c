@@ -222,6 +222,7 @@ static bool cst816_fw_update(void) {
 }
 
 static void cst816_hw_reset(void) {
+  pbl_mutex_lock(&s_i2c_lock, PBL_FOREVER);
 #ifdef RESET_PIN_CTRLBY_NPM1300
   NPM1300_OPS.gpio_set(Npm1300_Gpio2, 0);
   psleep(CST816_RESET_CYCLE_TIME);
@@ -233,6 +234,7 @@ static void cst816_hw_reset(void) {
   gpio_output_set(&CST816->reset, false);
   psleep(CST816_POR_DELAY_TIME);
 #endif
+  pbl_mutex_unlock(&s_i2c_lock);
 }
 
 void touch_sensor_init(void) {
