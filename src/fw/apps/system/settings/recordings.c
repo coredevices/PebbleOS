@@ -137,7 +137,7 @@ static void prv_reload(SettingsRecordingsData *data) {
   data->count =
       voice_recording_list_summaries(data->rows, SETTINGS_RECORDINGS_MAX_SHOWN, &has_more);
   if (has_more) {
-    PBL_LOG_WRN("More than %d recordings stored, only the first are listed",
+    PBL_LOG_WRN("More than %d recordings stored, only the newest are listed",
                 SETTINGS_RECORDINGS_MAX_SHOWN);
   }
   option_menu_reload_data(&data->option_menu);

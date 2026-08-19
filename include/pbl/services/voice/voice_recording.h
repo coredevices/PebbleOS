@@ -90,6 +90,7 @@ typedef struct {
 typedef struct {
   VoiceRecordingId id;
   uint32_t duration_ms;  //!< Captured duration
+  time_t created;        //!< Wall-clock time the recording started
 } VoiceRecordingSummary;
 
 //! Initialize the recording service. Cleans up any temporary files left by an
@@ -137,7 +138,7 @@ void voice_recording_transcription_release(VoiceRecordingId id);
 //! @return number of recordings written to \a out
 uint32_t voice_recording_list(VoiceRecordingInfo *out, uint32_t max);
 
-//! Enumerate per-row summaries of stored recordings, in a single storage pass.
+//! Enumerate per-row summaries of stored recordings, newest first.
 //! @param out       caller-provided array to fill
 //! @param max       capacity of \a out
 //! @param has_more  if not NULL, set when more recordings exist than fit in \a out

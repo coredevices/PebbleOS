@@ -487,6 +487,13 @@ uint32_t voice_recording_storage_list_owned_by(VoiceRecordingInfo *out, uint32_t
   return prv_list(out, max, 0, app_uuid, NULL);
 }
 
+// Order summaries newest first, using the id to make equal timestamps deterministic.
+static bool prv_summary_is_newer(const VoiceRecordingSummary *lhs,
+                                 const VoiceRecordingSummary *rhs) {
+  return (lhs->created > rhs->created) ||
+         ((lhs->created == rhs->created) && (lhs->id > rhs->id));
+}
+
 uint32_t voice_recording_storage_list_summaries(VoiceRecordingSummary *out, uint32_t max,
                                                 bool *has_more) {
   if (has_more) {
@@ -497,24 +504,39 @@ uint32_t voice_recording_storage_list_summaries(VoiceRecordingSummary *out, uint
   }
 
   uint32_t count = 0;
+  uint32_t valid_count = 0;
   PFSFileListEntry *list = pfs_create_file_list(prv_is_recording_file);
   for (PFSFileListEntry *entry = list; entry; entry = (PFSFileListEntry *)entry->list_node.next) {
     VoiceRecordingInfo info;
     if (!prv_read_info(entry->name, &info)) {
       continue;
     }
-    if (count == max) {
-      if (has_more) {
-        *has_more = true;
-      }
-      break;
-    }
-    out[count++] = (VoiceRecordingSummary){
+
+    valid_count++;
+    const VoiceRecordingSummary summary = {
         .id = info.id,
         .duration_ms = info.duration_ms,
+        .created = info.created,
     };
+    uint32_t insert_at = 0;
+    while ((insert_at < count) && !prv_summary_is_newer(&summary, &out[insert_at])) {
+      insert_at++;
+    }
+    if (insert_at >= max) {
+      continue;
+    }
+
+    if (count < max) {
+      count++;
+    }
+    memmove(&out[insert_at + 1], &out[insert_at],
+            (count - insert_at - 1) * sizeof(*out));
+    out[insert_at] = summary;
   }
   pfs_delete_file_list(list);
+  if (has_more) {
+    *has_more = (valid_count > max);
+  }
   return count;
 }
 
