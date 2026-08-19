@@ -441,23 +441,36 @@ void voice_recording_transcription_release(VoiceRecordingId id) {
 }
 
 uint32_t voice_recording_list(VoiceRecordingInfo *out, uint32_t max) {
-  return voice_recording_storage_list(out, max);
+  mutex_lock(s_lock);
+  const uint32_t count = voice_recording_storage_list(out, max);
+  mutex_unlock(s_lock);
+  return count;
 }
 
 uint32_t voice_recording_list_summaries(VoiceRecordingSummary *out, uint32_t max,
                                         bool *has_more) {
-  return voice_recording_storage_list_summaries(out, max, has_more);
+  mutex_lock(s_lock);
+  const uint32_t count = voice_recording_storage_list_summaries(out, max, has_more);
+  mutex_unlock(s_lock);
+  return count;
 }
 
 // Paginate recordings sent to the phone to keep Bluetooth responses bounded.
 uint32_t voice_recording_list_page(VoiceRecordingInfo *out, uint32_t max, uint32_t offset,
                                    bool *has_more) {
-  return voice_recording_storage_list_page(out, max, offset, has_more);
+  mutex_lock(s_lock);
+  const uint32_t count = voice_recording_storage_list_page(out, max, offset, has_more);
+  mutex_unlock(s_lock);
+  return count;
 }
 
 uint32_t voice_recording_list_owned_by(VoiceRecordingInfo *out, uint32_t max,
                                        const Uuid *app_uuid) {
-  return voice_recording_storage_list_owned_by(out, max, app_uuid);
+  // App syscalls use this filtered view; privileged callers may list every recording.
+  mutex_lock(s_lock);
+  const uint32_t count = voice_recording_storage_list_owned_by(out, max, app_uuid);
+  mutex_unlock(s_lock);
+  return count;
 }
 
 bool voice_recording_delete(VoiceRecordingId id) {
