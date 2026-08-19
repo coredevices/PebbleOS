@@ -33,6 +33,7 @@ static uint32_t s_remaining;
 static SpeakerStreamId s_stream_id = SPEAKER_STREAM_ID_INVALID;
 static VoiceRecordingId s_playback_id = VOICE_RECORDING_ID_INVALID;
 
+//! Release resources owned by playback without touching a stream that may have replaced it.
 static void prv_cleanup(void) {
   if (s_fd >= 0) {
     pfs_close(s_fd);
@@ -50,6 +51,7 @@ static void prv_cleanup(void) {
   s_playback_id = VOICE_RECORDING_ID_INVALID;
 }
 
+//! Decode and queue frames until the speaker buffer fills or playback ends.
 static void prv_feed(void *data) {
   mutex_lock(s_lock);
   if (s_fd < 0) {
