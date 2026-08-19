@@ -548,7 +548,7 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
 VoiceSessionId voice_start_dictation_from_recording(VoiceRecordingId recording_id) {
   PBL_LOG_DBG("voice_start_dictation_from_recording called for id %u", (unsigned)recording_id);
   if (!voice_recording_transcription_reserve(recording_id)) {
-    PBL_LOG_DBG("Another recording is already reserved for transcription");
+    PBL_LOG_DBG("Recording unavailable or another transcription is already reserved");
     return VOICE_SESSION_ID_INVALID;
   }
 

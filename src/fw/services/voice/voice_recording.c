@@ -45,6 +45,8 @@ static PebbleMutex *s_lock;
 static VoiceRecordingId s_active_id = VOICE_RECORDING_ID_INVALID;
 static VoiceRecordingId s_next_id = 1;
 static VoiceRecordingId s_transcribing_id = VOICE_RECORDING_ID_INVALID;
+static Uuid s_transcribing_owner = UUID_INVALID_INIT;
+static bool s_delete_transcribing_on_release;
 static PebbleTask s_owner_task = PebbleTask_Unknown;
 
 static int s_temp_fd = -1;
@@ -417,15 +419,28 @@ bool voice_recording_is_owned_by(VoiceRecordingId id, const Uuid *app_uuid) {
   return owned;
 }
 
+//! Delete a recording and update cached state. Caller must hold s_lock.
+static bool prv_delete_locked(VoiceRecordingId id) {
+  const bool deleted = voice_recording_storage_delete(id);
+  if (deleted && (id == s_last_saved_id)) {
+    s_last_saved_id = VOICE_RECORDING_ID_INVALID;
+  }
+  return deleted;
+}
+
 bool voice_recording_transcription_reserve(VoiceRecordingId id) {
   if (id == VOICE_RECORDING_ID_INVALID) {
     return false;
   }
 
   mutex_lock(s_lock);
-  const bool reserved = (s_transcribing_id == VOICE_RECORDING_ID_INVALID);
+  VoiceRecordingStorageMetadata metadata;
+  const bool reserved = (s_transcribing_id == VOICE_RECORDING_ID_INVALID) &&
+                        voice_recording_storage_get_metadata(id, &metadata);
   if (reserved) {
     s_transcribing_id = id;
+    s_transcribing_owner = metadata.app_uuid;
+    s_delete_transcribing_on_release = false;
   }
   mutex_unlock(s_lock);
   return reserved;
@@ -435,6 +450,13 @@ void voice_recording_transcription_release(VoiceRecordingId id) {
   mutex_lock(s_lock);
   if (s_transcribing_id == id) {
     s_transcribing_id = VOICE_RECORDING_ID_INVALID;
+    s_transcribing_owner = UUID_INVALID;
+    if (s_delete_transcribing_on_release) {
+      s_delete_transcribing_on_release = false;
+      if (!prv_delete_locked(id)) {
+        PBL_LOG_WRN("Failed to delete deferred recording %u", (unsigned)id);
+      }
+    }
   }
   mutex_unlock(s_lock);
 }
@@ -482,10 +504,7 @@ bool voice_recording_delete(VoiceRecordingId id) {
   if (s_transcribing_id == id) {
     PBL_LOG_WRN("Recording %u is being transcribed, refusing to delete", (unsigned)id);
   } else {
-    deleted = voice_recording_storage_delete(id);
-    if (deleted && (id == s_last_saved_id)) {
-      s_last_saved_id = VOICE_RECORDING_ID_INVALID;
-    }
+    deleted = prv_delete_locked(id);
   }
   mutex_unlock(s_lock);
   return deleted;
@@ -502,7 +521,11 @@ void voice_recording_delete_owned_by(const Uuid *app_uuid) {
       prv_is_owned_by_locked(playing_id, app_uuid)) {
     voice_recording_playback_stop();
   }
-  // Skip a recording held open by an active transcription stream (see voice_recording_delete).
+  if ((s_transcribing_id != VOICE_RECORDING_ID_INVALID) &&
+      uuid_equal(&s_transcribing_owner, app_uuid)) {
+    s_delete_transcribing_on_release = true;
+  }
+  // Delete the open transcription file when its payload descriptor is released.
   voice_recording_storage_delete_owned_by(app_uuid, s_transcribing_id);
   mutex_unlock(s_lock);
 }
