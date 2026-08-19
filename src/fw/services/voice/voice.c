@@ -12,7 +12,6 @@
 #include "process_management/app_install_manager.h"
 #include "process_management/app_manager.h"
 #include "pbl/services/comm_session/session.h"
-#include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/system_task.h"
 #include "pbl/services/audio_endpoint.h"
@@ -133,7 +132,7 @@ static void prv_stop_feed(void) {
   }
   if (s_rec_fd >= 0) {
     const VoiceRecordingId recording_id = s_rec_id;
-    pfs_close(s_rec_fd);
+    voice_recording_storage_close_payload(s_rec_fd);
     s_rec_fd = -1;
     s_rec_id = VOICE_RECORDING_ID_INVALID;
     voice_recording_transcription_release(recording_id);

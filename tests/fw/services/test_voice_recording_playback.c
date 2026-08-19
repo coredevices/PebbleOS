@@ -41,9 +41,8 @@ uint16_t voice_recording_get_playback_gain(void) {
   return VOICE_RECORDING_GAIN_DEFAULT;
 }
 
-status_t pfs_close(int fd) {
+void voice_recording_storage_close_payload(int fd) {
   s_close_calls++;
-  return S_SUCCESS;
 }
 
 bool voice_speex_decoder_init(void) {

@@ -7,7 +7,6 @@
 
 #include "kernel/pbl_malloc.h"
 #include <pbl/os/mutex.h>
-#include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/speaker/speaker_service.h"
 #include "pbl/services/voice/voice_speex.h"
@@ -36,7 +35,7 @@ static VoiceRecordingId s_playback_id = VOICE_RECORDING_ID_INVALID;
 //! Release resources owned by playback without touching a stream that may have replaced it.
 static void prv_cleanup(void) {
   if (s_fd >= 0) {
-    pfs_close(s_fd);
+    voice_recording_storage_close_payload(s_fd);
     s_fd = -1;
   }
   voice_speex_decoder_deinit();
