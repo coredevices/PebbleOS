@@ -16,6 +16,7 @@
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/settings/settings_file.h"
+#include "pbl/services/voice/voice.h"
 #include "pbl/services/voice/voice_speex.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/app_manager.h"
@@ -247,6 +248,9 @@ void voice_recording_init(void) {
 }
 
 VoiceRecordingId voice_recording_start(void) {
+  // Voice teardown takes the recording lock after its own lock, so query it first.
+  const bool voice_session_active = voice_session_is_active();
+
   mutex_lock(s_lock);
 
   VoiceRecordingId id = VOICE_RECORDING_ID_INVALID;
@@ -254,6 +258,12 @@ VoiceRecordingId voice_recording_start(void) {
 
   if ((s_active_id != VOICE_RECORDING_ID_INVALID) || voice_recording_playback_is_active()) {
     PBL_LOG_DBG("Recording or playback already in progress");
+    s_last_error = VoiceRecordingError_Busy;
+    goto unlock;
+  }
+
+  if (voice_session_active) {
+    PBL_LOG_DBG("Voice session already in progress");
     s_last_error = VoiceRecordingError_Busy;
     goto unlock;
   }

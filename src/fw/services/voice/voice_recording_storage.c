@@ -54,22 +54,27 @@ static uint32_t prv_compute_total_bytes(void);
 static bool prv_read_header(int fd, VoiceRecordingHeader *header);
 static bool prv_read_info(const char *name, VoiceRecordingInfo *info);
 
+// Build a PFS filename from a prefix and recording id.
 static void prv_make_name(char *buf, size_t len, const char *prefix, VoiceRecordingId id) {
   snprintf(buf, len, "%s%u", prefix, (unsigned)id);
 }
 
+// Check whether a filename belongs to a prefixed file family.
 static bool prv_name_has_prefix(const char *name, const char *prefix) {
   return strncmp(name, prefix, strlen(prefix)) == 0;
 }
 
+// Match finalized recording files.
 static bool prv_is_recording_file(const char *name) {
   return prv_name_has_prefix(name, VOICE_REC_PREFIX);
 }
 
+// Match incomplete recordings that startup cleanup must remove.
 static bool prv_is_temp_file(const char *name) {
   return prv_name_has_prefix(name, VOICE_REC_TEMP_PREFIX);
 }
 
+// Extract and validate the id stored in a recording filename.
 static bool prv_parse_id(const char *name, VoiceRecordingId *id_out) {
   const char *digits = name + strlen(VOICE_REC_PREFIX);
   if (*digits == '\0') {
@@ -85,6 +90,7 @@ static bool prv_parse_id(const char *name, VoiceRecordingId *id_out) {
   return true;
 }
 
+// Convert runtime metadata into the persisted file header.
 static void prv_fill_header(VoiceRecordingHeader *header,
                             const VoiceRecordingStorageMetadata *metadata) {
   *header = (VoiceRecordingHeader){
@@ -98,6 +104,7 @@ static void prv_fill_header(VoiceRecordingHeader *header,
   };
 }
 
+// Rebuild runtime metadata from a file header and its size.
 static void prv_fill_metadata(int fd, const VoiceRecordingHeader *header,
                               VoiceRecordingStorageMetadata *metadata) {
   *metadata = (VoiceRecordingStorageMetadata){
@@ -110,6 +117,7 @@ static void prv_fill_metadata(int fd, const VoiceRecordingHeader *header,
   };
 }
 
+// Build the public list entry for a recording.
 static void prv_fill_info(VoiceRecordingId id, const VoiceRecordingStorageMetadata *metadata,
                           VoiceRecordingInfo *info) {
   *info = (VoiceRecordingInfo){
@@ -121,7 +129,7 @@ static void prv_fill_info(VoiceRecordingId id, const VoiceRecordingStorageMetada
   };
 }
 
-//! Caller must hold s_open_payload_lock.
+// Find cached metadata for an open payload. Caller holds s_open_payload_lock.
 static OpenPayload *prv_find_open_payload(VoiceRecordingId id) {
   for (size_t i = 0; i < VOICE_REC_OPEN_PAYLOADS_MAX; i++) {
     if ((s_open_payloads[i].fd >= 0) && (s_open_payloads[i].id == id)) {
@@ -131,7 +139,7 @@ static OpenPayload *prv_find_open_payload(VoiceRecordingId id) {
   return NULL;
 }
 
-//! Caller must hold s_open_payload_lock.
+// Find an unused payload-cache slot. Caller holds s_open_payload_lock.
 static OpenPayload *prv_find_free_open_payload(void) {
   for (size_t i = 0; i < VOICE_REC_OPEN_PAYLOADS_MAX; i++) {
     if (s_open_payloads[i].fd < 0) {
@@ -141,6 +149,7 @@ static OpenPayload *prv_find_free_open_payload(void) {
   return NULL;
 }
 
+// Check that a stored file has a valid recording header.
 static bool prv_has_valid_header(const char *name) {
   const int fd = pfs_open(name, OP_FLAG_READ, FILE_TYPE_STATIC, 0);
   if (fd < 0) {
@@ -288,6 +297,7 @@ bool voice_recording_storage_finalize(VoiceRecordingId id,
   return ok;
 }
 
+// Read and validate a recording header.
 static bool prv_read_header(int fd, VoiceRecordingHeader *header) {
   const size_t file_size = pfs_get_file_size(fd);
   if ((file_size < sizeof(*header)) ||
@@ -394,6 +404,7 @@ bool voice_recording_storage_get_metadata(VoiceRecordingId id,
   return ok;
 }
 
+// Read list information from the cache or the stored file.
 static bool prv_read_info(const char *name, VoiceRecordingInfo *info) {
   VoiceRecordingId id;
   if (!prv_parse_id(name, &id)) {
@@ -426,6 +437,7 @@ static bool prv_read_info(const char *name, VoiceRecordingInfo *info) {
   return ok;
 }
 
+// Enumerate recordings with optional ownership and pagination filters.
 static uint32_t prv_list(VoiceRecordingInfo *out, uint32_t max, uint32_t offset,
                          const Uuid *app_uuid, bool *has_more) {
   if (has_more) {
@@ -506,6 +518,7 @@ uint32_t voice_recording_storage_list_summaries(VoiceRecordingSummary *out, uint
   return count;
 }
 
+// Sum the space occupied by valid recordings.
 static uint32_t prv_compute_total_bytes(void) {
   uint32_t total = 0;
   PFSFileListEntry *list = pfs_create_file_list(prv_is_recording_file);
