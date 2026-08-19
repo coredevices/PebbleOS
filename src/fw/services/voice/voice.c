@@ -52,6 +52,7 @@ typedef enum {
 } SessionState;
 
 static SessionState s_state = SessionState_Idle;
+static bool s_recording_start_reserved;
 
 static PebbleMutex* s_lock = NULL;
 
@@ -443,6 +444,7 @@ static VoiceStatus prv_get_status_from_result(VoiceEndpointResult result) {
 
 void voice_init(void) {
   s_lock = mutex_create();
+  s_recording_start_reserved = false;
   // Speex encoder is now initialized lazily when a dictation session starts
 }
 
@@ -518,8 +520,15 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
     }
   }
 
-  if (s_state != SessionState_Idle) {
-    PBL_LOG_DBG("Voice service not idle (state: %d), returning invalid session", s_state);
+  if ((s_state != SessionState_Idle) || s_recording_start_reserved) {
+    PBL_LOG_DBG("Voice service busy (state: %d, recording start: %d)", s_state,
+                s_recording_start_reserved);
+    mutex_unlock(s_lock);
+    return VOICE_SESSION_ID_INVALID;
+  }
+
+  if (voice_recording_in_progress()) {
+    PBL_LOG_DBG("Recording in progress, cannot start dictation");
     mutex_unlock(s_lock);
     return VOICE_SESSION_ID_INVALID;
   }
@@ -553,8 +562,14 @@ VoiceSessionId voice_start_dictation_from_recording(VoiceRecordingId recording_i
 
   mutex_lock(s_lock);
 
-  if (s_state != SessionState_Idle) {
-    PBL_LOG_DBG("Voice service not idle (state: %d), cannot transcribe", s_state);
+  if ((s_state != SessionState_Idle) || s_recording_start_reserved) {
+    PBL_LOG_DBG("Voice service busy (state: %d, recording start: %d)", s_state,
+                s_recording_start_reserved);
+    goto fail;
+  }
+
+  if (voice_recording_in_progress()) {
+    PBL_LOG_DBG("Recording in progress, cannot transcribe");
     goto fail;
   }
 
@@ -605,6 +620,22 @@ bool voice_session_is_active(void) {
   const bool active = (s_state != SessionState_Idle);
   mutex_unlock(s_lock);
   return active;
+}
+
+bool voice_session_reserve_recording(void) {
+  mutex_lock(s_lock);
+  const bool reserved = (s_state == SessionState_Idle) && !s_recording_start_reserved;
+  if (reserved) {
+    s_recording_start_reserved = true;
+  }
+  mutex_unlock(s_lock);
+  return reserved;
+}
+
+void voice_session_release_recording(void) {
+  mutex_lock(s_lock);
+  s_recording_start_reserved = false;
+  mutex_unlock(s_lock);
 }
 
 VoiceRecordingId voice_transcribing_recording_id(void) {

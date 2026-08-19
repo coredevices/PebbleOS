@@ -248,8 +248,8 @@ void voice_recording_init(void) {
 }
 
 VoiceRecordingId voice_recording_start(void) {
-  // Voice teardown takes the recording lock after its own lock, so query it first.
-  const bool voice_session_active = voice_session_is_active();
+  // Close the gap between checking the voice service and marking the recording active.
+  const bool voice_session_reserved = voice_session_reserve_recording();
 
   mutex_lock(s_lock);
 
@@ -262,7 +262,7 @@ VoiceRecordingId voice_recording_start(void) {
     goto unlock;
   }
 
-  if (voice_session_active) {
+  if (!voice_session_reserved) {
     PBL_LOG_DBG("Voice session already in progress");
     s_last_error = VoiceRecordingError_Busy;
     goto unlock;
@@ -364,6 +364,9 @@ VoiceRecordingId voice_recording_start(void) {
 
 unlock:
   mutex_unlock(s_lock);
+  if (voice_session_reserved) {
+    voice_session_release_recording();
+  }
   return id;
 }
 
@@ -566,8 +569,8 @@ bool voice_recording_playback_owned_by(const Uuid *app_uuid) {
 }
 
 void voice_recording_stop_playback(void) {
-  voice_recording_playback_stop();
   mutex_lock(s_lock);
+  voice_recording_playback_stop();
   s_playback_owner = UUID_INVALID;
   mutex_unlock(s_lock);
 }
