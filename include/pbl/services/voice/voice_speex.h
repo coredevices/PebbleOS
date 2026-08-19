@@ -75,6 +75,12 @@ bool voice_speex_is_initialized(void);
 bool voice_speex_set_quality(int quality);
 
 /**
+ * @brief Restore the encoder configuration used by live dictation.
+ * @return true if restored, false if the encoder is not initialized
+ */
+bool voice_speex_restore_defaults(void);
+
+/**
  * @brief Initialize the Speex decoder (for playback of recorded frames)
  * @return true if successful, false otherwise
  */

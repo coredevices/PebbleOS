@@ -32,8 +32,7 @@
 PBL_LOG_MODULE_DECLARE(service_voice, CONFIG_SERVICE_VOICE_LOG_LEVEL);
 
 #define VOICE_REC_MAX_DURATION_MS (120 * 1000)
-// Memos are encoded at a higher Speex quality than live dictation (whose bit rate is
-// constrained by the BT link); the default quality is restored when the recording ends.
+// Recording quality is configurable; restore the live dictation bit rate when recording ends.
 #define VOICE_REC_SETTINGS_FILE "voicerec"
 #define VOICE_REC_SETTINGS_KEY "config"
 #define VOICE_REC_SETTINGS_SIZE (128)
@@ -68,7 +67,7 @@ typedef struct {
 } VoiceRecordingConfig;
 
 static VoiceRecordingConfig s_config = {
-    .quality = VoiceRecordingQuality_High,
+    .quality = VoiceRecordingQuality_Medium,
     .record_gain = VOICE_RECORDING_GAIN_DEFAULT,
     .playback_gain = VOICE_RECORDING_GAIN_DEFAULT,
 };
@@ -151,7 +150,7 @@ static void prv_close_temp(bool remove) {
 }
 
 static void prv_reset(void) {
-  voice_speex_set_quality(VOICE_SPEEX_QUALITY_DEFAULT);
+  voice_speex_restore_defaults();
   s_active_id = VOICE_RECORDING_ID_INVALID;
   s_owner_task = PebbleTask_Unknown;
   s_data_bytes = 0;
