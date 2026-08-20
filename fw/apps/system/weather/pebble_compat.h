@@ -57,6 +57,7 @@
 
 #include <pbl/services/clock.h>
 #include <pbl/util/trig.h> // sin_lookup / cos_lookup / TRIG_MAX_ANGLE / TRIG_MAX_RATIO
+#include <shell/system_theme.h>
 
 // --- Window-stack call-site shims: the SDK names map 1:1 to the app-window
 //     variants firmware apps must use. ---
