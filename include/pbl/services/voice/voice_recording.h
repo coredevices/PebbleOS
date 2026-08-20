@@ -39,42 +39,14 @@ typedef enum {
   VoiceRecordingError_MicStart,     //!< the microphone failed to start
 } VoiceRecordingError;
 
-typedef enum {
-  VoiceRecordingQuality_Low = 0,
-  VoiceRecordingQuality_Medium,
-  VoiceRecordingQuality_High,
-} VoiceRecordingQuality;
-
-#define VOICE_RECORDING_GAIN_MIN (50)
-#define VOICE_RECORDING_GAIN_MAX (200)
-#define VOICE_RECORDING_GAIN_DEFAULT (100)
-
 //! @return the reason the most recent start/stop failed (cleared on success).
 VoiceRecordingError voice_recording_last_error(void);
 
-//! Get the quality used for new recordings.
-//! TODO: Remove with the temporary Voice Memos settings UI.
-VoiceRecordingQuality voice_recording_get_quality(void);
-
-//! Set the quality used for new recordings.
-//! TODO: Remove with the temporary Voice Memos settings UI.
-void voice_recording_set_quality(VoiceRecordingQuality quality);
-
-//! Get the recording input gain percentage.
-//! TODO: Remove with the temporary Voice Memos settings UI.
-uint16_t voice_recording_get_record_gain(void);
-
-//! Set the recording input gain percentage.
-//! TODO: Remove with the temporary Voice Memos settings UI.
-void voice_recording_set_record_gain(uint16_t gain);
-
-//! Get the recording playback gain percentage.
-//! TODO: Remove with the temporary Voice Memos settings UI.
-uint16_t voice_recording_get_playback_gain(void);
-
-//! Set the recording playback gain percentage.
-//! TODO: Remove with the temporary Voice Memos settings UI.
-void voice_recording_set_playback_gain(uint16_t gain);
+//! Return the recording quota usage in bytes.
+//! Either output pointer may be NULL. Available space is the unused portion of
+//! the recording quota, not the total free space in PFS.
+void voice_recording_get_storage_usage(uint32_t *used_bytes_out,
+                                       uint32_t *available_bytes_out);
 
 //! Metadata describing a stored recording.
 typedef struct {

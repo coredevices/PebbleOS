@@ -147,10 +147,10 @@ The recording service currently applies these limits:
 - IDs wrap after `UINT16_MAX`; the allocator probes for an unused ID and never
   overwrites a stored recording.
 
-On microphone-equipped builds, the settings application exposes a temporary
-**Voice Memos** module. It can create, list, play, transcribe, and delete system
-recordings. It also configures recording quality and recording/playback gain.
-These tuning controls are internal and are not part of the application SDK.
+On microphone-equipped builds, the settings application exposes a **Recordings**
+module showing the used and available recording quota. Recordings are created
+and managed by applications through the application API or by a compatible
+companion.
 
 ## Companion management protocol
 

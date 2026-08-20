@@ -98,8 +98,6 @@ static void prv_queue_dump(QueueHandle_t queue) {
 void events_init(void) {
   PBL_ASSERTN(s_system_event_queue_set == NULL);
 
-  // TODO: Confirm that the 12-byte PebbleEvent limit enforced in events.h is still required.
-
   s_system_event_queue_set = xQueueCreateSet(MAX_KERNEL_EVENTS + MAX_FROM_APP_EVENTS);
 
   s_kernel_event_queue = xQueueCreate(MAX_KERNEL_EVENTS, sizeof(PebbleEvent));

@@ -33,6 +33,7 @@ static VoiceRecordingId s_storage_delete_id;
 static int s_storage_delete_owned_by_calls;
 static VoiceRecordingId s_storage_delete_owned_by_skip_id;
 static bool s_storage_calls_are_locked;
+static uint32_t s_storage_total_bytes;
 
 static bool s_playback_active;
 static bool s_playback_stop_was_locked;
@@ -144,14 +145,6 @@ void voice_speex_get_transfer_info(AudioTransferInfoSpeex *info) {
   *info = (AudioTransferInfoSpeex){};
 }
 
-bool voice_speex_set_quality(int quality) {
-  return true;
-}
-
-bool voice_speex_restore_defaults(void) {
-  return true;
-}
-
 void voice_recording_storage_init(VoiceRecordingId *next_id_out) {
   *next_id_out = 1;
 }
@@ -212,7 +205,8 @@ uint32_t voice_recording_storage_list_owned_by(VoiceRecordingInfo *out, uint32_t
 }
 
 uint32_t voice_recording_storage_total_bytes(void) {
-  return 0;
+  prv_note_storage_lock();
+  return s_storage_total_bytes;
 }
 
 bool voice_recording_storage_delete(VoiceRecordingId id) {
@@ -284,6 +278,7 @@ void test_voice_recording__initialize(void) {
   s_storage_delete_owned_by_calls = 0;
   s_storage_delete_owned_by_skip_id = VOICE_RECORDING_ID_INVALID;
   s_storage_calls_are_locked = true;
+  s_storage_total_bytes = 0;
 
   s_playback_active = false;
   s_playback_stop_was_locked = false;
@@ -360,4 +355,25 @@ void test_voice_recording__successful_capture_releases_voice_reservation(void) {
   cl_assert(id != VOICE_RECORDING_ID_INVALID);
   cl_assert_equal_i(s_voice_session_release_calls, 1);
   cl_assert(voice_recording_stop(id));
+}
+
+void test_voice_recording__storage_usage_reports_remaining_quota(void) {
+  uint32_t used_bytes;
+  uint32_t available_bytes;
+  s_storage_total_bytes = 12345;
+
+  voice_recording_get_storage_usage(&used_bytes, &available_bytes);
+
+  cl_assert_equal_i(used_bytes, 12345);
+  cl_assert_equal_i(available_bytes, 1024 * 1024 - 12345);
+  cl_assert(s_storage_calls_are_locked);
+}
+
+void test_voice_recording__storage_usage_clamps_exhausted_quota(void) {
+  uint32_t available_bytes;
+  s_storage_total_bytes = 2 * 1024 * 1024;
+
+  voice_recording_get_storage_usage(NULL, &available_bytes);
+
+  cl_assert_equal_i(available_bytes, 0);
 }

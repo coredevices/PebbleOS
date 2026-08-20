@@ -37,10 +37,6 @@ int voice_recording_storage_read_frame(int fd, uint32_t *remaining_bytes, uint8_
   return 1;
 }
 
-uint16_t voice_recording_get_playback_gain(void) {
-  return VOICE_RECORDING_GAIN_DEFAULT;
-}
-
 void voice_recording_storage_close_payload(int fd) {
   s_close_calls++;
 }
