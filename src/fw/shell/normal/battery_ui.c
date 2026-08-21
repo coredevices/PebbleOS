@@ -34,6 +34,10 @@ typedef struct {
   ResourceId warning_icon;
 } BatteryWarningDisplayData;
 
+typedef struct {
+  uint8_t percent;
+} BatteryChargingDisplayData;
+
 // UI Callbacks
 ///////////////////////
 
@@ -53,8 +57,11 @@ static void prv_update_ui_fully_charged(Dialog *dialog, void *ignored) {
   dialog_set_icon(dialog, RESOURCE_ID_BATTERY_ICON_FULL_LARGE);
 }
 
-static void prv_update_ui_charging(Dialog *dialog, void *ignored) {
-  dialog_set_text(dialog, i18n_get("Charging", dialog));
+static void prv_update_ui_charging(Dialog *dialog, void *context) {
+  BatteryChargingDisplayData *data = context;
+  char text[32];
+  snprintf(text, sizeof(text), "%s\n%u%%", i18n_get("Charging", dialog), data->percent);
+  dialog_set_text(dialog, text);
   dialog_set_background_color(dialog, GColorLightGray);
   dialog_set_icon(dialog, RESOURCE_ID_BATTERY_ICON_CHARGING_LARGE);
 }
@@ -137,12 +144,15 @@ static void prv_display_modal(WindowStack *stack, DialogUpdateFn update_fn, void
 // Public API
 ////////////////////
 
-void battery_ui_display_plugged(void) {
+void battery_ui_display_plugged(uint8_t percent) {
   // If we're plugged in for charging, we want to alert the user of this,
   // but we don't want to overlay ourselves over anything they may have
   // on the screen at the moment.
   WindowStack *stack = modal_manager_get_window_stack(ModalPriorityGeneric);
-  prv_display_modal(stack, prv_update_ui_charging, NULL);
+  BatteryChargingDisplayData display_data = {
+    .percent = percent,
+  };
+  prv_display_modal(stack, prv_update_ui_charging, &display_data);
 }
 
 void battery_ui_display_fully_charged(void) {
