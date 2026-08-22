@@ -27,7 +27,7 @@
 
 /*** Repository @apache-mynewt-nimble info */
 #ifndef MYNEWT_VAL_REPO_HASH_APACHE_MYNEWT_NIMBLE
-#define MYNEWT_VAL_REPO_HASH_APACHE_MYNEWT_NIMBLE "a7a156f28954819e158b62dd613008f22f9cf73b"
+#define MYNEWT_VAL_REPO_HASH_APACHE_MYNEWT_NIMBLE "53e266cea1d00aaf584532865877836d1eb60719"
 #endif
 
 #ifndef MYNEWT_VAL_REPO_VERSION_APACHE_MYNEWT_NIMBLE
@@ -45,7 +45,7 @@
 
 /*** Repository @syscfg info */
 #ifndef MYNEWT_VAL_REPO_HASH_SYSCFG
-#define MYNEWT_VAL_REPO_HASH_SYSCFG "e383a491b7c5897735a9e09ffd4ff68f3bf0ab40-dirty"
+#define MYNEWT_VAL_REPO_HASH_SYSCFG "cec598b52d94d500687b9ffd3517e9cefcddfc2e-dirty"
 #endif
 
 #ifndef MYNEWT_VAL_REPO_VERSION_SYSCFG
@@ -1865,6 +1865,11 @@
 
 #ifndef MYNEWT_VAL_BLE_GAP_MAX_PENDING_CONN_PARAM_UPDATE
 #define MYNEWT_VAL_BLE_GAP_MAX_PENDING_CONN_PARAM_UPDATE (1)
+#endif
+
+/* Overridden by targets/nrf52 (defined by @apache-mynewt-nimble/nimble/host) */
+#ifndef MYNEWT_VAL_BLE_GATT_CACHING
+#define MYNEWT_VAL_BLE_GATT_CACHING (1)
 #endif
 
 #ifndef MYNEWT_VAL_BLE_GATT_DISC_ALL_CHRS

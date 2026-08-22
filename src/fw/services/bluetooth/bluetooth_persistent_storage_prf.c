@@ -236,6 +236,20 @@ bool bt_persistent_storage_delete_cccd(const BTDeviceInternal *peer, uint16_t ch
   return true;
 }
 
+// PRF does not support persistent GATT caching state either
+
+void bt_persistent_storage_set_ble_gatt_caching_state(const void *data, size_t len) {}
+
+int bt_persistent_storage_get_ble_gatt_caching_state(void *data_out, size_t buf_len) {
+  return 0;
+}
+
+void bt_persistent_storage_set_ble_gatt_db_hash(const uint8_t hash[16]) {}
+
+bool bt_persistent_storage_get_ble_gatt_db_hash(uint8_t hash_out[16]) {
+  return false;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Local Device Info
 
