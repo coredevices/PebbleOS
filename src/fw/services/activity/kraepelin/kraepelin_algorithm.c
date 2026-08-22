@@ -124,6 +124,8 @@ typedef struct {
 
 // ----------------------------------------------------------------------------------------
 // Sleep detection structures
+// Max number of deep sleep sessions per sleep session
+#define KALG_MAX_DEEP_SLEEP_SESSIONS 8
 // The data for each minute that we use for computing sleep
 typedef struct {
   uint16_t vmc;
@@ -138,6 +140,12 @@ typedef struct {
   uint32_t vmc_sum;
   uint16_t consecutive_sleep_minutes;
   uint16_t consecutive_awake_minutes;
+  // Contribution of the current run of awake minutes to the totals above. Reset when
+  // sleep resumes, so (total - tail) gives the slept portion of the cycle, excluding the
+  // movement that ends it -- vmc_clip alone cannot keep that movement from dominating the
+  // averages of a short cycle.
+  uint16_t num_non_zero_tail;
+  uint32_t vmc_sum_tail;
 } KAlgSleepActivityStats;
 
 typedef struct {
@@ -149,6 +157,21 @@ typedef struct {
   KAlgSleepActivityStats current_stats;
   KAlgOngoingSleepStats summary_stats;
   time_t last_sample_utc;
+
+  // End time of the last accepted or pending sleep cycle. Used to detect short cycles
+  // that continue an ongoing night. KALG_START_TIME_NONE if no cycle yet.
+  time_t last_cycle_end_utc;
+
+  // A short cycle that closely followed the previous cycle, held back until we know
+  // whether more sleep follows it (see KAlgSleepParams). start_utc is
+  // KALG_START_TIME_NONE when there is no pending cycle.
+  struct {
+    time_t start_utc;
+    uint16_t len_m;
+    uint8_t num_deep;
+    uint16_t deep_start_delta_sec[KALG_MAX_DEEP_SLEEP_SESSIONS];
+    uint16_t deep_len_m[KALG_MAX_DEEP_SLEEP_SESSIONS];
+  } pending_cycle;
 } KAlgSleepActivityState;
 
 // Params used for sleep detection
@@ -190,6 +213,15 @@ typedef struct {
   // We only start checking the percent of active minutes and average VMC when the sleep cycle
   // is at least this long
   uint16_t min_sleep_len_for_active_pct_check;
+
+  // A cycle shorter than min_sleep_cycle_len_minutes is still accepted when it slept at
+  // least min_adjacent_cycle_len_m, started within max_adjacent_cycle_gap_m of the previous
+  // cycle's end, AND more sleep follows it within the same gap: it is the middle of a night
+  // that briefly fragmented, not noise. Requiring sleep on both sides keeps post-wake
+  // stillness (dozing, reading in bed) from extending the night. Such cycles must still
+  // pass the not-worn checks.
+  uint16_t max_adjacent_cycle_gap_m;
+  uint16_t min_adjacent_cycle_len_m;
 } KAlgSleepParams;
 
 
@@ -211,6 +243,9 @@ static const KAlgSleepParams KALG_SLEEP_PARAMS = {
   .max_avg_vmc = 250,  // Increased significantly for asterix
   .vmc_clip = 1000,
   .min_sleep_len_for_active_pct_check = 39,
+
+  .max_adjacent_cycle_gap_m = 30,
+  .min_adjacent_cycle_len_m = 20,
 };
 #else
 static const KAlgSleepParams KALG_SLEEP_PARAMS = {
@@ -229,6 +264,9 @@ static const KAlgSleepParams KALG_SLEEP_PARAMS = {
   .max_avg_vmc = 180,
   .vmc_clip = 1000,
   .min_sleep_len_for_active_pct_check = 39,
+
+  .max_adjacent_cycle_gap_m = 30,
+  .min_adjacent_cycle_len_m = 20,
 };
 #endif
 
@@ -236,7 +274,6 @@ static const KAlgSleepParams KALG_SLEEP_PARAMS = {
 // ----------------------------------------------------------------------------------------
 // Deep Sleep detection structures
 // State information for deep sleep detection
-#define KALG_MAX_DEEP_SLEEP_SESSIONS 8    // Max number of deep sleep sessions per sleep session
 typedef struct {
   time_t sleep_start_time;              // KALG_START_TIME_NONE if no KAlgDeepSleepAction_Start yet
   time_t deep_start_time;               // start of current deep sleep session
@@ -1696,10 +1733,14 @@ static bool prv_sleep_activity_update_stats(KAlgState *alg_state, time_t utc_now
   bool is_sleep_minute = ((score <= params->max_sleep_minute_score) && !not_worn);
 
   // ----------------------------------------------------------------------------------
-  // Update stats
+  // Update stats. The tail counters track the contribution of the current run of awake
+  // minutes; they reset when sleep resumes, so (total - tail) gives the totals for the
+  // slept portion of the cycle, excluding the movement that ends it.
   if (is_sleep_minute) {
     state->current_stats.consecutive_sleep_minutes++;
     state->current_stats.consecutive_awake_minutes = 0;
+    state->current_stats.num_non_zero_tail = 0;
+    state->current_stats.vmc_sum_tail = 0;
   } else {
     state->current_stats.consecutive_sleep_minutes = 0;
     state->current_stats.consecutive_awake_minutes++;
@@ -1707,9 +1748,15 @@ static bool prv_sleep_activity_update_stats(KAlgState *alg_state, time_t utc_now
   if (score > params->min_valid_vmc) {
     // If there is any movememnt at all, increment the "non-zero" minutes count.
     state->current_stats.num_non_zero_minutes++;
+    if (!is_sleep_minute) {
+      state->current_stats.num_non_zero_tail++;
+    }
   }
   if (state->current_stats.start_time != KALG_START_TIME_NONE) {
     state->current_stats.vmc_sum += MIN(params->vmc_clip, vmc);
+    if (!is_sleep_minute) {
+      state->current_stats.vmc_sum_tail += MIN(params->vmc_clip, vmc);
+    }
   }
 
   state->last_sample_utc = sample_utc;
@@ -1741,6 +1788,19 @@ static void prv_sleep_activity_update_session_state(
     avg_vmc = state->current_stats.vmc_sum / minutes_since_sleep_started;
   }
 
+  // A short cycle that started soon after the previous cycle ended may be the middle of a
+  // fragmented night, held back for the sandwich test at the end of the cycle (see below).
+  // Defer the average-based rejections for it until then: the movement that is about to
+  // end the cycle skews the averages far more than it can for a full-length cycle.
+  const bool may_continue_night =
+      (state->current_stats.start_time != KALG_START_TIME_NONE)
+      && (state->last_cycle_end_utc != KALG_START_TIME_NONE)
+      && (state->current_stats.start_time >= state->last_cycle_end_utc)
+      && (state->current_stats.start_time
+          <= state->last_cycle_end_utc
+             + (params->max_adjacent_cycle_gap_m * SECONDS_PER_MINUTE))
+      && (minutes_since_sleep_started < params->min_sleep_cycle_len_minutes);
+
   // This gets set to true if we decided that the current sleep session we are in is
   // not a valid one.
   *reject_session = false;
@@ -1758,6 +1818,8 @@ static void prv_sleep_activity_update_session_state(
         - (state->current_stats.consecutive_sleep_minutes * SECONDS_PER_MINUTE);
       state->current_stats.num_non_zero_minutes = 0;
       state->current_stats.vmc_sum = 0;
+      state->current_stats.num_non_zero_tail = 0;
+      state->current_stats.vmc_sum_tail = 0;
 
       KALG_LOG_DEBUG("Detected bedtime at %s", prv_log_time(alg_state,
                                                             state->current_stats.start_time));
@@ -1798,7 +1860,7 @@ static void prv_sleep_activity_update_session_state(
       KALG_LOG_DEBUG("Cycle ended because score was too high for this minute");
 
     } else if ((minutes_since_sleep_started > params->min_sleep_len_for_active_pct_check)
-      && (pct_non_zero > params->max_active_minutes_pct)) {
+      && (pct_non_zero > params->max_active_minutes_pct) && !may_continue_night) {
       // Too high a percent of awake minutes
       // If the percentage of non-zero minutes is too high, reject this cycle.
       *sleep_end_time = sample_utc;
@@ -1807,7 +1869,7 @@ static void prv_sleep_activity_update_session_state(
                      pct_non_zero);
 
     } else if ((minutes_since_sleep_started > params->min_sleep_len_for_active_pct_check)
-      && (avg_vmc > params->max_avg_vmc)) {
+      && (avg_vmc > params->max_avg_vmc) && !may_continue_night) {
       // Too high an average VMC, reject this cycle
       // If the percentage of non-zero minutes is too high, reject this cycle.
       *sleep_end_time = sample_utc;
@@ -1825,6 +1887,84 @@ static void prv_sleep_activity_update_session_state(
                  prv_log_time(alg_state, sample_utc), score, (int8_t)is_sleep_minute,
                  state->current_stats.consecutive_sleep_minutes,
                  state->current_stats.consecutive_awake_minutes, pct_non_zero, avg_vmc);
+}
+
+
+// ------------------------------------------------------------------------------------------
+// Register the held-back short sleep cycle (see pending_cycle) and the deep sleep sessions
+// that were captured within it
+static void prv_register_pending_cycle(KAlgState *alg_state,
+                                       KAlgActivitySessionCallback sessions_cb, void *context) {
+  KAlgSleepActivityState *state = &alg_state->sleep_state;
+  PBL_LOG_DBG("Registering held-back sleep cycle of len %d, starting at %s",
+              (int)state->pending_cycle.len_m,
+              prv_log_time(alg_state, state->pending_cycle.start_utc));
+  sessions_cb(context, KAlgActivityType_Sleep, state->pending_cycle.start_utc,
+              state->pending_cycle.len_m * SECONDS_PER_MINUTE, false /*ongoing*/,
+              false /*delete*/, 0 /*steps*/, 0 /*resting_calories*/, 0 /*active_calories*/,
+              0 /*distance_mm*/);
+  for (int i = 0; i < state->pending_cycle.num_deep; i++) {
+    sessions_cb(context, KAlgActivityType_RestfulSleep,
+                state->pending_cycle.start_utc + state->pending_cycle.deep_start_delta_sec[i],
+                state->pending_cycle.deep_len_m[i] * SECONDS_PER_MINUTE, false /*ongoing*/,
+                false /*delete*/, 0 /*steps*/, 0 /*resting_calories*/, 0 /*active_calories*/,
+                0 /*distance_mm*/);
+  }
+}
+
+
+// ------------------------------------------------------------------------------------------
+// Hold back a short cycle that might be the middle of a fragmented night. Captures the deep
+// sleep sessions detected within it, since the deep sleep state machine is aborted right
+// after this.
+static void prv_stash_pending_cycle(KAlgState *alg_state, time_t sleep_end_time,
+                                    uint16_t session_len_m) {
+  KAlgSleepActivityState *state = &alg_state->sleep_state;
+  KAlgDeepSleepActivityState *deep_state = &alg_state->deep_sleep_state;
+
+  state->pending_cycle.start_utc = state->current_stats.start_time;
+  state->pending_cycle.len_m = session_len_m;
+  state->pending_cycle.num_deep = 0;
+  for (int i = 0; i < deep_state->num_sessions; i++) {
+    state->pending_cycle.deep_start_delta_sec[state->pending_cycle.num_deep] =
+        deep_state->start_delta_sec[i];
+    state->pending_cycle.deep_len_m[state->pending_cycle.num_deep] = deep_state->len_m[i];
+    state->pending_cycle.num_deep++;
+  }
+  // Include a deep sleep session still in progress, clipped to the end of the cycle
+  if ((deep_state->deep_start_time != KALG_START_TIME_NONE)
+      && (deep_state->deep_start_time < sleep_end_time)
+      && (state->pending_cycle.num_deep < KALG_MAX_DEEP_SLEEP_SESSIONS)) {
+    state->pending_cycle.deep_start_delta_sec[state->pending_cycle.num_deep] =
+        deep_state->deep_start_time - state->pending_cycle.start_utc;
+    state->pending_cycle.deep_len_m[state->pending_cycle.num_deep] =
+        (sleep_end_time - deep_state->deep_start_time) / SECONDS_PER_MINUTE;
+    state->pending_cycle.num_deep++;
+  }
+  KALG_LOG_DEBUG("Holding back short cycle of len %d at %s until more sleep follows",
+                 (int)session_len_m, prv_log_time(alg_state, state->pending_cycle.start_utc));
+}
+
+
+// ------------------------------------------------------------------------------------------
+// Resolve a held-back short cycle: register it if the current cycle is being kept and
+// started within the adjacency gap of the held-back cycle's end, then forget it either way
+static void prv_resolve_pending_cycle(KAlgState *alg_state, bool current_cycle_kept,
+                                      KAlgActivitySessionCallback sessions_cb, void *context) {
+  const KAlgSleepParams *params = &KALG_SLEEP_PARAMS;
+  KAlgSleepActivityState *state = &alg_state->sleep_state;
+
+  if (state->pending_cycle.start_utc == KALG_START_TIME_NONE) {
+    return;
+  }
+  const time_t pending_end = state->pending_cycle.start_utc
+                             + (state->pending_cycle.len_m * SECONDS_PER_MINUTE);
+  if (current_cycle_kept
+      && (state->current_stats.start_time
+          <= pending_end + (params->max_adjacent_cycle_gap_m * SECONDS_PER_MINUTE))) {
+    prv_register_pending_cycle(alg_state, sessions_cb, context);
+  }
+  state->pending_cycle.start_utc = KALG_START_TIME_NONE;
 }
 
 
@@ -1881,21 +2021,68 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
     KALG_LOG_DEBUG("Detected wake at %s, cycle_len: %u",  prv_log_time(alg_state, sleep_end_time),
                    session_len_m);
 
-    // Reject if the session is too short
-    if (minutes_since_sleep_started < params->min_sleep_cycle_len_minutes) {
-      reject_session = true;
-      KALG_LOG_DEBUG("Cycle rejected because too short");
+    // Reject if the session is too short. A short cycle that slept a reasonable amount and
+    // started soon after the previous cycle ended may be the middle of a night that briefly
+    // fragmented: hold it back and register it only once more sleep follows it, so post-wake
+    // stillness at the end of the night is never admitted. Since the average-based checks
+    // were deferred for such a cycle (see may_continue_night above), apply them here over
+    // its slept portion, i.e. excluding the movement that ended it.
+    bool hold_back_session = false;
+    if (!reject_session
+        && (minutes_since_sleep_started < params->min_sleep_cycle_len_minutes)) {
+      const time_t last_end = state->last_cycle_end_utc;
+      bool continues_night = (last_end != KALG_START_TIME_NONE)
+          && (state->current_stats.start_time >= last_end)
+          && (state->current_stats.start_time
+              <= last_end + (params->max_adjacent_cycle_gap_m * SECONDS_PER_MINUTE))
+          && (session_len_m >= params->min_adjacent_cycle_len_m);
+      if (continues_night) {
+        unsigned slept_m = minutes_since_sleep_started;
+        if (slept_m > state->current_stats.consecutive_awake_minutes) {
+          slept_m -= state->current_stats.consecutive_awake_minutes;
+        }
+        if (slept_m > params->min_sleep_len_for_active_pct_check) {
+          const uint32_t slept_avg_vmc =
+              (state->current_stats.vmc_sum - state->current_stats.vmc_sum_tail) / slept_m;
+          const unsigned slept_pct_non_zero =
+              ((state->current_stats.num_non_zero_minutes
+                - state->current_stats.num_non_zero_tail) * 100) / slept_m;
+          if ((slept_avg_vmc > params->max_avg_vmc)
+              || (slept_pct_non_zero > params->max_active_minutes_pct)) {
+            continues_night = false;
+            KALG_LOG_DEBUG("Short cycle not held: avg vmc %"PRIu32", pct non-zero %u",
+                           slept_avg_vmc, slept_pct_non_zero);
+          }
+        }
+      }
+      if (continues_night) {
+        hold_back_session = true;
+      } else {
+        reject_session = true;
+        KALG_LOG_DEBUG("Cycle rejected because too short");
+      }
     }
 
     // Reject if we detect the watch was not worn at all during this session
     if (prv_not_worn_during_session(alg_state, state->current_stats.start_time, session_len_m,
                                     false /*ongoing*/)) {
       reject_session = true;
+      hold_back_session = false;
       KALG_LOG_DEBUG("Cycle rejected because not worn");
     }
 
-    // If we got a valid sleep cycle, add it to the totals
-    if (!reject_session) {
+    // A cycle held back earlier is registered only now that this cycle proves the night
+    // continued (no-op if it was already resolved when this cycle registered as ongoing)
+    prv_resolve_pending_cycle(alg_state, !reject_session, sessions_cb, context);
+
+    if (hold_back_session) {
+      prv_stash_pending_cycle(alg_state, sleep_end_time, session_len_m);
+      // The deep sleep sessions were captured into the pending cycle; abort the live ones
+      prv_deep_sleep_update(alg_state, sample_utc, score, KAlgDeepSleepAction_Abort,
+                            false /*ok_to_register*/, sessions_cb, context);
+      state->last_cycle_end_utc = sleep_end_time;
+
+    } else if (!reject_session) {
       PBL_LOG_DBG("Detected valid sleep cycle of len %d, starting at %s",
               session_len_m, prv_log_time(alg_state, state->current_stats.start_time));
 
@@ -1912,6 +2099,7 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
         .uncertain_start_utc = 0,
         .sleep_len_m = session_len_m,
       };
+      state->last_cycle_end_utc = sleep_end_time;
 
     } else {
       KALG_LOG_DEBUG("Cycle rejected");
@@ -1936,6 +2124,10 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
     // Sleep has not ended yet
     if (state->current_stats.start_time != KALG_START_TIME_NONE) {
       if (minutes_since_sleep_started >= params->min_sleep_cycle_len_minutes) {
+        // This cycle is long enough to register: it also proves any held-back short cycle
+        // was mid-night. Register that one first to keep sessions in chronological order.
+        prv_resolve_pending_cycle(alg_state, true /*current_cycle_kept*/, sessions_cb, context);
+
         // Register ongoing sleep if we are in sleep
         sessions_cb(context, KAlgActivityType_Sleep, state->current_stats.start_time,
                     minutes_since_sleep_started * SECONDS_PER_MINUTE, true /*ongoing*/,
