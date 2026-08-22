@@ -263,7 +263,8 @@ static void prv_pulse_task_main(void *unused) {
   static RegularTimerInfo idle_watchdog_timer = {
     .cb = prv_pulse_task_idle_timer_callback
   };
-  regular_timer_add_seconds_callback(&idle_watchdog_timer);
+  // 3s check-in, same margin rationale as the other task liveness feeds.
+  regular_timer_add_multisecond_callback(&idle_watchdog_timer, 3);
 
   CobsDecodeContext frame_decode_ctx;
   cobs_streaming_decode_start(&frame_decode_ctx, s_current_rx_frame,

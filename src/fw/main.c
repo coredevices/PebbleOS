@@ -174,8 +174,11 @@ static void watchdog_timer_callback(void* data) {
 }
 
 static void register_system_timers(void) {
+  // Liveness check-in for the timer task. The hardware watchdog allows 10s
+  // between feeds, so a 3s cadence keeps ample margin while letting the
+  // system idle three times longer between wakeups.
   static RegularTimerInfo watchdog_timer = { .list_node = { 0, 0 }, .cb = watchdog_timer_callback };
-  regular_timer_add_seconds_callback(&watchdog_timer);
+  regular_timer_add_multisecond_callback(&watchdog_timer, 3);
 }
 
 static void init_drivers(void) {
