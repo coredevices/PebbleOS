@@ -36,8 +36,11 @@ extern void nimble_gattc_op_queue_init(void);
 static TaskHandle_t s_ll_task_handle;
 #endif
 static TaskHandle_t s_host_task_handle;
+static SemaphoreHandle_t s_host_start_done;
 static SemaphoreHandle_t s_host_started;
 static SemaphoreHandle_t s_host_stopped;
+static struct ble_npl_event s_host_start_event;
+static int s_host_start_rc;
 static DisInfo s_dis_info;
 static struct ble_hs_stop_listener s_listener;
 
@@ -78,10 +81,82 @@ static void prv_host_task_main(void *unused) {
 
 static void prv_ble_hs_stop_cb(int status, void *arg) { xSemaphoreGive(s_host_stopped); }
 
+static void prv_host_start_event_cb(struct ble_npl_event *event) {
+  (void)event;
+  s_host_start_rc = ble_hs_start();
+  xSemaphoreGive(s_host_start_done);
+}
+
+static void prv_configure_host(BTDriverConfig *config) {
+  s_dis_info = config->dis_info;
+  ble_svc_dis_model_number_set(s_dis_info.model_number);
+  ble_svc_dis_serial_number_set(s_dis_info.serial_number);
+  ble_svc_dis_firmware_revision_set(s_dis_info.fw_revision);
+  ble_svc_dis_software_revision_set(s_dis_info.sw_revision);
+  ble_svc_dis_manufacturer_name_set(s_dis_info.manufacturer);
+
+  ble_svc_gap_init();
+  ble_svc_gatt_init();
+  ble_svc_dis_init();
+  pebble_pairing_service_init();
+  ble_svc_bas_init();
+  ppog_reversed_service_init();
+
+#ifdef CONFIG_GH3X2X_TUNING_SERVICE_ENABLED
+  gh3x2x_tuning_service_init();
+#endif
+}
+
+static int prv_start_host(void) {
+  (void)xSemaphoreTake(s_host_start_done, 0);
+  (void)xSemaphoreTake(s_host_started, 0);
+  ble_npl_eventq_put(nimble_port_get_dflt_eventq(), &s_host_start_event);
+
+  BaseType_t rc =
+      xSemaphoreTake(s_host_start_done, milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms));
+  if (rc != pdTRUE) {
+    PBL_CROAK("NimBLE host start event timed out");
+  }
+
+  if (s_host_start_rc != 0) {
+    return s_host_start_rc;
+  }
+
+  rc = xSemaphoreTake(s_host_started, milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms));
+  if (rc != pdTRUE) {
+    PBL_CROAK("NimBLE host start timed out");
+  }
+
+  return 0;
+}
+
+static bool prv_stop_host_for_retry(void) {
+  (void)xSemaphoreTake(s_host_stopped, 0);
+  int rc = ble_hs_stop(&s_listener, prv_ble_hs_stop_cb, NULL);
+  if (rc == BLE_HS_EALREADY) {
+    (void)ble_gatts_reset();
+    return true;
+  } else if (rc != 0) {
+    PBL_LOG_ERR("Failed to stop NimBLE host for start retry: 0x%04x", (uint16_t)rc);
+    return false;
+  }
+
+  BaseType_t f_rc =
+      xSemaphoreTake(s_host_stopped, milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms));
+  if (f_rc != pdTRUE) {
+    PBL_LOG_ERR("NimBLE host stop timed out before start retry");
+    return false;
+  }
+
+  (void)ble_gatts_reset();
+  return true;
+}
+
 // ----------------------------------------------------------------------------------------
 void bt_driver_init(void) {
   bt_lock_init();
 
+  s_host_start_done = xSemaphoreCreateBinary();
   s_host_started = xSemaphoreCreateBinary();
   s_host_stopped = xSemaphoreCreateBinary();
 
@@ -90,6 +165,7 @@ void bt_driver_init(void) {
 
   nimble_port_init();
   nimble_store_init();
+  ble_npl_event_init(&s_host_start_event, prv_host_start_event_cb, NULL);
 
   TaskParameters_t host_task_params = {
       .pvTaskCode = prv_host_task_main,
@@ -132,33 +208,21 @@ bool bt_driver_start(BTDriverConfig *config) {
   }
 
   s_driver_state = DriverStateStarting;
-  // Drain a stale host_started signal (e.g. from an autonomous host re-sync)
-  // so we wait for *this* start to sync.
-  (void)xSemaphoreTake(s_host_started, 0);
+  for (unsigned attempt = 0; attempt < 2; ++attempt) {
+    prv_configure_host(config);
+    rc = prv_start_host();
+    if (rc == 0) {
+      break;
+    }
 
-  s_dis_info = config->dis_info;
-  ble_svc_dis_model_number_set(s_dis_info.model_number);
-  ble_svc_dis_serial_number_set(s_dis_info.serial_number);
-  ble_svc_dis_firmware_revision_set(s_dis_info.fw_revision);
-  ble_svc_dis_software_revision_set(s_dis_info.sw_revision);
-  ble_svc_dis_manufacturer_name_set(s_dis_info.manufacturer);
+    if (attempt == 0 && (rc == BLE_HS_EALREADY || rc == BLE_HS_EBUSY)) {
+      PBL_LOG_WRN("NimBLE host start state mismatch: 0x%04x; retrying", (uint16_t)rc);
+      if (prv_stop_host_for_retry()) {
+        continue;
+      }
+    }
 
-  ble_svc_gap_init();
-  ble_svc_gatt_init();
-  ble_svc_dis_init();
-  pebble_pairing_service_init();
-  ble_svc_bas_init();
-  ppog_reversed_service_init();
-
-#ifdef CONFIG_GH3X2X_TUNING_SERVICE_ENABLED
-  gh3x2x_tuning_service_init();
-#endif
-
-  ble_hs_sched_start();
-  f_rc = xSemaphoreTake(s_host_started, milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms));
-  if (f_rc != pdTRUE) {
-    // core_dump wakes the LCPU itself, so its RAM is captured here too.
-    PBL_CROAK("NimBLE host start timed out");
+    PBL_CROAK("NimBLE host start failed: 0x%04x", (uint16_t)rc);
   }
 
   rc = ble_hs_util_ensure_addr(0);
