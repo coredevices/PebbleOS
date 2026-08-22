@@ -3478,3 +3478,79 @@ msgstr ""
 #: ../src/fw/services/vibes/vibes.def:15
 msgid "Gentle"
 msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:49
+msgid "Play / Stop"
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:50
+msgid "Transcribe"
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:84
+#, c-format
+msgid "Used %u KB"
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:86
+#, c-format
+msgid "Free %u KB"
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:100
+msgid "Transcription"
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:102
+msgid "Transcription failed"
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:103
+msgid "Check the phone connection and try again."
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:127
+msgid "Delete failed"
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:127
+msgid "The recording is currently in use."
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:141
+msgid "Delete this recording?"
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:167
+msgid "Playback failed"
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:168
+msgid "The recording could not be played."
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:174
+msgid "Transcription unavailable"
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:175
+msgid "Connect a phone with voice support and try again."
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:194
+msgid "Recording"
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:213
+msgid "No recordings"
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:218
+#, c-format
+msgid "Recording %u  %u:%02u"
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:264
+#: ../src/fw/apps/system/settings/recordings.c:276
+msgid "Recordings"
+msgstr ""

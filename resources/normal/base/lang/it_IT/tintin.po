@@ -3425,6 +3425,82 @@ msgstr "Martellante"
 msgid "Gentle"
 msgstr "Delicato"
 
+#: ../src/fw/apps/system/settings/recordings.c:49
+msgid "Play / Stop"
+msgstr "Riproduci / Ferma"
+
+#: ../src/fw/apps/system/settings/recordings.c:50
+msgid "Transcribe"
+msgstr "Trascrivi"
+
+#: ../src/fw/apps/system/settings/recordings.c:84
+#, c-format
+msgid "Used %u KB"
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:86
+#, c-format
+msgid "Free %u KB"
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:100
+msgid "Transcription"
+msgstr "Trascrizione"
+
+#: ../src/fw/apps/system/settings/recordings.c:102
+msgid "Transcription failed"
+msgstr "Trascrizione fallita"
+
+#: ../src/fw/apps/system/settings/recordings.c:103
+msgid "Check the phone connection and try again."
+msgstr "Controlla la connessione al telefono e riprova."
+
+#: ../src/fw/apps/system/settings/recordings.c:127
+msgid "Delete failed"
+msgstr "Eliminazione fallita"
+
+#: ../src/fw/apps/system/settings/recordings.c:127
+msgid "The recording is currently in use."
+msgstr "La registrazione è attualmente in uso."
+
+#: ../src/fw/apps/system/settings/recordings.c:141
+msgid "Delete this recording?"
+msgstr "Eliminare questa registrazione?"
+
+#: ../src/fw/apps/system/settings/recordings.c:167
+msgid "Playback failed"
+msgstr "Riproduzione fallita"
+
+#: ../src/fw/apps/system/settings/recordings.c:168
+msgid "The recording could not be played."
+msgstr "Impossibile riprodurre la registrazione."
+
+#: ../src/fw/apps/system/settings/recordings.c:174
+msgid "Transcription unavailable"
+msgstr "Trascrizione non disponibile"
+
+#: ../src/fw/apps/system/settings/recordings.c:175
+msgid "Connect a phone with voice support and try again."
+msgstr "Collega un telefono con supporto vocale e riprova."
+
+#: ../src/fw/apps/system/settings/recordings.c:194
+msgid "Recording"
+msgstr "Registrazione"
+
+#: ../src/fw/apps/system/settings/recordings.c:213
+msgid "No recordings"
+msgstr "Nessuna registrazione"
+
+#: ../src/fw/apps/system/settings/recordings.c:218
+#, c-format
+msgid "Recording %u  %u:%02u"
+msgstr "Registrazione %u  %u:%02u"
+
+#: ../src/fw/apps/system/settings/recordings.c:264
+#: ../src/fw/apps/system/settings/recordings.c:276
+msgid "Recordings"
+msgstr "Registrazioni"
+
 #~ msgid "Default"
 #~ msgstr "Default"
 

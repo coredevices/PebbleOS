@@ -3495,6 +3495,82 @@ msgstr "Jackhammer"
 msgid "Gentle"
 msgstr "Gentle"
 
+#: ../src/fw/apps/system/settings/recordings.c:49
+msgid "Play / Stop"
+msgstr "Afspelen / Stoppen"
+
+#: ../src/fw/apps/system/settings/recordings.c:50
+msgid "Transcribe"
+msgstr "Transcriberen"
+
+#: ../src/fw/apps/system/settings/recordings.c:84
+#, c-format
+msgid "Used %u KB"
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:86
+#, c-format
+msgid "Free %u KB"
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:100
+msgid "Transcription"
+msgstr "Transcriptie"
+
+#: ../src/fw/apps/system/settings/recordings.c:102
+msgid "Transcription failed"
+msgstr "Transcriptie mislukt"
+
+#: ../src/fw/apps/system/settings/recordings.c:103
+msgid "Check the phone connection and try again."
+msgstr "Controleer de verbinding met de telefoon en probeer opnieuw."
+
+#: ../src/fw/apps/system/settings/recordings.c:127
+msgid "Delete failed"
+msgstr "Verwijderen mislukt"
+
+#: ../src/fw/apps/system/settings/recordings.c:127
+msgid "The recording is currently in use."
+msgstr "De opname is momenteel in gebruik."
+
+#: ../src/fw/apps/system/settings/recordings.c:141
+msgid "Delete this recording?"
+msgstr "Deze opname verwijderen?"
+
+#: ../src/fw/apps/system/settings/recordings.c:167
+msgid "Playback failed"
+msgstr "Afspelen mislukt"
+
+#: ../src/fw/apps/system/settings/recordings.c:168
+msgid "The recording could not be played."
+msgstr "De opname kon niet worden afgespeeld."
+
+#: ../src/fw/apps/system/settings/recordings.c:174
+msgid "Transcription unavailable"
+msgstr "Transcriptie niet beschikbaar"
+
+#: ../src/fw/apps/system/settings/recordings.c:175
+msgid "Connect a phone with voice support and try again."
+msgstr "Verbind een telefoon met spraakondersteuning en probeer opnieuw."
+
+#: ../src/fw/apps/system/settings/recordings.c:194
+msgid "Recording"
+msgstr "Opname"
+
+#: ../src/fw/apps/system/settings/recordings.c:213
+msgid "No recordings"
+msgstr "Geen opnamen"
+
+#: ../src/fw/apps/system/settings/recordings.c:218
+#, c-format
+msgid "Recording %u  %u:%02u"
+msgstr "Opname %u  %u:%02u"
+
+#: ../src/fw/apps/system/settings/recordings.c:264
+#: ../src/fw/apps/system/settings/recordings.c:276
+msgid "Recordings"
+msgstr "Opnamen"
+
 #~ msgid "Default"
 #~ msgstr "Default"
 

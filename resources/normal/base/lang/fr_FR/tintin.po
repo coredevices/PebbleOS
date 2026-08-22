@@ -1,7 +1,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: 39.0\n"
+"Project-Id-Version: 40.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-17 13:14+0200\n"
 "PO-Revision-Date: 2026-05-15 00:00+0200\n"
@@ -3505,6 +3505,82 @@ msgstr "Marteau piqueur"
 #: ../src/fw/services/vibes/vibes.def:15
 msgid "Gentle"
 msgstr "Doux"
+
+#: ../src/fw/apps/system/settings/recordings.c:49
+msgid "Play / Stop"
+msgstr "Lire / Arrêter"
+
+#: ../src/fw/apps/system/settings/recordings.c:50
+msgid "Transcribe"
+msgstr "Transcrire"
+
+#: ../src/fw/apps/system/settings/recordings.c:84
+#, c-format
+msgid "Used %u KB"
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:86
+#, c-format
+msgid "Free %u KB"
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:100
+msgid "Transcription"
+msgstr "Transcription"
+
+#: ../src/fw/apps/system/settings/recordings.c:102
+msgid "Transcription failed"
+msgstr "Échec transcription"
+
+#: ../src/fw/apps/system/settings/recordings.c:103
+msgid "Check the phone connection and try again."
+msgstr "Vérifiez la connexion au téléphone et réessayez."
+
+#: ../src/fw/apps/system/settings/recordings.c:127
+msgid "Delete failed"
+msgstr "Échec de suppression"
+
+#: ../src/fw/apps/system/settings/recordings.c:127
+msgid "The recording is currently in use."
+msgstr "L'enregistrement est en cours d'utilisation."
+
+#: ../src/fw/apps/system/settings/recordings.c:141
+msgid "Delete this recording?"
+msgstr "Supprimer cet enregistrement ?"
+
+#: ../src/fw/apps/system/settings/recordings.c:167
+msgid "Playback failed"
+msgstr "Échec de lecture"
+
+#: ../src/fw/apps/system/settings/recordings.c:168
+msgid "The recording could not be played."
+msgstr "L'enregistrement n'a pas pu être lu."
+
+#: ../src/fw/apps/system/settings/recordings.c:174
+msgid "Transcription unavailable"
+msgstr "Transcription indisponible"
+
+#: ../src/fw/apps/system/settings/recordings.c:175
+msgid "Connect a phone with voice support and try again."
+msgstr "Connectez un téléphone compatible voix et réessayez."
+
+#: ../src/fw/apps/system/settings/recordings.c:194
+msgid "Recording"
+msgstr "Enregistrement"
+
+#: ../src/fw/apps/system/settings/recordings.c:213
+msgid "No recordings"
+msgstr "Aucun enregistrement"
+
+#: ../src/fw/apps/system/settings/recordings.c:218
+#, c-format
+msgid "Recording %u  %u:%02u"
+msgstr "Enregistrement %u  %u:%02u"
+
+#: ../src/fw/apps/system/settings/recordings.c:264
+#: ../src/fw/apps/system/settings/recordings.c:276
+msgid "Recordings"
+msgstr "Enregistrements"
 
 #~ msgid "Default"
 #~ msgstr "Normal"

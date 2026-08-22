@@ -3498,6 +3498,82 @@ msgstr "Britadeira"
 msgid "Gentle"
 msgstr "Suave"
 
+#: ../src/fw/apps/system/settings/recordings.c:49
+msgid "Play / Stop"
+msgstr "Reproduzir / Parar"
+
+#: ../src/fw/apps/system/settings/recordings.c:50
+msgid "Transcribe"
+msgstr "Transcrever"
+
+#: ../src/fw/apps/system/settings/recordings.c:84
+#, c-format
+msgid "Used %u KB"
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:86
+#, c-format
+msgid "Free %u KB"
+msgstr ""
+
+#: ../src/fw/apps/system/settings/recordings.c:100
+msgid "Transcription"
+msgstr "Transcrição"
+
+#: ../src/fw/apps/system/settings/recordings.c:102
+msgid "Transcription failed"
+msgstr "Falha na transcrição"
+
+#: ../src/fw/apps/system/settings/recordings.c:103
+msgid "Check the phone connection and try again."
+msgstr "Verifique a ligação ao telefone e tente novamente."
+
+#: ../src/fw/apps/system/settings/recordings.c:127
+msgid "Delete failed"
+msgstr "Falha ao eliminar"
+
+#: ../src/fw/apps/system/settings/recordings.c:127
+msgid "The recording is currently in use."
+msgstr "A gravação está a ser utilizada."
+
+#: ../src/fw/apps/system/settings/recordings.c:141
+msgid "Delete this recording?"
+msgstr "Eliminar esta gravação?"
+
+#: ../src/fw/apps/system/settings/recordings.c:167
+msgid "Playback failed"
+msgstr "Falha na reprodução"
+
+#: ../src/fw/apps/system/settings/recordings.c:168
+msgid "The recording could not be played."
+msgstr "Não foi possível reproduzir a gravação."
+
+#: ../src/fw/apps/system/settings/recordings.c:174
+msgid "Transcription unavailable"
+msgstr "Transcrição indisponível"
+
+#: ../src/fw/apps/system/settings/recordings.c:175
+msgid "Connect a phone with voice support and try again."
+msgstr "Ligue um telefone com suporte de voz e tente novamente."
+
+#: ../src/fw/apps/system/settings/recordings.c:194
+msgid "Recording"
+msgstr "Gravação"
+
+#: ../src/fw/apps/system/settings/recordings.c:213
+msgid "No recordings"
+msgstr "Sem gravações"
+
+#: ../src/fw/apps/system/settings/recordings.c:218
+#, c-format
+msgid "Recording %u  %u:%02u"
+msgstr "Gravação %u  %u:%02u"
+
+#: ../src/fw/apps/system/settings/recordings.c:264
+#: ../src/fw/apps/system/settings/recordings.c:276
+msgid "Recordings"
+msgstr "Gravações"
+
 #~ msgid "Default"
 #~ msgstr "Padrão"
 
