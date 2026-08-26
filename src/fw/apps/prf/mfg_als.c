@@ -22,8 +22,8 @@
 
 // ALS pass/fail range (adjust these values based on your test requirements)
 #ifdef CONFIG_BOARD_OBELIX
-#define ALS_MIN_VALUE 100
-#define ALS_MAX_VALUE 250
+#define ALS_MIN_VALUE 600
+#define ALS_MAX_VALUE 1500
 #elif defined(CONFIG_BOARD_GETAFIX)
 #define ALS_MIN_VALUE 8500
 #define ALS_MAX_VALUE 11500
