@@ -8,6 +8,15 @@ config SERVICE_NOTIFICATIONS
 
 if SERVICE_NOTIFICATIONS
 
+config NOTIFICATION_SOUND_SAMPLES
+    bool "Sampled notification sounds"
+    depends on SPEAKER
+    default y
+    help
+      Include the sampled (PCM) notification sounds. Costs ~55 KB of code
+      flash; boards with a 1 MB code budget keep only the synthesized
+      chirps.
+
 module = SERVICE_NOTIFICATIONS
 module-str = Notifications
 source "subsys/logging/Kconfig.template.log_level"

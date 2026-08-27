@@ -40,6 +40,8 @@ static const SpeakerNote s_ascent[] = {
 
 #undef NOTE
 
+#if CONFIG_NOTIFICATION_SOUND_SAMPLES
+
 #include "notification_sounds_pcm.inc"
 
 // Sampled sounds play through the track player. The note pitches the sample;
@@ -153,6 +155,8 @@ static const SpeakerNote s_sparkle_notes[] = {
   { .midi_note = 100, .waveform = 0, .duration_ms = 500, .velocity = 0, .reserved = 0 },
 };
 
+#endif  // CONFIG_NOTIFICATION_SOUND_SAMPLES
+
 
 static const struct {
   const SpeakerNote *notes;
@@ -169,6 +173,7 @@ static const struct {
                                    i18n_noop("Trill") },
   [NotificationSound_Ascent]   = { s_ascent, sizeof(s_ascent) / sizeof(s_ascent[0]),
                                    i18n_noop("Ascent") },
+#if CONFIG_NOTIFICATION_SOUND_SAMPLES
   [NotificationSound_Glass]    = { s_glass_notes, sizeof(s_glass_notes) / sizeof(s_glass_notes[0]),
                                    i18n_noop("Glass"), &s_glass_sample },
   [NotificationSound_Pop]      = { s_pop_notes, sizeof(s_pop_notes) / sizeof(s_pop_notes[0]),
@@ -187,16 +192,23 @@ static const struct {
                                    i18n_noop("Bloom"), &s_bloom_sample },
   [NotificationSound_Sparkle]  = { s_sparkle_notes, sizeof(s_sparkle_notes) / sizeof(s_sparkle_notes[0]),
                                    i18n_noop("Sparkle"), &s_sparkle_sample },
+#endif  // CONFIG_NOTIFICATION_SOUND_SAMPLES
 };
 
 _Static_assert(NotificationSound_Sparkle + 1 == NotificationSound_Count,
                "notification_sounds table must cover every NotificationSound enum value");
 
+//! Sampled sounds are compiled out on flash-constrained boards
+//! (CONFIG_NOTIFICATION_SOUND_SAMPLES=n), leaving zeroed table rows.
+static bool prv_sound_is_available(NotificationSound sound) {
+  return (sound == NotificationSound_None) || (s_sounds[sound].notes != NULL);
+}
+
 bool notification_sounds_play(NotificationSound sound, uint8_t volume) {
   if (sound == NotificationSound_None) {
     return false;
   }
-  if ((unsigned)sound >= NotificationSound_Count) {
+  if ((unsigned)sound >= NotificationSound_Count || !prv_sound_is_available(sound)) {
     sound = NotificationSound_Ping;
   }
   if (s_sounds[sound].sample) {
@@ -212,12 +224,16 @@ bool notification_sounds_play(NotificationSound sound, uint8_t volume) {
 }
 
 const char *notification_sounds_get_name(NotificationSound sound) {
-  if ((unsigned)sound >= NotificationSound_Count) {
+  if ((unsigned)sound >= NotificationSound_Count || !prv_sound_is_available(sound)) {
     sound = NotificationSound_Ping;
   }
   return s_sounds[sound].name;
 }
 
 NotificationSound notification_sounds_cycle_next(NotificationSound sound) {
-  return (NotificationSound)(((unsigned)sound + 1) % NotificationSound_Count);
+  NotificationSound next = sound;
+  do {
+    next = (NotificationSound)(((unsigned)next + 1) % NotificationSound_Count);
+  } while (!prv_sound_is_available(next) && next != sound);
+  return next;
 }
