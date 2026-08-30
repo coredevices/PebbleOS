@@ -95,6 +95,9 @@ static bool s_notification_vibe_delay =
 static bool s_notification_backlight =
     true; // true = enable backlight (default), false = disable backlight
 
+#define PREF_KEY_NOTIF_GROUPING_RANGE "notifGroupingRange"
+static NotificationGroupingRange s_notification_grouping_range = NotificationGroupingRange_Never;
+
 #define PREF_KEY_NOTIF_STATUS_BAR_STYLE "notifStatusBarStyle"
 static NotificationStatusBarStyle s_notification_status_bar_style =
     NotificationStatusBarStyle_Default;
@@ -370,6 +373,7 @@ void alerts_preferences_init(void) {
   RESTORE_PREF(PREF_KEY_NOTIF_DESIGN_STYLE, s_notification_alternative_design);
   RESTORE_PREF(PREF_KEY_NOTIF_VIBE_DELAY, s_notification_vibe_delay);
   RESTORE_PREF(PREF_KEY_NOTIF_BACKLIGHT, s_notification_backlight);
+  RESTORE_PREF(PREF_KEY_NOTIF_GROUPING_RANGE, s_notification_grouping_range);
   RESTORE_PREF(PREF_KEY_NOTIF_STATUS_BAR_STYLE, s_notification_status_bar_style);
   RESTORE_PREF(PREF_KEY_NOTIF_TEXT_SIZE, s_notification_content_size);
   RESTORE_PREF(PREF_KEY_DND_AUTO_DISMISS, s_dnd_auto_dismiss);
@@ -461,6 +465,17 @@ bool alerts_preferences_get_notification_backlight(void) {
 void alerts_preferences_set_notification_backlight(bool enable) {
   s_notification_backlight = enable;
   SET_PREF(PREF_KEY_NOTIF_BACKLIGHT, s_notification_backlight);
+}
+
+NotificationGroupingRange alerts_preferences_get_notification_grouping_range(void) {
+  return (s_notification_grouping_range < NotificationGroupingRangeCount)
+             ? s_notification_grouping_range
+             : NotificationGroupingRange_Never;
+}
+
+void alerts_preferences_set_notification_grouping_range(NotificationGroupingRange range) {
+  s_notification_grouping_range = range;
+  SET_PREF(PREF_KEY_NOTIF_GROUPING_RANGE, s_notification_grouping_range);
 }
 
 NotificationStatusBarStyle alerts_preferences_get_notification_status_bar_style(void) {
@@ -764,6 +779,7 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
   RELOAD_IF_MATCH(PREF_KEY_NOTIF_DESIGN_STYLE, s_notification_alternative_design);
   RELOAD_IF_MATCH(PREF_KEY_NOTIF_VIBE_DELAY, s_notification_vibe_delay);
   RELOAD_IF_MATCH(PREF_KEY_NOTIF_BACKLIGHT, s_notification_backlight);
+  RELOAD_IF_MATCH(PREF_KEY_NOTIF_GROUPING_RANGE, s_notification_grouping_range);
   RELOAD_IF_MATCH(PREF_KEY_NOTIF_STATUS_BAR_STYLE, s_notification_status_bar_style);
   RELOAD_IF_MATCH(PREF_KEY_NOTIF_TEXT_SIZE, s_notification_content_size);
   RELOAD_IF_MATCH(PREF_KEY_DND_MOTION_BACKLIGHT, s_dnd_motion_backlight);
