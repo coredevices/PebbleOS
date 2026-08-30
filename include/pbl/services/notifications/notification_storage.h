@@ -58,6 +58,18 @@ void notification_storage_iterate(bool (*iter_callback)(void *data,
                                                         SerializedTimelineItemHeader *header_id),
                                   void *data);
 
+//! Iterates over all notifications. For notifications at or after item_cutoff, the string
+//! attributes listed in attr_list are read from storage into their cstring buffers (buffer_size
+//! bytes each, empty when absent) without deserializing or allocating the payload, and item
+//! carries the header together with that list. item is NULL for older notifications.
+//! Callback data is only valid during the callback.
+//! NOTE: Do NOT call into other notification storage functions from the iterator callback.
+void notification_storage_iterate_strings_after(
+    time_t item_cutoff, AttributeList *attr_list, size_t buffer_size,
+    bool (*iter_callback)(void *data, const CommonTimelineItemHeader *header,
+                          const TimelineItem *item),
+    void *data);
+
 //! Iterates over all the notifications calling the callback with the passed data.
 //! Overwrites the notifications and rewrites them to disk.
 //! This is essentially a noop if the callback doesn't alter the data.

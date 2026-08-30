@@ -7,6 +7,8 @@
 #include "pbl/util/uuid.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/filesystem/pfs.h"
+#include "pbl/services/timeline/attribute_private.h"
+#include "pbl/util/math.h"
 #include <pbl/logging/logging.h>
 #include <pbl/logging/logging.h>
 #include "pbl/kernel/mutex.h"
@@ -716,6 +718,90 @@ void notification_storage_iterate(bool (*iter_callback)(void *data,
     }
     int result = pfs_seek(iter_state.fd, iter_state.header.payload_length, FSeekCur);
     if (result < 0) {
+      break;
+    }
+  }
+
+  prv_file_close(fd);
+}
+
+//! Reads the string attributes requested in attr_list from the payload following the header,
+//! leaving the file positioned after the payload
+static bool prv_read_string_attributes(const SerializedTimelineItemHeader *header,
+                                       AttributeList *attr_list, size_t buffer_size, int fd) {
+  for (uint8_t i = 0; i < attr_list->num_attributes; i++) {
+    attr_list->attributes[i].cstring[0] = '\0';
+  }
+
+  uint32_t remaining = header->payload_length;
+  for (uint8_t i = 0; i < header->num_attributes; i++) {
+    SerializedAttributeHeader attribute;
+    if ((remaining < sizeof(attribute)) ||
+        (pfs_read(fd, (uint8_t *)&attribute, sizeof(attribute)) < 0)) {
+      return false;
+    }
+    remaining -= sizeof(attribute);
+    if (attribute.length > remaining) {
+      return false;
+    }
+    remaining -= attribute.length;
+
+    Attribute *dest = attribute_find(attr_list, attribute.id);
+    const size_t length = dest ? MIN(attribute.length, buffer_size - 1) : 0;
+    if ((length > 0) && (pfs_read(fd, (uint8_t *)dest->cstring, length) < 0)) {
+      return false;
+    }
+    if (dest) {
+      dest->cstring[length] = '\0';
+    }
+    if (pfs_seek(fd, attribute.length - length, FSeekCur) < 0) {
+      return false;
+    }
+  }
+
+  return pfs_seek(fd, remaining, FSeekCur) >= 0;
+}
+
+void notification_storage_iterate_strings_after(
+    time_t item_cutoff, AttributeList *attr_list, size_t buffer_size,
+    bool (*iter_callback)(void *data, const CommonTimelineItemHeader *header,
+                          const TimelineItem *item),
+    void *data) {
+  if (iter_callback == NULL) {
+    return;
+  }
+
+  int fd = prv_file_open(OP_FLAG_READ);
+  if (fd < 0) {
+    return;
+  }
+
+  Iterator iter;
+  NotificationIterState iter_state = {.fd = fd};
+  iter_init(&iter, (IteratorCallback)prv_iter_next, NULL, &iter_state);
+
+  while (iter_next(&iter)) {
+    if (iter_state.header.common.status & TimelineItemStatusDeleted) {
+      if (pfs_seek(fd, iter_state.header.payload_length, FSeekCur) < 0) {
+        break;
+      }
+      continue;
+    }
+
+    const bool read_strings = iter_state.header.common.timestamp >= item_cutoff;
+    if (read_strings) {
+      if (!prv_read_string_attributes(&iter_state.header, attr_list, buffer_size, fd)) {
+        break;
+      }
+    } else if (pfs_seek(fd, iter_state.header.payload_length, FSeekCur) < 0) {
+      break;
+    }
+
+    const TimelineItem item = {
+      .header = iter_state.header.common,
+      .attr_list = *attr_list,
+    };
+    if (!iter_callback(data, &iter_state.header.common, read_strings ? &item : NULL)) {
       break;
     }
   }
