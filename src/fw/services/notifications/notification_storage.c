@@ -781,7 +781,14 @@ void notification_storage_iterate_strings_after(
   iter_init(&iter, (IteratorCallback)prv_iter_next, NULL, &iter_state);
 
   while (iter_next(&iter)) {
-    if (iter_state.header.common.status & TimelineItemStatusDeleted) {
+    const uint8_t status = iter_state.header.common.status;
+    const bool corrupt = (status & TimelineItemStatusUnused) ||
+                         (iter_state.header.common.type >= TimelineItemTypeOutOfRange) ||
+                         (iter_state.header.common.layout >= NumLayoutIds);
+    if (corrupt) {
+      PBL_LOG_WRN("Skipping corrupt notification");
+    }
+    if (corrupt || (status & TimelineItemStatusDeleted)) {
       if (pfs_seek(fd, iter_state.header.payload_length, FSeekCur) < 0) {
         break;
       }
@@ -790,8 +797,16 @@ void notification_storage_iterate_strings_after(
 
     const bool read_strings = iter_state.header.common.timestamp >= item_cutoff;
     if (read_strings) {
-      if (!prv_read_string_attributes(&iter_state.header, attr_list, buffer_size, fd)) {
+      const int payload_offset = pfs_seek(fd, 0, FSeekCur);
+      if (payload_offset < 0) {
         break;
+      }
+      if (!prv_read_string_attributes(&iter_state.header, attr_list, buffer_size, fd)) {
+        PBL_LOG_WRN("Skipping corrupt notification payload");
+        if (pfs_seek(fd, payload_offset + iter_state.header.payload_length, FSeekSet) < 0) {
+          break;
+        }
+        continue;
       }
     } else if (pfs_seek(fd, iter_state.header.payload_length, FSeekCur) < 0) {
       break;
