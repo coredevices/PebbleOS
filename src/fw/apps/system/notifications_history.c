@@ -44,7 +44,8 @@ static const char *prv_group_sender_for_item(const TimelineItem *item, char *buf
   }
 
   const char *sender = attribute_get_string(&item->attr_list, AttributeIdSender, "");
-  if (IS_EMPTY_STRING(sender)) {
+  const bool from_title = IS_EMPTY_STRING(sender);
+  if (from_title) {
     sender = attribute_get_string(&item->attr_list, AttributeIdTitle, "");
   }
 
@@ -52,6 +53,15 @@ static const char *prv_group_sender_for_item(const TimelineItem *item, char *buf
   buffer[buffer_size - 1] = '\0';
   string_strip_trailing_whitespace(buffer, buffer);
   char *start = (char *)string_strip_leading_whitespace(buffer);
+
+  if (from_title) {
+    // "Conversation: Sender" titles group by the conversation
+    char *separator = strstr(start, ": ");
+    if (separator && (separator != start) && (separator[2] != '\0')) {
+      *separator = '\0';
+      string_strip_trailing_whitespace(start, start);
+    }
+  }
 
   return IS_EMPTY_STRING(start) ? NULL : start;
 }
