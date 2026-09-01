@@ -54,19 +54,35 @@ void test_vibe_score_info__cycle_next_notifications(void) {
     VibeScoreId_NudgeNudge,
     VibeScoreId_Jackhammer,
     VibeScoreId_Mario,
+    VibeScoreId_DoublePulseMedium,
+    VibeScoreId_PebbleMorse,
+    VibeScoreId_Heartbeat,
+    VibeScoreId_DoubleTap,
+    VibeScoreId_Wave,
+    VibeScoreId_Imperial,
   };
 
-  prv_test_cycle_next(VibeClient_Notifications, notification_scores, 7, VibeScoreId_Pulse, 3);
+  prv_test_cycle_next(VibeClient_Notifications, notification_scores, 13, VibeScoreId_Pulse, 3);
 }
 
 void test_vibe_score_info__cycle_next_calls(void) {
   const VibeScoreId call_scores[] = {
-    VibeScoreId_Disabled, VibeScoreId_StandardLongPulseLow, VibeScoreId_StandardLongPulseHigh,
-    VibeScoreId_Pulse,    VibeScoreId_NudgeNudge,           VibeScoreId_Jackhammer,
+    VibeScoreId_Disabled,
+    VibeScoreId_StandardLongPulseLow,
+    VibeScoreId_StandardLongPulseHigh,
+    VibeScoreId_Pulse,
+    VibeScoreId_NudgeNudge,
+    VibeScoreId_Jackhammer,
     VibeScoreId_Mario,
+    VibeScoreId_DoublePulseMedium,
+    VibeScoreId_PebbleMorse,
+    VibeScoreId_Heartbeat,
+    VibeScoreId_DoubleTap,
+    VibeScoreId_Wave,
+    VibeScoreId_Imperial,
   };
 
-  prv_test_cycle_next(VibeClient_PhoneCalls, call_scores, 7, VibeScoreId_Jackhammer, 5);
+  prv_test_cycle_next(VibeClient_PhoneCalls, call_scores, 13, VibeScoreId_Jackhammer, 5);
 }
 
 void test_vibe_score_info__cycle_next_alarms(void) {
@@ -79,9 +95,15 @@ void test_vibe_score_info__cycle_next_alarms(void) {
     VibeScoreId_Reveille,
     VibeScoreId_Mario,
     VibeScoreId_Gentle,
+    VibeScoreId_DoublePulseMedium,
+    VibeScoreId_PebbleMorse,
+    VibeScoreId_Heartbeat,
+    VibeScoreId_DoubleTap,
+    VibeScoreId_Wave,
+    VibeScoreId_Imperial,
   };
 
-  prv_test_cycle_next(VibeClient_Alarms, alarm_scores, 8, VibeScoreId_NudgeNudge, 3);
+  prv_test_cycle_next(VibeClient_Alarms, alarm_scores, 14, VibeScoreId_NudgeNudge, 3);
 }
 
 void test_vibe_score_info__is_valid_true_for_valid_score(void) {
