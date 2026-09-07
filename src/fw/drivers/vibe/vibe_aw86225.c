@@ -8,6 +8,7 @@
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/vibe/vibe_aw86225.h>
 #include <pbl/logging/logging.h>
+#include <pbl/util/math.h>
 #include "system/passert.h"
 #include "kernel/util/sleep.h"
 #include <string.h>
@@ -68,7 +69,8 @@ PBL_LOG_MODULE_DEFINE(driver_vibe_aw86225, CONFIG_DRIVER_VIBE_LOG_LEVEL);
 #define AW862XX_CONTCFG3_DRV_WIDTH                      (24000U / s_drive_frequency_hz - 8U - 8U - 15U)
 #define AW862XX_CONTCFG3_F0_DET_DRV_WIDTH               (24000U / AW86225->lra_frequency_hz - 8U - 8U - 15U)
 #define AW862XX_CONTCFG7_FULL_SCALE                     (0x7FL)
-#define AW862XX_CONTCFG7_DRV2_LEVEL                     AW862XX_CONTCFG7_FULL_SCALE
+#define AW862XX_CONT_LVL_FULL_SCALE_MV                  (5000U)
+#define AW862XX_CONT_HALF_CYCLES_PER_CYCLE              (2U)
 #define AW862XX_CONTCFG8_DRV1_TIME                      (0x04U)
 #define AW862XX_CONTCFG9_DRV2_TIME_MAX                  (0xFFU)
 #define AW862XX_CONTCFG10_BRK_TIME                      (0x08U)
@@ -119,7 +121,9 @@ static bool s_initialized = false;
 static int8_t s_target_strength = VIBE_STRENGTH_MAX;
 static uint16_t s_drive_frequency_hz;
 static uint8_t s_trim_lra = AW862XX_TRIM_LRA_INVALID;
+#ifndef CONFIG_VIBE_AW86225_CONT_PLAYBACK
 static uint16_t s_vbat_mv = AW862XX_VBAT_REFER_MV;
+#endif
 static bool s_playing = false;
 
 _Static_assert(CONFIG_VIBE_AW86225_RATED_VOLTAGE_MV <= CONFIG_VIBE_AW86225_OVERDRIVE_VOLTAGE_MV,
@@ -220,6 +224,7 @@ static void prv_stop(void) {
   s_playing = false;
 }
 
+#ifndef CONFIG_VIBE_AW86225_CONT_PLAYBACK
 static uint8_t prv_gain_for_strength(uint8_t strength) {
   uint32_t gain = (uint32_t)strength * AW862XX_OVERDRIVE_PEAK_MV * AW862XX_PLAYCFG2_GAIN_UNITY /
                   (100U * s_vbat_mv);
@@ -258,22 +263,43 @@ static void prv_update_vbat(void) {
   PBL_LOG_DBG("AW86225: VBAT %u mV, full-strength gain %u", (unsigned)vbat_mv,
               prv_gain_for_strength(VIBE_STRENGTH_MAX));
 }
+#endif
+
+//! CONT mode drives a square wave for DRV_WIDTH of each half cycle, so the RMS
+//! target maps to a peak of rms / sqrt(width / period).
+static uint8_t prv_cont_level(uint32_t rms_mv, uint8_t strength) {
+  uint32_t period = AW862XX_CONTCFG2_CONF_F0;
+  uint32_t width = AW862XX_CONTCFG3_DRV_WIDTH;
+  uint32_t peak_mv = (rms_mv * integer_sqrt(((int64_t)period << 20) / width)) >> 10;
+  uint32_t level = (uint32_t)strength * peak_mv * AW862XX_PLAYCFG2_GAIN_UNITY /
+                   (100U * AW862XX_CONT_LVL_FULL_SCALE_MV);
+  if (level > AW862XX_CONTCFG7_FULL_SCALE) {
+    level = AW862XX_CONTCFG7_FULL_SCALE;
+  }
+  return level;
+}
+
+static bool prv_write_cont_levels(uint8_t strength) {
+  uint8_t drv1_level = prv_cont_level(CONFIG_VIBE_AW86225_OVERDRIVE_VOLTAGE_MV, strength);
+  uint8_t drv2_level = prv_cont_level(CONFIG_VIBE_AW86225_RATED_VOLTAGE_MV, strength);
+  bool ret = prv_write_register(AW862XX_REG_CONTCFG7, drv2_level);
+  ret &= prv_write_register(AW862XX_REG_CONTCFG6, AW862XX_CONTCFG6_TRACK_EN | drv1_level);
+  return ret;
+}
 
 static bool prv_config_cont_mode(uint8_t drv1_time, uint8_t drv2_time) {
-  uint8_t drv1_level = ((uint16_t)s_target_strength * AW862XX_CONTCFG7_FULL_SCALE) / 100U;
-  uint8_t drv2_level = ((uint16_t)s_target_strength * AW862XX_CONTCFG7_DRV2_LEVEL) / 100U;
   bool ret = prv_write_register(AW862XX_REG_CONTCFG1,
                                 AW862XX_CONTCFG1_EDGE_FREQ_NONE |
                                     AW862XX_CONTCFG1_SIN_MODE_COS);
   ret &= prv_write_register(AW862XX_REG_CONTCFG2, AW862XX_CONTCFG2_CONF_F0);
   ret &= prv_write_register(AW862XX_REG_CONTCFG3, AW862XX_CONTCFG3_DRV_WIDTH);
-  ret &= prv_write_register(AW862XX_REG_CONTCFG7, drv2_level);
-  ret &= prv_write_register(AW862XX_REG_CONTCFG6, AW862XX_CONTCFG6_TRACK_EN | drv1_level);
+  ret &= prv_write_cont_levels(s_target_strength);
   ret &= prv_write_register(AW862XX_REG_CONTCFG8, drv1_time);
   ret &= prv_write_register(AW862XX_REG_CONTCFG9, drv2_time);
   ret &= prv_write_register(AW862XX_REG_CONTCFG10, AW862XX_CONTCFG10_BRK_TIME);
   ret &= prv_write_register(AW862XX_REG_CONTCFG11, AW862XX_CONTCFG11_TRACK_MARGIN);
-  ret &= prv_modify_reg(AW862XX_REG_PLAYCFG3, AW862XX_BIT_PLAYCFG3_BRK_EN_MASK, 0);
+  ret &= prv_modify_reg(AW862XX_REG_PLAYCFG3, AW862XX_BIT_PLAYCFG3_BRK_EN_MASK,
+                        AW862XX_BIT_PLAYCFG3_BRK_ENABLE);
   ret &= prv_modify_reg(AW862XX_REG_PLAYCFG3, AW862XX_BIT_PLAYCFG3_PLAY_MODE_MASK,
                         AW862XX_BIT_PLAYCFG3_PLAY_MODE_CONT);
   ret &= prv_modify_reg(AW862XX_REG_SYSCTRL1, AW862XX_SYSCTRL1_VBAT_MODE_MASK,
@@ -331,6 +357,7 @@ static bool prv_load_ram_waveform(void) {
   return ret;
 }
 
+#ifndef CONFIG_VIBE_AW86225_CONT_PLAYBACK
 static bool prv_config_ram_loop_mode(void) {
   uint8_t gain = prv_gain_for_strength(s_target_strength);
   bool ret = prv_modify_reg(AW862XX_REG_SYSCTRL2, AW862XX_SYSCTRL2_WAVDAT_MODE_MASK,
@@ -347,6 +374,17 @@ static bool prv_config_ram_loop_mode(void) {
                                 AW862XX_WAVCFG9_LOOP_INFINITE);
   ret &= prv_write_register(AW862XX_REG_PLAYCFG2, gain);
   return ret;
+}
+#endif
+
+static bool prv_config_playback(void) {
+#ifdef CONFIG_VIBE_AW86225_CONT_PLAYBACK
+  return prv_config_cont_mode(
+      CONFIG_VIBE_AW86225_OVERDRIVE_CYCLES * AW862XX_CONT_HALF_CYCLES_PER_CYCLE,
+      AW862XX_CONTCFG9_DRV2_TIME_MAX);
+#else
+  return prv_config_ram_loop_mode();
+#endif
 }
 
 static int prv_f0_detection(void)
@@ -445,7 +483,7 @@ void vibe_init(void) {
   if (s_trim_lra != AW862XX_TRIM_LRA_INVALID) {
     ret &= prv_modify_reg(AW862XX_REG_TRIMCFG3, AW862XX_TRIMCFG3_TRIM_LRA_MASK, s_trim_lra);
   }
-  ret &= prv_config_ram_loop_mode();
+  ret &= prv_config_playback();
 
   if (!ret) {
     PBL_LOG_ERR("AW86225: register configuration failed");
@@ -468,8 +506,11 @@ void vibe_set_strength(int8_t strength) {
     return;
   }
 
-  uint8_t gain = prv_gain_for_strength(strength);
-  bool ret = prv_write_register(AW862XX_REG_PLAYCFG2, gain);
+#ifdef CONFIG_VIBE_AW86225_CONT_PLAYBACK
+  bool ret = prv_write_cont_levels(strength);
+#else
+  bool ret = prv_write_register(AW862XX_REG_PLAYCFG2, prv_gain_for_strength(strength));
+#endif
   if (!ret) {
     PBL_LOG_ERR("AW86225: strength write failed");
   }
@@ -481,10 +522,12 @@ void vibe_ctl(bool on) {
   }
 
   if (on) {
+#ifndef CONFIG_VIBE_AW86225_CONT_PLAYBACK
     if (!s_playing) {
       prv_update_vbat();
     }
-    if (!prv_config_ram_loop_mode()) {
+#endif
+    if (!prv_config_playback()) {
       PBL_LOG_ERR("AW86225: playback configuration failed");
       return;
     }
