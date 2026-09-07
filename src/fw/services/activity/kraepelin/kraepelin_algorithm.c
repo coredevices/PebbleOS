@@ -97,7 +97,7 @@ static const int KALG_MIN_STEP_FREQ = 7;
 static const int KALG_MAX_STEP_FREQ = 20;
 
 // Size of butterworth filter used in prv_pim_filter
-#define KALG_BUTTERWORTH_NUM_COEFICIENTS 5
+#define KALG_BUTTERWORTH_NUM_COEFFICIENTS 5
 
 // Used to indicate that we have not yet detected a potential starting point for a step activity
 #define KALG_START_TIME_NONE 0
@@ -353,8 +353,8 @@ typedef struct KAlgState {
   KAlgStatsCallback stats_cb;
 
   // Butterworth filter state used in prv_pim_filter.
-  Fixed_S64_32 yt[KALG_N_AXES][KALG_BUTTERWORTH_NUM_COEFICIENTS - 1];
-  Fixed_S64_32 xt[KALG_N_AXES][KALG_BUTTERWORTH_NUM_COEFICIENTS];
+  Fixed_S64_32 yt[KALG_N_AXES][KALG_BUTTERWORTH_NUM_COEFFICIENTS - 1];
+  Fixed_S64_32 xt[KALG_N_AXES][KALG_BUTTERWORTH_NUM_COEFFICIENTS];
   bool pim_filter_primed;   // Right after init, we need to "prime" the filter
 
   // State for the activity detectors
@@ -472,13 +472,13 @@ static int32_t prv_integral_abs(int16_t *d, int16_t start, int16_t end) {
 static uint32_t prv_pim_filter(KAlgState *state, int16_t *d, int16_t dlen, int16_t axis) {
   // We use a butterworth second order digital filter with a bandpass
   // design of 0.25 to 1.75 hz
-  static const Fixed_S64_32 cb[KALG_BUTTERWORTH_NUM_COEFICIENTS] = {
+  static const Fixed_S64_32 cb[KALG_BUTTERWORTH_NUM_COEFFICIENTS] = {
       {0x000000000721d150LL},   //  0.027859766117136
       {0x0000000000000000LL},   //  0.0
       {0xfffffffff1bc5d60LL},   // -0.055719532234272
       {0x0000000000000000LL},   //  0.0
       {0x000000000721d150LL}};  //  0.027859766117136
-  static const Fixed_S64_32 ca[KALG_BUTTERWORTH_NUM_COEFICIENTS - 1] = {
+  static const Fixed_S64_32 ca[KALG_BUTTERWORTH_NUM_COEFFICIENTS - 1] = {
       {0xfffffffc92b0910cLL},   // -3.426993307709624
       {0x0000000473f9a693LL},   //  4.453028117259779
       {0xfffffffd633c7d23LL},   // -2.612358264068663
@@ -487,8 +487,8 @@ static uint32_t prv_pim_filter(KAlgState *state, int16_t *d, int16_t dlen, int16
   int32_t pim = 0;
   for (int16_t i = 0; i < dlen; i++) {
     Fixed_S64_32 ytmp = math_fixed_recursive_filter(
-        FIXED_S64_32_FROM_INT(d[i]), KALG_BUTTERWORTH_NUM_COEFICIENTS,
-        KALG_BUTTERWORTH_NUM_COEFICIENTS - 1, cb, ca, state->xt[axis], state->yt[axis]);
+        FIXED_S64_32_FROM_INT(d[i]), KALG_BUTTERWORTH_NUM_COEFFICIENTS,
+        KALG_BUTTERWORTH_NUM_COEFFICIENTS - 1, cb, ca, state->xt[axis], state->yt[axis]);
     pim += abs(FIXED_S64_32_TO_INT(ytmp));
   }
 
