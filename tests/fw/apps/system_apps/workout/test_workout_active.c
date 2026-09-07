@@ -9,13 +9,39 @@
 #include <apps/system/workout/active.h>
 #include <apps/system/workout/data.h>
 #include <apps/system/workout/dialog.h>
+#include <apps/system/workout/hr_history.h>
 #include <apps/system/workout/workout.h>
+#include <shell/prefs.h>
+
+// Only boards with a heart rate sensor build with CONFIG_HRM.
+#ifdef CONFIG_HRM
+static const bool s_has_hrm = true;
+#else
+static const bool s_has_hrm = false;
+#endif
 
 bool s_hrm_is_present;
+static bool s_spo2_enabled;
+
+bool activity_prefs_spo2_activity_tracking_is_enabled(void) {
+  return s_spo2_enabled;
+}
+static UnitsDistance s_distance_units;
+
+UnitsDistance shell_prefs_get_units_distance(void) {
+  return s_distance_units;
+}
 
 // Fakes
 /////////////////////
+// Render every animation at its end state.
+Animation *animation_create(void) {
+  return nullptr;
+}
+
 extern void prv_cycle_scrollable_metrics(WorkoutActiveWindow *active_window);
+extern void prv_finish_workout(WorkoutActiveWindow *active_window);
+extern void prv_update_timer_callback(void *data);
 
 bool activity_is_hrm_present(void) {
   return s_hrm_is_present;
@@ -38,6 +64,7 @@ static WorkoutController s_workout_controller = {
   .update_data = workout_data_update,
   .metric_to_string = workout_data_fill_metric_value,
   .get_metric_value = workout_data_get_metric_value,
+  .get_hr_samples = workout_data_get_hr_samples,
   .get_distance_string = health_util_get_distance_string,
 };
 
@@ -87,6 +114,16 @@ static void prv_metric_to_string(WorkoutMetricType type, char *buffer, size_t bu
     // Not supported by the sports API
     case WorkoutMetricType_Steps:
     case WorkoutMetricType_AvgPace:
+    case WorkoutMetricType_AvgSpeed:
+    case WorkoutMetricType_AvgCadence:
+    case WorkoutMetricType_ActiveCalories:
+    case WorkoutMetricType_AvgHr:
+    case WorkoutMetricType_SpO2:
+    case WorkoutMetricType_SpO2Min:
+    case WorkoutMetricType_HrZone0Time:
+    case WorkoutMetricType_HrZone1Time:
+    case WorkoutMetricType_HrZone2Time:
+    case WorkoutMetricType_HrZone3Time:
     case WorkoutMetricType_None:
     case WorkoutMetricTypeCount:
       break;
@@ -129,7 +166,15 @@ GContext *graphics_context_get_current_context(void) {
 }
 
 void test_workout_active__initialize(void) {
-  s_hrm_is_present = true;
+  workout_service_set_active_kcalories(0);
+  workout_service_set_avg_hr(0);
+  workout_service_set_hr_samples(0);
+  s_distance_units = UnitsDistance_Miles;
+  s_hrm_is_present = s_has_hrm;
+  s_spo2_enabled = false;
+  workout_service_set_spo2(0, 0, false);
+  workout_service_pause_workout(false);
+  workout_service_stop_workout();
 
   s_workout_data = (WorkoutData){};
   s_sports_data = (SportsData){};
@@ -182,6 +227,9 @@ void test_workout_active__workout_render_no_data(void) {
 }
 
 void test_workout_active__workout_render_walk(void) {
+  if (!s_has_hrm) {
+    return;
+  }
   s_workout_data = (WorkoutData){
     .steps = 567,
     .duration_s = 84,
@@ -216,6 +264,9 @@ void test_workout_active__workout_render_walk_no_hrm(void) {
 }
 
 void test_workout_active__workout_render_run(void) {
+  if (!s_has_hrm) {
+    return;
+  }
   s_workout_data = (WorkoutData){
     .steps = 567,
     .duration_s = 84,
@@ -250,6 +301,9 @@ void test_workout_active__workout_render_run_no_hrm(void) {
 }
 
 void test_workout_active__workout_render_open_workout(void) {
+  if (!s_has_hrm) {
+    return;
+  }
   s_workout_data = (WorkoutData){
     .steps = 0,
     .duration_s = 84,
@@ -284,6 +338,9 @@ void test_workout_active__workout_render_open_workout_no_hrm(void) {
 }
 
 void test_workout_active__workout_render_hr_zone_1(void) {
+  if (!s_has_hrm) {
+    return;
+  }
   s_workout_data = (WorkoutData){
     .steps = 567,
     .duration_s = 789,
@@ -300,6 +357,9 @@ void test_workout_active__workout_render_hr_zone_1(void) {
 }
 
 void test_workout_active__workout_render_hr_zone_2(void) {
+  if (!s_has_hrm) {
+    return;
+  }
   s_workout_data = (WorkoutData){
     .steps = 567,
     .duration_s = 789,
@@ -316,6 +376,9 @@ void test_workout_active__workout_render_hr_zone_2(void) {
 }
 
 void test_workout_active__workout_render_hr_zone_3(void) {
+  if (!s_has_hrm) {
+    return;
+  }
   s_workout_data = (WorkoutData){
     .steps = 567,
     .duration_s = 789,
@@ -343,7 +406,7 @@ void test_workout_active__workout_render_very_slow_pace(void) {
 
   WorkoutActiveWindow *active_window = workout_active_create_for_activity_type(
       ActivitySessionType_Walk, &s_workout_data, &s_workout_controller);
-  prv_create_window_and_render(active_window, 2);
+  prv_create_window_and_render(active_window, 0);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }
 
@@ -564,5 +627,436 @@ void test_workout_active__sports_custom_hanging_label(void) {
       top_metric, middle_metric, ARRAY_LENGTH(scrollable_metrics), scrollable_metrics,
       &s_sports_data, &s_sports_controller);
   prv_create_window_and_render(active_window, 1);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_workout_active__workout_render_paused(void) {
+  s_workout_data = (WorkoutData){.duration_s = 754, .distance_m = 2400, .avg_pace = 314};
+  workout_service_pause_workout(true);
+  WorkoutActiveWindow *window = workout_active_create_for_activity_type(
+      ActivitySessionType_Run, &s_workout_data, &s_workout_controller);
+  prv_create_window_and_render(window, 0);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_workout_active__workout_render_completed(void) {
+  workout_service_start_workout(ActivitySessionType_Run);
+  workout_service_set_current_workout_info(3210, 754, 2400, 148, HRZone_Zone2);
+  workout_service_set_active_kcalories(125);
+  workout_service_set_avg_hr(142);
+  WorkoutActiveWindow *window = workout_active_create_for_activity_type(
+      ActivitySessionType_Run, &s_workout_data, &s_workout_controller);
+  prv_finish_workout(window);
+  cl_assert(!workout_service_is_workout_ongoing());
+  cl_assert_equal_i(s_workout_data.duration_s, 754);
+  cl_assert_equal_i(s_workout_data.distance_m, 2400);
+  cl_assert_equal_i(s_workout_data.active_kcal, 125);
+  cl_assert_equal_i(s_workout_data.avg_bpm, 142);
+  workout_service_set_current_workout_info(0, 0, 0, 0, HRZone_Zone0);
+  workout_service_set_active_kcalories(0);
+  workout_service_set_avg_hr(0);
+  prv_update_timer_callback(window);
+  cl_assert_equal_i(s_workout_data.active_kcal, 125);
+  cl_assert_equal_i(s_workout_data.avg_bpm, 142);
+  cl_assert_equal_i(s_workout_data.duration_s, 754);
+  cl_assert_equal_i(s_workout_data.distance_m, 2400);
+  prv_create_window_and_render(window, 0);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_workout_active__workout_render_long_values(void) {
+  s_workout_data = (WorkoutData){
+    .duration_s = 45296,
+    .distance_m = 123456,
+    .steps = 123456,
+    .avg_pace = 367,
+    .bpm = 148
+  };
+  WorkoutActiveWindow *window = workout_active_create_for_activity_type(
+      ActivitySessionType_Run, &s_workout_data, &s_workout_controller);
+  prv_create_window_and_render(window, 1);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_workout_active__new_workout_clears_previous_pace(void) {
+  s_workout_data.avg_pace = 300;
+  workout_service_set_current_workout_info(0, 0, 0, 0, HRZone_Zone0);
+  workout_data_update(&s_workout_data);
+  cl_assert_equal_i(s_workout_data.avg_pace, 300);
+  workout_service_start_workout(ActivitySessionType_Run);
+  workout_data_update(&s_workout_data);
+  cl_assert_equal_i(s_workout_data.avg_pace, 0);
+}
+
+// Once the service has no workout, the data keeps its last values.
+void test_workout_active__update_keeps_data_after_service_stopped(void) {
+  workout_service_start_workout(ActivitySessionType_Run);
+  workout_service_set_current_workout_info(3210, 754, 2400, 148, HRZone_Zone2);
+  workout_service_set_active_kcalories(125);
+  workout_data_update(&s_workout_data);
+  cl_assert_equal_i(s_workout_data.active_kcal, 125);
+  workout_service_stop_workout();
+  workout_service_set_current_workout_info(0, 0, 0, 0, HRZone_Zone0);
+  workout_service_set_active_kcalories(0);
+  workout_data_update(&s_workout_data);
+  cl_assert_equal_i(s_workout_data.duration_s, 754);
+  cl_assert_equal_i(s_workout_data.distance_m, 2400);
+  cl_assert_equal_i(s_workout_data.active_kcal, 125);
+}
+
+void test_workout_active__no_scrollable_metrics_cycle_is_safe(void) {
+  WorkoutActiveWindow *window =
+      workout_active_create_triple_layout(WorkoutMetricType_Duration, WorkoutMetricType_Distance, 0,
+                                          nullptr, &s_sports_data, &s_sports_controller);
+  prv_cycle_scrollable_metrics(window);
+}
+
+void test_workout_active__derived_metrics_and_units(void) {
+  WorkoutData data = {.duration_s = 1800, .distance_m = 5000, .steps = 4500};
+  cl_assert_equal_i(10000, workout_data_get_metric_value(WorkoutMetricType_AvgSpeed, &data));
+  cl_assert_equal_i(150, workout_data_get_metric_value(WorkoutMetricType_AvgCadence, &data));
+  char text[24];
+  s_distance_units = UnitsDistance_KM;
+  workout_data_fill_metric_value(WorkoutMetricType_AvgSpeed, text, sizeof(text), &data, &data);
+  cl_assert_equal_s("10.0", text);
+  s_distance_units = UnitsDistance_Miles;
+  workout_data_fill_metric_value(WorkoutMetricType_AvgSpeed, text, sizeof(text), &data, &data);
+  cl_assert_equal_s("6.2", text);
+  data.duration_s = 0;
+  cl_assert_equal_i(0, workout_data_get_metric_value(WorkoutMetricType_AvgSpeed, &data));
+  cl_assert_equal_i(0, workout_data_get_metric_value(WorkoutMetricType_AvgCadence, &data));
+  workout_data_fill_metric_value(WorkoutMetricType_AvgSpeed, text, sizeof(text), &data, &data);
+  cl_assert_equal_s("--", text);
+  workout_data_fill_metric_value(WorkoutMetricType_AvgPace, text, sizeof(text), &data, &data);
+  cl_assert_equal_s("--", text);
+  data.avg_pace = PBL_SEC_PER_HOUR;
+  workout_data_fill_metric_value(WorkoutMetricType_AvgPace, text, sizeof(text), &data, &data);
+  cl_assert_equal_s("--", text);
+  data.avg_pace = 314;
+  workout_data_fill_metric_value(WorkoutMetricType_AvgPace, text, sizeof(text), &data, &data);
+  cl_assert_equal_s("5:14", text);
+  data = (WorkoutData){.duration_s = 60};
+  cl_assert_equal_i(0, workout_data_get_metric_value(WorkoutMetricType_AvgSpeed, &data));
+  cl_assert_equal_i(0, workout_data_get_metric_value(WorkoutMetricType_AvgCadence, &data));
+  data = (WorkoutData){.duration_s = 3600, .distance_m = 1000000, .steps = 180000};
+  cl_assert_equal_i(1000000, workout_data_get_metric_value(WorkoutMetricType_AvgSpeed, &data));
+  cl_assert_equal_i(3000, workout_data_get_metric_value(WorkoutMetricType_AvgCadence, &data));
+}
+
+void test_workout_active__workout_render_cadence(void) {
+  s_workout_data = (WorkoutData){
+    .duration_s = 1800,
+    .distance_m = 5000,
+    .steps = 4500,
+    .active_kcal = 320,
+    .bpm = 148
+  };
+  WorkoutActiveWindow *window = workout_active_create_for_activity_type(
+      ActivitySessionType_Run, &s_workout_data, &s_workout_controller);
+  prv_create_window_and_render(window, 1);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_workout_active__workout_render_speed_and_calories(void) {
+  s_distance_units = UnitsDistance_KM;
+  s_workout_data = (WorkoutData){
+    .duration_s = 1800,
+    .distance_m = 5000,
+    .steps = 4500,
+    .active_kcal = 320,
+    .bpm = 148,
+    .avg_pace = 360
+  };
+  WorkoutActiveWindow *window = workout_active_create_for_activity_type(
+      ActivitySessionType_Run, &s_workout_data, &s_workout_controller);
+  prv_create_window_and_render(window, 1);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_workout_active__workout_render_zones(void) {
+  if (!s_has_hrm) {
+    return;
+  }
+  s_workout_data = (WorkoutData){
+    .duration_s = 1800,
+    .bpm = 152,
+    .hr_zone_time_s = {312, 845, 503, 140},
+  };
+  WorkoutActiveWindow *window = workout_active_create_for_activity_type(
+      ActivitySessionType_Run, &s_workout_data, &s_workout_controller);
+  prv_create_window_and_render(window, 2);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_workout_active__workout_render_heart_page(void) {
+  if (!s_has_hrm) {
+    return;
+  }
+  s_workout_data = (WorkoutData){
+    .duration_s = 1800,
+    .distance_m = 5000,
+    .steps = 4500,
+    .bpm = 148,
+    .avg_bpm = 142
+  };
+  WorkoutActiveWindow *window = workout_active_create_for_activity_type(
+      ActivitySessionType_Run, &s_workout_data, &s_workout_controller);
+  prv_create_window_and_render(window, 3);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_workout_active__workout_render_heart_page_low(void) {
+  if (!s_has_hrm) {
+    return;
+  }
+  s_workout_data = (WorkoutData){
+    .duration_s = 1800,
+    .bpm = 62,
+    .avg_bpm = 65,
+  };
+  WorkoutActiveWindow *window = workout_active_create_for_activity_type(
+      ActivitySessionType_Run, &s_workout_data, &s_workout_controller);
+  prv_create_window_and_render(window, 3);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_workout_active__workout_render_heart_page_spo2(void) {
+  if (!s_has_hrm) {
+    return;
+  }
+  s_spo2_enabled = true;
+  s_workout_data = (WorkoutData){
+    .duration_s = 1800,
+    .bpm = 152,
+    .avg_bpm = 142,
+    .spo2 = 96,
+  };
+  WorkoutActiveWindow *window = workout_active_create_for_activity_type(
+      ActivitySessionType_Run, &s_workout_data, &s_workout_controller);
+  prv_create_window_and_render(window, 3);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_workout_active__workout_render_reading_spo2(void) {
+  if (!s_has_hrm) {
+    return;
+  }
+  s_spo2_enabled = true;
+  s_workout_data = (WorkoutData){
+    .duration_s = 1800,
+    .avg_bpm = 142,
+    .spo2 = 96,
+    .spo2_measuring = true,
+  };
+  WorkoutActiveWindow *window = workout_active_create_for_activity_type(
+      ActivitySessionType_Run, &s_workout_data, &s_workout_controller);
+  prv_create_window_and_render(window, 3);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_workout_active__workout_render_completed_spo2(void) {
+  if (!s_has_hrm) {
+    return;
+  }
+  s_spo2_enabled = true;
+  workout_service_start_workout(ActivitySessionType_Run);
+  workout_service_set_current_workout_info(3210, 754, 2400, 148, HRZone_Zone2);
+  workout_service_set_active_kcalories(125);
+  workout_service_set_avg_hr(142);
+  workout_service_set_spo2(97, 94, false);
+  WorkoutActiveWindow *window = workout_active_create_for_activity_type(
+      ActivitySessionType_Run, &s_workout_data, &s_workout_controller);
+  prv_finish_workout(window);
+  cl_assert_equal_i(s_workout_data.spo2_min, 94);
+  prv_create_window_and_render(window, 0);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+extern void prv_select_click_handler(ClickRecognizerRef recognizer, void *context);
+extern void prv_down_click_handler(ClickRecognizerRef recognizer, void *context);
+
+void test_workout_active__button_pause_cancel_resume_and_finish(void) {
+  workout_service_start_workout(ActivitySessionType_Run);
+  workout_service_set_current_workout_info(4500, 1800, 5000, 148, HRZone_Zone1);
+  WorkoutActiveWindow *window = workout_active_create_for_activity_type(
+      ActivitySessionType_Run, &s_workout_data, &s_workout_controller);
+  prv_select_click_handler(nullptr, window);
+  cl_assert(workout_service_is_paused());
+  prv_down_click_handler(nullptr, window);
+  cl_assert(workout_service_is_workout_ongoing());
+  prv_down_click_handler(nullptr, window);
+  prv_select_click_handler(nullptr, window);
+  cl_assert(!workout_service_is_paused());
+  prv_select_click_handler(nullptr, window);
+  prv_down_click_handler(nullptr, window);
+  prv_select_click_handler(nullptr, window);
+  cl_assert(!workout_service_is_workout_ongoing());
+  cl_assert_equal_i(s_workout_data.duration_s, 1800);
+}
+
+// Resuming from another client while "END WORKOUT?" shows must not turn the next select into
+// a finish.
+void test_workout_active__external_resume_cancels_confirmation(void) {
+  workout_service_start_workout(ActivitySessionType_Run);
+  workout_service_set_current_workout_info(4500, 1800, 5000, 148, HRZone_Zone1);
+  WorkoutActiveWindow *window = workout_active_create_for_activity_type(
+      ActivitySessionType_Run, &s_workout_data, &s_workout_controller);
+  prv_select_click_handler(nullptr, window);
+  prv_down_click_handler(nullptr, window);
+  cl_assert(workout_service_is_paused());
+  workout_service_pause_workout(false);
+  prv_update_timer_callback(window);
+  prv_select_click_handler(nullptr, window);
+  cl_assert(workout_service_is_paused());
+  cl_assert(workout_service_is_workout_ongoing());
+}
+
+// A workout the service ended, e.g. abandoned or stopped by another client, finishes into its
+// recap on the next tick instead of ticking on.
+void test_workout_active__service_stop_finishes_dashboard(void) {
+  workout_service_start_workout(ActivitySessionType_Run);
+  workout_service_set_current_workout_info(4500, 1800, 5000, 148, HRZone_Zone1);
+  WorkoutActiveWindow *window = workout_active_create_for_activity_type(
+      ActivitySessionType_Run, &s_workout_data, &s_workout_controller);
+  prv_update_timer_callback(window);
+  cl_assert_equal_i(s_workout_data.duration_s, 1800);
+  cl_assert(workout_service_stop_workout());
+  cl_assert(!workout_service_stop_workout());
+  prv_update_timer_callback(window);
+  workout_service_start_workout(ActivitySessionType_Run);
+  workout_service_set_current_workout_info(0, 0, 0, 0, HRZone_Zone0);
+  prv_update_timer_callback(window);
+  cl_assert_equal_i(s_workout_data.duration_s, 1800);
+}
+
+extern bool prv_beat(WorkoutActiveWindow *window);
+extern void prv_set_hr_plot(WorkoutActiveWindow *window, bool visible, bool animated);
+
+// The heart beats once per new reading, only where it is drawn.
+void test_workout_active__heart_beats_on_new_readings(void) {
+  if (!s_has_hrm) {
+    return;
+  }
+  workout_service_start_workout(ActivitySessionType_Run);
+  workout_service_set_current_workout_info(4500, 1800, 5000, 148, HRZone_Zone1);
+  WorkoutActiveWindow *window = workout_active_create_for_activity_type(
+      ActivitySessionType_Run, &s_workout_data, &s_workout_controller);
+  workout_service_set_hr_samples(1);
+  workout_data_update(&s_workout_data);
+  cl_assert(prv_beat(window));
+  cl_assert(!prv_beat(window));
+  workout_service_set_hr_samples(2);
+  workout_data_update(&s_workout_data);
+  cl_assert(prv_beat(window));
+
+  // The grid page has no heart.
+  prv_cycle_scrollable_metrics(window);
+  workout_service_set_hr_samples(3);
+  workout_data_update(&s_workout_data);
+  cl_assert(!prv_beat(window));
+
+  // The gauge does, unless the chart covers it.
+  prv_cycle_scrollable_metrics(window);
+  prv_cycle_scrollable_metrics(window);
+  workout_service_set_hr_samples(4);
+  workout_data_update(&s_workout_data);
+  cl_assert(prv_beat(window));
+  prv_set_hr_plot(window, true, false);
+  workout_service_set_hr_samples(5);
+  workout_data_update(&s_workout_data);
+  cl_assert(!prv_beat(window));
+
+  // Paused, no beat.
+  prv_set_hr_plot(window, false, false);
+  workout_service_pause_workout(true);
+  workout_service_set_hr_samples(6);
+  workout_data_update(&s_workout_data);
+  cl_assert(!prv_beat(window));
+}
+
+extern void prv_record_hr_sample(WorkoutActiveWindow *window);
+
+void test_workout_active__hr_history_rolls_after_one_minute(void) {
+  WorkoutHrHistory history = {};
+  for (int second = 0; second < 120; second++) {
+    workout_hr_history_add(&history, second, 100 + second);
+  }
+  cl_assert_equal_i(history.count, 60);
+  for (int i = 0; i < 60; i++) {
+    const WorkoutHrSample *sample = workout_hr_history_get(&history, i);
+    cl_assert_equal_i(sample->elapsed_s, i + 60);
+    cl_assert_equal_i(sample->bpm, i + 160);
+  }
+  cl_assert_equal_p(workout_hr_history_get(&history, 60), nullptr);
+}
+
+void test_workout_active__hr_history_duplicate_missing_and_reset(void) {
+  WorkoutHrHistory history = {};
+  workout_hr_history_add(&history, 10, 140);
+  workout_hr_history_add(&history, 10, 142);
+  cl_assert_equal_i(history.count, 1);
+  cl_assert_equal_i(workout_hr_history_get(&history, 0)->bpm, 142);
+  workout_hr_history_add(&history, 11, 0);
+  workout_hr_history_add(&history, 15, 155);
+  cl_assert_equal_i(history.count, 3);
+  cl_assert_equal_i(workout_hr_history_get(&history, 1)->bpm, 0);
+  cl_assert_equal_i(workout_hr_history_get(&history, 2)->elapsed_s, 15);
+  workout_hr_history_add(&history, 0, 130);
+  cl_assert_equal_i(history.count, 1);
+  cl_assert_equal_i(workout_hr_history_get(&history, 0)->elapsed_s, 0);
+}
+
+void test_workout_active__hr_history_autoscale(void) {
+  WorkoutHrHistory history = {};
+  int minimum;
+  int maximum;
+  cl_assert(!workout_hr_history_range(&history, 0, &minimum, &maximum));
+  workout_hr_history_add(&history, 0, 200);
+  workout_hr_history_add(&history, 1, 132);
+  workout_hr_history_add(&history, 59, 157);
+  workout_hr_history_add(&history, 60, 0);
+  workout_hr_history_add(&history, 61, 190);
+  cl_assert(workout_hr_history_range(&history, 60, &minimum, &maximum));
+  cl_assert_equal_i(minimum, 130);
+  cl_assert_equal_i(maximum, 160);
+  cl_assert(!workout_hr_history_range(&history, 121, &minimum, &maximum));
+  workout_hr_history_add(&history, 122, 140);
+  cl_assert(workout_hr_history_range(&history, 122, &minimum, &maximum));
+  cl_assert_equal_i(minimum, 130);
+  cl_assert_equal_i(maximum, 150);
+}
+
+static void prv_render_history(WorkoutActiveWindow *window) {
+  for (int i = 0; i < 3; i++) {
+    prv_cycle_scrollable_metrics(window);
+  }
+  prv_set_hr_plot(window, true, false);
+  prv_create_window_and_render(window, 0);
+}
+
+void test_workout_active__workout_render_heart_plot(void) {
+  if (!s_has_hrm) {
+    return;
+  }
+  s_workout_data = (WorkoutData){.avg_bpm = 145};
+  WorkoutActiveWindow *window = workout_active_create_for_activity_type(
+      ActivitySessionType_Run, &s_workout_data, &s_workout_controller);
+  for (int second = 1; second <= 90; second++) {
+    s_workout_data.duration_s = second;
+    s_workout_data.bpm = second >= 65 && second <= 70 ? 0 : 120 + second % 60;
+    prv_record_hr_sample(window);
+  }
+  prv_render_history(window);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_workout_active__workout_render_heart_plot_no_data(void) {
+  if (!s_has_hrm) {
+    return;
+  }
+  s_workout_data = (WorkoutData){.duration_s = 60};
+  WorkoutActiveWindow *window = workout_active_create_for_activity_type(
+      ActivitySessionType_Run, &s_workout_data, &s_workout_controller);
+  prv_render_history(window);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }

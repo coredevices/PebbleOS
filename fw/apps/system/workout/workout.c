@@ -11,6 +11,7 @@
 #include "utils.h"
 
 #include <pbl/services/activity/activity.h>
+#include <pbl/services/activity/activity_private.h>
 #include <pbl/services/activity/health_util.h>
 #include <pbl/services/activity/workout_service.h>
 #include <pbl/services/i18n/i18n.h>
@@ -49,6 +50,9 @@ static ActivitySessionType s_activity_type = DEFAULT_ACTIVITY_TYPE;
 static void prv_prep_and_open_active_window(ActivitySessionType type) {
   WorkoutAppData *data = app_state_get_user_data();
 
+  data->workout_data = (WorkoutData){};
+  workout_data_update(&data->workout_data);
+
   data->workout_controller = (WorkoutController){
     .is_paused = workout_service_is_paused,
     .pause = workout_service_pause_workout,
@@ -56,6 +60,7 @@ static void prv_prep_and_open_active_window(ActivitySessionType type) {
     .update_data = workout_data_update,
     .metric_to_string = workout_data_fill_metric_value,
     .get_metric_value = workout_data_get_metric_value,
+    .get_hr_samples = workout_data_get_hr_samples,
     .get_distance_string = health_util_get_distance_string,
   };
 
@@ -65,16 +70,18 @@ static void prv_prep_and_open_active_window(ActivitySessionType type) {
 }
 
 static void prv_start_workout_cb(ActivitySessionType type) {
-  workout_service_start_workout(type);
+  // Another client may have started one during the countdown: show that workout instead.
+  if (!workout_service_start_workout(type) && !workout_service_get_current_workout_type(&type)) {
+    return;
+  }
+  WorkoutAppData *data = app_state_get_user_data();
   prv_prep_and_open_active_window(type);
+  workout_summary_window_remove(data->summary_window);
+  data->summary_window = nullptr;
 }
 
 static void prv_select_workout_cb(ActivitySessionType type) {
-  WorkoutAppData *data = app_state_get_user_data();
-
   s_activity_type = type;
-
-  workout_summary_update_activity_type(data->summary_window, type);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -195,7 +202,8 @@ static void prv_init(void) {
     return;
   }
 
-  if (activity_prefs_get_workout_app_opened_version() != CURRENT_WORKOUT_APP_VERSION) {
+  if (activity_is_hrm_present() &&
+      activity_prefs_get_workout_app_opened_version() != CURRENT_WORKOUT_APP_VERSION) {
     /// Workout app first use text
     static const char *msg = i18n_noop(
         "Wear your watch snug and 2 fingers' width above "

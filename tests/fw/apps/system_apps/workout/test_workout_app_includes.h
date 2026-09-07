@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/compiler.h>
 #include <pbl/util/size.h>
 
 #include <applib/ui/window_private.h>
@@ -22,15 +23,15 @@
 
 typedef struct KinoReel KinoReel;
 
-KinoReel *kino_reel_scale_segmented_create(KinoReel *from_reel, bool take_ownership,
-                                           GRect screen_frame) {
+KinoReel *PBL_WEAK kino_reel_scale_segmented_create(KinoReel *from_reel, bool take_ownership,
+                                                    GRect screen_frame) {
   return nullptr;
 }
 
-void kino_reel_scale_segmented_set_deflate_effect(KinoReel *reel, int16_t expand) {
+void PBL_WEAK kino_reel_scale_segmented_set_deflate_effect(KinoReel *reel, int16_t expand) {
 }
 
-bool kino_reel_scale_segmented_set_delay_by_distance(KinoReel *reel, GPoint target) {
+bool PBL_WEAK kino_reel_scale_segmented_set_delay_by_distance(KinoReel *reel, GPoint target) {
   return false;
 }
 

@@ -3,11 +3,10 @@
 
 #pragma once
 
-#include "selection.h"
-
 #include <pbl/services/activity/activity.h>
 
 typedef void (*StartWorkoutCallback)(ActivitySessionType type);
+typedef void (*SelectWorkoutCallback)(ActivitySessionType type);
 
 typedef struct WorkoutSummaryWindow WorkoutSummaryWindow;
 
@@ -19,3 +18,5 @@ void workout_summary_window_push(WorkoutSummaryWindow *window);
 
 void workout_summary_update_activity_type(WorkoutSummaryWindow *summary_window,
                                           ActivitySessionType activity_type);
+
+void workout_summary_window_remove(WorkoutSummaryWindow *summary_window);

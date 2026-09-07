@@ -2430,14 +2430,9 @@
       "file": "normal/base/images/health_app_pulsing_heart.pdc"
     },
     {
-      "type": "png",
+      "type": "pdc",
       "name": "WORKOUT_APP_WALK",
-      "file": "normal/base/images/workout_app_walk.png"
-    },
-    {
-      "type": "png",
-      "name": "WORKOUT_APP_WALK_SMALL",
-      "file": "normal/base/images/workout_app_walk_small.png"
+      "file": "normal/base/images/workout_app_walk.svg"
     },
     {
       "type": "png",
@@ -2445,14 +2440,9 @@
       "file": "normal/base/images/workout_app_walk_tiny.png"
     },
     {
-      "type": "png",
+      "type": "pdc",
       "name": "WORKOUT_APP_RUN",
-      "file": "normal/base/images/workout_app_run.png"
-    },
-    {
-      "type": "png",
-      "name": "WORKOUT_APP_RUN_SMALL",
-      "file": "normal/base/images/workout_app_run_small.png"
+      "file": "normal/base/images/workout_app_run.svg"
     },
     {
       "type": "png",
@@ -2460,14 +2450,9 @@
       "file": "normal/base/images/workout_app_run_tiny.png"
     },
     {
-      "type": "png",
+      "type": "pdc",
       "name": "WORKOUT_APP_WORKOUT",
-      "file": "normal/base/images/workout_app_workout.png"
-    },
-    {
-      "type": "png",
-      "name": "WORKOUT_APP_WORKOUT_SMALL",
-      "file": "normal/base/images/workout_app_workout_small.png"
+      "file": "normal/base/images/workout_app_workout.svg"
     },
     {
       "type": "png",
@@ -2493,21 +2478,6 @@
       "type": "png",
       "name": "WORKOUT_APP_END",
       "file": "normal/base/images/workout_app_end.png"
-    },
-    {
-      "type": "pdc",
-      "name": "WORKOUT_APP_ONE",
-      "file": "normal/base/images/workout_app_one.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "WORKOUT_APP_TWO",
-      "file": "normal/base/images/workout_app_two.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "WORKOUT_APP_THREE",
-      "file": "normal/base/images/workout_app_three.svg"
     },
     {
       "type": "pdc",

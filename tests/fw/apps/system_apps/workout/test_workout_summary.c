@@ -55,8 +55,11 @@ void test_workout_summary__cleanup(void) {
 
 static void prv_start_workout_cb(ActivitySessionType type) {
 }
+static ActivitySessionType s_selected_type;
 static void prv_select_workout_cb(ActivitySessionType type) {
+  s_selected_type = type;
 }
+extern void prv_cycle_activity(WorkoutSummaryWindow *window, int direction);
 
 static void prv_create_window_and_render(ActivitySessionType activity_type) {
   Window *window = (Window *)workout_summary_window_create(activity_type, prv_start_workout_cb,
@@ -81,4 +84,19 @@ void test_workout_summary__render_walk(void) {
 void test_workout_summary__render_run(void) {
   prv_create_window_and_render(ActivitySessionType_Run);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_workout_summary__cycle_activity_in_both_directions(void) {
+  WorkoutSummaryWindow *window = workout_summary_window_create(
+      ActivitySessionType_Run, prv_start_workout_cb, prv_select_workout_cb);
+  prv_cycle_activity(window, 1);
+  cl_assert_equal_i(s_selected_type, ActivitySessionType_Walk);
+  prv_cycle_activity(window, 1);
+  cl_assert_equal_i(s_selected_type, ActivitySessionType_Open);
+  prv_cycle_activity(window, 1);
+  cl_assert_equal_i(s_selected_type, ActivitySessionType_Run);
+  prv_cycle_activity(window, -1);
+  cl_assert_equal_i(s_selected_type, ActivitySessionType_Open);
+  prv_cycle_activity(window, -1);
+  cl_assert_equal_i(s_selected_type, ActivitySessionType_Walk);
 }

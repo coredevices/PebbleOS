@@ -194,8 +194,8 @@ static bool prv_pause(bool should_be_paused) {
   return true;
 }
 
-static void prv_update_data(void *unused) {
-  // Nothing to do here.
+static bool prv_update_data(void *unused) {
+  return true;
 }
 
 static void prv_metric_to_string(WorkoutMetricType type, char *buffer, size_t buffer_size,
@@ -228,6 +228,16 @@ static void prv_metric_to_string(WorkoutMetricType type, char *buffer, size_t bu
     // Not supported by the sports API
     case WorkoutMetricType_Steps:
     case WorkoutMetricType_AvgPace:
+    case WorkoutMetricType_AvgSpeed:
+    case WorkoutMetricType_AvgCadence:
+    case WorkoutMetricType_ActiveCalories:
+    case WorkoutMetricType_AvgHr:
+    case WorkoutMetricType_SpO2:
+    case WorkoutMetricType_SpO2Min:
+    case WorkoutMetricType_HrZone0Time:
+    case WorkoutMetricType_HrZone1Time:
+    case WorkoutMetricType_HrZone2Time:
+    case WorkoutMetricType_HrZone3Time:
     case WorkoutMetricType_None:
     case WorkoutMetricTypeCount:
       break;

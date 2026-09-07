@@ -7,6 +7,7 @@
 
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/hr_util.h>
+#include <pbl/services/activity/workout_service.h>
 
 bool workout_service_is_workout_ongoing(void);
 
@@ -17,6 +18,13 @@ bool workout_service_pause_workout(bool should_be_paused);
 bool workout_service_stop_workout(void);
 
 bool workout_service_is_paused(void);
+
+void workout_service_set_active_kcalories(int32_t active);
+
+void workout_service_set_avg_hr(int32_t bpm);
+void workout_service_set_hr_samples(int32_t samples);
+void workout_service_set_spo2(int32_t last_pct, int32_t min_pct, bool measuring);
+void workout_service_set_hr_zone_time(const int32_t *hr_zone_time_s);
 
 bool workout_service_get_current_workout_type(ActivitySessionType *type_out);
 
