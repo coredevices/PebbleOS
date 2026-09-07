@@ -27,28 +27,11 @@ if(NOT VARIANT MATCHES "^(normal|prf)$")
   message(FATAL_ERROR "VARIANT must be 'normal' or 'prf', got '${VARIANT}'")
 endif()
 
-# An installed PebbleOS SDK ships the toolchain the firmware is meant to
-# be built with; prefer its binaries over whatever is on PATH.
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
-execute_process(
-  COMMAND ${PYTHON_EXECUTABLE} ${PBL_BASE}/tools/cmake/sdk_path.py
-  OUTPUT_VARIABLE sdk_path
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-  ERROR_VARIABLE sdk_message
-  ERROR_STRIP_TRAILING_WHITESPACE
-)
-if(sdk_path)
-  set(ENV{PATH} "${sdk_path}")
-  if(sdk_message)
-    message(STATUS "${sdk_message}")
-  endif()
-endif()
 
-# ENV{PATH} only reaches what CMake itself runs while configuring. The build
-# steps that shell out to the toolchain by name -- the native SDK generator
-# asks for arm-none-eabi-gcc -- need it too, so they run behind this.
-set(PBL_TOOLCHAIN_ENV ${CMAKE_COMMAND} -E env "PATH=$ENV{PATH}")
+# The toolchain and the device tools come from the installed SDK.
+include(pebbleos_sdk)
 
 if(NOT CMAKE_TOOLCHAIN_FILE)
   set(CMAKE_TOOLCHAIN_FILE ${PBL_BASE}/cmake/toolchain/arm-none-eabi.cmake)
@@ -62,6 +45,11 @@ if(CCACHE)
 endif()
 
 project(pebbleos VERSION 1.0 LANGUAGES C ASM)
+
+# Build steps that call the toolchain by name -- the native SDK generator
+# asks for arm-none-eabi-gcc -- find it next to the compiler CMake chose.
+get_filename_component(toolchain_bin ${CMAKE_C_COMPILER} DIRECTORY)
+set(PBL_TOOLCHAIN_ENV ${CMAKE_COMMAND} -E env "PATH=${toolchain_bin}:$ENV{PATH}")
 
 # Kconfig symbols given on the command line (-DCONFIG_FOO=y) are passed
 # through to Kconfig as overrides.

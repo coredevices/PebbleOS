@@ -120,6 +120,15 @@ live in `tools/cmake/`:
 `autoconf.h` is force-included into every compilation, so Kconfig symbols
 reach the sources, the headers and the linker script alike.
 
+## PebbleOS SDK
+
+`cmake/modules/pebbleos_sdk.cmake` locates the installed SDK once and caches
+it as `PEBBLEOS_SDK_ROOT`. Every tool lookup then uses the SDK as its first
+search path: the toolchain in `cmake/toolchain/arm-none-eabi.cmake`, and
+`PBL_QEMU`, `PBL_SFTOOL` and `PBL_GDB` for the `pbl` device commands, which
+read them back from `CMakeCache.txt`. Each is an ordinary `find_program`
+result, so it is cached too and can be overridden with `-D`.
+
 ## Directory layout
 
 ```

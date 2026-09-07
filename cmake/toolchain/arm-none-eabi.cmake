@@ -12,14 +12,17 @@ if(NOT DEFINED CROSS_COMPILE)
   set(CROSS_COMPILE arm-none-eabi-)
 endif()
 
-find_program(CMAKE_C_COMPILER ${CROSS_COMPILE}gcc REQUIRED)
-find_program(CMAKE_ASM_COMPILER ${CROSS_COMPILE}gcc REQUIRED)
-find_program(CMAKE_AR ${CROSS_COMPILE}gcc-ar REQUIRED)
-find_program(CMAKE_RANLIB ${CROSS_COMPILE}gcc-ranlib REQUIRED)
-find_program(CMAKE_OBJCOPY ${CROSS_COMPILE}objcopy REQUIRED)
-find_program(CMAKE_OBJDUMP ${CROSS_COMPILE}objdump REQUIRED)
-find_program(CMAKE_SIZE ${CROSS_COMPILE}size)
-find_program(CMAKE_NM ${CROSS_COMPILE}nm)
+# The installed PebbleOS SDK is searched ahead of PATH.
+include(${CMAKE_CURRENT_LIST_DIR}/../modules/pebbleos_sdk.cmake)
+
+find_program(CMAKE_C_COMPILER ${CROSS_COMPILE}gcc HINTS ${PEBBLEOS_SDK_HINTS} REQUIRED)
+find_program(CMAKE_ASM_COMPILER ${CROSS_COMPILE}gcc HINTS ${PEBBLEOS_SDK_HINTS} REQUIRED)
+find_program(CMAKE_AR ${CROSS_COMPILE}gcc-ar HINTS ${PEBBLEOS_SDK_HINTS} REQUIRED)
+find_program(CMAKE_RANLIB ${CROSS_COMPILE}gcc-ranlib HINTS ${PEBBLEOS_SDK_HINTS} REQUIRED)
+find_program(CMAKE_OBJCOPY ${CROSS_COMPILE}objcopy HINTS ${PEBBLEOS_SDK_HINTS} REQUIRED)
+find_program(CMAKE_OBJDUMP ${CROSS_COMPILE}objdump HINTS ${PEBBLEOS_SDK_HINTS} REQUIRED)
+find_program(CMAKE_SIZE ${CROSS_COMPILE}size HINTS ${PEBBLEOS_SDK_HINTS})
+find_program(CMAKE_NM ${CROSS_COMPILE}nm HINTS ${PEBBLEOS_SDK_HINTS})
 
 # The firmware supplies its own startup code and links against a linker
 # script that is only generated later, so a full link test cannot succeed.
