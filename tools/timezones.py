@@ -400,14 +400,25 @@ def zoneinfo_to_bin(zoneinfo_list, dstrule_list, zonelink_list, output_bin):
     # 1 byte + 15 bytes + 2 bytes + 5 bytes + 1 byte = 24 bytes
     # Continent_index City gmt_offset_minutes tz_abbr dst_id
 
+    region_id_list = ["/".join(line.split(" ")[:2]) for line in zoneinfo_list]
+
+    links = []
+    for line in zonelink_list:
+        target, linkname = line.split(" ")
+        if target in EXCLUDED_ZONES:
+            continue
+        try:
+            links.append((region_id_list.index(target), linkname))
+        except ValueError as e:
+            print("Couldn't find region, skipping:", e)
+
     # Unsigned short - count of entries
     output_bin.write(struct.pack("<H", len(zoneinfo_list)))
     # Unsigned short - count of DST rules
     output_bin.write(struct.pack("<H", len(dstzone_dict.values())))
     # Unsigned short - count of links
-    output_bin.write(struct.pack("<H", len(zonelink_list)))
+    output_bin.write(struct.pack("<H", len(links)))
 
-    region_id_list = []
     # write all the timezones to file
     for line in zoneinfo_list:
         continent, region, gmt_offset_minutes, tz_abbr, dst_zone = line.split(" ")
@@ -415,7 +426,6 @@ def zoneinfo_to_bin(zoneinfo_list, dstrule_list, zonelink_list, output_bin):
         # output the timezone continent index
         continent_index = tz_continent_dict[continent]
         output_bin.write(struct.pack("B", continent_index))
-        region_id_list.append(continent + "/" + region)
 
         # fixup and output the timezone region name
         output_bin.write(
@@ -485,15 +495,7 @@ def zoneinfo_to_bin(zoneinfo_list, dstrule_list, zonelink_list, output_bin):
         output_bin.write(bytearray(DST_RULE_PAIR_BYTES - bytes_written))
 
     # write all the timezone links to file
-    for line in zonelink_list:
-        target, linkname = line.split(" ")
-        if target in EXCLUDED_ZONES:
-            continue
-        try:
-            region_id = region_id_list.index(target)
-        except ValueError as e:
-            print("Couldn't find region, skipping:", e)
-            continue
+    for region_id, linkname in links:
         output_bin.write(struct.pack("<H", region_id))
         output_bin.write(linkname.ljust(TIMEZONE_LINK_NAME_LENGTH, "\0").encode("utf8"))
 
