@@ -240,6 +240,18 @@ def dstrules_parse(tzfile):
     return dstrule_list
 
 
+# Zones whose DST rules the fixed-size rule format cannot represent, e.g. the 30 minute shift on
+# Lord Howe Island or the Ramadan-dependent changes in Morocco. Troll is a station, not a city:
+# http://mm.icann.org/pipermail/tz/2014-February/020605.html
+EXCLUDED_ZONES = (
+    "Antarctica/Troll",
+    "Africa/Cairo",
+    "Africa/Casablanca",
+    "Africa/El_Aaiun",
+    "Australia/Lord_Howe",
+)
+
+
 def build_zoneinfo_list(tzfile):
     """
     Top level wrapper, searches the raw zoneinfo file
@@ -282,10 +294,7 @@ def build_zoneinfo_list(tzfile):
 
                     full_region = continent + "/" + region
 
-                    # Don't include Troll, Antarctica as their DST is 2 hours and overlapping rules
-                    # not even a city, actually just a station :
-                    # http://mm.icann.org/pipermail/tz/2014-February/020605.html
-                    if full_region == "Antarctica/Troll" or full_region == "Africa/Cairo" or full_region == "Africa/Casablanca" or full_region == "Africa/El_Aaiun" or full_region == "Australia/Lord_Howe":
+                    if full_region in EXCLUDED_ZONES:
                         region = ""
 
             # Now look to see if we've found the final line of the block
@@ -295,9 +304,9 @@ def build_zoneinfo_list(tzfile):
                 r"(?P<offset>[-0-9:]+)\s+"
                 # The name of the dstrule, such as US, or - if no DST
                 r"(?P<dst_name>[-A-Za-z]+)\s+"
-                # The short name of the timezone, like E%sT (EST or EDT), %z or VET
+                # The short name of the timezone, like E%sT (EST or EDT), %z, VET or ChST
                 # Or a GMT offset like +06
-                r"(?P<tz_abbr>([A-Z%sz\/]+)|\+\d+)"
+                r"(?P<tz_abbr>([A-Za-z%\/]+)|\+\d+)"
                 # Trailing spaces and comments, no year or dates allowed
                 r"(\s+\#.*)?$",
                 line,
