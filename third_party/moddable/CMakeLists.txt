@@ -1,17 +1,72 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 #
-# The XS JavaScript engine. The Moddable host tools are built and mcconfig
-# is run as a build step -- they need a host compiler, which has nothing to
-# do with the configuration -- and they generate mc.xs.c and
-# mc.resources.c, which are then compiled into the firmware like any other
-# source.
+# The XS JavaScript engine. Moddable's own makefiles build the host tools
+# (xsc, xsid, xsl and the mcconfig bundle), then mcconfig generates
+# mc.xs.c and mc.resources.c from the Pebble host manifest. CMake supplies
+# the host compiler and make and tracks the inputs; the artifacts stay
+# under moddable/build, where the makefiles cache them. The generated
+# sources then compile into the firmware like any other.
 
-set(moddable_host_dir ${CMAKE_CURRENT_SOURCE_DIR}/moddable/build/tmp/pebble/release/host)
+set(moddable ${CMAKE_CURRENT_SOURCE_DIR}/moddable)
+
+find_program(PBL_HOST_CC NAMES cc clang gcc REQUIRED
+  DOC "Host C compiler, for the Moddable tools")
+find_program(PBL_MAKE NAMES gmake make REQUIRED
+  DOC "GNU make, for the Moddable tools")
+if(CMAKE_HOST_APPLE)
+  set(host_os mac)
+elseif(CMAKE_HOST_LINUX)
+  set(host_os lin)
+else()
+  message(FATAL_ERROR "The Moddable host tools only build on macOS and Linux")
+endif()
+set(tools_bin ${moddable}/build/bin/${host_os}/release)
+
+# Runs one Moddable build step through the shell, keeping its output in a
+# log that is only shown when the step fails.
+function(pbl_moddable_step var name)
+  set(log ${CMAKE_CURRENT_BINARY_DIR}/${name}.log)
+  string(JOIN " " command ${ARGN})
+  set(${var} sh -c "${command} >${log} 2>&1 || ! cat ${log} >&2" PARENT_SCOPE)
+endfunction()
+
+set(make_vars GOAL=release CC=${PBL_HOST_CC} MODDABLE=${moddable} XS_DIR=${moddable}/xs
+              BUILD_DIR=${moddable}/build)
+set(xs_makefiles ${moddable}/xs/makefiles/${host_os})
+pbl_moddable_step(make_xsc xsc ${PBL_MAKE} -f ${xs_makefiles}/xsc.mk ${make_vars})
+pbl_moddable_step(make_xsid xsid ${PBL_MAKE} -f ${xs_makefiles}/xsid.mk ${make_vars})
+pbl_moddable_step(make_xsl xsl ${PBL_MAKE} -f ${xs_makefiles}/xsl.mk ${make_vars})
+pbl_moddable_step(make_tools tools
+  ${PBL_MAKE} -C ${moddable}/build/makefiles/${host_os} -f tools.mk ${make_vars})
+
+set(host_tools ${tools_bin}/xsc ${tools_bin}/xsid ${tools_bin}/xsl ${tools_bin}/tools
+               ${tools_bin}/mcconfig ${tools_bin}/mcrez)
+file(GLOB_RECURSE host_tool_sources CONFIGURE_DEPENDS
+  ${moddable}/xs/*.c ${moddable}/xs/*.h ${xs_makefiles}/*.mk
+  ${moddable}/tools/*.js ${moddable}/tools/*.c ${moddable}/tools/*.h
+  ${moddable}/build/makefiles/${host_os}/tools.mk
+)
+add_custom_command(
+  OUTPUT ${host_tools}
+  COMMAND ${make_xsc}
+  COMMAND ${make_xsid}
+  COMMAND ${make_xsl}
+  COMMAND ${make_tools}
+  DEPENDS ${host_tool_sources}
+  COMMENT "Building the Moddable host tools"
+  VERBATIM
+)
+
+set(host_manifest ${moddable}/build/devices/pebble/host/manifest.json)
+set(moddable_host_dir ${moddable}/build/tmp/pebble/release/host)
 # The generated headers land here, so the directory has to be on the
 # include path before the step that fills it has run.
 file(MAKE_DIRECTORY ${moddable_host_dir})
-
+file(GLOB_RECURSE host_sources CONFIGURE_DEPENDS
+  ${moddable}/modules/* ${moddable}/build/devices/pebble/* ${moddable}/typings/*
+  ${moddable}/examples/*.js ${moddable}/examples/*.json
+)
 set(moddable_generated
   ${moddable_host_dir}/mc.xs.c
   ${moddable_host_dir}/mc.resources.c
@@ -20,12 +75,15 @@ set(moddable_generated
   ${moddable_host_dir}/mc.rotation.h
   ${moddable_host_dir}/mc.xs.h
 )
-
+# mcconfig generates the makefile for the host app and runs it; the tools
+# it calls by name come from the bin directory built above.
+pbl_moddable_step(mcconfig host
+  PATH=${tools_bin}:$PATH MODDABLE=${moddable} ${tools_bin}/mcconfig -m -p pebble ${host_manifest})
 add_custom_command(
   OUTPUT ${moddable_generated}
-  COMMAND ${PBL_TOOLCHAIN_ENV} ${PYTHON_EXECUTABLE} ${PBL_BASE}/tools/build_moddable_host.py
-  WORKING_DIRECTORY ${PBL_BASE}
-  COMMENT "Building the Moddable host tools"
+  COMMAND ${mcconfig}
+  DEPENDS ${host_tools} ${host_manifest} ${host_sources} ${moddable}/tools/mcconfig/make.pebble.mk
+  COMMENT "Generating the Moddable host sources"
   VERBATIM
 )
 
