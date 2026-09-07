@@ -87,6 +87,7 @@ static bool s_initialized = false;
 static int8_t s_target_strength = VIBE_STRENGTH_MAX;
 static uint16_t s_drive_frequency_hz;
 static uint8_t s_trim_lra = AW862XX_TRIM_LRA_INVALID;
+static bool s_playing = false;
 
 _Static_assert(CONFIG_VIBE_AW86225_RATED_VOLTAGE_MV <= CONFIG_VIBE_AW86225_OVERDRIVE_VOLTAGE_MV,
                "overdrive voltage must not be below the rated voltage");
@@ -166,6 +167,7 @@ static void prv_stop(void) {
   if (!prv_aw862xx_play_go(false)) {
     PBL_LOG_ERR("AW86225: failed to confirm playback stop");
   }
+  s_playing = false;
 }
 
 //! CONT mode drives a square wave for DRV_WIDTH of each half cycle, so the RMS
@@ -345,13 +347,18 @@ void vibe_ctl(bool on) {
   }
 
   if (on) {
+    if (s_playing) {
+      return;
+    }
     if (!prv_config_playback()) {
       PBL_LOG_ERR("AW86225: playback configuration failed");
       return;
     }
     if (!prv_aw862xx_play_go(true)) {
       PBL_LOG_ERR("AW86225: playback start failed");
+      return;
     }
+    s_playing = true;
   } else {
     prv_stop();
   }
