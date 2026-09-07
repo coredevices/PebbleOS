@@ -71,7 +71,7 @@ static status_t prv_read_serialized_prefs(SettingsFile *file, const void *key, s
 }
 
 //! Returns the length of the data
-//! When done with the prefs, call prv_free_serialzed_prefs()
+//! When done with the prefs, call prv_free_serialized_prefs()
 static int prv_get_serialized_prefs(SettingsFile *file, const uint8_t *app_id, int key_len,
                                     SerializedNotifPrefs **prefs_out) {
   const unsigned prefs_len = settings_file_get_len(file, app_id, key_len);
@@ -93,7 +93,7 @@ static int prv_get_serialized_prefs(SettingsFile *file, const uint8_t *app_id, i
   return (prefs_len - sizeof(SerializedNotifPrefs));
 }
 
-static void prv_free_serialzed_prefs(SerializedNotifPrefs *prefs) {
+static void prv_free_serialized_prefs(SerializedNotifPrefs *prefs) {
   kernel_free(prefs);
 }
 
@@ -136,7 +136,7 @@ iOSNotifPrefs* ios_notif_pref_db_get_prefs(const uint8_t *app_id, int key_len) {
     strncpy(buffer, (const char *)app_id, key_len);
     buffer[key_len] = '\0';
     PBL_LOG_ERR("Could not parse serial data for <%s>", buffer);
-    prv_free_serialzed_prefs(serialized_prefs);
+    prv_free_serialized_prefs(serialized_prefs);
     return NULL;
   }
 
@@ -165,12 +165,12 @@ iOSNotifPrefs* ios_notif_pref_db_get_prefs(const uint8_t *app_id, int key_len) {
     strncpy(buffer, (const char *)app_id, key_len);
     buffer[key_len] = '\0';
     PBL_LOG_ERR("Could not deserialize data for <%s>", buffer);
-    prv_free_serialzed_prefs(serialized_prefs);
+    prv_free_serialized_prefs(serialized_prefs);
     kernel_free(notif_prefs);
     return NULL;
   }
 
-  prv_free_serialzed_prefs(serialized_prefs);
+  prv_free_serialized_prefs(serialized_prefs);
   return notif_prefs;
 }
 
@@ -370,7 +370,7 @@ uint32_t ios_notif_pref_db_get_flags(const uint8_t *app_id, int key_len) {
   SerializedNotifPrefs *prefs = NULL;
   prv_get_serialized_prefs(&file, app_id, key_len, &prefs);
   uint32_t flags = prefs->flags;
-  prv_free_serialzed_prefs(prefs);
+  prv_free_serialized_prefs(prefs);
   prv_file_close_and_unlock(&file);
   return flags;
 }
@@ -399,7 +399,7 @@ static bool prv_print_notif_pref_db(SettingsFile *file, SettingsRecordInfo *info
 
   // TODO: Print the attributes and actions
 
-  prv_free_serialzed_prefs(serialized_prefs);
+  prv_free_serialized_prefs(serialized_prefs);
   prompt_send_response("");
   return true;
 }
