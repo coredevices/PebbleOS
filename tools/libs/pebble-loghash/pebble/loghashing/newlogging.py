@@ -211,11 +211,15 @@ def parse_message(msg, log_dict):
         if index == -1:
             # This is going to cause an error below...
             arg_list.append(arg)
-        elif HEX_FORMAT_SPECIFIER_PATTERN.match(safe_output_msg, index):
+            continue
+        if isinstance(arg, int) and HEX_FORMAT_SPECIFIER_PATTERN.match(
+            safe_output_msg, index
+        ):
             # We found a %<format>X
             arg_list.append(arg & 0xFFFFFFFF)
         else:
             arg_list.append(arg)
+        index += 1
 
     # Use "printf" to generate the reconstructed string. Make sure the arguments are correct
     try:
