@@ -7,6 +7,7 @@
 
 #include <pbl/services/activity/health_util.h>
 #include <pbl/services/activity/workout_service.h>
+#include <pbl/util/units.h>
 
 void workout_data_update(void *data) {
   if (!data) {
@@ -17,7 +18,12 @@ void workout_data_update(void *data) {
   workout_service_get_current_workout_info(&workout_data->steps, &workout_data->duration_s,
                                            &workout_data->distance_m, &workout_data->bpm,
                                            &workout_data->hr_zone);
+  workout_service_get_active_kcalories(&workout_data->active_kcal);
+  workout_service_get_avg_hr(&workout_data->avg_bpm);
+  workout_service_get_spo2(&workout_data->spo2, &workout_data->spo2_min,
+                           &workout_data->spo2_measuring);
 
+  workout_data->avg_pace = 0;
   if (workout_data->duration_s && workout_data->distance_m) {
     workout_data->avg_pace =
         health_util_get_pace(workout_data->duration_s, workout_data->distance_m);
@@ -30,11 +36,17 @@ void workout_data_fill_metric_value(WorkoutMetricType type, char *buffer, size_t
 
   switch (type) {
     case WorkoutMetricType_Hr:
-    case WorkoutMetricType_Steps: {
+    case WorkoutMetricType_AvgHr:
+    case WorkoutMetricType_SpO2:
+    case WorkoutMetricType_SpO2Min:
+    case WorkoutMetricType_Steps:
+    case WorkoutMetricType_AvgCadence:
+    case WorkoutMetricType_ActiveCalories: {
       snprintf(buffer, buffer_size, "%" PRId32, metric_value);
       break;
     }
-    case WorkoutMetricType_Distance: {
+    case WorkoutMetricType_Distance:
+    case WorkoutMetricType_AvgSpeed: {
       const int conversion_factor = health_util_get_distance_factor();
       health_util_format_whole_and_decimal(buffer, buffer_size, metric_value, conversion_factor);
       break;
@@ -65,6 +77,13 @@ int32_t workout_data_get_metric_value(WorkoutMetricType type, void *data) {
   switch (type) {
     case WorkoutMetricType_Hr:
       return workout_data->bpm;
+    case WorkoutMetricType_AvgHr:
+      return workout_data->avg_bpm;
+    case WorkoutMetricType_SpO2:
+      // -1 while a reading is in progress.
+      return workout_data->spo2_measuring ? -1 : workout_data->spo2;
+    case WorkoutMetricType_SpO2Min:
+      return workout_data->spo2_min;
     case WorkoutMetricType_Duration:
       return workout_data->duration_s;
     case WorkoutMetricType_AvgPace:
@@ -73,6 +92,18 @@ int32_t workout_data_get_metric_value(WorkoutMetricType type, void *data) {
       return workout_data->distance_m;
     case WorkoutMetricType_Steps:
       return workout_data->steps;
+    case WorkoutMetricType_ActiveCalories:
+      return workout_data->active_kcal;
+    case WorkoutMetricType_AvgSpeed:
+      // Meters per hour; formatting applies the user's distance units.
+      return workout_data->duration_s > 0
+                 ? (int64_t)workout_data->distance_m * PBL_SEC_PER_HOUR / workout_data->duration_s
+                 : -1;
+    case WorkoutMetricType_AvgCadence:
+      return workout_data->duration_s > 0
+                 ? ((int64_t)workout_data->steps * PBL_SEC_PER_MIN + workout_data->duration_s / 2) /
+                       workout_data->duration_s
+                 : -1;
     default:
       return 0;
   }

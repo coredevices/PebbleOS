@@ -10,12 +10,15 @@
 #include "summary.h"
 #include "utils.h"
 
+#include <applib/app.h>
+#ifdef CONFIG_TOUCH
+#include <applib/touch_service.h>
+#endif
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/health_util.h>
 #include <pbl/services/activity/workout_service.h>
 #include <pbl/services/i18n/i18n.h>
 
-#include <applib/app.h>
 #include <applib/ui/dialogs/expandable_dialog.h>
 #include <applib/ui/preferred_durations.h>
 #include <applib/ui/ui.h>
@@ -49,6 +52,9 @@ static ActivitySessionType s_activity_type = DEFAULT_ACTIVITY_TYPE;
 static void prv_prep_and_open_active_window(ActivitySessionType type) {
   WorkoutAppData *data = app_state_get_user_data();
 
+  data->workout_data = (WorkoutData){};
+  workout_data_update(&data->workout_data);
+
   data->workout_controller = (WorkoutController){
     .is_paused = workout_service_is_paused,
     .pause = workout_service_pause_workout,
@@ -65,16 +71,16 @@ static void prv_prep_and_open_active_window(ActivitySessionType type) {
 }
 
 static void prv_start_workout_cb(ActivitySessionType type) {
-  workout_service_start_workout(type);
-  prv_prep_and_open_active_window(type);
+  if (workout_service_start_workout(type)) {
+    WorkoutAppData *data = app_state_get_user_data();
+    prv_prep_and_open_active_window(type);
+    workout_summary_window_remove(data->summary_window);
+    data->summary_window = nullptr;
+  }
 }
 
 static void prv_select_workout_cb(ActivitySessionType type) {
-  WorkoutAppData *data = app_state_get_user_data();
-
   s_activity_type = type;
-
-  workout_summary_update_activity_type(data->summary_window, type);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -242,6 +248,9 @@ static void prv_deinit(void) {
 // App Main
 
 static void prv_main(void) {
+#ifdef CONFIG_TOUCH
+  app_touch_navigation_enable(true);
+#endif
   prv_init();
   app_event_loop();
   prv_deinit();

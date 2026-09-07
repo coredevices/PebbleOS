@@ -13,5 +13,11 @@ typedef enum {
   WorkoutMetricType_AvgPace,
   WorkoutMetricType_Speed,
   WorkoutMetricType_Custom,
+  WorkoutMetricType_AvgSpeed,
+  WorkoutMetricType_AvgCadence,
+  WorkoutMetricType_ActiveCalories,
+  WorkoutMetricType_AvgHr,
+  WorkoutMetricType_SpO2,
+  WorkoutMetricType_SpO2Min,
   WorkoutMetricTypeCount,
 } WorkoutMetricType;

@@ -18,6 +18,14 @@ bool workout_service_stop_workout(void);
 
 bool workout_service_is_paused(void);
 
+void workout_service_set_active_kcalories(int32_t active);
+
+void workout_service_set_avg_hr(int32_t bpm);
+void workout_service_set_spo2(int32_t last_pct, int32_t min_pct, bool measuring);
+bool workout_service_get_spo2(int32_t *last_pct_out, int32_t *min_pct_out, bool *measuring_out);
+
+void workout_service_get_active_kcalories(int32_t *active);
+
 bool workout_service_get_current_workout_type(ActivitySessionType *type_out);
 
 bool workout_service_get_current_workout_info(int32_t *steps_out, int32_t *duration_s_out,

@@ -10,6 +10,47 @@ static int32_t s_duration_s;
 static int32_t s_distance_m;
 static int32_t s_current_bpm;
 static int32_t s_current_hr_zone;
+static int32_t s_active_kcal;
+static int32_t s_avg_bpm;
+static int32_t s_spo2;
+static int32_t s_spo2_min;
+static bool s_spo2_measuring;
+
+void workout_service_set_spo2(int32_t last_pct, int32_t min_pct, bool measuring) {
+  s_spo2 = last_pct;
+  s_spo2_min = min_pct;
+  s_spo2_measuring = measuring;
+}
+
+bool workout_service_get_spo2(int32_t *last_pct_out, int32_t *min_pct_out, bool *measuring_out) {
+  if (last_pct_out) {
+    *last_pct_out = s_spo2;
+  }
+  if (min_pct_out) {
+    *min_pct_out = s_spo2_min;
+  }
+  if (measuring_out) {
+    *measuring_out = s_spo2_measuring;
+  }
+  return s_is_ongoing;
+}
+
+void workout_service_set_avg_hr(int32_t bpm) {
+  s_avg_bpm = bpm;
+}
+
+bool workout_service_get_avg_hr(int32_t *bpm) {
+  *bpm = s_avg_bpm;
+  return true;
+}
+
+void workout_service_set_active_kcalories(int32_t active) {
+  s_active_kcal = active;
+}
+
+void workout_service_get_active_kcalories(int32_t *active) {
+  *active = s_active_kcal;
+}
 
 bool workout_service_is_workout_ongoing(void) {
   return s_is_ongoing;
