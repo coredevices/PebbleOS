@@ -4,6 +4,7 @@
 #include <pbl/drivers/uart/sf32lb.h>
 
 #include <pbl/drivers/uart.h>
+#include "pbl/mcu/cache.h"
 #include "pbl/soc/sf32lb/sleep.h"
 #include "system/passert.h"
 
@@ -174,6 +175,7 @@ void uart_irq_handler(UARTDevice *dev) {
         (__HAL_UART_GET_IT_SOURCE(&dev->state->huart, UART_IT_IDLE) != RESET)) {
       // process bytes from the DMA buffer
       const uint32_t dma_length = dev->state->rx_dma_length;
+      dcache_invalidate(dev->state->rx_dma_buffer, dma_length);
       const uint32_t recv_total_index = dma_length - __HAL_DMA_GET_COUNTER(&dev->state->hdma);
       int32_t recv_len = recv_total_index - dev->state->rx_dma_index;
       if (recv_len < 0) {
@@ -234,6 +236,7 @@ void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart) {
   UARTDeviceState *state = container_of(huart, UARTDeviceState, huart);
   UARTDevice *dev = (UARTDevice *)state->dev;
 
+  dcache_invalidate(state->rx_dma_buffer, state->rx_dma_length);
   recv_total_index = state->rx_dma_length - __HAL_DMA_GET_COUNTER(&state->hdma);
   if (recv_total_index < state->rx_dma_index)
     recv_len = state->rx_dma_length + recv_total_index - state->rx_dma_index;
@@ -266,13 +269,12 @@ void uart_dma_irq_handler(UARTDevice *dev) {
   HAL_DMA_IRQHandler(&dev->state->hdma);
 }
 
-// FIXME(SF32LB52): the IRQ paths above read `rx_dma_buffer[idx]` straight
-// without invalidating D-cache, so the CPU could pick up stale pre-DMA bytes.
-// There is no active SF32LB52 caller today (dbgserial_set_rx_dma_enabled is a
-// no-op for CONFIG_SOC_SF32LB52), so this hasn't been wired up. Before
-// enabling, the buffer needs to be cache-line aligned/sized and the callbacks
-// must dcache_invalidate the freshly-DMA'd range.
 void uart_start_rx_dma(UARTDevice *dev, void *buffer, uint32_t length) {
+  // The DMA buffer is invalidated whole from the IRQ paths, so it must not
+  // share cache lines with anything else.
+  const uintptr_t line_mask = dcache_line_size() - 1;
+  PBL_ASSERTN(((uintptr_t)buffer & line_mask) == 0 && (length & line_mask) == 0);
+  dcache_flush_invalidate(buffer, length);
   dev->state->rx_dma_buffer = buffer;
   dev->state->rx_dma_length = length;
   dev->state->rx_dma_index = 0;
