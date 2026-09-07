@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Core Devices LLC
  * SPDX-License-Identifier: Apache-2.0
  *
- * MPU region sizing and the log strings region.
+ * MPU region sizing.
  */
 
 /*
@@ -16,9 +16,3 @@ If you see this, you need to bump the size to the next power of two.
 */
 __unpriv_ro_bss_size__ = 2K;
 __stack_guard_size__ = 32;
-
-
-MEMORY {
-    /* Allocate log strings here for the console. Not loaded to memory. */
-    LOG_STRINGS (r) : ORIGIN = 0xC0000000, LENGTH = 512K
-}
