@@ -14,6 +14,15 @@ bundles the ARM GNU toolchain, Pebble QEMU, and other tools:
 curl -LsSf https://github.com/coredevices/PebbleOS-SDK/releases/latest/download/pebbleos-sdk-installer.sh | sh
 ```
 
+The build locates the SDK on its own when a build directory is configured:
+it honours `PEBBLEOS_SDK_ROOT` if set (the SDK's `env.sh` exports it), and
+otherwise picks the newest `pebbleos-sdk-<version>` under your home directory
+or `/opt` that satisfies the version in `SDK_VERSION`. The SDK root and the
+paths of the tools found in it (toolchain, QEMU, sftool, gdb) are cached in
+the build directory, so a build keeps using the SDK it was configured with.
+To use a specific install, pass `-DPEBBLEOS_SDK_ROOT=<dir>` to
+`pbl configure`.
+
 ## System-level dependencies
 
 A series of system-level dependencies are required.

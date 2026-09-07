@@ -101,7 +101,7 @@ class Qemu(_QemuCommand):
     def _command_line(self, build, decoration, spi_flash):
         qemu = os.getenv("PEBBLE_QEMU_BIN")
         if not qemu or not (os.path.isfile(qemu) and os.access(qemu, os.X_OK)):
-            qemu = "qemu-pebble"
+            qemu = build.tool("qemu") or "qemu-pebble"
 
         machine_args = self._machine_args(build, spi_flash)
 

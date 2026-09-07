@@ -29,7 +29,7 @@ class SfToolRunner(Runner):
     def _sftool(self, command):
         if not self.tty:
             raise RunnerError("Port not specified, use --tty")
-        self.call(f"sftool -c {self.cfg.soc} -p {self.tty} {command}")
+        self.call(f"{self.quote(self.cfg.sftool)} -c {self.cfg.soc} -p {self.tty} {command}")
 
     def do_run(self, command):
         if command == "flash":

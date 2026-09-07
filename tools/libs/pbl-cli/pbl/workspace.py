@@ -16,8 +16,6 @@ from dataclasses import dataclass
 
 import yaml
 
-from pbl import util
-
 WORKSPACE_FILE = "pbl.yml"
 
 
@@ -154,16 +152,6 @@ class Workspace:
     # --- runtime ----------------------------------------------------------
 
     def activate(self):
-        """Make the checkout's ``tools`` package importable and prefer an
-        installed SDK's binaries (toolchain, QEMU, sftool)."""
+        """Make the checkout's ``tools`` package importable."""
         if self.topdir not in sys.path:
             sys.path.insert(0, self.topdir)
-
-        try:
-            from tools.pebble_sdk_locator import activate_sdk
-        except ImportError:
-            return
-        try:
-            activate_sdk(self.topdir)
-        except OSError as e:
-            util.wrn(f"could not activate the installed SDK: {e}")

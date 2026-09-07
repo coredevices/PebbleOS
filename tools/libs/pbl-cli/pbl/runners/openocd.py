@@ -62,7 +62,7 @@ class OpenOcdRunner(Runner):
     def _debug(self):
         from tools.gdb_driver import find_gdb_path
 
-        gdb = find_gdb_path()
+        gdb = self.cfg.gdb or find_gdb_path()
         if gdb is None:
             raise RunnerError("pebble-gdb not found!")
 

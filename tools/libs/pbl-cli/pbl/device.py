@@ -49,6 +49,8 @@ def make_runner(build, args, resources=False):
         hex_file=build.hex,
         elf_file=build.elf,
         resources_file=resources_file,
+        sftool=build.tool("sftool") or "sftool",
+        gdb=build.tool("gdb"),
         dry_run=getattr(args, "dry_run", False),
     )
     return runners.create(selected, cfg, args)
