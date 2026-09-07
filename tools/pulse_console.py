@@ -29,6 +29,8 @@ def handle_prompt_command(interface, session):
             print(line)
     except commander.exceptions.CommandTimedOut:
         print(f"Command '{cmd}' timed out")
+    except pulse2.exceptions.SocketClosed:
+        print(f"Connection lost while running '{cmd}'")
     finally:
         prompt.close()
 
