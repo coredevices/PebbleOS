@@ -84,8 +84,6 @@ function(pbl_resources)
       OUTPUT ${pbpack}
       COMMAND ${PBL_TOOLCHAIN_ENV} ${PYTHON_EXECUTABLE} ${PBL_RESOURCES_PY} pbpack
               --ball ${ball} --output ${pbpack} --system
-      COMMAND ${PBL_TOOLCHAIN_ENV} ${PYTHON_EXECUTABLE} ${PBL_BASE}/tools/cmake/firmware.py
-              size-resources --config ${PBL_DOTCONFIG} --pbpack ${pbpack}
       DEPENDS ${ball} ${PBL_RESOURCES_PY}
       WORKING_DIRECTORY ${PBL_BASE}
       COMMENT "Packing system resources"
