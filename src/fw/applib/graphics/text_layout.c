@@ -530,7 +530,7 @@ bool char_iter_prev(IteratorState state) {
 //! Trim given codepoint from the start of the word
 //! Used to remove whitespace and newlines
 //! @return is_trimmed
-bool word_trim_preceeding_codepoint(GContext* ctx, Word* word, const Codepoint codepoint,
+bool word_trim_preceding_codepoint(GContext* ctx, Word* word, const Codepoint codepoint,
                                     const TextBoxParams* const text_box_params) {
   Iterator char_iter;
   CharIterState char_iter_state;
@@ -572,8 +572,8 @@ bool word_trim_preceeding_codepoint(GContext* ctx, Word* word, const Codepoint c
 }
 
 // [INTL] whitespace is more than just the space character.
-void word_trim_preceeding_whitespace(GContext* ctx, Word* word, const TextBoxParams* const text_box_params) {
-  while (word_trim_preceeding_codepoint(ctx, word, SPACE_CODEPOINT, text_box_params));
+void word_trim_preceding_whitespace(GContext* ctx, Word* word, const TextBoxParams* const text_box_params) {
+  while (word_trim_preceding_codepoint(ctx, word, SPACE_CODEPOINT, text_box_params));
 }
 
 ////////////////////////////////////////////////////////////
@@ -1399,7 +1399,7 @@ bool line_add_word(GContext* ctx, Line* line, Word* word, const TextBoxParams* c
   if (is_newline_first_codepoint) {
     // This trims off leading \n's from word. If we reach the end of the text while doing this, it sets
     //  word->start to NULL. 
-    word_trim_preceeding_codepoint(ctx, word, NEWLINE_CODEPOINT, text_box_params);
+    word_trim_preceding_codepoint(ctx, word, NEWLINE_CODEPOINT, text_box_params);
     if (text_box_params->overflow_mode != GTextOverflowModeFill) {
       return false;
     }
@@ -1445,7 +1445,7 @@ bool line_add_word(GContext* ctx, Line* line, Word* word, const TextBoxParams* c
   }
 
   // Word-wrap
-  word_trim_preceeding_whitespace(ctx, word, text_box_params);
+  word_trim_preceding_whitespace(ctx, word, text_box_params);
   return false;
 }
 
