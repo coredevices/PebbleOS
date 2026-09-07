@@ -36,14 +36,6 @@ config VIBE_AW86225_OVERDRIVE_CYCLES
     range 1 15
     default 4
 
-config VIBE_AW86225_CONT_PLAYBACK
-    bool "Play in CONT mode"
-    depends on VIBE_AW86225
-    help
-      Drive the LRA in CONT mode instead of looping the RAM waveform. The
-      chip tracks the resonant frequency and compensates for the supply
-      voltage in hardware.
-
 config VIBE_AW8623X
     bool "Awinic AW8623X"
     help
