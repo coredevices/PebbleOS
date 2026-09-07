@@ -706,6 +706,29 @@ bool workout_service_get_current_workout_info(int32_t *steps_out, int32_t *durat
   return rv;
 }
 
+bool workout_service_get_current_workout_metrics(WorkoutServiceMetrics *metrics_out) {
+  if (!metrics_out) {
+    return false;
+  }
+
+  prv_lock();
+  const CurrentWorkoutData *wrkt = s_workout_data.current_workout;
+  if (wrkt) {
+    *metrics_out = (WorkoutServiceMetrics){
+      .steps = wrkt->steps,
+      .duration_s = wrkt->duration_s,
+      .distance_m = wrkt->distance_m,
+      .current_bpm = wrkt->current_bpm,
+      .current_hr_zone = wrkt->current_hr_zone,
+      .hr_samples = wrkt->hr_samples_count,
+      .avg_bpm = prv_get_avg_hr(),
+      .active_kcal = ROUND(wrkt->active_calories, ACTIVITY_CALORIES_PER_KCAL),
+    };
+  }
+  prv_unlock();
+  return wrkt != nullptr;
+}
+
 #if UNITTEST
 bool workout_service_get_avg_hr(int32_t *avg_hr_out) {
   if (!avg_hr_out || !workout_service_is_workout_ongoing()) {

@@ -173,4 +173,32 @@ bool workout_service_get_current_workout_info(int32_t *steps_out, int32_t *durat
                                               int32_t *distance_m_out, int32_t *current_bpm_out,
                                               HRZone *current_hr_zone_out);
 
+/** @brief Metrics of the current workout, taken at one instant. */
+typedef struct WorkoutServiceMetrics {
+  /** Steps. */
+  int32_t steps;
+  /** Duration excluding pauses, in seconds. */
+  int32_t duration_s;
+  /** Distance, in meters. */
+  int32_t distance_m;
+  /** Current heart rate, in beats per minute. */
+  int32_t current_bpm;
+  /** Current heart rate zone. */
+  HRZone current_hr_zone;
+  /** Valid heart rate samples while not paused, grows with every new reading. */
+  int32_t hr_samples;
+  /** Average of the valid heart rate samples, in beats per minute. */
+  int32_t avg_bpm;
+  /** Estimated active kilocalories. */
+  int32_t active_kcal;
+} WorkoutServiceMetrics;
+
+/**
+ * @brief Get all metrics of the current workout at once.
+ *
+ * @param[out] metrics_out Metrics, left untouched without a workout.
+ * @return true if a workout is ongoing.
+ */
+bool workout_service_get_current_workout_metrics(WorkoutServiceMetrics *metrics_out);
+
 /** @} */
