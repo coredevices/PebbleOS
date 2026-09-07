@@ -14,15 +14,10 @@ import sys
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, REPO_ROOT)
 
-import contextlib
-import io
+from tools.pebble_sdk_locator import activate_sdk, sdk_label
 
-from tools.pebble_sdk_locator import activate_sdk
-
-# The locator announces what it found on stdout; keep that off the PATH
-# line CMake reads back and report it as a message instead.
-notes = io.StringIO()
-with contextlib.redirect_stdout(notes):
-    activate_sdk(REPO_ROOT)
-print(notes.getvalue().strip(), file=sys.stderr)
-print(os.environ["PATH"])
+# stdout carries the PATH CMake reads back; the announcement goes to stderr.
+sdk_dir = activate_sdk(REPO_ROOT)
+if sdk_dir is not None:
+    print(f"Using PebbleOS SDK ({sdk_label(sdk_dir)}) at {sdk_dir}", file=sys.stderr)
+    print(os.environ["PATH"])

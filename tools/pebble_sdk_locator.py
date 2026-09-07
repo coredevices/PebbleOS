@@ -25,10 +25,6 @@ except ImportError:
         def warn(msg, *args):
             print(msg % args if args else msg)
 
-        @staticmethod
-        def pprint(color, msg):
-            print(msg)
-
 
 _VERSION_DIR_RE = re.compile(r"^pebbleos-sdk-(\d+)\.(\d+)\.(\d+)$")
 _SEMVER_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)")
@@ -93,10 +89,17 @@ def _find_sdk(repo_root):
     return None
 
 
+def sdk_label(sdk_dir):
+    """Human-readable version of the SDK installed at sdk_dir."""
+    m = _VERSION_DIR_RE.match(Path(sdk_dir).name)
+    return ".".join(m.groups()) if m else "unversioned"
+
+
 def activate_sdk(repo_root):
     """Activate an installed PebbleOS SDK by sourcing its env.sh into PATH.
 
     Returns the activated SDK directory, or None if no usable SDK was found.
+    Silent: callers decide whether the choice is worth announcing.
     """
     if os.environ.get("PEBBLEOS_SDK_ACTIVATED"):
         return Path(os.environ["PEBBLEOS_SDK_ACTIVATED"])
@@ -104,7 +107,7 @@ def activate_sdk(repo_root):
     found = _find_sdk(repo_root)
     if found is None:
         return None
-    version, sdk_dir = found
+    _, sdk_dir = found
 
     env_sh = sdk_dir / "env.sh"
     if not env_sh.is_file():
@@ -131,7 +134,4 @@ def activate_sdk(repo_root):
 
     os.environ["PATH"] = new_path
     os.environ["PEBBLEOS_SDK_ACTIVATED"] = str(sdk_dir)
-
-    label = ".".join(str(x) for x in version) if version else "unversioned"
-    Logs.pprint("CYAN", f"Using PebbleOS SDK ({label}) at {sdk_dir}")
     return sdk_dir

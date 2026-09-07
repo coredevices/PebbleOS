@@ -36,6 +36,7 @@ execute_process(
   OUTPUT_VARIABLE sdk_path
   OUTPUT_STRIP_TRAILING_WHITESPACE
   ERROR_VARIABLE sdk_message
+  ERROR_STRIP_TRAILING_WHITESPACE
 )
 if(sdk_path)
   set(ENV{PATH} "${sdk_path}")
