@@ -9,6 +9,10 @@
  * whatever is left after the worker and the app take their share at the end.
  * The app segment is sized for the largest app execution environment (2x, 3x
  * or 4x) supported by the platform.
+ *
+ * The worker and app segments are not memory regions: the firmware overwrites
+ * them wholesale at runtime, so nothing may ever be linked into them. Only
+ * their bounds are exported, as symbols.
  */
 
 #define PBL_MAX(a, b) ((a) > (b) ? (a) : (b))
@@ -37,14 +41,23 @@ MEMORY
 
     KERNEL_RAM (xrw) : ORIGIN = CONFIG_SRAM_BASE,
                        LENGTH = PBL_KERNEL_RAM_SIZE
-    WORKER_RAM (xrw) : ORIGIN = CONFIG_SRAM_BASE + PBL_KERNEL_RAM_SIZE,
-                       LENGTH = PBL_WORKER_RAM_SIZE
-    APP_RAM (xrw)    : ORIGIN = CONFIG_SRAM_BASE + PBL_KERNEL_RAM_SIZE + PBL_WORKER_RAM_SIZE,
-                       LENGTH = PBL_APP_RAM_SIZE
 }
 
 __FLASH_start__ = CONFIG_FLASH_BASE;
 __FLASH_size__ = CONFIG_FLASH_SIZE;
+
+__SRAM_size__ = CONFIG_SRAM_SIZE;
+
+__KERNEL_RAM_start__ = ORIGIN(KERNEL_RAM);
+__KERNEL_RAM_size__ = LENGTH(KERNEL_RAM);
+
+__WORKER_RAM__ = __KERNEL_RAM_start__ + __KERNEL_RAM_size__;
+__WORKER_RAM_size__ = PBL_WORKER_RAM_SIZE;
+__WORKER_RAM_end__ = __WORKER_RAM__ + __WORKER_RAM_size__;
+
+__APP_RAM__ = __WORKER_RAM_end__;
+__APP_RAM_size__ = PBL_APP_RAM_SIZE;
+__APP_RAM_end__ = __APP_RAM__ + __APP_RAM_size__;
 
 REGION_ALIAS("REGION_ISR_STACK", KERNEL_RAM);
 REGION_ALIAS("REGION_KERNEL_STACKS", KERNEL_RAM);
