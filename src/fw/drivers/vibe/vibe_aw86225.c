@@ -366,14 +366,7 @@ void vibe_force_off(void) {
 }
 
 int8_t vibe_get_braking_strength(void) {
-  if (!s_initialized) {
-    return 0;
-  }
-
-  uint8_t value;
-  prv_read_register(AW862XX_REG_CONTCFG7, &value);
-  uint8_t strength = value * 100UL/AW862XX_CONTCFG7_FULL_SCALE;
-  return strength;
+  return VIBE_STRENGTH_OFF;
 }
 
 // Refer to DG_AW862XX_Software_Design_Guide_CN_V1.1
