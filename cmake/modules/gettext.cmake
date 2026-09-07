@@ -52,9 +52,18 @@ function(pbl_gettext output)
     list(APPEND keyword_args --keyword=${keyword})
   endforeach()
 
+  # xgettext echoes the paths it is given into the #: references, so they
+  # are passed relative to the repository: an absolute path would put the
+  # build machine's directory layout in the catalogs.
+  set(relative_sources "")
+  foreach(source ${sources})
+    file(RELATIVE_PATH source ${PBL_BASE} ${source})
+    list(APPEND relative_sources ${source})
+  endforeach()
+
   # The source list is long enough to overflow a command line.
   set(list_file ${output}.files)
-  string(REPLACE ";" "\n" file_list "${sources}")
+  string(REPLACE ";" "\n" file_list "${relative_sources}")
   file(CONFIGURE OUTPUT ${list_file} CONTENT "${file_list}\n" @ONLY)
 
   add_custom_command(
