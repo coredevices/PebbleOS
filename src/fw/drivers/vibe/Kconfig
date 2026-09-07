@@ -21,6 +21,21 @@ config VIBE_AW86225_RATED_VOLTAGE_MV
       Rated AC drive voltage of the LRA in mV RMS. Full strength drives the
       motor at this voltage, compensated for the supply voltage.
 
+config VIBE_AW86225_OVERDRIVE_VOLTAGE_MV
+    int "LRA overdrive voltage (mVrms)"
+    depends on VIBE_AW86225
+    default VIBE_AW86225_RATED_VOLTAGE_MV
+    help
+      Drive voltage in mV RMS applied for the first
+      VIBE_AW86225_OVERDRIVE_CYCLES cycles of each playback to shorten the
+      LRA rise time. Equal to the rated voltage disables overdrive.
+
+config VIBE_AW86225_OVERDRIVE_CYCLES
+    int "LRA overdrive cycles"
+    depends on VIBE_AW86225
+    range 1 15
+    default 4
+
 config VIBE_AW8623X
     bool "Awinic AW8623X"
     help
