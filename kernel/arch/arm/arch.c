@@ -51,6 +51,8 @@
 #define SHPR_PENDSV 10
 #define SHPR_SYSTICK 11
 
+struct pbl_thread *pbl_cur __attribute__((section(".kernel_unpriv_ro_bss")));
+
 //! Saved context, lowest address first. Matches the layout core dump tooling
 //! learned from the FreeRTOS port so the canonical register walk is unchanged.
 struct saved_context {

@@ -11,6 +11,10 @@
 
 //! What the portable kernel needs from an architecture.
 
+//! The running thread. The arch defines it so it can live where unprivileged
+//! threads may read it: pbl_thread_current() runs without privilege.
+extern struct pbl_thread *pbl_cur;
+
 void arch_init(void);
 
 //! Builds the initial context so that the first switch to @p t runs

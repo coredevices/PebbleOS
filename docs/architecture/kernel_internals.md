@@ -85,6 +85,10 @@ copies the exception frame onto the thread's dedicated syscall stack when
 pointer and stacked return slot to `pbl_kernel_syscall_entered()`, which is
 what the firmware's syscall island expects.
 
+The port defines `pbl_cur` in `.kernel_unpriv_ro_bss`, the firmware's
+unprivileged-readable kernel data, because `pbl_thread_current()` and
+`pebble_task_get_current()` run unprivileged inside apps.
+
 ## POSIX arch and tests
 
 Each kernel thread is a pthread; exactly one runs at a time, and control

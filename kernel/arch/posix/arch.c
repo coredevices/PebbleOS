@@ -16,6 +16,8 @@
 // kernel considers running. Switches hand s_cpu over explicitly, so the
 // scheduling is as deterministic as on the target.
 
+struct pbl_thread *pbl_cur;
+
 static pthread_mutex_t s_cpu = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t s_stop_cond = PTHREAD_COND_INITIALIZER;
 static bool s_switch_pending;

@@ -10,7 +10,6 @@
 #define NUM_PRIO CONFIG_KERNEL_NUM_PRIORITIES
 _Static_assert(NUM_PRIO <= 32, "the ready bitmap is 32 bits wide");
 
-struct pbl_thread *pbl_cur;
 struct pbl_thread *pbl_all_threads;
 
 static struct pbl_thread *s_ready_head[NUM_PRIO];

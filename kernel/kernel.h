@@ -16,8 +16,6 @@
 //! Internal interface between the objects, the scheduler and the arch code.
 //! Everything here is called with interrupts locked unless noted.
 
-extern struct pbl_thread *pbl_cur;
-
 #define KERNEL_ASSERT(x) OS_ASSERT(x)
 
 //! Woken by resume after being suspended while blocked.
