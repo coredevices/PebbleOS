@@ -173,4 +173,19 @@ bool workout_service_get_current_workout_info(int32_t *steps_out, int32_t *durat
                                               int32_t *distance_m_out, int32_t *current_bpm_out,
                                               HRZone *current_hr_zone_out);
 
+/**
+ * @brief Get the estimated active calories of the current workout.
+ *
+ * @param[out] active Active kilocalories, or zero without a workout.
+ */
+void workout_service_get_active_kcalories(int32_t *active);
+
+/**
+ * @brief Get the average heart rate of the current workout.
+ *
+ * @param[out] avg_hr_out Average of the valid heart rate samples, or zero without a workout.
+ * @return true if a workout is ongoing.
+ */
+bool workout_service_get_avg_hr(int32_t *avg_hr_out);
+
 /** @} */
