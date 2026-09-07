@@ -487,6 +487,8 @@ def zoneinfo_to_bin(zoneinfo_list, dstrule_list, zonelink_list, output_bin):
     # write all the timezone links to file
     for line in zonelink_list:
         target, linkname = line.split(" ")
+        if target in EXCLUDED_ZONES:
+            continue
         try:
             region_id = region_id_list.index(target)
         except ValueError as e:
