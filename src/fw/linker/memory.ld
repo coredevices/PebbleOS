@@ -30,7 +30,7 @@
 /* The worker always gets 12k of RAM. */
 #define PBL_WORKER_RAM_SIZE (12 * 1024)
 
-#define PBL_KERNEL_RAM_SIZE \
+#define PBL_RAM_SIZE \
     (CONFIG_SRAM_SIZE - PBL_WORKER_RAM_SIZE - PBL_APP_RAM_SIZE)
 
 MEMORY
@@ -39,8 +39,8 @@ MEMORY
     FLASH (rx) : ORIGIN = CONFIG_FLASH_BASE + CONFIG_FLASH_OFFSET + CONFIG_FIRMWARE_OFFSET,
                  LENGTH = CONFIG_FW_FLASH_SIZE - CONFIG_FIRMWARE_OFFSET
 
-    KERNEL_RAM (xrw) : ORIGIN = CONFIG_SRAM_BASE,
-                       LENGTH = PBL_KERNEL_RAM_SIZE
+    RAM (xrw) : ORIGIN = CONFIG_SRAM_BASE,
+                LENGTH = PBL_RAM_SIZE
 }
 
 __FLASH_start__ = CONFIG_FLASH_BASE;
@@ -48,10 +48,10 @@ __FLASH_size__ = CONFIG_FLASH_SIZE;
 
 __SRAM_size__ = CONFIG_SRAM_SIZE;
 
-__KERNEL_RAM_start__ = ORIGIN(KERNEL_RAM);
-__KERNEL_RAM_size__ = LENGTH(KERNEL_RAM);
+__RAM_start__ = ORIGIN(RAM);
+__RAM_size__ = LENGTH(RAM);
 
-__WORKER_RAM__ = __KERNEL_RAM_start__ + __KERNEL_RAM_size__;
+__WORKER_RAM__ = __RAM_start__ + __RAM_size__;
 __WORKER_RAM_size__ = PBL_WORKER_RAM_SIZE;
 __WORKER_RAM_end__ = __WORKER_RAM__ + __WORKER_RAM_size__;
 
@@ -59,9 +59,9 @@ __APP_RAM__ = __WORKER_RAM_end__;
 __APP_RAM_size__ = PBL_APP_RAM_SIZE;
 __APP_RAM_end__ = __APP_RAM__ + __APP_RAM_size__;
 
-REGION_ALIAS("REGION_ISR_STACK", KERNEL_RAM);
-REGION_ALIAS("REGION_KERNEL_STACKS", KERNEL_RAM);
-REGION_ALIAS("REGION_KERNEL_HEAP", KERNEL_RAM);
+REGION_ALIAS("REGION_ISR_STACK", RAM);
+REGION_ALIAS("REGION_KERNEL_STACKS", RAM);
+REGION_ALIAS("REGION_KERNEL_HEAP", RAM);
 
 /* The process loader enforces eight-byte alignment on all segments. */
 ASSERT(CONFIG_APP_RAM_2X_SEGMENT_SIZE % 8 == 0,
@@ -73,4 +73,4 @@ ASSERT(CONFIG_APP_RAM_4X_SEGMENT_SIZE % 8 == 0,
 
 /* Basic sanity checks: apps must fit, and the kernel needs at least 64k. */
 ASSERT(PBL_APP_RAM_SIZE > 0, "App RAM is too small!")
-ASSERT(PBL_KERNEL_RAM_SIZE >= 64K, "Kernel RAM is too small!")
+ASSERT(PBL_RAM_SIZE >= 64K, "Kernel RAM is too small!")

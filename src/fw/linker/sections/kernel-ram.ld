@@ -11,7 +11,7 @@
 
         . = ALIGN(8);
         __data_end = .;
-    } >KERNEL_RAM AT>FLASH
+    } >RAM AT>FLASH
     __data_load_start = LOADADDR(.kernel_data);
 
     .kernel_ro_bss (NOLOAD) : {
@@ -26,7 +26,7 @@
         *(.kernel_unpriv_ro_bss)
 
         . = __unpriv_ro_bss_start__ + __unpriv_ro_bss_size__;
-    } >KERNEL_RAM
+    } >RAM
 
     .kernel_bss (NOLOAD) : {
         *(.freertos_privileged_data)
@@ -37,7 +37,7 @@
         *(COMMON)
 
         __bss_end = .;
-    } >KERNEL_RAM
+    } >RAM
 
     .stack (NOLOAD) : {
         . = ALIGN(__stack_guard_size__);

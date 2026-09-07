@@ -5,7 +5,7 @@
  * Master firmware linker script. Preprocessed with the C preprocessor, so
  * Kconfig CONFIG_* symbols, #include and #if are all available.
  *
- * The FLASH and KERNEL_RAM memory regions, and the bounds of the worker and
+ * The FLASH and RAM memory regions, and the bounds of the worker and
  * app RAM segments, are derived from the Kconfig memory layout symbols in
  * memory.ld.
  *

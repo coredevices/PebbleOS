@@ -274,7 +274,7 @@ void syscall_assert_userspace_buffer(const void* buf, size_t num_bytes) {
 
 #if SYSCALL_PRIVILEGED_STACK
 // Dedicated privileged stacks for App/Worker syscalls. Plain .bss statics land
-// in the privileged-only .kernel_bss output (KERNEL_RAM): unreadable by app
+// in the privileged-only .kernel_bss output (RAM): unreadable by app
 // code, zeroed at boot. (Not section(".kernel_bss") -- that would orphan them.)
 #define SYSCALL_STACK_WORDS 512u  // 2 KiB each; size against measured high-water.
 static uint32_t s_app_syscall_stack[SYSCALL_STACK_WORDS] __attribute__((aligned(8)));
