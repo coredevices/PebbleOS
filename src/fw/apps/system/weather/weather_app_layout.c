@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "weather_app_layout.h"
+#include "pbl/services/i18n/i18n.h"
 #include "weather_math.h"
 #include "applib/graphics/gdraw_command_transforms.h"
 #include "shell/prefs.h"
@@ -397,13 +398,22 @@ static void prv_draw_uv_bar_frame(GContext *ctx, GPoint gc, int by, int h,
 // (WHO UV ramp now shared: weather_uv_severity_color in weather_math.c)
 #define prv_uv_severity_color weather_uv_severity_color
 
-// What falls from the sky when it falls — for the "Chance of ..." sentence.
-static const char *prv_precip_noun(WeatherType t) {
+// What falls from the sky when it falls — the precipitation sentences.
+static const char *prv_precip_likely(WeatherType t) {
   switch (t) {
     case WeatherType_LightSnow:
-    case WeatherType_HeavySnow:   return "snow";
-    case WeatherType_RainAndSnow: return "sleet";
-    default:                      return "rain";
+    case WeatherType_HeavySnow:   return i18n_noop("Snow likely");
+    case WeatherType_RainAndSnow: return i18n_noop("Sleet likely");
+    default:                      return i18n_noop("Rain likely");
+  }
+}
+
+static const char *prv_precip_chance(WeatherType t) {
+  switch (t) {
+    case WeatherType_LightSnow:
+    case WeatherType_HeavySnow:   return i18n_noop("Chance of snow");
+    case WeatherType_RainAndSnow: return i18n_noop("Chance of sleet");
+    default:                      return i18n_noop("Chance of rain");
   }
 }
 
@@ -429,7 +439,9 @@ static int prv_temp(int celsius) {
 // conditions first, then exposure, then the rain question, then a calm sign-off
 // (the newspaper version's ladder, verbatim). v4.2 raw readings are -1 on older
 // records and those rungs simply never fire.
-static void prv_build_alert(const WeatherLocationForecast *f, char *buf, size_t buf_size) {
+// wind_out: the warning already speaks of wind, so the wind sentence drops its prefix.
+static void prv_build_alert(const WeatherLocationForecast *f, char *buf, size_t buf_size,
+                            bool *wind_out) {
   const WeatherType t = f->current_weather_type;
   const int wmo = f->today_wmo;   // WMO 4677 code, -1 unknown
   const bool feels_known = f->today_feels != WEATHER_SERVICE_LOCATION_FORECAST_UNKNOWN_TEMP;
@@ -437,71 +449,76 @@ static void prv_build_alert(const WeatherLocationForecast *f, char *buf, size_t 
   const bool high_known  = f->today_high != WEATHER_SERVICE_LOCATION_FORECAST_UNKNOWN_TEMP;
   const bool low_known   = f->today_low != WEATHER_SERVICE_LOCATION_FORECAST_UNKNOWN_TEMP;
   const char *alert;
-  char likely[20];
+  bool wind = false;
   if (wmo == 96 || wmo == 99) {                        // thunderstorm with hail
-    alert = "Hail";
+    alert = i18n_noop("Hail");
   } else if (wmo >= 95 && wmo <= 99) {                 // thunderstorm codes
-    alert = "Chance of storms";
+    alert = i18n_noop("Chance of storms");
   } else if (t == WeatherType_HeavySnow || wmo == 75 || wmo == 86) {
-    alert = "Heavy snow";
+    alert = i18n_noop("Heavy snow");
   } else if (t == WeatherType_HeavyRain) {
-    alert = "Heavy rain";
+    alert = i18n_noop("Heavy rain");
   } else if (t == WeatherType_RainAndSnow) {
-    alert = "Wintry mix";
+    alert = i18n_noop("Wintry mix");
   } else if (f->today_precip_sum_mm >= 30) {           // a real soaking on the day
-    alert = "Flood risk";
+    alert = i18n_noop("Flood risk");
   } else if (f->today_wind_mph >= 25) {
-    alert = "Strong winds";
+    alert = i18n_noop("Strong winds");
+    wind = true;
   } else if (high_known && f->today_high <= prv_temp(0)) {   // an ice day
-    alert = "Below freezing";
+    alert = i18n_noop("Below freezing");
   } else if (low_known && f->today_low <= prv_temp(-4)) {
-    alert = "Hard frost";
+    alert = i18n_noop("Hard frost");
   } else if (feels_known && f->today_feels <= prv_temp(0) &&
              temp_known && f->current_temp > prv_temp(0)) {   // wind chill crosses zero
-    alert = "Feels below freezing";
+    alert = i18n_noop("Feels below freezing");
   } else if (high_known && f->today_high >= prv_temp(30)) {
-    alert = "Heatwave";
+    alert = i18n_noop("Heatwave");
   } else if (f->today_uv >= 8) {
-    alert = "Very high UV";
+    alert = i18n_noop("Very high UV");
   } else if (f->today_uv >= 6) {
-    alert = "High UV";
+    alert = i18n_noop("High UV");
   } else if (wmo == 45 || wmo == 48 ||                 // fog / depositing rime fog
              (f->today_visibility_m >= 0 && f->today_visibility_m <= 1000)) {
-    alert = "Poor visibility";
+    alert = i18n_noop("Poor visibility");
   } else if (f->today_humidity >= 85 && high_known && f->today_high >= prv_temp(20)) {
-    alert = "High humidity";
+    alert = i18n_noop("High humidity");
   } else if (!prv_precip_is_the_headline(t) && f->today_precip_mm >= 60) {
-    snprintf(likely, sizeof(likely), "%s likely", prv_precip_noun(t));
-    likely[0] = (char)(likely[0] - 'a' + 'A');
-    alert = likely;
+    alert = prv_precip_likely(t);
   } else if (!prv_precip_is_the_headline(t) && f->today_precip_mm > 0) {
-    snprintf(likely, sizeof(likely), "Chance of %s", prv_precip_noun(t));
-    alert = likely;
+    alert = prv_precip_chance(t);
   } else if (f->today_wind_mph >= 20) {
-    alert = "Windy";
+    alert = i18n_noop("Windy");
+    wind = true;
   } else {
     // No warning on file — a calm sign-off, deterministic per day's conditions.
     if (t == WeatherType_Sun) {
-      alert = "Clear skies";
+      alert = i18n_noop("Clear skies");
     } else if (f->today_wind_mph >= 10) {
-      alert = "Light winds";
+      alert = i18n_noop("Light winds");
+      wind = true;
     } else if (f->today_wind_mph >= 0 && f->today_wind_mph <= 4) {
-      alert = "Calm breeze";
+      alert = i18n_noop("Calm breeze");
+      wind = true;
     } else if (t == WeatherType_PartlyCloudy) {
-      alert = "Fair conditions";
+      alert = i18n_noop("Fair conditions");
     } else if (temp_known && f->current_temp >= prv_temp(12) &&
                f->current_temp <= prv_temp(24)) {
-      alert = "Mild conditions";
+      alert = i18n_noop("Mild conditions");
     } else {
-      alert = "All clear";
+      alert = i18n_noop("All clear");
     }
   }
-  snprintf(buf, buf_size, "%s", alert);
+  i18n_get_with_buffer(alert, buf, buf_size);
+  *wind_out = wind;
 }
 
 // 8-point compass name from degrees (0 = N, clockwise).
 static const char *prv_compass8(int deg) {
-  static const char kDirs[8][3] = {"N", "NE", "E", "SE", "S", "SW", "W", "NW"};
+  static const char *const kDirs[8] = {
+    i18n_noop("N"), i18n_noop("NE"), i18n_noop("E"), i18n_noop("SE"),
+    i18n_noop("S"), i18n_noop("SW"), i18n_noop("W"), i18n_noop("NW"),
+  };
   deg %= 360;
   if (deg < 0) deg += 360;
   return kDirs[((deg + 22) / 45) & 7];
@@ -510,33 +527,36 @@ static const char *prv_compass8(int deg) {
 // The forecast description: "High UV. Winds SW at 12mph. Precipitation 20%." —
 // warning first, then wind (direction when the record carries it), then precip.
 // Sentences drop out cleanly when their reading is off the wire.
-static void prv_build_forecast_desc(const WeatherLocationForecast *f,
+static void prv_build_forecast_desc(const WeatherLocationForecast *f, const void *owner,
                                     char *buf, size_t buf_size) {
-  char alert[24];
-  prv_build_alert(f, alert, sizeof(alert));
+  char alert[64];
+  bool wind_alert;
+  prv_build_alert(f, alert, sizeof(alert), &wind_alert);
   int n = snprintf(buf, buf_size, "%s.", alert);
   if (n < 0) return;
   // A wind-flavored warning already said "winds" -- the wind sentence then
   // drops its prefix ("Light winds. SW at 12mph.", not "...Winds SW at...").
-  const bool wind_alert = (strstr(alert, "wind") != NULL) ||
-                          (strstr(alert, "Wind") != NULL) ||
-                          (strstr(alert, "breeze") != NULL);
   if (f->today_wind_mph >= 0 && (size_t)n < buf_size) {
     const bool mph = shell_prefs_get_units_wind() == UnitsWind_Mph;
     const int speed = mph ? f->today_wind_mph
                           : ((f->today_wind_mph * 1609) + 500) / 1000;
-    const char *unit = mph ? "mph" : "km/h";
+    const char *unit = i18n_get(mph ? i18n_noop("mph") : i18n_noop("km/h"), owner);
     if (f->today_wind_dir_deg >= 0) {
-      n += snprintf(buf + n, buf_size - n, wind_alert ? " %s at %d%s." : " Winds %s at %d%s.",
-                    prv_compass8(f->today_wind_dir_deg), speed, unit);
+      const char *fmt = wind_alert ? i18n_noop("%s at %d%s.") : i18n_noop("Winds %s at %d%s.");
+      n += snprintf(buf + n, buf_size - n, " ");
+      n += snprintf(buf + n, buf_size - n, i18n_get(fmt, owner),
+                    i18n_get(prv_compass8(f->today_wind_dir_deg), owner), speed, unit);
     } else {
-      n += snprintf(buf + n, buf_size - n, wind_alert ? " At %d%s." : " Winds at %d%s.",
-                    speed, unit);
+      const char *fmt = wind_alert ? i18n_noop("At %d%s.") : i18n_noop("Winds at %d%s.");
+      n += snprintf(buf + n, buf_size - n, " ");
+      n += snprintf(buf + n, buf_size - n, i18n_get(fmt, owner), speed, unit);
     }
     if (n < 0) return;
   }
   if (f->today_precip_mm >= 0 && (size_t)n < buf_size) {
-    snprintf(buf + n, buf_size - n, " Precipitation %d%%.", f->today_precip_mm);
+    n += snprintf(buf + n, buf_size - n, " ");
+    snprintf(buf + n, buf_size - n, i18n_get(i18n_noop("Precipitation %d%%."), owner),
+             f->today_precip_mm);
   }
 }
 
@@ -809,7 +829,7 @@ __attribute__((unused)) static void prv_upcase_into(char *dst, size_t dst_size, 
 static void prv_snapshot_text(WeatherAppLayout *layout) {
   const WeatherLocationForecast *f = layout->forecast;
   if (f) {
-    const char *lbl = (f->label && f->label[0]) ? f->label : "TODAY";
+    const char *lbl = (f->label && f->label[0]) ? f->label : i18n_get("TODAY", layout);
     strncpy(layout->text_anim.top_label, lbl, sizeof(layout->text_anim.top_label) - 1);
     layout->text_anim.top_label[sizeof(layout->text_anim.top_label) - 1] = '\0';
 
@@ -828,7 +848,7 @@ static void prv_snapshot_text(WeatherAppLayout *layout) {
             f->current_weather_phrase ? f->current_weather_phrase : "",
             sizeof(layout->text_anim.top_phrase) - 1);
     layout->text_anim.top_phrase[sizeof(layout->text_anim.top_phrase) - 1] = '\0';
-    prv_build_forecast_desc(f, layout->text_anim.top_desc,
+    prv_build_forecast_desc(f, layout, layout->text_anim.top_desc,
                             sizeof(layout->text_anim.top_desc));
     prv_fill_uv_value_buffer(f,
                              layout->text_anim.top_uv,
@@ -844,7 +864,7 @@ static void prv_snapshot_text(WeatherAppLayout *layout) {
 
   const WeatherLocationForecast *n = layout->next_forecast;
   if (n) {
-    const char *lbl = (n->label && n->label[0]) ? n->label : "TOMORROW";
+    const char *lbl = (n->label && n->label[0]) ? n->label : i18n_get("TOMORROW", layout);
     strncpy(layout->text_anim.bot_label, lbl, sizeof(layout->text_anim.bot_label) - 1);
     layout->text_anim.bot_label[sizeof(layout->text_anim.bot_label) - 1] = '\0';
     prv_fill_high_low_buffer(n->today_high, n->today_low,
@@ -945,7 +965,8 @@ static void prv_draw_top_rows(const WeatherAppLayout *layout, GPoint *off, int c
     // stays concentric if the content layer ever moves.
     const GPoint gc = GPoint(PBL_DISPLAY_WIDTH / 2 - layout->content_layer_origin.x,
                              PBL_DISPLAY_HEIGHT / 2 - layout->content_layer_origin.y);
-    weather_app_layout_draw_uv_bar(ctx, gc, by, uvv, t->uv, WeatherUvBarFull, "UV INDEX");
+    weather_app_layout_draw_uv_bar(ctx, gc, by, uvv, t->uv, WeatherUvBarFull,
+                                   i18n_get("UV INDEX", layout));
   }
 #else
   // Rect: the ORIGINAL flow layout (the original condensed layout / a14c2675, styled to the
@@ -1038,7 +1059,7 @@ static void prv_draw_top_rows(const WeatherAppLayout *layout, GPoint *off, int c
     prv_draw_sun_glyph(ctx, GPoint(off->x + 12, by + 14));
     // Gothic-14-Bold's V glyph fuses into a solid stem (reads as "UY") —
     // Gothic 18's V tapers properly (metrics_value_font is G18 on rect).
-    graphics_draw_text(ctx, "UV INDEX", layout->metrics_value_font,
+    graphics_draw_text(ctx, i18n_get("UV INDEX", layout), layout->metrics_value_font,
                        GRect(off->x + 24, by + 2, 70, 20),
                        GTextOverflowModeFill, GTextAlignmentLeft, NULL);
     // Fully filled the instant the box appears — no tick-in (the box no longer
@@ -1094,15 +1115,16 @@ static void prv_draw_top_half_text(const WeatherAppLayout *layout, GPoint *curre
 
   char temp_buffer[15] = {0};
   char highlow_buffer[15] = {0};
-  char desc_buffer[72] = {0};
+  char desc_buffer[128] = {0};
   char uv_buffer[12] = {0};
-  prv_build_forecast_desc(forecast, desc_buffer, sizeof(desc_buffer));
+  prv_build_forecast_desc(forecast, layout, desc_buffer, sizeof(desc_buffer));
   prv_fill_uv_value_buffer(forecast, uv_buffer, sizeof(uv_buffer));
   prv_fill_featured_temp_buffer(forecast, temp_buffer, sizeof(temp_buffer));
   prv_fill_high_low_temp_buffer(forecast->today_high, forecast->today_low,
                                 highlow_buffer, sizeof(highlow_buffer));
   const TopText t = {
-    .label = (forecast->label && forecast->label[0]) ? forecast->label : "TODAY",
+    .label = (forecast->label && forecast->label[0]) ? forecast->label
+                                                      : i18n_get("TODAY", layout),
     .temp = temp_buffer,
     .highlow = highlow_buffer,
     .uv = uv_buffer,
@@ -1190,7 +1212,8 @@ static void prv_draw_bottom_half_text(const WeatherAppLayout *layout, GPoint *cu
                            true /* tight on both shapes now */,
                            text_buffer, sizeof(text_buffer));
   prv_draw_bottom_rows(layout, current_offset, content_width, context,
-                       (next->label && next->label[0]) ? next->label : "TOMORROW",
+                       (next->label && next->label[0]) ? next->label
+                                                        : i18n_get("TOMORROW", layout),
                        text_buffer, next->current_weather_phrase,
                        PBL_IF_RECT_ELSE(2, 10));
 }
@@ -2286,6 +2309,7 @@ void weather_app_layout_set_fin_allowed(WeatherAppLayout *layout,
 }
 
 void weather_app_layout_deinit(WeatherAppLayout *layout) {
+  i18n_free_all(layout);
   if (layout->icon_animation) {
     Animation *anim = layout->icon_animation;
     layout->icon_animation = NULL;
