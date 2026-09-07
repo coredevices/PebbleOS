@@ -56,7 +56,7 @@ uint8_t qemu_battery_get_percent(void) {
   return s_percent;
 }
 
-void qemu_battery_msg_callack(const uint8_t *data, uint32_t len) {
+void qemu_battery_msg_callback(const uint8_t *data, uint32_t len) {
   QemuProtocolBatteryHeader *hdr = (QemuProtocolBatteryHeader *)data;
   if (len != sizeof(*hdr)) {
     PBL_LOG_ERR("Invalid packet length");
