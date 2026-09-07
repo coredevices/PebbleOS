@@ -2219,7 +2219,7 @@ msgstr "手首の骨から指２本分の隙間を開けてPebbleを装着して
 msgid "%d BPM"
 msgstr "%d BPM"
 
-#. / Step count greater than 1000 with a thousands seperator
+#. / Step count greater than 1000 with a thousands separator
 #: ../src/fw/apps/watch/kickstart/kickstart.c:470
 #, c-format
 msgid "%d,%03d"

@@ -230,7 +230,7 @@ static void prv_draw_goal_line(GContext *ctx, int32_t current_progress, int32_t 
 }
 
 #if EMERY_SCREEN_RES
-static void prv_draw_seperator(GContext *ctx, GRect bounds, GColor color) {
+static void prv_draw_separator(GContext *ctx, GRect bounds, GColor color) {
   bounds.origin.y += 111; // top offset
 
   GPoint p1 = bounds.origin;
@@ -442,7 +442,7 @@ static void prv_base_layer_update_proc(Layer *layer, GContext *ctx) {
 
   // draw separator
   if (!screen_is_obstructed) {
-    prv_draw_seperator(ctx, bounds, GColorWhite);
+    prv_draw_separator(ctx, bounds, GColorWhite);
   }
 #endif
 
