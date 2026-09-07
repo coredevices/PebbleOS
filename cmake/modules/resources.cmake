@@ -58,6 +58,7 @@ function(pbl_resources)
       --platform ${PBL_PLATFORM_NAME}
       --board-name ${PBL_BOARD_NAME}
       --variant ${VARIANT}
+      --config ${PBL_DOTCONFIG}
       --output ${manifest}
       --cmake-output ${PROJECT_BINARY_DIR}/resources/resources.cmake
       --dynamic ${dynamic}
@@ -70,7 +71,7 @@ function(pbl_resources)
 
   include(${PROJECT_BINARY_DIR}/resources/resources.cmake)
   set_property(DIRECTORY ${PBL_BASE} APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
-    ${PBL_RESOURCE_MAP_FILES} ${PBL_RESOURCES_PY})
+    ${PBL_RESOURCE_MAP_FILES} ${PBL_RESOURCES_PY} ${PBL_DOTCONFIG})
 
   pbl_resource_command(
     OUTPUT ${ball}
