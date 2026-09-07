@@ -195,6 +195,7 @@ void shell_prefs_toggle_language_english(void);
 typedef enum ShellLanguage {
   ShellLanguageInstalledPack = 0,
   ShellLanguageEnglish,
+#ifdef CONFIG_SERVICE_I18N_BUILTIN_LANGUAGES
   ShellLanguageCatalan,
   ShellLanguageGerman,
   ShellLanguageSpanish,
@@ -203,6 +204,7 @@ typedef enum ShellLanguage {
   ShellLanguageDutch,
   ShellLanguagePortuguese,
   ShellLanguagePolish,
+#endif
   ShellLanguageCount,
 } ShellLanguage;
 

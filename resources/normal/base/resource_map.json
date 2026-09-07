@@ -2402,42 +2402,50 @@
     {
       "type": "mo",
       "name": "STRINGS_CA_ES",
-      "file": "normal/base/lang/ca_ES/tintin.po"
+      "file": "normal/base/lang/ca_ES/tintin.po",
+      "config": "CONFIG_SERVICE_I18N_BUILTIN_LANGUAGES"
     },
     {
       "type": "mo",
       "name": "STRINGS_DE_DE",
-      "file": "normal/base/lang/de_DE/tintin.po"
+      "file": "normal/base/lang/de_DE/tintin.po",
+      "config": "CONFIG_SERVICE_I18N_BUILTIN_LANGUAGES"
     },
     {
       "type": "mo",
       "name": "STRINGS_ES_ES",
-      "file": "normal/base/lang/es_ES/tintin.po"
+      "file": "normal/base/lang/es_ES/tintin.po",
+      "config": "CONFIG_SERVICE_I18N_BUILTIN_LANGUAGES"
     },
     {
       "type": "mo",
       "name": "STRINGS_FR_FR",
-      "file": "normal/base/lang/fr_FR/tintin.po"
+      "file": "normal/base/lang/fr_FR/tintin.po",
+      "config": "CONFIG_SERVICE_I18N_BUILTIN_LANGUAGES"
     },
     {
       "type": "mo",
       "name": "STRINGS_IT_IT",
-      "file": "normal/base/lang/it_IT/tintin.po"
+      "file": "normal/base/lang/it_IT/tintin.po",
+      "config": "CONFIG_SERVICE_I18N_BUILTIN_LANGUAGES"
     },
     {
       "type": "mo",
       "name": "STRINGS_NL_NL",
-      "file": "normal/base/lang/nl_NL/tintin.po"
+      "file": "normal/base/lang/nl_NL/tintin.po",
+      "config": "CONFIG_SERVICE_I18N_BUILTIN_LANGUAGES"
     },
     {
       "type": "mo",
       "name": "STRINGS_PT_PT",
-      "file": "normal/base/lang/pt_PT/tintin.po"
+      "file": "normal/base/lang/pt_PT/tintin.po",
+      "config": "CONFIG_SERVICE_I18N_BUILTIN_LANGUAGES"
     },
     {
       "type": "mo",
       "name": "STRINGS_PL_PL",
-      "file": "normal/base/lang/pl_PL/tintin.po"
+      "file": "normal/base/lang/pl_PL/tintin.po",
+      "config": "CONFIG_SERVICE_I18N_BUILTIN_LANGUAGES"
     },
     {
       "type": "pdc",

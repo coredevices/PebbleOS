@@ -8,6 +8,17 @@ config SERVICE_I18N
 
 if SERVICE_I18N
 
+config SERVICE_I18N_BUILTIN_LANGUAGES
+    bool "Built-in language catalogs"
+    default y
+    help
+      Ship the translated string catalogs in the system resource pack,
+      so the languages can be picked from Settings straight away. When
+      disabled the firmware only speaks English until a language pack
+      is installed from the phone. The catalogs are a third of the
+      resource pack, so boards with a small resource bank turn this
+      off.
+
 module = SERVICE_I18N
 module-str = Internationalization
 source "subsys/logging/Kconfig.template.log_level"
