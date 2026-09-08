@@ -90,12 +90,12 @@ def process_resource_ball(task_gen):
         prb_task = task_gen.create_task(
             "resource_ball", bundled_resos, task_gen.project_resource_ball
         )
-        prb_task.dep_node = getattr(task_gen, "resource_dependencies", [])
-        prb_task.dep_vars = getattr(task_gen, "vars", [])
+        prb_task.dep_nodes = getattr(task_gen, "resource_dependencies", [])
+        prb_task.vars = getattr(task_gen, "vars", [])
 
     task = task_gen.create_task(
         "resource_ball", resource_objects, task_gen.resource_ball
     )
     task.resource_declarations = getattr(task_gen, "resource_declarations", [])
     task.dep_nodes = getattr(task_gen, "resource_dependencies", [])
-    task.dep_vars = getattr(task_gen, "vars", [])
+    task.vars = getattr(task_gen, "vars", [])
