@@ -205,6 +205,8 @@ static void prv_start_audio(uint8_t vol) {
   PBL_ANALYTICS_ADD(speaker_play_count, 1);
   prv_update_volume_analytics(effective_vol);
 
+  // Keep DMA refills ahead of CPU-heavy app work until playback stops.
+  system_task_enable_raised_priority(true);
   audio_init((AudioDevice *)AUDIO);
   audio_set_volume((AudioDevice *)AUDIO, effective_vol);
   audio_start((AudioDevice *)AUDIO, prv_audio_trans_cb);
@@ -215,6 +217,7 @@ static void prv_stop_audio(void) {
   prv_update_volume_analytics(0);
 
   audio_stop((AudioDevice *)AUDIO);
+  system_task_enable_raised_priority(false);
 }
 
 static void prv_free_tracks(void) {
