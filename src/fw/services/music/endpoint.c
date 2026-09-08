@@ -24,20 +24,20 @@ static void prv_send_music_command_to_handset(MusicEndpointCmdID cmd) {
     PBL_LOG_ERR("No system session");
     return;
   }
-  comm_session_send_data(session, MUSIC_CTRL_ENDPOINT,
-                         (const uint8_t *)&cmd, 1, COMM_SESSION_DEFAULT_TIMEOUT);
+  comm_session_send_data(session, MUSIC_CTRL_ENDPOINT, (const uint8_t *)&cmd, 1,
+                         COMM_SESSION_DEFAULT_TIMEOUT);
 }
 
-static const uint8_t* prv_read_ptr_and_length_from_buffer(const uint8_t *iter,
+static const uint8_t *prv_read_ptr_and_length_from_buffer(const uint8_t *iter,
                                                           const uint8_t *iter_end,
-                                                          const char** out_str,
+                                                          const char **out_str,
                                                           size_t *out_length) {
   if (!out_str || !out_length) {
     return NULL;
   }
 
   *out_length = *iter;
-  *out_str = (const char*) iter + 1;
+  *out_str = (const char *)iter + 1;
 
   iter += 1 + *out_length;
   if (iter > iter_end) {
@@ -47,37 +47,36 @@ static const uint8_t* prv_read_ptr_and_length_from_buffer(const uint8_t *iter,
   return iter;
 }
 
-static void prv_update_now_playing_info(CommSession *session, const uint8_t* msg, size_t length) {
+static void prv_update_now_playing_info(CommSession *session, const uint8_t *msg, size_t length) {
   // Read all the lengths from the message so we know how to break it up.
-  const uint8_t* read_iter = msg;
-  const char* artist_ptr;
+  const uint8_t *read_iter = msg;
+  const char *artist_ptr;
   size_t artist_length;
 
-  read_iter = prv_read_ptr_and_length_from_buffer(read_iter, msg + length,
-                                                  &artist_ptr, &artist_length);
+  read_iter =
+      prv_read_ptr_and_length_from_buffer(read_iter, msg + length, &artist_ptr, &artist_length);
   if (!read_iter) {
     return;
   }
 
-  const char* album_ptr;
+  const char *album_ptr;
   size_t album_length;
-  read_iter = prv_read_ptr_and_length_from_buffer(read_iter, msg + length,
-                                                  &album_ptr, &album_length);
+  read_iter =
+      prv_read_ptr_and_length_from_buffer(read_iter, msg + length, &album_ptr, &album_length);
   if (!read_iter) {
     return;
   }
 
-  const char* title_ptr;
+  const char *title_ptr;
   size_t title_length;
-  read_iter = prv_read_ptr_and_length_from_buffer(read_iter, msg + length,
-                                              &title_ptr, &title_length);
+  read_iter =
+      prv_read_ptr_and_length_from_buffer(read_iter, msg + length, &title_ptr, &title_length);
   if (!read_iter) {
     return;
   }
 
-  music_update_now_playing(title_ptr, title_length,
-                           artist_ptr, artist_length,
-                           album_ptr, album_length);
+  music_update_now_playing(title_ptr, title_length, artist_ptr, artist_length, album_ptr,
+                           album_length);
 
   if (comm_session_has_capability(session, CommSessionExtendedMusicService)) {
     if (read_iter + sizeof(uint32_t) <= msg + length) {
@@ -98,11 +97,11 @@ static void prv_update_now_playing_info(CommSession *session, const uint8_t* msg
   }
 }
 
-static void prv_update_play_state_info(CommSession *session, const uint8_t* msg, size_t length) {
+static void prv_update_play_state_info(CommSession *session, const uint8_t *msg, size_t length) {
   if (length < sizeof(MusicEndpointPlayStateInfo)) {
     return;
   }
-  MusicEndpointPlayStateInfo *play_state_info = (MusicEndpointPlayStateInfo*) msg;
+  MusicEndpointPlayStateInfo *play_state_info = (MusicEndpointPlayStateInfo *)msg;
   MusicPlayerStateUpdate player_state_update;
 
   switch (play_state_info->play_state) {
@@ -125,8 +124,8 @@ static void prv_update_play_state_info(CommSession *session, const uint8_t* msg,
       player_state_update.playback_state = MusicPlayStateInvalid;
   }
   player_state_update.playback_rate_percent = play_state_info->play_rate;
-  const uint8_t skip_seeks = (length > sizeof(MusicEndpointPlayStateInfo)) ?
-      msg[sizeof(MusicEndpointPlayStateInfo)] : 0;
+  const uint8_t skip_seeks =
+      (length > sizeof(MusicEndpointPlayStateInfo)) ? msg[sizeof(MusicEndpointPlayStateInfo)] : 0;
   player_state_update.skip_seeks_within_track = (skip_seeks & MusicEndpointSkipSeeksWithinTrack);
   s_progress_reporting_supported = (play_state_info->track_pos_ms >= 0);
   player_state_update.elapsed_time_ms = MAX(play_state_info->track_pos_ms, 0);
@@ -137,29 +136,29 @@ static void prv_update_play_state_info(CommSession *session, const uint8_t* msg,
   music_update_player_playback_state(&player_state_update);
 }
 
-static void prv_update_volume_info(CommSession *session, const uint8_t* msg, size_t length) {
+static void prv_update_volume_info(CommSession *session, const uint8_t *msg, size_t length) {
   if (length < sizeof(uint8_t)) {
     return;
   }
   music_update_player_volume_percent((uint8_t)*msg);
 }
 
-static void prv_update_player_info(CommSession *session, const uint8_t* msg, size_t length) {
+static void prv_update_player_info(CommSession *session, const uint8_t *msg, size_t length) {
   // Read all the lengths from the message so we know how to break it up.
-  const uint8_t* read_iter = msg;
+  const uint8_t *read_iter = msg;
 
-  const char* player_package_ptr;
+  const char *player_package_ptr;
   size_t player_package_length;
-  read_iter = prv_read_ptr_and_length_from_buffer(read_iter, msg + length,
-                                                  &player_package_ptr, &player_package_length);
+  read_iter = prv_read_ptr_and_length_from_buffer(read_iter, msg + length, &player_package_ptr,
+                                                  &player_package_length);
   if (!read_iter) {
     return;
   }
 
-  const char* player_name_ptr;
+  const char *player_name_ptr;
   size_t player_name_length;
-  read_iter = prv_read_ptr_and_length_from_buffer(read_iter, msg + length,
-                                                  &player_name_ptr, &player_name_length);
+  read_iter = prv_read_ptr_and_length_from_buffer(read_iter, msg + length, &player_name_ptr,
+                                                  &player_name_length);
   if (!read_iter) {
     return;
   }
@@ -167,7 +166,7 @@ static void prv_update_player_info(CommSession *session, const uint8_t* msg, siz
   music_update_player_name(player_name_ptr, player_name_length);
 }
 
-void music_protocol_msg_callback(CommSession *session, const uint8_t* msg, size_t length) {
+void music_protocol_msg_callback(CommSession *session, const uint8_t *msg, size_t length) {
   if (!s_connected) {
     return;
   }
@@ -187,7 +186,7 @@ void music_protocol_msg_callback(CommSession *session, const uint8_t* msg, size_
       prv_update_player_info(session, msg, length);
       break;
     default:
-      PBL_LOG_DBG("Invalid command 0x%"PRIx8, msg[0]);
+      PBL_LOG_DBG("Invalid command 0x%" PRIx8, msg[0]);
   }
 }
 
@@ -237,8 +236,7 @@ static MusicServerCapability prv_music_get_capability_bitset(void) {
   if (comm_session_has_capability(comm_session_get_system_session(),
                                   CommSessionExtendedMusicService)) {
     if (s_progress_reporting_supported) {
-      return (MusicServerCapabilityPlaybackStateReporting |
-              MusicServerCapabilityProgressReporting |
+      return (MusicServerCapabilityPlaybackStateReporting | MusicServerCapabilityProgressReporting |
               MusicServerCapabilityVolumeReporting);
     } else {
       return (MusicServerCapabilityPlaybackStateReporting | MusicServerCapabilityVolumeReporting);
@@ -255,25 +253,23 @@ static bool prv_music_needs_user_to_start_playback_on_phone(void) {
 static void prv_music_request_reduced_latency(bool reduced_latency) {
   const ResponseTimeState state = reduced_latency ? ResponseTimeMiddle : ResponseTimeMax;
   comm_session_set_responsiveness(comm_session_get_system_session(),
-                                  BtConsumerMusicServiceIndefinite, state,
-                                  MAX_PERIOD_RUN_FOREVER);
+                                  BtConsumerMusicServiceIndefinite, state, MAX_PERIOD_RUN_FOREVER);
 }
 
 static void prv_music_request_low_latency_for_period(uint32_t period_ms) {
   comm_session_set_responsiveness(comm_session_get_system_session(),
-                                  BtConsumerMusicServiceMomentary,
-                                  ResponseTimeMin,
+                                  BtConsumerMusicServiceMomentary, ResponseTimeMin,
                                   period_ms / MS_PER_SECOND);
 }
 
 static const MusicServerImplementation s_pp_music_implementation = {
-  .debug_name = "PP",
-  .is_command_supported = &prv_music_is_command_supported,
-  .command_send = &prv_music_command_send,
-  .needs_user_to_start_playback_on_phone = prv_music_needs_user_to_start_playback_on_phone,
-  .get_capability_bitset = prv_music_get_capability_bitset,
-  .request_reduced_latency = prv_music_request_reduced_latency,
-  .request_low_latency_for_period = prv_music_request_low_latency_for_period,
+    .debug_name = "PP",
+    .is_command_supported = &prv_music_is_command_supported,
+    .command_send = &prv_music_command_send,
+    .needs_user_to_start_playback_on_phone = prv_music_needs_user_to_start_playback_on_phone,
+    .get_capability_bitset = prv_music_get_capability_bitset,
+    .request_reduced_latency = prv_music_request_reduced_latency,
+    .request_low_latency_for_period = prv_music_request_low_latency_for_period,
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

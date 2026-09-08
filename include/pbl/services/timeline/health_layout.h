@@ -22,7 +22,8 @@ typedef enum HealthCardType {
 typedef struct PACKED HealthLaunchArgs {
   union {
     struct {
-      HealthCardType card_type:8; //!< Tells us if we need to launch into an activity or sleep card
+      HealthCardType card_type
+          : 8;  //!< Tells us if we need to launch into an activity or sleep card
     };
     uint32_t args;
   };

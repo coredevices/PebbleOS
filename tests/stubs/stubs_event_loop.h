@@ -5,6 +5,4 @@
 
 #include "kernel/event_loop.h"
 
-void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
-  callback(data);
-}
+void launcher_task_add_callback(CallbackEventCallback callback, void *data) { callback(data); }

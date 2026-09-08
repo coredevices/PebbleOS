@@ -21,9 +21,8 @@ DEFINE_SYSCALL(size_t, sys_resource_size, ResAppNum app_num, uint32_t resource_i
   return resource_size(app_num, resource_id);
 }
 
-DEFINE_SYSCALL(size_t, sys_resource_load_range, ResAppNum app_num,
-               uint32_t id, uint32_t start_offset, uint8_t *data, size_t num_bytes) {
-
+DEFINE_SYSCALL(size_t, sys_resource_load_range, ResAppNum app_num, uint32_t id,
+               uint32_t start_offset, uint8_t *data, size_t num_bytes) {
   if (PRIVILEGE_WAS_ELEVATED) {
     if (pebble_task_get_current() == PebbleTask_Worker) {
       // Not allowed from workers
@@ -40,8 +39,8 @@ DEFINE_SYSCALL(bool, sys_resource_bytes_are_readonly, void *ptr) {
   return resource_bytes_are_readonly(ptr);
 }
 
-DEFINE_SYSCALL(const uint8_t *, sys_resource_read_only_bytes, ResAppNum app_num, uint32_t
-               resource_id, size_t *num_bytes_out) {
+DEFINE_SYSCALL(const uint8_t *, sys_resource_read_only_bytes, ResAppNum app_num,
+               uint32_t resource_id, size_t *num_bytes_out) {
   bool caller_is_privileged = true;
   if (PRIVILEGE_WAS_ELEVATED) {
     caller_is_privileged = false;

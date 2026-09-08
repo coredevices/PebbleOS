@@ -43,7 +43,7 @@ uint32_t flash_whoami(void);
  * @param start_addr The address of the first byte to be read from flash.
  * @param buffer_size The total number of bytes to be read from flash.
  */
-void flash_read_bytes(uint8_t* buffer, uint32_t start_addr, uint32_t buffer_size);
+void flash_read_bytes(uint8_t *buffer, uint32_t start_addr, uint32_t buffer_size);
 
 /**
  * Write 1 or more bytes from the buffer to flash starting at the
@@ -55,7 +55,7 @@ void flash_read_bytes(uint8_t* buffer, uint32_t start_addr, uint32_t buffer_size
  * @param start_addr The address of the first byte to be written to flash.
  * @param buffer_size The total number of bytes to be written.
  */
-void flash_write_bytes(const uint8_t* buffer, uint32_t start_addr, uint32_t buffer_size);
+void flash_write_bytes(const uint8_t *buffer, uint32_t start_addr, uint32_t buffer_size);
 
 typedef void (*FlashOperationCompleteCb)(void *context, status_t result);
 
@@ -67,8 +67,7 @@ typedef void (*FlashOperationCompleteCb)(void *context, status_t result);
  * (possibly high-priority) task, so the callback function must return quickly.
  * The callback may also be called directly from within flash_erase_subsector.
  */
-void flash_erase_subsector(uint32_t subsector_addr,
-                           FlashOperationCompleteCb on_complete,
+void flash_erase_subsector(uint32_t subsector_addr, FlashOperationCompleteCb on_complete,
                            void *context);
 
 /**
@@ -79,9 +78,7 @@ void flash_erase_subsector(uint32_t subsector_addr,
  * (possibly high-priority) task, so the callback function must return quickly.
  * The callback may also be called directly from within flash_erase_sector.
  */
-void flash_erase_sector(uint32_t sector_addr,
-                        FlashOperationCompleteCb on_complete,
-                        void *context);
+void flash_erase_sector(uint32_t sector_addr, FlashOperationCompleteCb on_complete, void *context);
 
 /**
  * Erase the subsector containing the specified address.
@@ -121,9 +118,9 @@ void flash_erase_bulk(void);
  * erased. Both min_start and max_end must be aligned to a subsector address as
  * that is the smallest unit that can be erased.
  */
-void flash_erase_optimal_range(
-    uint32_t min_start, uint32_t max_start, uint32_t min_end, uint32_t max_end,
-    FlashOperationCompleteCb on_complete, void *context);
+void flash_erase_optimal_range(uint32_t min_start, uint32_t max_start, uint32_t min_end,
+                               uint32_t max_end, FlashOperationCompleteCb on_complete,
+                               void *context);
 
 /**
  * Configure the flash driver to enter a deep sleep mode between commands.
@@ -158,14 +155,14 @@ void flash_power_up_after_stop_mode(void);
 typedef enum {
   FLASH_MODE_ASYNC = 0,
   FLASH_MODE_SYNC_BURST,
-  
+
   // Add new modes above this
   FLASH_MODE_NUM_MODES
-}FlashModeType;
+} FlashModeType;
 
 /**
  * Manually switches modes between asynchronous/synchronous
- * 
+ *
  */
 void flash_switch_mode(FlashModeType mode);
 
@@ -185,8 +182,7 @@ void flash_prf_set_protection(bool do_protect);
 uint32_t flash_crc32(uint32_t flash_addr, uint32_t length);
 
 //! Apply the legacy defective checksum to a region of flash.
-uint32_t flash_calculate_legacy_defective_checksum(uint32_t flash_addr,
-                                                   uint32_t length);
+uint32_t flash_calculate_legacy_defective_checksum(uint32_t flash_addr, uint32_t length);
 
 //! Call this before any external flash access (including memory-mapped)
 //! to power on the flash peripheral if it wasn't already, and
@@ -254,4 +250,4 @@ const FlashSecurityRegisters *flash_security_registers_info(void);
 //! @retval S_SUCCESS if the lock was successful
 //! @retval StatusCode if the lock failed
 status_t flash_lock_security_register(uint32_t addr);
-#endif // CONFIG_RECOVERY_FW
+#endif  // CONFIG_RECOVERY_FW

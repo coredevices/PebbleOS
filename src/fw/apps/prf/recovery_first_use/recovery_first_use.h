@@ -3,4 +3,4 @@
 
 typedef struct PebbleProcessMd PebbleProcessMd;
 
-const PebbleProcessMd* recovery_first_use_app_get_app_info(void);
+const PebbleProcessMd *recovery_first_use_app_get_app_info(void);

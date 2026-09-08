@@ -7,13 +7,9 @@
 
 static uint32_t s_sample_rate;
 
-static uint32_t prv_sample_input_rate(SpeakerPcmFormat fmt) {
-  return (fmt & 1) ? 16000 : 8000;
-}
+static uint32_t prv_sample_input_rate(SpeakerPcmFormat fmt) { return (fmt & 1) ? 16000 : 8000; }
 
-static uint32_t prv_sample_bytes_per(SpeakerPcmFormat fmt) {
-  return (fmt & 2) ? 2 : 1;
-}
+static uint32_t prv_sample_bytes_per(SpeakerPcmFormat fmt) { return (fmt & 2) ? 2 : 1; }
 
 static int16_t prv_decode_sample_at(const uint8_t *raw, uint32_t idx, bool is_16bit) {
   if (is_16bit) {
@@ -83,8 +79,7 @@ static int16_t prv_gen_sample_mode(TrackState *s) {
   }
 
   bool is_16bit = (s->sample->format & 2);
-  int16_t raw_sample = prv_decode_sample_at((const uint8_t *)s->sample->data,
-                                             idx, is_16bit);
+  int16_t raw_sample = prv_decode_sample_at((const uint8_t *)s->sample->data, idx, is_16bit);
 
   s->sample_pos_q32 += s->sample_stride_q32;
 
@@ -99,8 +94,8 @@ static int16_t prv_gen_waveform_mode(TrackState *s) {
   if (s->phase_inc == 0) {
     return 0;
   }
-  int16_t v = note_synth_sample(s->current_waveform, s->phase_acc, s->phase_inc,
-                                s->current_velocity);
+  int16_t v =
+      note_synth_sample(s->current_waveform, s->phase_acc, s->phase_inc, s->current_velocity);
   s->phase_acc += s->phase_inc;
   return v;
 }
@@ -154,6 +149,4 @@ uint32_t track_fill(TrackState *s, int16_t *out, uint32_t max_samples) {
   return written;
 }
 
-void track_deinit(TrackState *s) {
-  memset(s, 0, sizeof(*s));
-}
+void track_deinit(TrackState *s) { memset(s, 0, sizeof(*s)); }

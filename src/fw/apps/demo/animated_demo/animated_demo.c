@@ -33,10 +33,10 @@ static void animation_stopped(Animation *animation, bool finished, AnimatedDemoD
 
 AnimationProgress animation_bounce(AnimationProgress linear_distance) {
   // An awful linear "bounce-like" animation
-  if (linear_distance < ANIMATION_NORMALIZED_MAX/2) {
+  if (linear_distance < ANIMATION_NORMALIZED_MAX / 2) {
     return linear_distance * 2;
-  } else if (linear_distance < ANIMATION_NORMALIZED_MAX * 3/4) {
-    return ANIMATION_NORMALIZED_MAX * 3/2 - linear_distance;
+  } else if (linear_distance < ANIMATION_NORMALIZED_MAX * 3 / 4) {
+    return ANIMATION_NORMALIZED_MAX * 3 / 2 - linear_distance;
   } else {
     return linear_distance;
   }
@@ -95,10 +95,12 @@ static void click_handler(ClickRecognizerRef recognizer, Window *window) {
   animation_set_delay(animation, 1000);
   */
 
-  animation_set_handlers(animation, (AnimationHandlers) {
-    .started = (AnimationStartedHandler) animation_started,
-    .stopped = (AnimationStoppedHandler) animation_stopped,
-  }, data);
+  animation_set_handlers(animation,
+                         (AnimationHandlers){
+                             .started = (AnimationStartedHandler)animation_started,
+                             .stopped = (AnimationStoppedHandler)animation_stopped,
+                         },
+                         data);
   animation_schedule(animation);
 }
 
@@ -122,17 +124,17 @@ static void config_provider(Window *window) {
 }
 
 static void handle_init(void) {
-  AnimatedDemoData *data = (AnimatedDemoData*) app_malloc_check(sizeof(AnimatedDemoData));
+  AnimatedDemoData *data = (AnimatedDemoData *)app_malloc_check(sizeof(AnimatedDemoData));
   data->toggle = false;
   app_state_set_user_data(data);
 
   Window *window = &data->window;
   window_init(window, WINDOW_NAME("Animated Demo"));
   window_set_user_data(window, data);
-  window_set_click_config_provider(window, (ClickConfigProvider) config_provider);
+  window_set_click_config_provider(window, (ClickConfigProvider)config_provider);
   window_set_window_handlers(window, &(WindowHandlers){
-    .load = animated_demo_window_load,
-  });
+                                         .load = animated_demo_window_load,
+                                     });
   const bool animated = true;
   app_window_stack_push(window, animated);
 }
@@ -150,10 +152,8 @@ static void s_main(void) {
   handle_deinit();
 }
 
-const PebbleProcessMd* animated_demo_get_app_info() {
-  static const PebbleProcessMdSystem animated_demo_app_info = {
-    .common.main_func = s_main,
-    .name = "Animation Demo"
-  };
-  return (const PebbleProcessMd*) &animated_demo_app_info;
+const PebbleProcessMd *animated_demo_get_app_info() {
+  static const PebbleProcessMdSystem animated_demo_app_info = {.common.main_func = s_main,
+                                                               .name = "Animation Demo"};
+  return (const PebbleProcessMd *)&animated_demo_app_info;
 }

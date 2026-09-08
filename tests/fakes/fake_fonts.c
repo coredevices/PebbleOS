@@ -47,9 +47,10 @@ static FontHelper s_font_helpers[] = {
     {.key = FONT_KEY_GOTHIC_36, .handle = RESOURCE_ID_GOTHIC_36},
     {.key = FONT_KEY_GOTHIC_36_BOLD, .handle = RESOURCE_ID_GOTHIC_36_BOLD},
 #if defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX)
-    {.key = FONT_KEY_AGENCY_FB_46_NUMBERS_AM_PM, .handle = RESOURCE_ID_AGENCY_FB_46_NUMBERS_AM_PM },
-    {.key = FONT_KEY_AGENCY_FB_88_NUMBERS_AM_PM, .handle = RESOURCE_ID_AGENCY_FB_88_NUMBERS_AM_PM },
-    {.key = FONT_KEY_AGENCY_FB_88_THIN_NUMBERS_AM_PM, .handle = RESOURCE_ID_AGENCY_FB_88_THIN_NUMBERS_AM_PM },
+    {.key = FONT_KEY_AGENCY_FB_46_NUMBERS_AM_PM, .handle = RESOURCE_ID_AGENCY_FB_46_NUMBERS_AM_PM},
+    {.key = FONT_KEY_AGENCY_FB_88_NUMBERS_AM_PM, .handle = RESOURCE_ID_AGENCY_FB_88_NUMBERS_AM_PM},
+    {.key = FONT_KEY_AGENCY_FB_88_THIN_NUMBERS_AM_PM,
+     .handle = RESOURCE_ID_AGENCY_FB_88_THIN_NUMBERS_AM_PM},
 #endif
     // add more here as we need more fonts from this module
 };
@@ -80,10 +81,10 @@ static const struct {
   uint8_t min_height;
 } s_emoji_fonts[] = {
     // Keep this sorted in descending order
-    { FONT_KEY_GOTHIC_28_EMOJI, 28 },
-    { FONT_KEY_GOTHIC_24_EMOJI, 24 },
-    { FONT_KEY_GOTHIC_18_EMOJI, 18 },
-    { FONT_KEY_GOTHIC_14_EMOJI, 14 },
+    {FONT_KEY_GOTHIC_28_EMOJI, 28},
+    {FONT_KEY_GOTHIC_24_EMOJI, 24},
+    {FONT_KEY_GOTHIC_18_EMOJI, 18},
+    {FONT_KEY_GOTHIC_14_EMOJI, 14},
 };
 
 FontInfo *fonts_get_system_emoji_font_for_size(unsigned int font_height) {
@@ -96,17 +97,11 @@ FontInfo *fonts_get_system_emoji_font_for_size(unsigned int font_height) {
   return NULL;
 }
 
-GFont fonts_get_system_font(const char *font_key) {
-  return prv_get_font(font_key);
-}
+GFont fonts_get_system_font(const char *font_key) { return prv_get_font(font_key); }
 
-GFont system_resource_get_font(const char *font_key) {
-  return prv_get_font(font_key);
-}
+GFont system_resource_get_font(const char *font_key) { return prv_get_font(font_key); }
 
-uint8_t fonts_get_font_height(GFont font) {
-  return font->max_height;
-}
+uint8_t fonts_get_font_height(GFont font) { return font->max_height; }
 
 int16_t fonts_get_font_cap_offset(GFont font) {
   if (!font) {

@@ -17,7 +17,7 @@
 #include "process_state/app_state/app_state.h"
 #include <pbl/logging/logging.h>
 
-#define STEP_ROTATION_ANGLE (TRIG_MAX_ANGLE / 360) // 1 degree
+#define STEP_ROTATION_ANGLE (TRIG_MAX_ANGLE / 360)  // 1 degree
 #define MIN_OPS 0
 #define OP_ROTATE 0
 #define OP_CHANGE_WIDTH 1
@@ -39,7 +39,7 @@
 
 static Window *s_window;
 
-extern void prv_draw_stroked_line_precise(GContext* ctx, GPointPrecise p0, GPointPrecise p1,
+extern void prv_draw_stroked_line_precise(GContext *ctx, GPointPrecise p0, GPointPrecise p1,
                                           uint8_t width, bool anti_aliased);
 
 typedef struct AppData {
@@ -95,9 +95,9 @@ static void up_handler(ClickRecognizerRef recognizer, void *context) {
 
   layer_mark_dirty(data->canvas_layer);
 
-  PBL_LOG_DBG("line(p1(%d, %d), p2(%d, %d), width=%d), angle=%d)",
-          data->p1.x, data->p1.y, data->p2.x, data->p2.y, data->stroke_width,
-          (int)(data->rotation_angle * 360 / TRIG_MAX_ANGLE));
+  PBL_LOG_DBG("line(p1(%d, %d), p2(%d, %d), width=%d), angle=%d)", data->p1.x, data->p1.y,
+              data->p2.x, data->p2.y, data->stroke_width,
+              (int)(data->rotation_angle * 360 / TRIG_MAX_ANGLE));
 }
 
 static void down_handler(ClickRecognizerRef recognizer, void *context) {
@@ -138,9 +138,9 @@ static void down_handler(ClickRecognizerRef recognizer, void *context) {
 
   layer_mark_dirty(data->canvas_layer);
 
-  PBL_LOG_DBG("line(p1(%d, %d), p2(%d, %d), width=%d), angle=%d)",
-          data->p1.x, data->p1.y, data->p2.x, data->p2.y, data->stroke_width,
-          (int)(data->rotation_angle * 360 / TRIG_MAX_ANGLE));
+  PBL_LOG_DBG("line(p1(%d, %d), p2(%d, %d), width=%d), angle=%d)", data->p1.x, data->p1.y,
+              data->p2.x, data->p2.y, data->stroke_width,
+              (int)(data->rotation_angle * 360 / TRIG_MAX_ANGLE));
 }
 
 static void select_handler(ClickRecognizerRef recognizer, void *context) {
@@ -161,7 +161,7 @@ static void click_config_provider(void *context) {
   window_single_repeating_click_subscribe(BUTTON_ID_DOWN, 100, down_handler);
 }
 
-static void debug_layer_update_proc(Layer *layer, GContext* ctx) {
+static void debug_layer_update_proc(Layer *layer, GContext *ctx) {
   // For frame/bounds/clipping rect debugging
   AppData *data = window_get_user_data(s_window);
 
@@ -169,15 +169,15 @@ static void debug_layer_update_proc(Layer *layer, GContext* ctx) {
   const GRect *frame = &data->canvas_layer->frame;
 
   graphics_context_set_stroke_color(ctx, GColorGreen);
-  graphics_draw_rect(ctx, &GRect(bounds->origin.x + frame->origin.x,
-                                 bounds->origin.y + frame->origin.y,
-                                 bounds->size.w, bounds->size.h));
+  graphics_draw_rect(ctx,
+                     &GRect(bounds->origin.x + frame->origin.x, bounds->origin.y + frame->origin.y,
+                            bounds->size.w, bounds->size.h));
 
   graphics_context_set_stroke_color(ctx, GColorRed);
   graphics_draw_rect(ctx, frame);
 }
 
-static void canvas_update_proc(Layer *layer, GContext* ctx) {
+static void canvas_update_proc(Layer *layer, GContext *ctx) {
   AppData *data = window_get_user_data(s_window);
   GColor main_color = (GColor)GColorRoseVale;
 
@@ -185,10 +185,7 @@ static void canvas_update_proc(Layer *layer, GContext* ctx) {
   graphics_context_set_fill_color(ctx, main_color);
 
   if (data->operation == OP_TEST) {
-    int x1 = 50,
-    x2 = 100,
-    y1 = 40,
-    y2 = 120;
+    int x1 = 50, x2 = 100, y1 = 40, y2 = 120;
 
     GPoint p0 = GPoint(x1, y1);
     GPoint p1 = GPoint(x1, y2);
@@ -206,10 +203,7 @@ static void canvas_update_proc(Layer *layer, GContext* ctx) {
   }
 
   if (data->operation == OP_TEST2) {
-    int x1 = 50,
-    x2 = 100,
-    y1 = 40,
-    y2 = 120;
+    int x1 = 50, x2 = 100, y1 = 40, y2 = 120;
 
     GPoint p0 = GPoint(x1, y1);
     GPoint p1 = GPoint(x1, y2);
@@ -225,10 +219,7 @@ static void canvas_update_proc(Layer *layer, GContext* ctx) {
   }
 
   if (data->operation == OP_TEST3) {
-    int x1 = 50,
-    x2 = 100,
-    y1 = 40,
-    y2 = 120;
+    int x1 = 50, x2 = 100, y1 = 40, y2 = 120;
 
     GPoint p0 = GPoint(x1, y1);
     GPoint p1 = GPoint(x1, y2);
@@ -281,10 +272,12 @@ static void canvas_update_proc(Layer *layer, GContext* ctx) {
 
     p0.x.raw_value = (data->canvas_layer->bounds.size.w / 2) * FIXED_S16_3_ONE.raw_value;
     p0.y.raw_value = (data->canvas_layer->bounds.size.h / 2) * FIXED_S16_3_ONE.raw_value;
-    p1.x.raw_value = (sin_lookup(rotation) * (line_length * FIXED_S16_3_ONE.raw_value)
-                      / TRIG_MAX_RATIO) + p0.x.raw_value;
-    p1.y.raw_value = (-cos_lookup(rotation) * (line_length * FIXED_S16_3_ONE.raw_value)
-                      / TRIG_MAX_RATIO) + p0.y.raw_value;
+    p1.x.raw_value =
+        (sin_lookup(rotation) * (line_length * FIXED_S16_3_ONE.raw_value) / TRIG_MAX_RATIO) +
+        p0.x.raw_value;
+    p1.y.raw_value =
+        (-cos_lookup(rotation) * (line_length * FIXED_S16_3_ONE.raw_value) / TRIG_MAX_RATIO) +
+        p0.y.raw_value;
 
     graphics_context_set_antialiased(ctx, true);
     graphics_context_set_stroke_width(ctx, data->stroke_width);
@@ -312,10 +305,12 @@ static void canvas_update_proc(Layer *layer, GContext* ctx) {
 
     p0.x.raw_value = (data->canvas_layer->bounds.size.w / 2) * FIXED_S16_3_ONE.raw_value;
     p0.y.raw_value = (data->canvas_layer->bounds.size.h / 2) * FIXED_S16_3_ONE.raw_value;
-    p1.x.raw_value = (sin_lookup(rotation) * (line_length * FIXED_S16_3_ONE.raw_value)
-                      / TRIG_MAX_RATIO) + p0.x.raw_value;
-    p1.y.raw_value = (-cos_lookup(rotation) * (line_length * FIXED_S16_3_ONE.raw_value)
-                      / TRIG_MAX_RATIO) + p0.y.raw_value;
+    p1.x.raw_value =
+        (sin_lookup(rotation) * (line_length * FIXED_S16_3_ONE.raw_value) / TRIG_MAX_RATIO) +
+        p0.x.raw_value;
+    p1.y.raw_value =
+        (-cos_lookup(rotation) * (line_length * FIXED_S16_3_ONE.raw_value) / TRIG_MAX_RATIO) +
+        p0.y.raw_value;
 
     graphics_context_set_antialiased(ctx, false);
     graphics_context_set_stroke_width(ctx, data->stroke_width);
@@ -360,8 +355,8 @@ static void main_window_load(Window *window) {
   layer_set_update_proc(data->debug_layer, debug_layer_update_proc);
   layer_add_child(window_layer, data->debug_layer);
 
-  data->canvas_layer = layer_create(GRect(10, 10, window_bounds.size.w - 20,
-                                          window_bounds.size.h - 20));
+  data->canvas_layer =
+      layer_create(GRect(10, 10, window_bounds.size.w - 20, window_bounds.size.h - 20));
   layer_set_update_proc(data->canvas_layer, canvas_update_proc);
   layer_add_child(window_layer, data->canvas_layer);
 
@@ -395,10 +390,10 @@ static void init(void) {
   s_window = window_create();
   window_set_user_data(s_window, data);
   window_set_fullscreen(s_window, true);
-  window_set_window_handlers(s_window, &(WindowHandlers) {
-    .load = main_window_load,
-    .unload = main_window_unload,
-  });
+  window_set_window_handlers(s_window, &(WindowHandlers){
+                                           .load = main_window_load,
+                                           .unload = main_window_unload,
+                                       });
 
   data->p1.x = 10;
   data->p1.y = 30;
@@ -427,10 +422,8 @@ static void s_main(void) {
   deinit();
 }
 
-const PebbleProcessMd* stroke_width_get_app_info(void) {
-  static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = s_main,
-    .name = "Stroke Width"
-  };
-  return (const PebbleProcessMd*) &s_app_info;
+const PebbleProcessMd *stroke_width_get_app_info(void) {
+  static const PebbleProcessMdSystem s_app_info = {.common.main_func = s_main,
+                                                   .name = "Stroke Width"};
+  return (const PebbleProcessMd *)&s_app_info;
 }

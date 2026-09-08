@@ -25,6 +25,5 @@ bool workout_service_get_current_workout_info(int32_t *steps_out, int32_t *durat
                                               int32_t *distance_m_out, int32_t *current_bpm_out,
                                               HRZone *current_hr_zone_out);
 
-bool workout_service_set_current_workout_info(int32_t steps, int32_t duration_s,
-                                              int32_t distance_m, int32_t current_bpm,
-                                              HRZone current_hr_zone);
+bool workout_service_set_current_workout_info(int32_t steps, int32_t duration_s, int32_t distance_m,
+                                              int32_t current_bpm, HRZone current_hr_zone);

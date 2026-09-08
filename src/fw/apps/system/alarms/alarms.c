@@ -55,13 +55,12 @@ typedef struct AlarmsAppData {
   EventServiceInfo alarm_event_info;
 } AlarmsAppData;
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Alarm list functions
 
 static int prv_alarm_comparator(void *a, void *b) {
-  AlarmNode *alarm_a = (AlarmNode*) a;
-  AlarmNode *alarm_b = (AlarmNode*) b;
+  AlarmNode *alarm_a = (AlarmNode *)a;
+  AlarmNode *alarm_b = (AlarmNode *)b;
 
   // Sort by alarm time, with 12:00AM being the starting point
   if (alarm_a->info.hour > alarm_b->info.hour) {
@@ -73,10 +72,10 @@ static int prv_alarm_comparator(void *a, void *b) {
   return false;
 }
 
-static void prv_clear_alarm_list(AlarmsAppData* data) {
+static void prv_clear_alarm_list(AlarmsAppData *data) {
   while (data->alarm_list_head) {
-    AlarmNode* old_head = data->alarm_list_head;
-    data->alarm_list_head = (AlarmNode*) list_pop_head((ListNode *) old_head);
+    AlarmNode *old_head = data->alarm_list_head;
+    data->alarm_list_head = (AlarmNode *)list_pop_head((ListNode *)old_head);
     task_free(old_head);
     old_head = NULL;
   }
@@ -86,15 +85,13 @@ static void prv_add_alarm_to_list(AlarmId id, const AlarmInfo *info, void *callb
   AlarmsAppData *data = (AlarmsAppData *)callback_context;
 
   AlarmNode *new_node = task_malloc_check(sizeof(AlarmNode));
-  list_init((ListNode*) new_node);
+  list_init((ListNode *)new_node);
   new_node->id = id;
   new_node->info = *info;
   memcpy(&new_node->scheduled_days, info->scheduled_days, sizeof(new_node->scheduled_days));
   new_node->info.scheduled_days = &new_node->scheduled_days;
-  data->alarm_list_head = (AlarmNode *)list_sorted_add((ListNode *)data->alarm_list_head,
-                                                       (ListNode *)new_node,
-                                                       prv_alarm_comparator,
-                                                       false);
+  data->alarm_list_head = (AlarmNode *)list_sorted_add(
+      (ListNode *)data->alarm_list_head, (ListNode *)new_node, prv_alarm_comparator, false);
 }
 
 static void prv_update_alarm_list(AlarmsAppData *data) {
@@ -105,9 +102,8 @@ static void prv_update_alarm_list(AlarmsAppData *data) {
 }
 
 static bool prv_are_alarms_scheduled(AlarmsAppData *data) {
-  return (list_count((ListNode*) data->alarm_list_head) > 0);
+  return (list_count((ListNode *)data->alarm_list_head) > 0);
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! General helper functions
@@ -124,7 +120,7 @@ static void prv_show_deleted_dialog(void) {
   app_simple_dialog_push(simple_dialog);
 }
 
-static int prv_get_list_idx_of_alarm_id(AlarmsAppData* data, AlarmId id) {
+static int prv_get_list_idx_of_alarm_id(AlarmsAppData *data, AlarmId id) {
   if (id == ALARM_INVALID_ID) {
     return 0;
   }
@@ -136,16 +132,15 @@ static int prv_get_list_idx_of_alarm_id(AlarmsAppData* data, AlarmId id) {
       return list_idx;
     }
     list_idx++;
-    cur_node = (AlarmNode* )list_get_next((ListNode*) cur_node);
+    cur_node = (AlarmNode *)list_get_next((ListNode *)cur_node);
   }
   return 0;
 }
 
-static void prv_update_menu_layer(AlarmsAppData* data, AlarmId select_alarm) {
-    MenuIndex selected_menu_index = {0, prv_get_list_idx_of_alarm_id(data, select_alarm)};
-    menu_layer_reload_data(&data->menu_layer);
-    menu_layer_set_selected_index(&data->menu_layer, selected_menu_index,
-                                  MenuRowAlignCenter, false);
+static void prv_update_menu_layer(AlarmsAppData *data, AlarmId select_alarm) {
+  MenuIndex selected_menu_index = {0, prv_get_list_idx_of_alarm_id(data, select_alarm)};
+  menu_layer_reload_data(&data->menu_layer);
+  menu_layer_set_selected_index(&data->menu_layer, selected_menu_index, MenuRowAlignCenter, false);
 }
 
 static void prv_handle_alarm_editor_complete(AlarmEditorResult result, AlarmId id,
@@ -177,18 +172,15 @@ static void prv_handle_alarm_event(PebbleEvent *e, void *callback_context) {
   prv_update_alarm_list(data);
 }
 
-static void prv_create_new_alarm(AlarmsAppData* data) {
+static void prv_create_new_alarm(AlarmsAppData *data) {
   Window *editor = alarm_editor_create_new_alarm(prv_handle_alarm_editor_complete, data);
   app_window_stack_push(editor, true);
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Menu Layer Callbacks
 
-static bool prv_is_add_alarm_cell(MenuIndex *cell_index) {
-  return cell_index->row == 0;
-}
+static bool prv_is_add_alarm_cell(MenuIndex *cell_index) { return cell_index->row == 0; }
 
 static uint16_t prv_alarm_list_get_num_sections_callback(struct MenuLayer *menu_layer,
                                                          void *callback_context) {
@@ -200,7 +192,7 @@ static uint16_t prv_alarm_list_get_num_rows_callback(struct MenuLayer *menu_laye
                                                      void *callback_context) {
   AlarmsAppData *data = (AlarmsAppData *)callback_context;
   // Number of alarms + the add alarm header
-  return list_count((ListNode*) data->alarm_list_head) + 1;
+  return list_count((ListNode *)data->alarm_list_head) + 1;
 }
 
 static int16_t prv_alarm_list_get_cell_height_callback(struct MenuLayer *menu_layer,
@@ -221,33 +213,30 @@ static void prv_alarm_list_draw_row_callback(GContext *ctx, const Layer *cell_la
   AlarmsAppData *data = (AlarmsAppData *)callback_context;
 
   if (prv_is_add_alarm_cell(cell_index)) {
-
     GRect box;
     uint32_t new_bitmap_resource = RESOURCE_ID_PLUS_ICON_BLACK;
 
-    if (!data->can_schedule_alarm) { // alarm limit reached
+    if (!data->can_schedule_alarm) {  // alarm limit reached
       if (menu_cell_layer_is_highlighted(cell_layer)) {
         if (data->show_limit_reached_text) {
           // Trying to add a new alarm when list is already full
-          const GFont font =
-              system_theme_get_font_for_default_size(TextStyleFont_MenuCellSubtitle);
+          const GFont font = system_theme_get_font_for_default_size(TextStyleFont_MenuCellSubtitle);
 
           box = GRect(0, 0, cell_layer->bounds.size.w, fonts_get_font_height(font));
 
           const char *text = i18n_get("Limit reached.", data);
-          box.size = graphics_text_layout_get_max_used_size(ctx, text, font, box,
-                                                            GTextOverflowModeTrailingEllipsis,
-                                                            GTextAlignmentCenter, NULL);
+          box.size = graphics_text_layout_get_max_used_size(
+              ctx, text, font, box, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
           grect_align(&box, &cell_layer->bounds, GAlignCenter, true /* clip */);
           box.origin.y -= fonts_get_font_cap_offset(font);
 
-          graphics_draw_text(ctx, text, font, box,
-                             GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+          graphics_draw_text(ctx, text, font, box, GTextOverflowModeFill, GTextAlignmentCenter,
+                             NULL);
           return;
-        } else { // "add alarm" cell highlighted
+        } else {  // "add alarm" cell highlighted
           new_bitmap_resource = RESOURCE_ID_PLUS_ICON_DOTTED;
         }
-      } else { // "add alarm" cell not highlighted
+      } else {  // "add alarm" cell not highlighted
         // Have to manually override the tint color as we're using a color that differs
         // from the ones the MenuLayer uses.
         graphics_context_set_tint_color(ctx, GColorLightGray);
@@ -261,7 +250,6 @@ static void prv_alarm_list_draw_row_callback(GContext *ctx, const Layer *cell_la
       gbitmap_init_with_resource(&data->plus_icon, data->current_plus_icon_resource_id);
     }
 
-
     box.origin = GPoint((cell_layer->bounds.size.w - data->plus_icon.bounds.size.w) / 2,
                         (cell_layer->bounds.size.h - data->plus_icon.bounds.size.h) / 2);
     box.size = data->plus_icon.bounds.size;
@@ -271,31 +259,33 @@ static void prv_alarm_list_draw_row_callback(GContext *ctx, const Layer *cell_la
     return;
   }
 
-  AlarmNode *node = (AlarmNode*) list_get_at((ListNode*)data->alarm_list_head, cell_index->row - 1);
+  AlarmNode *node =
+      (AlarmNode *)list_get_at((ListNode *)data->alarm_list_head, cell_index->row - 1);
 
   // Format 1: 10:34 AM
   // Format 2: 14:56
   char alarm_time_text[9];
-  clock_format_time(alarm_time_text, sizeof(alarm_time_text),
-                    node->info.hour, node->info.minute, true);
+  clock_format_time(alarm_time_text, sizeof(alarm_time_text), node->info.hour, node->info.minute,
+                    true);
   const char *enabled = node->info.enabled ? i18n_get("ON", data) : i18n_get("OFF", data);
 
   graphics_context_set_compositing_mode(ctx, GCompOpTint);
   // If the alarm is not smart, use the icon as spacing but don't render it.
   // Otherwise if the alarm is smart draw according to the menu highlight.
-  graphics_context_set_tint_color(ctx, !node->info.is_smart ? GColorClear :
-                                       (cell_layer->is_highlighted ? GColorWhite : GColorBlack));
+  graphics_context_set_tint_color(
+      ctx, !node->info.is_smart ? GColorClear
+                                : (cell_layer->is_highlighted ? GColorWhite : GColorBlack));
 
   char alarm_day_text[32] = {0};
   MenuCellLayerConfig config = {
-    .title = alarm_time_text,
-    .value = enabled,
-    .icon = &data->smart_alarm_icon,
-    .icon_align = MenuCellLayerIconAlign_TopLeft,
-    .icon_box_model = &(GBoxModel) { .offset = { 0, 5 }, .margin = { 6, 0 } },
-    .icon_form_fit = true,
-    .horizontal_inset = PBL_IF_ROUND_ELSE(-6, 0),
-    .overflow_mode = GTextOverflowModeTrailingEllipsis,
+      .title = alarm_time_text,
+      .value = enabled,
+      .icon = &data->smart_alarm_icon,
+      .icon_align = MenuCellLayerIconAlign_TopLeft,
+      .icon_box_model = &(GBoxModel){.offset = {0, 5}, .margin = {6, 0}},
+      .icon_form_fit = true,
+      .horizontal_inset = PBL_IF_ROUND_ELSE(-6, 0),
+      .overflow_mode = GTextOverflowModeTrailingEllipsis,
   };
   if (node->info.kind != ALARM_KIND_CUSTOM) {
     const bool all_caps = false;
@@ -350,12 +340,12 @@ static void prv_alarms_app_opened_click_handler(ClickRecognizerRef recognizer, v
 static void prv_push_alarms_app_opened_dialog(AlarmsAppData *data) {
   const char *first_use_text = i18n_get(
       "Let us wake you in your lightest sleep so you're fully refreshed! "
-      "Smart Alarm wakes you up to 30min before your alarm.", data);
+      "Smart Alarm wakes you up to 30min before your alarm.",
+      data);
   const char *header = i18n_get("Smart Alarm", data);
   ExpandableDialog *expandable_dialog = expandable_dialog_create_with_params(
-      header, RESOURCE_ID_SMART_ALARM_TINY, first_use_text,
-      GColorBlack, GColorWhite, NULL, RESOURCE_ID_ACTION_BAR_ICON_CHECK,
-      prv_alarms_app_opened_click_handler);
+      header, RESOURCE_ID_SMART_ALARM_TINY, first_use_text, GColorBlack, GColorWhite, NULL,
+      RESOURCE_ID_ACTION_BAR_ICON_CHECK, prv_alarms_app_opened_click_handler);
 
   expandable_dialog_set_action_bar_background_color(expandable_dialog, ALARMS_APP_HIGHLIGHT_COLOR);
   expandable_dialog_set_header(expandable_dialog, header);
@@ -373,7 +363,7 @@ static void prv_push_alarms_app_opened_dialog(AlarmsAppData *data) {
 
 static void prv_handle_init(void) {
   AlarmsAppData *data = app_malloc_check(sizeof(*data));
-  *data = (AlarmsAppData) {{ .user_data = NULL }};
+  *data = (AlarmsAppData){{.user_data = NULL}};
 
   Window *window = &data->window;
   window_init(window, WINDOW_NAME("Alarms"));
@@ -383,24 +373,27 @@ static void prv_handle_init(void) {
   // Alarm list must be updated before menu layer is initialized
   prv_update_alarm_list(data);
 
-  const GRect bounds = grect_inset(data->window.layer.bounds,
-                                   GEdgeInsets(STATUS_BAR_LAYER_HEIGHT, 0,
-                                               PBL_IF_ROUND_ELSE(STATUS_BAR_LAYER_HEIGHT, 0), 0));
+  const GRect bounds = grect_inset(
+      data->window.layer.bounds,
+      GEdgeInsets(STATUS_BAR_LAYER_HEIGHT, 0, PBL_IF_ROUND_ELSE(STATUS_BAR_LAYER_HEIGHT, 0), 0));
   menu_layer_init(&data->menu_layer, &bounds);
-  menu_layer_set_callbacks(&data->menu_layer, data, &(MenuLayerCallbacks) {
-    .get_num_sections = prv_alarm_list_get_num_sections_callback,
-    .get_num_rows = prv_alarm_list_get_num_rows_callback,
-    .get_cell_height = prv_alarm_list_get_cell_height_callback,
-    .draw_row = prv_alarm_list_draw_row_callback,
-    .select_click = prv_alarm_list_select_callback,
-    .selection_changed = prv_alarm_list_selection_changed_callback
-  });
+  menu_layer_set_callbacks(
+      &data->menu_layer, data,
+      &(MenuLayerCallbacks){.get_num_sections = prv_alarm_list_get_num_sections_callback,
+                            .get_num_rows = prv_alarm_list_get_num_rows_callback,
+                            .get_cell_height = prv_alarm_list_get_cell_height_callback,
+                            .draw_row = prv_alarm_list_draw_row_callback,
+                            .select_click = prv_alarm_list_select_callback,
+                            .selection_changed = prv_alarm_list_selection_changed_callback});
 
   menu_layer_set_highlight_colors(&data->menu_layer, ALARMS_APP_HIGHLIGHT_COLOR, GColorWhite);
   menu_layer_set_click_config_onto_window(&data->menu_layer, &data->window);
-  menu_layer_set_scroll_wrap_around(&data->menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
-  menu_layer_set_scroll_vibe_on_wrap(&data->menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnWrapAround);
-  menu_layer_set_scroll_vibe_on_blocked(&data->menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnLocked);
+  menu_layer_set_scroll_wrap_around(&data->menu_layer,
+                                    shell_prefs_get_menu_scroll_wrap_around_enable());
+  menu_layer_set_scroll_vibe_on_wrap(
+      &data->menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnWrapAround);
+  menu_layer_set_scroll_vibe_on_blocked(
+      &data->menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnLocked);
   layer_add_child(&data->window.layer, menu_layer_get_layer(&data->menu_layer));
 
   status_bar_layer_init(&data->status_layer);
@@ -415,26 +408,26 @@ static void prv_handle_init(void) {
 
   app_state_set_user_data(data);
 
-  data->alarm_event_info = (EventServiceInfo) {
-    .type = PEBBLE_ALARM_CLOCK_EVENT,
-    .handler = prv_handle_alarm_event,
-    .context = data,
+  data->alarm_event_info = (EventServiceInfo){
+      .type = PEBBLE_ALARM_CLOCK_EVENT,
+      .handler = prv_handle_alarm_event,
+      .context = data,
   };
   event_service_client_subscribe(&data->alarm_event_info);
 
   if (prv_are_alarms_scheduled(data)) {
-    int list_idx = 1; // Default to first alarm entry in list
+    int list_idx = 1;  // Default to first alarm entry in list
     if (app_launch_reason() == APP_LAUNCH_TIMELINE_ACTION) {
       AlarmId alarm_id = (AlarmId)app_launch_get_args();
       list_idx = prv_get_list_idx_of_alarm_id(data, alarm_id);
       if (list_idx == 0) {
-        list_idx = 1; // Default to first alarm if idx not found
+        list_idx = 1;  // Default to first alarm if idx not found
       }
     }
 
     app_window_stack_push(&data->window, true);
-    menu_layer_set_selected_index(&data->menu_layer, MenuIndex(0, list_idx),
-                                  MenuRowAlignCenter, false);
+    menu_layer_set_selected_index(&data->menu_layer, MenuIndex(0, list_idx), MenuRowAlignCenter,
+                                  false);
   } else {
     Window *editor = alarm_editor_create_new_alarm(prv_handle_alarm_editor_complete, data);
     app_window_stack_push(editor, true);
@@ -466,14 +459,15 @@ static void s_main(void) {
   prv_handle_deinit();
 }
 
-const PebbleProcessMd* alarms_app_get_info() {
+const PebbleProcessMd *alarms_app_get_info() {
   static const PebbleProcessMdSystem s_alarms_app_info = {
-    .common = {
-      .main_func = s_main,
-      .uuid = UUID_ALARMS_DATA_SOURCE,
-    },
-    .name = i18n_noop("Alarms"),
-    .icon_resource_id = RESOURCE_ID_ALARM_CLOCK_TINY,
+      .common =
+          {
+              .main_func = s_main,
+              .uuid = UUID_ALARMS_DATA_SOURCE,
+          },
+      .name = i18n_noop("Alarms"),
+      .icon_resource_id = RESOURCE_ID_ALARM_CLOCK_TINY,
   };
-  return (const PebbleProcessMd*) &s_alarms_app_info;
+  return (const PebbleProcessMd *)&s_alarms_app_info;
 }

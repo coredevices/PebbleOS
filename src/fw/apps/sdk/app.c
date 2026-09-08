@@ -67,8 +67,7 @@ static void prv_handle_tick_timer(struct tm *tick_time, TimeUnits units_changed)
   prv_update_ui(app_state_get_user_data());
 }
 
-static void prv_config_provider(void *data) {
-}
+static void prv_config_provider(void *data) {}
 
 static void prv_init(void) {
   SdkAppData *data = app_malloc_check(sizeof(SdkAppData));
@@ -127,17 +126,14 @@ static void s_main(void) {
   app_event_loop();
 }
 
-const PebbleProcessMd* sdk_app_get_info(void) {
+const PebbleProcessMd *sdk_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_md = {
-    .common = {
-      .main_func = s_main,
-      // UUID: 1197fc39-47e7-439b-82be-f56d9ba1dbd8
-      .uuid = { 0x11, 0x97, 0xfc, 0x39, 0x47, 0xe7, 0x43, 0x9b,
-                0x82, 0xbe, 0xf5, 0x6d, 0x9b, 0xa1, 0xdb, 0xd8 },
-      .process_type = ProcessTypeWatchface
-    },
-    .icon_resource_id = RESOURCE_ID_MENU_ICON_TICTOC_WATCH,
-    .name = "TicToc"
-  };
-  return (const PebbleProcessMd*) &s_app_md;
+      .common = {.main_func = s_main,
+                 // UUID: 1197fc39-47e7-439b-82be-f56d9ba1dbd8
+                 .uuid = {0x11, 0x97, 0xfc, 0x39, 0x47, 0xe7, 0x43, 0x9b, 0x82, 0xbe, 0xf5, 0x6d,
+                          0x9b, 0xa1, 0xdb, 0xd8},
+                 .process_type = ProcessTypeWatchface},
+      .icon_resource_id = RESOURCE_ID_MENU_ICON_TICTOC_WATCH,
+      .name = "TicToc"};
+  return (const PebbleProcessMd *)&s_app_md;
 }

@@ -7,11 +7,12 @@
 #include <pbl/logging/logging.h>
 #include "pbl/util/size.h"
 
-#define PATTERN_FROM_DURATIONS(pat, array) (pat) = (VibePattern){ .durations = (array), .num_segments = ARRAY_LENGTH((array)) }
+#define PATTERN_FROM_DURATIONS(pat, array) \
+  (pat) = (VibePattern) { .durations = (array), .num_segments = ARRAY_LENGTH((array)) }
 
-static const uint32_t SHORT_PULSE_DURATIONS[] = { 250 };
-static const uint32_t LONG_PULSE_DURATIONS[] = { 500 };
-static const uint32_t DOUBLE_PULSE_DURATIONS[] = { 100, 100, 100 };
+static const uint32_t SHORT_PULSE_DURATIONS[] = {250};
+static const uint32_t LONG_PULSE_DURATIONS[] = {500};
+static const uint32_t DOUBLE_PULSE_DURATIONS[] = {100, 100, 100};
 
 void vibes_short_pulse(void) {
   VibePattern pat;
@@ -31,9 +32,7 @@ void vibes_double_pulse(void) {
   vibes_enqueue_custom_pattern(pat);
 }
 
-void vibes_cancel(void) {
-  sys_vibe_pattern_clear();
-}
+void vibes_cancel(void) { sys_vibe_pattern_clear(); }
 
 void vibes_enqueue_custom_pattern(VibePattern pattern) {
   if (pattern.durations == NULL) {
@@ -64,4 +63,3 @@ void vibes_enqueue_custom_pattern_with_amplitudes(VibePatternWithAmplitudes patt
 
   sys_vibe_pattern_trigger_start();
 }
-

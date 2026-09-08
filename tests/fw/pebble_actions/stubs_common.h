@@ -53,64 +53,46 @@
 #include "stubs_window_manager.h"
 #include "stubs_window_stack.h"
 
-PebblePhoneCaller* phone_call_util_create_caller(const char *number, const char *name) {
+PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char *name) {
   return NULL;
 }
 
-void launcher_task_add_callback(void (*callback)(void *data), void *data) {
-}
+void launcher_task_add_callback(void (*callback)(void *data), void *data) {}
 
-void system_task_add_callback(void (*callback)(void *data), void *data) {
-}
+void system_task_add_callback(void (*callback)(void *data), void *data) {}
 
-void ancs_perform_action(uint32_t notification_uid, uint8_t action_id) {
-}
+void ancs_perform_action(uint32_t notification_uid, uint8_t action_id) {}
 
-status_t blob_db_delete(BlobDBId db_id, const uint8_t *key, int key_len) {
-  return S_SUCCESS;
-}
+status_t blob_db_delete(BlobDBId db_id, const uint8_t *key, int key_len) { return S_SUCCESS; }
 
-void timeline_pin_window_push_modal(TimelineItem *item) {
-}
+void timeline_pin_window_push_modal(TimelineItem *item) {}
 
 CommSession *comm_session_get_system_session(void) {
   // This can't be NULL (in that case we don't try to send the message)
-  return (CommSession *) 1;
+  return (CommSession *)1;
 }
 
-void comm_session_set_responsiveness(
-    CommSession *session, BtConsumer consumer, ResponseTimeState state, uint16_t max_period_secs) {
+void comm_session_set_responsiveness(CommSession *session, BtConsumer consumer,
+                                     ResponseTimeState state, uint16_t max_period_secs) {
   return;
 }
 
-void* event_service_claim_buffer(PebbleEvent *e) {
-  return NULL;
-}
+void *event_service_claim_buffer(PebbleEvent *e) { return NULL; }
 
-void event_service_free_claimed_buffer(void *ref) {
-  return;
-}
+void event_service_free_claimed_buffer(void *ref) { return; }
 
 void timeline_resources_get_id(const TimelineResourceInfo *timeline_res, TimelineResourceSize size,
                                AppResourceInfo *res_info) {
   return;
 }
 
-bool notification_window_is_modal(void) {
-  return false;
-}
+bool notification_window_is_modal(void) { return false; }
 
-size_t string_list_count(StringList *list) {
-  return 0;
-}
+size_t string_list_count(StringList *list) { return 0; }
 
-char *string_list_get_at(StringList *list, size_t index) {
-  return NULL;
-}
+char *string_list_get_at(StringList *list, size_t index) { return NULL; }
 
-bool alerts_preferences_check_and_set_first_use_complete(int source) {
-  return true;
-}
+bool alerts_preferences_check_and_set_first_use_complete(int source) { return true; }
 
 static TimelineItemActionSource s_current_timeline_action_source =
     TimelineItemActionSourceModalNotification;

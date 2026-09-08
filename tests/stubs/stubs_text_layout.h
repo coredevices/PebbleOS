@@ -18,8 +18,8 @@ int16_t WEAK graphics_text_layout_get_line_spacing_delta(const GTextLayoutCacheR
   return 0;
 }
 
-GSize WEAK graphics_text_layout_get_max_used_size(GContext *ctx, const char *text,
-                                                  GFont const font, const GRect box,
+GSize WEAK graphics_text_layout_get_max_used_size(GContext *ctx, const char *text, GFont const font,
+                                                  const GRect box,
                                                   const GTextOverflowMode overflow_mode,
                                                   const GTextAlignment alignment,
                                                   GTextLayoutCacheRef layout) {

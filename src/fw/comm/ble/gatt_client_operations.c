@@ -17,8 +17,7 @@
 // function and for as long as the result is being used / accessed.
 
 extern uint16_t gatt_client_characteristic_get_handle_and_connection(
-                                                               BLECharacteristic characteristic_ref,
-                                                               GAPLEConnection **connection_out);
+    BLECharacteristic characteristic_ref, GAPLEConnection **connection_out);
 
 extern uint16_t gatt_client_descriptor_get_handle_and_connection(BLEDescriptor descriptor_ref,
                                                                  GAPLEConnection **connection_out);
@@ -53,21 +52,24 @@ static GattClientEventContext *s_client_event_ctxs[GAPLEClientNum];
 
 static void prv_send_event(PebbleBLEGATTClientEventType subtype, GAPLEClient client,
                            uintptr_t object_ref, uint16_t value_length, BLEGATTError gatt_error) {
-    PebbleEvent e = {
+  PebbleEvent e = {
       .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
       .task_mask = ~(gap_le_pebble_task_bit_for_client(client)),
-      .bluetooth = {
-        .le = {
-          .gatt_client = {
-            .subtype = subtype,
-            .object_ref = object_ref,
-            .gatt_error = gatt_error,
-            .value_length = value_length,
+      .bluetooth =
+          {
+              .le =
+                  {
+                      .gatt_client =
+                          {
+                              .subtype = subtype,
+                              .object_ref = object_ref,
+                              .gatt_error = gatt_error,
+                              .value_length = value_length,
+                          },
+                  },
           },
-        },
-      },
-    };
-    event_put(&e);
+  };
+  event_put(&e);
 }
 
 static void prv_internal_write_cccd_response_cb(GattClientOpResponseHdr *event) {
@@ -88,9 +90,9 @@ static BLEGATTError prv_handle_response(const GattClientOpReadResponse *resp,
       *gatt_value_length = 0;
       return BLEGATTErrorLocalInsufficientResources;
     }
-    *read_response = (const ReadResponseData) {
-      .object_ref = data->obj_ref,
-      .length = val_len,
+    *read_response = (const ReadResponseData){
+        .object_ref = data->obj_ref,
+        .length = val_len,
     };
     memcpy(read_response->value, resp->value, val_len);
     if (s_read_responses[data->client]) {
@@ -116,8 +118,8 @@ void bt_driver_cb_gatt_client_operations_handle_response(GattClientOpResponseHdr
   {
     //! Special case: writes to the "Client Characteristic Configuration Descriptor" are handled by
     //! the gatt_client_subscriptions.c module.
-    if (data->client == GAPLEClientKernel
-        && data->subtype == PebbleBLEGATTClientEventTypeCharacteristicSubscribe) {
+    if (data->client == GAPLEClientKernel &&
+        data->subtype == PebbleBLEGATTClientEventTypeCharacteristicSubscribe) {
       prv_internal_write_cccd_response_cb(event);
       goto cleanup;
     }
@@ -143,7 +145,7 @@ void bt_driver_cb_gatt_client_operations_handle_response(GattClientOpResponseHdr
           const GattClientOpReadResponse *resp = (GattClientOpReadResponse *)event;
           PBL_ASSERTN(data->subtype == PebbleBLEGATTClientEventTypeCharacteristicRead ||
                       data->subtype == PebbleBLEGATTClientEventTypeDescriptorRead);
-            gatt_err_code = prv_handle_response(resp, data, &gatt_value_length);
+          gatt_err_code = prv_handle_response(resp, data, &gatt_value_length);
           break;
         }
         case GattClientOpResponseWrite: {
@@ -157,7 +159,6 @@ void bt_driver_cb_gatt_client_operations_handle_response(GattClientOpResponseHdr
     }
 
     prv_send_event(data->subtype, data->client, data->obj_ref, gatt_value_length, gatt_err_code);
-
   }
 
 cleanup:
@@ -167,8 +168,7 @@ unlock:
   bt_unlock();
 }
 
-typedef uint16_t (*HandleAndConnectionGetter)(uintptr_t obj_ref,
-                                              GAPLEConnection **connection_out);
+typedef uint16_t (*HandleAndConnectionGetter)(uintptr_t obj_ref, GAPLEConnection **connection_out);
 
 static GattClientEventContext *prv_create_event_context(GAPLEClient client) {
   GattClientEventContext *evt_ctx = kernel_zalloc(sizeof(GattClientEventContext));
@@ -266,17 +266,13 @@ static BTErrno prv_write(uintptr_t obj_ref, const uint8_t *value, size_t value_l
   return ret_val;
 }
 
-BTErrno gatt_client_op_read(BLECharacteristic characteristic,
-                            GAPLEClient client) {
-  return prv_read(characteristic, client,
-                  gatt_client_characteristic_get_handle_and_connection,
+BTErrno gatt_client_op_read(BLECharacteristic characteristic, GAPLEClient client) {
+  return prv_read(characteristic, client, gatt_client_characteristic_get_handle_and_connection,
                   PebbleBLEGATTClientEventTypeCharacteristicRead);
 }
 
-void gatt_client_consume_read_response(uintptr_t object_ref,
-                                       uint8_t value_out[],
-                                       uint16_t value_length,
-                                       GAPLEClient client) {
+void gatt_client_consume_read_response(uintptr_t object_ref, uint8_t value_out[],
+                                       uint16_t value_length, GAPLEClient client) {
   bt_lock();
   {
     // For responses with 0 length, no ReadResponseData is created therefore
@@ -290,32 +286,28 @@ void gatt_client_consume_read_response(uintptr_t object_ref,
     if (value_out) {
       memcpy(value_out, read_response->value, read_response->length);
     }
-    list_remove(&read_response->node, (ListNode **) &s_read_responses[client], NULL);
+    list_remove(&read_response->node, (ListNode **)&s_read_responses[client], NULL);
     kernel_free(read_response);
   }
   bt_unlock();
 }
 
-BTErrno gatt_client_op_write(BLECharacteristic characteristic,
-                             const uint8_t *value,
-                             size_t value_length,
-                             GAPLEClient client) {
+BTErrno gatt_client_op_write(BLECharacteristic characteristic, const uint8_t *value,
+                             size_t value_length, GAPLEClient client) {
   return prv_write(characteristic, value, value_length, client,
                    gatt_client_characteristic_get_handle_and_connection,
                    PebbleBLEGATTClientEventTypeCharacteristicWrite);
 }
 
 BTErrno gatt_client_op_write_without_response(BLECharacteristic characteristic,
-                                              const uint8_t *value,
-                                              size_t value_length,
+                                              const uint8_t *value, size_t value_length,
                                               GAPLEClient client) {
   GAPLEConnection *connection;
   uint16_t att_handle;
 
   bt_lock();
   {
-    att_handle =
-        gatt_client_characteristic_get_handle_and_connection(characteristic, &connection);
+    att_handle = gatt_client_characteristic_get_handle_and_connection(characteristic, &connection);
     if (!att_handle) {
       bt_unlock();
       return BTErrnoInvalidParameter;
@@ -329,24 +321,20 @@ BTErrno gatt_client_op_write_without_response(BLECharacteristic characteristic,
   return bt_driver_gatt_write_without_response(connection, value, value_length, att_handle);
 }
 
-BTErrno gatt_client_op_write_descriptor(BLEDescriptor descriptor,
-                                        const uint8_t *value,
-                                        size_t value_length,
-                                        GAPLEClient client) {
+BTErrno gatt_client_op_write_descriptor(BLEDescriptor descriptor, const uint8_t *value,
+                                        size_t value_length, GAPLEClient client) {
   return prv_write(descriptor, value, value_length, client,
                    gatt_client_descriptor_get_handle_and_connection,
                    PebbleBLEGATTClientEventTypeDescriptorWrite);
 }
 
-BTErrno gatt_client_op_read_descriptor(BLEDescriptor descriptor,
-                                       GAPLEClient client) {
-  return prv_read(descriptor, client,
-                  gatt_client_descriptor_get_handle_and_connection,
+BTErrno gatt_client_op_read_descriptor(BLEDescriptor descriptor, GAPLEClient client) {
+  return prv_read(descriptor, client, gatt_client_descriptor_get_handle_and_connection,
                   PebbleBLEGATTClientEventTypeDescriptorRead);
 }
 
 BTErrno gatt_client_op_write_descriptor_cccd(BLEDescriptor cccd, const uint16_t *value) {
-  return prv_write(cccd, (const uint8_t *) value, sizeof(*value), GAPLEClientKernel,
+  return prv_write(cccd, (const uint8_t *)value, sizeof(*value), GAPLEClientKernel,
                    gatt_client_descriptor_get_handle_and_connection,
                    PebbleBLEGATTClientEventTypeCharacteristicSubscribe);
 }
@@ -365,7 +353,7 @@ void gatt_client_op_cleanup(GAPLEClient client) {
 
     ReadResponseData *read_response = s_read_responses[client];
     while (read_response) {
-      ReadResponseData *next_read_response = (ReadResponseData *) read_response->node.next;
+      ReadResponseData *next_read_response = (ReadResponseData *)read_response->node.next;
       kernel_free(read_response);
       read_response = next_read_response;
     }

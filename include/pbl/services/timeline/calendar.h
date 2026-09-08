@@ -12,7 +12,6 @@
 //! Not every calendar event start / stop produces an event, but every transition is guaranteed
 //! to put an event.
 
-
 const TimelineEventImpl *calendar_get_event_service(void);
 
 //! Used to determine if there is currently an event going on, used for Smart DND

@@ -3,6 +3,4 @@
 
 #include <stdint.h>
 
-uint32_t sys_app_comm_get_sniff_interval(void) {
-  return 0;
-}
+uint32_t sys_app_comm_get_sniff_interval(void) { return 0; }

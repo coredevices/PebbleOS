@@ -17,8 +17,8 @@
 const char **s_log_internal__expected;
 const char **s_log_internal__expected_regex;
 
-static void log_internal(uint8_t log_level, const char* src_filename, int src_line_number,
-                         const char* fmt, va_list args) {
+static void log_internal(uint8_t log_level, const char *src_filename, int src_line_number,
+                         const char *fmt, va_list args) {
   // this implementation for log_internal constructs the logged string inside of a static buffer
   // so we can compare it against some test expectation
 
@@ -26,7 +26,7 @@ static void log_internal(uint8_t log_level, const char* src_filename, int src_li
 
   static char buffer[256];
   const int written = vsprintf(buffer, fmt, args);
-  cl_assert(written < sizeof(buffer)); // there's no vsnprintf()
+  cl_assert(written < sizeof(buffer));  // there's no vsnprintf()
   buffer[written] = '\0';
 
   // compare log message against array of expectations
@@ -54,8 +54,8 @@ static void log_internal(uint8_t log_level, const char* src_filename, int src_li
       char msgbuf[256];
       char regexerr[128];
       regerror(rv, &regex, regexerr, sizeof(regexerr));
-      sprintf(msgbuf, "Regex match failed (rv=%i): %s\n \"%s\" didn't match pattern \"%s\"",
-              rv, regexerr, buffer, *s_log_internal__expected_regex);
+      sprintf(msgbuf, "Regex match failed (rv=%i): %s\n \"%s\" didn't match pattern \"%s\"", rv,
+              regexerr, buffer, *s_log_internal__expected_regex);
       cl_fail(msgbuf);
     }
     regfree(&regex);

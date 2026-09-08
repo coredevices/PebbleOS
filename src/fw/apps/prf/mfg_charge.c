@@ -21,16 +21,16 @@ typedef enum {
   ChargeStateFail,
 } ChargeTestState;
 
-static const char* status_text[] = {
-  [ChargeStateWaitPlug] =    "Plug Charger",
-  [ChargeStateWaitCharge] =  "Wait Charge...",
-  [ChargeStatePass] =        "PASS - Unplug",
-  [ChargeStateFail] =        "FAIL - Unplug",
+static const char *status_text[] = {
+    [ChargeStateWaitPlug] = "Plug Charger",
+    [ChargeStateWaitCharge] = "Wait Charge...",
+    [ChargeStatePass] = "PASS - Unplug",
+    [ChargeStateFail] = "FAIL - Unplug",
 };
 
 #if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX)
-static const int TEMP_MIN_MC = 15000; // 15.0C
-static const int TEMP_MAX_MC = 35000; // 35.0C
+static const int TEMP_MIN_MC = 15000;  // 15.0C
+static const int TEMP_MAX_MC = 35000;  // 35.0C
 #else
 static const int TEMP_MIN_MC = 0;
 static const int TEMP_MAX_MC = 0;
@@ -109,17 +109,15 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
 
   data->test_state = next_state;
 
-  sniprintf(data->status_string, sizeof(data->status_string),
-            "CHARGE\n%s", status_text[data->test_state]);
+  sniprintf(data->status_string, sizeof(data->status_string), "CHARGE\n%s",
+            status_text[data->test_state]);
   text_layer_set_text(&data->status, data->status_string);
 
   int8_t temp_c = (int8_t)(temp_mc / 1000);
   uint8_t temp_c_frac = ((temp_mc > 0 ? temp_mc : -temp_mc) % 1000) / 10;
   sniprintf(data->details_string, sizeof(data->details_string),
-            "%umV %" PRId8 ".%02" PRIu8 "C\r\nUSB: %s\r\nCharging: %s",
-            charge_mv,
-            temp_c, temp_c_frac,
-            charge_state.is_plugged ? "yes" : "no",
+            "%umV %" PRId8 ".%02" PRIu8 "C\r\nUSB: %s\r\nCharging: %s", charge_mv, temp_c,
+            temp_c_frac, charge_state.is_plugged ? "yes" : "no",
             charge_state.is_charging ? "yes" : "no");
   text_layer_set_text(&data->details, data->details_string);
 }
@@ -129,9 +127,9 @@ static void app_init(void) {
 
   app_state_set_user_data(data);
 
-  *data = (AppData) {
-    .test_state = ChargeStateWaitPlug,
-    .seconds_remaining = WAIT_CHARGE_TIMEOUT_S,
+  *data = (AppData){
+      .test_state = ChargeStateWaitPlug,
+      .seconds_remaining = WAIT_CHARGE_TIMEOUT_S,
   };
 
   Window *window = &data->window;
@@ -164,14 +162,14 @@ static void s_main(void) {
   app_event_loop();
 }
 
-const PebbleProcessMd* mfg_charge_app_get_info(void) {
+const PebbleProcessMd *mfg_charge_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = &s_main,
-    // UUID: fbb6d0e6-2d7d-40bc-8b01-f2f8beb9c394
-    .common.uuid = { 0xfb, 0xb6, 0xd0, 0xe6, 0x2d, 0x7d, 0x40, 0xbc,
-                     0x8b, 0x01, 0xf2, 0xf8, 0xbe, 0xb9, 0xc3, 0x94 },
-    .name = "Charge App",
+      .common.main_func = &s_main,
+      // UUID: fbb6d0e6-2d7d-40bc-8b01-f2f8beb9c394
+      .common.uuid = {0xfb, 0xb6, 0xd0, 0xe6, 0x2d, 0x7d, 0x40, 0xbc, 0x8b, 0x01, 0xf2, 0xf8, 0xbe,
+                      0xb9, 0xc3, 0x94},
+      .name = "Charge App",
   };
 
-  return (PebbleProcessMd*) &s_app_info;
+  return (PebbleProcessMd *)&s_app_info;
 }

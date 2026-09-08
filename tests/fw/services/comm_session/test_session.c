@@ -27,21 +27,16 @@ extern void comm_session_send_next_immediately(CommSession *session);
 #include "stubs_rand_ptr.h"
 #include "stubs_syscall_internal.h"
 
-void comm_session_analytics_open_session(CommSession *session) {
-}
+void comm_session_analytics_open_session(CommSession *session) {}
 
-void comm_session_analytics_close_session(CommSession *session, CommSessionCloseReason reason) {
-}
+void comm_session_analytics_close_session(CommSession *session, CommSessionCloseReason reason) {}
 
-void comm_session_receive_router_cleanup(CommSession *session) {
-}
+void comm_session_receive_router_cleanup(CommSession *session) {}
 
-void comm_session_send_queue_cleanup(CommSession *session) {
-}
+void comm_session_send_queue_cleanup(CommSession *session) {}
 
 void bt_persistent_storage_set_cached_system_capabilities(
-    const PebbleProtocolCapabilities *capabilities) {
-}
+    const PebbleProtocolCapabilities *capabilities) {}
 
 static uint16_t s_send_queue_length;
 
@@ -49,34 +44,25 @@ size_t comm_session_send_queue_get_length(const CommSession *session) {
   return s_send_queue_length;
 }
 
-void fake_session_send_queue_set_length(uint32_t length) {
-  s_send_queue_length = length;
-}
+void fake_session_send_queue_set_length(uint32_t length) { s_send_queue_length = length; }
 
 static bool s_dls_private_handle_disconnect_called;
-void dls_private_handle_disconnect(void *data) {
-  s_dls_private_handle_disconnect_called = true;
-}
+void dls_private_handle_disconnect(void *data) { s_dls_private_handle_disconnect_called = true; }
 
 static bool s_comm_session_event_put;
-void event_put(PebbleEvent* event) {
-  if (event->type == PEBBLE_COMM_SESSION_EVENT &&
-      event->bluetooth.comm_session_event.is_system) {
+void event_put(PebbleEvent *event) {
+  if (event->type == PEBBLE_COMM_SESSION_EVENT && event->bluetooth.comm_session_event.is_system) {
     s_comm_session_event_put = true;
   };
 }
 
-void app_launch_trigger(void) {
-}
+void app_launch_trigger(void) {}
 
-void session_remote_version_start_requests(CommSession *session) {
-}
+void session_remote_version_start_requests(CommSession *session) {}
 
 static int s_send_next_count;
 
-static void prv_send_next(Transport *transport) {
-  ++s_send_next_count;
-}
+static void prv_send_next(Transport *transport) { ++s_send_next_count; }
 
 static int s_close_count;
 Transport *s_last_closed_transport;
@@ -88,9 +74,7 @@ static void prv_close(Transport *transport) {
 
 static int s_reset_count;
 
-static void prv_reset(Transport *transport) {
-  ++s_reset_count;
-}
+static void prv_reset(Transport *transport) { ++s_reset_count; }
 
 typedef enum {
   TransportIDNull,
@@ -113,11 +97,11 @@ static CommSessionTransportType prv_get_type(struct Transport *transport) {
 }
 
 static const TransportImplementation s_transport_imp = {
-  .send_next = prv_send_next,
-  .close = prv_close,
-  .reset = prv_reset,
-  .get_uuid = prv_get_uuid,
-  .get_type = prv_get_type,
+    .send_next = prv_send_next,
+    .close = prv_close,
+    .reset = prv_reset,
+    .get_uuid = prv_get_uuid,
+    .get_type = prv_get_type,
 };
 
 // Fakes
@@ -183,15 +167,14 @@ void test_session__get_app_session_disconnected_returns_null(void) {
 void test_session__send_data_returns_false_for_null_session(void) {
   const uint16_t endpoint_id = 1234;
   uint8_t data[] = {1, 2, 3, 4};
-  cl_assert_equal_b(comm_session_send_data(NULL, endpoint_id,
-                                           data, sizeof(data),
-                                           COMM_SESSION_DEFAULT_TIMEOUT), false);
+  cl_assert_equal_b(
+      comm_session_send_data(NULL, endpoint_id, data, sizeof(data), COMM_SESSION_DEFAULT_TIMEOUT),
+      false);
 }
 
 void test_session__basic_open_close(void) {
-  Transport *transport = (Transport *) TransportID1;
-  CommSession *session = comm_session_open(transport, &s_transport_imp,
-                                           TransportDestinationSystem);
+  Transport *transport = (Transport *)TransportID1;
+  CommSession *session = comm_session_open(transport, &s_transport_imp, TransportDestinationSystem);
   cl_assert(session);
   cl_assert_equal_b(comm_session_is_valid(session), true);
   comm_session_close(session, CommSessionCloseReason_UnderlyingDisconnection);
@@ -199,41 +182,39 @@ void test_session__basic_open_close(void) {
 }
 
 void test_session__get_type_system(void) {
-  Transport *transport = (Transport *) TransportID1;
-  CommSession *session = comm_session_open(transport, &s_transport_imp,
-                                           TransportDestinationSystem);
+  Transport *transport = (Transport *)TransportID1;
+  CommSession *session = comm_session_open(transport, &s_transport_imp, TransportDestinationSystem);
   cl_assert_equal_i(comm_session_get_type(session), CommSessionTypeSystem);
   cl_assert_equal_p(comm_session_get_system_session(), session);
   cl_assert_equal_p(comm_session_get_by_type(CommSessionTypeSystem), session);
   comm_session_close(session, CommSessionCloseReason_UnderlyingDisconnection);
-  fake_system_task_callbacks_invoke_pending(); // get dls called
+  fake_system_task_callbacks_invoke_pending();  // get dls called
   cl_assert_equal_b(s_dls_private_handle_disconnect_called, true);
   cl_assert_equal_b(s_comm_session_event_put, true);
 }
 
 void test_session__get_type_app(void) {
-  Transport *transport = (Transport *) TransportID1;
-  CommSession *session = comm_session_open(transport, &s_transport_imp,
-                                           TransportDestinationApp);
+  Transport *transport = (Transport *)TransportID1;
+  CommSession *session = comm_session_open(transport, &s_transport_imp, TransportDestinationApp);
   cl_assert_equal_i(comm_session_get_type(session), CommSessionTypeApp);
   cl_assert_equal_p(comm_session_get_current_app_session(), session);
   cl_assert_equal_p(comm_session_get_by_type(CommSessionTypeApp), session);
   comm_session_close(session, CommSessionCloseReason_UnderlyingDisconnection);
-  fake_system_task_callbacks_invoke_pending(); // get dls called
+  fake_system_task_callbacks_invoke_pending();  // get dls called
   cl_assert_equal_b(s_dls_private_handle_disconnect_called, false);
   cl_assert_equal_b(s_comm_session_event_put, false);
 }
 
 void test_session__last_system_session_wins(void) {
-  Transport *system_transport = (Transport *) TransportID1;
-  CommSession *system_session = comm_session_open(system_transport, &s_transport_imp,
-                                                  TransportDestinationSystem);
+  Transport *system_transport = (Transport *)TransportID1;
+  CommSession *system_session =
+      comm_session_open(system_transport, &s_transport_imp, TransportDestinationSystem);
 
   cl_assert_equal_i(s_close_count, 0);
 
-  Transport *system_transport2 = (Transport *) TransportID2;
-  CommSession *system_session2 = comm_session_open(system_transport2, &s_transport_imp,
-                                                   TransportDestinationSystem);
+  Transport *system_transport2 = (Transport *)TransportID2;
+  CommSession *system_session2 =
+      comm_session_open(system_transport2, &s_transport_imp, TransportDestinationSystem);
 
   cl_assert(system_session2);
   cl_assert_equal_p(s_last_closed_transport, system_transport);
@@ -247,23 +228,21 @@ void test_session__last_system_session_wins(void) {
 }
 
 void test_session__get_app_session_multiple(void) {
-  Transport *system_transport = (Transport *) TransportID1;
-  CommSession *system_session = comm_session_open(system_transport, &s_transport_imp,
-                                                  TransportDestinationSystem);
-  Uuid legacy_app_uuid = {
-    0xff, 0xc5, 0x24, 0x01, 0x4d, 0xbe, 0x40, 0x8b,
-    0xb7, 0x3a, 0x0e, 0x80, 0xef, 0x09, 0xaf, 0x74};
+  Transport *system_transport = (Transport *)TransportID1;
+  CommSession *system_session =
+      comm_session_open(system_transport, &s_transport_imp, TransportDestinationSystem);
+  Uuid legacy_app_uuid = {0xff, 0xc5, 0x24, 0x01, 0x4d, 0xbe, 0x40, 0x8b,
+                          0xb7, 0x3a, 0x0e, 0x80, 0xef, 0x09, 0xaf, 0x74};
   // Legacy transport (iAP) isn't aware of the app UUID, so don't set anything:
-  Transport *legacy_transport = (Transport *) TransportID2;
-  CommSession *legacy_app_session = comm_session_open(legacy_transport, &s_transport_imp,
-                                                      TransportDestinationApp);
-  Uuid modern_app_uuid = {
-    0x04, 0xc5, 0x24, 0x01, 0x4d, 0xbe, 0x40, 0x8b,
-    0xb7, 0x3a, 0x0e, 0x80, 0xef, 0x09, 0xaf, 0x74};
-  Transport *modern_transport = (Transport *) TransportID3;
+  Transport *legacy_transport = (Transport *)TransportID2;
+  CommSession *legacy_app_session =
+      comm_session_open(legacy_transport, &s_transport_imp, TransportDestinationApp);
+  Uuid modern_app_uuid = {0x04, 0xc5, 0x24, 0x01, 0x4d, 0xbe, 0x40, 0x8b,
+                          0xb7, 0x3a, 0x0e, 0x80, 0xef, 0x09, 0xaf, 0x74};
+  Transport *modern_transport = (Transport *)TransportID3;
   s_transport_uuid[TransportID3] = &modern_app_uuid;
-  CommSession *modern_app_session = comm_session_open(modern_transport, &s_transport_imp,
-                                                      TransportDestinationApp);
+  CommSession *modern_app_session =
+      comm_session_open(modern_transport, &s_transport_imp, TransportDestinationApp);
 
   stub_app_set_uuid(legacy_app_uuid);
   cl_assert_equal_p(comm_session_get_current_app_session(), legacy_app_session);
@@ -283,9 +262,8 @@ void test_session__get_app_session_multiple(void) {
 }
 
 void test_session__assert_if_deinit_and_transport_did_not_clean_up_properly(void) {
-  Transport *transport = (Transport *) TransportID1;
-  CommSession *session = comm_session_open(transport, &s_transport_imp,
-                                           TransportDestinationSystem);
+  Transport *transport = (Transport *)TransportID1;
+  CommSession *session = comm_session_open(transport, &s_transport_imp, TransportDestinationSystem);
   cl_assert_equal_b(comm_session_is_valid(session), true);
   // Expect assert when Transport didn't clean up after itself:
   cl_assert_passert(comm_session_deinit());
@@ -293,9 +271,8 @@ void test_session__assert_if_deinit_and_transport_did_not_clean_up_properly(void
 }
 
 void test_session__send_next_deduping(void) {
-  Transport *transport = (Transport *) TransportID1;
-  CommSession *session = comm_session_open(transport, &s_transport_imp,
-                                           TransportDestinationSystem);
+  Transport *transport = (Transport *)TransportID1;
+  CommSession *session = comm_session_open(transport, &s_transport_imp, TransportDestinationSystem);
   cl_assert_equal_b(comm_session_is_valid(session), true);
   fake_session_send_queue_set_length(1234);
 
@@ -329,9 +306,8 @@ void test_session__send_next_deduping(void) {
 }
 
 void test_session__send_next_not_called_when_session_closed_in_mean_time(void) {
-  Transport *transport = (Transport *) TransportID1;
-  CommSession *session = comm_session_open(transport, &s_transport_imp,
-                                           TransportDestinationSystem);
+  Transport *transport = (Transport *)TransportID1;
+  CommSession *session = comm_session_open(transport, &s_transport_imp, TransportDestinationSystem);
   cl_assert_equal_b(comm_session_is_valid(session), true);
   fake_session_send_queue_set_length(1234);
 
@@ -344,9 +320,7 @@ void test_session__send_next_not_called_when_session_closed_in_mean_time(void) {
   cl_assert_equal_i(s_send_next_count, 0);
 }
 
-static bool prv_schedule_send_next(CommSession *session) {
-  return true;
-}
+static bool prv_schedule_send_next(CommSession *session) { return true; }
 
 static bool s_is_current_task_schedule_task = false;
 static bool prv_is_current_task_schedule_task(Transport *transport) {
@@ -358,11 +332,10 @@ void test_session__transport_send_next_task(void) {
   transport_imp.schedule = prv_schedule_send_next;
   transport_imp.is_current_task_schedule_task = prv_is_current_task_schedule_task;
 
-  extern bool comm_session_is_current_task_send_next_task(CommSession *session);
+  extern bool comm_session_is_current_task_send_next_task(CommSession * session);
 
-  Transport *transport = (Transport *) TransportID1;
-  CommSession *session = comm_session_open(transport, &transport_imp,
-                                           TransportDestinationSystem);
+  Transport *transport = (Transport *)TransportID1;
+  CommSession *session = comm_session_open(transport, &transport_imp, TransportDestinationSystem);
 
   s_is_current_task_schedule_task = true;
   cl_assert_equal_b(comm_session_is_current_task_send_next_task(session), true);
@@ -383,9 +356,8 @@ void test_session__transport_send_next_task(void) {
 }
 
 void test_session__reset_valid_session(void) {
-  Transport *transport = (Transport *) TransportID1;
-  CommSession *session = comm_session_open(transport, &s_transport_imp,
-                                           TransportDestinationSystem);
+  Transport *transport = (Transport *)TransportID1;
+  CommSession *session = comm_session_open(transport, &s_transport_imp, TransportDestinationSystem);
   cl_assert_equal_b(comm_session_is_valid(session), true);
   cl_assert_equal_i(s_reset_count, 0);
   comm_session_reset(session);
@@ -395,7 +367,7 @@ void test_session__reset_valid_session(void) {
 }
 
 void test_session__reset_invalid_session(void) {
-  CommSession *invalid_session = (CommSession *) TransportID1;
+  CommSession *invalid_session = (CommSession *)TransportID1;
   cl_assert_equal_b(comm_session_is_valid(invalid_session), false);
   cl_assert_equal_i(s_reset_count, 0);
   comm_session_reset(invalid_session);
@@ -404,10 +376,9 @@ void test_session__reset_invalid_session(void) {
 
 extern bool comm_session_send_next_is_scheduled(CommSession *session);
 
-void test_session__send_next_is_schedule_flag_not_unset_after_immediate_call(void){
-  Transport *transport = (Transport *) TransportID1;
-  CommSession *session = comm_session_open(transport, &s_transport_imp,
-                                           TransportDestinationSystem);
+void test_session__send_next_is_schedule_flag_not_unset_after_immediate_call(void) {
+  Transport *transport = (Transport *)TransportID1;
+  CommSession *session = comm_session_open(transport, &s_transport_imp, TransportDestinationSystem);
   cl_assert_equal_b(comm_session_is_valid(session), true);
 
   comm_session_send_next(session);
@@ -424,9 +395,8 @@ void test_session__send_next_is_schedule_flag_not_unset_after_immediate_call(voi
 }
 
 void test_session__capabilities(void) {
-  Transport *transport = (Transport *) TransportID1;
-  CommSession *session = comm_session_open(transport, &s_transport_imp,
-                                           TransportDestinationSystem);
+  Transport *transport = (Transport *)TransportID1;
+  CommSession *session = comm_session_open(transport, &s_transport_imp, TransportDestinationSystem);
 
   for (int i = 0; i < (sizeof(int) * 8); ++i) {
     CommSessionCapability capability = (1 << i);

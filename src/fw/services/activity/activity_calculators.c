@@ -12,7 +12,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-
 // ------------------------------------------------------------------------------------------------
 // Compute distance (in millimeters) covered by the taking the given number of steps in the given
 // amount of time.
@@ -63,18 +62,17 @@ uint32_t activity_private_compute_distance_mm(uint32_t steps, uint32_t ms) {
   // Since we have cadence in steps and milliseconds, this becomes:
   //  stride_len = (a * steps * 1000 * 60 / milliseconds + b) * height
   // Compute the "(a * steps * 1000 * 60 / milliseconds + b)" component:
-  uint64_t stride_len_component = ROUND(k_a_x10000 * steps_64 * MS_PER_SECOND * SECONDS_PER_MINUTE,
-                                        ms_64)  + k_b_x10000;
+  uint64_t stride_len_component =
+      ROUND(k_a_x10000 * steps_64 * MS_PER_SECOND * SECONDS_PER_MINUTE, ms_64) + k_b_x10000;
 
   // Multiply by height to get stride_len, then by steps to get distance, then factor out our
   // constant multiplier at the very end to minimize rounding errors.
   uint32_t distance_mm = ROUND(stride_len_component * height_mm_64 * steps, k_x10000);
 
   // Return distance in mm
-  ACTIVITY_LOG_DEBUG("Got delta distance of %"PRIu32" mm", distance_mm);
+  ACTIVITY_LOG_DEBUG("Got delta distance of %" PRIu32 " mm", distance_mm);
   return distance_mm;
 }
-
 
 // ------------------------------------------------------------------------------------------------
 // Compute active calories (in calories, not kcalories) covered by going the given distance in
@@ -134,10 +132,9 @@ uint32_t activity_private_compute_active_calories(uint32_t distance_mm, uint32_t
                             1000 * MM_PER_METER * ACTIVITY_DAG_PER_KG);
 
   // Return calories
-  ACTIVITY_LOG_DEBUG("Got delta active calories of %"PRIu32" ", calories);
+  ACTIVITY_LOG_DEBUG("Got delta active calories of %" PRIu32 " ", calories);
   return calories;
 }
-
 
 // --------------------------------------------------------------------------------------------
 uint32_t activity_private_compute_resting_calories(uint32_t elapsed_minutes) {
@@ -151,9 +148,7 @@ uint32_t activity_private_compute_resting_calories(uint32_t elapsed_minutes) {
 
   // For men:   kcalories = 10 * weight(kg) + 6.25 * height(cm) - 5 * age(y) + 5
   // For women: kcalories = 10 * weight(kg) + 6.25 * height(cm) - 5 * age(y) - 161
-  calories_per_day =   (100 * weight_dag)
-                     + (625 * height_mm)
-                     - (5000 * age_years);
+  calories_per_day = (100 * weight_dag) + (625 * height_mm) - (5000 * age_years);
   if (gender == ActivityGenderMale) {
     calories_per_day += 5000;
   } else if (gender == ActivityGenderFemale) {
@@ -165,6 +160,6 @@ uint32_t activity_private_compute_resting_calories(uint32_t elapsed_minutes) {
 
   // Scale by the requested number of minutes
   uint32_t resting_calories = ROUND(calories_per_day * elapsed_minutes, MINUTES_PER_DAY);
-  ACTIVITY_LOG_DEBUG("resting_calories: %"PRIu32"", resting_calories);
+  ACTIVITY_LOG_DEBUG("resting_calories: %" PRIu32 "", resting_calories);
   return resting_calories;
 }

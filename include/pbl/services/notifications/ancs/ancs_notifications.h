@@ -8,9 +8,7 @@
 #include "comm/ble/kernel_le_client/ancs/ancs_types.h"
 #include "pbl/services/timeline/item.h"
 
-
-void ancs_notifications_handle_message(uint32_t uid,
-                                       ANCSProperty properties,
+void ancs_notifications_handle_message(uint32_t uid, ANCSProperty properties,
                                        ANCSAttribute **notif_attributes,
                                        ANCSAttribute **app_attributes);
 

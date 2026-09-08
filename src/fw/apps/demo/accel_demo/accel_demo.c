@@ -36,10 +36,10 @@ typedef struct {
 
 // Selectable options. Each menu item maps by index into these tables.
 static const AccelSamplingRate s_rates[] = {
-  ACCEL_SAMPLING_10HZ,
-  ACCEL_SAMPLING_25HZ,
-  ACCEL_SAMPLING_50HZ,
-  ACCEL_SAMPLING_100HZ,
+    ACCEL_SAMPLING_10HZ,
+    ACCEL_SAMPLING_25HZ,
+    ACCEL_SAMPLING_50HZ,
+    ACCEL_SAMPLING_100HZ,
 };
 
 static const uint32_t s_batches[] = {1, 5, 10, 25};
@@ -48,25 +48,25 @@ static void prv_rate_selected(int index, void *context);
 static void prv_batch_selected(int index, void *context);
 
 static const SimpleMenuItem s_rate_items[] = {
-  {.title = "10 Hz", .callback = prv_rate_selected},
-  {.title = "25 Hz", .callback = prv_rate_selected},
-  {.title = "50 Hz", .callback = prv_rate_selected},
-  {.title = "100 Hz", .callback = prv_rate_selected},
+    {.title = "10 Hz", .callback = prv_rate_selected},
+    {.title = "25 Hz", .callback = prv_rate_selected},
+    {.title = "50 Hz", .callback = prv_rate_selected},
+    {.title = "100 Hz", .callback = prv_rate_selected},
 };
 
 static const SimpleMenuSection s_rate_sections[] = {
-  {.title = "Sample rate", .items = s_rate_items, .num_items = ARRAY_LENGTH(s_rate_items)},
+    {.title = "Sample rate", .items = s_rate_items, .num_items = ARRAY_LENGTH(s_rate_items)},
 };
 
 static const SimpleMenuItem s_batch_items[] = {
-  {.title = "1 sample", .callback = prv_batch_selected},
-  {.title = "5 samples", .callback = prv_batch_selected},
-  {.title = "10 samples", .callback = prv_batch_selected},
-  {.title = "25 samples", .callback = prv_batch_selected},
+    {.title = "1 sample", .callback = prv_batch_selected},
+    {.title = "5 samples", .callback = prv_batch_selected},
+    {.title = "10 samples", .callback = prv_batch_selected},
+    {.title = "25 samples", .callback = prv_batch_selected},
 };
 
 static const SimpleMenuSection s_batch_sections[] = {
-  {.title = "Batched samples", .items = s_batch_items, .num_items = ARRAY_LENGTH(s_batch_items)},
+    {.title = "Batched samples", .items = s_batch_items, .num_items = ARRAY_LENGTH(s_batch_items)},
 };
 
 static char prv_axis_char(AccelAxisType axis) {
@@ -94,8 +94,8 @@ static void prv_handle_tap(AccelAxisType axis, int32_t direction) {
     return;
   }
 
-  snprintf(data->tap_buffer, sizeof(data->tap_buffer), "Taps: %" PRIu32 "\n%c %c",
-           data->tap_count, prv_axis_char(axis), direction < 0 ? '-' : '+');
+  snprintf(data->tap_buffer, sizeof(data->tap_buffer), "Taps: %" PRIu32 "\n%c %c", data->tap_count,
+           prv_axis_char(axis), direction < 0 ? '-' : '+');
   text_layer_set_text(&data->tap_layer, data->tap_buffer);
 }
 
@@ -129,8 +129,8 @@ static void prv_data_window_load(Window *window) {
   Layer *root = &window->layer;
   const int16_t w = root->bounds.size.w;
 
-  snprintf(data->title_buffer, sizeof(data->title_buffer), "%u Hz  x%" PRIu32,
-           (unsigned)data->rate, data->batch);
+  snprintf(data->title_buffer, sizeof(data->title_buffer), "%u Hz  x%" PRIu32, (unsigned)data->rate,
+           data->batch);
   text_layer_init(&data->title_layer, &GRect(0, 0, w, 24));
   text_layer_set_text(&data->title_layer, data->title_buffer);
   layer_add_child(root, &data->title_layer.layer);
@@ -240,8 +240,8 @@ static void s_main(void) {
 
 const PebbleProcessMd *accel_demo_get_info(void) {
   static const PebbleProcessMdSystem s_accel_demo_info = {
-    .common.main_func = s_main,
-    .name = "Accel Demo",
+      .common.main_func = s_main,
+      .name = "Accel Demo",
   };
   return (const PebbleProcessMd *)&s_accel_demo_info;
 }

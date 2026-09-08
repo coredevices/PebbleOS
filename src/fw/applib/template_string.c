@@ -54,10 +54,22 @@ static void prv_filter_time_since(TemplateStringState *state);
 static void prv_filter_end(TemplateStringState *state);
 
 static const FilterImplementation s_filter_impls[] = {
-  { "format", prv_filter_format, },
-  { "time_until", prv_filter_time_until, },
-  { "time_since", prv_filter_time_since, },
-  { "end", prv_filter_end, },
+    {
+        "format",
+        prv_filter_format,
+    },
+    {
+        "time_until",
+        prv_filter_time_until,
+    },
+    {
+        "time_since",
+        prv_filter_time_since,
+    },
+    {
+        "end",
+        prv_filter_end,
+    },
 };
 
 static void prv_handle_escape_character(TemplateStringState *state) {
@@ -69,13 +81,9 @@ static void prv_handle_escape_character(TemplateStringState *state) {
   }
 }
 
-static bool prv_predicate_check(char ch) {
-  return ((ch == '>') || (ch == '<'));
-}
+static bool prv_predicate_check(char ch) { return ((ch == '>') || (ch == '<')); }
 
-static bool prv_format_string_ending(char ch) {
-  return ((ch == ',') || (ch == ')'));
-}
+static bool prv_format_string_ending(char ch) { return ((ch == ',') || (ch == ')')); }
 
 static bool prv_predicate_valid_splitter(char ch) {
   return ((ch == ':') || prv_format_string_ending(ch));
@@ -103,16 +111,28 @@ T_STATIC intmax_t prv_template_predicate_time(TemplateStringState *state) {
     switch (*state->position) {
       // NOTE: This number of seconds is a hack! See PBL-39903
 #if SUPPORT_YEAR
-      case 'y': multiplier = 365 * SECONDS_PER_DAY; break;
+      case 'y':
+        multiplier = 365 * SECONDS_PER_DAY;
+        break;
 #endif
-      // NOTE: This number of seconds is a hack! See PBL-39903
+        // NOTE: This number of seconds is a hack! See PBL-39903
 #if SUPPORT_MONTH
-      case 'm': multiplier = 30 * SECONDS_PER_DAY; break;
+      case 'm':
+        multiplier = 30 * SECONDS_PER_DAY;
+        break;
 #endif
-      case 'd': multiplier = SECONDS_PER_DAY; break;
-      case 'H': multiplier = SECONDS_PER_HOUR; break;
-      case 'M': multiplier = SECONDS_PER_MINUTE; break;
-      case 'S': multiplier = 1; break;
+      case 'd':
+        multiplier = SECONDS_PER_DAY;
+        break;
+      case 'H':
+        multiplier = SECONDS_PER_HOUR;
+        break;
+      case 'M':
+        multiplier = SECONDS_PER_MINUTE;
+        break;
+      case 'S':
+        multiplier = 1;
+        break;
       default:
         state->error->status = TemplateStringErrorStatus_InvalidTimeUnit;
         return 0;
@@ -127,7 +147,6 @@ T_STATIC intmax_t prv_template_predicate_time(TemplateStringState *state) {
 
   return total_value;
 }
-
 
 T_STATIC bool prv_template_predicate_match(TemplateStringState *state, PredicateCondition *cond,
                                            intmax_t *value) {
@@ -168,25 +187,43 @@ T_STATIC bool prv_template_predicate_match(TemplateStringState *state, Predicate
   }
 }
 
-static const char * const s_Tstrings[3][3] = {
-  { "H",  "M",  "S",  },
-  { "aH", "aM", "aS", },
-  { "uH", "uM", "uS", },
+static const char *const s_Tstrings[3][3] = {
+    {
+        "H",
+        "M",
+        "S",
+    },
+    {
+        "aH",
+        "aM",
+        "aS",
+    },
+    {
+        "uH",
+        "uM",
+        "uS",
+    },
 };
 
-static const char * const s_splitters[3][2] = {
-  /// The first separator in `<hour>:<minute>:<second>`
-  { i18n_ctx_noop("TmplStringSep", ":"),
-  /// The second separator in `<hour>:<minute>:<second>`
-    i18n_ctx_noop("TmplStringSep", ":"), },
-  /// The first separator in `<hour> hr <minute> min <second> sec`
-  { i18n_ctx_noop("TmplStringSep", " "),
-  /// The second separator in `<hour> hr <minute> min <second> sec`
-    i18n_ctx_noop("TmplStringSep", " "), },
-  /// The first separator in `<hour> hours, <minute> minutes, and <second> seconds`
-  { i18n_ctx_noop("TmplStringSep", ", "),
-  /// The second separator in `<hour> hours, <minute> minutes, and <second> seconds`
-    i18n_ctx_noop("TmplStringSep", ", and "), },
+static const char *const s_splitters[3][2] = {
+    /// The first separator in `<hour>:<minute>:<second>`
+    {
+        i18n_ctx_noop("TmplStringSep", ":"),
+        /// The second separator in `<hour>:<minute>:<second>`
+        i18n_ctx_noop("TmplStringSep", ":"),
+    },
+    /// The first separator in `<hour> hr <minute> min <second> sec`
+    {
+        i18n_ctx_noop("TmplStringSep", " "),
+        /// The second separator in `<hour> hr <minute> min <second> sec`
+        i18n_ctx_noop("TmplStringSep", " "),
+    },
+    /// The first separator in `<hour> hours, <minute> minutes, and <second> seconds`
+    {
+        i18n_ctx_noop("TmplStringSep", ", "),
+        /// The second separator in `<hour> hours, <minute> minutes, and <second> seconds`
+        i18n_ctx_noop("TmplStringSep", ", and "),
+    },
 };
 
 /*
@@ -256,97 +293,79 @@ static void prv_append_char(TemplateStringState *state, char c) {
 // Suffix columns: [0] singular, [1] plural ("few" for languages like Polish:
 // 2-4), [2] "many" (Polish: 0 and 5+). prv_plural_index() picks the column;
 // two-form languages never select [2].
-static const char * const s_second_strings[3][3] = {
-  /// Suffixes for seconds with no units
-  { i18n_ctx_noop("TmplStringSing", ""),
-    i18n_ctx_noop("TmplStringPlur", ""),
-    i18n_ctx_noop("TmplStringMany", "")},
-  /// Suffixes for seconds with abbreviated units
-  { i18n_ctx_noop("TmplStringSing", " sec"),
-    i18n_ctx_noop("TmplStringPlur", " sec"),
-    i18n_ctx_noop("TmplStringMany", " sec")},
-  /// Suffixes for seconds with full units
-  { i18n_ctx_noop("TmplStringSing", " second"),
-    i18n_ctx_noop("TmplStringPlur", " seconds"),
-    i18n_ctx_noop("TmplStringMany", " seconds")},
+static const char *const s_second_strings[3][3] = {
+    /// Suffixes for seconds with no units
+    {i18n_ctx_noop("TmplStringSing", ""), i18n_ctx_noop("TmplStringPlur", ""),
+     i18n_ctx_noop("TmplStringMany", "")},
+    /// Suffixes for seconds with abbreviated units
+    {i18n_ctx_noop("TmplStringSing", " sec"), i18n_ctx_noop("TmplStringPlur", " sec"),
+     i18n_ctx_noop("TmplStringMany", " sec")},
+    /// Suffixes for seconds with full units
+    {i18n_ctx_noop("TmplStringSing", " second"), i18n_ctx_noop("TmplStringPlur", " seconds"),
+     i18n_ctx_noop("TmplStringMany", " seconds")},
 };
 
-static const char * const s_minute_strings[3][3] = {
-  /// Suffixes for minutes with no units
-  { i18n_ctx_noop("TmplStringSing", ""),
-    i18n_ctx_noop("TmplStringPlur", ""),
-    i18n_ctx_noop("TmplStringMany", "")},
-  /// Suffixes for minutes with abbreviated units
-  { i18n_ctx_noop("TmplStringSing", " min"),
-    i18n_ctx_noop("TmplStringPlur", " min"),
-    i18n_ctx_noop("TmplStringMany", " min")},
-  /// Suffixes for minutes with full units
-  { i18n_ctx_noop("TmplStringSing", " minute"),
-    i18n_ctx_noop("TmplStringPlur", " minutes"),
-    i18n_ctx_noop("TmplStringMany", " minutes")},
+static const char *const s_minute_strings[3][3] = {
+    /// Suffixes for minutes with no units
+    {i18n_ctx_noop("TmplStringSing", ""), i18n_ctx_noop("TmplStringPlur", ""),
+     i18n_ctx_noop("TmplStringMany", "")},
+    /// Suffixes for minutes with abbreviated units
+    {i18n_ctx_noop("TmplStringSing", " min"), i18n_ctx_noop("TmplStringPlur", " min"),
+     i18n_ctx_noop("TmplStringMany", " min")},
+    /// Suffixes for minutes with full units
+    {i18n_ctx_noop("TmplStringSing", " minute"), i18n_ctx_noop("TmplStringPlur", " minutes"),
+     i18n_ctx_noop("TmplStringMany", " minutes")},
 };
 
-static const char * const s_hour_strings[3][3] = {
-  /// Suffixes for hours with no units
-  { i18n_ctx_noop("TmplStringSing", ""),
-    i18n_ctx_noop("TmplStringPlur", ""),
-    i18n_ctx_noop("TmplStringMany", "")},
-  /// Suffixes for hours with abbreviated units
-  { i18n_ctx_noop("TmplStringSing", " hr"),
-    i18n_ctx_noop("TmplStringPlur", " hr"),
-    i18n_ctx_noop("TmplStringMany", " hr")},
-  /// Suffixes for hours with full units
-  { i18n_ctx_noop("TmplStringSing", " hour"),
-    i18n_ctx_noop("TmplStringPlur", " hours"),
-    i18n_ctx_noop("TmplStringMany", " hours")},
+static const char *const s_hour_strings[3][3] = {
+    /// Suffixes for hours with no units
+    {i18n_ctx_noop("TmplStringSing", ""), i18n_ctx_noop("TmplStringPlur", ""),
+     i18n_ctx_noop("TmplStringMany", "")},
+    /// Suffixes for hours with abbreviated units
+    {i18n_ctx_noop("TmplStringSing", " hr"), i18n_ctx_noop("TmplStringPlur", " hr"),
+     i18n_ctx_noop("TmplStringMany", " hr")},
+    /// Suffixes for hours with full units
+    {i18n_ctx_noop("TmplStringSing", " hour"), i18n_ctx_noop("TmplStringPlur", " hours"),
+     i18n_ctx_noop("TmplStringMany", " hours")},
 };
 
-static const char * const s_day_strings[3][3] = {
-  /// Suffixes for days with no units
-  { i18n_ctx_noop("TmplStringSing", ""),
-    i18n_ctx_noop("TmplStringPlur", ""),
-    i18n_ctx_noop("TmplStringMany", "")},
-  /// Suffixes for days with abbreviated units
-  { i18n_ctx_noop("TmplStringSing", " d"),
-    i18n_ctx_noop("TmplStringPlur", " d"),
-    i18n_ctx_noop("TmplStringMany", " d")},
-  /// Suffixes for days with full units
-  { i18n_ctx_noop("TmplStringSing", " day"),
-    i18n_ctx_noop("TmplStringPlur", " days"),
-    i18n_ctx_noop("TmplStringMany", " days")},
+static const char *const s_day_strings[3][3] = {
+    /// Suffixes for days with no units
+    {i18n_ctx_noop("TmplStringSing", ""), i18n_ctx_noop("TmplStringPlur", ""),
+     i18n_ctx_noop("TmplStringMany", "")},
+    /// Suffixes for days with abbreviated units
+    {i18n_ctx_noop("TmplStringSing", " d"), i18n_ctx_noop("TmplStringPlur", " d"),
+     i18n_ctx_noop("TmplStringMany", " d")},
+    /// Suffixes for days with full units
+    {i18n_ctx_noop("TmplStringSing", " day"), i18n_ctx_noop("TmplStringPlur", " days"),
+     i18n_ctx_noop("TmplStringMany", " days")},
 };
 
 #if SUPPORT_MONTH
-static const char * const s_month_strings[3][3] = {
-  /// Suffixes for months with no units
-  { i18n_ctx_noop("TmplStringSing", ""),
-    i18n_ctx_noop("TmplStringPlur", ""),
-    i18n_ctx_noop("TmplStringMany", "")},
-  /// Suffixes for months with abbreviated units
-  { i18n_ctx_noop("TmplStringSing", " mo"),
-    i18n_ctx_noop("TmplStringPlur", " mo"),
-    i18n_ctx_noop("TmplStringMany", " mo")},
-  /// Suffixes for months with full units
-  { i18n_ctx_noop("TmplStringSing", " month"),
-    i18n_ctx_noop("TmplStringPlur", " months"),
-    i18n_ctx_noop("TmplStringMany", " months")},
+static const char *const s_month_strings[3][3] = {
+    /// Suffixes for months with no units
+    {i18n_ctx_noop("TmplStringSing", ""), i18n_ctx_noop("TmplStringPlur", ""),
+     i18n_ctx_noop("TmplStringMany", "")},
+    /// Suffixes for months with abbreviated units
+    {i18n_ctx_noop("TmplStringSing", " mo"), i18n_ctx_noop("TmplStringPlur", " mo"),
+     i18n_ctx_noop("TmplStringMany", " mo")},
+    /// Suffixes for months with full units
+    {i18n_ctx_noop("TmplStringSing", " month"), i18n_ctx_noop("TmplStringPlur", " months"),
+     i18n_ctx_noop("TmplStringMany", " months")},
 };
 #endif
 
 #if SUPPORT_YEAR
-static const char * const s_year_strings[3][3] = {
-  /// Suffixes for years with no units
-  { i18n_ctx_noop("TmplStringSing", ""),
-    i18n_ctx_noop("TmplStringPlur", ""),
-    i18n_ctx_noop("TmplStringMany", "")},
-  /// Suffixes for years with abbreviated units
-  { i18n_ctx_noop("TmplStringSing", " yr"),
-    i18n_ctx_noop("TmplStringPlur", " yr"),
-    i18n_ctx_noop("TmplStringMany", " yr")},
-  /// Suffixes for years with full units
-  { i18n_ctx_noop("TmplStringSing", " year"),
-    i18n_ctx_noop("TmplStringPlur", " years"),
-    i18n_ctx_noop("TmplStringMany", " years")},
+static const char *const s_year_strings[3][3] = {
+    /// Suffixes for years with no units
+    {i18n_ctx_noop("TmplStringSing", ""), i18n_ctx_noop("TmplStringPlur", ""),
+     i18n_ctx_noop("TmplStringMany", "")},
+    /// Suffixes for years with abbreviated units
+    {i18n_ctx_noop("TmplStringSing", " yr"), i18n_ctx_noop("TmplStringPlur", " yr"),
+     i18n_ctx_noop("TmplStringMany", " yr")},
+    /// Suffixes for years with full units
+    {i18n_ctx_noop("TmplStringSing", " year"), i18n_ctx_noop("TmplStringPlur", " years"),
+     i18n_ctx_noop("TmplStringMany", " years")},
 };
 #endif
 
@@ -377,7 +396,7 @@ static int prv_plural_index(intmax_t value) {
 }
 
 static void prv_do_conversion(TemplateStringState *state, intmax_t value, int divide, int mod,
-                              const char * const suffix_strings[3][3], FormatUnits add_units,
+                              const char *const suffix_strings[3][3], FormatUnits add_units,
                               bool zero_pad, bool should_mod) {
   int remain = (value % divide);
   if (!state->time_was_until) {
@@ -407,7 +426,7 @@ static void prv_do_conversion(TemplateStringState *state, intmax_t value, int di
 // So when adding stack variables, realize the stack usage may be doubled!
 T_STATIC const char *prv_template_format_specifier(TemplateStringState *state, const char *input,
                                                    intmax_t value) {
-  if (*input == '%') { // Escaped %
+  if (*input == '%') {  // Escaped %
     prv_append_char(state, *input);
     input++;
     return input;
@@ -459,46 +478,46 @@ T_STATIC const char *prv_template_format_specifier(TemplateStringState *state, c
   // conversion specifiers
   switch (*input) {
 #if SUPPORT_YEAR
-    case 'y': // year
+    case 'y':  // year
       // NOTE: This number of seconds to divide by is a hack! See PBL-39903
-      prv_do_conversion(state, value, 365 * SECONDS_PER_DAY, 100, s_year_strings,
-                        add_units, zero_pad, modulus);
+      prv_do_conversion(state, value, 365 * SECONDS_PER_DAY, 100, s_year_strings, add_units,
+                        zero_pad, modulus);
       break;
 #endif
 #if SUPPORT_MONTH
-    case 'm': // month
+    case 'm':  // month
       // NOTE: This number of seconds to divide by is a hack! See PBL-39903
-      prv_do_conversion(state, value, 30 * SECONDS_PER_DAY, 12, s_month_strings,
-                        add_units, zero_pad, modulus);
+      prv_do_conversion(state, value, 30 * SECONDS_PER_DAY, 12, s_month_strings, add_units,
+                        zero_pad, modulus);
       break;
 #endif
-    case 'd': // day
-      // NOTE: This number of modulus is a hack! See PBL-39903
+    case 'd':  // day
+               // NOTE: This number of modulus is a hack! See PBL-39903
 #if SUPPORT_MONTH
-      prv_do_conversion(state, value, SECONDS_PER_DAY, 30, s_day_strings,
-                        add_units, zero_pad, modulus);
+      prv_do_conversion(state, value, SECONDS_PER_DAY, 30, s_day_strings, add_units, zero_pad,
+                        modulus);
 #else
-      prv_do_conversion(state, value, SECONDS_PER_DAY, 0, s_day_strings,
-                        add_units, zero_pad, modulus);
+      prv_do_conversion(state, value, SECONDS_PER_DAY, 0, s_day_strings, add_units, zero_pad,
+                        modulus);
 #endif
       break;
-    case 'H': // hour
-      prv_do_conversion(state, value, SECONDS_PER_HOUR, HOURS_PER_DAY, s_hour_strings,
-                        add_units, zero_pad, modulus);
+    case 'H':  // hour
+      prv_do_conversion(state, value, SECONDS_PER_HOUR, HOURS_PER_DAY, s_hour_strings, add_units,
+                        zero_pad, modulus);
       break;
-    case 'M': // minute
+    case 'M':  // minute
       prv_do_conversion(state, value, SECONDS_PER_MINUTE, MINUTES_PER_HOUR, s_minute_strings,
                         add_units, zero_pad, modulus);
       break;
-    case 'S': // second
-      prv_do_conversion(state, value, 1, SECONDS_PER_MINUTE, s_second_strings,
-                        add_units, zero_pad, modulus);
+    case 'S':  // second
+      prv_do_conversion(state, value, 1, SECONDS_PER_MINUTE, s_second_strings, add_units, zero_pad,
+                        modulus);
       break;
-    case 'R': // H:M
+    case 'R':  // H:M
       // R is mostly the same as T, just without seconds.
       macro_end--;
       // fall-thru
-    case 'T': { // H:M:S
+    case 'T': {  // H:M:S
       char macro_spec[16];
       // Always show the last unit, even if it's 0.
       macro_units = MIN(macro_units, macro_end - 1);
@@ -565,8 +584,8 @@ static bool prv_format_predicate(TemplateStringState *state, bool previously_mat
     wait_time = state->filter_state - predicate_value;
   }
 
-  if (!previously_matched && match && ((predicate_cond == cond_to_expire) ||
-                                       (predicate_cond == cond_to_expire + 1))) {
+  if (!previously_matched && match &&
+      ((predicate_cond == cond_to_expire) || (predicate_cond == cond_to_expire + 1))) {
     // This predicate could expire over time.
 
     // If the conditional is equal, add 1 to the wait time, because the equals case stays
@@ -574,8 +593,8 @@ static bool prv_format_predicate(TemplateStringState *state, bool previously_mat
     if (predicate_cond == cond_to_expire + 1) {
       wait_time++;
     }
-  } else if (!match && ((predicate_cond == cond_to_valid) ||
-                        (predicate_cond == cond_to_valid + 1))) {
+  } else if (!match &&
+             ((predicate_cond == cond_to_valid) || (predicate_cond == cond_to_valid + 1))) {
     // This predicate could become valid over time.
 
     // If the conditional is not equal, add 1 to the wait time, because only the equals case
@@ -603,7 +622,7 @@ static bool prv_format_predicate(TemplateStringState *state, bool previously_mat
 static void prv_format_process_format_string(TemplateStringState *state, char delimiter) {
   // Predicate matched (or is default case), so let's parse the string.
   while ((*state->position != delimiter) && (*state->position != '\0')) {
-    if (*state->position != '%') { // Not a format character
+    if (*state->position != '%') {  // Not a format character
       prv_handle_escape_character(state);
       if (state->error->status != TemplateStringErrorStatus_Success) {
         return;
@@ -613,8 +632,7 @@ static void prv_format_process_format_string(TemplateStringState *state, char de
     } else {
       // Skip over the %
       state->position++;
-      state->position = prv_template_format_specifier(state, state->position,
-                                                      state->filter_state);
+      state->position = prv_template_format_specifier(state, state->position, state->filter_state);
       if (state->error->status != TemplateStringErrorStatus_Success) {
         return;
       }
@@ -725,9 +743,7 @@ static void prv_filter_time_since(TemplateStringState *state) {
   state->time_was_until = false;
 }
 
-static void prv_filter_end(TemplateStringState *state) {
-  state->filters_complete = true;
-}
+static void prv_filter_end(TemplateStringState *state) { state->filters_complete = true; }
 
 T_STATIC void prv_template_evaluate_filter(TemplateStringState *state, const char *filter_name,
                                            const char *parameters_start) {
@@ -802,15 +818,15 @@ bool template_string_evaluate(const char *input_template_string, char *output, s
                               TemplateStringEvalConditions *eval_cond,
                               const TemplateStringVars *vars, TemplateStringError *error) {
   TemplateStringState state = {
-    .position = input_template_string,
-    .output = output,
-    .output_remaining = output_size,
-    .eval_cond = eval_cond,
-    .vars = vars,
-    .error = error,
+      .position = input_template_string,
+      .output = output,
+      .output_remaining = output_size,
+      .eval_cond = eval_cond,
+      .vars = vars,
+      .error = error,
 
-    .time_was_until = false,
-    .filter_state = 0,
+      .time_was_until = false,
+      .filter_state = 0,
   };
 
   if (!state.position || !state.vars || !state.error) {
@@ -845,7 +861,7 @@ bool template_string_evaluate(const char *input_template_string, char *output, s
       }
       prv_append_char(&state, *state.position);
       state.position++;
-    } else { // Template
+    } else {  // Template
       state.position++;
       prv_template_eval(&state);
       if (state.error->status != TemplateStringErrorStatus_Success) {

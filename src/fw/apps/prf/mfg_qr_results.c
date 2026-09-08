@@ -23,20 +23,31 @@
 static const char *prv_color_short_name(WatchInfoColor color) {
   switch (color) {
 #ifdef CONFIG_BOARD_ASTERIX
-  case WATCH_INFO_COLOR_COREDEVICES_P2D_BLACK: return "BK";
-  case WATCH_INFO_COLOR_COREDEVICES_P2D_WHITE: return "WH";
+    case WATCH_INFO_COLOR_COREDEVICES_P2D_BLACK:
+      return "BK";
+    case WATCH_INFO_COLOR_COREDEVICES_P2D_WHITE:
+      return "WH";
 #elif defined(CONFIG_BOARD_OBELIX)
-  case WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_GREY: return "BG";
-  case WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_RED: return "BR";
-  case WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_BLUE: return "SB";
-  case WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_GREY: return "SG";
+    case WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_GREY:
+      return "BG";
+    case WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_RED:
+      return "BR";
+    case WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_BLUE:
+      return "SB";
+    case WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_GREY:
+      return "SG";
 #elif defined(CONFIG_BOARD_GETAFIX)
-  case WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK_20: return "BK20";
-  case WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_14: return "SV14";
-  case WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_20: return "SV20";
-  case WATCH_INFO_COLOR_COREDEVICES_PR2_GOLD_14: return "GD14";
+    case WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK_20:
+      return "BK20";
+    case WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_14:
+      return "SV14";
+    case WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_20:
+      return "SV20";
+    case WATCH_INFO_COLOR_COREDEVICES_PR2_GOLD_14:
+      return "GD14";
 #endif
-  default: return "??";
+    default:
+      return "??";
   }
 }
 
@@ -73,61 +84,61 @@ static void prv_append_result(char *buf, size_t bufsz, MfgTestId test) {
   }
 
   switch (test) {
-  case MfgTestId_Buttons:
-    snprintf(entry, sizeof(entry), "BTN:%c", rc);
-    break;
-  case MfgTestId_Display:
-    snprintf(entry, sizeof(entry), "DSP:%c", rc);
-    break;
+    case MfgTestId_Buttons:
+      snprintf(entry, sizeof(entry), "BTN:%c", rc);
+      break;
+    case MfgTestId_Display:
+      snprintf(entry, sizeof(entry), "DSP:%c", rc);
+      break;
 #ifdef CONFIG_TOUCH
-  case MfgTestId_Touch:
-    snprintf(entry, sizeof(entry), "TCH:%c", rc);
-    break;
+    case MfgTestId_Touch:
+      snprintf(entry, sizeof(entry), "TCH:%c", rc);
+      break;
 #endif
-  case MfgTestId_Backlight:
-    snprintf(entry, sizeof(entry), "BKL:%c", rc);
-    break;
-  case MfgTestId_Accel:
-    snprintf(entry, sizeof(entry), "ACC:%c", rc);
-    break;
+    case MfgTestId_Backlight:
+      snprintf(entry, sizeof(entry), "BKL:%c", rc);
+      break;
+    case MfgTestId_Accel:
+      snprintf(entry, sizeof(entry), "ACC:%c", rc);
+      break;
 #ifdef CONFIG_MAG
-  case MfgTestId_Mag:
-    snprintf(entry, sizeof(entry), "MAG:%c", rc);
-    break;
+    case MfgTestId_Mag:
+      snprintf(entry, sizeof(entry), "MAG:%c", rc);
+      break;
 #endif
 #if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX)
-  case MfgTestId_Speaker:
-    snprintf(entry, sizeof(entry), "SPK:%c", rc);
-    break;
+    case MfgTestId_Speaker:
+      snprintf(entry, sizeof(entry), "SPK:%c", rc);
+      break;
 #endif
 #if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX)
-  case MfgTestId_Mic:
-    snprintf(entry, sizeof(entry), "MIC:%c", rc);
-    break;
+    case MfgTestId_Mic:
+      snprintf(entry, sizeof(entry), "MIC:%c", rc);
+      break;
 #endif
-  case MfgTestId_ALS:
-    snprintf(entry, sizeof(entry), "ALS:%c,%lu", rc, (unsigned long)r->value);
-    break;
-  case MfgTestId_Vibration:
-    snprintf(entry, sizeof(entry), "VIB:%c", rc);
-    break;
+    case MfgTestId_ALS:
+      snprintf(entry, sizeof(entry), "ALS:%c,%lu", rc, (unsigned long)r->value);
+      break;
+    case MfgTestId_Vibration:
+      snprintf(entry, sizeof(entry), "VIB:%c", rc);
+      break;
 #if defined(CONFIG_BOARD_OBELIX) && defined(CONFIG_MFG)
-  case MfgTestId_HrmCtrLeakage:
-    snprintf(entry, sizeof(entry), "HRM:%c", rc);
-    break;
+    case MfgTestId_HrmCtrLeakage:
+      snprintf(entry, sizeof(entry), "HRM:%c", rc);
+      break;
 #endif
-  case MfgTestId_Charge:
-    snprintf(entry, sizeof(entry), "CHG:%c", rc);
-    break;
-  case MfgTestId_ProgramColor:
-    snprintf(entry, sizeof(entry), "CLR:%c,%s", rc,
-             prv_color_short_name((WatchInfoColor)r->value));
-    break;
-  case MfgTestId_Aging:
-    snprintf(entry, sizeof(entry), "AGE:%c", rc);
-    break;
-  default:
-    return;
+    case MfgTestId_Charge:
+      snprintf(entry, sizeof(entry), "CHG:%c", rc);
+      break;
+    case MfgTestId_ProgramColor:
+      snprintf(entry, sizeof(entry), "CLR:%c,%s", rc,
+               prv_color_short_name((WatchInfoColor)r->value));
+      break;
+    case MfgTestId_Aging:
+      snprintf(entry, sizeof(entry), "AGE:%c", rc);
+      break;
+    default:
+      return;
   }
 
   strncat(buf, entry, bufsz - strlen(buf) - 1);
@@ -147,9 +158,8 @@ static void prv_handle_init(void) {
   char mac[BT_DEVICE_ADDRESS_FMT_BUFFER_SIZE];
   bt_local_id_copy_address_mac_string(mac);
   BatteryChargeState charge = battery_state_service_peek();
-  snprintf(data->qr_buffer, sizeof(data->qr_buffer), "%s;%s;%s;%" PRIu8,
-           mfg_get_serial_number(), mac, TINTIN_METADATA.version_tag,
-           charge.charge_percent);
+  snprintf(data->qr_buffer, sizeof(data->qr_buffer), "%s;%s;%s;%" PRIu8, mfg_get_serial_number(),
+           mac, TINTIN_METADATA.version_tag, charge.charge_percent);
 
   for (MfgTestId id = 0; id < MfgTestIdCount; id++) {
     prv_append_result(data->qr_buffer, sizeof(data->qr_buffer), id);
@@ -158,18 +168,15 @@ static void prv_handle_init(void) {
   QRCode *qr_code = &data->qr_code;
 #if PBL_ROUND
 #define QR_CODE_SIZE ((window->layer.bounds.size.w * 10) / 14)
-  qr_code_init_with_parameters(qr_code,
-                               &GRect((window->layer.bounds.size.w - QR_CODE_SIZE) / 2,
-                                      (window->layer.bounds.size.h - QR_CODE_SIZE) / 2,
-                                      QR_CODE_SIZE, QR_CODE_SIZE),
-                               data->qr_buffer, strlen(data->qr_buffer), QRCodeECCMedium,
-                               GColorBlack, GColorWhite);
+  qr_code_init_with_parameters(
+      qr_code,
+      &GRect((window->layer.bounds.size.w - QR_CODE_SIZE) / 2,
+             (window->layer.bounds.size.h - QR_CODE_SIZE) / 2, QR_CODE_SIZE, QR_CODE_SIZE),
+      data->qr_buffer, strlen(data->qr_buffer), QRCodeECCMedium, GColorBlack, GColorWhite);
 #else
-  qr_code_init_with_parameters(qr_code,
-                               &GRect(10, 10, window->layer.bounds.size.w - 20,
-                                      window->layer.bounds.size.h - 20),
-                               data->qr_buffer, strlen(data->qr_buffer), QRCodeECCMedium,
-                               GColorBlack, GColorWhite);
+  qr_code_init_with_parameters(
+      qr_code, &GRect(10, 10, window->layer.bounds.size.w - 20, window->layer.bounds.size.h - 20),
+      data->qr_buffer, strlen(data->qr_buffer), QRCodeECCMedium, GColorBlack, GColorWhite);
 #endif
   layer_add_child(&window->layer, &qr_code->layer);
 
@@ -182,13 +189,13 @@ static void s_main(void) {
   app_event_loop();
 }
 
-const PebbleProcessMd* mfg_qr_results_app_get_info(void) {
+const PebbleProcessMd *mfg_qr_results_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = &s_main,
-    // UUID: 7b3e9f2a-5d1c-4e8b-a6f0-3c9d8e7a1b5f
-    .common.uuid = { 0x7b, 0x3e, 0x9f, 0x2a, 0x5d, 0x1c, 0x4e, 0x8b,
-                     0xa6, 0xf0, 0x3c, 0x9d, 0x8e, 0x7a, 0x1b, 0x5f },
-    .name = "MfgQRResults",
+      .common.main_func = &s_main,
+      // UUID: 7b3e9f2a-5d1c-4e8b-a6f0-3c9d8e7a1b5f
+      .common.uuid = {0x7b, 0x3e, 0x9f, 0x2a, 0x5d, 0x1c, 0x4e, 0x8b, 0xa6, 0xf0, 0x3c, 0x9d, 0x8e,
+                      0x7a, 0x1b, 0x5f},
+      .name = "MfgQRResults",
   };
-  return (const PebbleProcessMd*) &s_app_info;
+  return (const PebbleProcessMd *)&s_app_info;
 }

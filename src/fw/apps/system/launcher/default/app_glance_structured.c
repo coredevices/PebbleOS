@@ -40,17 +40,15 @@ static void prv_structured_glance_icon_draw_command_processor_process_command(
 
   // Luminance tint the fill color
   const GColor fill_color = gdraw_command_get_fill_color(processed_command);
-  const GColor tinted_fill_color =
-      gcolor_perform_lookup_using_color_luminance_and_multiply_alpha(fill_color,
-                                                                     luminance_tint_lookup_table);
+  const GColor tinted_fill_color = gcolor_perform_lookup_using_color_luminance_and_multiply_alpha(
+      fill_color, luminance_tint_lookup_table);
   gdraw_command_replace_color(processed_command, fill_color, tinted_fill_color);
   gdraw_command_set_fill_color(processed_command, tinted_fill_color);
 
   // Luminance tint the stroke color
   const GColor stroke_color = gdraw_command_get_stroke_color(processed_command);
-  const GColor tinted_stroke_color =
-      gcolor_perform_lookup_using_color_luminance_and_multiply_alpha(stroke_color,
-                                                                     luminance_tint_lookup_table);
+  const GColor tinted_stroke_color = gcolor_perform_lookup_using_color_luminance_and_multiply_alpha(
+      stroke_color, luminance_tint_lookup_table);
   gdraw_command_set_stroke_color(processed_command, tinted_stroke_color);
 }
 
@@ -78,7 +76,7 @@ static void prv_structured_glance_icon_bitmap_processor_post_func(
     GBitmapProcessor *processor, GContext *ctx, PBL_UNUSED const GBitmap *bitmap_used,
     PBL_UNUSED const GRect *global_clipped_grect_used) {
   GenericGlanceIconBitmapProcessor *processor_with_data =
-    (GenericGlanceIconBitmapProcessor *)processor;
+      (GenericGlanceIconBitmapProcessor *)processor;
   // Restore the saved compositing mode and tint color
   ctx->draw_state.compositing_mode = processor_with_data->saved_compositing_mode;
   ctx->draw_state.tint_color = processor_with_data->saved_tint_color;
@@ -109,26 +107,27 @@ void launcher_app_glance_structured_draw_icon(LauncherAppGlanceStructured *struc
   const GColor desired_tint_color = prv_get_icon_tint_color(structured_glance);
 
   GenericGlanceIconBitmapProcessor structured_glance_icon_bitmap_processor = {
-    .bitmap_processor = {
-      .pre = prv_structured_glance_icon_bitmap_processor_pre_func,
-      .post = prv_structured_glance_icon_bitmap_processor_post_func,
-    },
-    .desired_tint_color = desired_tint_color,
+      .bitmap_processor =
+          {
+              .pre = prv_structured_glance_icon_bitmap_processor_pre_func,
+              .post = prv_structured_glance_icon_bitmap_processor_post_func,
+          },
+      .desired_tint_color = desired_tint_color,
   };
 
   GColor8 luminance_tint_lookup_table[GCOLOR8_COMPONENT_NUM_VALUES] = {};
   gcolor_tint_luminance_lookup_table_init(desired_tint_color, luminance_tint_lookup_table);
 
   GenericGlanceIconDrawCommandProcessor structured_glance_icon_draw_command_processor = {
-    .draw_command_processor.command =
-        prv_structured_glance_icon_draw_command_processor_process_command,
-    .luminance_tint_lookup_table = luminance_tint_lookup_table,
+      .draw_command_processor.command =
+          prv_structured_glance_icon_draw_command_processor_process_command,
+      .luminance_tint_lookup_table = luminance_tint_lookup_table,
   };
 
   KinoReelProcessor structured_glance_icon_processor = {
-    .bitmap_processor = &structured_glance_icon_bitmap_processor.bitmap_processor,
-    .draw_command_processor =
-        &structured_glance_icon_draw_command_processor.draw_command_processor,
+      .bitmap_processor = &structured_glance_icon_bitmap_processor.bitmap_processor,
+      .draw_command_processor =
+          &structured_glance_icon_draw_command_processor.draw_command_processor,
   };
 
   // Draw the glance's icon, luminance tinting its colors according to the glance's highlight
@@ -146,13 +145,12 @@ static void prv_structured_glance_icon_node_draw_cb(GContext *ctx, const GRect *
 
   if (render && icon) {
     // Center the frame in which we'll draw the icon
-    GRect icon_frame = (GRect) { .size = kino_reel_get_size(icon) };
+    GRect icon_frame = (GRect){.size = kino_reel_get_size(icon)};
     grect_align(&icon_frame, rect, GAlignCenter, false /* clip */);
 
     // Save the GContext's clip box and override it so we clip the icon to the max icon size
     const GRect saved_clip_box = ctx->draw_state.clip_box;
-    ctx->draw_state.clip_box.origin = gpoint_add(ctx->draw_state.drawing_box.origin,
-                                                 rect->origin);
+    ctx->draw_state.clip_box.origin = gpoint_add(ctx->draw_state.drawing_box.origin, rect->origin);
     ctx->draw_state.clip_box.size = rect->size;
 
     // Prevent drawing outside of the existing clip box
@@ -190,8 +188,8 @@ static GTextNode *prv_structured_glance_create_text_node(
 
 static void prv_structured_glance_title_dynamic_text_node_update(
     PBL_UNUSED GContext *ctx, PBL_UNUSED GTextNode *node, PBL_UNUSED const GRect *box,
-    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer, size_t buffer_size,
-    void *user_data) {
+    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer,
+    size_t buffer_size, void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
   const char *title = NULL;
   if (structured_glance && structured_glance->impl && structured_glance->impl->get_title) {
@@ -233,11 +231,11 @@ static bool prv_get_text_scroll_vars(GContext *ctx, uint32_t cumulative_elapsed_
 
   // Allow for showing up to 3x the width of the draw_box for the text
   const int16_t max_text_width = draw_box->size.w * (int16_t)3;
-  const GRect max_text_box = (GRect) { .size = GSize(max_text_width, draw_box->size.h) };
+  const GRect max_text_box = (GRect){.size = GSize(max_text_width, draw_box->size.h)};
   const int16_t scroll_visible_text_width =
-      graphics_text_layout_get_max_used_size(ctx, text, font, max_text_box,
-                                             overflow_mode, text_alignment,
-                                             (GTextLayoutCacheRef)layout).w;
+      graphics_text_layout_get_max_used_size(ctx, text, font, max_text_box, overflow_mode,
+                                             text_alignment, (GTextLayoutCacheRef)layout)
+          .w;
 
   if (scroll_visible_text_width <= draw_box->size.w) {
     // No need to scroll because text fits completely in the provided draw_box
@@ -276,7 +274,7 @@ static bool prv_get_text_scroll_vars(GContext *ctx, uint32_t cumulative_elapsed_
 
   const uint32_t elapsed_normalized =
       ((uint32_t)elapsed_ms * ANIMATION_NORMALIZED_MAX) /
-        (rewind ? rewind_scroll_duration_ms : normal_scroll_duration_ms);
+      (rewind ? rewind_scroll_duration_ms : normal_scroll_duration_ms);
   vars_out->current_offset = interpolate_int16(elapsed_normalized, 0, total_px_to_scroll);
 
   return true;
@@ -292,9 +290,7 @@ static void prv_adjust_subtitle_node_for_scrolling_animation(
   const uint32_t cumulative_elapsed_ms = structured_glance->selection_animation_elapsed_ms;
 
   ScrollAnimationVars vars;
-  if (!prv_get_text_scroll_vars(ctx,
-                                cumulative_elapsed_ms,
-                                text, draw_box, node_text->font,
+  if (!prv_get_text_scroll_vars(ctx, cumulative_elapsed_ms, text, draw_box, node_text->font,
                                 node_text->alignment, node_text->overflow,
                                 &structured_glance->subtitle_scroll_calc_text_layout, &vars)) {
     // No need to scroll because text fits completely on-screen, set the selection animation
@@ -326,7 +322,7 @@ static void prv_adjust_subtitle_node_for_scrolling_animation(
 
 static void prv_structured_glance_subtitle_dynamic_text_node_update(
     GContext *ctx, GTextNode *node, const GRect *box, const GTextNodeDrawConfig *config,
-    bool render, char *buffer, size_t buffer_size,  void *user_data) {
+    bool render, char *buffer, size_t buffer_size, void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
   if (structured_glance->subtitle_update) {
     structured_glance->subtitle_update(ctx, node, box, config, render, buffer, buffer_size,
@@ -361,7 +357,7 @@ static GTextNode *prv_create_structured_glance_title_subtitle_node(
   GTextNode *title_node = prv_structured_glance_create_title_text_node(structured_glance);
   // We require a valid title node
   PBL_ASSERTN(title_node);
-  
+
   // Push the margin a bit closer
 #if PBL_DISPLAY_HEIGHT >= 200 && PBL_RECT
   title_node->margin.h = -3;
@@ -385,7 +381,7 @@ static GTextNode *prv_create_structured_glance_title_subtitle_node(
   // and a negative width must not reach text layout
   vertical_node->container.size.w =
       MAX(0, glance_frame->size.w - structured_glance->icon_horizontal_margin -
-          structured_glance->icon_max_size.w);
+                 structured_glance->icon_max_size.w);
 
   return &vertical_node->container.node;
 }
@@ -401,13 +397,13 @@ static NOINLINE GTextNode *prv_create_structured_glance_node(
   // This vertical node is just a container to vertically center the icon node
   const size_t max_vertical_icon_container_nodes = 1;
   GTextNodeVertical *vertical_icon_container_node =
-    graphics_text_node_create_vertical(max_vertical_icon_container_nodes);
+      graphics_text_node_create_vertical(max_vertical_icon_container_nodes);
   vertical_icon_container_node->vertical_alignment = GVerticalAlignmentCenter;
 
   // This horizontal node is just a container to horizontally center the icon node
   const size_t max_horizontal_icon_container_nodes = 1;
   GTextNodeHorizontal *horizontal_icon_container_node =
-    graphics_text_node_create_horizontal(max_horizontal_icon_container_nodes);
+      graphics_text_node_create_horizontal(max_horizontal_icon_container_nodes);
   horizontal_icon_container_node->horizontal_alignment = GTextAlignmentCenter;
   graphics_text_node_container_add_child(&vertical_icon_container_node->container,
                                          &horizontal_icon_container_node->container.node);
@@ -418,7 +414,8 @@ static NOINLINE GTextNode *prv_create_structured_glance_node(
   // The +1 is to force a rounding up. This way, 3 pixels extra will move closer to the screen
   // edge, instead of closer to the text.
   icon_node->node.offset.x -= (LAUNCHER_APP_GLANCE_STRUCTURED_ICON_HORIZONTAL_MARGIN -
-                                structured_glance->icon_horizontal_margin + 1) / 2;
+                               structured_glance->icon_horizontal_margin + 1) /
+                              2;
   graphics_text_node_container_add_child(&horizontal_icon_container_node->container,
                                          &icon_node->node);
 
@@ -427,8 +424,7 @@ static NOINLINE GTextNode *prv_create_structured_glance_node(
 
   GTextNode *title_subtitle_node =
       prv_create_structured_glance_title_subtitle_node(structured_glance, glance_frame);
-  graphics_text_node_container_add_child(&horizontal_node->container,
-                                         title_subtitle_node);
+  graphics_text_node_container_add_child(&horizontal_node->container, title_subtitle_node);
 
   return &horizontal_node->container.node;
 }
@@ -440,7 +436,7 @@ static void prv_draw_processed(KinoReel *reel, GContext *ctx, GPoint offset,
     return;
   }
 
-  GRect glance_frame = (GRect) { .origin = offset, .size = structured_glance->glance.size };
+  GRect glance_frame = (GRect){.origin = offset, .size = structured_glance->glance.size};
 #if PBL_ROUND && PBL_DISPLAY_HEIGHT >= 200
   // For a circle: x = R - sqrt(R^2 - (y - R)^2), where R = display_size / 2
   const int16_t radius = PBL_DISPLAY_HEIGHT / 2;
@@ -471,8 +467,8 @@ static void prv_draw_processed(KinoReel *reel, GContext *ctx, GPoint offset,
     return;
   }
 
-  GTextNode *structured_glance_node = prv_create_structured_glance_node(structured_glance,
-                                                                        &glance_frame);
+  GTextNode *structured_glance_node =
+      prv_create_structured_glance_node(structured_glance, &glance_frame);
   if (structured_glance_node) {
     graphics_text_node_draw(structured_glance_node, ctx, &glance_frame, NULL, NULL);
   }
@@ -514,13 +510,13 @@ static void prv_destructor(KinoReel *reel) {
 }
 
 static const KinoReelImpl s_launcher_app_glance_structured_reel_impl = {
-  .reel_type = KinoReelTypeCustom,
-  .get_size = launcher_app_glance_get_size_for_reel,
-  .draw_processed = prv_draw_processed,
-  .destructor = prv_destructor,
-  .get_duration = prv_get_duration,
-  .get_elapsed = prv_get_elapsed,
-  .set_elapsed = prv_set_elapsed,
+    .reel_type = KinoReelTypeCustom,
+    .get_size = launcher_app_glance_get_size_for_reel,
+    .draw_processed = prv_draw_processed,
+    .destructor = prv_destructor,
+    .get_duration = prv_get_duration,
+    .get_elapsed = prv_get_elapsed,
+    .set_elapsed = prv_set_elapsed,
 };
 
 LauncherAppGlanceStructured *launcher_app_glance_structured_create(
@@ -532,12 +528,11 @@ LauncherAppGlanceStructured *launcher_app_glance_structured_create(
   structured_glance->impl = impl;
   structured_glance->data = data;
   structured_glance->icon_max_size = LAUNCHER_APP_GLANCE_STRUCTURED_ICON_MAX_SIZE;
-  structured_glance->icon_horizontal_margin =
-      LAUNCHER_APP_GLANCE_STRUCTURED_ICON_HORIZONTAL_MARGIN;
+  structured_glance->icon_horizontal_margin = LAUNCHER_APP_GLANCE_STRUCTURED_ICON_HORIZONTAL_MARGIN;
   structured_glance->title_font = fonts_get_system_font(LAUNCHER_MENU_LAYER_TITLE_FONT);
   structured_glance->subtitle_font = fonts_get_system_font(LAUNCHER_MENU_LAYER_SUBTITLE_FONT);
-  KinoReel *glance_impl = kino_reel_custom_create(&s_launcher_app_glance_structured_reel_impl,
-                                                  structured_glance);
+  KinoReel *glance_impl =
+      kino_reel_custom_create(&s_launcher_app_glance_structured_reel_impl, structured_glance);
   // Now that we've setup the structured glance's fields, initialize the LauncherAppGlance
   launcher_app_glance_init(&structured_glance->glance, uuid, glance_impl, should_consider_slices,
                            base_handlers);
@@ -564,8 +559,8 @@ void launcher_app_glance_structured_set_icon_max_size(
 
   structured_glance->icon_max_size = new_size;
 
-  const int width_diff = structured_glance->icon_max_size.w -
-                         LAUNCHER_APP_GLANCE_STRUCTURED_ICON_MAX_SIZE.w;
+  const int width_diff =
+      structured_glance->icon_max_size.w - LAUNCHER_APP_GLANCE_STRUCTURED_ICON_MAX_SIZE.w;
   structured_glance->icon_horizontal_margin =
       LAUNCHER_APP_GLANCE_STRUCTURED_ICON_HORIZONTAL_MARGIN - width_diff;
 

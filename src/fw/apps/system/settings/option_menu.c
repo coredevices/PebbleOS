@@ -29,31 +29,31 @@ static void prv_menu_draw_row(OptionMenu *option_menu, GContext *ctx, const Laye
   option_menu_system_draw_row(option_menu, ctx, cell_layer, cell_frame, title, selected, context);
 }
 
-OptionMenu *settings_option_menu_create(
-    const char *i18n_title_key, OptionMenuContentType content_type, int choice,
-    const OptionMenuCallbacks *callbacks_ref, uint16_t num_rows, bool icons_enabled,
-    const char **rows, void *context) {
+OptionMenu *settings_option_menu_create(const char *i18n_title_key,
+                                        OptionMenuContentType content_type, int choice,
+                                        const OptionMenuCallbacks *callbacks_ref, uint16_t num_rows,
+                                        bool icons_enabled, const char **rows, void *context) {
   OptionMenu *option_menu = option_menu_create();
   if (!option_menu) {
     return NULL;
   }
   GColor highlight_bg = shell_prefs_get_theme_highlight_color();
   const OptionMenuConfig config = {
-    .title = i18n_get(i18n_title_key, option_menu),
-    .content_type = content_type,
-    .choice = choice,
-    .status_colors = { GColorWhite, GColorBlack },
-    .highlight_colors = { highlight_bg, gcolor_legible_over(highlight_bg) },
-    .icons_enabled = icons_enabled,
+      .title = i18n_get(i18n_title_key, option_menu),
+      .content_type = content_type,
+      .choice = choice,
+      .status_colors = {GColorWhite, GColorBlack},
+      .highlight_colors = {highlight_bg, gcolor_legible_over(highlight_bg)},
+      .icons_enabled = icons_enabled,
   };
   option_menu_configure(option_menu, &config);
   SettingsOptionMenuData *data = task_malloc_check(sizeof(SettingsOptionMenuData));
   OptionMenuCallbacks callbacks = *callbacks_ref;
-  *data = (SettingsOptionMenuData) {
-    .callbacks = callbacks,
-    .context = context,
-    .num_rows = num_rows,
-    .rows = rows,
+  *data = (SettingsOptionMenuData){
+      .callbacks = callbacks,
+      .context = context,
+      .num_rows = num_rows,
+      .rows = rows,
   };
   callbacks.draw_row = prv_menu_draw_row;
   callbacks.get_num_rows = prv_menu_get_num_rows;
@@ -62,11 +62,11 @@ OptionMenu *settings_option_menu_create(
   return option_menu;
 }
 
-OptionMenu *settings_option_menu_push(
-    const char *i18n_title_key, OptionMenuContentType content_type, int choice,
-    const OptionMenuCallbacks *callbacks_ref, uint16_t num_rows, bool icons_enabled,
-    const char **rows, void *context) {
-  OptionMenu * const option_menu = settings_option_menu_create(
+OptionMenu *settings_option_menu_push(const char *i18n_title_key,
+                                      OptionMenuContentType content_type, int choice,
+                                      const OptionMenuCallbacks *callbacks_ref, uint16_t num_rows,
+                                      bool icons_enabled, const char **rows, void *context) {
+  OptionMenu *const option_menu = settings_option_menu_create(
       i18n_title_key, content_type, choice, callbacks_ref, num_rows, icons_enabled, rows, context);
   if (option_menu) {
     const bool animated = true;
@@ -75,6 +75,4 @@ OptionMenu *settings_option_menu_push(
   return option_menu;
 }
 
-void *settings_option_menu_get_context(SettingsOptionMenuData *data) {
-  return data->context;
-}
+void *settings_option_menu_get_context(SettingsOptionMenuData *data) { return data->context; }

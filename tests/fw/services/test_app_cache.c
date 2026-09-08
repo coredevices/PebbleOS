@@ -43,9 +43,7 @@ void app_storage_delete_app(AppInstallId id) {
   pfs_remove(buffer);
 }
 
-bool app_storage_app_exists(AppInstallId id) {
-  return true;
-}
+bool app_storage_app_exists(AppInstallId id) { return true; }
 
 AppInstallId s_test_id_ql_up;
 AppInstallId s_test_id_ql_down;
@@ -68,21 +66,13 @@ AppInstallId quick_launch_single_click_get_app(ButtonId button) {
   }
 }
 
-AppInstallId quick_launch_combo_back_up_get_app(void) {
-  return s_test_id_ql_up;
-}
+AppInstallId quick_launch_combo_back_up_get_app(void) { return s_test_id_ql_up; }
 
-AppInstallId quick_launch_combo_up_down_get_app(void) {
-  return s_test_id_ql_down;
-}
+AppInstallId quick_launch_combo_up_down_get_app(void) { return s_test_id_ql_down; }
 
-AppInstallId watchface_get_default_install_id(void) {
-  return s_test_id_watchface;
-}
+AppInstallId watchface_get_default_install_id(void) { return s_test_id_watchface; }
 
-AppInstallId worker_preferences_get_default_worker(void) {
-  return s_test_id_worker;
-}
+AppInstallId worker_preferences_get_default_worker(void) { return s_test_id_worker; }
 
 extern AppInstallId app_cache_get_next_eviction(void);
 
@@ -95,18 +85,18 @@ typedef struct {
 } AppData;
 
 static const AppData app1 = {
-  .id = 1,
-  .size = 1000,
+    .id = 1,
+    .size = 1000,
 };
 
 static const AppData app2 = {
-  .id = 2,
-  .size = 1000,
+    .id = 2,
+    .size = 1000,
 };
 
 static const AppData app3 = {
-  .id = 3,
-  .size = 1000,
+    .id = 3,
+    .size = 1000,
 };
 
 void test_app_cache__initialize(void) {
@@ -224,7 +214,6 @@ void test_app_cache__update_all_lots_evict_one(void) {
   for (int i = 1; i <= NUM_UPDATES; i++) {
     // go through list and launch each app once.
     for (int j = 1; j <= NUM_ITEMS; j++) {
-
       if ((i == NUM_UPDATES) && (j == DESIRED_EVICT_ID)) {
         continue;
       }
@@ -258,10 +247,10 @@ void test_app_cache__clear(void) {
 #define APP_CACHE_MAX_SIZE 4000
 
 typedef struct PACKED {
-  time_t    install_date;
-  time_t    last_launch;
-  uint32_t  total_size;
-  uint16_t  launch_count;
+  time_t install_date;
+  time_t last_launch;
+  uint32_t total_size;
+  uint16_t launch_count;
 } AppCacheEntry;
 
 void test_app_cache__corrupt_key(void) {
@@ -269,7 +258,6 @@ void test_app_cache__corrupt_key(void) {
   cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app1.id, app1.size));
   cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app2.id, app2.size));
   cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app3.id, app3.size));
-
 
   // add one with a key value of length 3
   // Raw SettingsFile calls
@@ -279,15 +267,15 @@ void test_app_cache__corrupt_key(void) {
   cl_assert_equal_i(S_SUCCESS, rv);
 
   AppCacheEntry entry = {
-    .install_date = rtc_get_time(),
-    .last_launch = 0,
-    .launch_count = 0,
-    .total_size = 17,
+      .install_date = rtc_get_time(),
+      .last_launch = 0,
+      .launch_count = 0,
+      .total_size = 17,
   };
 
   int rand_id = 1717;
-  rv = settings_file_set(&file, (uint8_t *)&rand_id, (sizeof(AppInstallId) - 1),
-      (uint8_t *)&entry, sizeof(AppCacheEntry));
+  rv = settings_file_set(&file, (uint8_t *)&rand_id, (sizeof(AppInstallId) - 1), (uint8_t *)&entry,
+                         sizeof(AppCacheEntry));
 
   settings_file_close(&file);
   // End Raw SettingsFile calls
@@ -302,57 +290,58 @@ void test_app_cache__corrupt_key(void) {
 }
 
 static const uint32_t SIZE_SUM = 7210515;
-static const AppData t_data[] = {               // higher rank = should keep around
-  { .id = 1,  .priority = 40, .size = 131798 }, // priority rank 28
-  { .id = 2,  .priority = 60, .size = 194327 }, // priority rank 48
-  { .id = 3,  .priority = 23, .size = 195131 }, // priority rank 15
-  { .id = 4,  .priority = 21, .size = 16438  }, // priority rank 13
-  { .id = 5,  .priority = 58, .size = 88644  }, // priority rank 45
-  { .id = 6,  .priority = 57, .size = 269063 }, // priority rank 43
-  { .id = 7,  .priority = 43, .size = 83456  }, // priority rank 32
-  { .id = 8,  .priority = 29, .size = 233211 }, // priority rank 20
-  { .id = 9,  .priority = 38, .size = 55766  }, // priority rank 26
-  { .id = 10, .priority = 19, .size = 28359  }, // priority rank 12
-  { .id = 11, .priority = 29, .size = 82909  }, // priority rank 21
-  { .id = 12, .priority = 53, .size = 132316 }, // priority rank 41
-  { .id = 13, .priority = 45, .size = 214356 }, // priority rank 35
-  { .id = 14, .priority = 47, .size = 258908 }, // priority rank 36
-  { .id = 15, .priority = 19, .size = 117885 }, // priority rank 11
-  { .id = 16, .priority = 42, .size = 167427 }, // priority rank 31
-  { .id = 17, .priority = 1,  .size = 22644  }, // priority rank 2
-  { .id = 18, .priority = 30, .size = 33202  }, // priority rank 22
-  { .id = 19, .priority = 25, .size = 151434 }, // priority rank 18
-  { .id = 20, .priority = 33, .size = 102321 }, // priority rank 24
-  { .id = 21, .priority = 19, .size = 223352 }, // priority rank 9
-  { .id = 22, .priority = 36, .size = 133221 }, // priority rank 25
-  { .id = 23, .priority = 51, .size = 169128 }, // priority rank 39
-  { .id = 24, .priority = 22, .size = 103055 }, // priority rank 14
-  { .id = 25, .priority = 44, .size = 182304 }, // priority rank 33
-  { .id = 26, .priority = 2,  .size = 177430 }, // priority rank 3
-  { .id = 27, .priority = 5,  .size = 248430 }, // priority rank 4
-  { .id = 28, .priority = 44, .size = 168622 }, // priority rank 34
-  { .id = 29, .priority = 6,  .size = 192857 }, // priority rank 5
-  { .id = 30, .priority = 19, .size = 183331 }, // priority rank 10
-  { .id = 31, .priority = 61, .size = 111155 }, // priority rank 50
-  { .id = 32, .priority = 42, .size = 211695 }, // priority rank 30
-  { .id = 33, .priority = 49, .size = 35653  }, // priority rank 38
-  { .id = 34, .priority = 57, .size = 11541  }, // priority rank 44
-  { .id = 35, .priority = 40, .size = 49368  }, // priority rank 29
-  { .id = 36, .priority = 25, .size = 230982 }, // priority rank 17
-  { .id = 37, .priority = 32, .size = 185018 }, // priority rank 23
-  { .id = 38, .priority = 39, .size = 163897 }, // priority rank 27
-  { .id = 39, .priority = 24, .size = 233217 }, // priority rank 16
-  { .id = 40, .priority = 8,  .size = 23717  }, // priority rank 6
-  { .id = 41, .priority = 61, .size = 266668 }, // priority rank 49
-  { .id = 42, .priority = 58, .size = 61228  }, // priority rank 46
-  { .id = 43, .priority = 12, .size = 23513  }, // priority rank 7
-  { .id = 44, .priority = 60, .size = 267049 }, // priority rank 47
-  { .id = 45, .priority = 52, .size = 240086 }, // priority rank 40
-  { .id = 46, .priority = 14, .size = 194481 }, // priority rank 8
-  { .id = 47, .priority = 27, .size = 42163  }, // priority rank 19
-  { .id = 48, .priority = 56, .size = 72854  }, // priority rank 42
-  { .id = 49, .priority = 49, .size = 217548 }, // priority rank 37
-  { .id = 50, .priority = 1,  .size = 207357 }, // priority rank 1
+static const AppData t_data[] = {
+    // higher rank = should keep around
+    {.id = 1, .priority = 40, .size = 131798},   // priority rank 28
+    {.id = 2, .priority = 60, .size = 194327},   // priority rank 48
+    {.id = 3, .priority = 23, .size = 195131},   // priority rank 15
+    {.id = 4, .priority = 21, .size = 16438},    // priority rank 13
+    {.id = 5, .priority = 58, .size = 88644},    // priority rank 45
+    {.id = 6, .priority = 57, .size = 269063},   // priority rank 43
+    {.id = 7, .priority = 43, .size = 83456},    // priority rank 32
+    {.id = 8, .priority = 29, .size = 233211},   // priority rank 20
+    {.id = 9, .priority = 38, .size = 55766},    // priority rank 26
+    {.id = 10, .priority = 19, .size = 28359},   // priority rank 12
+    {.id = 11, .priority = 29, .size = 82909},   // priority rank 21
+    {.id = 12, .priority = 53, .size = 132316},  // priority rank 41
+    {.id = 13, .priority = 45, .size = 214356},  // priority rank 35
+    {.id = 14, .priority = 47, .size = 258908},  // priority rank 36
+    {.id = 15, .priority = 19, .size = 117885},  // priority rank 11
+    {.id = 16, .priority = 42, .size = 167427},  // priority rank 31
+    {.id = 17, .priority = 1, .size = 22644},    // priority rank 2
+    {.id = 18, .priority = 30, .size = 33202},   // priority rank 22
+    {.id = 19, .priority = 25, .size = 151434},  // priority rank 18
+    {.id = 20, .priority = 33, .size = 102321},  // priority rank 24
+    {.id = 21, .priority = 19, .size = 223352},  // priority rank 9
+    {.id = 22, .priority = 36, .size = 133221},  // priority rank 25
+    {.id = 23, .priority = 51, .size = 169128},  // priority rank 39
+    {.id = 24, .priority = 22, .size = 103055},  // priority rank 14
+    {.id = 25, .priority = 44, .size = 182304},  // priority rank 33
+    {.id = 26, .priority = 2, .size = 177430},   // priority rank 3
+    {.id = 27, .priority = 5, .size = 248430},   // priority rank 4
+    {.id = 28, .priority = 44, .size = 168622},  // priority rank 34
+    {.id = 29, .priority = 6, .size = 192857},   // priority rank 5
+    {.id = 30, .priority = 19, .size = 183331},  // priority rank 10
+    {.id = 31, .priority = 61, .size = 111155},  // priority rank 50
+    {.id = 32, .priority = 42, .size = 211695},  // priority rank 30
+    {.id = 33, .priority = 49, .size = 35653},   // priority rank 38
+    {.id = 34, .priority = 57, .size = 11541},   // priority rank 44
+    {.id = 35, .priority = 40, .size = 49368},   // priority rank 29
+    {.id = 36, .priority = 25, .size = 230982},  // priority rank 17
+    {.id = 37, .priority = 32, .size = 185018},  // priority rank 23
+    {.id = 38, .priority = 39, .size = 163897},  // priority rank 27
+    {.id = 39, .priority = 24, .size = 233217},  // priority rank 16
+    {.id = 40, .priority = 8, .size = 23717},    // priority rank 6
+    {.id = 41, .priority = 61, .size = 266668},  // priority rank 49
+    {.id = 42, .priority = 58, .size = 61228},   // priority rank 46
+    {.id = 43, .priority = 12, .size = 23513},   // priority rank 7
+    {.id = 44, .priority = 60, .size = 267049},  // priority rank 47
+    {.id = 45, .priority = 52, .size = 240086},  // priority rank 40
+    {.id = 46, .priority = 14, .size = 194481},  // priority rank 8
+    {.id = 47, .priority = 27, .size = 42163},   // priority rank 19
+    {.id = 48, .priority = 56, .size = 72854},   // priority rank 42
+    {.id = 49, .priority = 49, .size = 217548},  // priority rank 37
+    {.id = 50, .priority = 1, .size = 207357},   // priority rank 1
 };
 
 extern uint32_t app_cache_get_size(void);
@@ -405,7 +394,7 @@ void test_app_cache__free_up_space_lots_apps(void) {
 
   // test lowest priority's size
   prv_cleanup();
-  to_free = 1; // should remove 207357
+  to_free = 1;  // should remove 207357
   before_size = app_cache_get_size();
   cl_assert(before_size >= to_free);
   cl_assert_equal_i(S_SUCCESS, app_cache_free_up_space(to_free));
@@ -515,41 +504,41 @@ struct file_description {
 };
 
 static struct file_description descriptions[] = {
-  // this first set of files match some I found on my snowy bb2
-  {"gap_bonding_db", 8102},
-  {"pmap", 5632},
-  {"pindb", 57095},
-  {"appdb", 32603},
-  {"reminderdb", 57090},
-  {"appcache", 8108},
-  {"alarms", 8110},
-  {"notifpref", 8107},
-  {"activity", 24436},
-  {"insights", 8108},
-  {"shellpref", 8107},
-  {"dls_storage_33", 4096},
-  {"dls_storage_122", 4096},
-  {"dls_storage_84", 4096},
-  {"dls_storage_71", 4096},
-  {"dls_storage_107", 4096},
-  {"dls_storage_176", 12555},
-  {"dls_storage_161", 4096},
-  {"dls_storage_110", 4096},
-  {"dls_storage_142", 4096},
-  {"dls_storage_197", 4096},
-  {"dls_storage_218", 4096},
-  {"dls_storage_145", 4096},
-  {"app_comm", 8108},
-  {"wakeup", 16274},
-  {"notifstr", 30720},
-  {"dls_storage_238", 4096},
-  {"dls_storage_116", 4096},
-  {"dls_storage_199", 4096},
-  // throw in a few almost-but-not-quite look like resource files
-  {"@0123ABCD/res", 1024},
-  {"@01234567/ress", 1024},
-  {"@01234567/re", 1024},
-  {"!01234567/res", 1024}
+    // this first set of files match some I found on my snowy bb2
+    {"gap_bonding_db", 8102},
+    {"pmap", 5632},
+    {"pindb", 57095},
+    {"appdb", 32603},
+    {"reminderdb", 57090},
+    {"appcache", 8108},
+    {"alarms", 8110},
+    {"notifpref", 8107},
+    {"activity", 24436},
+    {"insights", 8108},
+    {"shellpref", 8107},
+    {"dls_storage_33", 4096},
+    {"dls_storage_122", 4096},
+    {"dls_storage_84", 4096},
+    {"dls_storage_71", 4096},
+    {"dls_storage_107", 4096},
+    {"dls_storage_176", 12555},
+    {"dls_storage_161", 4096},
+    {"dls_storage_110", 4096},
+    {"dls_storage_142", 4096},
+    {"dls_storage_197", 4096},
+    {"dls_storage_218", 4096},
+    {"dls_storage_145", 4096},
+    {"app_comm", 8108},
+    {"wakeup", 16274},
+    {"notifstr", 30720},
+    {"dls_storage_238", 4096},
+    {"dls_storage_116", 4096},
+    {"dls_storage_199", 4096},
+    // throw in a few almost-but-not-quite look like resource files
+    {"@0123ABCD/res", 1024},
+    {"@01234567/ress", 1024},
+    {"@01234567/re", 1024},
+    {"!01234567/res", 1024}
 
 };
 

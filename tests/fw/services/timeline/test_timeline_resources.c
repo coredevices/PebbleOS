@@ -31,15 +31,13 @@ typedef enum TimelineResourceTestAppTimelineId {
 } TimelineResourceTestTimelineId;
 
 static const uint32_t s_app_lut[TimelineResourceTestTimelineIdCount][TimelineResourceSizeCount] = {
-  [TIMELINE_RESOURCE_INVALID] = {
-    RESOURCE_ID_INVALID, RESOURCE_ID_INVALID, RESOURCE_ID_INVALID
-  },
-  [TimelineResourceTestTimelineId_AlarmClock] = {
-    RESOURCE_ID_ALARM_CLOCK_TINY, RESOURCE_ID_ALARM_CLOCK_SMALL, RESOURCE_ID_ALARM_CLOCK_LARGE
-  },
-  [TimelineResourceTestTimelineId_Basketball] = {
-    RESOURCE_ID_BASKETBALL_TINY, RESOURCE_ID_BASKETBALL_SMALL, RESOURCE_ID_BASKETBALL_LARGE
-  },
+    [TIMELINE_RESOURCE_INVALID] = {RESOURCE_ID_INVALID, RESOURCE_ID_INVALID, RESOURCE_ID_INVALID},
+    [TimelineResourceTestTimelineId_AlarmClock] = {RESOURCE_ID_ALARM_CLOCK_TINY,
+                                                   RESOURCE_ID_ALARM_CLOCK_SMALL,
+                                                   RESOURCE_ID_ALARM_CLOCK_LARGE},
+    [TimelineResourceTestTimelineId_Basketball] = {RESOURCE_ID_BASKETBALL_TINY,
+                                                   RESOURCE_ID_BASKETBALL_SMALL,
+                                                   RESOURCE_ID_BASKETBALL_LARGE},
 };
 
 typedef struct TimelineResourceTestAppData {
@@ -58,37 +56,41 @@ typedef enum TimelineResourceTestAppId {
 } TimelineResourceTestAppId;
 
 static const TimelineResourceTestAppData s_test_apps[TimelineResourceTestAppIdCount] = {
-  {
-    .install_entry = {
-      .install_id = TimelineResourceTestAppId_AppWithInvalidLUT,
-      .uuid = {0x3c, 0x6e, 0x2e, 0x1d, 0x61, 0x7d, 0x4d, 0x17,
-               0x97, 0xa1, 0xbc, 0x43, 0x2d, 0x87, 0x4c, 0xed},
-      .sdk_version = {TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MAJOR,
-                      TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MINOR},
+    {
+        .install_entry =
+            {
+                .install_id = TimelineResourceTestAppId_AppWithInvalidLUT,
+                .uuid = {0x3c, 0x6e, 0x2e, 0x1d, 0x61, 0x7d, 0x4d, 0x17, 0x97, 0xa1, 0xbc, 0x43,
+                         0x2d, 0x87, 0x4c, 0xed},
+                .sdk_version = {TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MAJOR,
+                                TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MINOR},
+            },
+        // No resource_lut specified because this app has an "invalid" lut
     },
-    // No resource_lut specified because this app has an "invalid" lut
-  },
-  {
-    .install_entry = {
-      .install_id = TimelineResourceTestAppId_AppWithInvalidSDKVersion,
-      .uuid = {0x37, 0xe7, 0x64, 0x5e, 0xd, 0x6a, 0x41, 0xfe,
-               0xb8, 0x80, 0xea, 0x47, 0x5a, 0x5f, 0x34, 0x34},
-      // We set the SDK version to one earlier than the first version supporting timeline resources
-      .sdk_version = {TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MAJOR,
-                      TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MINOR - 1},
+    {
+        .install_entry =
+            {
+                .install_id = TimelineResourceTestAppId_AppWithInvalidSDKVersion,
+                .uuid = {0x37, 0xe7, 0x64, 0x5e, 0xd, 0x6a, 0x41, 0xfe, 0xb8, 0x80, 0xea, 0x47,
+                         0x5a, 0x5f, 0x34, 0x34},
+                // We set the SDK version to one earlier than the first version supporting timeline
+                // resources
+                .sdk_version = {TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MAJOR,
+                                TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MINOR - 1},
+            },
+        .resource_lut = s_app_lut,
     },
-    .resource_lut = s_app_lut,
-  },
-  {
-    .install_entry = {
-      .install_id = TimelineResourceTestAppId_ValidApp,
-      .uuid = {0x9e, 0x95, 0x8b, 0xfe, 0xd, 0xbd, 0x4d, 0xf2,
-               0xbe, 0xbc, 0xf3, 0x77, 0x5d, 0x8d, 0x9f, 0x95},
-      .sdk_version = {TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MAJOR,
-                      TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MINOR},
+    {
+        .install_entry =
+            {
+                .install_id = TimelineResourceTestAppId_ValidApp,
+                .uuid = {0x9e, 0x95, 0x8b, 0xfe, 0xd, 0xbd, 0x4d, 0xf2, 0xbe, 0xbc, 0xf3, 0x77,
+                         0x5d, 0x8d, 0x9f, 0x95},
+                .sdk_version = {TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MAJOR,
+                                TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MINOR},
+            },
+        .resource_lut = s_app_lut,
     },
-    .resource_lut = s_app_lut,
-  },
 };
 
 static const TimelineResourceTestAppData *prv_get_data_for_app_with_id(AppInstallId install_id) {
@@ -177,9 +179,7 @@ ResAppNum app_install_get_app_icon_bank(const AppInstallEntry *entry) {
 // Setup
 /////////////////////////
 
-void test_timeline_resources__initialize(void) {
-  s_is_app_published_resource_invalid = false;
-}
+void test_timeline_resources__initialize(void) { s_is_app_published_resource_invalid = false; }
 
 // Tests
 /////////////////////////
@@ -189,7 +189,7 @@ void test_timeline_resources__get_id_system(void) {
 
   // Calling the function with an invalid TimelineResourceId should return false
   cl_assert(!timeline_resources_get_id_system(TIMELINE_RESOURCE_INVALID, TimelineResourceSizeTiny,
-            TimelineResourceTestAppId_ValidApp, &res_info));
+                                              TimelineResourceTestAppId_ValidApp, &res_info));
 
   // Calling the function with an invalid size should return false
   cl_assert(!timeline_resources_get_id_system(
@@ -242,26 +242,26 @@ void test_timeline_resources__get_id(void) {
   PBL_ASSERTN(valid_app_data);
 
   // Calling the function with an invalid TimelineResourceId should set res_info to the fallback
-  timeline_res_info = (TimelineResourceInfo) {
-    .app_id = &valid_app_data->install_entry.uuid,
-    .res_id = TIMELINE_RESOURCE_INVALID,
-    .fallback_id = TIMELINE_RESOURCE_BIRTHDAY_EVENT,
+  timeline_res_info = (TimelineResourceInfo){
+      .app_id = &valid_app_data->install_entry.uuid,
+      .res_id = TIMELINE_RESOURCE_INVALID,
+      .fallback_id = TIMELINE_RESOURCE_BIRTHDAY_EVENT,
   };
   timeline_resources_get_id(&timeline_res_info, TimelineResourceSizeLarge, &res_info);
   cl_assert_equal_i(res_info.res_app_num, SYSTEM_APP);
   cl_assert_equal_i(res_info.res_id, RESOURCE_ID_BIRTHDAY_EVENT_LARGE);
 
   // Set the TimelineResourceInfo to valid values
-  timeline_res_info = (TimelineResourceInfo) {
-    .app_id = &valid_app_data->install_entry.uuid,
-    .res_id = (TimelineResourceId)TimelineResourceTestTimelineId_AlarmClock,
-    .fallback_id = TIMELINE_RESOURCE_BIRTHDAY_EVENT,
+  timeline_res_info = (TimelineResourceInfo){
+      .app_id = &valid_app_data->install_entry.uuid,
+      .res_id = (TimelineResourceId)TimelineResourceTestTimelineId_AlarmClock,
+      .fallback_id = TIMELINE_RESOURCE_BIRTHDAY_EVENT,
   };
 
   // Calling the function with an invalid size, no TimelineResourceInfo, or no AppResourceInfo
   // should assert
-  cl_assert_passert(timeline_resources_get_id(&timeline_res_info, TimelineResourceSizeCount,
-                                              &res_info));
+  cl_assert_passert(
+      timeline_resources_get_id(&timeline_res_info, TimelineResourceSizeCount, &res_info));
   cl_assert_passert(timeline_resources_get_id(NULL, TimelineResourceSizeTiny, &res_info));
   cl_assert_passert(timeline_resources_get_id(&timeline_res_info, TimelineResourceSizeTiny, NULL));
 
@@ -269,10 +269,10 @@ void test_timeline_resources__get_id(void) {
   const TimelineResourceTestAppData *app_with_invalid_lut_data =
       prv_get_data_for_app_with_id(TimelineResourceTestAppId_AppWithInvalidLUT);
   PBL_ASSERTN(app_with_invalid_lut_data);
-  timeline_res_info = (TimelineResourceInfo) {
-    .app_id = &app_with_invalid_lut_data->install_entry.uuid,
-    .res_id = (TimelineResourceId)TimelineResourceTestTimelineId_AlarmClock,
-    .fallback_id = TIMELINE_RESOURCE_BIRTHDAY_EVENT,
+  timeline_res_info = (TimelineResourceInfo){
+      .app_id = &app_with_invalid_lut_data->install_entry.uuid,
+      .res_id = (TimelineResourceId)TimelineResourceTestTimelineId_AlarmClock,
+      .fallback_id = TIMELINE_RESOURCE_BIRTHDAY_EVENT,
   };
 
   // Calling the function with the UUID of an app with an invalid LUT should set res_info to the
@@ -282,10 +282,10 @@ void test_timeline_resources__get_id(void) {
   cl_assert_equal_i(res_info.res_id, RESOURCE_ID_BIRTHDAY_EVENT_LARGE);
 
   // Set the TimelineResourceInfo to valid values
-  timeline_res_info = (TimelineResourceInfo) {
-    .app_id = &valid_app_data->install_entry.uuid,
-    .res_id = (TimelineResourceId)TimelineResourceTestTimelineId_AlarmClock,
-    .fallback_id = TIMELINE_RESOURCE_BIRTHDAY_EVENT,
+  timeline_res_info = (TimelineResourceInfo){
+      .app_id = &valid_app_data->install_entry.uuid,
+      .res_id = (TimelineResourceId)TimelineResourceTestTimelineId_AlarmClock,
+      .fallback_id = TIMELINE_RESOURCE_BIRTHDAY_EVENT,
   };
 
   // Calling the function for an invalid resource (e.g. dimensions too large) should set res_info
@@ -305,10 +305,10 @@ void test_timeline_resources__get_id(void) {
   const TimelineResourceTestAppData *app_with_invalid_sdk_version =
       prv_get_data_for_app_with_id(TimelineResourceTestAppId_AppWithInvalidSDKVersion);
   PBL_ASSERTN(app_with_invalid_sdk_version);
-  timeline_res_info = (TimelineResourceInfo) {
-    .app_id = &app_with_invalid_sdk_version->install_entry.uuid,
-    .res_id = (TimelineResourceId)TimelineResourceTestTimelineId_Basketball,
-    .fallback_id = TIMELINE_RESOURCE_BIRTHDAY_EVENT,
+  timeline_res_info = (TimelineResourceInfo){
+      .app_id = &app_with_invalid_sdk_version->install_entry.uuid,
+      .res_id = (TimelineResourceId)TimelineResourceTestTimelineId_Basketball,
+      .fallback_id = TIMELINE_RESOURCE_BIRTHDAY_EVENT,
   };
 
   // Calling the function with the UUID of an app with an unsupported SDK version should set
@@ -318,10 +318,10 @@ void test_timeline_resources__get_id(void) {
   cl_assert_equal_i(res_info.res_id, RESOURCE_ID_BIRTHDAY_EVENT_TINY);
 
   // Set the TimelineResourceInfo to valid values but with a system TimelineResourceId requested
-  timeline_res_info = (TimelineResourceInfo) {
-    .app_id = &(Uuid)UUID_SYSTEM,
-    .res_id = TIMELINE_RESOURCE_HOTEL_RESERVATION,
-    .fallback_id = TIMELINE_RESOURCE_BIRTHDAY_EVENT,
+  timeline_res_info = (TimelineResourceInfo){
+      .app_id = &(Uuid)UUID_SYSTEM,
+      .res_id = TIMELINE_RESOURCE_HOTEL_RESERVATION,
+      .fallback_id = TIMELINE_RESOURCE_BIRTHDAY_EVENT,
   };
 
   // Calling the function with a valid system TimelineResourceId should set the correct values in

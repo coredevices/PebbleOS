@@ -22,15 +22,14 @@ typedef struct {
 } AppData;
 
 static const int16_t sine_wave_4k[] = {
-  0, 32767, 0, -32768, 0, 32767, 0, -32768,
-  0, 32767, 0, -32768, 0, 32767, 0, -32768,
+    0, 32767, 0, -32768, 0, 32767, 0, -32768, 0, 32767, 0, -32768, 0, 32767, 0, -32768,
 };
 
 static void prv_audio_trans_handler(uint32_t *free_size) {
-    uint32_t available_size = *free_size;
-    while (available_size > sizeof(sine_wave_4k)) {
-      available_size = audio_write(AUDIO, (void*)&sine_wave_4k[0], sizeof(sine_wave_4k));
-    }
+  uint32_t available_size = *free_size;
+  while (available_size > sizeof(sine_wave_4k)) {
+    available_size = audio_write(AUDIO, (void *)&sine_wave_4k[0], sizeof(sine_wave_4k));
+  }
 }
 
 static void prv_play_audio(void) {

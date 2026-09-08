@@ -45,7 +45,7 @@ bool tests_write_gbitmap_to_pbi(GBitmap *bmp, const char *filename) {
 }
 
 // Used to work around __func__ not being a string literal (necessary for macro concatenation)
-static const char *namecat(const char* str1, const char* str2){
+static const char *namecat(const char *str1, const char *str2) {
   char *filename = malloc(PATH_STRING_LENGTH);
   filename[0] = '\0';
   strcat(filename, str1);
@@ -70,15 +70,15 @@ static const char *namecat(const char* str1, const char* str2){
 
 static char get_terminal_color(uint8_t c) {
   switch (c) {
-    case GColorBlackARGB8: // black
+    case GColorBlackARGB8:  // black
       return 'B';
-    case GColorWhiteARGB8: // white
+    case GColorWhiteARGB8:  // white
       return 'W';
-    case GColorRedARGB8: // red
+    case GColorRedARGB8:  // red
       return 'R';
-    case GColorGreenARGB8: // green
+    case GColorGreenARGB8:  // green
       return 'G';
-    case GColorBlueARGB8: // blue
+    case GColorBlueARGB8:  // blue
       return 'b';
     default:
       return ' ';
@@ -97,19 +97,19 @@ void print_bitmap(const GBitmap *bmp) {
   uint8_t *data = (uint8_t *)bmp->addr;
   // Build a coordinate system, 3 rows up top for the col number
   for (uint8_t y = 0; y < 3; ++y) {
-    printf("\t"); // leave space for row #
+    printf("\t");  // leave space for row #
     for (uint8_t x = 0; x < size.w; ++x) {
       int num = -1;
       switch (y) {
-        case 0: // hundreds
+        case 0:  // hundreds
           if (x < 100) break;
           num = (x / 100) % 10;
           break;
-        case 1: // tens
+        case 1:  // tens
           if (x < 10) break;
           num = (x / 10) % 10;
           break;
-        case 2: // ones
+        case 2:  // ones
           num = x % 10;
           break;
       }
@@ -139,7 +139,7 @@ void print_bitmap(const GBitmap *bmp) {
 GBitmap *get_gbitmap_from_pbi(const char *filename) {
   char full_path[PATH_STRING_LENGTH];
   snprintf(full_path, PATH_STRING_LENGTH, "%s/%s", TEST_IMAGES_PATH, filename);
- 
+
   // Support using ".Xbit" for the native bitdepth
   char *filename_xbit = strstr(full_path, ".Xbit");
   if (filename_xbit) {
@@ -201,13 +201,14 @@ static GColor8 prv_convert_to_gcolor8(GBitmapFormat format, uint8_t raw_value, G
   return (GColor8)color8;
 }
 
-static uint8_t prv_raw_image_get_value_for_format(const uint8_t *raw_image_buffer,
-    uint32_t x, uint32_t y, uint16_t row_stride_bytes, uint8_t bitdepth, GBitmapFormat format) {
-  if (format == GBitmapFormat1Bit){
+static uint8_t prv_raw_image_get_value_for_format(const uint8_t *raw_image_buffer, uint32_t x,
+                                                  uint32_t y, uint16_t row_stride_bytes,
+                                                  uint8_t bitdepth, GBitmapFormat format) {
+  if (format == GBitmapFormat1Bit) {
     // Retrieve the byte from the image buffer containing the requested pixel
     uint32_t pixel_in_byte = raw_image_buffer[y * row_stride_bytes + (x / 8)];
     // Find the index of the pixel in terms of coordinates and aligned_width
-    uint32_t pixel_index =  y * (row_stride_bytes * 8) + x;
+    uint32_t pixel_index = y * (row_stride_bytes * 8) + x;
     // Shift and mask the requested pixel data from the byte containing it and return
     return (uint8_t)(pixel_in_byte >> ((pixel_index % 8)) & 1);
   } else {
@@ -215,8 +216,8 @@ static uint8_t prv_raw_image_get_value_for_format(const uint8_t *raw_image_buffe
   }
 }
 
-static void prv_write_diff_to_file(const char *filename, GBitmap *expected_bmp,
-                                   GBitmap *actual_bmp, GBitmap *diff_bmp) {
+static void prv_write_diff_to_file(const char *filename, GBitmap *expected_bmp, GBitmap *actual_bmp,
+                                   GBitmap *diff_bmp) {
   // Write the expected output to filename-expected.png
   char bmp_filename[PATH_STRING_LENGTH];
   if (expected_bmp) {
@@ -244,7 +245,6 @@ static void prv_write_diff_to_file(const char *filename, GBitmap *expected_bmp,
 
 // declared in gbitmap.c
 GBitmap *prv_gbitmap_create_blank_internal_no_platform_checks(GSize size, GBitmapFormat format);
-
 
 // Compare two bitmap and return whether or not they are the same
 // Note that if both passed bitmaps are NULL, this test will succeed!
@@ -279,10 +279,10 @@ bool gbitmap_eq(GBitmap *actual_bmp, GBitmap *expected_bmp, const char *filename
   rc = true;
 
   // Create a bitmap for the diff image - force 8-bit
-  // The diff image contains first the actual image, then the diff image, and then the expected image
-  // These images are separated by one pixel column (transparent)
+  // The diff image contains first the actual image, then the diff image, and then the expected
+  // image These images are separated by one pixel column (transparent)
   GSize diff_bmp_size = actual_bmp->bounds.size;
-  diff_bmp_size.w = (3 * diff_bmp_size.w) + 2; // 2 pixels to divide the three images
+  diff_bmp_size.w = (3 * diff_bmp_size.w) + 2;  // 2 pixels to divide the three images
   diff_bmp = prv_gbitmap_create_blank_internal_no_platform_checks(diff_bmp_size, GBitmapFormat8Bit);
   if (!diff_bmp) {
     printf("Unable to create diff bitmap\n");
@@ -291,35 +291,35 @@ bool gbitmap_eq(GBitmap *actual_bmp, GBitmap *expected_bmp, const char *filename
   }
 
   for (int y = start_y; y < end_y; ++y) {
-    uint8_t *line = ((uint8_t*)diff_bmp->addr) + (diff_bmp->row_size_bytes * y);
+    uint8_t *line = ((uint8_t *)diff_bmp->addr) + (diff_bmp->row_size_bytes * y);
 
     // TODO: PBL-20932 Add 1-bit and palletized support
     if (actual_bmp->info.format == GBitmapFormat8Bit) {
-      line[(diff_bmp->row_size_bytes / 3) + 1] = GColorClear.argb;     // Separator pixel between images
-      line[(2 * diff_bmp->row_size_bytes / 3) + 1] = GColorClear.argb; // Separator pixel between images
+      line[(diff_bmp->row_size_bytes / 3) + 1] =
+          GColorClear.argb;  // Separator pixel between images
+      line[(2 * diff_bmp->row_size_bytes / 3) + 1] =
+          GColorClear.argb;  // Separator pixel between images
     }
 
     // Needs to be prv_gbitmap_get_data_row_info to avoid unit test mocked version
     const GBitmapDataRowInfo dest_row_info = prv_gbitmap_get_data_row_info(actual_bmp, y);
     const int16_t start_x = MAX(actual_bmp->bounds.origin.x, dest_row_info.min_x);
     const int16_t end_x = MIN(grect_get_max_x(&actual_bmp->bounds), dest_row_info.max_x + 1);
-    const int16_t y_line = 0; // line is constant zero below now that we are retrieving row
+    const int16_t y_line = 0;  // line is constant zero below now that we are retrieving row
     if (end_x < start_x) {
       continue;
     }
 
     for (int x = start_x; x < end_x; ++x) {
       uint8_t *actual_bmp_data = dest_row_info.data;
-      uint8_t actual_bmp_val = prv_raw_image_get_value_for_format(actual_bmp_data, x, y_line,
-                                                                  actual_bmp->row_size_bytes,
-                                                                  actual_bmp_bpp,
-                                                                  actual_bmp->info.format);
-      uint8_t expected_bmp_val = prv_raw_image_get_value_for_format(expected_bmp_data, x, y,
-                                                                    expected_bmp->row_size_bytes,
-                                                                    expected_bmp_bpp,
-                                                                    expected_bmp->info.format);
-      GColor8 actual_bmp_color = prv_convert_to_gcolor8(actual_bmp->info.format,
-                                                        actual_bmp_val, actual_bmp->palette);
+      uint8_t actual_bmp_val =
+          prv_raw_image_get_value_for_format(actual_bmp_data, x, y_line, actual_bmp->row_size_bytes,
+                                             actual_bmp_bpp, actual_bmp->info.format);
+      uint8_t expected_bmp_val =
+          prv_raw_image_get_value_for_format(expected_bmp_data, x, y, expected_bmp->row_size_bytes,
+                                             expected_bmp_bpp, expected_bmp->info.format);
+      GColor8 actual_bmp_color =
+          prv_convert_to_gcolor8(actual_bmp->info.format, actual_bmp_val, actual_bmp->palette);
       GColor8 expected_bmp_color = prv_convert_to_gcolor8(expected_bmp->info.format,
                                                           expected_bmp_val, expected_bmp->palette);
 
@@ -372,35 +372,35 @@ bool gbitmap_pbi_eq(GBitmap *bmp, const char *filename) {
   return gbitmap_pbi_eq_with_bounds(bmp, filename, NULL);
 }
 
-size_t load_file(const char* filename, uint8_t** data) {
+size_t load_file(const char *filename, uint8_t **data) {
   char full_path[PATH_STRING_LENGTH];
   snprintf(full_path, sizeof(full_path), "%s/%s", TEST_IMAGES_PATH, filename);
 
-  FILE *file = fopen(full_path,"rb");
-  if(file == NULL){
+  FILE *file = fopen(full_path, "rb");
+  if (file == NULL) {
     printf("Error: couldn't open file: %s\n", filename);
     cl_assert(false);
   }
-  fseek(file,0,SEEK_END);
+  fseek(file, 0, SEEK_END);
   int data_size = ftell(file);
-  fseek(file,0,SEEK_SET);
-  *data = (unsigned char*)malloc(data_size);
-  fread(*data,1, data_size, file);
+  fseek(file, 0, SEEK_SET);
+  *data = (unsigned char *)malloc(data_size);
+  fread(*data, 1, data_size, file);
   fclose(file);
   return data_size;
 }
 
 // Mask flags to indicate what to setup in the draw_state of GContext within setup_test_context
-#define CTX_FLAG_DS_ALL               0x00000010
-#define CTX_FLAG_DS_CLIP_BOX          0x00000020
-#define CTX_FLAG_DS_DRAWING_BOX       0x00000040
-#define CTX_FLAG_DS_STROKE_COLOR      0x00000080
-#define CTX_FLAG_DS_FILL_COLOR        0x00000100
-#define CTX_FLAG_DS_TEXT_COLOR        0x00000200
-#define CTX_FLAG_DS_COMPOSITING_MODE  0x00000400
-#define CTX_FLAG_DS_ANTIALIASED       0x00000800
-#define CTX_FLAG_DS_STROKE_WIDTH      0x00001000
-void setup_test_context(GContext* ctx, uint32_t flags, GDrawState *draw_state, bool *lock) {
+#define CTX_FLAG_DS_ALL 0x00000010
+#define CTX_FLAG_DS_CLIP_BOX 0x00000020
+#define CTX_FLAG_DS_DRAWING_BOX 0x00000040
+#define CTX_FLAG_DS_STROKE_COLOR 0x00000080
+#define CTX_FLAG_DS_FILL_COLOR 0x00000100
+#define CTX_FLAG_DS_TEXT_COLOR 0x00000200
+#define CTX_FLAG_DS_COMPOSITING_MODE 0x00000400
+#define CTX_FLAG_DS_ANTIALIASED 0x00000800
+#define CTX_FLAG_DS_STROKE_WIDTH 0x00001000
+void setup_test_context(GContext *ctx, uint32_t flags, GDrawState *draw_state, bool *lock) {
   if (draw_state) {
     if (flags & CTX_FLAG_DS_CLIP_BOX) {
       ctx->draw_state.clip_box = draw_state->clip_box;
@@ -435,7 +435,7 @@ void setup_test_context(GContext* ctx, uint32_t flags, GDrawState *draw_state, b
   }
 }
 
-GBitmap* setup_pbi_test(const char *filename) {
+GBitmap *setup_pbi_test(const char *filename) {
   uint8_t *pbi_data = NULL;
   size_t pbi_size = 0;
   pbi_size = load_file(filename, &pbi_data);
@@ -444,7 +444,7 @@ GBitmap* setup_pbi_test(const char *filename) {
   return gbitmap_create_with_data(pbi_data);
 }
 
-static GBitmap* setup_png_test(const char *filename) {
+static GBitmap *setup_png_test(const char *filename) {
   uint8_t *png_data = NULL;
   size_t png_size = 0;
   png_size = load_file(filename, &png_data);
@@ -454,20 +454,17 @@ static GBitmap* setup_png_test(const char *filename) {
 }
 
 void setup_test_aa_sw(GContext *ctx, FrameBuffer *fb, GRect clip_box, GRect drawing_box,
-                             bool antialiased, uint8_t stroke_width) {
+                      bool antialiased, uint8_t stroke_width) {
   test_graphics_context_reset(ctx, fb);
 
-  GDrawState draw_state = {
-    .clip_box = clip_box,
-    .drawing_box = drawing_box,
+  GDrawState draw_state = {.clip_box = clip_box,
+                           .drawing_box = drawing_box,
 #if PBL_COLOR
-    .antialiased = antialiased,
+                           .antialiased = antialiased,
 #endif
-    .stroke_width = stroke_width
-  };
-  setup_test_context(ctx, 
-                     (CTX_FLAG_DS_CLIP_BOX | CTX_FLAG_DS_DRAWING_BOX |
-                      CTX_FLAG_DS_ANTIALIASED | CTX_FLAG_DS_STROKE_WIDTH),
+                           .stroke_width = stroke_width};
+  setup_test_context(ctx,
+                     (CTX_FLAG_DS_CLIP_BOX | CTX_FLAG_DS_DRAWING_BOX | CTX_FLAG_DS_ANTIALIASED |
+                      CTX_FLAG_DS_STROKE_WIDTH),
                      &draw_state, NULL);
 }
-

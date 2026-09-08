@@ -31,19 +31,18 @@
 #include "stubs_task_watchdog.h"
 
 #define TEST_START FLASH_REGION_FILE_TEST_SPACE_BEGIN
-#define TEST_SIZE (FLASH_REGION_FILE_TEST_SPACE_END - \
-    FLASH_REGION_FILE_TEST_SPACE_BEGIN)
+#define TEST_SIZE (FLASH_REGION_FILE_TEST_SPACE_END - FLASH_REGION_FILE_TEST_SPACE_BEGIN)
 
 extern void notification_storage_reset(void);
 
 typedef void (*SystemTaskEventCallback)(void *data);
 
 static Attribute action1_attributes[] = {
-  {.id = AttributeIdTitle, .cstring = "Dismiss"},
+    {.id = AttributeIdTitle, .cstring = "Dismiss"},
 };
 
 static Attribute action2_attributes[] = {
-  {.id = AttributeIdTitle, .cstring = "Archive"},
+    {.id = AttributeIdTitle, .cstring = "Archive"},
 };
 
 static StringList string_list = {
@@ -52,34 +51,26 @@ static StringList string_list = {
 };
 
 static Attribute action3_attributes[] = {
-  {.id = AttributeIdAncsAction, .int8 = 1},
-  {.id = AttributeIdCannedResponses, .string_list = &string_list,},
+    {.id = AttributeIdAncsAction, .int8 = 1},
+    {
+        .id = AttributeIdCannedResponses,
+        .string_list = &string_list,
+    },
 };
 
 static TimelineItemAction actions[] = {
-  {
-    .id = 0,
-    .type = TimelineItemActionTypeResponse,
-    .attr_list = {
-      .num_attributes = ARRAY_LENGTH(action1_attributes),
-      .attributes = action1_attributes
-    }
-  },
-  {
-    .id = 1, .type = TimelineItemActionTypeResponse,
-    .attr_list = {
-      .num_attributes = ARRAY_LENGTH(action2_attributes),
-      .attributes = action2_attributes
-    }
-  },
-  {
-    .id = 2,
-    .type = TimelineItemActionTypeResponse,
-    .attr_list = {
-      .num_attributes = ARRAY_LENGTH(action3_attributes),
-      .attributes = action3_attributes
-    }
-  },
+    {.id = 0,
+     .type = TimelineItemActionTypeResponse,
+     .attr_list = {.num_attributes = ARRAY_LENGTH(action1_attributes),
+                   .attributes = action1_attributes}},
+    {.id = 1,
+     .type = TimelineItemActionTypeResponse,
+     .attr_list = {.num_attributes = ARRAY_LENGTH(action2_attributes),
+                   .attributes = action2_attributes}},
+    {.id = 2,
+     .type = TimelineItemActionTypeResponse,
+     .attr_list = {.num_attributes = ARRAY_LENGTH(action3_attributes),
+                   .attributes = action3_attributes}},
 };
 
 static Attribute attributes[] = {
@@ -88,11 +79,9 @@ static Attribute attributes[] = {
     {.id = AttributeIdSubtitle, .cstring = "Subject"},
 };
 
-bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
-  return true;
-}
+bool system_task_add_callback(SystemTaskEventCallback cb, void *data) { return true; }
 
-PebblePhoneCaller* phone_call_util_create_caller(const char *number, const char *name) {
+PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char *name) {
   return NULL;
 }
 
@@ -106,8 +95,7 @@ void test_notification_storage__initialize(void) {
   notification_storage_reset();
 }
 
-void test_notification_storage__cleanup(void) {
-}
+void test_notification_storage__cleanup(void) {}
 
 static void compare_attr_list(AttributeList a, AttributeList b) {
   cl_assert_equal_i(a.num_attributes, b.num_attributes);
@@ -126,16 +114,10 @@ static void compare_attr_list(AttributeList a, AttributeList b) {
         StringList *list_a = a.attributes[i].string_list;
         StringList *list_b = b.attributes[i].string_list;
         cl_assert_equal_i(list_a->serialized_byte_length, list_b->serialized_byte_length);
-        cl_assert_equal_i(
-            string_list_count(list_a),
-            string_list_count(list_b)
-        );
+        cl_assert_equal_i(string_list_count(list_a), string_list_count(list_b));
         uint32_t count = string_list_count(list_a);
-        for (uint32_t idx = 0; i<count; i++) {
-          cl_assert_equal_s(
-              string_list_get_at(list_a, idx),
-              string_list_get_at(list_b, idx)
-          );
+        for (uint32_t idx = 0; i < count; i++) {
+          cl_assert_equal_s(string_list_get_at(list_a, idx), string_list_get_at(list_b, idx));
         }
         break;
       }
@@ -167,22 +149,22 @@ static void compare_notifications(TimelineItem *a, TimelineItem *b) {
 void test_notification_storage__basic(void) {
   Uuid id = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
              0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb4};
-  TimelineItem e = {
-    .header = {
-      .id = id,
-      .status = 0,
-      .layout = LayoutIdGeneric,
-      .type = TimelineItemTypeNotification,
-    },
-    .attr_list = {
-      .num_attributes = ARRAY_LENGTH(attributes),
-      .attributes = attributes,
-    },
-    .action_group = {
-      .num_actions = ARRAY_LENGTH(actions),
-      .actions = actions,
-    }
-  };
+  TimelineItem e = {.header =
+                        {
+                            .id = id,
+                            .status = 0,
+                            .layout = LayoutIdGeneric,
+                            .type = TimelineItemTypeNotification,
+                        },
+                    .attr_list =
+                        {
+                            .num_attributes = ARRAY_LENGTH(attributes),
+                            .attributes = attributes,
+                        },
+                    .action_group = {
+                        .num_actions = ARRAY_LENGTH(actions),
+                        .actions = actions,
+                    }};
 
   notification_storage_store(&e);
 
@@ -201,68 +183,68 @@ void test_notification_storage__basic(void) {
 }
 
 void test_notification_storage__multiple(void) {
-  Uuid i1 ;
+  Uuid i1;
   uuid_generate(&i1);
-  TimelineItem e1 = {
-    .header = {
-      .id = i1,
-      .type = TimelineItemTypeNotification,
-      .status = 0,
-      .ancs_uid = 0,
-      .layout = LayoutIdGeneric,
-      .timestamp = 0x53f0dda5,
-    },
-    .attr_list = {
-      .num_attributes = ARRAY_LENGTH(attributes),
-      .attributes = attributes,
-    },
-    .action_group = {
-      .num_actions = ARRAY_LENGTH(actions),
-      .actions = actions,
-    }
-  };
+  TimelineItem e1 = {.header =
+                         {
+                             .id = i1,
+                             .type = TimelineItemTypeNotification,
+                             .status = 0,
+                             .ancs_uid = 0,
+                             .layout = LayoutIdGeneric,
+                             .timestamp = 0x53f0dda5,
+                         },
+                     .attr_list =
+                         {
+                             .num_attributes = ARRAY_LENGTH(attributes),
+                             .attributes = attributes,
+                         },
+                     .action_group = {
+                         .num_actions = ARRAY_LENGTH(actions),
+                         .actions = actions,
+                     }};
 
   Uuid i2;
   uuid_generate(&i2);
-  TimelineItem e2 = {
-    .header = {
-      .id = i2,
-      .type = TimelineItemTypeNotification,
-      .status = 0,
-      .ancs_uid = 0,
-      .layout = LayoutIdGeneric,
-      .timestamp = 0x53f0dda6,
-    },
-    .attr_list = {
-      .num_attributes = 2,
-      .attributes = attributes,
-    },
-    .action_group = {
-      .num_actions = 1,
-      .actions = &actions[2],
-    }
-  };
+  TimelineItem e2 = {.header =
+                         {
+                             .id = i2,
+                             .type = TimelineItemTypeNotification,
+                             .status = 0,
+                             .ancs_uid = 0,
+                             .layout = LayoutIdGeneric,
+                             .timestamp = 0x53f0dda6,
+                         },
+                     .attr_list =
+                         {
+                             .num_attributes = 2,
+                             .attributes = attributes,
+                         },
+                     .action_group = {
+                         .num_actions = 1,
+                         .actions = &actions[2],
+                     }};
 
   Uuid i3;
   uuid_generate(&i3);
-  TimelineItem e3 = {
-    .header = {
-      .id = i3,
-      .type = TimelineItemTypeNotification,
-      .status = 0,
-      .ancs_uid = 0,
-      .layout = LayoutIdGeneric,
-      .timestamp = 0x53f0dda7,
-    },
-    .attr_list = {
-      .num_attributes = 1,
-      .attributes = &attributes[2],
-    },
-    .action_group = {
-      .num_actions = 2,
-      .actions = actions,
-    }
-  };
+  TimelineItem e3 = {.header =
+                         {
+                             .id = i3,
+                             .type = TimelineItemTypeNotification,
+                             .status = 0,
+                             .ancs_uid = 0,
+                             .layout = LayoutIdGeneric,
+                             .timestamp = 0x53f0dda7,
+                         },
+                     .attr_list =
+                         {
+                             .num_attributes = 1,
+                             .attributes = &attributes[2],
+                         },
+                     .action_group = {
+                         .num_actions = 2,
+                         .actions = actions,
+                     }};
 
   notification_storage_store(&e1);
 
@@ -294,24 +276,24 @@ void test_notification_storage__multiple(void) {
 void test_notification_storage__remove_single(void) {
   Uuid i;
   uuid_generate(&i);
-  TimelineItem e = {
-    .header = {
-      .id = i,
-      .type = TimelineItemTypeNotification,
-      .status = 0,
-      .ancs_uid = 0,
-      .layout = LayoutIdGeneric,
-      .timestamp = 0x53f0dda5,
-    },
-    .attr_list = {
-      .num_attributes = ARRAY_LENGTH(attributes),
-      .attributes = attributes,
-    },
-    .action_group = {
-      .num_actions = ARRAY_LENGTH(actions),
-      .actions = actions,
-    }
-  };
+  TimelineItem e = {.header =
+                        {
+                            .id = i,
+                            .type = TimelineItemTypeNotification,
+                            .status = 0,
+                            .ancs_uid = 0,
+                            .layout = LayoutIdGeneric,
+                            .timestamp = 0x53f0dda5,
+                        },
+                    .attr_list =
+                        {
+                            .num_attributes = ARRAY_LENGTH(attributes),
+                            .attributes = attributes,
+                        },
+                    .action_group = {
+                        .num_actions = ARRAY_LENGTH(actions),
+                        .actions = actions,
+                    }};
 
   notification_storage_store(&e);
 
@@ -327,24 +309,24 @@ void test_notification_storage__remove_single(void) {
 void test_notification_storage__set_actioned_flag(void) {
   Uuid i;
   uuid_generate(&i);
-  TimelineItem e = {
-    .header = {
-      .id = i,
-      .type = TimelineItemTypeNotification,
-      .status = 0,
-      .ancs_uid = 0,
-      .layout = LayoutIdGeneric,
-      .timestamp = 0x53f0dda5,
-    },
-    .attr_list = {
-      .num_attributes = ARRAY_LENGTH(attributes),
-      .attributes = attributes,
-    },
-    .action_group = {
-      .num_actions = ARRAY_LENGTH(actions),
-      .actions = actions,
-    }
-  };
+  TimelineItem e = {.header =
+                        {
+                            .id = i,
+                            .type = TimelineItemTypeNotification,
+                            .status = 0,
+                            .ancs_uid = 0,
+                            .layout = LayoutIdGeneric,
+                            .timestamp = 0x53f0dda5,
+                        },
+                    .attr_list =
+                        {
+                            .num_attributes = ARRAY_LENGTH(attributes),
+                            .attributes = attributes,
+                        },
+                    .action_group = {
+                        .num_actions = ARRAY_LENGTH(actions),
+                        .actions = actions,
+                    }};
 
   notification_storage_store(&e);
 
@@ -364,47 +346,47 @@ void test_notification_storage__set_actioned_flag(void) {
 }
 
 void test_notification_storage__remove_multiple_first(void) {
- Uuid i1;
- uuid_generate(&i1);
-  TimelineItem e1 = {
-    .header = {
-      .id = i1,
-      .type = TimelineItemTypeNotification,
-      .status = 0,
-      .ancs_uid = 0,
-      .layout = LayoutIdGeneric,
-      .timestamp = 0x53f0dda5,
-    },
-    .attr_list = {
-      .num_attributes = ARRAY_LENGTH(attributes),
-      .attributes = attributes,
-    },
-    .action_group = {
-      .num_actions = ARRAY_LENGTH(actions),
-      .actions = actions,
-    }
-  };
+  Uuid i1;
+  uuid_generate(&i1);
+  TimelineItem e1 = {.header =
+                         {
+                             .id = i1,
+                             .type = TimelineItemTypeNotification,
+                             .status = 0,
+                             .ancs_uid = 0,
+                             .layout = LayoutIdGeneric,
+                             .timestamp = 0x53f0dda5,
+                         },
+                     .attr_list =
+                         {
+                             .num_attributes = ARRAY_LENGTH(attributes),
+                             .attributes = attributes,
+                         },
+                     .action_group = {
+                         .num_actions = ARRAY_LENGTH(actions),
+                         .actions = actions,
+                     }};
 
   Uuid i2;
   uuid_generate(&i2);
-  TimelineItem e2 = {
-    .header = {
-      .id = i2,
-      .type = TimelineItemTypeNotification,
-      .status = 0,
-      .ancs_uid = 0,
-      .layout = LayoutIdGeneric,
-      .timestamp = 0x53f0dda6,
-    },
-    .attr_list = {
-      .num_attributes = 2,
-      .attributes = attributes,
-    },
-    .action_group = {
-      .num_actions = 1,
-      .actions = &actions[2],
-    }
-  };
+  TimelineItem e2 = {.header =
+                         {
+                             .id = i2,
+                             .type = TimelineItemTypeNotification,
+                             .status = 0,
+                             .ancs_uid = 0,
+                             .layout = LayoutIdGeneric,
+                             .timestamp = 0x53f0dda6,
+                         },
+                     .attr_list =
+                         {
+                             .num_attributes = 2,
+                             .attributes = attributes,
+                         },
+                     .action_group = {
+                         .num_actions = 1,
+                         .actions = &actions[2],
+                     }};
 
   notification_storage_store(&e1);
   notification_storage_store(&e2);
@@ -422,66 +404,66 @@ void test_notification_storage__remove_multiple_first(void) {
 void test_notification_storage__remove_add(void) {
   Uuid i1;
   uuid_generate(&i1);
-  TimelineItem e1 = {
-    .header = {
-      .id = i1,
-      .type = TimelineItemTypeNotification,
-      .status = 0,
-      .ancs_uid = 0,
-      .layout = LayoutIdGeneric,
-      .timestamp = 0x53f0dda5,
-    },
-    .attr_list = {
-      .num_attributes = ARRAY_LENGTH(attributes),
-      .attributes = attributes,
-    },
-    .action_group = {
-      .num_actions = ARRAY_LENGTH(actions),
-      .actions = actions,
-    }
-  };
+  TimelineItem e1 = {.header =
+                         {
+                             .id = i1,
+                             .type = TimelineItemTypeNotification,
+                             .status = 0,
+                             .ancs_uid = 0,
+                             .layout = LayoutIdGeneric,
+                             .timestamp = 0x53f0dda5,
+                         },
+                     .attr_list =
+                         {
+                             .num_attributes = ARRAY_LENGTH(attributes),
+                             .attributes = attributes,
+                         },
+                     .action_group = {
+                         .num_actions = ARRAY_LENGTH(actions),
+                         .actions = actions,
+                     }};
 
   Uuid i2;
   uuid_generate(&i2);
-  TimelineItem e2 = {
-    .header = {
-      .id = i2,
-      .type = TimelineItemTypeNotification,
-      .status = 0,
-      .ancs_uid = 0,
-      .layout = LayoutIdGeneric,
-      .timestamp = 0x53f0dda6,
-    },
-    .attr_list = {
-      .num_attributes = 2,
-      .attributes = attributes,
-    },
-    .action_group = {
-      .num_actions = 1,
-      .actions = &actions[2],
-    }
-  };
+  TimelineItem e2 = {.header =
+                         {
+                             .id = i2,
+                             .type = TimelineItemTypeNotification,
+                             .status = 0,
+                             .ancs_uid = 0,
+                             .layout = LayoutIdGeneric,
+                             .timestamp = 0x53f0dda6,
+                         },
+                     .attr_list =
+                         {
+                             .num_attributes = 2,
+                             .attributes = attributes,
+                         },
+                     .action_group = {
+                         .num_actions = 1,
+                         .actions = &actions[2],
+                     }};
 
   Uuid i3;
   uuid_generate(&i3);
-  TimelineItem e3 = {
-    .header = {
-      .id = i3,
-      .type = TimelineItemTypeNotification,
-      .status = 0,
-      .ancs_uid = 0,
-      .layout = LayoutIdGeneric,
-      .timestamp = 0x53f0dda7,
-    },
-    .attr_list = {
-      .num_attributes = 1,
-      .attributes = &attributes[2],
-    },
-    .action_group = {
-      .num_actions = 2,
-      .actions = actions,
-    }
-  };
+  TimelineItem e3 = {.header =
+                         {
+                             .id = i3,
+                             .type = TimelineItemTypeNotification,
+                             .status = 0,
+                             .ancs_uid = 0,
+                             .layout = LayoutIdGeneric,
+                             .timestamp = 0x53f0dda7,
+                         },
+                     .attr_list =
+                         {
+                             .num_attributes = 1,
+                             .attributes = &attributes[2],
+                         },
+                     .action_group = {
+                         .num_actions = 2,
+                         .actions = actions,
+                     }};
 
   notification_storage_store(&e1);
   notification_storage_store(&e2);
@@ -525,27 +507,26 @@ void test_notification_storage__remove_add(void) {
 
 void test_notification_storage__remove_add_compress(void) {
   time_t timestamp = 0x10000000;
-  TimelineItem e = {
-    .header = {
-      .type = TimelineItemTypeNotification,
-      .status = 0,
-      .ancs_uid = 0,
-      .layout = LayoutIdGeneric,
-      .timestamp = 0x53f0dda5,
-    },
-    .attr_list = {
-      .num_attributes = ARRAY_LENGTH(attributes),
-      .attributes = attributes,
-    },
-    .action_group = {
-      .num_actions = ARRAY_LENGTH(actions),
-      .actions = actions,
-    }
-  };
+  TimelineItem e = {.header =
+                        {
+                            .type = TimelineItemTypeNotification,
+                            .status = 0,
+                            .ancs_uid = 0,
+                            .layout = LayoutIdGeneric,
+                            .timestamp = 0x53f0dda5,
+                        },
+                    .attr_list =
+                        {
+                            .num_attributes = ARRAY_LENGTH(attributes),
+                            .attributes = attributes,
+                        },
+                    .action_group = {
+                        .num_actions = ARRAY_LENGTH(actions),
+                        .actions = actions,
+                    }};
 
-
-  const size_t notif_size = sizeof(SerializedTimelineItemHeader) +
-      timeline_item_get_serialized_payload_size(&e);
+  const size_t notif_size =
+      sizeof(SerializedTimelineItemHeader) + timeline_item_get_serialized_payload_size(&e);
   const size_t file_size = NOTIFICATION_STORAGE_FILE_SIZE;
   const size_t count = file_size / notif_size;
   Uuid uuids[count];
@@ -605,20 +586,20 @@ void test_notification_storage__remove_add_compress(void) {
     free(r.allocated_buffer);
   }
 
-  //Check that no notifications have been deleted
+  // Check that no notifications have been deleted
   e.header.id = uuids[j];
   e.header.timestamp = timestamp + j;
   cl_assert(notification_storage_get(&uuids[j], &r));
   compare_notifications(&e, &r);
   free(r.allocated_buffer);
 
-  //Free up enough space for one notification by removing one
-  notification_storage_remove(&uuids[i/2]);
-  e.header.id = uuids[i/2];
-  e.header.timestamp = timestamp + i/2;
-  cl_assert_equal_b(notification_storage_get(&uuids[i/2], &r), false);
+  // Free up enough space for one notification by removing one
+  notification_storage_remove(&uuids[i / 2]);
+  e.header.id = uuids[i / 2];
+  e.header.timestamp = timestamp + i / 2;
+  cl_assert_equal_b(notification_storage_get(&uuids[i / 2], &r), false);
 
-  //Add another notification. Compression should take place without freeing up a 4k block
+  // Add another notification. Compression should take place without freeing up a 4k block
   e.header.id = uuids[i];
   e.header.timestamp = timestamp + i;
   notification_storage_store(&e);
@@ -626,14 +607,14 @@ void test_notification_storage__remove_add_compress(void) {
   compare_notifications(&e, &r);
   free(r.allocated_buffer);
 
-  //Ensure that compression does not remove old notifications
+  // Ensure that compression does not remove old notifications
   e.header.id = uuids[j];
   e.header.timestamp = timestamp + j;
   cl_assert(notification_storage_get(&uuids[j], &r));
   compare_notifications(&e, &r);
   free(r.allocated_buffer);
 
-  //Add another notification. Compression should free up another 4k block
+  // Add another notification. Compression should free up another 4k block
   e.header.id = uuids[i];
   e.header.timestamp = timestamp + i;
   notification_storage_store(&e);
@@ -653,66 +634,66 @@ void test_notification_storage__remove_add_compress(void) {
 void test_notification_storage__find_ancs_id(void) {
   Uuid i1;
   uuid_generate(&i1);
-  TimelineItem e1 = {
-    .header = {
-      .id = i1,
-      .type = TimelineItemTypeNotification,
-      .status = 0,
-      .ancs_uid = 0,
-      .layout = LayoutIdGeneric,
-      .timestamp = 0x53f0dda5,
-    },
-    .attr_list = {
-      .num_attributes = ARRAY_LENGTH(attributes),
-      .attributes = attributes,
-    },
-    .action_group = {
-      .num_actions = ARRAY_LENGTH(actions),
-      .actions = actions,
-    }
-  };
+  TimelineItem e1 = {.header =
+                         {
+                             .id = i1,
+                             .type = TimelineItemTypeNotification,
+                             .status = 0,
+                             .ancs_uid = 0,
+                             .layout = LayoutIdGeneric,
+                             .timestamp = 0x53f0dda5,
+                         },
+                     .attr_list =
+                         {
+                             .num_attributes = ARRAY_LENGTH(attributes),
+                             .attributes = attributes,
+                         },
+                     .action_group = {
+                         .num_actions = ARRAY_LENGTH(actions),
+                         .actions = actions,
+                     }};
 
   Uuid i2;
   uuid_generate(&i2);
-  TimelineItem e2 = {
-    .header = {
-      .id = i2,
-      .type = TimelineItemTypeNotification,
-      .status = 0,
-      .ancs_uid = 1,
-      .layout = LayoutIdGeneric,
-      .timestamp = 0x53f0dda6,
-    },
-    .attr_list = {
-      .num_attributes = 2,
-      .attributes = attributes,
-    },
-    .action_group = {
-      .num_actions = 1,
-      .actions = &actions[2],
-    }
-  };
+  TimelineItem e2 = {.header =
+                         {
+                             .id = i2,
+                             .type = TimelineItemTypeNotification,
+                             .status = 0,
+                             .ancs_uid = 1,
+                             .layout = LayoutIdGeneric,
+                             .timestamp = 0x53f0dda6,
+                         },
+                     .attr_list =
+                         {
+                             .num_attributes = 2,
+                             .attributes = attributes,
+                         },
+                     .action_group = {
+                         .num_actions = 1,
+                         .actions = &actions[2],
+                     }};
 
   Uuid i3;
   uuid_generate(&i3);
-  TimelineItem e3 = {
-    .header = {
-      .id = i3,
-      .type = TimelineItemTypeNotification,
-      .status = 0,
-      .ancs_uid = 84,
-      .layout = LayoutIdGeneric,
-      .timestamp = 0x53f0dda7,
-    },
-    .attr_list = {
-      .num_attributes = 1,
-      .attributes = &attributes[2],
-    },
-    .action_group = {
-      .num_actions = 2,
-      .actions = actions,
-    }
-  };
+  TimelineItem e3 = {.header =
+                         {
+                             .id = i3,
+                             .type = TimelineItemTypeNotification,
+                             .status = 0,
+                             .ancs_uid = 84,
+                             .layout = LayoutIdGeneric,
+                             .timestamp = 0x53f0dda7,
+                         },
+                     .attr_list =
+                         {
+                             .num_attributes = 1,
+                             .attributes = &attributes[2],
+                         },
+                     .action_group = {
+                         .num_actions = 2,
+                         .actions = actions,
+                     }};
 
   notification_storage_store(&e1);
   notification_storage_store(&e2);
@@ -738,66 +719,66 @@ void test_notification_storage__find_ancs_id(void) {
 void test_notification_storage__find_by_timestamp(void) {
   Uuid i1;
   uuid_generate(&i1);
-  TimelineItem e1 = {
-    .header = {
-      .id = i1,
-      .type = TimelineItemTypeNotification,
-      .status = 0,
-      .ancs_uid = 0,
-      .layout = LayoutIdGeneric,
-      .timestamp = 0x53f0dda5,
-    },
-    .attr_list = {
-      .num_attributes = ARRAY_LENGTH(attributes),
-      .attributes = attributes,
-    },
-    .action_group = {
-      .num_actions = ARRAY_LENGTH(actions),
-      .actions = actions,
-    }
-  };
+  TimelineItem e1 = {.header =
+                         {
+                             .id = i1,
+                             .type = TimelineItemTypeNotification,
+                             .status = 0,
+                             .ancs_uid = 0,
+                             .layout = LayoutIdGeneric,
+                             .timestamp = 0x53f0dda5,
+                         },
+                     .attr_list =
+                         {
+                             .num_attributes = ARRAY_LENGTH(attributes),
+                             .attributes = attributes,
+                         },
+                     .action_group = {
+                         .num_actions = ARRAY_LENGTH(actions),
+                         .actions = actions,
+                     }};
 
   Uuid i2;
   uuid_generate(&i2);
-  TimelineItem e2 = {
-    .header = {
-      .id = i2,
-      .type = TimelineItemTypeNotification,
-      .status = 0,
-      .ancs_uid = 1,
-      .layout = LayoutIdGeneric,
-      .timestamp = 0x53f0dda6,
-    },
-    .attr_list = {
-      .num_attributes = 2,
-      .attributes = attributes,
-    },
-    .action_group = {
-      .num_actions = 1,
-      .actions = &actions[2],
-    }
-  };
+  TimelineItem e2 = {.header =
+                         {
+                             .id = i2,
+                             .type = TimelineItemTypeNotification,
+                             .status = 0,
+                             .ancs_uid = 1,
+                             .layout = LayoutIdGeneric,
+                             .timestamp = 0x53f0dda6,
+                         },
+                     .attr_list =
+                         {
+                             .num_attributes = 2,
+                             .attributes = attributes,
+                         },
+                     .action_group = {
+                         .num_actions = 1,
+                         .actions = &actions[2],
+                     }};
 
   Uuid i3;
   uuid_generate(&i3);
-  TimelineItem e3 = {
-    .header = {
-      .id = i3,
-      .type = TimelineItemTypeNotification,
-      .status = 0,
-      .ancs_uid = 84,
-      .layout = LayoutIdGeneric,
-      .timestamp = 0x53f0dda7,
-    },
-    .attr_list = {
-      .num_attributes = 1,
-      .attributes = &attributes[2],
-    },
-    .action_group = {
-      .num_actions = 2,
-      .actions = actions,
-    }
-  };
+  TimelineItem e3 = {.header =
+                         {
+                             .id = i3,
+                             .type = TimelineItemTypeNotification,
+                             .status = 0,
+                             .ancs_uid = 84,
+                             .layout = LayoutIdGeneric,
+                             .timestamp = 0x53f0dda7,
+                         },
+                     .attr_list =
+                         {
+                             .num_attributes = 1,
+                             .attributes = &attributes[2],
+                         },
+                     .action_group = {
+                         .num_actions = 2,
+                         .actions = actions,
+                     }};
 
   notification_storage_store(&e1);
   notification_storage_store(&e2);
@@ -812,8 +793,7 @@ void test_notification_storage__find_by_timestamp(void) {
   cl_assert_equal_m(&e1.header, &h, sizeof(CommonTimelineItemHeader));
 
   test.action_group.num_actions = 2;
-  cl_assert_equal_b(notification_storage_find_ancs_notification_by_timestamp(&test, &h),
-                    false);
+  cl_assert_equal_b(notification_storage_find_ancs_notification_by_timestamp(&test, &h), false);
 
   test = e2;
   test.header.id = UUID_INVALID;
@@ -828,8 +808,7 @@ void test_notification_storage__find_by_timestamp(void) {
   notification_storage_remove(&i2);
   test = e2;
   test.header.id = UUID_INVALID;
-  cl_assert_equal_b(notification_storage_find_ancs_notification_by_timestamp(&test, &h),
-                    false);
+  cl_assert_equal_b(notification_storage_find_ancs_notification_by_timestamp(&test, &h), false);
 
   test = e3;
   test.header.id = UUID_INVALID;
@@ -840,24 +819,24 @@ void test_notification_storage__find_by_timestamp(void) {
 void test_notification_storage__should_detect_corruption(void) {
   Uuid i1;
   uuid_generate(&i1);
-  TimelineItem e1 = {
-    .header = {
-      .id = i1,
-      .type = TimelineItemTypeNotification,
-      .status = TimelineItemStatusRead,
-      .ancs_uid = 0,
-      .layout = LayoutIdGeneric,
-      .timestamp = 0x53f0dda5,
-    },
-    .attr_list = {
-      .num_attributes = ARRAY_LENGTH(attributes),
-      .attributes = attributes,
-    },
-    .action_group = {
-      .num_actions = ARRAY_LENGTH(actions),
-      .actions = actions,
-    }
-  };
+  TimelineItem e1 = {.header =
+                         {
+                             .id = i1,
+                             .type = TimelineItemTypeNotification,
+                             .status = TimelineItemStatusRead,
+                             .ancs_uid = 0,
+                             .layout = LayoutIdGeneric,
+                             .timestamp = 0x53f0dda5,
+                         },
+                     .attr_list =
+                         {
+                             .num_attributes = ARRAY_LENGTH(attributes),
+                             .attributes = attributes,
+                         },
+                     .action_group = {
+                         .num_actions = ARRAY_LENGTH(actions),
+                         .actions = actions,
+                     }};
 
   notification_storage_store(&e1);
   TimelineItem r;
@@ -890,7 +869,7 @@ void test_notification_storage__should_detect_corruption(void) {
 }
 
 static void prv_rewrite_bump_timestamp_callback(TimelineItem *notification,
-    SerializedTimelineItemHeader *header, void *data) {
+                                                SerializedTimelineItemHeader *header, void *data) {
   int *count = data;
   (*count)++;
   header->common.timestamp += 42;
@@ -900,24 +879,24 @@ static void prv_rewrite_bump_timestamp_callback(TimelineItem *notification,
 void test_notification_storage__rewrite_skips_deleted(void) {
   Uuid i1;
   uuid_generate(&i1);
-  TimelineItem e1 = {
-    .header = {
-      .id = i1,
-      .type = TimelineItemTypeNotification,
-      .status = 0,
-      .ancs_uid = 0,
-      .layout = LayoutIdGeneric,
-      .timestamp = 0x53f0dda5,
-    },
-    .attr_list = {
-      .num_attributes = ARRAY_LENGTH(attributes),
-      .attributes = attributes,
-    },
-    .action_group = {
-      .num_actions = ARRAY_LENGTH(actions),
-      .actions = actions,
-    }
-  };
+  TimelineItem e1 = {.header =
+                         {
+                             .id = i1,
+                             .type = TimelineItemTypeNotification,
+                             .status = 0,
+                             .ancs_uid = 0,
+                             .layout = LayoutIdGeneric,
+                             .timestamp = 0x53f0dda5,
+                         },
+                     .attr_list =
+                         {
+                             .num_attributes = ARRAY_LENGTH(attributes),
+                             .attributes = attributes,
+                         },
+                     .action_group = {
+                         .num_actions = ARRAY_LENGTH(actions),
+                         .actions = actions,
+                     }};
 
   TimelineItem e2 = e1;
   Uuid i2;

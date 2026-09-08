@@ -41,7 +41,7 @@ static CommSession *s_session_head;
 // -------------------------------------------------------------------------------------------------
 // Defined in session_send_buffer.c
 
-extern SendBuffer * comm_session_send_buffer_create(TransportDestination destination);
+extern SendBuffer *comm_session_send_buffer_create(TransportDestination destination);
 extern void comm_session_send_buffer_destroy(SendBuffer *sb);
 
 // -------------------------------------------------------------------------------------------------
@@ -56,10 +56,9 @@ extern void comm_session_send_queue_cleanup(CommSession *session);
 
 static void prv_put_comm_session_event(bool is_open, bool is_system) {
   PebbleEvent event = {
-    .type = PEBBLE_COMM_SESSION_EVENT,
-    .bluetooth.comm_session_event.is_open = is_open,
-    .bluetooth.comm_session_event
-    .is_system = is_system,
+      .type = PEBBLE_COMM_SESSION_EVENT,
+      .bluetooth.comm_session_event.is_open = is_open,
+      .bluetooth.comm_session_event.is_system = is_system,
   };
   event_put(&event);
 }
@@ -70,7 +69,7 @@ static void prv_put_comm_session_event(bool is_open, bool is_system) {
 
 //! bt_lock() is expected to be taken by the caller!
 bool comm_session_is_valid(const CommSession *session) {
-  return list_contains((ListNode *) s_session_head, &session->node);
+  return list_contains((ListNode *)s_session_head, &session->node);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -106,11 +105,10 @@ void comm_session_set_capabilities(CommSession *session, CommSessionCapability c
   bt_unlock();
 
   if (comm_session_is_system(session)) {
-    const PebbleProtocolCapabilities capabilities = { .flags = capability_flags };
+    const PebbleProtocolCapabilities capabilities = {.flags = capability_flags};
     bt_persistent_storage_set_cached_system_capabilities(&capabilities);
   }
 }
-
 
 //! Resets the session (close and attempt re-opening the session)
 //! @note If the underlying transport is iAP, this will end up closing all the sessions on top of
@@ -141,9 +139,12 @@ static const Uuid *prv_get_uuid(const CommSession *session) {
 
 static const char *prv_string_for_destination(TransportDestination destination) {
   switch (destination) {
-    case TransportDestinationSystem: return "S";
-    case TransportDestinationApp: return "A";
-    case TransportDestinationHybrid: return "H";
+    case TransportDestinationSystem:
+      return "S";
+    case TransportDestinationApp:
+      return "A";
+    case TransportDestinationHybrid:
+      return "H";
     default:
       WTF;
       return NULL;
@@ -153,8 +154,8 @@ static const char *prv_string_for_destination(TransportDestination destination) 
 static void prv_log_session_event(CommSession *session, bool is_open) {
   char uuid_string[UUID_STRING_BUFFER_LENGTH];
   uuid_to_string(prv_get_uuid(session), uuid_string);
-  PBL_LOG_INFO("Session event: is_open=%d, destination=%s, app_uuid=%s",
-          is_open, prv_string_for_destination(session->destination), uuid_string);
+  PBL_LOG_INFO("Session event: is_open=%d, destination=%s, app_uuid=%s", is_open,
+               prv_string_for_destination(session->destination), uuid_string);
 }
 
 static bool prv_is_transport_type(Transport *transport,
@@ -165,9 +166,8 @@ static bool prv_is_transport_type(Transport *transport,
 }
 
 //! bt_lock() is expected to be taken by the caller!
-CommSession * comm_session_open(Transport *transport, const TransportImplementation *implementation,
-                       TransportDestination destination) {
-
+CommSession *comm_session_open(Transport *transport, const TransportImplementation *implementation,
+                               TransportDestination destination) {
   const bool is_system = (destination != TransportDestinationApp);
   if (is_system) {
     CommSession *existing_system_session = comm_session_get_system_session();
@@ -176,20 +176,21 @@ CommSession * comm_session_open(Transport *transport, const TransportImplementat
       // Actually using PULSE at the same time as another transport may cause
       // undesirable behaviour however.
       if (!prv_is_transport_type(existing_system_session->transport,
-                                         existing_system_session->transport_imp,
-                                         CommSessionTransportType_PULSE)
-           && !prv_is_transport_type(transport, implementation, CommSessionTransportType_PULSE)) {
+                                 existing_system_session->transport_imp,
+                                 CommSessionTransportType_PULSE) &&
+          !prv_is_transport_type(transport, implementation, CommSessionTransportType_PULSE)) {
         if (!existing_system_session->transport_imp->close) {
           // iAP sessions cannot be closed from the watch' side :(
           PBL_LOG_ERR("System session already exists and cannot be closed");
           return NULL;
         }
         // Last system session to connect wins:
-        // This is to work-around a race condition that happens when iOS still has the PPoGATT service
-        // registered (the app has crashed / jettisoned) and iSPP is connected but the system session
-        // is running over PPoGATT. If the app launches again, it will have no state of what was the
-        // previously used transport was, prior to getting killed. Often, iAP ends up winning.
-        // However, to the firmware, PPoGATT still appears connected, so we'd end up here.
+        // This is to work-around a race condition that happens when iOS still has the PPoGATT
+        // service registered (the app has crashed / jettisoned) and iSPP is connected but the
+        // system session is running over PPoGATT. If the app launches again, it will have no state
+        // of what was the previously used transport was, prior to getting killed. Often, iAP ends
+        // up winning. However, to the firmware, PPoGATT still appears connected, so we'd end up
+        // here.
         PBL_LOG_INFO("System session already exists, closing it now");
         existing_system_session->transport_imp->close(existing_system_session->transport);
       }
@@ -201,13 +202,13 @@ CommSession * comm_session_open(Transport *transport, const TransportImplementat
     PBL_LOG_ERR("Not enough memory for new CommSession");
     return NULL;
   }
-  *session = (const CommSession) {
-    .transport = transport,
-    .transport_imp = implementation,
-    .destination = destination,
+  *session = (const CommSession){
+      .transport = transport,
+      .transport_imp = implementation,
+      .destination = destination,
   };
 
-  s_session_head = (CommSession *) list_prepend((ListNode *) s_session_head, &session->node);
+  s_session_head = (CommSession *)list_prepend((ListNode *)s_session_head, &session->node);
 
   prv_log_session_event(session, true /* is_open */);
 
@@ -239,7 +240,6 @@ void comm_session_close(CommSession *session, CommSessionCloseReason reason) {
 
   const bool is_system = (session->destination != TransportDestinationApp);
   if (is_system) {
-
     // Only relevant for iOS + BLE, otherwise this is a no-op:
     app_launch_trigger();
 
@@ -258,13 +258,12 @@ void comm_session_close(CommSession *session, CommSessionCloseReason reason) {
   // Cleanup:
   comm_session_receive_router_cleanup(session);
   comm_session_send_queue_cleanup(session);
-  list_remove(&session->node, (ListNode **) &s_session_head, NULL);
+  list_remove(&session->node, (ListNode **)&s_session_head, NULL);
   kernel_free(session);
 }
 
-void comm_session_set_responsiveness(
-    CommSession *session, BtConsumer consumer, ResponseTimeState state,
-    uint16_t max_period_secs) {
+void comm_session_set_responsiveness(CommSession *session, BtConsumer consumer,
+                                     ResponseTimeState state, uint16_t max_period_secs) {
   comm_session_set_responsiveness_ext(session, consumer, state, max_period_secs, NULL);
 }
 
@@ -274,9 +273,8 @@ void comm_session_set_responsiveness_ext(CommSession *session, BtConsumer consum
   if (session) {
     bt_lock();
     if (comm_session_is_valid(session)) {
-      session->transport_imp->set_connection_responsiveness(session->transport, consumer,
-                                                            state, max_period_secs,
-                                                            granted_handler);
+      session->transport_imp->set_connection_responsiveness(session->transport, consumer, state,
+                                                            max_period_secs, granted_handler);
     }
     bt_unlock();
   }
@@ -351,8 +349,8 @@ bool comm_session_send_next_is_scheduled(CommSession *session) {
 // Interface towards the system / subsystems that need to receive and send data
 // -------------------------------------------------------------------------------------------------
 
-bool comm_session_send_data(CommSession *session, uint16_t endpoint_id,
-                            const uint8_t *data, size_t length, uint32_t timeout_ms) {
+bool comm_session_send_data(CommSession *session, uint16_t endpoint_id, const uint8_t *data,
+                            size_t length, uint32_t timeout_ms) {
   if (!session) {
     return false;
   }
@@ -383,8 +381,8 @@ static bool prv_find_session_by_app_uuid_comparator(ListNode *found_node, void *
   }
   // If there is no valid UUID, it means we don't know what app UUID is associated with the
   // transport, consider it as a fallback option:
-  const bool is_unknown_app_session = (session->destination == TransportDestinationApp &&
-                                       uuid_is_invalid(session_uuid));
+  const bool is_unknown_app_session =
+      (session->destination == TransportDestinationApp && uuid_is_invalid(session_uuid));
   const bool is_hybrid_session = (session->destination == TransportDestinationHybrid);
   if (is_hybrid_session || is_unknown_app_session) {
     // On Android + SPP, we can expect one Hybrid session, so we assume that the found session is
@@ -404,12 +402,12 @@ static CommSession *prv_get_app_session(void) {
   if (uuid_is_system(app_uuid) || uuid_is_invalid(app_uuid)) {
     return NULL;
   }
-  FindByAppUUIDContext ctx = (FindByAppUUIDContext) {
-    .app_uuid = app_uuid,
+  FindByAppUUIDContext ctx = (FindByAppUUIDContext){
+      .app_uuid = app_uuid,
   };
   // Try most specific first:
-  CommSession *session = (CommSession *) list_find((ListNode *) s_session_head,
-                                                   prv_find_session_by_app_uuid_comparator, &ctx);
+  CommSession *session = (CommSession *)list_find((ListNode *)s_session_head,
+                                                  prv_find_session_by_app_uuid_comparator, &ctx);
   if (!session) {
     return ctx.fallback_session;
   }
@@ -417,30 +415,30 @@ static CommSession *prv_get_app_session(void) {
 }
 
 static bool prv_find_session_is_system_filter(ListNode *found_node, void *data) {
-  CommSession *session = (CommSession *) found_node;
+  CommSession *session = (CommSession *)found_node;
   const TransportDestination destination = session->destination;
-  return (destination == TransportDestinationSystem || destination == TransportDestinationHybrid)
-          && !prv_is_transport_type(session->transport, session->transport_imp,
-                                    CommSessionTransportType_QEMU)
-          && !prv_is_transport_type(session->transport, session->transport_imp,
-                                    CommSessionTransportType_PULSE);
+  return (destination == TransportDestinationSystem || destination == TransportDestinationHybrid) &&
+         !prv_is_transport_type(session->transport, session->transport_imp,
+                                CommSessionTransportType_QEMU) &&
+         !prv_is_transport_type(session->transport, session->transport_imp,
+                                CommSessionTransportType_PULSE);
 }
 
 static bool prv_find_session_is_type_filter(ListNode *found_node, void *data) {
-  CommSession *session = (CommSession *) found_node;
-  CommSessionTransportType required_session_type = (CommSessionTransportType) data;
+  CommSession *session = (CommSession *)found_node;
+  CommSessionTransportType required_session_type = (CommSessionTransportType)data;
   return prv_is_transport_type(session->transport, session->transport_imp, required_session_type);
 }
 
 static CommSession *prv_find_session_by_type(CommSessionTransportType session_type) {
-  return (CommSession *) list_find((ListNode *) s_session_head,
-                                   prv_find_session_is_type_filter, (void*)session_type);
+  return (CommSession *)list_find((ListNode *)s_session_head, prv_find_session_is_type_filter,
+                                  (void *)session_type);
 }
 
 static CommSession *prv_get_system_session(void) {
   // Attempt to explicitly find and return a session that isn't QEMU or PULSE
-  CommSession *session = (CommSession *) list_find((ListNode *) s_session_head,
-                                                   prv_find_session_is_system_filter, NULL);
+  CommSession *session =
+      (CommSession *)list_find((ListNode *)s_session_head, prv_find_session_is_system_filter, NULL);
   if (session) {
     return session;
   }
@@ -520,24 +518,22 @@ CommSessionType comm_session_get_type(const CommSession *session) {
   bt_lock();
   {
     if (comm_session_is_valid(session)) {
-      type = (session->destination == TransportDestinationApp) ? CommSessionTypeApp :
-                                                                 CommSessionTypeSystem;
+      type = (session->destination == TransportDestinationApp) ? CommSessionTypeApp
+                                                               : CommSessionTypeSystem;
     }
   }
   bt_unlock();
   return type;
 }
 
-bool comm_session_is_system(CommSession* session) {
+bool comm_session_is_system(CommSession *session) {
   return (comm_session_get_type(session) == CommSessionTypeSystem);
 }
 
 // -------------------------------------------------------------------------------------------------
 
 //! Must (only) be called when going out of airplane mode (enabling Bluetooth).
-void comm_session_init(void) {
-  PBL_ASSERTN(s_session_head == NULL);
-}
+void comm_session_init(void) { PBL_ASSERTN(s_session_head == NULL); }
 
 //! Must (only) be called when going into airplane mode (disabling Bluetooth).
 void comm_session_deinit(void) {
@@ -547,16 +543,14 @@ void comm_session_deinit(void) {
 }
 
 DEFINE_SYSCALL(void, sys_app_comm_set_responsiveness, SniffInterval interval) {
-
   CommSession *comm_session = comm_session_get_current_app_session();
   switch (interval) {
     case SNIFF_INTERVAL_REDUCED:
-      comm_session_set_responsiveness(comm_session, BtConsumerApp,
-                                      ResponseTimeMiddle, MAX_PERIOD_RUN_FOREVER);
+      comm_session_set_responsiveness(comm_session, BtConsumerApp, ResponseTimeMiddle,
+                                      MAX_PERIOD_RUN_FOREVER);
       return;
     case SNIFF_INTERVAL_NORMAL:
-      comm_session_set_responsiveness(comm_session, BtConsumerApp,
-                                      ResponseTimeMax, 0);
+      comm_session_set_responsiveness(comm_session, BtConsumerApp, ResponseTimeMax, 0);
       return;
   }
   PBL_LOG_WRN("Invalid sniff interval");

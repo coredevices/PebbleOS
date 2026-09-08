@@ -18,27 +18,24 @@
 #include "moddableAppState.h"
 #include "kernel/pbl_malloc.h"
 
-void moddable_cleanup(void)
-{
-	ModdablePebbleAppState state = (ModdablePebbleAppState)app_state_get_js_memory_api_context();
+void moddable_cleanup(void) {
+  ModdablePebbleAppState state = (ModdablePebbleAppState)app_state_get_js_memory_api_context();
 
-	if (state->the)
-		xsDeleteMachine(state->the);
+  if (state->the) xsDeleteMachine(state->the);
 
-	if (state->abortReason)
-		c_free(state->abortReason);
+  if (state->abortReason) c_free(state->abortReason);
 
-	extern void modTimerExit(void);
-	modTimerExit();
+  extern void modTimerExit(void);
+  modTimerExit();
 
-	while (state->debugFragments) {
-		DebugFragment f = state->debugFragments;
-		state->debugFragments = f->next;
-		kernel_free(f);
-	}
+  while (state->debugFragments) {
+    DebugFragment f = state->debugFragments;
+    state->debugFragments = f->next;
+    kernel_free(f);
+  }
 
-	app_state_set_js_memory_api_context(NULL);
-	task_free(state);
+  app_state_set_js_memory_api_context(NULL);
+  task_free(state);
 }
 
 // Minimum recordSize for the original struct (without flags field)
@@ -51,124 +48,121 @@ void moddable_cleanup(void)
 // ALWAYS_INLINE: PRIVILEGE_WAS_ELEVATED is only valid inside the syscall body.
 static ALWAYS_INLINE void prv_assert_userspace_creation_record(ModdableCreationRecord *cr,
                                                                size_t len) {
-	if (PRIVILEGE_WAS_ELEVATED) {
-		syscall_assert_userspace_buffer(cr, len);
-	}
+  if (PRIVILEGE_WAS_ELEVATED) {
+    syscall_assert_userspace_buffer(cr, len);
+  }
 }
 
-DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr)
-{
-	uint32_t flags = 0;
-	uint32_t record_size = 0;
+DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr) {
+  uint32_t flags = 0;
+  uint32_t record_size = 0;
 
-	ModdablePebbleAppState state = task_zalloc_check(sizeof(ModdablePebbleAppStateRecord));
-	app_state_set_js_memory_api_context((void *)state);
+  ModdablePebbleAppState state = task_zalloc_check(sizeof(ModdablePebbleAppStateRecord));
+  app_state_set_js_memory_api_context((void *)state);
 
-	// Read flags if the record is large enough to include them
-	if (cr) {
-		prv_assert_userspace_creation_record(cr, sizeof(cr->recordSize));
-		record_size = cr->recordSize;
-		if (record_size < kModdableCreationRecordMinSize) {
-			APP_LOG(APP_LOG_LEVEL_ERROR, "invalid recordSize");
-			return;
-		}
+  // Read flags if the record is large enough to include them
+  if (cr) {
+    prv_assert_userspace_creation_record(cr, sizeof(cr->recordSize));
+    record_size = cr->recordSize;
+    if (record_size < kModdableCreationRecordMinSize) {
+      APP_LOG(APP_LOG_LEVEL_ERROR, "invalid recordSize");
+      return;
+    }
 
-		prv_assert_userspace_creation_record(cr, cr->recordSize);
-		if (record_size >= kModdableCreationRecordFlagsSize)
-			flags = cr->flags;
-	}
+    prv_assert_userspace_creation_record(cr, cr->recordSize);
+    if (record_size >= kModdableCreationRecordFlagsSize) flags = cr->flags;
+  }
 
-	// Don't log instrumentation if nobody is listening to APP_LOG over BT
-	if (!app_log_is_bt_enabled())
-		flags &= ~(kModdableCreationFlagLogInstrumentation | kModdableCreationFlagDebug);
+  // Don't log instrumentation if nobody is listening to APP_LOG over BT
+  if (!app_log_is_bt_enabled())
+    flags &= ~(kModdableCreationFlagLogInstrumentation | kModdableCreationFlagDebug);
 
-	state->creationFlags = flags;
+  state->creationFlags = flags;
 
-	void *fxBuildFFI = NULL;
-	xsCreation *defaultCreation;
-	extern void *xsPreparationAndCreation(xsCreation **creation);
-	(void)xsPreparationAndCreation(&defaultCreation);
-	struct xsCreationRecord creation = *defaultCreation;
-	if (NULL != cr) {
-		APP_LOG(APP_LOG_LEVEL_ERROR, "evaluating creation record");
-		uint32_t stack = (cr->stack + 3) & ~3, slot = (cr->slot + 3) & ~3, chunk = (cr->chunk + 3) & ~3;
-		if (stack || slot || chunk) {
-			if (!stack || !slot || !chunk) {
-				APP_LOG(APP_LOG_LEVEL_ERROR, "invalid ModdableCreationRecord");
-				return;
-			}
+  void *fxBuildFFI = NULL;
+  xsCreation *defaultCreation;
+  extern void *xsPreparationAndCreation(xsCreation * *creation);
+  (void)xsPreparationAndCreation(&defaultCreation);
+  struct xsCreationRecord creation = *defaultCreation;
+  if (NULL != cr) {
+    APP_LOG(APP_LOG_LEVEL_ERROR, "evaluating creation record");
+    uint32_t stack = (cr->stack + 3) & ~3, slot = (cr->slot + 3) & ~3, chunk = (cr->chunk + 3) & ~3;
+    if (stack || slot || chunk) {
+      if (!stack || !slot || !chunk) {
+        APP_LOG(APP_LOG_LEVEL_ERROR, "invalid ModdableCreationRecord");
+        return;
+      }
 
-			creation.stackCount = stack / sizeof(xsSlot);
-			creation.initialHeapCount = slot / sizeof(xsSlot);
-			creation.initialChunkSize = chunk;
-			if ((stack + slot + chunk) <= (uint32_t)creation.staticSize)
-				creation.staticSize = stack + slot + chunk;
-			else {
-				creation.incrementalChunkSize = 0;
-				creation.incrementalHeapCount = 0;
-				creation.staticSize = 0;
-			}
-		}
+      creation.stackCount = stack / sizeof(xsSlot);
+      creation.initialHeapCount = slot / sizeof(xsSlot);
+      creation.initialChunkSize = chunk;
+      if ((stack + slot + chunk) <= (uint32_t)creation.staticSize)
+        creation.staticSize = stack + slot + chunk;
+      else {
+        creation.incrementalChunkSize = 0;
+        creation.incrementalHeapCount = 0;
+        creation.staticSize = 0;
+      }
+    }
 
-		if (record_size >= kModdableCreationRecordFFISize) {
-			fxBuildFFI = cr->fxBuildFFI;
+    if (record_size >= kModdableCreationRecordFFISize) {
+      fxBuildFFI = cr->fxBuildFFI;
 
-			if (fxBuildFFI && creation.staticSize) {
-				int available = creation.staticSize - (creation.stackCount * sizeof(xsSlot));
-				creation.initialHeapCount = (available >> 1) / sizeof(xsSlot);
-				creation.initialChunkSize = available >> 1;
-				creation.staticSize = 0;
-			}
-		}
-	}
+      if (fxBuildFFI && creation.staticSize) {
+        int available = creation.staticSize - (creation.stackCount * sizeof(xsSlot));
+        creation.initialHeapCount = (available >> 1) / sizeof(xsSlot);
+        creation.initialChunkSize = available >> 1;
+        creation.staticSize = 0;
+      }
+    }
+  }
 
-	xsMachine *the = modCloneMachine(&creation, NULL);
-	if (NULL == the) {
-		APP_LOG(APP_LOG_LEVEL_ERROR, "failed to allocate XS machine");
-		moddable_cleanup();
-		return;
-	}
+  xsMachine *the = modCloneMachine(&creation, NULL);
+  if (NULL == the) {
+    APP_LOG(APP_LOG_LEVEL_ERROR, "failed to allocate XS machine");
+    moddable_cleanup();
+    return;
+  }
 
-	state->the = the;
-	state->fxBuildFFI = fxBuildFFI;
-	state->eventedTimer = EVENTED_TIMER_INVALID_ID;
+  state->the = the;
+  state->fxBuildFFI = fxBuildFFI;
+  state->eventedTimer = EVENTED_TIMER_INVALID_ID;
 
-	evented_timer_register(1, false, (EventedTimerCallback)modRunMachineSetup, the);
+  evented_timer_register(1, false, (EventedTimerCallback)modRunMachineSetup, the);
 
-	xsBeginHostExit(the);
-	app_event_loop();
-	xsEndHostExit(the);
+  xsBeginHostExit(the);
+  app_event_loop();
+  xsEndHostExit(the);
 
-	int exitStatus = the->exitStatus;
-	char *abortReason = state->abortReason;
-	state->abortReason = NULL;
-	moddable_cleanup();
+  int exitStatus = the->exitStatus;
+  char *abortReason = state->abortReason;
+  state->abortReason = NULL;
+  moddable_cleanup();
 
-	if ((xsNormalExit != exitStatus) && (xsDebuggerExit != exitStatus)) {
-		ExpandableDialog *dialog = expandable_dialog_create("");
-		Dialog *base_dialog = expandable_dialog_get_dialog(dialog);
+  if ((xsNormalExit != exitStatus) && (xsDebuggerExit != exitStatus)) {
+    ExpandableDialog *dialog = expandable_dialog_create("");
+    Dialog *base_dialog = expandable_dialog_get_dialog(dialog);
 
-		expandable_dialog_set_header(dialog, "Alloy: Fatal Error");
-		char *msg = (char *)fxAbortString(exitStatus);
-		dialog_set_text(base_dialog, abortReason ? abortReason : msg);
-		if (abortReason) {
-		    c_free(abortReason);
-		}
-		dialog_set_icon(base_dialog, RESOURCE_ID_GENERIC_WARNING_SMALL);
-		dialog_set_fullscreen(base_dialog, true);
-		expandable_dialog_show_action_bar(dialog, false);
+    expandable_dialog_set_header(dialog, "Alloy: Fatal Error");
+    char *msg = (char *)fxAbortString(exitStatus);
+    dialog_set_text(base_dialog, abortReason ? abortReason : msg);
+    if (abortReason) {
+      c_free(abortReason);
+    }
+    dialog_set_icon(base_dialog, RESOURCE_ID_GENERIC_WARNING_SMALL);
+    dialog_set_fullscreen(base_dialog, true);
+    expandable_dialog_show_action_bar(dialog, false);
 
-		app_expandable_dialog_push(dialog);
+    app_expandable_dialog_push(dialog);
 
-		app_event_loop();
-	}
+    app_event_loop();
+  }
 }
 
 #else
 
-DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr)
-{
-	APP_LOG(APP_LOG_LEVEL_ERROR, "Moddable XS not supported in this build");
+DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr) {
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Moddable XS not supported in this build");
 }
 
 // Normally provided by the moddable submodule (xsPlatform.c). The xsbug
@@ -176,7 +170,5 @@ DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr)
 // so stub the callback when building without moddable to satisfy the linker.
 struct CommSession;
 
-void xsbug_protocol_msg_callback(struct CommSession *session, const uint8_t *msg, size_t length)
-{
-}
+void xsbug_protocol_msg_callback(struct CommSession *session, const uint8_t *msg, size_t length) {}
 #endif

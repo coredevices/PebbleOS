@@ -23,9 +23,9 @@ typedef struct AppState {
   GFont gothic_14_bold;
 } AppState;
 
-static const char* TEXT_DELTA_BUF =
-  "!\"#$%&'()*+,-./ 0123456789:;<=>?@ ABCDEFGHIJKLMNOP QRSTUVWXYZ [\\]^_` "
-  "abcdefghijklmnop qrstuvwxyz";
+static const char *TEXT_DELTA_BUF =
+    "!\"#$%&'()*+,-./ 0123456789:;<=>?@ ABCDEFGHIJKLMNOP QRSTUVWXYZ [\\]^_` "
+    "abcdefghijklmnop qrstuvwxyz";
 
 static void click_handler(ClickRecognizerRef recognizer, Window *window) {
   AppState *data = window_get_user_data(window);
@@ -45,10 +45,10 @@ static void click_handler(ClickRecognizerRef recognizer, Window *window) {
     text_layer_set_line_spacing_delta(&data->text_layer, data->line_spacing_delta);
   }
 
-  GSize size_used = text_layer_get_content_size(app_get_current_graphics_context(),
-                                                &data->text_layer);
-  PBL_LOG_DBG("Line Delta: %d, Size %d x %d, Overflow: %d", data->line_spacing_delta,
-          size_used.w, size_used.h, data->overflow_mode);
+  GSize size_used =
+      text_layer_get_content_size(app_get_current_graphics_context(), &data->text_layer);
+  PBL_LOG_DBG("Line Delta: %d, Size %d x %d, Overflow: %d", data->line_spacing_delta, size_used.w,
+              size_used.h, data->overflow_mode);
 }
 
 static void config_provider(Window *window) {
@@ -78,36 +78,35 @@ static void prv_window_load(Window *window) {
 
   layer_add_child(&window->layer, &data->text_layer.layer);
 
-  GSize size_used = text_layer_get_content_size(app_get_current_graphics_context(),
-                                                &data->text_layer);
+  GSize size_used =
+      text_layer_get_content_size(app_get_current_graphics_context(), &data->text_layer);
   PBL_LOG_DBG("Max size used %d %d", size_used.w, size_used.h);
 }
 
 static void push_window(struct AppState *data) {
-  Window* window = &data->window;
+  Window *window = &data->window;
   window_init(window, WINDOW_NAME("Text Spacing"));
   window_set_user_data(window, data);
-  window_set_click_config_provider(window, (ClickConfigProvider) config_provider);
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_window_load,
-  });
+  window_set_click_config_provider(window, (ClickConfigProvider)config_provider);
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_window_load,
+                                     });
   const bool animated = true;
   app_window_stack_push(window, animated);
 }
-
 
 ////////////////////
 // App boilerplate
 
 static void handle_init(void) {
-  struct AppState* data = app_malloc_check(sizeof(struct AppState));
+  struct AppState *data = app_malloc_check(sizeof(struct AppState));
 
   app_state_set_user_data(data);
   push_window(data);
 }
 
 static void handle_deinit(void) {
-  struct AppState* data = app_state_get_user_data();
+  struct AppState *data = app_state_get_user_data();
   app_free(data);
 }
 
@@ -119,10 +118,10 @@ static void s_main(void) {
   handle_deinit();
 }
 
-const PebbleProcessMd* text_spacing_app_get_info() {
+const PebbleProcessMd *text_spacing_app_get_info() {
   static const PebbleProcessMdSystem text_delta_info = {
-    .common.main_func = &s_main,
-    .name = "Text Spacing" // The first 4 bytes is a UTF-8 codepoint for the hamster emoji.
+      .common.main_func = &s_main,
+      .name = "Text Spacing"  // The first 4 bytes is a UTF-8 codepoint for the hamster emoji.
   };
-  return (const PebbleProcessMd*) &text_delta_info;
+  return (const PebbleProcessMd *)&text_delta_info;
 }

@@ -34,10 +34,8 @@ T_STATIC const char *PREF_KEY_SEND_TEXT_APP = "sendTextApp";
 
 static status_t prv_lock_mutex_and_open_file(void) {
   pbl_mutex_lock(&s_watch_app_prefs_db.mutex, PBL_FOREVER);
-  status_t rv = settings_file_open_growable(&s_watch_app_prefs_db.settings_file,
-                                            SETTINGS_FILE_NAME,
-                                            SETTINGS_FILE_SIZE,
-                                            KiBYTES(4));
+  status_t rv = settings_file_open_growable(&s_watch_app_prefs_db.settings_file, SETTINGS_FILE_NAME,
+                                            SETTINGS_FILE_SIZE, KiBYTES(4));
   if (rv != S_SUCCESS) {
     pbl_mutex_unlock(&s_watch_app_prefs_db.mutex);
   }
@@ -58,13 +56,13 @@ static void *prv_get_prefs(const char *pref_key) {
     return NULL;
   }
 
-  const int len = settings_file_get_len(&s_watch_app_prefs_db.settings_file, pref_key,
-                                        strlen(pref_key));
+  const int len =
+      settings_file_get_len(&s_watch_app_prefs_db.settings_file, pref_key, strlen(pref_key));
   void *prefs = task_zalloc(len);
 
   if (prefs) {
-    rv = settings_file_get(&s_watch_app_prefs_db.settings_file, pref_key,
-                           strlen(pref_key), prefs, len);
+    rv = settings_file_get(&s_watch_app_prefs_db.settings_file, pref_key, strlen(pref_key), prefs,
+                           len);
     if (rv != S_SUCCESS) {
       task_free(prefs);
       prefs = NULL;
@@ -94,8 +92,8 @@ SerializedReminderAppPrefs *watch_app_prefs_get_reminder(void) {
   } else {
     result = prv_get_prefs(PREF_KEY_REMINDER_APP);
     s_watch_app_prefs_db.is_cached_reminder_app_prefs_valid = true;
-    s_watch_app_prefs_db.cached_reminder_app_prefs = result ? *result :
-                                                              (SerializedReminderAppPrefs) {};
+    s_watch_app_prefs_db.cached_reminder_app_prefs =
+        result ? *result : (SerializedReminderAppPrefs){};
   }
   pbl_mutex_unlock(&s_watch_app_prefs_db.mutex);
   return result;
@@ -109,9 +107,7 @@ void watch_app_prefs_destroy_weather(SerializedWeatherAppPrefs *prefs) {
 // BlobDB APIs
 ////////////////////////////////////////////////////////////////////////////////
 
-void watch_app_prefs_db_init(void) {
-  pbl_mutex_init(&s_watch_app_prefs_db.mutex);
-}
+void watch_app_prefs_db_init(void) { pbl_mutex_init(&s_watch_app_prefs_db.mutex); }
 
 // All entries in this db currently follow a structure of base data + arbitrary list of records.
 // All records in the list are the same size
@@ -164,8 +160,7 @@ status_t watch_app_prefs_db_insert(const uint8_t *key, int key_len, const uint8_
 
     // Cache the data we just set if it was for the Reminders app
     const int expected_reminder_app_prefs_size = sizeof(SerializedReminderAppPrefs);
-    if ((rv == S_SUCCESS) &&
-        is_valid_reminder_key &&
+    if ((rv == S_SUCCESS) && is_valid_reminder_key &&
         (val_len == expected_reminder_app_prefs_size)) {
       s_watch_app_prefs_db.is_cached_reminder_app_prefs_valid = true;
       memcpy(&s_watch_app_prefs_db.cached_reminder_app_prefs, val,

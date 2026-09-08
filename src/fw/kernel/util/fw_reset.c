@@ -18,16 +18,14 @@
 #include "system/reset.h"
 
 static void prv_reset_into_prf(void) {
-  RebootReason reason = { RebootReasonCode_PrfReset, 0 };
+  RebootReason reason = {RebootReasonCode_PrfReset, 0};
   reboot_reason_set(&reason);
   boot_bit_set(BOOT_BIT_FORCE_PRF);
   services_set_runlevel(RunLevel_BareMinimum);
   system_reset();
 }
 
-void fw_reset_into_prf(void) {
-  prv_reset_into_prf();
-}
+void fw_reset_into_prf(void) { prv_reset_into_prf(); }
 
 static const uint8_t s_prf_reset_cmd __attribute__((unused)) = 0xff;
 
@@ -47,16 +45,16 @@ static void prv_launch_factory_reset_app(void *unused) {
   modal_manager_pop_all();
 
   static const ProgressUIAppArgs s_factory_reset_args = {
-    .progress_source = PROGRESS_UI_SOURCE_FACTORY_RESET,
+      .progress_source = PROGRESS_UI_SOURCE_FACTORY_RESET,
   };
-  app_manager_launch_new_app(&(AppLaunchConfig) {
-    .md = progress_ui_app_get_info(),
-    .common.args = &s_factory_reset_args,
-    .restart = true,
+  app_manager_launch_new_app(&(AppLaunchConfig){
+      .md = progress_ui_app_get_info(),
+      .common.args = &s_factory_reset_args,
+      .restart = true,
   });
 }
 
-void reset_protocol_msg_callback(CommSession *session, const uint8_t* data, unsigned int length) {
+void reset_protocol_msg_callback(CommSession *session, const uint8_t *data, unsigned int length) {
   PBL_ASSERT_RUNNING_FROM_EXPECTED_TASK(PebbleTask_KernelBackground);
 
   const uint8_t cmd = data[0];
@@ -95,4 +93,3 @@ void fw_prepare_for_reset(void) {
   pulse_end();
 #endif
 }
-

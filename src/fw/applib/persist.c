@@ -11,29 +11,20 @@
 #include "syscall/syscall_internal.h"
 #include "pbl/util/math.h"
 
-
 _Static_assert(PERSIST_DATA_MAX_LENGTH <= SETTINGS_VAL_MAX_LEN,
                "PERSIST_DATA_MAX_LENGTH is larger than the max length that "
                "settings_file supports.");
 
-
-static SettingsFile * prv_lock_and_get_store(void) {
-  return persist_service_lock_and_get_store(
-      &sys_process_manager_get_current_process_md()->uuid);
+static SettingsFile *prv_lock_and_get_store(void) {
+  return persist_service_lock_and_get_store(&sys_process_manager_get_current_process_md()->uuid);
 }
 
-static void prv_unlock(SettingsFile **store) {
-  persist_service_unlock_store(*store);
-}
+static void prv_unlock(SettingsFile **store) { persist_service_unlock_store(*store); }
 
 #define LOCK_AND_GET_STORE(name) \
-  SettingsFile *name __attribute__((cleanup(prv_unlock))) \
-      = prv_lock_and_get_store()
+  SettingsFile *name __attribute__((cleanup(prv_unlock))) = prv_lock_and_get_store()
 
-
-DEFINE_SYSCALL(size_t, persist_get_max_size, void) {
-  return persist_service_get_max_size();
-}
+DEFINE_SYSCALL(size_t, persist_get_max_size, void) { return persist_service_get_max_size(); }
 
 DEFINE_SYSCALL(bool, persist_exists, const uint32_t key) {
   LOCK_AND_GET_STORE(store);
@@ -60,8 +51,7 @@ DEFINE_SYSCALL(int32_t, persist_read_int, const uint32_t key) {
   return value;
 }
 
-DEFINE_SYSCALL(int, persist_read_data, const uint32_t key,
-               void *buffer, const size_t buffer_size) {
+DEFINE_SYSCALL(int, persist_read_data, const uint32_t key, void *buffer, const size_t buffer_size) {
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(buffer, buffer_size);
   }
@@ -75,8 +65,7 @@ DEFINE_SYSCALL(int, persist_read_data, const uint32_t key,
   }
 
   const size_t restricted_size = MIN(buffer_size, (size_t)len);
-  const status_t read_result = settings_file_get(
-      store, &key, sizeof(key), buffer, restricted_size);
+  const status_t read_result = settings_file_get(store, &key, sizeof(key), buffer, restricted_size);
   if (FAILED(read_result)) {
     RETURN_STATUS_UP(read_result);
   }
@@ -84,13 +73,11 @@ DEFINE_SYSCALL(int, persist_read_data, const uint32_t key,
 }
 
 // Legacy version to prevent previous app breakage, __deprecated preserves order
-int persist_read_data__deprecated(const uint32_t key,
-                                  const size_t buffer_size, void *buffer) {
+int persist_read_data__deprecated(const uint32_t key, const size_t buffer_size, void *buffer) {
   return persist_read_data(key, buffer, buffer_size);
 }
 
-int persist_read_string(const uint32_t key,
-                        char *buffer, const size_t buffer_size) {
+int persist_read_string(const uint32_t key, char *buffer, const size_t buffer_size) {
   const int read_result = persist_read_data(key, buffer, buffer_size);
   if (PASSED(read_result)) {
     buffer[read_result - 1] = '\0';
@@ -99,47 +86,43 @@ int persist_read_string(const uint32_t key,
 }
 
 // Legacy version to prevent previous app breakage, __deprecated preserves order
-int persist_read_string__deprecated(const uint32_t key,
-                                    const size_t buffer_size, char *buffer) {
+int persist_read_string__deprecated(const uint32_t key, const size_t buffer_size, char *buffer) {
   return persist_read_string(key, buffer, buffer_size);
 }
 
 DEFINE_SYSCALL(status_t, persist_write_bool, const uint32_t key, const bool value) {
   LOCK_AND_GET_STORE(store);
-  status_t result = settings_file_set(store, &key, sizeof(key),
-                                      &value, sizeof(value));
+  status_t result = settings_file_set(store, &key, sizeof(key), &value, sizeof(value));
   return PASSED(result) ? (status_t)sizeof(value) : result;
 }
 
 DEFINE_SYSCALL(status_t, persist_write_int, const uint32_t key, const int32_t value) {
   LOCK_AND_GET_STORE(store);
-  status_t result = settings_file_set(store, &key, sizeof(key),
-                                      &value, sizeof(value));
+  status_t result = settings_file_set(store, &key, sizeof(key), &value, sizeof(value));
   return PASSED(result) ? (status_t)sizeof(value) : result;
 }
 
 // FIXME: PBL-23877 Disallow and document persist write data of length 0 edge case
-DEFINE_SYSCALL(int, persist_write_data, const uint32_t key,
-                       const void *buffer, const size_t buffer_size) {
+DEFINE_SYSCALL(int, persist_write_data, const uint32_t key, const void *buffer,
+               const size_t buffer_size) {
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(buffer, buffer_size);
   }
   const size_t restricted_size = MIN(buffer_size, PERSIST_DATA_MAX_LENGTH);
   LOCK_AND_GET_STORE(store);
-  int result = settings_file_set(store, &key, sizeof(key),
-                                 buffer, restricted_size);
+  int result = settings_file_set(store, &key, sizeof(key), buffer, restricted_size);
   return PASSED(result) ? (int)restricted_size : result;
 }
 
 // Legacy version to prevent previous app breakage, __deprecated preserves order
-int persist_write_data__deprecated(const uint32_t key, const size_t buffer_size, const void *buffer) {
+int persist_write_data__deprecated(const uint32_t key, const size_t buffer_size,
+                                   const void *buffer) {
   return persist_write_data(key, buffer, buffer_size);
 }
 
 DEFINE_SYSCALL(int, persist_write_string, const uint32_t key, const char *cstring) {
   if (PRIVILEGE_WAS_ELEVATED) {
-    if (!memory_layout_is_cstring_in_region(
-          memory_layout_get_app_region(), cstring, -1)) {
+    if (!memory_layout_is_cstring_in_region(memory_layout_get_app_region(), cstring, -1)) {
       syscall_failed();
     }
   }

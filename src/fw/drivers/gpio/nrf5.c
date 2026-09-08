@@ -15,10 +15,10 @@ bool gpio_input_read(const InputConfig *input_cfg) {
 }
 
 void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype) {
-  if (otype == GPIO_OType_OD)
-    WTF;
+  if (otype == GPIO_OType_OD) WTF;
 
-  nrf_gpio_cfg(pin_config->gpio_pin, NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE);
+  nrf_gpio_cfg(pin_config->gpio_pin, NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT,
+               NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE);
 }
 
 void gpio_output_set(const OutputConfig *pin_config, bool asserted) {

@@ -51,5 +51,5 @@ void simple_dialog_set_buttons_enabled(SimpleDialog *simple_dialog, bool enabled
 //! @param animated Whether the icon should animate or not
 void simple_dialog_set_icon_animated(SimpleDialog *simple_dialog, bool animated);
 
-bool simple_dialog_does_text_fit(const char *text, GSize window_size,
-                                 GSize icon_size, bool has_status_bar);
+bool simple_dialog_does_text_fit(const char *text, GSize window_size, GSize icon_size,
+                                 bool has_status_bar);

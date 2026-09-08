@@ -12,9 +12,8 @@
  * attempt to use these macros without including this header will result in a
  * compiler error.
  */
-#define MYNEWT_VAL(_name)                       MYNEWT_VAL_ ## _name
-#define MYNEWT_VAL_CHOICE(_name, _val)          MYNEWT_VAL_ ## _name ## __ ## _val
-
+#define MYNEWT_VAL(_name) MYNEWT_VAL_##_name
+#define MYNEWT_VAL_CHOICE(_name, _val) MYNEWT_VAL_##_name##__##_val
 
 /*** Repository @apache-mynewt-core info */
 #ifndef MYNEWT_VAL_REPO_HASH_APACHE_MYNEWT_CORE
@@ -52,8 +51,6 @@
 #define MYNEWT_VAL_REPO_VERSION_SYSCFG "0.0.0"
 #endif
 
-
-
 /*** @apache-mynewt-core/boot/startup */
 #ifndef MYNEWT_VAL_INCLUDE_IMAGE_HEADER
 #define MYNEWT_VAL_INCLUDE_IMAGE_HEADER (1)
@@ -69,12 +66,14 @@
 #define MYNEWT_VAL_MAIN_STACK_SIZE (768)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/boot/startup) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/boot/startup) */
 #ifndef MYNEWT_VAL_MCU_RAM_SIZE
 #define MYNEWT_VAL_MCU_RAM_SIZE (0x40000)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/boot/startup) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/boot/startup) */
 #ifndef MYNEWT_VAL_MCU_RAM_START
 #define MYNEWT_VAL_MCU_RAM_START (0x20000000)
 #endif
@@ -157,7 +156,8 @@
 #define MYNEWT_VAL_MBEDTLS_CIPHER_MODE_XTS (0)
 #endif
 
-/* Overridden by @apache-mynewt-nimble/nimble/host (defined by @apache-mynewt-core/crypto/mbedtls) */
+/* Overridden by @apache-mynewt-nimble/nimble/host (defined by @apache-mynewt-core/crypto/mbedtls)
+ */
 #ifndef MYNEWT_VAL_MBEDTLS_CMAC_C
 #define MYNEWT_VAL_MBEDTLS_CMAC_C (1)
 #endif
@@ -397,7 +397,8 @@
 #define MYNEWT_VAL_CRYPTO (0)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_GPIO_AS_PIN_RESET
 #define MYNEWT_VAL_GPIO_AS_PIN_RESET (1)
 #endif
@@ -410,12 +411,14 @@
 #define MYNEWT_VAL_I2C_0_FREQ_KHZ (100)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_I2C_0_PIN_SCL
 #define MYNEWT_VAL_I2C_0_PIN_SCL (27)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_I2C_0_PIN_SDA
 #define MYNEWT_VAL_I2C_0_PIN_SDA (26)
 #endif
@@ -432,7 +435,8 @@
 
 #undef MYNEWT_VAL_I2C_1_PIN_SDA
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_MCU_ACCESS_PORT_PROTECTION__default
 #define MYNEWT_VAL_MCU_ACCESS_PORT_PROTECTION__default (0)
 #endif
@@ -450,12 +454,14 @@
 #define MYNEWT_VAL_MCU_BUS_DRIVER_I2C_USE_TWIM (0)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_MCU_COMMON_STARTUP
 #define MYNEWT_VAL_MCU_COMMON_STARTUP (1)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_MCU_DCDC_ENABLED
 #define MYNEWT_VAL_MCU_DCDC_ENABLED (1)
 #endif
@@ -487,12 +493,14 @@
 #define MYNEWT_VAL_MCU_I2C_RECOVERY_DELAY_USEC (100)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_MCU_ICACHE_ENABLED
 #define MYNEWT_VAL_MCU_ICACHE_ENABLED (1)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_MCU_LFCLK_SOURCE__LFRC
 #define MYNEWT_VAL_MCU_LFCLK_SOURCE__LFRC (0)
 #endif
@@ -514,7 +522,8 @@
 #define MYNEWT_VAL_MCU_NRF52840 (0)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_MCU_TARGET__nRF52810
 #define MYNEWT_VAL_MCU_TARGET__nRF52810 (0)
 #endif
@@ -563,47 +572,56 @@
 #define MYNEWT_VAL_QSPI_ENABLE (0)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_QSPI_FLASH_PAGE_SIZE
 #define MYNEWT_VAL_QSPI_FLASH_PAGE_SIZE (256)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_QSPI_FLASH_SECTOR_COUNT
 #define MYNEWT_VAL_QSPI_FLASH_SECTOR_COUNT (4096)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_QSPI_FLASH_SECTOR_SIZE
 #define MYNEWT_VAL_QSPI_FLASH_SECTOR_SIZE (4096)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_QSPI_PIN_CS
 #define MYNEWT_VAL_QSPI_PIN_CS (17)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_QSPI_PIN_DIO0
 #define MYNEWT_VAL_QSPI_PIN_DIO0 (20)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_QSPI_PIN_DIO1
 #define MYNEWT_VAL_QSPI_PIN_DIO1 (21)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_QSPI_PIN_DIO2
 #define MYNEWT_VAL_QSPI_PIN_DIO2 (22)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_QSPI_PIN_DIO3
 #define MYNEWT_VAL_QSPI_PIN_DIO3 (23)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_QSPI_PIN_SCK
 #define MYNEWT_VAL_QSPI_PIN_SCK (19)
 #endif
@@ -636,17 +654,20 @@
 #define MYNEWT_VAL_SPI_0_MASTER (0)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_SPI_0_MASTER_PIN_MISO
 #define MYNEWT_VAL_SPI_0_MASTER_PIN_MISO (46)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_SPI_0_MASTER_PIN_MOSI
 #define MYNEWT_VAL_SPI_0_MASTER_PIN_MOSI (45)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_SPI_0_MASTER_PIN_SCK
 #define MYNEWT_VAL_SPI_0_MASTER_PIN_SCK (47)
 #endif
@@ -655,22 +676,26 @@
 #define MYNEWT_VAL_SPI_0_SLAVE (0)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_SPI_0_SLAVE_PIN_MISO
 #define MYNEWT_VAL_SPI_0_SLAVE_PIN_MISO (46)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_SPI_0_SLAVE_PIN_MOSI
 #define MYNEWT_VAL_SPI_0_SLAVE_PIN_MOSI (45)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_SPI_0_SLAVE_PIN_SCK
 #define MYNEWT_VAL_SPI_0_SLAVE_PIN_SCK (47)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_SPI_0_SLAVE_PIN_SS
 #define MYNEWT_VAL_SPI_0_SLAVE_PIN_SS (44)
 #endif
@@ -733,7 +758,8 @@
 #define MYNEWT_VAL_TEMP (0)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_TIMER_0
 #define MYNEWT_VAL_TIMER_0 (0)
 #endif
@@ -754,7 +780,8 @@
 #define MYNEWT_VAL_TIMER_4 (0)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_TIMER_5
 #define MYNEWT_VAL_TIMER_5 (1)
 #endif
@@ -767,22 +794,26 @@
 #define MYNEWT_VAL_UART_0 (1)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_UART_0_PIN_CTS
 #define MYNEWT_VAL_UART_0_PIN_CTS (7)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_UART_0_PIN_RTS
 #define MYNEWT_VAL_UART_0_PIN_RTS (5)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_UART_0_PIN_RX
 #define MYNEWT_VAL_UART_0_PIN_RX (8)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/mcu/nordic/nrf52xxx) */
 #ifndef MYNEWT_VAL_UART_0_PIN_TX
 #define MYNEWT_VAL_UART_0_PIN_TX (6)
 #endif
@@ -816,7 +847,8 @@
 #endif
 
 /*** @apache-mynewt-core/hw/scripts */
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/scripts) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/scripts) */
 #ifndef MYNEWT_VAL_JLINK_TARGET
 #define MYNEWT_VAL_JLINK_TARGET (NRF52)
 #endif
@@ -838,7 +870,8 @@
 #endif
 #undef MYNEWT_VAL_MYNEWT_DEBUGGER
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/scripts) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/scripts) */
 #ifndef MYNEWT_VAL_MYNEWT_DOWNLOADER__ezflashcli
 #define MYNEWT_VAL_MYNEWT_DOWNLOADER__ezflashcli (0)
 #endif
@@ -867,7 +900,8 @@
 #define MYNEWT_VAL_MYNEWT_DOWNLOADER (1)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/scripts) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/scripts) */
 #ifndef MYNEWT_VAL_MYNEWT_DOWNLOADER_MFG_IMAGE_FLASH_OFFSET
 #define MYNEWT_VAL_MYNEWT_DOWNLOADER_MFG_IMAGE_FLASH_OFFSET (0x0)
 #endif
@@ -882,7 +916,8 @@
 
 #undef MYNEWT_VAL_NRFUTIL_TRAITS
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/hw/scripts) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/hw/scripts) */
 #ifndef MYNEWT_VAL_PYOCD_TARGET
 #define MYNEWT_VAL_PYOCD_TARGET (nrf52840)
 #endif
@@ -938,12 +973,14 @@
 #define MYNEWT_VAL_OS_COREDUMP_CB (0)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/kernel/os) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/kernel/os) */
 #ifndef MYNEWT_VAL_OS_CPUTIME_FREQ
 #define MYNEWT_VAL_OS_CPUTIME_FREQ (32768)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-core/kernel/os) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-core/kernel/os) */
 #ifndef MYNEWT_VAL_OS_CPUTIME_TIMER_NUM
 #define MYNEWT_VAL_OS_CPUTIME_TIMER_NUM (5)
 #endif
@@ -1060,7 +1097,8 @@
 #define MYNEWT_VAL_OS_TASK_RUN_TIME_CPUTIME (0)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx (defined by @apache-mynewt-core/kernel/os) */
+/* Overridden by @apache-mynewt-core/hw/mcu/nordic/nrf52xxx (defined by
+ * @apache-mynewt-core/kernel/os) */
 #ifndef MYNEWT_VAL_OS_TICKS_PER_SEC
 #define MYNEWT_VAL_OS_TICKS_PER_SEC (128)
 #endif
@@ -1390,7 +1428,8 @@
 #endif
 
 #ifndef MYNEWT_VAL_BLE_LL_CFG_FEAT_CONN_PARAM_REQ
-#define MYNEWT_VAL_BLE_LL_CFG_FEAT_CONN_PARAM_REQ (MYNEWT_VAL_BLE_LL_ROLE_CENTRAL || MYNEWT_VAL_BLE_LL_ROLE_PERIPHERAL)
+#define MYNEWT_VAL_BLE_LL_CFG_FEAT_CONN_PARAM_REQ \
+  (MYNEWT_VAL_BLE_LL_ROLE_CENTRAL || MYNEWT_VAL_BLE_LL_ROLE_PERIPHERAL)
 #endif
 
 #ifndef MYNEWT_VAL_BLE_LL_CFG_FEAT_CTRL_TO_HOST_FLOW_CONTROL
@@ -1398,7 +1437,8 @@
 #endif
 
 #ifndef MYNEWT_VAL_BLE_LL_CFG_FEAT_DATA_LEN_EXT
-#define MYNEWT_VAL_BLE_LL_CFG_FEAT_DATA_LEN_EXT (MYNEWT_VAL_BLE_LL_ROLE_CENTRAL || MYNEWT_VAL_BLE_LL_ROLE_PERIPHERAL)
+#define MYNEWT_VAL_BLE_LL_CFG_FEAT_DATA_LEN_EXT \
+  (MYNEWT_VAL_BLE_LL_ROLE_CENTRAL || MYNEWT_VAL_BLE_LL_ROLE_PERIPHERAL)
 #endif
 
 /* Value copied from BLE_PHY_2M */
@@ -1416,7 +1456,8 @@
 #endif
 
 #ifndef MYNEWT_VAL_BLE_LL_CFG_FEAT_LE_ENCRYPTION
-#define MYNEWT_VAL_BLE_LL_CFG_FEAT_LE_ENCRYPTION (MYNEWT_VAL_BLE_LL_ROLE_CENTRAL || MYNEWT_VAL_BLE_LL_ROLE_PERIPHERAL || MYNEWT_VAL_BLE_LL_ISO)
+#define MYNEWT_VAL_BLE_LL_CFG_FEAT_LE_ENCRYPTION \
+  (MYNEWT_VAL_BLE_LL_ROLE_CENTRAL || MYNEWT_VAL_BLE_LL_ROLE_PERIPHERAL || MYNEWT_VAL_BLE_LL_ISO)
 #endif
 
 #ifndef MYNEWT_VAL_BLE_LL_CFG_FEAT_LE_PING
@@ -1466,7 +1507,8 @@
 #endif
 
 #ifndef MYNEWT_VAL_BLE_LL_CFG_FEAT_PERIPH_INIT_FEAT_XCHG
-#define MYNEWT_VAL_BLE_LL_CFG_FEAT_PERIPH_INIT_FEAT_XCHG (MYNEWT_VAL_BLE_LL_ROLE_CENTRAL || MYNEWT_VAL_BLE_LL_ROLE_PERIPHERAL)
+#define MYNEWT_VAL_BLE_LL_CFG_FEAT_PERIPH_INIT_FEAT_XCHG \
+  (MYNEWT_VAL_BLE_LL_ROLE_CENTRAL || MYNEWT_VAL_BLE_LL_ROLE_PERIPHERAL)
 #endif
 
 /* Value copied from BLE_CHANNEL_SOUNDING */
@@ -1645,7 +1687,8 @@
 #define MYNEWT_VAL_BLE_LL_RESOLV_LIST_SIZE (4)
 #endif
 
-/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by @apache-mynewt-nimble/nimble/controller) */
+/* Overridden by @apache-mynewt-core/hw/bsp/nordic_pca10056 (defined by
+ * @apache-mynewt-nimble/nimble/controller) */
 #ifndef MYNEWT_VAL_BLE_LL_RFMGMT_ENABLE_TIME
 #define MYNEWT_VAL_BLE_LL_RFMGMT_ENABLE_TIME (1500)
 #endif
@@ -1800,7 +1843,8 @@
 #endif
 
 #ifndef MYNEWT_VAL_BLE_ATT_SVR_NOTIFY_MULTI
-#define MYNEWT_VAL_BLE_ATT_SVR_NOTIFY_MULTI (MYNEWT_VAL_BLE_ATT_SVR_NOTIFY && (MYNEWT_VAL_BLE_VERSION >= 52))
+#define MYNEWT_VAL_BLE_ATT_SVR_NOTIFY_MULTI \
+  (MYNEWT_VAL_BLE_ATT_SVR_NOTIFY && (MYNEWT_VAL_BLE_VERSION >= 52))
 #endif
 
 #ifndef MYNEWT_VAL_BLE_ATT_SVR_QUEUED_WRITE
@@ -1925,7 +1969,8 @@
 #endif
 
 #ifndef MYNEWT_VAL_BLE_GATT_READ_MULT_VAR
-#define MYNEWT_VAL_BLE_GATT_READ_MULT_VAR (MYNEWT_VAL_BLE_ROLE_CENTRAL && (MYNEWT_VAL_BLE_VERSION >= 52))
+#define MYNEWT_VAL_BLE_GATT_READ_MULT_VAR \
+  (MYNEWT_VAL_BLE_ROLE_CENTRAL && (MYNEWT_VAL_BLE_VERSION >= 52))
 #endif
 
 #ifndef MYNEWT_VAL_BLE_GATT_READ_UUID
@@ -2038,7 +2083,7 @@
 #endif
 
 #ifndef MYNEWT_VAL_BLE_L2CAP_COC_MPS
-#define MYNEWT_VAL_BLE_L2CAP_COC_MPS (MYNEWT_VAL_MSYS_1_BLOCK_SIZE-8)
+#define MYNEWT_VAL_BLE_L2CAP_COC_MPS (MYNEWT_VAL_MSYS_1_BLOCK_SIZE - 8)
 #endif
 
 #ifndef MYNEWT_VAL_BLE_L2CAP_COC_SDU_BUFF_COUNT
@@ -2054,7 +2099,7 @@
 #endif
 
 #ifndef MYNEWT_VAL_BLE_L2CAP_MAX_CHANS
-#define MYNEWT_VAL_BLE_L2CAP_MAX_CHANS (3*MYNEWT_VAL_BLE_MAX_CONNECTIONS)
+#define MYNEWT_VAL_BLE_L2CAP_MAX_CHANS (3 * MYNEWT_VAL_BLE_MAX_CONNECTIONS)
 #endif
 
 #ifndef MYNEWT_VAL_BLE_L2CAP_RX_FRAG_TIMEOUT

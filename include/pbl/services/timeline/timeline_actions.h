@@ -46,10 +46,12 @@ ActionMenu *timeline_actions_push_action_menu(ActionMenuConfig *base_config,
 //! @param source The window/app that pushed this action menu
 //! @param standalone_reply Changes the "Voice" text to "Reply with Voice" to provide better
 //! context when this menu has been pushed without a previous menu
-ActionMenu *timeline_actions_push_response_menu(
-    TimelineItem *item, TimelineItemAction *reply_action, GColor bg_color,
-    ActionMenuDidCloseCb did_close_cb, WindowStack *window_stack, TimelineItemActionSource source,
-    bool standalone_reply);
+ActionMenu *timeline_actions_push_response_menu(TimelineItem *item,
+                                                TimelineItemAction *reply_action, GColor bg_color,
+                                                ActionMenuDidCloseCb did_close_cb,
+                                                WindowStack *window_stack,
+                                                TimelineItemActionSource source,
+                                                bool standalone_reply);
 
 typedef void (*ActionCompleteCallback)(bool succeeded, void *cb_data);
 

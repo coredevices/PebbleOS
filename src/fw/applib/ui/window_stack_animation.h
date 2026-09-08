@@ -12,7 +12,7 @@
 typedef struct WindowTransitioningContext WindowTransitioningContext;
 
 typedef Animation *(*WindowTransitionImplementationCreateAnimationFunc)(
-  WindowTransitioningContext *context);
+    WindowTransitioningContext *context);
 typedef void (*WindowTransitionImplementationRenderFunc)(WindowTransitioningContext *context,
                                                          GContext *ctx);
 

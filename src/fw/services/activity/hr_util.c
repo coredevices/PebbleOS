@@ -8,9 +8,9 @@
 // ------------------------------------------------------------------------------------------------
 HRZone hr_util_get_hr_zone(int bpm) {
   const int zone_thresholds[HRZone_Max] = {
-    activity_prefs_heart_get_zone1_threshold(),
-    activity_prefs_heart_get_zone2_threshold(),
-    activity_prefs_heart_get_zone3_threshold(),
+      activity_prefs_heart_get_zone1_threshold(),
+      activity_prefs_heart_get_zone2_threshold(),
+      activity_prefs_heart_get_zone3_threshold(),
   };
 
   HRZone zone;
@@ -22,6 +22,4 @@ HRZone hr_util_get_hr_zone(int bpm) {
   return zone;
 }
 
-bool hr_util_is_elevated(int bpm) {
-  return bpm >= activity_prefs_heart_get_elevated_hr();
-}
+bool hr_util_is_elevated(int bpm) { return bpm >= activity_prefs_heart_get_elevated_hr(); }

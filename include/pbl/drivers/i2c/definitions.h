@@ -16,10 +16,7 @@ typedef enum I2CTransferEvent {
   I2CTransferEvent_Error,
 } I2CTransferEvent;
 
-typedef enum {
-  I2CTransferDirection_Read,
-  I2CTransferDirection_Write
-} I2CTransferDirection;
+typedef enum { I2CTransferDirection_Read, I2CTransferDirection_Write } I2CTransferDirection;
 
 typedef enum {
   // Send a register address, followed by a repeat start for reads

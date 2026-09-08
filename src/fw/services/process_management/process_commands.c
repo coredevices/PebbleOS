@@ -40,14 +40,12 @@ bool prv_print_app_info(AppInstallEntry *entry, void *data) {
   char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
   uuid_to_string(&entry->uuid, uuid_buffer);
 
-  prompt_send_response_fmt(buffer, sizeof(buffer), "%"PRIi32": %s %s", entry->install_id,
-      entry->name, uuid_buffer);
+  prompt_send_response_fmt(buffer, sizeof(buffer), "%" PRIi32 ": %s %s", entry->install_id,
+                           entry->name, uuid_buffer);
   return true;
 }
 
-void command_app_list(void) {
-  app_install_enumerate_entries(prv_print_app_info, NULL);
-}
+void command_app_list(void) { app_install_enumerate_entries(prv_print_app_info, NULL); }
 
 void command_app_launch(const char *id_str) {
   int32_t id = atoi(id_str);
@@ -60,7 +58,7 @@ void command_app_launch(const char *id_str) {
   bool success = app_install_get_entry_for_install_id(id, &entry);
 
   if (success) {
-    app_manager_put_launch_app_event(&(AppLaunchEventConfig) { .id = id });
+    app_manager_put_launch_app_event(&(AppLaunchEventConfig){.id = id});
     prompt_send_response("OK");
   } else {
     prompt_send_response("No app with id");
@@ -78,7 +76,7 @@ void command_worker_launch(const char *id_str) {
   bool success = app_install_get_entry_for_install_id(id, &entry);
 
   if (success && app_install_entry_has_worker(&entry)) {
-    app_manager_put_launch_app_event(&(AppLaunchEventConfig) { .id = id });
+    app_manager_put_launch_app_event(&(AppLaunchEventConfig){.id = id});
     prompt_send_response("OK");
   } else {
     prompt_send_response("No worker with id");

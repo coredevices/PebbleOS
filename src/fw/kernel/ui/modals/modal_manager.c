@@ -96,12 +96,10 @@ static void prv_send_will_focus_event(bool in_focus) {
 
   s_focus_lost = in_focus;
 
-  PebbleEvent event = {
-    .type = PEBBLE_APP_WILL_CHANGE_FOCUS_EVENT,
-    .app_focus = {
-      .in_focus = in_focus,
-    }
-  };
+  PebbleEvent event = {.type = PEBBLE_APP_WILL_CHANGE_FOCUS_EVENT,
+                       .app_focus = {
+                           .in_focus = in_focus,
+                       }};
   event_put(&event);
 }
 
@@ -149,39 +147,34 @@ static void prv_modal_touch_nav_emit_button(void *ctx, ButtonId button) {
   click_recognizer_handle_button_up(&cm->recognizers[button]);
 }
 
-static void prv_modal_touch_nav_idle_refresh(void *ctx) {
-  app_idle_timeout_refresh();
-}
+static void prv_modal_touch_nav_idle_refresh(void *ctx) { app_idle_timeout_refresh(); }
 
 static const TouchNavOps s_modal_touch_nav_ops = {
-  .is_animating = prv_modal_touch_nav_is_animating,
-  .top_overrides_back = prv_modal_touch_nav_top_overrides_back,
-  .top_tap_requires_action_bar = prv_modal_touch_nav_top_tap_requires_action_bar,
-  .top_bridge_disabled = prv_modal_touch_nav_top_bridge_disabled,
-  .pop_top = prv_modal_touch_nav_pop_top,
-  .emit_button = prv_modal_touch_nav_emit_button,
-  .idle_refresh = prv_modal_touch_nav_idle_refresh,
+    .is_animating = prv_modal_touch_nav_is_animating,
+    .top_overrides_back = prv_modal_touch_nav_top_overrides_back,
+    .top_tap_requires_action_bar = prv_modal_touch_nav_top_tap_requires_action_bar,
+    .top_bridge_disabled = prv_modal_touch_nav_top_bridge_disabled,
+    .pop_top = prv_modal_touch_nav_pop_top,
+    .emit_button = prv_modal_touch_nav_emit_button,
+    .idle_refresh = prv_modal_touch_nav_idle_refresh,
 };
 
 RecognizerManager *modal_manager_get_recognizer_manager(void) {
   return &s_modal_recognizer_manager;
 }
 
-TouchNavState *modal_manager_get_touch_nav_state(void) {
-  return &s_modal_touch_nav_state;
-}
+TouchNavState *modal_manager_get_touch_nav_state(void) { return &s_modal_touch_nav_state; }
 
 // The focused-modal predicate: enabled and at least one focusable modal on top. This is the same
 // predicate the button path uses in the kernel event loop to decide whether to route input to the
 // modal twin instead of the app.
 static bool prv_modal_is_focused(void) {
-  return modal_manager_get_enabled() &&
-         !(modal_manager_get_properties() & ModalProperty_Unfocused);
+  return modal_manager_get_enabled() && !(modal_manager_get_properties() & ModalProperty_Unfocused);
 }
 
-// Point the kernel recognizer manager at \a window (NULL to unbind), dropping any in-flight gesture.
-// Mirrors window_became_input_focus / window_lost_input_focus for the app manager. Used for the
-// cross-stack modal focus changes that bypass the per-stack window transitions.
+// Point the kernel recognizer manager at \a window (NULL to unbind), dropping any in-flight
+// gesture. Mirrors window_became_input_focus / window_lost_input_focus for the app manager. Used
+// for the cross-stack modal focus changes that bypass the per-stack window transitions.
 static void prv_modal_recognizer_focus(Window *window) {
   recognizer_manager_cancel_and_reset(&s_modal_recognizer_manager);
   recognizer_manager_set_window(&s_modal_recognizer_manager, window);
@@ -237,13 +230,9 @@ void modal_manager_set_min_priority(ModalPriority priority) {
   }
 }
 
-bool modal_manager_get_enabled(void) {
-  return s_modal_min_priority < ModalPriorityMax;
-}
+bool modal_manager_get_enabled(void) { return s_modal_min_priority < ModalPriorityMax; }
 
-ClickManager *modal_manager_get_click_manager(void) {
-  return &s_modal_window_click_manager;
-}
+ClickManager *modal_manager_get_click_manager(void) { return &s_modal_window_click_manager; }
 
 static WindowStack *prv_find_window_stack(ModalContextFilterCallback callback, void *data) {
   for (ModalPriority idx = NumModalPriorities - 1; idx >= ModalPriorityMin; idx--) {
@@ -272,8 +261,7 @@ Window *modal_manager_get_top_window(void) {
 static void prv_pop_stacks_in_range(ModalPriority low, ModalPriority high) {
   // Discreet modals are transparent and unfocusable, they are not meant to be popped when
   // requesting opaque focusable modals to pop.
-  for (ModalPriority priority = MAX(low, ModalPriorityDiscreet + 1); priority <= high;
-       priority++) {
+  for (ModalPriority priority = MAX(low, ModalPriorityDiscreet + 1); priority <= high; priority++) {
     ModalContext *m_context = &s_modal_window_stacks[priority];
     window_stack_pop_all(&m_context->window_stack, true /* animated */);
   }
@@ -409,10 +397,10 @@ typedef bool (*ModalContextIterCallback)(ModalContext *modal, IterContext *iter,
 
 static void prv_each_modal_stack(ModalContextIterCallback callback, void *data) {
   IterContext iter = {
-    .first_visible_idx = ModalPriorityInvalid,
-    .first_transition_idx = ModalPriorityInvalid,
-    .first_focus_idx = ModalPriorityInvalid,
-    .first_opaque_idx = ModalPriorityInvalid,
+      .first_visible_idx = ModalPriorityInvalid,
+      .first_transition_idx = ModalPriorityInvalid,
+      .first_focus_idx = ModalPriorityInvalid,
+      .first_opaque_idx = ModalPriorityInvalid,
   };
   for (ModalPriority idx = NumModalPriorities - 1; idx >= ModalPriorityMin; idx--) {
     ModalContext *context = &s_modal_window_stacks[idx];
@@ -524,8 +512,7 @@ static bool prv_render_modal_stack_callback(ModalContext *modal, IterContext *it
   WindowStack *stack = &modal->window_stack;
   Window *window = iter->current_top_window;
 
-  if (window_stack_is_animating(stack) &&
-      stack->transition_context.implementation &&
+  if (window_stack_is_animating(stack) && stack->transition_context.implementation &&
       stack->transition_context.implementation->render) {
     // a lot of safety guards to make sure the transition can do render by its own
     WindowTransitioningContext *const transition_context = &stack->transition_context;
@@ -570,7 +557,7 @@ static bool prv_is_window_visible_callback(ModalContext *modal, IterContext *ite
 }
 
 bool modal_manager_is_window_visible(Window *window) {
-  VisibleContext context = { .window = window };
+  VisibleContext context = {.window = window};
   prv_each_modal_stack(prv_is_window_visible_callback, &context);
   return context.visible;
 }
@@ -582,13 +569,13 @@ typedef struct FocusedContext {
 
 static bool prv_is_window_focused_callback(ModalContext *modal, IterContext *iter, void *data) {
   FocusedContext *ctx = data;
-  ctx->focused = ((iter->current_top_window == ctx->window) &&
-                  (iter->current_idx == iter->first_focus_idx));
+  ctx->focused =
+      ((iter->current_top_window == ctx->window) && (iter->current_idx == iter->first_focus_idx));
   return !ctx->focused;
 }
 
 bool modal_manager_is_window_focused(Window *window) {
-  FocusedContext context = { .window = window };
+  FocusedContext context = {.window = window};
   prv_each_modal_stack(prv_is_window_focused_callback, &context);
   return context.focused;
 }
@@ -645,12 +632,9 @@ typedef struct WindowStackInfoContext {
 static void prv_modal_window_stack_info_cb(void *ctx) {
   WindowStackInfoContext *info = ctx;
   if (modal_manager_get_enabled()) {
-    for (ModalPriority priority = 0;
-         priority < NumModalPriorities;
-         ++priority) {
+    for (ModalPriority priority = 0; priority < NumModalPriorities; ++priority) {
       WindowStack *window_stack = modal_manager_get_window_stack(priority);
-      info->counts[priority] = window_stack_dump(window_stack,
-                                                 &info->dumps[priority]);
+      info->counts[priority] = window_stack_dump(window_stack, &info->dumps[priority]);
     }
   } else {
     info->disabled = true;
@@ -659,7 +643,7 @@ static void prv_modal_window_stack_info_cb(void *ctx) {
 }
 
 void command_modal_stack_info(void) {
-  WindowStackInfoContext info = { 0 };
+  WindowStackInfoContext info = {0};
   pbl_sem_init(&info.interlock, 0, 1);
 
   launcher_task_add_callback(prv_modal_window_stack_info_cb, &info);
@@ -669,18 +653,16 @@ void command_modal_stack_info(void) {
   prompt_send_response("Modal Stack, top to bottom:");
 
   char buffer[128];
-  for (ModalPriority priority = NumModalPriorities - 1;
-       priority > ModalPriorityInvalid;
+  for (ModalPriority priority = NumModalPriorities - 1; priority > ModalPriorityInvalid;
        --priority) {
-    prompt_send_response_fmt(buffer, sizeof(buffer), "Priority: %d (%zu)",
-                             priority, info.counts[priority]);
+    prompt_send_response_fmt(buffer, sizeof(buffer), "Priority: %d (%zu)", priority,
+                             info.counts[priority]);
     if (info.counts[priority] > 0 && !info.dumps[priority]) {
       prompt_send_response("Couldn't allocate buffers for modal stack data");
     } else {
       for (size_t i = 0; i < info.counts[priority]; ++i) {
         prompt_send_response_fmt(buffer, sizeof(buffer), "window %p <%s>",
-                                 info.dumps[priority][i].addr,
-                                 info.dumps[priority][i].name);
+                                 info.dumps[priority][i].addr, info.dumps[priority][i].name);
       }
     }
     kernel_free(info.dumps[priority]);

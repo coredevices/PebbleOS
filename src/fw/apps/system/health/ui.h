@@ -16,8 +16,7 @@ void health_ui_draw_text_in_box(GContext *ctx, const char *text, const GRect dra
 //! @param layer Layer to render into.
 //! @param value_text Pre-formatted value text for the lower line (e.g. the
 //!   daily-total step count, or the typical sleep duration).
-void health_ui_render_typical_text_box(GContext *ctx, Layer *layer,
-                                       const char *value_text);
+void health_ui_render_typical_text_box(GContext *ctx, Layer *layer, const char *value_text);
 
 //! Render the "TYPICAL <day>" pill as a two-column split: each column shows a
 //! value on top and a label beneath, separated by a vertical divider. Used on
@@ -30,6 +29,6 @@ void health_ui_render_typical_text_box(GContext *ctx, Layer *layer,
 //! @param left_label  Label for the left column (bottom).
 //! @param right_value Pre-formatted value for the right column (top).
 //! @param right_label Label for the right column (bottom).
-void health_ui_render_split_typical_text_box(GContext *ctx, Layer *layer,
-                                             const char *left_value, const char *left_label,
-                                             const char *right_value, const char *right_label);
+void health_ui_render_split_typical_text_box(GContext *ctx, Layer *layer, const char *left_value,
+                                             const char *left_label, const char *right_value,
+                                             const char *right_label);

@@ -35,7 +35,7 @@ typedef enum BatteryUIStateID {
   BatteryLowPower,
   BatteryCritical,
   BatteryCharging,
-  BatteryFullyCharged, // plugged but not charging (aka 100%)
+  BatteryFullyCharged,  // plugged but not charging (aka 100%)
   BatteryShutdownCharging
 } BatteryUIStateID;
 
@@ -58,37 +58,37 @@ static void prv_dismiss_fully_charged(void);
 static void prv_shutdown(void *ignored);
 
 static const BatteryUIState ui_states[] = {
-  [BatteryGood] = { .next_state = {
-    BatteryWarning, BatteryLowPower, BatteryCritical, BatteryCharging, BatteryFullyCharged
-  }},
-  [BatteryWarning] = { .enter = prv_display_warning, .exit = prv_dismiss_warning, .next_state = {
-    BatteryGood, BatteryWarning, BatteryLowPower, BatteryCharging
-  }},
-  [BatteryLowPower] = { .enter = prv_enter_low_power, .exit = prv_exit_low_power, .next_state = {
-    BatteryWarning, BatteryCritical, BatteryCharging
-  }},
-  [BatteryCritical] = { .enter = prv_enter_critical, .exit = prv_exit_critical, .next_state = {
-    BatteryLowPower, BatteryCharging
-  }},
-  [BatteryCharging] = { .enter = prv_display_plugged, .exit = prv_dismiss_plugged, .next_state = {
-    BatteryGood, BatteryWarning, BatteryLowPower,
-    BatteryCritical, BatteryFullyCharged, BatteryShutdownCharging
-  }},
-  [BatteryFullyCharged] = { .enter = prv_display_fully_charged, .exit = prv_dismiss_fully_charged,
-    .next_state = {
-      BatteryGood, BatteryWarning, BatteryLowPower, BatteryCritical, BatteryShutdownCharging
-  }},
-  [BatteryShutdownCharging] = { .enter = prv_shutdown }
-};
+    [BatteryGood] = {.next_state = {BatteryWarning, BatteryLowPower, BatteryCritical,
+                                    BatteryCharging, BatteryFullyCharged}},
+    [BatteryWarning] = {.enter = prv_display_warning,
+                        .exit = prv_dismiss_warning,
+                        .next_state = {BatteryGood, BatteryWarning, BatteryLowPower,
+                                       BatteryCharging}},
+    [BatteryLowPower] = {.enter = prv_enter_low_power,
+                         .exit = prv_exit_low_power,
+                         .next_state = {BatteryWarning, BatteryCritical, BatteryCharging}},
+    [BatteryCritical] = {.enter = prv_enter_critical,
+                         .exit = prv_exit_critical,
+                         .next_state = {BatteryLowPower, BatteryCharging}},
+    [BatteryCharging] = {.enter = prv_display_plugged,
+                         .exit = prv_dismiss_plugged,
+                         .next_state = {BatteryGood, BatteryWarning, BatteryLowPower,
+                                        BatteryCritical, BatteryFullyCharged,
+                                        BatteryShutdownCharging}},
+    [BatteryFullyCharged] = {.enter = prv_display_fully_charged,
+                             .exit = prv_dismiss_fully_charged,
+                             .next_state = {BatteryGood, BatteryWarning, BatteryLowPower,
+                                            BatteryCritical, BatteryShutdownCharging}},
+    [BatteryShutdownCharging] = {.enter = prv_shutdown}};
 
 static BatteryUIStateID s_state = BatteryGood;
 static BatteryUIWarningLevel s_warning_points_index = -1;
 
 /* Default warnings are at 18 and 12 hours remaining. */
-static const uint8_t s_warning_points[] = { 18, 12 };
+static const uint8_t s_warning_points[] = {18, 12};
 static const uint8_t s_warning_percentages[] = {
-  CONFIG_BATTERY_WARNING_FIRST_PERCENT,
-  CONFIG_BATTERY_WARNING_SECOND_PERCENT,
+    CONFIG_BATTERY_WARNING_FIRST_PERCENT,
+    CONFIG_BATTERY_WARNING_SECOND_PERCENT,
 };
 
 static uint8_t prv_get_warning_percent(BatteryUIWarningLevel level) {
@@ -146,8 +146,8 @@ static void prv_enter_low_power(void *ignored) {
   // Override the vibe intensity to Medium in low-power mode
   vibes_set_default_vibe_strength(get_strength_for_intensity(VibeIntensityMedium));
 #else
-  app_manager_launch_new_app(&(AppLaunchConfig) {
-    .md = prf_low_power_app_get_info(),
+  app_manager_launch_new_app(&(AppLaunchConfig){
+      .md = prf_low_power_app_get_info(),
   });
 #endif
 }
@@ -169,8 +169,8 @@ static void prv_enter_critical(void *ignored) {
   // in case there is a warning on screen
   modal_manager_pop_all();
   modal_manager_set_min_priority(ModalPriorityMax);
-  app_manager_put_launch_app_event(&(AppLaunchEventConfig) {
-    .id = APP_ID_BATTERY_CRITICAL,
+  app_manager_put_launch_app_event(&(AppLaunchEventConfig){
+      .id = APP_ID_BATTERY_CRITICAL,
   });
 }
 
@@ -186,21 +186,13 @@ static void prv_display_plugged(void *data) {
   battery_ui_display_plugged();
 }
 
-static void prv_dismiss_plugged(void) {
-  battery_ui_dismiss_modal();
-}
+static void prv_dismiss_plugged(void) { battery_ui_dismiss_modal(); }
 
-static void prv_display_fully_charged(void *data) {
-  battery_ui_display_fully_charged();
-}
+static void prv_display_fully_charged(void *data) { battery_ui_display_fully_charged(); }
 
-static void prv_dismiss_fully_charged(void) {
-  battery_ui_dismiss_modal();
-}
+static void prv_dismiss_fully_charged(void) { battery_ui_dismiss_modal(); }
 
-static void prv_shutdown(void *ignored) {
-  battery_ui_handle_shut_down();
-}
+static void prv_shutdown(void *ignored) { battery_ui_handle_shut_down(); }
 
 // Internals
 

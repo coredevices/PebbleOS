@@ -14,7 +14,7 @@ typedef struct __attribute__((packed)) {
   void *context;
 } EventServiceInfo;
 
-void event_service_client_subscribe(EventServiceInfo * service_info);
-void event_service_client_unsubscribe(EventServiceInfo * service_info);
+void event_service_client_subscribe(EventServiceInfo *service_info);
+void event_service_client_unsubscribe(EventServiceInfo *service_info);
 void event_service_client_handle_event(PebbleEvent *e);
 bool event_service_filter(ListNode *node, void *tp);

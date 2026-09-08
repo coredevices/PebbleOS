@@ -16,7 +16,6 @@ static uint32_t s_samples_per_update;
 
 #define ACCEL_SESSION_REF ((AccelServiceState *)1)
 
-
 void accel_data_service_subscribe(uint32_t samples_per_update, AccelDataHandler handler) {
   PBL_ASSERTN(!s_raw_handler);
   s_handler = handler;
@@ -34,10 +33,7 @@ void accel_data_service_unsubscribe(void) {
   s_raw_handler = NULL;
 }
 
-
-int accel_service_set_sampling_rate(AccelSamplingRate rate) {
-  return 0;
-}
+int accel_service_set_sampling_rate(AccelSamplingRate rate) { return 0; }
 
 void fake_accel_service_invoke_callbacks(AccelData *data, uint32_t num_samples) {
   if (s_handler) {
@@ -57,13 +53,9 @@ void fake_accel_service_invoke_callbacks(AccelData *data, uint32_t num_samples) 
   }
 }
 
+AccelServiceState *accel_session_create(void) { return ACCEL_SESSION_REF; }
 
-AccelServiceState * accel_session_create(void) {
-  return ACCEL_SESSION_REF;
-}
-
-void accel_session_delete(AccelServiceState *session) {
-}
+void accel_session_delete(AccelServiceState *session) {}
 
 void accel_session_data_subscribe(AccelServiceState *session, uint32_t samples_per_update,
                                   AccelDataHandler handler) {
@@ -71,13 +63,11 @@ void accel_session_data_subscribe(AccelServiceState *session, uint32_t samples_p
   s_samples_per_update = samples_per_update;
 }
 
-void accel_session_raw_data_subscribe(
-    AccelServiceState *session, AccelSamplingRate sampling_rate, uint32_t samples_per_update,
-    AccelRawDataHandler handler) {
+void accel_session_raw_data_subscribe(AccelServiceState *session, AccelSamplingRate sampling_rate,
+                                      uint32_t samples_per_update, AccelRawDataHandler handler) {
   s_raw_handler = handler;
   s_samples_per_update = samples_per_update;
 }
-
 
 void accel_session_data_unsubscribe(AccelServiceState *session) {
   s_handler = NULL;
@@ -94,8 +84,4 @@ int accel_session_set_samples_per_update(AccelServiceState *session, uint32_t sa
   return 0;
 }
 
-
-void accel_manager_set_motion_backlight_enabled(bool enabled) {
-}
-
-
+void accel_manager_set_motion_backlight_enabled(bool enabled) {}

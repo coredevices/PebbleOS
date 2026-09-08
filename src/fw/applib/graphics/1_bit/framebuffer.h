@@ -12,8 +12,8 @@
 typedef struct FrameBuffer {
   uint32_t buffer[FRAMEBUFFER_SIZE_DWORDS];
   GSize size;
-  GRect dirty_rect; //<! Smallest rect covering all dirty pixels.
+  GRect dirty_rect;  //<! Smallest rect covering all dirty pixels.
   bool is_dirty;
 } FrameBuffer;
 
-uint32_t* framebuffer_get_line(FrameBuffer* f, uint8_t y);
+uint32_t *framebuffer_get_line(FrameBuffer *f, uint8_t y);

@@ -15,12 +15,12 @@ static void prv_origin_y_to_area(int16_t origin_y, GRect *area_out);
 
 void unobstructed_area_service_init(UnobstructedAreaState *state, int16_t current_y) {
   PBL_ASSERTN(state);
-  *state = (UnobstructedAreaState) {};
+  *state = (UnobstructedAreaState){};
   prv_origin_y_to_area(current_y, &state->area);
-  state->event_info = (EventServiceInfo) {
-    .type = PEBBLE_UNOBSTRUCTED_AREA_EVENT,
-    .handler = prv_handle_unobstructed_area_event,
-    .context = state,
+  state->event_info = (EventServiceInfo){
+      .type = PEBBLE_UNOBSTRUCTED_AREA_EVENT,
+      .handler = prv_handle_unobstructed_area_event,
+      .context = state,
   };
   event_service_client_subscribe(&state->event_info);
 }
@@ -30,23 +30,24 @@ void unobstructed_area_service_deinit(UnobstructedAreaState *state) {
   event_service_client_unsubscribe(&state->event_info);
 }
 
-static void prv_put_area_event(UnobstructedAreaEventType type, int16_t current_y,
-                               int16_t final_y, AnimationProgress progress) {
+static void prv_put_area_event(UnobstructedAreaEventType type, int16_t current_y, int16_t final_y,
+                               AnimationProgress progress) {
   PebbleEvent event = {
-    .type = PEBBLE_UNOBSTRUCTED_AREA_EVENT,
-    .unobstructed_area = {
-      .type = type,
-      .current_y = current_y,
-      .final_y = final_y,
-      .progress = progress,
-    },
+      .type = PEBBLE_UNOBSTRUCTED_AREA_EVENT,
+      .unobstructed_area =
+          {
+              .type = type,
+              .current_y = current_y,
+              .final_y = final_y,
+              .progress = progress,
+          },
   };
   event_put(&event);
 }
 
 static void prv_clip_area(GRect *area_out) {
   PBL_ASSERTN(area_out);
-  const GRect display_frame = { .size = framebuffer_get_size(app_state_get_framebuffer()) };
+  const GRect display_frame = {.size = framebuffer_get_size(app_state_get_framebuffer())};
   grect_clip(area_out, &display_frame);
 }
 
@@ -54,8 +55,8 @@ static void prv_clip_area(GRect *area_out) {
 //! This is equivalent to the height of the unobstructed area.
 static void prv_origin_y_to_area(int16_t origin_y, GRect *area_out) {
   PBL_ASSERTN(area_out);
-  *area_out = (GRect) {
-    .size = { DISP_COLS, origin_y },
+  *area_out = (GRect){
+      .size = {DISP_COLS, origin_y},
   };
   prv_clip_area(area_out);
 }
@@ -141,8 +142,7 @@ static void prv_handle_unobstructed_area_event(PebbleEvent *event, void *context
 }
 
 void unobstructed_area_service_subscribe(UnobstructedAreaState *state,
-                                         const UnobstructedAreaHandlers *handlers,
-                                         void *context) {
+                                         const UnobstructedAreaHandlers *handlers, void *context) {
   PBL_ASSERTN(state && handlers);
   state->handlers = *handlers;
   state->context = context;
@@ -151,7 +151,7 @@ void unobstructed_area_service_subscribe(UnobstructedAreaState *state,
 
 void unobstructed_area_service_unsubscribe(UnobstructedAreaState *state) {
   PBL_ASSERTN(state);
-  state->handlers = (UnobstructedAreaHandlers) {};
+  state->handlers = (UnobstructedAreaHandlers){};
   state->context = NULL;
   state->is_subscribed = false;
 }

@@ -34,24 +34,20 @@ static void prv_window_load(Window *window) {
   layer_add_child(window_layer, text_layer_get_layer(s_text_layer));
 }
 
-static void prv_window_unload(Window *window) {
-  text_layer_destroy(s_text_layer);
-}
+static void prv_window_unload(Window *window) { text_layer_destroy(s_text_layer); }
 
 static void prv_init(void) {
   s_window = window_create();
   window_set_click_config_provider(s_window, prv_click_config_provider);
-  window_set_window_handlers(s_window, (WindowHandlers) {
-    .load = prv_window_load,
-    .unload = prv_window_unload,
-  });
+  window_set_window_handlers(s_window, (WindowHandlers){
+                                           .load = prv_window_load,
+                                           .unload = prv_window_unload,
+                                       });
   const bool animated = true;
   window_stack_push(s_window, animated);
 }
 
-static void prv_deinit(void) {
-  window_destroy(s_window);
-}
+static void prv_deinit(void) { window_destroy(s_window); }
 
 int main(void) {
   prv_init();

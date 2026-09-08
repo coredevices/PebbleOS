@@ -107,8 +107,7 @@ static void prv_toggle_dnd_from_back_click(ClickRecognizerRef recognizer, void *
   do_not_disturb_manual_toggle_with_dialog();
 }
 
-static void prv_toggle_dnd_from_action_menu(ActionMenu *action_menu,
-                                            const ActionMenuItem *item,
+static void prv_toggle_dnd_from_action_menu(ActionMenu *action_menu, const ActionMenuItem *item,
                                             void *context) {
   // This function handles first-time use tutorial logic
   do_not_disturb_toggle_manually_enabled(ManualDNDFirstUseSourceActionMenu);
@@ -147,8 +146,7 @@ static void prv_update_status_layer(NotificationWindowData *data) {
   } else {
     // if more than one, then show the current index in relation to the total number
     status_bar_layer_set_info_progress(&data->status_layer,
-                                   notifications_presented_list_current_idx() + 1,
-                                   notif_count);
+                                       notifications_presented_list_current_idx() + 1, notif_count);
   }
 }
 
@@ -181,8 +179,8 @@ static void prv_pop_notification_window(NotificationWindowData *data) {
 }
 
 static int prv_reminders_on_top_comparator(void *a, void *b) {
-  NotifList *notif_a = (NotifList*) a;
-  NotifList *notif_b = (NotifList*) b;
+  NotifList *notif_a = (NotifList *)a;
+  NotifList *notif_b = (NotifList *)b;
   NotificationType type_a = notif_a->notif.type;
   NotificationType type_b = notif_b->notif.type;
 
@@ -223,7 +221,7 @@ static void prv_reload_swap_layer(NotificationWindowData *data) {
 /////////////////////
 
 static void prv_handle_dismiss_all_complete(bool succeeded, void *cb_data) {
-  NotificationWindowData *window_data = (NotificationWindowData*) cb_data;
+  NotificationWindowData *window_data = (NotificationWindowData *)cb_data;
   window_data->window_frozen = false;
   if (s_in_use && succeeded) {
     prv_pop_notification_window(window_data);
@@ -231,7 +229,7 @@ static void prv_handle_dismiss_all_complete(bool succeeded, void *cb_data) {
 }
 
 static void prv_dismiss_all(void *data, ActionMenu *action_menu) {
-  NotificationWindowData *window_data = (NotificationWindowData*) data;
+  NotificationWindowData *window_data = (NotificationWindowData *)data;
 
   const int num_notifications = notifications_presented_list_count();
   if (num_notifications == 0) {
@@ -250,19 +248,15 @@ static void prv_dismiss_all(void *data, ActionMenu *action_menu) {
 
   PBL_LOG_DBG("Dismissing %d notifications", num_notifications);
   window_data->window_frozen = true;
-  timeline_actions_dismiss_all(notif_list,
-                               num_notifications,
-                               action_menu,
-                               prv_handle_dismiss_all_complete,
-                               data);
+  timeline_actions_dismiss_all(notif_list, num_notifications, action_menu,
+                               prv_handle_dismiss_all_complete, data);
 
   kernel_free(notif_list);
 }
 
-static void prv_dismiss_all_action_cb(ActionMenu *action_menu,
-                                      const ActionMenuItem *item,
+static void prv_dismiss_all_action_cb(ActionMenu *action_menu, const ActionMenuItem *item,
                                       void *context) {
-  NotificationWindowData *window_data = (NotificationWindowData*) item->action_data;
+  NotificationWindowData *window_data = (NotificationWindowData *)item->action_data;
   prv_dismiss_all(window_data, action_menu);
 }
 
@@ -348,14 +342,14 @@ static void prv_hide_peek_layer(void *context) {
   const int16_t peek_circle_vertical_offset = (BANNER_CIRCLE_RADIUS - (DISP_ROWS / 2)) / 2;
   peek_frame_animation_dy -= peek_circle_vertical_offset;
 #endif
-  Animation *peek_up = prv_create_anim_frame((Layer *)data->peek_layer, peek_frame_animation_dy,
-                                             false /* scroll */);
-  Animation *swap_up = prv_create_anim_frame((Layer *)&data->swap_layer, swap_frame_animation_dy,
-                                             true /* scroll */);
+  Animation *peek_up =
+      prv_create_anim_frame((Layer *)data->peek_layer, peek_frame_animation_dy, false /* scroll */);
+  Animation *swap_up =
+      prv_create_anim_frame((Layer *)&data->swap_layer, swap_frame_animation_dy, true /* scroll */);
   Animation *spawn = animation_spawn_create(peek_up, swap_up, NULL);
   AnimationHandlers anim_handlers = {
-    .started = NULL,
-    .stopped = prv_peek_anim_stopped,
+      .started = NULL,
+      .stopped = prv_peek_anim_stopped,
   };
   animation_set_handlers(spawn, anim_handlers, data);
 
@@ -378,16 +372,13 @@ static void prv_hide_peek_layer(void *context) {
   animation_schedule(spawn);
 }
 
-
 static void prv_play_peek_layer(void *context) {
   NotificationWindowData *data = context;
   // play the peek layer unfold sequence
   peek_layer_play(data->peek_layer);
   const uint16_t PEEK_LAYER_HIDE_DELAY = PBL_IF_RECT_ELSE(500, 400);
-  data->peek_layer_timer = evented_timer_register_or_reschedule(data->peek_layer_timer,
-                                                                PEEK_LAYER_HIDE_DELAY,
-                                                                prv_hide_peek_layer,
-                                                                data);
+  data->peek_layer_timer = evented_timer_register_or_reschedule(
+      data->peek_layer_timer, PEEK_LAYER_HIDE_DELAY, prv_hide_peek_layer, data);
 }
 
 static void prv_show_peek_for_notification(NotificationWindowData *data, Uuid *id,
@@ -426,15 +417,14 @@ static void prv_show_peek_for_notification(NotificationWindowData *data, Uuid *i
   const LayoutColors *colors = layout_get_notification_colors(layout);
   TimelineItem *item = prv_get_current_notification(data);
   TimelineResourceId timeline_res_id;
-  const TimelineResourceId fallback_icon_id = notification_layout_get_fallback_icon_id(
-      item->header.type);
-  timeline_res_id = attribute_get_uint32(&item->attr_list, AttributeIdIconTiny,
-                                         fallback_icon_id);
+  const TimelineResourceId fallback_icon_id =
+      notification_layout_get_fallback_icon_id(item->header.type);
+  timeline_res_id = attribute_get_uint32(&item->attr_list, AttributeIdIconTiny, fallback_icon_id);
 
-  data->peek_icon_info = (TimelineResourceInfo) {
-    .res_id = timeline_res_id,
-    .app_id = &data->notification_app_id, // This is set earlier when we reload the layout
-    .fallback_id = fallback_icon_id,
+  data->peek_icon_info = (TimelineResourceInfo){
+      .res_id = timeline_res_id,
+      .app_id = &data->notification_app_id,  // This is set earlier when we reload the layout
+      .fallback_id = fallback_icon_id,
   };
 #if PBL_BW
   const bool use_alternative_design = alerts_preferences_get_notification_alternative_design();
@@ -447,16 +437,14 @@ static void prv_show_peek_for_notification(NotificationWindowData *data, Uuid *i
   // This is so that only the banner of the swap_layer is sticking out from the bottom
   GRect swap_frame = ((Layer *)&data->swap_layer)->frame;
   swap_frame.origin.y = swap_frame.origin.y + swap_frame.size.h -
-      PBL_IF_RECT_ELSE(LAYOUT_BANNER_HEIGHT_RECT, LAYOUT_TOP_BANNER_HEIGHT_ROUND);
+                        PBL_IF_RECT_ELSE(LAYOUT_BANNER_HEIGHT_RECT, LAYOUT_TOP_BANNER_HEIGHT_ROUND);
   layer_set_frame((Layer *)&data->swap_layer, &swap_frame);
 
   // play the peek layer after the delay, more delay for the first notification
   // because we're coming from the compositor modal transition
   const uint16_t peek_layer_play_delay = is_first_notification ? FIRST_PEEK_DELAY : 100;
-  data->peek_layer_timer = evented_timer_register_or_reschedule(data->peek_layer_timer,
-                                                                peek_layer_play_delay,
-                                                                prv_play_peek_layer,
-                                                                data);
+  data->peek_layer_timer = evented_timer_register_or_reschedule(
+      data->peek_layer_timer, peek_layer_play_delay, prv_play_peek_layer, data);
 
   // insert below status bar but above everything else.
   Window *window = &data->window;
@@ -483,7 +471,7 @@ static void prv_remove_notification(NotificationWindowData *data, Uuid *notif_id
   // Setting the next ID is handled by the service
   notifications_presented_list_remove(notif_id);
 
-  if ((notifications_presented_list_current_idx() < 0) && s_in_use)  {
+  if ((notifications_presented_list_current_idx() < 0) && s_in_use) {
     prv_pop_notification_window(data);
     return;
   }
@@ -500,8 +488,8 @@ static void prv_layout_removed_handler(SwapLayer *swap_layer, LayoutLayer *layou
 T_STATIC LayoutLayer *prv_get_layout_handler(SwapLayer *swap_layer, int8_t rel_position,
                                              void *context) {
   NotificationWindowData *data = context;
-  Uuid *id = notifications_presented_list_relative(
-      notifications_presented_list_current(), rel_position);
+  Uuid *id =
+      notifications_presented_list_relative(notifications_presented_list_current(), rel_position);
 
   // if no layers, don't return one
   if (uuid_is_invalid(id)) {
@@ -527,8 +515,8 @@ T_STATIC LayoutLayer *prv_get_layout_handler(SwapLayer *swap_layer, int8_t rel_p
   }
 
   // Determine if the icon isn't a system resource (meaning we have to load its associated app id)
-  TimelineResourceId icon = attribute_get_uint32(&item->attr_list, AttributeIdIconTiny,
-                                                 TIMELINE_RESOURCE_INVALID);
+  TimelineResourceId icon =
+      attribute_get_uint32(&item->attr_list, AttributeIdIconTiny, TIMELINE_RESOURCE_INVALID);
   TimelineItem pin;
   if (timeline_resources_is_system(icon) ||
       pin_db_read_item_header(&pin, &item->header.parent_id) != S_SUCCESS) {
@@ -538,17 +526,13 @@ T_STATIC LayoutLayer *prv_get_layout_handler(SwapLayer *swap_layer, int8_t rel_p
   }
 
   const LayoutId layout_id = (type == NotificationMobile) ? LayoutIdNotification : LayoutIdReminder;
-  NotificationLayoutInfo layout_info = (NotificationLayoutInfo) {
-    .item = item,
-    .show_notification_timestamp = !prv_should_pop_due_to_inactivity()
-  };
-  const LayoutLayerConfig config = {
-    .frame = &data->window.layer.bounds,
-    .attributes = &item->attr_list,
-    .mode = LayoutLayerModeCard,
-    .app_id = &data->notification_app_id,
-    .context = &layout_info
-  };
+  NotificationLayoutInfo layout_info = (NotificationLayoutInfo){
+      .item = item, .show_notification_timestamp = !prv_should_pop_due_to_inactivity()};
+  const LayoutLayerConfig config = {.frame = &data->window.layer.bounds,
+                                    .attributes = &item->attr_list,
+                                    .mode = LayoutLayerModeCard,
+                                    .app_id = &data->notification_app_id,
+                                    .context = &layout_info};
   NotificationLayout *notification_layout = (NotificationLayout *)layout_create(layout_id, &config);
   return &notification_layout->layout;
 
@@ -660,9 +644,9 @@ static void prv_setup_reminder_watchdog(NotificationWindowData *data) {
     return;
   }
 
-  data->reminder_watchdog_timer_id = (const RegularTimerInfo) {
-    .cb = prv_clear_stale_reminders_timer_cb,
-    .cb_data = data,
+  data->reminder_watchdog_timer_id = (const RegularTimerInfo){
+      .cb = prv_clear_stale_reminders_timer_cb,
+      .cb_data = data,
   };
 
   regular_timer_add_minutes_callback(&data->reminder_watchdog_timer_id);
@@ -687,13 +671,12 @@ static bool prv_should_show_action_in_action_menu(NotificationWindowData *data,
       // and only show non ANCS actions. Once iOS9 is more widespread we can look at updating this
       return !timeline_item_action_is_ancs(action);
     }
-  } else { // Android
+  } else {  // Android
     // Show all actions unless the item has already been acted upon, in which case show none
-    return (!item->header.actioned &&
-            !item->header.dismissed &&
-            (data->is_modal ||
-             comm_session_has_capability(comm_session_get_system_session(),
-                                         CommSessionExtendedNotificationService)));
+    return (
+        !item->header.actioned && !item->header.dismissed &&
+        (data->is_modal || comm_session_has_capability(comm_session_get_system_session(),
+                                                       CommSessionExtendedNotificationService)));
   }
 }
 
@@ -729,15 +712,14 @@ static void prv_push_snooze_dialog(void) {
   simple_dialog_push(simple_dialog, prv_get_window_stack());
 }
 
-static void prv_snooze_reminder_cb(ActionMenu *action_menu,
-                                   const ActionMenuItem *action_menu_item,
+static void prv_snooze_reminder_cb(ActionMenu *action_menu, const ActionMenuItem *action_menu_item,
                                    void *context) {
-  NotificationWindowData *window_data = (NotificationWindowData *) action_menu_item->action_data;
+  NotificationWindowData *window_data = (NotificationWindowData *)action_menu_item->action_data;
   TimelineItem *item = prv_get_current_notification(window_data);
 
   // Snooze reminder.
   // It's highly unlikely we'll get E_INVALID_OPERATION based on the snooze logic parameters.
-  if (reminders_snooze((Reminder *) item) == S_SUCCESS) {
+  if (reminders_snooze((Reminder *)item) == S_SUCCESS) {
     prv_push_snooze_dialog();
   }
 
@@ -760,8 +742,7 @@ static void prv_push_muted_dialog(void) {
   simple_dialog_push(simple_dialog, prv_get_window_stack());
 }
 
-static void prv_mute_notification(const ActionMenuItem *action_menu_item,
-                                  uint8_t muted_bitfield) {
+static void prv_mute_notification(const ActionMenuItem *action_menu_item, uint8_t muted_bitfield) {
   NotificationWindowData *window_data = action_menu_item->action_data;
   TimelineItem *item = prv_get_current_notification(window_data);
 
@@ -775,8 +756,8 @@ static void prv_mute_notification(const ActionMenuItem *action_menu_item,
   iOSNotifPrefs *notif_prefs = ios_notif_pref_db_get_prefs((uint8_t *)app_id, app_id_len);
   if (notif_prefs && attribute_find(&notif_prefs->attr_list, AttributeIdMuteDayOfWeek)) {
     attribute_list_add_uint8(&notif_prefs->attr_list, AttributeIdMuteDayOfWeek, muted_bitfield);
-    ios_notif_pref_db_store_prefs((uint8_t *)app_id, app_id_len,
-                                  &notif_prefs->attr_list, &notif_prefs->action_group);
+    ios_notif_pref_db_store_prefs((uint8_t *)app_id, app_id_len, &notif_prefs->attr_list,
+                                  &notif_prefs->action_group);
 
     TimelineItemAction *dismiss = timeline_item_find_dismiss_action(item);
     if (dismiss) {
@@ -794,24 +775,22 @@ static void prv_mute_notification(const ActionMenuItem *action_menu_item,
 }
 
 static void prv_mute_notification_always(ActionMenu *action_menu,
-                                         const ActionMenuItem *action_menu_item,
-                                         void *context) {
+                                         const ActionMenuItem *action_menu_item, void *context) {
   prv_mute_notification(action_menu_item, MuteBitfield_Always);
 }
 
 static void prv_mute_notification_weekdays(ActionMenu *action_menu,
-                                           const ActionMenuItem *action_menu_item,
-                                           void *context) {
+                                           const ActionMenuItem *action_menu_item, void *context) {
   prv_mute_notification(action_menu_item, MuteBitfield_Weekdays);
 }
 
 static void prv_mute_notification_weekends(ActionMenu *action_menu,
-                                           const ActionMenuItem *action_menu_item,
-                                           void *context) {
+                                           const ActionMenuItem *action_menu_item, void *context) {
   prv_mute_notification(action_menu_item, MuteBitfield_Weekends);
 }
 
-static void prv_mute_notification_timed(const ActionMenuItem *action_menu_item, int duration_seconds) {
+static void prv_mute_notification_timed(const ActionMenuItem *action_menu_item,
+                                        int duration_seconds) {
   NotificationWindowData *window_data = action_menu_item->action_data;
   TimelineItem *item = prv_get_current_notification(window_data);
 
@@ -823,14 +802,14 @@ static void prv_mute_notification_timed(const ActionMenuItem *action_menu_item, 
 
   const int app_id_len = strlen(app_id);
   iOSNotifPrefs *notif_prefs = ios_notif_pref_db_get_prefs((uint8_t *)app_id, app_id_len);
-  Attribute *expiration_attr = notif_prefs ?
-      attribute_find(&notif_prefs->attr_list, AttributeIdMuteExpiration) : NULL;
+  Attribute *expiration_attr =
+      notif_prefs ? attribute_find(&notif_prefs->attr_list, AttributeIdMuteExpiration) : NULL;
   if (notif_prefs && expiration_attr) {
     const uint32_t expiration_time = rtc_get_time() + duration_seconds;
     expiration_attr->uint32 = expiration_time;
 
-    ios_notif_pref_db_store_prefs((uint8_t *)app_id, app_id_len,
-                                  &notif_prefs->attr_list, &notif_prefs->action_group);
+    ios_notif_pref_db_store_prefs((uint8_t *)app_id, app_id_len, &notif_prefs->attr_list,
+                                  &notif_prefs->action_group);
 
     TimelineItemAction *dismiss = timeline_item_find_dismiss_action(item);
     if (dismiss) {
@@ -845,18 +824,17 @@ static void prv_mute_notification_timed(const ActionMenuItem *action_menu_item, 
 }
 
 static void prv_mute_notification_1_hour(ActionMenu *action_menu,
-                                         const ActionMenuItem *action_menu_item,
-                                         void *context) {
+                                         const ActionMenuItem *action_menu_item, void *context) {
   prv_mute_notification_timed(action_menu_item, 3600);
 }
 
 static void prv_mute_notification_today(ActionMenu *action_menu,
-                                        const ActionMenuItem *action_menu_item,
-                                        void *context) {
+                                        const ActionMenuItem *action_menu_item, void *context) {
   time_t now = rtc_get_time();
   struct tm now_tm;
   localtime_r(&now, &now_tm);
-  const int seconds_until_midnight = (24 * 3600) - (now_tm.tm_hour * 3600 + now_tm.tm_min * 60 + now_tm.tm_sec);
+  const int seconds_until_midnight =
+      (24 * 3600) - (now_tm.tm_hour * 3600 + now_tm.tm_min * 60 + now_tm.tm_sec);
   prv_mute_notification_timed(action_menu_item, seconds_until_midnight);
 }
 
@@ -887,13 +865,14 @@ static ActionMenuLevel *prv_create_action_menu_for_item(TimelineItem *item,
   // Snooze is not needed for Reminders App items
   Uuid items_originator_id;
   timeline_get_originator_id(item, &items_originator_id);
-  const bool has_snooze_action = ((item->header.type == TimelineItemTypeReminder) &&
-                      !uuid_equal(&(Uuid)UUID_REMINDERS_DATA_SOURCE, &items_originator_id) &&
-                      reminders_can_snooze(item));
+  const bool has_snooze_action =
+      ((item->header.type == TimelineItemTypeReminder) &&
+       !uuid_equal(&(Uuid)UUID_REMINDERS_DATA_SOURCE, &items_originator_id) &&
+       reminders_can_snooze(item));
 
-  const bool has_dismiss_all_action = ((dismiss_action) &&
-                                       (notifications_presented_list_count() > 1));
-  const bool has_quiet_time_action = true; // Always true
+  const bool has_dismiss_all_action =
+      ((dismiss_action) && (notifications_presented_list_count() > 1));
+  const bool has_quiet_time_action = true;  // Always true
   const bool has_ancs_mute_action = prv_has_mute_action(item);
 
   uint8_t num_local_actions = 0;
@@ -909,9 +888,8 @@ static ActionMenuLevel *prv_create_action_menu_for_item(TimelineItem *item,
   // Create root level
   uint8_t num_actions = num_timeline_actions + num_local_actions;
   uint8_t separator_index = num_actions > num_item_specific_actions ? num_item_specific_actions : 0;
-  ActionMenuLevel *root_level = timeline_actions_create_action_menu_root_level(num_actions,
-                                                                               separator_index,
-                                                                               source);
+  ActionMenuLevel *root_level =
+      timeline_actions_create_action_menu_root_level(num_actions, separator_index, source);
 
   // Add actions in order
   // [0] Dismiss (if applicable)
@@ -926,9 +904,7 @@ static ActionMenuLevel *prv_create_action_menu_for_item(TimelineItem *item,
     timeline_actions_add_action_to_root_level(dismiss_action, root_level);
   }
   if (has_snooze_action) {
-    action_menu_level_add_action(root_level,
-                                 i18n_get("Snooze", root_level),
-                                 prv_snooze_reminder_cb,
+    action_menu_level_add_action(root_level, i18n_get("Snooze", root_level), prv_snooze_reminder_cb,
                                  window_data);
   }
   for (int i = 0; i < item->action_group.num_actions; i++) {
@@ -948,68 +924,51 @@ static ActionMenuLevel *prv_create_action_menu_for_item(TimelineItem *item,
 
     const char *mute_label = i18n_noop("Mute %s");
     static char mute_label_buf[32];
-    snprintf(mute_label_buf, sizeof(mute_label_buf),
-            i18n_get(mute_label, root_level), display_name);
+    snprintf(mute_label_buf, sizeof(mute_label_buf), i18n_get(mute_label, root_level),
+             display_name);
 
     const uint8_t mute_option = ancs_filtering_get_mute_type(notif_prefs);
     const bool is_mute_weekdays = mute_option == MuteBitfield_Weekdays;
     const bool is_mute_weekends = mute_option == MuteBitfield_Weekends;
 
     if (is_mute_weekdays || is_mute_weekends) {
-      action_menu_level_add_action(root_level,
-                                   mute_label_buf,
-                                   prv_mute_notification_always,
+      action_menu_level_add_action(root_level, mute_label_buf, prv_mute_notification_always,
                                    window_data);
     } else {
       const uint8_t number_mute_actions = 5;
       ActionMenuLevel *mute_level = action_menu_level_create(number_mute_actions);
 
-      action_menu_level_add_child(root_level,
-                                  mute_level,
-                                  mute_label_buf);
+      action_menu_level_add_child(root_level, mute_level, mute_label_buf);
 
-      action_menu_level_add_action(mute_level,
-                                   i18n_get("Mute 1 Hour", root_level),
-                                   prv_mute_notification_1_hour,
-                                   window_data);
+      action_menu_level_add_action(mute_level, i18n_get("Mute 1 Hour", root_level),
+                                   prv_mute_notification_1_hour, window_data);
 
-      action_menu_level_add_action(mute_level,
-                                   i18n_get("Mute Today", root_level),
-                                   prv_mute_notification_today,
-                                   window_data);
+      action_menu_level_add_action(mute_level, i18n_get("Mute Today", root_level),
+                                   prv_mute_notification_today, window_data);
 
-      action_menu_level_add_action(mute_level,
-                                   i18n_get("Mute Always", root_level),
-                                   prv_mute_notification_always,
-                                   window_data);
+      action_menu_level_add_action(mute_level, i18n_get("Mute Always", root_level),
+                                   prv_mute_notification_always, window_data);
 
-      action_menu_level_add_action(mute_level,
-                                   i18n_get("Mute Weekends", root_level),
-                                   prv_mute_notification_weekends,
-                                   window_data);
+      action_menu_level_add_action(mute_level, i18n_get("Mute Weekends", root_level),
+                                   prv_mute_notification_weekends, window_data);
 
-      action_menu_level_add_action(mute_level,
-                                   i18n_get("Mute Weekdays", root_level),
-                                   prv_mute_notification_weekdays,
-                                   window_data);
+      action_menu_level_add_action(mute_level, i18n_get("Mute Weekdays", root_level),
+                                   prv_mute_notification_weekdays, window_data);
     }
 
     ios_notif_pref_db_free_prefs(notif_prefs);
   }
 
   if (has_dismiss_all_action) {
-    action_menu_level_add_action(root_level,
-                                 i18n_get("Dismiss All", root_level),
-                                 prv_dismiss_all_action_cb,
-                                 window_data);
+    action_menu_level_add_action(root_level, i18n_get("Dismiss All", root_level),
+                                 prv_dismiss_all_action_cb, window_data);
   }
   if (has_quiet_time_action) {
     action_menu_level_add_action(root_level,
-                                 do_not_disturb_is_active() ?
-                                     i18n_get("End Quiet Time", root_level) :
-                                     i18n_get("Start Quiet Time", root_level),
-                                 prv_toggle_dnd_from_action_menu,
-                                 window_data);
+                                 do_not_disturb_is_active()
+                                     ? i18n_get("End Quiet Time", root_level)
+                                     : i18n_get("Start Quiet Time", root_level),
+                                 prv_toggle_dnd_from_action_menu, window_data);
   }
 
   return root_level;
@@ -1033,13 +992,14 @@ static void prv_select_single_click_handler(ClickRecognizerRef recognizer, void 
   const LayoutColors *colors = layout_get_notification_colors(layout);
 
   ActionMenuConfig config = {
-    .context = item,
-    .colors.background = colors->bg_color,
-    .did_close = prv_action_menu_did_close,
+      .context = item,
+      .colors.background = colors->bg_color,
+      .did_close = prv_action_menu_did_close,
   };
 
-  TimelineItemActionSource source = (window_data->is_modal ?
-            TimelineItemActionSourceModalNotification : TimelineItemActionSourceNotificationApp);
+  TimelineItemActionSource source =
+      (window_data->is_modal ? TimelineItemActionSourceModalNotification
+                             : TimelineItemActionSourceNotificationApp);
 
   config.root_level = prv_create_action_menu_for_item(item, window_data, source);
   if (config.root_level == NULL) {
@@ -1114,8 +1074,8 @@ static void prv_window_disappear(Window *window) {
   prv_cleanup_timer(&data->pop_timer_id);
 #ifdef CONFIG_TOUCH
   // A higher modal (e.g. the action menu opened via SELECT) has covered this window. Release the
-  // swap layer's touch participation so the now-focused modal owns touch and events cannot leak into
-  // this hidden notification body. The click-config-provider re-registers it on re-show.
+  // swap layer's touch participation so the now-focused modal owns touch and events cannot leak
+  // into this hidden notification body. The click-config-provider re-registers it on re-show.
   swap_layer_touch_release(&data->swap_layer);
 #endif
 }
@@ -1226,7 +1186,7 @@ static void prv_update_colors_handler(SwapLayer *swap_layer, GColor bg_color,
   status_bar_layer_set_colors(&data->status_layer, PBL_IF_ROUND_ELSE(GColorClear, status_color),
                               gcolor_legible_over(status_color));
 }
-#endif // PBL_COLOR
+#endif  // PBL_COLOR
 
 static void prv_interaction_handler(SwapLayer *swap_layer, void *context) {
   NotificationWindowData *data = context;
@@ -1257,11 +1217,11 @@ static void prv_set_dnd_icon_visible(bool is_visible) {
 #endif
   const uint16_t icon_layer_x_offset = PBL_IF_ROUND_ELSE(new_icon_layer_x_offset, 6);
   const GRect status_frame = data->status_layer.layer.frame;
-  const int16_t icon_layer_y_offset = status_frame.origin.y +
-      MAX((status_frame.size.h - icon_rect.size.h) / 2, 0);
-  const GRect dnd_frame = (GRect) {
-    .origin = GPoint(icon_layer_x_offset, icon_layer_y_offset),
-    .size = icon_rect.size,
+  const int16_t icon_layer_y_offset =
+      status_frame.origin.y + MAX((status_frame.size.h - icon_rect.size.h) / 2, 0);
+  const GRect dnd_frame = (GRect){
+      .origin = GPoint(icon_layer_x_offset, icon_layer_y_offset),
+      .size = icon_rect.size,
   };
   layer_set_frame(&data->dnd_icon_layer, &dnd_frame);
 
@@ -1317,22 +1277,20 @@ static void prv_init_notification_window(bool is_modal) {
   data->peek_layer_timer = EVENTED_TIMER_INVALID_ID;
   data->peek_animation = NULL;
   data->peek_layer = NULL;
-  data->peek_icon_info = (TimelineResourceInfo) {
-    .res_id = TIMELINE_RESOURCE_INVALID,
-    .app_id = NULL,
-    .fallback_id = TIMELINE_RESOURCE_INVALID
-  };
+  data->peek_icon_info = (TimelineResourceInfo){.res_id = TIMELINE_RESOURCE_INVALID,
+                                                .app_id = NULL,
+                                                .fallback_id = TIMELINE_RESOURCE_INVALID};
   data->action_menu = NULL;
   data->dnd_icon_visible = false;
   data->pending_vibe = false;
 
   Window *window = &data->window;
   window_init(window, "Notification Window");
-  window_set_window_handlers(window, &(WindowHandlers) {
-      .appear = prv_window_appear,
-      .disappear = prv_window_disappear,
-      .unload = prv_window_unload,
-  });
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .appear = prv_window_appear,
+                                         .disappear = prv_window_disappear,
+                                         .unload = prv_window_unload,
+                                     });
   window_set_user_data(window, data);
 
 #ifdef CONFIG_TOUCH
@@ -1360,21 +1318,22 @@ static void prv_init_notification_window(bool is_modal) {
   const int16_t status_bar_height = status_layer->layer.frame.size.h;
 
   // prepare the swap layer frame using notification_layout values including the status bar
-  const GRect swap_frame = GRect(0, status_bar_height, window_frame->size.w,
-                                 LAYOUT_HEIGHT + LAYOUT_ARROW_HEIGHT);
+  const GRect swap_frame =
+      GRect(0, status_bar_height, window_frame->size.w, LAYOUT_HEIGHT + LAYOUT_ARROW_HEIGHT);
 
   SwapLayer *swap_layer = &data->swap_layer;
   swap_layer_init(swap_layer, &swap_frame);
-  swap_layer_set_callbacks(swap_layer, data, (SwapLayerCallbacks) {
-    .get_layout_handler = prv_get_layout_handler,
-    .layout_removed_handler = prv_layout_removed_handler,
-    .layout_did_appear_handler = prv_layout_did_appear_handler,
+  swap_layer_set_callbacks(swap_layer, data,
+                           (SwapLayerCallbacks){
+                               .get_layout_handler = prv_get_layout_handler,
+                               .layout_removed_handler = prv_layout_removed_handler,
+                               .layout_did_appear_handler = prv_layout_did_appear_handler,
 #if PBL_COLOR
-    .update_colors_handler = prv_update_colors_handler,
+                               .update_colors_handler = prv_update_colors_handler,
 #endif
-    .interaction_handler = prv_interaction_handler,
-    .click_config_provider = prv_click_config_provider,
-  });
+                               .interaction_handler = prv_interaction_handler,
+                               .click_config_provider = prv_click_config_provider,
+                           });
   swap_layer_set_click_config_onto_window(swap_layer, window);
   layer_add_child(root_layer, swap_layer_get_layer(swap_layer));
 
@@ -1386,7 +1345,8 @@ static void prv_init_notification_window(bool is_modal) {
   data->action_button_layer.update_proc = action_button_update_proc;
   layer_add_child(root_layer, &data->action_button_layer);
 #ifdef CONFIG_TOUCH
-  layer_set_contains_point_override(&data->action_button_layer, prv_action_button_touch_transparent);
+  layer_set_contains_point_override(&data->action_button_layer,
+                                    prv_action_button_touch_transparent);
 #endif
 
   layer_set_hidden((Layer *)&data->action_button_layer, true);
@@ -1413,8 +1373,8 @@ void notification_window_init(bool is_modal) {
   if (is_modal && notification_window_is_modal()) {
     // If we didn't ask for a modal window, it means some other task already created it,
     // so no need to push it
-    modal_window_push(&s_notification_window_data.window,
-                      NOTIFICATION_PRIORITY, true /* animated */);
+    modal_window_push(&s_notification_window_data.window, NOTIFICATION_PRIORITY,
+                      true /* animated */);
   }
 }
 
@@ -1427,9 +1387,7 @@ void notification_window_show() {
   app_window_stack_push(&s_notification_window_data.window, animated);
 }
 
-bool notification_window_is_modal(void) {
-  return s_notification_window_data.is_modal;
-}
+bool notification_window_is_modal(void) { return s_notification_window_data.is_modal; }
 
 void notification_window_add_notification_by_id(Uuid *id) {
   prv_notification_window_add_notification(id, NotificationMobile);
@@ -1441,8 +1399,8 @@ void notification_window_focus_notification(Uuid *id, bool animated) {
 
   if (animated) {
 #if PBL_RECT
-    Uuid *second_id = notifications_presented_list_relative(
-        notifications_presented_list_first(), +1);
+    Uuid *second_id =
+        notifications_presented_list_relative(notifications_presented_list_first(), +1);
     if (second_id) {
       // On rectangular displays, get the notification below the one we want to focus,
       // set it as the current notification, then swap up. This allows us
@@ -1477,7 +1435,6 @@ void notification_window_service_init(void) {
   imaging_register_handler(ImagingImageTypeNotification, prv_imaging_notification_received);
 #endif
 }
-
 
 //////////////////
 // Event Handlers
@@ -1533,7 +1490,8 @@ static void prv_do_notification_vibe(NotificationWindowData *data, Uuid *id) {
     return;
   }
   bool did_vibrate = false;
-  Uint32List *vibeDurations = attribute_get_uint32_list(&item->attr_list, AttributeIdVibrationPattern);
+  Uint32List *vibeDurations =
+      attribute_get_uint32_list(&item->attr_list, AttributeIdVibrationPattern);
   if (vibeDurations && vibeDurations->num_values > 0) {
     VibePattern patt;
 
@@ -1548,8 +1506,8 @@ static void prv_do_notification_vibe(NotificationWindowData *data, Uuid *id) {
     VibeScore *score = vibe_client_get_score(VibeClient_Notifications);
     if (score) {
       VibeScoreId id = alerts_preferences_get_vibe_score_for_client(VibeClient_Notifications);
-      PBL_LOG_DBG("Notification vibe: using alerts preferences (%d, %s)",
-                  (int)id, vibe_score_info_get_name(id));
+      PBL_LOG_DBG("Notification vibe: using alerts preferences (%d, %s)", (int)id,
+                  vibe_score_info_get_name(id));
 
       vibe_score_do_vibe(score);
       vibe_score_destroy(score);
@@ -1572,7 +1530,7 @@ static void prv_handle_notification_added_common(Uuid *id, NotificationType type
 
   alerts_incoming_alert_analytics();
 
-  if (do_not_disturb_is_active() && 
+  if (do_not_disturb_is_active() &&
       alerts_preferences_dnd_get_show_notifications() == DndNotificationModeHide) {
     return;
   }

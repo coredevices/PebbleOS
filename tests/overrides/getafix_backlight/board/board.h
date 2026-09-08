@@ -21,15 +21,14 @@ typedef struct {
 } BoardConfigPower;
 
 static const BoardConfig BOARD_CONFIG = {
-  .backlight_on_percent = 25,
+    .backlight_on_percent = 25,
 };
 
-static const BoardConfigBTCommon BOARD_CONFIG_BT_COMMON = {
-};
+static const BoardConfigBTCommon BOARD_CONFIG_BT_COMMON = {};
 
 static const BoardConfigPower BOARD_CONFIG_POWER = {
-  .low_power_threshold = 5,
-  .battery_capacity_hours = 144,
+    .low_power_threshold = 5,
+    .battery_capacity_hours = 144,
 };
 
 typedef struct {
@@ -37,7 +36,7 @@ typedef struct {
 } BoardConfigAccel;
 
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
-  .default_motion_sensitivity = 0,
+    .default_motion_sensitivity = 0,
 };
 
 typedef const struct MicDevice MicDevice;

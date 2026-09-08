@@ -32,7 +32,7 @@ typedef enum {
   WindowHandlerOffsetUnload = offsetof(WindowHandlers, unload),
 } WindowHandlerOffset;
 
-void window_do_layer_update_proc(Layer *layer, GContext* ctx) {
+void window_do_layer_update_proc(Layer *layer, GContext *ctx) {
   Window *window = layer_get_window(layer);
 
   const GColor bg_color = window->background_color;
@@ -52,7 +52,7 @@ typedef struct {
 
 static void prv_adjust_drawing_state_for_legacy2_apps(DrawingStateOrigins *saved_state,
                                                       GContext *ctx, Window *window) {
-  GDrawState * const draw_state = &ctx->draw_state;
+  GDrawState *const draw_state = &ctx->draw_state;
   *saved_state = (DrawingStateOrigins){
       .drawing_box_origin = draw_state->drawing_box.origin,
       .clip_box = draw_state->clip_box,
@@ -139,22 +139,18 @@ void window_call_handler(Window *window, WindowHandlerOffset handler_offset) {
   if (window == NULL) {
     return;
   }
-  WindowHandler handler = *(WindowHandler*)(((uint8_t*)&window->window_handlers) + handler_offset);
+  WindowHandler handler =
+      *(WindowHandler *)(((uint8_t *)&window->window_handlers) + handler_offset);
   if (handler) {
     handler(window);
   }
 }
 
-void window_schedule_render(Window *window) {
-  window->is_render_scheduled = true;
-}
+void window_schedule_render(Window *window) { window->is_render_scheduled = true; }
 
 GRect window_calc_frame(bool fullscreen) {
   GContext *ctx = graphics_context_get_current_context();
-  GRect result = (GRect) {
-    .origin = { 0, 0 },
-    .size = graphics_context_get_framebuffer_size(ctx)
-  };
+  GRect result = (GRect){.origin = {0, 0}, .size = graphics_context_get_framebuffer_size(ctx)};
   result.size.h -= fullscreen ? 0 : STATUS_BAR_HEIGHT;
   return result;
 }
@@ -166,7 +162,7 @@ GRect window_calc_frame(bool fullscreen) {
 // then this function shifts it to its correct position of (0, STATUS_BAR_HEIGHT).
 // Either this function should set the window not on screen, or we should provide
 // an alternate function for initializing the window that takes a frame dimension too.
-void window_init(Window *window, const char* debug_name) {
+void window_init(Window *window, const char *debug_name) {
   if (window == NULL) {
     PBL_LOG_ERR("Tried to init a NULL window");
     return;
@@ -190,15 +186,15 @@ void window_init(Window *window, const char* debug_name) {
   window->parent_window_stack = NULL;
 }
 
-Window* window_create(void) {
-  Window* window = applib_type_malloc(Window);
+Window *window_create(void) {
+  Window *window = applib_type_malloc(Window);
   if (window) {
     window_init(window, "");
   }
   return window;
 }
 
-void window_destroy(Window* window) {
+void window_destroy(Window *window) {
   if (window == NULL) {
     return;
   }
@@ -241,7 +237,7 @@ void window_set_touch_tap_requires_action_bar(Window *window, bool requires_acti
   window->touch_tap_requires_action_bar = requires_action_bar;
 }
 
-static ClickManager* prv_get_current_click_manager(void) {
+static ClickManager *prv_get_current_click_manager(void) {
   return window_manager_get_window_click_manager(window_manager_get_top_window());
 }
 
@@ -253,15 +249,14 @@ static void prv_call_click_provider(Window *window) {
 
 static void prv_check_is_in_click_config_provider(Window *window, char *type) {
   PBL_ASSERT(window->in_click_config_provider,
-      "Click %s must be set from click config provider (Window %p)", type, window);
+             "Click %s must be set from click config provider (Window %p)", type, window);
 }
 
-void window_setup_click_config_provider(Window *window) {
-  prv_call_click_provider(window);
-}
+void window_setup_click_config_provider(Window *window) { prv_call_click_provider(window); }
 
-void window_set_click_config_provider_with_context(
-    Window *window, ClickConfigProvider click_config_provider, void *context) {
+void window_set_click_config_provider_with_context(Window *window,
+                                                   ClickConfigProvider click_config_provider,
+                                                   void *context) {
   PBL_ASSERTN(window);
   window->click_config_provider = click_config_provider;
   window->click_config_context = context;
@@ -300,7 +295,8 @@ void window_single_click_subscribe(ButtonId button_id, ClickHandler handler) {
   }
 }
 
-void window_single_repeating_click_subscribe(ButtonId button_id, uint16_t repeat_interval_ms, ClickHandler handler) {
+void window_single_repeating_click_subscribe(ButtonId button_id, uint16_t repeat_interval_ms,
+                                             ClickHandler handler) {
   prv_check_is_in_click_config_provider(window_manager_get_top_window(), "subscribe");
   if (button_id == BUTTON_ID_BACK) {
     PBL_LOG_ERR("Cannot register BUTTON_ID_BACK repeating click handler");
@@ -313,8 +309,8 @@ void window_single_repeating_click_subscribe(ButtonId button_id, uint16_t repeat
   cfg->click.handler = handler;
 }
 
-void window_multi_click_subscribe(ButtonId button_id, uint8_t min_clicks, uint8_t max_clicks, uint16_t timeout,
-                                  bool last_click_only, ClickHandler handler) {
+void window_multi_click_subscribe(ButtonId button_id, uint8_t min_clicks, uint8_t max_clicks,
+                                  uint16_t timeout, bool last_click_only, ClickHandler handler) {
   Window *window = window_manager_get_top_window();
   prv_check_is_in_click_config_provider(window, "subscribe");
   ClickManager *mgr = prv_get_current_click_manager();
@@ -331,7 +327,8 @@ void window_multi_click_subscribe(ButtonId button_id, uint8_t min_clicks, uint8_
   }
 }
 
-void window_long_click_subscribe(ButtonId button_id, uint16_t delay_ms, ClickHandler down_handler, ClickHandler up_handler) {
+void window_long_click_subscribe(ButtonId button_id, uint16_t delay_ms, ClickHandler down_handler,
+                                 ClickHandler up_handler) {
   prv_check_is_in_click_config_provider(window_manager_get_top_window(), "subscribe");
   if (button_id == BUTTON_ID_BACK) {
     // We only want system apps to be able to override the back button for long
@@ -354,7 +351,8 @@ void window_long_click_subscribe(ButtonId button_id, uint16_t delay_ms, ClickHan
   cfg->long_click.release_handler = up_handler;
 }
 
-void window_raw_click_subscribe(ButtonId button_id, ClickHandler down_handler, ClickHandler up_handler, void *context) {
+void window_raw_click_subscribe(ButtonId button_id, ClickHandler down_handler,
+                                ClickHandler up_handler, void *context) {
   prv_check_is_in_click_config_provider(window_manager_get_top_window(), "subscribe");
   if (button_id == BUTTON_ID_BACK) {
     PBL_LOG_ERR("Cannot register BUTTON_ID_BACK raw handler");
@@ -372,9 +370,7 @@ ClickConfigProvider window_get_click_config_provider(const Window *window) {
   return window->click_config_provider;
 }
 
-void *window_get_click_config_context(Window *window) {
-  return window->click_config_context;
-}
+void *window_get_click_config_context(Window *window) { return window->click_config_context; }
 
 void window_set_window_handlers(Window *window, const WindowHandlers *handlers) {
   if (handlers) {
@@ -386,17 +382,11 @@ void window_set_window_handlers_by_value(Window *window, WindowHandlers handlers
   window_set_window_handlers(window, &handlers);
 }
 
-void window_set_user_data(Window *window, void *data) {
-  window->user_data = data;
-}
+void window_set_user_data(Window *window, void *data) { window->user_data = data; }
 
-void* window_get_user_data(const Window *window) {
-  return window->user_data;
-}
+void *window_get_user_data(const Window *window) { return window->user_data; }
 
-struct Layer* window_get_root_layer(const Window *window) {
-  return &((Window *)window)->layer;
-}
+struct Layer *window_get_root_layer(const Window *window) { return &((Window *)window)->layer; }
 
 static void prv_window_load(Window *window) {
   if (window->is_loaded) {
@@ -413,13 +403,14 @@ void window_unload(Window *window) {
   window->is_loaded = false;
   window_call_handler(window, WindowHandlerOffsetUnload);
 
-  // Don't touch window after calling it's unload handler. We allow windows to free themselves on unload.
+  // Don't touch window after calling it's unload handler. We allow windows to free themselves on
+  // unload.
 }
 
 // TODO PBL-1769: deal with window unload. In app deinit? When low memory?
 
 void window_set_on_screen(Window *window, bool new_on_screen, bool call_window_appear_handlers) {
-  PBL_ASSERTN(window != NULL);    // This tripped me up for about a day
+  PBL_ASSERTN(window != NULL);  // This tripped me up for about a day
   if (new_on_screen == window->on_screen) {
     return;
   }
@@ -485,49 +476,35 @@ void window_set_fullscreen(Window *window, bool enabled) {
   layer_mark_dirty(&window->layer);
 }
 
-bool window_get_fullscreen(const Window *window) {
-  return window->is_fullscreen;
-}
+bool window_get_fullscreen(const Window *window) { return window->is_fullscreen; }
 
-void window_set_status_bar_icon(Window *window, const GBitmap *icon) {
-  return;
-}
+void window_set_status_bar_icon(Window *window, const GBitmap *icon) { return; }
 
-bool window_is_on_screen(Window *window) {
-  return (window->on_screen);
-}
+bool window_is_on_screen(Window *window) { return (window->on_screen); }
 
-bool window_is_loaded(Window *window) {
-  return (window->is_loaded);
-}
+bool window_is_loaded(Window *window) { return (window->is_loaded); }
 
 void window_set_transparent(Window *window, bool transparent) {
   window->is_transparent = transparent;
 }
 
-bool window_is_transparent(Window *window) {
-  return window->is_transparent;
-}
+bool window_is_transparent(Window *window) { return window->is_transparent; }
 
-void window_set_focusable(Window *window, bool focusable) {
-  window->is_unfocusable = !focusable;
-}
+void window_set_focusable(Window *window, bool focusable) { window->is_unfocusable = !focusable; }
 
-bool window_is_focusable(Window *window) {
-  return !window->is_unfocusable;
-}
+bool window_is_focusable(Window *window) { return !window->is_unfocusable; }
 
-const char* window_get_debug_name(Window *window) {
+const char *window_get_debug_name(Window *window) {
 #ifndef CONFIG_RELEASE
-    return window->debug_name;
+  return window->debug_name;
 #else
-    return "?";
+  return "?";
   (void)window;
 #endif
 }
 
-// A simple wrapper so feedback can be given to developers if click config subscriptions are made from outside of the
-// click config configuration callback.
+// A simple wrapper so feedback can be given to developers if click config subscriptions are made
+// from outside of the click config configuration callback.
 void window_call_click_config_provider(Window *window, void *context) {
   window->in_click_config_provider = true;
   window->click_config_provider(context);
@@ -537,7 +514,7 @@ void window_call_click_config_provider(Window *window, void *context) {
 static bool prv_find_status_bar_layer(Layer *layer, void *ctx) {
   if (layer_is_status_bar_layer(layer)) {
     *((StatusBarLayer **)ctx) = (StatusBarLayer *)layer;
-    return false; // prevent further iterating
+    return false;  // prevent further iterating
   }
   return true;
 }

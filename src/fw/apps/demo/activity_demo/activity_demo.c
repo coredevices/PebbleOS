@@ -32,8 +32,6 @@ typedef enum {
   AppPersistKeyLapSteps = 0,
 } AppPersistKey;
 
-
-
 // -------------------------------------------------------------------------------
 // Structures
 
@@ -54,8 +52,7 @@ typedef struct {
 static ActivityDemoAppData *s_data;
 
 // -------------------------------------------------------------------------------
-static void prv_convert_seconds_to_time(uint32_t secs_after_midnight, char *text,
-                                        int text_len) {
+static void prv_convert_seconds_to_time(uint32_t secs_after_midnight, char *text, int text_len) {
   uint32_t minutes_after_midnight = secs_after_midnight / SECONDS_PER_MINUTE;
   uint32_t hour = minutes_after_midnight / MINUTES_PER_HOUR;
   uint32_t minute = minutes_after_midnight % MINUTES_PER_HOUR;
@@ -72,7 +69,6 @@ static void prv_display_alert(const char *text) {
   app_expandable_dialog_push(expandable_dialog);
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_display_scalar_history_alert(ActivityDemoAppData *data, const char *title,
                                              ActivityMetric metric) {
@@ -88,7 +84,6 @@ static void prv_display_scalar_history_alert(ActivityDemoAppData *data, const ch
   }
   prv_display_alert(data->debug_card.dialog_text);
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_display_averages_alert(ActivityDemoAppData *data, DayInWeek day) {
@@ -114,7 +109,6 @@ static void prv_display_averages_alert(ActivityDemoAppData *data, DayInWeek day)
   app_free(averages);
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_display_seconds_history_alert(ActivityDemoAppData *data, const char *title,
                                               ActivityMetric metric) {
@@ -133,7 +127,6 @@ static void prv_display_seconds_history_alert(ActivityDemoAppData *data, const c
   prv_display_alert(data->debug_card.dialog_text);
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_set_steps(int32_t steps, ActivityDemoAppData *data) {
   activity_test_set_steps_and_avg(steps, CURRENT_STEP_AVG, DAILY_STEP_AVG);
@@ -142,10 +135,9 @@ static void prv_set_steps(int32_t steps, ActivityDemoAppData *data) {
   data->cur_steps = peek_steps + data->steps_offset;
 
   snprintf(data->debug_card.dialog_text, sizeof(data->debug_card.dialog_text),
-           "Current steps changed to: %"PRIu32"\n", data->cur_steps);
+           "Current steps changed to: %" PRIu32 "\n", data->cur_steps);
   prv_display_alert(data->debug_card.dialog_text);
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_tracking(int index, void *context) {
@@ -165,7 +157,6 @@ static void prv_debug_cmd_tracking(int index, void *context) {
   layer_mark_dirty(simple_menu_layer_get_layer(data->debug_card.menu_layer));
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_activity_insights(int index, void *context) {
   ActivityDemoAppData *data = context;
@@ -177,7 +168,6 @@ static void prv_debug_cmd_activity_insights(int index, void *context) {
   data->debug_card.menu_items[index].subtitle = enabled ? "Enabled" : "Disabled";
   layer_mark_dirty(simple_menu_layer_get_layer(data->debug_card.menu_layer));
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_sleep_insights(int index, void *context) {
@@ -191,7 +181,6 @@ static void prv_debug_cmd_sleep_insights(int index, void *context) {
   layer_mark_dirty(simple_menu_layer_get_layer(data->debug_card.menu_layer));
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_dls_sends(int index, void *context) {
   ActivityDemoAppData *data = context;
@@ -204,13 +193,11 @@ static void prv_debug_cmd_dls_sends(int index, void *context) {
   layer_mark_dirty(simple_menu_layer_get_layer(data->debug_card.menu_layer));
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_set_steps_below_avg(int index, void *context) {
   ActivityDemoAppData *data = context;
   prv_set_steps(CURRENT_STEP_AVG - 250, data);
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_set_steps_at_avg(int index, void *context) {
@@ -218,13 +205,11 @@ static void prv_debug_cmd_set_steps_at_avg(int index, void *context) {
   prv_set_steps(CURRENT_STEP_AVG, data);
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_set_steps_above_avg(int index, void *context) {
   ActivityDemoAppData *data = context;
   prv_set_steps(CURRENT_STEP_AVG + 250, data);
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_set_steps_history(int index, void *context) {
@@ -236,7 +221,6 @@ static void prv_debug_cmd_set_steps_history(int index, void *context) {
   prv_display_alert(data->debug_card.dialog_text);
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_set_sleep_history(int index, void *context) {
   ActivityDemoAppData *data = context;
@@ -246,7 +230,6 @@ static void prv_debug_cmd_set_sleep_history(int index, void *context) {
            "Sleep history changed");
   prv_display_alert(data->debug_card.dialog_text);
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_sleep_file_info(int index, void *context) {
@@ -263,7 +246,6 @@ static void prv_debug_cmd_sleep_file_info(int index, void *context) {
   prv_display_alert(data->debug_card.dialog_text);
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_sleep_file_compact(int index, void *context) {
   ActivityDemoAppData *data = context;
@@ -279,13 +261,11 @@ static void prv_debug_cmd_sleep_file_compact(int index, void *context) {
   prv_display_alert(data->debug_card.dialog_text);
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_resting_calorie_history(int index, void *context) {
   ActivityDemoAppData *data = context;
   prv_display_scalar_history_alert(data, "Resting Calories", ActivityMetricRestingKCalories);
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_active_calorie_history(int index, void *context) {
@@ -293,13 +273,11 @@ static void prv_debug_cmd_active_calorie_history(int index, void *context) {
   prv_display_scalar_history_alert(data, "Active Calories", ActivityMetricActiveKCalories);
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_step_history(int index, void *context) {
   ActivityDemoAppData *data = context;
   prv_display_scalar_history_alert(data, "Steps", ActivityMetricStepCount);
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_sleep_history(int index, void *context) {
@@ -307,20 +285,17 @@ static void prv_debug_cmd_sleep_history(int index, void *context) {
   prv_display_seconds_history_alert(data, "Sleep total", ActivityMetricSleepTotalSeconds);
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_active_time_history(int index, void *context) {
   ActivityDemoAppData *data = context;
   prv_display_seconds_history_alert(data, "Active Time", ActivityMetricActiveSeconds);
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_distance_history(int index, void *context) {
   ActivityDemoAppData *data = context;
   prv_display_scalar_history_alert(data, "Distance(m)", ActivityMetricDistanceMeters);
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_sleep_sessions(int index, void *context) {
@@ -341,11 +316,10 @@ static void prv_debug_cmd_sleep_sessions(int index, void *context) {
   bool success = activity_get_sessions(&num_sessions, sessions);
   if (!success) {
     snprintf(data->debug_card.dialog_text, sizeof(data->debug_card.dialog_text),
-           "Error getting sleep sessions");
+             "Error getting sleep sessions");
     goto exit;
   }
-  snprintf(data->debug_card.dialog_text, sizeof(data->debug_card.dialog_text),
-           "Sleep sessions\n");
+  snprintf(data->debug_card.dialog_text, sizeof(data->debug_card.dialog_text), "Sleep sessions\n");
 
   // Print info on each one
   ActivitySession *session = sessions;
@@ -393,7 +367,6 @@ exit:
   prv_display_alert(data->debug_card.dialog_text);
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_step_sessions(int index, void *context) {
   ActivityDemoAppData *data = context;
@@ -416,8 +389,7 @@ static void prv_debug_cmd_step_sessions(int index, void *context) {
              "Error getting activity sessions");
     goto exit;
   }
-  snprintf(data->debug_card.dialog_text, sizeof(data->debug_card.dialog_text),
-           "Step activities\n");
+  snprintf(data->debug_card.dialog_text, sizeof(data->debug_card.dialog_text), "Step activities\n");
 
   // Print info on each one
   ActivitySession *session = sessions;
@@ -452,18 +424,18 @@ static void prv_debug_cmd_step_sessions(int index, void *context) {
     safe_strcat(data->debug_card.dialog_text, temp, sizeof(data->debug_card.dialog_text));
 
     // Write steps, calories, distance
-    snprintf(temp, sizeof(temp), " %"PRIu16", %"PRIu16"C, %"PRIu16"m\n", session->step_data.steps,
+    snprintf(temp, sizeof(temp), " %" PRIu16 ", %" PRIu16 "C, %" PRIu16 "m\n",
+             session->step_data.steps,
              session->step_data.active_kcalories + session->step_data.resting_kcalories,
              session->step_data.distance_meters);
     safe_strcat(data->debug_card.dialog_text, temp, sizeof(data->debug_card.dialog_text));
   }
 
-  exit:
+exit:
   // Free session info memory
   app_free(sessions);
   prv_display_alert(data->debug_card.dialog_text);
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_weekday_averages(int index, void *context) {
@@ -471,13 +443,11 @@ static void prv_debug_cmd_weekday_averages(int index, void *context) {
   prv_display_averages_alert(data, Monday);
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_weekend_averages(int index, void *context) {
   ActivityDemoAppData *data = context;
   prv_display_averages_alert(data, Saturday);
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_activity_prefs(int index, void *context) {
@@ -491,17 +461,23 @@ static void prv_debug_cmd_activity_prefs(int index, void *context) {
   uint8_t age_years = activity_prefs_get_age_years();
 
   snprintf(data->debug_card.dialog_text, sizeof(data->debug_card.dialog_text),
-      "activity tracking: %"PRIu8"\n"
-      "activity_insights: %"PRIu8"\n"
-      "sleep_insights: %"PRIu8"\n"
-      "gender: %"PRIu8"\n"
-      "height: %"PRIu16"\n"
-      "weight: %"PRIu16"\n"
-      "age: %"PRIu8"", tracking_enabled, activity_insights_enabled, sleep_insights_enabled,
-      gender, height_mm, weight_dag, age_years);
+           "activity tracking: %" PRIu8
+           "\n"
+           "activity_insights: %" PRIu8
+           "\n"
+           "sleep_insights: %" PRIu8
+           "\n"
+           "gender: %" PRIu8
+           "\n"
+           "height: %" PRIu16
+           "\n"
+           "weight: %" PRIu16
+           "\n"
+           "age: %" PRIu8 "",
+           tracking_enabled, activity_insights_enabled, sleep_insights_enabled, gender, height_mm,
+           weight_dag, age_years);
   prv_display_alert(data->debug_card.dialog_text);
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_minute_data(int index, void *context) {
@@ -511,12 +487,10 @@ static void prv_debug_cmd_minute_data(int index, void *context) {
   const uint32_t k_size = 1000;
   HealthMinuteData *minute_data = app_malloc(k_size * sizeof(HealthMinuteData));
   if (!minute_data) {
-    snprintf(data->debug_card.dialog_text, sizeof(data->debug_card.dialog_text),
-             "Out of memory");
+    snprintf(data->debug_card.dialog_text, sizeof(data->debug_card.dialog_text), "Out of memory");
     prv_display_alert(data->debug_card.dialog_text);
     goto exit;
   }
-
 
   // Start as far back as 30 days ago
   time_t utc_start = rtc_get_time() - 30 * SECONDS_PER_DAY;
@@ -526,13 +500,12 @@ static void prv_debug_cmd_minute_data(int index, void *context) {
     time_t prior_start = utc_start;
     success = activity_get_minute_history(minute_data, &chunk, &utc_start);
     if (!success) {
-      snprintf(data->debug_card.dialog_text, sizeof(data->debug_card.dialog_text),
-               "Failed");
+      snprintf(data->debug_card.dialog_text, sizeof(data->debug_card.dialog_text), "Failed");
       prv_display_alert(data->debug_card.dialog_text);
       goto exit;
     }
-    PBL_LOG_DBG("Got %d minutes with UTC of %d (delta of %d min)", (int)chunk,
-            (int)utc_start, (int)(utc_start - prior_start) / SECONDS_PER_MINUTE);
+    PBL_LOG_DBG("Got %d minutes with UTC of %d (delta of %d min)", (int)chunk, (int)utc_start,
+                (int)(utc_start - prior_start) / SECONDS_PER_MINUTE);
     num_records += chunk;
     utc_start += chunk * SECONDS_PER_MINUTE;
     if (chunk == 0) {
@@ -544,7 +517,6 @@ static void prv_debug_cmd_minute_data(int index, void *context) {
   snprintf(data->debug_card.dialog_text, sizeof(data->debug_card.dialog_text),
            "Retrieved %d minute data records", (int)num_records);
 
-
   // Print detail on the last few minutes
   const int k_print_batch_size = k_size;
   PBL_LOG_DBG("Fetching last %d minutes", k_print_batch_size);
@@ -553,21 +525,20 @@ static void prv_debug_cmd_minute_data(int index, void *context) {
   uint32_t chunk = k_print_batch_size;
   success = activity_get_minute_history(minute_data, &chunk, &utc_start);
   if (!success) {
-    snprintf(data->debug_card.dialog_text, sizeof(data->debug_card.dialog_text),
-             "Failed");
+    snprintf(data->debug_card.dialog_text, sizeof(data->debug_card.dialog_text), "Failed");
     prv_display_alert(data->debug_card.dialog_text);
     goto exit;
   }
 
-  PBL_LOG_DBG("Got last %d minutes with UTC of %d (delta of %d min)", (int)chunk,
-          (int)utc_start, (int)(utc_start - prior_start) / SECONDS_PER_MINUTE);
+  PBL_LOG_DBG("Got last %d minutes with UTC of %d (delta of %d min)", (int)chunk, (int)utc_start,
+              (int)(utc_start - prior_start) / SECONDS_PER_MINUTE);
 
   const unsigned int k_num_last_minutes = 6;
   if (chunk >= k_num_last_minutes) {
     for (int i = (int)chunk - k_num_last_minutes; i < (int)chunk; i++) {
       HealthMinuteData *m_data = &minute_data[i];
       char temp[32];
-      snprintf(temp, sizeof(temp), "\n%"PRId8", 0x%"PRIx8", %"PRIu16", %"PRId8" ",
+      snprintf(temp, sizeof(temp), "\n%" PRId8 ", 0x%" PRIx8 ", %" PRIu16 ", %" PRId8 " ",
                m_data->steps, m_data->orientation, m_data->vmc, m_data->light);
       safe_strcat(data->debug_card.dialog_text, temp, sizeof(data->debug_card.dialog_text));
     }
@@ -579,12 +550,10 @@ exit:
   app_free(minute_data);
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_send_fake_logging_record(int index, void *context) {
   activity_test_send_fake_dls_records();
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_push_summary_pins(int index, void *context) {
@@ -598,12 +567,10 @@ static void prv_debug_cmd_push_summary_pins(int index, void *context) {
   prv_display_alert(data->debug_card.dialog_text);
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_push_rewards(int index, void *context) {
   activity_insights_test_push_rewards();
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_push_walk_run(int index, void *context) {
@@ -621,103 +588,124 @@ static void debug_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   const GRect *root_bounds = &window_layer->bounds;
 
-  static SimpleMenuItem menu_items[] = {
-    {
-      .title = "Tracking",
-      .callback = prv_debug_cmd_tracking,
-    }, {
-      .title = "Activity Insights",
-      .callback = prv_debug_cmd_activity_insights,
-    }, {
-      .title = "Sleep Insights",
-      .callback = prv_debug_cmd_sleep_insights,
-    }, {
-      .title = "DLS sends",
-      .callback = prv_debug_cmd_dls_sends,
-    }, {
-      .title = "Step History",
-      .callback = prv_debug_cmd_step_history,
-    }, {
-      .title = "Distance(m) History",
-      .callback = prv_debug_cmd_distance_history,
-    }, {
-      .title = "Resting Calorie History",
-      .callback = prv_debug_cmd_resting_calorie_history,
-    }, {
-      .title = "Active Calorie History",
-      .callback = prv_debug_cmd_active_calorie_history,
-    }, {
-      .title = "Active Minutes History",
-      .callback = prv_debug_cmd_active_time_history,
-    }, {
-      .title = "Sleep History",
-      .callback = prv_debug_cmd_sleep_history,
-    }, {
-      .title = "Sleep Sessions",
-      .callback = prv_debug_cmd_sleep_sessions,
-    }, {
-      .title = "Step activities",
-      .callback = prv_debug_cmd_step_sessions,
-    }, {
-      .title = "Weekday averages",
-      .callback = prv_debug_cmd_weekday_averages,
-    }, {
-      .title = "Weekend averages",
-      .callback = prv_debug_cmd_weekend_averages,
-    }, {
-      .title = "Activity Prefs",
-      .callback = prv_debug_cmd_activity_prefs,
-    }, {
-      .title = "Steps below avg",
-      .callback = prv_debug_cmd_set_steps_below_avg,
-    }, {
-      .title = "Steps at avg",
-      .callback = prv_debug_cmd_set_steps_at_avg,
-    }, {
-      .title = "Steps above avg",
-      .callback = prv_debug_cmd_set_steps_above_avg,
-    }, {
-      .title = "Set step history",
-      .callback = prv_debug_cmd_set_steps_history,
-    }, {
-      .title = "Set sleep history",
-      .callback = prv_debug_cmd_set_sleep_history,
-    }, {
-      .title = "Sleep File Info",
-      .callback = prv_debug_cmd_sleep_file_info,
-    }, {
-      .title = "Sleep File Compact",
-      .callback = prv_debug_cmd_sleep_file_compact,
-    }, {
-      .title = "Read Minute data",
-      .callback = prv_debug_cmd_minute_data,
-    }, {
-      .title = "Send fake DL record",
-      .callback = prv_debug_cmd_send_fake_logging_record,
-    }, {
-      .title = "Push Summary Pins",
-      .callback = prv_debug_cmd_push_summary_pins,
-    }, {
-      .title = "Push Rewards",
-      .callback = prv_debug_cmd_push_rewards,
-    }, {
-      .title = "Walk/Run Notif",
-      .callback = prv_debug_cmd_push_walk_run,
-    }, {
-      .title = "Push Nap Session",
-      .callback = prv_debug_cmd_push_nap_session,
-    }
-  };
+  static SimpleMenuItem menu_items[] = {{
+                                            .title = "Tracking",
+                                            .callback = prv_debug_cmd_tracking,
+                                        },
+                                        {
+                                            .title = "Activity Insights",
+                                            .callback = prv_debug_cmd_activity_insights,
+                                        },
+                                        {
+                                            .title = "Sleep Insights",
+                                            .callback = prv_debug_cmd_sleep_insights,
+                                        },
+                                        {
+                                            .title = "DLS sends",
+                                            .callback = prv_debug_cmd_dls_sends,
+                                        },
+                                        {
+                                            .title = "Step History",
+                                            .callback = prv_debug_cmd_step_history,
+                                        },
+                                        {
+                                            .title = "Distance(m) History",
+                                            .callback = prv_debug_cmd_distance_history,
+                                        },
+                                        {
+                                            .title = "Resting Calorie History",
+                                            .callback = prv_debug_cmd_resting_calorie_history,
+                                        },
+                                        {
+                                            .title = "Active Calorie History",
+                                            .callback = prv_debug_cmd_active_calorie_history,
+                                        },
+                                        {
+                                            .title = "Active Minutes History",
+                                            .callback = prv_debug_cmd_active_time_history,
+                                        },
+                                        {
+                                            .title = "Sleep History",
+                                            .callback = prv_debug_cmd_sleep_history,
+                                        },
+                                        {
+                                            .title = "Sleep Sessions",
+                                            .callback = prv_debug_cmd_sleep_sessions,
+                                        },
+                                        {
+                                            .title = "Step activities",
+                                            .callback = prv_debug_cmd_step_sessions,
+                                        },
+                                        {
+                                            .title = "Weekday averages",
+                                            .callback = prv_debug_cmd_weekday_averages,
+                                        },
+                                        {
+                                            .title = "Weekend averages",
+                                            .callback = prv_debug_cmd_weekend_averages,
+                                        },
+                                        {
+                                            .title = "Activity Prefs",
+                                            .callback = prv_debug_cmd_activity_prefs,
+                                        },
+                                        {
+                                            .title = "Steps below avg",
+                                            .callback = prv_debug_cmd_set_steps_below_avg,
+                                        },
+                                        {
+                                            .title = "Steps at avg",
+                                            .callback = prv_debug_cmd_set_steps_at_avg,
+                                        },
+                                        {
+                                            .title = "Steps above avg",
+                                            .callback = prv_debug_cmd_set_steps_above_avg,
+                                        },
+                                        {
+                                            .title = "Set step history",
+                                            .callback = prv_debug_cmd_set_steps_history,
+                                        },
+                                        {
+                                            .title = "Set sleep history",
+                                            .callback = prv_debug_cmd_set_sleep_history,
+                                        },
+                                        {
+                                            .title = "Sleep File Info",
+                                            .callback = prv_debug_cmd_sleep_file_info,
+                                        },
+                                        {
+                                            .title = "Sleep File Compact",
+                                            .callback = prv_debug_cmd_sleep_file_compact,
+                                        },
+                                        {
+                                            .title = "Read Minute data",
+                                            .callback = prv_debug_cmd_minute_data,
+                                        },
+                                        {
+                                            .title = "Send fake DL record",
+                                            .callback = prv_debug_cmd_send_fake_logging_record,
+                                        },
+                                        {
+                                            .title = "Push Summary Pins",
+                                            .callback = prv_debug_cmd_push_summary_pins,
+                                        },
+                                        {
+                                            .title = "Push Rewards",
+                                            .callback = prv_debug_cmd_push_rewards,
+                                        },
+                                        {
+                                            .title = "Walk/Run Notif",
+                                            .callback = prv_debug_cmd_push_walk_run,
+                                        },
+                                        {
+                                            .title = "Push Nap Session",
+                                            .callback = prv_debug_cmd_push_nap_session,
+                                        }};
   static const SimpleMenuSection sections[] = {
-    {
-      .items = menu_items,
-      .num_items = ARRAY_LENGTH(menu_items)
-    }
-  };
+      {.items = menu_items, .num_items = ARRAY_LENGTH(menu_items)}};
 
   data->debug_card.menu_items = menu_items;
-  data->debug_card.menu_layer = simple_menu_layer_create(*root_bounds, window, sections,
-                                                         ARRAY_LENGTH(sections), data);
+  data->debug_card.menu_layer =
+      simple_menu_layer_create(*root_bounds, window, sections, ARRAY_LENGTH(sections), data);
   layer_add_child(window_layer, simple_menu_layer_get_layer(data->debug_card.menu_layer));
 
   // Init status
@@ -729,13 +717,11 @@ static void debug_window_load(Window *window) {
   data->debug_card.menu_items[3].subtitle = dls_get_send_enable() ? "Enabled" : "Disabled";
 }
 
-
 // -------------------------------------------------------------------------------
 static void debug_window_unload(Window *window) {
   ActivityDemoAppData *data = window_get_user_data(window);
   simple_menu_layer_destroy(data->debug_card.menu_layer);
 }
-
 
 // -------------------------------------------------------------------------------
 static void deinit(void) {
@@ -743,7 +729,6 @@ static void deinit(void) {
   window_destroy(data->debug_window);
   app_free(data);
 }
-
 
 // -------------------------------------------------------------------------------
 static void init(void) {
@@ -755,14 +740,13 @@ static void init(void) {
   // Debug window
   data->debug_window = window_create();
   window_set_user_data(data->debug_window, data);
-  window_set_window_handlers(data->debug_window, &(WindowHandlers) {
-    .load = debug_window_load,
-    .unload = debug_window_unload,
-  });
+  window_set_window_handlers(data->debug_window, &(WindowHandlers){
+                                                     .load = debug_window_load,
+                                                     .unload = debug_window_unload,
+                                                 });
 
   app_window_stack_push(data->debug_window, true /* Animated */);
 }
-
 
 // -------------------------------------------------------------------------------
 static void s_main(void) {
@@ -771,15 +755,13 @@ static void s_main(void) {
   deinit();
 }
 
-
 // -------------------------------------------------------------------------------
-const PebbleProcessMd* activity_demo_get_app_info(void) {
+const PebbleProcessMd *activity_demo_get_app_info(void) {
   static const PebbleProcessMdSystem s_activity_demo_app_info = {
-    .common.main_func = &s_main,
-    // UUID: 60206d97-818b-4f42-87ae-48fde623608d
-    .common.uuid = {0x60, 0x20, 0x6d, 0x97, 0x81, 0x8b, 0x4f, 0x42, 0x87, 0xae, 0x48, 0xfd, 0xe6,
-                    0x23, 0x60, 0x8d},
-    .name = "ActivityDemo"
-  };
-  return (const PebbleProcessMd*) &s_activity_demo_app_info;
+      .common.main_func = &s_main,
+      // UUID: 60206d97-818b-4f42-87ae-48fde623608d
+      .common.uuid = {0x60, 0x20, 0x6d, 0x97, 0x81, 0x8b, 0x4f, 0x42, 0x87, 0xae, 0x48, 0xfd, 0xe6,
+                      0x23, 0x60, 0x8d},
+      .name = "ActivityDemo"};
+  return (const PebbleProcessMd *)&s_activity_demo_app_info;
 }

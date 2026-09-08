@@ -7,10 +7,6 @@
 
 #include <stdint.h>
 
-pbl_tick_t pbl_ms_to_ticks(uint32_t ms) {
-  return ((uint64_t)ms * PBL_TICK_HZ) / 1000;
-}
+pbl_tick_t pbl_ms_to_ticks(uint32_t ms) { return ((uint64_t)ms * PBL_TICK_HZ) / 1000; }
 
-uint32_t pbl_ticks_to_ms(pbl_tick_t ticks) {
-  return ((uint64_t)ticks * 1000) / PBL_TICK_HZ;
-}
+uint32_t pbl_ticks_to_ms(pbl_tick_t ticks) { return ((uint64_t)ticks * 1000) / PBL_TICK_HZ; }

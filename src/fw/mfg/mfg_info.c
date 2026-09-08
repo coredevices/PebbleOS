@@ -15,7 +15,8 @@ void mfg_info_get_serialnumber(char *serial_number, size_t serial_number_size) {
     // strncpy should pad the end of strings with nulls if there is space, but
     // everywhere that seems to use OTP or registry strings seems to pad the end
     // with a null-term.
-    // Note: making an assumption here that the serial number is always going to the MFG_SERIAL_NUMBER_SIZE characters
+    // Note: making an assumption here that the serial number is always going to the
+    // MFG_SERIAL_NUMBER_SIZE characters
     serial_number[MFG_SERIAL_NUMBER_SIZE] = '\0';
   }
 }
@@ -35,4 +36,3 @@ void mfg_info_get_hw_version(char *hw_version, size_t hw_version_size) {
     hw_version[MFG_HW_VERSION_SIZE] = '\0';
   }
 }
-

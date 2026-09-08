@@ -13,8 +13,8 @@
 // gcolor_get_luminance() returns a 2-bit value (0..3); scale to 0..255.
 #define ALS_COMP_LUM_TO_255(l) ((uint32_t)(l) * 85u)
 
-uint16_t als_compensation_region_luminance(const GBitmap *fb, int16_t rx, int16_t ry,
-                                           int16_t rw, int16_t rh) {
+uint16_t als_compensation_region_luminance(const GBitmap *fb, int16_t rx, int16_t ry, int16_t rw,
+                                           int16_t rh) {
   if (fb == NULL || rw <= 0 || rh <= 0) {
     return 256;  // empty/unmeasured region -> unity gain
   }
@@ -40,8 +40,8 @@ uint16_t als_compensation_region_luminance(const GBitmap *fb, int16_t rx, int16_
   if (count == 0) {
     return 256;
   }
-  const uint32_t avg255 = sum / count;          // 0..255
-  return (uint16_t)((avg255 * 256u) / 255u);    // 0..256 (white -> 256)
+  const uint32_t avg255 = sum / count;        // 0..255
+  return (uint16_t)((avg255 * 256u) / 255u);  // 0..256 (white -> 256)
 }
 
 #endif  // CONFIG_ALS_SCREEN_COMPENSATION

@@ -11,9 +11,9 @@
 #include "pbl/util/size.h"
 
 static const uint32_t prv_sec_regs[] = {
-  0x00001000,
-  0x00002000,
-  0x00003000,
+    0x00001000,
+    0x00002000,
+    0x00003000,
 };
 
 static QSPIFlashPart QSPI_FLASH_PART = {
@@ -60,11 +60,12 @@ static QSPIFlashPart QSPI_FLASH_PART = {
         {
             .fast_read = 4,
         },
-    .sec_registers = {
-        .sec_regs = prv_sec_regs,
-        .num_sec_regs = ARRAY_LENGTH(prv_sec_regs),
-        .sec_reg_size = 1024,
-    },
+    .sec_registers =
+        {
+            .sec_regs = prv_sec_regs,
+            .num_sec_regs = ARRAY_LENGTH(prv_sec_regs),
+            .sec_reg_size = 1024,
+        },
     .supports_block_lock = false,
     .reset_latency_ms = 12,
     .suspend_to_read_latency_us = 20,
@@ -91,9 +92,7 @@ status_t flash_impl_write_protect(FlashAddress start_sector, FlashAddress end_se
   return S_SUCCESS;
 }
 
-status_t flash_impl_unprotect(void) {
-  return S_SUCCESS;
-}
+status_t flash_impl_unprotect(void) { return S_SUCCESS; }
 
 status_t flash_impl_init(bool coredump_mode) {
   qspi_flash_init(QSPI_FLASH, &QSPI_FLASH_PART, coredump_mode);

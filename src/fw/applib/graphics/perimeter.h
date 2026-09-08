@@ -17,4 +17,4 @@ typedef struct GPerimeter {
 } GPerimeter;
 
 //! @internal
-extern const GPerimeter * const g_perimeter_for_display;
+extern const GPerimeter *const g_perimeter_for_display;

@@ -15,7 +15,8 @@ typedef enum BootBitValue {
   BOOT_BIT_RECOVERY_LOAD_FAIL_STRIKE_ONE = 0x1 << 5,
   BOOT_BIT_RECOVERY_LOAD_FAIL_STRIKE_TWO = 0x1 << 6,
   BOOT_BIT_RECOVERY_START_IN_PROGRESS = 0x1 << 7,
-  BOOT_BIT_STANDBY_MODE_REQUESTED = 0x1 << 8, //!< Bootloader enter standby immediately after reset.
+  BOOT_BIT_STANDBY_MODE_REQUESTED = 0x1
+                                    << 8,  //!< Bootloader enter standby immediately after reset.
   BOOT_BIT_SOFTWARE_FAILURE_OCCURRED = 0x1 << 9,
   BOOT_BIT_NEW_SYSTEM_RESOURCES_AVAILABLE = 0x1 << 10,
   BOOT_BIT_RESET_LOOP_DETECT_ONE = 0x1 << 11,
@@ -26,7 +27,7 @@ typedef enum BootBitValue {
   BOOT_BIT_STANDBY_MODE_ENTERED = 0x1 << 16,
   BOOT_BIT_FORCE_PRF = 0x1 << 17,
   BOOT_BIT_NEW_PRF_AVAILABLE = 0x1 << 18,
-  BOOT_BIT_SHUTDOWN_REQUESTED = 0x1 << 19, //!< Bootloader hard power-off instead of jumping to fw.
+  BOOT_BIT_SHUTDOWN_REQUESTED = 0x1 << 19,  //!< Bootloader hard power-off instead of jumping to fw.
 } BootBitValue;
 
 void boot_bit_init();

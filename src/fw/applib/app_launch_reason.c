@@ -6,14 +6,9 @@
 #include "process_state/app_state/app_state.h"
 #include "syscall/syscall.h"
 
-AppLaunchReason app_launch_reason(void) {
-  return sys_process_get_launch_reason();
-}
+AppLaunchReason app_launch_reason(void) { return sys_process_get_launch_reason(); }
 
-
-uint32_t app_launch_get_args(void) {
-  return sys_process_get_launch_args();
-}
+uint32_t app_launch_get_args(void) { return sys_process_get_launch_args(); }
 
 AppQuickLaunchAction app_launch_get_quick_launch_action(void) {
   return sys_process_get_quick_launch_action();

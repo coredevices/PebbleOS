@@ -23,26 +23,22 @@
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
-
 // ---------------------------------------------------------------------------------------
 // Storage converters. These convert metrics from their storage type (ActivityScalarStore,
 // which is only 16-bits) into the uint32_t value returned by activity_get_metric. For example,
 // we might convert minutes to seconds.
-static uint32_t prv_convert_none(ActivityScalarStore in) {
-  return in;
-}
+static uint32_t prv_convert_none(ActivityScalarStore in) { return in; }
 
 static uint32_t prv_convert_minutes_to_seconds(ActivityScalarStore in) {
   return (uint32_t)in * SECONDS_PER_MINUTE;
 }
 
-
 // ------------------------------------------------------------------------------------------------
 // Returns info about each metric we capture
 void activity_metrics_prv_get_metric_info(ActivityMetric metric, ActivityMetricInfo *info) {
   ActivityState *state = activity_private_state();
-  *info = (ActivityMetricInfo) {
-    .converter = prv_convert_none,
+  *info = (ActivityMetricInfo){
+      .converter = prv_convert_none,
   };
   switch (metric) {
     case ActivityMetricStepCount:
@@ -144,7 +140,6 @@ void activity_metrics_prv_get_metric_info(ActivityMetric metric, ActivityMetricI
   }
 }
 
-
 // ----------------------------------------------------------------------------------------------
 // Set the value of a given metric.
 // For the current day the cached value is only overridden when `force` is true or the new value is
@@ -192,15 +187,15 @@ static void prv_set_metric(ActivityMetric metric, DayInWeek wday, int32_t value,
       goto unlock;
     }
     ActivitySettingsValueHistory history;
-    settings_file_get(file, &m_info.settings_key, sizeof(m_info.settings_key),
-                      &history, sizeof(history));
+    settings_file_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
+                      sizeof(history));
 
     int day = positive_modulo(cur_wday - wday, DAYS_PER_WEEK);
     if ((int32_t)history.values[day] != value) {
       history.values[day] = value;
 
-      settings_file_set(file, &m_info.settings_key, sizeof(m_info.settings_key),
-                        &history, sizeof(history));
+      settings_file_set(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
+                        sizeof(history));
     }
     activity_private_settings_close(file);
   }
@@ -208,13 +203,15 @@ static void prv_set_metric(ActivityMetric metric, DayInWeek wday, int32_t value,
   if (current_value_updated) {
     if (metric == ActivityMetricStepCount) {
       PebbleEvent e = {
-        .type = PEBBLE_HEALTH_SERVICE_EVENT,
-        .health_event = {
-          .type = HealthEventMovementUpdate,
-          .data.movement_update = {
-            .steps = value,
-          },
-        },
+          .type = PEBBLE_HEALTH_SERVICE_EVENT,
+          .health_event =
+              {
+                  .type = HealthEventMovementUpdate,
+                  .data.movement_update =
+                      {
+                          .steps = value,
+                      },
+              },
       };
       event_put(&e);
     } else if (metric == ActivityMetricDistanceMeters) {
@@ -231,7 +228,6 @@ unlock:
   pbl_mutex_unlock(&state->mutex);
 }
 
-
 // ----------------------------------------------------------------------------------------------
 // Set the value of a given metric. The current day's value is only overridden if the new value is
 // higher; historical values can be overridden with any value.
@@ -239,14 +235,12 @@ void activity_metrics_prv_set_metric(ActivityMetric metric, DayInWeek wday, int3
   prv_set_metric(metric, wday, value, false /* force */);
 }
 
-
 // ----------------------------------------------------------------------------------------------
 // Force the current day's value of a metric to an exact value (may also decrease it). Intended for
 // QEMU/test injection of health data.
 void activity_metrics_set_metric_exact(ActivityMetric metric, int32_t value) {
   prv_set_metric(metric, time_util_get_day_in_week(rtc_get_time()), value, true /* force */);
 }
-
 
 // ----------------------------------------------------------------------------------------------
 // Shift the history back one day and reset the current day's stats.
@@ -263,8 +257,7 @@ static void NOINLINE prv_shift_history(time_t utc_now) {
     ActivitySettingsValueHistory history;
     ActivityMetricInfo m_info;
 
-    for (ActivityMetric metric = ActivityMetricFirst; metric < ActivityMetricNumMetrics;
-         metric++) {
+    for (ActivityMetric metric = ActivityMetricFirst; metric < ActivityMetricNumMetrics; metric++) {
       activity_metrics_prv_get_metric_info(metric, &m_info);
 
       // Shift the history
@@ -293,7 +286,6 @@ unlock:
   pbl_mutex_unlock(&state->mutex);
 }
 
-
 // --------------------------------------------------------------------------------------------
 // Called from activity_get_metric() every time a client asks for a metric. Also called
 // periodically from the minute handler before we save current metrics to setting.
@@ -301,17 +293,14 @@ static void prv_update_real_time_derived_metrics(void) {
   ActivityState *state = activity_private_state();
   pbl_mutex_lock(&state->mutex, PBL_FOREVER);
   {
-    state->step_data.distance_meters = ROUND(state->distance_mm,
-                                                       MM_PER_METER);
-    ACTIVITY_LOG_DEBUG("new distance: %"PRIu32"", state->step_data.distance_meters);
+    state->step_data.distance_meters = ROUND(state->distance_mm, MM_PER_METER);
+    ACTIVITY_LOG_DEBUG("new distance: %" PRIu32 "", state->step_data.distance_meters);
 
-    state->step_data.active_kcalories = ROUND(state->active_calories,
-                                                        ACTIVITY_CALORIES_PER_KCAL);
-    ACTIVITY_LOG_DEBUG("new active kcal: %"PRIu32"", state->step_data.active_kcalories);
+    state->step_data.active_kcalories = ROUND(state->active_calories, ACTIVITY_CALORIES_PER_KCAL);
+    ACTIVITY_LOG_DEBUG("new active kcal: %" PRIu32 "", state->step_data.active_kcalories);
   }
   pbl_mutex_unlock(&state->mutex);
 }
-
 
 // --------------------------------------------------------------------------------------------
 // Called periodically from the minute handler to update step derived metrics that do not have to
@@ -326,54 +315,45 @@ static void NOINLINE prv_update_step_derived_metrics(time_t utc_sec) {
     // negative steps to 0 when computing the metrics below
     uint16_t steps_in_minute = 0;
     if (state->step_data.steps >= state->steps_per_minute_last_steps) {
-      steps_in_minute = state->step_data.steps
-                        - state->steps_per_minute_last_steps;
+      steps_in_minute = state->step_data.steps - state->steps_per_minute_last_steps;
     }
 
     // Update the walking rate
     state->steps_per_minute = steps_in_minute;
     state->steps_per_minute_last_steps = state->step_data.steps;
-    ACTIVITY_LOG_DEBUG("new steps/minute: %"PRIu32"", state->steps_per_minute);
+    ACTIVITY_LOG_DEBUG("new steps/minute: %" PRIu32 "", state->steps_per_minute);
 
     // Update the number of stepping minutes and the last active minute
     if (state->steps_per_minute >= ACTIVITY_ACTIVE_MINUTE_MIN_STEPS) {
       state->step_data.step_minutes++;
-      ACTIVITY_LOG_DEBUG("new step minutes: %"PRIu32"", state->step_data.step_minutes);
+      ACTIVITY_LOG_DEBUG("new step minutes: %" PRIu32 "", state->step_data.step_minutes);
 
       // The prior minute was the most recent active one
       state->last_active_minute = time_util_minute_of_day_adjust(minute_of_day, -1);
-      ACTIVITY_LOG_DEBUG("last active minute: %"PRIu16"", state->last_active_minute);
+      ACTIVITY_LOG_DEBUG("last active minute: %" PRIu16 "", state->last_active_minute);
     }
 
     // Update the resting calories
     state->resting_calories = activity_private_compute_resting_calories(minute_of_day);
-    state->step_data.resting_kcalories = ROUND(state->resting_calories,
-                                                         ACTIVITY_CALORIES_PER_KCAL);
-    ACTIVITY_LOG_DEBUG("resting kcalories: %"PRIu32"",
-                       state->step_data.resting_kcalories);
+    state->step_data.resting_kcalories = ROUND(state->resting_calories, ACTIVITY_CALORIES_PER_KCAL);
+    ACTIVITY_LOG_DEBUG("resting kcalories: %" PRIu32 "", state->step_data.resting_kcalories);
   }
   pbl_mutex_unlock(&state->mutex);
 }
-
 
 // ------------------------------------------------------------------------------------------
 // Pushes an HR Median/Filtered/LastStable event.
 static void prv_push_median_hr_event(uint8_t median_hr) {
   if (median_hr > 0) {
-    PebbleEvent event = {
-      .type = PEBBLE_HEALTH_SERVICE_EVENT,
-      .health_event = {
-        .type = HealthEventHeartRateUpdate,
-        .data.heart_rate_update = {
-          .current_bpm = median_hr,
-          .is_filtered = true,
-        }
-      }
-    };
+    PebbleEvent event = {.type = PEBBLE_HEALTH_SERVICE_EVENT,
+                         .health_event = {.type = HealthEventHeartRateUpdate,
+                                          .data.heart_rate_update = {
+                                              .current_bpm = median_hr,
+                                              .is_filtered = true,
+                                          }}};
     event_put(&event);
   }
 }
-
 
 // ------------------------------------------------------------------------------------------
 // Calculates and stores the most recent minutes median heart rate value.
@@ -394,8 +374,7 @@ static void prv_update_median_hr_bpm(ActivityState *state) {
     }
 
     // Calculate the total weight
-    stats_calculate_basic(StatsBasicOp_Sum, weight_buf, hr->num_samples, NULL, NULL,
-                          &total_weight);
+    stats_calculate_basic(StatsBasicOp_Sum, weight_buf, hr->num_samples, NULL, NULL, &total_weight);
 
     // Calculate the weighted median
     median = stats_calculate_weighted_median(sample_buf, weight_buf, num_hr_samples);
@@ -432,8 +411,8 @@ static void prv_write_hr_zone_info_to_flash(HRZone zone) {
 
   ActivityMetricInfo m_info;
   activity_metrics_prv_get_metric_info(metric, &m_info);
-  settings_file_set(file, &m_info.settings_key, sizeof(m_info.settings_key),
-                    m_info.value_p, sizeof(*m_info.value_p));
+  settings_file_set(file, &m_info.settings_key, sizeof(m_info.settings_key), m_info.value_p,
+                    sizeof(*m_info.value_p));
   activity_private_settings_close(file);
 }
 
@@ -503,13 +482,11 @@ void activity_metrics_prv_minute_handler(time_t utc_sec) {
   prv_update_hr_derived_metrics();
 }
 
-
 // --------------------------------------------------------------------------------------------
 ActivityScalarStore activity_metrics_prv_steps_per_minute(void) {
   ActivityState *state = activity_private_state();
   return state->steps_per_minute;
 }
-
 
 // --------------------------------------------------------------------------------------------
 uint32_t activity_metrics_prv_get_distance_mm(void) {
@@ -517,20 +494,17 @@ uint32_t activity_metrics_prv_get_distance_mm(void) {
   return state->distance_mm;
 }
 
-
 // --------------------------------------------------------------------------------------------
 uint32_t activity_metrics_prv_get_resting_calories(void) {
   ActivityState *state = activity_private_state();
   return state->resting_calories;
 }
 
-
 // --------------------------------------------------------------------------------------------
 uint32_t activity_metrics_prv_get_active_calories(void) {
   ActivityState *state = activity_private_state();
   return state->active_calories;
 }
-
 
 // --------------------------------------------------------------------------------------------
 uint32_t activity_metrics_prv_get_steps(void) {
@@ -543,12 +517,8 @@ static uint8_t prv_get_hr_quality_weight(HRMQuality quality) {
     HRMQuality quality;
     uint8_t weight_x100;
   } s_hr_quality_weights_x100[] = {
-    {HRMQuality_OffWrist, 0 },
-    {HRMQuality_Worst, 1 },
-    {HRMQuality_Poor, 1 },
-    {HRMQuality_Acceptable, 60 },
-    {HRMQuality_Good, 65 },
-    {HRMQuality_Excellent, 85 },
+      {HRMQuality_OffWrist, 0},    {HRMQuality_Worst, 1}, {HRMQuality_Poor, 1},
+      {HRMQuality_Acceptable, 60}, {HRMQuality_Good, 65}, {HRMQuality_Excellent, 85},
   };
 
   for (size_t i = 0; i < ARRAY_LENGTH(s_hr_quality_weights_x100); i++) {
@@ -613,8 +583,7 @@ bool activity_metrics_prv_is_hrm_offwrist(time_t now_utc) {
   bool offwrist = false;
   pbl_mutex_lock(&state->mutex, PBL_FOREVER);
   {
-    if (state->hr.last_quality_event_utc != 0 &&
-        state->hr.last_quality_was_offwrist &&
+    if (state->hr.last_quality_event_utc != 0 && state->hr.last_quality_was_offwrist &&
         (now_utc - state->hr.last_quality_event_utc) <= ACTIVITY_HRM_OFFWRIST_STALE_SEC) {
       offwrist = true;
     }
@@ -635,8 +604,7 @@ void activity_metrics_prv_add_median_hr_sample(PebbleHRMEvent *hrm_event, time_t
       // is terribly wrong.
       PBL_ASSERT(state->hr.num_samples <= ACTIVITY_MAX_HR_SAMPLES, "Too many samples");
       state->hr.samples[state->hr.num_samples] = hrm_event->bpm.bpm;
-      state->hr.weights[state->hr.num_samples] =
-          prv_get_hr_quality_weight(hrm_event->bpm.quality);
+      state->hr.weights[state->hr.num_samples] = prv_get_hr_quality_weight(hrm_event->bpm.quality);
       if (hrm_event->bpm.quality >= HRMQuality_Good) {
         state->hr.num_good_quality_samples++;
       }
@@ -663,19 +631,18 @@ void activity_metrics_prv_add_median_hr_sample(PebbleHRMEvent *hrm_event, time_t
 void activity_metrics_prv_init(SettingsFile *file, time_t utc_now) {
   ActivityState *state = activity_private_state();
   // Roll back the history if needed and init each of the metrics for today
-  for (ActivityMetric metric = ActivityMetricFirst; metric < ActivityMetricNumMetrics;
-       metric++) {
+  for (ActivityMetric metric = ActivityMetricFirst; metric < ActivityMetricNumMetrics; metric++) {
     ActivityMetricInfo m_info;
     activity_metrics_prv_get_metric_info(metric, &m_info);
     if (m_info.has_history) {
       PBL_ASSERTN(m_info.value_p);
-      ActivitySettingsValueHistory old_history = { 0 };
-      ActivitySettingsValueHistory new_history = { 0 };
+      ActivitySettingsValueHistory old_history = {0};
+      ActivitySettingsValueHistory new_history = {0};
 
       // In case we change the length of the history, fetch the old size
       int fetch_size = sizeof(old_history);
       fetch_size = MIN(fetch_size, settings_file_get_len(file, &m_info.settings_key,
-                       sizeof(m_info.settings_key)));
+                                                         sizeof(m_info.settings_key)));
       settings_file_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &old_history,
                         fetch_size);
 
@@ -714,8 +681,8 @@ void activity_metrics_prv_init(SettingsFile *file, time_t utc_now) {
       *m_info.value_p = new_history.values[0];
 
       // Only write to flash if the values change or this is a new day (to update the timestamp)
-      if (memcmp(old_history.values, new_history.values, sizeof(old_history.values)) != 0
-          || old_age != 0) {
+      if (memcmp(old_history.values, new_history.values, sizeof(old_history.values)) != 0 ||
+          old_age != 0) {
         // Write out the updated history
         settings_file_set(file, &m_info.settings_key, sizeof(m_info.settings_key), &new_history,
                           sizeof(new_history));
@@ -729,7 +696,6 @@ void activity_metrics_prv_init(SettingsFile *file, time_t utc_now) {
     }
   }
 }
-
 
 // ------------------------------------------------------------------------------------------------
 bool activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *history) {
@@ -766,7 +732,7 @@ bool activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *h
       PBL_ASSERTN(m_info.value_u32p && (m_info.converter == prv_convert_none));
       history[0] = *m_info.value_u32p;
     }
-    ACTIVITY_LOG_DEBUG("get current metric %"PRIi32" : %"PRIi32"", (int32_t)metric, history[0]);
+    ACTIVITY_LOG_DEBUG("get current metric %" PRIi32 " : %" PRIi32 "", (int32_t)metric, history[0]);
 
     // Look up historical values
     if (history_len > 1) {
@@ -782,8 +748,8 @@ bool activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *h
                         sizeof(setting_history));
       for (uint32_t i = 1; i < history_len; i++) {
         history[i] = m_info.converter(setting_history.values[i]);
-        ACTIVITY_LOG_DEBUG("get metric %"PRIi32" %"PRIu32" days ago: %"PRIi32"", (int32_t)metric,
-                           i, history[i]);
+        ACTIVITY_LOG_DEBUG("get metric %" PRIi32 " %" PRIu32 " days ago: %" PRIi32 "",
+                           (int32_t)metric, i, history[i]);
       }
       activity_private_settings_close(file);
     }
@@ -793,10 +759,9 @@ unlock:
   return success;
 }
 
-
 // ------------------------------------------------------------------------------------------------
-DEFINE_SYSCALL(bool, sys_activity_get_metric, ActivityMetric metric,
-               uint32_t history_len, int32_t *history) {
+DEFINE_SYSCALL(bool, sys_activity_get_metric, ActivityMetric metric, uint32_t history_len,
+               int32_t *history) {
   if (PRIVILEGE_WAS_ELEVATED) {
     // activity_get_metric() unconditionally writes history_len int32_t entries
     // to `history` before later clamping to ACTIVITY_HISTORY_DAYS. A huge

@@ -19,28 +19,29 @@ struct WindowStack;
 //!   @addtogroup Window
 //! \brief The basic building block of the user interface
 //!
-//! Windows are the top-level elements in the UI hierarchy and the basic building blocks for a Pebble
-//! UI. A single window is always displayed at a time on Pebble, with the exception of when animating
-//! from one window to the other, which, in that case, is managed by the window stack. You can stack
-//! windows on top of each other, but only the topmost window will be visible.
+//! Windows are the top-level elements in the UI hierarchy and the basic building blocks for a
+//! Pebble UI. A single window is always displayed at a time on Pebble, with the exception of when
+//! animating from one window to the other, which, in that case, is managed by the window stack. You
+//! can stack windows on top of each other, but only the topmost window will be visible.
 //!
-//! Users wearing a Pebble typically interact with the content and media displayed in a window, clicking
-//! and pressing buttons on the watch, depending on what they see and wish to respond to in a window.
+//! Users wearing a Pebble typically interact with the content and media displayed in a window,
+//! clicking and pressing buttons on the watch, depending on what they see and wish to respond to in
+//! a window.
 //!
-//! Windows serve to display a hierarchy of layers on the screen and handle user input. When a window is
-//! visible, its root Layer (and all its child layers) are drawn onto the screen automatically.
+//! Windows serve to display a hierarchy of layers on the screen and handle user input. When a
+//! window is visible, its root Layer (and all its child layers) are drawn onto the screen
+//! automatically.
 //!
-//! You need a window, which always fills the entire screen, to display images, text, and graphics in
-//! your Pebble app. A layer by itself doesn’t display on Pebble; it must be in the current window’s
-//! layer hierarchy to be visible.
+//! You need a window, which always fills the entire screen, to display images, text, and graphics
+//! in your Pebble app. A layer by itself doesn’t display on Pebble; it must be in the current
+//! window’s layer hierarchy to be visible.
 //!
-//! The Window Stack serves as the global manager of what window is presented and makes sure that input
-//! events are forwarded to the topmost window.
+//! The Window Stack serves as the global manager of what window is presented and makes sure that
+//! input events are forwarded to the topmost window.
 //!
 //! Refer to the \htmlinclude UiFramework.html (chapter "Window") for a conceptual
 //! overview of Window, the Window Stack and relevant code examples.
 //!   @{
-
 
 //! Function signature for a handler that deals with transition events of a window.
 //! @see WindowHandlers
@@ -104,35 +105,35 @@ typedef struct Window {
   //! @see \ref window_set_background_color()
   GColor8 background_color;
 
-  bool is_render_scheduled:1;
-  bool on_screen:1;
-  bool is_loaded:1;
-  bool overrides_back_button:1;
-  bool is_fullscreen:1;
-  bool in_click_config_provider:1;
+  bool is_render_scheduled : 1;
+  bool on_screen : 1;
+  bool is_loaded : 1;
+  bool overrides_back_button : 1;
+  bool is_fullscreen : 1;
+  bool in_click_config_provider : 1;
 
   //! @internal
   //! If set, the touch-nav bridge must not emulate buttons for this window (Tier-2 is off).
   //! A Tier-1 widget sets this so its own recognizers, not the system bridge, drive the gesture.
-  bool touch_bridge_disabled:1;
+  bool touch_bridge_disabled : 1;
 
   //! @internal
   //! If set, the touch-nav bridge only synthesizes a button for a tap landing on an action-bar
   //! icon zone; a tap anywhere else is dropped instead of falling back to SELECT. Swipes are
   //! unaffected. @see \ref window_set_touch_tap_requires_action_bar()
-  bool touch_tap_requires_action_bar:1;
+  bool touch_tap_requires_action_bar : 1;
 
   //! @internal
   //! If a click config provider was changed while the window was covered by a modal,
   //! this flag is used to indicate that it should be called when uncovered.
-  bool is_waiting_for_click_config:1;
+  bool is_waiting_for_click_config : 1;
 
   //! @internal
   //! If the window has configured its click config provider. This flag is used to automatically
   //! click configure a window if a modal from above relinquishes focus either by going off screen
   //! or becoming unfocusable. This is necessary because windows can be unfocusable, thus whether
   //! they are on screen does not indicate whether their click has been configured.
-  bool is_click_configured:1;
+  bool is_click_configured : 1;
 
   //! @internal
   //! If the window can visually expose window stacks below it. This property decides whether the
@@ -142,7 +143,7 @@ typedef struct Window {
   //! the top windows of window stacks below it, not windows within the same window stack.
   //! @note Currently, the app window stack is the lowest stack, is_transparent has no affect on
   //! app windows.
-  bool is_transparent:1;
+  bool is_transparent : 1;
 
   //! @internal
   //! If the window passes input to the next window stack with a top focusable window. A window
@@ -150,14 +151,14 @@ typedef struct Window {
   //! not the top window in their respective window stack never receive input, therefore
   //! unfocusable windows can only pass input to the top windows of window stacks below it, not
   //! windows within the same window stack.
-  bool is_unfocusable:1;
+  bool is_unfocusable : 1;
 
   //! @internal
   //! Back pointer to the window stack that this Window is residing on.
   //! @see \ref WindowStack
   struct WindowStack *parent_window_stack;
 
-  const char* debug_name;
+  const char *debug_name;
 } Window;
 
 #ifdef CONFIG_RELEASE
@@ -169,25 +170,27 @@ typedef struct Window {
 //! Initializes a window and resets its members to the default values:
 //!
 //! * Background color : `GColorWhite`
-//! * Root layer's `update_proc` : function that fills the window's background using `background_color`.
+//! * Root layer's `update_proc` : function that fills the window's background using
+//! `background_color`.
 //! * `click_config_provider` : `NULL`
 //! * `window_handlers` : all `NULL`
 //! @param window The window to initialize
 //! @param debug_name The window's debug name
-void window_init(Window *window, const char* debug_name);
+void window_init(Window *window, const char *debug_name);
 
 //! Creates a new Window on the heap and initializes it with the default values.
 //!
 //! * Background color : `GColorWhite`
-//! * Root layer's `update_proc` : function that fills the window's background using `background_color`.
+//! * Root layer's `update_proc` : function that fills the window's background using
+//! `background_color`.
 //! * `click_config_provider` : `NULL`
 //! * `window_handlers` : all `NULL`
 //! @return A pointer to the window. `NULL` if the window could not
 //! be created
-Window* window_create(void);
+Window *window_create(void);
 
 //! Destroys a Window previously created by window_create.
-void window_destroy(Window* window);
+void window_destroy(Window *window);
 
 //! Deinitializes the window.
 //! Removes the window from the screen, removes its child layers from the root layer and
@@ -202,7 +205,8 @@ void window_deinit(Window *window);
 //! This will automatically setup the input handlers of the window as well to use
 //! the click recognizer subsystem.
 //! @param window The window for which to set the click config provider
-//! @param click_config_provider The callback that will be called to configure the click recognizers with the window
+//! @param click_config_provider The callback that will be called to configure the click recognizers
+//! with the window
 //! @see Clicks
 //! @see ClickConfigProvider
 void window_set_click_config_provider(Window *window, ClickConfigProvider click_config_provider);
@@ -210,14 +214,19 @@ void window_set_click_config_provider(Window *window, ClickConfigProvider click_
 //! Same as window_set_click_config_provider(), but will assign a custom context pointer
 //! (instead of the window pointer) that will be passed into the ClickHandler click event handlers.
 //! @param window The window for which to set the click config provider
-//! @param click_config_provider The callback that will be called to configure the click recognizers with the window
-//! @param context Pointer to application specific data that will be passed to the click configuration provider callback (defaults to the window).
+//! @param click_config_provider The callback that will be called to configure the click recognizers
+//! with the window
+//! @param context Pointer to application specific data that will be passed to the click
+//! configuration provider callback (defaults to the window).
 //! @see Clicks
 //! @see window_set_click_config_provider
-void window_set_click_config_provider_with_context(Window *window, ClickConfigProvider click_config_provider, void *context);
+void window_set_click_config_provider_with_context(Window *window,
+                                                   ClickConfigProvider click_config_provider,
+                                                   void *context);
 
-//! Set the context that will be passed to handlers for the given button's events. By default the context passed to handlers
-//! is equal to the \ref ClickConfigProvider context (defaults to the window).
+//! Set the context that will be passed to handlers for the given button's events. By default the
+//! context passed to handlers is equal to the \ref ClickConfigProvider context (defaults to the
+//! window).
 //! @note Must be called from within the \ref ClickConfigProvider.
 //! @param button_id The button to set the context for.
 //! @param context Set the context that will be passed to handlers for the given button's events.
@@ -225,55 +234,74 @@ void window_set_click_context(ButtonId button_id, void *context);
 
 //! Subscribe to single click events.
 //! @note Must be called from the \ref ClickConfigProvider.
-//! @note \ref window_single_click_subscribe() and \ref window_single_repeating_click_subscribe() conflict, and cannot both be used on the same button.
-//! @note When there is a multi_click and/or long_click setup, there will be a delay before the single click
+//! @note \ref window_single_click_subscribe() and \ref window_single_repeating_click_subscribe()
+//! conflict, and cannot both be used on the same button.
+//! @note When there is a multi_click and/or long_click setup, there will be a delay before the
+//! single click
 //! @param button_id The button events to subscribe to.
 //! @param handler The \ref ClickHandler to fire on this event.
-//! handler will get fired. On the other hand, when there is no multi_click nor long_click setup, the single click handler will fire directly on button down.
+//! handler will get fired. On the other hand, when there is no multi_click nor long_click setup,
+//! the single click handler will fire directly on button down.
 //! @see ButtonId
 //! @see Clicks
 //! @see window_single_repeating_click_subscribe
 void window_single_click_subscribe(ButtonId button_id, ClickHandler handler);
 
-//! Subscribe to single click event, with a repeat interval. A single click is detected every time "repeat_interval_ms" has been reached.
+//! Subscribe to single click event, with a repeat interval. A single click is detected every time
+//! "repeat_interval_ms" has been reached.
 //! @note Must be called from the \ref ClickConfigProvider.
-//! @note \ref window_single_click_subscribe() and \ref window_single_repeating_click_subscribe() conflict, and cannot both be used on the same button.
+//! @note \ref window_single_click_subscribe() and \ref window_single_repeating_click_subscribe()
+//! conflict, and cannot both be used on the same button.
 //! @note The back button cannot be overridden with a repeating click.
 //! @param button_id The button events to subscribe to.
-//! @param repeat_interval_ms When holding down, how many milliseconds before the handler is fired again.
-//! A value of 0ms means "no repeat timer". The minimum is 30ms, and values below will be disregarded.
-//! If there is a long-click handler subscribed on this button, `repeat_interval_ms` will not be used.
+//! @param repeat_interval_ms When holding down, how many milliseconds before the handler is fired
+//! again. A value of 0ms means "no repeat timer". The minimum is 30ms, and values below will be
+//! disregarded. If there is a long-click handler subscribed on this button, `repeat_interval_ms`
+//! will not be used.
 //! @param handler The \ref ClickHandler to fire on this event.
 //! @see window_single_click_subscribe
-void window_single_repeating_click_subscribe(ButtonId button_id, uint16_t repeat_interval_ms, ClickHandler handler);
+void window_single_repeating_click_subscribe(ButtonId button_id, uint16_t repeat_interval_ms,
+                                             ClickHandler handler);
 
 //! Subscribe to multi click events.
 //! @note Must be called from the \ref ClickConfigProvider.
 //! @param button_id The button events to subscribe to.
 //! @param min_clicks Minimum number of clicks before handler is fired. Defaults to 2.
-//! @param max_clicks Maximum number of clicks after which the click counter is reset. A value of 0 means use "min" also as "max".
-//! @param timeout The delay after which a sequence of clicks is considered finished, and the click counter is reset. A value of 0 means to use the system default 300ms.
-//! @param last_click_only Defaults to false. When true, only the handler for the last multi-click is called.
-//! @param handler The \ref ClickHandler to fire on this event. Fired for multi-clicks, as "filtered" by the `last_click_only`, `min`, and `max` parameters.
-void window_multi_click_subscribe(ButtonId button_id, uint8_t min_clicks, uint8_t max_clicks, uint16_t timeout, bool last_click_only, ClickHandler handler);
+//! @param max_clicks Maximum number of clicks after which the click counter is reset. A value of 0
+//! means use "min" also as "max".
+//! @param timeout The delay after which a sequence of clicks is considered finished, and the click
+//! counter is reset. A value of 0 means to use the system default 300ms.
+//! @param last_click_only Defaults to false. When true, only the handler for the last multi-click
+//! is called.
+//! @param handler The \ref ClickHandler to fire on this event. Fired for multi-clicks, as
+//! "filtered" by the `last_click_only`, `min`, and `max` parameters.
+void window_multi_click_subscribe(ButtonId button_id, uint8_t min_clicks, uint8_t max_clicks,
+                                  uint16_t timeout, bool last_click_only, ClickHandler handler);
 
 //! Subscribe to long click events.
 //! @note Must be called from the \ref ClickConfigProvider.
 //! @note The back button cannot be overridden with a long click.
 //! @param button_id The button events to subscribe to.
-//! @param delay_ms Milliseconds after which "handler" is fired. A value of 0 means to use the system default 500ms.
-//! @param down_handler The \ref ClickHandler to fire as soon as the button has been held for `delay_ms`. This may be NULL to have no down handler.
-//! @param up_handler The \ref ClickHandler to fire on the release of a long click. This may be NULL to have no up handler.
-void window_long_click_subscribe(ButtonId button_id, uint16_t delay_ms, ClickHandler down_handler, ClickHandler up_handler);
+//! @param delay_ms Milliseconds after which "handler" is fired. A value of 0 means to use the
+//! system default 500ms.
+//! @param down_handler The \ref ClickHandler to fire as soon as the button has been held for
+//! `delay_ms`. This may be NULL to have no down handler.
+//! @param up_handler The \ref ClickHandler to fire on the release of a long click. This may be NULL
+//! to have no up handler.
+void window_long_click_subscribe(ButtonId button_id, uint16_t delay_ms, ClickHandler down_handler,
+                                 ClickHandler up_handler);
 
 //! Subscribe to raw click events.
 //! @note Must be called from within the \ref ClickConfigProvider.
 //! @note The back button cannot be overridden with a raw click.
 //! @param button_id The button events to subscribe to.
-//! @param down_handler The \ref ClickHandler to fire as soon as the button has been pressed. This may be NULL to have no down handler.
-//! @param up_handler The \ref ClickHandler to fire on the release of the button. This may be NULL to have no up handler.
+//! @param down_handler The \ref ClickHandler to fire as soon as the button has been pressed. This
+//! may be NULL to have no down handler.
+//! @param up_handler The \ref ClickHandler to fire on the release of the button. This may be NULL
+//! to have no up handler.
 //! @param context If this context is not NULL, it will override the general context.
-void window_raw_click_subscribe(ButtonId button_id, ClickHandler down_handler, ClickHandler up_handler, void *context);
+void window_raw_click_subscribe(ButtonId button_id, ClickHandler down_handler,
+                                ClickHandler up_handler, void *context);
 
 //! Gets the current click configuration provider of the window.
 //! @param window The window for which to get the click config provider
@@ -308,7 +336,7 @@ void window_set_user_data(Window *window, void *data);
 //! set using window_set_user_data().
 //! @see window_set_user_data
 //! @param window The window for which to get the user data
-void* window_get_user_data(const Window *window);
+void *window_get_user_data(const Window *window);
 
 //! Gets the root Layer of the window.
 //! The root layer is the layer at the bottom of the layer hierarchy for this window.
@@ -316,7 +344,7 @@ void* window_get_user_data(const Window *window);
 //! a solid fill with the window's background color.
 //! @param window The window for which to get the root layer
 //! @return The window's root layer
-struct Layer* window_get_root_layer(const Window *window);
+struct Layer *window_get_root_layer(const Window *window);
 
 //! Sets the background color of the window, which is drawn automatically by the
 //! root layer of the window.
@@ -329,7 +357,8 @@ void window_set_background_color_2bit(Window *window, GColor2 background_color);
 //! Sets whether or not the window is fullscreen, consequently hiding the system status bar.
 //! @note This needs to be called before pushing a window to the window stack.
 //! @param window The window for which to set its full-screen property
-//! @param enabled True to make the window full-screen or false to leave space for the system status bar.
+//! @param enabled True to make the window full-screen or false to leave space for the system status
+//! bar.
 //! @see \ref window_get_fullscreen()
 void window_set_fullscreen(Window *window, bool enabled);
 
@@ -347,7 +376,7 @@ void window_set_status_bar_icon(Window *window, const GBitmap *icon);
 
 //! @internal
 //! Internal window layer update proc to be called in window subclass layer update procs
-void window_do_layer_update_proc(Layer *window, GContext* ctx);
+void window_do_layer_update_proc(Layer *window, GContext *ctx);
 
 //! @internal
 //! This function gets called by the default render event handler.
@@ -368,7 +397,7 @@ bool window_is_on_screen(Window *window);
 //! @return true if the window is currently loaded or false if not.
 //! @param window The window to query its loaded status
 //! @see \ref WindowHandlers
-bool window_is_loaded(Window *window) ;
+bool window_is_loaded(Window *window);
 
 //! @internal
 //! Sets whether a window is transparent. Transparent windows that are at the top of their stack
@@ -394,7 +423,7 @@ bool window_is_focusable(Window *window);
 //! @internal
 //! @return A name used to identify the window. If CONFIG_RELEASE is defined will just return "?"
 //! @param window The window for which to get the debug name
-const char* window_get_debug_name(Window *window);
+const char *window_get_debug_name(Window *window);
 
 //! @internal
 void window_call_click_config_provider(Window *window, void *context);

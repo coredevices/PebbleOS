@@ -15,7 +15,6 @@
 #include "stubs_logging.h"
 #include "stubs_passert.h"
 
-
 // Tests
 ///////////////////////////////////////////////////////////
 
@@ -56,7 +55,6 @@ void test_phone_formatting__name_trailing_space(void) {
   phone_format_caller_name("Katharine Berry  ", dest, NAME_LENGTH);
 
   cl_assert_equal_s(dest, "Katharine B.");
-
 }
 
 void test_phone_formatting__single_name_trailing_space(void) {
@@ -214,4 +212,3 @@ void test_phone_formatting__phone_number_std_germany(void) {
 
   cl_assert_equal_s(dest, "030 90 26 0");
 }
-

@@ -22,13 +22,9 @@ void sys_pbl_analytics_set_string(enum pbl_analytics_key key, const char *value)
   (void)value;
 }
 
-void sys_pbl_analytics_timer_start(enum pbl_analytics_key key) {
-  (void)key;
-}
+void sys_pbl_analytics_timer_start(enum pbl_analytics_key key) { (void)key; }
 
-void sys_pbl_analytics_timer_stop(enum pbl_analytics_key key) {
-  (void)key;
-}
+void sys_pbl_analytics_timer_stop(enum pbl_analytics_key key) { (void)key; }
 
 void sys_pbl_analytics_add(enum pbl_analytics_key key, int32_t amount) {
   (void)key;

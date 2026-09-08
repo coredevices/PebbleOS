@@ -4,7 +4,6 @@
 #pragma once
 #include "util/time/time.h"
 
-
 struct tm *pbl_override_localtime(const time_t *timep) {
   static struct tm local_tm;
   localtime_r(timep, &local_tm);
@@ -17,7 +16,4 @@ struct tm *pbl_override_gmtime(const time_t *timep) {
   return &local_tm;
 }
 
-time_t pbl_override_mktime(struct tm *tb) {
-  return mktime(tb);
-}
-
+time_t pbl_override_mktime(struct tm *tb) { return mktime(tb); }

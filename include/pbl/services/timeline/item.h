@@ -14,9 +14,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#define MAX_PIN_TITLE_LENGTH  (50)
+#define MAX_PIN_TITLE_LENGTH (50)
 
-#define TIMELINE_INVALID_ACTION_ID  (0xFF)
+#define TIMELINE_INVALID_ACTION_ID (0xFF)
 
 typedef Uuid TimelineItemId;
 
@@ -45,7 +45,7 @@ typedef enum {
 //! Enumeration of the different types of actions a TimelineItem can have.
 typedef enum {
   TimelineItemActionTypeUnknown = 0x00,
-  TimelineItemActionTypeAncsNegative = 0x01, // Formerly ANCS Dismiss
+  TimelineItemActionTypeAncsNegative = 0x01,  // Formerly ANCS Dismiss
   TimelineItemActionTypeGeneric = 0x02,
   TimelineItemActionTypeResponse = 0x03,
   TimelineItemActionTypeDismiss = 0x04,
@@ -114,7 +114,7 @@ typedef struct PACKED {
   //! timestamp + duration < current_time, then it is no longer in NOW.
   uint16_t duration;
   //! The timeline item type
-  TimelineItemType type:8;
+  TimelineItemType type : 8;
   //! These flags are set by the datasource and/or mobile application and are one-way
   //! flags indicating how the pin interacts with the user.
   union {
@@ -122,16 +122,16 @@ typedef struct PACKED {
     //! entirely to revert the value.
     struct {
       //! Indicates whether the item is visible or not.
-      uint8_t visible:1;
+      uint8_t visible : 1;
       //! Indicates whether this is a floating timezone item (implementation TBD)
-      uint8_t is_floating:1;
+      uint8_t is_floating : 1;
       //! Indicates whether the item is an all day event.
       //! All day events should have a timestamp at midnight.
-      uint8_t all_day:1;
+      uint8_t all_day : 1;
       //! Indicates that this item was added by the watch and shouldn't get flushed
-      uint8_t from_watch:1;
+      uint8_t from_watch : 1;
       //! Indicates that this notification was added by ANCS (iOS)
-      uint8_t ancs_notif:1;
+      uint8_t ancs_notif : 1;
     };
     uint8_t flags;
   };
@@ -140,23 +140,23 @@ typedef struct PACKED {
     //! entirely to revert the value.
     struct {
       //! Indicates that the item has been read (only used for Notifications).
-      uint8_t read:1;
+      uint8_t read : 1;
       //! Indicates that the item has been deleted
-      uint8_t deleted:1;
+      uint8_t deleted : 1;
       //! Indicates that the item has been actioned on.
-      uint8_t actioned:1;
+      uint8_t actioned : 1;
       //! Indicates whether the reminder has been reminded.
-      uint8_t reminded:1;
+      uint8_t reminded : 1;
       //! Indicates whether the item has been dismissed
-      uint8_t dismissed:1;
+      uint8_t dismissed : 1;
       //! Indicates whether the item is persistent (only used for Timeline Peek / Quick View)
-      uint8_t persistent:1;
+      uint8_t persistent : 1;
     };
     uint8_t status;
   };
   //! Layout for this TimelineItem when rendered in a view. Determines
   //! how the attributes are rendered.
-  LayoutId layout:8;
+  LayoutId layout : 8;
 } CommonTimelineItemHeader;
 
 //! A TimelineItem is one of {Reminder, Notification, Pin}.  To determine which
@@ -204,7 +204,8 @@ TimelineItem *timeline_item_create_with_attributes(time_t timestamp, uint16_t du
 //!                         strings must be appended. The alloc string will set \c *string_buffer
 //!                         if \c string_buffer is not NULL)
 TimelineItem *timeline_item_create(int num_attributes, int num_actions,
-    uint8_t attributes_per_action[], size_t required_size_for_strings, uint8_t **string_buffer);
+                                   uint8_t attributes_per_action[],
+                                   size_t required_size_for_strings, uint8_t **string_buffer);
 
 //! Deserialize a \ref TimelineItem
 //! @param item               storage for the item
@@ -230,7 +231,7 @@ TimelineItem *timeline_item_copy(TimelineItem *src);
 //! @param payload pointer to the item's payload data
 //! @return true if the function succeeds, false otherwise
 bool timeline_item_deserialize_item(TimelineItem *item_out,
-                                    const SerializedTimelineItemHeader* header,
+                                    const SerializedTimelineItemHeader *header,
                                     const uint8_t *payload);
 
 //! Serialize some of a timeline item's metadata into a SerializedTimelineItemHeader
@@ -255,8 +256,7 @@ time_t timeline_item_get_tz_timestamp(CommonTimelineItemHeader *hdr);
 //! @param buffer a pointer to the buffer to write to
 //! @param buffer_size the size of the buffer in bytes
 //! @returns the number of bytes written to \c buffer
-size_t timeline_item_serialize_payload(TimelineItem *item, uint8_t *buffer,
-    size_t buffer_size);
+size_t timeline_item_serialize_payload(TimelineItem *item, uint8_t *buffer, size_t buffer_size);
 
 //! Calculate the required size for a buffer to store an item's actions & attributes
 size_t timeline_item_get_serialized_payload_size(TimelineItem *item);
@@ -268,11 +268,12 @@ size_t timeline_item_get_serialized_payload_size(TimelineItem *item);
 //! @param payload serialized payload buffer
 //! @param payload_size size of the payload buffer in bytes
 //! @return true on success
-bool timeline_item_deserialize_payload(TimelineItem *item,
-    char *string_buffer, size_t string_buffer_size, const uint8_t *payload, size_t payload_size);
+bool timeline_item_deserialize_payload(TimelineItem *item, char *string_buffer,
+                                       size_t string_buffer_size, const uint8_t *payload,
+                                       size_t payload_size);
 
 //! Clean up a dynamically allocated item.
-void timeline_item_destroy(TimelineItem* item);
+void timeline_item_destroy(TimelineItem *item);
 
 //! Frees allocated buffer and NULLs pointer to it.
 //! NOTE: Internal pointers to attributes are invalid after calling this function
@@ -307,7 +308,6 @@ TimelineItemAction *timeline_item_find_dismiss_action(const TimelineItem *item);
 //! @param item the item containing the action
 //! @return a pointer to the action, NULL if not found
 TimelineItemAction *timeline_item_find_reply_action(const TimelineItem *item);
-
 
 //! Find the reply action in an action group (can be either regular response or ANCS response)
 //! @param action_group the action group to search

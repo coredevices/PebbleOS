@@ -10,8 +10,8 @@
 //! @internal
 //! The number of reports that the circular reports buffer can contain.
 //! Accommodate for 4 reports with advertisement and scan response data:
-#define GAP_LE_SCAN_REPORTS_BUFFER_SIZE (4 * (sizeof(GAPLERawAdReport) + \
-(2 * GAP_LE_AD_REPORT_DATA_MAX_LENGTH)))
+#define GAP_LE_SCAN_REPORTS_BUFFER_SIZE \
+  (4 * (sizeof(GAPLERawAdReport) + (2 * GAP_LE_AD_REPORT_DATA_MAX_LENGTH)))
 
 //! @internal
 //! This is a semi-processed advertisement report. It is "raw" in the sense that
@@ -19,8 +19,8 @@
 //! stuff into a circular buffer.
 typedef struct {
   //! Is the advertiser's address a public address or random address?
-  bool is_random_address:1;
-  uint8_t rsvd:7; // free for use
+  bool is_random_address : 1;
+  uint8_t rsvd : 7;  // free for use
 
   //! The address of the advertiser
   BTDeviceInternal address;

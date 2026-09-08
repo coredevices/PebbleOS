@@ -7,18 +7,13 @@
 
 #include "clar.h"
 
-void passert_failed_no_message(const char* filename, int line_number) {
-}
+void passert_failed_no_message(const char *filename, int line_number) {}
 
-void pbl_irq_lock(void) {
-}
+void pbl_irq_lock(void) {}
 
-void pbl_irq_unlock(void) {
-}
+void pbl_irq_unlock(void) {}
 
-void test_interval_timer__initialize(void) {
-  fake_rtc_init(0, 0);
-}
+void test_interval_timer__initialize(void) { fake_rtc_init(0, 0); }
 
 void test_interval_timer__simple(void) {
   IntervalTimer timer;
@@ -222,4 +217,3 @@ void test_interval_timer__moving_average(void) {
   // = 1027
   cl_assert_equal_i(average_ms, 1027);
 }
-

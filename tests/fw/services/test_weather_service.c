@@ -37,9 +37,7 @@
 #include "stubs_sleep.h"
 
 static EventServiceInfo *s_event_info;
-void event_service_client_subscribe(EventServiceInfo *service_info) {
-  s_event_info = service_info;
-}
+void event_service_client_subscribe(EventServiceInfo *service_info) { s_event_info = service_info; }
 
 void event_service_client_unsubscribe(EventServiceInfo *service_info) {}
 
@@ -56,60 +54,49 @@ void test_weather_service__initialize(void) {
   weather_shared_data_init();
 }
 
-void test_weather_service__cleanup(void) {
-  weather_shared_data_cleanup();
-}
+void test_weather_service__cleanup(void) { weather_shared_data_cleanup(); }
 
 static const WeatherLocationForecast s_forecasts[] = {
-  {
-    .location_name = TEST_WEATHER_DB_LOCATION_PALO_ALTO,
-    .is_current_location = true,
-    .current_temp = 68,
-    .today_high = 68,
-    .today_low = 52,
-    .current_weather_type = WeatherType_Sun,
-    .current_weather_phrase = TEST_WEATHER_DB_SHORT_PHRASE_SUNNY,
-    .tomorrow_high = 70,
-    .tomorrow_low = 60,
-    .tomorrow_weather_type = WeatherType_CloudyDay
-  },
-  {
-    .location_name = TEST_WEATHER_DB_LOCATION_KITCHENER,
-    .is_current_location = false,
-    .current_temp = -10,
-    .today_high = 0,
-    .today_low = -11,
-    .current_weather_type = WeatherType_PartlyCloudy,
-    .current_weather_phrase = TEST_WEATHER_DB_SHORT_PHRASE_PARTLY_CLOUDY,
-    .tomorrow_high = 2,
-    .tomorrow_low = -3,
-    .tomorrow_weather_type = WeatherType_CloudyDay
-  },
-  {
-    .location_name = TEST_WEATHER_DB_LOCATION_WATERLOO,
-    .is_current_location = false,
-    .current_temp = -99,
-    .today_high = -98,
-    .today_low = -99,
-    .current_weather_type = WeatherType_HeavySnow,
-    .current_weather_phrase = TEST_WEATHER_DB_SHORT_PHRASE_HEAVY_SNOW,
-    .tomorrow_high = 2,
-    .tomorrow_low = 1,
-    .tomorrow_weather_type = WeatherType_Sun
-  },
-  {
-    .location_name = TEST_WEATHER_DB_LOCATION_RWC,
-    .is_current_location = true,
-    .current_temp = 60,
-    .today_high = 70,
-    .today_low = 50,
-    .current_weather_type = WeatherType_HeavyRain,
-    .current_weather_phrase = TEST_WEATHER_DB_SHORT_PHRASE_HEAVY_RAIN,
-    .tomorrow_high = 70,
-    .tomorrow_low = 60,
-    .tomorrow_weather_type = WeatherType_PartlyCloudy
-  }
-};
+    {.location_name = TEST_WEATHER_DB_LOCATION_PALO_ALTO,
+     .is_current_location = true,
+     .current_temp = 68,
+     .today_high = 68,
+     .today_low = 52,
+     .current_weather_type = WeatherType_Sun,
+     .current_weather_phrase = TEST_WEATHER_DB_SHORT_PHRASE_SUNNY,
+     .tomorrow_high = 70,
+     .tomorrow_low = 60,
+     .tomorrow_weather_type = WeatherType_CloudyDay},
+    {.location_name = TEST_WEATHER_DB_LOCATION_KITCHENER,
+     .is_current_location = false,
+     .current_temp = -10,
+     .today_high = 0,
+     .today_low = -11,
+     .current_weather_type = WeatherType_PartlyCloudy,
+     .current_weather_phrase = TEST_WEATHER_DB_SHORT_PHRASE_PARTLY_CLOUDY,
+     .tomorrow_high = 2,
+     .tomorrow_low = -3,
+     .tomorrow_weather_type = WeatherType_CloudyDay},
+    {.location_name = TEST_WEATHER_DB_LOCATION_WATERLOO,
+     .is_current_location = false,
+     .current_temp = -99,
+     .today_high = -98,
+     .today_low = -99,
+     .current_weather_type = WeatherType_HeavySnow,
+     .current_weather_phrase = TEST_WEATHER_DB_SHORT_PHRASE_HEAVY_SNOW,
+     .tomorrow_high = 2,
+     .tomorrow_low = 1,
+     .tomorrow_weather_type = WeatherType_Sun},
+    {.location_name = TEST_WEATHER_DB_LOCATION_RWC,
+     .is_current_location = true,
+     .current_temp = 60,
+     .today_high = 70,
+     .today_low = 50,
+     .current_weather_type = WeatherType_HeavyRain,
+     .current_weather_phrase = TEST_WEATHER_DB_SHORT_PHRASE_HEAVY_RAIN,
+     .tomorrow_high = 70,
+     .tomorrow_low = 60,
+     .tomorrow_weather_type = WeatherType_PartlyCloudy}};
 
 static void prv_assert_forecast_equal(const WeatherLocationForecast *to_check,
                                       const WeatherLocationForecast *original) {
@@ -152,15 +139,13 @@ void test_weather_service__get_default_location_forecast_from_weather_db_update(
   const int default_location_index = 0;
   const WeatherDBKey *default_location_key = weather_shared_data_get_key(default_location_index);
 
-  PebbleEvent insert_event = (PebbleEvent) {
-    .type = PEBBLE_BLOBDB_EVENT,
-    .blob_db = {
-      .db_id = BlobDBIdWeather,
-      .type = BlobDBEventTypeInsert,
-      .key = (uint8_t *)default_location_key,
-      .key_len = sizeof(WeatherDBKey),
-    }
-  };
+  PebbleEvent insert_event = (PebbleEvent){.type = PEBBLE_BLOBDB_EVENT,
+                                           .blob_db = {
+                                               .db_id = BlobDBIdWeather,
+                                               .type = BlobDBEventTypeInsert,
+                                               .key = (uint8_t *)default_location_key,
+                                               .key_len = sizeof(WeatherDBKey),
+                                           }};
 
   s_event_info->handler(&insert_event, s_event_info->context);
   forecast = weather_service_create_default_forecast();
@@ -170,15 +155,13 @@ void test_weather_service__get_default_location_forecast_from_weather_db_update(
   weather_service_destroy_default_forecast(forecast);
 
   weather_db_flush();
-  PebbleEvent flush_event = (PebbleEvent) {
-    .type = PEBBLE_BLOBDB_EVENT,
-    .blob_db = {
-      .db_id = BlobDBIdWeather,
-      .type = BlobDBEventTypeFlush,
-      .key = NULL,
-      .key_len = 0,
-    }
-  };
+  PebbleEvent flush_event = (PebbleEvent){.type = PEBBLE_BLOBDB_EVENT,
+                                          .blob_db = {
+                                              .db_id = BlobDBIdWeather,
+                                              .type = BlobDBEventTypeFlush,
+                                              .key = NULL,
+                                              .key_len = 0,
+                                          }};
 
   s_event_info->handler(&flush_event, s_event_info->context);
   forecast = weather_service_create_default_forecast();
@@ -193,15 +176,13 @@ void test_weather_service__get_default_location_forecast_from_watch_app_prefs_db
   const int default_location_index = 0;
   const WeatherDBKey *default_location_key = weather_shared_data_get_key(0);
 
-  PebbleEvent insert_event = (PebbleEvent) {
-    .type = PEBBLE_BLOBDB_EVENT,
-    .blob_db = {
-      .db_id = BlobDBIdWatchAppPrefs,
-      .type = BlobDBEventTypeInsert,
-      .key = (uint8_t *)PREF_KEY_WEATHER_APP,
-      .key_len = sizeof(PREF_KEY_WEATHER_APP),
-    }
-  };
+  PebbleEvent insert_event = (PebbleEvent){.type = PEBBLE_BLOBDB_EVENT,
+                                           .blob_db = {
+                                               .db_id = BlobDBIdWatchAppPrefs,
+                                               .type = BlobDBEventTypeInsert,
+                                               .key = (uint8_t *)PREF_KEY_WEATHER_APP,
+                                               .key_len = sizeof(PREF_KEY_WEATHER_APP),
+                                           }};
 
   s_event_info->handler(&insert_event, s_event_info->context);
   forecast = weather_service_create_default_forecast();

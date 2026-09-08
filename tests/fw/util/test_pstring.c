@@ -5,16 +5,12 @@
 
 #include "util/pstring.h"
 
-
 #include "stubs_pbl_malloc.h"
 #include "stubs_logging.h"
 
+void test_pstring__initialize(void) {}
 
-void test_pstring__initialize(void) {
-}
-
-void test_pstring__cleanup(void) {
-}
+void test_pstring__cleanup(void) {}
 
 void test_pstring__equal(void) {
   const char *ps1_str = "Phil";
@@ -41,7 +37,6 @@ void test_pstring__equal(void) {
   ps4->str_length = strlen(ps4_str);
   memcpy(ps4->str_value, ps4_str, strlen(ps4_str));
 
-
   cl_assert(pstring_equal(ps1, ps4));
   cl_assert(!pstring_equal(ps1, ps2));
   cl_assert(!pstring_equal(ps1, ps3));
@@ -57,9 +52,7 @@ void test_pstring__equal_cstring(void) {
   ps1->str_length = strlen(str1);
   memcpy(ps1->str_value, str1, strlen(str1));
 
-
   const char *str2 = "PhilG";
-
 
   cl_assert(pstring_equal_cstring(ps1, str1));
   cl_assert(!pstring_equal_cstring(ps1, str2));

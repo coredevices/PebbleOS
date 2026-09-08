@@ -10,10 +10,9 @@
 void test_sle__simple(void) {
   SLEDecodeContext ctx;
   uint8_t buf[] = {
-    0xfd, // escape code
-    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-    0xfd, 0x00 // end
+      0xfd,  // escape code
+      0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+      0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0xfd, 0x00  // end
   };
   sle_decode_init(&ctx, buf);
 
@@ -30,9 +29,9 @@ void test_sle__simple(void) {
 void test_sle__short_zeros(void) {
   SLEDecodeContext ctx;
   uint8_t buf[] = {
-    0xfd, // escape code
-    0xfd, 0x5, // 5 zeroes
-    0xfd, 0x00 // end
+      0xfd,       // escape code
+      0xfd, 0x5,  // 5 zeroes
+      0xfd, 0x00  // end
   };
   sle_decode_init(&ctx, buf);
 
@@ -48,9 +47,9 @@ void test_sle__short_zeros(void) {
 void test_sle__long_zeros(void) {
   SLEDecodeContext ctx;
   uint8_t buf[] = {
-    0xfd, // escape code
-    0xfd, 0xff, 0xaa, // 32810 zeroes
-    0xfd, 0x00 // end
+      0xfd,              // escape code
+      0xfd, 0xff, 0xaa,  // 32810 zeroes
+      0xfd, 0x00         // end
   };
   sle_decode_init(&ctx, buf);
 
@@ -66,9 +65,9 @@ void test_sle__long_zeros(void) {
 void test_sle__escape_byte(void) {
   SLEDecodeContext ctx;
   uint8_t buf[] = {
-    0xfd, // escape code
-    0xfd, 0x01, // literal escape byte
-    0xfd, 0x00 // end
+      0xfd,        // escape code
+      0xfd, 0x01,  // literal escape byte
+      0xfd, 0x00   // end
   };
   sle_decode_init(&ctx, buf);
 

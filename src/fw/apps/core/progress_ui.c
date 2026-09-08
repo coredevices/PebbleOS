@@ -31,8 +31,8 @@
 // Used to force the progress bar to start at PROG_LAYER_START_VAL and scale
 // the reset of the progress between that value and MAX_PROGRESS_PERCENT
 #define PROG_LAYER_TRANSFORM(real_prog) \
-    (PROG_LAYER_START_VAL + (real_prog * \
-     (MAX_PROGRESS_PERCENT - PROG_LAYER_START_VAL) / MAX_PROGRESS_PERCENT))
+  (PROG_LAYER_START_VAL +               \
+   (real_prog * (MAX_PROGRESS_PERCENT - PROG_LAYER_START_VAL) / MAX_PROGRESS_PERCENT))
 
 ////////////////////////////////////////////////////////////
 // Data structures
@@ -40,7 +40,7 @@
 typedef struct {
   Window window;
   TextLayer percent_done_text_layer;
-  char percent_done_text_buffer[5]; //<! Text for progress percentage label, format %02d%%
+  char percent_done_text_buffer[5];  //<! Text for progress percentage label, format %02d%%
   SimpleDialog finished_dialog;
   ProgressLayer progress_layer;
   AppTimer *timer;
@@ -96,8 +96,8 @@ static void prv_handle_finished(ProgressUIData *data, bool success) {
 }
 
 static void prv_update_progress_text(ProgressUIData *data) {
-  sniprintf(data->percent_done_text_buffer,
-            sizeof(data->percent_done_text_buffer), "%u%%", data->percent_complete);
+  sniprintf(data->percent_done_text_buffer, sizeof(data->percent_done_text_buffer), "%u%%",
+            data->percent_complete);
   layer_mark_dirty(&data->percent_done_text_layer.layer);
 }
 
@@ -127,17 +127,15 @@ static void prv_update_progress(ProgressUIData *data) {
   }
 
   prv_update_progress_text(data);
-  progress_layer_set_progress(&data->progress_layer,
-                              PROG_LAYER_TRANSFORM(data->percent_complete));
+  progress_layer_set_progress(&data->progress_layer, PROG_LAYER_TRANSFORM(data->percent_complete));
 
-  if ((data->progress_source != PROGRESS_UI_SOURCE_FW_UPDATE) &&
-        (data->percent_complete >= 100)) {
+  if ((data->progress_source != PROGRESS_UI_SOURCE_FW_UPDATE) && (data->percent_complete >= 100)) {
     prv_handle_finished(data, true /* success */);
   }
 }
 
 static void prv_refresh_progress(void *data_in) {
-  ProgressUIData *data = (ProgressUIData*) data_in;
+  ProgressUIData *data = (ProgressUIData *)data_in;
   if (!data) {
     // Sanity check
     return;
@@ -159,7 +157,7 @@ static void prv_dialog_unloaded(void *context) {
   data->timer = app_timer_register(10, prv_quit, data);
 }
 
-static void prv_window_unload_handler(Window* window) {
+static void prv_window_unload_handler(Window *window) {
   ProgressUIData *data = window_get_user_data(window);
   if (data) {
     i18n_free_all(data);
@@ -183,10 +181,10 @@ static void prv_push_factory_reset_dialog(ProgressUIData *data) {
   simple_dialog_push(&data->finished_dialog, app_state_get_window_stack());
 }
 
-static void prv_window_load_handler(Window* window) {
+static void prv_window_load_handler(Window *window) {
   ProgressUIData *data = window_get_user_data(window);
 
-  const ProgressUIAppArgs* app_args = app_manager_get_task_context()->args;
+  const ProgressUIAppArgs *app_args = app_manager_get_task_context()->args;
   data->progress_source = app_args->progress_source;
 
   if (data->progress_source == PROGRESS_UI_SOURCE_FACTORY_RESET) {
@@ -195,9 +193,11 @@ static void prv_window_load_handler(Window* window) {
   }
 
   simple_dialog_init(&data->finished_dialog, "Update Completed Dialog");
-  dialog_set_callbacks(&data->finished_dialog.dialog, &(DialogCallbacks) {
-    .unload = prv_dialog_unloaded,
-  }, data);
+  dialog_set_callbacks(&data->finished_dialog.dialog,
+                       &(DialogCallbacks){
+                           .unload = prv_dialog_unloaded,
+                       },
+                       data);
   dialog_set_destroy_on_pop(&data->finished_dialog.dialog, false);
 
   const int16_t load_bar_length = 108;
@@ -205,19 +205,18 @@ static void prv_window_load_handler(Window* window) {
   const int16_t x_offset = (window->layer.bounds.size.w - load_bar_length) / 2;
   const int16_t y_offset_progress = (window->layer.bounds.size.h - load_bar_height) / 2;
   const int16_t y_offset_text = y_offset_progress - 38;
-  const GRect progress_bounds = GRect(x_offset, y_offset_progress, load_bar_length, load_bar_height);
+  const GRect progress_bounds =
+      GRect(x_offset, y_offset_progress, load_bar_length, load_bar_height);
   ProgressLayer *progress_layer = &data->progress_layer;
   progress_layer_init(progress_layer, &progress_bounds);
   progress_layer_set_corner_radius(progress_layer, 3);
   layer_add_child(&window->layer, &progress_layer->layer);
 
   TextLayer *percent_done_text_layer = &data->percent_done_text_layer;
-  text_layer_init_with_parameters(percent_done_text_layer,
-                                  &GRect(0, y_offset_text, window->layer.bounds.size.w, 30),
-                                  data->percent_done_text_buffer,
-                                  fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
-                                  GColorBlack, GColorClear, GTextAlignmentCenter,
-                                  GTextOverflowModeTrailingEllipsis);
+  text_layer_init_with_parameters(
+      percent_done_text_layer, &GRect(0, y_offset_text, window->layer.bounds.size.w, 30),
+      data->percent_done_text_buffer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GColorBlack,
+      GColorClear, GTextAlignmentCenter, GTextOverflowModeTrailingEllipsis);
   layer_add_child(&window->layer, &percent_done_text_layer->layer);
 
   data->timer = app_timer_register(UPDATE_FREQ_MS, prv_refresh_progress, data);
@@ -227,15 +226,15 @@ static void prv_window_load_handler(Window* window) {
 static void prv_progress_ui_window_push(void) {
   ProgressUIData *data = app_zalloc_check(sizeof(ProgressUIData));
 
-  Window* window = &data->window;
+  Window *window = &data->window;
   window_init(window, WINDOW_NAME("Progress UI App"));
   window_set_user_data(window, data);
   window_set_overrides_back_button(window, true);
   window_set_background_color(window, PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite));
   window_set_window_handlers(window, &(WindowHandlers){
-    .load = prv_window_load_handler,
-    .unload = prv_window_unload_handler,
-  });
+                                         .load = prv_window_load_handler,
+                                         .unload = prv_window_unload_handler,
+                                     });
   app_window_stack_push(window, false);
 }
 
@@ -257,17 +256,18 @@ static void prv_main(void) {
 ////////////////////////////////////////////////////////////
 // Public functions
 
-const PebbleProcessMd* progress_ui_app_get_info() {
+const PebbleProcessMd *progress_ui_app_get_info() {
   static const PebbleProcessMdSystem s_app_info = {
-    .common = {
-      .main_func = &prv_main,
-      .visibility = ProcessVisibilityHidden,
-      // UUID: f29f18ac-bbec-452b-9262-49c4f6e5c920
-      .uuid = {0xf2, 0x9f, 0x18, 0xac, 0xbb, 0xec, 0x45, 0x2b,
-               0x92, 0x62, 0x49, 0xc4, 0xf6, 0xe5, 0xc9, 0x20},
-    },
-    .name = "Progress UI",
-    .run_level = ProcessAppRunLevelSystem,
+      .common =
+          {
+              .main_func = &prv_main,
+              .visibility = ProcessVisibilityHidden,
+              // UUID: f29f18ac-bbec-452b-9262-49c4f6e5c920
+              .uuid = {0xf2, 0x9f, 0x18, 0xac, 0xbb, 0xec, 0x45, 0x2b, 0x92, 0x62, 0x49, 0xc4, 0xf6,
+                       0xe5, 0xc9, 0x20},
+          },
+      .name = "Progress UI",
+      .run_level = ProcessAppRunLevelSystem,
   };
-  return (const PebbleProcessMd*) &s_app_info;
+  return (const PebbleProcessMd *)&s_app_info;
 }

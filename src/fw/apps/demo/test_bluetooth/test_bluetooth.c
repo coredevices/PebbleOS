@@ -23,18 +23,17 @@ typedef struct {
   SimpleMenuLayer *menu_layer;
   SimpleMenuSection menu_section;
   SimpleMenuItem menu_items[NUM_MENU_ITEMS];
-  
+
 } TestBTAppData;
 
 static TestBTAppData *s_app_data = 0;
-
 
 static volatile int s_pending_count = 0;
 static volatile bool s_connected = false;
 
 // =================================================================================
-static void send_bluetooth(void* data) {
-  //uint8_t *buffer = (uint8_t *)"hello world";
+static void send_bluetooth(void *data) {
+  // uint8_t *buffer = (uint8_t *)"hello world";
 
   CommSession *session = comm_session_get_system_session();
   if (!session) {
@@ -50,18 +49,17 @@ static void send_bluetooth(void* data) {
   s_pending_count--;
 }
 
-
 // =================================================================================
 // You can capture when the user selects a menu icon with a menu item select callback
 static void menu_select_callback(int index, void *ctx) {
   PBL_LOG_DBG("Hit menu item %d", index);
-  
+
   // Here we just change the subtitle to a literal string
   s_app_data->menu_items[index].subtitle = "You've hit select here!";
-  
+
   // Mark the layer to be updated
   layer_mark_dirty(simple_menu_layer_get_layer(s_app_data->menu_layer));
-  
+
   // ---------------------------------------------------------------------------
   // Run the appropriate test
   if (index == 0) {
@@ -79,48 +77,40 @@ static void menu_select_callback(int index, void *ctx) {
 
   } else if (index == 1) {
     PBL_LOG_DBG("Not implemented");
-
   }
 }
 
-
 // =================================================================================
 static void prv_window_load(Window *window) {
-  
   TestBTAppData *data = s_app_data;
-  
+
   int i = 0;
-  data->menu_items[i++] = (SimpleMenuItem) {
-    .title = "flood BT",
-    .callback = menu_select_callback,
+  data->menu_items[i++] = (SimpleMenuItem){
+      .title = "flood BT",
+      .callback = menu_select_callback,
   };
-  data->menu_items[i++] = (SimpleMenuItem) {
-    .title = "Ad space available",
-    .callback = menu_select_callback,
+  data->menu_items[i++] = (SimpleMenuItem){
+      .title = "Ad space available",
+      .callback = menu_select_callback,
   };
   PBL_ASSERTN(i == NUM_MENU_ITEMS);
-  
+
   // The menu sections
-  data->menu_section = (SimpleMenuSection) {
-    .num_items = NUM_MENU_ITEMS,
-    .items = data->menu_items,
+  data->menu_section = (SimpleMenuSection){
+      .num_items = NUM_MENU_ITEMS,
+      .items = data->menu_items,
   };
-  
+
   Layer *window_layer = window_get_root_layer(data->window);
   GRect bounds = window_layer->bounds;
-  
-  data->menu_layer = simple_menu_layer_create(bounds, data->window, &data->menu_section, 1, 
-                                              NULL);
+
+  data->menu_layer = simple_menu_layer_create(bounds, data->window, &data->menu_section, 1, NULL);
   layer_add_child(window_layer, simple_menu_layer_get_layer(data->menu_layer));
 }
 
-
 // =================================================================================
 // Deinitialize resources on window unload that were initialized on window load
-static void prv_window_unload(Window *window) {
-  simple_menu_layer_destroy(s_app_data->menu_layer);
-}
-
+static void prv_window_unload(Window *window) { simple_menu_layer_destroy(s_app_data->menu_layer); }
 
 // =================================================================================
 static void handle_init(void) {
@@ -133,17 +123,16 @@ static void handle_init(void) {
     return;
   }
   window_init(data->window, "");
-  window_set_window_handlers(data->window, &(WindowHandlers) {
-    .load = prv_window_load,
-    .unload = prv_window_unload,
-  });
+  window_set_window_handlers(data->window, &(WindowHandlers){
+                                               .load = prv_window_load,
+                                               .unload = prv_window_unload,
+                                           });
   app_window_stack_push(data->window, true /*animated*/);
 }
 
 static void handle_deinit(void) {
   // Don't bother freeing anything, the OS should be re-initing the heap.
 }
-
 
 // =================================================================================
 static void s_main(void) {
@@ -153,11 +142,8 @@ static void s_main(void) {
 }
 
 // =================================================================================
-const PebbleProcessMd* test_bluetooth_app_get_info() {
-  static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = &s_main,
-    .name = "Bluetooth Test"
-  };
-  return (const PebbleProcessMd*) &s_app_info;
+const PebbleProcessMd *test_bluetooth_app_get_info() {
+  static const PebbleProcessMdSystem s_app_info = {.common.main_func = &s_main,
+                                                   .name = "Bluetooth Test"};
+  return (const PebbleProcessMd *)&s_app_info;
 }
-

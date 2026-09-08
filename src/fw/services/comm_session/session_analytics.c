@@ -27,5 +27,4 @@ void comm_session_analytics_close_session(CommSession *session, CommSessionClose
     PBL_ANALYTICS_TIMER_START(connectivity_expected_time_ms);
     PBL_ANALYTICS_TIMER_STOP(connectivity_connected_time_ms);
   }
-
 }

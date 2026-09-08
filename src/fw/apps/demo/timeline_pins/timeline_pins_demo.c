@@ -21,10 +21,11 @@
 
 #include <sys/cdefs.h>
 
-#define StringListLiteral(str) { \
-  .serialized_byte_length = ARRAY_LENGTH(str) - 1, \
-  .data = str, \
-} \
+#define StringListLiteral(str)                         \
+  {                                                    \
+      .serialized_byte_length = ARRAY_LENGTH(str) - 1, \
+      .data = str,                                     \
+  }
 
 const char *timeline_demo_strings[TimelinePinsDemoCount] = {
     [TimelinePinsDemo_Default] = "Default Pins",
@@ -68,10 +69,8 @@ static void prv_add_notification(int32_t delta_time_s) {
   attribute_list_add_cstring(&list, AttributeIdTitle, ARRAY_RAND(titles));
   attribute_list_add_cstring(&list, AttributeIdBody, ARRAY_RAND(bodies));
   attribute_list_add_uint32(&list, AttributeIdLastUpdated, now);
-  TimelineItem *item = timeline_item_create_with_attributes(now + delta_time_s, 0,
-                                                            TimelineItemTypeNotification,
-                                                            LayoutIdNotification,
-                                                            &list, NULL);
+  TimelineItem *item = timeline_item_create_with_attributes(
+      now + delta_time_s, 0, TimelineItemTypeNotification, LayoutIdNotification, &list, NULL);
   notification_storage_store(item);
   timeline_item_destroy(item);
   attribute_list_destroy_list(&list);
@@ -101,9 +100,8 @@ static void prv_add_weather_pin_with_params(int32_t delta_time_s, bool has_times
   if (has_short_subtitle) {
     attribute_list_add_cstring(&list, AttributeIdShortSubtitle, "Cloudy with rain and snow");
   }
-  TimelineItem *item = timeline_item_create_with_attributes(now + delta_time_s, 0,
-                                                            TimelineItemTypePin, LayoutIdWeather,
-                                                            &list, NULL);
+  TimelineItem *item = timeline_item_create_with_attributes(
+      now + delta_time_s, 0, TimelineItemTypePin, LayoutIdWeather, &list, NULL);
 
   pin_db_insert_item_without_event(item);
   timeline_item_destroy(item);
@@ -137,9 +135,8 @@ static void prv_add_sports_pin(int32_t delta_time_s, GColor secondary_color, boo
                              "01:45\nJames 3pt Shot: Missed\n"
                              "03:15 | 22-29\nLeonard Free Throw 2 of 2 (8PTS)");
   attribute_list_add_uint32(&list, AttributeIdLastUpdated, now);
-  TimelineItem *item = timeline_item_create_with_attributes(now + delta_time_s, 0,
-                                                            TimelineItemTypePin, LayoutIdSports,
-                                                            &list, NULL);
+  TimelineItem *item = timeline_item_create_with_attributes(
+      now + delta_time_s, 0, TimelineItemTypePin, LayoutIdSports, &list, NULL);
 
   pin_db_insert_item_without_event(item);
   timeline_item_destroy(item);
@@ -175,9 +172,8 @@ static void prv_add_calendar_pin(int32_t delta_time_s, int32_t duration_m, bool 
                              "http://docs.google.com/u/1/#inbox/14b9fa5f872ebbc6\n\n"
                              "Will email before if we need to cancel");
   attribute_list_add_uint32(&list, AttributeIdLastUpdated, now);
-  TimelineItem *item = timeline_item_create_with_attributes(target, duration_m,
-                                                            TimelineItemTypePin, LayoutIdCalendar,
-                                                            &list, NULL);
+  TimelineItem *item = timeline_item_create_with_attributes(target, duration_m, TimelineItemTypePin,
+                                                            LayoutIdCalendar, &list, NULL);
 
   pin_db_insert_item_without_event(item);
   timeline_item_destroy(item);
@@ -202,9 +198,8 @@ static void prv_add_generic_pin(int32_t delta_time_s, bool has_subtitle) {
   attribute_list_add_string_list(&list, AttributeIdParagraphs, &paragraphs);
   attribute_list_add_cstring(&list, AttributeIdBody, "Body message");
   attribute_list_add_uint32(&list, AttributeIdLastUpdated, now);
-  TimelineItem *item = timeline_item_create_with_attributes(now + delta_time_s, 0,
-                                                            TimelineItemTypePin, LayoutIdGeneric,
-                                                            &list, NULL);
+  TimelineItem *item = timeline_item_create_with_attributes(
+      now + delta_time_s, 0, TimelineItemTypePin, LayoutIdGeneric, &list, NULL);
 
   pin_db_insert_item_without_event(item);
   timeline_item_destroy(item);
@@ -225,20 +220,22 @@ static void prv_add_activity_session_pin(int32_t delta_time_s, int32_t duration_
 
   uint8_t buffer[Uint32ListSize(ActivitySessionMetricCount)];
   Uint32List *icons = (Uint32List *)buffer;
-  icons->num_values = ActivitySessionMetricCount,
-  icons->values[0] = TIMELINE_RESOURCE_PACE;
+  icons->num_values = ActivitySessionMetricCount, icons->values[0] = TIMELINE_RESOURCE_PACE;
   icons->values[1] = TIMELINE_RESOURCE_DURATION;
   icons->values[2] = TIMELINE_RESOURCE_CALORIES;
   icons->values[3] = TIMELINE_RESOURCE_DISTANCE;
   static StringList names = StringListLiteral("Pace\0Run duration\0Calories burned\0Distance");
-  static StringList values = StringListLiteral("7:45\0" "30M\0" "8384\0" "3.3 miles");
+  static StringList values = StringListLiteral(
+      "7:45\0"
+      "30M\0"
+      "8384\0"
+      "3.3 miles");
   attribute_list_add_string_list(&list, AttributeIdMetricNames, &names);
   attribute_list_add_string_list(&list, AttributeIdMetricValues, &values);
   attribute_list_add_uint32_list(&list, AttributeIdMetricIcons, icons);
 
-  TimelineItem *item = timeline_item_create_with_attributes(now + delta_time_s, duration_m,
-                                                            TimelineItemTypePin, LayoutIdHealth,
-                                                            &list, NULL);
+  TimelineItem *item = timeline_item_create_with_attributes(
+      now + delta_time_s, duration_m, TimelineItemTypePin, LayoutIdHealth, &list, NULL);
 
   pin_db_insert_item_without_event(item);
   timeline_item_destroy(item);
@@ -246,11 +243,11 @@ static void prv_add_activity_session_pin(int32_t delta_time_s, int32_t duration_
 }
 
 static void prv_launch_timeline(void) {
-  app_manager_put_launch_app_event(&(AppLaunchEventConfig) { .id = APP_ID_TIMELINE });
+  app_manager_put_launch_app_event(&(AppLaunchEventConfig){.id = APP_ID_TIMELINE});
 }
 
 static void prv_launch_notifications(void) {
-  app_manager_put_launch_app_event(&(AppLaunchEventConfig) { .id = APP_ID_NOTIFICATIONS });
+  app_manager_put_launch_app_event(&(AppLaunchEventConfig){.id = APP_ID_NOTIFICATIONS});
 }
 
 void timeline_pins_demo_add_pins(TimelinePinsDemoSet pin_set) {
@@ -302,8 +299,8 @@ void timeline_pins_demo_add_pins(TimelinePinsDemoSet pin_set) {
       prv_add_weather_pin(2 * 24 * 60 * 60);
       goto timeline;
     case TimelinePinsDemo_OngoingEvent: {
-      prv_add_calendar_pin(-(3 * SECONDS_PER_DAY) / 2, 3 * MINUTES_PER_DAY, is_all_day,
-                           !recurring, 0, 0);
+      prv_add_calendar_pin(-(3 * SECONDS_PER_DAY) / 2, 3 * MINUTES_PER_DAY, is_all_day, !recurring,
+                           0, 0);
       goto timeline;
     }
     case TimelinePinsDemo_TodayAndTomorrow:
@@ -347,8 +344,8 @@ static uint16_t prv_menu_get_num_rows(OptionMenu *option_menu, void *context) {
 
 static void prv_menu_draw_row(OptionMenu *option_menu, GContext *ctx, const Layer *cell_layer,
                               const GRect *text_frame, uint32_t row, bool selected, void *context) {
-  option_menu_system_draw_row(option_menu, ctx, cell_layer, text_frame,
-                              timeline_demo_strings[row], selected, context);
+  option_menu_system_draw_row(option_menu, ctx, cell_layer, text_frame, timeline_demo_strings[row],
+                              selected, context);
 }
 
 static void prv_menu_unload(OptionMenu *option_menu, void *context) {
@@ -358,24 +355,26 @@ static void prv_menu_unload(OptionMenu *option_menu, void *context) {
 static void prv_handle_init(void) {
   // add CFLAGS="-DTIMELINE_PIN_SET=OneDayAway" before ./waf configure to skip menu
 #ifdef TIMELINE_PIN_SET
-  #define PREFIX_PIN_SET(set) (__CONCAT(TimelinePinsDemo, set))
+#define PREFIX_PIN_SET(set) (__CONCAT(TimelinePinsDemo, set))
   timeline_pins_demo_add_pins(PREFIX_PIN_SET(TIMELINE_PIN_SET));
 #else
   OptionMenu *option_menu = option_menu_create();
 
   const OptionMenuConfig config = {
-    .title = "Select Type of Pins to Add",
-    .choice = OPTION_MENU_CHOICE_NONE,
-    .status_colors = { GColorDarkGray, GColorWhite },
-    .highlight_colors = { GColorLightGray, GColorBlack },
+      .title = "Select Type of Pins to Add",
+      .choice = OPTION_MENU_CHOICE_NONE,
+      .status_colors = {GColorDarkGray, GColorWhite},
+      .highlight_colors = {GColorLightGray, GColorBlack},
   };
   option_menu_configure(option_menu, &config);
-  option_menu_set_callbacks(option_menu, &(OptionMenuCallbacks) {
-    .select = prv_menu_select,
-    .get_num_rows = prv_menu_get_num_rows,
-    .draw_row = prv_menu_draw_row,
-    .unload = prv_menu_unload,
-  }, option_menu);
+  option_menu_set_callbacks(option_menu,
+                            &(OptionMenuCallbacks){
+                                .select = prv_menu_select,
+                                .get_num_rows = prv_menu_get_num_rows,
+                                .draw_row = prv_menu_draw_row,
+                                .unload = prv_menu_unload,
+                            },
+                            option_menu);
 
   const bool animated = true;
   app_window_stack_push(&option_menu->window, animated);
@@ -387,15 +386,16 @@ static void prv_main(void) {
   app_event_loop();
 }
 
-const PebbleProcessMd* timeline_pins_get_app_info(void) {
+const PebbleProcessMd *timeline_pins_get_app_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-      .common = {
-          .main_func = prv_main,
-          // UUID: c53a79d7-3472-4062-a7d0-39ada9bfa415
-          .uuid = {0xc5, 0x3a, 0x79, 0xd7, 0x34, 0x72, 0x40, 0x62,
-                   0xa7, 0xd0, 0x39, 0xad, 0xa9, 0xbf, 0xa4, 0x15},
-      },
+      .common =
+          {
+              .main_func = prv_main,
+              // UUID: c53a79d7-3472-4062-a7d0-39ada9bfa415
+              .uuid = {0xc5, 0x3a, 0x79, 0xd7, 0x34, 0x72, 0x40, 0x62, 0xa7, 0xd0, 0x39, 0xad, 0xa9,
+                       0xbf, 0xa4, 0x15},
+          },
       .name = "Timeline Pins Demo",
   };
-  return (const PebbleProcessMd*) &s_app_info;
+  return (const PebbleProcessMd *)&s_app_info;
 }

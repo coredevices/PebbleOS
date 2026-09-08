@@ -36,19 +36,18 @@ typedef struct {
   SlaveConnEventStats conn_event_stats;
 } GetBytesState;
 
-
 // ----------------------------------------------------------------------------------------
 // Private globals
 static bool s_get_bytes_in_progress = false;
 
-
 static void prv_put_status_event(DebugInfoEventState state) {
   PebbleEvent event = {
-    .type = PEBBLE_GATHER_DEBUG_INFO_EVENT,
-    .debug_info = {
-      .source = DebugInfoSourceGetBytes,
-      .state = state,
-    },
+      .type = PEBBLE_GATHER_DEBUG_INFO_EVENT,
+      .debug_info =
+          {
+              .source = DebugInfoSourceGetBytes,
+              .state = state,
+          },
   };
   event_put(&event);
 }
@@ -56,18 +55,15 @@ static void prv_put_status_event(DebugInfoEventState state) {
 // -----------------------------------------------------------------------------------------------
 static bool prv_protocol_send_err_response(CommSession *session, int8_t transaction_id,
                                            GetBytesInfoErrorCode result) {
-  const GetBytesRspObjectInfo rsp = (const GetBytesRspObjectInfo) {
-    .hdr.cmd_id = GET_BYTES_CMD_OBJECT_INFO,
-    .hdr.transaction_id = transaction_id,
-    .error_code = result,
-    .num_bytes = htonl(0),
+  const GetBytesRspObjectInfo rsp = (const GetBytesRspObjectInfo){
+      .hdr.cmd_id = GET_BYTES_CMD_OBJECT_INFO,
+      .hdr.transaction_id = transaction_id,
+      .error_code = result,
+      .num_bytes = htonl(0),
   };
 
-  bool success = comm_session_send_data(session,
-                                        GET_BYTES_ENDPOINT_ID,
-                                        (const uint8_t *) &rsp,
-                                        sizeof(rsp),
-                                        COMM_SESSION_DEFAULT_TIMEOUT);
+  bool success = comm_session_send_data(session, GET_BYTES_ENDPOINT_ID, (const uint8_t *)&rsp,
+                                        sizeof(rsp), COMM_SESSION_DEFAULT_TIMEOUT);
   if (!success) {
     PBL_LOG_ERR("GET_BYTES: aborted");
     s_get_bytes_in_progress = false;
@@ -86,15 +82,14 @@ static bool prv_protocol_send_err_response(CommSession *session, int8_t transact
 static void prv_gather_and_record_stats(GetBytesState *state) {
   uint32_t elapsed_time_ms = pbl_ticks_to_ms(rtc_get_ticks() - state->start_ticks);
   uint32_t bytes_per_sec = ((state->num_bytes * MS_PER_SECOND) / elapsed_time_ms);
-  PBL_LOG_DBG("GET_BYTES: Done sending data. Pushed %"PRIu32" bytes/sec",
-          bytes_per_sec);
-  bluetooth_analytics_handle_get_bytes_stats(
-    state->object_type, state->num_bytes, elapsed_time_ms, &state->conn_event_stats);
+  PBL_LOG_DBG("GET_BYTES: Done sending data. Pushed %" PRIu32 " bytes/sec", bytes_per_sec);
+  bluetooth_analytics_handle_get_bytes_stats(state->object_type, state->num_bytes, elapsed_time_ms,
+                                             &state->conn_event_stats);
 }
 
 // -----------------------------------------------------------------------------------------------
-static void prv_protocol_send_next_chunk(void* raw_state) {
-  GetBytesState* state = (GetBytesState*)raw_state;
+static void prv_protocol_send_next_chunk(void *raw_state) {
+  GetBytesState *state = (GetBytesState *)raw_state;
 
   // -------------------------------------------------------------------------------------------
   // Did we fetch the total size yet? If not, walk through all the chunks getting the total size
@@ -141,29 +136,29 @@ static void prv_protocol_send_next_chunk(void* raw_state) {
 
   if (state->sent_header) {
     // Send next chunk of data
-    GetBytesRspObjectData* rsp = (GetBytesRspObjectData *) kernel_zalloc_check(packet_len);
-    *rsp = (GetBytesRspObjectData) {
-      .hdr.cmd_id = GET_BYTES_CMD_OBJECT_DATA,
-      .hdr.transaction_id = state->transaction_id,
-      .byte_offset = htonl(state->storage.current_offset),
+    GetBytesRspObjectData *rsp = (GetBytesRspObjectData *)kernel_zalloc_check(packet_len);
+    *rsp = (GetBytesRspObjectData){
+        .hdr.cmd_id = GET_BYTES_CMD_OBJECT_DATA,
+        .hdr.transaction_id = state->transaction_id,
+        .byte_offset = htonl(state->storage.current_offset),
     };
 
     // read the next chunk from storage
     gb_storage_read_next_chunk(&state->storage, rsp->data, data_len);
 
-    comm_session_send_buffer_write(sb, (const uint8_t *) rsp, packet_len);
+    comm_session_send_buffer_write(sb, (const uint8_t *)rsp, packet_len);
     kernel_free(rsp);
     PBL_LOG_DBG("GET_BYTES: sending next %d bytes. %d remaining", (int)data_len,
-            (int)(remaining_bytes-data_len));
+                (int)(remaining_bytes - data_len));
   } else {
     // Send image info response
-    const GetBytesRspObjectInfo rsp = (const GetBytesRspObjectInfo) {
-      .hdr.cmd_id = GET_BYTES_CMD_OBJECT_INFO,
-      .hdr.transaction_id = state->transaction_id,
-      .error_code = htonl(GET_BYTES_OK),
-      .num_bytes  = htonl(state->num_bytes),
+    const GetBytesRspObjectInfo rsp = (const GetBytesRspObjectInfo){
+        .hdr.cmd_id = GET_BYTES_CMD_OBJECT_INFO,
+        .hdr.transaction_id = state->transaction_id,
+        .error_code = htonl(GET_BYTES_OK),
+        .num_bytes = htonl(state->num_bytes),
     };
-    comm_session_send_buffer_write(sb, (const uint8_t *) &rsp, sizeof(rsp));
+    comm_session_send_buffer_write(sb, (const uint8_t *)&rsp, sizeof(rsp));
     state->sent_header = true;
   }
   comm_session_send_buffer_end_write(sb);
@@ -196,9 +191,9 @@ cleanup:
 
 //! Sets up the storage for the given GetBytes command. Will return whether the command
 //! was successful.
-bool prv_setup_state_for_command(GetBytesCmd cmd, GetBytesState *state,
-                                 const uint8_t* data, uint32_t len) {
-  GetBytesStorageInfo info = { 0 };
+bool prv_setup_state_for_command(GetBytesCmd cmd, GetBytesState *state, const uint8_t *data,
+                                 uint32_t len) {
+  GetBytesStorageInfo info = {0};
 
   switch (cmd) {
     case GET_BYTES_CMD_GET_NEW_COREDUMP:
@@ -215,8 +210,7 @@ bool prv_setup_state_for_command(GetBytesCmd cmd, GetBytesState *state,
       // copy the filename
       GetBytesFileHeader *hdr = (GetBytesFileHeader *)data;
       if ((hdr->filename_len + sizeof(GetBytesFileHeader) + 1) < len) {
-        PBL_LOG_ERR("Filename len does not match message length %d",
-                hdr->filename_len);
+        PBL_LOG_ERR("Filename len does not match message length %d", hdr->filename_len);
         return false;
       }
       if (hdr->filename[hdr->filename_len] != '\0') {
@@ -233,7 +227,7 @@ bool prv_setup_state_for_command(GetBytesCmd cmd, GetBytesState *state,
       info.flash_start_addr = ntohl(hdr->start_addr);
       info.flash_len = ntohl(hdr->len);
       PBL_LOG_DBG("Fetching %d bytes starting at %d", (int)info.flash_len,
-              (int)info.flash_start_addr);
+                  (int)info.flash_start_addr);
       bool rv = gb_storage_setup(&state->storage, state->object_type, &info);
       return rv;
     }
@@ -244,13 +238,12 @@ bool prv_setup_state_for_command(GetBytesCmd cmd, GetBytesState *state,
   }
 }
 
-void get_bytes_protocol_msg_callback(CommSession *session, const uint8_t* msg_data,
-                                    uint32_t msg_len) {
+void get_bytes_protocol_msg_callback(CommSession *session, const uint8_t *msg_data,
+                                     uint32_t msg_len) {
   // at least have a cmd and a transaction_id
   if (msg_len < 2) {
-    PBL_LOG_ERR("Invalid length %"PRIu32, msg_len);
-    prv_protocol_send_err_response(session, 0 /*transaction_id*/,
-                                         GET_BYTES_MALFORMED_COMMAND);
+    PBL_LOG_ERR("Invalid length %" PRIu32, msg_len);
+    prv_protocol_send_err_response(session, 0 /*transaction_id*/, GET_BYTES_MALFORMED_COMMAND);
     return;
   }
 
@@ -263,22 +256,20 @@ void get_bytes_protocol_msg_callback(CommSession *session, const uint8_t* msg_da
       break;
     default:
       PBL_LOG_ERR("first byte can't be %u", hdr->cmd_id);
-      prv_protocol_send_err_response(session, hdr->transaction_id,
-                                         GET_BYTES_MALFORMED_COMMAND);
+      prv_protocol_send_err_response(session, hdr->transaction_id, GET_BYTES_MALFORMED_COMMAND);
       return;
   }
 
   if (s_get_bytes_in_progress == true) {
     PBL_LOG_ERR("already in progress.");
-    prv_protocol_send_err_response(session, hdr->transaction_id,
-                                         GET_BYTES_ALREADY_IN_PROGRESS);
+    prv_protocol_send_err_response(session, hdr->transaction_id, GET_BYTES_ALREADY_IN_PROGRESS);
     return;
   }
 
-  GetBytesState* state = kernel_zalloc_check(sizeof(*state));
-  *state = (GetBytesState) {
-    .session = session,
-    .transaction_id = hdr->transaction_id,
+  GetBytesState *state = kernel_zalloc_check(sizeof(*state));
+  *state = (GetBytesState){
+      .session = session,
+      .transaction_id = hdr->transaction_id,
   };
 
   // let the other types of pushes setup the state.

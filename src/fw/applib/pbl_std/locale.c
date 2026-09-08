@@ -47,15 +47,7 @@ char *pbl_setlocale(int category, const char *locale) {
   return NULL;
 }
 
-static const struct lconv pbl_lconv = {
-  ".", "", "", "", "", "", "", "", "", "",
-  255, 255, 255, 255,
-  255, 255, 255, 255,
-  255, 255, 255, 255,
-  255, 255
-};
+static const struct lconv pbl_lconv = {".", "",  "",  "",  "",  "",  "",  "",  "",  "",  255, 255,
+                                       255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255};
 
-struct lconv *pbl_localeconv_r(struct _reent *data) {
-  return (struct lconv *)&pbl_lconv;
-}
-
+struct lconv *pbl_localeconv_r(struct _reent *data) { return (struct lconv *)&pbl_lconv; }

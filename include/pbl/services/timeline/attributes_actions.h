@@ -18,10 +18,8 @@
 //! @param attributes_per_action_out    an array of counts for the number of attributes per action
 //!                                     in order corresponding to action order
 //! @return True if the data was parsed successfully, False if not
-bool attributes_actions_parse_serial_data(uint8_t num_attributes,
-                                          uint8_t num_actions,
-                                          const uint8_t *data,
-                                          size_t data_size,
+bool attributes_actions_parse_serial_data(uint8_t num_attributes, uint8_t num_actions,
+                                          const uint8_t *data, size_t data_size,
                                           size_t *string_alloc_size_out,
                                           uint8_t *attributes_per_action_out);
 
@@ -32,11 +30,9 @@ bool attributes_actions_parse_serial_data(uint8_t num_attributes,
 //!                                 in order corresponding to action order
 //! @param required_size_for_strings    total size of all attribute strings
 //! @return The size of the buffer required to store the attributes, actions and strings
-size_t attributes_actions_get_required_buffer_size(uint8_t num_attributes,
-                                                   uint8_t num_actions,
+size_t attributes_actions_get_required_buffer_size(uint8_t num_attributes, uint8_t num_actions,
                                                    uint8_t *attributes_per_action,
                                                    size_t required_size_for_strings);
-
 
 //! @return The size of the buffer needed to hold the attribute list and action group
 size_t attributes_actions_get_buffer_size(AttributeList *attr_list,
@@ -50,11 +46,8 @@ size_t attributes_actions_get_buffer_size(AttributeList *attr_list,
 //! @param num_actions        number of actions
 //! @param attributes_per_action    an array of counts for the number of attributes per action
 //!                                 in order corresponding to action order
-void attributes_actions_init(AttributeList *attr_list,
-                             TimelineItemActionGroup *action_group,
-                             uint8_t **buffer,
-                             uint8_t num_attributes,
-                             uint8_t num_actions,
+void attributes_actions_init(AttributeList *attr_list, TimelineItemActionGroup *action_group,
+                             uint8_t **buffer, uint8_t num_attributes, uint8_t num_actions,
                              const uint8_t *attributes_per_action);
 
 //! Fills an AttributeList and ActionGroup from serialized data
@@ -64,11 +57,8 @@ void attributes_actions_init(AttributeList *attr_list,
 //! @param buf_end            A pointer to the end of the buffer
 //! @param payload            Serialized payload buffer
 //! @param payload_size       Size of the payload buffer in bytes
-bool attributes_actions_deserialize(AttributeList *attr_list,
-                                    TimelineItemActionGroup *action_group,
-                                    uint8_t *buffer,
-                                    uint8_t *buf_end,
-                                    const uint8_t *payload,
+bool attributes_actions_deserialize(AttributeList *attr_list, TimelineItemActionGroup *action_group,
+                                    uint8_t *buffer, uint8_t *buf_end, const uint8_t *payload,
                                     size_t payload_size);
 
 //! Calculate the required size for a buffer to store actions & attributes
@@ -82,13 +72,11 @@ size_t attributes_actions_get_serialized_payload_size(AttributeList *list,
 //! @param buffer_size the size of the buffer in bytes
 //! @returns the number of bytes written to buffer
 size_t attributes_actions_serialize_payload(AttributeList *attr_list,
-                                            TimelineItemActionGroup *action_group,
-                                            uint8_t *buffer,
+                                            TimelineItemActionGroup *action_group, uint8_t *buffer,
                                             size_t buffer_size);
 
 //! @return true if successful, false if the buffer isn't large enough
-bool attributes_actions_deep_copy(AttributeList *src_attr_list,
-                                  AttributeList *dest_attr_list,
+bool attributes_actions_deep_copy(AttributeList *src_attr_list, AttributeList *dest_attr_list,
                                   TimelineItemActionGroup *src_action_group,
-                                  TimelineItemActionGroup *dest_action_group,
-                                  uint8_t *buffer, uint8_t *buf_end);
+                                  TimelineItemActionGroup *dest_action_group, uint8_t *buffer,
+                                  uint8_t *buf_end);

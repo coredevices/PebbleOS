@@ -12,9 +12,7 @@ void util_log(const char *filename, int line, const char *string) {
   pbl_log(LOG_LEVEL_INFO, filename, line, string);
 }
 
-void util_dbgserial_str(const char *string) {
-  dbgserial_putstr(string);
-}
+void util_dbgserial_str(const char *string) { dbgserial_putstr(string); }
 
 NORETURN util_assertion_failed(const char *filename, int line) {
   passert_failed_no_message(filename, line);

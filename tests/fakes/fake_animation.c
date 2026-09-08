@@ -15,7 +15,7 @@ ListNode *s_animations;
 
 Animation *animation_create(void) {
   AnimationPrivate *animation = malloc(sizeof(AnimationPrivate));
-  *animation = (AnimationPrivate) {};
+  *animation = (AnimationPrivate){};
 
   if (!s_animations) {
     s_animations = (ListNode *)animation;
@@ -81,8 +81,7 @@ Animation *WEAK animation_spawn_create(Animation *animation_a, Animation *animat
   return animation;
 }
 
-Animation *WEAK animation_spawn_create_from_array(Animation **animation_array,
-                                                  uint32_t array_len) {
+Animation *WEAK animation_spawn_create_from_array(Animation **animation_array, uint32_t array_len) {
   return prv_create_from_array(animation_array, array_len);
 }
 
@@ -173,7 +172,7 @@ bool animation_set_elapsed(Animation *animation_h, uint32_t elapsed_ms) {
 }
 
 bool animation_get_elapsed(Animation *animation_h, int32_t *elapsed_ms) {
-  AnimationPrivate *animation= (AnimationPrivate *)animation_h;
+  AnimationPrivate *animation = (AnimationPrivate *)animation_h;
   if (!animation) {
     return false;
   }
@@ -192,7 +191,6 @@ bool animation_set_handlers(Animation *animation_h, AnimationHandlers callbacks,
   animation->context = context;
   return true;
 }
-
 
 void *animation_get_context(Animation *animation_h) {
   AnimationPrivate *animation = (AnimationPrivate *)animation_h;
@@ -233,9 +231,7 @@ bool animation_unschedule(Animation *animation_h) {
 // Interface for unit tests to query the fake animation state
 /////////////////////////////////////////////////////////////
 
-Animation *fake_animation_get_first_animation(void) {
-  return (Animation *)s_animations;
-}
+Animation *fake_animation_get_first_animation(void) { return (Animation *)s_animations; }
 
 Animation *fake_animation_get_next_animation(Animation *animation) {
   return (Animation *)((AnimationPrivate *)animation)->list_node.next;

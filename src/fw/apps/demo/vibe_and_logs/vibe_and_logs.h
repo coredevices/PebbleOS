@@ -5,4 +5,4 @@
 
 #include "process_management/pebble_process_md.h"
 
-const PebbleProcessMd* vibe_and_logs_get_app_info();
+const PebbleProcessMd *vibe_and_logs_get_app_info();

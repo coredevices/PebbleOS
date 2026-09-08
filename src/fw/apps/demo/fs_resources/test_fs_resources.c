@@ -30,9 +30,9 @@ static void push_window(FSResourceAppData *data) {
   Window *window = &data->window;
   window_init(window, WINDOW_NAME("FS Resource Demo"));
   window_set_user_data(window, data);
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_window_load,
-  });
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_window_load,
+                                     });
   const bool animated = true;
   app_window_stack_push(window, animated);
 }
@@ -40,7 +40,7 @@ static void push_window(FSResourceAppData *data) {
 ////////////////////
 // App boilerplate
 static void handle_init(void) {
-  FSResourceAppData *data = (FSResourceAppData*) app_malloc_check(sizeof(FSResourceAppData));
+  FSResourceAppData *data = (FSResourceAppData *)app_malloc_check(sizeof(FSResourceAppData));
   if (data == NULL) {
     PBL_CROAK("Out of memory");
   }
@@ -61,12 +61,8 @@ static void s_main(void) {
   handle_deinit();
 }
 
-const PebbleProcessMd* fs_resources_app_get_info() {
-  static const PebbleProcessMdSystem s_fs_resources_app_info = {
-    .common.main_func = s_main,
-    .name = "FS Resources"
-  };
-  return (const PebbleProcessMd*) &s_fs_resources_app_info;
+const PebbleProcessMd *fs_resources_app_get_info() {
+  static const PebbleProcessMdSystem s_fs_resources_app_info = {.common.main_func = s_main,
+                                                                .name = "FS Resources"};
+  return (const PebbleProcessMd *)&s_fs_resources_app_info;
 }
-
-

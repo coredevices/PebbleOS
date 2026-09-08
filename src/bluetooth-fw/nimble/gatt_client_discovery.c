@@ -156,12 +156,9 @@ static bool prv_find_dsc_by_uuid(ListNode *node, void *data) {
   return ble_uuid_cmp(&dsc_node->descriptor.uuid.u, dsc_uuid) == 0;
 }
 
-static bool prv_find_dsc_uuid(GATTServiceDiscoveryContext *context,
-                              const ble_uuid_t *svc_uuid,
-                              const ble_uuid_t *chr_uuid,
-                              const ble_uuid_t *dsc_uuid,
-                              uint16_t *chr_handle,
-                              uint16_t *dsc_handle) {
+static bool prv_find_dsc_uuid(GATTServiceDiscoveryContext *context, const ble_uuid_t *svc_uuid,
+                              const ble_uuid_t *chr_uuid, const ble_uuid_t *dsc_uuid,
+                              uint16_t *chr_handle, uint16_t *dsc_handle) {
   GATTServiceDiscoveryServiceNode *service_node = (GATTServiceDiscoveryServiceNode *)list_find(
       context->services, prv_find_svc_by_uuid, (void *)svc_uuid);
   if (service_node == NULL) {
@@ -195,12 +192,10 @@ typedef struct {
 static int prv_on_svc_chgd_subscribe(uint16_t conn_handle, const struct ble_gatt_error *error,
                                      struct ble_gatt_attr *attr, void *arg) {
   if (error->status != 0) {
-    PBL_LOG_ERR("Failed to subscribe to service changed: 0x%" PRIx16,
-              error->status);
+    PBL_LOG_ERR("Failed to subscribe to service changed: 0x%" PRIx16, error->status);
   } else {
     GATTServiceDiscoveryDescriptorContext *ctx = arg;
-    bt_driver_cb_gatt_client_discovery_handle_service_changed(ctx->connection,
-                                                              ctx->chr_handle);
+    bt_driver_cb_gatt_client_discovery_handle_service_changed(ctx->connection, ctx->chr_handle);
 
     PBL_LOG_DBG("Subscribed to service changed");
   }
@@ -210,7 +205,8 @@ static int prv_on_svc_chgd_subscribe(uint16_t conn_handle, const struct ble_gatt
   return 0;
 }
 
-static void prv_convert_service_and_notify_os(uint16_t conn_handle, GATTServiceDiscoveryContext *context) {
+static void prv_convert_service_and_notify_os(uint16_t conn_handle,
+                                              GATTServiceDiscoveryContext *context) {
   list_foreach(context->services, prv_convert_service_and_notify_os_cb, context->connection);
   bt_driver_cb_gatt_client_discovery_complete(context->connection, BTErrnoOK);
 
@@ -218,21 +214,21 @@ static void prv_convert_service_and_notify_os(uint16_t conn_handle, GATTServiceD
   uint16_t chr_handle, dsc_handle;
   if (prv_find_dsc_uuid(context, BLE_UUID16_DECLARE(BLE_GATT_SVC_UUID16),
                         BLE_UUID16_DECLARE(BLE_SVC_GATT_CHR_SERVICE_CHANGED_UUID16),
-                        BLE_UUID16_DECLARE(BLE_GATT_DSC_CLT_CFG_UUID16),
-                        &chr_handle, &dsc_handle)) {
+                        BLE_UUID16_DECLARE(BLE_GATT_DSC_CLT_CFG_UUID16), &chr_handle,
+                        &dsc_handle)) {
     uint16_t value;
     int ret;
 
-    GATTServiceDiscoveryDescriptorContext *ctx = kernel_zalloc_check(
-        sizeof(GATTServiceDiscoveryDescriptorContext));
+    GATTServiceDiscoveryDescriptorContext *ctx =
+        kernel_zalloc_check(sizeof(GATTServiceDiscoveryDescriptorContext));
     ctx->connection = context->connection;
     ctx->chr_handle = chr_handle;
 
     value = 0x0002;
-    ret = ble_gattc_write_flat(conn_handle, dsc_handle,
-                               &value, sizeof(value), prv_on_svc_chgd_subscribe, ctx);
+    ret = ble_gattc_write_flat(conn_handle, dsc_handle, &value, sizeof(value),
+                               prv_on_svc_chgd_subscribe, ctx);
     if (ret != 0) {
-        PBL_LOG_ERR("Failed to subscribe to service changed: %d", ret);
+      PBL_LOG_ERR("Failed to subscribe to service changed: %d", ret);
     }
   }
 
@@ -264,8 +260,8 @@ static void prv_discover_next_dscs(uint16_t conn_handle, GATTServiceDiscoveryCon
   uint16_t end_handle = prv_get_last_dsc_handle(context);
   int rc = ble_gattc_disc_all_dscs(conn_handle, start_handle, end_handle, prv_find_dsc_cb, context);
   if (rc != 0) {
-    PBL_LOG_ERR("ble_gattc_disc_all_dscs rc=0x%04x (0x%04x -> 0x%04x)",
-              (uint16_t)rc, start_handle, end_handle);
+    PBL_LOG_ERR("ble_gattc_disc_all_dscs rc=0x%04x (0x%04x -> 0x%04x)", (uint16_t)rc, start_handle,
+                end_handle);
   }
 }
 
@@ -275,8 +271,8 @@ static void prv_discover_next_chrs(uint16_t conn_handle, GATTServiceDiscoveryCon
   int rc = ble_gattc_disc_all_chrs(conn_handle, service_node->service.start_handle,
                                    service_node->service.end_handle, prv_find_chr_cb, context);
   if (rc != 0) {
-    PBL_LOG_ERR("ble_gattc_disc_all_chrs rc=0x%04x (0x%04x -> 0x%04x)",
-              (uint16_t)rc, service_node->service.start_handle, service_node->service.end_handle);
+    PBL_LOG_ERR("ble_gattc_disc_all_chrs rc=0x%04x (0x%04x -> 0x%04x)", (uint16_t)rc,
+                service_node->service.start_handle, service_node->service.end_handle);
   }
 }
 
@@ -339,8 +335,7 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
     case 0:
       char chr_uuid_str[BLE_UUID_STR_LEN];
       ble_uuid_to_str(&dsc->uuid.u, chr_uuid_str);
-      PBL_LOG_DBG("Found descriptor %s (hdl: 0x%" PRIx16 ")",
-                chr_uuid_str, dsc->handle);
+      PBL_LOG_DBG("Found descriptor %s (hdl: 0x%" PRIx16 ")", chr_uuid_str, dsc->handle);
 
       GATTServiceDiscoveryDescriptorNode *dsc_node = prv_create_descriptor_node(dsc);
       GATTServiceDiscoveryCharacteristicNode *chr_node = prv_get_current_chr(context);
@@ -384,8 +379,7 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
       break;
 
     default:
-      PBL_LOG_ERR("Descriptor discovery error: %d",
-                error->status);
+      PBL_LOG_ERR("Descriptor discovery error: %d", error->status);
       if (error->status == BLE_HS_ETIMEOUT) {
         errno = BTErrnoServiceDiscoveryTimeout;
       } else if (error->status == BLE_HS_ENOTCONN) {
@@ -420,7 +414,7 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
       char chr_uuid_str[BLE_UUID_STR_LEN];
       ble_uuid_to_str(&chr->uuid.u, chr_uuid_str);
       PBL_LOG_DBG("Found characteristic %s (val hdl: 0x%" PRIx16 ", def hdl: 0x%" PRIx16 ")",
-                chr_uuid_str, chr->val_handle, chr->def_handle);
+                  chr_uuid_str, chr->val_handle, chr->def_handle);
 
       GATTServiceDiscoveryCharacteristicNode *chr_node = prv_create_chr_node(chr);
       GATTServiceDiscoveryServiceNode *service_node = prv_get_current_service(context);
@@ -456,8 +450,7 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
       break;
 
     default:
-      PBL_LOG_ERR("Characteristic discovery error: %d",
-                error->status);
+      PBL_LOG_ERR("Characteristic discovery error: %d", error->status);
       if (error->status == BLE_HS_ETIMEOUT) {
         errno = BTErrnoServiceDiscoveryTimeout;
       } else if (error->status == BLE_HS_ENOTCONN) {
@@ -491,7 +484,7 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
     case 0:
       if (service->start_handle < context->range.start ||
           service->end_handle > context->range.end) {
-        return 0; // skip this service
+        return 0;  // skip this service
       }
 
       GATTServiceDiscoveryServiceNode *service_node = prv_create_service_node(service);
@@ -499,9 +492,8 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
 
       char service_uuid_str[BLE_UUID_STR_LEN];
       ble_uuid_to_str(&service->uuid.u, service_uuid_str);
-      PBL_LOG_DBG("Found service %s, 0x%" PRIx16 "-0x%" PRIx16 " (total %lu)",
-                service_uuid_str, service->start_handle, service->end_handle,
-                list_count(context->services));
+      PBL_LOG_DBG("Found service %s, 0x%" PRIx16 "-0x%" PRIx16 " (total %lu)", service_uuid_str,
+                  service->start_handle, service->end_handle, list_count(context->services));
       break;
 
     case BLE_HS_EDONE:
@@ -538,8 +530,7 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
   return 0;
 }
 
-void nimble_discover_init(void) {
-}
+void nimble_discover_init(void) {}
 
 static BTErrno prv_start_discovery(const GAPLEConnection *connection, const ATTHandleRange *data) {
   uint16_t conn_handle;

@@ -26,22 +26,18 @@
 
 static GRect s_graphics_draw_bitmap_in_rect__rect = GRectZero;
 
-void graphics_draw_bitmap_in_rect(GContext* ctx, const GBitmap *src_bitmap, const GRect *rect) {
+void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *src_bitmap, const GRect *rect) {
   s_graphics_draw_bitmap_in_rect__rect = *rect;
 }
 
-bool process_manager_compiled_with_legacy2_sdk(void) {
-  return cl_mock_type(bool);
-}
+bool process_manager_compiled_with_legacy2_sdk(void) { return cl_mock_type(bool); }
 
 // Test boilerplate
 /////////////////////
 
-void test_bitmap_layer__initialize(void) {
-}
+void test_bitmap_layer__initialize(void) {}
 
-void test_bitmap_layer__cleanup(void) {
-}
+void test_bitmap_layer__cleanup(void) {}
 
 // Tests
 //////////////////////
@@ -50,17 +46,18 @@ void test_bitmap_layer__cleanup(void) {
 // on recent SDKs but that a previous bug is kept for 2.x SDK
 void test_bitmap_layer__nonzero_bounds(void) {
   GContext ctx = {
-    .draw_state = (GDrawState) {
-      .clip_box = GRect(0, 0, 144, 168),
-      .drawing_box = GRect(0, 0, 144, 168),
-    },
+      .draw_state =
+          (GDrawState){
+              .clip_box = GRect(0, 0, 144, 168),
+              .drawing_box = GRect(0, 0, 144, 168),
+          },
   };
 
   static const GRect BITMAP_LAYER_FRAME = GRect(0, 0, 640, 64);
   static const GRect BITMAP_LAYER_BOUNDS = GRect(-32, 0, 640, 64);
   static const GRect BITMAP_BOUNDS = GRect(0, 0, 640, 64);
   GBitmap bitmap = {
-    .bounds = BITMAP_BOUNDS,
+      .bounds = BITMAP_BOUNDS,
   };
 
   BitmapLayer layer;

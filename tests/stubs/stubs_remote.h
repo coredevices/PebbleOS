@@ -5,12 +5,8 @@
 
 #include <stdbool.h>
 
-typedef void * RemoteRef;
+typedef void *RemoteRef;
 
-RemoteRef remote_get_active() {
-  return NULL;
-}
+RemoteRef remote_get_active() { return NULL; }
 
-bool remote_is_connected(void) {
-  return false;
-}
+bool remote_is_connected(void) { return false; }

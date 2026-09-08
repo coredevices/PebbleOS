@@ -7,4 +7,3 @@
 #include "pbl/util/attributes.h"
 
 void WEAK comm_session_app_session_capabilities_evict(const Uuid *app_uuid) {}
-

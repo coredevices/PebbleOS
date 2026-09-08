@@ -33,9 +33,9 @@ typedef void (*TaskTimerCallback)(void *data);
 //!
 //! TIMER_START_FLAG_FAIL_IF_SCHEDULED If the timer is already scheduled, do not reschedule it and
 //! return false from task_timer_start.
-#define TIMER_START_FLAG_REPEATING          0x01
-#define TIMER_START_FLAG_FAIL_IF_EXECUTING  0x02
-#define TIMER_START_FLAG_FAIL_IF_SCHEDULED  0x04
+#define TIMER_START_FLAG_REPEATING 0x01
+#define TIMER_START_FLAG_FAIL_IF_EXECUTING 0x02
+#define TIMER_START_FLAG_FAIL_IF_SCHEDULED 0x04
 
 //! Creates a new timer object. This timer will start out in the stopped state.
 //! @return the non-zero timer id or TIMER_INVALID_ID if OOM

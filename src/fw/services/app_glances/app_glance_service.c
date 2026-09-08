@@ -87,11 +87,12 @@ static void prv_glance_event_put(const Uuid *app_uuid) {
   Uuid *app_uuid_copy = kernel_zalloc_check(sizeof(Uuid));
   *app_uuid_copy = *app_uuid;
 
-  PebbleEvent e = (PebbleEvent) {
-    .type = PEBBLE_APP_GLANCE_EVENT,
-    .app_glance = (PebbleAppGlanceEvent) {
-      .app_uuid = app_uuid_copy,
-    },
+  PebbleEvent e = (PebbleEvent){
+      .type = PEBBLE_APP_GLANCE_EVENT,
+      .app_glance =
+          (PebbleAppGlanceEvent){
+              .app_uuid = app_uuid_copy,
+          },
   };
 
   event_put(&e);
@@ -131,20 +132,19 @@ void app_glance_service_init_glance(AppGlance *glance) {
   if (!glance) {
     return;
   }
-  *glance = (AppGlance) {};
+  *glance = (AppGlance){};
 }
 
 void app_glance_service_init(void) {
-
   static EventServiceInfo s_blob_db_event_info = {
-    .type = PEBBLE_BLOBDB_EVENT,
-    .handler = prv_blob_db_event_handler,
+      .type = PEBBLE_BLOBDB_EVENT,
+      .handler = prv_blob_db_event_handler,
   };
   event_service_client_subscribe(&s_blob_db_event_info);
 
   static EventServiceInfo s_app_cache_event_info = {
-    .type = PEBBLE_APP_CACHE_EVENT,
-    .handler = prv_handle_app_cache_event,
+      .type = PEBBLE_APP_CACHE_EVENT,
+      .handler = prv_handle_app_cache_event,
   };
   event_service_client_subscribe(&s_app_cache_event_info);
 }
@@ -165,8 +165,8 @@ bool app_glance_service_get_current_slice(const Uuid *app_uuid, AppGlanceSliceIn
 
   // Iterate over the slices to find the current slice (which might be NULL if there aren't any
   // slices or if all of the slices have expired)
-  FindCurrentSliceData find_current_slice_data = (FindCurrentSliceData) {
-    .current_time = rtc_get_time(),
+  FindCurrentSliceData find_current_slice_data = (FindCurrentSliceData){
+      .current_time = rtc_get_time(),
   };
   prv_slice_for_each(app_glance, prv_find_current_glance, &find_current_slice_data);
   if (!find_current_slice_data.current_slice) {

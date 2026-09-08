@@ -15,7 +15,6 @@
 #include "pbl/services/touch/touch.h"
 #endif
 
-
 void prv_change_orientation(bool rotated) {
   display_set_rotated(rotated);
   button_set_rotated(rotated);
@@ -33,7 +32,7 @@ void orientation_handle_prefs_changed(void) {
   // Without this, phone-originated orientation changes (via settings blob DB sync) would not
   // be visible until the next natural redraw (e.g. button press or watchface tick).
   PebbleEvent event = {
-    .type = PEBBLE_RENDER_REQUEST_EVENT,
+      .type = PEBBLE_RENDER_REQUEST_EVENT,
   };
   process_manager_send_event_to_process(PebbleTask_App, &event);
 }

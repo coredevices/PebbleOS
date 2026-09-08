@@ -21,24 +21,27 @@ extern void ble_client_handle_event(PebbleEvent *e, void *context);
 
 void ble_init_app_state(void) {
   BLEAppState *ble_app_state = app_state_get_ble_app_state();
-  *ble_app_state = (const BLEAppState) {
-    // ble_scan_...:
-    .scan_service_info = (const EventServiceInfo) {
-      .type = PEBBLE_BLE_SCAN_EVENT,
-      .handler = ble_scan_handle_event,
-    },
+  *ble_app_state = (const BLEAppState){
+      // ble_scan_...:
+      .scan_service_info =
+          (const EventServiceInfo){
+              .type = PEBBLE_BLE_SCAN_EVENT,
+              .handler = ble_scan_handle_event,
+          },
 
-    // ble_central_...:
-    .connection_service_info = (const EventServiceInfo) {
-      .type = PEBBLE_BLE_CONNECTION_EVENT,
-      .handler = ble_central_handle_event,
-    },
+      // ble_central_...:
+      .connection_service_info =
+          (const EventServiceInfo){
+              .type = PEBBLE_BLE_CONNECTION_EVENT,
+              .handler = ble_central_handle_event,
+          },
 
-    // ble_client_...:
-    .gatt_client_service_info = (const EventServiceInfo) {
-      .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
-      .handler = ble_client_handle_event,
-    },
+      // ble_client_...:
+      .gatt_client_service_info =
+          (const EventServiceInfo){
+              .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
+              .handler = ble_client_handle_event,
+          },
   };
 }
 

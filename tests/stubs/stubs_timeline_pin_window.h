@@ -5,4 +5,4 @@
 
 #include "apps/system/timeline/pin_window.h"
 
-void timeline_pin_window_push_modal(TimelineItem *item) { }
+void timeline_pin_window_push_modal(TimelineItem *item) {}

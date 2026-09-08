@@ -14,14 +14,14 @@
 #include <stdlib.h>
 
 static const SystemResourceBank s_resource_banks[] = {
-  {
-    .begin = FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN,
-    .end = FLASH_REGION_SYSTEM_RESOURCES_BANK_0_END,
-  },
-  {
-    .begin = FLASH_REGION_SYSTEM_RESOURCES_BANK_1_BEGIN,
-    .end = FLASH_REGION_SYSTEM_RESOURCES_BANK_1_END,
-  },
+    {
+        .begin = FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN,
+        .end = FLASH_REGION_SYSTEM_RESOURCES_BANK_0_END,
+    },
+    {
+        .begin = FLASH_REGION_SYSTEM_RESOURCES_BANK_1_BEGIN,
+        .end = FLASH_REGION_SYSTEM_RESOURCES_BANK_1_END,
+    },
 };
 
 //! Index into s_resource_banks
@@ -37,11 +37,9 @@ const ResourceStoreImplementation g_system_bank_impl;
 static void resource_storage_system_bank_init(void) {
   boot_bit_clear(BOOT_BIT_NEW_SYSTEM_RESOURCES_AVAILABLE);
 
-  ResourceStoreEntry entry = {
-    .id = 0, // resource id 0 means the store itself
-    .impl = &g_system_bank_impl,
-    .length = ENTRY_LENGTH_UNSET
-  };
+  ResourceStoreEntry entry = {.id = 0,  // resource id 0 means the store itself
+                              .impl = &g_system_bank_impl,
+                              .length = ENTRY_LENGTH_UNSET};
 
   // Increment s_active_bank and call resource_storage_generic_check for each value to find
   // a bank that's valid.
@@ -88,8 +86,7 @@ static uint32_t resource_storage_system_bank_metadata_size(ResourceStoreEntry *e
 static uint32_t resource_storage_system_bank_get_crc(ResourceStoreEntry *entry, uint32_t num_bytes,
                                                      uint32_t entry_offset) {
   uint32_t start_offset = resource_store_get_metadata_size(entry) + entry_offset;
-  return flash_calculate_legacy_defective_checksum(
-      BANK.begin + start_offset, num_bytes);
+  return flash_calculate_legacy_defective_checksum(BANK.begin + start_offset, num_bytes);
 }
 
 static uint32_t resource_storage_system_bank_read(ResourceStoreEntry *entry, uint32_t offset,
@@ -130,7 +127,6 @@ static void resource_storage_system_bank_clear(ResourceStoreEntry *entry) {
   flash_write_bytes(buffer, BANK.begin, MANIFEST_SIZE);
 }
 
-
 bool resource_storage_system_bank_check(ResAppNum app_num, uint32_t resource_id,
                                         ResourceStoreEntry *entry,
                                         const ResourceVersion *expected_version) {
@@ -149,28 +145,28 @@ bool resource_storage_system_bank_check(ResAppNum app_num, uint32_t resource_id,
   return resource_storage_generic_check(app_num, resource_id, entry, expected_version);
 }
 
-static bool resource_storage_system_bank_find_resource(ResourceStoreEntry *entry,
-                                                       ResAppNum app_num, uint32_t resource_id) {
+static bool resource_storage_system_bank_find_resource(ResourceStoreEntry *entry, ResAppNum app_num,
+                                                       uint32_t resource_id) {
   return app_num == SYSTEM_APP && s_valid_resources_found;
 }
 
 const ResourceStoreImplementation g_system_bank_impl = {
-  .type = ResourceStoreTypeSystemBank,
+    .type = ResourceStoreTypeSystemBank,
 
-  .init = resource_storage_system_bank_init,
-  .clear = resource_storage_system_bank_clear,
-  .check = resource_storage_system_bank_check,
+    .init = resource_storage_system_bank_init,
+    .clear = resource_storage_system_bank_clear,
+    .check = resource_storage_system_bank_check,
 
-  .metadata_size = resource_storage_system_bank_metadata_size,
-  .find_resource = resource_storage_system_bank_find_resource,
-  .get_resource = resource_storage_generic_get_resource,
+    .metadata_size = resource_storage_system_bank_metadata_size,
+    .find_resource = resource_storage_system_bank_find_resource,
+    .get_resource = resource_storage_generic_get_resource,
 
-  .get_length = resource_storage_generic_get_length,
-  .get_crc = resource_storage_system_bank_get_crc,
-  .write = resource_storage_generic_write,
-  .read = resource_storage_system_bank_read,
-  .readonly_bytes = resource_storage_system_bank_readonly_bytes,
+    .get_length = resource_storage_generic_get_length,
+    .get_crc = resource_storage_system_bank_get_crc,
+    .write = resource_storage_generic_write,
+    .read = resource_storage_system_bank_read,
+    .readonly_bytes = resource_storage_system_bank_readonly_bytes,
 
-  .watch = resource_storage_generic_watch,
-  .unwatch = resource_storage_generic_unwatch,
+    .watch = resource_storage_generic_watch,
+    .unwatch = resource_storage_generic_unwatch,
 };

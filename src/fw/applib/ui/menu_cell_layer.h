@@ -68,7 +68,7 @@ void menu_cell_layer_draw(GContext *ctx, const Layer *cell_layer,
 //! @param icon If non-null, draws an icon to the left of the text. If `NULL`,
 //! the icon will be omitted and the leftover space is used for the title and
 //! subtitle.
-void menu_cell_basic_draw(GContext* ctx, const Layer *cell_layer, const char *title,
+void menu_cell_basic_draw(GContext *ctx, const Layer *cell_layer, const char *title,
                           const char *subtitle, GBitmap *icon);
 
 //! Cell drawing function similar to \ref menu_cell_basic_draw with the icon drawn on the right
@@ -85,7 +85,7 @@ void menu_cell_basic_draw(GContext* ctx, const Layer *cell_layer, const char *ti
 //! @param icon If non-null, draws an icon to the right of the text. If `NULL`,
 //! the icon will be omitted and the leftover space is used for the title and
 //! subtitle.
-void menu_cell_basic_draw_icon_right(GContext* ctx, const Layer *cell_layer, const char *title,
+void menu_cell_basic_draw_icon_right(GContext *ctx, const Layer *cell_layer, const char *title,
                                      const char *subtitle, GBitmap *icon);
 
 //! Cell drawing function to draw a basic menu cell layout with title, subtitle
@@ -96,12 +96,12 @@ void menu_cell_basic_draw_icon_right(GContext* ctx, const Layer *cell_layer, con
 //! @param cell_layer The layer of the cell to draw
 //! @param title If non-null, draws a title in larger text (28 points, bold
 //! Raster Gothic system font).
-void menu_cell_title_draw(GContext* ctx, const Layer *cell_layer, const char *title);
+void menu_cell_title_draw(GContext *ctx, const Layer *cell_layer, const char *title);
 
 //! @internal
 //! Cell drawing function similar to \ref menu_cell_basic_draw_with_value and
 //! \ref menu_cell_basic_draw_icon_right, except with specifiable fonts.
-void menu_cell_basic_draw_custom(GContext* ctx, const Layer *cell_layer, GFont const title_font,
+void menu_cell_basic_draw_custom(GContext *ctx, const Layer *cell_layer, GFont const title_font,
                                  const char *title, GFont const value_font, const char *value,
                                  GFont const subtitle_font, const char *subtitle, GBitmap *icon,
                                  bool icon_on_right, GTextOverflowMode overflow_mode);
@@ -114,7 +114,7 @@ void menu_cell_basic_draw_custom(GContext* ctx, const Layer *cell_layer, GFont c
 //! @param cell_layer The layer of the cell to draw
 //! @param title If non-null, draws the title in small text (14 points, bold
 //! Raster Gothic system font).
-void menu_cell_basic_header_draw(GContext* ctx, const Layer *cell_layer, const char *title);
+void menu_cell_basic_header_draw(GContext *ctx, const Layer *cell_layer, const char *title);
 
 //! Returns whether or not the given cell layer is highlighted.
 //! Using this for determining highlight behaviour is preferable to using
@@ -130,33 +130,33 @@ int16_t menu_cell_basic_cell_height(void);
 
 //! Constant value representing \ref MenuLayer short cell height when this item is
 //! the selected item on a round display.
-#define MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT ((const int16_t) 68)
+#define MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT ((const int16_t)68)
 
 //! Constant value representing \ref MenuLayer short cell height when this item is
 //! not the selected item on a round display.
-#define MENU_CELL_ROUND_UNFOCUSED_SHORT_CELL_HEIGHT ((const int16_t) 24)
+#define MENU_CELL_ROUND_UNFOCUSED_SHORT_CELL_HEIGHT ((const int16_t)24)
 
 //! Constant value representing \ref MenuLayer tall cell height when this item is
 //! the selected item on a round display.
-#define MENU_CELL_ROUND_FOCUSED_TALL_CELL_HEIGHT ((const int16_t) 84)
+#define MENU_CELL_ROUND_FOCUSED_TALL_CELL_HEIGHT ((const int16_t)84)
 
 //! Constant value representing \ref MenuLayer tall cell height when this item is
 //! not the selected item on a round display.
-#define MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT ((const int16_t) 32)
+#define MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT ((const int16_t)32)
 
 //! "Small" cell height in pixels.
 int16_t menu_cell_small_cell_height(void);
 
 //! Default section header height in pixels
-#define MENU_CELL_BASIC_HEADER_HEIGHT ((const int16_t) 16)
+#define MENU_CELL_BASIC_HEADER_HEIGHT ((const int16_t)16)
 
 //! Default menu separator height in pixels
-#define MENU_CELL_BASIC_SEPARATOR_HEIGHT ((const int16_t) 0)
+#define MENU_CELL_BASIC_SEPARATOR_HEIGHT ((const int16_t)0)
 
 //! Default cell horizontal inset in pixels.
 int16_t menu_cell_basic_horizontal_inset(void);
-#define MENU_CELL_ROUND_FOCUSED_HORIZONTAL_INSET ((const int16_t) 16)
-#define MENU_CELL_ROUND_UNFOCUSED_HORIZONTAL_INSET ((const int16_t) 34)
+#define MENU_CELL_ROUND_FOCUSED_HORIZONTAL_INSET ((const int16_t)16)
+#define MENU_CELL_ROUND_UNFOCUSED_HORIZONTAL_INSET ((const int16_t)34)
 
 //!     @} // end addtogroup MenuLayer
 //!   @} // end addtogroup Layer

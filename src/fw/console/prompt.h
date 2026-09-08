@@ -31,7 +31,7 @@ typedef struct PromptContext {
   //! PROMPT_BUFFER_SIZE_BYTES - 1.
   unsigned int write_index;
 
-  char buffer[PROMPT_BUFFER_SIZE_BYTES + 1]; // Leave space for a trailing null always.
+  char buffer[PROMPT_BUFFER_SIZE_BYTES + 1];  // Leave space for a trailing null always.
 } PromptContext;
 
 //! Asks the console to switch to prompt mode. Used by other console modes to flip back to the
@@ -39,7 +39,7 @@ typedef struct PromptContext {
 void console_switch_to_prompt(void);
 
 //! Called on an ISR. Handles a new character from the dbgserial when we're in prompt mode.
-void prompt_handle_character(char c, bool* should_context_switch);
+void prompt_handle_character(char c, bool *should_context_switch);
 
 //! Appends a character to a given context.
 //! @return true if the character fits, false if the buffer is full
@@ -56,12 +56,12 @@ void prompt_watchdog_feed(void);
 //! appropriate output terminal depending on who ran the command (dbgserial or accessory
 //! connector).
 //! @param response NULL-terminated string
-void prompt_send_response(const char* response);
+void prompt_send_response(const char *response);
 
 //! Use this from a prompt command to respond to a command. The output will directed out the
 //! appropriate output terminal depending on who ran the command (dbgserial or accessory
 //! connector). This option allows the use of printf style formatters to create output.
-void prompt_send_response_fmt(char* buffer, size_t buffer_size, const char* fmt, ...)
+void prompt_send_response_fmt(char *buffer, size_t buffer_size, const char *fmt, ...)
     FORMAT_PRINTF(3, 4);
 
 //! Finishes the currently running prompt command, and sends the prompt command complete message.

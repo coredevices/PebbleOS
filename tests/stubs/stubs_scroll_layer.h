@@ -3,6 +3,4 @@
 
 #include "applib/ui/scroll_layer.h"
 
-bool WEAK scroll_layer_is_instance(const Layer *layer) {
-  return false;
-}
+bool WEAK scroll_layer_is_instance(const Layer *layer) { return false; }

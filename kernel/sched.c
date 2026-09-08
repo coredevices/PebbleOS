@@ -334,9 +334,7 @@ void sched_tick(void) {
   sched_request_switch();
 }
 
-bool sched_idle_confirm(void) {
-  return prv_pick() == &s_idle_thread && !s_switch_deferred;
-}
+bool sched_idle_confirm(void) { return prv_pick() == &s_idle_thread && !s_switch_deferred; }
 
 void sched_idle_slept(pbl_tick_t elapsed) {
   s_ticks += elapsed;
@@ -366,12 +364,12 @@ void sched_start_prepare(void) {
   arch_init();
 
   struct pbl_thread_attr attr = {
-    .name = "IDLE",
-    .entry = prv_idle_entry,
-    .prio = PBL_PRIO_IDLE,
-    .privileged = true,
-    .stack = s_idle_stack,
-    .stack_size = sizeof(s_idle_stack),
+      .name = "IDLE",
+      .entry = prv_idle_entry,
+      .prio = PBL_PRIO_IDLE,
+      .privileged = true,
+      .stack = s_idle_stack,
+      .stack_size = sizeof(s_idle_stack),
   };
   int rc = pbl_thread_create(&s_idle_thread, &attr);
   KERNEL_ASSERT(rc == 0);

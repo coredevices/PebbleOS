@@ -64,8 +64,7 @@ bool utf8_contains_arabic(const utf8_t *start, const utf8_t *end) {
 // these keep their left-to-right order; reversing them with the run would turn
 // a number such as 2026 into 6202.
 static bool prv_codepoint_is_digit(Codepoint cp) {
-  return (cp >= 0x30 && cp <= 0x39) ||
-         (cp >= 0x0660 && cp <= 0x0669) ||
+  return (cp >= 0x30 && cp <= 0x39) || (cp >= 0x0660 && cp <= 0x0669) ||
          (cp >= 0x06F0 && cp <= 0x06F9);
 }
 
@@ -92,8 +91,7 @@ utf8_t *rtl_segment_content_end(utf8_t *start, utf8_t *end) {
   return content_end;
 }
 
-size_t utf8_reverse_for_rtl(const utf8_t *src, size_t src_len,
-                            utf8_t *dest, size_t dest_size) {
+size_t utf8_reverse_for_rtl(const utf8_t *src, size_t src_len, utf8_t *dest, size_t dest_size) {
   if (src == NULL || dest == NULL || src_len == 0 || dest_size == 0) {
     return 0;
   }

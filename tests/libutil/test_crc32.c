@@ -10,33 +10,24 @@
 #include <stdio.h>
 #include <string.h>
 
-#define assert_equal_hex(A, B) \
-  do { \
-    uint32_t a = (A); \
-    uint32_t b = (B); \
-    if (a != b) { \
-      char error_msg[256]; \
-      sprintf(error_msg, \
-              "%#08"PRIx32" != %#08"PRIx32"\n", \
-              a, b); \
-      clar__assert(0, __FILE__, __LINE__, \
-                   #A " != " #B, error_msg, 1); \
-    } \
+#define assert_equal_hex(A, B)                                         \
+  do {                                                                 \
+    uint32_t a = (A);                                                  \
+    uint32_t b = (B);                                                  \
+    if (a != b) {                                                      \
+      char error_msg[256];                                             \
+      sprintf(error_msg, "%#08" PRIx32 " != %#08" PRIx32 "\n", a, b);  \
+      clar__assert(0, __FILE__, __LINE__, #A " != " #B, error_msg, 1); \
+    }                                                                  \
   } while (0)
 
 static uint32_t crc;
 
-void test_crc32__initialize(void) {
-  crc = crc32(0, NULL, 0);
-}
+void test_crc32__initialize(void) { crc = crc32(0, NULL, 0); }
 
-void test_crc32__initial_value_matches_header(void) {
-  cl_assert_equal_i(crc, CRC32_INIT);
-}
+void test_crc32__initial_value_matches_header(void) { cl_assert_equal_i(crc, CRC32_INIT); }
 
-void test_crc32__null(void) {
-  cl_assert_equal_i(crc, 0);
-}
+void test_crc32__null(void) { cl_assert_equal_i(crc, 0); }
 
 void test_crc32__empty_buffer(void) {
   crc = crc32(crc, "arbitrary pointer", 0);

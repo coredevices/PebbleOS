@@ -32,9 +32,7 @@ static GContext s_ctx;
 #include "fake_spi_flash.h"
 #include "fixtures/load_test_resources.h"
 
-GContext *graphics_context_get_current_context(void) {
-  return &s_ctx;
-}
+GContext *graphics_context_get_current_context(void) { return &s_ctx; }
 
 // Stubs
 /////////////////////
@@ -84,7 +82,6 @@ bool kino_reel_scale_segmented_set_delay_by_distance(KinoReel *reel, GPoint targ
   return false;
 }
 
-
 // Helper Functions
 /////////////////////
 
@@ -104,7 +101,7 @@ static GBitmap *s_dest_bitmap;
 // Overrides same function in graphics.c; we need to do this so we can pass in the GBitmapFormat
 // we need to use for the unit test output canvas instead of relying on GBITMAP_NATIVE_FORMAT, which
 // wouldn't work for Spalding since it uses GBitmapFormat8BitCircular
-GBitmap* graphics_capture_frame_buffer(GContext *ctx) {
+GBitmap *graphics_capture_frame_buffer(GContext *ctx) {
   PBL_ASSERTN(ctx);
   return graphics_capture_frame_buffer_format(ctx, CANVAS_GBITMAP_FORMAT);
 }
@@ -121,7 +118,7 @@ bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) {
 
 void test_simple_dialog__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
   test_graphics_context_init(&s_ctx, fb);
   framebuffer_clear(fb);
 
@@ -129,7 +126,8 @@ void test_simple_dialog__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
   pfs_init(false);
   pfs_format(true /* write erase headers */);
-  load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME, false /* is_next */);
+  load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME,
+                                 false /* is_next */);
 
   resource_init();
 }

@@ -20,7 +20,7 @@
 #define FRENCH_FIXTURE_NAME "fr_FR.pbpack"
 #define CHINESE_FIXTURE_NAME "zh_CN.pbpack"
 
-#define SYSTEM_RESOURCES_FIXTURE_NAME "system_resources_"PLATFORM_NAME".pbpack"
+#define SYSTEM_RESOURCES_FIXTURE_NAME "system_resources_" PLATFORM_NAME ".pbpack"
 
 void load_resource_fixture_in_flash(const char *fixture_path, const char *name, bool is_next) {
   char res_path[strlen(CLAR_FIXTURE_PATH) + strlen(fixture_path) + strlen(name) + 3];
@@ -31,7 +31,8 @@ void load_resource_fixture_in_flash(const char *fixture_path, const char *name, 
   resource_init_app(0, &SYSTEM_RESOURCE_VERSION);
 }
 
-void load_resource_fixture_on_pfs(const char *fixture_path, const char *name, const char *pfs_name) {
+void load_resource_fixture_on_pfs(const char *fixture_path, const char *name,
+                                  const char *pfs_name) {
   char res_path[strlen(CLAR_FIXTURE_PATH) + strlen(fixture_path) + strlen(name) + 3];
   sprintf(res_path, "%s/%s/%s", CLAR_FIXTURE_PATH, fixture_path, name);
   // check that file exists and fits in buffer

@@ -25,11 +25,11 @@ struct Animation;
 //! necessary to draw or redraw the object that it represents and uses graphics routines along with
 //! this state to draw itself when asked. Layers can be used to display various graphics.
 //!
-//! Layers are the basic building blocks for your application UI. Layers can be nested inside each other.
-//! Every window has a root layer which is always the topmost layer.
-//! You provide a function that is called to draw the content of the layer when needed; or
-//! you can use standard layers that are provided by the system, such as text layer, image layer,
-//! menu layer, action bar layer, and so on.
+//! Layers are the basic building blocks for your application UI. Layers can be nested inside each
+//! other. Every window has a root layer which is always the topmost layer. You provide a function
+//! that is called to draw the content of the layer when needed; or you can use standard layers that
+//! are provided by the system, such as text layer, image layer, menu layer, action bar layer, and
+//! so on.
 //!
 //! The Pebble layer hierarchy is the list of things that need to be drawn to the screen.
 //! Multiple layers can be arranged into a hierarchy. This enables ordering (front to back),
@@ -63,7 +63,7 @@ struct Animation;
 //! @param ctx The destination graphics context to draw into
 //! @see \ref Graphics
 //! @see \ref layer_set_update_proc()
-typedef void (*LayerUpdateProc)(struct Layer *layer, GContext* ctx);
+typedef void (*LayerUpdateProc)(struct Layer *layer, GContext *ctx);
 
 typedef void (*PropertyChangedProc)(struct Layer *layer);
 
@@ -97,10 +97,10 @@ typedef struct Layer {
   union {
     uint8_t flags;
     struct {
-      bool clips:1;
-      bool hidden:1;
-      bool has_data:1;
-      bool is_highlighted:1; //!< Indicates the highlight status of a \ref MenuLayer cell
+      bool clips : 1;
+      bool hidden : 1;
+      bool has_data : 1;
+      bool is_highlighted : 1;  //!< Indicates the highlight status of a \ref MenuLayer cell
     };
   };
 
@@ -154,7 +154,7 @@ void layer_init(Layer *layer, const GRect *frame);
 //! @see \ref layer_set_bounds()
 //! @return A pointer to the layer. `NULL` if the layer could not
 //! be created
-Layer* layer_create(GRect frame);
+Layer *layer_create(GRect frame);
 
 //! Creates a layer on the heap with extra space for callback data, and set its frame andbounds.
 //! Default values:
@@ -168,12 +168,12 @@ Layer* layer_create(GRect frame);
 //! @see \ref layer_set_frame()
 //! @see \ref layer_set_bounds()
 //! @return A pointer to the layer. `NULL` if the layer could not be created
-Layer* layer_create_with_data(GRect frame, size_t data_size);
+Layer *layer_create_with_data(GRect frame, size_t data_size);
 
 void layer_deinit(Layer *layer);
 
 //! Destroys a layer previously created by layer_create
-void layer_destroy(Layer* layer);
+void layer_destroy(Layer *layer);
 
 //! @internal
 //! Renders a tree of layers to a graphics context
@@ -189,7 +189,8 @@ void layer_property_changed_tree(Layer *root);
 //! * The layer's `.update_proc` will not be called before this function returns,
 //! but will be called asynchronously, shortly.
 //! * Internally, a call to this function will schedule a re-render of the window that the
-//! layer belongs to. In effect, all layers in that window's layer hierarchy will be asked to redraw.
+//! layer belongs to. In effect, all layers in that window's layer hierarchy will be asked to
+//! redraw.
 //! * If an earlier re-render request is still pending, this function is a no-op.
 //! @param layer The layer to mark dirty
 void layer_mark_dirty(Layer *layer);
@@ -198,9 +199,9 @@ void layer_mark_dirty(Layer *layer);
 //! The system will call the `update_proc` automatically when the layer needs to redraw itself, see
 //! also \ref layer_mark_dirty().
 //! @param layer Pointer to the layer structure.
-//! @param update_proc Pointer to the function that will be called when the layer needs to be rendered.
-//! Typically, one performs a series of drawing commands in the implementation of the `update_proc`,
-//! see \ref Drawing, \ref PathDrawing and \ref TextDrawing.
+//! @param update_proc Pointer to the function that will be called when the layer needs to be
+//! rendered. Typically, one performs a series of drawing commands in the implementation of the
+//! `update_proc`, see \ref Drawing, \ref PathDrawing and \ref TextDrawing.
 void layer_set_update_proc(Layer *layer, LayerUpdateProc update_proc);
 
 //! Sets the frame of the layer, which is it's bounding box relative to the coordinate
@@ -322,7 +323,7 @@ bool layer_get_clips(const Layer *layer);
 //! Gets the data from a layer that has been created with an extra data region.
 //! @param layer The layer to get the data region from.
 //! @return A void pointer to the data region.
-void* layer_get_data(const Layer *layer);
+void *layer_get_data(const Layer *layer);
 
 //! Converts a point from the layer's local coordinate system to screen coordinates.
 //! @note If the layer isn't part of the view hierarchy the result is undefined.
@@ -412,4 +413,3 @@ typedef enum {
 
 //!   @} // end addtogroup Layer
 //! @} // end addtogroup UI
-

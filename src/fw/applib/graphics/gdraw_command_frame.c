@@ -10,8 +10,8 @@ bool gdraw_command_frame_validate(GDrawCommandFrame *frame, size_t size) {
   if (!frame || (size < sizeof(GDrawCommandFrame))) {
     return false;
   }
-  return gdraw_command_list_validate(&frame->command_list, size - (sizeof(GDrawCommandFrame) -
-          sizeof(GDrawCommandList)));
+  return gdraw_command_list_validate(&frame->command_list,
+                                     size - (sizeof(GDrawCommandFrame) - sizeof(GDrawCommandList)));
 }
 
 void gdraw_command_frame_draw_processed(GContext *ctx, GDrawCommandSequence *sequence,
@@ -60,7 +60,7 @@ size_t gdraw_command_frame_get_data_size(GDrawCommandFrame *frame) {
   }
 
   return sizeof(GDrawCommandFrame) - sizeof(GDrawCommandList) +
-      gdraw_command_list_get_data_size(&frame->command_list);
+         gdraw_command_list_get_data_size(&frame->command_list);
 }
 
 GDrawCommandList *gdraw_command_frame_get_command_list(GDrawCommandFrame *frame) {

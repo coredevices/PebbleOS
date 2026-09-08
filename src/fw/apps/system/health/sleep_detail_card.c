@@ -43,13 +43,11 @@ static void prv_set_sleep_session(char *buffer, size_t buffer_size, int32_t slee
 
   int pos = 0;
 
-  pos += clock_format_time(buffer + pos, buffer_size - pos,
-                           start_hours, start_minutes, false);
+  pos += clock_format_time(buffer + pos, buffer_size - pos, start_hours, start_minutes, false);
 
   pos += snprintf(buffer + pos, buffer_size - pos, " %s ", "-");
 
-  pos += clock_format_time(buffer + pos, buffer_size - pos,
-                           end_hours, end_minutes, false);
+  pos += clock_format_time(buffer + pos, buffer_size - pos, end_hours, end_minutes, false);
 }
 
 static void prv_set_deep_sleep(char *buffer, size_t buffer_size, int32_t sleep_duration,
@@ -72,8 +70,8 @@ static void prv_set_avg(char *buffer, size_t buffer_size, int32_t daily_avg, voi
   if (daily_avg <= 0) {
     strncpy(buffer + avg_len, EN_DASH, buffer_size - avg_len);
   } else {
-    health_util_format_hours_and_minutes(buffer + avg_len, buffer_size - avg_len,
-                                         daily_avg, i18n_owner);
+    health_util_format_hours_and_minutes(buffer + avg_len, buffer_size - avg_len, daily_avg,
+                                         i18n_owner);
   }
 }
 
@@ -85,25 +83,20 @@ Window *health_sleep_detail_card_create(HealthData *health_data) {
   const GColor fill_color = PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorDarkGray);
   const GColor today_fill_color = PBL_IF_COLOR_ELSE(GColorElectricBlue, GColorDarkGray);
 
-  health_detail_card_set_render_day_zones(card_data->zones,
-                                          &card_data->num_zones,
-                                          &card_data->weekly_max,
-                                          true /* format hours and minutes */,
-                                          false /* show crown */,
-                                          fill_color,
-                                          today_fill_color,
-                                          health_data_sleep_get(health_data),
-                                          card_data);
+  health_detail_card_set_render_day_zones(
+      card_data->zones, &card_data->num_zones, &card_data->weekly_max,
+      true /* format hours and minutes */, false /* show crown */, fill_color, today_fill_color,
+      health_data_sleep_get(health_data), card_data);
 
   const size_t buffer_len = 32;
 
   HealthDetailHeading *heading = &card_data->headings[card_data->num_headings++];
 
-  *heading = (HealthDetailHeading) {
-    .primary_label = (char *)i18n_get("SLEEP SESSION", card_data),
-    .primary_value = app_zalloc_check(buffer_len),
-    .fill_color = GColorWhite,
-    .outline_color = PBL_IF_COLOR_ELSE(GColorClear, GColorBlack),
+  *heading = (HealthDetailHeading){
+      .primary_label = (char *)i18n_get("SLEEP SESSION", card_data),
+      .primary_value = app_zalloc_check(buffer_len),
+      .fill_color = GColorWhite,
+      .outline_color = PBL_IF_COLOR_ELSE(GColorClear, GColorBlack),
   };
 
   prv_set_sleep_session(heading->primary_value, buffer_len,
@@ -112,12 +105,12 @@ Window *health_sleep_detail_card_create(HealthData *health_data) {
 
   heading = &card_data->headings[card_data->num_headings++];
 
-  *heading = (HealthDetailHeading) {
-    .primary_label = (char *)i18n_get("DEEP SLEEP", card_data),
-    .primary_value = app_zalloc_check(buffer_len),
-    .fill_color = PBL_IF_COLOR_ELSE(GColorCobaltBlue, GColorWhite),
+  *heading = (HealthDetailHeading){
+      .primary_label = (char *)i18n_get("DEEP SLEEP", card_data),
+      .primary_value = app_zalloc_check(buffer_len),
+      .fill_color = PBL_IF_COLOR_ELSE(GColorCobaltBlue, GColorWhite),
 #if PBL_BW
-    .outline_color = GColorBlack,
+      .outline_color = GColorBlack,
 #endif
   };
 
@@ -126,24 +119,24 @@ Window *health_sleep_detail_card_create(HealthData *health_data) {
 
   HealthDetailSubtitle *subtitle = &card_data->subtitles[card_data->num_subtitles++];
 
-  *subtitle = (HealthDetailSubtitle) {
-    .label = app_zalloc_check(buffer_len),
-    .fill_color = PBL_IF_COLOR_ELSE(GColorYellow, GColorBlack),
+  *subtitle = (HealthDetailSubtitle){
+      .label = app_zalloc_check(buffer_len),
+      .fill_color = PBL_IF_COLOR_ELSE(GColorYellow, GColorBlack),
   };
 
   prv_set_avg(subtitle->label, buffer_len, card_data->daily_avg, card_data);
 
   const HealthDetailCardConfig config = {
-    .num_headings = card_data->num_headings,
-    .headings = card_data->headings,
-    .num_subtitles = card_data->num_subtitles,
-    .subtitles = card_data->subtitles,
-    .daily_avg = card_data->daily_avg,
-    .weekly_max = card_data->weekly_max,
-    .bg_color = PBL_IF_COLOR_ELSE(GColorOxfordBlue, GColorWhite),
-    .num_zones = card_data->num_zones,
-    .zones = card_data->zones,
-    .data = card_data,
+      .num_headings = card_data->num_headings,
+      .headings = card_data->headings,
+      .num_subtitles = card_data->num_subtitles,
+      .subtitles = card_data->subtitles,
+      .daily_avg = card_data->daily_avg,
+      .weekly_max = card_data->weekly_max,
+      .bg_color = PBL_IF_COLOR_ELSE(GColorOxfordBlue, GColorWhite),
+      .num_zones = card_data->num_zones,
+      .zones = card_data->zones,
+      .data = card_data,
   };
 
   return (Window *)health_detail_card_create(&config);

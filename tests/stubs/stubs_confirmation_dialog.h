@@ -5,13 +5,9 @@
 
 #include "applib/ui/dialogs/confirmation_dialog.h"
 
-ConfirmationDialog *confirmation_dialog_create(const char *dialog_name) {
-  return NULL;
-}
+ConfirmationDialog *confirmation_dialog_create(const char *dialog_name) { return NULL; }
 
-Dialog *confirmation_dialog_get_dialog(ConfirmationDialog *confirmation_dialog) {
-  return NULL;
-}
+Dialog *confirmation_dialog_get_dialog(ConfirmationDialog *confirmation_dialog) { return NULL; }
 
 ActionBarLayer *confirmation_dialog_get_action_bar(ConfirmationDialog *confirmation_dialog) {
   return NULL;

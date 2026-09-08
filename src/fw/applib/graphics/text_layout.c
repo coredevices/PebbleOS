@@ -40,7 +40,7 @@
 #include <stdint.h>
 #include <limits.h>
 
-static bool prv_char_iter_next_start_of_word(Iterator* char_iter);
+static bool prv_char_iter_next_start_of_word(Iterator *char_iter);
 
 //! Check if a codepoint is invisible: formatting indicator or should-skip (no direction, no width).
 static bool prv_codepoint_is_invisible(Codepoint cp) {
@@ -78,9 +78,8 @@ static bool prv_utf8_starts_with_rtl(const utf8_t *start, const utf8_t *end) {
       break;
     }
     // Skip whitespace, newlines, punctuation, and invisible codepoints
-    if (cp == SPACE_CODEPOINT || cp == NEWLINE_CODEPOINT ||
-        codepoint_is_zero_width(cp) || prv_codepoint_is_punctuation(cp) ||
-        prv_codepoint_is_invisible(cp)) {
+    if (cp == SPACE_CODEPOINT || cp == NEWLINE_CODEPOINT || codepoint_is_zero_width(cp) ||
+        prv_codepoint_is_punctuation(cp) || prv_codepoint_is_invisible(cp)) {
       ptr = next;
       continue;
     }
@@ -140,8 +139,7 @@ static int8_t prv_unicode_space_advance(FontCache *font_cache, const GFont font,
 }
 
 // [CTX] processing individual codepoints doesn't work for contextual writing systems.
-static int8_t prv_codepoint_get_horizontal_advance(FontCache* const font_cache,
-                                                   const GFont font,
+static int8_t prv_codepoint_get_horizontal_advance(FontCache *const font_cache, const GFont font,
                                                    const Codepoint codepoint) {
   PBL_ASSERTN(font_cache);
   int8_t horiz_advance = 0;
@@ -160,15 +158,17 @@ static int8_t prv_codepoint_get_horizontal_advance(FontCache* const font_cache,
 // Init functions
 
 //! @note can be init to a null-termination character
-void char_iter_init(Iterator* char_iter, CharIterState* char_iter_state, const TextBoxParams* const text_box_params, utf8_t* start) {
-  Iterator* utf8_iter = &char_iter_state->utf8_iter;
-  Utf8IterState* utf8_iter_state = (Utf8IterState*) &char_iter_state->utf8_iter_state;
+void char_iter_init(Iterator *char_iter, CharIterState *char_iter_state,
+                    const TextBoxParams *const text_box_params, utf8_t *start) {
+  Iterator *utf8_iter = &char_iter_state->utf8_iter;
+  Utf8IterState *utf8_iter_state = (Utf8IterState *)&char_iter_state->utf8_iter_state;
 
   utf8_iter_init(utf8_iter, utf8_iter_state, text_box_params->utf8_bounds, start);
 
   char_iter_state->text_box_params = text_box_params;
 
-  iter_init(char_iter, (IteratorCallback) char_iter_next, char_iter_prev, (IteratorState) char_iter_state);
+  iter_init(char_iter, (IteratorCallback)char_iter_next, char_iter_prev,
+            (IteratorState)char_iter_state);
 }
 
 typedef enum {
@@ -242,7 +242,8 @@ static Codepoint prv_shape_pair(Codepoint prev_cp, Codepoint curr_cp, Codepoint 
   return arabic_shape_pair(prev_cp, curr_cp, next_cp, consumed_next);
 }
 
-bool word_init(GContext* ctx, Word* word, const TextBoxParams* const text_box_params, utf8_t* start) {
+bool word_init(GContext *ctx, Word *word, const TextBoxParams *const text_box_params,
+               utf8_t *start) {
   word->width_px = 0;
 
   if (*start == NULL_CODEPOINT) {
@@ -255,7 +256,7 @@ bool word_init(GContext* ctx, Word* word, const TextBoxParams* const text_box_pa
   Iterator char_iter;
   CharIterState char_iter_state;
   char_iter_init(&char_iter, &char_iter_state, text_box_params, start);
-  Utf8IterState* utf8_iter_state = (Utf8IterState*) &char_iter_state.utf8_iter_state;
+  Utf8IterState *utf8_iter_state = (Utf8IterState *)&char_iter_state.utf8_iter_state;
 
   bool success = prv_char_iter_next_start_of_word(&char_iter);
   if (!success) {
@@ -295,15 +296,15 @@ bool word_init(GContext* ctx, Word* word, const TextBoxParams* const text_box_pa
         skip_ligature_member = false;
       } else if (arabic_is_transparent(curr_cp)) {
         // A mark keeps its own width but is not reshaped.
-        word->width_px += prv_codepoint_get_horizontal_advance(&ctx->font_cache,
-            text_box_params->font, curr_cp);
+        word->width_px +=
+            prv_codepoint_get_horizontal_advance(&ctx->font_cache, text_box_params->font, curr_cp);
       } else {
         Codepoint shape_next =
             arabic_is_transparent(next_cp) ? prv_peek_next_letter(curr_pos, bounds_end) : next_cp;
         bool consumed_next = false;
         Codepoint width_cp = prv_shape_pair(prev_cp, curr_cp, shape_next, &consumed_next);
-        word->width_px += prv_codepoint_get_horizontal_advance(&ctx->font_cache,
-            text_box_params->font, width_cp);
+        word->width_px +=
+            prv_codepoint_get_horizontal_advance(&ctx->font_cache, text_box_params->font, width_cp);
         skip_ligature_member = consumed_next;
       }
     }
@@ -320,29 +321,23 @@ bool word_init(GContext* ctx, Word* word, const TextBoxParams* const text_box_pa
   return true;
 }
 
-void word_iter_init(Iterator* word_iter, WordIterState* word_iter_state, GContext* ctx,
-                    const TextBoxParams* const text_box_params, utf8_t* start) {
-  *word_iter_state = (WordIterState) {
-    .ctx = ctx,
-    .text_box_params = text_box_params
-  };
+void word_iter_init(Iterator *word_iter, WordIterState *word_iter_state, GContext *ctx,
+                    const TextBoxParams *const text_box_params, utf8_t *start) {
+  *word_iter_state = (WordIterState){.ctx = ctx, .text_box_params = text_box_params};
 
   word_init(ctx, &word_iter_state->current, text_box_params, start);
 
-  iter_init(word_iter, (IteratorCallback) word_iter_next, NULL, (IteratorState) word_iter_state);
+  iter_init(word_iter, (IteratorCallback)word_iter_next, NULL, (IteratorState)word_iter_state);
 }
 
-void line_iter_init(Iterator* line_iter, LineIterState* line_iter_state, GContext* ctx) {
-  *line_iter_state = (LineIterState) {
-    .ctx = ctx,
-    .current = &ctx->text_draw_state.line
-  };
+void line_iter_init(Iterator *line_iter, LineIterState *line_iter_state, GContext *ctx) {
+  *line_iter_state = (LineIterState){.ctx = ctx, .current = &ctx->text_draw_state.line};
 
-  WordIterState* word_iter_state = &line_iter_state->word_iter_state;
-  word_iter_init(&line_iter_state->word_iter, word_iter_state, ctx,
-                 &ctx->text_draw_state.text_box, ctx->text_draw_state.text_box.utf8_bounds->start);
+  WordIterState *word_iter_state = &line_iter_state->word_iter_state;
+  word_iter_init(&line_iter_state->word_iter, word_iter_state, ctx, &ctx->text_draw_state.text_box,
+                 ctx->text_draw_state.text_box.utf8_bounds->start);
 
-  iter_init(line_iter, (IteratorCallback) line_iter_next, NULL, (IteratorState) line_iter_state);
+  iter_init(line_iter, (IteratorCallback)line_iter_next, NULL, (IteratorState)line_iter_state);
 }
 
 ////////////////////////////////////////////////////////////
@@ -357,7 +352,7 @@ static int16_t prv_layout_get_line_spacing_delta(GTextLayoutCacheRef layout) {
     return 0;
   }
 
-  return (layout ? ((TextLayoutExtended *)layout)->line_spacing_delta: 0);
+  return (layout ? ((TextLayoutExtended *)layout)->line_spacing_delta : 0);
 }
 
 ////////////////////////////////////////////////////////////
@@ -366,9 +361,9 @@ static int16_t prv_layout_get_line_spacing_delta(GTextLayoutCacheRef layout) {
 //! Advance the char iterator to the start of the next word. Used by word_init
 //! to find the start of the next word.
 //! @return is_success
-static bool prv_char_iter_next_start_of_word(Iterator* char_iter) {
-  CharIterState* char_iter_state = (CharIterState*) char_iter->state;
-  Utf8IterState* utf8_iter_state = (Utf8IterState*) &char_iter_state->utf8_iter_state;
+static bool prv_char_iter_next_start_of_word(Iterator *char_iter) {
+  CharIterState *char_iter_state = (CharIterState *)char_iter->state;
+  Utf8IterState *utf8_iter_state = (Utf8IterState *)&char_iter_state->utf8_iter_state;
 
   // the first codepoint could be invalid, iter_next takes care of the others
   Codepoint codepoint = utf8_iter_state->codepoint;
@@ -392,8 +387,8 @@ static bool prv_char_iter_next_start_of_word(Iterator* char_iter) {
   return true;
 }
 
-static bool prv_line_iter_is_vertical_overflow(const LineIterState* const line_iter_state,
-                                               const TextBoxParams* const text_box_params) {
+static bool prv_line_iter_is_vertical_overflow(const LineIterState *const line_iter_state,
+                                               const TextBoxParams *const text_box_params) {
   int16_t next_line_y_extent;
   // Normally, we lay out the text one line below the regular cutoff so that it may be rendered,
   // albeit clipped.  But, if we're rendering in truncation mode (e.g. GTextOverflowModeFill or
@@ -423,8 +418,8 @@ static bool prv_line_iter_is_vertical_overflow(const LineIterState* const line_i
 
 //! @return is_advanced
 bool line_iter_next(IteratorState state) {
-  LineIterState* line_iter_state = (LineIterState*) state;
-  const TextBoxParams* const text_box_params = &line_iter_state->ctx->text_draw_state.text_box;
+  LineIterState *line_iter_state = (LineIterState *)state;
+  const TextBoxParams *const text_box_params = &line_iter_state->ctx->text_draw_state.text_box;
 
   if (prv_line_iter_is_vertical_overflow(line_iter_state, text_box_params)) {
     return false;
@@ -442,11 +437,11 @@ bool line_iter_next(IteratorState state) {
 
 //! @return is_advanced
 bool word_iter_next(IteratorState state) {
-  WordIterState* word_iter_state = (WordIterState*) state;
+  WordIterState *word_iter_state = (WordIterState *)state;
 
-  Word* current_word = &word_iter_state->current;
-  const TextBoxParams* const text_box_params = word_iter_state->text_box_params;
-  GContext* ctx = word_iter_state->ctx;
+  Word *current_word = &word_iter_state->current;
+  const TextBoxParams *const text_box_params = word_iter_state->text_box_params;
+  GContext *ctx = word_iter_state->ctx;
 
   if (*current_word->end == NULL_CODEPOINT) {
     return false;
@@ -457,11 +452,11 @@ bool word_iter_next(IteratorState state) {
 
 //! @return is_advanced
 bool char_iter_next(IteratorState state) {
-  CharIterState* char_iter_state = (CharIterState*) state;
+  CharIterState *char_iter_state = (CharIterState *)state;
 
   Codepoint codepoint;
-  Iterator* utf8_iter = &char_iter_state->utf8_iter;
-  Utf8IterState* utf8_iter_state = &char_iter_state->utf8_iter_state;
+  Iterator *utf8_iter = &char_iter_state->utf8_iter;
+  Utf8IterState *utf8_iter_state = &char_iter_state->utf8_iter_state;
 
   while (true) {
     if (utf8_iter_state->current >= utf8_iter_state->bounds->end) {
@@ -491,11 +486,11 @@ bool char_iter_next(IteratorState state) {
 }
 
 bool char_iter_prev(IteratorState state) {
-  CharIterState* char_iter_state = (CharIterState*) state;
+  CharIterState *char_iter_state = (CharIterState *)state;
 
   Codepoint codepoint;
-  Iterator* utf8_iter = &char_iter_state->utf8_iter;
-  Utf8IterState* utf8_iter_state = &char_iter_state->utf8_iter_state;
+  Iterator *utf8_iter = &char_iter_state->utf8_iter;
+  Utf8IterState *utf8_iter_state = &char_iter_state->utf8_iter_state;
 
   while (true) {
     if (utf8_iter_state->current <= utf8_iter_state->bounds->start) {
@@ -530,13 +525,13 @@ bool char_iter_prev(IteratorState state) {
 //! Trim given codepoint from the start of the word
 //! Used to remove whitespace and newlines
 //! @return is_trimmed
-bool word_trim_preceding_codepoint(GContext* ctx, Word* word, const Codepoint codepoint,
-                                    const TextBoxParams* const text_box_params) {
+bool word_trim_preceding_codepoint(GContext *ctx, Word *word, const Codepoint codepoint,
+                                   const TextBoxParams *const text_box_params) {
   Iterator char_iter;
   CharIterState char_iter_state;
   char_iter_init(&char_iter, &char_iter_state, text_box_params, word->start);
 
-  Utf8IterState* utf8_iter_state = &char_iter_state.utf8_iter_state;
+  Utf8IterState *utf8_iter_state = &char_iter_state.utf8_iter_state;
 
   if (utf8_iter_state->codepoint != codepoint) {
     return false;
@@ -552,8 +547,9 @@ bool word_trim_preceding_codepoint(GContext* ctx, Word* word, const Codepoint co
 
   if (word->end == char_iter_state.utf8_iter_state.current) {
     // Word has been completely trimmed; init a new word
-    bool is_end_of_text = (*word->end == NULL_CODEPOINT ||
-        char_iter_state.utf8_iter_state.current >= text_box_params->utf8_bounds->end);
+    bool is_end_of_text =
+        (*word->end == NULL_CODEPOINT ||
+         char_iter_state.utf8_iter_state.current >= text_box_params->utf8_bounds->end);
 
     if (!is_end_of_text) {
       word_init(ctx, word, text_box_params, word->end);
@@ -562,9 +558,9 @@ bool word_trim_preceding_codepoint(GContext* ctx, Word* word, const Codepoint co
   }
 
   // Trim
-  int advance = prv_codepoint_get_horizontal_advance(&ctx->font_cache,
-      text_box_params->font, codepoint);
-  PBL_ASSERTN(advance <= word->width_px); // Negative-length word not allowed
+  int advance =
+      prv_codepoint_get_horizontal_advance(&ctx->font_cache, text_box_params->font, codepoint);
+  PBL_ASSERTN(advance <= word->width_px);  // Negative-length word not allowed
 
   word->width_px -= advance;
   word->start = utf8_iter_state->current;
@@ -572,18 +568,19 @@ bool word_trim_preceding_codepoint(GContext* ctx, Word* word, const Codepoint co
 }
 
 // [INTL] whitespace is more than just the space character.
-void word_trim_preceding_whitespace(GContext* ctx, Word* word, const TextBoxParams* const text_box_params) {
+void word_trim_preceding_whitespace(GContext *ctx, Word *word,
+                                    const TextBoxParams *const text_box_params) {
   while (word_trim_preceding_codepoint(ctx, word, SPACE_CODEPOINT, text_box_params));
 }
 
 ////////////////////////////////////////////////////////////
 // Walk Line
 
-typedef void (*CharVisitorCallback)(GContext* ctx, const TextBoxParams* const text_box_params,
-                                    Line* line, GRect cursor, const Codepoint codepoint);
+typedef void (*CharVisitorCallback)(GContext *ctx, const TextBoxParams *const text_box_params,
+                                    Line *line, GRect cursor, const Codepoint codepoint);
 
-void render_chars_char_visitor_cb(GContext* ctx, const TextBoxParams* const text_box_params,
-                                  Line* line, GRect cursor, const Codepoint codepoint) {
+void render_chars_char_visitor_cb(GContext *ctx, const TextBoxParams *const text_box_params,
+                                  Line *line, GRect cursor, const Codepoint codepoint) {
   if (codepoint_is_zero_width(codepoint) || codepoint_is_unicode_space(codepoint)) {
     return;
   }
@@ -591,12 +588,12 @@ void render_chars_char_visitor_cb(GContext* ctx, const TextBoxParams* const text
   render_glyph(ctx, codepoint, text_box_params->font, cursor);
 }
 
-void update_dimensions_char_visitor_cb(GContext* ctx, const TextBoxParams* const text_box_params,
-                                       Line* line, GRect cursor, const Codepoint codepoint) {
-  (void) ctx;
-  (void) codepoint;
+void update_dimensions_char_visitor_cb(GContext *ctx, const TextBoxParams *const text_box_params,
+                                       Line *line, GRect cursor, const Codepoint codepoint) {
+  (void)ctx;
+  (void)codepoint;
   PBL_ASSERT(cursor.origin.x >= line->origin.x, "Text cursor x=<%u> ahead of line origin x=<%u>",
-      cursor.origin.x, line->origin.x);
+             cursor.origin.x, line->origin.x);
 
   // Use the advance the caller already computed (the cursor width). walk_line
   // makes it pair-aware -- a folded pair is one glyph -- so recomputing it per
@@ -606,8 +603,8 @@ void update_dimensions_char_visitor_cb(GContext* ctx, const TextBoxParams* const
   line->width_px = (cursor.origin.x + glyph_width_px) - line->origin.x;
 
   PBL_ASSERT(line->width_px <= text_box_params->box.size.w,
-      "Line <%p>: max extent=<%" PRId16 "> exceeds text_box_params width=<%" PRId16 ">",
-      line, line->width_px + line->origin.x, text_box_params->box.size.w);
+             "Line <%p>: max extent=<%" PRId16 "> exceeds text_box_params width=<%" PRId16 ">",
+             line, line->width_px + line->origin.x, text_box_params->box.size.w);
 }
 
 // Peek the next letter after the one at `pos`, skipping transparent Arabic marks
@@ -652,7 +649,7 @@ static int prv_shaped_glyph_advance(GContext *ctx, const TextBoxParams *text_box
 //! Traverse until end of line->width_px if rendering chars, else text_box_params width
 //! if updating line dimensions
 //! @return utf8_t* pointer to last visited character
-utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box_params,
+utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box_params,
                   CharVisitorCallback char_visitor_cb) {
   PBL_ASSERTN(char_visitor_cb);
 
@@ -671,14 +668,14 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
   }
 
   PBL_ASSERT(line->width_px <= text_box_params->box.size.w,
-      "Line <%p>: max extent=<%" PRId16 "> exceeds text_box_params width=<%" PRId16 ">", line,
-      line->width_px + line->origin.x, text_box_params->box.size.w);
+             "Line <%p>: max extent=<%" PRId16 "> exceeds text_box_params width=<%" PRId16 ">",
+             line, line->width_px + line->origin.x, text_box_params->box.size.w);
 
   int suffix_width_px = 0;
 
   if (line->suffix_codepoint) {
-    suffix_width_px = prv_codepoint_get_horizontal_advance(&ctx->font_cache,
-        text_box_params->font, line->suffix_codepoint);
+    suffix_width_px = prv_codepoint_get_horizontal_advance(&ctx->font_cache, text_box_params->font,
+                                                           line->suffix_codepoint);
   }
 
   if (available_horiz_px < suffix_width_px) {
@@ -695,10 +692,9 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
       text_box_params->utf8_bounds->end != NULL &&
       text_box_params->utf8_bounds->end > line->start &&
       utf8_contains_rtl(line->start, text_box_params->utf8_bounds->end)) {
-
-    // Segment descriptor for BiDi reordering
-    // Headroom for splitting boundary spaces into their own neutral segments.
-    #define MAX_BIDI_SEGMENTS 16
+// Segment descriptor for BiDi reordering
+// Headroom for splitting boundary spaces into their own neutral segments.
+#define MAX_BIDI_SEGMENTS 16
     typedef struct {
       utf8_t *start;
       utf8_t *end;
@@ -716,7 +712,6 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
     while (ptr < line_end && *ptr != '\0' && *ptr != '\n' &&
            total_width_px + suffix_width_px <= available_horiz_px &&
            num_segments < MAX_BIDI_SEGMENTS) {
-
       utf8_t *segment_start = ptr;
       utf8_t *next = NULL;
       Codepoint first_cp = utf8_peek_codepoint(ptr, &next);
@@ -729,8 +724,8 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
         utf8_t *check_next = NULL;
         Codepoint check_cp = utf8_peek_codepoint(check_ptr, &check_next);
         if (check_cp == 0 || check_next == NULL) break;
-        if (!prv_codepoint_is_punctuation(check_cp) &&
-            check_cp != SPACE_CODEPOINT && !codepoint_is_zero_width(check_cp)) {
+        if (!prv_codepoint_is_punctuation(check_cp) && check_cp != SPACE_CODEPOINT &&
+            !codepoint_is_zero_width(check_cp)) {
           segment_is_rtl = codepoint_is_rtl(check_cp);
           break;
         }
@@ -762,8 +757,8 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
         }
 
         // Check if this character changes the segment type
-        if (!prv_codepoint_is_punctuation(seg_cp) &&
-            seg_cp != SPACE_CODEPOINT && !codepoint_is_zero_width(seg_cp)) {
+        if (!prv_codepoint_is_punctuation(seg_cp) && seg_cp != SPACE_CODEPOINT &&
+            !codepoint_is_zero_width(seg_cp)) {
           bool char_is_rtl = codepoint_is_rtl(seg_cp);
           if (char_is_rtl != segment_is_rtl) {
             break;  // End of segment
@@ -788,8 +783,9 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
             skip_ligature_member = consumed_next;
           }
           int glyph_width = prv_codepoint_get_horizontal_advance(&ctx->font_cache,
-              text_box_params->font, width_cp);
-          if (total_width_px + segment_width_px + glyph_width + suffix_width_px > available_horiz_px) {
+                                                                 text_box_params->font, width_cp);
+          if (total_width_px + segment_width_px + glyph_width + suffix_width_px >
+              available_horiz_px) {
             break;
           }
           segment_width_px += glyph_width;
@@ -813,16 +809,22 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
       if (content_end > segment_start && content_end < segment_end) {
         // strong-direction content, then the trailing space(s) as a neutral
         segments[num_segments++] = (BiDiSegment){
-          .start = segment_start, .end = content_end, .is_rtl = segment_is_rtl,
+            .start = segment_start,
+            .end = content_end,
+            .is_rtl = segment_is_rtl,
         };
         if (num_segments < MAX_BIDI_SEGMENTS) {
           segments[num_segments++] = (BiDiSegment){
-            .start = content_end, .end = segment_end, .is_rtl = false,
+              .start = content_end,
+              .end = segment_end,
+              .is_rtl = false,
           };
         }
       } else {
         segments[num_segments++] = (BiDiSegment){
-          .start = segment_start, .end = segment_end, .is_rtl = segment_is_rtl,
+            .start = segment_start,
+            .end = segment_end,
+            .is_rtl = segment_is_rtl,
         };
       }
       total_width_px += segment_width_px;
@@ -865,20 +867,20 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
         if (utf8_contains_arabic(seg->start, seg->end)) {
           utf8_t *shaped_buffer = applib_malloc(rtl_buffer_size);
           if (shaped_buffer) {
-            size_t shaped_len = arabic_shape_text(seg->start, render_len,
-                                                  shaped_buffer, rtl_buffer_size - 1);
+            size_t shaped_len =
+                arabic_shape_text(seg->start, render_len, shaped_buffer, rtl_buffer_size - 1);
             if (shaped_len > 0) {
               shaped_buffer[shaped_len] = '\0';
-              reversed_len = utf8_reverse_for_rtl(shaped_buffer, shaped_len,
-                                                  rtl_buffer, rtl_buffer_size - 1);
+              reversed_len =
+                  utf8_reverse_for_rtl(shaped_buffer, shaped_len, rtl_buffer, rtl_buffer_size - 1);
             }
             applib_free(shaped_buffer);
           }
         }
 
         if (reversed_len == 0) {
-          reversed_len = utf8_reverse_for_rtl(seg->start, render_len,
-                                              rtl_buffer, rtl_buffer_size - 1);
+          reversed_len =
+              utf8_reverse_for_rtl(seg->start, render_len, rtl_buffer, rtl_buffer_size - 1);
         }
 
         if (reversed_len > 0) {
@@ -889,16 +891,17 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
             utf8_t *rnext = NULL;
             Codepoint rcp = utf8_peek_codepoint(rptr, &rnext);
             if (rcp == 0 || rnext == NULL) break;
-            if (prv_codepoint_is_invisible(rcp)) { rptr = rnext; continue; }
+            if (prv_codepoint_is_invisible(rcp)) {
+              rptr = rnext;
+              continue;
+            }
 
-            int glyph_width = prv_codepoint_get_horizontal_advance(&ctx->font_cache,
-                text_box_params->font, rcp);
+            int glyph_width =
+                prv_codepoint_get_horizontal_advance(&ctx->font_cache, text_box_params->font, rcp);
 
-            GRect cursor = {
-              .origin = line->origin,
-              .size.w = glyph_width,
-              .size.h = fonts_get_font_height(text_box_params->font)
-            };
+            GRect cursor = {.origin = line->origin,
+                            .size.w = glyph_width,
+                            .size.h = fonts_get_font_height(text_box_params->font)};
             cursor.origin.x += walked_width_px;
 
             if (!codepoint_is_zero_width(rcp)) {
@@ -920,7 +923,10 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
           utf8_t *snext = NULL;
           Codepoint scp = utf8_peek_codepoint(sptr, &snext);
           if (scp == 0 || snext == NULL) break;
-          if (prv_codepoint_is_invisible(scp)) { sptr = snext; continue; }
+          if (prv_codepoint_is_invisible(scp)) {
+            sptr = snext;
+            continue;
+          }
 
           if (skip_pair_member && !arabic_is_transparent(scp)) {
             // Folded into the preceding pair: already drawn, adds no width.
@@ -938,13 +944,11 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
             }
 
             int glyph_width = prv_codepoint_get_horizontal_advance(&ctx->font_cache,
-                text_box_params->font, draw_cp);
+                                                                   text_box_params->font, draw_cp);
 
-            GRect cursor = {
-              .origin = line->origin,
-              .size.w = glyph_width,
-              .size.h = fonts_get_font_height(text_box_params->font)
-            };
+            GRect cursor = {.origin = line->origin,
+                            .size.w = glyph_width,
+                            .size.h = fonts_get_font_height(text_box_params->font)};
             cursor.origin.x += walked_width_px;
 
             if (!codepoint_is_zero_width(draw_cp)) {
@@ -970,11 +974,9 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
 
     // Handle suffix if present
     if (line->suffix_codepoint) {
-      GRect cursor = {
-        .origin = line->origin,
-        .size.w = suffix_width_px,
-        .size.h = fonts_get_font_height(text_box_params->font)
-      };
+      GRect cursor = {.origin = line->origin,
+                      .size.w = suffix_width_px,
+                      .size.h = fonts_get_font_height(text_box_params->font)};
       cursor.origin.x += walked_width_px;
       text_resources_get_glyph(&ctx->font_cache, line->suffix_codepoint, text_box_params->font,
                                NULL);
@@ -988,7 +990,7 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
   Iterator char_iter;
   CharIterState char_iter_state;
   char_iter_init(&char_iter, &char_iter_state, text_box_params, line->start);
-  Utf8IterState* utf8_iter_state = (Utf8IterState*) &char_iter_state.utf8_iter_state;
+  Utf8IterState *utf8_iter_state = (Utf8IterState *)&char_iter_state.utf8_iter_state;
 
   bool is_newline_as_space = text_box_params->overflow_mode == GTextOverflowModeFill;
   Codepoint current_codepoint = utf8_iter_state->codepoint;
@@ -1007,20 +1009,19 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
   Codepoint prev_shaped_cp = 0;       // previous codepoint, for Arabic joining context
   bool skip_ligature_member = false;  // current codepoint was folded into a preceding pair
   bool consumed_next = false;
-  bool current_folded = false;        // current codepoint was folded into the preceding pair
+  bool current_folded = false;  // current codepoint was folded into the preceding pair
   Codepoint current_draw_cp = current_codepoint;  // shaped codepoint whose advance was measured
   Codepoint peek_cp = prv_peek_next_letter(utf8_iter_state->current, text_end);
-  int next_glyph_width_px = prv_shaped_glyph_advance(ctx, text_box_params, prev_shaped_cp,
-      current_codepoint, peek_cp, &consumed_next, &current_draw_cp);
+  int next_glyph_width_px =
+      prv_shaped_glyph_advance(ctx, text_box_params, prev_shaped_cp, current_codepoint, peek_cp,
+                               &consumed_next, &current_draw_cp);
 
-  utf8_t* last_visited_char = NULL;
+  utf8_t *last_visited_char = NULL;
 
   while (walked_width_px + next_glyph_width_px + suffix_width_px <= available_horiz_px) {
-    GRect cursor = {
-      .origin = line->origin,
-      .size.w = next_glyph_width_px,
-      .size.h = fonts_get_font_height(text_box_params->font)
-    };
+    GRect cursor = {.origin = line->origin,
+                    .size.w = next_glyph_width_px,
+                    .size.h = fonts_get_font_height(text_box_params->font)};
     cursor.origin.x += walked_width_px;
 
     // A codepoint folded into the preceding pair has zero width and must not
@@ -1072,12 +1073,13 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
     } else if (arabic_is_transparent(current_codepoint)) {
       // A mark keeps its own width but is not reshaped.
       current_draw_cp = current_codepoint;
-      next_glyph_width_px = prv_codepoint_get_horizontal_advance(&ctx->font_cache,
-          text_box_params->font, current_codepoint);
+      next_glyph_width_px = prv_codepoint_get_horizontal_advance(
+          &ctx->font_cache, text_box_params->font, current_codepoint);
     } else {
       peek_cp = prv_peek_next_letter(utf8_iter_state->current, text_end);
-      next_glyph_width_px = prv_shaped_glyph_advance(ctx, text_box_params, prev_shaped_cp,
-          current_codepoint, peek_cp, &consumed_next, &current_draw_cp);
+      next_glyph_width_px =
+          prv_shaped_glyph_advance(ctx, text_box_params, prev_shaped_cp, current_codepoint, peek_cp,
+                                   &consumed_next, &current_draw_cp);
     }
   }
 
@@ -1088,9 +1090,8 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
       if (current_codepoint == NEWLINE_CODEPOINT) {
         next_glyph_width_px = 0;
       } else {
-        next_glyph_width_px = prv_codepoint_get_horizontal_advance(&ctx->font_cache,
-                                                               text_box_params->font,
-                                                               current_codepoint);
+        next_glyph_width_px = prv_codepoint_get_horizontal_advance(
+            &ctx->font_cache, text_box_params->font, current_codepoint);
       }
 
       // Safety check
@@ -1107,11 +1108,9 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
   }
 
   if (line->suffix_codepoint) {
-    GRect cursor = {
-      .origin = line->origin,
-      .size.w = suffix_width_px,
-      .size.h = fonts_get_font_height(text_box_params->font)
-    };
+    GRect cursor = {.origin = line->origin,
+                    .size.w = suffix_width_px,
+                    .size.h = fonts_get_font_height(text_box_params->font)};
     cursor.origin.x += walked_width_px;
     if (char_visitor_cb) {
       if (is_render) {
@@ -1125,12 +1124,11 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
   return last_visited_char;
 }
 
-
 ////////////////////////////////////////////////////////////
 // Walk Lines
 
-void set_ellipsis_on_overflow_last_line_cb(GContext* ctx, Line* line,
-                                           const TextBoxParams* const text_box_params,
+void set_ellipsis_on_overflow_last_line_cb(GContext *ctx, Line *line,
+                                           const TextBoxParams *const text_box_params,
                                            const bool is_text_remaining) {
   // Only set a trailing ellipsis if there is text remaining
   if (!is_text_remaining) {
@@ -1152,12 +1150,13 @@ void set_ellipsis_on_overflow_last_line_cb(GContext* ctx, Line* line,
   walk_line(ctx, line, text_box_params, update_dimensions_char_visitor_cb);
 }
 
-void render_all_render_line_cb(GContext* ctx, Line* line, const TextBoxParams* const text_box_params) {
-  walk_line(ctx, line, text_box_params, (CharVisitorCallback) render_chars_char_visitor_cb);
+void render_all_render_line_cb(GContext *ctx, Line *line,
+                               const TextBoxParams *const text_box_params) {
+  walk_line(ctx, line, text_box_params, (CharVisitorCallback)render_chars_char_visitor_cb);
 }
 
-void update_all_layout_update_cb(TextLayout* layout, Line* line,
-                                 const TextBoxParams* const text_box_params) {
+void update_all_layout_update_cb(TextLayout *layout, Line *line,
+                                 const TextBoxParams *const text_box_params) {
   PBL_ASSERTN(line);
   if (layout) {
     layout->max_used_size.h = (line->origin.y - layout->box.origin.y) + line->height_px +
@@ -1167,24 +1166,24 @@ void update_all_layout_update_cb(TextLayout* layout, Line* line,
 }
 
 //! @return is_overflow
-bool is_clip_box_overflow_top_stop_condition_cb(GContext* ctx, Line* line,
-                                                const TextBoxParams* const text_box_params) {
+bool is_clip_box_overflow_top_stop_condition_cb(GContext *ctx, Line *line,
+                                                const TextBoxParams *const text_box_params) {
   int next_line_max_y = line->origin.y;
   int clip_box_min_y = ctx->draw_state.clip_box.origin.y;
   return (next_line_max_y < clip_box_min_y);
 }
 
 //! @return is_overflow
-bool is_clip_box_overflow_bottom_stop_condition_cb(GContext* ctx, Line* line,
-                                                   const TextBoxParams* const text_box_params) {
+bool is_clip_box_overflow_bottom_stop_condition_cb(GContext *ctx, Line *line,
+                                                   const TextBoxParams *const text_box_params) {
   int next_line_min_y = line->origin.y + line->height_px + text_box_params->line_spacing_delta;
   int clip_box_max_y = ctx->draw_state.clip_box.origin.y + ctx->draw_state.clip_box.size.h;
   return (next_line_min_y > clip_box_max_y);
 }
 
 //! @return is_overflow
-bool is_clip_box_overflow_stop_condition_cb(GContext* ctx, Line* line,
-                                            const TextBoxParams* const text_box_params) {
+bool is_clip_box_overflow_stop_condition_cb(GContext *ctx, Line *line,
+                                            const TextBoxParams *const text_box_params) {
   return (is_clip_box_overflow_bottom_stop_condition_cb(ctx, line, text_box_params) ||
           is_clip_box_overflow_top_stop_condition_cb(ctx, line, text_box_params));
 }
@@ -1200,23 +1199,21 @@ bool is_clip_box_overflow_stop_condition_cb(GContext* ctx, Line* line,
 #define TEXT_LINE_DESCENDER_LINE(line) DIVIDE_CEIL((line)->height_px, 5)  // 1/5th rounded up
 
 T_STATIC NOINLINE MOCKABLE void prv_debug_perimeter(GContext *ctx, const GRangeHorizontal *h_range,
-                                                   const Line *line) {
+                                                    const Line *line) {
   // PBL-23045 Eventually remove perimeter debugging
   // Draw a red horizontal line to show the range of the current lines perimeter
   if (app_state_get_text_perimeter_debugging_enabled()) {
 #if !defined(UNITTEST)
-    const Fixed_S16_3 fixed_x1 = (Fixed_S16_3) {
-      .integer = h_range->origin_x,
+    const Fixed_S16_3 fixed_x1 = (Fixed_S16_3){
+        .integer = h_range->origin_x,
     };
-    const Fixed_S16_3 fixed_x2 = (Fixed_S16_3) {
-      .integer = h_range->origin_x + h_range->size_w,
+    const Fixed_S16_3 fixed_x2 = (Fixed_S16_3){
+        .integer = h_range->origin_x + h_range->size_w,
     };
-    graphics_private_draw_horizontal_line_prepared(ctx, &ctx->dest_bitmap,
-                                                   &ctx->dest_bitmap.bounds,
+    graphics_private_draw_horizontal_line_prepared(ctx, &ctx->dest_bitmap, &ctx->dest_bitmap.bounds,
                                                    line->origin.y + TEXT_LINE_CAP_LINE(line),
                                                    fixed_x1, fixed_x2, GColorRed);
-    graphics_private_draw_horizontal_line_prepared(ctx, &ctx->dest_bitmap,
-                                                   &ctx->dest_bitmap.bounds,
+    graphics_private_draw_horizontal_line_prepared(ctx, &ctx->dest_bitmap, &ctx->dest_bitmap.bounds,
                                                    line->origin.y + TEXT_LINE_BASE_LINE(line),
                                                    fixed_x1, fixed_x2, GColorRed);
 #endif
@@ -1228,10 +1225,10 @@ typedef struct {
   int16_t width_px;
 } OrphanLineState;
 
-static OrphanLineState prv_capture_orphan_state(Line const* line) {
-  return (OrphanLineState) {
-    .origin_x = line->origin.x,
-    .width_px = line->width_px,
+static OrphanLineState prv_capture_orphan_state(Line const *line) {
+  return (OrphanLineState){
+      .origin_x = line->origin.x,
+      .width_px = line->width_px,
   };
 }
 
@@ -1241,26 +1238,26 @@ static void prv_apply_orphan_state(const OrphanLineState *state, Line *line) {
 }
 
 //! Iterate over lines in the text box
-static inline void prv_walk_lines_down(Iterator* const line_iter, TextLayout* const layout,
-                                       WalkLinesCallbacks* const callbacks) {
-  LineIterState* line_iter_state = (LineIterState*) line_iter->state;
-  GContext* ctx = line_iter_state->ctx;
+static inline void prv_walk_lines_down(Iterator *const line_iter, TextLayout *const layout,
+                                       WalkLinesCallbacks *const callbacks) {
+  LineIterState *line_iter_state = (LineIterState *)line_iter->state;
+  GContext *ctx = line_iter_state->ctx;
   const GSize ctx_size = graphics_context_get_framebuffer_size(ctx);
-  const TextBoxParams* const text_box_params = &ctx->text_draw_state.text_box;
-  Line* line = line_iter_state->current;
+  const TextBoxParams *const text_box_params = &ctx->text_draw_state.text_box;
+  Line *line = line_iter_state->current;
 
   const TextLayoutFlowData *flow_data = graphics_text_layout_get_flow_data(layout);
   const bool uses_paging = flow_data->paging.page_on_screen.size_h != 0;
   const bool uses_perimeter = flow_data->perimeter.impl != NULL;
   const GPoint perimeter_paging_offset =
-    uses_paging ? gpoint_sub(flow_data->paging.origin_on_screen, line->origin) : GPointZero;
+      uses_paging ? gpoint_sub(flow_data->paging.origin_on_screen, line->origin) : GPointZero;
   Word prev_line_word = WORD_EMPTY;
   while (!prv_line_iter_is_vertical_overflow(line_iter_state, text_box_params)) {
     GPoint line_in_perimeter_space = gpoint_add(line->origin, perimeter_paging_offset);
 
     if (uses_paging) {
-      const int16_t page_max_y = flow_data->paging.page_on_screen.origin_y +
-                                 flow_data->paging.page_on_screen.size_h;
+      const int16_t page_max_y =
+          flow_data->paging.page_on_screen.origin_y + flow_data->paging.page_on_screen.size_h;
 
       // TODO: optimize
       while (line_in_perimeter_space.y < flow_data->paging.page_on_screen.origin_y) {
@@ -1284,17 +1281,15 @@ static inline void prv_walk_lines_down(Iterator* const line_iter, TextLayout* co
       GRangeHorizontal text_horizontal_range = {.origin_x = line_in_perimeter_space.x,
                                                 .size_w = line->max_width_px};
       const GRangeVertical vertical_range = {
-        .origin_y = line_in_perimeter_space.y + TEXT_LINE_CAP_LINE(line),
-        .size_h = TEXT_LINE_BASE_LINE(line) - TEXT_LINE_CAP_LINE(line)
-      };
-      GRangeHorizontal perimeter_horizontal_range =
-        flow_data->perimeter.impl->callback(flow_data->perimeter.impl, &ctx_size, vertical_range,
-                                            flow_data->perimeter.inset);
+          .origin_y = line_in_perimeter_space.y + TEXT_LINE_CAP_LINE(line),
+          .size_h = TEXT_LINE_BASE_LINE(line) - TEXT_LINE_CAP_LINE(line)};
+      GRangeHorizontal perimeter_horizontal_range = flow_data->perimeter.impl->callback(
+          flow_data->perimeter.impl, &ctx_size, vertical_range, flow_data->perimeter.inset);
 
       prv_debug_perimeter(ctx, &perimeter_horizontal_range, line);
 
       // protect against range expanding: clip perimeter to the original text range
-      grange_clip((GRange*)&perimeter_horizontal_range, (GRange*)&text_horizontal_range);
+      grange_clip((GRange *)&perimeter_horizontal_range, (GRange *)&text_horizontal_range);
       text_horizontal_range = perimeter_horizontal_range;
 
       // convert range back to screen space
@@ -1307,7 +1302,7 @@ static inline void prv_walk_lines_down(Iterator* const line_iter, TextLayout* co
 
     // reference into the iterator's current word to easily access this attribute here and
     // later without the complicated cast
-    Word *const current_word_ref = &(((WordIterState*)line_iter_state->word_iter.state)->current);
+    Word *const current_word_ref = &(((WordIterState *)line_iter_state->word_iter.state)->current);
     // state that needs to be captured so we can restore it in case of an orphan
     const Word word_before_rendering = *current_word_ref;
     const OrphanLineState orphan_state = prv_capture_orphan_state(line);
@@ -1321,30 +1316,30 @@ static inline void prv_walk_lines_down(Iterator* const line_iter, TextLayout* co
     // buffer.
     const int num_safe_lines = 3;
     const bool page_contains_enough_lines =
-      (flow_data->paging.page_on_screen.size_h >= num_safe_lines * line->height_px);
-    bool avoiding_orphans = uses_paging && ctx->draw_state.avoid_text_orphans &&
-                            page_contains_enough_lines;
+        (flow_data->paging.page_on_screen.size_h >= num_safe_lines * line->height_px);
+    bool avoiding_orphans =
+        uses_paging && ctx->draw_state.avoid_text_orphans && page_contains_enough_lines;
 
-render_line: {} // this {} is just an empty statement that both C and our linter accepts
-    const bool is_text_remaining = line_add_words(
-        line, &line_iter_state->word_iter, callbacks->last_line_cb);
+  render_line: {}  // this {} is just an empty statement that both C and our linter accepts
+    const bool is_text_remaining =
+        line_add_words(line, &line_iter_state->word_iter, callbacks->last_line_cb);
     // NOTE: Account for descender - assume descender is no more than half the line height
     const int16_t line_spacing_delta = prv_layout_get_line_spacing_delta(layout);
-    const int32_t line_max_y = line->origin.y + line->height_px +
-                               TEXT_LINE_DESCENDER_LINE(line) + line_spacing_delta;
+    const int32_t line_max_y =
+        line->origin.y + line->height_px + TEXT_LINE_DESCENDER_LINE(line) + line_spacing_delta;
     const int32_t clip_box_min_y = ctx->draw_state.clip_box.origin.y;
 
     if (line_max_y > clip_box_min_y) {
       if (avoiding_orphans) {
         const bool line_is_first_line_page =
-          (line_in_perimeter_space.y == flow_data->paging.page_on_screen.origin_y);
+            (line_in_perimeter_space.y == flow_data->paging.page_on_screen.origin_y);
         const bool is_orphan =
-          (line_is_first_line_page && prev_line_word.start && !is_text_remaining);
+            (line_is_first_line_page && prev_line_word.start && !is_text_remaining);
 
         if (is_orphan) {
           *current_word_ref = prev_line_word;
           prv_apply_orphan_state(&orphan_state, line);
-          avoiding_orphans = false; // prevent infinite loops
+          avoiding_orphans = false;  // prevent infinite loops
           goto render_line;
         }
       }
@@ -1377,7 +1372,8 @@ render_line: {} // this {} is just an empty statement that both C and our linter
 // Text layout
 
 //! @return is_success
-bool line_add_word(GContext* ctx, Line* line, Word* word, const TextBoxParams* const text_box_params) {
+bool line_add_word(GContext *ctx, Line *line, Word *word,
+                   const TextBoxParams *const text_box_params) {
   // Horizontal overflow
   if (line->width_px > line->max_width_px) {
     return false;
@@ -1397,8 +1393,9 @@ bool line_add_word(GContext* ctx, Line* line, Word* word, const TextBoxParams* c
   line->height_px = line_height;
 
   if (is_newline_first_codepoint) {
-    // This trims off leading \n's from word. If we reach the end of the text while doing this, it sets
-    //  word->start to NULL. 
+    // This trims off leading \n's from word. If we reach the end of the text while doing this, it
+    // sets
+    //  word->start to NULL.
     word_trim_preceding_codepoint(ctx, word, NEWLINE_CODEPOINT, text_box_params);
     if (text_box_params->overflow_mode != GTextOverflowModeFill) {
       return false;
@@ -1422,13 +1419,13 @@ bool line_add_word(GContext* ctx, Line* line, Word* word, const TextBoxParams* c
     // [CJK] - when breaking a Katakana word, you probably don't want to add a hyphen. And to
     // a Japanese user, a hyphen with Katakana looks like a long (chou-on) sound mark.
     line->suffix_codepoint = HYPHEN_CODEPOINT;
-    utf8_t* last_visited = walk_line(ctx, line, text_box_params,
-        (CharVisitorCallback) update_dimensions_char_visitor_cb);
+    utf8_t *last_visited = walk_line(ctx, line, text_box_params,
+                                     (CharVisitorCallback)update_dimensions_char_visitor_cb);
     last_visited = (last_visited == NULL) ? (word->start) : last_visited;
 
     // Trim the word
-    int suffix_width_px = prv_codepoint_get_horizontal_advance(&ctx->font_cache,
-        text_box_params->font, HYPHEN_CODEPOINT);
+    int suffix_width_px = prv_codepoint_get_horizontal_advance(
+        &ctx->font_cache, text_box_params->font, HYPHEN_CODEPOINT);
     int truncated_word_length_px = (line->width_px - suffix_width_px);
     PBL_ASSERTN(word->width_px >= truncated_word_length_px);
     word->width_px -= truncated_word_length_px;
@@ -1449,7 +1446,7 @@ bool line_add_word(GContext* ctx, Line* line, Word* word, const TextBoxParams* c
   return false;
 }
 
-static void prv_line_justify(Line* line, const TextBoxParams* const text_box_params) {
+static void prv_line_justify(Line *line, const TextBoxParams *const text_box_params) {
   PBL_ASSERTN(line->max_width_px >= line->width_px);
 
   int horiz_px_remaining = (line->max_width_px - line->width_px);
@@ -1477,9 +1474,8 @@ static void prv_line_justify(Line* line, const TextBoxParams* const text_box_par
 }
 
 //! @return is_text_remaining
-bool line_add_words(Line* line, Iterator* word_iter, LastLineCallback last_line_cb) {
-
-  WordIterState* word_iter_state = (WordIterState*) word_iter->state;
+bool line_add_words(Line *line, Iterator *word_iter, LastLineCallback last_line_cb) {
+  WordIterState *word_iter_state = (WordIterState *)word_iter->state;
 
   line->start = word_iter_state->current.start;
 
@@ -1489,8 +1485,8 @@ bool line_add_words(Line* line, Iterator* word_iter, LastLineCallback last_line_
   while (is_text_remaining && line->max_width_px > 0) {
     Word next_word = word_iter_state->current;
 
-    bool is_added = line_add_word(word_iter_state->ctx, line, &next_word,
-                                  word_iter_state->text_box_params);
+    bool is_added =
+        line_add_word(word_iter_state->ctx, line, &next_word, word_iter_state->text_box_params);
 
     if (!is_added) {
       word_iter_state->current = next_word;
@@ -1515,7 +1511,7 @@ bool line_add_words(Line* line, Iterator* word_iter, LastLineCallback last_line_
   return is_text_remaining;
 }
 
-static bool prv_text_layout_is_fresh(TextLayout* layout, GFont const font, const GRect box,
+static bool prv_text_layout_is_fresh(TextLayout *layout, GFont const font, const GRect box,
                                      const GTextOverflowMode overflow_mode,
                                      const GTextAlignment alignment, Codepoint text_hash) {
   PBL_ASSERTN(layout);
@@ -1543,9 +1539,8 @@ static bool prv_text_layout_is_fresh(TextLayout* layout, GFont const font, const
   return true;
 }
 
-static inline void prv_text_walk_lines(GContext* ctx, TextLayout* const layout,
-                                       WalkLinesCallbacks* callbacks) {
-
+static inline void prv_text_walk_lines(GContext *ctx, TextLayout *const layout,
+                                       WalkLinesCallbacks *callbacks) {
   TextBoxParams *text_box = &ctx->text_draw_state.text_box;
 
   // Degenerate boxes draw nothing; negative sizes must not reach line layout
@@ -1570,13 +1565,12 @@ static inline void prv_text_walk_lines(GContext* ctx, TextLayout* const layout,
     callbacks->last_line_cb = NULL;
   }
 
-  ctx->text_draw_state.line = (Line) {
-    .start = utf8_bounds->start,
-    // set initial bounding values for line
-    .origin = text_box->box.origin, //<! Needs to be in global co-ords!
-    .max_width_px = text_box->box.size.w,
-    .height_px = fonts_get_font_height(text_box->font)
-  };
+  ctx->text_draw_state.line =
+      (Line){.start = utf8_bounds->start,
+             // set initial bounding values for line
+             .origin = text_box->box.origin,  //<! Needs to be in global co-ords!
+             .max_width_px = text_box->box.size.w,
+             .height_px = fonts_get_font_height(text_box->font)};
 
   Iterator line_iter;
   line_iter_init(&line_iter, &ctx->text_draw_state.line_iter_state, ctx);
@@ -1584,10 +1578,10 @@ static inline void prv_text_walk_lines(GContext* ctx, TextLayout* const layout,
   prv_walk_lines_down(&line_iter, layout, callbacks);
 }
 
-static void prv_graphics_text_layout_update(GContext* ctx, const char* text, GFont const font,
+static void prv_graphics_text_layout_update(GContext *ctx, const char *text, GFont const font,
                                             const GRect box, const GTextOverflowMode overflow_mode,
                                             const GTextAlignment alignment,
-                                            TextLayout* const layout) {
+                                            TextLayout *const layout) {
   PBL_ASSERTN(layout);
 
   bool success = false;
@@ -1599,7 +1593,7 @@ static void prv_graphics_text_layout_update(GContext* ctx, const char* text, GFo
   }
 
   int str_len_bytes = (utf8_bounds.end - utf8_bounds.start);
-  Codepoint text_hash = hash((const uint8_t*) utf8_bounds.start, str_len_bytes);
+  Codepoint text_hash = hash((const uint8_t *)utf8_bounds.start, str_len_bytes);
 
   if (prv_text_layout_is_fresh(layout, font, box, overflow_mode, alignment, text_hash)) {
     return;
@@ -1612,18 +1606,16 @@ static void prv_graphics_text_layout_update(GContext* ctx, const char* text, GFo
   layout->alignment = alignment;
   layout->font = font;
 
-  WalkLinesCallbacks callbacks = {
-    .layout_update_cb = update_all_layout_update_cb
-  };
+  WalkLinesCallbacks callbacks = {.layout_update_cb = update_all_layout_update_cb};
 
   int16_t line_spacing_delta = prv_layout_get_line_spacing_delta(layout);
-  ctx->text_draw_state.text_box = (TextBoxParams) {
-    .utf8_bounds = &utf8_bounds,
-    .box = box,
-    .font = font,
-    .overflow_mode = overflow_mode,
-    .alignment = alignment,
-    .line_spacing_delta = line_spacing_delta,
+  ctx->text_draw_state.text_box = (TextBoxParams){
+      .utf8_bounds = &utf8_bounds,
+      .box = box,
+      .font = font,
+      .overflow_mode = overflow_mode,
+      .alignment = alignment,
+      .line_spacing_delta = line_spacing_delta,
   };
 
   prv_text_walk_lines(ctx, layout, &callbacks);
@@ -1632,19 +1624,18 @@ static void prv_graphics_text_layout_update(GContext* ctx, const char* text, GFo
 // helper macro to avoid source code duplication
 // we call this instead of a true function to keep the stack as low as possible as this is
 // on a critical path.
-#define APP_TEXT_GET_CONTENT_SIZE(text, font, box, overflow_mode, alignment, text_attributes) \
-  do { \
-    GContext* ctx = app_state_get_graphics_context(); \
-    return graphics_text_layout_get_max_used_size( \
-      ctx, text, font, box, overflow_mode, alignment, text_attributes); \
+#define APP_TEXT_GET_CONTENT_SIZE(text, font, box, overflow_mode, alignment, text_attributes)     \
+  do {                                                                                            \
+    GContext *ctx = app_state_get_graphics_context();                                             \
+    return graphics_text_layout_get_max_used_size(ctx, text, font, box, overflow_mode, alignment, \
+                                                  text_attributes);                               \
   } while (0)
 
 GSize app_graphics_text_layout_get_content_size_with_attributes(
-  const char *text, GFont const font, const GRect box, const GTextOverflowMode overflow_mode,
-  const GTextAlignment alignment, GTextAttributes *text_attributes) {
+    const char *text, GFont const font, const GRect box, const GTextOverflowMode overflow_mode,
+    const GTextAlignment alignment, GTextAttributes *text_attributes) {
   APP_TEXT_GET_CONTENT_SIZE(text, font, box, overflow_mode, alignment, text_attributes);
 }
-
 
 GSize app_graphics_text_layout_get_content_size(const char *text, GFont const font, const GRect box,
                                                 const GTextOverflowMode overflow_mode,
@@ -1657,12 +1648,10 @@ uint16_t graphics_text_layout_get_text_height(GContext *ctx, const char *text, G
                                               const GTextOverflowMode overflow_mode,
                                               const GTextAlignment alignment) {
   const int16_t LAYOUT_HEIGHT_IGNORE = SHRT_MAX;
-  GRect box = {
-        .origin = (GPoint) { .x = 0, .y = 0 },
-        .size = (GSize) { .w = bounds_width, .h = LAYOUT_HEIGHT_IGNORE }
-      };
-  GSize size = graphics_text_layout_get_max_used_size(ctx, text, font,
-      box, overflow_mode, alignment, NULL);
+  GRect box = {.origin = (GPoint){.x = 0, .y = 0},
+               .size = (GSize){.w = bounds_width, .h = LAYOUT_HEIGHT_IGNORE}};
+  GSize size =
+      graphics_text_layout_get_max_used_size(ctx, text, font, box, overflow_mode, alignment, NULL);
   return size.h;
 }
 
@@ -1670,15 +1659,15 @@ GSize graphics_text_layout_get_max_used_size(GContext *ctx, const char *text, GF
                                              const GRect box, const GTextOverflowMode overflow_mode,
                                              const GTextAlignment alignment,
                                              GTextLayoutCacheRef const layout) {
-  TextLayoutExtended stack_layout = { 0 }; // Default use extended layout
-  TextLayout* text_layout = layout ? (TextLayout*) layout : (TextLayout*) &stack_layout;
+  TextLayoutExtended stack_layout = {0};  // Default use extended layout
+  TextLayout *text_layout = layout ? (TextLayout *)layout : (TextLayout *)&stack_layout;
   prv_graphics_text_layout_update(ctx, text, font, box, overflow_mode, alignment, text_layout);
   return text_layout->max_used_size;
 }
 
-void graphics_draw_text(GContext* ctx, const char* text, GFont const font,
-                        GRect box, const GTextOverflowMode overflow_mode,
-                        const GTextAlignment alignment, GTextLayoutCacheRef const layout) {
+void graphics_draw_text(GContext *ctx, const char *text, GFont const font, GRect box,
+                        const GTextOverflowMode overflow_mode, const GTextAlignment alignment,
+                        GTextLayoutCacheRef const layout) {
   if (ctx->lock) {
     return;
   }
@@ -1699,42 +1688,40 @@ void graphics_draw_text(GContext* ctx, const char* text, GFont const font,
     return;
   }
 
-
   if (layout) {
     layout->box.origin = global_box.origin;
   }
 
   WalkLinesCallbacks callbacks = {
-    .render_line_cb = render_all_render_line_cb,
-    .layout_update_cb = update_all_layout_update_cb,
-    .stop_condition_cb = is_clip_box_overflow_bottom_stop_condition_cb
-  };
+      .render_line_cb = render_all_render_line_cb,
+      .layout_update_cb = update_all_layout_update_cb,
+      .stop_condition_cb = is_clip_box_overflow_bottom_stop_condition_cb};
 
   int16_t line_spacing_delta = prv_layout_get_line_spacing_delta(layout);
-  ctx->text_draw_state.text_box = (TextBoxParams) {
-    .utf8_bounds = &utf8_bounds,
-    .box = global_box,
-    .font = font,
-    .overflow_mode = overflow_mode,
-    .alignment = alignment,
-    .line_spacing_delta = line_spacing_delta,
+  ctx->text_draw_state.text_box = (TextBoxParams){
+      .utf8_bounds = &utf8_bounds,
+      .box = global_box,
+      .font = font,
+      .overflow_mode = overflow_mode,
+      .alignment = alignment,
+      .line_spacing_delta = line_spacing_delta,
   };
 
   prv_text_walk_lines(ctx, layout, &callbacks);
 }
 
-void graphics_text_layout_cache_init(GTextLayoutCacheRef* layout) {
+void graphics_text_layout_cache_init(GTextLayoutCacheRef *layout) {
   if (process_manager_compiled_with_legacy2_sdk()) {
     *layout = applib_type_malloc(TextLayout);
-    *((TextLayout*) *layout) = (TextLayout) { 0 };
+    *((TextLayout *)*layout) = (TextLayout){0};
   } else {
     *layout = applib_type_malloc(TextLayoutExtended);
-    *((TextLayoutExtended*) *layout) = (TextLayoutExtended) { 0 };
+    *((TextLayoutExtended *)*layout) = (TextLayoutExtended){0};
   }
 }
 
-void graphics_text_layout_cache_deinit(GTextLayoutCacheRef* layout) {
-  TextLayout* text_layout = (TextLayout*) *layout;
+void graphics_text_layout_cache_deinit(GTextLayoutCacheRef *layout) {
+  TextLayout *text_layout = (TextLayout *)*layout;
   applib_free(text_layout);
   *layout = NULL;
 }
@@ -1753,9 +1740,8 @@ void graphics_text_attributes_destroy(GTextAttributes *text_attributes) {
   graphics_text_layout_cache_deinit(&text_attributes);
 }
 
-
-static TextLayoutExtended* prv_get_writable_extended_layout(GTextLayoutCacheRef layout) {
-  PBL_ASSERTN(!process_manager_compiled_with_legacy2_sdk()); // should not get here if 2.X
+static TextLayoutExtended *prv_get_writable_extended_layout(GTextLayoutCacheRef layout) {
+  PBL_ASSERTN(!process_manager_compiled_with_legacy2_sdk());  // should not get here if 2.X
   PBL_ASSERTN(layout);
   // Invalidate the hash to ensure the layout gets updated when prv_graphics_text_layout_update is
   // called on the layout
@@ -1763,13 +1749,12 @@ static TextLayoutExtended* prv_get_writable_extended_layout(GTextLayoutCacheRef 
   return (TextLayoutExtended *)layout;
 }
 
-static TextLayoutExtended* prv_get_readable_extended_layout(GTextLayoutCacheRef layout) {
+static TextLayoutExtended *prv_get_readable_extended_layout(GTextLayoutCacheRef layout) {
   if (!layout || process_manager_compiled_with_legacy2_sdk()) {
     return NULL;
   }
-  return (TextLayoutExtended*)layout;
+  return (TextLayoutExtended *)layout;
 }
-
 
 void graphics_text_layout_set_line_spacing_delta(GTextLayoutCacheRef layout, int16_t delta) {
   TextLayoutExtended *extended = prv_get_writable_extended_layout(layout);
@@ -1810,9 +1795,9 @@ void graphics_text_attributes_enable_screen_text_flow(GTextLayoutCacheRef layout
   const GPerimeter *perimeter = NULL;
 #endif
 
-  extended->flow_data.perimeter = (TextLayoutFlowDataPerimeter) {
-    .impl = perimeter,
-    .inset = inset,
+  extended->flow_data.perimeter = (TextLayoutFlowDataPerimeter){
+      .impl = perimeter,
+      .inset = inset,
   };
 }
 
@@ -1824,14 +1809,15 @@ void graphics_text_attributes_restore_default_paging(GTextLayoutCacheRef layout)
   extended->flow_data.paging.page_on_screen.size_h = 0;
 }
 
-void graphics_text_attributes_enable_paging(
-  GTextLayoutCacheRef layout, GPoint content_origin_on_screen, GRect paging_on_screen) {
+void graphics_text_attributes_enable_paging(GTextLayoutCacheRef layout,
+                                            GPoint content_origin_on_screen,
+                                            GRect paging_on_screen) {
   TextLayoutExtended *extended = prv_get_writable_extended_layout(layout);
   if (extended) {
-    extended->flow_data.paging = (TextLayoutFlowDataPaging) {
-      .origin_on_screen = content_origin_on_screen,
-      .page_on_screen.origin_y = paging_on_screen.origin.y,
-      .page_on_screen.size_h = paging_on_screen.size.h,
+    extended->flow_data.paging = (TextLayoutFlowDataPaging){
+        .origin_on_screen = content_origin_on_screen,
+        .page_on_screen.origin_y = paging_on_screen.origin.y,
+        .page_on_screen.size_h = paging_on_screen.size.h,
     };
   }
 }
@@ -1842,9 +1828,9 @@ const TextLayoutFlowData *graphics_text_layout_get_flow_data(GTextLayoutCacheRef
     return &extended_layout->flow_data;
   } else {
     static const TextLayoutFlowData s_default_data = {
-      // yes, this is basically just an empty struct but I want to be explicit here:
-      .perimeter.impl = NULL, // no perimeter/inset configured
-      .paging.page_on_screen.size_h = 0, // no paging or origin
+        // yes, this is basically just an empty struct but I want to be explicit here:
+        .perimeter.impl = NULL,             // no perimeter/inset configured
+        .paging.page_on_screen.size_h = 0,  // no paging or origin
     };
     return &s_default_data;
   }

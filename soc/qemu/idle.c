@@ -23,12 +23,8 @@ void pbl_soc_idle(pbl_tick_t max_ticks) {
   __enable_irq();
 }
 
-bool pbl_soc_tick_enable(void) {
-  return false;
-}
+bool pbl_soc_tick_enable(void) { return false; }
 
-void dump_current_runtime_stats(void) {
-}
+void dump_current_runtime_stats(void) {}
 
-void pbl_analytics_external_collect_cpu_stats(void) {
-}
+void pbl_analytics_external_collect_cpu_stats(void) {}

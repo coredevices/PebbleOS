@@ -54,15 +54,14 @@ static void prv_send_next(Transport *transport) {
 
   while (bytes_remaining) {
     bt_unlock();
-    PulsePPPacket *resp = (PulsePPPacket*) pulse_reliable_send_begin(PULSE2_PEBBLE_PROTOCOL);
+    PulsePPPacket *resp = (PulsePPPacket *)pulse_reliable_send_begin(PULSE2_PEBBLE_PROTOCOL);
     bt_lock();
 
     if (resp) {
       resp->opcode = PULSE_PP_OPCODE_DATA;
 
       const size_t bytes_to_copy = MIN(bytes_remaining, mss);
-      comm_session_send_queue_copy(session, 0 /* start_offset */,
-                                   bytes_to_copy, &resp->data[0]);
+      comm_session_send_queue_copy(session, 0 /* start_offset */, bytes_to_copy, &resp->data[0]);
       pulse_reliable_send(resp, bytes_to_copy + sizeof(PulsePPPacket));
       comm_session_send_queue_consume(session, bytes_to_copy);
 
@@ -76,18 +75,16 @@ static void prv_send_next(Transport *transport) {
   }
 }
 
-static void prv_reset(Transport *transport) {
-  PBL_LOG_WRN("Unimplemented");
-}
+static void prv_reset(Transport *transport) { PBL_LOG_WRN("Unimplemented"); }
 
 static void prv_granted_kernel_main_cb(void *ctx) {
   ResponsivenessGrantedHandler granted_handler = ctx;
   granted_handler();
 }
 
-static void prv_set_connection_responsiveness(
-    Transport *transport, BtConsumer consumer, ResponseTimeState state, uint16_t max_period_secs,
-    ResponsivenessGrantedHandler granted_handler) {
+static void prv_set_connection_responsiveness(Transport *transport, BtConsumer consumer,
+                                              ResponseTimeState state, uint16_t max_period_secs,
+                                              ResponsivenessGrantedHandler granted_handler) {
   if (granted_handler) {
     launcher_task_add_callback(prv_granted_kernel_main_cb, granted_handler);
   }
@@ -112,12 +109,10 @@ static bool prv_is_current_task_schedule_task(struct Transport *transport) {
 }
 
 //! Defined in session.c
-extern void comm_session_set_capabilities(
-    CommSession *session, CommSessionCapability capability_flags);
+extern void comm_session_set_capabilities(CommSession *session,
+                                          CommSessionCapability capability_flags);
 
-bool pulse_transport_is_connected(void) {
-  return (s_transport.session != NULL);
-}
+bool pulse_transport_is_connected(void) { return (s_transport.session != NULL); }
 
 // -----------------------------------------------------------------------------------------
 void pulse_transport_set_connected(bool is_connected) {
@@ -126,32 +121,29 @@ void pulse_transport_set_connected(bool is_connected) {
   }
 
   static const TransportImplementation s_pulse_transport_implementation = {
-    .send_next = prv_send_next,
-    .reset = prv_reset,
-    .set_connection_responsiveness = prv_set_connection_responsiveness,
-    .get_type = prv_get_type,
-    .schedule = prv_schedule_send_next_job,
-    .is_current_task_schedule_task = prv_is_current_task_schedule_task,
+      .send_next = prv_send_next,
+      .reset = prv_reset,
+      .set_connection_responsiveness = prv_set_connection_responsiveness,
+      .get_type = prv_get_type,
+      .schedule = prv_schedule_send_next_job,
+      .is_current_task_schedule_task = prv_is_current_task_schedule_task,
   };
 
   bool send_event = true;
 
   if (is_connected) {
-    s_transport.session = comm_session_open((Transport *) &s_transport,
-                                            &s_pulse_transport_implementation,
-                                            TransportDestinationHybrid);
+    s_transport.session = comm_session_open(
+        (Transport *)&s_transport, &s_pulse_transport_implementation, TransportDestinationHybrid);
     if (!s_transport.session) {
       PBL_LOG_ERR("CommSession couldn't be opened");
       send_event = false;
     }
 
     // Give it the appropriate capabilities
-    const CommSessionCapability capabilities = CommSessionRunState |
-                                               CommSessionInfiniteLogDumping |
-                                               CommSessionVoiceApiSupport |
-                                               CommSessionAppMessage8kSupport |
-                                               CommSessionWeatherAppSupport |
-                                               CommSessionExtendedNotificationService;
+    const CommSessionCapability capabilities =
+        CommSessionRunState | CommSessionInfiniteLogDumping | CommSessionVoiceApiSupport |
+        CommSessionAppMessage8kSupport | CommSessionWeatherAppSupport |
+        CommSessionExtendedNotificationService;
     comm_session_set_capabilities(s_transport.session, capabilities);
   } else {
     comm_session_close(s_transport.session, CommSessionCloseReason_UnderlyingDisconnection);
@@ -160,14 +152,11 @@ void pulse_transport_set_connected(bool is_connected) {
 
   if (send_event) {
     PebbleEvent e = {
-      .type = PEBBLE_BT_CONNECTION_EVENT,
-      .bluetooth = {
-        .connection = {
-          .state = (s_transport.session) ? PebbleBluetoothConnectionEventStateConnected
-          : PebbleBluetoothConnectionEventStateDisconnected
-        }
-      }
-    };
+        .type = PEBBLE_BT_CONNECTION_EVENT,
+        .bluetooth = {
+            .connection = {.state = (s_transport.session)
+                                        ? PebbleBluetoothConnectionEventStateConnected
+                                        : PebbleBluetoothConnectionEventStateDisconnected}}};
     event_put(&e);
   }
 }
@@ -212,13 +201,9 @@ static void prv_pulse_pp_send(uint8_t opcode, uint8_t *data, size_t data_length)
   launcher_task_add_callback(prv_pulse_pp_send_cb, cb_data);
 }
 
-void pulse_pp_transport_open_handler(void) {
-  return;
-}
+void pulse_pp_transport_open_handler(void) { return; }
 
-void pulse_pp_transport_closed_handler(void) {
-  prv_pulse_pp_transport_set_connected(false);
-}
+void pulse_pp_transport_closed_handler(void) { prv_pulse_pp_transport_set_connected(false); }
 
 void pulse_pp_transport_handle_received_data(void *data, size_t length) {
   PulsePPPacket *packet = data;

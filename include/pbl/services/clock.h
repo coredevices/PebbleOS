@@ -51,7 +51,7 @@ void clock_hourly_chime_arm(void);
 #endif
 
 //! @internal
-void clock_get_time_tm(struct tm* time_tm);
+void clock_get_time_tm(struct tm *time_tm);
 
 //! @internal
 //! @param add_space whether to add a space between the time and AM/PM
@@ -61,9 +61,8 @@ size_t clock_format_time(char *buffer, uint8_t size, int16_t hours, int16_t minu
 //! Same as \ref clock_copy_time_string, but with a supplied timestamp
 size_t clock_copy_time_string_timestamp(char *buffer, uint8_t size, time_t timestamp);
 
-//! Copies a time string into the buffer, formatted according to the user's time display preferences (such as 12h/24h
-//! time).
-//! Example results: "7:30" or "15:00".
+//! Copies a time string into the buffer, formatted according to the user's time display preferences
+//! (such as 12h/24h time). Example results: "7:30" or "15:00".
 //! @note AM/PM are also outputted with the time if the user's preference is 12h time.
 //! @param[out] buffer A pointer to the buffer to copy the time string into
 //! @param size The maximum size of buffer
@@ -80,8 +79,8 @@ size_t clock_get_time_word(char *buffer, size_t buffer_size, time_t timestamp);
 //! Get the relative time string of an event, e.g. "10 min. ago", with "10" and " min ago"
 //! copied into separate buffers so they can be rendered in different fonts
 void clock_get_event_relative_time_string(char *number_buffer, int number_buffer_size,
-    char *word_buffer, int word_buffer_size, time_t timestamp, uint16_t duration,
-    time_t current_day, bool all_day);
+                                          char *word_buffer, int word_buffer_size, time_t timestamp,
+                                          uint16_t duration, time_t current_day, bool all_day);
 
 //! Gets the user's 12/24h clock style preference.
 //! @return `true` if the user prefers 24h-style time display or `false` if the
@@ -176,8 +175,7 @@ void clock_get_since_time(char *buffer, int buf_size, time_t timestamp);
 //! @param buf_size size of the buffer
 //! @param timestamp timestamp to get a friendly time for
 //! @param max_relative_hrs how many hours for which it should show "IN X HOURS"
-void clock_get_until_time(char *buffer, int buf_size, time_t timestamp,
-                          int max_relative_hrs);
+void clock_get_until_time(char *buffer, int buf_size, time_t timestamp, int max_relative_hrs);
 
 //! Get a friendly "time to" out of a timestamp, without ever writing the real time
 //! @param buffer buffer to output the friendly time into
@@ -185,7 +183,7 @@ void clock_get_until_time(char *buffer, int buf_size, time_t timestamp,
 //! @param timestamp timestamp to get a friendly time for
 //! @param max_relative_hrs how many hours for which it should show "IN X HOURS"
 void clock_get_until_time_without_fulltime(char *buffer, int buf_size, time_t timestamp,
-                                          int max_relative_hrs);
+                                           int max_relative_hrs);
 
 //! Get the date in MM/DD format
 size_t clock_get_date(char *buffer, int buf_size, time_t timestamp);

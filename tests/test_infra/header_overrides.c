@@ -8,14 +8,8 @@
 // Loading of override headers must be done in a separate source file because
 // the overrides are not applied to the test harness itself.
 
-int default_only_define(void) {
-  return DEFAULT_ONLY_DEFINE;
-}
+int default_only_define(void) { return DEFAULT_ONLY_DEFINE; }
 
-int overridden_define(void) {
-  return OVERRIDDEN_DEFINE;
-}
+int overridden_define(void) { return OVERRIDDEN_DEFINE; }
 
-int custom_only_define(void) {
-  return CUSTOM_ONLY_DEFINE;
-}
+int custom_only_define(void) { return CUSTOM_ONLY_DEFINE; }

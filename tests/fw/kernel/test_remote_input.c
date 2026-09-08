@@ -45,11 +45,12 @@ void event_service_client_subscribe(EventServiceInfo *service_info) {
 static void prv_put_comm_session_event(bool is_open, bool is_system) {
   cl_assert(s_comm_session_subscription != NULL);
   PebbleEvent event = {
-    .type = PEBBLE_COMM_SESSION_EVENT,
-    .bluetooth.comm_session_event = {
-      .is_open = is_open,
-      .is_system = is_system,
-    },
+      .type = PEBBLE_COMM_SESSION_EVENT,
+      .bluetooth.comm_session_event =
+          {
+              .is_open = is_open,
+              .is_system = is_system,
+          },
   };
   s_comm_session_subscription->handler(&event, s_comm_session_subscription->context);
 }
@@ -78,16 +79,14 @@ bool touch_handle_injected_update(TouchInjectPhase phase, int16_t x, int16_t y) 
   return true;
 }
 
-bool touch_injection_is_available(void) {
-  return s_injection_available;
-}
+bool touch_injection_is_available(void) { return s_injection_available; }
 
 static uint8_t s_ack[8];
 static int s_ack_length;
 static int s_ack_count;
 
 bool comm_session_send_data(CommSession *session, uint16_t endpoint_id, const uint8_t *data,
-                           size_t length, uint32_t timeout_ms) {
+                            size_t length, uint32_t timeout_ms) {
   cl_assert(length <= sizeof(s_ack));
   memcpy(s_ack, data, length);
   s_ack_length = length;
@@ -114,13 +113,9 @@ static void prv_run_sequence(void) {
 
 //! Injected coordinates are the ones the UI observes; left-hand mode is the touch service's
 //! business (see test_touch), so these read the samples straight back.
-static int16_t prv_observed_y(int i) {
-  return s_touches[i].y;
-}
+static int16_t prv_observed_y(int i) { return s_touches[i].y; }
 
-static int16_t prv_observed_x(int i) {
-  return s_touches[i].x;
-}
+static int16_t prv_observed_x(int i) { return s_touches[i].x; }
 
 // Tests
 ///////////////////////////////////////////////////////////////////////////////
@@ -181,8 +176,7 @@ void test_remote_input__zero_presses_leaves_no_button_held(void) {
 }
 
 void test_remote_input__rejects_unknown_button(void) {
-  cl_assert_equal_i(RemoteInputResult_Invalid,
-                    remote_input_button_press(NUM_BUTTONS, 1, 20, 0));
+  cl_assert_equal_i(RemoteInputResult_Invalid, remote_input_button_press(NUM_BUTTONS, 1, 20, 0));
   cl_assert_equal_i(0, s_event_count);
 }
 
@@ -190,8 +184,7 @@ void test_remote_input__second_request_is_busy(void) {
   cl_assert_equal_i(RemoteInputResult_Ok, remote_input_button_press(BUTTON_ID_SELECT, 1, 20, 0));
   cl_assert_equal_i(RemoteInputResult_Busy, remote_input_button_press(BUTTON_ID_UP, 1, 20, 0));
   // Swipes share the timer, so they are single-flight against button presses too.
-  cl_assert_equal_i(RemoteInputResult_Busy,
-                    remote_input_swipe(RemoteInputSwipeDirection_Up, 150));
+  cl_assert_equal_i(RemoteInputResult_Busy, remote_input_swipe(RemoteInputSwipeDirection_Up, 150));
 
   prv_run_sequence();
 
@@ -261,8 +254,7 @@ void test_remote_input__held_buttons_block_sequences(void) {
   cl_assert_equal_i(RemoteInputResult_Ok, remote_input_button_set(1 << BUTTON_ID_BACK));
 
   cl_assert_equal_i(RemoteInputResult_Busy, remote_input_button_press(BUTTON_ID_UP, 1, 20, 0));
-  cl_assert_equal_i(RemoteInputResult_Busy,
-                    remote_input_swipe(RemoteInputSwipeDirection_Up, 150));
+  cl_assert_equal_i(RemoteInputResult_Busy, remote_input_swipe(RemoteInputSwipeDirection_Up, 150));
 
   // Releasing the hold lets sequences through again.
   cl_assert_equal_i(RemoteInputResult_Ok, remote_input_button_set(0));
@@ -413,8 +405,10 @@ void test_remote_input__swipe_aborts_when_injection_is_refused(void) {
 
 void test_remote_input__swipe_stays_on_screen(void) {
   const RemoteInputSwipeDirection directions[] = {
-    RemoteInputSwipeDirection_Up, RemoteInputSwipeDirection_Down,
-    RemoteInputSwipeDirection_Left, RemoteInputSwipeDirection_Right,
+      RemoteInputSwipeDirection_Up,
+      RemoteInputSwipeDirection_Down,
+      RemoteInputSwipeDirection_Left,
+      RemoteInputSwipeDirection_Right,
   };
   for (unsigned d = 0; d < ARRAY_LENGTH(directions); d++) {
     s_touch_count = 0;

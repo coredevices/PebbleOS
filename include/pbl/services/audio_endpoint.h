@@ -19,14 +19,15 @@ typedef void (*AudioEndpointStopTransferCallback)(AudioEndpointSessionId session
 //! Create a session for transferring audio data from watch to phone
 //! @param stop_transfer Callback to handle stop transfer message received from phone.
 //! @return Session identifier to pass to other endpoint functions
-AudioEndpointSessionId audio_endpoint_setup_transfer(AudioEndpointStopTransferCallback stop_transfer);
+AudioEndpointSessionId audio_endpoint_setup_transfer(
+    AudioEndpointStopTransferCallback stop_transfer);
 
 //! Add a frame of audio data to session's internal buffer
 //! @param session_id Session identifier returned by audio_endpoint_start_transfer
 //! @param frame Pointer to frame of encoded audio data
 //! @param frame_size Size of frame of encoded audio data in bytes
 void audio_endpoint_add_frame(AudioEndpointSessionId session_id, uint8_t *frame,
-    uint8_t frame_size);
+                              uint8_t frame_size);
 
 //! Stop transferring audio data from watch to phone
 //! @param session_id Session identifier returned by audio_endpoint_setup_transfer

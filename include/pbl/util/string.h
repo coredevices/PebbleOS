@@ -11,7 +11,7 @@
 // but if you just extern this the libc still has the right symbol. Weirdddd.
 size_t strnlen(const char *, size_t);
 
-const char *string_strip_leading_whitespace(const char * string);
+const char *string_strip_leading_whitespace(const char *string);
 
 void string_strip_trailing_whitespace(const char *string, char *string_out);
 
@@ -39,7 +39,8 @@ const char *bool_to_str(bool b);
 //! @param bd_addr Points to a SS1 BD_ADDR_t as defined in BTBTypes.h
 //! @param bd_addr_size Size of the bd_addr buffer, in bytes
 //! @return True on success
-bool convert_bt_addr_hex_str_to_bd_addr(const char *hex_str, uint8_t *bd_addr, const unsigned int bd_addr_size);
+bool convert_bt_addr_hex_str_to_bd_addr(const char *hex_str, uint8_t *bd_addr,
+                                        const unsigned int bd_addr_size);
 
 //! Concatenates a simple string and a number.
 //! NOTE: Buffer must be long enough to fit the largest number value (12 bytes) and the string, plus
@@ -50,11 +51,11 @@ void concat_str_int(const char *str, uint32_t num, char *buf, uint8_t buf_len);
 void toupper_str(char *str);
 
 //! Converts a byte stream to a hex string, i.e ({0xaa, 0xbb, 0xcc} -> "aabbcc")
-void byte_stream_to_hex_string(char *out_buf, size_t out_buf_len,
-    const uint8_t *byte_stream, size_t byte_stream_len, bool stream_backward);
+void byte_stream_to_hex_string(char *out_buf, size_t out_buf_len, const uint8_t *byte_stream,
+                               size_t byte_stream_len, bool stream_backward);
 
 //! Appends the src string to dst, taking the overall size of the dst buffer into account
 //! @param dst Destination string to append to
 //! @param src String to append
 //! @param dst_space Total size of dst buffer
-void safe_strcat(char* dst, const char* src, int dst_space);
+void safe_strcat(char *dst, const char *src, int dst_space);

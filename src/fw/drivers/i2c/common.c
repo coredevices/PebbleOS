@@ -22,13 +22,13 @@
 
 PBL_LOG_MODULE_DEFINE(driver_i2c, CONFIG_DRIVER_I2C_LOG_LEVEL);
 
-#define I2C_ERROR_TIMEOUT_MS  (1000)
+#define I2C_ERROR_TIMEOUT_MS (1000)
 #define I2C_TIMEOUT_ATTEMPTS_MAX (2 * 1000 * 1000)
 
 // MFI NACKs while busy. We delay ~1ms between retries so this is approximately a 1000ms timeout.
 // The longest operation of the MFi chip is "start signature generation", which seems to take
 // 223-224 NACKs, but sometimes for unknown reasons it can take much longer.
-#define I2C_NACK_COUNT_MAX    (1000)
+#define I2C_NACK_COUNT_MAX (1000)
 
 #define Read I2CTransferDirection_Read
 #define Write I2CTransferDirection_Write
@@ -51,32 +51,24 @@ static void prv_semaphore_give(I2CBusState *bus) {
   pbl_sem_give(&bus->event_semaphore);
 }
 
-static void prv_semaphore_give_from_isr(I2CBusState *bus) {
-  pbl_sem_give(&bus->event_semaphore);
-}
+static void prv_semaphore_give_from_isr(I2CBusState *bus) { pbl_sem_give(&bus->event_semaphore); }
 
 /*-------------------BUS/PIN CONFIG FUNCTIONS--------------------------*/
 // FIXME: These rail control functions should be moved to board-specific implementations
 // https://pebbletechnology.atlassian.net/browse/PBL-32232
 
 #ifdef CONFIG_PMIC
-void i2c_rail_ctl_pmic(I2CBus *bus, bool enable) {
-  set_ldo3_power_state(enable);
-}
+void i2c_rail_ctl_pmic(I2CBus *bus, bool enable) { set_ldo3_power_state(enable); }
 #endif
 
 //! Configure the bus pins, enable the peripheral clock and initialize the I2C peripheral.
 //! Always lock the bus and peripheral config access before enabling it
-static void prv_bus_enable(I2CBus *bus) {
-  i2c_hal_enable(bus);
-}
+static void prv_bus_enable(I2CBus *bus) { i2c_hal_enable(bus); }
 
 //! De-initialize and gate the clock to the peripheral
 //! Power down rail if the bus supports that and no devices are using it
 //! Always lock the bus and peripheral config access before disabling it
-static void prv_bus_disable(I2CBus *bus) {
-  i2c_hal_disable(bus);
-}
+static void prv_bus_disable(I2CBus *bus) { i2c_hal_disable(bus); }
 
 //! Perform a soft reset of the bus
 //! Always lock the bus before reset
@@ -90,7 +82,7 @@ static void prv_bus_reset(I2CBus *bus) {
 void i2c_init(I2CBus *bus) {
   PBL_ASSERTN(bus);
 
-  *bus->state = (I2CBusState) { 0 };
+  *bus->state = (I2CBusState){0};
   pbl_sem_init(&bus->state->event_semaphore, 0, 1);
   pbl_mutex_init(&bus->state->bus_mutex);
 
@@ -137,8 +129,10 @@ void i2c_reset(I2CSlavePort *slave) {
   pbl_mutex_lock(&slave->bus->state->bus_mutex, PBL_FOREVER);
 
   if (slave->bus->state->user_count == 0) {
-    PBL_LOG_ERR("Attempted reset of disabled bus %s when still in use by "
-        "another bus", slave->bus->name);
+    PBL_LOG_ERR(
+        "Attempted reset of disabled bus %s when still in use by "
+        "another bus",
+        slave->bus->name);
     pbl_mutex_unlock(&slave->bus->state->bus_mutex);
     return;
   }
@@ -167,7 +161,7 @@ bool i2c_bitbang_recovery(I2CSlavePort *slave) {
 
 //! Wait a short amount of time for busy bit to clear
 static bool prv_wait_for_not_busy(I2CBus *bus) {
-  static const int WAIT_DELAY = 10; // milliseconds
+  static const int WAIT_DELAY = 10;  // milliseconds
 
   if (i2c_hal_is_busy(bus)) {
     psleep(WAIT_DELAY);
@@ -183,9 +177,9 @@ static bool prv_wait_for_not_busy(I2CBus *bus) {
 //! Set up and start a transfer to a bus, wait for it to finish and clean up after the transfer
 //! has completed
 //! Caller must hold bus mutex
-static bool prv_do_transfer_locked(I2CBus *bus, I2CTransferDirection direction, uint16_t device_address,
-                                   uint8_t register_address, uint32_t size, uint8_t *data,
-                                   I2CTransferType type) {
+static bool prv_do_transfer_locked(I2CBus *bus, I2CTransferDirection direction,
+                                   uint16_t device_address, uint8_t register_address, uint32_t size,
+                                   uint8_t *data, I2CTransferType type) {
   if (bus->state->user_count == 0) {
     PBL_LOG_ERR("Attempted access to disabled bus %s", bus->name);
     return false;
@@ -208,14 +202,14 @@ static bool prv_do_transfer_locked(I2CBus *bus, I2CTransferDirection direction, 
   PBL_ASSERT(prv_semaphore_take(bus->state), "Could not acquire semaphore token");
 
   // Set up transfer
-  bus->state->transfer = (I2CTransfer) {
-    .device_address = device_address,
-    .register_address = register_address,
-    .direction = direction,
-    .type = type,
-    .size = size,
-    .idx = 0,
-    .data = data,
+  bus->state->transfer = (I2CTransfer){
+      .device_address = device_address,
+      .register_address = register_address,
+      .direction = direction,
+      .type = type,
+      .size = size,
+      .idx = 0,
+      .data = data,
   };
 
   i2c_hal_init_transfer(bus);
@@ -288,8 +282,8 @@ static bool prv_do_transfer(I2CBus *bus, I2CTransferDirection direction, uint16_
                             I2CTransferType type) {
   pbl_mutex_lock(&bus->state->bus_mutex, PBL_FOREVER);
 
-  bool result = prv_do_transfer_locked(bus, direction, device_address, register_address, size,
-                                       data, type);
+  bool result =
+      prv_do_transfer_locked(bus, direction, device_address, register_address, size, data, type);
 
   pbl_mutex_unlock(&bus->state->bus_mutex);
 
@@ -300,8 +294,8 @@ bool i2c_read_register(I2CSlavePort *slave, uint8_t register_address, uint8_t *r
   return i2c_read_register_block(slave, register_address, 1, result);
 }
 
-bool i2c_read_register_block(I2CSlavePort *slave,  uint8_t register_address_start,
-                             uint32_t read_size, uint8_t* result_buffer) {
+bool i2c_read_register_block(I2CSlavePort *slave, uint8_t register_address_start,
+                             uint32_t read_size, uint8_t *result_buffer) {
   PBL_ASSERTN(slave);
   PBL_ASSERTN(result_buffer);
   // Do transfer locks the bus
@@ -315,12 +309,12 @@ bool i2c_read_register_block(I2CSlavePort *slave,  uint8_t register_address_star
   return result;
 }
 
-bool i2c_read_block(I2CSlavePort *slave, uint32_t read_size, uint8_t* result_buffer) {
+bool i2c_read_block(I2CSlavePort *slave, uint32_t read_size, uint8_t *result_buffer) {
   PBL_ASSERTN(slave);
   PBL_ASSERTN(result_buffer);
 
   bool result = prv_do_transfer(slave->bus, Read, slave->address, 0, read_size, result_buffer,
-                            NoRegisterAddress);
+                                NoRegisterAddress);
 
   if (!result) {
     PBL_LOG_ERR("Block read failed on bus %s", slave->bus->name);
@@ -334,12 +328,12 @@ bool i2c_write_register(I2CSlavePort *slave, uint8_t register_address, uint8_t v
 }
 
 bool i2c_write_register_block(I2CSlavePort *slave, uint8_t register_address_start,
-                              uint32_t write_size, const uint8_t* buffer) {
+                              uint32_t write_size, const uint8_t *buffer) {
   PBL_ASSERTN(slave);
   PBL_ASSERTN(buffer);
   // Do transfer locks the bus
   bool result = prv_do_transfer(slave->bus, Write, slave->address, register_address_start,
-                                write_size, (uint8_t*)buffer, SendRegisterAddress);
+                                write_size, (uint8_t *)buffer, SendRegisterAddress);
 
   if (!result) {
     PBL_LOG_ERR("Write failed on bus %s", slave->bus->name);
@@ -348,12 +342,12 @@ bool i2c_write_register_block(I2CSlavePort *slave, uint8_t register_address_star
   return result;
 }
 
-bool i2c_write_block(I2CSlavePort *slave, uint32_t write_size, const uint8_t* buffer) {
+bool i2c_write_block(I2CSlavePort *slave, uint32_t write_size, const uint8_t *buffer) {
   PBL_ASSERTN(slave);
   PBL_ASSERTN(buffer);
 
   // Do transfer locks the bus
-  bool result = prv_do_transfer(slave->bus, Write, slave->address, 0, write_size, (uint8_t*)buffer,
+  bool result = prv_do_transfer(slave->bus, Write, slave->address, 0, write_size, (uint8_t *)buffer,
                                 NoRegisterAddress);
 
   if (!result) {
@@ -363,8 +357,8 @@ bool i2c_write_block(I2CSlavePort *slave, uint32_t write_size, const uint8_t* bu
   return result;
 }
 
-bool i2c_write_read_block(I2CSlavePort *slave, uint32_t write_size, const uint8_t* write_buffer,
-                          uint32_t read_size, uint8_t* read_buffer) {
+bool i2c_write_read_block(I2CSlavePort *slave, uint32_t write_size, const uint8_t *write_buffer,
+                          uint32_t read_size, uint8_t *read_buffer) {
   PBL_ASSERTN(slave);
   PBL_ASSERTN(write_buffer);
   PBL_ASSERTN(read_buffer);
@@ -376,12 +370,12 @@ bool i2c_write_read_block(I2CSlavePort *slave, uint32_t write_size, const uint8_
 
   // Perform write transfer
   bool result = prv_do_transfer_locked(bus, Write, slave->address, 0, write_size,
-                                       (uint8_t*)write_buffer, NoRegisterAddress);
+                                       (uint8_t *)write_buffer, NoRegisterAddress);
 
   // Only proceed with read if write succeeded
   if (result) {
-    result = prv_do_transfer_locked(bus, Read, slave->address, 0, read_size,
-                                    read_buffer, NoRegisterAddress);
+    result = prv_do_transfer_locked(bus, Read, slave->address, 0, read_size, read_buffer,
+                                    NoRegisterAddress);
   }
 
   pbl_mutex_unlock(&bus->state->bus_mutex);

@@ -20,10 +20,10 @@ typedef struct {
 } HealthServiceStats;
 
 typedef struct {
-  HealthServiceStats weekday;                // weekday stats
-  HealthServiceStats weekend;                // weekend stats
-  HealthServiceStats weekly;                 // weekly stats
-  HealthServiceStats daily;                  // daily stats
+  HealthServiceStats weekday;  // weekday stats
+  HealthServiceStats weekend;  // weekend stats
+  HealthServiceStats weekly;   // weekly stats
+  HealthServiceStats daily;    // daily stats
 } HealthServiceMetricStats;
 
 // The number of session we choose to store is arbitrary and taken from other examples
@@ -32,16 +32,16 @@ typedef struct {
 
 // Information required to support health metric alerts
 typedef struct {
-  HealthValue threshold;                      // the threshold
-  HealthValue prior_reading;                  // the prior reading
+  HealthValue threshold;      // the threshold
+  HealthValue prior_reading;  // the prior reading
 } HealthServiceMetricAlertInfo;
 
 typedef struct {
-  uint32_t cur_day_id;                        // Current day ID, used for cache validation
+  uint32_t cur_day_id;  // Current day ID, used for cache validation
 
   // These are intraday step averages
-  DayInWeek step_averages_day;                // which day in the week the step averages are for
-  ActivityMetricAverages step_averages;       // intraday step averages
+  DayInWeek step_averages_day;           // which day in the week the step averages are for
+  ActivityMetricAverages step_averages;  // intraday step averages
 
   // We cache the daily step totals since that metric is very likely to be requested by a
   // client. The other metrics we fetch only on an as-needed basis
@@ -58,9 +58,9 @@ typedef struct {
 
   union {
     struct {
-      uint16_t step_averages_valid:1;
-      uint16_t step_daily_valid:1;
-      uint16_t reserved:14;
+      uint16_t step_averages_valid : 1;
+      uint16_t step_daily_valid : 1;
+      uint16_t reserved : 14;
     };
     uint16_t valid_flags;
   };
@@ -85,13 +85,12 @@ void health_service_state_deinit(HealthServiceState *state);
 
 // helper struct for representing utc-based ranges on a per-day granularity including fractions
 typedef struct {
-  uint32_t last_day_idx; // last intersected day of this range (0=today, 1=yesterday, ...)
-  uint32_t num_days; // number of intersected days for this range
-  uint32_t seconds_first_day; // number of seconds on the oldest intersected day for this range
-  uint32_t seconds_last_day; // number of seconds on the youngest intersected day for this range
-  uint32_t seconds_total_last_day; // total number of seconds available on the youngest i. day
+  uint32_t last_day_idx;       // last intersected day of this range (0=today, 1=yesterday, ...)
+  uint32_t num_days;           // number of intersected days for this range
+  uint32_t seconds_first_day;  // number of seconds on the oldest intersected day for this range
+  uint32_t seconds_last_day;   // number of seconds on the youngest intersected day for this range
+  uint32_t seconds_total_last_day;  // total number of seconds available on the youngest i. day
 } HealthServiceTimeRange;
-
 
 // since we expect clients to allocate this struct on the stack we make sure its size is limited
 _Static_assert(sizeof(HealthServiceTimeRange) <= 160, "Helper struct too large for stack");

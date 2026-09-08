@@ -20,17 +20,13 @@ uint8_t get_strength_for_intensity(VibeIntensity intensity) {
   }
 }
 
-void vibe_intensity_init(void) {
-  vibe_intensity_set(vibe_intensity_get());
-}
+void vibe_intensity_init(void) { vibe_intensity_set(vibe_intensity_get()); }
 
 void vibe_intensity_set(VibeIntensity intensity) {
   vibes_set_default_vibe_strength(get_strength_for_intensity(intensity));
 }
 
-VibeIntensity vibe_intensity_get(void) {
-  return alerts_preferences_get_vibe_intensity();
-}
+VibeIntensity vibe_intensity_get(void) { return alerts_preferences_get_vibe_intensity(); }
 
 const char *vibe_intensity_get_string_for_intensity(VibeIntensity intensity) {
   switch (intensity) {

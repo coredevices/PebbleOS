@@ -12,10 +12,11 @@ static bool s_event_ongoing = false;
 
 static void prv_put_calendar_event(void) {
   PebbleEvent event = {
-    .type = PEBBLE_CALENDAR_EVENT,
-    .calendar = {
-      .is_event_ongoing = s_event_ongoing,
-    },
+      .type = PEBBLE_CALENDAR_EVENT,
+      .calendar =
+          {
+              .is_event_ongoing = s_event_ongoing,
+          },
   };
   event_put(&event);
 }
@@ -38,12 +39,10 @@ static uint32_t prv_calendar_update(TimelineItem *item, void **context) {
 
 const TimelineEventImpl *calendar_get_event_service(void) {
   static const TimelineEventImpl s_event_impl = {
-    .filter = prv_calendar_filter,
-    .update = prv_calendar_update,
+      .filter = prv_calendar_filter,
+      .update = prv_calendar_update,
   };
   return &s_event_impl;
 }
 
-bool calendar_event_is_ongoing(void) {
-  return s_event_ongoing;
-}
+bool calendar_event_is_ongoing(void) { return s_event_ongoing; }

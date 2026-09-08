@@ -21,15 +21,11 @@ WEAK void util_log(const char *filename, int line, const char *string) {
   printf("%s:%d %s\n", filename, line, string);
 }
 
-WEAK void util_dbgserial_str(const char *string) {
-  printf("%s\n", string);
-}
+WEAK void util_dbgserial_str(const char *string) { printf("%s\n", string); }
 
 WEAK NORETURN util_assertion_failed(const char *filename, int line) {
   util_log(filename, line, "*** UTIL ASSERT FAILED");
   exit(EXIT_FAILURE);
 }
 
-WEAK uint32_t rand32(void) {
-  return ((uint32_t)rand() << 1) + (uint32_t)rand();
-}
+WEAK uint32_t rand32(void) { return ((uint32_t)rand() << 1) + (uint32_t)rand(); }

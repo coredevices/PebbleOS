@@ -34,8 +34,6 @@ extern const uint32_t LIGHT_FADE_TIME_MS;
 // number of fade-out steps
 extern const uint32_t LIGHT_FADE_STEPS;
 
-
-
 // Stubs
 ///////////////////////////////////////////////////////////
 
@@ -44,45 +42,27 @@ static TimerID s_light_timer;
 static uint8_t s_backlight_brightness;
 static bool s_backlight_enabled = true;
 
-BacklightBehaviour backlight_get_behaviour(void) {
-  return BacklightBehaviour_On;
-}
+BacklightBehaviour backlight_get_behaviour(void) { return BacklightBehaviour_On; }
 
-bool backlight_is_enabled(void) {
-  return s_backlight_enabled;
-}
+bool backlight_is_enabled(void) { return s_backlight_enabled; }
 
-bool backlight_is_ambient_sensor_enabled(void) {
-  return false;
-}
+bool backlight_is_ambient_sensor_enabled(void) { return false; }
 
-void backlight_set_enabled(bool enabled) {
-  s_backlight_enabled = enabled;
-}
+void backlight_set_enabled(bool enabled) { s_backlight_enabled = enabled; }
 
-void backlight_set_ambient_sensor_enabled(bool enabled) {
-}
+void backlight_set_ambient_sensor_enabled(bool enabled) {}
 
-void backlight_set_brightness(uint8_t brightness) {
-  s_backlight_brightness = brightness;
-}
+void backlight_set_brightness(uint8_t brightness) { s_backlight_brightness = brightness; }
 
-uint8_t backlight_get_level(uint8_t brightness) {
-  return brightness;
-}
+uint8_t backlight_get_level(uint8_t brightness) { return brightness; }
 
-void backlight_refresh(void) {
-}
+void backlight_refresh(void) {}
 
-bool backlight_is_motion_enabled(void) {
-  return false;
-}
+bool backlight_is_motion_enabled(void) { return false; }
 
 // From pref.h
 uint32_t s_backlight_timeout_ms;
-uint32_t backlight_get_timeout_ms(void) {
-  return s_backlight_timeout_ms;
-}
+uint32_t backlight_get_timeout_ms(void) { return s_backlight_timeout_ms; }
 void backlight_set_timeout_ms(uint32_t timeout_ms) {
   PBL_ASSERTN(timeout_ms > 0);
   s_backlight_timeout_ms = timeout_ms;
@@ -90,15 +70,12 @@ void backlight_set_timeout_ms(uint32_t timeout_ms) {
 
 uint16_t s_backlight_intensity;
 
-uint8_t backlight_get_intensity(void) {
-  return s_backlight_intensity;
-}
+uint8_t backlight_get_intensity(void) { return s_backlight_intensity; }
 
 void backlight_set_intensity(uint8_t percent_intensity) {
   PBL_ASSERTN(percent_intensity > 0 && percent_intensity <= 100);
   s_backlight_intensity = percent_intensity;
 }
-
 
 // Helper functions
 ///////////////////////////////////////////////////////////
@@ -147,14 +124,13 @@ static void check_off(void) {
   cl_assert(!stub_new_timer_is_scheduled(s_light_timer));
 }
 
-
 // Tests
 ///////////////////////////////////////////////////////////
 
 void test_light__initialize(void) {
   light_init();
   light_allow(true);
-  s_light_timer = ((StubTimer*) s_idle_timers)->id;
+  s_light_timer = ((StubTimer *)s_idle_timers)->id;
   backlight_set_intensity(100);
   s_backlight_enabled = true;
 }
@@ -170,11 +146,7 @@ void test_light__scales_getafix_presets_upward(void) {
     uint8_t intensity;
     uint8_t scaled;
   } cases[] = {
-    { 0, 0 },
-    { 10, 3 },
-    { 25, 7 },
-    { 50, 13 },
-    { 100, 25 },
+      {0, 0}, {10, 3}, {25, 7}, {50, 13}, {100, 25},
   };
 
   for (size_t i = 0; i < ARRAY_LENGTH(cases); i++) {

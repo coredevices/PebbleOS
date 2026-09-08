@@ -86,9 +86,7 @@ void connection_service_state_init(ConnectionServiceState *state) {}
 void tick_timer_service_state_init(TickTimerServiceState *state) {}
 void framebuffer_clear(FrameBuffer *f) {}
 
-void launcher_task_add_callback(void (*callback)(void *data), void *data) {
-  callback(data);
-}
+void launcher_task_add_callback(void (*callback)(void *data), void *data) { callback(data); }
 
 void app_idle_timeout_pause(void) { s_app_idle = true; }
 void app_idle_timeout_resume(void) { s_app_idle = false; }
@@ -126,7 +124,7 @@ Animation *window_transition_default_pop_create_animation(WindowTransitioningCon
   return animation_create();
 }
 const WindowTransitionImplementation window_transition_default_pop_implementation = {
-  .create_animation = window_transition_default_pop_create_animation,
+    .create_animation = window_transition_default_pop_create_animation,
 };
 const WindowTransitionImplementation *window_transition_get_default_pop_implementation(void) {
   return &window_transition_default_pop_implementation;
@@ -138,7 +136,7 @@ Animation *window_transition_default_push_create_animation(WindowTransitioningCo
   return animation_create();
 }
 const WindowTransitionImplementation window_transition_default_push_implementation = {
-  .create_animation = window_transition_default_push_create_animation,
+    .create_animation = window_transition_default_push_create_animation,
 };
 const WindowTransitionImplementation *window_transition_get_default_push_implementation(void) {
   return &window_transition_default_push_implementation;
@@ -150,7 +148,7 @@ Animation *window_transition_none_create_animation(WindowTransitioningContext *c
   return animation_create();
 }
 const WindowTransitionImplementation g_window_transition_none_implementation = {
-  .create_animation = window_transition_none_create_animation,
+    .create_animation = window_transition_none_create_animation,
 };
 
 void app_click_config_setup_with_window(ClickManager *click_manager, struct Window *window) {
@@ -166,20 +164,16 @@ void touch_service_set_system_handler(TouchServiceHandler handler, void *context
   s_kernel_ctx = context;
 }
 
-RecognizerManager *app_state_get_recognizer_manager(void) {
-  return &s_app_recognizer_manager;
-}
+RecognizerManager *app_state_get_recognizer_manager(void) { return &s_app_recognizer_manager; }
 
 // Helpers
 ////////////////////////////////////
 
-static void prv_unload_destroy(Window *window) {
-  window_destroy(window);
-}
+static void prv_unload_destroy(Window *window) { window_destroy(window); }
 
 static Window *prv_make_window(void) {
   Window *window = window_create();
-  window_set_window_handlers(window, &(WindowHandlers){ .unload = prv_unload_destroy });
+  window_set_window_handlers(window, &(WindowHandlers){.unload = prv_unload_destroy});
   return window;
 }
 
@@ -188,10 +182,10 @@ static Window *prv_make_window(void) {
 // the gate lets the dispatcher run, the counter ticks; when it gates out, it does not.
 static void prv_kernel_touchdown(void) {
   const TouchEvent e = {
-    .type = TouchEvent_Touchdown,
-    .x = 50,
-    .y = 90,
-    .non_navigational = true,
+      .type = TouchEvent_Touchdown,
+      .x = 50,
+      .y = 90,
+      .non_navigational = true,
   };
   cl_assert(s_kernel_handler != NULL);
   s_kernel_handler(&e, s_kernel_ctx);
@@ -245,8 +239,7 @@ void test_modal_touch_nav__app_and_modal_managers_are_separate(void) {
   Window *app_window = prv_make_window();
   stub_pebble_tasks_set_current(PebbleTask_App);
   window_stack_push(app_state_get_window_stack(), app_window, false);
-  cl_assert_equal_p(window_get_recognizer_manager(app_window),
-                    app_state_get_recognizer_manager());
+  cl_assert_equal_p(window_get_recognizer_manager(app_window), app_state_get_recognizer_manager());
 
   stub_pebble_tasks_set_current(PebbleTask_KernelMain);
   Window *modal_window = prv_make_window();

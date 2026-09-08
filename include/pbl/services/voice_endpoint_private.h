@@ -30,30 +30,30 @@ typedef enum {
 
 typedef union PACKED {
   struct {
-    uint32_t app_initiated:1;
+    uint32_t app_initiated : 1;
   };
   uint32_t all;
 } VEFlags;
 
 typedef struct PACKED {
-  MsgId msg_id:8;
+  MsgId msg_id : 8;
   VEFlags flags;
-  VoiceEndpointSessionType session_type:8;
+  VoiceEndpointSessionType session_type : 8;
   AudioEndpointSessionId session_id;
   GenericAttributeList attr_list;
 } SessionSetupMsg;
 
 typedef struct PACKED {
-  MsgId msg_id:8;
+  MsgId msg_id : 8;
   VEFlags flags;
-  VoiceEndpointSessionType session_type:8;
-  VoiceEndpointResult result:8;
+  VoiceEndpointSessionType session_type : 8;
+  VoiceEndpointResult result : 8;
 } SessionSetupResultMsg;
 
 typedef struct PACKED {
-  MsgId msg_id:8;
+  MsgId msg_id : 8;
   VEFlags flags;
   AudioEndpointSessionId session_id;
-  VoiceEndpointResult result:8;
+  VoiceEndpointResult result : 8;
   GenericAttributeList attr_list;
 } VoiceSessionResultMsg;

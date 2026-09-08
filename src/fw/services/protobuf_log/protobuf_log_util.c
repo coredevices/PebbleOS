@@ -8,10 +8,8 @@
 
 #include <pbl/util/uuid.h>
 
-
-
 bool protobuf_log_util_encode_uuid(pb_ostream_t *stream, const pb_field_t *field,
-                                  void * const *arg) {
+                                   void *const *arg) {
   if (!pb_encode_tag_for_field(stream, field)) {
     return false;
   }
@@ -20,7 +18,7 @@ bool protobuf_log_util_encode_uuid(pb_ostream_t *stream, const pb_field_t *field
 }
 
 bool protobuf_log_util_encode_string(pb_ostream_t *stream, const pb_field_t *field,
-                                           void * const *arg) {
+                                     void *const *arg) {
   if (!pb_encode_tag_for_field(stream, field)) {
     return false;
   }
@@ -30,7 +28,7 @@ bool protobuf_log_util_encode_string(pb_ostream_t *stream, const pb_field_t *fie
 }
 
 bool protobuf_log_util_encode_packed_varints(pb_ostream_t *stream, const pb_field_t *field,
-                                            void * const *arg) {
+                                             void *const *arg) {
   PLogPackedVarintsEncoderArg *encoder_arg = *(PLogPackedVarintsEncoderArg **)arg;
 
   // We need to figure out the size of the packed array of varints first
@@ -69,7 +67,7 @@ bool protobuf_log_util_encode_packed_varints(pb_ostream_t *stream, const pb_fiel
 }
 
 bool protobuf_log_util_encode_measurement_types(pb_ostream_t *stream, const pb_field_t *field,
-                                               void * const *arg) {
+                                                void *const *arg) {
   PLogTypesEncoderArg *encoder_arg = *(PLogTypesEncoderArg **)arg;
   for (unsigned i = 0; i < encoder_arg->num_types; i++) {
     if (!pb_encode_tag_for_field(stream, field)) {
@@ -83,7 +81,7 @@ bool protobuf_log_util_encode_measurement_types(pb_ostream_t *stream, const pb_f
 }
 
 bool protobuf_log_util_encode_buffer(pb_ostream_t *stream, const pb_field_t *field,
-                                                     void * const *arg) {
+                                     void *const *arg) {
   PLogBufferEncoderArg *encoder_arg = *(PLogBufferEncoderArg **)arg;
   if (!pb_encode_tag_for_field(stream, field)) {
     return false;

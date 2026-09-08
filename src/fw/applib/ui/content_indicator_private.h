@@ -9,8 +9,8 @@
 #include "util/buffer.h"
 
 typedef struct {
-  ContentIndicatorDirection direction:2;
-  bool content_available:1;
+  ContentIndicatorDirection direction : 2;
+  bool content_available : 1;
   AppTimer *timeout_timer;
   ContentIndicatorConfig config;
   LayerUpdateProc original_update_proc;
@@ -35,8 +35,8 @@ struct ContentIndicator {
 #define CONTENT_INDICATOR_BUFFER_SIZE 4
 
 //! The maximum size (in Bytes) of the buffer of ContentIndicators.
-#define CONTENT_INDICATOR_BUFFER_SIZE_BYTES (CONTENT_INDICATOR_BUFFER_SIZE * \
-                                             sizeof(ContentIndicator *))
+#define CONTENT_INDICATOR_BUFFER_SIZE_BYTES \
+  (CONTENT_INDICATOR_BUFFER_SIZE * sizeof(ContentIndicator *))
 
 //! This union allows us to statically allocate the storage for a buffer of content indicators.
 typedef union {

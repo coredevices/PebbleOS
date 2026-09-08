@@ -14,11 +14,10 @@
 #include "stubs_app_state.h"
 #include "stubs_worker_state.h"
 
-
 #include <stdlib.h>
 #include <string.h>
 
-#define BLOCK_SIZE  sizeof(unsigned long)
+#define BLOCK_SIZE sizeof(unsigned long)
 
 // Stubs
 ///////////////////////////////////////////////////////////
@@ -35,23 +34,23 @@ void test_heap__should_handle_uniform_blocks(void) {
   // - Alloc 15 uniform blocks
   const int heap_size_blocks = 30;
   int heap_size_bytes = BLOCK_SIZE * heap_size_blocks;
-  void* heap_space = malloc(heap_size_bytes);
+  void *heap_space = malloc(heap_size_bytes);
   cl_assert(heap_space != NULL);
 
   Heap heap;
 
   // Test init
-  heap_init(&heap, (void*) heap_space, (void*) (heap_space + heap_size_bytes), false);
+  heap_init(&heap, (void *)heap_space, (void *)(heap_space + heap_size_bytes), false);
   cl_assert(heap.begin == heap_space);
   cl_assert(heap.end == (heap_space + heap_size_bytes));
   cl_assert(heap.current_size == 0);
 
-  void* ptr = NULL;
+  void *ptr = NULL;
 
   // Alloc
   for (int i = 0; i < heap_size_blocks / 2; i++) {
-    //printf("Allocating block=<%d>\n", i);
-    // Test malloc
+    // printf("Allocating block=<%d>\n", i);
+    //  Test malloc
     ptr = heap_malloc(&heap, sizeof(BLOCK_SIZE), 0);
     cl_assert(ptr != NULL);
 
@@ -63,25 +62,25 @@ void test_heap__should_handle_uniform_blocks(void) {
       cl_assert(heap.current_size == heap_size_bytes);
     } else {
       // Free block list should still be size 1
-      cl_assert(heap.current_size == 2*BLOCK_SIZE * (i + 1));
+      cl_assert(heap.current_size == 2 * BLOCK_SIZE * (i + 1));
     }
 
     // Block is allocated at the *end* of the heap
-    uint8_t* expected_addr = (uint8_t*) heap_space + i*BLOCK_SIZE*2 + BLOCK_SIZE;
-    printf("Expected addr at=<%p>; got ptr to=<%p>\n", expected_addr, (uint8_t*) ptr);
-    cl_assert(expected_addr == ((uint8_t*) ptr));
+    uint8_t *expected_addr = (uint8_t *)heap_space + i * BLOCK_SIZE * 2 + BLOCK_SIZE;
+    printf("Expected addr at=<%p>; got ptr to=<%p>\n", expected_addr, (uint8_t *)ptr);
+    cl_assert(expected_addr == ((uint8_t *)ptr));
   }
 
   ptr = heap_malloc(&heap, BLOCK_SIZE, 0);
   cl_assert(ptr == NULL);
-  cl_assert(heap.current_size == heap_size_blocks*BLOCK_SIZE);
+  cl_assert(heap.current_size == heap_size_blocks * BLOCK_SIZE);
 
   // Free
   // Reset ptr to first alloc'd element and iterate over all (uniform) elements
-  ptr = ((uint8_t*) heap_space) + BLOCK_SIZE;
+  ptr = ((uint8_t *)heap_space) + BLOCK_SIZE;
   for (int i = 0; i < heap_size_blocks / 2; i++) {
     heap_free(&heap, ptr, 0);
-    cl_assert(heap.current_size == (heap_size_blocks-(2*(i+1)))*BLOCK_SIZE);
+    cl_assert(heap.current_size == (heap_size_blocks - (2 * (i + 1))) * BLOCK_SIZE);
     ptr += 2 * BLOCK_SIZE;
   }
 
@@ -101,17 +100,17 @@ void test_heap__should_handle_uniform_blocks(void) {
       cl_assert(heap.current_size == heap_size_bytes);
     } else {
       // Free block list should still be size 1
-      cl_assert(heap.current_size == 2*BLOCK_SIZE * (i + 1));
+      cl_assert(heap.current_size == 2 * BLOCK_SIZE * (i + 1));
     }
     // Block is allocated at the *end* of the heap
-    uint8_t* expected_addr = (uint8_t*) heap_space + i*BLOCK_SIZE*2 + BLOCK_SIZE;
-    cl_assert(expected_addr == ((uint8_t*) ptr));
+    uint8_t *expected_addr = (uint8_t *)heap_space + i * BLOCK_SIZE * 2 + BLOCK_SIZE;
+    cl_assert(expected_addr == ((uint8_t *)ptr));
   }
   cl_assert(heap.begin == heap_space);
 
   ptr = heap_malloc(&heap, BLOCK_SIZE, 0);
   cl_assert(ptr == NULL);
-  cl_assert(heap.current_size == heap_size_blocks*BLOCK_SIZE);
+  cl_assert(heap.current_size == heap_size_blocks * BLOCK_SIZE);
 
   free(heap_space);
 }
@@ -123,13 +122,13 @@ void test_heap__realloc(void) {
 
   Heap heap;
 
-  heap_init(&heap, (void*)heap_space, (void*)(heap_space + heap_size_bytes), false);
+  heap_init(&heap, (void *)heap_space, (void *)(heap_space + heap_size_bytes), false);
   cl_assert(heap.begin == heap_space);
 
   unsigned int *ptr = NULL;
 
   // Allocate a block, realloc to the same size, make sure data is the same.
-  ptr = heap_malloc(&heap, sizeof(unsigned int)*5, 0);
+  ptr = heap_malloc(&heap, sizeof(unsigned int) * 5, 0);
   for (int i = 0; i < 5; i++) {
     ptr[i] = i;
   }
@@ -137,29 +136,29 @@ void test_heap__realloc(void) {
   unsigned int *oom_ptr = heap_realloc(&heap, ptr, heap_size_bytes + 1, 0);
   cl_assert_equal_p(oom_ptr, NULL);
   // ... but leave original block untouched:
-  ptr = heap_realloc(&heap, ptr, sizeof(unsigned int)*5, 0);
+  ptr = heap_realloc(&heap, ptr, sizeof(unsigned int) * 5, 0);
   for (int i = 0; i < 5; i++) {
     cl_assert(ptr[i] == i);
   }
   heap_free(&heap, ptr, 0);
 
   // Allocate a block, realloc to a larger size, make sure all data copied.
-  ptr = heap_malloc(&heap, sizeof(unsigned int)*5, 0);
+  ptr = heap_malloc(&heap, sizeof(unsigned int) * 5, 0);
   for (int i = 0; i < 5; i++) {
     ptr[i] = i;
   }
-  ptr = heap_realloc(&heap, ptr, sizeof(unsigned int)*10, 0);
+  ptr = heap_realloc(&heap, ptr, sizeof(unsigned int) * 10, 0);
   for (int i = 0; i < 5; i++) {
     cl_assert(ptr[i] == i);
   }
   heap_free(&heap, ptr, 0);
 
   // Allocate a block, realloc to a smaller size, make data copied.
-  ptr = heap_malloc(&heap, sizeof(unsigned int)*10, 0);
+  ptr = heap_malloc(&heap, sizeof(unsigned int) * 10, 0);
   for (int i = 0; i < 10; i++) {
     ptr[i] = i;
   }
-  ptr = heap_realloc(&heap, ptr, sizeof(unsigned int)*5, 0);
+  ptr = heap_realloc(&heap, ptr, sizeof(unsigned int) * 5, 0);
   for (int i = 0; i < 5; i++) {
     cl_assert(ptr[i] == i);
   }
@@ -171,13 +170,12 @@ void test_heap__realloc(void) {
   heap_free(&heap, ptr, 0);
 }
 
-void test_heap__should_handle_irregular_blocks(void) {
-}
+void test_heap__should_handle_irregular_blocks(void) {}
 
 void test_heap__unaligned_start_end(void) {
   // Make a little word aligned buffer to use as our heap.
   uintptr_t int_buffer[8];
-  char *char_buffer = (char*) &int_buffer[0];
+  char *char_buffer = (char *)&int_buffer[0];
 
   {
     Heap heap;
@@ -209,7 +207,7 @@ void test_heap___heap_bytes_free(void) {
 
   // Retrieve application heap, allocate space for it.
   Heap *heap = app_state_get_heap();
-  heap_init(heap, (void*)heap_space, (void*)(heap_space + heap_size_bytes), false);
+  heap_init(heap, (void *)heap_space, (void *)(heap_space + heap_size_bytes), false);
   cl_assert(heap->begin == heap_space);
 
   int before_available = heap_bytes_free();
@@ -238,7 +236,7 @@ void test_heap__heap_bytes_used(void) {
 
   // Retrieve application heap, allocate space for it.
   Heap *heap = app_state_get_heap();
-  heap_init(heap, (void*)heap_space, (void*)(heap_space + heap_size_bytes), false);
+  heap_init(heap, (void *)heap_space, (void *)(heap_space + heap_size_bytes), false);
   cl_assert(heap->begin == heap_space);
 
   int before_used = heap_bytes_used();
@@ -266,7 +264,7 @@ void test_heap__is_allocated(void) {
 
   // Retrieve application heap, allocate space for it.
   Heap *heap = app_state_get_heap();
-  heap_init(heap, (void*)heap_space, (void*)(heap_space + heap_size_bytes), false);
+  heap_init(heap, (void *)heap_space, (void *)(heap_space + heap_size_bytes), false);
   cl_assert(heap->begin == heap_space);
 
   // Allocate a few things
@@ -306,7 +304,7 @@ static void prv_alloc_and_test_fuzz_on_free(bool enabled) {
 
   // Retrieve application heap, allocate space for it.
   Heap *heap = app_state_get_heap();
-  heap_init(heap, (void*)heap_space, (void*)(heap_space + heap_size_bytes), enabled);
+  heap_init(heap, (void *)heap_space, (void *)(heap_space + heap_size_bytes), enabled);
   cl_assert(heap->begin == heap_space);
 
   char *test_string = "data to store in heap";

@@ -13,7 +13,7 @@
 
 extern void launcher_app_message_reset(void);
 extern void launcher_app_message_protocol_msg_callback_deprecated(CommSession *session,
-                                                                  const uint8_t* data,
+                                                                  const uint8_t *data,
                                                                   size_t length);
 
 // Fakes
@@ -36,28 +36,29 @@ AppRunStateCommand s_last_cmd;
 Transport *s_transport;
 CommSession *s_session;
 
-#define APP_UUID_RAW   0x13, 0xEC, 0xC6, 0x7C, 0xCC, 0xB4, 0x4A, 0x96, \
-0x9E, 0xA7, 0x50, 0xE5, 0x09, 0xCA, 0xF7, 0x3A
+#define APP_UUID_RAW \
+  0x13, 0xEC, 0xC6, 0x7C, 0xCC, 0xB4, 0x4A, 0x96, 0x9E, 0xA7, 0x50, 0xE5, 0x09, 0xCA, 0xF7, 0x3A
 
-#define LAUNCHER_MESSAGE_ENDPOINT_ID  (0x31)
+#define LAUNCHER_MESSAGE_ENDPOINT_ID (0x31)
 
-#define RUN_STATE_KEY       (1)
-#define STATE_FETCH_KEY     (2)
-#define INVALID_KEY         (0xffffffff)
+#define RUN_STATE_KEY (1)
+#define STATE_FETCH_KEY (2)
+#define INVALID_KEY (0xffffffff)
 
-#define RUNNING             (1)
-#define NOT_RUNNING         (0)
+#define RUNNING (1)
+#define NOT_RUNNING (0)
 
-#define TRANSACTION_ID      (0xA5)
+#define TRANSACTION_ID (0xA5)
 
-#define assert_ack(ack) \
-  fake_comm_session_process_send_next(); \
-  const AppMessageAck ack_message = { \
-    .header = { \
-      .command = ack ? CMD_ACK : CMD_NACK, \
-      .transaction_id = TRANSACTION_ID, \
-    }, \
-  }; \
+#define assert_ack(ack)                                                    \
+  fake_comm_session_process_send_next();                                   \
+  const AppMessageAck ack_message = {                                      \
+      .header =                                                            \
+          {                                                                \
+              .command = ack ? CMD_ACK : CMD_NACK,                         \
+              .transaction_id = TRANSACTION_ID,                            \
+          },                                                               \
+  };                                                                       \
   fake_transport_assert_sent(s_transport, 0, LAUNCHER_MESSAGE_ENDPOINT_ID, \
                              (const uint8_t *)&ack_message, sizeof(ack_message));
 
@@ -78,21 +79,19 @@ static const uint8_t *prv_build_push_message(uint32_t key, uint8_t value, uint32
   static uint8_t buffer[sizeof(AppMessagePush) + sizeof(Tuple) + sizeof(uint8_t)];
   AppMessagePush *push_message = (AppMessagePush *)buffer;
 
-  *push_message = (const AppMessagePush) {
-    .header = {
-      .command = 0x01, // Push
-      .transaction_id = TRANSACTION_ID,
-    },
-    .uuid = {
-      APP_UUID_RAW
-    },
+  *push_message = (const AppMessagePush){
+      .header =
+          {
+              .command = 0x01,  // Push
+              .transaction_id = TRANSACTION_ID,
+          },
+      .uuid = {APP_UUID_RAW},
   };
 
   *size = sizeof(Dictionary) + sizeof(Tuple) + sizeof(uint8_t);
   const Tuplet tuplet = TupletInteger(key, value);
-  cl_assert_equal_i(DICT_OK, dict_serialize_tuplets_to_buffer(&tuplet, 1,
-                                                              (uint8_t *)&push_message->dictionary,
-                                                              size));
+  cl_assert_equal_i(DICT_OK, dict_serialize_tuplets_to_buffer(
+                                 &tuplet, 1, (uint8_t *)&push_message->dictionary, size));
 
   // Including sizeof(AppMessagePush):
   *size = sizeof(buffer);
@@ -101,13 +100,12 @@ static const uint8_t *prv_build_push_message(uint32_t key, uint8_t value, uint32
 
 static void prv_receive(uint32_t key, uint8_t value) {
   uint32_t length = 0;
-  const uint8_t *msg= prv_build_push_message(key, value, &length);
+  const uint8_t *msg = prv_build_push_message(key, value, &length);
   launcher_app_message_protocol_msg_callback_deprecated(s_session, msg, length);
 }
 
 // Tests
 ////////////////////////////////////
-
 
 void test_launcher_app_message__initialize(void) {
   launcher_app_message_reset();
@@ -157,10 +155,11 @@ void test_launcher_app_message__receive_push_fetch_request(void) {
 
 void test_launcher_app_message__ignore_acks(void) {
   const AppMessageAck ack_message = {
-    .header = {
-      .command = CMD_ACK,
-      .transaction_id = TRANSACTION_ID,
-    },
+      .header =
+          {
+              .command = CMD_ACK,
+              .transaction_id = TRANSACTION_ID,
+          },
   };
   launcher_app_message_protocol_msg_callback_deprecated(s_session, (const uint8_t *)&ack_message,
                                                         sizeof(ack_message));
@@ -178,19 +177,19 @@ void test_launcher_app_message__send_app_state(void) {
   uint8_t buffer[sizeof(AppMessagePush) + sizeof(Tuple) + sizeof(uint32_t)];
   AppMessagePush *push_message = (AppMessagePush *)buffer;
 
-  *push_message = (const AppMessagePush) {
-    .header = {
-      .command = CMD_PUSH,
-      .transaction_id = 0,
-    },
-    .uuid = {APP_UUID_RAW},
+  *push_message = (const AppMessagePush){
+      .header =
+          {
+              .command = CMD_PUSH,
+              .transaction_id = 0,
+          },
+      .uuid = {APP_UUID_RAW},
   };
 
   uint32_t size = sizeof(Dictionary) + sizeof(Tuple) + sizeof(uint32_t);
-  const Tuplet tuplet = TupletInteger(RUN_STATE_KEY, (uint32_t) (running ? RUNNING : NOT_RUNNING));
-  PBL_ASSERTN(DICT_OK == dict_serialize_tuplets_to_buffer(&tuplet, 1,
-                                                          (uint8_t *)&push_message->dictionary,
-                                                          &size));
+  const Tuplet tuplet = TupletInteger(RUN_STATE_KEY, (uint32_t)(running ? RUNNING : NOT_RUNNING));
+  PBL_ASSERTN(DICT_OK == dict_serialize_tuplets_to_buffer(
+                             &tuplet, 1, (uint8_t *)&push_message->dictionary, &size));
   fake_comm_session_process_send_next();
   fake_transport_assert_sent(s_transport, 0, LAUNCHER_MESSAGE_ENDPOINT_ID, buffer, sizeof(buffer));
 }

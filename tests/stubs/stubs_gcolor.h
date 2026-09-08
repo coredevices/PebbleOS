@@ -10,7 +10,4 @@ bool WEAK gcolor_equal(GColor8 x, GColor8 y) {
   return ((x.argb == y.argb) || ((x.a == 0) && (y.a == 0)));
 }
 
-GColor8 WEAK gcolor_legible_over(GColor8 background_color) {
-  return GColorBlack;
-}
-
+GColor8 WEAK gcolor_legible_over(GColor8 background_color) { return GColorBlack; }

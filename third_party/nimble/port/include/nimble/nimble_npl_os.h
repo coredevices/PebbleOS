@@ -80,9 +80,7 @@ struct ble_npl_sem {
 
 #include "npl_pebble.h"
 
-static inline bool ble_npl_os_started(void) {
-  return pbl_kernel_is_started();
-}
+static inline bool ble_npl_os_started(void) { return pbl_kernel_is_started(); }
 
 static inline void *ble_npl_get_current_task_id(void) { return pbl_thread_current(); }
 
@@ -220,9 +218,7 @@ static inline uint32_t ble_npl_hw_enter_critical(void) {
 
 static inline void ble_npl_hw_exit_critical(uint32_t ctx) { pbl_irq_unlock(); }
 
-static inline bool ble_npl_hw_is_in_critical(void) {
-  return pbl_irq_is_locked();
-}
+static inline bool ble_npl_hw_is_in_critical(void) { return pbl_irq_is_locked(); }
 #define realloc kernel_realloc
 
 #if NRF52_SERIES

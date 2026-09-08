@@ -8,13 +8,12 @@
 extern uint32_t __isr_stack_start__[];
 
 uint32_t stack_free_bytes(void) {
-
   // Get the current SP
-  register uint32_t SP __asm ("sp");
+  register uint32_t SP __asm("sp");
   uint32_t cur_sp = SP;
 
   // Default stack
-  uint32_t start = (uint32_t) __isr_stack_start__;
+  uint32_t start = (uint32_t)__isr_stack_start__;
 
   // On ISR stack?
   if (!mcu_state_is_isr()) {

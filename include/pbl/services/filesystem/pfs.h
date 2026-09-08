@@ -27,24 +27,21 @@
 //!    perspective). Care should be taken not to constantly be deleting/creating
 //!    files
 
-#define OP_FLAG_READ                  (1 << 0)
-#define OP_FLAG_WRITE                 (1 << 1)
-#define OP_FLAG_OVERWRITE             (1 << 2)
-#define OP_FLAG_SKIP_HDR_CRC_CHECK    (1 << 3)
-#define OP_FLAG_USE_PAGE_CACHE        (1 << 4)
+#define OP_FLAG_READ (1 << 0)
+#define OP_FLAG_WRITE (1 << 1)
+#define OP_FLAG_OVERWRITE (1 << 2)
+#define OP_FLAG_SKIP_HDR_CRC_CHECK (1 << 3)
+#define OP_FLAG_USE_PAGE_CACHE (1 << 4)
 
-#define FILE_TYPE_STATIC        (0xfe)
-#define FILE_MAX_NAME_LEN       (255)
+#define FILE_TYPE_STATIC (0xfe)
+#define FILE_MAX_NAME_LEN (255)
 
-typedef enum {
-  FSeekSet,
-  FSeekCur
-} FSeekType;
+typedef enum { FSeekSet, FSeekCur } FSeekType;
 
 //! Used by pfs_watch_file to know which events to trigger callbacks on
-#define FILE_CHANGED_EVENT_CLOSED   (1 << 0)
-#define FILE_CHANGED_EVENT_REMOVED  (1 << 1)
-#define FILE_CHANGED_EVENT_ALL      (FILE_CHANGED_EVENT_CLOSED | FILE_CHANGED_EVENT_REMOVED)
+#define FILE_CHANGED_EVENT_CLOSED (1 << 0)
+#define FILE_CHANGED_EVENT_REMOVED (1 << 1)
+#define FILE_CHANGED_EVENT_ALL (FILE_CHANGED_EVENT_CLOSED | FILE_CHANGED_EVENT_REMOVED)
 
 //! Types used by pfs_watch_file()
 typedef void (*PFSFileChangedCallback)(void *data);
@@ -58,7 +55,6 @@ typedef struct {
   ListNode list_node;
   char name[];
 } PFSFileListEntry;
-
 
 //! @param name - The name of the file to be opened
 //! @param op_flags - The operation to be performed on the file
@@ -99,8 +95,7 @@ typedef struct {
 //!                     being created
 //! @return - status_t error code if the operation failed,
 //!           else a fd handle >= 0 if operation was successful
-extern int pfs_open(const char *name, uint8_t op_flags, uint8_t file_type,
-    size_t start_size);
+extern int pfs_open(const char *name, uint8_t op_flags, uint8_t file_type, size_t start_size);
 
 //! Writes data to the fd specified. After each write, the internal file offset
 //! is moved forward
@@ -184,8 +179,8 @@ extern uint32_t get_available_pfs_space(void);
 //! (see FILE_CHANGED_EVENT_ flags defined above)
 //! @param data - pointer passed to callback when invoked
 //! @return - cb handle to pass into \ref pfs_unwatch_file
-PFSCallbackHandle pfs_watch_file(const char* filename, PFSFileChangedCallback callback,
-                                 uint8_t event_flags, void* data);
+PFSCallbackHandle pfs_watch_file(const char *filename, PFSFileChangedCallback callback,
+                                 uint8_t event_flags, void *data);
 
 //! Stop watching a file.
 void pfs_unwatch_file(PFSCallbackHandle cb_handle);

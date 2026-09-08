@@ -34,16 +34,11 @@
 #include "stubs_rand_ptr.h"
 #include "stubs_regular_timer.h"
 
-void core_dump_reset(bool is_forced) {
-}
+void core_dump_reset(bool is_forced) {}
 
-void launcher_task_add_callback(void (*callback)(void *data), void *data) {
-  callback(data);
-}
+void launcher_task_add_callback(void (*callback)(void *data), void *data) { callback(data); }
 
-uint16_t gaps_get_starting_att_handle(void) {
-  return 4;
-}
+uint16_t gaps_get_starting_att_handle(void) { return 4; }
 
 // Helpers
 ///////////////////////////////////////////////////////////
@@ -52,14 +47,15 @@ uint16_t gaps_get_starting_att_handle(void) {
 
 static BTDeviceInternal prv_dummy_device(uint8_t octet) {
   BTDeviceAddress address = {
-    .octets = {
-      [0] = octet,
-      [1] = octet,
-      [2] = octet,
-      [3] = octet,
-      [4] = octet,
-      [5] = octet,
-    },
+      .octets =
+          {
+              [0] = octet,
+              [1] = octet,
+              [2] = octet,
+              [3] = octet,
+              [4] = octet,
+              [5] = octet,
+          },
   };
   BTDevice device = bt_device_init_with_address(address, true /* is_random */);
   return *(BTDeviceInternal *)(&device);
@@ -83,11 +79,9 @@ static void prv_assert_event(const BTDeviceInternal *device, BTErrno status) {
   cl_assert_equal_i(event.type, PEBBLE_BLE_GATT_CLIENT_EVENT);
   cl_assert_equal_i(event.bluetooth.le.gatt_client_service.subtype,
                     PebbleBLEGATTClientEventTypeServiceChange);
-  cl_assert_equal_i(event.bluetooth.le.gatt_client_service.info->status,
-                    status);
+  cl_assert_equal_i(event.bluetooth.le.gatt_client_service.info->status, status);
   const BTDeviceInternal event_device = event.bluetooth.le.gatt_client_service.info->device;
-  const bool equal_devices = bt_device_equal(&device->opaque,
-                                 &event_device.opaque);
+  const bool equal_devices = bt_device_equal(&device->opaque, &event_device.opaque);
   cl_assert_equal_b(equal_devices, true);
 
   // clear the event
@@ -124,8 +118,7 @@ void test_gatt_client_discovery__cleanup(void) {
 
 void test_gatt_client_discovery__not_connected(void) {
   BTDeviceInternal device = prv_dummy_device(1);
-  cl_assert_equal_i(gatt_client_discovery_discover_all(&device),
-                    BTErrnoInvalidParameter);
+  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), BTErrnoInvalidParameter);
   cl_assert_equal_b(fake_gatt_is_service_discovery_running(), false);
 }
 
@@ -137,8 +130,7 @@ void test_gatt_client_discovery__already_in_progress(void) {
   cl_assert_equal_b(fake_gatt_is_service_discovery_running(), true);
 
   // Start again (expect to fail):
-  cl_assert_equal_i(gatt_client_discovery_discover_all(&device),
-                    BTErrnoInvalidState);
+  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), BTErrnoInvalidState);
 
   // take down the connection and a disconnection event should be emitted
   gap_le_connection_remove(&device);
@@ -360,14 +352,8 @@ void test_gatt_client_discovery__multiple_jobs_pending(void) {
   BTDeviceInternal device = prv_connected_dummy_device(1);
   GAPLEConnection *connection = gap_le_connection_by_device(&device);
 
-  ATTHandleRange range = {
-    .start = 0x1,
-    .end = 0x3000
-  };
-  ATTHandleRange range_alt = {
-    .start = 0x3001,
-    .end = 0x4000
-  };
+  ATTHandleRange range = {.start = 0x1, .end = 0x3000};
+  ATTHandleRange range_alt = {.start = 0x3001, .end = 0x4000};
 
   cl_assert_equal_b(fake_gatt_is_service_discovery_running(), false);
 
@@ -418,7 +404,7 @@ void test_gatt_client_discovery__multiple_jobs_pending(void) {
   fake_gatt_put_discovery_complete_event(GATT_SERVICE_DISCOVERY_STATUS_SUCCESS,
                                          TEST_GATT_CONNECTION_ID);
   prv_assert_event(&device, BTErrnoOK);
-  
+
   cl_assert_equal_i(4, fake_gatt_is_service_discovery_start_count());
   cl_assert_equal_b(fake_gatt_is_service_discovery_running(), false);
 }
@@ -428,10 +414,7 @@ void test_gatt_client_discovery__partial_and_full_discovery_jobs_intermixed(void
   GAPLEConnection *connection = gap_le_connection_by_device(&device);
 
   // queue up a few jobs - note only one should be running at any time
-  ATTHandleRange range = {
-    .start = 0x1,
-    .end = 0x3000
-  };
+  ATTHandleRange range = {.start = 0x1, .end = 0x3000};
   for (int i = 0; i < 10; i++) {
     gatt_client_discovery_discover_range(connection, &range);
   }
@@ -468,7 +451,8 @@ static void prv_assert_blood_pressure_service(const GATTService *service) {
 
   const GATTCharacteristic *characteristic_one = service->characteristics;
   const Characteristic *expected_characteristic1 = &bp_service->characteristics[0];
-  cl_assert_equal_i(characteristic_one->att_handle_offset, expected_characteristic1->handle - service_handle);
+  cl_assert_equal_i(characteristic_one->att_handle_offset,
+                    expected_characteristic1->handle - service_handle);
   cl_assert_equal_i(characteristic_one->num_descriptors, expected_characteristic1->num_descriptors);
   cl_assert_equal_i(characteristic_one->descriptors[0].att_handle_offset,
                     expected_characteristic1->descriptors[0].handle - service_handle);
@@ -477,9 +461,10 @@ static void prv_assert_blood_pressure_service(const GATTService *service) {
 
   // Second characteristic is tacked right after the first one:
   const GATTCharacteristic *characteristic_two =
-                  (const GATTCharacteristic *) &characteristic_one->descriptors[1];
+      (const GATTCharacteristic *)&characteristic_one->descriptors[1];
   const Characteristic *expected_characteristic2 = &bp_service->characteristics[1];
-  cl_assert_equal_i(characteristic_two->att_handle_offset, expected_characteristic2->handle - service_handle);
+  cl_assert_equal_i(characteristic_two->att_handle_offset,
+                    expected_characteristic2->handle - service_handle);
   cl_assert_equal_i(characteristic_two->num_descriptors, expected_characteristic2->num_descriptors);
   cl_assert_equal_i(characteristic_two->descriptors[0].att_handle_offset,
                     expected_characteristic2->descriptors[0].handle - service_handle);

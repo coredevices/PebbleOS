@@ -5,5 +5,4 @@
 
 #include "process_management/pebble_process_md.h"
 
-const PebbleProcessMd* battery_critical_get_app_info();
-
+const PebbleProcessMd *battery_critical_get_app_info();

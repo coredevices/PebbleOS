@@ -74,24 +74,27 @@
 #define MAX_UPDATE_REQUEST_ATTEMPTS (3)
 
 static const GAPLEConnectRequestParams s_default_connection_params_table[NumResponseTimeState] = {
-  [ResponseTimeMax] = {
-    .slave_latency_events = 3,
-    .connection_interval_min_1_25ms = 24, // 30ms
-    .connection_interval_max_1_25ms = 36, // 45ms
-    .supervision_timeout_10ms = 600, // 6s
-  },
-  [ResponseTimeMiddle] = {
-    .slave_latency_events = 3,
-    .connection_interval_min_1_25ms = 24, // 30ms
-    .connection_interval_max_1_25ms = 36, // 45ms
-    .supervision_timeout_10ms = 600, // 6s
-  },
-  [ResponseTimeMin] = {
-    .slave_latency_events = 0,
-    .connection_interval_min_1_25ms = 12, // 15ms
-    .connection_interval_max_1_25ms = 12, // 15ms
-    .supervision_timeout_10ms = 600, // 6s
-  },
+    [ResponseTimeMax] =
+        {
+            .slave_latency_events = 3,
+            .connection_interval_min_1_25ms = 24,  // 30ms
+            .connection_interval_max_1_25ms = 36,  // 45ms
+            .supervision_timeout_10ms = 600,       // 6s
+        },
+    [ResponseTimeMiddle] =
+        {
+            .slave_latency_events = 3,
+            .connection_interval_min_1_25ms = 24,  // 30ms
+            .connection_interval_max_1_25ms = 36,  // 45ms
+            .supervision_timeout_10ms = 600,       // 6s
+        },
+    [ResponseTimeMin] =
+        {
+            .slave_latency_events = 0,
+            .connection_interval_min_1_25ms = 12,  // 15ms
+            .connection_interval_max_1_25ms = 12,  // 15ms
+            .supervision_timeout_10ms = 600,       // 6s
+        },
 };
 
 extern void conn_mgr_handle_desired_state_granted(GAPLEConnection *hdl,
@@ -183,8 +186,7 @@ static bool prv_do_actual_params_match_desired_state(const GAPLEConnection *conn
           actual_params->slave_latency_events == desired_params->slave_latency_events);
 }
 
-static void prv_request_params_update(GAPLEConnection *connection,
-                                      ResponseTimeState state) {
+static void prv_request_params_update(GAPLEConnection *connection, ResponseTimeState state) {
   if (connection->is_remote_device_managing_connection_parameters ||
       connection->param_update_info.is_request_pending) {
     return;
@@ -221,10 +223,10 @@ static void prv_request_params_update(GAPLEConnection *connection,
 
   const GAPLEConnectRequestParams *desired_params = prv_params_for_state(connection, state);
   BleConnectionParamsUpdateReq req = {
-    .interval_min_1_25ms = desired_params->connection_interval_min_1_25ms,
-    .interval_max_1_25ms = desired_params->connection_interval_max_1_25ms,
-    .slave_latency_events = desired_params->slave_latency_events,
-    .supervision_timeout_10ms = desired_params->supervision_timeout_10ms,
+      .interval_min_1_25ms = desired_params->connection_interval_min_1_25ms,
+      .interval_max_1_25ms = desired_params->connection_interval_max_1_25ms,
+      .slave_latency_events = desired_params->slave_latency_events,
+      .supervision_timeout_10ms = desired_params->supervision_timeout_10ms,
   };
 
   const bool success = bt_driver_le_connection_parameter_update(&connection->device, &req);
@@ -263,8 +265,7 @@ static void prv_watchdog_timer_callback(void *ctx) {
   system_task_add_callback(prv_watchdog_system_task_callback, ctx);
 }
 
-void gap_le_connect_params_request(GAPLEConnection *connection,
-                                   ResponseTimeState desired_state) {
+void gap_le_connect_params_request(GAPLEConnection *connection, ResponseTimeState desired_state) {
   // A new desired state is requested by the FW, start afresh:
   connection->param_update_info.attempts = 0;
 
@@ -344,9 +345,9 @@ void bt_driver_handle_le_conn_params_update_event(const BleConnectionUpdateCompl
 
   const bool local_is_master = connection->local_is_master;
   if (!local_is_master) {
-     bluetooth_analytics_handle_connection_params_update(params);
-     prv_analytics_update_conn_params(params->conn_interval_1_25ms, params->slave_latency_events);
-     PBL_ANALYTICS_ADD(ble_conn_param_update_count, 1);
+    bluetooth_analytics_handle_connection_params_update(params);
+    prv_analytics_update_conn_params(params->conn_interval_1_25ms, params->slave_latency_events);
+    PBL_ANALYTICS_ADD(ble_conn_param_update_count, 1);
   }
 
   prv_evaluate(connection, desired_state);

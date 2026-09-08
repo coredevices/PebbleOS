@@ -12,7 +12,6 @@
 
 #include <clar.h>
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Stubs & Fakes
 
@@ -26,16 +25,12 @@
 #include "stubs_logging.h"
 #include "stubs_passert.h"
 
-void gap_le_slave_reconnect_hrm_restart(void) {
-}
+void gap_le_slave_reconnect_hrm_restart(void) {}
 
-void gap_le_slave_reconnect_hrm_stop(void) {
-}
+void gap_le_slave_reconnect_hrm_stop(void) {}
 
 static bool s_activity_prefs_heart_rate_is_enabled;
-bool activity_prefs_heart_rate_is_enabled(void) {
-  return s_activity_prefs_heart_rate_is_enabled;
-}
+bool activity_prefs_heart_rate_is_enabled(void) { return s_activity_prefs_heart_rate_is_enabled; }
 
 static bool s_bt_driver_hrm_service_is_enabled;
 static int s_bt_driver_hrm_service_enable_call_count;
@@ -66,9 +61,7 @@ void ble_hrm_push_sharing_request_window(BLEHRMSharingRequest *sharing_request) 
   s_last_sharing_request = sharing_request;
 }
 
-bool bt_driver_is_hrm_service_supported(void) {
-  return true;
-}
+bool bt_driver_is_hrm_service_supported(void) { return true; }
 
 static BTDeviceInternal s_last_disconnected;
 int bt_driver_gap_le_disconnect(const BTDeviceInternal *peer_address) {
@@ -81,9 +74,7 @@ static void prv_assert_last_disconnected(const BTDeviceInternal *peer_address) {
 }
 
 static int s_ble_hrm_push_reminder_popup_call_count;
-void ble_hrm_push_reminder_popup(void) {
-  s_ble_hrm_push_reminder_popup_call_count++;
-}
+void ble_hrm_push_reminder_popup(void) { s_ble_hrm_push_reminder_popup_call_count++; }
 
 static int s_hrm_manager_subscribe_with_callback_call_count;
 static HRMSessionRef s_last_session_ref;
@@ -91,7 +82,7 @@ static HRMSessionRef s_next_session_ref;
 HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t update_interval_s,
                                                   uint16_t expire_s, HRMFeature features,
                                                   HRMSubscriberCallback callback, void *context) {
-  cl_assert_equal_p(NULL, callback); // we're using the event service
+  cl_assert_equal_p(NULL, callback);  // we're using the event service
   cl_assert_equal_i(features, HRMFeature_BPM);
   ++s_hrm_manager_subscribe_with_callback_call_count;
   s_last_session_ref = ++s_next_session_ref;
@@ -108,9 +99,7 @@ GAPLEConnection *gap_le_connection_by_device(const BTDeviceInternal *device) {
   }
   return NULL;
 }
-BTDeviceInternal *device_from_le_connection(GAPLEConnection *conn) {
-  return &conn->device;
-}
+BTDeviceInternal *device_from_le_connection(GAPLEConnection *conn) { return &conn->device; }
 
 bool gap_le_connection_is_valid(const GAPLEConnection *conn) {
   for (int i = 0; i < ARRAY_LENGTH(s_connections); ++i) {
@@ -127,13 +116,9 @@ void gap_le_connection_for_each(GAPLEConnectionForEachCallback cb, void *data) {
   }
 }
 
-void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
-  callback(data);
-}
+void launcher_task_add_callback(CallbackEventCallback callback, void *data) { callback(data); }
 
-bool sys_hrm_manager_is_hrm_present(void) {
-  return true;
-}
+bool sys_hrm_manager_is_hrm_present(void) { return true; }
 
 static int s_sys_hrm_manager_unsubscribe_call_count;
 bool sys_hrm_manager_unsubscribe(HRMSessionRef session) {
@@ -194,27 +179,31 @@ void test_ble_hrm__initialize(void) {
   s_ble_hrm_push_reminder_popup_call_count = 0;
   s_last_session_ref = ~0;
   s_next_session_ref = 1234;
-  s_last_disconnected = (BTDeviceInternal) {};
+  s_last_disconnected = (BTDeviceInternal){};
   s_last_sharing_request = NULL;
-  s_last_ble_hrm_measurement = (BleHrmServiceMeasurement) {};
+  s_last_ble_hrm_measurement = (BleHrmServiceMeasurement){};
   fake_event_service_init();
 
   // Set up fake devices/connections:
-  s_conn_a = (GAPLEConnection) {
-    .device_name = TEST_DEVICE_NAME,
-    .device = {
-      .address = {
-        .octets = {1, 2, 3, 4, 5, 6},
-      },
-    },
+  s_conn_a = (GAPLEConnection){
+      .device_name = TEST_DEVICE_NAME,
+      .device =
+          {
+              .address =
+                  {
+                      .octets = {1, 2, 3, 4, 5, 6},
+                  },
+          },
   };
-  s_conn_b = (GAPLEConnection) {
-    .device_name = TEST_DEVICE_NAME,
-    .device = {
-      .address = {
-        .octets = {6, 5, 4, 3, 2, 1},
-      },
-    },
+  s_conn_b = (GAPLEConnection){
+      .device_name = TEST_DEVICE_NAME,
+      .device =
+          {
+              .address =
+                  {
+                      .octets = {6, 5, 4, 3, 2, 1},
+                  },
+          },
   };
   s_connections[0] = &s_conn_a;
   s_connections[1] = &s_conn_b;
@@ -421,7 +410,7 @@ void test_ble_hrm__sub_after_deinit(void) {
   prv_assert_event_service_subscribed(false);
   cl_assert_equal_i(s_hrm_manager_subscribe_with_callback_call_count, 0);
 
-  ble_hrm_init(); // reinit, __cleanup() will deinit again
+  ble_hrm_init();  // reinit, __cleanup() will deinit again
 }
 
 static void prv_put_and_assert_hrm_event(HRMEventType subtype, uint8_t bpm, HRMQuality quality,
@@ -429,14 +418,16 @@ static void prv_put_and_assert_hrm_event(HRMEventType subtype, uint8_t bpm, HRMQ
   int call_count_before = s_bt_driver_hrm_service_handle_measurement_call_count;
 
   PebbleEvent hrm_event = {
-    .type = PEBBLE_HRM_EVENT,
-    .hrm = {
-      .event_type = subtype,
-      .bpm = {
-        .bpm = bpm,
-        .quality = quality,
-      },
-    },
+      .type = PEBBLE_HRM_EVENT,
+      .hrm =
+          {
+              .event_type = subtype,
+              .bpm =
+                  {
+                      .bpm = bpm,
+                      .quality = quality,
+                  },
+          },
   };
   event_put(&hrm_event);
   fake_event_service_handle_last();

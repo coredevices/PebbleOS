@@ -29,9 +29,7 @@
 #include "stubs_stringlist.h"
 #include "stubs_system_task.h"
 
-bool activity_is_initialized(void) {
-  return true;
-}
+bool activity_is_initialized(void) { return true; }
 
 // Fakes
 #include "fake_kernel_services_notifications.h"
@@ -41,12 +39,11 @@ bool activity_is_initialized(void) {
 
 // We start time out at 5pm on Jan 1, 2015 for all of these tests
 static struct tm s_init_time_tm = {
-  // Thursday, Jan 1, 2015, 10:00am
-  .tm_hour = 10,
-  .tm_mday = 1,
-  .tm_mon = 0,
-  .tm_year = 115
-};
+    // Thursday, Jan 1, 2015, 10:00am
+    .tm_hour = 10,
+    .tm_mday = 1,
+    .tm_mon = 0,
+    .tm_year = 115};
 
 #define ACTIVE_MINUTES 2
 #define AVERAGE_STEPS 1000
@@ -73,19 +70,14 @@ typedef struct StaticData {
 } StaticData;
 static StaticData s_data = {};
 
-bool activity_prefs_activity_insights_are_enabled(void) {
-  return true;
-}
+bool activity_prefs_activity_insights_are_enabled(void) { return true; }
 
-bool activity_prefs_sleep_insights_are_enabled(void) {
-  return true;
-}
+bool activity_prefs_sleep_insights_are_enabled(void) { return true; }
 
 bool activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *history) {
   memcpy(history, &s_data.metric_history[metric], history_len * sizeof(int32_t));
   return true;
 }
-
 
 // Update the sleep metrics based on the current set of sleep sessions for today
 static void prv_update_sleep_metrics(void) {
@@ -97,8 +89,8 @@ static void prv_update_sleep_metrics(void) {
   time_t sleep_enter_utc = -1;
   time_t sleep_exit_utc = -1;
   for (uint32_t i = 0; i < num_sessions; i++) {
-    time_t exit_utc = activity_sessions[i].start_utc
-                    + activity_sessions[i].length_min * SECONDS_PER_MINUTE;
+    time_t exit_utc =
+        activity_sessions[i].start_utc + activity_sessions[i].length_min * SECONDS_PER_MINUTE;
     if (activity_sessions[i].type == ActivitySessionType_Sleep) {
       if (sleep_enter_utc == -1) {
         sleep_enter_utc = activity_sessions[i].start_utc;
@@ -111,12 +103,11 @@ static void prv_update_sleep_metrics(void) {
   }
 
   s_data.metric_history[ActivityMetricSleepEnterAtSeconds][0] =
-                 time_util_get_minute_of_day(sleep_enter_utc) * SECONDS_PER_MINUTE;
+      time_util_get_minute_of_day(sleep_enter_utc) * SECONDS_PER_MINUTE;
   s_data.metric_history[ActivityMetricSleepExitAtSeconds][0] =
-                 time_util_get_minute_of_day(sleep_exit_utc) * SECONDS_PER_MINUTE;
+      time_util_get_minute_of_day(sleep_exit_utc) * SECONDS_PER_MINUTE;
   s_data.metric_history[ActivityMetricSleepTotalSeconds][0] = total_seconds;
 }
-
 
 time_t activity_sessions_prv_get_sleep_window_start_utc(time_t now_utc) {
   time_t start_of_today_utc = time_util_get_midnight_of(now_utc);
@@ -129,8 +120,8 @@ time_t activity_sessions_prv_get_sleep_window_start_utc(time_t now_utc) {
   return start_of_today_utc + last_sleep_second_of_day;
 }
 
-
-void activity_sessions_prv_get_sleep_bounds_utc(time_t now_utc, time_t *enter_utc, time_t *exit_utc) {
+void activity_sessions_prv_get_sleep_bounds_utc(time_t now_utc, time_t *enter_utc,
+                                                time_t *exit_utc) {
   ActivitySession activity_sessions[MAX_ACTIVITY_SESSIONS];
   uint32_t num_sessions = MAX_ACTIVITY_SESSIONS;
 
@@ -145,14 +136,13 @@ void activity_sessions_prv_get_sleep_bounds_utc(time_t now_utc, time_t *enter_ut
     if (*enter_utc == 0) {
       *enter_utc = activity_sessions[i].start_utc;
     }
-    time_t session_exit_utc = activity_sessions[i].start_utc
-                              + activity_sessions[i].length_min * SECONDS_PER_MINUTE;
+    time_t session_exit_utc =
+        activity_sessions[i].start_utc + activity_sessions[i].length_min * SECONDS_PER_MINUTE;
     if (*exit_utc == 0 || session_exit_utc > *exit_utc) {
       *exit_utc = session_exit_utc;
     }
   }
 }
-
 
 // Appends a new sleep session to the sleep sessions array and increments the current SleepExit and
 // SleepTotal metrics accordingly
@@ -167,8 +157,8 @@ void prv_add_sleep_or_nap_session(ActivitySessionType session_type, double offse
   time_t midnight = time_util_get_midnight_of(rtc_get_time());
   time_t previous_exit_utc;
   if (s_data.num_sessions > 0) {
-    previous_exit_utc = s_data.activity_sessions[prev].start_utc
-                        + (s_data.activity_sessions[prev].length_min * SECONDS_PER_MINUTE);
+    previous_exit_utc = s_data.activity_sessions[prev].start_utc +
+                        (s_data.activity_sessions[prev].length_min * SECONDS_PER_MINUTE);
   } else {
     previous_exit_utc = midnight;
   }
@@ -182,10 +172,10 @@ void prv_add_sleep_or_nap_session(ActivitySessionType session_type, double offse
     printf("now_utc: %ld, end_utc: %ld\n", rtc_get_time(), start_utc + length_sec);
   }
   cl_assert(start_utc + length_sec <= rtc_get_time());
-  s_data.activity_sessions[s_data.num_sessions++] = (ActivitySession) {
-    .type = session_type,
-    .length_min = length_min,
-    .start_utc = start_utc,
+  s_data.activity_sessions[s_data.num_sessions++] = (ActivitySession){
+      .type = session_type,
+      .length_min = length_min,
+      .start_utc = start_utc,
   };
 
   // Update 'current' metrics
@@ -207,16 +197,17 @@ void prv_add_nap_session(double offset_hours, double length_hours) {
 void prv_add_walk_session(double offset_hours, double length_hours) {
   const uint32_t length_min = length_hours * MINUTES_PER_HOUR;
 
-  s_data.activity_sessions[s_data.num_sessions++] = (ActivitySession) {
-    .type = ActivitySessionType_Walk,
-    .length_min = length_min,
-    .start_utc = rtc_get_time(),
-    .step_data = {
-      .steps = length_min * 60,
-      .active_kcalories = length_min * 2,
-      .resting_kcalories = length_min / 10,
-      .distance_meters = (length_min * 1000) / 30,
-    },
+  s_data.activity_sessions[s_data.num_sessions++] = (ActivitySession){
+      .type = ActivitySessionType_Walk,
+      .length_min = length_min,
+      .start_utc = rtc_get_time(),
+      .step_data =
+          {
+              .steps = length_min * 60,
+              .active_kcalories = length_min * 2,
+              .resting_kcalories = length_min / 10,
+              .distance_meters = (length_min * 1000) / 30,
+          },
   };
 }
 
@@ -224,8 +215,7 @@ bool activity_get_sessions(uint32_t *session_entries, ActivitySession *sessions)
   // Only return the sleep sessions that belong to "today"
   time_t start_of_today_utc = time_util_get_midnight_of(rtc_get_time());
   int last_sleep_second_of_day = ACTIVITY_LAST_SLEEP_MINUTE_OF_DAY * SECONDS_PER_MINUTE;
-  time_t sleep_earliest_end_utc = start_of_today_utc
-                                - (SECONDS_PER_DAY - last_sleep_second_of_day);
+  time_t sleep_earliest_end_utc = start_of_today_utc - (SECONDS_PER_DAY - last_sleep_second_of_day);
 
   uint32_t num_sessions_returned = 0;
   for (uint32_t i = 0; i < s_data.num_sessions; i++) {
@@ -233,8 +223,8 @@ bool activity_get_sessions(uint32_t *session_entries, ActivitySession *sessions)
       // No more room
       break;
     }
-    time_t session_end = s_data.activity_sessions[i].start_utc
-                       + s_data.activity_sessions[i].length_min * SECONDS_PER_MINUTE;
+    time_t session_end = s_data.activity_sessions[i].start_utc +
+                         s_data.activity_sessions[i].length_min * SECONDS_PER_MINUTE;
     if (session_end >= sleep_earliest_end_utc) {
       // This session should be included in today's sessions
       sessions[num_sessions_returned++] = s_data.activity_sessions[i];
@@ -249,22 +239,16 @@ SettingsFile *activity_private_settings_open(void) {
   return &file;
 }
 
-void activity_private_settings_close(SettingsFile *file) {
-  return;
-}
+void activity_private_settings_close(SettingsFile *file) { return; }
 
 bool activity_get_step_averages(DayInWeek day_of_week, ActivityMetricAverages *averages) {
   return false;
 }
 
 static time_t s_activation_time = 0;
-time_t activity_prefs_get_activation_time(void) {
-  return s_activation_time;
-}
+time_t activity_prefs_get_activation_time(void) { return s_activation_time; }
 
-static void prv_set_activation_time(time_t activation_time) {
-  s_activation_time = activation_time;
-}
+static void prv_set_activation_time(time_t activation_time) { s_activation_time = activation_time; }
 
 static uint32_t s_activity_activation_delay_insight_bitmask = 0;
 bool activity_prefs_has_activation_delay_insight_fired(ActivationDelayInsightType type) {
@@ -277,27 +261,20 @@ void activity_prefs_set_activation_delay_insight_fired(ActivationDelayInsightTyp
 
 static int s_health_app_opened_version = 0;
 
-uint8_t activity_prefs_get_health_app_opened_version(void) {
-  return s_health_app_opened_version;
-}
+uint8_t activity_prefs_get_health_app_opened_version(void) { return s_health_app_opened_version; }
 
-ActivityScalarStore activity_metrics_prv_steps_per_minute(void) {
-  return s_data.steps_per_minute;
-}
-
+ActivityScalarStore activity_metrics_prv_steps_per_minute(void) { return s_data.steps_per_minute; }
 
 // =========================================================================================
 // PFS stubs
 static PFSFileChangedCallback pfs_watch_cb = NULL;
-PFSCallbackHandle pfs_watch_file(const char* filename, PFSFileChangedCallback callback,
-                                 uint8_t event_flags, void* data) {
+PFSCallbackHandle pfs_watch_file(const char *filename, PFSFileChangedCallback callback,
+                                 uint8_t event_flags, void *data) {
   pfs_watch_cb = callback;
   return NULL;
 }
 
-void pfs_unwatch_file(PFSCallbackHandle cb_handle) {
-  pfs_watch_cb = NULL;
-}
+void pfs_unwatch_file(PFSCallbackHandle cb_handle) { pfs_watch_cb = NULL; }
 
 // =========================================================================================
 // Timeline item stubs
@@ -310,9 +287,7 @@ TimelineItem *timeline_item_create_with_attributes(time_t timestamp, uint16_t du
   return &s_item;
 }
 
-void timeline_item_destroy(TimelineItem* item) {
-  return;
-}
+void timeline_item_destroy(TimelineItem *item) { return; }
 
 // =========================================================================================
 // Timeline stubs
@@ -328,15 +303,11 @@ bool timeline_remove(Uuid *id) {
   return true;
 }
 
-bool timeline_exists(Uuid *id) {
-  return true;
-}
+bool timeline_exists(Uuid *id) { return true; }
 
 // =========================================================================================
 // Notification stubs
-void notification_storage_store(TimelineItem* notification) {
-  s_data.notifs_shown++;
-}
+void notification_storage_store(TimelineItem *notification) { s_data.notifs_shown++; }
 
 // Helpers
 static void prv_set_time(const struct tm *input) {
@@ -358,23 +329,20 @@ void test_activity_insights__initialize(void) {
   s_activation_time = 0;
   s_health_app_opened_version = 0;
 
-  s_data = (StaticData) {};
+  s_data = (StaticData){};
 }
 
 // ---------------------------------------------------------------------------------------
-void test_activity_insights__cleanup(void) {
-  fake_settings_file_reset();
-}
+void test_activity_insights__cleanup(void) { fake_settings_file_reset(); }
 
 // ---------------------------------------------------------------------------------------
 // Test that we correctly calculate the statistics (# days of history, median, etc)
 void test_activity_insights__calculate_metric_history_stats(void) {
   // Construct history
   static const int32_t complete_history[ACTIVITY_HISTORY_DAYS] = {
-    1234, // This value is ignored since it's loaded in as the current value
-    6233, 4277, 9857, 4737, 6540, 719, 9917, 7019, 6347, 4704, 5050, 8370, 4200, 8284, 6664,
-    9177, 9734, 2330, 3951, 1568, 871, 776, 8751, 987, 7813, 772, 5079, 7438, 428
-  };
+      1234,  // This value is ignored since it's loaded in as the current value
+      6233, 4277, 9857, 4737, 6540, 719, 9917, 7019, 6347, 4704, 5050, 8370, 4200, 8284, 6664,
+      9177, 9734, 2330, 3951, 1568, 871, 776,  8751, 987,  7813, 772,  5079, 7438, 428};
   memcpy(&s_data.metric_history[ActivityMetricStepCount], complete_history,
          sizeof(complete_history));
 
@@ -386,12 +354,10 @@ void test_activity_insights__calculate_metric_history_stats(void) {
 
   // Test sparse history
   static const int32_t sparse_history[ACTIVITY_HISTORY_DAYS] = {
-    1234, // This value is ignored since it's loaded in as the current day
-    6233, 4277, 9857, 0, 6540, 719, 0, 0, 0, 0, 0, 0, 0, 0, 6664, 9177, 0, 2330, 3951, 1568,
-    871, 0, 8751, 0, 7813, 772, 0, 7438, 428
-  };
-  memcpy(&s_data.metric_history[ActivityMetricStepCount], sparse_history,
-         sizeof(sparse_history));
+      1234,  // This value is ignored since it's loaded in as the current day
+      6233, 4277, 9857, 0,    6540, 719, 0, 0,    0, 0,    0,   0, 0,    0,  6664,
+      9177, 0,    2330, 3951, 1568, 871, 0, 8751, 0, 7813, 772, 0, 7438, 428};
+  memcpy(&s_data.metric_history[ActivityMetricStepCount], sparse_history, sizeof(sparse_history));
   prv_calculate_metric_history_stats(ActivityMetricStepCount, &stats);
   cl_assert_equal_i(stats.median, 4277);
   cl_assert_equal_i(stats.total_days, 16);
@@ -406,20 +372,12 @@ void test_activity_insights__sleep_reward(void) {
   const ActivityScalarStore GOOD_SLEEP = 8 * MINUTES_PER_HOUR;
 
   static const int32_t sleep_history[ACTIVITY_HISTORY_DAYS] = {
-    GOOD_SLEEP,     // This is 'today'
-    GOOD_SLEEP,     // User has had good sleep for past 3 nights
-    GOOD_SLEEP,
-    GOOD_SLEEP,
-    AVERAGE_SLEEP,  // Average sleep to make sure our median is fairly low
-    AVERAGE_SLEEP,
-    AVERAGE_SLEEP,
-    AVERAGE_SLEEP,
-    AVERAGE_SLEEP,
-    AVERAGE_SLEEP,
-    AVERAGE_SLEEP,
-    AVERAGE_SLEEP,
-    AVERAGE_SLEEP
-  };
+      GOOD_SLEEP,  // This is 'today'
+      GOOD_SLEEP,  // User has had good sleep for past 3 nights
+      GOOD_SLEEP,    GOOD_SLEEP,
+      AVERAGE_SLEEP,  // Average sleep to make sure our median is fairly low
+      AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP,
+      AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP};
   memcpy(&s_data.metric_history[ActivityMetricSleepTotalSeconds], sleep_history,
          sizeof(sleep_history));
 
@@ -449,51 +407,52 @@ void test_activity_insights__sleep_reward(void) {
     cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
   }
 
-//  // These tests only make sense if the insights are enabled
-//  // Now we shouldn't see another notification for the next 6 days
-//  for (int i = 0; i < 6; ++i) {
-//    rtc_set_time(rtc_get_time() + SECONDS_PER_DAY);
-//    activity_insights_recalculate_stats();
-//    activity_insights_process_sleep_data(rtc_get_time());
-//    cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
-//  }
-//
-//  rtc_set_time(rtc_get_time() + SECONDS_PER_DAY);
-//  activity_insights_recalculate_stats();
-//  activity_insights_process_sleep_data(rtc_get_time());
-//  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 2);
-//
-//  // Make sure we don't trigger if we didn't get enough sleep
-//  rtc_set_time(rtc_get_time() + 7 * SECONDS_PER_DAY);
-//  activity_insights_recalculate_stats();
-//  s_data.metric_history[ActivityMetricSleepTotalSeconds][0] = AVERAGE_SLEEP;
-//  activity_insights_process_sleep_data(rtc_get_time());
-//  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 2);
-//
-//  // Fall back asleep, make sure we get the reward
-//  s_data.metric_history[ActivityMetricSleepState][0] = ActivitySleepStateLightSleep;
-//  activity_insights_process_sleep_data(rtc_get_time());
-//  s_data.metric_history[ActivityMetricSleepState][0] = ActivitySleepStateAwake;
-//  s_data.metric_history[ActivityMetricSleepTotalSeconds][0] = GOOD_SLEEP;
-//  activity_insights_process_sleep_data(rtc_get_time());
-//  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 3);
-//
-//  // Make sure setting enable to false actually disables things
-//  rtc_set_time(rtc_get_time() + 7 * SECONDS_PER_DAY);
-//  activity_insights_recalculate_stats();
-//  ActivityInsightSettings disabled_sleep;
-//  activity_insights_settings_read(ACTIVITY_INSIGHTS_SETTINGS_SLEEP_REWARD, &disabled_sleep);
-//  disabled_sleep.enabled = false,
-//  settings_file_set(NULL, /* fake settings file don't care */
-//                    ACTIVITY_INSIGHTS_SETTINGS_SLEEP_REWARD, strlen(ACTIVITY_INSIGHTS_SETTINGS_SLEEP_REWARD),
-//                    &disabled_sleep, sizeof(disabled_sleep));
-//  pfs_watch_cb(NULL); // Update the settings cache
-//  activity_insights_process_sleep_data(rtc_get_time());
-//  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 3);
+  //  // These tests only make sense if the insights are enabled
+  //  // Now we shouldn't see another notification for the next 6 days
+  //  for (int i = 0; i < 6; ++i) {
+  //    rtc_set_time(rtc_get_time() + SECONDS_PER_DAY);
+  //    activity_insights_recalculate_stats();
+  //    activity_insights_process_sleep_data(rtc_get_time());
+  //    cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
+  //  }
+  //
+  //  rtc_set_time(rtc_get_time() + SECONDS_PER_DAY);
+  //  activity_insights_recalculate_stats();
+  //  activity_insights_process_sleep_data(rtc_get_time());
+  //  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 2);
+  //
+  //  // Make sure we don't trigger if we didn't get enough sleep
+  //  rtc_set_time(rtc_get_time() + 7 * SECONDS_PER_DAY);
+  //  activity_insights_recalculate_stats();
+  //  s_data.metric_history[ActivityMetricSleepTotalSeconds][0] = AVERAGE_SLEEP;
+  //  activity_insights_process_sleep_data(rtc_get_time());
+  //  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 2);
+  //
+  //  // Fall back asleep, make sure we get the reward
+  //  s_data.metric_history[ActivityMetricSleepState][0] = ActivitySleepStateLightSleep;
+  //  activity_insights_process_sleep_data(rtc_get_time());
+  //  s_data.metric_history[ActivityMetricSleepState][0] = ActivitySleepStateAwake;
+  //  s_data.metric_history[ActivityMetricSleepTotalSeconds][0] = GOOD_SLEEP;
+  //  activity_insights_process_sleep_data(rtc_get_time());
+  //  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 3);
+  //
+  //  // Make sure setting enable to false actually disables things
+  //  rtc_set_time(rtc_get_time() + 7 * SECONDS_PER_DAY);
+  //  activity_insights_recalculate_stats();
+  //  ActivityInsightSettings disabled_sleep;
+  //  activity_insights_settings_read(ACTIVITY_INSIGHTS_SETTINGS_SLEEP_REWARD, &disabled_sleep);
+  //  disabled_sleep.enabled = false,
+  //  settings_file_set(NULL, /* fake settings file don't care */
+  //                    ACTIVITY_INSIGHTS_SETTINGS_SLEEP_REWARD,
+  //                    strlen(ACTIVITY_INSIGHTS_SETTINGS_SLEEP_REWARD), &disabled_sleep,
+  //                    sizeof(disabled_sleep));
+  //  pfs_watch_cb(NULL); // Update the settings cache
+  //  activity_insights_process_sleep_data(rtc_get_time());
+  //  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 3);
 }
 
 static void prv_minute_update(int iterations) {
-  for ( ; iterations > 0; --iterations) {
+  for (; iterations > 0; --iterations) {
     rtc_set_time(rtc_get_time() + SECONDS_PER_MINUTE);
     activity_insights_process_minute_data(rtc_get_time());
   }
@@ -503,18 +462,9 @@ static void prv_minute_update(int iterations) {
 void prv_set_step_history_avg() {
   // History with low median
   static const int32_t step_history[ACTIVITY_HISTORY_DAYS] = {
-    AVERAGE_STEPS, // This is 'today'
-    AVERAGE_STEPS,
-    AVERAGE_STEPS,
-    AVERAGE_STEPS,
-    AVERAGE_STEPS,
-    AVERAGE_STEPS,
-    AVERAGE_STEPS,
-    AVERAGE_STEPS,
-    AVERAGE_STEPS,
-    AVERAGE_STEPS,
-    AVERAGE_STEPS
-  };
+      AVERAGE_STEPS,  // This is 'today'
+      AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS,
+      AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS};
   memcpy(&s_data.metric_history[ActivityMetricStepCount], &step_history, sizeof(step_history));
 }
 
@@ -522,17 +472,10 @@ void prv_set_sleep_history_avg() {
   const ActivityScalarStore AVERAGE_SLEEP = 5 * MINUTES_PER_HOUR;
 
   static const int32_t sleep_history[ACTIVITY_HISTORY_DAYS] = {
-    AVERAGE_SLEEP,  // This is 'today'
-    AVERAGE_SLEEP,  // Average sleep to make sure our median is fairly low
-    AVERAGE_SLEEP,
-    AVERAGE_SLEEP,
-    AVERAGE_SLEEP,
-    AVERAGE_SLEEP,
-    AVERAGE_SLEEP,
-    AVERAGE_SLEEP,
-    AVERAGE_SLEEP,
-    AVERAGE_SLEEP
-  };
+      AVERAGE_SLEEP,  // This is 'today'
+      AVERAGE_SLEEP,  // Average sleep to make sure our median is fairly low
+      AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP,
+      AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP};
   memcpy(&s_data.metric_history[ActivityMetricSleepTotalSeconds], sleep_history,
          sizeof(sleep_history));
 }
@@ -582,13 +525,13 @@ void test_activity_insights__activity_reward_trigger(void) {
   prv_minute_update(ACTIVE_MINUTES);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
-//  // This tests multi day triggers if insights are enabled
-//  prv_minute_update(ACTIVE_MINUTES);
-//  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
-//  rtc_set_time(rtc_get_time() + 1 * SECONDS_PER_DAY);
-//  activity_insights_recalculate_stats();
-//  prv_minute_update(ACTIVE_MINUTES);
-//  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
+  //  // This tests multi day triggers if insights are enabled
+  //  prv_minute_update(ACTIVE_MINUTES);
+  //  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
+  //  rtc_set_time(rtc_get_time() + 1 * SECONDS_PER_DAY);
+  //  activity_insights_recalculate_stats();
+  //  prv_minute_update(ACTIVE_MINUTES);
+  //  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 }
 
 void test_activity_insights__disable_activity_reward(void) {
@@ -608,7 +551,7 @@ void test_activity_insights__disable_activity_reward(void) {
                     ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_REWARD,
                     strlen(ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_REWARD), &disabled_activity,
                     sizeof(disabled_activity));
-  pfs_watch_cb(NULL); // Update the settings cache
+  pfs_watch_cb(NULL);  // Update the settings cache
   prv_minute_update(ACTIVE_MINUTES);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 }
@@ -635,14 +578,12 @@ void test_activity_insights__sleep_summary(void) {
   prv_set_sleep_history_avg();
 
   // Let's start at 11:30pm
-  struct tm start_tm = {
-    // Thursday, Jan 1, 2015, 11:30pm
-    .tm_hour = 23,
-    .tm_min = 30,
-    .tm_mday = 1,
-    .tm_mon = 0,
-    .tm_year = 115
-  };
+  struct tm start_tm = {// Thursday, Jan 1, 2015, 11:30pm
+                        .tm_hour = 23,
+                        .tm_min = 30,
+                        .tm_mday = 1,
+                        .tm_mon = 0,
+                        .tm_year = 115};
   prv_set_time(&start_tm);
   activity_insights_init(rtc_get_time());
 
@@ -653,7 +594,7 @@ void test_activity_insights__sleep_summary(void) {
 
   // Put in a 1 hour sleep session that ends at 11pm. This is after
   // ACTIVITY_LAST_SLEEP_MINUTE_OF_DAY (9pm), so it should be part of "tonight's" sleep.
-  prv_add_sleep_session(22, 1);     // Starting 22 hours from midnight of today
+  prv_add_sleep_session(22, 1);  // Starting 22 hours from midnight of today
 
   // Awake until 11:45pm
   rtc_set_time(rtc_get_time() + 15 * SECONDS_PER_MINUTE);
@@ -696,7 +637,7 @@ void test_activity_insights__sleep_summary(void) {
 void test_activity_insights__sleep_summary_midnight_timezone(void) {
   // Set to a non-UTC timezone
   static TimezoneInfo tz = {
-    .tm_gmtoff = -8 * SECONDS_PER_HOUR, // PST
+      .tm_gmtoff = -8 * SECONDS_PER_HOUR,  // PST
   };
   time_util_update_timezone(&tz);
   rtc_set_time(time_util_get_midnight_of(rtc_get_time()) + tz.tm_gmtoff);
@@ -814,29 +755,29 @@ void test_activity_insights__activation_delay_insights_time_trigger(void) {
   activity_insights_process_minute_data(now);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
-  now += SECONDS_PER_DAY; // Jan 2 @ 10:00am
+  now += SECONDS_PER_DAY;  // Jan 2 @ 10:00am
   rtc_set_time(now);
   activity_insights_process_minute_data(now);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
-  now += 8 * SECONDS_PER_HOUR; // Jan 2 @ 6:00pm - used to fire the day 1 nag
+  now += 8 * SECONDS_PER_HOUR;  // Jan 2 @ 6:00pm - used to fire the day 1 nag
   rtc_set_time(now);
   activity_insights_process_minute_data(now);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
-  now += (3 * SECONDS_PER_DAY) + (2 * SECONDS_PER_HOUR); // Jan 5 @ 8:00pm
+  now += (3 * SECONDS_PER_DAY) + (2 * SECONDS_PER_HOUR);  // Jan 5 @ 8:00pm
   rtc_set_time(now);
   activity_insights_process_minute_data(now);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
   s_health_app_opened_version = 1;
 
-  now += 30 * SECONDS_PER_MINUTE; // Jan 5 @ 8:30pm - used to fire the day 4 nag
+  now += 30 * SECONDS_PER_MINUTE;  // Jan 5 @ 8:30pm - used to fire the day 4 nag
   rtc_set_time(now);
   activity_insights_process_minute_data(now);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
-  now += 6 * SECONDS_PER_DAY; // Jan 11 @ 8:30pm - used to fire the day 10 nag
+  now += 6 * SECONDS_PER_DAY;  // Jan 11 @ 8:30pm - used to fire the day 10 nag
   rtc_set_time(now);
   activity_insights_process_minute_data(now);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
@@ -852,12 +793,12 @@ void test_activity_insights__activation_delay_insights_fifteen_interval_trigger(
   activity_insights_process_minute_data(now);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
-  now += SECONDS_PER_DAY + (8 * SECONDS_PER_HOUR) + (5 * SECONDS_PER_MINUTE); // Jan 2 @ 6:05pm
+  now += SECONDS_PER_DAY + (8 * SECONDS_PER_HOUR) + (5 * SECONDS_PER_MINUTE);  // Jan 2 @ 6:05pm
   rtc_set_time(now);
   activity_insights_process_minute_data(now);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
-  now += (10 * SECONDS_PER_MINUTE); // Jan 2 @ 6:15pm
+  now += (10 * SECONDS_PER_MINUTE);  // Jan 2 @ 6:15pm
   rtc_set_time(now);
   activity_insights_process_minute_data(now);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
@@ -928,7 +869,7 @@ void test_activity_insights__walk_session_power_cycle(void) {
 // Helpers for the sleep summary notification tests
 static void prv_use_utc_timezone(void) {
   static TimezoneInfo tz = {
-    .tm_gmtoff = 0,
+      .tm_gmtoff = 0,
   };
   time_util_update_timezone(&tz);
   prv_set_time(&s_init_time_tm);

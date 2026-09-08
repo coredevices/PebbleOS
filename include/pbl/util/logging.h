@@ -5,8 +5,8 @@
 
 void util_log(const char *filename, int line, const char *string);
 
-#define UTIL_LOG(string) \
-  do { \
+#define UTIL_LOG(string)                       \
+  do {                                         \
     util_log(__FILE_NAME__, __LINE__, string); \
   } while (0)
 

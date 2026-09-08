@@ -26,16 +26,17 @@
 ////////////////////////////////////
 static GRect s_graphics_draw_bitmap_in_rect__rect = GRectZero;
 
-void graphics_draw_bitmap_in_rect(GContext* ctx, const GBitmap *src_bitmap, const GRect *rect) {
+void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *src_bitmap, const GRect *rect) {
   s_graphics_draw_bitmap_in_rect__rect = *rect;
 }
-bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) {return false;}
+bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) { return false; }
 void window_schedule_render(struct Window *window) {}
-void window_set_click_config_provider_with_context(
-    struct Window *window, ClickConfigProvider click_config_provider, void *context) {}
+void window_set_click_config_provider_with_context(struct Window *window,
+                                                   ClickConfigProvider click_config_provider,
+                                                   void *context) {}
 void window_set_click_context(ButtonId button_id, void *context) {}
-void window_single_repeating_click_subscribe(
-    ButtonId button_id, uint16_t repeat_interval_ms, ClickHandler handler) {}
+void window_single_repeating_click_subscribe(ButtonId button_id, uint16_t repeat_interval_ms,
+                                             ClickHandler handler) {}
 
 // Internal definitions
 ////////////////////////////////////
@@ -53,7 +54,7 @@ void test_scroll_layer__cleanup(void) {}
 ////////////////////////////////////
 
 void test_scroll_layer__enable_paging(void) {
-  GRect scroll_bounds = GRect(0,0,180,180);
+  GRect scroll_bounds = GRect(0, 0, 180, 180);
   ScrollLayer *scroll_layer = scroll_layer_create(scroll_bounds);
 
   // Verify paging is disabled by default
@@ -76,7 +77,7 @@ void test_scroll_layer__enable_paging(void) {
 }
 
 void test_scroll_layer__paging_vs_shadow_bits(void) {
-  ScrollLayer *scroll_layer = scroll_layer_create(GRect(0,0,180,180));
+  ScrollLayer *scroll_layer = scroll_layer_create(GRect(0, 0, 180, 180));
 
   // Validate that paging_disabled is same position as shadow clips
   scroll_layer->shadow_sublayer.clips = true;
@@ -95,11 +96,10 @@ void test_scroll_layer__paging_vs_shadow_bits(void) {
   scroll_layer->shadow_sublayer.hidden = false;
   cl_assert_equal_b(false, scroll_layer->paging.paging_disabled);
   cl_assert_equal_b(false, scroll_layer->paging.shadow_hidden);
-
 }
 
 void test_scroll_layer__scrolling(void) {
-  GRect scroll_bounds = GRect(0,0,180,180);
+  GRect scroll_bounds = GRect(0, 0, 180, 180);
   ScrollLayer *scroll_layer = scroll_layer_create(scroll_bounds);
 
   GSize content_size = GSize(180, 2000);
@@ -108,7 +108,7 @@ void test_scroll_layer__scrolling(void) {
   int32_t scroll_height = DEFAULT_SCROLL_HEIGHT;
 
   int32_t offset = 0;
-  
+
   for (offset = 0; offset < content_size.h - scroll_bounds.size.h; offset += scroll_height) {
     // scroll offset for scroll down is negative, so invert offset.y
     cl_assert_equal_i(offset, -((int32_t)scroll_layer_get_content_offset(scroll_layer).y));
@@ -121,13 +121,13 @@ void test_scroll_layer__scrolling(void) {
 }
 
 void test_scroll_layer__paging_with_scroll(void) {
-  ScrollLayer *scroll_layer = scroll_layer_create(GRect(0,0,180,180));
+  ScrollLayer *scroll_layer = scroll_layer_create(GRect(0, 0, 180, 180));
   int16_t page_height = 0;
 
   page_height = scroll_layer->layer.frame.size.h;
   scroll_layer_set_paging(scroll_layer, true);
   cl_assert_equal_i(page_height, prv_scroll_layer_get_paging_height(scroll_layer));
-  
+
   // paging should force < page_height offsets to ceil of modulo page height
   scroll_layer_set_content_size(scroll_layer, GSize(180, 2000));
   scroll_layer_scroll(scroll_layer, ScrollDirectionDown, false);
@@ -137,7 +137,7 @@ void test_scroll_layer__paging_with_scroll(void) {
 
 void test_scroll_layer__paging_last_pages_content(void) {
   uint16_t page_height = 86;
-  ScrollLayer *scroll_layer = scroll_layer_create(GRect(0,0,180,page_height));
+  ScrollLayer *scroll_layer = scroll_layer_create(GRect(0, 0, 180, page_height));
 
   // validate enable paging works for paging height
   scroll_layer_set_paging(scroll_layer, true);
@@ -170,7 +170,7 @@ void test_scroll_layer__paging_last_pages_content(void) {
 }
 
 void test_scroll_layer__fullscreen_paging(void) {
-  GRect scroll_bounds = GRect(0,0,180,180);
+  GRect scroll_bounds = GRect(0, 0, 180, 180);
   ScrollLayer *scroll_layer = scroll_layer_create(scroll_bounds);
 
   int16_t page_height = scroll_bounds.size.h;

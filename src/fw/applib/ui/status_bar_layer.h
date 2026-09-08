@@ -18,28 +18,19 @@
 //!     @{
 
 //! The fixed height of the status bar, including separator height, for all platforms.
-#define _STATUS_BAR_LAYER_HEIGHT(plat) PBL_PLATFORM_SWITCH(plat, \
-  /*aplite*/ 16, \
-  /*basalt*/ 16, \
-  /*chalk*/ 24, \
-  /*diorite*/ 16, \
-  /*emery*/ 20, \
-  /*flint*/ 16, \
-  /*gabbro*/ 20)
+#define _STATUS_BAR_LAYER_HEIGHT(plat)                                                  \
+  PBL_PLATFORM_SWITCH(plat, /*aplite*/ 16, /*basalt*/ 16, /*chalk*/ 24, /*diorite*/ 16, \
+                      /*emery*/ 20, /*flint*/ 16, /*gabbro*/ 20)
 
 //! The fixed height of the status bar, including separator height
 #define STATUS_BAR_LAYER_HEIGHT _STATUS_BAR_LAYER_HEIGHT(PBL_PLATFORM_TYPE_CURRENT)
 
 //! The height of the status bar when rendering the "Big & Bold" clock, including
 //! separator height, for all platforms.
-#define _STATUS_BAR_LAYER_LARGE_BOLD_HEIGHT(plat) PBL_PLATFORM_SWITCH(plat, \
-  /*aplite*/ 20, \
-  /*basalt*/ 20, \
-  /*chalk*/ 24, /* already tall enough; only the font grows */ \
-  /*diorite*/ 20, \
-  /*emery*/ 26, \
-  /*flint*/ 20, \
-  /*gabbro*/ 26)
+#define _STATUS_BAR_LAYER_LARGE_BOLD_HEIGHT(plat)                                                  \
+  PBL_PLATFORM_SWITCH(plat, /*aplite*/ 20, /*basalt*/ 20, /*chalk*/ 24,                            \
+                      /* already tall enough; only the font grows */ /*diorite*/ 20, /*emery*/ 26, \
+                      /*flint*/ 20, /*gabbro*/ 26)
 
 //! The "Big & Bold" status bar height for the current platform.
 #define STATUS_BAR_LAYER_LARGE_BOLD_HEIGHT \
@@ -61,7 +52,6 @@
 #define INFO_TEXT_BUFFER_SIZE 8
 //! The max size of the total value of set_info_progress before progress is displayed as percentage
 #define MAX_INFO_TOTAL 99
-
 
 //! Values that are used to indicate the different status bar modes
 typedef enum {
@@ -97,12 +87,12 @@ typedef struct StatusBarLayerSeparator {
 
 //! Configuration of a StatusBarLayer independently from Layer and timer code
 typedef struct StatusBarLayerConfig {
-  char title_text_buffer[TITLE_TEXT_BUFFER_SIZE];   // center title text buffer
-  char info_text_buffer[INFO_TEXT_BUFFER_SIZE];     // right info text buffer
-  GColor foreground_color;                          // default:GColorWhite
-  GColor background_color;                          // default:GColorBlack
-  StatusBarLayerSeparator separator;                // default:StatusBarLayerSeparatorModeDotted
-  StatusBarLayerMode mode;                          // default:StatusBarLayerModeClock
+  char title_text_buffer[TITLE_TEXT_BUFFER_SIZE];  // center title text buffer
+  char info_text_buffer[INFO_TEXT_BUFFER_SIZE];    // right info text buffer
+  GColor foreground_color;                         // default:GColorWhite
+  GColor background_color;                         // default:GColorBlack
+  StatusBarLayerSeparator separator;               // default:StatusBarLayerSeparatorModeDotted
+  StatusBarLayerMode mode;                         // default:StatusBarLayerModeClock
 } StatusBarLayerConfig;
 
 //! renders a status bar as described into a given rectangle
@@ -120,8 +110,8 @@ void status_bar_layer_render(GContext *ctx, const GRect *bounds, StatusBarLayerC
 typedef struct StatusBarLayer {
   Layer layer;
   StatusBarLayerConfig config;
-  AppTimer *title_timer_id;                         // timer id for title revert
-  EventServiceInfo tick_event;                      // Event service to update the time
+  AppTimer *title_timer_id;     // timer id for title revert
+  EventServiceInfo tick_event;  // Event service to update the time
   int previous_min_of_day;
 } StatusBarLayer;
 

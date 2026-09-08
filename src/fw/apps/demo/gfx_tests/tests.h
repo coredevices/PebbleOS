@@ -12,14 +12,14 @@
 
 //! GFX test struct
 typedef struct GfxTest {
-  char *name;                         //!< Name string
-  uint32_t duration;                  //!< Number of seconds to run the test for
-  uint32_t unit_multiple;             //!< Number of actions per test iteration
-  LayerUpdateProc test_proc;          //!< Test procedure
-  void (*setup)(Window *window);      //!< Test setup function
-  void (*teardown)( Window *window);  //!< Test teardown function
+  char *name;                        //!< Name string
+  uint32_t duration;                 //!< Number of seconds to run the test for
+  uint32_t unit_multiple;            //!< Number of actions per test iteration
+  LayerUpdateProc test_proc;         //!< Test procedure
+  void (*setup)(Window *window);     //!< Test setup function
+  void (*teardown)(Window *window);  //!< Test teardown function
 } GfxTest;
 
 #include "process_management/pebble_process_md.h"
 
-const PebbleProcessMd* gfx_tests_get_app_info(void);
+const PebbleProcessMd *gfx_tests_get_app_info(void);

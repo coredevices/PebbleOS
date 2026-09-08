@@ -14,7 +14,6 @@
 #include <stdint.h>
 #include <string.h>
 
-
 typedef struct PACKED FramebufferStatResp {
   uint8_t flags;
   uint16_t width;
@@ -23,29 +22,26 @@ typedef struct PACKED FramebufferStatResp {
   uint32_t length;
 } FramebufferStatResp;
 
-static int framebuffer_domain_read(uint8_t *buf, uint32_t address, uint32_t length,
-                                        void *context) {
-  uint8_t *fb_offset = (uint8_t*)compositor_get_framebuffer()->buffer + address;
+static int framebuffer_domain_read(uint8_t *buf, uint32_t address, uint32_t length, void *context) {
+  uint8_t *fb_offset = (uint8_t *)compositor_get_framebuffer()->buffer + address;
   memcpy(buf, fb_offset, length);
   return length;
 }
 
 static int framebuffer_domain_write(uint8_t *buf, uint32_t address, uint32_t length,
-                                         void *context) {
-  uint8_t *fb_offset = (uint8_t*)compositor_get_framebuffer()->buffer + address;
+                                    void *context) {
+  uint8_t *fb_offset = (uint8_t *)compositor_get_framebuffer()->buffer + address;
   memcpy(fb_offset, buf, length);
   return length;
 }
 
 static int framebuffer_domain_stat(uint8_t *resp, size_t resp_max_len, void *context) {
-  FramebufferStatResp *stat_resp = (FramebufferStatResp*) resp;
-  *stat_resp = (FramebufferStatResp) {
-    .flags = 0,
-    .length = FRAMEBUFFER_SIZE_BYTES,
-    .width = DISP_COLS,
-    .height = DISP_ROWS,
-    .bpp = CONFIG_SCREEN_COLOR_DEPTH_BITS
-  };
+  FramebufferStatResp *stat_resp = (FramebufferStatResp *)resp;
+  *stat_resp = (FramebufferStatResp){.flags = 0,
+                                     .length = FRAMEBUFFER_SIZE_BYTES,
+                                     .width = DISP_COLS,
+                                     .height = DISP_ROWS,
+                                     .bpp = CONFIG_SCREEN_COLOR_DEPTH_BITS};
 
   return sizeof(FramebufferStatResp);
 }
@@ -65,7 +61,7 @@ static void framebuffer_domain_close_cb(void *foo) {
   compositor_display_update(NULL);
 }
 
-static status_t framebuffer_domain_close(void* data) {
+static status_t framebuffer_domain_close(void *data) {
   animation_private_resume();
 
   // Force the compositor to redraw the framebuffer
@@ -74,12 +70,10 @@ static status_t framebuffer_domain_close(void* data) {
   return S_SUCCESS;
 }
 
-PulseBulkIODomainHandler pulse_bulkio_domain_framebuffer = {
-  .id = PulseBulkIODomainType_Framebuffer,
-  .open_proc = framebuffer_domain_open,
-  .close_proc = framebuffer_domain_close,
-  .read_proc = framebuffer_domain_read,
-  .write_proc = framebuffer_domain_write,
-  .stat_proc = framebuffer_domain_stat,
-  .erase_proc = framebuffer_domain_erase
-};
+PulseBulkIODomainHandler pulse_bulkio_domain_framebuffer = {.id = PulseBulkIODomainType_Framebuffer,
+                                                            .open_proc = framebuffer_domain_open,
+                                                            .close_proc = framebuffer_domain_close,
+                                                            .read_proc = framebuffer_domain_read,
+                                                            .write_proc = framebuffer_domain_write,
+                                                            .stat_proc = framebuffer_domain_stat,
+                                                            .erase_proc = framebuffer_domain_erase};

@@ -45,11 +45,12 @@ struct PanRecognizerData {
 
   // Gesture state
   struct {
-    GPoint touch_down_point;   // Touchdown point; total_delta is measured from here
-    GPoint start_point;        // Point at which the pan Started; delta_since_start is measured here
-    GPoint prev_point;         // Previous event point; delta_since_prev is measured from here
-    GPoint last_point;         // Most recent position update point (liftoff coords are ignored)
-    // Velocity sample ring buffer; sample_head indexes the newest, filled up to sample_count entries
+    GPoint touch_down_point;  // Touchdown point; total_delta is measured from here
+    GPoint start_point;       // Point at which the pan Started; delta_since_start is measured here
+    GPoint prev_point;        // Previous event point; delta_since_prev is measured from here
+    GPoint last_point;        // Most recent position update point (liftoff coords are ignored)
+    // Velocity sample ring buffer; sample_head indexes the newest, filled up to sample_count
+    // entries
     PanVelocitySample samples[PAN_VELOCITY_SAMPLE_COUNT];
     uint8_t sample_head;
     uint8_t sample_count;
@@ -61,19 +62,17 @@ static void prv_reset(Recognizer *recognizer);
 static bool prv_cancel(Recognizer *recognizer);
 
 static const RecognizerImpl s_pan_recognizer_impl = {
-  .handle_touch_event = prv_handle_touch_event,
-  .reset = prv_reset,
-  .cancel = prv_cancel
-};
+    .handle_touch_event = prv_handle_touch_event, .reset = prv_reset, .cancel = prv_cancel};
 
 static uint32_t prv_ticks_to_ms(RtcTicks ticks) {
   return (uint32_t)((ticks * MS_PER_SECOND) / RTC_TICKS_HZ);
 }
 
 static void prv_record_sample(PanRecognizerData *data, GPoint point, RtcTicks ticks) {
-  const uint8_t next = (data->state.sample_count == 0) ?
-      0 : (uint8_t)((data->state.sample_head + 1) % PAN_VELOCITY_SAMPLE_COUNT);
-  data->state.samples[next] = (PanVelocitySample) { .point = point, .ticks = ticks };
+  const uint8_t next = (data->state.sample_count == 0)
+                           ? 0
+                           : (uint8_t)((data->state.sample_head + 1) % PAN_VELOCITY_SAMPLE_COUNT);
+  data->state.samples[next] = (PanVelocitySample){.point = point, .ticks = ticks};
   data->state.sample_head = next;
   if (data->state.sample_count < PAN_VELOCITY_SAMPLE_COUNT) {
     data->state.sample_count++;
@@ -93,7 +92,8 @@ static GPoint prv_compute_velocity(const PanRecognizerData *data) {
   // Walk back from the newest sample to find the oldest sample still inside the window.
   const PanVelocitySample *oldest = newest;
   for (uint8_t i = 1; i < data->state.sample_count; i++) {
-    const uint8_t idx = (uint8_t)((head + PAN_VELOCITY_SAMPLE_COUNT - i) % PAN_VELOCITY_SAMPLE_COUNT);
+    const uint8_t idx =
+        (uint8_t)((head + PAN_VELOCITY_SAMPLE_COUNT - i) % PAN_VELOCITY_SAMPLE_COUNT);
     const PanVelocitySample *candidate = &data->state.samples[idx];
     if (prv_ticks_to_ms(newest->ticks - candidate->ticks) > PAN_VELOCITY_WINDOW_MS) {
       break;
@@ -105,8 +105,10 @@ static GPoint prv_compute_velocity(const PanRecognizerData *data) {
   if (dt_ms == 0) {
     return GPointZero;
   }
-  const int32_t vx = ((int32_t)(newest->point.x - oldest->point.x) * MS_PER_SECOND) / (int32_t)dt_ms;
-  const int32_t vy = ((int32_t)(newest->point.y - oldest->point.y) * MS_PER_SECOND) / (int32_t)dt_ms;
+  const int32_t vx =
+      ((int32_t)(newest->point.x - oldest->point.x) * MS_PER_SECOND) / (int32_t)dt_ms;
+  const int32_t vy =
+      ((int32_t)(newest->point.y - oldest->point.y) * MS_PER_SECOND) / (int32_t)dt_ms;
   return GPoint((int16_t)vx, (int16_t)vy);
 }
 
@@ -129,8 +131,8 @@ static bool prv_axis_dominance(const PanRecognizerData *data, GPoint total_delta
 }
 
 static void prv_handle_touch_event(Recognizer *recognizer, const TouchEvent *touch_event) {
-  PanRecognizerData *data = recognizer_get_impl_data((Recognizer *)recognizer,
-                                                     &s_pan_recognizer_impl);
+  PanRecognizerData *data =
+      recognizer_get_impl_data((Recognizer *)recognizer, &s_pan_recognizer_impl);
 
   switch (touch_event->type) {
     case TouchEvent_Touchdown: {
@@ -170,8 +172,9 @@ static void prv_handle_touch_event(Recognizer *recognizer, const TouchEvent *tou
           break;
         }
         // (a) Dominant axis matches the locked axis -> Start; foreign axis -> Fail.
-        const bool matches_lock = (is_horizontal && (data->config.axis_lock == PanAxis_Horizontal)) ||
-                                  (!is_horizontal && (data->config.axis_lock == PanAxis_Vertical));
+        const bool matches_lock =
+            (is_horizontal && (data->config.axis_lock == PanAxis_Horizontal)) ||
+            (!is_horizontal && (data->config.axis_lock == PanAxis_Vertical));
         if (matches_lock) {
           // Anchor delta_since_start at the current point so it is exactly (0, 0) when Started
           // fires; this prevents a visual jump for live scroll that consumes delta_since_start.
@@ -188,8 +191,8 @@ static void prv_handle_touch_event(Recognizer *recognizer, const TouchEvent *tou
     }
 
     case TouchEvent_Liftoff:
-      // Liftoff coordinates are ignored (the driver reports finger-up at (0, 0)); the gesture end is
-      // the last position update.
+      // Liftoff coordinates are ignored (the driver reports finger-up at (0, 0)); the gesture end
+      // is the last position update.
       if (recognizer_has_triggered(recognizer)) {
         recognizer_transition_state(recognizer, RecognizerState_Completed);
       } else {
@@ -201,8 +204,8 @@ static void prv_handle_touch_event(Recognizer *recognizer, const TouchEvent *tou
 }
 
 static void prv_reset(Recognizer *recognizer) {
-  PanRecognizerData *data = recognizer_get_impl_data((Recognizer *)recognizer,
-                                                     &s_pan_recognizer_impl);
+  PanRecognizerData *data =
+      recognizer_get_impl_data((Recognizer *)recognizer, &s_pan_recognizer_impl);
   memset(&data->state, 0, sizeof(data->state));
 }
 
@@ -213,11 +216,12 @@ static bool prv_cancel(Recognizer *recognizer) {
 
 Recognizer *pan_recognizer_create(RecognizerEventCb event_cb, void *user_data, PanAxis axis) {
   PanRecognizerData data = {
-    .config = {
-      .axis_lock = axis,
-      .start_threshold_px = PAN_START_THRESHOLD_PX,
-      .axis_dominance = PAN_AXIS_DOMINANCE,
-    },
+      .config =
+          {
+              .axis_lock = axis,
+              .start_threshold_px = PAN_START_THRESHOLD_PX,
+              .axis_dominance = PAN_AXIS_DOMINANCE,
+          },
   };
 
   return recognizer_create_with_data(&s_pan_recognizer_impl, &data, sizeof(data), event_cb,
@@ -229,11 +233,12 @@ Recognizer *pan_recognizer_init_static(void *storage, RecognizerEventCb event_cb
   _Static_assert(RECOGNIZER_INSTANCE_SIZE + sizeof(PanRecognizerData) <= PAN_RECOGNIZER_STATIC_SIZE,
                  "PAN_RECOGNIZER_STATIC_SIZE too small for a static pan recognizer");
   PanRecognizerData data = {
-    .config = {
-      .axis_lock = axis,
-      .start_threshold_px = PAN_START_THRESHOLD_PX,
-      .axis_dominance = PAN_AXIS_DOMINANCE,
-    },
+      .config =
+          {
+              .axis_lock = axis,
+              .start_threshold_px = PAN_START_THRESHOLD_PX,
+              .axis_dominance = PAN_AXIS_DOMINANCE,
+          },
   };
 
   return recognizer_init_static_with_data(storage, &s_pan_recognizer_impl, &data, sizeof(data),
@@ -245,8 +250,8 @@ const PanRecognizerData *pan_recognizer_get_data(const Recognizer *recognizer) {
 }
 
 GPoint pan_recognizer_get_total_delta(const Recognizer *recognizer) {
-  const PanRecognizerData *data = recognizer_get_impl_data((Recognizer *)recognizer,
-                                                           &s_pan_recognizer_impl);
+  const PanRecognizerData *data =
+      recognizer_get_impl_data((Recognizer *)recognizer, &s_pan_recognizer_impl);
   if (!data) {
     // SDK-reachable with a NULL or non-pan recognizer: reject, don't crash.
     return GPointZero;
@@ -255,8 +260,8 @@ GPoint pan_recognizer_get_total_delta(const Recognizer *recognizer) {
 }
 
 GPoint pan_recognizer_get_delta_since_start(const Recognizer *recognizer) {
-  const PanRecognizerData *data = recognizer_get_impl_data((Recognizer *)recognizer,
-                                                           &s_pan_recognizer_impl);
+  const PanRecognizerData *data =
+      recognizer_get_impl_data((Recognizer *)recognizer, &s_pan_recognizer_impl);
   if (!data) {
     return GPointZero;
   }
@@ -264,8 +269,8 @@ GPoint pan_recognizer_get_delta_since_start(const Recognizer *recognizer) {
 }
 
 GPoint pan_recognizer_get_delta_since_prev(const Recognizer *recognizer) {
-  const PanRecognizerData *data = recognizer_get_impl_data((Recognizer *)recognizer,
-                                                           &s_pan_recognizer_impl);
+  const PanRecognizerData *data =
+      recognizer_get_impl_data((Recognizer *)recognizer, &s_pan_recognizer_impl);
   if (!data) {
     return GPointZero;
   }
@@ -273,8 +278,8 @@ GPoint pan_recognizer_get_delta_since_prev(const Recognizer *recognizer) {
 }
 
 GPoint pan_recognizer_get_velocity(const Recognizer *recognizer) {
-  const PanRecognizerData *data = recognizer_get_impl_data((Recognizer *)recognizer,
-                                                           &s_pan_recognizer_impl);
+  const PanRecognizerData *data =
+      recognizer_get_impl_data((Recognizer *)recognizer, &s_pan_recognizer_impl);
   if (!data) {
     return GPointZero;
   }

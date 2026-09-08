@@ -24,17 +24,15 @@
 
 #define CRC_POLY 0x04C11DB7
 
-static uint32_t crc_init(void) {
-  return 0xffffffff;
-}
+static uint32_t crc_init(void) { return 0xffffffff; }
 
 static uint32_t crc_update(uint32_t crc, const uint8_t *data, uint32_t length) {
   const uint8_t num_remainder_bytes = length % 4;
   uint32_t num_whole_word_bytes = length / 4;
 
   while (num_whole_word_bytes--) {
-    crc = crc ^ *((uint32_t*)data);
-    for(int bit = 0; bit < 32; ++bit) {
+    crc = crc ^ *((uint32_t *)data);
+    for (int bit = 0; bit < 32; ++bit) {
       if ((crc & 0x80000000) != 0) {
         crc = (crc << 1) ^ CRC_POLY;
       } else {
@@ -49,7 +47,7 @@ static uint32_t crc_update(uint32_t crc, const uint8_t *data, uint32_t length) {
     for (unsigned int i = 0; i < num_remainder_bytes; ++i) {
       last_word = (last_word << 8) | data[i];
     }
-    return crc_update(crc, (uint8_t*)&last_word, 4);
+    return crc_update(crc, (uint8_t *)&last_word, 4);
   }
 
   return crc & 0xffffffff;
@@ -93,13 +91,14 @@ static void handle_timer(void *ck) {
     // Sessions closed.
     return;
   }
-  struct DataLoggingInfo*info = ck;
+  struct DataLoggingInfo *info = ck;
 
   log_moar_data(info);
 
   const int num_chunks = 30;
 
-  snprintf(info->text, sizeof(info->text), "%lu (%i) %i/%i", info->crc, info->counter * s_chunk_size, info->counter, num_chunks);
+  snprintf(info->text, sizeof(info->text), "%lu (%i) %i/%i", info->crc,
+           info->counter * s_chunk_size, info->counter, num_chunks);
   text_layer_set_text(&info->text_layer, info->text);
 
   if (info->counter < num_chunks) {
@@ -119,7 +118,8 @@ static void close_sessions(void) {
 
 static void start_logging(void) {
   const uint8_t item_size[] = {4, 2, 16};
-  const DataLoggingItemType types[] = {DATA_LOGGING_INT, DATA_LOGGING_UINT, DATA_LOGGING_BYTE_ARRAY};
+  const DataLoggingItemType types[] = {DATA_LOGGING_INT, DATA_LOGGING_UINT,
+                                       DATA_LOGGING_BYTE_ARRAY};
 
   for (int i = 0; i < 3; ++i) {
     text_layer_set_text(&s_data.info[i].text_layer, "Empty");
@@ -128,9 +128,9 @@ static void start_logging(void) {
   }
 
   // start timers
-  app_timer_register(2000 /* milliseconds */, handle_timer, (void *) &s_data.info[0]);
-  app_timer_register(1500 /* milliseconds */, handle_timer, (void *) &s_data.info[1]);
-  app_timer_register(4500 /* milliseconds */, handle_timer, (void *) &s_data.info[2]);
+  app_timer_register(2000 /* milliseconds */, handle_timer, (void *)&s_data.info[0]);
+  app_timer_register(1500 /* milliseconds */, handle_timer, (void *)&s_data.info[1]);
+  app_timer_register(4500 /* milliseconds */, handle_timer, (void *)&s_data.info[2]);
 
   text_layer_set_text(&s_data.log_layer, "Logging...");
 }
@@ -147,10 +147,9 @@ static void click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);
 }
 
-
 static void handle_deinit(void) {
-  comm_session_set_responsiveness(comm_session_get_system_session(), BtConsumerApp,
-                                  ResponseTimeMax, MAX_PERIOD_RUN_FOREVER);
+  comm_session_set_responsiveness(comm_session_get_system_session(), BtConsumerApp, ResponseTimeMax,
+                                  MAX_PERIOD_RUN_FOREVER);
 }
 
 static void handle_init(void) {
@@ -171,14 +170,14 @@ static void handle_init(void) {
     layer_add_child(&s_data.window.layer, &s_data.info[i].text_layer.layer);
   }
 
-  text_layer_init(&s_data.log_layer, &GRect(0, bounds->size.w / 2, bounds->size.w,
-                                            bounds->size.w / 2));
+  text_layer_init(&s_data.log_layer,
+                  &GRect(0, bounds->size.w / 2, bounds->size.w, bounds->size.w / 2));
   layer_add_child(&s_data.window.layer, &s_data.log_layer.layer);
 
   start_logging();
 
-  comm_session_set_responsiveness(comm_session_get_system_session(), BtConsumerApp,
-                                  ResponseTimeMax, MAX_PERIOD_RUN_FOREVER);
+  comm_session_set_responsiveness(comm_session_get_system_session(), BtConsumerApp, ResponseTimeMax,
+                                  MAX_PERIOD_RUN_FOREVER);
 }
 
 ////////////////////
@@ -192,12 +191,12 @@ static void s_main(void) {
   handle_deinit();
 }
 
-const PebbleProcessMd* data_logging_test_get_info() {
+const PebbleProcessMd *data_logging_test_get_info() {
   static const PebbleProcessMdSystem s_app_info = {
-    // UUID: 01020304-0506-0708-0910-111213141516
-    .common.uuid = {0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16},
-    .common.main_func = &s_main,
-    .name = "Data Logging Test"
-  };
-  return (const PebbleProcessMd*) &s_app_info;
+      // UUID: 01020304-0506-0708-0910-111213141516
+      .common.uuid = {0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0x10, 0x11, 0x12, 0x13, 0x14,
+                      0x15, 0x16},
+      .common.main_func = &s_main,
+      .name = "Data Logging Test"};
+  return (const PebbleProcessMd *)&s_app_info;
 }

@@ -18,15 +18,14 @@ bool speaker_play_notes(const SpeakerNote *notes, uint32_t num_notes, uint8_t vo
   return sys_speaker_play_note_seq(notes, num_notes, 0 /* SpeakerPriorityApp */, volume);
 }
 
-bool speaker_play_tone(uint16_t frequency_hz, uint32_t duration_ms,
-                       uint8_t volume, SpeakerWaveform waveform) {
+bool speaker_play_tone(uint16_t frequency_hz, uint32_t duration_ms, uint8_t volume,
+                       SpeakerWaveform waveform) {
   if (duration_ms > 10000) {
     duration_ms = 10000;
   }
 
-  return sys_speaker_play_tone(frequency_hz, (uint16_t)duration_ms,
-                               (uint8_t)waveform, 0 /* use global volume */,
-                               0 /* SpeakerPriorityApp */, volume);
+  return sys_speaker_play_tone(frequency_hz, (uint16_t)duration_ms, (uint8_t)waveform,
+                               0 /* use global volume */, 0 /* SpeakerPriorityApp */, volume);
 }
 
 bool speaker_stream_open(SpeakerPcmFormat format, uint8_t volume) {
@@ -41,25 +40,15 @@ uint32_t speaker_stream_write(const void *data, uint32_t num_bytes) {
   return sys_speaker_stream_write(data, num_bytes);
 }
 
-void speaker_stream_close(void) {
-  sys_speaker_stream_close();
-}
+void speaker_stream_close(void) { sys_speaker_stream_close(); }
 
-void speaker_stop(void) {
-  sys_speaker_stop();
-}
+void speaker_stop(void) { sys_speaker_stop(); }
 
-void speaker_set_volume(uint8_t volume) {
-  sys_speaker_set_volume(volume);
-}
+void speaker_set_volume(uint8_t volume) { sys_speaker_set_volume(volume); }
 
-SpeakerStatus speaker_get_status(void) {
-  return (SpeakerStatus)sys_speaker_get_state();
-}
+SpeakerStatus speaker_get_status(void) { return (SpeakerStatus)sys_speaker_get_state(); }
 
-bool speaker_is_muted(void) {
-  return sys_speaker_is_muted();
-}
+bool speaker_is_muted(void) { return sys_speaker_is_muted(); }
 
 bool speaker_play_tracks(const SpeakerTrack *tracks, uint32_t num_tracks, uint8_t volume) {
   if (!tracks || num_tracks == 0) {
@@ -75,8 +64,7 @@ static void prv_finish_event_handler(PebbleEvent *e, void *context) {
   if (cb == NULL) {
     return;
   }
-  cb((SpeakerFinishReason)e->speaker.finish_reason,
-     app_state_get_speaker_finish_ctx());
+  cb((SpeakerFinishReason)e->speaker.finish_reason, app_state_get_speaker_finish_ctx());
 }
 
 void speaker_set_finish_callback(SpeakerFinishedCallback cb, void *ctx) {

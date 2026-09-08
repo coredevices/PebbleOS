@@ -10,17 +10,17 @@
 struct _tagHeapInfo_t;
 typedef struct _tagHeapInfo_t HeapInfo_t;
 
-typedef void (*LockFunction)(void*);
-typedef void (*UnlockFunction)(void*);
+typedef void (*LockFunction)(void *);
+typedef void (*UnlockFunction)(void *);
 
 typedef struct HeapLockImpl {
   LockFunction lock_function;
   UnlockFunction unlock_function;
-  void* lock_context;
+  void *lock_context;
 } HeapLockImpl;
 
-typedef void (*DoubleFreeHandler)(void*);
-typedef void (*CorruptionHandler)(void*);
+typedef void (*DoubleFreeHandler)(void *);
+typedef void (*CorruptionHandler)(void *);
 
 typedef struct Heap {
   // These HeapInfo_t structure pointers are initialized to the start and the end of the heap area.
@@ -53,7 +53,7 @@ typedef struct Heap {
 //!         address that is < end
 //!     @param fuzz_on_free if true, memsets memory contents to junk values upon free in order to
 //!                         catch bad accesses more quickly
-void heap_init(Heap* const heap, void* start, void* end, bool fuzz_on_free);
+void heap_init(Heap *const heap, void *start, void *end, bool fuzz_on_free);
 
 //! Configure this heap for thread safety using the given locking implementation
 void heap_set_lock_impl(Heap *heap, HeapLockImpl lock_impl);
@@ -76,7 +76,7 @@ void heap_set_corruption_handler(Heap *heap, CorruptionHandler corruption_handle
 //! @param client_pc The PC register of the client who caused this malloc. Only used when
 //!                  CONFIG_MALLOC_INSTRUMENTATION is defined.
 //! @return A pointer to the start of the allocated memory
-void* heap_malloc(Heap* const heap, unsigned long nbytes, uintptr_t client_pc);
+void *heap_malloc(Heap *const heap, unsigned long nbytes, uintptr_t client_pc);
 
 //! Return memory to free list. Where possible, make contiguous blocks of free
 //! memory. The function tries to verify that the structure is a valid fragment
@@ -85,7 +85,7 @@ void* heap_malloc(Heap* const heap, unsigned long nbytes, uintptr_t client_pc);
 //!     @note heap_init() must be called prior to using heap_free().
 //!         otherwise, the free list will be NULL.)
 //!     @note Assumes that 0 is not a valid address for allocation.
-void heap_free(Heap* const heap, void* ptr, uintptr_t client_pc);
+void heap_free(Heap *const heap, void *ptr, uintptr_t client_pc);
 
 //! Allocate a new block of the given size, and copy over the data at ptr into
 //! the new block. If the new size is smaller than the old size, will only copy
@@ -95,21 +95,21 @@ void heap_free(Heap* const heap, void* ptr, uintptr_t client_pc);
 //! @param nbytes The total number of bytes to allocate.
 //! @param client_pc The PC register of the client who caused this malloc. Only used when
 //!                  CONFIG_MALLOC_INSTRUMENTATION is defined.
-void* heap_realloc(Heap* const heap, void *ptr, unsigned long nbytes, uintptr_t client_pc);
+void *heap_realloc(Heap *const heap, void *ptr, unsigned long nbytes, uintptr_t client_pc);
 
 //! Allocate a buffer to hold anything. The initial contents of the buffer
 //! are zero'd.
-void* heap_zalloc(Heap* const heap, size_t size, uintptr_t client_pc);
+void *heap_zalloc(Heap *const heap, size_t size, uintptr_t client_pc);
 
 //! Allocate a buffer to hold an array of count elements, each of size size (in bytes)
 //! and initializes all bits to zero.
-void* heap_calloc(Heap* const heap, size_t count, size_t size, uintptr_t client_pc);
+void *heap_calloc(Heap *const heap, size_t count, size_t size, uintptr_t client_pc);
 
 //! @return True if ptr is on the given heap, false otherwise.
-bool heap_contains_address(Heap* const heap, void* ptr);
+bool heap_contains_address(Heap *const heap, void *ptr);
 
 //! @return True if ptr is allocated on the given heap, false otherwise.
-bool heap_is_allocated(Heap* const heap, void* ptr);
+bool heap_is_allocated(Heap *const heap, void *ptr);
 
 //! @return The size of the heap in bytes
 size_t heap_size(const Heap *heap);
@@ -125,6 +125,7 @@ uint32_t heap_get_minimum_headroom(Heap *heap);
 //!     @param free Output, will contain the number of unallocated bytes.
 //!     @param max_free Output, will contain size of the largest unallocated
 //!         fragment.
-void heap_calc_totals(Heap* const heap, unsigned int *used, unsigned int *free, unsigned int *max_free);
+void heap_calc_totals(Heap *const heap, unsigned int *used, unsigned int *free,
+                      unsigned int *max_free);
 
 void heap_dump_malloc_instrumentation_to_dbgserial(Heap *heap);

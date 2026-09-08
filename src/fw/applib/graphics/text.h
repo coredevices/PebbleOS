@@ -67,7 +67,7 @@ typedef struct {
   GTextOverflowMode overflow_mode;
   GTextAlignment alignment;
   //! Cached parameters
-  GSize max_used_size; //<! Max area occupied by text in px
+  GSize max_used_size;  //<! Max area occupied by text in px
 } TextLayout;
 
 //! @internal
@@ -99,7 +99,7 @@ typedef struct {
   GTextOverflowMode overflow_mode;
   GTextAlignment alignment;
   //! Cached parameters
-  GSize max_used_size; //<! Max area occupied by text in px
+  GSize max_used_size;  //<! Max area occupied by text in px
 
   //! Vertical padding in px to add to the font line height when rendering
   int16_t line_spacing_delta;
@@ -110,7 +110,7 @@ typedef struct {
 } TextLayoutExtended;
 
 //! Pointer to opaque text layout cache data structure
-typedef TextLayout* GTextLayoutCacheRef;
+typedef TextLayout *GTextLayoutCacheRef;
 
 //! Describes various characteristics for text rendering and measurement.
 //! @see graphics_draw_text
@@ -139,7 +139,6 @@ void graphics_draw_text(GContext *ctx, const char *text, GFont const font, const
                         const GTextOverflowMode overflow_mode, const GTextAlignment alignment,
                         GTextAttributes *text_attributes);
 
-
 //! Obtain the maximum size that a text with given font, overflow mode and alignment
 //! occupies within a given rectangular constraint.
 //! @param ctx the current graphics context
@@ -156,9 +155,8 @@ void graphics_draw_text(GContext *ctx, const char *text, GFont const font, const
 //! even though this function does not draw anything.
 //! @internal
 //! @see \ref app_get_current_graphics_context()
-GSize graphics_text_layout_get_max_used_size(GContext *ctx, const char *text,
-                                             GFont const font, const GRect box,
-                                             const GTextOverflowMode overflow_mode,
+GSize graphics_text_layout_get_max_used_size(GContext *ctx, const char *text, GFont const font,
+                                             const GRect box, const GTextOverflowMode overflow_mode,
                                              const GTextAlignment alignment,
                                              GTextLayoutCacheRef layout);
 
@@ -188,10 +186,8 @@ GSize app_graphics_text_layout_get_content_size(const char *text, GFont const fo
 //! @return The maximum size occupied by the text
 //! @see app_graphics_text_layout_get_content_size
 GSize app_graphics_text_layout_get_content_size_with_attributes(
-  const char *text, GFont const font, const GRect box, const GTextOverflowMode overflow_mode,
-  const GTextAlignment alignment, GTextAttributes *text_attributes);
-
-
+    const char *text, GFont const font, const GRect box, const GTextOverflowMode overflow_mode,
+    const GTextAlignment alignment, GTextAttributes *text_attributes);
 
 //! @internal
 //! Does the same as \ref app_graphics_text_layout_get_text_height with the provided GContext

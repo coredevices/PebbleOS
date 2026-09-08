@@ -82,9 +82,7 @@ static void prv_extcomin_init(void) {
   nrf_rtc_task_trigger(extcomin->rtc, NRF_RTC_TASK_START);
 }
 
-static inline void prv_enable_spim(void) {
-  nrf_spim_enable(BOARD_CONFIG_DISPLAY.spi.p_reg);
-}
+static inline void prv_enable_spim(void) { nrf_spim_enable(BOARD_CONFIG_DISPLAY.spi.p_reg); }
 
 static inline void prv_disable_spim(void) {
   nrf_spim_disable(BOARD_CONFIG_DISPLAY.spi.p_reg);
@@ -95,9 +93,7 @@ static inline void prv_disable_spim(void) {
   }
 }
 
-static inline void prv_enable_chip_select(void) {
-  gpio_output_set(&BOARD_CONFIG_DISPLAY.cs, true);
-}
+static inline void prv_enable_chip_select(void) { gpio_output_set(&BOARD_CONFIG_DISPLAY.cs, true); }
 
 static inline void prv_disable_chip_select(void) {
   gpio_output_set(&BOARD_CONFIG_DISPLAY.cs, false);
@@ -126,7 +122,6 @@ static void prv_spim_evt_handler(nrfx_spim_evt_t const *evt, void *ctx) {
   } else {
     pbl_sem_give(&s_sem);
   }
-
 }
 
 void display_init(void) {
@@ -146,7 +141,6 @@ void display_init(void) {
   gpio_output_set(&BOARD_CONFIG_DISPLAY.on_ctrl, true);
 
   prv_extcomin_init();
-
 }
 
 void display_clear(void) {
@@ -166,13 +160,9 @@ void display_clear(void) {
   prv_disable_spim();
 }
 
-void display_set_enabled(bool enabled) {
-  gpio_output_set(&BOARD_CONFIG_DISPLAY.on_ctrl, enabled);
-}
+void display_set_enabled(bool enabled) { gpio_output_set(&BOARD_CONFIG_DISPLAY.on_ctrl, enabled); }
 
-void display_set_rotated(bool rotated) {
-  s_rotated_180 = rotated;
-}
+void display_set_rotated(bool rotated) { s_rotated_180 = rotated; }
 
 void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   DisplayRow row;
@@ -214,9 +204,7 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   PBL_ASSERTN(err == NRFX_SUCCESS);
 }
 
-bool display_update_in_progress(void) {
-  return s_updating;
-}
+bool display_update_in_progress(void) { return s_updating; }
 
 /* stubs */
 

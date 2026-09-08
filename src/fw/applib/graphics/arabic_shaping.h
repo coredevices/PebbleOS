@@ -12,9 +12,9 @@
 //! Arabic letter contextual form types
 typedef enum {
   ARABIC_FORM_ISOLATED = 0,  //!< Letter stands alone
-  ARABIC_FORM_FINAL    = 1,  //!< End of word (connects right only)
-  ARABIC_FORM_INITIAL  = 2,  //!< Beginning of word (connects left only)
-  ARABIC_FORM_MEDIAL   = 3   //!< Middle of word (connects both sides)
+  ARABIC_FORM_FINAL = 1,     //!< End of word (connects right only)
+  ARABIC_FORM_INITIAL = 2,   //!< Beginning of word (connects left only)
+  ARABIC_FORM_MEDIAL = 3     //!< Middle of word (connects both sides)
 } ArabicForm;
 
 //! Check if a codepoint is a shapeable Arabic letter (U+0621-U+064A).
@@ -61,5 +61,4 @@ Codepoint arabic_shape_pair(Codepoint prev_cp, Codepoint curr_cp, Codepoint next
 //! @param dest_size Size of destination buffer in bytes
 //! @return Number of bytes written to dest (excluding null terminator),
 //!         or 0 on failure
-size_t arabic_shape_text(const utf8_t *src, size_t src_len,
-                         utf8_t *dest, size_t dest_size);
+size_t arabic_shape_text(const utf8_t *src, size_t src_len, utf8_t *dest, size_t dest_size);

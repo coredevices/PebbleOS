@@ -69,9 +69,11 @@ static void prv_setup_dialog(Dialog *dialog, const ActionToggleDialogConfig *con
   dialog_set_text_color(dialog, config->text_color);
   dialog_set_background_color(dialog, config->background_color);
   dialog_set_timeout(dialog, config->timeout_ms);
-  dialog_set_callbacks(dialog, &(DialogCallbacks) {
-    .unload = prv_action_toggle_dialog_unload,
-  }, context);
+  dialog_set_callbacks(dialog,
+                       &(DialogCallbacks){
+                           .unload = prv_action_toggle_dialog_unload,
+                       },
+                       context);
 }
 
 static void prv_vibe(const bool enabled) {
@@ -88,7 +90,7 @@ static WindowStack *prv_get_window_stack(void) {
 
 static void prv_push_result_dialog(ActionToggleContext *ctx) {
   ActionToggleDialogConfig config = {
-    .message = ctx->config.impl->result_messages[prv_get_toggled_state_index(ctx)],
+      .message = ctx->config.impl->result_messages[prv_get_toggled_state_index(ctx)],
   };
   prv_setup_state_config(ctx, &config, ActionToggleDialogType_Result);
   SimpleDialog *simple_dialog = simple_dialog_create(config.window_name);
@@ -145,7 +147,7 @@ static void prv_prompt_click_config_provider(void *context) {
 
 static void prv_push_prompt_dialog(ActionToggleContext *ctx) {
   ActionToggleDialogConfig config = {
-    .message = ctx->config.impl->prompt_messages[prv_get_toggled_state_index(ctx)],
+      .message = ctx->config.impl->prompt_messages[prv_get_toggled_state_index(ctx)],
   };
   prv_setup_state_config(ctx, &config, ActionToggleDialogType_Prompt);
   ActionableDialog *actionable_dialog = actionable_dialog_create(config.window_name);
@@ -170,8 +172,8 @@ static bool prv_should_prompt(const ActionToggleConfig *config) {
 void action_toggle_push(const ActionToggleConfig *config) {
   ActionToggleContext *context = applib_zalloc(sizeof(ActionToggleContext));
   PBL_ASSERTN(context);
-  *context = (ActionToggleContext) {
-    .config = *config,
+  *context = (ActionToggleContext){
+      .config = *config,
   };
   prv_call_get_state_callback(context);
   if (prv_should_prompt(config)) {

@@ -52,7 +52,7 @@ struct PACKED VersionsMessage {
   net16 javascript_bytecode_version;
 };
 
-static void fixup_string(char* str, unsigned int length) {
+static void fixup_string(char *str, unsigned int length) {
   if (memchr(str, 0, length) == NULL) {
     memset(str, 0, length);
   }
@@ -84,14 +84,14 @@ static void resource_version_to_network_endian(ResourceVersion *resources_versio
 
 static void prv_send_watch_versions(CommSession *session) {
   struct VersionsMessage versions_msg = {
-    .command = VERSION_RESPONSE,
-    .boot_version = htonl(boot_version_read()),
+      .command = VERSION_RESPONSE,
+      .boot_version = htonl(boot_version_read()),
   };
 
   _Static_assert(sizeof(struct VersionsMessage) >=
-            126 /* pre-v1.5 version info */ +
-            24 /* v1.5 version info or later, added system_resources_version */,
-            "");
+                     126 /* pre-v1.5 version info */ +
+                         24 /* v1.5 version info or later, added system_resources_version */,
+                 "");
 
   version_copy_running_fw_metadata(&versions_msg.running_fw_metadata);
   prv_fixup_running_firmware_metadata(&versions_msg.running_fw_metadata);
@@ -99,7 +99,8 @@ static void prv_send_watch_versions(CommSession *session) {
   version_copy_recovery_fw_metadata(&versions_msg.recovery_fw_metadata);
   prv_fixup_firmware_metadata(&versions_msg.recovery_fw_metadata);
 
-  // Note: Don't worry about the null terminator if it doesn't fit, the other side should deal with it.
+  // Note: Don't worry about the null terminator if it doesn't fit, the other side should deal with
+  // it.
   mfg_info_get_hw_version(versions_msg.hw_version, sizeof(versions_msg.hw_version));
   mfg_info_get_serialnumber(versions_msg.serial_number, sizeof(versions_msg.serial_number));
 
@@ -151,19 +152,20 @@ static void prv_send_watch_versions(CommSession *session) {
   versions_msg.activity_insights_version = hton16(activity_insights_settings_get_version());
 #endif
 
-  comm_session_send_data(session, s_endpoint_id, (uint8_t*) &versions_msg, sizeof(versions_msg),
+  comm_session_send_data(session, s_endpoint_id, (uint8_t *)&versions_msg, sizeof(versions_msg),
                          COMM_SESSION_DEFAULT_TIMEOUT);
 }
 
-void system_version_protocol_msg_callback(CommSession *session, const uint8_t* data, size_t length) {
+void system_version_protocol_msg_callback(CommSession *session, const uint8_t *data,
+                                          size_t length) {
   switch (data[0]) {
-  case VERSION_REQUEST: {
-    prv_send_watch_versions(session);
-    break;
-  }
-  default:
-    PBL_LOG_ERR("Invalid message received. First byte is %u", data[0]);
-    break;
+    case VERSION_REQUEST: {
+      prv_send_watch_versions(session);
+      break;
+    }
+    default:
+      PBL_LOG_ERR("Invalid message received. First byte is %u", data[0]);
+      break;
   }
 }
 
@@ -172,7 +174,7 @@ void command_version_info(void) {
   prompt_send_response("MANUFACTURING FW");
 #endif
 
-  bool (*fun_ptr[2])(FirmwareMetadata*) = { version_copy_running_fw_metadata,
+  bool (*fun_ptr[2])(FirmwareMetadata *) = {version_copy_running_fw_metadata,
                                             version_copy_recovery_fw_metadata};
   const char *label[2] = {"Running", "Recovery"};
 
@@ -183,9 +185,9 @@ void command_version_info(void) {
     if (success) {
       prompt_send_response_fmt(
           buffer, sizeof(buffer),
-          "%s FW:\n  ts:%"PRIu32"\n  tag:%s\n  short:%s\n  recov:%u\n  platform:%u",
-          label[i], fw_metadata.version_timestamp, fw_metadata.version_tag,
-          fw_metadata.version_short, fw_metadata.is_recovery_firmware, fw_metadata.hw_platform);
+          "%s FW:\n  ts:%" PRIu32 "\n  tag:%s\n  short:%s\n  recov:%u\n  platform:%u", label[i],
+          fw_metadata.version_timestamp, fw_metadata.version_tag, fw_metadata.version_short,
+          fw_metadata.is_recovery_firmware, fw_metadata.hw_platform);
 
       if ((i == 0) && fw_metadata.is_dual_slot) {
         prompt_send_response_fmt(buffer, sizeof(buffer), "  dual slot");
@@ -214,19 +216,18 @@ void command_version_info(void) {
   size_t mcu_serial_size = sizeof(mcu_serial);
   StatusCode err = mcu_get_serial(mcu_serial, &mcu_serial_size);
   if (err != S_SUCCESS) {
-    prompt_send_response_fmt(buffer, sizeof(buffer),
-                             "MCU Serial: N/A (%d)", err);
+    prompt_send_response_fmt(buffer, sizeof(buffer), "MCU Serial: N/A (%d)", err);
   } else {
     char serial_str[sizeof(mcu_serial) * 2 + 1];
     byte_stream_to_hex_string(serial_str, sizeof(serial_str), mcu_serial, mcu_serial_size, false);
     prompt_send_response_fmt(buffer, sizeof(buffer), "MCU Serial: %s", serial_str);
   }
 
-  prompt_send_response_fmt(buffer, sizeof(buffer), "Boot:0x%08"PRIx32"\nHW:%s\nSN:%s",
+  prompt_send_response_fmt(buffer, sizeof(buffer), "Boot:0x%08" PRIx32 "\nHW:%s\nSN:%s",
                            boot_version_read(), hw_version, serial_number);
 
   ResourceVersion system_resources_version = resource_get_system_version();
   prompt_send_response_fmt(buffer, sizeof(buffer),
-                           "System Resources:\n  CRC:0x%"PRIx32"\n  Valid:%s",
+                           "System Resources:\n  CRC:0x%" PRIx32 "\n  Valid:%s",
                            system_resources_version.crc, bool_to_str(system_resource_is_valid()));
 }

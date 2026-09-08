@@ -25,18 +25,58 @@ static KeyedCircularCacheKey s_cache_keys[TEST_BUFFER_SIZE];
 static TestCacheItem s_cache_buffer[TEST_BUFFER_SIZE];
 static TestCacheItem ZERO_ITEM = {};
 static const TestCacheDefinition s_test_data[] = {
-  { .key = 0x12345678,
-    .item = { .data = { 0xDEADCAFE, 0xBEEFBABE, 0xF00DD00D, 0xDEFACED1, }, },
-  },
-  { .key = 0x9ABCDEF0,
-    .item = { .data = { 0x13579BDF, 0x02468ACE, 0xFEDCBA98, 0x76543210, }, },
-  },
-  { .key = 0x01238ACE,
-    .item = { .data = { 0x012389AB, 0x4567CDEF, 0x014589CD, 0x2367ABEF, }, },
-  },
-  { .key = 0x45679BDF,
-    .item = { .data = { 0xFEDC7654, 0xBA983210, 0xFEBA7632, 0xDC985410, }, },
-  },
+    {
+        .key = 0x12345678,
+        .item =
+            {
+                .data =
+                    {
+                        0xDEADCAFE,
+                        0xBEEFBABE,
+                        0xF00DD00D,
+                        0xDEFACED1,
+                    },
+            },
+    },
+    {
+        .key = 0x9ABCDEF0,
+        .item =
+            {
+                .data =
+                    {
+                        0x13579BDF,
+                        0x02468ACE,
+                        0xFEDCBA98,
+                        0x76543210,
+                    },
+            },
+    },
+    {
+        .key = 0x01238ACE,
+        .item =
+            {
+                .data =
+                    {
+                        0x012389AB,
+                        0x4567CDEF,
+                        0x014589CD,
+                        0x2367ABEF,
+                    },
+            },
+    },
+    {
+        .key = 0x45679BDF,
+        .item =
+            {
+                .data =
+                    {
+                        0xFEDC7654,
+                        0xBA983210,
+                        0xFEBA7632,
+                        0xDC985410,
+                    },
+            },
+    },
 };
 
 // setup and teardown
@@ -47,8 +87,7 @@ void test_keyed_circular_cache__initialize(void) {
                             TEST_BUFFER_SIZE);
 }
 
-void test_keyed_circular_cache__cleanup(void) {
-}
+void test_keyed_circular_cache__cleanup(void) {}
 
 // tests
 static void prv_push(int index) {
@@ -61,8 +100,7 @@ static TestCacheItem *prv_get(KeyedCircularCacheKey key) {
 
 static void prv_test_backing_data(int cache_idx, int data_idx) {
   cl_assert_equal_i(s_cache_keys[cache_idx], s_test_data[data_idx].key);
-  cl_assert_equal_m(&s_cache_buffer[cache_idx], &s_test_data[data_idx].item,
-                    sizeof(TestCacheItem));
+  cl_assert_equal_m(&s_cache_buffer[cache_idx], &s_test_data[data_idx].item, sizeof(TestCacheItem));
 }
 
 static void prv_test_backing_data_empty(int cache_idx) {
@@ -70,9 +108,7 @@ static void prv_test_backing_data_empty(int cache_idx) {
   cl_assert_equal_m(&s_cache_buffer[cache_idx], &ZERO_ITEM, sizeof(TestCacheItem));
 }
 
-static void prv_test_get_miss(int data_idx) {
-  cl_assert(!prv_get(s_test_data[data_idx].key));
-}
+static void prv_test_get_miss(int data_idx) { cl_assert(!prv_get(s_test_data[data_idx].key)); }
 
 static void prv_test_get_hit(int data_idx, int cache_idx) {
   TestCacheItem *data = prv_get(s_test_data[data_idx].key);

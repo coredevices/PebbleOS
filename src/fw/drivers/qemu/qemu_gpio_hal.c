@@ -10,8 +10,8 @@
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 
 // GPIO MMIO register offsets
-#define GPIO_STATE   0x00  // r: bit per button
-#define GPIO_OUTPUT  0x04  // w: output state bits
+#define GPIO_STATE 0x00   // r: bit per button
+#define GPIO_OUTPUT 0x04  // w: output state bits
 
 void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype) {
   (void)pin_config;
@@ -32,9 +32,7 @@ void gpio_output_set(const OutputConfig *pin_config, bool asserted) {
   REG32(QEMU_GPIO_BASE + GPIO_OUTPUT) = output;
 }
 
-void gpio_input_init(const InputConfig *input_cfg) {
-  (void)input_cfg;
-}
+void gpio_input_init(const InputConfig *input_cfg) { (void)input_cfg; }
 
 void gpio_input_init_pull_up_down(const InputConfig *input_cfg, GPIOPuPd_TypeDef pupd) {
   (void)input_cfg;

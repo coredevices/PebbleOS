@@ -10,25 +10,17 @@ VibeScoreId WEAK alerts_preferences_get_vibe_score_for_client(VibeClient client)
   return VibeScoreId_Invalid;
 }
 
-VibeIntensity WEAK alerts_preferences_get_vibe_intensity(void) {
-  return VibeIntensityLow;
-}
+VibeIntensity WEAK alerts_preferences_get_vibe_intensity(void) { return VibeIntensityLow; }
 
-bool WEAK alerts_preferences_get_notification_alternative_design(void) {
-  return false;
-}
+bool WEAK alerts_preferences_get_notification_alternative_design(void) { return false; }
 
 DndNotificationMode WEAK alerts_preferences_dnd_get_show_notifications(void) {
   return DndNotificationModeShow;
 }
 
-bool WEAK alerts_preferences_dnd_get_auto_dismiss(void) {
-  return false;
-}
+bool WEAK alerts_preferences_dnd_get_auto_dismiss(void) { return false; }
 
-bool WEAK alerts_preferences_get_notification_vibe_delay(void) {
-  return false;
-}
+bool WEAK alerts_preferences_get_notification_vibe_delay(void) { return false; }
 
 NotificationStatusBarStyle WEAK alerts_preferences_get_notification_status_bar_style(void) {
   return NotificationStatusBarStyle_Default;

@@ -125,9 +125,7 @@ static void prv_watch_is_motionless(void) {
 //! The orientation of the accelerometer is checked every minute. If the orientation has
 //! changed by a significant amount, we consider the watch as in motion, and restart the
 //! stationary counter
-static void prv_watch_is_in_motion(void) {
-  prv_handle_action(StationaryActionWakeUp);
-}
+static void prv_watch_is_in_motion(void) { prv_handle_action(StationaryActionWakeUp); }
 
 static void prv_stationary_check_launcher_task_cb(void *unused_data) {
   if (prv_update_and_check_accel_is_stationary()) {
@@ -144,9 +142,7 @@ static void prv_stationary_check_timer_cb(void *unused_data) {
   launcher_task_add_callback(prv_stationary_check_launcher_task_cb, NULL);
 }
 
-bool stationary_get_enabled(void) {
-  return shell_prefs_get_stationary_enabled();
-}
+bool stationary_get_enabled(void) { return shell_prefs_get_stationary_enabled(); }
 
 void stationary_set_enabled(bool enabled) {
   if (enabled == stationary_get_enabled()) {
@@ -323,32 +319,26 @@ static void prv_handle_action(StationaryAction action) {
   // we need to be on kernel main so that we subscribe to event services
   // for kernel main
   PBL_ASSERT_TASK(PebbleTask_KernelMain);
-  PBL_LOG_D_DBG(DEBUG_STATIONARY, "Stationary: state %d action %d",
-            s_current_state, action);
+  PBL_LOG_D_DBG(DEBUG_STATIONARY, "Stationary: state %d action %d", s_current_state, action);
 
   static StationaryActionHandler const prv_action_jump_table[] = {
-    [StationaryStateAwake] = prv_handle_awake_action,
-    [StationaryStateStationary] = prv_handle_stationary_action,
-    [StationaryStatePeeking] = prv_handle_peeking_action,
-    [StationaryStateDisabled] = prv_handle_disabled_action
-  };
+      [StationaryStateAwake] = prv_handle_awake_action,
+      [StationaryStateStationary] = prv_handle_stationary_action,
+      [StationaryStatePeeking] = prv_handle_peeking_action,
+      [StationaryStateDisabled] = prv_handle_disabled_action};
   PBL_ASSERTN(s_current_state < ARRAY_LENGTH(prv_action_jump_table));
   prv_action_jump_table[s_current_state](action);
 }
 
 static void prv_setup_callback_info(void) {
   //! Timer callback to check whether the watch is stationary every minute
-  s_accel_stationary_timer_info = (RegularTimerInfo) {
-    .cb = prv_stationary_check_timer_cb
-  };
+  s_accel_stationary_timer_info = (RegularTimerInfo){.cb = prv_stationary_check_timer_cb};
 
   //! Button press events
-  s_button_event_info = (EventServiceInfo) {
-    .type = PEBBLE_BUTTON_DOWN_EVENT,
-    .handler = prv_button_down_handler,
+  s_button_event_info = (EventServiceInfo){
+      .type = PEBBLE_BUTTON_DOWN_EVENT,
+      .handler = prv_button_down_handler,
   };
 }
 
-void stationary_init(void) {
-  prv_setup_callback_info();
-}
+void stationary_init(void) { prv_setup_callback_info(); }

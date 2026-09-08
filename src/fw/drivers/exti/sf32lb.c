@@ -31,7 +31,8 @@ static GPIO_TypeDef *prv_gpio_get_instance(GPIO_TypeDef *hgpio, uint16_t gpio_pi
     return (GPIO_TypeDef *)NULL;
   }
 
-  // There are many groups of similar registers in the GPIO, and because of register length limitations, up to 32 gpio can be operated in each group.
+  // There are many groups of similar registers in the GPIO, and because of register length
+  // limitations, up to 32 gpio can be operated in each group.
   inst_idx = gpio_pin >> 5;
   *offset = gpio_pin & 31;
 
@@ -43,8 +44,7 @@ static GPIO_TypeDef *prv_gpio_get_instance(GPIO_TypeDef *hgpio, uint16_t gpio_pi
 static void prv_insert_handler(GPIO_TypeDef *hgpio, uint8_t gpio_pin, ExtiHandlerCallback cb) {
   // Find the handler index for this pin
   uint8_t index = 0;
-  while (index < EXTI_MAX_GPIO1_PIN_NUM &&
-         s_exti_gpio1_handler_configs[index].callback != NULL) {
+  while (index < EXTI_MAX_GPIO1_PIN_NUM && s_exti_gpio1_handler_configs[index].callback != NULL) {
     index++;
   }
   if (index >= EXTI_MAX_GPIO1_PIN_NUM) {
@@ -125,6 +125,4 @@ void HAL_GPIO_EXTI_Callback(GPIO_TypeDef *hgpio, uint16_t GPIO_Pin) {
   PBL_LOG_WRN("No handler found for GPIO pin %u", GPIO_Pin);
 }
 
-void GPIO1_IRQHandler(void) {
-  HAL_GPIO_IRQHandler(hwp_gpio1);
-}
+void GPIO1_IRQHandler(void) { HAL_GPIO_IRQHandler(hwp_gpio1); }

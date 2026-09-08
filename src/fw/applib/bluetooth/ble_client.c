@@ -26,12 +26,12 @@
 //     - How to identify? iOS SDK does not expose addresses. Use DIS info? Fall
 //       back to device name?
 
-static void prv_handle_services_added(
-    BLEClientServiceChangeHandler handler, BTDeviceInternal device, BTErrno status) {
+static void prv_handle_services_added(BLEClientServiceChangeHandler handler,
+                                      BTDeviceInternal device, BTErrno status) {
   BLEService services[BLE_GATT_MAX_SERVICES_CHANGED];
 
-  uint8_t num_services = sys_ble_client_copy_services(device, services,
-                                                      BLE_GATT_MAX_SERVICES_CHANGED);
+  uint8_t num_services =
+      sys_ble_client_copy_services(device, services, BLE_GATT_MAX_SERVICES_CHANGED);
 
   if (num_services != 0) {
     handler(device.opaque, BLEClientServicesAdded, services, num_services, status);
@@ -59,17 +59,13 @@ DEFINE_SYSCALL(void, sys_get_service_discovery_info, const PebbleBLEGATTClientSe
     }
   }
 
-  *info = (PebbleBLEGATTClientServiceEventInfo) {
-    .type = e->info->type,
-    .device = e->info->device,
-    .status = e->info->status
-  };
+  *info = (PebbleBLEGATTClientServiceEventInfo){
+      .type = e->info->type, .device = e->info->device, .status = e->info->status};
 }
 
 static void prv_handle_service_change(const PebbleBLEGATTClientEvent *e) {
   BLEAppState *ble_app_state = app_state_get_ble_app_state();
-  const BLEClientServiceChangeHandler handler =
-                                     ble_app_state->gatt_service_change_handler;
+  const BLEClientServiceChangeHandler handler = ble_app_state->gatt_service_change_handler;
   if (!handler) {
     return;
   }
@@ -97,11 +93,8 @@ static void prv_handle_service_change(const PebbleBLEGATTClientEvent *e) {
   }
 }
 
-typedef void (*GenericReadHandler)(BLECharacteristic characteristic,
-                                   const uint8_t *value,
-                                   size_t value_length,
-                                   uint16_t value_offset,
-                                   BLEGATTError error);
+typedef void (*GenericReadHandler)(BLECharacteristic characteristic, const uint8_t *value,
+                                   size_t value_length, uint16_t value_offset, BLEGATTError error);
 
 static void prv_consume_read_response(const PebbleBLEGATTClientEvent *e,
                                       GenericReadHandler handler) {
@@ -112,7 +105,7 @@ static void prv_consume_read_response(const PebbleBLEGATTClientEvent *e,
 
   // Read Responses / Notifications with 0 length data must not be attempted to be consumed
   if (value_length) {
-    value = (uint8_t *) applib_malloc(value_length);
+    value = (uint8_t *)applib_malloc(value_length);
     if (!value) {
       gatt_error = BLEGATTErrorLocalInsufficientResources;
       value_length = 0;
@@ -141,7 +134,7 @@ static void prv_consume_notifications(const PebbleBLEGATTClientEvent *e,
     if (heap_buffer_size < value_length) {
       const uint16_t new_heap_buffer_size = MIN(value_length, 64 /* arbitrary min size.. */);
       applib_free(value);
-      value = (uint8_t *) applib_malloc(new_heap_buffer_size);
+      value = (uint8_t *)applib_malloc(new_heap_buffer_size);
       heap_buffer_size = value ? new_heap_buffer_size : 0;
     }
     if (!value) {
@@ -153,9 +146,8 @@ static void prv_consume_notifications(const PebbleBLEGATTClientEvent *e,
     uintptr_t object_ref = 0;
     // Consume, even if we didn't have enough memory, this will eat the notification and free up
     // the space in the buffer.
-    const uint16_t next_value_length = sys_ble_client_consume_notification(&object_ref,
-                                                                           value, &value_length,
-                                                                           &has_more);
+    const uint16_t next_value_length =
+        sys_ble_client_consume_notification(&object_ref, value, &value_length, &has_more);
     if (handler) {
       handler(object_ref, value, value_length, 0 /* value_offset (future proofing) */, gatt_error);
     }
@@ -205,23 +197,22 @@ static void prv_handle_buffer_empty(const PebbleBLEGATTClientEvent *e) {
   // TODO
 }
 
-typedef void(*PrvHandler)(const PebbleBLEGATTClientEvent *);
+typedef void (*PrvHandler)(const PebbleBLEGATTClientEvent *);
 
-static PrvHandler prv_handler_for_subtype(
-                                   PebbleBLEGATTClientEventType event_subtype) {
+static PrvHandler prv_handler_for_subtype(PebbleBLEGATTClientEventType event_subtype) {
   if (event_subtype >= PebbleBLEGATTClientEventTypeNum) {
     WTF;
   }
   // MT: This is a bit smaller in code size than a switch():
   static const PrvHandler handler[] = {
-    [PebbleBLEGATTClientEventTypeServiceChange] = prv_handle_service_change,
-    [PebbleBLEGATTClientEventTypeCharacteristicRead] = prv_handle_characteristic_read,
-    [PebbleBLEGATTClientEventTypeNotification] = prv_handle_notifications,
-    [PebbleBLEGATTClientEventTypeCharacteristicWrite] = prv_handle_characteristic_write,
-    [PebbleBLEGATTClientEventTypeCharacteristicSubscribe] = prv_handle_characteristic_subscribe,
-    [PebbleBLEGATTClientEventTypeDescriptorRead] = prv_handle_descriptor_read,
-    [PebbleBLEGATTClientEventTypeDescriptorWrite] = prv_handle_descriptor_write,
-    [PebbleBLEGATTClientEventTypeBufferEmpty] = prv_handle_buffer_empty,
+      [PebbleBLEGATTClientEventTypeServiceChange] = prv_handle_service_change,
+      [PebbleBLEGATTClientEventTypeCharacteristicRead] = prv_handle_characteristic_read,
+      [PebbleBLEGATTClientEventTypeNotification] = prv_handle_notifications,
+      [PebbleBLEGATTClientEventTypeCharacteristicWrite] = prv_handle_characteristic_write,
+      [PebbleBLEGATTClientEventTypeCharacteristicSubscribe] = prv_handle_characteristic_subscribe,
+      [PebbleBLEGATTClientEventTypeDescriptorRead] = prv_handle_descriptor_read,
+      [PebbleBLEGATTClientEventTypeDescriptorWrite] = prv_handle_descriptor_write,
+      [PebbleBLEGATTClientEventTypeBufferEmpty] = prv_handle_buffer_empty,
   };
   return handler[event_subtype];
 }
@@ -236,10 +227,10 @@ static BTErrno prv_set_handler(void *new_handler, off_t struct_offset_bytes) {
   BLEAppState *ble_app_state = app_state_get_ble_app_state();
   typedef void (*BLEGenericHandler)(void);
   BLEGenericHandler *handler_storage =
-       (BLEGenericHandler *)(((uint8_t *) ble_app_state) + struct_offset_bytes);
+      (BLEGenericHandler *)(((uint8_t *)ble_app_state) + struct_offset_bytes);
 
   const bool had_previous_handler = (*handler_storage == NULL);
-  *handler_storage = (BLEGenericHandler) new_handler;
+  *handler_storage = (BLEGenericHandler)new_handler;
 
   if (had_previous_handler) {
     if (new_handler) {
@@ -261,8 +252,7 @@ static BTErrno prv_set_handler(void *new_handler, off_t struct_offset_bytes) {
   return BTErrnoOK;
 }
 
-BTErrno ble_client_set_service_filter(const Uuid service_uuids[],
-                                      uint8_t num_uuids) {
+BTErrno ble_client_set_service_filter(const Uuid service_uuids[], uint8_t num_uuids) {
   // TODO
   return 0;
 }

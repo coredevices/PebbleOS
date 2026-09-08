@@ -18,7 +18,7 @@
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
-#define SETTINGS_FILE_NAME   "appdb"
+#define SETTINGS_FILE_NAME "appdb"
 // Holds about ~150 app metadata blobs
 #define SETTINGS_FILE_SIZE KiBYTES(20)
 
@@ -42,10 +42,8 @@ struct AppDBInitData {
 
 static status_t prv_lock_mutex_and_open_file(void) {
   pbl_mutex_lock(&s_app_db.mutex, PBL_FOREVER);
-  status_t rv = settings_file_open_growable(&s_app_db.settings_file,
-                                            SETTINGS_FILE_NAME,
-                                            SETTINGS_FILE_SIZE,
-                                            KiBYTES(4));
+  status_t rv = settings_file_open_growable(&s_app_db.settings_file, SETTINGS_FILE_NAME,
+                                            SETTINGS_FILE_SIZE, KiBYTES(4));
   if (rv != S_SUCCESS) {
     pbl_mutex_unlock(&s_app_db.mutex);
   }
@@ -73,7 +71,7 @@ static status_t prv_cancel_app_fetch(AppInstallId app_id) {
 static bool prv_each_inspect_ids(SettingsFile *file, SettingsRecordInfo *info, void *context) {
   // check entry is valid
   if ((info->val_len == 0) || (info->key_len != sizeof(AppInstallId))) {
-    return true; // continue iterating
+    return true;  // continue iterating
   }
 
   struct AppDBInitData *data = context;
@@ -84,12 +82,12 @@ static bool prv_each_inspect_ids(SettingsFile *file, SettingsRecordInfo *info, v
   data->max_id = MAX(data->max_id, app_id);
   data->num_apps++;
 
-  return true; // continue iterating
+  return true;  // continue iterating
 }
 
 struct UuidFilterData {
-  Uuid          uuid;
-  AppInstallId  found_id;
+  Uuid uuid;
+  AppInstallId found_id;
 };
 
 //! SettingsFileEachCallback function is used to iterate over all entries and search for
@@ -98,7 +96,7 @@ struct UuidFilterData {
 static bool prv_db_filter_app_id(SettingsFile *file, SettingsRecordInfo *info, void *context) {
   // check entry is valid
   if ((info->val_len == 0) || (info->key_len != sizeof(AppInstallId))) {
-    return true; // continue iterating
+    return true;  // continue iterating
   }
 
   struct UuidFilterData *uuid_data = (struct UuidFilterData *)context;
@@ -110,9 +108,9 @@ static bool prv_db_filter_app_id(SettingsFile *file, SettingsRecordInfo *info, v
 
   if (uuid_equal(&uuid_data->uuid, &entry.uuid)) {
     uuid_data->found_id = app_id;
-    return false; // stop iterating
+    return false;  // stop iterating
   }
-  return true; // continue iterating
+  return true;  // continue iterating
 }
 
 //! Retrieves the AppInstallId for a given UUID using the SettingsFile that is already open.
@@ -120,8 +118,8 @@ static bool prv_db_filter_app_id(SettingsFile *file, SettingsRecordInfo *info, v
 static AppInstallId prv_find_install_id_for_uuid(SettingsFile *file, const Uuid *uuid) {
   // used when iterating through all entries in our database.
   struct UuidFilterData filter_data = {
-    .found_id = INSTALL_ID_INVALID,
-    .uuid = *uuid,
+      .found_id = INSTALL_ID_INVALID,
+      .uuid = *uuid,
   };
 
   settings_file_each(file, prv_db_filter_app_id, (void *)&filter_data);
@@ -148,7 +146,6 @@ AppInstallId app_db_get_install_id_for_uuid(const Uuid *uuid) {
 // App DB API
 ///////////////////////////
 
-
 //! Fills an AppDBEntry for a given UUID. This is a wrapper around app_db_read to keep it uniform
 //! with `app_db_get_app_entry_for_install_id`
 status_t app_db_get_app_entry_for_uuid(const Uuid *uuid, AppDBEntry *entry) {
@@ -162,7 +159,7 @@ status_t app_db_get_app_entry_for_install_id(AppInstallId app_id, AppDBEntry *en
   }
 
   rv = settings_file_get(&s_app_db.settings_file, (uint8_t *)&app_id, sizeof(AppInstallId),
-      (uint8_t *)entry, sizeof(AppDBEntry));
+                         (uint8_t *)entry, sizeof(AppDBEntry));
 
   prv_close_file_and_unlock_mutex();
   return rv;
@@ -174,8 +171,8 @@ bool app_db_exists_install_id(AppInstallId app_id) {
     return rv;
   }
 
-  bool exists = settings_file_exists(&s_app_db.settings_file, (uint8_t *)&app_id,
-                                     sizeof(AppInstallId));
+  bool exists =
+      settings_file_exists(&s_app_db.settings_file, (uint8_t *)&app_id, sizeof(AppInstallId));
 
   prv_close_file_and_unlock_mutex();
   return exists;
@@ -190,7 +187,7 @@ typedef struct {
 static bool prv_enumerate_entries(SettingsFile *file, SettingsRecordInfo *info, void *context) {
   // check entry is valid
   if ((info->val_len == 0) || (info->key_len != sizeof(AppInstallId))) {
-    return true; // continue iteration
+    return true;  // continue iteration
   }
 
   EnumerateData *cb_data = (EnumerateData *)context;
@@ -202,7 +199,7 @@ static bool prv_enumerate_entries(SettingsFile *file, SettingsRecordInfo *info, 
   // check return value
   cb_data->cb(id, cb_data->entry_buf, cb_data->data);
 
-  return true; // continue iteration
+  return true;  // continue iteration
 }
 
 void app_db_enumerate_entries(AppDBEnumerateCb cb, void *data) {
@@ -214,9 +211,9 @@ void app_db_enumerate_entries(AppDBEnumerateCb cb, void *data) {
   AppDBEntry *db_entry = kernel_malloc_check(sizeof(AppDBEntry));
 
   EnumerateData cb_data = {
-    .cb = cb,
-    .data = data,
-    .entry_buf = db_entry,
+      .cb = cb,
+      .data = data,
+      .entry_buf = db_entry,
   };
   settings_file_each(&s_app_db.settings_file, prv_enumerate_entries, &cb_data);
 
@@ -243,7 +240,7 @@ void app_db_init(void) {
     WTF;
   }
 
-  struct AppDBInitData data = { 0 };
+  struct AppDBInitData data = {0};
 
   settings_file_each(&s_app_db.settings_file, prv_each_inspect_ids, &data);
 
@@ -253,15 +250,14 @@ void app_db_init(void) {
     s_next_unique_flash_app_id = (data.max_id + 1);
   }
 
-  PBL_LOG_INFO("Found %"PRIu32" apps. Next ID: %"PRIu32" ", data.num_apps,
-          s_next_unique_flash_app_id);
+  PBL_LOG_INFO("Found %" PRIu32 " apps. Next ID: %" PRIu32 " ", data.num_apps,
+               s_next_unique_flash_app_id);
 
   prv_close_file_and_unlock_mutex();
 }
 
 status_t app_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
-  if (key_len != UUID_SIZE ||
-      val_len != sizeof(AppDBEntry)) {
+  if (key_len != UUID_SIZE || val_len != sizeof(AppDBEntry)) {
     return E_INVALID_ARGUMENT;
   }
 
@@ -279,14 +275,13 @@ status_t app_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int 
     new_install = true;
     app_id = s_next_unique_flash_app_id++;
   } else if (app_fetch_in_progress()) {
-    PBL_LOG_WRN("Got an insert for an app that is currently being fetched, %"PRId32,
-            app_id);
+    PBL_LOG_WRN("Got an insert for an app that is currently being fetched, %" PRId32, app_id);
     rv = prv_cancel_app_fetch(app_id);
   }
 
   if (rv == S_SUCCESS) {
-    rv = settings_file_set(&s_app_db.settings_file, (uint8_t *)&app_id,
-                           sizeof(AppInstallId), val, val_len);
+    rv = settings_file_set(&s_app_db.settings_file, (uint8_t *)&app_id, sizeof(AppInstallId), val,
+                           val_len);
   }
 
   prv_close_file_and_unlock_mutex();
@@ -332,8 +327,8 @@ status_t app_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_
   if (app_id == INSTALL_ID_INVALID) {
     rv = E_DOES_NOT_EXIST;
   } else {
-    rv = settings_file_get(&s_app_db.settings_file, (uint8_t *)&app_id,
-                           sizeof(AppInstallId), val_out, val_len);
+    rv = settings_file_get(&s_app_db.settings_file, (uint8_t *)&app_id, sizeof(AppInstallId),
+                           val_out, val_len);
   }
 
   prv_close_file_and_unlock_mutex();
@@ -357,15 +352,13 @@ status_t app_db_delete(const uint8_t *key, int key_len) {
   if (app_id == INSTALL_ID_INVALID) {
     rv = E_DOES_NOT_EXIST;
   } else if (app_fetch_in_progress()) {
-    PBL_LOG_WRN("Tried to delete an app that is currently being fetched, %"PRId32,
-            app_id);
+    PBL_LOG_WRN("Tried to delete an app that is currently being fetched, %" PRId32, app_id);
     rv = prv_cancel_app_fetch(app_id);
   }
 
   if (rv == S_SUCCESS) {
     rv = settings_file_delete(&s_app_db.settings_file, (uint8_t *)&app_id, sizeof(AppInstallId));
   }
-
 
   prv_close_file_and_unlock_mutex();
 
@@ -419,6 +412,4 @@ status_t app_db_compact(void) {
 //////////////////////
 
 // automated testing and app_install_manager prompt commands
-int32_t app_db_check_next_unique_id(void) {
-  return s_next_unique_flash_app_id;
-}
+int32_t app_db_check_next_unique_id(void) { return s_next_unique_flash_app_id; }

@@ -27,28 +27,19 @@
 static bool s_cell_is_highlighted = false;
 
 // TODO PBL-23041: When round MenuLayer animations are enabled, we need a "is_selected" function
-bool menu_cell_layer_is_highlighted(const Layer *cell_layer) {
-  return s_cell_is_highlighted;
-}
+bool menu_cell_layer_is_highlighted(const Layer *cell_layer) { return s_cell_is_highlighted; }
 
 // Controllable replacement for stubs_pebble_tasks.h so tests can simulate an app task
 
 static PebbleTask s_current_task = PebbleTask_KernelMain;
 
-PebbleTask pebble_task_get_current(void) {
-  return s_current_task;
-}
+PebbleTask pebble_task_get_current(void) { return s_current_task; }
 
-struct pbl_thread *pebble_task_get_thread(PebbleTask task) {
-  return NULL;
-}
+struct pbl_thread *pebble_task_get_thread(PebbleTask task) { return NULL; }
 
-const char* pebble_task_get_name(PebbleTask task) {
-  return NULL;
-}
+const char *pebble_task_get_name(PebbleTask task) { return NULL; }
 
-void pebble_task_unregister(PebbleTask task) {
-}
+void pebble_task_unregister(PebbleTask task) {}
 
 struct pbl_thread *pebble_task_create(PebbleTask pebble_task, struct pbl_thread_attr *attr) {
   return NULL;
@@ -57,9 +48,7 @@ struct pbl_thread *pebble_task_create(PebbleTask pebble_task, struct pbl_thread_
 //! System install ids are negative, app-db (third-party) install ids are positive
 static AppInstallId s_current_process_id = (AppInstallId)(-1);
 
-AppInstallId sys_process_manager_get_current_process_id(void) {
-  return s_current_process_id;
-}
+AppInstallId sys_process_manager_get_current_process_id(void) { return s_current_process_id; }
 
 // Stubs
 /////////////////////
@@ -84,7 +73,7 @@ AppInstallId sys_process_manager_get_current_process_id(void) {
 #include "stubs_sleep.h"
 // Hide the WEAK stub so the controllable strong definition above owns the real symbol
 #define sys_process_manager_get_current_process_id \
-    prv_stubbed_sys_process_manager_get_current_process_id
+  prv_stubbed_sys_process_manager_get_current_process_id
 #include "stubs_syscalls.h"
 #undef sys_process_manager_get_current_process_id
 #include "stubs_task_watchdog.h"
@@ -130,7 +119,7 @@ void test_menu_layer_system_cells__initialize(void) {
   process_manager_set_compiled_with_legacy2_sdk(false);
 
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
 
   test_graphics_context_init(&s_ctx, fb);
   framebuffer_clear(fb);
@@ -139,7 +128,8 @@ void test_menu_layer_system_cells__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
   pfs_init(false);
   pfs_format(true /* write erase headers */);
-  load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME, false /* is_next */);
+  load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME,
+                                 false /* is_next */);
 
   resource_init();
 
@@ -168,12 +158,12 @@ typedef struct {
 } MenuLayerSystemCellTestColumnData;
 
 static const MenuLayerSystemCellTestColumnData s_menu_system_basic_cell_test_column_data[] = {
-  { NULL, NULL, NULL }, // Use the default fonts
+    {NULL, NULL, NULL},  // Use the default fonts
 };
 
 static const MenuLayerSystemCellTestColumnData s_menu_system_cell_layer_test_column_data[] = {
-  { FONT_KEY_GOTHIC_24_BOLD, FONT_KEY_GOTHIC_14, FONT_KEY_GOTHIC_24_BOLD },
-  { FONT_KEY_GOTHIC_14, FONT_KEY_GOTHIC_24_BOLD, FONT_KEY_GOTHIC_14 },
+    {FONT_KEY_GOTHIC_24_BOLD, FONT_KEY_GOTHIC_14, FONT_KEY_GOTHIC_24_BOLD},
+    {FONT_KEY_GOTHIC_14, FONT_KEY_GOTHIC_24_BOLD, FONT_KEY_GOTHIC_14},
 };
 
 // This struct represents the data for a row of the grid of our resulting test image
@@ -192,34 +182,34 @@ typedef struct {
 #define DEFAULT_ICON_ALIGN PBL_IF_RECT_ELSE(MenuCellLayerIconAlign_Left, MenuCellLayerIconAlign_Top)
 
 static const MenuLayerSystemCellTestRowData s_menu_system_cell_test_row_data[] = {
-  {"Star Wars", NULL, NULL, NULL, DEFAULT_ICON_ALIGN},
-  {"The Lord of the Rings", "The Fellowship of the Ring", NULL, NULL, DEFAULT_ICON_ALIGN},
-  {"The Lord of the Rings", NULL, NULL, &s_tictoc_icon_bitmap, DEFAULT_ICON_ALIGN},
-  {"The Matrix", "Revolutions", NULL, &s_tictoc_icon_bitmap, DEFAULT_ICON_ALIGN},
-  {"8:00 AM", "Weekdays", "OFF", NULL, DEFAULT_ICON_ALIGN},
-  {"8:00 AM", "Weekdays", NULL, &s_tictoc_icon_bitmap, MenuCellLayerIconAlign_Right},
-  {"8:00 AM", "Weekdays", "OFF", &s_smart_alarm_icon_bitmap, MenuCellLayerIconAlign_TopLeft,
-   false, &(GBoxModel){ .offset = { 0, 5 }, .margin = { 6, 0 }}, PBL_IF_ROUND_ELSE(-6, 0), true},
-  {"The Lord of the Rings", NULL, NULL, &s_tictoc_icon_bitmap, DEFAULT_ICON_ALIGN, true},
-  {"The Matrix", "Revolutions", NULL, &s_tictoc_icon_bitmap, DEFAULT_ICON_ALIGN, true},
+    {"Star Wars", NULL, NULL, NULL, DEFAULT_ICON_ALIGN},
+    {"The Lord of the Rings", "The Fellowship of the Ring", NULL, NULL, DEFAULT_ICON_ALIGN},
+    {"The Lord of the Rings", NULL, NULL, &s_tictoc_icon_bitmap, DEFAULT_ICON_ALIGN},
+    {"The Matrix", "Revolutions", NULL, &s_tictoc_icon_bitmap, DEFAULT_ICON_ALIGN},
+    {"8:00 AM", "Weekdays", "OFF", NULL, DEFAULT_ICON_ALIGN},
+    {"8:00 AM", "Weekdays", NULL, &s_tictoc_icon_bitmap, MenuCellLayerIconAlign_Right},
+    {"8:00 AM", "Weekdays", "OFF", &s_smart_alarm_icon_bitmap, MenuCellLayerIconAlign_TopLeft,
+     false, &(GBoxModel){.offset = {0, 5}, .margin = {6, 0}}, PBL_IF_ROUND_ELSE(-6, 0), true},
+    {"The Lord of the Rings", NULL, NULL, &s_tictoc_icon_bitmap, DEFAULT_ICON_ALIGN, true},
+    {"The Matrix", "Revolutions", NULL, &s_tictoc_icon_bitmap, DEFAULT_ICON_ALIGN, true},
 };
 
 // We render all of the row data's for each of the following heights
 static const int16_t s_menu_system_cell_test_row_heights[] = {
 #if PBL_ROUND
-  MENU_CELL_ROUND_UNFOCUSED_SHORT_CELL_HEIGHT,
-  MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT,
+    MENU_CELL_ROUND_UNFOCUSED_SHORT_CELL_HEIGHT,
+    MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT,
 #endif
-  0, //!< Will be interpreted as "use menu_cell_basic_cell_height()"
-  MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT,
-  MENU_CELL_ROUND_FOCUSED_TALL_CELL_HEIGHT,
+    0,  //!< Will be interpreted as "use menu_cell_basic_cell_height()"
+    MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT,
+    MENU_CELL_ROUND_FOCUSED_TALL_CELL_HEIGHT,
 };
 
 #define GRID_CELL_PADDING 5
 
 static int16_t prv_get_row_height_for_index(int i) {
-  return (s_menu_system_cell_test_row_heights[i] == 0) ? menu_cell_basic_cell_height() :
-                                                         s_menu_system_cell_test_row_heights[i];
+  return (s_menu_system_cell_test_row_heights[i] == 0) ? menu_cell_basic_cell_height()
+                                                       : s_menu_system_cell_test_row_heights[i];
 }
 
 static int16_t prv_calculate_overall_grid_height(void) {
@@ -292,18 +282,19 @@ static void prv_draw_cell(MenuCellType cell_type, const GRect *cell_bounds,
   s_cell_is_highlighted = is_selected;
 
   const MenuCellLayerConfig config = {
-    .title_font = column_data->title_font ? fonts_get_system_font(column_data->title_font) : NULL,
-    .subtitle_font = column_data->subtitle_font ? fonts_get_system_font(column_data->subtitle_font) : NULL,
-    .value_font = column_data->value_font ? fonts_get_system_font(column_data->value_font) : NULL,
-    .title = row_data->title,
-    .subtitle = row_data->subtitle,
-    .value = row_data->value,
-    .icon = row_data->icon,
-    .icon_align = row_data->icon_align,
-    .icon_box_model = row_data->icon_box_model,
-    .icon_form_fit = row_data->icon_form_fit,
-    .horizontal_inset = row_data->horizontal_inset,
-    .overflow_mode = GTextOverflowModeFill,
+      .title_font = column_data->title_font ? fonts_get_system_font(column_data->title_font) : NULL,
+      .subtitle_font =
+          column_data->subtitle_font ? fonts_get_system_font(column_data->subtitle_font) : NULL,
+      .value_font = column_data->value_font ? fonts_get_system_font(column_data->value_font) : NULL,
+      .title = row_data->title,
+      .subtitle = row_data->subtitle,
+      .value = row_data->value,
+      .icon = row_data->icon,
+      .icon_align = row_data->icon_align,
+      .icon_box_model = row_data->icon_box_model,
+      .icon_form_fit = row_data->icon_form_fit,
+      .horizontal_inset = row_data->horizontal_inset,
+      .overflow_mode = GTextOverflowModeFill,
   };
   prv_menu_cell_draw_dispatch(&s_ctx, &cell_layer, cell_type, &config, row_data->icon_subbitmap);
 }
@@ -318,12 +309,13 @@ void prv_prepare_canvas_and_render_cells(MenuCellType cell_type, int16_t cell_wi
 
   // Multiply num_columns * 2 to account for drawing both focused and unfocused side-by-side
   const int num_columns_accounting_for_focused_unfocused = num_columns * 2;
-  const int16_t bitmap_width = (cell_width * num_columns_accounting_for_focused_unfocused) +
-    (GRID_CELL_PADDING * (num_columns_accounting_for_focused_unfocused + 1));
+  const int16_t bitmap_width =
+      (cell_width * num_columns_accounting_for_focused_unfocused) +
+      (GRID_CELL_PADDING * (num_columns_accounting_for_focused_unfocused + 1));
   const int16_t bitmap_height = prv_calculate_overall_grid_height();
   const GSize bitmap_size = GSize(bitmap_width, bitmap_height);
-  s_dest_bitmap = gbitmap_create_blank(bitmap_size,
-                                       PBL_IF_COLOR_ELSE(GBitmapFormat8Bit, GBitmapFormat1Bit));
+  s_dest_bitmap =
+      gbitmap_create_blank(bitmap_size, PBL_IF_COLOR_ELSE(GBitmapFormat8Bit, GBitmapFormat1Bit));
 
   s_ctx.dest_bitmap = *s_dest_bitmap;
   s_ctx.draw_state.clip_box.size = bitmap_size;
@@ -337,8 +329,7 @@ void prv_prepare_canvas_and_render_cells(MenuCellType cell_type, int16_t cell_wi
 
   int16_t y_offset = 0;
   for (unsigned int row_index = 0; row_index < num_rows; row_index++) {
-    const MenuLayerSystemCellTestRowData row_data = 
-        s_menu_system_cell_test_row_data[row_index];
+    const MenuLayerSystemCellTestRowData row_data = s_menu_system_cell_test_row_data[row_index];
     for (unsigned int row_height_index = 0; row_height_index < num_row_heights;
          row_height_index++) {
       y_offset += GRID_CELL_PADDING;
@@ -346,7 +337,8 @@ void prv_prepare_canvas_and_render_cells(MenuCellType cell_type, int16_t cell_wi
       for (unsigned int column_index = 0; column_index < num_columns; column_index++) {
         const MenuLayerSystemCellTestColumnData column_data = columns[column_index];
 
-        int16_t x_offset = GRID_CELL_PADDING + column_index * ((GRID_CELL_PADDING + cell_width) * 2);
+        int16_t x_offset =
+            GRID_CELL_PADDING + column_index * ((GRID_CELL_PADDING + cell_width) * 2);
 
         GRect cell_bounds = GRect(x_offset, y_offset, cell_width, row_height);
         prv_draw_cell(cell_type, &cell_bounds, &row_data, &column_data, true);
@@ -369,74 +361,67 @@ void test_menu_layer_system_cells__basic_cell_width_144_legacy2(void) {
   //       1bit due to the legacy2 check in gbitmap_get_format. This is normal and expected.
 
   const int16_t cell_width = 144;
-  prv_prepare_canvas_and_render_cells(
-      MenuCellType_Basic, cell_width,
-      s_menu_system_basic_cell_test_column_data,
-      ARRAY_LENGTH(s_menu_system_basic_cell_test_column_data),
-      /* is_legacy2 */ true);
+  prv_prepare_canvas_and_render_cells(MenuCellType_Basic, cell_width,
+                                      s_menu_system_basic_cell_test_column_data,
+                                      ARRAY_LENGTH(s_menu_system_basic_cell_test_column_data),
+                                      /* is_legacy2 */ true);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 #endif
 }
 
 void test_menu_layer_system_cells__basic_cell_width_144(void) {
   const int16_t cell_width = 144;
-  prv_prepare_canvas_and_render_cells(
-      MenuCellType_Basic, cell_width,
-      s_menu_system_basic_cell_test_column_data,
-      ARRAY_LENGTH(s_menu_system_basic_cell_test_column_data),
-      /* is_legacy2 */ false);
+  prv_prepare_canvas_and_render_cells(MenuCellType_Basic, cell_width,
+                                      s_menu_system_basic_cell_test_column_data,
+                                      ARRAY_LENGTH(s_menu_system_basic_cell_test_column_data),
+                                      /* is_legacy2 */ false);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 }
 
 void test_menu_layer_system_cells__basic_custom_cell_width_144(void) {
   const int16_t cell_width = 144;
-  prv_prepare_canvas_and_render_cells(
-      MenuCellType_BasicCustom, cell_width,
-      s_menu_system_cell_layer_test_column_data,
-      ARRAY_LENGTH(s_menu_system_cell_layer_test_column_data),
-      /* is_legacy2 */ false);
+  prv_prepare_canvas_and_render_cells(MenuCellType_BasicCustom, cell_width,
+                                      s_menu_system_cell_layer_test_column_data,
+                                      ARRAY_LENGTH(s_menu_system_cell_layer_test_column_data),
+                                      /* is_legacy2 */ false);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 }
 
 void test_menu_layer_system_cells__cell_width_32(void) {
 #if PBL_ROUND
   const int16_t cell_width = 32;
-  prv_prepare_canvas_and_render_cells(
-      MenuCellType_CellLayer, cell_width,
-      s_menu_system_cell_layer_test_column_data,
-      ARRAY_LENGTH(s_menu_system_cell_layer_test_column_data),
-      /* is_legacy2 */ false);
+  prv_prepare_canvas_and_render_cells(MenuCellType_CellLayer, cell_width,
+                                      s_menu_system_cell_layer_test_column_data,
+                                      ARRAY_LENGTH(s_menu_system_cell_layer_test_column_data),
+                                      /* is_legacy2 */ false);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 #endif
 }
 
 void test_menu_layer_system_cells__cell_width_100(void) {
   const int16_t cell_width = 100;
-  prv_prepare_canvas_and_render_cells(
-      MenuCellType_CellLayer, cell_width,
-      s_menu_system_cell_layer_test_column_data,
-      ARRAY_LENGTH(s_menu_system_cell_layer_test_column_data),
-      /* is_legacy2 */ false);
+  prv_prepare_canvas_and_render_cells(MenuCellType_CellLayer, cell_width,
+                                      s_menu_system_cell_layer_test_column_data,
+                                      ARRAY_LENGTH(s_menu_system_cell_layer_test_column_data),
+                                      /* is_legacy2 */ false);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 }
 
 void test_menu_layer_system_cells__cell_width_144(void) {
   const int16_t cell_width = 144;
-  prv_prepare_canvas_and_render_cells(
-      MenuCellType_CellLayer, cell_width,
-      s_menu_system_cell_layer_test_column_data,
-      ARRAY_LENGTH(s_menu_system_cell_layer_test_column_data),
-      /* is_legacy2 */ false);
+  prv_prepare_canvas_and_render_cells(MenuCellType_CellLayer, cell_width,
+                                      s_menu_system_cell_layer_test_column_data,
+                                      ARRAY_LENGTH(s_menu_system_cell_layer_test_column_data),
+                                      /* is_legacy2 */ false);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 }
 
 void test_menu_layer_system_cells__cell_width_180(void) {
   const int16_t cell_width = 180;
-  prv_prepare_canvas_and_render_cells(
-      MenuCellType_CellLayer, cell_width,
-      s_menu_system_cell_layer_test_column_data,
-      ARRAY_LENGTH(s_menu_system_cell_layer_test_column_data),
-      /* is_legacy2 */ false);
+  prv_prepare_canvas_and_render_cells(MenuCellType_CellLayer, cell_width,
+                                      s_menu_system_cell_layer_test_column_data,
+                                      ARRAY_LENGTH(s_menu_system_cell_layer_test_column_data),
+                                      /* is_legacy2 */ false);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 }
 
@@ -450,22 +435,22 @@ void test_menu_layer_system_cells__basic_cell_content_sizes(void) {
 
   // Two cells (focused and unfocused) per content size column
   const int num_cell_columns = NumPreferredContentSizes * 2;
-  const int16_t bitmap_width = (cell_width * num_cell_columns) +
-      (GRID_CELL_PADDING * (num_cell_columns + 1));
+  const int16_t bitmap_width =
+      (cell_width * num_cell_columns) + (GRID_CELL_PADDING * (num_cell_columns + 1));
 
   // Cell heights follow the content size, so size the canvas for the tallest column
   int16_t bitmap_height = 0;
   for (PreferredContentSize size = PreferredContentSizeSmall; size < NumPreferredContentSizes;
        size++) {
     system_theme_set_content_size(size);
-    const int16_t column_height = GRID_CELL_PADDING +
-        (num_rows * (menu_cell_basic_cell_height() + GRID_CELL_PADDING));
+    const int16_t column_height =
+        GRID_CELL_PADDING + (num_rows * (menu_cell_basic_cell_height() + GRID_CELL_PADDING));
     bitmap_height = MAX(bitmap_height, column_height);
   }
 
   const GSize bitmap_size = GSize(bitmap_width, bitmap_height);
-  s_dest_bitmap = gbitmap_create_blank(bitmap_size,
-                                       PBL_IF_COLOR_ELSE(GBitmapFormat8Bit, GBitmapFormat1Bit));
+  s_dest_bitmap =
+      gbitmap_create_blank(bitmap_size, PBL_IF_COLOR_ELSE(GBitmapFormat8Bit, GBitmapFormat1Bit));
 
   s_ctx.dest_bitmap = *s_dest_bitmap;
   s_ctx.draw_state.clip_box.size = bitmap_size;
@@ -484,12 +469,10 @@ void test_menu_layer_system_cells__basic_cell_content_sizes(void) {
     for (unsigned int row_index = 0; row_index < num_rows; row_index++) {
       y_offset += GRID_CELL_PADDING;
       GRect cell_bounds = GRect(x_offset, y_offset, cell_width, row_height);
-      prv_draw_cell(MenuCellType_Basic, &cell_bounds,
-                    &s_menu_system_cell_test_row_data[row_index],
+      prv_draw_cell(MenuCellType_Basic, &cell_bounds, &s_menu_system_cell_test_row_data[row_index],
                     &s_menu_system_basic_cell_test_column_data[0], true /* is_selected */);
       cell_bounds.origin.x += cell_width + GRID_CELL_PADDING;
-      prv_draw_cell(MenuCellType_Basic, &cell_bounds,
-                    &s_menu_system_cell_test_row_data[row_index],
+      prv_draw_cell(MenuCellType_Basic, &cell_bounds, &s_menu_system_cell_test_row_data[row_index],
                     &s_menu_system_basic_cell_test_column_data[0], false /* is_selected */);
       y_offset += row_height;
     }

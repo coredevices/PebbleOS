@@ -29,7 +29,6 @@ static bool prv_uart_irq_handler(UARTDevice *dev, uint8_t byte, const UARTRXErro
 // Our globals
 static QemuSerialGlobals s_qemu_state;
 
-
 // -----------------------------------------------------------------------------------------
 // Handle incoming Tap packet data (QemuProtocol_Tap)
 static void prv_tap_msg_callback(const uint8_t *data, uint32_t len) {
@@ -41,16 +40,16 @@ static void prv_tap_msg_callback(const uint8_t *data, uint32_t len) {
 
   PBL_LOG_DBG("Got tap msg: axis: %d, direction: %d", hdr->axis, hdr->direction);
   PebbleEvent e = {
-    .type = PEBBLE_ACCEL_SHAKE_EVENT,
-    .accel_tap = {
-      .axis = hdr->axis,
-      .direction = hdr->direction,
-    },
+      .type = PEBBLE_ACCEL_SHAKE_EVENT,
+      .accel_tap =
+          {
+              .axis = hdr->axis,
+              .direction = hdr->direction,
+          },
   };
 
   event_put(&e);
 }
-
 
 // -----------------------------------------------------------------------------------------
 // Handle incoming Bluetooth connection packet data (QemuProtocol_BluetoothConnection)
@@ -65,14 +64,11 @@ static void prv_bluetooth_connection_msg_callback(const uint8_t *data, uint32_t 
   bool current_status = qemu_transport_is_connected();
   bool new_status = (hdr->connected != 0);
 
-
   if (new_status != current_status && !bt_ctl_is_airplane_mode_on()) {
     // Change to new status if we're not in airplane mode
     qemu_transport_set_connected(new_status);
   }
-
 }
-
 
 // -----------------------------------------------------------------------------------------
 // Handle incoming compass packet data (QemuProtocol_Compass)
@@ -83,19 +79,14 @@ static void prv_compass_msg_callback(const uint8_t *data, uint32_t len) {
     return;
   }
 
-  PBL_LOG_DBG("Got compass msg: magnetic_heading: %"PRId32", calib_status:%u",
-        ntohl(hdr->magnetic_heading), hdr->calib_status);
-  PebbleEvent e = {
-    .type = PEBBLE_COMPASS_DATA_EVENT,
-    .compass_data = {
-      .magnetic_heading = ntohl(hdr->magnetic_heading),
-      .calib_status = hdr->calib_status
-    }
-  };
+  PBL_LOG_DBG("Got compass msg: magnetic_heading: %" PRId32 ", calib_status:%u",
+              ntohl(hdr->magnetic_heading), hdr->calib_status);
+  PebbleEvent e = {.type = PEBBLE_COMPASS_DATA_EVENT,
+                   .compass_data = {.magnetic_heading = ntohl(hdr->magnetic_heading),
+                                    .calib_status = hdr->calib_status}};
 
   event_put(&e);
 }
-
 
 // -----------------------------------------------------------------------------------------
 // Handle incoming time format data (QemuProtocol_TimeFormat)
@@ -109,7 +100,6 @@ static void prv_time_format_msg_callback(const uint8_t *data, uint32_t len) {
   PBL_LOG_DBG("Got time format msg: is 24 hour: %d", hdr->is_24_hour);
   clock_set_24h_style(hdr->is_24_hour);
 }
-
 
 // -----------------------------------------------------------------------------------------
 // Handle incoming timeline peek format data (QemuProtocol_TimelinePeek)
@@ -125,7 +115,6 @@ static void prv_timeline_peek_msg_callback(const uint8_t *data, uint32_t len) {
   timeline_peek_set_enabled(hdr->enabled);
 #endif
 }
-
 
 static void prv_content_size_msg_callback(const uint8_t *data, uint32_t len) {
   QemuProtocolContentSizeHeader *hdr = (QemuProtocolContentSizeHeader *)data;
@@ -145,7 +134,6 @@ static void prv_content_size_msg_callback(const uint8_t *data, uint32_t len) {
 #endif
 }
 
-
 // -----------------------------------------------------------------------------------------
 // Handle incoming health metric data (QemuProtocol_HealthMetric)
 static void prv_health_metric_msg_callback(const uint8_t *data, uint32_t len) {
@@ -156,18 +144,32 @@ static void prv_health_metric_msg_callback(const uint8_t *data, uint32_t len) {
   }
 
   const int32_t value = (int32_t)ntohl(hdr->value);
-  PBL_LOG_DBG("Got health metric msg: metric: %d, value: %"PRId32, hdr->metric, value);
+  PBL_LOG_DBG("Got health metric msg: metric: %d, value: %" PRId32, hdr->metric, value);
 
 #if !defined(CONFIG_RECOVERY_FW)
   ActivityMetric metric;
   switch (hdr->metric) {
-    case QemuHealthMetric_Steps:               metric = ActivityMetricStepCount; break;
-    case QemuHealthMetric_ActiveSeconds:       metric = ActivityMetricActiveSeconds; break;
-    case QemuHealthMetric_RestingCalories:     metric = ActivityMetricRestingKCalories; break;
-    case QemuHealthMetric_ActiveCalories:      metric = ActivityMetricActiveKCalories; break;
-    case QemuHealthMetric_DistanceMeters:      metric = ActivityMetricDistanceMeters; break;
-    case QemuHealthMetric_SleepTotalSeconds:   metric = ActivityMetricSleepTotalSeconds; break;
-    case QemuHealthMetric_SleepRestfulSeconds: metric = ActivityMetricSleepRestfulSeconds; break;
+    case QemuHealthMetric_Steps:
+      metric = ActivityMetricStepCount;
+      break;
+    case QemuHealthMetric_ActiveSeconds:
+      metric = ActivityMetricActiveSeconds;
+      break;
+    case QemuHealthMetric_RestingCalories:
+      metric = ActivityMetricRestingKCalories;
+      break;
+    case QemuHealthMetric_ActiveCalories:
+      metric = ActivityMetricActiveKCalories;
+      break;
+    case QemuHealthMetric_DistanceMeters:
+      metric = ActivityMetricDistanceMeters;
+      break;
+    case QemuHealthMetric_SleepTotalSeconds:
+      metric = ActivityMetricSleepTotalSeconds;
+      break;
+    case QemuHealthMetric_SleepRestfulSeconds:
+      metric = ActivityMetricSleepRestfulSeconds;
+      break;
     default:
       PBL_LOG_WRN("Unknown health metric: %d", hdr->metric);
       return;
@@ -175,7 +177,6 @@ static void prv_health_metric_msg_callback(const uint8_t *data, uint32_t len) {
   activity_metrics_set_metric_exact(metric, value);
 #endif
 }
-
 
 // -----------------------------------------------------------------------------------------
 // Handle incoming heart rate data (QemuProtocol_HeartRate)
@@ -189,9 +190,9 @@ static void prv_heart_rate_msg_callback(const uint8_t *data, uint32_t len) {
   PBL_LOG_DBG("Got heart rate msg: bpm: %d, quality: %d", hdr->bpm, hdr->quality);
 #if defined(CONFIG_HRM)
   HRMData hrm_data = {
-    .features = HRMFeature_BPM,
-    .hrm_bpm = hdr->bpm,
-    .hrm_quality = (HRMQuality)hdr->quality,
+      .features = HRMFeature_BPM,
+      .hrm_bpm = hdr->bpm,
+      .hrm_quality = (HRMQuality)hdr->quality,
   };
   hrm_manager_new_data_cb(&hrm_data);
 #else
@@ -199,31 +200,29 @@ static void prv_heart_rate_msg_callback(const uint8_t *data, uint32_t len) {
 #endif
 }
 
-
 // -----------------------------------------------------------------------------------------
 // List of incoming message handlers
 static const QemuMessageHandler s_qemu_endpoints[] = {
-  // IMPORTANT: These must be in sorted order!!
-  { QemuProtocol_SPP, qemu_transport_handle_received_data },
-  { QemuProtocol_Tap, prv_tap_msg_callback },
-  { QemuProtocol_BluetoothConnection, prv_bluetooth_connection_msg_callback },
-  { QemuProtocol_Compass, prv_compass_msg_callback },
-  { QemuProtocol_Battery, qemu_battery_msg_callback },
-  { QemuProtocol_Accel, qemu_accel_msg_callback },
-  { QemuProtocol_TimeFormat, prv_time_format_msg_callback },
-  { QemuProtocol_TimelinePeek, prv_timeline_peek_msg_callback },
-  { QemuProtocol_ContentSize, prv_content_size_msg_callback },
-  { QemuProtocol_HealthMetric, prv_health_metric_msg_callback },
-  { QemuProtocol_HeartRate, prv_heart_rate_msg_callback },
-  // Button messages are handled by QEMU directly
+    // IMPORTANT: These must be in sorted order!!
+    {QemuProtocol_SPP, qemu_transport_handle_received_data},
+    {QemuProtocol_Tap, prv_tap_msg_callback},
+    {QemuProtocol_BluetoothConnection, prv_bluetooth_connection_msg_callback},
+    {QemuProtocol_Compass, prv_compass_msg_callback},
+    {QemuProtocol_Battery, qemu_battery_msg_callback},
+    {QemuProtocol_Accel, qemu_accel_msg_callback},
+    {QemuProtocol_TimeFormat, prv_time_format_msg_callback},
+    {QemuProtocol_TimelinePeek, prv_timeline_peek_msg_callback},
+    {QemuProtocol_ContentSize, prv_content_size_msg_callback},
+    {QemuProtocol_HealthMetric, prv_health_metric_msg_callback},
+    {QemuProtocol_HeartRate, prv_heart_rate_msg_callback},
+    // Button messages are handled by QEMU directly
 };
-
 
 // -----------------------------------------------------------------------------------------
 // Find handler from s_qemu_endpoints for a given protocol
-static const QemuMessageHandler* prv_find_handler(uint16_t protocol_id) {
+static const QemuMessageHandler *prv_find_handler(uint16_t protocol_id) {
   for (size_t i = 0; i < ARRAY_LENGTH(s_qemu_endpoints); ++i) {
-    const QemuMessageHandler* handler = &s_qemu_endpoints[i];
+    const QemuMessageHandler *handler = &s_qemu_endpoints[i];
     if (!handler || handler->protocol_id > protocol_id) {
       break;
     }
@@ -235,7 +234,6 @@ static const QemuMessageHandler* prv_find_handler(uint16_t protocol_id) {
 
   return NULL;
 }
-
 
 // -----------------------------------------------------------------------------------------
 void qemu_serial_init(void) {
@@ -250,7 +248,6 @@ void qemu_serial_init(void) {
   // enable the UART RX interrupt
   uart_set_rx_interrupt_enabled(QEMU_UART, true);
 }
-
 
 // -----------------------------------------------------------------------------------------
 // KernelMain callback triggered by our ISR handler when we detect a high water mark on our
@@ -279,9 +276,8 @@ static void prv_process_receive_buffer(void *context) {
     }
 
     // Dispatch the received message
-    PBL_LOG_DBG("Dispatching msg of len %"PRIu32" for protocol %d", msg_bytes,
-              protocol);
-    const QemuMessageHandler* handler = prv_find_handler(protocol);
+    PBL_LOG_DBG("Dispatching msg of len %" PRIu32 " for protocol %d", msg_bytes, protocol);
+    const QemuMessageHandler *handler = prv_find_handler(protocol);
     if (!handler) {
       PBL_LOG_WRN("No handler for protocol: %d", protocol);
     } else {
@@ -289,7 +285,6 @@ static void prv_process_receive_buffer(void *context) {
     }
   }
 }
-
 
 // -----------------------------------------------------------------------------------------
 static bool prv_uart_irq_handler(UARTDevice *dev, uint8_t byte, const UARTRXErrorFlags *err_flags) {
@@ -302,8 +297,8 @@ static bool prv_uart_irq_handler(UARTDevice *dev, uint8_t byte, const UARTRXErro
   // Add to circular buffer. It's safe to assume that the buffer has space
   // remaining as the RX interrupt will be disabled from the time the buffer
   // fills up until when the buffer is drained.
-  bool success = shared_circular_buffer_write(&s_qemu_state.isr_buffer, &byte, 1,
-                                              false/*advance_slackers*/);
+  bool success =
+      shared_circular_buffer_write(&s_qemu_state.isr_buffer, &byte, 1, false /*advance_slackers*/);
   if (!success) {
     PBL_LOG_ERR("ISR buf too small 0x%x", byte);
     s_qemu_state.recv_error_count++;
@@ -325,13 +320,8 @@ static bool prv_uart_irq_handler(UARTDevice *dev, uint8_t byte, const UARTRXErro
       (byte == QEMU_FOOTER_LSB && s_qemu_state.prev_byte == QEMU_FOOTER_MSB)) {
     if (!s_qemu_state.callback_pending) {
       s_qemu_state.callback_pending = true;
-      PebbleEvent e = {
-        .type = PEBBLE_CALLBACK_EVENT,
-        .callback = {
-          .callback = prv_process_receive_buffer,
-          .data = NULL
-        }
-      };
+      PebbleEvent e = {.type = PEBBLE_CALLBACK_EVENT,
+                       .callback = {.callback = prv_process_receive_buffer, .data = NULL}};
       should_context_switch = event_put_isr(&e);
     }
   }
@@ -340,7 +330,6 @@ static bool prv_uart_irq_handler(UARTDevice *dev, uint8_t byte, const UARTRXErro
 
   return should_context_switch;
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_send(const uint8_t *data, uint32_t len) {
@@ -353,7 +342,6 @@ static void prv_send(const uint8_t *data, uint32_t len) {
   uart_wait_for_tx_complete(QEMU_UART);
 }
 
-
 // -----------------------------------------------------------------------------------------
 void qemu_serial_send(QemuProtocol protocol, const uint8_t *data, uint32_t len) {
   if (!s_qemu_state.initialized) {
@@ -363,20 +351,15 @@ void qemu_serial_send(QemuProtocol protocol, const uint8_t *data, uint32_t len) 
   pbl_mutex_lock(&s_qemu_state.qemu_comm_lock, PBL_FOREVER);
 
   // Send the header
-  QemuCommChannelHdr hdr = (QemuCommChannelHdr) {
-    .signature = htons(QEMU_HEADER_SIGNATURE),
-    .protocol = htons(protocol),
-    .len = htons(len)
-  };
+  QemuCommChannelHdr hdr = (QemuCommChannelHdr){
+      .signature = htons(QEMU_HEADER_SIGNATURE), .protocol = htons(protocol), .len = htons(len)};
   prv_send((uint8_t *)&hdr, sizeof(hdr));
 
   // Send the data
   prv_send(data, len);
 
   // Send the footer
-  QemuCommChannelFooter footer = (QemuCommChannelFooter) {
-    .signature = htons(QEMU_FOOTER_SIGNATURE)
-  };
+  QemuCommChannelFooter footer = (QemuCommChannelFooter){.signature = htons(QEMU_FOOTER_SIGNATURE)};
   prv_send((uint8_t *)&footer, sizeof(footer));
 
   pbl_mutex_unlock(&s_qemu_state.qemu_comm_lock);

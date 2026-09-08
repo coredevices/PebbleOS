@@ -57,7 +57,7 @@ bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
   return true;
 }
 
-void event_put(PebbleEvent* event) {
+void event_put(PebbleEvent *event) {
   if (event->type == PEBBLE_DO_NOT_DISTURB_EVENT) {
     s_num_dnd_events_put++;
   }
@@ -95,13 +95,9 @@ static const int s_monday_10_30 = 1427106600;
 static TimerID s_timer = TIMER_INVALID_ID;
 static bool s_event_ongoing = false;
 
-void calendar_init() {
-  s_timer = new_timer_create();
-}
+void calendar_init() { s_timer = new_timer_create(); }
 
-bool calendar_event_is_ongoing() {
-  return s_event_ongoing;
-}
+bool calendar_event_is_ongoing() { return s_event_ongoing; }
 
 void do_not_disturb_toggle_push(ActionTogglePrompt prompt, bool set_exit_reason) {
   do_not_disturb_set_manually_enabled(!do_not_disturb_is_active());
@@ -110,8 +106,8 @@ void do_not_disturb_toggle_push(ActionTogglePrompt prompt, bool set_exit_reason)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Helper Functions
 
-static void prv_assert_settings_value(const void *key, size_t key_len,
-                                      const void *expected_value, size_t value_len) {
+static void prv_assert_settings_value(const void *key, size_t key_len, const void *expected_value,
+                                      size_t value_len) {
   SettingsFile file;
   char buffer[value_len];
   cl_must_pass(settings_file_open(&file, "notifpref", 1024));
@@ -122,8 +118,8 @@ static void prv_assert_settings_value(const void *key, size_t key_len,
 
 static void prv_assert_manually_dnd_setting_val(bool expected_value) {
   const char *key = "dndManuallyEnabled";
-  prv_assert_settings_value((void*)key, strlen("dndManuallyEnabled"),
-                            (void*)&expected_value, sizeof(bool));
+  prv_assert_settings_value((void *)key, strlen("dndManuallyEnabled"), (void *)&expected_value,
+                            sizeof(bool));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -195,9 +191,9 @@ static void prv_sync_bool_pref_from_phone(const char *key, bool value) {
   settings_file_close(&file);
 
   PebbleBlobDBEvent event = {
-    .type = BlobDBEventTypeInsert,
-    .key = (uint8_t *)key,
-    .key_len = strlen(key),
+      .type = BlobDBEventTypeInsert,
+      .key = (uint8_t *)key,
+      .key_len = strlen(key),
   };
   alerts_preferences_handle_blob_db_event(&event);
 }
@@ -253,10 +249,10 @@ void test_do_not_disturb__is_active(void) {
   // Manual && Scheduled && !Smart
   do_not_disturb_set_schedule_enabled(WeekdaySchedule, true);
   DoNotDisturbSchedule schedule = {
-    .from_hour = 0,
-    .from_minute = 0,
-    .to_hour = 11,
-    .to_minute = 30,
+      .from_hour = 0,
+      .from_minute = 0,
+      .to_hour = 11,
+      .to_minute = 30,
   };
   do_not_disturb_set_schedule(WeekdaySchedule, &schedule);
   cl_assert(do_not_disturb_is_manually_enabled() == true);
@@ -269,9 +265,9 @@ void test_do_not_disturb__is_active(void) {
 
   do_not_disturb_set_manually_enabled(false);
   cl_assert(do_not_disturb_is_active() == false);
-  do_not_disturb_toggle_scheduled(WeekdaySchedule); // see PBL-22011
+  do_not_disturb_toggle_scheduled(WeekdaySchedule);  // see PBL-22011
   cl_assert(do_not_disturb_is_active() == false);
-  do_not_disturb_toggle_scheduled(WeekdaySchedule); // see PBL-22011
+  do_not_disturb_toggle_scheduled(WeekdaySchedule);  // see PBL-22011
   cl_assert(do_not_disturb_is_active() == true);
   cl_assert(do_not_disturb_is_manually_enabled() == false);
   cl_assert(do_not_disturb_is_schedule_enabled(WeekdaySchedule) == true);
@@ -303,8 +299,8 @@ void test_do_not_disturb__is_active(void) {
   cl_assert(active == true);
 
   // !Manual && !Scheduled && Smart
-  do_not_disturb_set_manually_enabled(false); // Overrides all DND and disables
-  do_not_disturb_set_schedule_enabled(WeekdaySchedule, false); // Clears overrides
+  do_not_disturb_set_manually_enabled(false);                   // Overrides all DND and disables
+  do_not_disturb_set_schedule_enabled(WeekdaySchedule, false);  // Clears overrides
   active = do_not_disturb_is_active();
   cl_assert(active == true);
 
@@ -319,43 +315,43 @@ void test_do_not_disturb__disabling_manual_dnd_should_override_scheduled(void) {
   bool active;
   // Time 00:00, Manual and Scheduled DND both OFF
   DoNotDisturbSchedule schedule = {
-    .from_hour = 0,
-    .from_minute = 30,
-    .to_hour = 12,
-    .to_minute = 30,
+      .from_hour = 0,
+      .from_minute = 30,
+      .to_hour = 12,
+      .to_minute = 30,
   };
   active = do_not_disturb_is_active();
-  cl_assert(active == false); // both OFF
+  cl_assert(active == false);  // both OFF
 
   do_not_disturb_set_schedule(WeekdaySchedule, &schedule);
   do_not_disturb_set_schedule_enabled(WeekdaySchedule, true);
   active = do_not_disturb_is_active();
-  cl_assert(active == false); // not in Scheduled mode
+  cl_assert(active == false);  // not in Scheduled mode
 
   rtc_set_time(s_thursday_01_00);
-  do_not_disturb_handle_clock_change(); // In scheduled period
+  do_not_disturb_handle_clock_change();  // In scheduled period
 
-  do_not_disturb_set_manually_enabled(true); // both ON
+  do_not_disturb_set_manually_enabled(true);  // both ON
   cl_assert(do_not_disturb_is_manually_enabled() == true);
   cl_assert(do_not_disturb_is_schedule_enabled(WeekdaySchedule) == true);
   active = do_not_disturb_is_active();
-  cl_assert(active == true); // Both OFF
+  cl_assert(active == true);  // Both OFF
 
-  do_not_disturb_set_manually_enabled(false); // turned Manual OFF, scheduled should be overriden
+  do_not_disturb_set_manually_enabled(false);  // turned Manual OFF, scheduled should be overriden
   cl_assert(do_not_disturb_is_manually_enabled() == false);
   cl_assert(do_not_disturb_is_schedule_enabled(WeekdaySchedule) == true);
   active = do_not_disturb_is_active();
-  cl_assert(active == false); // Both OFF
+  cl_assert(active == false);  // Both OFF
 }
 
 void test_do_not_disturb__disable_manual_dnd_when_scheduled_ends(void) {
   bool active;
   // Time 00:00, Manual and Scheduled DND both OFF
   DoNotDisturbSchedule schedule = {
-    .from_hour = 1,
-    .from_minute = 0,
-    .to_hour = 12,
-    .to_minute = 30,
+      .from_hour = 1,
+      .from_minute = 0,
+      .to_hour = 12,
+      .to_minute = 30,
   };
   do_not_disturb_set_schedule(WeekdaySchedule, &schedule);
   cl_assert(do_not_disturb_is_manually_enabled() == false);
@@ -367,27 +363,27 @@ void test_do_not_disturb__disable_manual_dnd_when_scheduled_ends(void) {
   cl_assert(do_not_disturb_is_manually_enabled() == true);
   cl_assert(do_not_disturb_is_schedule_enabled(WeekdaySchedule) == true);
   active = do_not_disturb_is_active();
-  cl_assert(active == true); // ON due to manual only
+  cl_assert(active == true);  // ON due to manual only
 
   do_not_disturb_set_manually_enabled(false);
   cl_assert(do_not_disturb_is_manually_enabled() == false);
   active = do_not_disturb_is_active();
-  cl_assert(active == false); // Both OFF
+  cl_assert(active == false);  // Both OFF
 
   do_not_disturb_set_manually_enabled(true);
   do_not_disturb_set_schedule_enabled(WeekdaySchedule, true);
   active = do_not_disturb_is_active();
-  cl_assert(active == true); // Both ON
+  cl_assert(active == true);  // Both ON
 
   rtc_set_time(s_thursday_12_00);
-  do_not_disturb_handle_clock_change(); // In scheduled period
+  do_not_disturb_handle_clock_change();  // In scheduled period
   active = do_not_disturb_is_active();
-  cl_assert(active == true); // Both ON
+  cl_assert(active == true);  // Both ON
 
   rtc_set_time(s_thursday_13_00);
-  do_not_disturb_handle_clock_change(); // Out of scheduled period
+  do_not_disturb_handle_clock_change();  // Out of scheduled period
   active = do_not_disturb_is_active();
-  cl_assert(active == false); // Both should be turned off
+  cl_assert(active == false);  // Both should be turned off
   cl_assert(do_not_disturb_is_schedule_enabled(WeekdaySchedule) == true);
   cl_assert(do_not_disturb_is_manually_enabled() == false);
 }
@@ -396,44 +392,43 @@ void test_do_not_disturb__change_schedule_while_in_scheduled(void) {
   bool active;
   // Time 00:00, Manual and Scheduled DND both OFF
   DoNotDisturbSchedule schedule_1 = {
-    .from_hour = 0,
-    .from_minute = 0,
-    .to_hour = 12,
-    .to_minute = 30,
+      .from_hour = 0,
+      .from_minute = 0,
+      .to_hour = 12,
+      .to_minute = 30,
   };
 
   do_not_disturb_set_schedule(WeekdaySchedule, &schedule_1);
   do_not_disturb_set_schedule_enabled(WeekdaySchedule, true);
   active = do_not_disturb_is_active();
-  cl_assert(active == true); // Scheduled ON
+  cl_assert(active == true);  // Scheduled ON
 
   DoNotDisturbSchedule schedule_2 = {
-    .from_hour = 5,
-    .from_minute = 0,
-    .to_hour = 13,
-    .to_minute = 0,
+      .from_hour = 5,
+      .from_minute = 0,
+      .to_hour = 13,
+      .to_minute = 0,
   };
   do_not_disturb_set_schedule(WeekdaySchedule, &schedule_2);
 
   rtc_set_time(s_thursday_12_00);
-  do_not_disturb_handle_clock_change(); // Should still be in scheduled period
+  do_not_disturb_handle_clock_change();  // Should still be in scheduled period
   cl_assert(do_not_disturb_is_manually_enabled() == false);
   active = do_not_disturb_is_active();
-  cl_assert(active == true); // Scheduled ON
-
+  cl_assert(active == true);  // Scheduled ON
 
   DoNotDisturbSchedule schedule_3 = {
-    .from_hour = 14,
-    .from_minute = 0,
-    .to_hour = 15,
-    .to_minute = 0,
+      .from_hour = 14,
+      .from_minute = 0,
+      .to_hour = 15,
+      .to_minute = 0,
   };
   do_not_disturb_set_schedule(WeekdaySchedule, &schedule_3);
 
   cl_assert(do_not_disturb_is_schedule_enabled(WeekdaySchedule) == true);
   cl_assert(do_not_disturb_is_manually_enabled() == false);
   active = do_not_disturb_is_active();
-  cl_assert(active == false); // Scheduled ON
+  cl_assert(active == false);  // Scheduled ON
 }
 
 void test_do_not_disturb__smart_dnd(void) {
@@ -441,7 +436,7 @@ void test_do_not_disturb__smart_dnd(void) {
 
   calendar_init();
   cl_assert(do_not_disturb_is_smart_dnd_enabled() == false);
-  do_not_disturb_toggle_smart_dnd(); // Only smart DND is on
+  do_not_disturb_toggle_smart_dnd();  // Only smart DND is on
   cl_assert(do_not_disturb_is_smart_dnd_enabled() == true);
   active = do_not_disturb_is_active();
   cl_assert(active == false);
@@ -464,7 +459,6 @@ void test_do_not_disturb__smart_dnd(void) {
   cl_assert(active == false);
 }
 
-
 void test_do_not_disturb__weekday_weekend_schedule(void) {
   bool active;
 
@@ -477,18 +471,18 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
 
   // 11 PM - 7 AM
   DoNotDisturbSchedule weekday_schedule = {
-    .from_hour = 23,
-    .from_minute = 0,
-    .to_hour = 7,
-    .to_minute = 0,
+      .from_hour = 23,
+      .from_minute = 0,
+      .to_hour = 7,
+      .to_minute = 0,
   };
 
   // 1 AM - 9 AM
   DoNotDisturbSchedule weekend_schedule = {
-    .from_hour = 1,
-    .from_minute = 0,
-    .to_hour = 9,
-    .to_minute = 0,
+      .from_hour = 1,
+      .from_minute = 0,
+      .to_hour = 9,
+      .to_minute = 0,
   };
 
   do_not_disturb_set_schedule(WeekdaySchedule, &weekday_schedule);
@@ -496,14 +490,14 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   do_not_disturb_set_schedule_enabled(WeekdaySchedule, true);
   do_not_disturb_set_schedule_enabled(WeekendSchedule, true);
 
-  rtc_set_time(s_friday_08_30); // Out of schedule
+  rtc_set_time(s_friday_08_30);  // Out of schedule
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == false);
   // Timer will go off at 23:00 on Friday. (14.5 hours)
   cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 52200 * MS_PER_SECOND);
 
-  rtc_set_time(s_friday_23_30); // In schedule
+  rtc_set_time(s_friday_23_30);  // In schedule
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == true);
@@ -579,18 +573,18 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
 
   // 10:30 PM - 8:30 AM
   DoNotDisturbSchedule weekday_schedule_2 = {
-    .from_hour = 22,
-    .from_minute = 30,
-    .to_hour = 8,
-    .to_minute = 30,
+      .from_hour = 22,
+      .from_minute = 30,
+      .to_hour = 8,
+      .to_minute = 30,
   };
 
   // 12 AM - 10 AM
   DoNotDisturbSchedule weekend_schedule_2 = {
-    .from_hour = 0,
-    .from_minute = 0,
-    .to_hour = 10,
-    .to_minute = 0,
+      .from_hour = 0,
+      .from_minute = 0,
+      .to_hour = 10,
+      .to_minute = 0,
   };
 
   do_not_disturb_set_schedule(WeekdaySchedule, &weekday_schedule_2);
@@ -598,7 +592,7 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   do_not_disturb_set_schedule_enabled(WeekdaySchedule, true);
   do_not_disturb_set_schedule_enabled(WeekendSchedule, true);
 
-  rtc_set_time(s_friday_23_30); // In schedule
+  rtc_set_time(s_friday_23_30);  // In schedule
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == true);

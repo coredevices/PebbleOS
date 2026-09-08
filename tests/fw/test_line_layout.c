@@ -39,19 +39,17 @@
 static GContext s_ctx;
 static FrameBuffer s_fb;
 
-size_t framebuffer_get_size_bytes(FrameBuffer *f) {
-  return FRAMEBUFFER_SIZE_BYTES;
-}
+size_t framebuffer_get_size_bytes(FrameBuffer *f) { return FRAMEBUFFER_SIZE_BYTES; }
 
 ///////////////////////////////////////////////////////////
 // Tests
 
 void test_line_layout__initialize(void) {
-  framebuffer_init(&s_fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(&s_fb, &(GSize){DISP_COLS, DISP_ROWS});
   graphics_context_init(&s_ctx, &s_fb, GContextInitializationMode_App);
 }
 
-void line_reset(Line* line, utf8_t* start) {
+void line_reset(Line *line, utf8_t *start) {
   line->start = start;
   line->origin = GPoint(0, 0);
   line->height_px = 0;
@@ -67,16 +65,15 @@ void line_reset(Line* line, utf8_t* start) {
 void test_line_layout__lam_alef_width_counts_ligature_once(void) {
   Iterator word_iter = ITERATOR_EMPTY;
   WordIterState word_iter_state = WORD_ITER_STATE_EMPTY;
-  Line line = { 0 };
+  Line line = {0};
 
   bool success = false;
   const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, "\xD8\xA8\xD9\x84\xD8\xA7");  // بلا
   cl_assert(success);
 
-  const TextBoxParams text_box_params = (TextBoxParams) {
-    .utf8_bounds = &utf8_bounds,
-    .box = (GRect) { GPointZero, (GSize) { 5 * HORIZ_ADVANCE_PX + 1, 11 } }
-  };
+  const TextBoxParams text_box_params =
+      (TextBoxParams){.utf8_bounds = &utf8_bounds,
+                      .box = (GRect){GPointZero, (GSize){5 * HORIZ_ADVANCE_PX + 1, 11}}};
   line.max_width_px = text_box_params.box.size.w;
   line.height_px = text_box_params.box.size.h;
 
@@ -94,17 +91,16 @@ void test_line_layout__lam_alef_width_counts_ligature_once(void) {
 void test_line_layout__lam_alef_width_transparent_to_harakat(void) {
   Iterator word_iter = ITERATOR_EMPTY;
   WordIterState word_iter_state = WORD_ITER_STATE_EMPTY;
-  Line line = { 0 };
+  Line line = {0};
 
   bool success = false;
   const Utf8Bounds utf8_bounds =
       utf8_get_bounds(&success, "\xD8\xA8\xD9\x84\xD9\x8E\xD8\xA7");  // بلَا
   cl_assert(success);
 
-  const TextBoxParams text_box_params = (TextBoxParams) {
-    .utf8_bounds = &utf8_bounds,
-    .box = (GRect) { GPointZero, (GSize) { 6 * HORIZ_ADVANCE_PX + 1, 11 } }
-  };
+  const TextBoxParams text_box_params =
+      (TextBoxParams){.utf8_bounds = &utf8_bounds,
+                      .box = (GRect){GPointZero, (GSize){6 * HORIZ_ADVANCE_PX + 1, 11}}};
   line.max_width_px = text_box_params.box.size.w;
   line.height_px = text_box_params.box.size.h;
 
@@ -118,17 +114,16 @@ void test_line_layout__test_line_add_word_no_overflow(void) {
   // Allocate mutable types
   Iterator word_iter = ITERATOR_EMPTY;
   WordIterState word_iter_state = WORD_ITER_STATE_EMPTY;
-  Line line = { 0 };
+  Line line = {0};
 
   // Allocate immutable types
   bool success = false;
   const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, "Foo bar");
   cl_assert(success);
 
-  const TextBoxParams text_box_params = (TextBoxParams) {
-    .utf8_bounds = &utf8_bounds,
-    .box = (GRect) { GPointZero, (GSize) { 7 * HORIZ_ADVANCE_PX + 1, 11 } }
-  };
+  const TextBoxParams text_box_params =
+      (TextBoxParams){.utf8_bounds = &utf8_bounds,
+                      .box = (GRect){GPointZero, (GSize){7 * HORIZ_ADVANCE_PX + 1, 11}}};
   line.max_width_px = text_box_params.box.size.w;
   line.height_px = text_box_params.box.size.h;
 
@@ -154,17 +149,15 @@ void test_line_layout__test_line_add_word_exact_bounds(void) {
   // Allocate mutable types
   Iterator word_iter = ITERATOR_EMPTY;
   WordIterState word_iter_state = WORD_ITER_STATE_EMPTY;
-  Line line = { 0 };
-  
+  Line line = {0};
+
   // Allocate immutable types
   bool success = false;
   const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, "Foo bar");
   cl_assert(success);
 
-  const TextBoxParams text_box_params = (TextBoxParams) {
-    .utf8_bounds = &utf8_bounds,
-    .box = (GRect) { GPointZero, (GSize) { 7 * HORIZ_ADVANCE_PX, 10 } }
-  };
+  const TextBoxParams text_box_params = (TextBoxParams){
+      .utf8_bounds = &utf8_bounds, .box = (GRect){GPointZero, (GSize){7 * HORIZ_ADVANCE_PX, 10}}};
   line.max_width_px = text_box_params.box.size.w;
   line.height_px = text_box_params.box.size.h;
 
@@ -187,9 +180,9 @@ void test_line_layout__test_line_add_word_exact_bounds(void) {
 
 void test_line_layout__test_line_add_word_horizontal_overflow(void) {
   // Allocate mutable types
-  Iterator word_iter = (Iterator) { 0 };
-  WordIterState word_iter_state = (WordIterState) { 0 };
-  Line line = (Line) { 0 };
+  Iterator word_iter = (Iterator){0};
+  WordIterState word_iter_state = (WordIterState){0};
+  Line line = (Line){0};
 
   // Allocate immutable types
   bool success = false;
@@ -198,11 +191,10 @@ void test_line_layout__test_line_add_word_horizontal_overflow(void) {
   const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, sentence);
   cl_assert(success);
 
-  const TextBoxParams text_box_params = (TextBoxParams) {
-    .utf8_bounds = &utf8_bounds,
-      // Width for first word only:
-    .box = (GRect) { (GPoint) { 0, 0 }, (GSize) { 3 * HORIZ_ADVANCE_PX, 10 } }
-  };
+  const TextBoxParams text_box_params =
+      (TextBoxParams){.utf8_bounds = &utf8_bounds,
+                      // Width for first word only:
+                      .box = (GRect){(GPoint){0, 0}, (GSize){3 * HORIZ_ADVANCE_PX, 10}}};
   line.max_width_px = text_box_params.box.size.w;
   line.height_px = text_box_params.box.size.h;
 
@@ -226,9 +218,9 @@ void test_line_layout__test_line_add_word_horizontal_overflow(void) {
 
 void test_line_layout__test_line_add_word_ideographs(void) {
   // Allocate mutable types
-  Iterator word_iter = (Iterator) { 0 };
-  WordIterState word_iter_state = (WordIterState) { 0 };
-  Line line = (Line) { 0 };
+  Iterator word_iter = (Iterator){0};
+  WordIterState word_iter_state = (WordIterState){0};
+  Line line = (Line){0};
 
   // Allocate immutable types
   bool success = false;
@@ -237,11 +229,10 @@ void test_line_layout__test_line_add_word_ideographs(void) {
   const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, sentence);
   cl_assert(success);
 
-  const TextBoxParams text_box_params = (TextBoxParams) {
-    .utf8_bounds = &utf8_bounds,
-      // Width for first word only:
-    .box = (GRect) { (GPoint) { 0, 0 }, (GSize) { 3 * HORIZ_ADVANCE_PX, 10 } }
-  };
+  const TextBoxParams text_box_params =
+      (TextBoxParams){.utf8_bounds = &utf8_bounds,
+                      // Width for first word only:
+                      .box = (GRect){(GPoint){0, 0}, (GSize){3 * HORIZ_ADVANCE_PX, 10}}};
   line.max_width_px = text_box_params.box.size.w;
   line.height_px = text_box_params.box.size.h;
 
@@ -266,7 +257,7 @@ void test_line_layout__test_line_add_word_ideographs(void) {
   cl_assert(line.width_px == 3 * HORIZ_ADVANCE_PX);
 
   // reset line
-  line = (Line) { 0 };
+  line = (Line){0};
   line.max_width_px = text_box_params.box.size.w;
   line.height_px = text_box_params.box.size.h;
 
@@ -281,7 +272,7 @@ void test_line_layout__test_line_add_word_ideographs(void) {
   cl_assert(line.width_px == 1 * HORIZ_ADVANCE_PX);
 
   // reset line
-  line = (Line) { 0 };
+  line = (Line){0};
   line.max_width_px = text_box_params.box.size.w;
   line.height_px = text_box_params.box.size.h;
 
@@ -296,7 +287,7 @@ void test_line_layout__test_line_add_word_ideographs(void) {
   cl_assert(line.width_px == 3 * HORIZ_ADVANCE_PX);
 
   // reset line
-  line = (Line) { 0 };
+  line = (Line){0};
   line.max_width_px = text_box_params.box.size.w;
   line.height_px = text_box_params.box.size.h;
 
@@ -312,7 +303,6 @@ void test_line_layout__test_line_add_word_ideographs(void) {
 
   cl_assert(!line_add_word(&s_ctx, &line, &word_iter_state.current, &text_box_params));
   cl_assert(!line_add_word(&s_ctx, &line, &word_iter_state.current, &text_box_params));
-
 }
 
 //! Multi-line, multi-word, multi-hyphenation
@@ -320,17 +310,15 @@ void test_line_layout__test_line_add_words_multi_line(void) {
   // Allocate mutable types
   Iterator word_iter = ITERATOR_EMPTY;
   WordIterState word_iter_state = WORD_ITER_STATE_EMPTY;
-  Line line = { 0 };
-  
+  Line line = {0};
+
   // Allocate immutable types
   bool success = false;
   const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, "Foo b\n\n\nar \nanimalstyle");
   cl_assert(success);
 
-  const TextBoxParams text_box_params = (TextBoxParams) {
-    .utf8_bounds = &utf8_bounds,
-    .box = (GRect) { GPointZero, (GSize) { 4 * HORIZ_ADVANCE_PX, 90 } }
-  };
+  const TextBoxParams text_box_params = (TextBoxParams){
+      .utf8_bounds = &utf8_bounds, .box = (GRect){GPointZero, (GSize){4 * HORIZ_ADVANCE_PX, 90}}};
   line.max_width_px = text_box_params.box.size.w;
   line.height_px = text_box_params.box.size.h;
 
@@ -460,22 +448,18 @@ void test_line_layout__test_line_add_words_multi_line(void) {
 void test_line_layout__test_walk_lines_down(void) {
   // Allocate mutable types
   Iterator line_iter = ITERATOR_EMPTY;
-  LineIterState line_iter_state = { 0 };
+  LineIterState line_iter_state = {0};
 
   // Allocate immutable types
   bool success = false;
   const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, "\n\n\0");
   cl_assert(success);
 
-  s_ctx.text_draw_state.text_box = (TextBoxParams) {
-    .utf8_bounds = &utf8_bounds,
-    .box = (GRect) { GPointZero, (GSize) { 7 * HORIZ_ADVANCE_PX, 80 } }
-  };
-  s_ctx.text_draw_state.line = (Line) {
-    .max_width_px = s_ctx.text_draw_state.text_box.box.size.w,
-    .height_px = s_ctx.text_draw_state.text_box.box.size.h,
-    .start = utf8_bounds.start
-  };
+  s_ctx.text_draw_state.text_box = (TextBoxParams){
+      .utf8_bounds = &utf8_bounds, .box = (GRect){GPointZero, (GSize){7 * HORIZ_ADVANCE_PX, 80}}};
+  s_ctx.text_draw_state.line = (Line){.max_width_px = s_ctx.text_draw_state.text_box.box.size.w,
+                                      .height_px = s_ctx.text_draw_state.text_box.box.size.h,
+                                      .start = utf8_bounds.start};
 
   // Init mutable types
   line_iter_init(&line_iter, &line_iter_state, &s_ctx);
@@ -483,7 +467,8 @@ void test_line_layout__test_walk_lines_down(void) {
   // Tests
   int count = 0;
   while (true) {
-    bool is_text_remaining = line_add_words(&s_ctx.text_draw_state.line, &line_iter_state.word_iter, NULL);
+    bool is_text_remaining =
+        line_add_words(&s_ctx.text_draw_state.line, &line_iter_state.word_iter, NULL);
     count++;
     if (!is_text_remaining) {
       // Exit after 2 lines
@@ -497,4 +482,3 @@ void test_line_layout__test_walk_lines_down(void) {
     }
   }
 }
-

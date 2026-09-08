@@ -12,7 +12,7 @@
 #include "process_state/app_state/app_state.h"
 #include "process_state/worker_state/worker_state.h"
 
-static ConnectionServiceState* prv_get_state(void) {
+static ConnectionServiceState *prv_get_state(void) {
   PebbleTask task = pebble_task_get_current();
 
   if (task == PebbleTask_App) {
@@ -29,9 +29,8 @@ static void prv_do_handle(PebbleEvent *e, void *context) {
   bool connected = e->bluetooth.comm_session_event.is_open;
 
   ConnectionHandler handler =
-      (e->bluetooth.comm_session_event.is_system ?
-       state->handlers.pebble_app_connection_handler :
-       state->handlers.pebblekit_connection_handler);
+      (e->bluetooth.comm_session_event.is_system ? state->handlers.pebble_app_connection_handler
+                                                 : state->handlers.pebblekit_connection_handler);
 
   if (handler) {
     handler(connected);
@@ -59,27 +58,24 @@ void connection_service_subscribe(ConnectionHandlers conn_handlers) {
 }
 
 void connection_service_state_init(ConnectionServiceState *state) {
-  *state = (ConnectionServiceState) {
-    .bcs_info = {
-      .type = PEBBLE_BT_CONNECTION_DEBOUNCED_EVENT,
-      .handler = prv_do_handle,
-    },
+  *state = (ConnectionServiceState){
+      .bcs_info =
+          {
+              .type = PEBBLE_BT_CONNECTION_DEBOUNCED_EVENT,
+              .handler = prv_do_handle,
+          },
   };
 }
 
 // Deprecated routines kept around for backward compile compatibility
 
 void bluetooth_connection_service_subscribe(ConnectionHandler handler) {
-  ConnectionHandlers conn_handlers = {
-    .pebble_app_connection_handler = handler,
-    .pebblekit_connection_handler = NULL
-  };
+  ConnectionHandlers conn_handlers = {.pebble_app_connection_handler = handler,
+                                      .pebblekit_connection_handler = NULL};
   connection_service_subscribe(conn_handlers);
 }
 
-void bluetooth_connection_service_unsubscribe(void) {
-  connection_service_unsubscribe();
-}
+void bluetooth_connection_service_unsubscribe(void) { connection_service_unsubscribe(); }
 
 bool bluetooth_connection_service_peek(void) {
   return connection_service_peek_pebble_app_connection();

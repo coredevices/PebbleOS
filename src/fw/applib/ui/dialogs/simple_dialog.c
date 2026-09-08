@@ -21,11 +21,11 @@
 
 // Layout Defines
 #define TEXT_ALIGNMENT (GTextAlignmentCenter)
-#define TEXT_OVERFLOW  (GTextOverflowModeWordWrap)
+#define TEXT_OVERFLOW (GTextOverflowModeWordWrap)
 #if PBL_DISPLAY_HEIGHT >= 200
-#define TEXT_FONT      (fonts_get_system_font(FONT_KEY_GOTHIC_28))
+#define TEXT_FONT (fonts_get_system_font(FONT_KEY_GOTHIC_28))
 #else
-#define TEXT_FONT      (fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD))
+#define TEXT_FONT (fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD))
 #endif
 
 // On taller round displays, inset the text box so the larger font still wraps
@@ -35,25 +35,20 @@
 #else
 #define TEXT_ROUND_MARGIN_PX (0)
 #endif
-#define TEXT_LEFT_MARGIN_PX  (PBL_IF_RECT_ELSE(6, TEXT_ROUND_MARGIN_PX))
+#define TEXT_LEFT_MARGIN_PX (PBL_IF_RECT_ELSE(6, TEXT_ROUND_MARGIN_PX))
 #define TEXT_RIGHT_MARGIN_PX (PBL_IF_RECT_ELSE(6, TEXT_ROUND_MARGIN_PX))
-#define TEXT_FLOW_INSET_PX   (PBL_IF_RECT_ELSE(0, 8))
-#define TEXT_LINE_HEIGHT_PX  (fonts_get_font_height(TEXT_FONT))
-#define TEXT_MAX_HEIGHT_PX   ((2 * TEXT_LINE_HEIGHT_PX) + 8) // 2 line + some space for descenders
-
+#define TEXT_FLOW_INSET_PX (PBL_IF_RECT_ELSE(0, 8))
+#define TEXT_LINE_HEIGHT_PX (fonts_get_font_height(TEXT_FONT))
+#define TEXT_MAX_HEIGHT_PX ((2 * TEXT_LINE_HEIGHT_PX) + 8)  // 2 line + some space for descenders
 
 static int prv_get_rendered_text_height(const char *text, const GRect *text_box) {
   GContext *ctx = graphics_context_get_current_context();
-  TextLayoutExtended layout = { 0 };
-  graphics_text_attributes_enable_screen_text_flow((GTextLayoutCacheRef) &layout,
+  TextLayoutExtended layout = {0};
+  graphics_text_attributes_enable_screen_text_flow((GTextLayoutCacheRef)&layout,
                                                    TEXT_FLOW_INSET_PX);
-  return graphics_text_layout_get_max_used_size(ctx,
-                                                text,
-                                                TEXT_FONT,
-                                                *text_box,
-                                                TEXT_OVERFLOW,
-                                                TEXT_ALIGNMENT,
-                                                (GTextLayoutCacheRef) &layout).h;
+  return graphics_text_layout_get_max_used_size(ctx, text, TEXT_FONT, *text_box, TEXT_OVERFLOW,
+                                                TEXT_ALIGNMENT, (GTextLayoutCacheRef)&layout)
+      .h;
 }
 
 static int prv_get_icon_top_margin(bool has_status_bar, int icon_height, int window_height) {
@@ -77,8 +72,8 @@ static int prv_get_icon_top_margin(bool has_status_bar, int icon_height, int win
   return icon_top_default_margin_px;
 }
 
-static void prv_get_text_box(GSize frame_size, GSize icon_size,
-                              int icon_top_margin_px, GRect *text_box_out) {
+static void prv_get_text_box(GSize frame_size, GSize icon_size, int icon_top_margin_px,
+                             GRect *text_box_out) {
 #if PBL_DISPLAY_HEIGHT >= 200
   const uint16_t icon_text_spacing_px = PBL_IF_ROUND_ELSE(8, 16);
 #else
@@ -109,8 +104,8 @@ static void prv_simple_dialog_load(Window *window) {
     dialog_add_status_bar_layer(dialog, &GRect(0, 0, frame.size.w, STATUS_BAR_LAYER_HEIGHT));
   }
 
-  uint16_t icon_top_margin_px = prv_get_icon_top_margin(dialog->show_status_layer,
-                                                        icon_size.h, frame.size.h);
+  uint16_t icon_top_margin_px =
+      prv_get_icon_top_margin(dialog->show_status_layer, icon_size.h, frame.size.h);
 
   // Text
   GRect text_box;
@@ -137,8 +132,8 @@ static void prv_simple_dialog_load(Window *window) {
 #endif
 
   // Icon
-  const GPoint icon_origin = GPoint((grect_get_max_x(&frame) - icon_size.w) / 2,
-                                    icon_top_margin_px);
+  const GPoint icon_origin =
+      GPoint((grect_get_max_x(&frame) - icon_size.w) / 2, icon_top_margin_px);
 
   if (dialog_init_icon_layer(dialog, icon, icon_origin, !simple_dialog->icon_static)) {
     layer_add_child(&dialog->window.layer, &dialog->icon_layer.layer);
@@ -175,9 +170,7 @@ static void prv_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_DOWN, prv_click_handler);
 }
 
-Dialog *simple_dialog_get_dialog(SimpleDialog *simple_dialog) {
-  return &simple_dialog->dialog;
-}
+Dialog *simple_dialog_get_dialog(SimpleDialog *simple_dialog) { return &simple_dialog->dialog; }
 
 void simple_dialog_push(SimpleDialog *simple_dialog, WindowStack *window_stack) {
   dialog_push(&simple_dialog->dialog, window_stack);
@@ -189,17 +182,17 @@ void app_simple_dialog_push(SimpleDialog *simple_dialog) {
 
 void simple_dialog_init(SimpleDialog *simple_dialog, const char *dialog_name) {
   PBL_ASSERTN(simple_dialog);
-  *simple_dialog = (SimpleDialog) {
-    .icon_static = !SIMPLE_DIALOG_ANIMATED,
+  *simple_dialog = (SimpleDialog){
+      .icon_static = !SIMPLE_DIALOG_ANIMATED,
   };
 
   dialog_init(&simple_dialog->dialog, dialog_name);
   Window *window = &simple_dialog->dialog.window;
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_simple_dialog_load,
-    .unload = prv_simple_dialog_unload,
-    .appear = prv_simple_dialog_appear,
-  });
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_simple_dialog_load,
+                                         .unload = prv_simple_dialog_unload,
+                                         .appear = prv_simple_dialog_appear,
+                                     });
   window_set_click_config_provider_with_context(window, prv_config_provider, simple_dialog);
   window_set_user_data(window, simple_dialog);
 }
@@ -222,10 +215,10 @@ void simple_dialog_set_icon_animated(SimpleDialog *simple_dialog, bool animated)
   simple_dialog->icon_static = !animated;
 }
 
-bool simple_dialog_does_text_fit(const char *text, GSize window_size,
-                                 GSize icon_size, bool has_status_bar) {
-  const uint16_t icon_top_margin_px = prv_get_icon_top_margin(has_status_bar, icon_size.h,
-                                                              window_size.h);
+bool simple_dialog_does_text_fit(const char *text, GSize window_size, GSize icon_size,
+                                 bool has_status_bar) {
+  const uint16_t icon_top_margin_px =
+      prv_get_icon_top_margin(has_status_bar, icon_size.h, window_size.h);
   GRect text_box;
   prv_get_text_box(window_size, icon_size, icon_top_margin_px, &text_box);
   return prv_get_rendered_text_height(text, &text_box) <= TEXT_MAX_HEIGHT_PX;

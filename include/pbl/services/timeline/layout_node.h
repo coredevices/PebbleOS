@@ -117,16 +117,16 @@ typedef struct PACKED {
 typedef struct PACKED {
   LayoutNodeExtentConfig extent;
   const char *font_key;
-  LayoutContentSize style:8;
-  TextStyleFont style_font:8;
-  int8_t line_spacing_delta:4;
+  LayoutContentSize style : 8;
+  TextStyleFont style_font : 8;
+  int8_t line_spacing_delta : 4;
   //! Specifies the fixed height as a function of the font height and number of lines.
   //! The lines corresponds to the multiplier against the font height to use, which correlates with
   //! the amount of lines that will render if used with other fixed components on the first page.
   //! Do not use fixed_lines for text that can appear after the first page fold. Doing so will
   //! result in text nodes that are not guaranteed to draw.
-  uint8_t fixed_lines:2;
-  LayoutTextAlignment alignment:2;
+  uint8_t fixed_lines : 2;
+  LayoutTextAlignment alignment : 2;
 #if PBL_COLOR
   LayoutColor color;
 #endif
@@ -134,9 +134,9 @@ typedef struct PACKED {
 
 typedef struct PACKED {
   LayoutNodeExtentConfig extent;
-  LayoutContentSize size:8;
-  TextStyleFont heading_style_font:8;
-  TextStyleFont paragraph_style_font:8;
+  LayoutContentSize size : 8;
+  TextStyleFont heading_style_font : 8;
+  TextStyleFont paragraph_style_font : 8;
 } LayoutNodeHeadingsParagraphsConfig;
 
 typedef struct PACKED {
@@ -152,9 +152,9 @@ typedef struct PACKED {
 
 typedef struct LayoutNodeTextDynamicConfig LayoutNodeTextDynamicConfig;
 
-typedef void (*LayoutNodeTextDynamicUpdate)(
-    const LayoutLayer *layout, const LayoutNodeTextDynamicConfig *config, char *buffer,
-    bool render);
+typedef void (*LayoutNodeTextDynamicUpdate)(const LayoutLayer *layout,
+                                            const LayoutNodeTextDynamicConfig *config, char *buffer,
+                                            bool render);
 
 struct PACKED LayoutNodeTextDynamicConfig {
   LayoutNodeTextConfig text;
@@ -182,8 +182,8 @@ typedef struct PACKED {
 
 typedef struct LayoutNodeConstructorConfig LayoutNodeConstructorConfig;
 
-typedef GTextNode *(*LayoutNodeConstructor)(
-    const LayoutLayer *layout, const LayoutNodeConstructorConfig *config);
+typedef GTextNode *(*LayoutNodeConstructor)(const LayoutLayer *layout,
+                                            const LayoutNodeConstructorConfig *config);
 
 struct PACKED LayoutNodeConstructorConfig {
   LayoutNodeExtentConfig extent;

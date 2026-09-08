@@ -61,18 +61,14 @@ void dialog_set_icon_animate_direction(Dialog *dialog, DialogIconAnimationDirect
   dialog->icon_anim_direction = direction;
 }
 
-void dialog_set_vibe(Dialog *dialog, bool vibe_on_show) {
-  dialog->vibe_on_show = vibe_on_show;
-}
+void dialog_set_vibe(Dialog *dialog, bool vibe_on_show) { dialog->vibe_on_show = vibe_on_show; }
 
-void dialog_set_timeout(Dialog *dialog, uint32_t timeout) {
-  dialog->timeout = timeout;
-}
+void dialog_set_timeout(Dialog *dialog, uint32_t timeout) { dialog->timeout = timeout; }
 
 void dialog_set_callbacks(Dialog *dialog, const DialogCallbacks *callbacks,
                           void *callback_context) {
   if (!callbacks) {
-    dialog->callbacks = (DialogCallbacks) {};
+    dialog->callbacks = (DialogCallbacks){};
     return;
   }
 

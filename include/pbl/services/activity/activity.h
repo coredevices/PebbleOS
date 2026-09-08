@@ -12,15 +12,15 @@
 #include "util/time/time.h"
 
 // Max # of days of history we store
-#define ACTIVITY_HISTORY_DAYS                     30
+#define ACTIVITY_HISTORY_DAYS 30
 
 // The max number of activity sessions we collect and cache at a time. Usually, there will only be
 // about 4 or 5 sleep sessions (1 container and a handful of restful periods) in a night and
 // a handful of walk and/or run sessions. Allocating space for 32 to should be more than enough.
-#define ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT      32
+#define ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT 32
 
 // Number of calories in a kcalorie
-#define ACTIVITY_CALORIES_PER_KCAL                1000
+#define ACTIVITY_CALORIES_PER_KCAL 1000
 
 // Values for ActivitySettingGender
 typedef enum {
@@ -62,46 +62,49 @@ typedef enum {
 // Activity HRM Settings Struct, for storing to prefs
 typedef struct PACKED ActivityHRMSettings {
   bool enabled;
-  uint8_t measurement_interval; // HRMonitoringInterval value
-  bool activity_tracking_enabled; // HR tracking during detected activities (walk/run)
+  uint8_t measurement_interval;    // HRMonitoringInterval value
+  bool activity_tracking_enabled;  // HR tracking during detected activities (walk/run)
 } ActivityHRMSettings;
 
 // Default values, taken from http://www.cdc.gov/nchs/fastats/body-measurements.htm
-#define ACTIVITY_DEFAULT_HEIGHT_MM                1620    // 5'3.8"
+#define ACTIVITY_DEFAULT_HEIGHT_MM 1620  // 5'3.8"
 // dag - decagram (10 g)
-#define ACTIVITY_DEFAULT_WEIGHT_DAG               7539    // 166.2 lbs
-#define ACTIVITY_DEFAULT_GENDER                   ActivityGenderFemale
-#define ACTIVITY_DEFAULT_AGE_YEARS                30
+#define ACTIVITY_DEFAULT_WEIGHT_DAG 7539  // 166.2 lbs
+#define ACTIVITY_DEFAULT_GENDER ActivityGenderFemale
+#define ACTIVITY_DEFAULT_AGE_YEARS 30
 
-#define ACTIVITY_DEFAULT_PREFERENCES { \
-  .tracking_enabled = false, \
-  .activity_insights_enabled = false, \
-  .sleep_insights_enabled = false, \
-  .age_years = ACTIVITY_DEFAULT_AGE_YEARS, \
-  .gender = ACTIVITY_DEFAULT_GENDER, \
-  .height_mm = ACTIVITY_DEFAULT_HEIGHT_MM, \
-  .weight_dag = ACTIVITY_DEFAULT_WEIGHT_DAG, \
-}
+#define ACTIVITY_DEFAULT_PREFERENCES             \
+  {                                              \
+      .tracking_enabled = false,                 \
+      .activity_insights_enabled = false,        \
+      .sleep_insights_enabled = false,           \
+      .age_years = ACTIVITY_DEFAULT_AGE_YEARS,   \
+      .gender = ACTIVITY_DEFAULT_GENDER,         \
+      .height_mm = ACTIVITY_DEFAULT_HEIGHT_MM,   \
+      .weight_dag = ACTIVITY_DEFAULT_WEIGHT_DAG, \
+  }
 
-#define ACTIVITY_HEART_RATE_DEFAULT_PREFERENCES { \
-  .resting_hr = 70, \
-  .elevated_hr = 100, \
-  .max_hr = 220 - ACTIVITY_DEFAULT_AGE_YEARS, \
-  .zone1_threshold = 130 /* 50% of HRR */, \
-  .zone2_threshold = 154 /* 70% of HRR */, \
-  .zone3_threshold = 172 /* 85% of HRR */, \
-}
+#define ACTIVITY_HEART_RATE_DEFAULT_PREFERENCES   \
+  {                                               \
+      .resting_hr = 70,                           \
+      .elevated_hr = 100,                         \
+      .max_hr = 220 - ACTIVITY_DEFAULT_AGE_YEARS, \
+      .zone1_threshold = 130 /* 50% of HRR */,    \
+      .zone2_threshold = 154 /* 70% of HRR */,    \
+      .zone3_threshold = 172 /* 85% of HRR */,    \
+  }
 
-#define ACTIVITY_HRM_DEFAULT_PREFERENCES { \
-  .enabled = true, \
-  .measurement_interval = HRMonitoringInterval_10Min, \
-  .activity_tracking_enabled = false, \
-}
+#define ACTIVITY_HRM_DEFAULT_PREFERENCES                  \
+  {                                                       \
+      .enabled = true,                                    \
+      .measurement_interval = HRMonitoringInterval_10Min, \
+      .activity_tracking_enabled = false,                 \
+  }
 
 // We consider values outside of this range to be invalid
 // In the future we could pick these values based on user history
-#define ACTIVITY_DEFAULT_MIN_HR  40
-#define ACTIVITY_DEFAULT_MAX_HR  200
+#define ACTIVITY_DEFAULT_MIN_HR 40
+#define ACTIVITY_DEFAULT_MAX_HR 200
 
 // Activity metric enums, accepted by activity_get_metric()
 typedef enum {
@@ -113,20 +116,20 @@ typedef enum {
   ActivityMetricDistanceMeters,
   ActivityMetricSleepTotalSeconds,
   ActivityMetricSleepRestfulSeconds,
-  ActivityMetricSleepEnterAtSeconds,               // What time the user fell asleep. Measured in
-                                                   // seconds after midnight.
-  ActivityMetricSleepExitAtSeconds,                // What time the user woke up. Measured in
-                                                   // seconds after midnight
-  ActivityMetricSleepState,                        // returns an ActivitySleepState enum value
-  ActivityMetricSleepStateSeconds,                 // how many seconds we've been in the
-                                                   // ActivityMetricSleepState state
+  ActivityMetricSleepEnterAtSeconds,  // What time the user fell asleep. Measured in
+                                      // seconds after midnight.
+  ActivityMetricSleepExitAtSeconds,   // What time the user woke up. Measured in
+                                      // seconds after midnight
+  ActivityMetricSleepState,           // returns an ActivitySleepState enum value
+  ActivityMetricSleepStateSeconds,    // how many seconds we've been in the
+                                      // ActivityMetricSleepState state
   ActivityMetricLastVMC,
 
-  ActivityMetricHeartRateRawBPM,                   // Most recent heart rate reading
-  ActivityMetricHeartRateRawQuality,               // Heart rate signal quality
-  ActivityMetricHeartRateRawUpdatedTimeUTC,        // UTC of last heart rate update
-  ActivityMetricHeartRateFilteredBPM,              // Most recent "Stable (median)" HR reading
-  ActivityMetricHeartRateFilteredUpdatedTimeUTC,   // UTC of last stable HR reading
+  ActivityMetricHeartRateRawBPM,                  // Most recent heart rate reading
+  ActivityMetricHeartRateRawQuality,              // Heart rate signal quality
+  ActivityMetricHeartRateRawUpdatedTimeUTC,       // UTC of last heart rate update
+  ActivityMetricHeartRateFilteredBPM,             // Most recent "Stable (median)" HR reading
+  ActivityMetricHeartRateFilteredUpdatedTimeUTC,  // UTC of last stable HR reading
 
   ActivityMetricHeartRateZone1Minutes,
   ActivityMetricHeartRateZone2Minutes,
@@ -136,7 +139,6 @@ typedef enum {
   ActivityMetricNumMetrics,
   ActivityMetricInvalid = ActivityMetricNumMetrics,
 } ActivityMetric;
-
 
 // Activity session types, used in ActivitySession struct
 typedef enum {
@@ -182,16 +184,15 @@ typedef enum {
   ActivitySleepStateUnknown,
 } ActivitySleepState;
 
-
 // Data included for stepping related activities.
 // NOTE: modifying this struct requires a bump to the ACTIVITY_SESSION_LOGGING_VERSION and
 // an update to documentation on this wiki page:
 //   https://pebbletechnology.atlassian.net/wiki/pages/viewpage.action?pageId=46301269
 typedef struct PACKED {
-  uint16_t steps;                                 // number of steps
-  uint16_t active_kcalories;                      // number of active kcalories
-  uint16_t resting_kcalories;                     // number of resting kcalories
-  uint16_t distance_meters;                       // distance covered
+  uint16_t steps;              // number of steps
+  uint16_t active_kcalories;   // number of active kcalories
+  uint16_t resting_kcalories;  // number of resting kcalories
+  uint16_t distance_meters;    // distance covered
 } ActivitySessionDataStepping;
 
 // Data included for sleep related activities
@@ -204,14 +205,14 @@ typedef struct {
 #define ACTIVITY_SESSION_MAX_LENGTH_MIN MINUTES_PER_DAY
 
 typedef struct PACKED {
-  time_t start_utc;                               // session start time
-  uint16_t length_min;                            // length of session in minutes
-  ActivitySessionType type:8;                     // type of activity
+  time_t start_utc;              // session start time
+  uint16_t length_min;           // length of session in minutes
+  ActivitySessionType type : 8;  // type of activity
   union {
     struct {
-      uint8_t ongoing:1;                          // activity still ongoing
-      uint8_t manual:1;                           // activity is a manual one
-      uint8_t reserved:6;
+      uint8_t ongoing : 1;  // activity still ongoing
+      uint8_t manual : 1;   // activity is a manual one
+      uint8_t reserved : 6;
     };
     uint8_t flags;
   };
@@ -233,50 +234,50 @@ typedef struct PACKED {
 
 // Utilities for the encoded samples collected by raw sample collection.
 #define ACTIVITY_RAW_SAMPLE_VALUE_BITS (10)
-#define ACTIVITY_RAW_SAMPLE_VALUE_MASK (0x03FF)     // 10 bits per axis
+#define ACTIVITY_RAW_SAMPLE_VALUE_MASK (0x03FF)  // 10 bits per axis
 
 // We throw away the least significant 3 bits and keep only 10 bits per axix. The + 4 is used
 // so that we round to nearest instead of rounding down as a result of the shift right
 #define ACTIVITY_RAW_SAMPLE_SHIFT 3
-#define ACTIVITY_RAW_SAMPLE_VALUE_ENCODE(x) ((((x) + 4) >> ACTIVITY_RAW_SAMPLE_SHIFT) \
-                                             & ACTIVITY_RAW_SAMPLE_VALUE_MASK)
+#define ACTIVITY_RAW_SAMPLE_VALUE_ENCODE(x) \
+  ((((x) + 4) >> ACTIVITY_RAW_SAMPLE_SHIFT) & ACTIVITY_RAW_SAMPLE_VALUE_MASK)
 
 #define ACTIVITY_RAW_SAMPLE_MAX_RUN_SIZE 3
 #define ACTIVITY_RAW_SAMPLE_GET_RUN_SIZE(s) ((s) >> (3 * ACTIVITY_RAW_SAMPLE_VALUE_BITS))
 #define ACTIVITY_RAW_SAMPLE_SET_RUN_SIZE(s, r) (s |= (r) << (3 * ACTIVITY_RAW_SAMPLE_VALUE_BITS))
 #define ACTIVITY_RAW_SAMPLE_SIGN_EXTEND(x) ((x) & 0x1000 ? -1 * (0x2000 - (x)) : (x))
 
-#define ACTIVITY_RAW_SAMPLE_GET_X(s) \
-    ACTIVITY_RAW_SAMPLE_SIGN_EXTEND((((uint32_t)s >> (2 * ACTIVITY_RAW_SAMPLE_VALUE_BITS)) \
-                                & ACTIVITY_RAW_SAMPLE_VALUE_MASK) << ACTIVITY_RAW_SAMPLE_SHIFT)
-#define ACTIVITY_RAW_SAMPLE_GET_Y(s) \
-    ACTIVITY_RAW_SAMPLE_SIGN_EXTEND(((s >> ACTIVITY_RAW_SAMPLE_VALUE_BITS) \
-                                & ACTIVITY_RAW_SAMPLE_VALUE_MASK) << ACTIVITY_RAW_SAMPLE_SHIFT)
+#define ACTIVITY_RAW_SAMPLE_GET_X(s)                                                           \
+  ACTIVITY_RAW_SAMPLE_SIGN_EXTEND(                                                             \
+      (((uint32_t)s >> (2 * ACTIVITY_RAW_SAMPLE_VALUE_BITS)) & ACTIVITY_RAW_SAMPLE_VALUE_MASK) \
+      << ACTIVITY_RAW_SAMPLE_SHIFT)
+#define ACTIVITY_RAW_SAMPLE_GET_Y(s)                                           \
+  ACTIVITY_RAW_SAMPLE_SIGN_EXTEND(                                             \
+      ((s >> ACTIVITY_RAW_SAMPLE_VALUE_BITS) & ACTIVITY_RAW_SAMPLE_VALUE_MASK) \
+      << ACTIVITY_RAW_SAMPLE_SHIFT)
 #define ACTIVITY_RAW_SAMPLE_GET_Z(s) \
-    ACTIVITY_RAW_SAMPLE_SIGN_EXTEND((s \
-                                & ACTIVITY_RAW_SAMPLE_VALUE_MASK) << ACTIVITY_RAW_SAMPLE_SHIFT)
+  ACTIVITY_RAW_SAMPLE_SIGN_EXTEND((s & ACTIVITY_RAW_SAMPLE_VALUE_MASK) << ACTIVITY_RAW_SAMPLE_SHIFT)
 
-#define ACTIVITY_RAW_SAMPLE_ENCODE(run_size, x, y, z)     \
-        ((run_size) << (3 * ACTIVITY_RAW_SAMPLE_VALUE_BITS))                                \
-    |   (ACTIVITY_RAW_SAMPLE_VALUE_ENCODE(x) << (2 * ACTIVITY_RAW_SAMPLE_VALUE_BITS))        \
-    |   (ACTIVITY_RAW_SAMPLE_VALUE_ENCODE(y) << ACTIVITY_RAW_SAMPLE_VALUE_BITS)              \
-    |   ACTIVITY_RAW_SAMPLE_VALUE_ENCODE(z)
+#define ACTIVITY_RAW_SAMPLE_ENCODE(run_size, x, y, z)                                 \
+  ((run_size) << (3 * ACTIVITY_RAW_SAMPLE_VALUE_BITS)) |                              \
+      (ACTIVITY_RAW_SAMPLE_VALUE_ENCODE(x) << (2 * ACTIVITY_RAW_SAMPLE_VALUE_BITS)) | \
+      (ACTIVITY_RAW_SAMPLE_VALUE_ENCODE(y) << ACTIVITY_RAW_SAMPLE_VALUE_BITS) |       \
+      ACTIVITY_RAW_SAMPLE_VALUE_ENCODE(z)
 
-#define ACTIVITY_RAW_SAMPLE_FLAG_FIRST_RECORD     0x01    // Set for first record of session
-#define ACTIVITY_RAW_SAMPLE_FLAG_LAST_RECORD      0x02    // set for last record of session
+#define ACTIVITY_RAW_SAMPLE_FLAG_FIRST_RECORD 0x01  // Set for first record of session
+#define ACTIVITY_RAW_SAMPLE_FLAG_LAST_RECORD 0x02   // set for last record of session
 typedef struct __attribute__((__packed__)) {
-  uint16_t version;                  // Set to ACTIVITY_RAW_SAMPLE_VERSION
-  uint16_t session_id;               // raw sample session id
-  uint32_t time_local;               // local time
-  uint8_t flags;                     // one or more of ACTIVITY_RAW_SAMPLE_FLAG_.*
-  uint8_t len;                       // length of this blob, including this entire header
-  uint8_t num_samples;               // number of uncompressed samples that this blob represents
-  uint8_t num_entries;               // number of elements in the entries array below
+  uint16_t version;     // Set to ACTIVITY_RAW_SAMPLE_VERSION
+  uint16_t session_id;  // raw sample session id
+  uint32_t time_local;  // local time
+  uint8_t flags;        // one or more of ACTIVITY_RAW_SAMPLE_FLAG_.*
+  uint8_t len;          // length of this blob, including this entire header
+  uint8_t num_samples;  // number of uncompressed samples that this blob represents
+  uint8_t num_entries;  // number of elements in the entries array below
   uint32_t entries[ACTIVITY_RAW_SAMPLES_MAX_ENTRIES];
-                                     // array of entries, each entry can represent multiple samples
-                                     // if we detect run lengths
+  // array of entries, each entry can represent multiple samples
+  // if we detect run lengths
 } ActivityRawSamplesRecord;
-
 
 //! Init the activity tracking service. This does not start it up - to start it up call
 //! activity_start_tracking();
@@ -447,7 +448,6 @@ bool activity_get_metric_typical(ActivityMetric metric, DayInWeek day, int32_t *
 //! Get the value for a metric over the last 4 weeks
 bool activity_get_metric_monthly_avg(ActivityMetric metric, int32_t *value_out);
 
-
 //! Get detailed info about activity sessions. This fills in an array with info on all of the
 //! activity sessions that ended after 12am (midnight) of the current day. The caller must allocate
 //! space for the array and tell this method how many entries the array can hold
@@ -476,8 +476,8 @@ bool activity_get_minute_history(HealthMinuteData *minute_data, uint32_t *num_re
                                  time_t *utc_start);
 
 // Metric averages, returned by activity_get_step_averages()
-#define ACTIVITY_NUM_METRIC_AVERAGES (4 * 24) //!< one average for each 15 minute interval of a day
-#define ACTIVITY_METRIC_AVERAGES_UNKNOWN  0xFFFF //!< indicates the average is unknown
+#define ACTIVITY_NUM_METRIC_AVERAGES (4 * 24)  //!< one average for each 15 minute interval of a day
+#define ACTIVITY_METRIC_AVERAGES_UNKNOWN 0xFFFF  //!< indicates the average is unknown
 typedef struct {
   uint16_t average[ACTIVITY_NUM_METRIC_AVERAGES];
 } ActivityMetricAverages;
@@ -508,8 +508,8 @@ bool activity_get_step_averages(DayInWeek day_of_week, ActivityMetricAverages *a
 //!     sampling is currently disabled, this is the number of seconds of data in the most recently
 //!     ended session.
 //! @return true on success, false on error
-bool activity_raw_sample_collection(bool enable, bool disable, bool *enabled,
-                                    uint32_t *session_id, uint32_t *num_samples, uint32_t *seconds);
+bool activity_raw_sample_collection(bool enable, bool disable, bool *enabled, uint32_t *session_id,
+                                    uint32_t *num_samples, uint32_t *seconds);
 
 //! Dump the current sleep data using PBL_LOG. We write out base64 encoded data using PBL_LOG
 //! so that it can be extracted using a support request.

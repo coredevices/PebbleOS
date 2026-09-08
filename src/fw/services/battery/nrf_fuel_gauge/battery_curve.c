@@ -6,7 +6,7 @@
 
 uint32_t battery_curve_get_percent_remaining(uint32_t hours) {
   return ((hours * 100) / BOARD_CONFIG_POWER.battery_capacity_hours) +
-    BOARD_CONFIG_POWER.low_power_threshold;
+         BOARD_CONFIG_POWER.low_power_threshold;
 }
 
 // TODO: nRF Fuel gauge lib provides TTE estimation
@@ -21,13 +21,10 @@ uint32_t battery_curve_get_hours_remaining(uint32_t percent_remaining) {
   return ((BOARD_CONFIG_POWER.battery_capacity_hours * percent_remaining) / 100);
 }
 
-
 // Stubs for tests (need fixing/test adjustments)
-int32_t battery_curve_lookup_percent_with_scaling_factor(
-    int battery_mv, bool is_charging, uint32_t scaling_factor) {
+int32_t battery_curve_lookup_percent_with_scaling_factor(int battery_mv, bool is_charging,
+                                                         uint32_t scaling_factor) {
   return 0U;
 }
 
-uint32_t battery_curve_lookup_voltage_by_percent(uint32_t percent, bool is_charging) {
-  return 0U;
-}
+uint32_t battery_curve_lookup_voltage_by_percent(uint32_t percent, bool is_charging) { return 0U; }

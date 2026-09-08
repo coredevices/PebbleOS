@@ -358,9 +358,7 @@ static MagReadStatus prv_mmc5603nj_get_sample(MagData *sample) {
   return MagReadSuccess;
 }
 
-void mag_set_rotated(bool rotated) {
-  s_rotated_180 = rotated;
-}
+void mag_set_rotated(bool rotated) { s_rotated_180 = rotated; }
 
 static int16_t prv_get_axis_projection(axis_t axis, int16_t *raw_vector) {
   uint8_t axis_offset = BOARD_CONFIG_MAG.mag_config.axes_offsets[axis];

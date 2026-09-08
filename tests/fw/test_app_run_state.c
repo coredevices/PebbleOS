@@ -3,7 +3,7 @@
 
 #include "clar.h"
 
-//#include "comm/remote.h"
+// #include "comm/remote.h"
 #include "process_management/app_run_state.h"
 #include "pbl/services/comm_session/protocol.h"
 #include "system/passert.h"
@@ -32,11 +32,10 @@ typedef struct PACKED {
   Uuid uuid;
 } AppStateMessage;
 
-struct CommSession {
-};
+struct CommSession {};
 
 typedef struct PACKED {
-  AppState state:8;
+  AppState state : 8;
   Uuid uuid;
 } AppRunState;
 
@@ -58,49 +57,36 @@ static uint8_t s_app_state;
 
 static uint64_t s_flags = 0;
 
-static const Uuid s_app_uuid = {
-  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5
-};
+static const Uuid s_app_uuid = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5};
 
 // Helpers
 ///////////////////////////////////////
 static void prv_set_remote_active(void) {
   static const int deadbeef = 0xdeadbeef;
-  s_session = (void*)&deadbeef;
+  s_session = (void *)&deadbeef;
   s_flags = 0;
 }
 
-static void prv_set_expected(AppState app_state) {
-  s_app_state = app_state;
-}
+static void prv_set_expected(AppState app_state) { s_app_state = app_state; }
 
-static void prv_set_remote_capability(CommSessionCapability c) {
-  s_flags |= c;
-}
+static void prv_set_remote_capability(CommSessionCapability c) { s_flags |= c; }
 
 bool comm_session_has_capability(CommSession *session, CommSessionCapability c) {
   return (s_flags & c) != 0;
 }
 
-void app_install_unmark_prioritized(const Uuid *uuid) {
-  return;
-}
+void app_install_unmark_prioritized(const Uuid *uuid) { return; }
 
-bool app_install_is_app_running(AppInstallId id) {
-  return true;
-}
+bool app_install_is_app_running(AppInstallId id) { return true; }
 
-void app_install_mark_prioritized(AppInstallId install_id, bool can_expire) {
-}
+void app_install_mark_prioritized(AppInstallId install_id, bool can_expire) {}
 
-bool system_task_add_callback(void(*cb)(void *data), void *data) {
+bool system_task_add_callback(void (*cb)(void *data), void *data) {
   cb(data);
   return true;
 }
 
-status_t app_cache_app_launched(AppInstallId id) {
-  return 0;
-}
+status_t app_cache_app_launched(AppInstallId id) { return 0; }
 
 void app_manager_put_launch_app_event(const AppLaunchEventConfig *config) {
   app_run_state_send_update(&app_manager_get_current_app_md()->uuid, RUNNING);
@@ -110,36 +96,29 @@ void process_manager_put_kill_process_event(PebbleTask task, bool gracefully) {
   app_run_state_send_update(&app_manager_get_current_app_md()->uuid, NOT_RUNNING);
 }
 
-CommSession *comm_session_get_system_session(void) {
-  return s_session;
-}
+CommSession *comm_session_get_system_session(void) { return s_session; }
 
 void launcher_app_message_send_app_state_deprecated(const Uuid *uuid, bool running) {
   s_launcher_deprecated_messages++;
   cl_assert(running == (s_app_state == RUNNING ? true : false));
 }
 
-bool comm_session_send_data(CommSession *session, uint16_t endpoint_id,
-                            const uint8_t *data, size_t length, uint32_t timeout_ms) {
-  AppRunState *state = (AppRunState*)data;
+bool comm_session_send_data(CommSession *session, uint16_t endpoint_id, const uint8_t *data,
+                            size_t length, uint32_t timeout_ms) {
+  AppRunState *state = (AppRunState *)data;
   s_app_run_state_messages++;
   cl_assert(state->state == s_app_state);
   return true;
 }
 
-void bt_lock(void) {
-  return;
-}
+void bt_lock(void) { return; }
 
-void bt_unlock(void) {
-  return;
-}
-
+void bt_unlock(void) { return; }
 
 // Tests
 ///////////////////////////////////////
 
-extern void app_run_state_protocol_msg_callback(CommSession*, const uint8_t*, size_t);
+extern void app_run_state_protocol_msg_callback(CommSession *, const uint8_t *, size_t);
 
 void test_app_run_state__initialize(void) {
   s_launcher_deprecated_messages = 0;
@@ -153,12 +132,10 @@ void test_app_run_state__initialize(void) {
   stub_app_init();
 }
 
-
 void test_app_run_state__cleanup(void) {
   // Always ensure that after any test, all malloc'd data has been freed
   cl_assert_equal_i(s_malloc_count, s_free_count);
 }
-
 
 void test_app_run_state__send_update(void) {
   // Tests that when app_run_state_send_update is called, that the proper
@@ -206,37 +183,28 @@ void test_app_run_state__protocol_msg_callback(void) {
   msg.command = APP_RUN_STATE_INVALID_COMMAND;
   memcpy(&msg.uuid, &s_app_uuid, sizeof(s_app_uuid));
 
-  app_run_state_protocol_msg_callback(&session, (uint8_t*)&msg, sizeof(msg));
+  app_run_state_protocol_msg_callback(&session, (uint8_t *)&msg, sizeof(msg));
 
   // This should be a noop since the key is invalid
   cl_assert_equal_i(s_launcher_deprecated_messages, 0);
   cl_assert_equal_i(s_app_run_state_messages, 0);
 
-  AppRunStateCommand commands[] = {
-    APP_RUN_STATE_INVALID_COMMAND,
-    APP_RUN_STATE_RUN_COMMAND,
-    APP_RUN_STATE_STOP_COMMAND,
-    APP_RUN_STATE_STATUS_COMMAND
-  };
+  AppRunStateCommand commands[] = {APP_RUN_STATE_INVALID_COMMAND, APP_RUN_STATE_RUN_COMMAND,
+                                   APP_RUN_STATE_STOP_COMMAND, APP_RUN_STATE_STATUS_COMMAND};
 
-  AppState expected[] = {
-    RUNNING,
-    RUNNING,
-    NOT_RUNNING,
-    RUNNING
-  };
+  AppState expected[] = {RUNNING, RUNNING, NOT_RUNNING, RUNNING};
 
   // Since our version is >= 2.2, this should use the new endpoint
   // And check that we're getting back the right state
   for (int msg_count = 0; msg_count < 4; msg_count++) {
     msg.command = commands[msg_count];
     prv_set_expected(expected[msg_count]);
-    app_run_state_protocol_msg_callback(&session, (uint8_t*)&msg, sizeof(msg));
+    app_run_state_protocol_msg_callback(&session, (uint8_t *)&msg, sizeof(msg));
     cl_assert_equal_i(s_launcher_deprecated_messages, 0);
     cl_assert_equal_i(s_app_run_state_messages, msg_count);
   }
 
-  app_run_state_protocol_msg_callback(NULL, (uint8_t*)&msg, sizeof(msg));
+  app_run_state_protocol_msg_callback(NULL, (uint8_t *)&msg, sizeof(msg));
 
   cl_assert_equal_i(s_launcher_deprecated_messages, 1);
 }

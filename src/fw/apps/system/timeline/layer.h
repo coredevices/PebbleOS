@@ -19,8 +19,7 @@
 
 #define TIMELINE_LAYER_FIRST_VISIBLE_LAYOUT 1
 
-#define TIMELINE_LAYER_TEXT_ALIGNMENT \
-    PBL_IF_RECT_ELSE(GTextAlignmentLeft, GTextAlignmentRight)
+#define TIMELINE_LAYER_TEXT_ALIGNMENT PBL_IF_RECT_ELSE(GTextAlignmentLeft, GTextAlignmentRight)
 #define TIMELINE_LAYER_TEXT_VERTICAL_ALIGNMENT GVerticalAlignmentTop
 
 #define TIMELINE_LAYER_SLIDE_MS (150)
@@ -44,10 +43,10 @@ typedef struct {
 
 typedef struct {
   Layer layer;
-  RelationshipBar prev_rel_bar; // Used for previous relationship bar animation exit
-  RelationshipBar curr_rel_bar; // Used for current on-screen relationship bar animation
-  EventedTimerID rel_bar_timer; // Used to show bars after user stops fast scrolling
-  void *timeline_layer;         // Necessary for the layer update proc to access the TimelineLayer
+  RelationshipBar prev_rel_bar;  // Used for previous relationship bar animation exit
+  RelationshipBar curr_rel_bar;  // Used for current on-screen relationship bar animation
+  EventedTimerID rel_bar_timer;  // Used to show bars after user stops fast scrolling
+  void *timeline_layer;          // Necessary for the layer update proc to access the TimelineLayer
 } RelationshipBarLayer;
 
 // The timeline layer is the view(controller, sort of) for the timeline -- it uses

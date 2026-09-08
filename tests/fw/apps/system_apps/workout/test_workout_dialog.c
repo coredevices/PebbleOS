@@ -10,9 +10,7 @@
 // Fakes
 /////////////////////
 
-uint16_t time_ms(time_t *tloc, uint16_t *out_ms) {
-  return 0;
-}
+uint16_t time_ms(time_t *tloc, uint16_t *out_ms) { return 0; }
 
 // Setup and Teardown
 ////////////////////////////////////
@@ -20,13 +18,11 @@ uint16_t time_ms(time_t *tloc, uint16_t *out_ms) {
 static GContext s_ctx;
 static FrameBuffer s_fb;
 
-GContext *graphics_context_get_current_context(void) {
-  return &s_ctx;
-}
+GContext *graphics_context_get_current_context(void) { return &s_ctx; }
 
 void test_workout_dialog__initialize(void) {
   // Setup graphics context
-  framebuffer_init(&s_fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(&s_fb, &(GSize){DISP_COLS, DISP_ROWS});
   framebuffer_clear(&s_fb);
   graphics_context_init(&s_ctx, &s_fb, GContextInitializationMode_App);
   s_app_state_get_graphics_context = &s_ctx;
@@ -44,8 +40,7 @@ void test_workout_dialog__initialize(void) {
   content_indicator_init_buffer(buffer);
 }
 
-void test_workout_dialog__cleanup(void) {
-}
+void test_workout_dialog__cleanup(void) {}
 
 // Tests
 //////////////////////

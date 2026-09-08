@@ -15,14 +15,10 @@ static uint16_t s_battery_mv = 4000;
 static bool s_usb_connected;
 static uint8_t s_percent = 100;
 
-void battery_init(void) {
-  s_usb_connected = qemu_setting_get(QemuSetting_DefaultPluggedIn);
-}
+void battery_init(void) { s_usb_connected = qemu_setting_get(QemuSetting_DefaultPluggedIn); }
 
 // TODO: update whoever uses this function
-int battery_get_millivolts(void) {
-  return s_battery_mv;
-}
+int battery_get_millivolts(void) { return s_battery_mv; }
 
 int battery_get_constants(BatteryConstants *constants) {
   constants->v_mv = s_battery_mv;
@@ -40,21 +36,13 @@ bool battery_charge_controller_thinks_we_are_charging_impl(void) {
   return s_usb_connected && (s_percent < 100);
 }
 
-bool battery_is_usb_connected_impl(void) {
-  return s_usb_connected;
-}
+bool battery_is_usb_connected_impl(void) { return s_usb_connected; }
 
-void battery_set_charge_enable(bool charging_enabled) {
-  s_usb_connected = false;
-}
+void battery_set_charge_enable(bool charging_enabled) { s_usb_connected = false; }
 
-void battery_set_fast_charge(bool fast_charge_enabled) {
-}
+void battery_set_fast_charge(bool fast_charge_enabled) {}
 
-
-uint8_t qemu_battery_get_percent(void) {
-  return s_percent;
-}
+uint8_t qemu_battery_get_percent(void) { return s_percent; }
 
 void qemu_battery_msg_callback(const uint8_t *data, uint32_t len) {
   QemuProtocolBatteryHeader *hdr = (QemuProtocolBatteryHeader *)data;
@@ -63,8 +51,8 @@ void qemu_battery_msg_callback(const uint8_t *data, uint32_t len) {
     return;
   }
 
-  PBL_LOG_DBG("Got battery msg: pct: %d, charger_connected:%d",
-        hdr->battery_pct, hdr->charger_connected);
+  PBL_LOG_DBG("Got battery msg: pct: %d, charger_connected:%d", hdr->battery_pct,
+              hdr->charger_connected);
 
   s_percent = MIN(100, hdr->battery_pct);
   s_usb_connected = hdr->charger_connected;
@@ -76,5 +64,3 @@ void qemu_battery_msg_callback(const uint8_t *data, uint32_t len) {
   // Force a state machine update
   battery_state_handle_connection_event(s_usb_connected);
 }
-
-

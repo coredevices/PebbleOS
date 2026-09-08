@@ -18,19 +18,17 @@ void fake_otp_reset(void) {
   memset(s_otp_locks, 0xff, sizeof(s_otp_locks));
 }
 
-char * otp_get_slot(const uint8_t index) {
+char *otp_get_slot(const uint8_t index) {
   PBL_ASSERTN(index < NUM_OTP_SLOTS);
-  return (char * const) (s_otp_buffer + (32 * index));
+  return (char *const)(s_otp_buffer + (32 * index));
 }
 
-uint8_t * otp_get_lock(const uint8_t index) {
+uint8_t *otp_get_lock(const uint8_t index) {
   PBL_ASSERTN(index < NUM_OTP_SLOTS);
-  return (uint8_t * const) (s_otp_locks + index);
+  return (uint8_t *const)(s_otp_locks + index);
 }
 
-bool otp_is_locked(const uint8_t index) {
-  return (*otp_get_lock(index) == 0);
-}
+bool otp_is_locked(const uint8_t index) { return (*otp_get_lock(index) == 0); }
 
 OtpWriteResult otp_write_slot(const uint8_t index, const char *value) {
   if (otp_is_locked(index)) {

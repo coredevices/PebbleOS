@@ -30,7 +30,7 @@ typedef struct UARTState {
   uint32_t rx_cons_pos;
   uint32_t tx_cache_buffer[8];
   uint32_t rx_cache_buffer[8];
-  } UARTDeviceState;
+} UARTDeviceState;
 
 typedef const struct UARTDevice {
   UARTDeviceState *state;

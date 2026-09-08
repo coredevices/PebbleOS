@@ -3,6 +3,4 @@
 
 #pragma once
 
-bool firmware_update_is_in_progress(void) {
-  return false;
-}
+bool firmware_update_is_in_progress(void) { return false; }

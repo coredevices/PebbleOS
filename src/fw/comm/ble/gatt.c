@@ -60,9 +60,8 @@ void bt_driver_cb_gatt_handle_mtu_update(const GattDeviceMtuUpdateEvent *event) 
     if (!connection) {
       goto unlock;
     }
-    
-    PBL_LOG_INFO("Handle MTU change from %d to %d bytes",
-            connection->gatt_mtu, event->mtu);
+
+    PBL_LOG_INFO("Handle MTU change from %d to %d bytes", connection->gatt_mtu, event->mtu);
     connection->gatt_mtu = event->mtu;
   }
 unlock:
@@ -81,10 +80,8 @@ void bt_driver_cb_gatt_handle_notification(const GattServerNotifIndicEvent *even
     return;
   }
 
-  gatt_client_subscriptions_handle_server_notification(connection,
-                                                       event->attr_handle,
-                                                       event->attr_val,
-                                                       event->attr_val_len);
+  gatt_client_subscriptions_handle_server_notification(connection, event->attr_handle,
+                                                       event->attr_val, event->attr_val_len);
   PBL_LOG_VERBOSE("GATT Server Notification for handle %u " BT_DEVICE_ADDRESS_FMT,
                   event->attr_handle, BT_DEVICE_ADDRESS_XPLODE(event->dev_address));
 }
@@ -97,13 +94,13 @@ void bt_driver_cb_gatt_handle_indication(const GattServerNotifIndicEvent *event)
     connection = gap_le_connection_by_addr(&event->dev_address);
 
     PBL_LOG_VERBOSE("GATT Server Indication for handle %u " BT_DEVICE_ADDRESS_FMT,
-                    event->attr_handle,
-                    BT_DEVICE_ADDRESS_XPLODE(event->dev_address));
+                    event->attr_handle, BT_DEVICE_ADDRESS_XPLODE(event->dev_address));
 
     // We are done if we got disconnected in the meantime or if this is a Service Changed indication
     // consumed by gatt_service_changed.c
-    done = (connection == NULL) || gatt_service_changed_client_handle_indication(
-        connection, event->attr_handle, event->attr_val, event->attr_val_len);
+    done = (connection == NULL) ||
+           gatt_service_changed_client_handle_indication(connection, event->attr_handle,
+                                                         event->attr_val, event->attr_val_len);
   }
   bt_unlock();
 
@@ -111,8 +108,8 @@ void bt_driver_cb_gatt_handle_indication(const GattServerNotifIndicEvent *event)
     return;
   }
 
-  gatt_client_subscriptions_handle_server_notification(
-      connection, event->attr_handle, event->attr_val, event->attr_val_len);
+  gatt_client_subscriptions_handle_server_notification(connection, event->attr_handle,
+                                                       event->attr_val, event->attr_val_len);
 }
 
 void bt_driver_cb_gatt_handle_buffer_empty(const GattDeviceBufferEmptyEvent *event) {
@@ -126,15 +123,18 @@ void bt_driver_cb_gatt_handle_buffer_empty(const GattDeviceBufferEmptyEvent *eve
     PebbleTaskBitset task_mask = gap_le_connect_task_mask_for_connection(connection);
 
     PebbleEvent e = {
-      .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
-      .task_mask = task_mask,
-      .bluetooth = {
-        .le = {
-          .gatt_client = {
-            .subtype = PebbleBLEGATTClientEventTypeBufferEmpty,
-          },
-        },
-      },
+        .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
+        .task_mask = task_mask,
+        .bluetooth =
+            {
+                .le =
+                    {
+                        .gatt_client =
+                            {
+                                .subtype = PebbleBLEGATTClientEventTypeBufferEmpty,
+                            },
+                    },
+            },
     };
     event_put(&e);
   }

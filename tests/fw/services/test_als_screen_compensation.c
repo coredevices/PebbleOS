@@ -22,8 +22,8 @@
 // Real lookup lives in gtypes.c; we only need the white/black entries here so
 // the region-averaging logic is exercised without linking the graphics libs.
 const GColor8Component g_color_luminance_lookup[64] = {
-  [0x00] = 0,  // black -> luminance 0
-  [0x3F] = 3,  // white -> luminance 3 (max)
+    [0x00] = 0,  // black -> luminance 0
+    [0x3F] = 3,  // white -> luminance 3 (max)
 };
 
 // Mirrors the non-circular branch of the real gbitmap_get_data_row_info().
@@ -62,9 +62,9 @@ void test_als_screen_compensation__apply_black_is_full_scale(void) {
 void test_als_screen_compensation__apply_inverse_luminance(void) {
   // Inverse-luminance: gain(L) = 256/lum. Use a large black_scale so the dark
   // clamp doesn't engage. raw 256 -> corrected == gain (256/lum * 256 / 256).
-  cl_assert_equal_i(als_compensation_apply(256, UNITY_Q8 / 2, SCALE_32X_Q8), 512);   // 2.00x
-  cl_assert_equal_i(als_compensation_apply(256, 85, SCALE_32X_Q8), 771);             // ~3.01x
-  cl_assert_equal_i(als_compensation_apply(256, 170, SCALE_32X_Q8), 385);            // ~1.51x
+  cl_assert_equal_i(als_compensation_apply(256, UNITY_Q8 / 2, SCALE_32X_Q8), 512);  // 2.00x
+  cl_assert_equal_i(als_compensation_apply(256, 85, SCALE_32X_Q8), 771);            // ~3.01x
+  cl_assert_equal_i(als_compensation_apply(256, 170, SCALE_32X_Q8), 385);           // ~1.51x
 }
 
 void test_als_screen_compensation__apply_clamps_dark_end(void) {

@@ -17,18 +17,14 @@ static const int IN_OUT_ANIMATION_DURATION = 200;
 static void prv_invoke_will_close(ActionMenu *action_menu) {
   ActionMenuData *data = window_get_user_data(&action_menu->window);
   if (data->config.will_close) {
-    data->config.will_close(action_menu,
-                            data->performed_item,
-                            data->config.context);
+    data->config.will_close(action_menu, data->performed_item, data->config.context);
   }
 }
 
 static void prv_invoke_did_close(ActionMenu *action_menu) {
   ActionMenuData *data = window_get_user_data(&action_menu->window);
   if (data->config.did_close) {
-    data->config.did_close(action_menu,
-                           data->performed_item,
-                           data->config.context);
+    data->config.did_close(action_menu, data->performed_item, data->config.context);
   }
 }
 
@@ -46,9 +42,7 @@ static void prv_action_window_insert_below(ActionMenu *action_menu, Window *wind
   window_stack_insert_next(action_menu->window.parent_window_stack, window);
 }
 
-static void prv_remove_window(Window *window) {
-  window_stack_remove(window, false /* animated */);
-}
+static void prv_remove_window(Window *window) { window_stack_remove(window, false /* animated */); }
 
 static void prv_action_callback(const ActionMenuItem *item, void *context);
 static void prv_action_menu_layer_selection_changed(const ActionMenuItem *item, void *context);
@@ -62,10 +56,14 @@ static void prv_invoke_level_selection_changed(ActionMenuData *data, const Actio
 
 static void prv_set_action_menu_layer_callbacks(ActionMenuData *data,
                                                 bool enable_selection_changed) {
-  action_menu_layer_set_callbacks(&data->action_menu_layer, (ActionMenuLayerCallbacks) {
-    .select = prv_action_callback,
-    .selection_changed = enable_selection_changed ? prv_action_menu_layer_selection_changed : NULL,
-  }, data);
+  action_menu_layer_set_callbacks(
+      &data->action_menu_layer,
+      (ActionMenuLayerCallbacks){
+          .select = prv_action_callback,
+          .selection_changed =
+              enable_selection_changed ? prv_action_menu_layer_selection_changed : NULL,
+      },
+      data);
 }
 
 static void prv_view_model_did_change(ActionMenuData *data) {
@@ -76,14 +74,12 @@ static void prv_view_model_did_change(ActionMenuData *data) {
   prv_set_action_menu_layer_callbacks(data, false);
   if (cur_level->display_mode == ActionMenuLevelDisplayModeThin) {
     action_menu_layer_set_items(&data->action_menu_layer, NULL, 0, 0, 0);
-    action_menu_layer_set_short_items(&data->action_menu_layer,
-                                      cur_level->items,
-                                      cur_level->num_items,
-                                      cur_level->default_selected_item);
+    action_menu_layer_set_short_items(&data->action_menu_layer, cur_level->items,
+                                      cur_level->num_items, cur_level->default_selected_item);
   } else {
     action_menu_layer_set_short_items(&data->action_menu_layer, NULL, 0, 0);
     action_menu_layer_set_items(&data->action_menu_layer, cur_level->items, cur_level->num_items,
-        cur_level->default_selected_item, cur_level->separator_index);
+                                cur_level->default_selected_item, cur_level->separator_index);
   }
   prv_set_action_menu_layer_callbacks(data, true);
   action_menu_layer_notify_selection_changed(&data->action_menu_layer);
@@ -92,8 +88,8 @@ static void prv_view_model_did_change(ActionMenuData *data) {
 
 static void prv_next_level_anim_stopped(Animation *anim, bool finished, void *context) {
   // update the view model
-  AnimationContext *anim_ctx = (AnimationContext*) context;
-  ActionMenuData *data = window_get_user_data((Window*) anim_ctx->window);
+  AnimationContext *anim_ctx = (AnimationContext *)context;
+  ActionMenuData *data = window_get_user_data((Window *)anim_ctx->window);
   if (!data || !finished) {
     // We could have gotten cleaned up in the middle of an animation, bail
     applib_free(anim_ctx);
@@ -114,16 +110,16 @@ static void prv_next_level_anim_stopped(Animation *anim, bool finished, void *co
 
 static GEdgeInsets prv_action_menu_insets(Window *window) {
   const int crumbs_width = crumbs_layer_width();
-  return (GEdgeInsets) {
-      .top    = PBL_IF_RECT_ELSE(0, STATUS_BAR_LAYER_HEIGHT),
-      .right  = PBL_IF_RECT_ELSE(0, crumbs_width),
+  return (GEdgeInsets){
+      .top = PBL_IF_RECT_ELSE(0, STATUS_BAR_LAYER_HEIGHT),
+      .right = PBL_IF_RECT_ELSE(0, crumbs_width),
       .bottom = PBL_IF_RECT_ELSE(0, STATUS_BAR_LAYER_HEIGHT),
-      .left   = crumbs_width,
+      .left = crumbs_width,
   };
 }
 
-static Animation* prv_create_content_in_animation(ActionMenuData *data,
-    const ActionMenuLevel *level) {
+static Animation *prv_create_content_in_animation(ActionMenuData *data,
+                                                  const ActionMenuLevel *level) {
   // animate the ease in of the new level
   const GRect window_frame = data->action_menu.window.layer.frame;
   const GEdgeInsets insets = prv_action_menu_insets(&data->action_menu.window);
@@ -131,9 +127,7 @@ static Animation* prv_create_content_in_animation(ActionMenuData *data,
   GRect start = stop;
   start.origin.x -= crumbs_layer_width();
   PropertyAnimation *prop_anim =
-      property_animation_create_layer_frame((Layer *)&data->action_menu_layer,
-                                            &start,
-                                            &stop);
+      property_animation_create_layer_frame((Layer *)&data->action_menu_layer, &start, &stop);
   Animation *content_in = property_animation_get_animation(prop_anim);
   animation_set_duration(content_in, IN_OUT_ANIMATION_DURATION);
 
@@ -145,8 +139,8 @@ static Animation* prv_create_content_in_animation(ActionMenuData *data,
   return spawn_anim;
 }
 
-static Animation* prv_create_content_out_animation(ActionMenuData *data,
-    const ActionMenuLevel *level) {
+static Animation *prv_create_content_out_animation(ActionMenuData *data,
+                                                   const ActionMenuLevel *level) {
   // animate the ease out of the current level
   GRect *start = &data->action_menu_layer.layer.frame;
   GRect stop = *start;
@@ -156,14 +150,14 @@ static Animation* prv_create_content_out_animation(ActionMenuData *data,
   Animation *content_out = property_animation_get_animation(prop_anim);
   animation_set_duration(content_out, IN_OUT_ANIMATION_DURATION);
   AnimationHandlers anim_handlers = {
-    .started = NULL,
-    .stopped = prv_next_level_anim_stopped,
+      .started = NULL,
+      .stopped = prv_next_level_anim_stopped,
   };
 
   AnimationContext *anim_ctx = applib_type_malloc(AnimationContext);
-  *anim_ctx  = (AnimationContext) {
-    .window = &data->action_menu.window,
-    .next_level = level,
+  *anim_ctx = (AnimationContext){
+      .window = &data->action_menu.window,
+      .next_level = level,
   };
   animation_set_handlers(content_out, anim_handlers, anim_ctx);
 
@@ -249,10 +243,10 @@ static void prv_action_window_load(Window *window) {
   // Click config
   window_set_click_config_provider_with_context(window, prv_click_config_provider, data);
   // Init the view model
-  data->view_model = (ActionMenuViewModel) {
-    .cur_level = data->config.root_level,
-    .menu_insets = prv_action_menu_insets(window),
-    .num_dots = 1,
+  data->view_model = (ActionMenuViewModel){
+      .cur_level = data->config.root_level,
+      .menu_insets = prv_action_menu_insets(window),
+      .num_dots = 1,
   };
   prv_view_model_did_change(data);
 }
@@ -270,8 +264,7 @@ static void prv_action_window_unload(Window *window) {
   applib_free(data);
 }
 
-static void prv_dummy_click_config(void *data) {
-}
+static void prv_dummy_click_config(void *data) {}
 
 ActionMenuLevel *action_menu_get_root_level(ActionMenu *action_menu) {
   if (!action_menu) return NULL;
@@ -292,8 +285,8 @@ void action_menu_freeze(ActionMenu *action_menu) {
 
 void action_menu_unfreeze(ActionMenu *action_menu) {
   ActionMenuData *data = window_get_user_data(&action_menu->window);
-  window_set_click_config_provider_with_context(&action_menu->window,
-                                                prv_click_config_provider, data);
+  window_set_click_config_provider_with_context(&action_menu->window, prv_click_config_provider,
+                                                data);
   data->frozen = false;
 }
 
@@ -323,7 +316,6 @@ void action_menu_set_result_window(ActionMenu *action_menu, Window *result_windo
   data->result_window = result_window;
 }
 
-
 void action_menu_set_align(ActionMenuConfig *config, ActionMenuAlign align) {
   if (!config) {
     return;
@@ -352,10 +344,10 @@ ActionMenu *action_menu_open(WindowStack *window_stack, ActionMenuConfig *config
   window_set_user_data(window, data);
   window_set_fullscreen(window, true);
   window_set_background_color(window, GColorBlack);
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_action_window_load,
-    .unload = prv_action_window_unload,
-  });
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_action_window_load,
+                                         .unload = prv_action_window_unload,
+                                     });
 
   prv_action_window_push(window_stack, &data->action_menu, true /* animated */);
 

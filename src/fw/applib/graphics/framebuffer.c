@@ -30,18 +30,18 @@ GBitmap framebuffer_get_as_bitmap(FrameBuffer *fb, const GSize *size) {
   const GBitmapDataRowInfoInternal *data_row_infos = NULL;
 #endif
 
-  return (GBitmap) {
-    .addr = fb->buffer,
-    .row_size_bytes = gbitmap_format_get_row_size_bytes(size->w, GBITMAP_NATIVE_FORMAT),
-    .info = (BitmapInfo) {.format = GBITMAP_NATIVE_FORMAT, .version = GBITMAP_VERSION_CURRENT},
-    .bounds = (GRect) { GPointZero, *size },
-    .data_row_infos = data_row_infos,
+  return (GBitmap){
+      .addr = fb->buffer,
+      .row_size_bytes = gbitmap_format_get_row_size_bytes(size->w, GBITMAP_NATIVE_FORMAT),
+      .info = (BitmapInfo){.format = GBITMAP_NATIVE_FORMAT, .version = GBITMAP_VERSION_CURRENT},
+      .bounds = (GRect){GPointZero, *size},
+      .data_row_infos = data_row_infos,
   };
 }
 
 void framebuffer_dirty_all(FrameBuffer *fb) {
   PBL_ASSERTN(!gsize_equal(&fb->size, &GSizeZero));
-  fb->dirty_rect = (GRect) { GPointZero, fb->size };
+  fb->dirty_rect = (GRect){GPointZero, fb->size};
   fb->is_dirty = true;
 }
 
@@ -56,6 +56,4 @@ bool framebuffer_is_dirty(FrameBuffer *fb) {
   return fb->is_dirty;
 }
 
-GSize framebuffer_get_size(FrameBuffer *fb) {
-  return fb->size;
-}
+GSize framebuffer_get_size(FrameBuffer *fb) { return fb->size; }

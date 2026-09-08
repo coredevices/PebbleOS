@@ -8,8 +8,8 @@
 
 void WEAK clock_get_since_time(char *buffer, int buf_size, time_t timestamp) {}
 
-void WEAK clock_get_until_time(char *buffer, int buf_size, time_t timestamp,
-                               int max_relative_hrs) {}
+void WEAK clock_get_until_time(char *buffer, int buf_size, time_t timestamp, int max_relative_hrs) {
+}
 
 void WEAK clock_get_until_time_without_fulltime(char *buffer, int buf_size, time_t timestamp,
                                                 int max_relative_hrs) {}
@@ -27,6 +27,4 @@ size_t WEAK clock_get_time_number(char *number_buffer, size_t number_buffer_size
   return 0;
 }
 
-size_t WEAK clock_get_time_word(char *buffer, size_t buffer_size, time_t timestamp) {
-  return 0;
-}
+size_t WEAK clock_get_time_word(char *buffer, size_t buffer_size, time_t timestamp) { return 0; }

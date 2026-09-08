@@ -18,9 +18,7 @@ void test_lru_cache__initialize(void) {
   lru_cache_init(&s_cache, sizeof(uint32_t), s_buffer, CACHE_BUFFER_SIZE);
 }
 
-void test_lru_cache__cleanup(void) {
-  lru_cache_flush(&s_cache);
-}
+void test_lru_cache__cleanup(void) { lru_cache_flush(&s_cache); }
 
 void test_lru_cache__one_put(void) {
   uint32_t input = 0xdeadbeef;
@@ -109,4 +107,3 @@ void test_lru_cache__use_and_evict(void) {
     cl_assert(*output == i);
   }
 }
-

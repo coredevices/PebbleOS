@@ -37,7 +37,7 @@ static void prv_show_thumbsup(AppData *data) {
 
 static void prv_set_tap_text(AppData *data, uint32_t count, AccelAxisType axis) {
   char axes[] = {'X', 'Y', 'Z'};
-  snprintf(data->text, sizeof(data->text), "Axis: %c\nDouble Taps: %6"PRIu32, axes[axis], count);
+  snprintf(data->text, sizeof(data->text), "Axis: %c\nDouble Taps: %6" PRIu32, axes[axis], count);
   text_layer_set_text(&data->text_layer, data->text);
 }
 
@@ -67,14 +67,13 @@ static void prv_handle_tap(AccelAxisType axis, int32_t direction) {
 }
 
 static void prv_handle_init(void) {
-  AppData *data = (AppData*) app_malloc(sizeof(AppData));
+  AppData *data = (AppData *)app_malloc(sizeof(AppData));
 
   app_state_set_user_data(data);
 
   window_init(&data->window, WINDOW_NAME("Double Tap Test"));
   window_set_user_data(&data->window, data);
-  window_set_window_handlers(&data->window, &(WindowHandlers) {
-      .load = prv_window_load });
+  window_set_window_handlers(&data->window, &(WindowHandlers){.load = prv_window_load});
 
   const bool animated = true;
   app_window_stack_push(&data->window, animated);
@@ -95,10 +94,8 @@ static void s_main(void) {
   prv_handle_deinit();
 }
 
-const PebbleProcessMd* double_tap_test_get_info() {
-  static const PebbleProcessMdSystem s_accel_config_info = {
-    .common.main_func = s_main,
-    .name = "Double Tap Test"
-  };
-  return (const PebbleProcessMd*) &s_accel_config_info;
+const PebbleProcessMd *double_tap_test_get_info() {
+  static const PebbleProcessMdSystem s_accel_config_info = {.common.main_func = s_main,
+                                                            .name = "Double Tap Test"};
+  return (const PebbleProcessMd *)&s_accel_config_info;
 }

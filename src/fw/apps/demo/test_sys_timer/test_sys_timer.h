@@ -5,4 +5,4 @@
 
 #include "process_management/pebble_process_md.h"
 
-const PebbleProcessMd* test_sys_timer_app_get_info();
+const PebbleProcessMd *test_sys_timer_app_get_info();

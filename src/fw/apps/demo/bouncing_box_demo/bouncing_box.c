@@ -25,8 +25,8 @@ typedef struct AppData {
 } AppData;
 
 static void prv_change_color(AppData *data) {
-  data->color++; // next RGB value (in lower 6 bits, might overflow to most significant 2 bits)
-  data->color |= (uint8_t)0b11000000; // make sure color is always 100% opaque
+  data->color++;  // next RGB value (in lower 6 bits, might overflow to most significant 2 bits)
+  data->color |= (uint8_t)0b11000000;  // make sure color is always 100% opaque
 }
 
 static void prv_move_rect(AppData *data) {
@@ -49,7 +49,7 @@ static void prv_move_rect(AppData *data) {
   }
 }
 
-static void layer_update_proc(Layer *layer, GContext* ctx) {
+static void layer_update_proc(Layer *layer, GContext *ctx) {
   AppData *data = app_state_get_user_data();
 
   graphics_context_set_fill_color(ctx, GColorWhite);
@@ -61,7 +61,6 @@ static void layer_update_proc(Layer *layer, GContext* ctx) {
   graphics_context_set_stroke_color(ctx, GColorBlack);
   graphics_draw_rect(ctx, &data->box_rect);
 }
-
 
 void prv_redraw_timer_cb(void *cb_data) {
   AppData *data = app_state_get_user_data();
@@ -97,11 +96,8 @@ static void s_main(void) {
   app_event_loop();
 }
 
-const PebbleProcessMd* bouncing_box_demo_get_app_info(void) {
-  static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = s_main,
-    .name = "Bouncing Box"
-  };
-  return (const PebbleProcessMd*) &s_app_info;
+const PebbleProcessMd *bouncing_box_demo_get_app_info(void) {
+  static const PebbleProcessMdSystem s_app_info = {.common.main_func = s_main,
+                                                   .name = "Bouncing Box"};
+  return (const PebbleProcessMd *)&s_app_info;
 }
-

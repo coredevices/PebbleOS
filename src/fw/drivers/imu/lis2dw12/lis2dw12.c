@@ -39,7 +39,7 @@ PBL_LOG_MODULE_DEFINE(driver_accel_lis2dw12, CONFIG_DRIVER_IMU_LOG_LEVEL);
 #define LIS2DW12_RESET_TIME_US 5
 
 // DRDY polling parameters for accel_peek single-shot mode
-#define LIS2DW12_DRDY_POLL_DELAY_MS   (5)   /* ms between data-ready polls */
+#define LIS2DW12_DRDY_POLL_DELAY_MS (5)     /* ms between data-ready polls */
 #define LIS2DW12_DRDY_POLL_TIMEOUT_MS (100) /* max wait (~5x 20ms at 50Hz ODR) */
 
 // FIFO threshold periods without a FIFO read before the stream is considered
@@ -230,20 +230,22 @@ static void prv_lis2dw12_process_samples(uint8_t num_samples, uint64_t timestamp
   // raw word equals the 12-bit value << 4; scale the denominator by 16 to match.
   int8_t rotate = LIS2DW12->state->rotated ? -1 : 1;
   AccelRawBatch batch = {
-    .data = LIS2DW12->state->raw_sample_buf,
-    .num_samples = num_samples,
-    .stride = LIS2DW12_SAMPLE_SIZE_BYTES,
-    .axis = {
-      [AXIS_X] = {.offset = LIS2DW12->axis_map[AXIS_X] * 2U,
-                  .sign = (int8_t)(LIS2DW12->axis_dir[AXIS_X] * rotate)},
-      [AXIS_Y] = {.offset = LIS2DW12->axis_map[AXIS_Y] * 2U,
-                  .sign = (int8_t)(LIS2DW12->axis_dir[AXIS_Y] * rotate)},
-      [AXIS_Z] = {.offset = LIS2DW12->axis_map[AXIS_Z] * 2U, .sign = LIS2DW12->axis_dir[AXIS_Z]},
-    },
-    .scale_num = CONFIG_ACCEL_LIS2DW12_SCALE_MG,
-    .scale_den = LIS2DW12_S12_SCALE_RANGE << 4U,
-    .first_timestamp_us = timestamp_us,
-    .sampling_interval_us = LIS2DW12->state->sampling_interval_us,
+      .data = LIS2DW12->state->raw_sample_buf,
+      .num_samples = num_samples,
+      .stride = LIS2DW12_SAMPLE_SIZE_BYTES,
+      .axis =
+          {
+              [AXIS_X] = {.offset = LIS2DW12->axis_map[AXIS_X] * 2U,
+                          .sign = (int8_t)(LIS2DW12->axis_dir[AXIS_X] * rotate)},
+              [AXIS_Y] = {.offset = LIS2DW12->axis_map[AXIS_Y] * 2U,
+                          .sign = (int8_t)(LIS2DW12->axis_dir[AXIS_Y] * rotate)},
+              [AXIS_Z] = {.offset = LIS2DW12->axis_map[AXIS_Z] * 2U,
+                          .sign = LIS2DW12->axis_dir[AXIS_Z]},
+          },
+      .scale_num = CONFIG_ACCEL_LIS2DW12_SCALE_MG,
+      .scale_den = LIS2DW12_S12_SCALE_RANGE << 4U,
+      .first_timestamp_us = timestamp_us,
+      .sampling_interval_us = LIS2DW12->state->sampling_interval_us,
   };
 
   accel_cb_new_samples(&batch);
@@ -442,9 +444,8 @@ static bool prv_configure_odr(uint32_t sampling_interval_us, bool shake_detectio
     sampling_interval_us = 5000UL;
   }
 
-  PBL_LOG_DBG("Configuring ODR to %" PRIu32 " ms (%" PRIu32 " mHz)",
-          sampling_interval_us / 1000UL,
-          sampling_interval_us > 0UL ? 1000000000UL / sampling_interval_us : 0UL);
+  PBL_LOG_DBG("Configuring ODR to %" PRIu32 " ms (%" PRIu32 " mHz)", sampling_interval_us / 1000UL,
+              sampling_interval_us > 0UL ? 1000000000UL / sampling_interval_us : 0UL);
 
   ret = prv_lis2dw12_write(LIS2DW12_CTRL1, &val, 1);
   if (!ret) {
@@ -511,8 +512,7 @@ static void prv_lis2dw12_recover(void) {
 
   LIS2DW12->state->num_recoveries++;
   PBL_ANALYTICS_ADD(accel_stream_recovery_count, 1);
-  PBL_LOG_WRN("Recovering accel stream (count %" PRIu32 ")",
-          LIS2DW12->state->num_recoveries);
+  PBL_LOG_WRN("Recovering accel stream (count %" PRIu32 ")", LIS2DW12->state->num_recoveries);
 
   if (!prv_configure_int1(false, false)) {
     return;
@@ -556,8 +556,7 @@ static uint32_t prv_ms_since_last_fifo_read(void) {
 }
 
 static uint32_t prv_stall_threshold_ms(void) {
-  return MAX(LIS2DW12_STALL_MARGIN * LIS2DW12->state->int1_period_ms,
-             LIS2DW12_STALL_MIN_MS);
+  return MAX(LIS2DW12_STALL_MARGIN * LIS2DW12->state->int1_period_ms, LIS2DW12_STALL_MIN_MS);
 }
 
 //! Arm/disarm the INT1 stall watchdog to match the active INT1 sources.
@@ -591,8 +590,7 @@ static void prv_stall_check_work_cb(void) {
     // Shake-only mode: re-run the servicing pass if the pad is stuck high
     // (reading the INT source clears the latch); escalate to a full recovery
     // after consecutive passes that never release it.
-    if (LIS2DW12->state->shake_detection_enabled &&
-        gpio_input_read(&LIS2DW12->int1_in)) {
+    if (LIS2DW12->state->shake_detection_enabled && gpio_input_read(&LIS2DW12->int1_in)) {
       prv_lis2dw12_int1_work_handler();
       // A pad released by the pass is healthy; count only a still-high pad
       if (!gpio_input_read(&LIS2DW12->int1_in)) {
@@ -618,9 +616,7 @@ static void prv_stall_check_work_cb(void) {
   prv_lis2dw12_recover();
 }
 
-static void prv_int1_wdt_cb(void *data) {
-  accel_offload_work(prv_stall_check_work_cb);
-}
+static void prv_int1_wdt_cb(void *data) { accel_offload_work(prv_stall_check_work_cb); }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accelerometer interface
@@ -755,19 +751,14 @@ uint32_t accel_set_sampling_interval(uint32_t interval_us) {
     }
   }
 
-  PBL_LOG_DBG("Set sampling interval to %" PRIu32 " us",
-          LIS2DW12->state->sampling_interval_us);
+  PBL_LOG_DBG("Set sampling interval to %" PRIu32 " us", LIS2DW12->state->sampling_interval_us);
 
   return LIS2DW12->state->sampling_interval_us;
 }
 
-uint32_t accel_get_sampling_interval(void) {
-  return LIS2DW12->state->sampling_interval_us;
-}
+uint32_t accel_get_sampling_interval(void) { return LIS2DW12->state->sampling_interval_us; }
 
-uint32_t accel_get_max_num_samples(void) {
-  return LIS2DW12_FIFO_SIZE;
-}
+uint32_t accel_get_max_num_samples(void) { return LIS2DW12_FIFO_SIZE; }
 
 void accel_set_num_samples(uint32_t num_samples) {
   bool ret;
@@ -966,9 +957,7 @@ void accel_enable_shake_detection(bool on) {
   PBL_LOG_DBG("%s shake detection", on ? "Enabled" : "Disabled");
 }
 
-bool accel_get_shake_detection_enabled(void) {
-  return LIS2DW12->state->shake_detection_enabled;
-}
+bool accel_get_shake_detection_enabled(void) { return LIS2DW12->state->shake_detection_enabled; }
 
 void accel_set_shake_sensitivity_high(bool sensitivity_high) {
   bool ret;
@@ -986,8 +975,7 @@ void accel_set_shake_sensitivity_high(bool sensitivity_high) {
     return;
   }
 
-  PBL_LOG_DBG("Configured shake sensitivity to %s",
-          sensitivity_high ? "high" : "normal");
+  PBL_LOG_DBG("Configured shake sensitivity to %s", sensitivity_high ? "high" : "normal");
 }
 
 void accel_set_shake_sensitivity_percent(uint8_t percent) {

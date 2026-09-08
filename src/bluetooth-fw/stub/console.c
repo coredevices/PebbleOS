@@ -3,6 +3,4 @@
 
 #include <console/prompt.h>
 
-void command_ble_host_reset(void) {
-  prompt_send_response("Not supported");
-}
+void command_ble_host_reset(void) { prompt_send_response("Not supported"); }

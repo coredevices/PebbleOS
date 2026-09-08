@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-
 #include "applib/app.h"
 #include "applib/graphics/graphics.h"
 #include "applib/graphics/text.h"
@@ -18,7 +17,7 @@
 #include "pbl/services/light.h"
 #include "pbl/util/math.h"
 
-#define TOUCH_SUPPORT_DEBUG    0
+#define TOUCH_SUPPORT_DEBUG 0
 
 #define TEST_TIMEOUT_S (30)
 #define WINDOW_POP_TIME_S (3)
@@ -91,8 +90,8 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
   if (data->seconds_remaining == 0) {
     prv_complete_test(data, false);
   } else {
-    sniprintf(data->status_string, sizeof(data->status_string),
-              "%" PRIu32 "s", data->seconds_remaining);
+    sniprintf(data->status_string, sizeof(data->status_string), "%" PRIu32 "s",
+              data->seconds_remaining);
     text_layer_set_text(&data->status, data->status_string);
     layer_mark_dirty(&data->window.layer);
     data->seconds_remaining--;
@@ -140,8 +139,7 @@ static void prv_trace_append(AppData *data, GPoint p) {
     return;
   }
   if (data->trace_len > 0 &&
-      prv_dist_sq(p, data->trace[data->trace_len - 1]) <
-          TRACE_MIN_DIST_PX * TRACE_MIN_DIST_PX) {
+      prv_dist_sq(p, data->trace[data->trace_len - 1]) < TRACE_MIN_DIST_PX * TRACE_MIN_DIST_PX) {
     return;
   }
   data->trace[data->trace_len++] = p;
@@ -166,17 +164,15 @@ static void prv_draw_walls(GContext *ctx, AppData *data) {
     int16_t y = GRID_SPACING_Y / 2 + (k - 1) * GRID_SPACING_Y + GRID_SPACING_Y / 2;
     if (k % 2 == 1) {
       // Rows connect on the right: wall spans from the left edge
-      graphics_draw_line(ctx, GPoint(0, y),
-                         GPoint(PBL_DISPLAY_WIDTH - GRID_SPACING_X, y));
+      graphics_draw_line(ctx, GPoint(0, y), GPoint(PBL_DISPLAY_WIDTH - GRID_SPACING_X, y));
     } else {
-      graphics_draw_line(ctx, GPoint(GRID_SPACING_X, y),
-                         GPoint(PBL_DISPLAY_WIDTH - 1, y));
+      graphics_draw_line(ctx, GPoint(GRID_SPACING_X, y), GPoint(PBL_DISPLAY_WIDTH - 1, y));
     }
   }
 #endif
 }
 
-static void prv_update_proc(struct Layer *layer, GContext* ctx) {
+static void prv_update_proc(struct Layer *layer, GContext *ctx) {
   AppData *data = app_state_get_user_data();
 
   // This update proc replaces the default window one: clear the background
@@ -229,8 +225,7 @@ static void prv_touch_event_handler(const TouchEvent *event, void *context) {
 
   if (!data->tracking) {
     // Stroke starts anywhere within the corridor mouth around the first dot
-    if (prv_dist_sq(p, data->dots[0]) <=
-        PATH_TOLERANCE_PX * PATH_TOLERANCE_PX) {
+    if (prv_dist_sq(p, data->dots[0]) <= PATH_TOLERANCE_PX * PATH_TOLERANCE_PX) {
       data->trace_len = 0;
       data->tracking = true;
       data->next_dot = 1;
@@ -268,9 +263,8 @@ static void prv_touch_event_handler(const TouchEvent *event, void *context) {
   if (best_end > data->next_dot) {
     data->next_dot = best_end;
   }
-  while (data->next_dot < data->num_dots &&
-         prv_dist_sq(p, data->dots[data->next_dot]) <=
-             DOT_CAPTURE_RADIUS_PX * DOT_CAPTURE_RADIUS_PX) {
+  while (data->next_dot < data->num_dots && prv_dist_sq(p, data->dots[data->next_dot]) <=
+                                                DOT_CAPTURE_RADIUS_PX * DOT_CAPTURE_RADIUS_PX) {
     data->next_dot++;
   }
   if (data->next_dot > data->best_progress) {
@@ -350,8 +344,8 @@ static void prv_init_dots(AppData *data) {
 
 static void prv_handle_init(void) {
   AppData *data = app_malloc_check(sizeof(AppData));
-  *data = (AppData) {
-    .seconds_remaining = TEST_TIMEOUT_S,
+  *data = (AppData){
+      .seconds_remaining = TEST_TIMEOUT_S,
   };
 
   app_state_set_user_data(data);
@@ -368,8 +362,7 @@ static void prv_handle_init(void) {
 
   TextLayer *status = &data->status;
   // Centered overlay; kept small so it covers as little of the path as possible
-  text_layer_init(status,
-                  &GRect(PBL_DISPLAY_WIDTH / 2 - 34, PBL_DISPLAY_HEIGHT / 2 - 20, 68, 40));
+  text_layer_init(status, &GRect(PBL_DISPLAY_WIDTH / 2 - 34, PBL_DISPLAY_HEIGHT / 2 - 20, 68, 40));
   text_layer_set_font(status, fonts_get_system_font(FONT_KEY_GOTHIC_24));
   text_layer_set_text_alignment(status, GTextAlignmentCenter);
   text_layer_set_background_color(status, GColorWhite);
@@ -391,13 +384,13 @@ static void s_main(void) {
   light_enable(false);
 }
 
-const PebbleProcessMd* mfg_touch_app_get_info(void) {
+const PebbleProcessMd *mfg_touch_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = &s_main,
-    // UUID: a53e7d1c-d2ee-4592-96b9-5d33a46237db
-    .common.uuid = { 0xa5, 0x3e, 0x7d, 0x1c, 0xd2, 0xee, 0x45, 0x92,
-                     0x96, 0xb9, 0x5d, 0x33, 0xa4, 0x62, 0x37, 0xdb },
-    .name = "MfgTouch",
+      .common.main_func = &s_main,
+      // UUID: a53e7d1c-d2ee-4592-96b9-5d33a46237db
+      .common.uuid = {0xa5, 0x3e, 0x7d, 0x1c, 0xd2, 0xee, 0x45, 0x92, 0x96, 0xb9, 0x5d, 0x33, 0xa4,
+                      0x62, 0x37, 0xdb},
+      .name = "MfgTouch",
   };
-  return (const PebbleProcessMd*) &s_app_info;
+  return (const PebbleProcessMd *)&s_app_info;
 }

@@ -8,7 +8,6 @@
 #include <pbl/logging/logging.h>
 #include "pbl/util/attributes.h"
 
-
 #include <stdio.h>
 
 // Fakes
@@ -28,21 +27,16 @@
 #include "stubs_passert.h"
 #include "stubs_rand_ptr.h"
 
-typedef struct {} EventServiceInfo;
+typedef struct {
+} EventServiceInfo;
 
-void app_event_service_subscribe(EventServiceInfo * service_info) {
-  return;
-}
+void app_event_service_subscribe(EventServiceInfo *service_info) { return; }
 
-void put_bytes_cancel(void) {
-}
+void put_bytes_cancel(void) {}
 
-void put_bytes_expect_init(uint32_t timeout_ms) {
-}
+void put_bytes_expect_init(uint32_t timeout_ms) {}
 
-void app_storage_delete_bank(uint32_t bank) {
-}
-
+void app_storage_delete_bank(uint32_t bank) {}
 
 typedef struct PACKED {
   uint16_t length;
@@ -69,13 +63,14 @@ typedef struct PACKED {
   uint32_t app_id;
 } AppFetchRequest;
 
-extern void app_fetch_protocol_msg_callback(CommSession *session, const uint8_t* data, size_t length);
+extern void app_fetch_protocol_msg_callback(CommSession *session, const uint8_t *data,
+                                            size_t length);
 
 static const uint16_t APP_FETCH_ENDPOINT_ID = 6001;
 
 static const uint32_t app_id_1 = 42;
 static const Uuid uuid_1 = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
-                                 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb4};
+                            0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb4};
 
 Transport *s_transport;
 
@@ -98,15 +93,14 @@ void test_app_fetch_endpoint__cleanup(void) {
  * Checking for valid INSERT command *
  *************************************/
 
- static const uint8_t s_app_fetch_success[] = {
-   // Message Header
-   0x01,                     // APP_FETCH_INSTALL_RESPONSE
-   0x01,                     // ACK: 0x01
- };
+static const uint8_t s_app_fetch_success[] = {
+    // Message Header
+    0x01,  // APP_FETCH_INSTALL_RESPONSE
+    0x01,  // ACK: 0x01
+};
 
-static void prv_check_valid_app_fetch_request(uint16_t endpoint_id, const uint8_t* data,
-    unsigned int data_length) {
-
+static void prv_check_valid_app_fetch_request(uint16_t endpoint_id, const uint8_t *data,
+                                              unsigned int data_length) {
   // AppFetchRequest request = *(AppFetchRequest *)data;
   PBL_LOG_DBG("sizeof: %lu length: %u", sizeof(AppFetchRequest), data_length);
   AppFetchRequest request = *(AppFetchRequest *)data;
@@ -117,8 +111,8 @@ static void prv_check_valid_app_fetch_request(uint16_t endpoint_id, const uint8_
   cl_assert_equal_b(true, uuid_equal(&request.uuid, &uuid_1));
 
   // if anything is planning on being done relating to this ACK, then it will be done after this
-  app_fetch_protocol_msg_callback(comm_session_get_system_session(),
-                                  s_app_fetch_success, sizeof(s_app_fetch_success));
+  app_fetch_protocol_msg_callback(comm_session_get_system_session(), s_app_fetch_success,
+                                  sizeof(s_app_fetch_success));
 }
 
 void test_app_fetch_endpoint__app_fetch_binaries(void) {
@@ -139,15 +133,15 @@ void test_app_fetch_endpoint__app_fetch_binaries(void) {
 static void prv_fetch_complete_app() {
   app_fetch_binaries(&uuid_1, app_id_1, false);
   app_fetch_put_bytes_event_handler(&(PebblePutBytesEvent){
-    .type = PebblePutBytesEventTypeCleanup,
-    .object_type = ObjectAppResources,
-    .has_cookie = true,
+      .type = PebblePutBytesEventTypeCleanup,
+      .object_type = ObjectAppResources,
+      .has_cookie = true,
   });
   fake_system_task_callbacks_invoke_pending();
   app_fetch_put_bytes_event_handler(&(PebblePutBytesEvent){
-    .type = PebblePutBytesEventTypeCleanup,
-    .object_type = ObjectWatchApp,
-    .has_cookie = true,
+      .type = PebblePutBytesEventTypeCleanup,
+      .object_type = ObjectWatchApp,
+      .has_cookie = true,
   });
   fake_system_task_callbacks_invoke_pending();
 }

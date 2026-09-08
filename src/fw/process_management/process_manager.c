@@ -63,9 +63,9 @@ static ProcessContext *prv_get_context(void) {
 }
 
 // --------------------------------------------------------------------------------------------------
-// This timer callback gets called if the process doesn't finish it's deinit within the required timeout (currently
-// 3 seconds).
-static void prv_graceful_close_timer_callback(void* data) {
+// This timer callback gets called if the process doesn't finish it's deinit within the required
+// timeout (currently 3 seconds).
+static void prv_graceful_close_timer_callback(void *data) {
   PBL_LOG_DBG("deinit timeout expired, killing app forcefully");
   PebbleTask task = (PebbleTask)data;
 
@@ -89,7 +89,7 @@ static bool prv_force_stop_task_if_unprivileged(ProcessContext *context) {
 }
 
 // --------------------------------------------------------------------------------------------------
-static void prv_force_close_timer_callback(void* data) {
+static void prv_force_close_timer_callback(void *data) {
   PebbleTask task = (PebbleTask)data;
   ProcessContext *context = prv_get_context_for_task(task);
 
@@ -114,18 +114,17 @@ EXTERNALLY_VISIBLE void process_manager_handle_syscall_exit(void) {
 }
 
 // ---------------------------------------------------------------------------------------------
-void process_manager_init(void) {
-  s_deinit_timer_id = new_timer_create();
-}
+void process_manager_init(void) { s_deinit_timer_id = new_timer_create(); }
 
 // -----------------------------------------------------------------------------------------------------------
 void process_manager_put_kill_process_event(PebbleTask task, bool gracefully) {
   PebbleEvent event = {
-    .type = PEBBLE_PROCESS_KILL_EVENT,
-    .kill = {
-      .gracefully = gracefully,
-      .task = task,
-    },
+      .type = PEBBLE_PROCESS_KILL_EVENT,
+      .kill =
+          {
+              .gracefully = gracefully,
+              .task = task,
+          },
   };
 
   // When we have decided to exit the app,
@@ -146,8 +145,8 @@ void process_manager_put_kill_process_event(PebbleTask task, bool gracefully) {
 
 // ---------------------------------------------------------------------------------------------
 //! Init the context variables for a task.
-void process_manager_init_context(ProcessContext* context,
-                                  const PebbleProcessMd *app_md, const void *args) {
+void process_manager_init_context(ProcessContext *context, const PebbleProcessMd *app_md,
+                                  const void *args) {
   PBL_ASSERT_TASK(PebbleTask_KernelMain);
 
   PBL_ASSERTN(context->task_handle == NULL);
@@ -184,11 +183,12 @@ bool process_manager_check_SDK_compatible(const AppInstallId id) {
     return true;
   }
 
-  PBL_LOG_WRN("App requires support for SDK version (%"PRIu8".%"PRIu8"), "
-                             "we only support version (%"PRIu8".%"PRIu8").",
-          entry.sdk_version.major, entry.sdk_version.minor,
-          (uint8_t) PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR,
-          (uint8_t) PROCESS_INFO_CURRENT_SDK_VERSION_MINOR);
+  PBL_LOG_WRN("App requires support for SDK version (%" PRIu8 ".%" PRIu8
+              "), "
+              "we only support version (%" PRIu8 ".%" PRIu8 ").",
+              entry.sdk_version.major, entry.sdk_version.minor,
+              (uint8_t)PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR,
+              (uint8_t)PROCESS_INFO_CURRENT_SDK_VERSION_MINOR);
 
   ExpandableDialog *expandable_dialog = expandable_dialog_create("Incompatible SDK");
   Dialog *dialog = expandable_dialog_get_dialog(expandable_dialog);
@@ -227,8 +227,8 @@ static bool prv_needs_fetch(AppInstallId id, const PebbleProcessMd **md, bool is
     char expected_uuid[UUID_STRING_BUFFER_LENGTH];
     uuid_to_string(&(*md)->uuid, cached_uuid);
     uuid_to_string(&entry.uuid, expected_uuid);
-    PBL_LOG_WRN("Stale app cache entry for id %" PRId32 ": cached %s, expected %s. Refetching.",
-                id, cached_uuid, expected_uuid);
+    PBL_LOG_WRN("Stale app cache entry for id %" PRId32 ": cached %s, expected %s. Refetching.", id,
+                cached_uuid, expected_uuid);
     app_install_release_md(*md);
     *md = NULL;
     app_cache_remove_entry(id);
@@ -253,9 +253,9 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
   const PebbleProcessMd *md = NULL;
 #if !defined(CONFIG_RECOVERY_FW)
   if (app_install_id_from_app_db(id)) {
-      if (!process_manager_check_SDK_compatible(id)) {
-        return;
-      }
+    if (!process_manager_check_SDK_compatible(id)) {
+      return;
+    }
 
     // This is a third party flash 3.0 app install
     if (prv_needs_fetch(id, &md, is_worker)) {
@@ -275,12 +275,13 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
       }
 
       PebbleEvent e = {
-        .type = PEBBLE_APP_FETCH_REQUEST_EVENT,
-        .app_fetch_request = {
-          .id = id,
-          .with_ui = true,
-          .fetch_args = fetch_args,
-        },
+          .type = PEBBLE_APP_FETCH_REQUEST_EVENT,
+          .app_fetch_request =
+              {
+                  .id = id,
+                  .with_ui = true,
+                  .fetch_args = fetch_args,
+              },
       };
       event_put(&e);
       return;
@@ -309,7 +310,7 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
       AppInstallEntry entry;
       if (!app_install_get_entry_for_install_id(id, &entry)) {
         // can't retrieve app install entry for id
-        PBL_LOG_ERR("Failed to get entry for id %"PRId32, id);
+        PBL_LOG_ERR("Failed to get entry for id %" PRId32, id);
       } else if (app_install_entry_is_watchface(&entry)) {
         // If the watchface is for an unsupported SDK version, we need to switch the default
         // watchface back to tictoc. Otherwise, we will be stuck in the launcher forever.
@@ -336,8 +337,7 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
 
       ExpandableDialog *expandable_dialog = expandable_dialog_create("Unsupported App");
       Dialog *dialog = expandable_dialog_get_dialog(expandable_dialog);
-      const char *error_text =
-          i18n_noop("This app uses RockyJS which is no longer supported.");
+      const char *error_text = i18n_noop("This app uses RockyJS which is no longer supported.");
       dialog_set_text(dialog, i18n_get(error_text, expandable_dialog));
       dialog_set_icon(dialog, RESOURCE_ID_GENERIC_WARNING_SMALL);
       i18n_free(error_text, expandable_dialog);
@@ -354,35 +354,37 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
   if (is_worker) {
     worker_manager_launch_new_worker_with_args(md, NULL);
   } else {
-    app_manager_launch_new_app(&(AppLaunchConfig) {
-      .md = md,
-      .common = config->common,
-      .forcefully = config->forcefully,
+    app_manager_launch_new_app(&(AppLaunchConfig){
+        .md = md,
+        .common = config->common,
+        .forcefully = config->forcefully,
     });
   }
 }
 
 // ---------------------------------------------------------------------------------------------
-//! This method returns true if the process is safe to kill (it has exited out of it's main function). If the
-//! the process is not already safe to kill, it will "prod" it to exit, set a timer, and return false.
+//! This method returns true if the process is safe to kill (it has exited out of it's main
+//! function). If the the process is not already safe to kill, it will "prod" it to exit, set a
+//! timer, and return false.
 //!
-//! The app manager and worker manager MUST call this before they call the code to kill the task and clean it up
-//! (most of that work is done by process_manager_process_cleanup()). If it returns false, they should abort the
-//! current process exit operation and wait for another KILL event to get posted.
+//! The app manager and worker manager MUST call this before they call the code to kill the task and
+//! clean it up (most of that work is done by process_manager_process_cleanup()). If it returns
+//! false, they should abort the current process exit operation and wait for another KILL event to
+//! get posted.
 //!
-//! If the task does eventually fall through it's main function, the exit handling code will set the safe to kill
-//! boolean and post another KILL event to the KernelMain which will result in this method being called again, and
-//! this time it will see the safe to kill is set and return true
+//! If the task does eventually fall through it's main function, the exit handling code will set the
+//! safe to kill boolean and post another KILL event to the KernelMain which will result in this
+//! method being called again, and this time it will see the safe to kill is set and return true
 //!
-//! If the task does not exit by itself before the timer expires, then the timer will post another KILL event
-//! with graceful set to false. This will result in this method being called again with gracefully = false. When
-//! we see this, we just try and make sure the app is not stuck in privilege code. If it's not, we return true
-//! and allow the caller to kill the task.
+//! If the task does not exit by itself before the timer expires, then the timer will post another
+//! KILL event with graceful set to false. This will result in this method being called again with
+//! gracefully = false. When we see this, we just try and make sure the app is not stuck in
+//! privilege code. If it's not, we return true and allow the caller to kill the task.
 //!
-//! If however, the task is in privilege mode, we tell the syscall machinery to set the safe to kill boolean as
-//! soon as the current syscall returns and set another timer. Once that timer expires, if the task is no longer
-//! in privilege mode we post another KILL event (graceful = false). If the task is still in privilege mode then,
-//! we croak.
+//! If however, the task is in privilege mode, we tell the syscall machinery to set the safe to kill
+//! boolean as soon as the current syscall returns and set another timer. Once that timer expires,
+//! if the task is no longer in privilege mode we post another KILL event (graceful = false). If the
+//! task is still in privilege mode then, we croak.
 bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully) {
   PBL_ASSERT_TASK(PebbleTask_KernelMain);
   ProcessContext *context = prv_get_context_for_task(task);
@@ -400,7 +402,7 @@ bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully)
   }
 
   PBL_LOG_DBG("make %s process safe to kill: state %u", pebble_task_get_name(task),
-                              context->closing_state);
+              context->closing_state);
 
   if (gracefully) {
     if (context->closing_state == ProcessRunState_Running) {
@@ -410,15 +412,16 @@ bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully)
 
       // Send deinit event to app:
       PebbleEvent deinit_event = {
-        .type = PEBBLE_PROCESS_DEINIT_EVENT,
+          .type = PEBBLE_PROCESS_DEINIT_EVENT,
       };
       process_manager_send_event_to_process(task, &deinit_event);
 
-      // Set a timer to forcefully close the app in 3 seconds if it doesn't respond by then. The app can respond
-      // within 3 seconds by posting a PEBBLE_APP_KILL_EVENT (graceful=true), which will result in
-      // app_manager_close_current_app() being called, which in turn calls this method with graceful = true.
-      bool success = new_timer_start(s_deinit_timer_id, 3 * 1000, prv_graceful_close_timer_callback, (void*)task,
-                        0 /*flags*/);
+      // Set a timer to forcefully close the app in 3 seconds if it doesn't respond by then. The app
+      // can respond within 3 seconds by posting a PEBBLE_APP_KILL_EVENT (graceful=true), which will
+      // result in app_manager_close_current_app() being called, which in turn calls this method
+      // with graceful = true.
+      bool success = new_timer_start(s_deinit_timer_id, 3 * 1000, prv_graceful_close_timer_callback,
+                                     (void *)task, 0 /*flags*/);
       PBL_ASSERTN(success);
     }
     // Else we're already in the gracefully closing state, just let the timer run out or the
@@ -455,15 +458,14 @@ bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully)
       // (e.g., in sys_get_pebble_event). This allows the syscall to return and
       // trigger process_manager_handle_syscall_exit() which will mark the process
       // as safe to kill.
-      PBL_LOG_DBG("Sending DEINIT event to wake %s from syscall",
-              pebble_task_get_name(task));
+      PBL_LOG_DBG("Sending DEINIT event to wake %s from syscall", pebble_task_get_name(task));
       PebbleEvent deinit_event = {
-        .type = PEBBLE_PROCESS_DEINIT_EVENT,
+          .type = PEBBLE_PROCESS_DEINIT_EVENT,
       };
       process_manager_send_event_to_process(task, &deinit_event);
 
-      bool success = new_timer_start(s_deinit_timer_id, 3 * 1000, prv_force_close_timer_callback, (void*)task,
-              0 /*flags*/);
+      bool success = new_timer_start(s_deinit_timer_id, 3 * 1000, prv_force_close_timer_callback,
+                                     (void *)task, 0 /*flags*/);
       PBL_ASSERTN(success);
     }
   }
@@ -471,8 +473,8 @@ bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully)
 }
 
 // -----------------------------------------------------------------------------------------------------------
-// This is designed to be called from the task itself, in privilege mode, after it exits. It is called from
-// app_task_exit for app tasks and worker_task_exit from worker tasks
+// This is designed to be called from the task itself, in privilege mode, after it exits. It is
+// called from app_task_exit for app tasks and worker_task_exit from worker tasks
 NORETURN process_manager_task_exit(void) {
   PebbleTask task = pebble_task_get_current();
   ProcessContext *context = prv_get_context_for_task(task);
@@ -490,16 +492,18 @@ NORETURN process_manager_task_exit(void) {
 
     // FIXME: We cast heap_size's size_t result to int because for some reason our printf doesn't
     // like the %zd formatter
-    APP_LOG(APP_LOG_LEVEL_INFO, "Heap Usage for %s: Total Size <%dB> Used <%uB> Still allocated <%uB>",
-        pebble_task_get_name(task), (int) heap_size(heap), heap->high_water_mark, heap->current_size);
+    APP_LOG(APP_LOG_LEVEL_INFO,
+            "Heap Usage for %s: Total Size <%dB> Used <%uB> Still allocated <%uB>",
+            pebble_task_get_name(task), (int)heap_size(heap), heap->high_water_mark,
+            heap->current_size);
   }
 
   // Let the task manager know we're done cleaning up.
   context->safe_to_kill = true;
 
-  // Tell the task manager that we want to be killed. This may be redundant if we're responding to a DEINIT
-  // message, but just in case we're exiting on our own (someone found the sys_exit syscall and called in when
-  // we weren't expecting it?) we should let the app manager know.
+  // Tell the task manager that we want to be killed. This may be redundant if we're responding to a
+  // DEINIT message, but just in case we're exiting on our own (someone found the sys_exit syscall
+  // and called in when we weren't expecting it?) we should let the app manager know.
   process_manager_put_kill_process_event(task, true);
 
   // Better to die in our sleep ...
@@ -507,14 +511,11 @@ NORETURN process_manager_task_exit(void) {
 
   // We don't expect someone to resume us.
   PBL_CROAK("");
-
 }
 
 // ---------------------------------------------------------------------------------------------
 // Get the args for the current process
-const void *process_manager_get_current_process_args(void) {
-  return prv_get_context()->args;
-}
+const void *process_manager_get_current_process_args(void) { return prv_get_context()->args; }
 
 // ---------------------------------------------------------------------------------------------
 // Setup the system services required for this process. Called by app_manager and worker_manager
@@ -525,9 +526,10 @@ void process_manager_process_setup(PebbleTask task) {
 }
 
 // ---------------------------------------------------------------------------------------------
-//! Kills the process, giving it no chance to clean things up or exit gracefully. The process must already be in a
-//! state where it's safe to exit, so the caller must call process_manager_make_process_safe_to_kill() first and only
-//! call this method if process_manager_make_process_safe_to_kill() returns true;
+//! Kills the process, giving it no chance to clean things up or exit gracefully. The process must
+//! already be in a state where it's safe to exit, so the caller must call
+//! process_manager_make_process_safe_to_kill() first and only call this method if
+//! process_manager_make_process_safe_to_kill() returns true;
 void process_manager_process_cleanup(PebbleTask task) {
   PBL_ASSERT_TASK(PebbleTask_KernelMain);
 
@@ -557,7 +559,7 @@ void process_manager_process_cleanup(PebbleTask task) {
 
   if (task == PebbleTask_App) {
   }
-#endif // CONFIG_RECOVERY_FW
+#endif  // CONFIG_RECOVERY_FW
 
   // Unregister the task
   pebble_task_unregister(task);
@@ -597,7 +599,7 @@ void process_manager_close_process(PebbleTask task, bool gracefully) {
 }
 
 // ----------------------------------------------------------------------------------------------
-bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent* e) {
+bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent *e) {
   ProcessContext *context = prv_get_context_for_task(task);
 
   if (context->to_process_event_queue == 0) {
@@ -630,15 +632,16 @@ uint32_t process_manager_process_events_waiting(PebbleTask task) {
 }
 
 // ----------------------------------------------------------------------------------------------
-void process_manager_send_callback_event_to_process(PebbleTask task, void (*callback)(void *data), void *data) {
-
+void process_manager_send_callback_event_to_process(PebbleTask task, void (*callback)(void *data),
+                                                    void *data) {
   PBL_ASSERTN(callback != NULL);
   PebbleEvent event = {
-    .type = PEBBLE_CALLBACK_EVENT,
-    .callback = {
-      .callback = callback,
-      .data = data,
-    },
+      .type = PEBBLE_CALLBACK_EVENT,
+      .callback =
+          {
+              .callback = callback,
+              .data = data,
+          },
   };
   process_manager_send_event_to_process(task, &event);
 }
@@ -646,9 +649,8 @@ void process_manager_send_callback_event_to_process(PebbleTask task, void (*call
 // ----------------------------------------------------------------------------------------------
 void *process_manager_address_to_offset(PebbleTask task, void *system_address) {
   ProcessContext *context = prv_get_context_for_task(task);
-  if (system_address >= context->load_start &&
-      system_address < context->load_end) {
-    return (void*)((uintptr_t) system_address - (uintptr_t)context->load_start);
+  if (system_address >= context->load_start && system_address < context->load_end) {
+    return (void *)((uintptr_t)system_address - (uintptr_t)context->load_start);
   }
   // Not in app space:
   return system_address;
@@ -704,7 +706,7 @@ DEFINE_SYSCALL(uint32_t, sys_process_get_launch_args, void) {
   if (sys_process_get_launch_reason() != APP_LAUNCH_TIMELINE_ACTION) {
     return 0;
   } else {
-    return (uint32_t) process_manager_get_current_process_args();
+    return (uint32_t)process_manager_get_current_process_args();
   }
 }
 
@@ -713,7 +715,7 @@ DEFINE_SYSCALL(AppQuickLaunchAction, sys_process_get_quick_launch_action, void) 
   if (sys_process_get_launch_reason() != APP_LAUNCH_QUICK_LAUNCH) {
     return APP_QUICK_LAUNCH_ACTION_NONE;
   }
-  return (AppQuickLaunchAction)(uintptr_t) process_manager_get_current_process_args();
+  return (AppQuickLaunchAction)(uintptr_t)process_manager_get_current_process_args();
 }
 
 // -------------------------------------------------------------------------------------------
@@ -739,7 +741,7 @@ DEFINE_SYSCALL(void, sys_process_get_wakeup_info, WakeupInfo *info) {
 }
 
 // -------------------------------------------------------------------------------------------
-DEFINE_SYSCALL(const PebbleProcessMd*, sys_process_manager_get_current_process_md, void) {
+DEFINE_SYSCALL(const PebbleProcessMd *, sys_process_manager_get_current_process_md, void) {
   return prv_get_context()->app_md;
 }
 
@@ -749,7 +751,7 @@ DEFINE_SYSCALL(bool, sys_process_manager_get_current_process_uuid, Uuid *uuid_ou
     syscall_assert_userspace_buffer(uuid_out, sizeof(*uuid_out));
   }
 
-  const PebbleProcessMd* app_md = prv_get_context()->app_md;
+  const PebbleProcessMd *app_md = prv_get_context()->app_md;
   if (!app_md) {
     return false;
   }

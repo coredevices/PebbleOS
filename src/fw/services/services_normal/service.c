@@ -8,7 +8,7 @@
 #include "applib/event_service_client.h"
 #include <pbl/drivers/rtc.h>
 #include "kernel/events.h"
-#include "process_management/app_install_manager.h" // FIXME: This should really be in services/
+#include "process_management/app_install_manager.h"  // FIXME: This should really be in services/
 #include "pbl/services/activity/activity.h"
 #include "pbl/services/alarms/alarm.h"
 #include "pbl/services/app_cache.h"
@@ -54,10 +54,10 @@ static void prv_time_set_event_handler(PebbleEvent *e, void *context) {
   if (s_activity_init_deferred && rtc_get_time() >= MIN_VALID_TIME_TIMESTAMP) {
     // Time is now valid, initialize activity
     s_activity_init_deferred = false;
-    
+
     // Unsubscribe from time events
     event_service_client_unsubscribe(&s_time_event_info);
-    
+
     activity_init();
     // If the user had tracking enabled before init was deferred, start tracking now so we
     // don't miss steps when initialization happens after boot.
@@ -75,9 +75,7 @@ static bool prv_is_time_valid_for_activity_init(void) {
   return rtc_get_time() >= MIN_VALID_TIME_TIMESTAMP;
 }
 
-void services_normal_early_init(void) {
-  pfs_init(true);
-}
+void services_normal_early_init(void) { pfs_init(true); }
 
 void services_normal_init(void) {
   persist_service_init();
@@ -104,9 +102,9 @@ void services_normal_init(void) {
     s_activity_init_deferred = true;
 
     // Subscribe to time set events
-    s_time_event_info = (EventServiceInfo) {
-      .type = PEBBLE_SET_TIME_EVENT,
-      .handler = prv_time_set_event_handler,
+    s_time_event_info = (EventServiceInfo){
+        .type = PEBBLE_SET_TIME_EVENT,
+        .handler = prv_time_set_event_handler,
     };
     event_service_client_subscribe(&s_time_event_info);
   }
@@ -128,35 +126,35 @@ void services_normal_init(void) {
 }
 
 static struct ServiceRunLevelSetting s_runlevel_settings[] = {
-  {
-    .set_enable_fn = wakeup_enable,
-    .enable_mask = R_Stationary | R_Normal,
-  },
-  {
-    .set_enable_fn = alarm_service_enable_alarms,
-    .enable_mask = R_LowPower | R_Stationary | R_Normal,
-  },
-  {
-    .set_enable_fn = activity_set_enabled,
-    .enable_mask = R_Stationary | R_Normal,
-  },
-  {
-    .set_enable_fn = stationary_run_level_enable,
-    .enable_mask = R_Stationary | R_Normal,
-  },
-  {
-    .set_enable_fn = dls_set_send_enable_run_level,
-    .enable_mask = R_Normal,
-  },
-  {
-    .set_enable_fn = blob_db_enabled,
-    .enable_mask = R_Normal,
-  },
+    {
+        .set_enable_fn = wakeup_enable,
+        .enable_mask = R_Stationary | R_Normal,
+    },
+    {
+        .set_enable_fn = alarm_service_enable_alarms,
+        .enable_mask = R_LowPower | R_Stationary | R_Normal,
+    },
+    {
+        .set_enable_fn = activity_set_enabled,
+        .enable_mask = R_Stationary | R_Normal,
+    },
+    {
+        .set_enable_fn = stationary_run_level_enable,
+        .enable_mask = R_Stationary | R_Normal,
+    },
+    {
+        .set_enable_fn = dls_set_send_enable_run_level,
+        .enable_mask = R_Normal,
+    },
+    {
+        .set_enable_fn = blob_db_enabled,
+        .enable_mask = R_Normal,
+    },
 #ifdef CONFIG_ORIENTATION_MANAGER
-  {
-    .set_enable_fn = orientation_manager_enable,
-    .enable_mask = R_LowPower | R_Stationary | R_Normal,
-  }
+    {
+        .set_enable_fn = orientation_manager_enable,
+        .enable_mask = R_LowPower | R_Stationary | R_Normal,
+    }
 #endif
 };
 

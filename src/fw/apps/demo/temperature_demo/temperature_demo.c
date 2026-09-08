@@ -49,19 +49,14 @@ typedef struct {
 
 static TemperatureDemoAppData *s_data;
 
+// -------------------------------------------------------------------------------
+static void select_click_handler(ClickRecognizerRef recognizer, void *context) {}
 
 // -------------------------------------------------------------------------------
-static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
-}
+static void up_click_handler(ClickRecognizerRef recognizer, void *context) {}
 
 // -------------------------------------------------------------------------------
-static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
-}
-
-// -------------------------------------------------------------------------------
-static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
-}
-
+static void down_click_handler(ClickRecognizerRef recognizer, void *context) {}
 
 // -------------------------------------------------------------------------------
 static void click_config_provider(void *context) {
@@ -77,15 +72,15 @@ static void cur_temp_update_text(TemperatureDemoAppData *data) {
   snprintf(data->cur_temp_text, sizeof(data->cur_temp_text), "%d", cur_temp);
   text_layer_set_text(data->cur_temp_layer, data->cur_temp_text);
 
-  snprintf(data->temp_range_text, sizeof(data->temp_range_text),
-           "%d - %d", data->min_temp, data->max_temp);
+  snprintf(data->temp_range_text, sizeof(data->temp_range_text), "%d - %d", data->min_temp,
+           data->max_temp);
   text_layer_set_text(data->temp_range_layer, data->temp_range_text);
 
   layer_mark_dirty(window_get_root_layer(data->window));
 }
 
 // -------------------------------------------------------------------------------
-static void handle_second_tick(struct tm* tick_time, TimeUnits units_changed) {
+static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
   int32_t reading = temperature_read();
   memmove(s_temp_readings, s_temp_readings + 1, (READ_HISTORY_ENTRIES - 1) * sizeof(int32_t));
   s_temp_readings[READ_HISTORY_ENTRIES - 1] = reading;
@@ -93,7 +88,7 @@ static void handle_second_tick(struct tm* tick_time, TimeUnits units_changed) {
 }
 
 // -------------------------------------------------------------------------------
-static void layer_update_proc(Layer *layer, GContext* ctx) {
+static void layer_update_proc(Layer *layer, GContext *ctx) {
   TemperatureDemoAppData *data = s_data;
   const GRect *bounds = &layer->bounds;
 
@@ -169,8 +164,7 @@ static void prv_window_load(Window *window) {
   // Current temp
   data->cur_temp_layer = text_layer_create(CUR_TEMP_RECT);
   text_layer_set_text_alignment(data->cur_temp_layer, GTextAlignmentCenter);
-  text_layer_set_font(data->cur_temp_layer,
-                      fonts_get_system_font(FONT_KEY_LECO_20_BOLD_NUMBERS));
+  text_layer_set_font(data->cur_temp_layer, fonts_get_system_font(FONT_KEY_LECO_20_BOLD_NUMBERS));
   text_layer_set_background_color(data->cur_temp_layer, GColorClear);
   text_layer_set_text_color(data->cur_temp_layer, GColorBlack);
   layer_add_child(window_layer, text_layer_get_layer(data->cur_temp_layer));
@@ -178,8 +172,7 @@ static void prv_window_load(Window *window) {
   // Current temp range
   data->temp_range_layer = text_layer_create(TEMP_RANGE_RECT);
   text_layer_set_text_alignment(data->temp_range_layer, GTextAlignmentCenter);
-  text_layer_set_font(data->temp_range_layer,
-                      fonts_get_system_font(FONT_KEY_LECO_20_BOLD_NUMBERS));
+  text_layer_set_font(data->temp_range_layer, fonts_get_system_font(FONT_KEY_LECO_20_BOLD_NUMBERS));
   text_layer_set_background_color(data->temp_range_layer, GColorClear);
   text_layer_set_text_color(data->temp_range_layer, GColorBlack);
   layer_add_child(window_layer, text_layer_get_layer(data->temp_range_layer));
@@ -191,13 +184,11 @@ static void prv_window_load(Window *window) {
   tick_timer_service_subscribe(SECOND_UNIT, handle_second_tick);
 }
 
-
 // -------------------------------------------------------------------------------
 static void prv_window_unload(Window *window) {
   TemperatureDemoAppData *data = window_get_user_data(window);
   text_layer_destroy(data->cur_temp_layer);
 }
-
 
 // -------------------------------------------------------------------------------
 static void deinit(void) {
@@ -205,7 +196,6 @@ static void deinit(void) {
   window_destroy(data->window);
   app_free(data);
 }
-
 
 // -------------------------------------------------------------------------------
 static void init(void) {
@@ -218,14 +208,13 @@ static void init(void) {
   window_set_background_color(data->window, GColorWhite);
   window_set_user_data(data->window, data);
   window_set_click_config_provider_with_context(data->window, click_config_provider, data);
-  window_set_window_handlers(data->window, &(WindowHandlers) {
-    .load = prv_window_load,
-    .unload = prv_window_unload,
-  });
+  window_set_window_handlers(data->window, &(WindowHandlers){
+                                               .load = prv_window_load,
+                                               .unload = prv_window_unload,
+                                           });
 
   app_window_stack_push(data->window, true /* Animated */);
 }
-
 
 // -------------------------------------------------------------------------------
 static void s_main(void) {
@@ -234,12 +223,9 @@ static void s_main(void) {
   deinit();
 }
 
-
 // -------------------------------------------------------------------------------
-const PebbleProcessMd* temperature_demo_get_app_info(void) {
-  static const PebbleProcessMdSystem s_temperature_demo_app_info = {
-    .common.main_func = &s_main,
-    .name = "Temperature"
-  };
-  return (const PebbleProcessMd*) &s_temperature_demo_app_info;
+const PebbleProcessMd *temperature_demo_get_app_info(void) {
+  static const PebbleProcessMdSystem s_temperature_demo_app_info = {.common.main_func = &s_main,
+                                                                    .name = "Temperature"};
+  return (const PebbleProcessMd *)&s_temperature_demo_app_info;
 }

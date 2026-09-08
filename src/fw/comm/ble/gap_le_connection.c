@@ -46,39 +46,35 @@ static bool s_le_connection_module_initialized = false;
 // Internal helpers
 
 static bool prv_list_filter_by_gatt_id(ListNode *found_node, void *data) {
-  const unsigned int connection_id = (uintptr_t) data;
-  const GAPLEConnection *connection = (const GAPLEConnection *) found_node;
+  const unsigned int connection_id = (uintptr_t)data;
+  const GAPLEConnection *connection = (const GAPLEConnection *)found_node;
   return (connection->gatt_connection_id == connection_id);
 }
 
-static GAPLEConnection * prv_find_connection_by_gatt_id(uintptr_t connection_id) {
-  return (GAPLEConnection *) list_find(&s_connections->node,
-                                       prv_list_filter_by_gatt_id,
-                                       (void *) connection_id);
+static GAPLEConnection *prv_find_connection_by_gatt_id(uintptr_t connection_id) {
+  return (GAPLEConnection *)list_find(&s_connections->node, prv_list_filter_by_gatt_id,
+                                      (void *)connection_id);
 }
 
 static bool prv_list_filter_for_addr(ListNode *found_node, void *data) {
-  const BTDeviceAddress *addr = (const BTDeviceAddress *) data;
-  const GAPLEConnection *connection = (const GAPLEConnection *) found_node;
+  const BTDeviceAddress *addr = (const BTDeviceAddress *)data;
+  const GAPLEConnection *connection = (const GAPLEConnection *)found_node;
   return bt_device_address_equal(&connection->device.address, addr);
 }
 
-static GAPLEConnection * prv_find_connection_by_addr(const BTDeviceAddress *addr) {
-  return (GAPLEConnection *) list_find(&s_connections->node,
-                                       prv_list_filter_for_addr,
-                                       (void *) addr);
+static GAPLEConnection *prv_find_connection_by_addr(const BTDeviceAddress *addr) {
+  return (GAPLEConnection *)list_find(&s_connections->node, prv_list_filter_for_addr, (void *)addr);
 }
 
 static bool prv_list_filter_for_device(ListNode *found_node, void *data) {
-  const BTDeviceInternal *device = (const BTDeviceInternal *) data;
-  const GAPLEConnection *connection = (const GAPLEConnection *) found_node;
+  const BTDeviceInternal *device = (const BTDeviceInternal *)data;
+  const GAPLEConnection *connection = (const GAPLEConnection *)found_node;
   return bt_device_equal(&connection->device.opaque, &device->opaque);
 }
 
-static GAPLEConnection * prv_find_connection(const BTDeviceInternal *device) {
-  return (GAPLEConnection *) list_find(&s_connections->node,
-                                       prv_list_filter_for_device,
-                                       (void *) device);
+static GAPLEConnection *prv_find_connection(const BTDeviceInternal *device) {
+  return (GAPLEConnection *)list_find(&s_connections->node, prv_list_filter_for_device,
+                                      (void *)device);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -114,27 +110,25 @@ void gap_le_connection_set_irk(GAPLEConnection *connection, const SMIdentityReso
 // -------------------------------------------------------------------------------------------------
 
 GAPLEConnection *gap_le_connection_add(const BTDeviceInternal *device,
-                                       const SMIdentityResolvingKey *irk,
-                                       bool local_is_master,
+                                       const SMIdentityResolvingKey *irk, bool local_is_master,
                                        TimerID param_watchdog_timer) {
   bt_lock_assert_held(true /* is_held */);
   PBL_ASSERTN(!gap_le_connection_is_connected(device));
 
   GAPLEConnection *connection = kernel_zalloc_check(sizeof(GAPLEConnection));
 
-  *connection = (const GAPLEConnection) {
-    .device = *device,
-    .local_is_master = local_is_master,
-    .conn_mgr_info = bt_conn_mgr_info_init(),
-    .bonding_id = BT_BONDING_ID_INVALID,
-    .ticks_since_connection = rtc_get_ticks(),
-    .is_remote_device_managing_connection_parameters = false,
-    .connection_parameter_sets = NULL,
+  *connection = (const GAPLEConnection){
+      .device = *device,
+      .local_is_master = local_is_master,
+      .conn_mgr_info = bt_conn_mgr_info_init(),
+      .bonding_id = BT_BONDING_ID_INVALID,
+      .ticks_since_connection = rtc_get_ticks(),
+      .is_remote_device_managing_connection_parameters = false,
+      .connection_parameter_sets = NULL,
   };
   gap_le_connection_set_irk(connection, irk);
 
-  s_connections = (GAPLEConnection *) list_prepend(&s_connections->node,
-                                                   &connection->node);
+  s_connections = (GAPLEConnection *)list_prepend(&s_connections->node, &connection->node);
 
   gap_le_connect_params_setup_connection(connection, param_watchdog_timer);
 
@@ -150,7 +144,7 @@ void prv_destroy_connection(GAPLEConnection *connection) {
   gatt_client_subscriptions_cleanup_by_connection(connection, false /* should_unsubscribe */);
   gatt_client_cleanup_discovery_jobs(connection);
 
-  list_remove(&connection->node, (ListNode **) &s_connections, NULL);
+  list_remove(&connection->node, (ListNode **)&s_connections, NULL);
   bt_conn_mgr_info_deinit(&connection->conn_mgr_info);
   kernel_free(connection->connection_parameter_sets);
   kernel_free(connection->pairing_state);
@@ -210,9 +204,7 @@ uint16_t gap_le_connection_get_gatt_mtu(const BTDeviceInternal *device) {
 
 // -------------------------------------------------------------------------------------------------
 
-void gap_le_connection_init(void) {
-  s_le_connection_module_initialized = true;
-}
+void gap_le_connection_init(void) { s_le_connection_module_initialized = true; }
 
 // -------------------------------------------------------------------------------------------------
 
@@ -221,8 +213,7 @@ void gap_le_connection_deinit(void) {
   {
     GAPLEConnection *connection = s_connections;
     while (connection) {
-      GAPLEConnection *next_connection =
-                                      (GAPLEConnection *) connection->node.next;
+      GAPLEConnection *next_connection = (GAPLEConnection *)connection->node.next;
       prv_destroy_connection(connection);
       connection = next_connection;
     }
@@ -238,9 +229,7 @@ void gap_le_connection_deinit(void) {
 
 // -------------------------------------------------------------------------------------------------
 
-GAPLEConnection *gap_le_connection_any(void) {
-  return s_connections;
-}
+GAPLEConnection *gap_le_connection_any(void) { return s_connections; }
 
 static bool prv_valid_conn_filter(ListNode *found_node, void *data) {
   GAPLEConnection *searching_for = (GAPLEConnection *)data;
@@ -274,11 +263,8 @@ GAPLEConnection *gap_le_connection_by_gatt_id(unsigned int connection_id) {
 // -------------------------------------------------------------------------------------------------
 
 //! @note !!! To access the returned context bt_lock MUST be held!!!
-GAPLEConnection *gap_le_connection_find(GAPLEConnectionFindCallback filter,
-                                        void *data) {
-  return (GAPLEConnection *) list_find(&s_connections->node,
-                                       (ListFilterCallback) filter,
-                                       data);
+GAPLEConnection *gap_le_connection_find(GAPLEConnectionFindCallback filter, void *data) {
+  return (GAPLEConnection *)list_find(&s_connections->node, (ListFilterCallback)filter, data);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -288,7 +274,7 @@ void gap_le_connection_for_each(GAPLEConnectionForEachCallback cb, void *data) {
   GAPLEConnection *connection = s_connections;
   while (connection) {
     cb(connection, data);
-    connection = (GAPLEConnection *) connection->node.next;
+    connection = (GAPLEConnection *)connection->node.next;
   }
 }
 
@@ -324,16 +310,16 @@ void gap_le_connection_handle_bonding_change(BTBondingID bonding, BtPersistBondi
   }
   // Clean up the bonding_id field for the bonding that just got removed:
   bt_lock();
-  GAPLEConnection *connection = gap_le_connection_find(prv_find_connection_with_bonding_id,
-                                                       (void *)(uintptr_t)bonding);
+  GAPLEConnection *connection =
+      gap_le_connection_find(prv_find_connection_with_bonding_id, (void *)(uintptr_t)bonding);
   if (connection) {
     connection->bonding_id = BT_BONDING_ID_INVALID;
   }
   bt_unlock();
 }
 
-void gap_le_connection_copy_device_name(
-    const GAPLEConnection *connection, char *name_out, size_t name_out_len) {
+void gap_le_connection_copy_device_name(const GAPLEConnection *connection, char *name_out,
+                                        size_t name_out_len) {
   bt_lock();
   {
     if (!gap_le_connection_is_valid(connection)) {

@@ -63,8 +63,8 @@ typedef enum {
 //!   NewSolutionAvail - New solution set available
 //!   NewLockedSolutionAvail - A set of solutions close to one another have
 //!       been found. Result in new_corr is the average of these values
-extern MagCalStatus ecomp_corr_add_raw_mag_sample(int16_t *sample,
-    int16_t *saved_corr, int16_t *new_corr);
+extern MagCalStatus ecomp_corr_add_raw_mag_sample(int16_t *sample, int16_t *saved_corr,
+                                                  int16_t *new_corr);
 
 //! Drops any samples which have been collected as part of
 //! ecomp_corr_add_raw_mag_sample and resets any state tracking

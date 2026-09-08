@@ -9,11 +9,9 @@
 static void prv_focus_event_handler(PebbleEvent *e, void *context) {
   AppFocusState *state = app_state_get_app_focus_state();
   bool in_focus = e->app_focus.in_focus;
-  if (e->type == PEBBLE_APP_WILL_CHANGE_FOCUS_EVENT &&
-      state->handlers.will_focus) {
+  if (e->type == PEBBLE_APP_WILL_CHANGE_FOCUS_EVENT && state->handlers.will_focus) {
     state->handlers.will_focus(in_focus);
-  } else if (e->type == PEBBLE_APP_DID_CHANGE_FOCUS_EVENT &&
-             state->handlers.did_focus) {
+  } else if (e->type == PEBBLE_APP_DID_CHANGE_FOCUS_EVENT && state->handlers.did_focus) {
     state->handlers.did_focus(in_focus);
   }
 }
@@ -42,7 +40,7 @@ void app_focus_service_subscribe_handlers(AppFocusHandlers handlers) {
 }
 
 void app_focus_service_subscribe(AppFocusHandler handler) {
-  AppFocusHandlers handlers = (AppFocusHandlers) { .will_focus = handler };
+  AppFocusHandlers handlers = (AppFocusHandlers){.will_focus = handler};
   app_focus_service_subscribe_handlers(handlers);
 }
 
@@ -54,5 +52,5 @@ void app_focus_service_unsubscribe(void) {
   if (state->handlers.did_focus) {
     event_service_client_unsubscribe(&state->did_focus_info);
   }
-  state->handlers = (AppFocusHandlers) {};
+  state->handlers = (AppFocusHandlers){};
 }

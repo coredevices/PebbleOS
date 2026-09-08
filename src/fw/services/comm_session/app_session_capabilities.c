@@ -45,9 +45,8 @@ bool comm_session_current_app_session_cache_has_capability(CommSessionCapability
 
   uint64_t cached_capabilities = 0;
   if (file_open) {
-    settings_file_get(&settings_file,
-                      &app_uuid, sizeof(app_uuid),
-                      &cached_capabilities, sizeof(cached_capabilities));
+    settings_file_get(&settings_file, &app_uuid, sizeof(app_uuid), &cached_capabilities,
+                      sizeof(cached_capabilities));
   }
 
   uint64_t new_capabilities = cached_capabilities;
@@ -56,9 +55,8 @@ bool comm_session_current_app_session_cache_has_capability(CommSessionCapability
     new_capabilities = comm_session_get_capabilities(app_session);
 
     if (file_open && (new_capabilities != cached_capabilities)) {
-      settings_file_set(&settings_file,
-                        &app_uuid, sizeof(app_uuid),
-                        &new_capabilities, sizeof(new_capabilities));
+      settings_file_set(&settings_file, &app_uuid, sizeof(app_uuid), &new_capabilities,
+                        sizeof(new_capabilities));
     }
   }
 
@@ -69,12 +67,10 @@ bool comm_session_current_app_session_cache_has_capability(CommSessionCapability
   return ((new_capabilities & capability) != 0);
 }
 
-static void prv_rewrite_cb(SettingsFile *old_file,
-                           SettingsFile *new_file,
-                           SettingsRecordInfo *info,
+static void prv_rewrite_cb(SettingsFile *old_file, SettingsFile *new_file, SettingsRecordInfo *info,
                            void *context) {
   if (!info->val_len) {
-    return; // Cache for this app has been deleted, don't rewrite it
+    return;  // Cache for this app has been deleted, don't rewrite it
   }
   Uuid key;
   uint64_t val;

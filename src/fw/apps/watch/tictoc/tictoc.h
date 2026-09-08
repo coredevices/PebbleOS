@@ -7,4 +7,4 @@
 
 void tictoc_main(void);
 
-const PebbleProcessMd* tictoc_get_app_info(void);
+const PebbleProcessMd *tictoc_get_app_info(void);

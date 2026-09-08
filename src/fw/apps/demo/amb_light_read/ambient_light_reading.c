@@ -41,8 +41,7 @@ static void handle_init(void) {
   Layer *window_layer = window_get_root_layer(data->window);
   GRect bounds = window_layer->bounds;
 
-  data->text_layer = text_layer_create((GRect)
-      { .origin = { 0, 40 }, .size = { bounds.size.w, 100 } });
+  data->text_layer = text_layer_create((GRect){.origin = {0, 40}, .size = {bounds.size.w, 100}});
 
   prv_populate_amb_read_str(&data->ambient_reading[0]);
 
@@ -70,10 +69,8 @@ static void s_main(void) {
   handle_deinit();
 }
 
-const PebbleProcessMd* ambient_light_reading_get_info() {
-  static const PebbleProcessMdSystem s_ambient_light_info = {
-    .common.main_func = s_main,
-    .name = "Amb Reading"
-  };
-  return (const PebbleProcessMd*) &s_ambient_light_info;
+const PebbleProcessMd *ambient_light_reading_get_info() {
+  static const PebbleProcessMdSystem s_ambient_light_info = {.common.main_func = s_main,
+                                                             .name = "Amb Reading"};
+  return (const PebbleProcessMd *)&s_ambient_light_info;
 }

@@ -25,8 +25,8 @@ void ppogatt_handle_subscribe(BLECharacteristic subscribed_characteristic,
 void ppogatt_handle_read_or_notification(BLECharacteristic characteristic, const uint8_t *value,
                                          size_t value_length, BLEGATTError error);
 
-void ppogatt_handle_service_removed(
-    BLECharacteristic *characteristics, uint8_t num_characteristics);
+void ppogatt_handle_service_removed(BLECharacteristic *characteristics,
+                                    uint8_t num_characteristics);
 
 void ppogatt_invalidate_all_references(void);
 

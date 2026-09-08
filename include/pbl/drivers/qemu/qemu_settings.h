@@ -6,12 +6,10 @@
 #include <stdint.h>
 
 typedef enum {
-  QemuSetting_FirstBootLogicEnable = 1,     // Returns a bool
-  QemuSetting_DefaultConnected = 2,         // Returns a bool
-  QemuSetting_DefaultPluggedIn = 3,         // Returns a bool
+  QemuSetting_FirstBootLogicEnable = 1,  // Returns a bool
+  QemuSetting_DefaultConnected = 2,      // Returns a bool
+  QemuSetting_DefaultPluggedIn = 3,      // Returns a bool
 } QemuSetting;
-
-
 
 // ---------------------------------------------------------------------------------------
 // API

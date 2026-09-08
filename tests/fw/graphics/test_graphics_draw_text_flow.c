@@ -15,7 +15,6 @@
 #include "resource/resource_ids.auto.h"
 #include "pbl/util/size.h"
 
-
 // Helper Functions
 ////////////////////////////////////
 #include "test_graphics.h"
@@ -56,10 +55,11 @@ static GContext ctx;
 #define DELTA 20
 static FontInfo s_font_info;
 static GBitmap *s_dest_bitmap;
-static char *s_text = "A B C D E F G "
-  "H I J K L M N O P Q R S T U V W X Y Z a b c d e f g h i j k l m n o "
-  "p q r s t u v w x y z A B C D E F G H I J K L M N O P Q R"
-  "S T U V W X Y Z a b c d e f g h i j k l m n o p q r s t u v w x y z";
+static char *s_text =
+    "A B C D E F G "
+    "H I J K L M N O P Q R S T U V W X Y Z a b c d e f g h i j k l m n o "
+    "p q r s t u v w x y z A B C D E F G H I J K L M N O P Q R"
+    "S T U V W X Y Z a b c d e f g h i j k l m n o p q r s t u v w x y z";
 
 void prv_prepare_fb_steps_xy(GSize size, int16_t steps_x, int16_t steps_y) {
   gbitmap_destroy(s_dest_bitmap);
@@ -70,8 +70,8 @@ void prv_prepare_fb_steps_xy(GSize size, int16_t steps_x, int16_t steps_y) {
   // (DISP_COLS x DISP_ROWS) bitmap. A non-full-screen circular bitmap has no row
   // table, so reading a data row dereferences an unset pointer and segfaults.
   // Use a plain rectangular 8-bit format, which addresses rows by row_size_bytes.
-  s_dest_bitmap = gbitmap_create_blank(GSize(size.w * steps_x, size.h * steps_y),
-                                       GBitmapFormat8Bit);
+  s_dest_bitmap =
+      gbitmap_create_blank(GSize(size.w * steps_x, size.h * steps_y), GBitmapFormat8Bit);
   ctx.dest_bitmap = *s_dest_bitmap;
   ctx.draw_state.clip_box = (GRect){.size = size};
   ctx.draw_state.drawing_box = ctx.draw_state.clip_box;
@@ -80,20 +80,19 @@ void prv_prepare_fb_steps_xy(GSize size, int16_t steps_x, int16_t steps_y) {
   memset(s_dest_bitmap->addr, 0xff, s_dest_bitmap->row_size_bytes * s_dest_bitmap->bounds.size.h);
 }
 
-void prv_prepare_fb_steps(GSize size) {
-  prv_prepare_fb_steps_xy(size, NUM_STEPS, NUM_STEPS);
-}
+void prv_prepare_fb_steps(GSize size) { prv_prepare_fb_steps_xy(size, NUM_STEPS, NUM_STEPS); }
 
 void test_graphics_draw_text_flow__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
   ctx = (GContext){};
 
   // Setup resources
   fake_spi_flash_init(0, 0x1000000);
   pfs_init(false);
   pfs_format(true /* write erase headers */);
-  load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME, false /* is_next */);
+  load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME,
+                                 false /* is_next */);
 
   resource_init();
 
@@ -114,15 +113,12 @@ void test_graphics_draw_text_flow__cleanup(void) {
   s_dest_bitmap = NULL;
 }
 
-
 #define RECT_TEXT_0_0 GRect(0, 0, DISP_COLS, DISP_ROWS)
-GRangeHorizontal perimeter_for_display_round(const GPerimeter *perimeter,
-                                             const GSize *ctx_size,
-                                             GRangeVertical vertical_range,
-                                             uint16_t inset);
+GRangeHorizontal perimeter_for_display_round(const GPerimeter *perimeter, const GSize *ctx_size,
+                                             GRangeVertical vertical_range, uint16_t inset);
 
-static uint8_t *prv_bitmap_offset_for_steps(GBitmap *bmp, int sx, int sy,
-                                            int steps_x, int steps_y) {
+static uint8_t *prv_bitmap_offset_for_steps(GBitmap *bmp, int sx, int sy, int steps_x,
+                                            int steps_y) {
   sx += (steps_x - 1) / 2;
   sy += (steps_y - 1) / 2;
 
@@ -145,7 +141,7 @@ void render_steps(TextLayoutExtended *layout, RenderMoveMode mode, int delta, in
   int steps_y = ctx.dest_bitmap.bounds.size.h / ctx.draw_state.clip_box.size.h;
 
   int text_idx = 0;
-  for (int sx = -((steps_x - 1) / 2) ; sx <= steps_x / 2; sx++) {
+  for (int sx = -((steps_x - 1) / 2); sx <= steps_x / 2; sx++) {
     for (int sy = -((steps_y - 1) / 2); sy <= steps_y / 2; sy++) {
       // as draw_text internally uses absolute coordinates to derive its state we cannot
       // simply adjust the draw_box to accomplish a side-by-side comparison
@@ -162,22 +158,23 @@ void render_steps(TextLayoutExtended *layout, RenderMoveMode mode, int delta, in
 
       graphics_fill_rect(&ctx, &box);
       graphics_draw_rect(&ctx, &(GRect){.origin = GPoint(-ctx.draw_state.drawing_box.origin.x,
-                                                        -ctx.draw_state.drawing_box.origin.y),
-                                       .size = ctx.draw_state.clip_box.size});
+                                                         -ctx.draw_state.drawing_box.origin.y),
+                                        .size = ctx.draw_state.clip_box.size});
 
       char *text = texts ? texts[text_idx++] : s_text;
-      graphics_draw_text(&ctx, text, &s_font_info, box,
-                         GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, layout_cache);
+      graphics_draw_text(&ctx, text, &s_font_info, box, GTextOverflowModeTrailingEllipsis,
+                         GTextAlignmentLeft, layout_cache);
     }
   }
 }
 
 void test_graphics_draw_text_flow__flow_no_paging(void) {
   TextLayoutExtended layout = {
-    .flow_data = {
-      .perimeter.impl = &(GPerimeter){.callback=perimeter_for_display_round},
-      .perimeter.inset = 8,
-    },
+      .flow_data =
+          {
+              .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_round},
+              .perimeter.inset = 8,
+          },
   };
   render_steps(&layout, RenderMoveTextBox, DELTA, DISP_ROWS, NULL);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
@@ -185,10 +182,11 @@ void test_graphics_draw_text_flow__flow_no_paging(void) {
 
 void test_graphics_draw_text_flow__flow_no_paging_draw_box(void) {
   TextLayoutExtended layout = {
-    .flow_data = {
-      .perimeter.impl = &(GPerimeter){.callback=perimeter_for_display_round},
-      .perimeter.inset = 8,
-    },
+      .flow_data =
+          {
+              .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_round},
+              .perimeter.inset = 8,
+          },
   };
   render_steps(&layout, RenderMoveDrawBox, DELTA, DISP_ROWS, NULL);
   // should result in the very same output as if you did a placement via text box
@@ -197,12 +195,14 @@ void test_graphics_draw_text_flow__flow_no_paging_draw_box(void) {
 
 void test_graphics_draw_text_flow__with_origin_zero(void) {
   TextLayoutExtended layout = {
-    .flow_data = {
-      .perimeter.impl = &(GPerimeter){.callback=perimeter_for_display_round},
-      .perimeter.inset = 8,
-      .paging.page_on_screen.size_h = DISP_ROWS, // setting a page height != enables positioning
-      .paging.origin_on_screen = {0, 0},
-    },
+      .flow_data =
+          {
+              .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_round},
+              .perimeter.inset = 8,
+              .paging.page_on_screen.size_h =
+                  DISP_ROWS,  // setting a page height != enables positioning
+              .paging.origin_on_screen = {0, 0},
+          },
   };
   render_steps(&layout, RenderMoveTextBox, DELTA, DISP_ROWS, NULL);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
@@ -210,12 +210,14 @@ void test_graphics_draw_text_flow__with_origin_zero(void) {
 
 void test_graphics_draw_text_flow__with_origin_non_zero(void) {
   TextLayoutExtended layout = {
-    .flow_data = {
-      .perimeter.impl = &(GPerimeter){.callback=perimeter_for_display_round},
-      .perimeter.inset = 8,
-      .paging.page_on_screen.size_h = DISP_ROWS, // setting a page height != enables positioning
-      .paging.origin_on_screen = {DELTA, 2 * DELTA},
-    },
+      .flow_data =
+          {
+              .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_round},
+              .perimeter.inset = 8,
+              .paging.page_on_screen.size_h =
+                  DISP_ROWS,  // setting a page height != enables positioning
+              .paging.origin_on_screen = {DELTA, 2 * DELTA},
+          },
   };
   render_steps(&layout, RenderMoveTextBox, DELTA, DISP_ROWS, NULL);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
@@ -224,14 +226,14 @@ void test_graphics_draw_text_flow__with_origin_non_zero(void) {
 void test_graphics_draw_text_flow__with_paging(void) {
   prv_prepare_fb_steps(GSize(DISP_COLS, 2 * DISP_ROWS));
   TextLayoutExtended layout = {
-    .flow_data = {
-      .perimeter.impl = &(GPerimeter){.callback=perimeter_for_display_round},
-      .perimeter.inset = 8,
-      .paging.page_on_screen = {
-        .origin_y = 25,
-        .size_h = 100
-      }, // setting a page height != enables positioning
-    },
+      .flow_data =
+          {
+              .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_round},
+              .perimeter.inset = 8,
+              .paging.page_on_screen = {.origin_y = 25,
+                                        .size_h =
+                                            100},  // setting a page height != enables positioning
+          },
   };
   render_steps(&layout, RenderMoveTextBox, DELTA, 1000, NULL);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
@@ -239,40 +241,44 @@ void test_graphics_draw_text_flow__with_paging(void) {
 
 void test_graphics_draw_text_flow__avoid_repeat_text_to_avoid_orphans(void) {
   TextLayoutExtended layout = {
-    .flow_data = {
-      .perimeter.impl = &(GPerimeter){.callback=perimeter_for_display_round},
-      .perimeter.inset = 8,
-      .paging.page_on_screen = {
-        .origin_y = 25,
-        .size_h = 100
-      }, // setting a page height != enables positioning
-    },
+      .flow_data =
+          {
+              .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_round},
+              .perimeter.inset = 8,
+              .paging.page_on_screen = {.origin_y = 25,
+                                        .size_h =
+                                            100},  // setting a page height != enables positioning
+          },
   };
 
   char first_page_one_line[] = "A B C D E F G H I";
   char second_page_one_line[] = "A B C D E F G H I J K L M N";
   char second_page_two_lines[] = "A B C D E F G H I J K L M N O P Q R S T U V";
-  char second_page_full[] = "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z "
-                            "a b c d e f g h j k l m n o p q r s t u v w x y z "
-                            "A";
-  char third_page_one_line[] = "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z "
-                               "a b c d e f g h j k l m n o p q r s t u v w x y z "
-                               "A B C D E F G";
-  char third_page_two_lines[] = "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z "
-                                "a b c d e f g h j k l m n o p q r s t u v w x y z "
-                                "A B C D E F G I J K L M N O P";
-  char third_page_full[] = "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z "
-                           "a b c d e f g h j k l m n o p q r s t u v w x y z "
-                           "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z "
-                           "a b c d e f g h j k l m n o p q r s t u";
-  char fourth_page_one_line[] = "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z "
-                                "a b c d e f g h j k l m n o p q r s t u v w x y z "
-                                "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z "
-                                "a b c d e f g h j k l m n o p q r s t u v w x y z";
+  char second_page_full[] =
+      "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z "
+      "a b c d e f g h j k l m n o p q r s t u v w x y z "
+      "A";
+  char third_page_one_line[] =
+      "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z "
+      "a b c d e f g h j k l m n o p q r s t u v w x y z "
+      "A B C D E F G";
+  char third_page_two_lines[] =
+      "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z "
+      "a b c d e f g h j k l m n o p q r s t u v w x y z "
+      "A B C D E F G I J K L M N O P";
+  char third_page_full[] =
+      "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z "
+      "a b c d e f g h j k l m n o p q r s t u v w x y z "
+      "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z "
+      "a b c d e f g h j k l m n o p q r s t u";
+  char fourth_page_one_line[] =
+      "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z "
+      "a b c d e f g h j k l m n o p q r s t u v w x y z "
+      "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z "
+      "a b c d e f g h j k l m n o p q r s t u v w x y z";
   char *texts[] = {
-    first_page_one_line,
-    second_page_one_line, second_page_two_lines, second_page_full,
-    third_page_one_line, third_page_two_lines, third_page_full, fourth_page_one_line,
+      first_page_one_line, second_page_one_line, second_page_two_lines, second_page_full,
+      third_page_one_line, third_page_two_lines, third_page_full,       fourth_page_one_line,
   };
 
   const int16_t num_steps = ARRAY_LENGTH(texts);
@@ -298,10 +304,8 @@ void test_graphics_draw_text_flow__avoid_repeat_text_to_avoid_orphans(void) {
 }
 
 GRangeHorizontal perimeter_for_circle(GRangeVertical vertical_range, GPoint center, int32_t radius);
-GRangeHorizontal perimeter_for_display_rect(const GPerimeter *perimeter,
-                                            const GSize *ctx_size,
-                                            GRangeVertical vertical_range,
-                                            uint16_t inset);
+GRangeHorizontal perimeter_for_display_rect(const GPerimeter *perimeter, const GSize *ctx_size,
+                                            GRangeVertical vertical_range, uint16_t inset);
 
 // easiest way to make these dimensions identical to a 180x180 round display although the
 // tests take defaults from basalt's screen resolution. The original
@@ -316,29 +320,27 @@ static GRangeHorizontal prv_perimeter_for_display_round(const GPerimeter *perime
   return perimeter_for_circle(vertical_range, center, radius);
 }
 
-
 void test_graphics_draw_text_flow__draw_text_doom(void) {
   // text and configuration we see in text_flow demo app
   cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_24_BOLD, 0, &s_font_info));
   TextLayoutExtended layout = {
-    .flow_data = {
-      .perimeter.impl = &(GPerimeter){.callback = prv_perimeter_for_display_round},
-      .perimeter.inset = 8,
-      .paging.page_on_screen = {
-        .origin_y = 48,
-        .size_h = 85
-      },
-      .paging.origin_on_screen.y = 412,
-    },
+      .flow_data =
+          {
+              .perimeter.impl = &(GPerimeter){.callback = prv_perimeter_for_display_round},
+              .perimeter.inset = 8,
+              .paging.page_on_screen = {.origin_y = 48, .size_h = 85},
+              .paging.origin_on_screen.y = 412,
+          },
   };
-  char text[] = "Dib: You're just jealous...\nZim: This has nothing to do with jelly!\n"
-    "Zim: You dare agree with me? Prepare to meet your horrible doom!";
+  char text[] =
+      "Dib: You're just jealous...\nZim: This has nothing to do with jelly!\n"
+      "Zim: You dare agree with me? Prepare to meet your horrible doom!";
 
   prv_prepare_fb_steps_xy(GSize(180, 300), 1, 1);
   ctx.draw_state.avoid_text_orphans = true;
   graphics_draw_text(&ctx, text, &s_font_info, GRect(0, 0, 180, 1000),
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter,
-                     (GTextAttributes *const) &layout);
+                     (GTextAttributes *const)&layout);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 
   prv_prepare_fb_steps_xy(GSize(180, 300), 1, 1);
@@ -348,14 +350,14 @@ void test_graphics_draw_text_flow__draw_text_doom(void) {
   ctx.draw_state.drawing_box.origin.y = -183;
   graphics_draw_text(&ctx, text, &s_font_info, GRect(0, 0, 180, 1000),
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter,
-                     (GTextAttributes *const) &layout);
+                     (GTextAttributes *const)&layout);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, namecat(namecat(__func__, "__clipped"), ".pbi")));
 
   prv_prepare_fb_steps_xy(GSize(180, 300), 1, 1);
   ctx.draw_state.avoid_text_orphans = false;
   graphics_draw_text(&ctx, text, &s_font_info, GRect(0, 0, 180, 1000),
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter,
-                     (GTextAttributes *const) &layout);
+                     (GTextAttributes *const)&layout);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, namecat(namecat(__func__, "__with_orphan"), ".pbi")));
 }
 
@@ -363,20 +365,19 @@ void test_graphics_draw_text_flow__max_used_size_draw_text_doom(void) {
   cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_24_BOLD, 0, &s_font_info));
 
   TextLayoutExtended layout = {
-    .flow_data = {
-      .perimeter.impl = &(GPerimeter){.callback = prv_perimeter_for_display_round},
-      .perimeter.inset = 8,
-      .paging.page_on_screen = {
-        .origin_y = 48,
-        .size_h = 85
-      },
-      .paging.origin_on_screen.y = 412,
-    },
+      .flow_data =
+          {
+              .perimeter.impl = &(GPerimeter){.callback = prv_perimeter_for_display_round},
+              .perimeter.inset = 8,
+              .paging.page_on_screen = {.origin_y = 48, .size_h = 85},
+              .paging.origin_on_screen.y = 412,
+          },
   };
   void *layout_ref = (void *)&layout;
 
-  char text[] = "Dib: You're just jealous...\nZim: This has nothing to do with jelly!\n"
-    "Zim: You dare agree with me? Prepare to meet your horrible doom!";
+  char text[] =
+      "Dib: You're just jealous...\nZim: This has nothing to do with jelly!\n"
+      "Zim: You dare agree with me? Prepare to meet your horrible doom!";
 
   const GFont font = &s_font_info;
   const GRect box = GRect(0, 0, 180, 1000);
@@ -389,11 +390,8 @@ void test_graphics_draw_text_flow__max_used_size_draw_text_doom(void) {
   prv_prepare_fb_steps_xy(fb_size, steps_x, steps_y);
   ctx.draw_state.avoid_text_orphans = true;
 
-  const GSize size_with_orphan_avoidance = graphics_text_layout_get_max_used_size(&ctx,
-                                                                                  text, font, box,
-                                                                                  overflow_mode,
-                                                                                  text_alignment,
-                                                                                  layout_ref);
+  const GSize size_with_orphan_avoidance = graphics_text_layout_get_max_used_size(
+      &ctx, text, font, box, overflow_mode, text_alignment, layout_ref);
 
   // TODO: PBL-34191 move .avoid_text_orphans from GContext to TextLayout so layout is invalidated
   // Invalidate the layout so it will be recalculated for the next step
@@ -402,12 +400,8 @@ void test_graphics_draw_text_flow__max_used_size_draw_text_doom(void) {
   prv_prepare_fb_steps_xy(fb_size, steps_x, steps_y);
   ctx.draw_state.avoid_text_orphans = false;
 
-  const GSize size_without_orphan_avoidance = graphics_text_layout_get_max_used_size(&ctx,
-                                                                                     text, font,
-                                                                                     box,
-                                                                                     overflow_mode,
-                                                                                     text_alignment,
-                                                                                     layout_ref);
+  const GSize size_without_orphan_avoidance = graphics_text_layout_get_max_used_size(
+      &ctx, text, font, box, overflow_mode, text_alignment, layout_ref);
 
   // We should get different heights because the orphan avoidance algorithm adds an extra line
   cl_assert_equal_i(size_with_orphan_avoidance.h, 279);
@@ -420,9 +414,10 @@ void test_graphics_draw_text_flow__no_infinite_loop(void) {
   // compiled out there; clar still discovers the test because it scans textually.
 #if PBL_RECT
   TextLayoutExtended layout = {
-    .flow_data = {
-      .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_rect},
-    },
+      .flow_data =
+          {
+              .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_rect},
+          },
   };
   char text[] = "Prevent orphans for tall-enough pages.";
   const int16_t line_height = 22;
@@ -436,15 +431,15 @@ void test_graphics_draw_text_flow__no_infinite_loop(void) {
     const int number_of_lines_per_page = i + 1;
     layout.flow_data.paging.page_on_screen.size_h = number_of_lines_per_page * line_height + some;
     layout.flow_data.paging.origin_on_screen.y =
-      layout.flow_data.paging.page_on_screen.size_h - line_height;
+        layout.flow_data.paging.page_on_screen.size_h - line_height;
     graphics_draw_text(&ctx, text, &s_font_info, GRect(0, 0, 180, 1000),
                        GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter,
-                       (GTextAttributes *const) &layout);
+                       (GTextAttributes *const)&layout);
 
-    const int16_t second_page_start_y =
-      (layout.flow_data.paging.page_on_screen.size_h - layout.flow_data.paging.origin_on_screen.y);
+    const int16_t second_page_start_y = (layout.flow_data.paging.page_on_screen.size_h -
+                                         layout.flow_data.paging.origin_on_screen.y);
     const int16_t second_page_end_y =
-      (second_page_start_y + layout.flow_data.paging.page_on_screen.size_h);
+        (second_page_start_y + layout.flow_data.paging.page_on_screen.size_h);
     graphics_draw_line(&ctx, GPoint(0, second_page_start_y), GPoint(180, second_page_start_y));
     graphics_draw_line(&ctx, GPoint(0, second_page_end_y), GPoint(180, second_page_end_y));
     ctx.draw_state.drawing_box.origin.x += 180;
@@ -452,7 +447,7 @@ void test_graphics_draw_text_flow__no_infinite_loop(void) {
   }
 
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
-#endif // PBL_RECT
+#endif  // PBL_RECT
 }
 
 void test_graphics_draw_text_flow__no_infinite_loop2(void) {
@@ -460,24 +455,25 @@ void test_graphics_draw_text_flow__no_infinite_loop2(void) {
   // the following values are those we measured in GDB when it entered the infinite loop
   cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_24_BOLD, 0, &s_font_info));
   TextLayoutExtended layout = {
-    .flow_data = {
-      .perimeter.impl = &(GPerimeter){.callback = prv_perimeter_for_display_round,},
-      .perimeter.inset = 8,
-      .paging = {
-        .origin_on_screen = GPoint(12, 83),
-        .page_on_screen.origin_y = 24,
-        .page_on_screen.size_h = 140,
-      }
-    },
+      .flow_data = {.perimeter.impl =
+                        &(GPerimeter){
+                            .callback = prv_perimeter_for_display_round,
+                        },
+                    .perimeter.inset = 8,
+                    .paging =
+                        {
+                            .origin_on_screen = GPoint(12, 83),
+                            .page_on_screen.origin_y = 24,
+                            .page_on_screen.size_h = 140,
+                        }},
   };
   char text[] = "Late again? Can you be on time ever? Seriously? Dude!!!";
   prv_prepare_fb_steps_xy(GSize(180, 360), 1, 1);
   ctx.draw_state.avoid_text_orphans = true;
 
   GRect box = (GRect){.origin = {.x = 12, .y = 59}, .size = {.w = 156, .h = 2480}};
-  graphics_draw_text(&ctx, text, &s_font_info, box,
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter,
-                     (GTextAttributes *const) &layout);
+  graphics_draw_text(&ctx, text, &s_font_info, box, GTextOverflowModeTrailingEllipsis,
+                     GTextAlignmentCenter, (GTextAttributes *const)&layout);
 
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 }

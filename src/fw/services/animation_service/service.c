@@ -16,7 +16,6 @@
 
 #include "syscall/syscall_internal.h"
 
-
 // The timer ID used for each task that we support
 static TimerID s_kernel_main_timer_id = TIMER_INVALID_ID;
 static TimerID s_app_timer_id = TIMER_INVALID_ID;
@@ -43,17 +42,12 @@ void animation_service_cleanup(PebbleTask task) {
   }
 }
 
-
 // ------------------------------------------------------------------------------------------
-static void prv_timer_callback(void * context) {
+static void prv_timer_callback(void *context) {
   PebbleTask task = (PebbleTask)context;
 
-  PebbleEvent e = {
-    .type = PEBBLE_CALLBACK_EVENT,
-    .callback = {
-      .callback = animation_private_timer_callback
-    }
-  };
+  PebbleEvent e = {.type = PEBBLE_CALLBACK_EVENT,
+                   .callback = {.callback = animation_private_timer_callback}};
 
   switch (task) {
     case PebbleTask_KernelMain:
@@ -71,9 +65,8 @@ static void prv_timer_callback(void * context) {
       break;
     default:
       PBL_CROAK("Invalid task %s", pebble_task_get_name(pebble_task_get_current()));
-    }
+  }
 }
-
 
 // ------------------------------------------------------------------------------------------
 DEFINE_SYSCALL(void, animation_service_timer_event_received, void) {
@@ -90,7 +83,6 @@ DEFINE_SYSCALL(void, animation_service_timer_event_received, void) {
     return;
   }
 }
-
 
 // ------------------------------------------------------------------------------------------
 DEFINE_SYSCALL(void, animation_service_timer_schedule, uint32_t ms) {
@@ -116,17 +108,14 @@ DEFINE_SYSCALL(void, animation_service_timer_schedule, uint32_t ms) {
 
   // Schedule/reschedule it
   if (*timer_id != TIMER_INVALID_ID) {
-    success = new_timer_start(*timer_id, ms, prv_timer_callback, (void *)(uintptr_t)task,
-                    0 /*flags */);
+    success =
+        new_timer_start(*timer_id, ms, prv_timer_callback, (void *)(uintptr_t)task, 0 /*flags */);
   }
   if (!success) {
     APP_LOG(APP_LOG_LEVEL_ERROR, "Error scheduling timer");
   }
 }
 
-
 // ---------------------------------------------------------------------------
 // Used for unit tests only
-TimerID animation_service_test_get_timer_id(void) {
-  return s_kernel_main_timer_id;
-}
+TimerID animation_service_test_get_timer_id(void) { return s_kernel_main_timer_id; }

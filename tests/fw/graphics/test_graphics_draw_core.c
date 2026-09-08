@@ -9,7 +9,6 @@
 #include "applib/ui/window_private.h"
 #include "applib/ui/layer.h"
 
-
 #include "clar.h"
 #include "util.h"
 
@@ -19,7 +18,6 @@
 ////////////////////////////////////
 #include "test_graphics.h"
 #include "8bit/test_framebuffer.h"
-
 
 // Stubs
 ////////////////////////////////////
@@ -41,16 +39,14 @@ static FrameBuffer *fb = NULL;
 // Setup
 void test_graphics_draw_core__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize) { DISP_COLS, DISP_ROWS });
+  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
   // Enable fake data row handling which will override the gbitmap_get_data_row_xxx() functions
   // with their fake counterparts in fake_gbitmap_get_data_row.c
   s_fake_data_row_handling = true;
 }
 
 // Teardown
-void test_graphics_draw_core__cleanup(void) {
-  free(fb);
-}
+void test_graphics_draw_core__cleanup(void) { free(fb); }
 
 // Helpers
 ////////////////////////////////////
@@ -63,7 +59,7 @@ typedef void (*HLinePatternDrawFunction)(GContext *ctx, int16_t y, int16_t x1, i
 static void prv_draw_hlines_in_rect(GContext *ctx, HLinePatternDrawFunction draw_func,
                                     const GRect *rect, GColor color) {
   for (int16_t y = 0; y < rect->size.h; y++) {
-    draw_func(ctx, rect->origin.y + y, rect->origin.x , grect_get_max_x(rect) - 1, color);
+    draw_func(ctx, rect->origin.y + y, rect->origin.x, grect_get_max_x(rect) - 1, color);
   }
 }
 
@@ -77,11 +73,10 @@ static void prv_draw_hline_test_pattern(GContext *ctx, HLinePatternDrawFunction 
 
   // Draw the bottom rectangle blue with 66% opacity
   // (will appear at the top because data rows are vertically flipped)
-  const GSize bottom_rect_size = GSize(bitmap_bounds_size->w * 4 / 5,  bitmap_bounds_size->h / 2);
-  const GRect bottom_rect = (GRect) {
-    .origin = GPoint((bitmap_bounds_size->w - bottom_rect_size.w) / 2, bitmap_bounds_size->h / 2),
-    .size = bottom_rect_size
-  };
+  const GSize bottom_rect_size = GSize(bitmap_bounds_size->w * 4 / 5, bitmap_bounds_size->h / 2);
+  const GRect bottom_rect = (GRect){
+      .origin = GPoint((bitmap_bounds_size->w - bottom_rect_size.w) / 2, bitmap_bounds_size->h / 2),
+      .size = bottom_rect_size};
   GColor bottom_rect_color = GColorBlue;
   bottom_rect_color.a = 2;
   prv_draw_hlines_in_rect(ctx, draw_func, &bottom_rect, bottom_rect_color);
@@ -92,15 +87,12 @@ static void prv_draw_hline_test_pattern(GContext *ctx, HLinePatternDrawFunction 
   const int16_t top_rects_x_offset = ((bitmap_bounds_size->w / 2) - top_rects_size.w) / 2;
   GColor top_rects_color = GColorGreen;
   top_rects_color.a = 2;
-  const GRect top_left_rect = (GRect) {
-    .origin = GPoint(top_rects_x_offset, 0),
-    .size = top_rects_size
-  };
+  const GRect top_left_rect =
+      (GRect){.origin = GPoint(top_rects_x_offset, 0), .size = top_rects_size};
   prv_draw_hlines_in_rect(ctx, draw_func, &top_left_rect, top_rects_color);
-  const GRect top_right_rect = (GRect) {
-    .origin = GPoint((bitmap_bounds_size->w / 2) + top_rects_x_offset, 0),
-    .size = top_rects_size
-  };
+  const GRect top_right_rect =
+      (GRect){.origin = GPoint((bitmap_bounds_size->w / 2) + top_rects_x_offset, 0),
+              .size = top_rects_size};
   prv_draw_hlines_in_rect(ctx, draw_func, &top_right_rect, top_rects_color);
 }
 
@@ -126,7 +118,7 @@ static void prv_draw_vline_test_pattern(GContext *ctx, HLinePatternDrawFunction 
 
   // Draw the left rectangle blue with 66% opacity
   // (will appear at the top because data rows are vertically flipped)
-  const GRect left_rect = GRect(0, 0, bitmap_bounds_size->w * 2 / 5,  bitmap_bounds_size->h);
+  const GRect left_rect = GRect(0, 0, bitmap_bounds_size->w * 2 / 5, bitmap_bounds_size->h);
   GColor left_rect_color = GColorBlue;
   left_rect_color.a = 2;
   prv_draw_vlines_in_rect(ctx, draw_func, &left_rect, left_rect_color);
@@ -138,17 +130,14 @@ static void prv_draw_vline_test_pattern(GContext *ctx, HLinePatternDrawFunction 
   const int16_t right_rects_y_offset = ((bitmap_bounds_size->h / 2) - right_rects_size.h) / 2;
   GColor top_right_rect_color = GColorGreen;
   top_right_rect_color.a = 2;
-  const GRect top_left_rect = (GRect) {
-    .origin = GPoint(right_rects_x, right_rects_y_offset),
-    .size = right_rects_size
-  };
+  const GRect top_left_rect =
+      (GRect){.origin = GPoint(right_rects_x, right_rects_y_offset), .size = right_rects_size};
   prv_draw_vlines_in_rect(ctx, draw_func, &top_left_rect, top_right_rect_color);
   GColor bottom_right_rect_color = GColorYellow;
   bottom_right_rect_color.a = 2;
-  const GRect top_right_rect = (GRect) {
-    .origin = GPoint(right_rects_x, (bitmap_bounds_size->h / 2) + right_rects_y_offset),
-    .size = right_rects_size
-  };
+  const GRect top_right_rect =
+      (GRect){.origin = GPoint(right_rects_x, (bitmap_bounds_size->h / 2) + right_rects_y_offset),
+              .size = right_rects_size};
   prv_draw_vlines_in_rect(ctx, draw_func, &top_right_rect, bottom_right_rect_color);
 }
 
@@ -162,13 +151,13 @@ static void prv_draw_vline_test_pattern(GContext *ctx, HLinePatternDrawFunction 
 // the pattern is clipped to a diamond mask and flipped vertically (i.e. blue rect on top, green
 // rects on bottom)
 
-void prv_assign_horizontal_line_raw(GBitmap *framebuffer, int16_t y, Fixed_S16_3 x1,
-                                    Fixed_S16_3 x2, GColor color);
+void prv_assign_horizontal_line_raw(GBitmap *framebuffer, int16_t y, Fixed_S16_3 x1, Fixed_S16_3 x2,
+                                    GColor color);
 
 static void prv_hline_pattern_assign_horizontal_line_raw(GContext *ctx, int16_t y, int16_t x1,
                                                          int16_t x2, GColor color) {
-  const Fixed_S16_3 x1_fixed = (Fixed_S16_3) { .integer = x1 };
-  const Fixed_S16_3 x2_fixed = (Fixed_S16_3) { .integer = x2 };
+  const Fixed_S16_3 x1_fixed = (Fixed_S16_3){.integer = x1};
+  const Fixed_S16_3 x2_fixed = (Fixed_S16_3){.integer = x2};
   prv_assign_horizontal_line_raw(&ctx->dest_bitmap, y, x1_fixed, x2_fixed, color);
 }
 
@@ -198,21 +187,19 @@ void test_graphics_draw_core__blend_horizontal_line_raw(void) {
 
   prv_draw_hline_test_pattern(&ctx, prv_hline_pattern_blend_horizontal_line_raw);
 
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-                          TEST_NAMED_PBI_FILE("draw_core_blend_horizontal_line_raw")));
+  cl_check(
+      gbitmap_pbi_eq(&ctx.dest_bitmap, TEST_NAMED_PBI_FILE("draw_core_blend_horizontal_line_raw")));
 };
 
-void prv_assign_horizontal_line_delta_raw(GBitmap *framebuffer, int16_t y,
-                                          Fixed_S16_3 x1, Fixed_S16_3 x2,
-                                          uint8_t left_aa_offset, uint8_t right_aa_offset,
-                                          int16_t clip_box_min_x, int16_t clip_box_max_x,
-                                          GColor color);
+void prv_assign_horizontal_line_delta_raw(GBitmap *framebuffer, int16_t y, Fixed_S16_3 x1,
+                                          Fixed_S16_3 x2, uint8_t left_aa_offset,
+                                          uint8_t right_aa_offset, int16_t clip_box_min_x,
+                                          int16_t clip_box_max_x, GColor color);
 
-static void prv_hline_pattern_assign_horizontal_line_delta_raw(GContext *ctx, int16_t y,
-                                                               int16_t x1, int16_t x2,
-                                                               GColor color) {
-  const Fixed_S16_3 x1_fixed = (Fixed_S16_3) { .integer = x1 };
-  Fixed_S16_3 x2_fixed = (Fixed_S16_3) { .integer = x2 };
+static void prv_hline_pattern_assign_horizontal_line_delta_raw(GContext *ctx, int16_t y, int16_t x1,
+                                                               int16_t x2, GColor color) {
+  const Fixed_S16_3 x1_fixed = (Fixed_S16_3){.integer = x1};
+  Fixed_S16_3 x2_fixed = (Fixed_S16_3){.integer = x2};
   const uint8_t gradient_width = (x2 - x1) / 6;
   x2_fixed.integer -= gradient_width;
   prv_assign_horizontal_line_delta_raw(&ctx->dest_bitmap, y, x1_fixed, x2_fixed, gradient_width,
@@ -244,8 +231,8 @@ void prv_assign_vertical_line_raw(GBitmap *framebuffer, int16_t x, Fixed_S16_3 y
 
 static void prv_vline_pattern_assign_vertical_line_raw(GContext *ctx, int16_t x, int16_t y1,
                                                        int16_t y2, GColor color) {
-  const Fixed_S16_3 y1_fixed = (Fixed_S16_3) { .integer = y1 };
-  const Fixed_S16_3 y2_fixed = (Fixed_S16_3) { .integer = y2 };
+  const Fixed_S16_3 y1_fixed = (Fixed_S16_3){.integer = y1};
+  const Fixed_S16_3 y2_fixed = (Fixed_S16_3){.integer = y2};
   prv_assign_vertical_line_raw(&ctx->dest_bitmap, x, y1_fixed, y2_fixed, color);
 }
 
@@ -256,8 +243,8 @@ void test_graphics_draw_core__assign_vertical_line_raw(void) {
 
   prv_draw_vline_test_pattern(&ctx, prv_vline_pattern_assign_vertical_line_raw);
 
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-                          TEST_NAMED_PBI_FILE("draw_core_assign_vertical_line_raw")));
+  cl_check(
+      gbitmap_pbi_eq(&ctx.dest_bitmap, TEST_NAMED_PBI_FILE("draw_core_assign_vertical_line_raw")));
 };
 
 void prv_blend_vertical_line_raw(GBitmap *framebuffer, int16_t x, int16_t y1, int16_t y2,
@@ -275,15 +262,15 @@ void test_graphics_draw_core__blend_vertical_line_raw(void) {
 
   prv_draw_vline_test_pattern(&ctx, prv_vline_pattern_blend_vertical_line_raw);
 
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-                          TEST_NAMED_PBI_FILE("draw_core_blend_vertical_line_raw")));
+  cl_check(
+      gbitmap_pbi_eq(&ctx.dest_bitmap, TEST_NAMED_PBI_FILE("draw_core_blend_vertical_line_raw")));
 };
 
 // PIXEL DRAWING AND COLUMN REPLICATION TESTS
 
 void prv_replicate_column_row_raw(GBitmap *framebuffer, int16_t src_x, int16_t dst_x1,
                                   int16_t dst_x2);
-void set_pixel_raw_8bit(GContext* ctx, GPoint point);
+void set_pixel_raw_8bit(GContext *ctx, GPoint point);
 
 void test_graphics_draw_core__set_pixel_raw_8bit_replicate_column_row_raw(void) {
   GContext ctx;
@@ -294,10 +281,8 @@ void test_graphics_draw_core__set_pixel_raw_8bit_replicate_column_row_raw(void) 
   const GRect bitmap_bounds = ctx.dest_bitmap.bounds;
   const uint8_t max_rgb_value = 0b00111111;
   for (int y = 0; y < bitmap_bounds.size.h; y++) {
-    GColor color = (GColor) {
-      .argb = y * max_rgb_value / (bitmap_bounds.size.h - 1)
-    };
-    color.a = 3; // 100% opacity
+    GColor color = (GColor){.argb = y * max_rgb_value / (bitmap_bounds.size.h - 1)};
+    color.a = 3;  // 100% opacity
     ctx.draw_state.stroke_color = color;
     for (int x = 0; x < bitmap_bounds.size.w / 2; x++) {
       const GPoint point = GPoint(x, y);
@@ -306,14 +291,12 @@ void test_graphics_draw_core__set_pixel_raw_8bit_replicate_column_row_raw(void) 
   }
 
   // Replicate the last column of the colored gradient for the remaining columns of the bitmap
-  prv_replicate_column_row_raw(&ctx.dest_bitmap,
-                               (bitmap_bounds.size.w / 2) - 1,
-                               (bitmap_bounds.size.w / 2),
-                               bitmap_bounds.size.w - 1);
+  prv_replicate_column_row_raw(&ctx.dest_bitmap, (bitmap_bounds.size.w / 2) - 1,
+                               (bitmap_bounds.size.w / 2), bitmap_bounds.size.w - 1);
 
   const bool result =
-    gbitmap_pbi_eq(&ctx.dest_bitmap,
-                   TEST_NAMED_PBI_FILE("draw_core_set_pixel_raw_8bit_replicate_column_row_raw"));
+      gbitmap_pbi_eq(&ctx.dest_bitmap,
+                     TEST_NAMED_PBI_FILE("draw_core_set_pixel_raw_8bit_replicate_column_row_raw"));
   cl_check(result);
 };
 

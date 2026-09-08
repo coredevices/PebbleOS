@@ -55,9 +55,7 @@ void i2c_irq_handler(I2CBus *bus) {
   i2c_handle_transfer_event(bus, event);
 }
 
-void i2c_hal_init_transfer(I2CBus *bus) {
-  prv_deepsleep_block(bus);
-}
+void i2c_hal_init_transfer(I2CBus *bus) { prv_deepsleep_block(bus); }
 
 void i2c_hal_abort_transfer(I2CBus *bus) {
   I2CBusHal *hal = bus->hal;

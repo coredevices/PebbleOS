@@ -53,7 +53,7 @@ static void prv_get_resource(ResAppNum app_num, uint32_t id, ResourceStoreEntry 
 
   ListNode *node;
   if (app_num == SYSTEM_APP &&
-     (node = list_find((ListNode *)s_resource_list, prv_resource_filter, (void *)(uintptr_t)id))) {
+      (node = list_find((ListNode *)s_resource_list, prv_resource_filter, (void *)(uintptr_t)id))) {
     pbl_mutex_unlock(&s_resource_mutex);
     *entry = ((CachedResource *)node)->stored_resource;
     return;
@@ -73,7 +73,10 @@ static void prv_get_resource(ResAppNum app_num, uint32_t id, ResourceStoreEntry 
 
   if (app_num != SYSTEM_APP && entry->id >= 1) {
     s_app_resource_cache = (AppResourceCache){
-      .valid = true, .app_num = app_num, .id = id, .entry = *entry,
+        .valid = true,
+        .app_num = app_num,
+        .id = id,
+        .entry = *entry,
     };
   }
 
@@ -110,14 +113,14 @@ uint32_t resource_get_and_cache(ResAppNum app_num, uint32_t resource_id) {
   }
 
   // check if we already have something in cache for this resource
-  CachedResource *cached_resource = (CachedResource *)list_find((ListNode *)s_resource_list,
-      prv_resource_filter, (void *)(uintptr_t)resource_id);
+  CachedResource *cached_resource = (CachedResource *)list_find(
+      (ListNode *)s_resource_list, prv_resource_filter, (void *)(uintptr_t)resource_id);
   if (cached_resource == NULL) {
     cached_resource = kernel_malloc_check(sizeof(CachedResource));
     *cached_resource = (CachedResource){};
     cached_resource->id = resource_id;
-    s_resource_list = (CachedResource *)list_prepend((ListNode *)s_resource_list,
-        (ListNode *)cached_resource);
+    s_resource_list =
+        (CachedResource *)list_prepend((ListNode *)s_resource_list, (ListNode *)cached_resource);
   }
   cached_resource->stored_resource = res;
 
@@ -125,8 +128,8 @@ uint32_t resource_get_and_cache(ResAppNum app_num, uint32_t resource_id) {
   return resource_id;
 }
 
-size_t resource_load_byte_range_system(ResAppNum app_num, uint32_t resource_id,
-    uint32_t offset, uint8_t *buffer, size_t num_bytes) {
+size_t resource_load_byte_range_system(ResAppNum app_num, uint32_t resource_id, uint32_t offset,
+                                       uint8_t *buffer, size_t num_bytes) {
   PBL_ASSERTN(buffer);
 
   if (!num_bytes) {
@@ -150,8 +153,7 @@ size_t resource_load_byte_range_system(ResAppNum app_num, uint32_t resource_id,
     // We want to stop the FW from doing this, so we added an assert
     // but in the name of backwards compatibility, we let the app misbehave
     num_bytes = resource.length - offset;
-    PBL_LOG_DBG("Tried to read past end of resource, reading %d bytes",
-            (int)num_bytes);
+    PBL_LOG_DBG("Tried to read past end of resource, reading %d bytes", (int)num_bytes);
   }
 
   size_t bytes_read = resource_storage_read(&resource, offset, buffer, num_bytes);
@@ -202,9 +204,7 @@ ResourceVersion resource_get_version(ResAppNum app_num, uint32_t resource_id) {
   return v;
 }
 
-ResourceVersion resource_get_system_version(void) {
-  return resource_get_version(0, 0);
-}
+ResourceVersion resource_get_system_version(void) { return resource_get_version(0, 0); }
 
 bool resource_is_valid(ResAppNum app_num, uint32_t resource_id) {
   pbl_mutex_lock(&s_resource_mutex, PBL_FOREVER);
@@ -221,4 +221,3 @@ bool resource_is_valid(ResAppNum app_num, uint32_t resource_id) {
 bool resource_version_matches(const ResourceVersion *v1, const ResourceVersion *v2) {
   return (v1->crc == v2->crc);
 }
-

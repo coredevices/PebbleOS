@@ -11,9 +11,7 @@ void WEAK kino_player_deinit(KinoPlayer *player) {}
 void WEAK kino_player_set_callbacks(KinoPlayer *player, KinoPlayerCallbacks callbacks,
                                     void *context) {}
 
-KinoReel * WEAK kino_player_get_reel(KinoPlayer *player) {
-  return NULL;
-}
+KinoReel *WEAK kino_player_get_reel(KinoPlayer *player) { return NULL; }
 
 void WEAK kino_player_play(KinoPlayer *player) {}
 

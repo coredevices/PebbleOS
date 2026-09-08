@@ -44,7 +44,7 @@ static TouchNavState s_touch_nav_state;
 struct TouchNavState *app_state_get_touch_nav_state(void) { return &s_touch_nav_state; }
 struct TouchNavState *modal_manager_get_touch_nav_state(void) { return &s_touch_nav_state; }
 
-static Layer s_root_layer;               // window root, holds the scroll layer while driving pans
+static Layer s_root_layer;  // window root, holds the scroll layer while driving pans
 static RecognizerManager s_recognizer_manager;
 static RecognizerList s_global_list;
 
@@ -67,7 +67,9 @@ static bool prv_bridge_top_overrides_back(void *ctx) {
 }
 static void prv_bridge_pop_top(void *ctx) { ((FakeBridgeOps *)ctx)->pop_count++; }
 static void prv_bridge_emit_button(void *ctx, ButtonId b) {
-  FakeBridgeOps *o = ctx; o->emit_count++; o->last_emit = b;
+  FakeBridgeOps *o = ctx;
+  o->emit_count++;
+  o->last_emit = b;
 }
 static TouchNavOps s_bridge_ops;
 
@@ -75,11 +77,11 @@ static TouchNavOps s_bridge_ops;
 static void prv_touch_nav_setup(void) {
   s_bridge = (FakeBridgeOps){0};
   s_bridge_ops = (TouchNavOps){
-    .is_animating = prv_bridge_is_animating,
-    .top_overrides_back = prv_bridge_top_overrides_back,
-    .pop_top = prv_bridge_pop_top,
-    .emit_button = prv_bridge_emit_button,
-    .ctx = &s_bridge,
+      .is_animating = prv_bridge_is_animating,
+      .top_overrides_back = prv_bridge_top_overrides_back,
+      .pop_top = prv_bridge_pop_top,
+      .emit_button = prv_bridge_emit_button,
+      .ctx = &s_bridge,
   };
   layer_init(&s_root_layer, &GRect(0, 0, 200, 400));
   recognizer_list_init(&s_global_list);
@@ -91,10 +93,10 @@ static void prv_touch_nav_setup(void) {
 
 // Fakes
 ////////////////////
-void graphics_context_set_compositing_mode(GContext* ctx, GCompOp mode) {}
+void graphics_context_set_compositing_mode(GContext *ctx, GCompOp mode) {}
 void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *bitmap, const GRect *rect) {}
-GDrawState graphics_context_get_drawing_state(GContext* ctx) { return (GDrawState){}; }
-void graphics_context_set_drawing_state(GContext* ctx, GDrawState draw_state) {}
+GDrawState graphics_context_get_drawing_state(GContext *ctx) { return (GDrawState){}; }
+void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {}
 
 bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) { return false; }
 void window_set_click_config_provider_with_context(struct Window *window,
@@ -114,17 +116,17 @@ static AnimationHandlers s_anim_handlers;
 static void *s_anim_handlers_context;
 
 bool property_animation_init(PropertyAnimation *animation,
-                             const PropertyAnimationImplementation *implementation,
-                             void *subject, void *from_value, void *to_value) {
+                             const PropertyAnimationImplementation *implementation, void *subject,
+                             void *from_value, void *to_value) {
   if (!animation) {
     return false;
   }
-  *(PropertyAnimationPrivate *)animation = (PropertyAnimationPrivate) {
-    .animation.implementation = (const AnimationImplementation *)implementation,
-    .subject = subject,
+  *(PropertyAnimationPrivate *)animation = (PropertyAnimationPrivate){
+      .animation.implementation = (const AnimationImplementation *)implementation,
+      .subject = subject,
   };
   if (to_value) {
-    s_anim_to = *(GPoint *)to_value;   // every scroll animation targets a GPoint offset
+    s_anim_to = *(GPoint *)to_value;  // every scroll animation targets a GPoint offset
   }
   return true;
 }
@@ -145,7 +147,7 @@ bool animation_set_handlers(Animation *animation, AnimationHandlers callbacks, v
 void test_scroll_layer_touch__initialize(void) {
   fake_rtc_init(0, 0);
   s_anim_to = GPointZero;
-  s_anim_handlers = (AnimationHandlers) { 0 };
+  s_anim_handlers = (AnimationHandlers){0};
   s_anim_handlers_context = NULL;
   s_nav_enabled = true;
   // A zeroed state has a NULL manager, so scroll_layer_init() registration is inert for tests that
@@ -163,7 +165,7 @@ static void prv_make_tall_scroll(ScrollLayer *sl, GRect frame, int16_t content_h
 }
 
 static void prv_drive(TouchEventType type, int16_t x, int16_t y) {
-  const TouchEvent e = { .type = type, .x = x, .y = y, .non_navigational = false };
+  const TouchEvent e = {.type = type, .x = x, .y = y, .non_navigational = false};
   touch_nav_dispatch(&e, &s_touch_nav_state);
 }
 
@@ -253,23 +255,23 @@ void test_scroll_layer_touch__subthreshold_pan_does_not_scroll(void) {
   layer_add_child(&s_root_layer, scroll_layer_get_layer(&sl));
 
   // Touchdown then a 3px move: below PAN_START_THRESHOLD_PX (10) so the pan never Starts. The
-  // Touchdown latches the scroll layer as the unified target (routing is fixed for the gesture), but
-  // with the pan never Starting no content moves.
+  // Touchdown latches the scroll layer as the unified target (routing is fixed for the gesture),
+  // but with the pan never Starting no content moves.
   prv_drive(TouchEvent_Touchdown, 100, 150);
   prv_advance_ms(20);
   prv_drive(TouchEvent_PositionUpdate, 100, 147);
-  cl_assert_equal_i(scroll_layer_get_content_offset(&sl).y, 0);   // no scroll
+  cl_assert_equal_i(scroll_layer_get_content_offset(&sl).y, 0);  // no scroll
   prv_drive(TouchEvent_Liftoff, 100, 147);
 
   // A real pan (well past threshold) does scroll, confirming the widget is otherwise live. The pan
   // Starts on the first update (latch only) and live-scrolls on the second (Updated) event.
   prv_drive(TouchEvent_Touchdown, 100, 150);
   prv_advance_ms(20);
-  prv_drive(TouchEvent_PositionUpdate, 100, 110);   // 40px up -> pan Started
+  prv_drive(TouchEvent_PositionUpdate, 100, 110);  // 40px up -> pan Started
   cl_assert(scroll_layer_touch_is_gesture_target(&sl));
   prv_advance_ms(20);
-  prv_drive(TouchEvent_PositionUpdate, 100, 90);    // -> Updated -> live scroll
-  cl_assert(scroll_layer_get_content_offset(&sl).y < 0);   // content scrolled
+  prv_drive(TouchEvent_PositionUpdate, 100, 90);          // -> Updated -> live scroll
+  cl_assert(scroll_layer_get_content_offset(&sl).y < 0);  // content scrolled
 
   scroll_layer_deinit(&sl);
 }
@@ -292,9 +294,9 @@ void test_scroll_layer_touch__pan_start_cancels_running_animation(void) {
   // A pan grabs the content: on pan Start the running animation is unscheduled.
   prv_drive(TouchEvent_Touchdown, 100, 150);
   prv_advance_ms(20);
-  prv_drive(TouchEvent_PositionUpdate, 100, 100);   // 50px -> pan Started
+  prv_drive(TouchEvent_PositionUpdate, 100, 100);  // 50px -> pan Started
   cl_assert(scroll_layer_touch_is_gesture_target(&sl));
-  cl_assert(!animation_is_scheduled(anim));          // finger cancelled the fling
+  cl_assert(!animation_is_scheduled(anim));  // finger cancelled the fling
 
   scroll_layer_deinit(&sl);
 }
@@ -304,7 +306,8 @@ void test_scroll_layer_touch__pan_start_cancels_running_animation(void) {
 //
 // The opt-in gate is inherited: the app-task twin installs the system touch handler (and thus the
 // dispatcher that routes to the Scroll registry) only when the pref is on AND the app participates.
-// A non-participating app never reaches the dispatcher, so its registered ScrollLayer never scrolls.
+// A non-participating app never reaches the dispatcher, so its registered ScrollLayer never
+// scrolls.
 
 // Drive a full pan through the dispatcher only if the app twin would be subscribed. The pan Starts
 // on the first update (latch) and live-scrolls on the second (Updated) before liftoff.
@@ -324,7 +327,7 @@ static void prv_twin_pan(bool participating, int16_t sy, int16_t my, int16_t ey)
 
 void test_scroll_layer_touch__third_party_inert_with_pref_on(void) {
   prv_touch_nav_setup();
-  s_nav_enabled = true;                 // master pref ON
+  s_nav_enabled = true;  // master pref ON
   ScrollLayer sl;
   prv_make_tall_scroll(&sl, GRect(0, 0, 200, 300), 900);
   layer_add_child(&s_root_layer, scroll_layer_get_layer(&sl));
@@ -333,7 +336,7 @@ void test_scroll_layer_touch__third_party_inert_with_pref_on(void) {
   const bool participating = false;
   cl_assert(!touch_nav_app_twin_active(s_nav_enabled, false, participating, false));
   prv_twin_pan(participating, 150, 110, 60);
-  cl_assert_equal_i(scroll_layer_get_content_offset(&sl).y, 0);   // inert
+  cl_assert_equal_i(scroll_layer_get_content_offset(&sl).y, 0);  // inert
   cl_assert_equal_i(s_bridge.emit_count, 0);
   cl_assert_equal_i(s_bridge.pop_count, 0);
 
@@ -375,10 +378,10 @@ void test_scroll_layer_touch__deinit_mid_gesture_cancels(void) {
   layer_add_child(&s_root_layer, scroll_layer_get_layer(&sl2));
   prv_drive(TouchEvent_Touchdown, 100, 150);
   prv_advance_ms(20);
-  prv_drive(TouchEvent_PositionUpdate, 100, 110);   // pan Started
+  prv_drive(TouchEvent_PositionUpdate, 100, 110);  // pan Started
   cl_assert(scroll_layer_touch_is_gesture_target(&sl2));
   prv_advance_ms(20);
-  prv_drive(TouchEvent_PositionUpdate, 100, 80);    // Updated -> scroll
+  prv_drive(TouchEvent_PositionUpdate, 100, 80);  // Updated -> scroll
   cl_assert(scroll_layer_get_content_offset(&sl2).y < 0);
 
   scroll_layer_deinit(&sl2);
@@ -389,7 +392,7 @@ void test_scroll_layer_touch__deinit_mid_gesture_cancels(void) {
 
 void test_scroll_layer_touch__swipe_right_emits_back(void) {
   prv_touch_nav_setup();
-  s_bridge.overrides_back = false;   // no back handler => the bridge pops the window
+  s_bridge.overrides_back = false;  // no back handler => the bridge pops the window
   ScrollLayer sl;
   prv_make_tall_scroll(&sl, GRect(0, 0, 200, 300), 900);
   scroll_layer_touch_handle_swipe(&sl, SwipeDirection_Right);
@@ -442,11 +445,11 @@ void test_scroll_layer_touch__dispatch_pan_scrolls_1to1_and_snaps(void) {
   prv_make_tall_scroll(&sl, GRect(0, 0, 200, 300), 900);  // min offset = 300 - 900 = -600
   layer_add_child(&s_root_layer, scroll_layer_get_layer(&sl));
 
-  // Touchdown, then a first update 40px up crosses the pan threshold: the pan Starts and only latches
-  // the base (offset unchanged). delta_since_start is re-anchored to (0,0) at Start.
+  // Touchdown, then a first update 40px up crosses the pan threshold: the pan Starts and only
+  // latches the base (offset unchanged). delta_since_start is re-anchored to (0,0) at Start.
   prv_drive(TouchEvent_Touchdown, 100, 200);
   prv_advance_ms(20);
-  prv_drive(TouchEvent_PositionUpdate, 100, 160);   // pan Started at y=160, base latched
+  prv_drive(TouchEvent_PositionUpdate, 100, 160);  // pan Started at y=160, base latched
   cl_assert(scroll_layer_touch_is_gesture_target(&sl));
   cl_assert_equal_i(scroll_layer_get_content_offset(&sl).y, 0);
 
@@ -459,7 +462,7 @@ void test_scroll_layer_touch__dispatch_pan_scrolls_1to1_and_snaps(void) {
   prv_drive(TouchEvent_Liftoff, 100, 130);
   cl_assert_equal_i(scroll_layer_get_content_offset(&sl).y, -30);
   cl_assert(!scroll_layer_touch_is_gesture_target(&sl));
-  cl_assert_equal_i(s_bridge.emit_count, 0);   // a pan is never a bridge button
+  cl_assert_equal_i(s_bridge.emit_count, 0);  // a pan is never a bridge button
   cl_assert_equal_i(s_bridge.pop_count, 0);
 
   scroll_layer_deinit(&sl);
@@ -473,14 +476,14 @@ void test_scroll_layer_touch__dispatch_tap_does_nothing(void) {
   prv_make_tall_scroll(&sl, GRect(0, 0, 200, 300), 900);
   layer_add_child(&s_root_layer, scroll_layer_get_layer(&sl));
 
-  // A stationary tap on the scroll routes to the unified set (the bridge set is failed on the Tier-1
-  // route). ScrollLayer's tap op is NULL, so the tap is dropped: no scroll, and crucially NO bridge
-  // SELECT (the tap must not fall through to the Tier-2 bridge).
+  // A stationary tap on the scroll routes to the unified set (the bridge set is failed on the
+  // Tier-1 route). ScrollLayer's tap op is NULL, so the tap is dropped: no scroll, and crucially NO
+  // bridge SELECT (the tap must not fall through to the Tier-2 bridge).
   prv_scroll_dispatch_tap(100, 150);
-  cl_assert_equal_i(scroll_layer_get_content_offset(&sl).y, 0);   // no scroll
-  cl_assert_equal_i(s_bridge.emit_count, 0);                      // no SELECT emitted
+  cl_assert_equal_i(scroll_layer_get_content_offset(&sl).y, 0);  // no scroll
+  cl_assert_equal_i(s_bridge.emit_count, 0);                     // no SELECT emitted
   cl_assert_equal_i(s_bridge.pop_count, 0);
-  cl_assert(!scroll_layer_touch_is_gesture_target(&sl));          // latch cleared on completion
+  cl_assert(!scroll_layer_touch_is_gesture_target(&sl));  // latch cleared on completion
   // The manager returns to idle after the dropped tap.
   cl_assert_equal_i(s_recognizer_manager.state, RecognizerManagerState_WaitForTouchdown);
 
@@ -496,8 +499,8 @@ void test_scroll_layer_touch__dispatch_tap_does_nothing(void) {
 void test_scroll_layer_touch__dispatch_no_trigger_leaves_manager_idle(void) {
   prv_touch_nav_setup();
   ScrollLayer sl;
-  // Register the scroll away from the top status-bar dead zone so a dead-zone Touchdown does not get
-  // routed to it as the sole widget.
+  // Register the scroll away from the top status-bar dead zone so a dead-zone Touchdown does not
+  // get routed to it as the sole widget.
   scroll_layer_init(&sl, &GRect(0, 100, 200, 200));
   scroll_layer_set_content_size(&sl, GSize(200, 600));
   layer_add_child(&s_root_layer, scroll_layer_get_layer(&sl));
@@ -517,7 +520,6 @@ void test_scroll_layer_touch__dispatch_no_trigger_leaves_manager_idle(void) {
   scroll_layer_deinit(&sl);
 }
 
-
 // =============================================================================================
 // Inertial fling on liftoff. All physics run through scroll_layer_touch_handle_snap: the released
 // offset settles instantly (as before), then the coast animation is scheduled toward the clamped
@@ -532,7 +534,7 @@ void test_scroll_layer_touch__snap_below_threshold_settles_only(void) {
   scroll_layer_touch_handle_snap(&sl, GPoint(0, 0), GPoint(0, -100),
                                  GPoint(0, -(TOUCH_FLING_MIN_VELOCITY_PX_S - 1)));
   cl_assert_equal_i(scroll_layer_get_content_offset(&sl).y, -100);
-  cl_assert(sl.animation == NULL);   // never animated: no coast was scheduled
+  cl_assert(sl.animation == NULL);  // never animated: no coast was scheduled
   scroll_layer_deinit(&sl);
 }
 
@@ -544,7 +546,7 @@ void test_scroll_layer_touch__snap_flings_toward_projection(void) {
   scroll_layer_touch_handle_pan_update(&sl, GPoint(0, 0), GPoint(0, -100));
   // Projection = -100 + (-1000 * 240 / 1000) = -340, inside [-600, 0].
   scroll_layer_touch_handle_snap(&sl, GPoint(0, 0), GPoint(0, -100), GPoint(0, -1000));
-  cl_assert_equal_i(scroll_layer_get_content_offset(&sl).y, -100);   // no liftoff jump
+  cl_assert_equal_i(scroll_layer_get_content_offset(&sl).y, -100);  // no liftoff jump
   Animation *anim = property_animation_get_animation(sl.animation);
   cl_assert(anim != NULL);
   cl_assert(animation_is_scheduled(anim));
@@ -562,11 +564,11 @@ void test_scroll_layer_touch__snap_absorbs_unthrottled_residual(void) {
   // Last throttled update left the content at -60; the unthrottled final delta says -100.
   scroll_layer_touch_handle_pan_update(&sl, GPoint(0, 0), GPoint(0, -60));
   scroll_layer_touch_handle_snap(&sl, GPoint(0, 0), GPoint(0, -100), GPoint(0, -1000));
-  cl_assert_equal_i(scroll_layer_get_content_offset(&sl).y, -60);   // no teleport to -100
+  cl_assert_equal_i(scroll_layer_get_content_offset(&sl).y, -60);  // no teleport to -100
   Animation *anim = property_animation_get_animation(sl.animation);
   cl_assert(anim != NULL);
   cl_assert(animation_is_scheduled(anim));
-  cl_assert_equal_i(s_anim_to.y, -340);   // target still projects from the released offset
+  cl_assert_equal_i(s_anim_to.y, -340);  // target still projects from the released offset
   scroll_layer_deinit(&sl);
 }
 
@@ -611,7 +613,7 @@ void test_scroll_layer_touch__snap_velocity_clamped(void) {
   Animation *anim = property_animation_get_animation(sl.animation);
   cl_assert(anim != NULL);
   cl_assert(animation_is_scheduled(anim));
-  cl_assert_equal_i(s_anim_to.y, -600);   // projection -864 clamped to the content range
+  cl_assert_equal_i(s_anim_to.y, -600);  // projection -864 clamped to the content range
   cl_assert_equal_i(animation_get_duration(anim, false, false), 500);
   scroll_layer_deinit(&sl);
 }
@@ -654,7 +656,7 @@ void test_scroll_layer_touch__fling_stopped_restores_defaults(void) {
   animation_unschedule(anim);
   s_anim_handlers.stopped(anim, true /* finished */, s_anim_handlers_context);
   cl_assert_equal_i(animation_get_duration(anim, false, false), ANIMATION_DEFAULT_DURATION_MS);
-  cl_assert(s_anim_handlers.stopped == NULL);   // handlers cleared for the next (plain) scroll
+  cl_assert(s_anim_handlers.stopped == NULL);  // handlers cleared for the next (plain) scroll
   scroll_layer_deinit(&sl);
 }
 
@@ -665,10 +667,10 @@ void test_scroll_layer_touch__fling_cleanup_is_idempotent(void) {
   prv_make_tall_scroll(&sl, GRect(0, 0, 200, 300), 900);
   scroll_layer_touch_handle_snap(&sl, GPoint(0, 0), GPoint(0, -100), GPoint(0, -1000));
   Animation *anim = property_animation_get_animation(sl.animation);
-  animation_unschedule(anim);   // caught: no stopped handler ran
+  animation_unschedule(anim);  // caught: no stopped handler ran
   scroll_layer_touch_fling_cleanup(&sl);
   cl_assert_equal_i(animation_get_duration(anim, false, false), ANIMATION_DEFAULT_DURATION_MS);
-  scroll_layer_touch_fling_cleanup(&sl);   // safe to repeat
+  scroll_layer_touch_fling_cleanup(&sl);  // safe to repeat
   cl_assert_equal_i(animation_get_duration(anim, false, false), ANIMATION_DEFAULT_DURATION_MS);
   scroll_layer_deinit(&sl);
 }

@@ -16,15 +16,13 @@ static RegularTimerInfo s_missed_call_timer_id;
 
 static void prv_put_call_event(PhoneEventType type, uint32_t call_identifier,
                                PebblePhoneCaller *caller, bool ios_9) {
-  PebbleEvent event = {
-    .type = PEBBLE_PHONE_EVENT,
-    .phone = {
-      .type = type,
-      .source = ios_9 ? PhoneCallSource_ANCS : PhoneCallSource_ANCS_Legacy,
-      .call_identifier = call_identifier,
-      .caller = caller,
-    }
-  };
+  PebbleEvent event = {.type = PEBBLE_PHONE_EVENT,
+                       .phone = {
+                           .type = type,
+                           .source = ios_9 ? PhoneCallSource_ANCS : PhoneCallSource_ANCS_Legacy,
+                           .call_identifier = call_identifier,
+                           .caller = caller,
+                       }};
 
   event_put(&event);
 }
@@ -77,7 +75,7 @@ bool ancs_phone_call_should_ignore_missed_calls(void) {
 }
 
 static void prv_handle_missed_call_timer_timeout(void *not_used) {
-if (regular_timer_is_scheduled(&s_missed_call_timer_id)) {
+  if (regular_timer_is_scheduled(&s_missed_call_timer_id)) {
     regular_timer_remove_callback(&s_missed_call_timer_id);
   }
 }
@@ -88,8 +86,8 @@ void ancs_phone_call_temporarily_block_missed_calls(void) {
     regular_timer_remove_callback(&s_missed_call_timer_id);
   }
 
-  s_missed_call_timer_id = (const RegularTimerInfo) {
-    .cb = prv_handle_missed_call_timer_timeout,
+  s_missed_call_timer_id = (const RegularTimerInfo){
+      .cb = prv_handle_missed_call_timer_timeout,
   };
   regular_timer_add_multisecond_callback(&s_missed_call_timer_id, BLOCK_MISS_CALL_TIME_S);
 }

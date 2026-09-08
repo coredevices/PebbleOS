@@ -32,8 +32,9 @@ static void prv_convert_pps_request_params(const PebblePairingServiceConnParamSe
   params_out->supervision_timeout_10ms = pps_params_in->supervision_timeout_30ms * 3;
 }
 
-static void prv_handle_set_remote_param_mgmt_settings(GAPLEConnection *connection,
-    const PebblePairingServiceRemoteParamMgmtSettings *settings, size_t settings_length) {
+static void prv_handle_set_remote_param_mgmt_settings(
+    GAPLEConnection *connection, const PebblePairingServiceRemoteParamMgmtSettings *settings,
+    size_t settings_length) {
   bool is_remote_device_managing_connection_parameters =
       settings->is_remote_device_managing_connection_parameters;
   connection->is_remote_device_managing_connection_parameters =
@@ -43,11 +44,10 @@ static void prv_handle_set_remote_param_mgmt_settings(GAPLEConnection *connectio
     if (!connection->connection_parameter_sets) {
       const size_t size = sizeof(GAPLEConnectRequestParams) * NumResponseTimeState;
       connection->connection_parameter_sets =
-          (GAPLEConnectRequestParams *) kernel_zalloc_check(size);
+          (GAPLEConnectRequestParams *)kernel_zalloc_check(size);
     }
     for (ResponseTimeState s = ResponseTimeMax; s < NumResponseTimeState; ++s) {
-      const PebblePairingServiceConnParamSet *pps_params =
-          &settings->connection_parameter_sets[s];
+      const PebblePairingServiceConnParamSet *pps_params = &settings->connection_parameter_sets[s];
       GAPLEConnectRequestParams *params = &connection->connection_parameter_sets[s];
       prv_convert_pps_request_params(pps_params, params);
     }
@@ -57,8 +57,8 @@ static void prv_handle_set_remote_param_mgmt_settings(GAPLEConnection *connectio
   gap_le_connect_params_re_evaluate(connection);
 }
 
-static void prv_handle_set_remote_desired_state(GAPLEConnection *connection,
-    const PebblePairingServiceRemoteDesiredState *desired_state) {
+static void prv_handle_set_remote_desired_state(
+    GAPLEConnection *connection, const PebblePairingServiceRemoteDesiredState *desired_state) {
   const ResponseTimeState remote_desired_state = (ResponseTimeState)desired_state->state;
   PBL_LOG_DBG("PPS: desired_state=%u", remote_desired_state);
 
@@ -69,8 +69,7 @@ static void prv_handle_set_remote_desired_state(GAPLEConnection *connection,
 }
 
 void bt_driver_cb_pebble_pairing_service_handle_connection_parameter_write(
-    const BTDeviceInternal *device,
-    const PebblePairingServiceConnParamsWrite *conn_params,
+    const BTDeviceInternal *device, const PebblePairingServiceConnParamsWrite *conn_params,
     size_t conn_params_length) {
   bt_lock();
   {
@@ -78,8 +77,8 @@ void bt_driver_cb_pebble_pairing_service_handle_connection_parameter_write(
     if (!connection) {
       goto unlock;
     }
-    const size_t length = (conn_params_length - offsetof(PebblePairingServiceConnParamsWrite,
-                                                         remote_desired_state));
+    const size_t length =
+        (conn_params_length - offsetof(PebblePairingServiceConnParamsWrite, remote_desired_state));
     switch (conn_params->cmd) {
       case PebblePairingServiceConnParamsWriteCmd_SetRemoteParamMgmtSettings:
         prv_handle_set_remote_param_mgmt_settings(connection,

@@ -11,13 +11,9 @@
 
 static BlobDBId s_blobdb_id = BlobDBIdTest;
 
-void fake_blob_db_set_id(BlobDBId id) {
-  s_blobdb_id = id;
-}
+void fake_blob_db_set_id(BlobDBId id) { s_blobdb_id = id; }
 
-void blob_db_init_dbs(void) {
-  test_db_init();
-}
+void blob_db_init_dbs(void) { test_db_init(); }
 
 void blob_db_get_dirty_dbs(uint8_t *ids, uint8_t *num_ids) {
   bool is_dirty = false;
@@ -30,26 +26,24 @@ void blob_db_get_dirty_dbs(uint8_t *ids, uint8_t *num_ids) {
   }
 }
 
-status_t blob_db_insert(BlobDBId db_id,
-    const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
+status_t blob_db_insert(BlobDBId db_id, const uint8_t *key, int key_len, const uint8_t *val,
+                        int val_len) {
   cl_assert(db_id == s_blobdb_id);
   return test_db_insert(key, key_len, val, val_len);
 }
 
-int blob_db_get_len(BlobDBId db_id,
-    const uint8_t *key, int key_len) {
+int blob_db_get_len(BlobDBId db_id, const uint8_t *key, int key_len) {
   cl_assert(db_id == s_blobdb_id);
   return test_db_get_len(key, key_len);
 }
 
-status_t blob_db_read(BlobDBId db_id,
-    const uint8_t *key, int key_len, uint8_t *val_out, int val_len) {
+status_t blob_db_read(BlobDBId db_id, const uint8_t *key, int key_len, uint8_t *val_out,
+                      int val_len) {
   cl_assert(db_id == s_blobdb_id);
   return test_db_read(key, key_len, val_out, val_len);
 }
 
-status_t blob_db_delete(BlobDBId db_id,
-    const uint8_t *key, int key_len) {
+status_t blob_db_delete(BlobDBId db_id, const uint8_t *key, int key_len) {
   cl_assert(db_id == s_blobdb_id);
   return test_db_delete(key, key_len);
 }

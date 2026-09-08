@@ -40,22 +40,14 @@ void test_settings_file__initialize(void) {
   pfs_init(false);
 }
 
-void test_settings_file__cleanup(void) {
-  stub_pbl_malloc_set_kernel_malloc_should_fail(false);
-}
+void test_settings_file__cleanup(void) { stub_pbl_malloc_set_kernel_malloc_should_fail(false); }
 
 #include <stdio.h>
 
 #define PRIb8 "%d%d%d%d%d%d%d%d"
-#define TO_BINARY(byte)  \
-  (byte & 0x80 ? 1 : 0), \
-  (byte & 0x40 ? 1 : 0), \
-  (byte & 0x20 ? 1 : 0), \
-  (byte & 0x10 ? 1 : 0), \
-  (byte & 0x08 ? 1 : 0), \
-  (byte & 0x04 ? 1 : 0), \
-  (byte & 0x02 ? 1 : 0), \
-  (byte & 0x01 ? 1 : 0)
+#define TO_BINARY(byte)                                                                       \
+  (byte & 0x80 ? 1 : 0), (byte & 0x40 ? 1 : 0), (byte & 0x20 ? 1 : 0), (byte & 0x10 ? 1 : 0), \
+      (byte & 0x08 ? 1 : 0), (byte & 0x04 ? 1 : 0), (byte & 0x02 ? 1 : 0), (byte & 0x01 ? 1 : 0)
 
 extern void pfs_debug_dump(int fd, int num_bytes);
 void settings_file_hexdump(SettingsFile *file) {
@@ -67,14 +59,13 @@ void settings_file_dump(SettingsFile *file) {
        settings_raw_iter_next(&file->iter)) {
     SettingsRecordHeader hdr = file->iter.hdr;
     printf("Record { last_modified: %d, ", hdr.last_modified);
-    printf("flags: "PRIb8", ", TO_BINARY(hdr.flags));
-    printf("key_hash: %"PRIu8", key_len: %d, val_len: %d }\n", hdr.key_hash, hdr.key_len, hdr.val_len);
+    printf("flags: " PRIb8 ", ", TO_BINARY(hdr.flags));
+    printf("key_hash: %" PRIu8 ", key_len: %d, val_len: %d }\n", hdr.key_hash, hdr.key_len,
+           hdr.val_len);
   }
 }
 
-
-static void verify(SettingsFile *file, uint8_t *key, int key_len,
-                   uint8_t *val, int val_len) {
+static void verify(SettingsFile *file, uint8_t *key, int key_len, uint8_t *val, int val_len) {
   int val_len_out = settings_file_get_len(file, key, key_len);
   cl_must_pass(val_len_out);
   cl_assert_equal_i(val_len, val_len_out);
@@ -89,8 +80,8 @@ static void verify(SettingsFile *file, uint8_t *key, int key_len,
   free(val_out);
 }
 
-static void set_and_verify(SettingsFile *file, uint8_t *key, int key_len,
-                           uint8_t *val, int val_len) {
+static void set_and_verify(SettingsFile *file, uint8_t *key, int key_len, uint8_t *val,
+                           int val_len) {
   cl_must_pass(settings_file_set(file, key, key_len, val, val_len));
   verify(file, key, key_len, val, val_len);
 }
@@ -167,8 +158,8 @@ static void prv_test_settings_file_compaction(const bool manual) {
         cl_must_pass(settings_file_compact(&file));
       }
 
-      settings_file_get(&file, (uint8_t *)&j, sizeof(uint32_t),
-                        (uint8_t *)&value, sizeof(uint32_t));
+      settings_file_get(&file, (uint8_t *)&j, sizeof(uint32_t), (uint8_t *)&value,
+                        sizeof(uint32_t));
       value += 1;
       set_and_verify(&file, (uint8_t *)&j, sizeof(uint32_t), (uint8_t *)&value, sizeof(uint32_t));
     }
@@ -457,8 +448,7 @@ void test_settings_file__zero_length(void) {
   set_and_verify(&file, key, 0, val, val_len);
 }
 
-static bool prv_each_cb(SettingsFile *file, SettingsRecordInfo *info,
-                        void *context) {
+static bool prv_each_cb(SettingsFile *file, SettingsRecordInfo *info, void *context) {
   uint8_t *key = malloc(info->key_len + 1);
   uint8_t *val = malloc(info->val_len + 1);
   info->get_key(file, key, info->key_len);
@@ -467,15 +457,15 @@ static bool prv_each_cb(SettingsFile *file, SettingsRecordInfo *info,
   val[info->val_len] = '\0';
 
   printf("Read key of %s %d and val of %s %d\n", key, info->key_len, val, info->val_len);
-  int key_i = atoi((char*)key + 1);
+  int key_i = atoi((char *)key + 1);
   cl_assert(key_i >= 0 && key_i < 255);
-  uint8_t *counts = (uint8_t*)context;
+  uint8_t *counts = (uint8_t *)context;
   counts[key_i]++;
 
   status_t result = settings_file_get(file, key, info->key_len, val, info->val_len);
   cl_assert_equal_i(result, S_SUCCESS);
 
-  int val_i = atoi((char*)val + 1);
+  int val_i = atoi((char *)val + 1);
   cl_assert_equal_i(key_i, val_i);
   return true;
 }
@@ -506,8 +496,7 @@ void test_settings_file__each(void) {
 }
 
 static const uint8_t STOPPING_NUM = 117;
-static bool prv_each_cb_quit_early(SettingsFile *file, SettingsRecordInfo *info,
-                        void *context) {
+static bool prv_each_cb_quit_early(SettingsFile *file, SettingsRecordInfo *info, void *context) {
   uint8_t *key = malloc(info->key_len + 1);
   uint8_t *val = malloc(info->val_len + 1);
   info->get_key(file, key, info->key_len);
@@ -516,12 +505,12 @@ static bool prv_each_cb_quit_early(SettingsFile *file, SettingsRecordInfo *info,
   val[info->val_len] = '\0';
 
   printf("Read key of %s %d and val of %s %d\n", key, info->key_len, val, info->val_len);
-  int key_i = atoi((char*)key + 1);
+  int key_i = atoi((char *)key + 1);
   cl_assert(key_i >= 0 && key_i < 255);
-  uint8_t *cur_val = (uint8_t*)context;
+  uint8_t *cur_val = (uint8_t *)context;
   *cur_val = key_i;
 
-  int val_i = atoi((char*)val + 1);
+  int val_i = atoi((char *)val + 1);
   cl_assert_equal_i(key_i, val_i);
 
   if (key_i == STOPPING_NUM) {
@@ -627,8 +616,7 @@ void test_settings_file__growable_auto_growth(void) {
   cl_must_pass(settings_file_open_growable(&file, "tg", max_cap, initial_alloc));
 
   int initial_file_size = pfs_get_file_size(file.iter.fd);
-  printf("Initial file size: %d, max_space_total: %d\n",
-         initial_file_size, file.max_space_total);
+  printf("Initial file size: %d, max_space_total: %d\n", initial_file_size, file.max_space_total);
 
   // Write large records to fill and exceed the initial allocation.
   // Each record: 8 (header) + 4 (key) + 128 (val) = 140 bytes.
@@ -642,7 +630,7 @@ void test_settings_file__growable_auto_growth(void) {
   int num_records = 65;
   for (int i = 0; i < num_records; i++) {
     snprintf((char *)key, sizeof(key), "k%03d", i);
-    val[0] = (uint8_t)i; // Make each value unique
+    val[0] = (uint8_t)i;  // Make each value unique
     cl_must_pass(settings_file_set(&file, key, key_len, val, val_len));
   }
 

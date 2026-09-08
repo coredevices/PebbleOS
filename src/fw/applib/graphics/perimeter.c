@@ -13,7 +13,7 @@ static uint16_t prv_triangle_side(uint16_t hypotenuse, uint16_t side) {
 }
 
 T_STATIC GRangeHorizontal perimeter_for_circle(GRangeVertical vertical_range, GPoint center,
-                                      int32_t radius) {
+                                               int32_t radius) {
   radius = MAX(0, radius);
   int32_t height = 0;
   int32_t width = 0;
@@ -25,8 +25,7 @@ T_STATIC GRangeHorizontal perimeter_for_circle(GRangeVertical vertical_range, GP
   int32_t range_end = vertical_range.origin_y + vertical_range.size_h;
 
   // Check if both top and bottom are outside but not surrounding the perimeter
-  if ((range_start < top && range_end < top) ||
-      (range_start > bottom && range_end > bottom)) {
+  if ((range_start < top && range_end < top) || (range_start > bottom && range_end > bottom)) {
     return (GRangeHorizontal){0, 0};
   }
 
@@ -50,7 +49,7 @@ T_STATIC GRangeHorizontal perimeter_for_display_round(const GPerimeter *perimete
                                                       const GSize *ctx_size,
                                                       GRangeVertical vertical_range,
                                                       uint16_t inset) {
-  const GRect frame = (GRect) { GPointZero, *ctx_size };
+  const GRect frame = (GRect){GPointZero, *ctx_size};
   const GPoint center = grect_center_point(&frame);
   const int32_t radius = grect_shortest_side(frame) / 2 - inset;
   return perimeter_for_circle(vertical_range, center, radius);
@@ -66,6 +65,6 @@ T_STATIC GRangeHorizontal perimeter_for_display_rect(const GPerimeter *perimeter
 }
 #endif
 
-const GPerimeter * const g_perimeter_for_display = &(const GPerimeter) {
-  .callback = PBL_IF_RECT_ELSE(perimeter_for_display_rect, perimeter_for_display_round),
+const GPerimeter *const g_perimeter_for_display = &(const GPerimeter){
+    .callback = PBL_IF_RECT_ELSE(perimeter_for_display_rect, perimeter_for_display_round),
 };

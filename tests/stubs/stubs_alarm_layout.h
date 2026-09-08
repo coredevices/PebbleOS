@@ -6,10 +6,6 @@
 #include "pbl/services/timeline/alarm_layout.h"
 #include "pbl/util/attributes.h"
 
-LayoutLayer * WEAK alarm_layout_create(const LayoutLayerConfig *config) {
-  return NULL;
-}
+LayoutLayer *WEAK alarm_layout_create(const LayoutLayerConfig *config) { return NULL; }
 
-bool WEAK alarm_layout_verify(bool existing_attributes[]) {
-  return false;
-}
+bool WEAK alarm_layout_verify(bool existing_attributes[]) { return false; }

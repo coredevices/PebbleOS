@@ -5,19 +5,12 @@
 
 #include <pbl/kernel/irq.h>
 
-void pbl_irq_lock(void) {
-}
+void pbl_irq_lock(void) {}
 
-void pbl_irq_unlock(void) {
-}
+void pbl_irq_unlock(void) {}
 
-bool pbl_irq_is_locked(void) {
-  return false;
-}
+bool pbl_irq_is_locked(void) { return false; }
 
-bool pbl_in_isr(void) {
-  return false;
-}
+bool pbl_in_isr(void) { return false; }
 
-void sys_psleep(int millis) {
-}
+void sys_psleep(int millis) {}

@@ -24,14 +24,14 @@
 #include <stdbool.h>
 
 typedef enum {
-  StateStart,                   // Start state. Nothing happens
-  StateStartWaitForReady,       // Dot flies in
-  StateWaitForReady,            // Progress bar shows and animates, dot pulses
-  StateRecording,               // Microphone unfolds and text appears
-  StateStopRecording,           // Microphone folds up again and text disappears
-  StateWaitForResponse,         // Dot pulses, progress bar shown
-  StateStopWaitForResponse,     // Progress bar shrinks
-  StateTransitionToText,        // Dot flies out, text window pushed
+  StateStart,                // Start state. Nothing happens
+  StateStartWaitForReady,    // Dot flies in
+  StateWaitForReady,         // Progress bar shows and animates, dot pulses
+  StateRecording,            // Microphone unfolds and text appears
+  StateStopRecording,        // Microphone folds up again and text disappears
+  StateWaitForResponse,      // Dot pulses, progress bar shown
+  StateStopWaitForResponse,  // Progress bar shrinks
+  StateTransitionToText,     // Dot flies out, text window pushed
   StateError,
   StateFinished,
   StateExiting,
@@ -45,14 +45,14 @@ typedef struct VoiceUiData {
     Layer mic_dot_layer;
     int16_t mic_dot_radius;
     TextLayer text_layer;
-    char text_buffer[20];       // Larger than needed because i18n
+    char text_buffer[20];  // Larger than needed because i18n
     StatusBarLayer status_bar;
     LoadingLayer progress_bar;
     PropertyAnimation *progress_anim;
     PropertyAnimation *fly_anim;
   } mic_window;
 
-  union{
+  union {
     TranscriptionDialog transcription_dialog;
     ExpandableDialog long_error_dialog;
     SimpleDialog short_error_dialog;

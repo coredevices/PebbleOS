@@ -34,13 +34,14 @@ static void prv_timer_handler(nrf_timer_event_t evt, void *ctx);
 
 static void initialize_button_timer(void) {
   nrfx_timer_config_t config = {
-    .frequency = TIMER_FREQUENCY_HZ,
-    .mode = NRF_TIMER_MODE_TIMER,
-    .bit_width = NRF_TIMER_BIT_WIDTH_32,
-    .interrupt_priority = NRFX_TIMER_DEFAULT_CONFIG_IRQ_PRIORITY,
+      .frequency = TIMER_FREQUENCY_HZ,
+      .mode = NRF_TIMER_MODE_TIMER,
+      .bit_width = NRF_TIMER_BIT_WIDTH_32,
+      .interrupt_priority = NRFX_TIMER_DEFAULT_CONFIG_IRQ_PRIORITY,
   };
   nrfx_timer_init(&BOARD_CONFIG_BUTTON.timer, &config, prv_timer_handler);
-  nrfx_timer_extended_compare(&BOARD_CONFIG_BUTTON.timer, NRF_TIMER_CC_CHANNEL0, TIMER_PERIOD_TICKS, NRF_TIMER_SHORT_COMPARE0_CLEAR_MASK, true /* enable interrupt */);
+  nrfx_timer_extended_compare(&BOARD_CONFIG_BUTTON.timer, NRF_TIMER_CC_CHANNEL0, TIMER_PERIOD_TICKS,
+                              NRF_TIMER_SHORT_COMPARE0_CLEAR_MASK, true /* enable interrupt */);
 }
 
 static bool prv_check_timer_enabled(void) {
@@ -63,9 +64,7 @@ static void prv_enable_button_timer(void) {
   __enable_irq();
 }
 
-static void prv_button_interrupt_handler(bool *should_context_switch) {
-  prv_enable_button_timer();
-}
+static void prv_button_interrupt_handler(bool *should_context_switch) { prv_enable_button_timer(); }
 
 static void clear_stuck_button(ButtonId button_id) {
   __disable_irq();
@@ -96,7 +95,7 @@ void debounced_button_init(void) {
   // If someone is holding down a button, we need to start up the timer immediately ourselves as
   // we won't get a button down interrupt to start it.
   if (button_get_state_bits() != 0) {
-     prv_enable_button_timer();
+    prv_enable_button_timer();
   }
 }
 
@@ -142,17 +141,15 @@ static void prv_timer_handler(nrf_timer_event_t evt, void *ctx) {
         clear_stuck_button(i);
       }
 
-      PebbleEvent e = {
-        .type = (is_pressed) ? PEBBLE_BUTTON_DOWN_EVENT : PEBBLE_BUTTON_UP_EVENT,
-        .button.button_id = i
-      };
+      PebbleEvent e = {.type = (is_pressed) ? PEBBLE_BUTTON_DOWN_EVENT : PEBBLE_BUTTON_UP_EVENT,
+                       .button.button_id = i};
       event_put_isr(&e);
     }
   }
 
 #if !defined(CONFIG_MFG)
-  // Now that s_debounced_button_state is updated, check to see if the user is holding down the reset
-  // combination.
+  // Now that s_debounced_button_state is updated, check to see if the user is holding down the
+  // reset combination.
   static uint32_t s_hard_reset_timer = 0;
   if ((s_debounced_button_state & RESET_BUTTONS) == RESET_BUTTONS) {
     s_hard_reset_timer += 1;
@@ -167,10 +164,8 @@ static void prv_timer_handler(nrf_timer_event_t evt, void *ctx) {
         boot_bit_set(BOOT_BIT_FORCE_PRF);
       }
 
-      RebootReason reason = {
-        .code = force_prf ? RebootReasonCode_PrfResetButtonsHeld :
-                            RebootReasonCode_ResetButtonsHeld
-      };
+      RebootReason reason = {.code = force_prf ? RebootReasonCode_PrfResetButtonsHeld
+                                               : RebootReasonCode_ResetButtonsHeld};
       reboot_reason_set(&reason);
 
       // Don't use system_reset here. This back door absolutely must work. Just hard reset.
@@ -186,12 +181,11 @@ static void prv_timer_handler(nrf_timer_event_t evt, void *ctx) {
     disable_button_timer();
     __enable_irq();
   }
-
 }
 
 // Serial commands
 ///////////////////////////////////////////////////////////
-void command_put_raw_button_event(const char* button_index, const char* is_button_down_event) {
+void command_put_raw_button_event(const char *button_index, const char *is_button_down_event) {
   PebbleEvent e;
   int is_down = atoi(is_button_down_event);
   int button = atoi(button_index);

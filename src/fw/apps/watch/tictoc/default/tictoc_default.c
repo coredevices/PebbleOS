@@ -80,18 +80,16 @@ static void prv_canvas_layer_update_proc(Layer *layer, GContext *ctx) {
   int hour_hand_length = clock_radius - HOUR_HAND_MARGIN;
 
   // Plot hands
-  GPoint minute_hand = (GPoint) {
-    .x = (int16_t)(sin_lookup(minute_angle) * (int32_t)minute_hand_length
-                   / TRIG_MAX_RATIO) + center.x,
-    .y = (int16_t)(-cos_lookup(minute_angle) * (int32_t)minute_hand_length
-                   / TRIG_MAX_RATIO) + center.y
-  };
-  GPoint hour_hand = (GPoint) {
-    .x = (int16_t)(sin_lookup(hour_angle) * (int32_t)hour_hand_length
-                   / TRIG_MAX_RATIO) + center.x,
-    .y = (int16_t)(-cos_lookup(hour_angle) * (int32_t)hour_hand_length
-                   / TRIG_MAX_RATIO) + center.y
-  };
+  GPoint minute_hand = (GPoint){
+      .x = (int16_t)(sin_lookup(minute_angle) * (int32_t)minute_hand_length / TRIG_MAX_RATIO) +
+           center.x,
+      .y = (int16_t)(-cos_lookup(minute_angle) * (int32_t)minute_hand_length / TRIG_MAX_RATIO) +
+           center.y};
+  GPoint hour_hand = (GPoint){
+      .x =
+          (int16_t)(sin_lookup(hour_angle) * (int32_t)hour_hand_length / TRIG_MAX_RATIO) + center.x,
+      .y = (int16_t)(-cos_lookup(hour_angle) * (int32_t)hour_hand_length / TRIG_MAX_RATIO) +
+           center.y};
 
   // Draw hands with positive length only
   if (clock_radius > MINUTE_HAND_MARGIN) {
@@ -123,7 +121,7 @@ static void prv_window_load(Window *window) {
   layer_set_update_proc(&data->canvas_layer, prv_canvas_layer_update_proc);
   layer_add_child(window_layer, &data->canvas_layer);
 
-  AppFocusHandlers focus_handlers = { .did_focus = prv_did_focus_handler };
+  AppFocusHandlers focus_handlers = {.did_focus = prv_did_focus_handler};
   app_focus_service_subscribe_handlers(focus_handlers);
 }
 
@@ -132,9 +130,7 @@ static void prv_init() {
   app_state_set_user_data(data);
 
   window_init(&data->window, WINDOW_NAME("TicToc"));
-  window_set_window_handlers(&data->window, &(WindowHandlers) {
-    .load = prv_window_load
-  });
+  window_set_window_handlers(&data->window, &(WindowHandlers){.load = prv_window_load});
   window_set_user_data(&data->window, data);
   app_window_stack_push(&data->window, true);
 

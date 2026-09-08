@@ -16,13 +16,11 @@ static uint64_t prv_get_curr_system_time_ms(void) {
 
 void interval_timer_init(IntervalTimer *timer, uint32_t min_expected_ms, uint32_t max_expected_ms,
                          uint32_t weighting_factor_inverted) {
-  PBL_ASSERTN(weighting_factor_inverted != 0); // Divide by zero is not awesome
+  PBL_ASSERTN(weighting_factor_inverted != 0);  // Divide by zero is not awesome
 
-  *timer = (IntervalTimer) {
-    .min_expected_ms = min_expected_ms,
-    .max_expected_ms = max_expected_ms,
-    .weighting_factor_inverted = weighting_factor_inverted
-  };
+  *timer = (IntervalTimer){.min_expected_ms = min_expected_ms,
+                           .max_expected_ms = max_expected_ms,
+                           .weighting_factor_inverted = weighting_factor_inverted};
 }
 
 //! Record a sample that marks the start/end of an interval.
@@ -40,9 +38,7 @@ void interval_timer_take_sample(IntervalTimer *timer) {
       const int64_t last_interval = current_time - timer->last_sample_timestamp_ms;
 
       // Make sure this interval is valid
-      if (last_interval >= timer->min_expected_ms &&
-          last_interval <= timer->max_expected_ms) {
-
+      if (last_interval >= timer->min_expected_ms && last_interval <= timer->max_expected_ms) {
         // It's valid! Let's roll it into our moving average
 
         // This is an exponential moving average.
@@ -55,8 +51,8 @@ void interval_timer_take_sample(IntervalTimer *timer) {
           // Initialize the average to the first sample we have
           timer->average_ms = last_interval;
         } else {
-          timer->average_ms = timer->average_ms +
-              ((last_interval - timer->average_ms) / timer->weighting_factor_inverted);
+          timer->average_ms = timer->average_ms + ((last_interval - timer->average_ms) /
+                                                   timer->weighting_factor_inverted);
         }
 
         timer->num_samples++;

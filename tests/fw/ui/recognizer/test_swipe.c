@@ -43,9 +43,9 @@ void test_swipe__cleanup(void) {}
 // Helpers
 static void prv_dispatch(Recognizer *r, TouchEventType type, int16_t x, int16_t y) {
   const TouchEvent e = {
-    .type = type,
-    .x = x,
-    .y = y,
+      .type = type,
+      .x = x,
+      .y = y,
   };
   recognizer_handle_touch_event(r, &e);
 }

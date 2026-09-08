@@ -4,7 +4,6 @@
 #include "fake_events.h"
 #include "kernel/pbl_malloc.h"
 
-
 static PebbleEvent s_last_pebble_event;
 static uint32_t s_fake_event_count = 0;
 static FakeEventCallback s_fake_event_cb = NULL;
@@ -18,12 +17,12 @@ WEAK void **fake_event_get_buffer(PebbleEvent *event) {
       break;
 
     default:
-      break; // Nothing to do!
+      break;  // Nothing to do!
   }
   return NULL;
 }
 
-void event_put(PebbleEvent* event) {
+void event_put(PebbleEvent *event) {
   fake_event_clear_last();
   s_last_pebble_event = *event;
   ++s_fake_event_count;
@@ -32,25 +31,18 @@ void event_put(PebbleEvent* event) {
   }
 }
 
-bool event_put_isr(PebbleEvent* event) {
-  return false;
-}
+bool event_put_isr(PebbleEvent *event) { return false; }
 
-struct pbl_msgq *event_kernel_to_kernel_event_queue(void) {
-  return NULL;
-}
+struct pbl_msgq *event_kernel_to_kernel_event_queue(void) { return NULL; }
 
-void event_queue_cleanup_and_reset(struct pbl_msgq *queue) {
-}
+void event_queue_cleanup_and_reset(struct pbl_msgq *queue) {}
 
 void fake_event_init(void) {
   fake_event_reset_count();
   fake_event_clear_last();
 }
 
-PebbleEvent fake_event_get_last(void) {
-  return s_last_pebble_event;
-}
+PebbleEvent fake_event_get_last(void) { return s_last_pebble_event; }
 
 void fake_event_clear_last(void) {
   void **buf = fake_event_get_buffer(&s_last_pebble_event);
@@ -59,17 +51,11 @@ void fake_event_clear_last(void) {
     *buf = NULL;
   }
 
-  s_last_pebble_event = (PebbleEvent) {};
+  s_last_pebble_event = (PebbleEvent){};
 }
 
-void fake_event_reset_count(void) {
-  s_fake_event_count = 0;
-}
+void fake_event_reset_count(void) { s_fake_event_count = 0; }
 
-uint32_t fake_event_get_count(void) {
-  return s_fake_event_count;
-}
+uint32_t fake_event_get_count(void) { return s_fake_event_count; }
 
-void fake_event_set_callback(FakeEventCallback cb) {
-  s_fake_event_cb = cb;
-}
+void fake_event_set_callback(FakeEventCallback cb) { s_fake_event_cb = cb; }

@@ -78,11 +78,11 @@ static uint32_t s_backlight_timeout_ms = DEFAULT_BACKLIGHT_TIMEOUT_MS;
 #define BACKLIGHT_INTENSITY_MEDIUM 25U
 #define BACKLIGHT_INTENSITY_HIGH 50U
 #define BACKLIGHT_INTENSITY_DEFAULT BACKLIGHT_INTENSITY_MEDIUM
-static uint8_t s_backlight_intensity; // default set in shell_prefs_init()
+static uint8_t s_backlight_intensity;  // default set in shell_prefs_init()
 
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
 #define PREF_KEY_BACKLIGHT_COLOR "lightColor"
-static uint32_t s_backlight_color; // default pulled from BOARD_CONFIG in shell_prefs_init()
+static uint32_t s_backlight_color;  // default pulled from BOARD_CONFIG in shell_prefs_init()
 #endif
 
 #define PREF_KEY_BACKLIGHT_MOTION "lightMotion"
@@ -98,7 +98,7 @@ static bool s_touch_enabled = true;
 static bool s_touch_navigation_menu_enabled = true;
 
 #define PREF_KEY_MOTION_SENSITIVITY "motionSensitivity"
-static uint8_t s_motion_sensitivity = 55; // Default to Medium
+static uint8_t s_motion_sensitivity = 55;  // Default to Medium
 
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
 #define PREF_KEY_BACKLIGHT_DYNAMIC_MODE "lightDynamicMode"
@@ -127,45 +127,49 @@ typedef struct BacklightPresetSettings {
 } BacklightPresetSettings;
 
 static const BacklightPresetSettings s_backlight_preset_settings[] = {
-  [BacklightPreset_MaxBrightness] = {
-    .ambient_sensor_enabled = true,
+    [BacklightPreset_MaxBrightness] =
+        {
+            .ambient_sensor_enabled = true,
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
-    .dynamic_mode = BacklightDynamicMode_Off,
+            .dynamic_mode = BacklightDynamicMode_Off,
 #endif
-    .intensity = BACKLIGHT_INTENSITY_MAX,
-    .timeout_ms = 5000,
-    .motion_enabled = true,
-    .touch_wake = BacklightTouchWake_DoubleTap,
-  },
-  [BacklightPreset_Standard] = {
-    .ambient_sensor_enabled = true,
+            .intensity = BACKLIGHT_INTENSITY_MAX,
+            .timeout_ms = 5000,
+            .motion_enabled = true,
+            .touch_wake = BacklightTouchWake_DoubleTap,
+        },
+    [BacklightPreset_Standard] =
+        {
+            .ambient_sensor_enabled = true,
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
-    .dynamic_mode = BacklightDynamicMode_Standard,
+            .dynamic_mode = BacklightDynamicMode_Standard,
 #endif
-    .intensity = BACKLIGHT_INTENSITY_HIGH,
-    .timeout_ms = DEFAULT_BACKLIGHT_TIMEOUT_MS,
-    .motion_enabled = true,
-    .touch_wake = BacklightTouchWake_DoubleTap,
-  },
-  [BacklightPreset_BatterySaver] = {
-    .ambient_sensor_enabled = true,
+            .intensity = BACKLIGHT_INTENSITY_HIGH,
+            .timeout_ms = DEFAULT_BACKLIGHT_TIMEOUT_MS,
+            .motion_enabled = true,
+            .touch_wake = BacklightTouchWake_DoubleTap,
+        },
+    [BacklightPreset_BatterySaver] =
+        {
+            .ambient_sensor_enabled = true,
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
-    .dynamic_mode = BacklightDynamicMode_Dim,
+            .dynamic_mode = BacklightDynamicMode_Dim,
 #endif
-    .intensity = BACKLIGHT_INTENSITY_MEDIUM,
-    .timeout_ms = DEFAULT_BACKLIGHT_TIMEOUT_MS,
-    .motion_enabled = true,
-    .touch_wake = BacklightTouchWake_DoubleTap,
-  },
+            .intensity = BACKLIGHT_INTENSITY_MEDIUM,
+            .timeout_ms = DEFAULT_BACKLIGHT_TIMEOUT_MS,
+            .motion_enabled = true,
+            .touch_wake = BacklightTouchWake_DoubleTap,
+        },
 };
 
 #ifdef CONFIG_ORIENTATION_MANAGER
 #define PREF_KEY_DISPLAY_ORIENTATION_LEFT_HANDED "displayOrientationLeftHanded"
 static bool s_display_orientation_left = false;
-#endif 
+#endif
 
 #define PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD "lightAmbientThreshold"
-static uint32_t s_backlight_ambient_threshold = 0; // default set from board config in shell_prefs_init()
+static uint32_t s_backlight_ambient_threshold =
+    0;  // default set from board config in shell_prefs_init()
 
 #define PREF_KEY_STATIONARY "stationaryMode"
 static bool s_stationary_mode_enabled = true;
@@ -198,23 +202,23 @@ typedef struct QuickLaunchPreference {
 #define PREF_KEY_QUICK_LAUNCH_BACK "qlBack"
 
 static QuickLaunchPreference s_quick_launch_up = {
-  .enabled = false,
-  .uuid = UUID_INVALID_INIT,
+    .enabled = false,
+    .uuid = UUID_INVALID_INIT,
 };
 
 static QuickLaunchPreference s_quick_launch_down = {
-  .enabled = false,
-  .uuid = UUID_INVALID_INIT,
+    .enabled = false,
+    .uuid = UUID_INVALID_INIT,
 };
 
 static QuickLaunchPreference s_quick_launch_select = {
-  .enabled = false,
-  .uuid = UUID_INVALID_INIT,
+    .enabled = false,
+    .uuid = UUID_INVALID_INIT,
 };
 
 static QuickLaunchPreference s_quick_launch_back = {
-  .enabled = true,
-  .uuid = QUIET_TIME_TOGGLE_UUID,
+    .enabled = true,
+    .uuid = QUIET_TIME_TOGGLE_UUID,
 };
 
 #define PREF_KEY_QUICK_LAUNCH_SINGLE_CLICK_UP "qlSingleClickUp"
@@ -223,23 +227,23 @@ static QuickLaunchPreference s_quick_launch_back = {
 #define PREF_KEY_QUICK_LAUNCH_COMBO_UP_DOWN "qlComboUpDown"
 
 static QuickLaunchPreference s_quick_launch_single_click_up = {
-  .enabled = true,
-  .uuid = UUID_HEALTH_DATA_SOURCE,
+    .enabled = true,
+    .uuid = UUID_HEALTH_DATA_SOURCE,
 };
 
 static QuickLaunchPreference s_quick_launch_single_click_down = {
-  .enabled = true,
-  .uuid = TIMELINE_UUID_INIT,
+    .enabled = true,
+    .uuid = TIMELINE_UUID_INIT,
 };
 
 static QuickLaunchPreference s_quick_launch_combo_back_up = {
-  .enabled = false,
-  .uuid = UUID_INVALID_INIT,
+    .enabled = false,
+    .uuid = UUID_INVALID_INIT,
 };
 
 static QuickLaunchPreference s_quick_launch_combo_up_down = {
-  .enabled = false,
-  .uuid = UUID_INVALID_INIT,
+    .enabled = false,
+    .uuid = UUID_INVALID_INIT,
 };
 
 #define PREF_KEY_QUICK_LAUNCH_SETUP_OPENED "qlSetupOpened"
@@ -306,7 +310,7 @@ static bool s_settings_dbs_compacted_v1 = false;
 static bool s_als_threshold_migrated_v1 = false;
 static bool s_als_threshold_migrated_v2 = false;
 #ifdef CONFIG_APP_SCALING
-static uint8_t s_legacy_app_render_mode = 1; // Default to scaled mode
+static uint8_t s_legacy_app_render_mode = 1;  // Default to scaled mode
 #endif
 
 #ifdef CONFIG_THEMING
@@ -347,8 +351,8 @@ static bool prv_set_s_clock_24h(bool *new_value) {
     s_clock_24h = *new_value;
     // Fire a tick event so watchfaces re-render with the new time format
     PebbleEvent e = {
-      .type = PEBBLE_TICK_EVENT,
-      .clock_tick.tick_time = rtc_get_time(),
+        .type = PEBBLE_TICK_EVENT,
+        .clock_tick.tick_time = rtc_get_time(),
     };
     event_put(&e);
   } else {
@@ -515,17 +519,17 @@ static bool prv_set_s_backlight_preset(uint8_t *preset) {
 static bool prv_set_s_motion_sensitivity(uint8_t *sensitivity) {
   // Clamp sensitivity to 0-100 range
   if (*sensitivity > 100) {
-    s_motion_sensitivity = 100; // Reset to default if invalid
+    s_motion_sensitivity = 100;  // Reset to default if invalid
     return false;
   }
   s_motion_sensitivity = *sensitivity;
-  
-  // Update accelerometer sensitivity in accel_manager
-  // This applies the setting to the hardware
-  #ifdef CONFIG_ACCEL_SENSITIVITY
+
+// Update accelerometer sensitivity in accel_manager
+// This applies the setting to the hardware
+#ifdef CONFIG_ACCEL_SENSITIVITY
   accel_manager_update_sensitivity(*sensitivity);
-  #endif
-  
+#endif
+
   return true;
 }
 
@@ -670,8 +674,8 @@ static bool prv_set_s_activity_preferences(ActivitySettings *new_settings) {
   }
 
   if (!(new_settings->gender == ActivityGenderMale ||
-       new_settings->gender == ActivityGenderFemale ||
-       new_settings->gender == ActivityGenderOther)) {
+        new_settings->gender == ActivityGenderFemale ||
+        new_settings->gender == ActivityGenderOther)) {
     new_settings->gender = ACTIVITY_DEFAULT_GENDER;
     invalid_data = true;
   }
@@ -748,13 +752,12 @@ static bool prv_set_s_activity_hrm_preferences(ActivityHRMSettings *new_settings
 
 #ifdef CONFIG_HRM
   hrm_manager_handle_prefs_changed();
-#endif // CONFIG_HRM
+#endif  // CONFIG_HRM
 #if BLE_HRM_SERVICE
   ble_hrm_handle_activity_prefs_heart_rate_is_enabled(new_settings->enabled);
-#endif // BLE_HRM_SERVICE
+#endif  // BLE_HRM_SERVICE
   return true;
 }
-
 
 static uint8_t prv_set_s_timeline_settings_opened(uint8_t *version) {
   s_timeline_settings_opened = *version;
@@ -840,16 +843,16 @@ static bool prv_is_valid_theme_color(GColor color) {
   }
   // Valid colors from settings_themes.h
   static const uint8_t valid_colors[] = {
-    GColorSunsetOrangeARGB8,        // Red
-    GColorChromeYellowARGB8,        // Orange
-    GColorYellowARGB8,              // Yellow
-    GColorGreenARGB8,               // Green
-    GColorCyanARGB8,                // Cyan
-    GColorVividCeruleanARGB8,       // Light Blue
-    GColorVeryLightBlueARGB8,       // Royal Blue
-    GColorLavenderIndigoARGB8,      // Purple
-    GColorMagentaARGB8,             // Magenta
-    GColorBrilliantRoseARGB8,       // Pink
+      GColorSunsetOrangeARGB8,    // Red
+      GColorChromeYellowARGB8,    // Orange
+      GColorYellowARGB8,          // Yellow
+      GColorGreenARGB8,           // Green
+      GColorCyanARGB8,            // Cyan
+      GColorVividCeruleanARGB8,   // Light Blue
+      GColorVeryLightBlueARGB8,   // Royal Blue
+      GColorLavenderIndigoARGB8,  // Purple
+      GColorMagentaARGB8,         // Magenta
+      GColorBrilliantRoseARGB8,   // Pink
   };
   for (size_t i = 0; i < ARRAY_LENGTH(valid_colors); i++) {
     if (color.argb == valid_colors[i]) {
@@ -861,8 +864,7 @@ static bool prv_is_valid_theme_color(GColor color) {
 
 static bool prv_set_s_theme_highlight_color(GColor *color) {
   if (!prv_is_valid_theme_color(*color)) {
-    PBL_LOG_WRN("Invalid menu highlight color 0x%02x, using default",
-            color->argb);
+    PBL_LOG_WRN("Invalid menu highlight color 0x%02x, using default", color->argb);
     s_theme_highlight_color = GColorVividCerulean;
     return false;  // Reject invalid value
   }
@@ -899,7 +901,7 @@ static bool prv_set_s_music_show_album_art(bool *enabled) {
   s_music_show_album_art = *enabled;
   return true;
 }
-  
+
 // ------------------------------------------------------------------------------------
 // Table of all prefs
 typedef bool (*PrefSetHandler)(const void *value, size_t val_len);
@@ -913,15 +915,15 @@ typedef struct {
 // The PREFS_DECLARE_HANDLER creates a springboard function with a generic signature
 // (of type PrefSetHandler) which simply calls into the specialized function prv_set_<var_name>
 // after dereferencing the void* argument using the right type for that pref
-#define PREFS_MACRO(name, var) \
-  static bool prv_set_ ## var ## _cb(const void *value, size_t val_len) { \
-    return prv_set_ ## var ((__typeof__(var) *)value); \
+#define PREFS_MACRO(name, var)                                        \
+  static bool prv_set_##var##_cb(const void *value, size_t val_len) { \
+    return prv_set_##var((__typeof__(var) *)value);                   \
   }
 #include "prefs_values.h.inc"
 #undef PREFS_MACRO
 
 // Create a time containing the key name and global variable name for each pref
-#define PREFS_MACRO(key, var) {key, &var, sizeof(var), prv_set_ ## var ## _cb},
+#define PREFS_MACRO(key, var) {key, &var, sizeof(var), prv_set_##var##_cb},
 static const PrefsTableEntry s_prefs_table[] = {
 #include "prefs_values.h.inc"
 };
@@ -935,11 +937,11 @@ static void prv_convert_deprecated_backlight_behaviour_key(SettingsFile *file) {
     bool temp;
     BacklightBehaviour backlight_behaviour = BacklightBehaviour_Auto;
     settings_file_get(file, PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED,
-                      sizeof(PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED),
-                      &backlight_behaviour, sizeof(backlight_behaviour));
+                      sizeof(PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED), &backlight_behaviour,
+                      sizeof(backlight_behaviour));
     temp = (backlight_behaviour != BacklightBehaviour_Off);
-    settings_file_set(file, PREF_KEY_BACKLIGHT_ENABLED,
-                      sizeof(PREF_KEY_BACKLIGHT_ENABLED), &temp, sizeof(temp));
+    settings_file_set(file, PREF_KEY_BACKLIGHT_ENABLED, sizeof(PREF_KEY_BACKLIGHT_ENABLED), &temp,
+                      sizeof(temp));
     temp = (backlight_behaviour != BacklightBehaviour_On);
     settings_file_set(file, PREF_KEY_BACKLIGHT_AMBIENT_SENSOR_ENABLED,
                       sizeof(PREF_KEY_BACKLIGHT_AMBIENT_SENSOR_ENABLED), &temp, sizeof(temp));
@@ -956,8 +958,8 @@ static void prv_convert_deprecated_dynamic_intensity_key(SettingsFile *file) {
                            sizeof(PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED))) {
     bool enabled = true;
     settings_file_get(file, PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED,
-                      sizeof(PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED),
-                      &enabled, sizeof(enabled));
+                      sizeof(PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED), &enabled,
+                      sizeof(enabled));
     const uint8_t mode = enabled ? BacklightDynamicMode_Standard : BacklightDynamicMode_Off;
     settings_file_set(file, PREF_KEY_BACKLIGHT_DYNAMIC_MODE,
                       sizeof(PREF_KEY_BACKLIGHT_DYNAMIC_MODE), &mode, sizeof(mode));
@@ -967,13 +969,12 @@ static void prv_convert_deprecated_dynamic_intensity_key(SettingsFile *file) {
 }
 #endif
 
-
 // ------------------------------------------------------------------------------------
-static void prv_pref_set(const char* key, const void *value, size_t val_len);
+static void prv_pref_set(const char *key, const void *value, size_t val_len);
 
 void shell_prefs_init(void) {
 #ifdef CONFIG_QEMU
-  s_backlight_intensity = BACKLIGHT_INTENSITY_MAX; // Blinding
+  s_backlight_intensity = BACKLIGHT_INTENSITY_MAX;  // Blinding
 #else
   // Match the Standard preset so fresh devices report Mode: Standard.
   s_backlight_intensity = s_backlight_preset_settings[BacklightPreset_Standard].intensity;
@@ -1024,7 +1025,7 @@ void shell_prefs_init(void) {
   }
 
   settings_file_close(&file);
-  
+
   if (!prv_backlight_intensity_is_valid(s_backlight_intensity)) {
     s_backlight_intensity = BACKLIGHT_INTENSITY_DEFAULT;
   }
@@ -1073,7 +1074,7 @@ void shell_prefs_init(void) {
 
   // Update the ambient light driver with the loaded threshold value
   ambient_light_set_dark_threshold(s_backlight_ambient_threshold);
-  
+
   // Initialize prefs sync (must be after prefs are loaded)
   prefs_sync_init();
 
@@ -1093,7 +1094,6 @@ void shell_prefs_init(void) {
 #endif
 }
 
-
 // ------------------------------------------------------------------------------------
 // Find the PrefsTableEntry for the given key
 static const PrefsTableEntry *prv_prefs_entry(const uint8_t *key, size_t key_len) {
@@ -1108,13 +1108,12 @@ static const PrefsTableEntry *prv_prefs_entry(const uint8_t *key, size_t key_len
   return NULL;
 }
 
-
 // ------------------------------------------------------------------------------------
 // Set the backing store for a pref
 static bool prv_set_pref_backing(const PrefsTableEntry *entry, const void *value, int value_len) {
   if (value_len != entry->value_len) {
-    PBL_LOG_WRN("Attempt to set %s using invalid value_len of %"PRIu32"",
-            entry->key, (uint32_t)value_len);
+    PBL_LOG_WRN("Attempt to set %s using invalid value_len of %" PRIu32 "", entry->key,
+                (uint32_t)value_len);
     return false;
   }
 
@@ -1126,7 +1125,7 @@ static bool prv_set_pref_backing(const PrefsTableEntry *entry, const void *value
       // Keys in the backing store include the null terminator, so we add 1 to key_len
       rv = settings_file_set(&file, entry->key, strlen(entry->key) + 1, value, value_len);
       if (rv != S_SUCCESS) {
-        PBL_LOG_WRN("Failed to set pref '%s' (%"PRIi32")", entry->key, (int32_t)rv);
+        PBL_LOG_WRN("Failed to set pref '%s' (%" PRIi32 ")", entry->key, (int32_t)rv);
       }
       settings_file_close(&file);
     }
@@ -1135,19 +1134,19 @@ static bool prv_set_pref_backing(const PrefsTableEntry *entry, const void *value
   return (rv == S_SUCCESS);
 }
 
-
 // ------------------------------------------------------------------------------------
 // Convenience function used to update the state AND set the backing for a pref. This is
 // used by the functions below that are called by the firmware to change prefs (i.e.
 // shell_prefs_set.*, backlight_set.*, etc.).
-static void prv_pref_set(const char* key, const void *value, size_t val_len) {
+static void prv_pref_set(const char *key, const void *value, size_t val_len) {
   // Find the entry for this key
   const PrefsTableEntry *entry = prv_prefs_entry((const uint8_t *)key, strlen(key));
 
   // validate the key and value length
   PBL_ASSERT(entry != NULL, "Key %s not found", key);
-  PBL_ASSERT(val_len == entry->value_len, "Attempt to set %s using invalid value_len of %"PRIu32"",
-             entry->key, (uint32_t)val_len);
+  PBL_ASSERT(val_len == entry->value_len,
+             "Attempt to set %s using invalid value_len of %" PRIu32 "", entry->key,
+             (uint32_t)val_len);
 
   // Call the update handler
   bool success = entry->handler(value, val_len);
@@ -1159,11 +1158,10 @@ static void prv_pref_set(const char* key, const void *value, size_t val_len) {
   }
 }
 
-
 // ------------------------------------------------------------------------------------
 // Exported function used by blob_db API to set the backing store for a specific key
 bool prefs_private_write_backing(const uint8_t *key, size_t key_len, const void *value,
-                               int value_len) {
+                                 int value_len) {
   const PrefsTableEntry *entry = prv_prefs_entry(key, key_len);
   if (!entry) {
     return false;
@@ -1171,7 +1169,6 @@ bool prefs_private_write_backing(const uint8_t *key, size_t key_len, const void 
 
   return prv_set_pref_backing(entry, value, value_len);
 }
-
 
 // ------------------------------------------------------------------------------------
 // Exported function used by blob_db API to get the length of a value in our backing store
@@ -1183,7 +1180,6 @@ int prefs_private_get_backing_len(const uint8_t *key, size_t key_len) {
   return entry->value_len;
 }
 
-
 // ------------------------------------------------------------------------------------
 // Exported function used by blob_db API to read our backing store
 bool prefs_private_read_backing(const uint8_t *key, size_t key_len, void *value, int value_len) {
@@ -1193,8 +1189,8 @@ bool prefs_private_read_backing(const uint8_t *key, size_t key_len, void *value,
   }
 
   if (value_len != entry->value_len) {
-    PBL_LOG_WRN("Attempt to read %s using invalid value_len of %"PRIu32"",
-            entry->key, (uint32_t)value_len);
+    PBL_LOG_WRN("Attempt to read %s using invalid value_len of %" PRIu32 "", entry->key,
+                (uint32_t)value_len);
     return false;
   }
 
@@ -1206,8 +1202,8 @@ bool prefs_private_read_backing(const uint8_t *key, size_t key_len, void *value,
       // Keys in the backing store include the null terminator
       // Use strlen(entry->key) + 1 to match how it was written, since key_len from
       // BlobDB may or may not include the null terminator
-      success = (settings_file_get(&file, entry->key, strlen(entry->key) + 1, value, value_len)
-                                   == S_SUCCESS);
+      success = (settings_file_get(&file, entry->key, strlen(entry->key) + 1, value, value_len) ==
+                 S_SUCCESS);
       settings_file_close(&file);
     }
   }
@@ -1215,15 +1211,9 @@ bool prefs_private_read_backing(const uint8_t *key, size_t key_len, void *value,
   return success;
 }
 
+void prefs_private_lock(void) { pbl_mutex_lock(&s_mutex, PBL_FOREVER); }
 
-void prefs_private_lock(void) {
-  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
-}
-
-void prefs_private_unlock(void) {
-  pbl_mutex_unlock(&s_mutex);
-}
-
+void prefs_private_unlock(void) { pbl_mutex_unlock(&s_mutex); }
 
 // ------------------------------------------------------------------------------------
 // Called from KernelMain when we get a blob DB event. We take this opportunity to update the state
@@ -1239,8 +1229,8 @@ void prefs_private_handle_blob_db_event(PebbleBlobDBEvent *event) {
   }
 
   // Read in the updated value from the backing store
-  bool success = prefs_private_read_backing(event->key, event->key_len, entry->value,
-                                            entry->value_len);
+  bool success =
+      prefs_private_read_backing(event->key, event->key_len, entry->value, entry->value_len);
   if (success) {
     // Call the state update handler in case this pref needs to take other action besides
     // just updating the global
@@ -1252,11 +1242,12 @@ void prefs_private_handle_blob_db_event(PebbleBlobDBEvent *event) {
 
     // Notify UI that a preference changed so it can refresh
     PebbleEvent pref_event = {
-      .type = PEBBLE_PREF_CHANGE_EVENT,
-      .pref_change = {
-        .key = entry->key,
-        .key_len = strlen(entry->key) + 1,
-      },
+        .type = PEBBLE_PREF_CHANGE_EVENT,
+        .pref_change =
+            {
+                .key = entry->key,
+                .key_len = strlen(entry->key) + 1,
+            },
     };
     event_put(&pref_event);
   }
@@ -1269,13 +1260,9 @@ void prefs_private_handle_blob_db_event(PebbleBlobDBEvent *event) {
 //   1.) It validates that the stored global matches the type of the passed in argument
 //   2.) It insures that the flow will also work correctly for setting a pref from the
 //        mobile side using a blob_db insert operation.
-bool shell_prefs_get_clock_24h_style(void) {
-  return s_clock_24h;
-}
+bool shell_prefs_get_clock_24h_style(void) { return s_clock_24h; }
 
-UnitsDistance shell_prefs_get_units_distance(void) {
-  return s_units_distance;
-}
+UnitsDistance shell_prefs_get_units_distance(void) { return s_units_distance; }
 
 void shell_prefs_set_units_distance(UnitsDistance new_unit) {
   uint8_t uint_new_unit = new_unit;
@@ -1285,7 +1272,7 @@ void shell_prefs_set_units_distance(UnitsDistance new_unit) {
 UnitsWind shell_prefs_get_units_wind(void) {
   if (s_units_wind == UnitsWind_FromDistance) {
     return (shell_prefs_get_units_distance() == UnitsDistance_Miles) ? UnitsWind_Mph
-                                                                    : UnitsWind_KmH;
+                                                                     : UnitsWind_KmH;
   }
   return s_units_wind;
 }
@@ -1299,17 +1286,13 @@ void shell_prefs_set_clock_24h_style(bool is24h) {
   prv_pref_set(PREF_KEY_CLOCK_24H, &is24h, sizeof(is24h));
 }
 
-bool shell_prefs_is_timezone_source_manual(void) {
-  return s_clock_timezone_source_is_manual;
-}
+bool shell_prefs_is_timezone_source_manual(void) { return s_clock_timezone_source_is_manual; }
 
 void shell_prefs_set_timezone_source_manual(bool manual) {
   prv_pref_set(PREF_KEY_CLOCK_TIMEZONE_SOURCE_IS_MANUAL, &manual, sizeof(manual));
 }
 
-bool shell_prefs_is_time_source_manual(void) {
-  return s_clock_time_source_is_manual;
-}
+bool shell_prefs_is_time_source_manual(void) { return s_clock_time_source_is_manual; }
 
 void shell_prefs_set_time_source_manual(bool manual) {
   prv_pref_set(PREF_KEY_CLOCK_TIME_SOURCE_IS_MANUAL, &manual, sizeof(manual));
@@ -1319,9 +1302,7 @@ void shell_prefs_set_automatic_timezone_id(int16_t timezone_id) {
   prv_pref_set(PREF_KEY_CLOCK_PHONE_TIMEZONE_ID, &timezone_id, sizeof(timezone_id));
 }
 
-int16_t shell_prefs_get_automatic_timezone_id(void) {
-  return s_clock_phone_timezone_id;
-}
+int16_t shell_prefs_get_automatic_timezone_id(void) { return s_clock_phone_timezone_id; }
 
 // Emulate the old BacklightBehaviour type for analytics.
 // This is a deprecated method and should not be called by new code.
@@ -1337,33 +1318,25 @@ BacklightBehaviour backlight_get_behaviour(void) {
   }
 }
 
-bool backlight_is_enabled(void) {
-  return s_backlight_enabled;
-}
+bool backlight_is_enabled(void) { return s_backlight_enabled; }
 
 void backlight_set_enabled(bool enabled) {
   prv_pref_set(PREF_KEY_BACKLIGHT_ENABLED, &enabled, sizeof(enabled));
 }
 
-bool backlight_is_ambient_sensor_enabled(void) {
-  return s_backlight_ambient_sensor_enabled;
-}
+bool backlight_is_ambient_sensor_enabled(void) { return s_backlight_ambient_sensor_enabled; }
 
 void backlight_set_ambient_sensor_enabled(bool enabled) {
   prv_pref_set(PREF_KEY_BACKLIGHT_AMBIENT_SENSOR_ENABLED, &enabled, sizeof(enabled));
 }
 
-uint32_t backlight_get_timeout_ms(void) {
-  return s_backlight_timeout_ms;
-}
+uint32_t backlight_get_timeout_ms(void) { return s_backlight_timeout_ms; }
 
 void backlight_set_timeout_ms(uint32_t timeout_ms) {
   prv_pref_set(PREF_KEY_BACKLIGHT_TIMEOUT_MS, &timeout_ms, sizeof(timeout_ms));
 }
 
-uint8_t backlight_get_intensity(void) {
-  return s_backlight_intensity;
-}
+uint8_t backlight_get_intensity(void) { return s_backlight_intensity; }
 
 void backlight_set_intensity(uint8_t percent_intensity) {
   PBL_ASSERTN(percent_intensity > 0 && percent_intensity <= 100);
@@ -1371,9 +1344,7 @@ void backlight_set_intensity(uint8_t percent_intensity) {
 }
 
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
-uint32_t backlight_get_default_color(void) {
-  return s_backlight_color;
-}
+uint32_t backlight_get_default_color(void) { return s_backlight_color; }
 
 void backlight_set_default_color(uint32_t rgb_color) {
   // Clamp to 24-bit packed RGB; upper byte is unused.
@@ -1382,9 +1353,7 @@ void backlight_set_default_color(uint32_t rgb_color) {
 }
 #endif
 
-bool backlight_is_motion_enabled(void) {
-  return s_backlight_motion_enabled;
-}
+bool backlight_is_motion_enabled(void) { return s_backlight_motion_enabled; }
 
 void backlight_set_motion_enabled(bool enable) {
   prv_pref_set(PREF_KEY_BACKLIGHT_MOTION, &enable, sizeof(enable));
@@ -1399,17 +1368,13 @@ void backlight_set_touch_wake(BacklightTouchWake wake) {
   prv_pref_set(PREF_KEY_BACKLIGHT_TOUCH, &value, sizeof(value));
 }
 
-bool touch_is_globally_enabled(void) {
-  return s_touch_enabled;
-}
+bool touch_is_globally_enabled(void) { return s_touch_enabled; }
 
 void touch_set_globally_enabled(bool enable) {
   prv_pref_set(PREF_KEY_TOUCH_ENABLED, &enable, sizeof(enable));
 }
 
-bool touch_navigation_menu_is_enabled(void) {
-  return s_touch_navigation_menu_enabled;
-}
+bool touch_navigation_menu_is_enabled(void) { return s_touch_navigation_menu_enabled; }
 
 void touch_set_navigation_menu_enabled(bool enable) {
   prv_pref_set(PREF_KEY_TOUCH_NAVIGATION_MENU, &enable, sizeof(enable));
@@ -1481,9 +1446,7 @@ void backlight_set_preset(BacklightPreset preset) {
   backlight_set_touch_wake(settings->touch_wake);
 }
 
-uint8_t shell_prefs_get_motion_sensitivity(void) {
-  return s_motion_sensitivity;
-}
+uint8_t shell_prefs_get_motion_sensitivity(void) { return s_motion_sensitivity; }
 
 void shell_prefs_set_motion_sensitivity(uint8_t sensitivity) {
   // Clamp to valid range
@@ -1493,9 +1456,7 @@ void shell_prefs_set_motion_sensitivity(uint8_t sensitivity) {
   prv_pref_set(PREF_KEY_MOTION_SENSITIVITY, &sensitivity, sizeof(sensitivity));
 }
 
-uint32_t backlight_get_ambient_threshold(void) {
-  return s_backlight_ambient_threshold;
-}
+uint32_t backlight_get_ambient_threshold(void) { return s_backlight_ambient_threshold; }
 
 void backlight_set_ambient_threshold(uint32_t threshold) {
   // Validate threshold is within acceptable range
@@ -1511,18 +1472,14 @@ void backlight_set_ambient_threshold(uint32_t threshold) {
 }
 
 #ifdef CONFIG_ORIENTATION_MANAGER
-bool display_orientation_is_left(void) {
-  return s_display_orientation_left;
-}
+bool display_orientation_is_left(void) { return s_display_orientation_left; }
 
 void display_orientation_set_left(bool left) {
   prv_pref_set(PREF_KEY_DISPLAY_ORIENTATION_LEFT_HANDED, &left, sizeof(left));
 }
 #endif
 
-bool shell_prefs_get_stationary_enabled(void) {
-  return s_stationary_mode_enabled;
-}
+bool shell_prefs_get_stationary_enabled(void) { return s_stationary_mode_enabled; }
 
 void shell_prefs_set_stationary_enabled(bool enabled) {
   prv_pref_set(PREF_KEY_STATIONARY, &enabled, sizeof(enabled));
@@ -1577,8 +1534,8 @@ AppInstallId quick_launch_get_app(ButtonId button) {
 }
 
 void quick_launch_set_app(ButtonId button, AppInstallId app_id) {
-  QuickLaunchPreference pref = (QuickLaunchPreference) {
-    .enabled = true,
+  QuickLaunchPreference pref = (QuickLaunchPreference){
+      .enabled = true,
   };
   app_install_get_uuid_for_install_id(app_id, &pref.uuid);
 
@@ -1640,22 +1597,20 @@ void quick_launch_set_quick_launch_setup_opened(uint8_t version) {
   }
 }
 
-uint8_t quick_launch_get_quick_launch_setup_opened(void) {
-  return s_quick_launch_setup_opened;
-}
+uint8_t quick_launch_get_quick_launch_setup_opened(void) { return s_quick_launch_setup_opened; }
 
 bool quick_launch_single_click_is_enabled(ButtonId button) {
-    switch (button) {
-      case BUTTON_ID_UP:
-        return s_quick_launch_single_click_up.enabled;
-      case BUTTON_ID_DOWN:
-        return s_quick_launch_single_click_down.enabled;
-      case BUTTON_ID_SELECT:
-      case BUTTON_ID_BACK:
-      case NUM_BUTTONS:
-        break;
-    }
-    return false;
+  switch (button) {
+    case BUTTON_ID_UP:
+      return s_quick_launch_single_click_up.enabled;
+    case BUTTON_ID_DOWN:
+      return s_quick_launch_single_click_down.enabled;
+    case BUTTON_ID_SELECT:
+    case BUTTON_ID_BACK:
+    case NUM_BUTTONS:
+      break;
+  }
+  return false;
 }
 
 AppInstallId quick_launch_single_click_get_app(ButtonId button) {
@@ -1668,15 +1623,15 @@ AppInstallId quick_launch_single_click_get_app(ButtonId button) {
       uuid = &s_quick_launch_single_click_down.uuid;
       break;
     default:
-      PBL_ASSERTN(0); // Should not reach here: invalid button id
+      PBL_ASSERTN(0);  // Should not reach here: invalid button id
       break;
   }
   return app_install_get_id_for_uuid(uuid);
 }
 
 void quick_launch_single_click_set_app(ButtonId button, AppInstallId app_id) {
-  QuickLaunchPreference pref = (QuickLaunchPreference) {
-    .enabled = true,
+  QuickLaunchPreference pref = (QuickLaunchPreference){
+      .enabled = true,
   };
   app_install_get_uuid_for_install_id(app_id, &pref.uuid);
 
@@ -1689,7 +1644,7 @@ void quick_launch_single_click_set_app(ButtonId button, AppInstallId app_id) {
       key = PREF_KEY_QUICK_LAUNCH_SINGLE_CLICK_DOWN;
       break;
     default:
-      PBL_ASSERTN(0); // Should not reach here: invalid button id
+      PBL_ASSERTN(0);  // Should not reach here: invalid button id
       break;
   }
   prv_pref_set(key, &pref, sizeof(pref));
@@ -1709,24 +1664,22 @@ void quick_launch_single_click_set_enabled(ButtonId button, bool enabled) {
       key = PREF_KEY_QUICK_LAUNCH_SINGLE_CLICK_DOWN;
       break;
     default:
-      PBL_ASSERTN(0); // Should not reach here: invalid button id
+      PBL_ASSERTN(0);  // Should not reach here: invalid button id
       break;
   }
   pref.enabled = enabled;
   prv_pref_set(key, &pref, sizeof(pref));
 }
 
-bool quick_launch_combo_back_up_is_enabled(void) {
-  return s_quick_launch_combo_back_up.enabled;
-}
+bool quick_launch_combo_back_up_is_enabled(void) { return s_quick_launch_combo_back_up.enabled; }
 
 AppInstallId quick_launch_combo_back_up_get_app(void) {
   return app_install_get_id_for_uuid(&s_quick_launch_combo_back_up.uuid);
 }
 
 void quick_launch_combo_back_up_set_app(AppInstallId app_id) {
-  QuickLaunchPreference pref = (QuickLaunchPreference) {
-    .enabled = true,
+  QuickLaunchPreference pref = (QuickLaunchPreference){
+      .enabled = true,
   };
   app_install_get_uuid_for_install_id(app_id, &pref.uuid);
   prv_pref_set(PREF_KEY_QUICK_LAUNCH_COMBO_BACK_UP, &pref, sizeof(pref));
@@ -1738,17 +1691,15 @@ void quick_launch_combo_back_up_set_enabled(bool enabled) {
   prv_pref_set(PREF_KEY_QUICK_LAUNCH_COMBO_BACK_UP, &pref, sizeof(pref));
 }
 
-bool quick_launch_combo_up_down_is_enabled(void) {
-  return s_quick_launch_combo_up_down.enabled;
-}
+bool quick_launch_combo_up_down_is_enabled(void) { return s_quick_launch_combo_up_down.enabled; }
 
 AppInstallId quick_launch_combo_up_down_get_app(void) {
   return app_install_get_id_for_uuid(&s_quick_launch_combo_up_down.uuid);
 }
 
 void quick_launch_combo_up_down_set_app(AppInstallId app_id) {
-  QuickLaunchPreference pref = (QuickLaunchPreference) {
-    .enabled = true,
+  QuickLaunchPreference pref = (QuickLaunchPreference){
+      .enabled = true,
   };
   app_install_get_uuid_for_install_id(app_id, &pref.uuid);
   prv_pref_set(PREF_KEY_QUICK_LAUNCH_COMBO_UP_DOWN, &pref, sizeof(pref));
@@ -1773,14 +1724,11 @@ void welcome_set_welcome_version(uint8_t version) {
   }
 }
 
-uint8_t welcome_get_welcome_version(void) {
-  return s_welcome_version;
-}
+uint8_t welcome_get_welcome_version(void) { return s_welcome_version; }
 
 static bool prv_set_default_any_watchface_enumerate_callback(AppInstallEntry *entry, void *data) {
-  if (!app_install_entry_is_watchface(entry)
-      || app_install_entry_is_hidden(entry)) {
-    return true; // continue search
+  if (!app_install_entry_is_watchface(entry) || app_install_entry_is_hidden(entry)) {
+    return true;  // continue search
   }
 
   watchface_set_default_install_id(entry->install_id);
@@ -1790,11 +1738,9 @@ static bool prv_set_default_any_watchface_enumerate_callback(AppInstallEntry *en
 AppInstallId watchface_get_default_install_id(void) {
   AppInstallId app_id = app_install_get_id_for_uuid(&s_default_watchface);
   AppInstallEntry entry;
-  if (app_id == INSTALL_ID_INVALID ||
-      !app_install_get_entry_for_install_id(app_id, &entry) ||
+  if (app_id == INSTALL_ID_INVALID || !app_install_get_entry_for_install_id(app_id, &entry) ||
       !app_install_entry_is_watchface(&entry)) {
-    app_install_enumerate_entries(
-        prv_set_default_any_watchface_enumerate_callback, NULL);
+    app_install_enumerate_entries(prv_set_default_any_watchface_enumerate_callback, NULL);
     app_id = app_install_get_id_for_uuid(&s_default_watchface);
   }
   return app_id;
@@ -1802,8 +1748,7 @@ AppInstallId watchface_get_default_install_id(void) {
 
 void system_theme_set_content_size(PreferredContentSize content_size) {
   if (content_size >= NumPreferredContentSizes) {
-    PBL_LOG_WRN("Ignoring attempt to set content size to invalid size %d",
-            content_size);
+    PBL_LOG_WRN("Ignoring attempt to set content size to invalid size %d", content_size);
     return;
   }
   const uint8_t content_size_uint = content_size;
@@ -1811,11 +1756,12 @@ void system_theme_set_content_size(PreferredContentSize content_size) {
 
   // Watch-side sets bypass the blob-db path, so notify subscribed UI here too.
   PebbleEvent pref_event = {
-    .type = PEBBLE_PREF_CHANGE_EVENT,
-    .pref_change = {
-      .key = PREF_KEY_TEXT_STYLE,
-      .key_len = sizeof(PREF_KEY_TEXT_STYLE),
-    },
+      .type = PEBBLE_PREF_CHANGE_EVENT,
+      .pref_change =
+          {
+              .key = PREF_KEY_TEXT_STYLE,
+              .key_len = sizeof(PREF_KEY_TEXT_STYLE),
+          },
   };
   event_put(&pref_event);
 }
@@ -1825,9 +1771,7 @@ PreferredContentSize system_theme_get_content_size(void) {
       (PreferredContentSize)s_text_style);
 }
 
-bool shell_prefs_get_language_english(void) {
-  return s_language_english;
-}
+bool shell_prefs_get_language_english(void) { return s_language_english; }
 
 void shell_prefs_set_language_english(bool english) {
   prv_pref_set(PREF_KEY_LANG_ENGLISH, &english, sizeof(english));
@@ -1891,9 +1835,7 @@ static void prv_activity_pref_set(void) {
                sizeof(s_activity_preferences));
 }
 
-time_t activity_prefs_get_activation_time(void) {
-  return s_activity_activation_timestamp;
-}
+time_t activity_prefs_get_activation_time(void) { return s_activity_activation_timestamp; }
 
 void activity_prefs_set_activated(void) {
   if (s_activity_activation_timestamp == 0) {
@@ -1955,9 +1897,7 @@ void activity_prefs_sleep_insights_set_enabled(bool enable) {
   prv_activity_pref_set();
 }
 
-bool activity_prefs_tracking_is_enabled(void) {
-  return s_activity_preferences.tracking_enabled;
-}
+bool activity_prefs_tracking_is_enabled(void) { return s_activity_preferences.tracking_enabled; }
 
 void activity_prefs_tracking_set_enabled(bool enable) {
   s_activity_preferences.tracking_enabled = enable;
@@ -1969,48 +1909,34 @@ void activity_prefs_set_height_mm(uint16_t height_mm) {
   prv_activity_pref_set();
 }
 
-uint16_t activity_prefs_get_height_mm(void) {
-  return s_activity_preferences.height_mm;
-}
+uint16_t activity_prefs_get_height_mm(void) { return s_activity_preferences.height_mm; }
 
 void activity_prefs_set_weight_dag(uint16_t weight_dag) {
   s_activity_preferences.weight_dag = weight_dag;
   prv_activity_pref_set();
 }
 
-uint16_t activity_prefs_get_weight_dag(void) {
-  return s_activity_preferences.weight_dag;
-}
+uint16_t activity_prefs_get_weight_dag(void) { return s_activity_preferences.weight_dag; }
 
 void activity_prefs_set_gender(ActivityGender gender) {
   s_activity_preferences.gender = gender;
   prv_activity_pref_set();
 }
 
-ActivityGender activity_prefs_get_gender(void) {
-  return s_activity_preferences.gender;
-}
+ActivityGender activity_prefs_get_gender(void) { return s_activity_preferences.gender; }
 
 void activity_prefs_set_age_years(uint8_t age_years) {
   s_activity_preferences.age_years = age_years;
   prv_activity_pref_set();
 }
 
-uint8_t activity_prefs_get_age_years(void) {
-  return s_activity_preferences.age_years;
-}
+uint8_t activity_prefs_get_age_years(void) { return s_activity_preferences.age_years; }
 
-uint8_t activity_prefs_heart_get_resting_hr(void) {
-  return s_activity_hr_preferences.resting_hr;
-}
+uint8_t activity_prefs_heart_get_resting_hr(void) { return s_activity_hr_preferences.resting_hr; }
 
-uint8_t activity_prefs_heart_get_elevated_hr(void) {
-  return s_activity_hr_preferences.elevated_hr;
-}
+uint8_t activity_prefs_heart_get_elevated_hr(void) { return s_activity_hr_preferences.elevated_hr; }
 
-uint8_t activity_prefs_heart_get_max_hr(void) {
-  return s_activity_hr_preferences.max_hr;
-}
+uint8_t activity_prefs_heart_get_max_hr(void) { return s_activity_hr_preferences.max_hr; }
 
 uint8_t activity_prefs_heart_get_zone1_threshold(void) {
   return s_activity_hr_preferences.zone1_threshold;
@@ -2024,9 +1950,7 @@ uint8_t activity_prefs_heart_get_zone3_threshold(void) {
   return s_activity_hr_preferences.zone3_threshold;
 }
 
-bool activity_prefs_heart_rate_is_enabled(void) {
-  return s_activity_hrm_preferences.enabled;
-}
+bool activity_prefs_heart_rate_is_enabled(void) { return s_activity_hrm_preferences.enabled; }
 
 #ifdef CONFIG_HRM
 HRMonitoringInterval activity_prefs_get_hrm_measurement_interval(void) {
@@ -2067,33 +1991,25 @@ void alarm_prefs_set_alarms_app_opened(uint8_t version) {
   }
 }
 
-uint8_t alarm_prefs_get_alarms_app_opened(void) {
-  return s_alarms_app_opened;
-}
+uint8_t alarm_prefs_get_alarms_app_opened(void) { return s_alarms_app_opened; }
 
 void timeline_prefs_set_settings_opened(uint8_t version) {
   prv_pref_set(PREF_KEY_TIMELINE_SETTINGS_OPENED, &version, sizeof(version));
 }
 
-uint8_t timeline_prefs_get_settings_opened(void) {
-  return s_timeline_settings_opened;
-}
+uint8_t timeline_prefs_get_settings_opened(void) { return s_timeline_settings_opened; }
 
 void timeline_peek_prefs_set_enabled(bool enabled) {
   prv_pref_set(PREF_KEY_TIMELINE_PEEK_ENABLED, &enabled, sizeof(enabled));
 }
 
-bool timeline_peek_prefs_get_enabled(void) {
-  return s_timeline_peek_enabled;
-}
+bool timeline_peek_prefs_get_enabled(void) { return s_timeline_peek_enabled; }
 
 void timeline_peek_prefs_set_before_time(uint16_t before_time_m) {
   prv_pref_set(PREF_KEY_TIMELINE_PEEK_BEFORE_TIME_M, &before_time_m, sizeof(before_time_m));
 }
 
-uint16_t timeline_peek_prefs_get_before_time(void) {
-  return s_timeline_peek_before_time_m;
-}
+uint16_t timeline_peek_prefs_get_before_time(void) { return s_timeline_peek_before_time_m; }
 
 #if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
 void timeline_peek_prefs_set_unsupported_face_mode(TimelinePeekUnsupportedFaceMode mode) {
@@ -2106,33 +2022,25 @@ TimelinePeekUnsupportedFaceMode timeline_peek_prefs_get_unsupported_face_mode(vo
 }
 #endif
 
-bool shell_prefs_can_coredump_on_request(void) {
-  return s_coredump_on_request_enabled;
-}
+bool shell_prefs_can_coredump_on_request(void) { return s_coredump_on_request_enabled; }
 
 void shell_prefs_set_coredump_on_request(bool enabled) {
   prv_pref_set(PREF_KEY_COREDUMP_ON_REQUEST, &enabled, sizeof(enabled));
 }
 
-bool shell_prefs_get_accel_shake_log_info_enabled(void) {
-  return s_accel_shake_log_info_enabled;
-}
+bool shell_prefs_get_accel_shake_log_info_enabled(void) { return s_accel_shake_log_info_enabled; }
 
 void shell_prefs_set_accel_shake_log_info_enabled(bool enabled) {
   prv_pref_set(PREF_KEY_ACCEL_SHAKE_LOG_INFO, &enabled, sizeof(enabled));
 }
 
-bool shell_prefs_get_vibe_log_info_enabled(void) {
-  return s_vibe_log_info_enabled;
-}
+bool shell_prefs_get_vibe_log_info_enabled(void) { return s_vibe_log_info_enabled; }
 
 void shell_prefs_set_vibe_log_info_enabled(bool enabled) {
   prv_pref_set(PREF_KEY_VIBE_LOG_INFO, &enabled, sizeof(enabled));
 }
 
-bool shell_prefs_get_settings_dbs_compacted_v1(void) {
-  return s_settings_dbs_compacted_v1;
-}
+bool shell_prefs_get_settings_dbs_compacted_v1(void) { return s_settings_dbs_compacted_v1; }
 
 void shell_prefs_set_settings_dbs_compacted_v1(bool done) {
   prv_pref_set(PREF_KEY_SETTINGS_DBS_COMPACTED_V1, &done, sizeof(done));
@@ -2163,9 +2071,7 @@ void shell_prefs_set_theme_highlight_color(GColor color) {
 #endif
 }
 
-bool shell_prefs_get_menu_scroll_wrap_around_enable(void) {
-  return s_menu_scroll_wrap_around;
-}
+bool shell_prefs_get_menu_scroll_wrap_around_enable(void) { return s_menu_scroll_wrap_around; }
 
 void shell_prefs_set_menu_scroll_wrap_around_enable(bool enable) {
   prv_pref_set(PREF_KEY_MENU_SCROLL_WRAP_AROUND, &enable, sizeof(bool));
@@ -2183,8 +2089,7 @@ void pbl_analytics_external_collect_settings(void) {
   PBL_ANALYTICS_SET_UNSIGNED(settings_health_tracking_enabled,
                              activity_prefs_tracking_is_enabled());
 #ifdef CONFIG_HRM
-  PBL_ANALYTICS_SET_UNSIGNED(settings_health_hrm_enabled,
-                             activity_prefs_heart_rate_is_enabled());
+  PBL_ANALYTICS_SET_UNSIGNED(settings_health_hrm_enabled, activity_prefs_heart_rate_is_enabled());
   PBL_ANALYTICS_SET_UNSIGNED(settings_health_hrm_measurement_interval,
                              activity_prefs_get_hrm_measurement_interval());
   PBL_ANALYTICS_SET_UNSIGNED(settings_health_hrm_activity_tracking_enabled,
@@ -2196,25 +2101,19 @@ void pbl_analytics_external_collect_settings(void) {
   PBL_ANALYTICS_SET_UNSIGNED(settings_touch_enabled, touch_is_globally_enabled());
 }
 
-bool shell_prefs_get_music_show_volume_controls(void) {
-  return s_music_show_volume_controls;
-}
+bool shell_prefs_get_music_show_volume_controls(void) { return s_music_show_volume_controls; }
 
 void shell_prefs_set_music_show_volume_controls(bool enable) {
   prv_pref_set(PREF_KEY_MUSIC_SHOW_VOLUME_CONTROLS, &enable, sizeof(enable));
 }
 
-bool shell_prefs_get_music_show_progress_bar(void) {
-  return s_music_show_progress_bar;
-}
+bool shell_prefs_get_music_show_progress_bar(void) { return s_music_show_progress_bar; }
 
 void shell_prefs_set_music_show_progress_bar(bool enable) {
   prv_pref_set(PREF_KEY_MUSIC_SHOW_PROGRESS_BAR, &enable, sizeof(enable));
 }
 
-bool shell_prefs_get_music_show_album_art(void) {
-  return s_music_show_album_art;
-}
+bool shell_prefs_get_music_show_album_art(void) { return s_music_show_album_art; }
 
 void shell_prefs_set_music_show_album_art(bool enable) {
   prv_pref_set(PREF_KEY_MUSIC_SHOW_ALBUM_ART, &enable, sizeof(enable));

@@ -41,13 +41,9 @@ void prv_get_subtitle_from_attributes(AttributeList *attributes, char *buffer, s
 // Setup
 /////////////////////////
 
-void test_alarm_layout__initialize(void) {
+void test_alarm_layout__initialize(void) {}
 
-}
-
-void test_alarm_layout__cleanup(void) {
-
-}
+void test_alarm_layout__cleanup(void) {}
 
 // Tests
 ///////////////////////////
@@ -70,7 +66,7 @@ void test_alarm_layout__get_subtitle_from_attributes(void) {
   // An alarm pin that has both a subtitle attribute and an AlarmKind attribute should create the
   // subtitle using the AlarmKind (ignoring the subtitle attribute), respecting the desire to
   // all-caps the subtitle on rectangular displays
-  attribute_list = (AttributeList) {0};
+  attribute_list = (AttributeList){0};
   attribute_list_add_cstring(attribute_list_ref, AttributeIdSubtitle, "Ignore me!");
   attribute_list_add_uint8(attribute_list_ref, AttributeIdAlarmKind, (uint8_t)ALARM_KIND_JUST_ONCE);
   prv_get_subtitle_from_attributes(attribute_list_ref, buffer, buffer_size, dummy_i18n_owner);

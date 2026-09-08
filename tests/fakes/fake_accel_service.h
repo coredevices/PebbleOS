@@ -8,4 +8,3 @@
 #include "applib/accel_service.h"
 
 void fake_accel_service_invoke_callbacks(AccelData *data, uint32_t num_samples);
-

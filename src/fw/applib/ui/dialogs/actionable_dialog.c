@@ -26,8 +26,7 @@ static void prv_actionable_dialog_load(Window *window) {
   const GRect *bounds = &window_root_layer->bounds;
   const uint16_t left_margin_px = PBL_IF_RECT_ELSE(5, 0);
   const uint16_t content_and_action_bar_horizontal_spacing = PBL_IF_RECT_ELSE(5, 7);
-  const uint16_t right_margin_px = ACTION_BAR_WIDTH +
-                                              content_and_action_bar_horizontal_spacing;
+  const uint16_t right_margin_px = ACTION_BAR_WIDTH + content_and_action_bar_horizontal_spacing;
   const GFont dialog_text_font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
   const int max_text_line_height_px = 2 * fonts_get_font_height(dialog_text_font) + 8;
   const uint16_t icon_text_spacing_px = 4;
@@ -57,19 +56,17 @@ static void prv_actionable_dialog_load(Window *window) {
   GContext *ctx = graphics_context_get_current_context();
   const GTextAlignment text_alignment = PBL_IF_RECT_ELSE(GTextAlignmentCenter, GTextAlignmentRight);
   const GRect probe_rect = GRect(x, 0, w, max_text_line_height_px);
-  const uint16_t text_height = graphics_text_layout_get_max_used_size(ctx,
-                                                                      dialog->buffer,
-                                                                      dialog_text_font,
-                                                                      probe_rect,
-                                                                      GTextOverflowModeWordWrap,
-                                                                      text_alignment,
-                                                                      text_attributes).h;
+  const uint16_t text_height = graphics_text_layout_get_max_used_size(
+                                   ctx, dialog->buffer, dialog_text_font, probe_rect,
+                                   GTextOverflowModeWordWrap, text_alignment, text_attributes)
+                                   .h;
 
   const uint16_t status_bar_height = dialog->show_status_layer ? STATUS_BAR_LAYER_HEIGHT : 0;
   const uint16_t available_height = bounds->size.h - status_bar_height;
   const uint16_t spacing = icon ? icon_text_spacing_px : 0;
   const uint16_t content_height = icon_size.h + spacing + text_height;
-  uint16_t icon_top_margin_px = status_bar_height +
+  uint16_t icon_top_margin_px =
+      status_bar_height +
       (available_height > content_height ? (available_height - content_height) / 2 : 0);
   uint16_t text_top_margin_px = icon_top_margin_px + icon_size.h + spacing;
 
@@ -78,8 +75,7 @@ static void prv_actionable_dialog_load(Window *window) {
 
   // Set up the text.
   TextLayer *text_layer = &dialog->text_layer;
-  text_layer_init_with_parameters(text_layer, &GRect(x, y, w, h),
-                                  dialog->buffer, dialog_text_font,
+  text_layer_init_with_parameters(text_layer, &GRect(x, y, w, h), dialog->buffer, dialog_text_font,
                                   dialog->text_color, GColorClear, text_alignment,
                                   GTextOverflowModeWordWrap);
   if (text_attributes) {
@@ -99,8 +95,8 @@ static void prv_actionable_dialog_load(Window *window) {
   ActionBarLayer *action_bar = actionable_dialog->action_bar;
   if (actionable_dialog->action_bar_type == DialogActionBarConfirm) {
 #if !defined(CONFIG_RECOVERY_FW)
-    actionable_dialog->select_icon = gbitmap_create_with_resource(
-        RESOURCE_ID_ACTION_BAR_ICON_CHECK);
+    actionable_dialog->select_icon =
+        gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_CHECK);
 #endif
     action_bar_layer_set_context(action_bar, window);
     action_bar_layer_set_icon(action_bar, BUTTON_ID_SELECT, actionable_dialog->select_icon);
@@ -130,7 +126,7 @@ static void prv_actionable_dialog_load(Window *window) {
   // On round displays we right align it with respect to the same imaginary vertical line that the
   // text is right aligned to
   x = grect_get_max_x(bounds) - ACTION_BAR_WIDTH - content_and_action_bar_horizontal_spacing -
-          icon_size.w;
+      icon_size.w;
 #endif
 
   y = icon_top_margin_px;
@@ -159,7 +155,7 @@ static void prv_actionable_dialog_unload(Window *window) {
     if (actionable_dialog->action_bar_type == DialogActionBarConfirmDecline) {
       gbitmap_destroy(actionable_dialog->up_icon);
       gbitmap_destroy(actionable_dialog->down_icon);
-    } else { // DialogActionBarConfirm || DialogActionBarDecline
+    } else {  // DialogActionBarConfirm || DialogActionBarDecline
       gbitmap_destroy(actionable_dialog->select_icon);
     }
   }
@@ -190,11 +186,11 @@ void actionable_dialog_init(ActionableDialog *actionable_dialog, const char *dia
 
   dialog_init(&actionable_dialog->dialog, dialog_name);
   Window *window = &actionable_dialog->dialog.window;
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_actionable_dialog_load,
-    .unload = prv_actionable_dialog_unload,
-    .appear = prv_actionable_dialog_appear,
-  });
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_actionable_dialog_load,
+                                         .unload = prv_actionable_dialog_unload,
+                                         .appear = prv_actionable_dialog_appear,
+                                     });
   window_set_user_data(window, actionable_dialog);
 }
 
@@ -211,7 +207,7 @@ void actionable_dialog_set_action_bar_type(ActionableDialog *actionable_dialog,
                                            DialogActionBarType action_bar_type,
                                            ActionBarLayer *action_bar) {
   if (action_bar_type == DialogActionBarCustom) {
-    PBL_ASSERTN(action_bar); // Action bar must not be NULL if it is a custom type.
+    PBL_ASSERTN(action_bar);  // Action bar must not be NULL if it is a custom type.
     actionable_dialog->action_bar = action_bar;
   } else {
     actionable_dialog->action_bar = NULL;

@@ -5,6 +5,4 @@
 
 #include <stdint.h>
 
-int8_t sys_ble_get_advertising_tx_power(void) {
-  return -55;
-}
+int8_t sys_ble_get_advertising_tx_power(void) { return -55; }

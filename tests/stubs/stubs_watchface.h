@@ -6,9 +6,7 @@
 #include "shell/normal/watchface.h"
 #include "pbl/util/attributes.h"
 
-AppInstallId WEAK watchface_get_default_install_id(void) {
-  return 0;
-}
+AppInstallId WEAK watchface_get_default_install_id(void) { return 0; }
 
 void WEAK watchface_set_default_install_id(const AppInstallId app_id) {}
 

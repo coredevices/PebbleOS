@@ -56,11 +56,10 @@ static void prv_comm_session_event_handler(PebbleEvent *e, void *context) {
 }
 
 void remote_input_init(void) {
-
   static EventServiceInfo s_comm_session_event_info;
   s_comm_session_event_info = (EventServiceInfo){
-    .type = PEBBLE_COMM_SESSION_EVENT,
-    .handler = prv_comm_session_event_handler,
+      .type = PEBBLE_COMM_SESSION_EVENT,
+      .handler = prv_comm_session_event_handler,
   };
   event_service_client_subscribe(&s_comm_session_event_info);
 }
@@ -110,8 +109,8 @@ static RemoteInputResult prv_start_sequence(NewTimerCallback cb, void *context) 
 
 static void prv_put_button_event(ButtonId button, bool down) {
   PebbleEvent event = {
-    .type = down ? PEBBLE_BUTTON_DOWN_EVENT : PEBBLE_BUTTON_UP_EVENT,
-    .button.button_id = button,
+      .type = down ? PEBBLE_BUTTON_DOWN_EVENT : PEBBLE_BUTTON_UP_EVENT,
+      .button.button_id = button,
   };
   event_put(&event);
 }
@@ -163,11 +162,11 @@ RemoteInputResult remote_input_button_press(ButtonId button, uint32_t presses, u
     return RemoteInputResult_Invalid;
   }
   *context = (ButtonPressContext){
-    .button_id = button,
-    .button_is_held_down = false,
-    .presses_remaining = presses,
-    .hold_ms = hold_ms,
-    .gap_ms = gap_ms,
+      .button_id = button,
+      .button_is_held_down = false,
+      .presses_remaining = presses,
+      .hold_ms = hold_ms,
+      .gap_ms = gap_ms,
   };
 
   // Drive the whole sequence from timer callbacks so the button events can't race the timers that
@@ -227,7 +226,8 @@ RemoteInputResult remote_input_button_set(uint8_t buttons) {
 #define REMOTE_INPUT_SWIPE_TRAVEL_DEN 5
 
 _Static_assert((MIN(DISP_COLS, DISP_ROWS) * REMOTE_INPUT_SWIPE_TRAVEL_NUM) /
-                   REMOTE_INPUT_SWIPE_TRAVEL_DEN >= SWIPE_MIN_LENGTH_PX,
+                       REMOTE_INPUT_SWIPE_TRAVEL_DEN >=
+                   SWIPE_MIN_LENGTH_PX,
                "swipe travel is below the swipe recognizer's minimum length");
 
 typedef struct SwipeContext {
@@ -300,32 +300,32 @@ RemoteInputResult remote_input_swipe(RemoteInputSwipeDirection direction, uint16
   const int16_t travel =
       (int16_t)((axis * REMOTE_INPUT_SWIPE_TRAVEL_NUM) / REMOTE_INPUT_SWIPE_TRAVEL_DEN);
   // The finger starts on the far side of centre and travels towards the named direction.
-  const int16_t sign = ((direction == RemoteInputSwipeDirection_Up) ||
-                        (direction == RemoteInputSwipeDirection_Left))
-                           ? -1
-                           : 1;
+  const int16_t sign =
+      ((direction == RemoteInputSwipeDirection_Up) || (direction == RemoteInputSwipeDirection_Left))
+          ? -1
+          : 1;
   const int16_t half = (int16_t)(travel / 2);
   // Round the per-step delta away from zero so the accumulated path never falls short of `travel`.
-  const int16_t step = (int16_t)(sign * ((travel + REMOTE_INPUT_SWIPE_STEPS - 1) /
-                                         REMOTE_INPUT_SWIPE_STEPS));
+  const int16_t step =
+      (int16_t)(sign * ((travel + REMOTE_INPUT_SWIPE_STEPS - 1) / REMOTE_INPUT_SWIPE_STEPS));
 
   SwipeContext *context = kernel_malloc(sizeof(SwipeContext));
   if (!context) {
     return RemoteInputResult_Invalid;
   }
   *context = (SwipeContext){
-    .x = (int16_t)(DISP_COLS / 2 - (vertical ? 0 : sign * half)),
-    .y = (int16_t)(DISP_ROWS / 2 - (vertical ? sign * half : 0)),
-    .step_dx = vertical ? 0 : step,
-    .step_dy = vertical ? step : 0,
-    .steps_remaining = REMOTE_INPUT_SWIPE_STEPS,
-    // The touchdown-to-liftoff time covers the position updates plus the liftoff that follows
-    // them. One divisor step beyond that count keeps the scheduled path strictly inside the
-    // requested duration: the recognizer measures the gesture in wall-clock time, so a path
-    // timed to land exactly on SWIPE_MAX_DURATION_MS would be rejected by any dispatch latency
-    // at all. At least 1ms per step, or the chained timers never separate the velocity samples.
-    .step_ms = MAX(1, duration_ms / (REMOTE_INPUT_SWIPE_STEPS + 2)),
-    .finger_down = false,
+      .x = (int16_t)(DISP_COLS / 2 - (vertical ? 0 : sign * half)),
+      .y = (int16_t)(DISP_ROWS / 2 - (vertical ? sign * half : 0)),
+      .step_dx = vertical ? 0 : step,
+      .step_dy = vertical ? step : 0,
+      .steps_remaining = REMOTE_INPUT_SWIPE_STEPS,
+      // The touchdown-to-liftoff time covers the position updates plus the liftoff that follows
+      // them. One divisor step beyond that count keeps the scheduled path strictly inside the
+      // requested duration: the recognizer measures the gesture in wall-clock time, so a path
+      // timed to land exactly on SWIPE_MAX_DURATION_MS would be rejected by any dispatch latency
+      // at all. At least 1ms per step, or the chained timers never separate the velocity samples.
+      .step_ms = MAX(1, duration_ms / (REMOTE_INPUT_SWIPE_STEPS + 2)),
+      .finger_down = false,
   };
 
   const RemoteInputResult result = prv_start_sequence(prv_swipe_timer_cb, context);
@@ -413,8 +413,8 @@ void remote_input_protocol_msg_callback(CommSession *session, const uint8_t *dat
   PBL_LOG_DBG("Remote input: cmd %u -> %u", command, result);
 
   const RemoteInputAck ack = {
-    .command = command,
-    .status = (uint8_t)result,
+      .command = command,
+      .status = (uint8_t)result,
   };
   comm_session_send_data(session, REMOTE_INPUT_ENDPOINT, (const uint8_t *)&ack, sizeof(ack),
                          COMM_SESSION_DEFAULT_TIMEOUT);

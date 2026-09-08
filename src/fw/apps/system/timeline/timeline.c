@@ -44,19 +44,19 @@ typedef struct TimelineAppStyle {
 } TimelineAppStyle;
 
 static const TimelineAppStyle s_style_medium = {
-  .peek_icon_offset_y = PEEK_LAYER_ICON_OFFSET_Y,
+    .peek_icon_offset_y = PEEK_LAYER_ICON_OFFSET_Y,
 };
 
 static const TimelineAppStyle s_style_large = {
-  .peek_offset_y = -7,
-  .peek_icon_offset_y = -16,
+    .peek_offset_y = -7,
+    .peek_icon_offset_y = -16,
 };
 
-static const TimelineAppStyle * const s_styles[NumPreferredContentSizes] = {
-  [PreferredContentSizeSmall] = &s_style_medium,
-  [PreferredContentSizeMedium] = &s_style_medium,
-  [PreferredContentSizeLarge] = &s_style_large,
-  [PreferredContentSizeExtraLarge] = &s_style_large,
+static const TimelineAppStyle *const s_styles[NumPreferredContentSizes] = {
+    [PreferredContentSizeSmall] = &s_style_medium,
+    [PreferredContentSizeMedium] = &s_style_medium,
+    [PreferredContentSizeLarge] = &s_style_large,
+    [PreferredContentSizeExtraLarge] = &s_style_large,
 };
 
 static TimelineAppData *s_app_data;
@@ -64,10 +64,7 @@ static TimelineAppData *s_app_data;
 static const uint32_t TIMELINE_SLIDE_ANIMATION_MS = 150;
 static const uint32_t PEEK_SHOW_TIME_MS = 660;
 
-
-static const TimelineAppStyle *prv_get_style(void) {
-  return s_styles[PreferredContentSizeDefault];
-}
+static const TimelineAppStyle *prv_get_style(void) { return s_styles[PreferredContentSizeDefault]; }
 
 /////////////////////////////////////
 // State Machine
@@ -75,14 +72,12 @@ static const TimelineAppStyle *prv_get_style(void) {
 
 static bool prv_can_transition_state(TimelineAppData *data, TimelineAppState next_state) {
   // all non-exit states can transition to exit
-  if (data->state != TimelineAppStateExit &&
-      next_state == TimelineAppStateExit) {
+  if (data->state != TimelineAppStateExit && next_state == TimelineAppStateExit) {
     return true;
   }
   switch (data->state) {
     case TimelineAppStateNone:
-      return (next_state == TimelineAppStatePeek ||
-              next_state == TimelineAppStateHidePeek ||
+      return (next_state == TimelineAppStatePeek || next_state == TimelineAppStateHidePeek ||
               next_state == TimelineAppStateFarDayHidePeek ||
               next_state == TimelineAppStateNoEvents);
     case TimelineAppStatePeek:
@@ -92,10 +87,8 @@ static bool prv_can_transition_state(TimelineAppData *data, TimelineAppState nex
     case TimelineAppStateFarDayHidePeek:
       return (next_state == TimelineAppStateDaySeparator);
     case TimelineAppStateStationary:
-      return (next_state == TimelineAppStateUpDown ||
-              next_state == TimelineAppStatePushCard ||
-              next_state == TimelineAppStateNoEvents ||
-              next_state == TimelineAppStateInactive);
+      return (next_state == TimelineAppStateUpDown || next_state == TimelineAppStatePushCard ||
+              next_state == TimelineAppStateNoEvents || next_state == TimelineAppStateInactive);
     case TimelineAppStateUpDown:
       return (next_state == TimelineAppStateUpDown ||
               next_state == TimelineAppStateShowDaySeparator ||
@@ -107,14 +100,11 @@ static bool prv_can_transition_state(TimelineAppData *data, TimelineAppState nex
     case TimelineAppStateHideDaySeparator:
       return (next_state == TimelineAppStateStationary);
     case TimelineAppStatePushCard:
-      return (next_state == TimelineAppStateCard ||
-              next_state == TimelineAppStatePopCard);
+      return (next_state == TimelineAppStateCard || next_state == TimelineAppStatePopCard);
     case TimelineAppStateCard:
-      return (next_state == TimelineAppStatePopCard ||
-              next_state == TimelineAppStateStationary);
+      return (next_state == TimelineAppStatePopCard || next_state == TimelineAppStateStationary);
     case TimelineAppStatePopCard:
-      return (next_state == TimelineAppStateStationary ||
-              next_state == TimelineAppStatePushCard);
+      return (next_state == TimelineAppStateStationary || next_state == TimelineAppStatePushCard);
     case TimelineAppStateNoEvents:
       return (next_state == TimelineAppStateInactive);
     case TimelineAppStateInactive:
@@ -127,8 +117,7 @@ static bool prv_can_transition_state(TimelineAppData *data, TimelineAppState nex
 
 static bool prv_set_state(TimelineAppData *data, TimelineAppState next_state) {
   const bool can_transition = prv_can_transition_state(data, next_state);
-  PBL_LOG_DBG("state transition %d->%d valid:%d",
-          data->state, next_state, can_transition);
+  PBL_LOG_DBG("state transition %d->%d valid:%d", data->state, next_state, can_transition);
   if (can_transition) {
     data->state = next_state;
   }
@@ -168,28 +157,27 @@ static void prv_swap_timeline(void *data) {
   const CompositorTransition *transition = PBL_IF_RECT_ELSE(
       compositor_slide_transition_timeline_get(!is_future, to_timeline, timeline_model_is_empty()),
       compositor_dot_transition_timeline_get(!is_future, to_timeline));
-  static TimelineArgs args = (TimelineArgs) {
-    .force_full = true
-  };
+  static TimelineArgs args = (TimelineArgs){.force_full = true};
   args.force_display_day_sep_on_start = s_app_data->day_sep_displayed_on_start;
   if (is_future) {
     Uuid past_uuid = TIMELINE_PAST_UUID_INIT;
     args.direction = TimelineIterDirectionPast;
-    app_manager_put_launch_app_event(&(AppLaunchEventConfig) {
-      .id = app_install_get_id_for_uuid((const Uuid *)(&past_uuid)),
-      .common.args = (const void *)&args,
-      .common.transition = transition,
+    app_manager_put_launch_app_event(&(AppLaunchEventConfig){
+        .id = app_install_get_id_for_uuid((const Uuid *)(&past_uuid)),
+        .common.args = (const void *)&args,
+        .common.transition = transition,
     });
   } else {
     Uuid app_uuid;
     sys_get_app_uuid(&app_uuid);
-    const Uuid target_uuid = uuid_equal(&app_uuid, &(Uuid)TIMELINE_FULL_UUID_INIT) ?
-        (Uuid)TIMELINE_UUID_INIT : (Uuid)TIMELINE_FULL_UUID_INIT;
+    const Uuid target_uuid = uuid_equal(&app_uuid, &(Uuid)TIMELINE_FULL_UUID_INIT)
+                                 ? (Uuid)TIMELINE_UUID_INIT
+                                 : (Uuid)TIMELINE_FULL_UUID_INIT;
     args.direction = TimelineIterDirectionFuture;
-    app_manager_put_launch_app_event(&(AppLaunchEventConfig) {
-      .id = app_install_get_id_for_uuid((const Uuid *)&target_uuid),
-      .common.args = (const void *)&args,
-      .common.transition = transition,
+    app_manager_put_launch_app_event(&(AppLaunchEventConfig){
+        .id = app_install_get_id_for_uuid((const Uuid *)&target_uuid),
+        .common.args = (const void *)&args,
+        .common.transition = transition,
     });
   }
 }
@@ -226,14 +214,14 @@ static void prv_exit_anim_stopped(Animation *animation, bool finished, void *con
 //! If use_pin is true, the animation frame size and position will be that of the first pin icon.
 //! If shift_offscreen is true, the frame will be shifted by the screen row amount in a direction
 //! depending on the scroll direction.
-static void prv_get_icon_animation_frame(TimelineAppData *data, GRect *icon_frame_out,
-                                         bool use_pin, bool shift_offscreen) {
+static void prv_get_icon_animation_frame(TimelineAppData *data, GRect *icon_frame_out, bool use_pin,
+                                         bool shift_offscreen) {
 #if ANIMATION_DOT
   const GRect *layer_frame = &data->timeline_window.layer.frame;
-  *icon_frame_out = (GRect) {
-    .origin.x = layer_frame->origin.x + (layer_frame->size.w - UNFOLD_DOT_SIZE_PX) / 2,
-    .origin.y = layer_frame->origin.y + (layer_frame->size.h - UNFOLD_DOT_SIZE_PX) / 2,
-    .size = UNFOLD_DOT_SIZE,
+  *icon_frame_out = (GRect){
+      .origin.x = layer_frame->origin.x + (layer_frame->size.w - UNFOLD_DOT_SIZE_PX) / 2,
+      .origin.y = layer_frame->origin.y + (layer_frame->size.h - UNFOLD_DOT_SIZE_PX) / 2,
+      .size = UNFOLD_DOT_SIZE,
   };
 #elif ANIMATION_SLIDE
   GRect icon_frame;
@@ -245,7 +233,7 @@ static void prv_get_icon_animation_frame(TimelineAppData *data, GRect *icon_fram
     timeline_layout_get_icon_frame(&frame, data->timeline_layer.scroll_direction, &icon_frame);
   } else {
     // Since there is no pin, we need the peek size, which is the large size
-    icon_frame = (GRect) { .size = TIMELINE_LARGE_RESOURCE_SIZE };
+    icon_frame = (GRect){.size = TIMELINE_LARGE_RESOURCE_SIZE};
     grect_align(&icon_frame, &data->peek_layer.layer.frame, GAlignCenter, false);
     const TimelineAppStyle *style = prv_get_style();
     icon_frame.origin.y += style->peek_icon_offset_y;
@@ -265,12 +253,10 @@ static void prv_get_icon_animation_frame(TimelineAppData *data, GRect *icon_fram
 static Animation *prv_create_peek_exit_anim(TimelineAppData *data, TimelineAppState prev_state,
                                             uint32_t duration) {
   PeekLayer *peek_layer = &data->peek_layer;
-  if (prev_state == TimelineAppStateNoEvents ||
-      prev_state == TimelineAppStatePeek ||
+  if (prev_state == TimelineAppStateNoEvents || prev_state == TimelineAppStatePeek ||
       prev_state == TimelineAppStateHidePeek) {
     prv_cleanup_timer(&data->intro_timer_id);
-  } else if (prev_state == TimelineAppStateStationary ||
-             prev_state == TimelineAppStateUpDown) {
+  } else if (prev_state == TimelineAppStateStationary || prev_state == TimelineAppStateUpDown) {
     TimelineLayout *first_timeline_layout =
         timeline_layer_get_current_layout(&data->timeline_layer);
     if (!first_timeline_layout) {
@@ -333,10 +319,12 @@ static void prv_exit(TimelineAppData *data) {
 
   Animation *sidebar_slide = prv_create_sidebar_animation(data, false /* open */);
   animation_set_duration(sidebar_slide, duration);
-  animation_set_handlers(sidebar_slide, (AnimationHandlers) {
-    .started = prv_intro_or_exit_anim_started,
-    .stopped = prv_exit_anim_stopped,
-  }, data);
+  animation_set_handlers(sidebar_slide,
+                         (AnimationHandlers){
+                             .started = prv_intro_or_exit_anim_started,
+                             .stopped = prv_exit_anim_stopped,
+                         },
+                         data);
 
   Animation *peek_anim = prv_create_peek_exit_anim(data, prev_state, duration);
 
@@ -391,11 +379,13 @@ static void prv_move_timeline_layer_stopped(Animation *animation, bool finished,
 static Animation *prv_animate_to_pin_window(TimelineAppData *data) {
   Layer *layer = &data->timeline_layer.layer;
   GPoint to_origin = GPoint(-layer->bounds.size.w, 0);
-  Animation *animation = (Animation *)property_animation_create_bounds_origin(layer, NULL,
-                                                                              &to_origin);
-  animation_set_handlers(animation, (AnimationHandlers) {
-    .stopped = prv_move_timeline_layer_stopped,
-  }, data);
+  Animation *animation =
+      (Animation *)property_animation_create_bounds_origin(layer, NULL, &to_origin);
+  animation_set_handlers(animation,
+                         (AnimationHandlers){
+                             .stopped = prv_move_timeline_layer_stopped,
+                         },
+                         data);
   animation_set_duration(animation, TIMELINE_CARD_TRANSITION_MS / 2);
   animation_set_custom_interpolation(animation, interpolate_moook);
   animation_schedule(animation);
@@ -461,8 +451,7 @@ T_STATIC void prv_setup_no_events_peek(TimelineAppData *data);
 
 static void prv_update_timeline_layer(TimelineAppData *data) {
   TimelineLayer *timeline_layer = &data->timeline_layer;
-  if (data->state != TimelineAppStateStationary &&
-      data->state != TimelineAppStateUpDown &&
+  if (data->state != TimelineAppStateStationary && data->state != TimelineAppStateUpDown &&
       data->state != TimelineAppStateCard) {
     return;
   }
@@ -470,8 +459,7 @@ static void prv_update_timeline_layer(TimelineAppData *data) {
   data->current_animation = NULL;
   timeline_layer_reset(timeline_layer);
 
-  if (timeline_model_is_empty() &&
-      prv_set_state(data, TimelineAppStateNoEvents)) {
+  if (timeline_model_is_empty() && prv_set_state(data, TimelineAppStateNoEvents)) {
     // Hide layouts and animate to "No events"
     timeline_layer_set_layouts_hidden(&data->timeline_layer, true);
 
@@ -509,9 +497,11 @@ static void prv_hide_day_sep_stopped(Animation *animation, bool finished, void *
   Animation *move_animation = timeline_layer_create_up_down_animation(
       &data->timeline_layer, TIMELINE_UP_DOWN_ANIMATION_DURATION_MS / 2,
       timeline_animation_interpolate_moook_second_half);
-  animation_set_handlers(move_animation, (AnimationHandlers) {
-    .stopped = prv_up_down_stopped,
-  }, data);
+  animation_set_handlers(move_animation,
+                         (AnimationHandlers){
+                             .stopped = prv_up_down_stopped,
+                         },
+                         data);
 
   data->current_animation = move_animation;
   animation_schedule(move_animation);
@@ -527,9 +517,11 @@ static void prv_hide_day_sep(void *context) {
   animation_unschedule(data->current_animation);
 
   Animation *day_sep_hide = timeline_layer_create_day_sep_hide(&data->timeline_layer);
-  animation_set_handlers(day_sep_hide, (AnimationHandlers){
-    .stopped = prv_hide_day_sep_stopped,
-  }, data);
+  animation_set_handlers(day_sep_hide,
+                         (AnimationHandlers){
+                             .stopped = prv_hide_day_sep_stopped,
+                         },
+                         data);
   data->current_animation = day_sep_hide;
   animation_schedule(day_sep_hide);
 }
@@ -561,10 +553,8 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *contex
 
 static void prv_set_day_sep_timer(TimelineAppData *data) {
   const int DAY_SEP_TIMEOUT_MS = 1000;
-  data->day_separator_timer_id = evented_timer_register(DAY_SEP_TIMEOUT_MS,
-                                                        false,
-                                                        prv_hide_day_sep,
-                                                        data);
+  data->day_separator_timer_id =
+      evented_timer_register(DAY_SEP_TIMEOUT_MS, false, prv_hide_day_sep, data);
 }
 
 static void prv_day_sep_show_stopped(Animation *animation, bool finished, void *context) {
@@ -585,8 +575,8 @@ static void prv_up_down_click_handler(ClickRecognizerRef recognizer, void *conte
   prv_inactive_timer_refresh(data);
 
   ButtonId button = click_recognizer_get_button_id(recognizer);
-  const bool next = (button == BUTTON_ID_UP) ^
-    (data->timeline_model.direction == TimelineIterDirectionFuture);
+  const bool next =
+      (button == BUTTON_ID_UP) ^ (data->timeline_model.direction == TimelineIterDirectionFuture);
 
   // We want to know if it was stationary before transitioning
   const bool was_stationary = (data->state == TimelineAppStateStationary);
@@ -601,11 +591,11 @@ static void prv_up_down_click_handler(ClickRecognizerRef recognizer, void *conte
         prv_exit(data);
       }
     }
-    return; // There are no events
+    return;  // There are no events
   } else if (prv_attempt_hide_day_sep(data)) {
-    return; // Successfully interrupted the day separator, let it hide
+    return;  // Successfully interrupted the day separator, let it hide
   } else if (!prv_set_state(data, TimelineAppStateUpDown)) {
-    return; // Not in a state able to scroll at the moment
+    return;  // Not in a state able to scroll at the moment
   }
 
   animation_unschedule(data->current_animation);
@@ -639,23 +629,27 @@ static void prv_up_down_click_handler(ClickRecognizerRef recognizer, void *conte
   // If we interrupted a previous scroll, hasten this scroll
   const bool is_hasted = !was_stationary;
   const uint32_t duration = TIMELINE_UP_DOWN_ANIMATION_DURATION_MS;
-  const InterpolateInt64Function interpolate = is_hasted ?
-      timeline_animation_interpolate_moook_second_half :
-      timeline_animation_interpolate_moook_soft;
-  Animation *move_animation = timeline_layer_create_up_down_animation(
-      &data->timeline_layer, duration, interpolate);
+  const InterpolateInt64Function interpolate =
+      is_hasted ? timeline_animation_interpolate_moook_second_half
+                : timeline_animation_interpolate_moook_soft;
+  Animation *move_animation =
+      timeline_layer_create_up_down_animation(&data->timeline_layer, duration, interpolate);
 
   if (timeline_layer_should_animate_day_separator(&data->timeline_layer) &&
       prv_set_state(data, TimelineAppStateShowDaySeparator)) {
     Animation *day_sep_show = timeline_layer_create_day_sep_show(&data->timeline_layer);
     move_animation = animation_spawn_create(move_animation, day_sep_show, NULL);
-    animation_set_handlers(move_animation, (AnimationHandlers) {
-      .stopped = prv_day_sep_show_stopped,
-    }, data);
+    animation_set_handlers(move_animation,
+                           (AnimationHandlers){
+                               .stopped = prv_day_sep_show_stopped,
+                           },
+                           data);
   } else {
-    animation_set_handlers(move_animation, (AnimationHandlers) {
-      .stopped = prv_up_down_stopped,
-    }, data);
+    animation_set_handlers(move_animation,
+                           (AnimationHandlers){
+                               .stopped = prv_up_down_stopped,
+                           },
+                           data);
   }
 
   data->current_animation = move_animation;
@@ -739,8 +733,8 @@ static void prv_intro_anim_stopped(Animation *anim, bool finished, void *context
     prv_set_day_sep_timer(data);
   } else {
     GPoint direction = GPoint(0, -1);
-    Animation *layer_bounce = timeline_layer_create_bounce_back_animation(&data->timeline_layer,
-                                                                          direction);
+    Animation *layer_bounce =
+        timeline_layer_create_bounce_back_animation(&data->timeline_layer, direction);
     data->current_animation = layer_bounce;
     animation_schedule(layer_bounce);
   }
@@ -759,9 +753,9 @@ static Animation *prv_create_intro_animation(TimelineAppData *data, uint32_t dur
 
   // animate the peek layer to the right
   GRect *start = &data->peek_layer.layer.frame;
-  GRect stop = { { was_mini_peek ? 0 : start->size.w , 0 }, start->size };
-  Animation *peek_out = (Animation *)property_animation_create_layer_frame(
-      (Layer *)&data->peek_layer, start, &stop);
+  GRect stop = {{was_mini_peek ? 0 : start->size.w, 0}, start->size};
+  Animation *peek_out =
+      (Animation *)property_animation_create_layer_frame((Layer *)&data->peek_layer, start, &stop);
   animation_set_duration(peek_out, duration);
   animation_set_custom_interpolation(peek_out, interpolate_moook_in_only);
 
@@ -769,8 +763,9 @@ static Animation *prv_create_intro_animation(TimelineAppData *data, uint32_t dur
   Animation *sidebar_slide = prv_create_sidebar_animation(data, true /* open */);
   animation_set_duration(sidebar_slide, duration);
 
-  Animation *speed_lines = data->launch_into_deep_pin ?
-      timeline_layer_create_speed_lines_animation(&data->timeline_layer) : NULL;
+  Animation *speed_lines = data->launch_into_deep_pin
+                               ? timeline_layer_create_speed_lines_animation(&data->timeline_layer)
+                               : NULL;
 
   return animation_spawn_create(peek_out, sidebar_slide, speed_lines, NULL);
 }
@@ -828,8 +823,7 @@ static void prv_intro_timer_callback(void *context) {
 
   prv_set_state(data, TimelineAppStateHidePeek);
 
-  if (data->state != TimelineAppStateHidePeek &&
-      data->state != TimelineAppStateFarDayHidePeek) {
+  if (data->state != TimelineAppStateHidePeek && data->state != TimelineAppStateFarDayHidePeek) {
     return;
   }
 
@@ -839,13 +833,15 @@ static void prv_intro_timer_callback(void *context) {
 
   animation_unschedule(data->current_animation);
 
-  const uint32_t duration = was_mini_peek ? interpolate_moook_in_duration() :
-                                            TIMELINE_SLIDE_ANIMATION_MS;
+  const uint32_t duration =
+      was_mini_peek ? interpolate_moook_in_duration() : TIMELINE_SLIDE_ANIMATION_MS;
   Animation *intro = prv_create_intro_animation(data, duration, was_mini_peek);
-  animation_set_handlers(intro, (AnimationHandlers) {
-    .started = prv_intro_or_exit_anim_started,
-    .stopped = prv_intro_anim_stopped,
-  }, data);
+  animation_set_handlers(intro,
+                         (AnimationHandlers){
+                             .started = prv_intro_or_exit_anim_started,
+                             .stopped = prv_intro_anim_stopped,
+                         },
+                         data);
 
   data->current_animation = intro;
   animation_schedule(intro);
@@ -876,10 +872,8 @@ static void prv_peek_did_focus_handler(PebbleEvent *e, void *context) {
                                                   data);
   } else if (data->state == TimelineAppStatePeek &&
              data->intro_timer_id == EVENTED_TIMER_INVALID_ID) {
-    data->intro_timer_id = evented_timer_register(PEEK_SHOW_TIME_MS,
-                                                  false,
-                                                  prv_intro_timer_callback,
-                                                  data);
+    data->intro_timer_id =
+        evented_timer_register(PEEK_SHOW_TIME_MS, false, prv_intro_timer_callback, data);
   }
 }
 
@@ -907,7 +901,7 @@ T_STATIC void prv_setup_no_events_peek(TimelineAppData *data) {
   peek_layer_set_fields(peek_layer, "", i18n_get("No events", peek_layer), "");
   // set the icon resource
   TimelineResourceInfo timeline_res = {
-    .res_id = TIMELINE_RESOURCE_NO_EVENTS,
+      .res_id = TIMELINE_RESOURCE_NO_EVENTS,
   };
   const bool use_pin = false;
   prv_setup_peek_animation(data, &timeline_res, use_pin);
@@ -938,13 +932,13 @@ static void prv_setup_first_pin_peek(TimelineAppData *data) {
   const bool is_mini_peek = (data->state == TimelineAppStateHidePeek);
 
   // set the text
-  char number_buffer[TIME_STRING_REQUIRED_LENGTH] = {}; // "11"
-  char word_buffer[TIME_STRING_REQUIRED_LENGTH] = {}; // "min to"
+  char number_buffer[TIME_STRING_REQUIRED_LENGTH] = {};  // "11"
+  char word_buffer[TIME_STRING_REQUIRED_LENGTH] = {};    // "min to"
   if (!is_mini_peek) {
-    clock_get_event_relative_time_string(
-        number_buffer, sizeof(number_buffer), word_buffer, sizeof(word_buffer),
-        first_pin->header.timestamp, first_pin->header.duration, state->current_day,
-        first_pin->header.all_day);
+    clock_get_event_relative_time_string(number_buffer, sizeof(number_buffer), word_buffer,
+                                         sizeof(word_buffer), first_pin->header.timestamp,
+                                         first_pin->header.duration, state->current_day,
+                                         first_pin->header.all_day);
   }
   peek_layer_set_fields(peek_layer, number_buffer, word_buffer, "");
 
@@ -973,7 +967,9 @@ static void NOINLINE prv_setup_peek(TimelineAppData *data) {
     layer_set_hidden((Layer *)&data->peek_layer, false);
     prv_setup_no_events_peek(data);
     focus_handler = prv_peek_did_focus_handler;
-  } else if (state && ((state->current_day != time_util_get_midnight_of(now)) || (data->force_display_day_sep == true)) &&
+  } else if (state &&
+             ((state->current_day != time_util_get_midnight_of(now)) ||
+              (data->force_display_day_sep == true)) &&
              prv_set_state(data, TimelineAppStateFarDayHidePeek)) {
     // entering into a day that isn't today, setup the day separator
     // If switching from Past to Future or Future to Past,
@@ -999,10 +995,10 @@ static void NOINLINE prv_setup_peek(TimelineAppData *data) {
   }
 
   // set the did_focus handler
-  data->focus_event_info = (EventServiceInfo) {
-    .type = PEBBLE_APP_DID_CHANGE_FOCUS_EVENT,
-    .handler = focus_handler,
-    .context = s_app_data,
+  data->focus_event_info = (EventServiceInfo){
+      .type = PEBBLE_APP_DID_CHANGE_FOCUS_EVENT,
+      .handler = focus_handler,
+      .context = s_app_data,
   };
   event_service_client_subscribe(&s_app_data->focus_event_info);
 }
@@ -1021,7 +1017,7 @@ T_STATIC void prv_init_peek_layer(TimelineAppData *data) {
   Window *window = &data->timeline_window;
   PeekLayer *peek_layer = &data->peek_layer;
   const TimelineAppStyle *style = prv_get_style();
-  const GRect frame = { .origin.y = style->peek_offset_y, .size = window->layer.bounds.size };
+  const GRect frame = {.origin.y = style->peek_offset_y, .size = window->layer.bounds.size};
   peek_layer_init(peek_layer, &frame);
   peek_layer_set_icon_offset_y(peek_layer, style->peek_icon_offset_y);
   peek_layer_set_frame(peek_layer, &frame);
@@ -1042,10 +1038,9 @@ static void prv_timeline_window_load(Window *window) {
 
   // timeline layer
   timeline_layer_init(timeline_layer, &window->layer.bounds, scroll_direction);
-  timeline_layer_set_sidebar_color(timeline_layer,
-                                   PBL_IF_COLOR_ELSE(prv_get_sidebar_color(s_app_data),
-                                                     GColorLightGray));
-  timeline_layer_set_layouts_hidden(timeline_layer, true); // hide until the peek is over
+  timeline_layer_set_sidebar_color(
+      timeline_layer, PBL_IF_COLOR_ELSE(prv_get_sidebar_color(s_app_data), GColorLightGray));
+  timeline_layer_set_layouts_hidden(timeline_layer, true);  // hide until the peek is over
   layer_set_hidden((Layer *)&timeline_layer->day_separator, true);
   layer_add_child(&window->layer, (Layer *)timeline_layer);
 
@@ -1087,8 +1082,8 @@ static void prv_back_from_card_stopped(Animation *animation, bool finished, void
   data->current_animation = NULL;
   prv_update_timeline_layer(data);
 
-  Animation *layer_bounce = timeline_layer_create_bounce_back_animation(&data->timeline_layer,
-                                                                        GPoint(1, 0));
+  Animation *layer_bounce =
+      timeline_layer_create_bounce_back_animation(&data->timeline_layer, GPoint(1, 0));
 
   data->current_animation = layer_bounce;
   animation_schedule(layer_bounce);
@@ -1119,7 +1114,6 @@ Animation *timeline_animate_back_from_card(void) {
   timeline_layer_set_layouts_hidden(&data->timeline_layer, true);
   window_set_background_color(&data->timeline_window, GColorWhite);
 
-
   TimelineLayout *pin_timeline_layout = timeline_layer_get_current_layout(&data->timeline_layer);
   if (pin_timeline_layout) {
     // animation the pin icon
@@ -1129,14 +1123,16 @@ Animation *timeline_animate_back_from_card(void) {
 
   // animate the timeline layer from the left
   Layer *layer = &data->timeline_layer.layer;
-  GPoint from_origin = { -layer->bounds.size.w, 0 };
-  Animation *layer_in = (Animation *)property_animation_create_bounds_origin(layer, &from_origin,
-                                                                             &GPointZero);
+  GPoint from_origin = {-layer->bounds.size.w, 0};
+  Animation *layer_in =
+      (Animation *)property_animation_create_bounds_origin(layer, &from_origin, &GPointZero);
   animation_set_duration(layer_in, TIMELINE_CARD_TRANSITION_MS / 2);
   animation_set_custom_interpolation(layer_in, interpolate_moook);
-  animation_set_handlers(layer_in, (AnimationHandlers) {
-    .stopped = prv_back_from_card_stopped,
-  }, data);
+  animation_set_handlers(layer_in,
+                         (AnimationHandlers){
+                             .stopped = prv_back_from_card_stopped,
+                         },
+                         data);
 
   data->current_animation = layer_in;
   animation_schedule(layer_in);
@@ -1156,10 +1152,10 @@ static bool NOINLINE prv_setup_timeline_app(void) {
   s_app_data = data;
   *data = (TimelineAppData){};
 
-  data->blobdb_event_info = (EventServiceInfo) {
-    .type = PEBBLE_BLOBDB_EVENT,
-    .handler = prv_blobdb_event_handler,
-    .context = data,
+  data->blobdb_event_info = (EventServiceInfo){
+      .type = PEBBLE_BLOBDB_EVENT,
+      .handler = prv_blobdb_event_handler,
+      .context = data,
   };
   event_service_client_subscribe(&data->blobdb_event_info);
 
@@ -1190,8 +1186,7 @@ static bool NOINLINE prv_setup_timeline_app(void) {
   time_t now = rtc_get_time();
   TimelineItem pin;
   bool launch_into_pin = false;
-  if (args && args->launch_into_pin &&
-      !uuid_is_invalid(&args->pin_id) &&
+  if (args && args->launch_into_pin && !uuid_is_invalid(&args->pin_id) &&
       pin_db_get(&args->pin_id, &pin) == S_SUCCESS) {
     launch_into_pin = true;
     if (!args->stay_in_list_view) {
@@ -1216,7 +1211,8 @@ static bool NOINLINE prv_setup_timeline_app(void) {
         launch_into_pin = false;
         data->launch_into_deep_pin = false;
         // we couldn't find the launch pin, go back to the present
-        while (timeline_model_iter_prev(NULL, NULL)) {}
+        while (timeline_model_iter_prev(NULL, NULL)) {
+        }
         break;
       }
     }
@@ -1225,12 +1221,10 @@ static bool NOINLINE prv_setup_timeline_app(void) {
   Window *window = &data->timeline_window;
   window_init(window, WINDOW_NAME("Timeline"));
   window_set_user_data(window, data);
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_timeline_window_load,
-    .appear = prv_timeline_window_appear,
-    .disappear = prv_timeline_window_disappear,
-    .unload = prv_timeline_window_unload
-  });
+  window_set_window_handlers(window, &(WindowHandlers){.load = prv_timeline_window_load,
+                                                       .appear = prv_timeline_window_appear,
+                                                       .disappear = prv_timeline_window_disappear,
+                                                       .unload = prv_timeline_window_unload});
 
   return (launch_into_pin && !(args && args->stay_in_list_view));
 }
@@ -1272,40 +1266,43 @@ static void prv_main(void) {
 
 const PebbleProcessMd *timeline_get_app_info() {
   static const PebbleProcessMdSystem s_app_md = {
-    .common = {
-      .main_func = prv_main,
-      // uuid: 79C76B48-6111-4E80-8DEB-3119EEBEF33E
-      .uuid = TIMELINE_UUID_INIT,
-      .visibility = ProcessVisibilityQuickLaunch,
-    },
-    .name = i18n_noop("Timeline Future"),
+      .common =
+          {
+              .main_func = prv_main,
+              // uuid: 79C76B48-6111-4E80-8DEB-3119EEBEF33E
+              .uuid = TIMELINE_UUID_INIT,
+              .visibility = ProcessVisibilityQuickLaunch,
+          },
+      .name = i18n_noop("Timeline Future"),
   };
   return &s_app_md.common;
 }
 
 const PebbleProcessMd *timeline_past_get_app_info() {
   static const PebbleProcessMdSystem s_app_md = {
-    .common = {
-      .main_func = prv_main,
-      .uuid = TIMELINE_PAST_UUID_INIT,
-      .visibility = ProcessVisibilityQuickLaunch,
-    },
-    /// The title of Timeline Past in Quick Launch. If the translation is too long, cut out
-    /// Timeline and only translate "Past".
-    .name = i18n_noop("Timeline Past"),
+      .common =
+          {
+              .main_func = prv_main,
+              .uuid = TIMELINE_PAST_UUID_INIT,
+              .visibility = ProcessVisibilityQuickLaunch,
+          },
+      /// The title of Timeline Past in Quick Launch. If the translation is too long, cut out
+      /// Timeline and only translate "Past".
+      .name = i18n_noop("Timeline Past"),
   };
   return &s_app_md.common;
 }
 
 const PebbleProcessMd *timeline_full_get_app_info() {
   static const PebbleProcessMdSystem s_app_md = {
-    .common = {
-      .main_func = prv_main,
-      .uuid = TIMELINE_FULL_UUID_INIT,
-      .visibility = ProcessVisibilityShown,
-    },
-    .name = i18n_noop("Timeline"),
-    .icon_resource_id = RESOURCE_ID_DAY_SEPARATOR_TINY,
+      .common =
+          {
+              .main_func = prv_main,
+              .uuid = TIMELINE_FULL_UUID_INIT,
+              .visibility = ProcessVisibilityShown,
+          },
+      .name = i18n_noop("Timeline"),
+      .icon_resource_id = RESOURCE_ID_DAY_SEPARATOR_TINY,
   };
   return &s_app_md.common;
 }

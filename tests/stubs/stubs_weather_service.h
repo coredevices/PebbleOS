@@ -6,9 +6,6 @@
 #include "pbl/services/weather/weather_service.h"
 #include "pbl/util/attributes.h"
 
-WeatherLocationForecast * WEAK weather_service_create_default_forecast(void) {
-  return NULL;
-}
-
+WeatherLocationForecast *WEAK weather_service_create_default_forecast(void) { return NULL; }
 
 void WEAK weather_service_destroy_default_forecast(WeatherLocationForecast *forecast) {}

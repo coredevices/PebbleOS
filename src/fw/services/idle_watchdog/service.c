@@ -45,28 +45,28 @@ static void prv_watchdog_feed(PebbleEvent *e, void *context) {
 }
 
 void prf_idle_watchdog_init(void) {
-  s_bt_event_info = (EventServiceInfo) {
-    .type = PEBBLE_BT_CONNECTION_EVENT,
-    .handler = prv_watchdog_feed,
+  s_bt_event_info = (EventServiceInfo){
+      .type = PEBBLE_BT_CONNECTION_EVENT,
+      .handler = prv_watchdog_feed,
   };
   event_service_client_subscribe(&s_bt_event_info);
 
-  s_battery_event_info = (EventServiceInfo) {
-    .type = PEBBLE_BATTERY_CONNECTION_EVENT,
-    .handler = prv_watchdog_feed,
+  s_battery_event_info = (EventServiceInfo){
+      .type = PEBBLE_BATTERY_CONNECTION_EVENT,
+      .handler = prv_watchdog_feed,
   };
   event_service_client_subscribe(&s_battery_event_info);
 
-  s_button_event_info = (EventServiceInfo) {
-    .type = PEBBLE_BUTTON_DOWN_EVENT,
-    .handler = prv_watchdog_feed,
+  s_button_event_info = (EventServiceInfo){
+      .type = PEBBLE_BUTTON_DOWN_EVENT,
+      .handler = prv_watchdog_feed,
   };
   event_service_client_subscribe(&s_button_event_info);
 }
 
 void prf_idle_watchdog_start(void) {
-  s_is_idle_timer = (RegularTimerInfo) {
-    .cb = prv_handle_watchdog_timeout,
+  s_is_idle_timer = (RegularTimerInfo){
+      .cb = prv_handle_watchdog_timeout,
   };
   regular_timer_add_multiminute_callback(&s_is_idle_timer, PRF_IDLE_TIMEOUT_MINUTES);
   __atomic_store_n(&s_running, true, __ATOMIC_RELAXED);

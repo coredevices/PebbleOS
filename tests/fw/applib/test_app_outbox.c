@@ -26,26 +26,23 @@ EventServiceInfo *app_state_get_app_outbox_subscription_info(void) {
   return &s_app_state_app_outbox_subscription_info;
 }
 
-void event_service_client_subscribe(EventServiceInfo * service_info) {
-}
+void event_service_client_subscribe(EventServiceInfo *service_info) {}
 
-void sys_send_pebble_event_to_kernel(PebbleEvent* event) {
+void sys_send_pebble_event_to_kernel(PebbleEvent *event) {
   cl_assert_equal_i(event->type, PEBBLE_APP_OUTBOX_MSG_EVENT);
   event->callback.callback(event->callback.data);
 }
 
 static int s_num_app_outbox_events_sent;
-bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent* e) {
+bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent *e) {
   cl_assert_equal_i(e->type, PEBBLE_APP_OUTBOX_SENT_EVENT);
   cl_assert(e->app_outbox_sent.sent_handler);
-  e->app_outbox_sent.sent_handler(e->app_outbox_sent.status,
-                                  e->app_outbox_sent.cb_ctx);
+  e->app_outbox_sent.sent_handler(e->app_outbox_sent.status, e->app_outbox_sent.cb_ctx);
   ++s_num_app_outbox_events_sent;
   return true;
 }
 
-void app_message_outbox_handle_app_outbox_message_sent(AppOutboxStatus status, void *cb_ctx) {
-}
+void app_message_outbox_handle_app_outbox_message_sent(AppOutboxStatus status, void *cb_ctx) {}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Helpers
@@ -67,7 +64,7 @@ void test_app_outbox_sent_handler(AppOutboxStatus status, void *cb_ctx) {
 }
 
 #define assert_sent_cb_last_status(expected_status) \
-    cl_assert_equal_i(s_last_sent_status, expected_status)
+  cl_assert_equal_i(s_last_sent_status, expected_status)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Tests
@@ -89,7 +86,7 @@ void test_app_outbox__initialize(void) {
   s_last_message = NULL;
 
   stubs_syscall_init();
-  s_app_state_app_outbox_subscription_info = (EventServiceInfo) {};
+  s_app_state_app_outbox_subscription_info = (EventServiceInfo){};
   // set to something that is not expected anywhere in the tests:
   s_last_sent_status = AppOutboxStatusUserRangeEnd;
 
@@ -106,10 +103,8 @@ void test_app_outbox__cleanup(void) {
 static size_t s_consumer_data_length = 1;
 
 static void prv_register(void) {
-  app_outbox_service_register(AppOutboxServiceTagUnitTest,
-                              prv_message_handler,
-                              PebbleTask_KernelMain,
-                              s_consumer_data_length);
+  app_outbox_service_register(AppOutboxServiceTagUnitTest, prv_message_handler,
+                              PebbleTask_KernelMain, s_consumer_data_length);
 }
 
 void test_app_outbox__register_twice_asserts(void) {
@@ -120,19 +115,18 @@ void test_app_outbox__register_twice_asserts(void) {
 void test_app_outbox__send_not_user_space_buffer(void) {
   // TODO: really implement privilege escalation in unit tests. See PBL-9688
   return;
-  cl_assert_passert(app_outbox_send(NULL, s_test_data_length,
-                                    test_app_outbox_sent_handler, s_expected_cb_ctx));
+  cl_assert_passert(
+      app_outbox_send(NULL, s_test_data_length, test_app_outbox_sent_handler, s_expected_cb_ctx));
   assert_syscall_failed();
 }
 
 // Disallowed, because it's not white-listed in app_outbox_service.c
-static void prv_disallowed_sent_handler(AppOutboxStatus status, void *cb_ctx) {
-}
+static void prv_disallowed_sent_handler(AppOutboxStatus status, void *cb_ctx) {}
 
 void test_app_outbox__send_disallowed_sent_handler(void) {
   prv_register();
-  cl_assert_passert(app_outbox_send(s_test_data, s_test_data_length,
-                                    prv_disallowed_sent_handler, s_expected_cb_ctx));
+  cl_assert_passert(app_outbox_send(s_test_data, s_test_data_length, prv_disallowed_sent_handler,
+                                    s_expected_cb_ctx));
   assert_syscall_failed();
 }
 
@@ -147,8 +141,7 @@ void test_app_outbox__send_but_consumer_not_registered(void) {
   prv_register();
   app_outbox_service_unregister(AppOutboxServiceTagUnitTest);
 
-  app_outbox_send(s_test_data, s_test_data_length,
-                  test_app_outbox_sent_handler, s_expected_cb_ctx);
+  app_outbox_send(s_test_data, s_test_data_length, test_app_outbox_sent_handler, s_expected_cb_ctx);
   assert_sent_cb_last_status(AppOutboxStatusConsumerDoesNotExist);
 }
 
@@ -159,21 +152,19 @@ void test_app_outbox__send_but_max_pending_messages_reached(void) {
       app_outbox_service_max_pending_messages(AppOutboxServiceTagUnitTest);
 
   for (uint32_t i = 0; i < max_pending_messages; ++i) {
-    app_outbox_send(s_test_data, s_test_data_length,
-                    test_app_outbox_sent_handler, s_expected_cb_ctx);
+    app_outbox_send(s_test_data, s_test_data_length, test_app_outbox_sent_handler,
+                    s_expected_cb_ctx);
     cl_assert_equal_i(s_num_sent_handler_called, 0);
   }
 
-  app_outbox_send(s_test_data, s_test_data_length,
-                  test_app_outbox_sent_handler, s_expected_cb_ctx);
+  app_outbox_send(s_test_data, s_test_data_length, test_app_outbox_sent_handler, s_expected_cb_ctx);
   assert_sent_cb_last_status(AppOutboxStatusOutOfResources);
 }
 
 void test_app_outbox__send_but_oom(void) {
   prv_register();
   fake_kernel_malloc_set_largest_free_block(0);
-  app_outbox_send(s_test_data, s_test_data_length,
-                  test_app_outbox_sent_handler, s_expected_cb_ctx);
+  app_outbox_send(s_test_data, s_test_data_length, test_app_outbox_sent_handler, s_expected_cb_ctx);
   assert_sent_cb_last_status(AppOutboxStatusOutOfMemory);
 }
 
@@ -195,8 +186,8 @@ void test_app_outbox__send(void) {
 
   AppOutboxMessage *message[max_pending_messages];
   for (uint32_t i = 0; i < max_pending_messages; ++i) {
-    app_outbox_send(s_test_data, s_test_data_length,
-                    test_app_outbox_sent_handler, s_expected_cb_ctx);
+    app_outbox_send(s_test_data, s_test_data_length, test_app_outbox_sent_handler,
+                    s_expected_cb_ctx);
     cl_assert_equal_i(s_num_app_outbox_events_sent, 0);
     cl_assert_equal_i(s_num_message_handler_calls, i + 1);
     cl_assert(s_last_message);
@@ -221,8 +212,7 @@ void test_app_outbox__unregister_with_pending_message(void) {
   fake_kernel_malloc_mark();
 
   prv_register();
-  app_outbox_send(s_test_data, s_test_data_length,
-                  test_app_outbox_sent_handler, s_expected_cb_ctx);
+  app_outbox_send(s_test_data, s_test_data_length, test_app_outbox_sent_handler, s_expected_cb_ctx);
   cl_assert(s_last_message);
 
   app_outbox_service_unregister(AppOutboxServiceTagUnitTest);
@@ -243,8 +233,7 @@ void test_app_outbox__cleanup_all_with_pending_message(void) {
   fake_kernel_malloc_mark();
 
   prv_register();
-  app_outbox_send(s_test_data, s_test_data_length,
-                  test_app_outbox_sent_handler, s_expected_cb_ctx);
+  app_outbox_send(s_test_data, s_test_data_length, test_app_outbox_sent_handler, s_expected_cb_ctx);
   cl_assert(s_last_message);
 
   app_outbox_service_cleanup_all_pending_messages();
@@ -258,4 +247,3 @@ void test_app_outbox__cleanup_all_with_pending_message(void) {
 
   fake_kernel_malloc_mark_assert_equal();
 }
-

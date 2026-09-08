@@ -17,9 +17,8 @@
 // the next appear replays it — call on a globe city commit before the reveal.
 void forecast_list_replay_location_intro(void);
 
-void forecast_list_push(const WeatherLocationForecast *days, size_t num_days,
-                        int start_day_index, bool animated,
-                        void (*on_pop)(void *ctx), void *on_pop_ctx,
+void forecast_list_push(const WeatherLocationForecast *days, size_t num_days, int start_day_index,
+                        bool animated, void (*on_pop)(void *ctx), void *on_pop_ctx,
                         void (*on_city_select)(void *ctx), void *on_city_select_ctx);
 
 // Register the callback the DOWN-again clock-burst fires on completion (to push the clock face).
@@ -55,5 +54,4 @@ void forecast_list_update_data(const WeatherLocationForecast *days, size_t num_d
 // The expanded card's glance data (sunset title + high/low° strings, UV + rain %). The UP-to-card
 // hero transition animates this identical content (time, text, meters) in from the left, synced to
 // the icon-fly landing.
-void forecast_list_set_glance(const char *sunset, const char *temp, int uv, int precip,
-                              int wind);
+void forecast_list_set_glance(const char *sunset, const char *temp, int uv, int precip, int wind);

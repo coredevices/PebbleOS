@@ -6,6 +6,4 @@
 #include "applib/battery_state_service.h"
 #include "pbl/util/attributes.h"
 
-BatteryChargeState WEAK battery_state_service_peek(void) {
-  return (BatteryChargeState) {};
-}
+BatteryChargeState WEAK battery_state_service_peek(void) { return (BatteryChargeState){}; }

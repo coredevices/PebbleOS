@@ -45,9 +45,7 @@ void dbgserial_set_rx_dma_enabled(bool enabled) {
   }
 }
 
-void dbgserial_set_input_enabled(bool enabled) {
-  uart_set_rx_interrupt_enabled(DBG_UART, enabled);
-}
+void dbgserial_set_input_enabled(bool enabled) { uart_set_rx_interrupt_enabled(DBG_UART, enabled); }
 
 #else
 void dbgserial_input_init(void) {}

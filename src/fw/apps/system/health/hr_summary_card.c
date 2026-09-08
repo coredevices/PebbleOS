@@ -43,7 +43,6 @@ typedef struct HealthHrSummaryCardData {
 #define TEXT_COLOR (PBL_IF_COLOR_ELSE(GColorBulgarianRose, GColorBlack))
 #define CARD_BACKGROUND_COLOR (PBL_IF_COLOR_ELSE(GColorWhite, GColorWhite))
 
-
 static void prv_pulsing_heart_timer_cb(void *context) {
   Layer *base_layer = context;
   HealthHrSummaryCardData *data = layer_get_data(base_layer);
@@ -61,9 +60,8 @@ static void prv_pulsing_heart_timer_cb(void *context) {
   }
 
   if (data->num_heart_beats < max_heart_beats) {
-    data->pulsing_heart_timer = app_timer_register(timer_duration,
-                                                   prv_pulsing_heart_timer_cb,
-                                                   base_layer);
+    data->pulsing_heart_timer =
+        app_timer_register(timer_duration, prv_pulsing_heart_timer_cb, base_layer);
   }
 
   layer_mark_dirty(base_layer);
@@ -72,8 +70,8 @@ static void prv_pulsing_heart_timer_cb(void *context) {
 static void prv_render_progress_bar(GContext *ctx, Layer *base_layer) {
   HealthHrSummaryCardData *data = layer_get_data(base_layer);
 
-  health_progress_bar_fill(ctx, &data->progress_bar, PROGRESS_BACKGROUND_COLOR,
-                           0, HEALTH_PROGRESS_BAR_MAX_VALUE);
+  health_progress_bar_fill(ctx, &data->progress_bar, PROGRESS_BACKGROUND_COLOR, 0,
+                           HEALTH_PROGRESS_BAR_MAX_VALUE);
 }
 
 static void prv_render_icon(GContext *ctx, Layer *base_layer) {
@@ -99,14 +97,14 @@ static void prv_render_bpm(GContext *ctx, Layer *base_layer) {
   horiz_container->horizontal_alignment = GTextAlignmentCenter;
 
   if (data->now_bpm == 0) {
-    health_util_create_text_node_with_text(
-        EM_DASH, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD), TEXT_COLOR, container);
+    health_util_create_text_node_with_text(EM_DASH, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
+                                           TEXT_COLOR, container);
   } else {
     const size_t bpm_size = sizeof("000");
 
     GTextNodeText *number_text_node =
         health_util_create_text_node(bpm_size, data->bpm_font, TEXT_COLOR, container);
-    snprintf((char *)number_text_node->text, bpm_size, "%"PRIu32, data->now_bpm);
+    snprintf((char *)number_text_node->text, bpm_size, "%" PRIu32, data->now_bpm);
 
     GTextNodeText *units_text_node = health_util_create_text_node_with_text(
         i18n_get("BPM", base_layer), data->units_font, TEXT_COLOR, container);
@@ -116,9 +114,10 @@ static void prv_render_bpm(GContext *ctx, Layer *base_layer) {
 
   const int offset_y = PBL_IF_RECT_ELSE(101, 109) + HEALTH_Y_OFFSET;
 
-  graphics_text_node_draw(&container->node, ctx,
-      &GRect(0, offset_y, base_layer->bounds.size.w,
-             fonts_get_font_height(data->bpm_font)), NULL, NULL);
+  graphics_text_node_draw(
+      &container->node, ctx,
+      &GRect(0, offset_y, base_layer->bounds.size.w, fonts_get_font_height(data->bpm_font)), NULL,
+      NULL);
   graphics_text_node_destroy(&container->node);
 }
 
@@ -141,8 +140,8 @@ static void prv_render_timstamp(GContext *ctx, Layer *base_layer) {
 #endif
 
   graphics_context_set_text_color(ctx, TEXT_COLOR);
-  graphics_draw_text(ctx, buffer, data->timestamp_font,
-                     rect, GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+  graphics_draw_text(ctx, buffer, data->timestamp_font, rect, GTextOverflowModeWordWrap,
+                     GTextAlignmentCenter, NULL);
 }
 
 static void prv_render_hrm_disabled(GContext *ctx, Layer *base_layer) {
@@ -156,8 +155,8 @@ static void prv_render_hrm_disabled(GContext *ctx, Layer *base_layer) {
   const char *text = i18n_get("Enable heart rate monitoring in the mobile app", base_layer);
 
   graphics_context_set_text_color(ctx, TEXT_COLOR);
-  graphics_draw_text(ctx, text, data->timestamp_font,
-                     rect, GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+  graphics_draw_text(ctx, text, data->timestamp_font, rect, GTextOverflowModeWordWrap,
+                     GTextAlignmentCenter, NULL);
 }
 
 static void prv_base_layer_update_proc(Layer *base_layer, GContext *ctx) {
@@ -194,25 +193,26 @@ Layer *health_hr_summary_card_create(HealthData *health_data) {
   HealthHrSummaryCardData *data = layer_get_data(base_layer);
   layer_set_update_proc(base_layer, prv_base_layer_update_proc);
   // set health data
-  *data = (HealthHrSummaryCardData) {
-    .health_data = health_data,
-    .pulsing_heart =
-        gdraw_command_sequence_create_with_resource(RESOURCE_ID_HEALTH_APP_PULSING_HEART),
-    .progress_bar = {
-      .num_segments = ARRAY_LENGTH(s_hr_summary_progress_segments),
-      .segments = s_hr_summary_progress_segments,
-    },
-    .now_bpm = health_data_hr_get_current_bpm(health_data),
-    .resting_bpm = health_data_hr_get_resting_bpm(health_data),
-    .last_updated = health_data_hr_get_last_updated_timestamp(health_data),
+  *data = (HealthHrSummaryCardData){
+      .health_data = health_data,
+      .pulsing_heart =
+          gdraw_command_sequence_create_with_resource(RESOURCE_ID_HEALTH_APP_PULSING_HEART),
+      .progress_bar =
+          {
+              .num_segments = ARRAY_LENGTH(s_hr_summary_progress_segments),
+              .segments = s_hr_summary_progress_segments,
+          },
+      .now_bpm = health_data_hr_get_current_bpm(health_data),
+      .resting_bpm = health_data_hr_get_resting_bpm(health_data),
+      .last_updated = health_data_hr_get_last_updated_timestamp(health_data),
 #if DISP_ROWS > LEGACY_2X_DISP_ROWS
-    .bpm_font = fonts_get_system_font(FONT_KEY_LECO_32_BOLD_NUMBERS),
-    .units_font = fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM),
+      .bpm_font = fonts_get_system_font(FONT_KEY_LECO_32_BOLD_NUMBERS),
+      .units_font = fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM),
 #else
-    .bpm_font = fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM),
-    .units_font = fonts_get_system_font(FONT_KEY_LECO_20_BOLD_NUMBERS),
+      .bpm_font = fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM),
+      .units_font = fonts_get_system_font(FONT_KEY_LECO_20_BOLD_NUMBERS),
 #endif
-    .timestamp_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
+      .timestamp_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
   };
 
   data->pulsing_heart_timer = app_timer_register(0, prv_pulsing_heart_timer_cb, base_layer);
@@ -224,9 +224,9 @@ void health_hr_summary_card_select_click_handler(Layer *layer) {
   HealthHrSummaryCardData *data = layer_get_data(layer);
   HealthData *health_data = data->health_data;
   Window *window = health_hr_detail_card_create(health_data);
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .unload = prv_hr_detail_card_unload_callback,
-  });
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .unload = prv_hr_detail_card_unload_callback,
+                                     });
   app_window_stack_push(window, true);
 }
 
@@ -238,10 +238,6 @@ void health_hr_summary_card_destroy(Layer *base_layer) {
   layer_destroy(base_layer);
 }
 
-GColor health_hr_summary_card_get_bg_color(Layer *layer) {
-  return CARD_BACKGROUND_COLOR;
-}
+GColor health_hr_summary_card_get_bg_color(Layer *layer) { return CARD_BACKGROUND_COLOR; }
 
-bool health_hr_summary_show_select_indicator(Layer *layer) {
-  return true;
-}
+bool health_hr_summary_show_select_indicator(Layer *layer) { return true; }

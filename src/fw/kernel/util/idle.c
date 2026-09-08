@@ -5,18 +5,10 @@
 
 static bool s_idle_allowed = true;
 
-void idle_set_enabled(bool enable) {
-  s_idle_allowed = enable;
-}
+void idle_set_enabled(bool enable) { s_idle_allowed = enable; }
 
-bool idle_is_allowed(void) {
-  return s_idle_allowed;
-}
+bool idle_is_allowed(void) { return s_idle_allowed; }
 
-void command_scheduler_force_active(void) {
-  idle_set_enabled(false);
-}
+void command_scheduler_force_active(void) { idle_set_enabled(false); }
 
-void command_scheduler_resume_normal(void) {
-  idle_set_enabled(true);
-}
+void command_scheduler_resume_normal(void) { idle_set_enabled(true); }

@@ -39,17 +39,15 @@ static SystemTaskEventCallback s_current_cb;
 static bool s_system_task_idle = true;
 static bool s_should_block_callbacks = false;
 
-static bool prv_is_accepting_callbacks() {
-  return s_initialized && !s_should_block_callbacks;
-}
+static bool prv_is_accepting_callbacks() { return s_initialized && !s_should_block_callbacks; }
 
-static void system_task_idle_timer_callback(void* data) {
+static void system_task_idle_timer_callback(void *data) {
   if (s_system_task_idle && pbl_poll_group_is_empty(&s_system_task_queue_set)) {
     system_task_watchdog_feed();
   }
 }
 
-static void system_task_main(void* paramater) {
+static void system_task_main(void *paramater) {
   task_watchdog_mask_set(PebbleTask_KernelBackground);
   task_init();
 
@@ -88,12 +86,12 @@ void system_task_init(void) {
   extern uint32_t __stack_guard_size__[];
 
   struct pbl_thread_attr attr = {
-    .name = "KernelBG",
-    .entry = system_task_main,
-    .prio = SYSTEM_TASK_PRIORITY,
-    .privileged = true,
-    .stack = (void *)((uintptr_t)__kernel_bg_stack_start__ + (uintptr_t)__stack_guard_size__),
-    .stack_size = (uintptr_t)__kernel_bg_stack_size__ - (uintptr_t)__stack_guard_size__,
+      .name = "KernelBG",
+      .entry = system_task_main,
+      .prio = SYSTEM_TASK_PRIORITY,
+      .privileged = true,
+      .stack = (void *)((uintptr_t)__kernel_bg_stack_start__ + (uintptr_t)__stack_guard_size__),
+      .stack_size = (uintptr_t)__kernel_bg_stack_size__ - (uintptr_t)__stack_guard_size__,
   };
 
   pebble_task_create(PebbleTask_KernelBackground, &attr);
@@ -107,27 +105,19 @@ void system_task_timer_init(void) {
   // all the other regular tasks. Note that the system_task_idle_timer_callback only kicks
   // the watchdog if we're currently waiting for work to do on the system_task. If we're in the
   // middle of something we won't kick it.
-  static RegularTimerInfo idle_watchdog_timer = {
-    .cb = system_task_idle_timer_callback
-  };
+  static RegularTimerInfo idle_watchdog_timer = {.cb = system_task_idle_timer_callback};
   regular_timer_add_seconds_callback(&idle_watchdog_timer);
 }
 
-void system_task_watchdog_feed(void) {
-  task_watchdog_bit_set(PebbleTask_KernelBackground);
-}
+void system_task_watchdog_feed(void) { task_watchdog_bit_set(PebbleTask_KernelBackground); }
 
 static void handle_system_task_send_failure(SystemTaskEventCallback cb, uintptr_t caller_lr) {
   PBL_LOG_ERR("System task queue full. Dropped cb: %p, current cb: %p", cb, s_current_cb);
 
-  RebootReason reason = {
-    .code = RebootReasonCode_EventQueueFull,
-    .event_queue = {
-      .push_lr = (uint32_t) caller_lr,
-      .current_event = (uint32_t) s_current_cb,
-      .dropped_event = (uint32_t) cb
-    }
-  };
+  RebootReason reason = {.code = RebootReasonCode_EventQueueFull,
+                         .event_queue = {.push_lr = (uint32_t)caller_lr,
+                                         .current_event = (uint32_t)s_current_cb,
+                                         .dropped_event = (uint32_t)cb}};
   reboot_reason_set(&reason);
 
   reset_due_to_software_failure();
@@ -136,8 +126,8 @@ static void handle_system_task_send_failure(SystemTaskEventCallback cb, uintptr_
 static bool prv_send_to_queue_from_isr(SystemTaskEventCallback cb, void *data,
                                        bool *should_context_switch) {
   SystemTaskEvent event = {
-    .cb = cb,
-    .data = data,
+      .cb = cb,
+      .data = data,
   };
 
   bool success = (pbl_msgq_put(&s_system_task_queue, &event, PBL_NO_WAIT) == 0);
@@ -146,7 +136,8 @@ static bool prv_send_to_queue_from_isr(SystemTaskEventCallback cb, void *data,
   return success;
 }
 
-bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data, bool* should_context_switch) {
+bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data,
+                                       bool *should_context_switch) {
   // Capture caller LR at entry; reading from a deeper helper is unreliable.
   uintptr_t caller_lr = (uintptr_t)__builtin_return_address(0);
   if (!prv_is_accepting_callbacks()) {
@@ -177,18 +168,20 @@ bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
   }
 
   SystemTaskEvent event = {
-    .cb = cb,
-    .data = data,
+      .cb = cb,
+      .data = data,
   };
 
   if (pebble_task_get_current() == PebbleTask_App) {
     // If we're the app and we've filled up our system task, the app just gets to wait.
-    // FIXME: In the future when we want to bound the amount of time a syscall can take this will have to change.
+    // FIXME: In the future when we want to bound the amount of time a syscall can take this will
+    // have to change.
     pbl_msgq_put(&s_from_app_system_task_queue, &event, PBL_FOREVER);
     return true;
   } else {
-    // Back ourselves up and wait a reasonable amount of time before failing. If the queue is really backed up
-    // we want to fall through to the handle_system_task_send_failure and not just get killed by the watchdog.
+    // Back ourselves up and wait a reasonable amount of time before failing. If the queue is really
+    // backed up we want to fall through to the handle_system_task_send_failure and not just get
+    // killed by the watchdog.
     bool success = (pbl_msgq_put(&s_system_task_queue, &event, PBL_MSEC(3000)) == 0);
     if (!success) {
       handle_system_task_send_failure(cb, caller_lr);
@@ -198,21 +191,17 @@ bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
   return true;
 }
 
-void system_task_block_callbacks(bool block) {
-  s_should_block_callbacks = block;
-}
+void system_task_block_callbacks(bool block) { s_should_block_callbacks = block; }
 
 uint32_t system_task_get_available_space(void) {
   const bool is_app = pebble_task_get_current() == PebbleTask_App;
   return pbl_msgq_num_free(is_app ? &s_from_app_system_task_queue : &s_system_task_queue);
 }
 
-void* system_task_get_current_callback(void) {
-  return s_current_cb;
-}
+void *system_task_get_current_callback(void) { return s_current_cb; }
 
 void system_task_enable_raised_priority(bool is_raised) {
-  const pbl_prio_t raised_priority_level = PBL_PRIO_IDLE + 3; // Same as KernelMain / BT tasks
+  const pbl_prio_t raised_priority_level = PBL_PRIO_IDLE + 3;  // Same as KernelMain / BT tasks
   pbl_thread_prio_set(pebble_task_get_thread(PebbleTask_KernelBackground),
                       is_raised ? raised_priority_level : SYSTEM_TASK_PRIORITY);
 }

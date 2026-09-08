@@ -41,24 +41,15 @@ typedef struct __attribute__((__packed__)) {
 // -----------------------------------------------------------------------------
 // Accessors
 
-Uuid ble_ibeacon_get_uuid(const BLEiBeacon *ibeacon) {
-  return ibeacon->uuid;
-}
+Uuid ble_ibeacon_get_uuid(const BLEiBeacon *ibeacon) { return ibeacon->uuid; }
 
-uint16_t ble_ibeacon_get_major(const BLEiBeacon *ibeacon) {
-  return ibeacon->major;
-}
+uint16_t ble_ibeacon_get_major(const BLEiBeacon *ibeacon) { return ibeacon->major; }
 
-uint16_t ble_ibeacon_get_minor(const BLEiBeacon *ibeacon) {
-  return ibeacon->minor;
-}
+uint16_t ble_ibeacon_get_minor(const BLEiBeacon *ibeacon) { return ibeacon->minor; }
 
-uint16_t ble_ibeacon_get_distance_cm(const BLEiBeacon *ibeacon) {
-  return ibeacon->distance_cm;
-}
+uint16_t ble_ibeacon_get_distance_cm(const BLEiBeacon *ibeacon) { return ibeacon->distance_cm; }
 
-BLEiBeacon *ble_ibeacon_create_from_ad_data(const BLEAdData *ad,
-                                            int8_t rssi) {
+BLEiBeacon *ble_ibeacon_create_from_ad_data(const BLEAdData *ad, int8_t rssi) {
   // Note, not yet exported to 3rd party apps so no padding necessary
   BLEiBeacon *ibeacon = applib_malloc(sizeof(BLEiBeacon));
   if (ibeacon && !ble_ibeacon_parse(ad, rssi, ibeacon)) {
@@ -69,43 +60,36 @@ BLEiBeacon *ble_ibeacon_create_from_ad_data(const BLEAdData *ad,
   return ibeacon;
 }
 
-void ble_ibeacon_destroy(BLEiBeacon *ibeacon) {
-  applib_free(ibeacon);
-}
+void ble_ibeacon_destroy(BLEiBeacon *ibeacon) { applib_free(ibeacon); }
 
 // -----------------------------------------------------------------------------
 // Below is the iBeacon advertisement parsing code.
 
 static uint16_t calculate_distance_cm(int8_t tx_power, int8_t rssi) {
-  return 0; // TODO
+  return 0;  // TODO
 }
 
 // -----------------------------------------------------------------------------
 //! iBeacon Advertisement Data parser
-bool ble_ibeacon_parse(const BLEAdData *ad, int8_t rssi,
-                       BLEiBeacon *ibeacon_out) {
+bool ble_ibeacon_parse(const BLEAdData *ad, int8_t rssi, BLEiBeacon *ibeacon_out) {
   uint16_t company_id = 0;
   AdDataManufacturerSpecificAppleiBeacon raw_ibeacon;
-  const size_t size_copied =
-      ble_ad_copy_manufacturer_specific_data(ad, &company_id,
-                                             (uint8_t *) &raw_ibeacon,
-                                             sizeof(raw_ibeacon));
+  const size_t size_copied = ble_ad_copy_manufacturer_specific_data(
+      ad, &company_id, (uint8_t *)&raw_ibeacon, sizeof(raw_ibeacon));
   if (size_copied != sizeof(raw_ibeacon)) {
     return false;
   }
 
-  if (company_id == COMPANY_ID_APPLE &&
-      raw_ibeacon.type == APPLE_TYPE_IBEACON &&
+  if (company_id == COMPANY_ID_APPLE && raw_ibeacon.type == APPLE_TYPE_IBEACON &&
       raw_ibeacon.length == APPLE_IBEACON_LENGTH) {
-
     const int8_t tx_power = raw_ibeacon.calibrated_tx_power;
-    *ibeacon_out = (const BLEiBeacon) {
-      .uuid = UuidMakeFromBEBytes(raw_ibeacon.uuid),
-      .major = ntohs(raw_ibeacon.major),
-      .minor = ntohs(raw_ibeacon.minor),
-      .distance_cm = calculate_distance_cm(tx_power, rssi),
-      .rssi = rssi,
-      .calibrated_tx_power = tx_power,
+    *ibeacon_out = (const BLEiBeacon){
+        .uuid = UuidMakeFromBEBytes(raw_ibeacon.uuid),
+        .major = ntohs(raw_ibeacon.major),
+        .minor = ntohs(raw_ibeacon.minor),
+        .distance_cm = calculate_distance_cm(tx_power, rssi),
+        .rssi = rssi,
+        .calibrated_tx_power = tx_power,
     };
     return true;
   }
@@ -116,17 +100,16 @@ bool ble_ibeacon_parse(const BLEAdData *ad, int8_t rssi,
 //! iBeacon Advertisement Data composer
 bool ble_ibeacon_compose(const BLEiBeacon *ibeacon_in, BLEAdData *ad_out) {
   AdDataManufacturerSpecificAppleiBeacon raw_ibeacon = {
-    .type = APPLE_TYPE_IBEACON,
-    .length = APPLE_IBEACON_LENGTH,
-    // Major/Minor are part of Apple's iBeacon spec and are Big Endian!
-    .major = htons(ibeacon_in->major),
-    .minor = htons(ibeacon_in->minor),
-    .calibrated_tx_power = ibeacon_in->calibrated_tx_power,
+      .type = APPLE_TYPE_IBEACON,
+      .length = APPLE_IBEACON_LENGTH,
+      // Major/Minor are part of Apple's iBeacon spec and are Big Endian!
+      .major = htons(ibeacon_in->major),
+      .minor = htons(ibeacon_in->minor),
+      .calibrated_tx_power = ibeacon_in->calibrated_tx_power,
   };
   // Uuid is stored Big Endian on Pebble, so just copy over:
   memcpy(&raw_ibeacon.uuid, &ibeacon_in->uuid, sizeof(Uuid));
 
-  return ble_ad_set_manufacturer_specific_data(ad_out, COMPANY_ID_APPLE,
-                                               (uint8_t *) &raw_ibeacon,
+  return ble_ad_set_manufacturer_specific_data(ad_out, COMPANY_ID_APPLE, (uint8_t *)&raw_ibeacon,
                                                sizeof(raw_ibeacon));
 }

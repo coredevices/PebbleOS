@@ -31,12 +31,12 @@ void gpath_init(GPath *path, const GPathInfo *init) {
   path->points = init->points;
 }
 
-GPath* gpath_create(const GPathInfo *init) {
+GPath *gpath_create(const GPathInfo *init) {
   // Can't pad this out because the definition itself is exported. Even if we did pad it out so
-  // we can theoretically add members to the end of the struct, we'll still have to add compatibility
-  // flags throughout here to check which size of struct the app is going to pass us through these
-  // APIs.
-  GPath* path = applib_malloc(sizeof(GPath));
+  // we can theoretically add members to the end of the struct, we'll still have to add
+  // compatibility flags throughout here to check which size of struct the app is going to pass us
+  // through these APIs.
+  GPath *path = applib_malloc(sizeof(GPath));
   if (path) {
     gpath_init(path, init);
   } else {
@@ -45,22 +45,22 @@ GPath* gpath_create(const GPathInfo *init) {
   return path;
 }
 
-void gpath_destroy(GPath* gpath) {
-  applib_free(gpath);
-}
+void gpath_destroy(GPath *gpath) { applib_free(gpath); }
 
 static GPoint rotate_offset_point(const GPoint *orig, int32_t rotation, const GPoint *offset) {
   int32_t cosine = cos_lookup(rotation);
   int32_t sine = sin_lookup(rotation);
   GPoint result;
-  result.x = (int32_t)orig->x * cosine / TRIG_MAX_RATIO - (int32_t)orig->y * sine / TRIG_MAX_RATIO + offset->x;
-  result.y = (int32_t)orig->y * cosine / TRIG_MAX_RATIO + (int32_t)orig->x * sine / TRIG_MAX_RATIO + offset->y;
+  result.x = (int32_t)orig->x * cosine / TRIG_MAX_RATIO - (int32_t)orig->y * sine / TRIG_MAX_RATIO +
+             offset->x;
+  result.y = (int32_t)orig->y * cosine / TRIG_MAX_RATIO + (int32_t)orig->x * sine / TRIG_MAX_RATIO +
+             offset->y;
   return result;
 }
 
 static void sort16(int16_t *values, size_t length) {
   for (unsigned int i = 0; i < length; i++) {
-    for (unsigned int j = i+1; j < length; j++) {
+    for (unsigned int j = i + 1; j < length; j++) {
       if (values[i] > values[j]) {
         swap16(&values[i], &values[j]);
       }
@@ -77,7 +77,7 @@ static void swapIntersections(Intersection *a, Intersection *b) {
 
 static void sortIntersections(Intersection *values, size_t length) {
   for (unsigned int i = 0; i < length; i++) {
-    for (unsigned int j = i+1; j < length; j++) {
+    for (unsigned int j = i + 1; j < length; j++) {
       if (values[i].x.raw_value > values[j].x.raw_value) {
         swapIntersections(&values[i], &values[j]);
       }
@@ -90,11 +90,9 @@ static inline bool prv_is_in_range(int16_t min_a, int16_t max_a, int16_t min_b, 
   return (max_a >= min_b) && (min_a <= max_b);
 }
 
-static void prv_gpath_draw_filled_cb(GContext *ctx, int16_t y,
-                                     Fixed_S16_3 x_range_begin, Fixed_S16_3 x_range_end,
-                                     Fixed_S16_3 delta_begin, Fixed_S16_3 delta_end,
-                                     void *user_data) {
-
+static void prv_gpath_draw_filled_cb(GContext *ctx, int16_t y, Fixed_S16_3 x_range_begin,
+                                     Fixed_S16_3 x_range_end, Fixed_S16_3 delta_begin,
+                                     Fixed_S16_3 delta_end, void *user_data) {
 #if PBL_COLOR
   // We know that correct delta is always positive, and treat that as an input from
   // antialiased function, otherwise its treated as non-AA
@@ -102,17 +100,16 @@ static void prv_gpath_draw_filled_cb(GContext *ctx, int16_t y,
     x_range_begin.integer++;
     x_range_end.integer--;
 
-    graphics_private_draw_horizontal_line_delta_aa(
-        ctx, y, x_range_begin, x_range_end, delta_begin, delta_end);
+    graphics_private_draw_horizontal_line_delta_aa(ctx, y, x_range_begin, x_range_end, delta_begin,
+                                                   delta_end);
     return;
   }
 #endif
-  graphics_fill_rect(
-      ctx, &(GRect) { { x_range_begin.integer + 1, y },
-                      { x_range_end.integer - x_range_begin.integer - 1, 1 } });
+  graphics_fill_rect(ctx, &(GRect){{x_range_begin.integer + 1, y},
+                                   {x_range_end.integer - x_range_begin.integer - 1, 1}});
 }
 
-void gpath_draw_filled(GContext* ctx, GPath* path) {
+void gpath_draw_filled(GContext *ctx, GPath *path) {
 #if PBL_COLOR
   // This algorithm makes sense only in 8bit mode...
   if (ctx->draw_state.antialiased) {
@@ -124,15 +121,11 @@ void gpath_draw_filled(GContext* ctx, GPath* path) {
   gpath_draw_filled_with_cb(ctx, path, prv_gpath_draw_filled_cb, NULL);
 }
 
-void gpath_draw_outline(GContext* ctx, GPath* path) {
-  gpath_draw_stroke(ctx, path, false);
-}
+void gpath_draw_outline(GContext *ctx, GPath *path) { gpath_draw_stroke(ctx, path, false); }
 
-void gpath_draw_outline_open(GContext* ctx, GPath* path) {
-  gpath_draw_stroke(ctx, path, true);
-}
+void gpath_draw_outline_open(GContext *ctx, GPath *path) { gpath_draw_stroke(ctx, path, true); }
 
-void gpath_draw_stroke(GContext* ctx, GPath* path, bool open) {
+void gpath_draw_stroke(GContext *ctx, GPath *path, bool open) {
   if (!path || path->num_points < 2) {
     return;
   }
@@ -219,13 +212,12 @@ void prv_fill_path_with_cb_aa(GContext *ctx, GPath *path, GPathDrawFilledCallbac
    *      + Gradients too close to clipping rect will be properly cut off
    */
 
-
   // Protect against apps calling with no points to draw (Upright watchface)
   if (!path || path->num_points < 2) {
     return;
   }
 
-  GPointPrecise* rot_points = applib_malloc(path->num_points * sizeof(GPointPrecise));
+  GPointPrecise *rot_points = applib_malloc(path->num_points * sizeof(GPointPrecise));
   if (!rot_points) {
     return;
   }
@@ -237,8 +229,8 @@ void prv_fill_path_with_cb_aa(GContext *ctx, GPath *path, GPathDrawFilledCallbac
   Intersection *intersections_up = NULL;
   Intersection *intersections_down = NULL;
 
-  rot_points[0] = rot_end = GPointPreciseFromGPoint(
-      rotate_offset_point(&path->points[0], path->rotation, &path->offset));
+  rot_points[0] = rot_end =
+      GPointPreciseFromGPoint(rotate_offset_point(&path->points[0], path->rotation, &path->offset));
   min_x = max_x = rot_points[0].x.integer;
   min_y = max_y = rot_points[0].y.integer;
 
@@ -247,10 +239,18 @@ void prv_fill_path_with_cb_aa(GContext *ctx, GPath *path, GPathDrawFilledCallbac
   for (int i = path->num_points - 1; i > 0; --i) {
     rot_points[i] = rot_start = GPointPreciseFromGPoint(
         rotate_offset_point(&path->points[i], path->rotation, &path->offset));
-    if (min_x > rot_points[i].x.integer) { min_x = rot_points[i].x.integer; }
-    if (max_x < rot_points[i].x.integer) { max_x = rot_points[i].x.integer; }
-    if (min_y > rot_points[i].y.integer) { min_y = rot_points[i].y.integer; }
-    if (max_y < rot_points[i].y.integer) { max_y = rot_points[i].y.integer; }
+    if (min_x > rot_points[i].x.integer) {
+      min_x = rot_points[i].x.integer;
+    }
+    if (max_x < rot_points[i].x.integer) {
+      max_x = rot_points[i].x.integer;
+    }
+    if (min_y > rot_points[i].y.integer) {
+      min_y = rot_points[i].y.integer;
+    }
+    if (max_y < rot_points[i].y.integer) {
+      max_y = rot_points[i].y.integer;
+    }
 
     if (found_start_direction) {
       continue;
@@ -265,8 +265,8 @@ void prv_fill_path_with_cb_aa(GContext *ctx, GPath *path, GPathDrawFilledCallbac
     rot_end = rot_start;
   }
 
-  const int16_t clip_min_x = ctx->draw_state.clip_box.origin.x
-      - ctx->draw_state.drawing_box.origin.x;
+  const int16_t clip_min_x =
+      ctx->draw_state.clip_box.origin.x - ctx->draw_state.drawing_box.origin.x;
   const int16_t clip_max_x = ctx->draw_state.clip_box.size.w + clip_min_x;
   if (!prv_is_in_range(min_x, max_x, clip_min_x, clip_max_x)) {
     goto cleanup;
@@ -287,8 +287,8 @@ void prv_fill_path_with_cb_aa(GContext *ctx, GPath *path, GPathDrawFilledCallbac
   int intersection_down_count;
 
   // convert clip coordinates to drawing coordinates
-  const int16_t clip_min_y = ctx->draw_state.clip_box.origin.y
-      - ctx->draw_state.drawing_box.origin.y;
+  const int16_t clip_min_y =
+      ctx->draw_state.clip_box.origin.y - ctx->draw_state.drawing_box.origin.y;
   const int16_t clip_max_y = ctx->draw_state.clip_box.size.h + clip_min_y;
   min_y = MAX(min_y, clip_min_y);
   max_y = MIN(max_y, clip_max_y);
@@ -321,8 +321,9 @@ void prv_fill_path_with_cb_aa(GContext *ctx, GPath *path, GPathDrawFilledCallbac
 
       // if the line is on/crosses this height
       if ((rot_start.y.integer - i) * (rot_end.y.integer - i) <= 0) {
-        bool is_down = rot_end.y.integer != rot_start.y.integer ?
-                       rot_end.y.integer > rot_start.y.integer : last_is_down;
+        bool is_down = rot_end.y.integer != rot_start.y.integer
+                           ? rot_end.y.integer > rot_start.y.integer
+                           : last_is_down;
         // don't count end points in the same direction to avoid double intersections
         if (!(rot_start.y.integer == i && last_is_down == is_down)) {
           // linear interpolation of the line intersection
@@ -330,18 +331,20 @@ void prv_fill_path_with_cb_aa(GContext *ctx, GPath *path, GPathDrawFilledCallbac
           int16_t delta_x = rot_end.x.raw_value - rot_start.x.raw_value;
           int16_t delta_y = rot_end.y.raw_value - rot_start.y.raw_value;
 
-          Fixed_S16_3 x = (Fixed_S16_3){.raw_value = rot_start.x.raw_value + delta_x
-                          * (i * FIXED_S16_3_ONE.raw_value - rot_start.y.raw_value) / delta_y};
+          Fixed_S16_3 x = (Fixed_S16_3){
+              .raw_value =
+                  rot_start.x.raw_value +
+                  delta_x * (i * FIXED_S16_3_ONE.raw_value - rot_start.y.raw_value) / delta_y};
 
-          Fixed_S16_3 delta = (Fixed_S16_3){.raw_value = ABS(delta_x / delta_y) *
-                                                          FIXED_S16_3_ONE.raw_value};
+          Fixed_S16_3 delta =
+              (Fixed_S16_3){.raw_value = ABS(delta_x / delta_y) * FIXED_S16_3_ONE.raw_value};
 
           if (delta.integer > 1) {
             // this is where we try to fix edges diving in and out of paths
-            int16_t min_x = rot_end.x.raw_value < rot_start.x.raw_value ?
-                              rot_end.x.raw_value : rot_start.x.raw_value;
-            int16_t max_x = rot_end.x.raw_value > rot_start.x.raw_value ?
-                              rot_end.x.raw_value : rot_start.x.raw_value;
+            int16_t min_x = rot_end.x.raw_value < rot_start.x.raw_value ? rot_end.x.raw_value
+                                                                        : rot_start.x.raw_value;
+            int16_t max_x = rot_end.x.raw_value > rot_start.x.raw_value ? rot_end.x.raw_value
+                                                                        : rot_start.x.raw_value;
 
             if (x.raw_value - (delta.raw_value / 2) < min_x) {
               delta.raw_value = (x.raw_value - min_x) * 2;
@@ -395,16 +398,16 @@ cleanup:
   applib_free(intersections_up);
   applib_free(intersections_down);
 }
-#endif // PBL_COLOR
+#endif  // PBL_COLOR
 
 void gpath_draw_filled_with_cb(GContext *ctx, GPath *path, GPathDrawFilledCallback cb,
                                void *user_data) {
-  //Protect against apps calling with no points to draw (Upright watchface)
+  // Protect against apps calling with no points to draw (Upright watchface)
   if (!path || path->num_points < 2) {
     return;
   }
 
-  GPoint* rot_points = applib_malloc(path->num_points * sizeof(GPoint));
+  GPoint *rot_points = applib_malloc(path->num_points * sizeof(GPoint));
   if (!rot_points) {
     APP_LOG(APP_LOG_LEVEL_ERROR, GPATH_ERROR);
     return;
@@ -424,11 +427,20 @@ void gpath_draw_filled_with_cb(GContext *ctx, GPath *path, GPathDrawFilledCallba
   // begin finding the last path segment's direction going backwards through the path
   // we must go backwards because we find intersections going forwards
   for (int i = path->num_points - 1; i > 0; --i) {
-    rot_points[i] = rot_start = rotate_offset_point(&path->points[i], path->rotation, &path->offset);
-    if (min_x > rot_points[i].x) { min_x = rot_points[i].x; }
-    if (max_x < rot_points[i].x) { max_x = rot_points[i].x; }
-    if (min_y > rot_points[i].y) { min_y = rot_points[i].y; }
-    if (max_y < rot_points[i].y) { max_y = rot_points[i].y; }
+    rot_points[i] = rot_start =
+        rotate_offset_point(&path->points[i], path->rotation, &path->offset);
+    if (min_x > rot_points[i].x) {
+      min_x = rot_points[i].x;
+    }
+    if (max_x < rot_points[i].x) {
+      max_x = rot_points[i].x;
+    }
+    if (min_y > rot_points[i].y) {
+      min_y = rot_points[i].y;
+    }
+    if (max_y < rot_points[i].y) {
+      max_y = rot_points[i].y;
+    }
 
     if (found_start_direction) {
       continue;
@@ -443,9 +455,8 @@ void gpath_draw_filled_with_cb(GContext *ctx, GPath *path, GPathDrawFilledCallba
     rot_end = rot_start;
   }
 
-
-  const int16_t clip_min_x = ctx->draw_state.clip_box.origin.x
-      - ctx->draw_state.drawing_box.origin.x;
+  const int16_t clip_min_x =
+      ctx->draw_state.clip_box.origin.x - ctx->draw_state.drawing_box.origin.x;
   const int16_t clip_max_x = ctx->draw_state.clip_box.size.w + clip_min_x;
   if (!prv_is_in_range(min_x, max_x, clip_min_x, clip_max_x)) {
     goto cleanup;
@@ -465,8 +476,8 @@ void gpath_draw_filled_with_cb(GContext *ctx, GPath *path, GPathDrawFilledCallba
   int intersection_up_count;
   int intersection_down_count;
 
-  const int16_t clip_min_y = ctx->draw_state.clip_box.origin.y
-      - ctx->draw_state.drawing_box.origin.y;
+  const int16_t clip_min_y =
+      ctx->draw_state.clip_box.origin.y - ctx->draw_state.drawing_box.origin.y;
   const int16_t clip_max_y = ctx->draw_state.clip_box.size.h + clip_min_y;
   min_y = MAX(min_y, clip_min_y);
   max_y = MIN(max_y, clip_max_y);
@@ -477,8 +488,8 @@ void gpath_draw_filled_with_cb(GContext *ctx, GPath *path, GPathDrawFilledCallba
     intersection_down_count = 0;
     intersection_up_count = 0;
 
-    // horizontal path segments don't have a direction and depend upon the last path segment's direction
-    // keep track of the last path direction for horizontal path segments to use
+    // horizontal path segments don't have a direction and depend upon the last path segment's
+    // direction keep track of the last path direction for horizontal path segments to use
     bool last_is_down = start_is_down;
     rot_end = rot_points[0];
 
@@ -498,7 +509,8 @@ void gpath_draw_filled_with_cb(GContext *ctx, GPath *path, GPathDrawFilledCallba
         // don't count end points in the same direction to avoid double intersections
         if (!(rot_start.y == i && last_is_down == is_down)) {
           // linear interpolation of the line intersection
-          int16_t x = rot_start.x + (rot_end.x - rot_start.x) * (i - rot_start.y) / (rot_end.y - rot_start.y);
+          int16_t x = rot_start.x +
+                      (rot_end.x - rot_start.x) * (i - rot_start.y) / (rot_end.y - rot_start.y);
           if (is_down) {
             intersections_down[intersection_down_count] = x;
             intersection_down_count++;
@@ -550,10 +562,7 @@ void gpath_fill_precise_internal(GContext *ctx, GPointPrecise *points, size_t nu
   for (size_t i = 0; i < num_points; i++) {
     imprecise_points[i] = GPointFromGPointPrecise(points[i]);
   }
-  GPath path = {
-    .num_points = (uint32_t)num_points,
-    .points = imprecise_points
-  };
+  GPath path = {.num_points = (uint32_t)num_points, .points = imprecise_points};
   gpath_draw_filled(ctx, &path);
 
   applib_free(imprecise_points);

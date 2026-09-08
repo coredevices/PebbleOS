@@ -13,7 +13,7 @@
 #include <stdint.h>
 
 static uint32_t s_vibe_score_resources[] = {
-  RESOURCE_ID_VIBE_SCORE_NUDGE_NUDGE,
+    RESOURCE_ID_VIBE_SCORE_NUDGE_NUDGE,
 };
 static VibeScore *s_vibe_scores[ARRAY_LENGTH(s_vibe_score_resources)];
 
@@ -41,9 +41,8 @@ static void prv_unload_scores(void) {
 static void handle_init(void) {
   prv_load_scores();
 
-  NumberWindow *vibe_num_window = number_window_create("Vibe Patterns",
-      (NumberWindowCallbacks) { .selected = prv_do_vibe },
-      NULL);
+  NumberWindow *vibe_num_window =
+      number_window_create("Vibe Patterns", (NumberWindowCallbacks){.selected = prv_do_vibe}, NULL);
   app_state_set_user_data(vibe_num_window);
 
   number_window_set_value(vibe_num_window, 0);
@@ -66,10 +65,8 @@ static void s_main(void) {
   handle_deinit();
 }
 
-const PebbleProcessMd* vibe_score_demo_get_info() {
-  static const PebbleProcessMdSystem s_vibe_score_info = {
-    .common.main_func = s_main,
-    .name = "Vibe Patterns"
-  };
-  return (const PebbleProcessMd*) &s_vibe_score_info;
+const PebbleProcessMd *vibe_score_demo_get_info() {
+  static const PebbleProcessMdSystem s_vibe_score_info = {.common.main_func = s_main,
+                                                          .name = "Vibe Patterns"};
+  return (const PebbleProcessMd *)&s_vibe_score_info;
 }

@@ -15,11 +15,7 @@
 //!
 //!   @{
 
-
-typedef enum {
-  ActionMenuAlignTop = 0,
-  ActionMenuAlignCenter
-} ActionMenuAlign;
+typedef enum { ActionMenuAlignTop = 0, ActionMenuAlignCenter } ActionMenuAlign;
 
 struct ActionMenuItem;
 //! An ActionMenuItem is an entry in the ActionMenu
@@ -38,8 +34,7 @@ typedef struct ActionMenu ActionMenu;
 //! @param performed_action the ActionMenuItem for the action that was performed,
 //! NULL if the ActionMenu is closing without an action being selected by the user
 //! @param context the context passed to the ActionMenu
-typedef void (*ActionMenuDidCloseCb)(ActionMenu *menu,
-                                     const ActionMenuItem *performed_action,
+typedef void (*ActionMenuDidCloseCb)(ActionMenu *menu, const ActionMenuItem *performed_action,
                                      void *context);
 
 //! Callback executed immediately before the ActionMenu closes.
@@ -47,20 +42,19 @@ typedef void (*ActionMenuDidCloseCb)(ActionMenu *menu,
 //! @param performed_action the ActionMenuItem for the action that was performed,
 //! NULL if the ActionMenu is closing without an action being selected by the user
 //! @param context the context passed to the ActionMenu
-typedef void (*ActionMenuWillCloseCb)(ActionMenu *menu,
-                                      const ActionMenuItem *performed_action,
+typedef void (*ActionMenuWillCloseCb)(ActionMenu *menu, const ActionMenuItem *performed_action,
                                       void *context);
 
 //! Configuration struct for the ActionMenu
 typedef struct {
-  const ActionMenuLevel *root_level; //!< the root level of the ActionMenu
-  void *context; //!< a context pointer which will be accessible when actions are performed
+  const ActionMenuLevel *root_level;  //!< the root level of the ActionMenu
+  void *context;  //!< a context pointer which will be accessible when actions are performed
   struct {
-    GColor background; //!< the color of the left column of the ActionMenu
-    GColor foreground; //!< the color of the individual "crumbs" that indicate menu depth
+    GColor background;  //!< the color of the left column of the ActionMenu
+    GColor foreground;  //!< the color of the individual "crumbs" that indicate menu depth
   } colors;
-  ActionMenuDidCloseCb will_close; //!< Called immediately before the ActionMenu closes
-  ActionMenuDidCloseCb did_close; //!< a callback used to cleanup memory after the menu has closed
+  ActionMenuDidCloseCb will_close;  //!< Called immediately before the ActionMenu closes
+  ActionMenuDidCloseCb did_close;   //!< a callback used to cleanup memory after the menu has closed
   ActionMenuAlign align;
 } ActionMenuConfig;
 

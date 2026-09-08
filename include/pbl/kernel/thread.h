@@ -33,7 +33,7 @@ struct pbl_thread_attr {
 
 struct pbl_thread {
   struct pbl_thread_backend backend;  // first: the arch code relies on its offset
-  uint32_t id;  // unique per creation, never 0
+  uint32_t id;                        // unique per creation, never 0
   char name[PBL_THREAD_NAME_LEN];
   pbl_prio_t prio;
   bool privileged;
@@ -48,7 +48,7 @@ struct pbl_thread {
 
 //! Returning from the entry function ends the thread.
 int pbl_thread_create(struct pbl_thread *t, const struct pbl_thread_attr *attr);
-void pbl_thread_abort(struct pbl_thread *t);  // NULL = self
+void pbl_thread_abort(struct pbl_thread *t);    // NULL = self
 void pbl_thread_suspend(struct pbl_thread *t);  // NULL = self
 void pbl_thread_resume(struct pbl_thread *t);
 void pbl_thread_yield(void);

@@ -23,8 +23,8 @@
 #include "stubs_text_layout.h"
 #include "stubs_unobstructed_area.h"
 
-void graphics_context_set_fill_color(GContext* ctx, GColor color){}
-void graphics_context_set_text_color(GContext* ctx, GColor color){}
+void graphics_context_set_fill_color(GContext *ctx, GColor color) {}
+void graphics_context_set_text_color(GContext *ctx, GColor color) {}
 
 // Fakes
 ////////////////////////
@@ -44,8 +44,7 @@ void test_text_layer_flow__initialize(void) {
   scroll_layer_is_instance_value = NULL;
 }
 
-void test_text_layer_flow__cleanup(void) {
-}
+void test_text_layer_flow__cleanup(void) {}
 
 void test_text_layer_flow__return_value_handling(void) {
   GPoint origin;
@@ -60,8 +59,8 @@ void test_text_layer_flow__return_value_handling(void) {
 
   cl_assert_equal_gpoint(origin, text_layer.layer.frame.origin);
   cl_assert_equal_gpoint(page.origin, origin);
-  cl_assert_equal_gsize(page.size, GSize(text_layer.layer.frame.size.w,
-                                        TEXT_LAYER_FLOW_DEFAULT_PAGING_HEIGHT));
+  cl_assert_equal_gsize(
+      page.size, GSize(text_layer.layer.frame.size.w, TEXT_LAYER_FLOW_DEFAULT_PAGING_HEIGHT));
 }
 
 void test_text_layer_flow__paging_container(void) {

@@ -27,34 +27,23 @@
 #include "stubs_vibe_score_info.h"
 #include "fake_rtc.h"
 
-
 // Overrides
 /////////////////////////////////
-void do_not_disturb_init(void) {
-  return;
-}
+void do_not_disturb_init(void) { return; }
 
-void do_not_disturb_handle_pref_synced(void) {
-  return;
-}
+void do_not_disturb_handle_pref_synced(void) { return; }
 
-void vibe_intensity_init(void) {
-  return;
-}
+void vibe_intensity_init(void) { return; }
 
 static bool s_low_power_active = false;
 
-bool low_power_is_active(void) {
-  return s_low_power_active;
-}
+bool low_power_is_active(void) { return s_low_power_active; }
 
 static bool s_dnd_active = false;
 
-bool do_not_disturb_is_active(void) {
-  return s_dnd_active;
-}
+bool do_not_disturb_is_active(void) { return s_dnd_active; }
 
-#define NOTIFICATION_VIBE_HOLDOFF_TICKS 3073024 // Just above 3 seconds
+#define NOTIFICATION_VIBE_HOLDOFF_TICKS 3073024  // Just above 3 seconds
 // Setup
 /////////////////////////////////
 
@@ -64,8 +53,7 @@ void test_alerts__initialize(void) {
   alerts_set_mask(AlertMaskAllOn);
 }
 
-void test_alerts__cleanup(void) {
-}
+void test_alerts__cleanup(void) {}
 
 // Tests
 /////////////////////////////////

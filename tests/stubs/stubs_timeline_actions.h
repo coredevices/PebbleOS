@@ -30,9 +30,10 @@ ActionMenu *WEAK timeline_actions_push_response_menu(
 void WEAK timeline_actions_cleanup_action_menu(ActionMenu *action_menu, const ActionMenuItem *item,
                                                void *context) {}
 
-void WEAK timeline_actions_dismiss_all(
-    NotificationInfo *notif_list, int num_notifications, ActionMenu *action_menu,
-    ActionCompleteCallback dismiss_all_complete_callback, void *dismiss_all_cb_data) {}
+void WEAK timeline_actions_dismiss_all(NotificationInfo *notif_list, int num_notifications,
+                                       ActionMenu *action_menu,
+                                       ActionCompleteCallback dismiss_all_complete_callback,
+                                       void *dismiss_all_cb_data) {}
 
 void WEAK timeline_actions_invoke_action(const TimelineItemAction *action, const TimelineItem *pin,
                                          ActionCompleteCallback cb, void *cb_data) {}

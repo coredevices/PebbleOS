@@ -20,22 +20,22 @@
 #include <pbl/drivers/flash.h>
 #include "applib/ui/window_private.h"
 
-#define PCM_BUFFER_SIZE          1024
+#define PCM_BUFFER_SIZE 1024
 
-#define RECORDING_MS             5000
-#define SAMPLE_RATE_HZ           16000
-#define SAMPLE_BITS              16
-#define CAPTURE_MS               100
-#define N_CHANNELS               2
-#define N_SAMPLES                (N_CHANNELS * ((SAMPLE_RATE_HZ * RECORDING_MS) / 1000))
-#define SAMPLE_SIZE_BYTES        (SAMPLE_BITS / 8)
-#define BLOCK_SIZE               (N_SAMPLES * SAMPLE_SIZE_BYTES)
+#define RECORDING_MS 5000
+#define SAMPLE_RATE_HZ 16000
+#define SAMPLE_BITS 16
+#define CAPTURE_MS 100
+#define N_CHANNELS 2
+#define N_SAMPLES (N_CHANNELS * ((SAMPLE_RATE_HZ * RECORDING_MS) / 1000))
+#define SAMPLE_SIZE_BYTES (SAMPLE_BITS / 8)
+#define BLOCK_SIZE (N_SAMPLES * SAMPLE_SIZE_BYTES)
 
-#define FLASH_START              FLASH_REGION_FIRMWARE_DEST_BEGIN
-#define FLASH_END                (FLASH_REGION_FIRMWARE_DEST_BEGIN + \
-                                  ROUND_TO_MOD_CEIL(BLOCK_SIZE, SUBSECTOR_SIZE_BYTES))
+#define FLASH_START FLASH_REGION_FIRMWARE_DEST_BEGIN
+#define FLASH_END \
+  (FLASH_REGION_FIRMWARE_DEST_BEGIN + ROUND_TO_MOD_CEIL(BLOCK_SIZE, SUBSECTOR_SIZE_BYTES))
 
-#define PROCESS_STATUS_STR_LEN   64
+#define PROCESS_STATUS_STR_LEN 64
 
 typedef struct {
   Window window;
@@ -53,15 +53,15 @@ typedef struct {
 
 static void prv_interleaved_to_non_interleaved(int16_t *audio_data, size_t frame_count) {
   if (audio_data == NULL || frame_count == 0) {
-      return;
+    return;
   }
 
   for (size_t i = 1; i < frame_count; i++) {
-      int16_t temp = audio_data[2 * i];
-      for (size_t j = 2 * i; j > i; j--) {
-          audio_data[j] = audio_data[j - 1];
-      }
-      audio_data[i] = temp;
+    int16_t temp = audio_data[2 * i];
+    for (size_t j = 2 * i; j > i; j--) {
+      audio_data[j] = audio_data[j - 1];
+    }
+    audio_data[i] = temp;
   }
 }
 
@@ -69,23 +69,27 @@ static void prv_audio_trans_handler(uint32_t *free_size) {
   uint32_t available_size = *free_size;
   AppData *app_data = app_state_get_user_data();
   static enum {
-    MIC1, MIC2, MIC_MAX,
+    MIC1,
+    MIC2,
+    MIC_MAX,
   } mic_id = MIC1;
 
-  while (available_size > PCM_BUFFER_SIZE*sizeof(int16_t)) {
-    flash_read_bytes((uint8_t *)app_data->pcm, app_data->flash_addr, PCM_BUFFER_SIZE*sizeof(int16_t));
-    app_data->flash_addr += PCM_BUFFER_SIZE*sizeof(int16_t);
-    prv_interleaved_to_non_interleaved(app_data->pcm, PCM_BUFFER_SIZE/2);
+  while (available_size > PCM_BUFFER_SIZE * sizeof(int16_t)) {
+    flash_read_bytes((uint8_t *)app_data->pcm, app_data->flash_addr,
+                     PCM_BUFFER_SIZE * sizeof(int16_t));
+    app_data->flash_addr += PCM_BUFFER_SIZE * sizeof(int16_t);
+    prv_interleaved_to_non_interleaved(app_data->pcm, PCM_BUFFER_SIZE / 2);
     if (mic_id == MIC1) {
-      available_size = audio_write(AUDIO, (void*)app_data->pcm, PCM_BUFFER_SIZE);
+      available_size = audio_write(AUDIO, (void *)app_data->pcm, PCM_BUFFER_SIZE);
     } else if (mic_id == MIC2) {
-      available_size = audio_write(AUDIO, (void*)&app_data->pcm[PCM_BUFFER_SIZE/2], PCM_BUFFER_SIZE);
+      available_size =
+          audio_write(AUDIO, (void *)&app_data->pcm[PCM_BUFFER_SIZE / 2], PCM_BUFFER_SIZE);
     }
   }
 
   if (app_data->flash_addr >= FLASH_START + BLOCK_SIZE) {
     app_data->flash_addr = FLASH_START;
-    if(++mic_id >= MIC_MAX) {
+    if (++mic_id >= MIC_MAX) {
       audio_stop(AUDIO);
       app_data->audio_playing = false;
       mic_id = MIC1;
@@ -107,7 +111,7 @@ static void prv_start_playback() {
 
 static void prv_mic_data_handler(int16_t *samples, size_t sample_count, void *context) {
   AppData *app_data = app_state_get_user_data();
-  
+
   if (app_data->flash_addr - FLASH_START > BLOCK_SIZE) {
     mic_stop(MIC);
     app_data->mic_recording = false;
@@ -116,8 +120,8 @@ static void prv_mic_data_handler(int16_t *samples, size_t sample_count, void *co
     prv_start_playback();
     return;
   }
-  flash_write_bytes((uint8_t *)samples, app_data->flash_addr, sample_count*sizeof(int16_t));
-  app_data->flash_addr += sample_count*sizeof(int16_t);
+  flash_write_bytes((uint8_t *)samples, app_data->flash_addr, sample_count * sizeof(int16_t));
+  app_data->flash_addr += sample_count * sizeof(int16_t);
 }
 
 static void prv_recording_start(void) {
@@ -130,7 +134,7 @@ static void prv_recording_start(void) {
 
   snprintf(app_data->status_text, PROCESS_STATUS_STR_LEN, "Pls Speak");
   mic_init(MIC);
-  //set to maximum make it's more audible in testing
+  // set to maximum make it's more audible in testing
   mic_set_volume(MIC, 100);
   mic_start(MIC, prv_mic_data_handler, NULL, app_data->pcm, PCM_BUFFER_SIZE);
   app_data->mic_recording = true;
@@ -217,7 +221,7 @@ static void prv_handle_init(void) {
   text_layer_set_text_alignment(status, GTextAlignmentCenter);
   snprintf(data->status_text, PROCESS_STATUS_STR_LEN, "Press Sel to start");
   text_layer_set_text(status, data->status_text);
-  layer_set_frame((Layer*)status, &bounds);
+  layer_set_frame((Layer *)status, &bounds);
   layer_add_child(&window->layer, &status->layer);
 
   app_window_stack_push(window, true /* Animated */);

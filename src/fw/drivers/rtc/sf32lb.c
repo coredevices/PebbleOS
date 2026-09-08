@@ -69,7 +69,7 @@ static void prv_rtc_set_time_no_cal_reset(time_t time);
 #endif
 
 static RTC_HandleTypeDef RTC_Handler = {
-    .Instance = (RTC_TypeDef*)RTC_BASE,
+    .Instance = (RTC_TypeDef *)RTC_BASE,
     .Init =
         {
             .HourFormat = RTC_HOURFORMAT_24,
@@ -95,7 +95,7 @@ static uint32_t prv_rtc_get_lpcycle() {
   return value;
 }
 
-void prv_rtc_rc10_calculate_div(RTC_HandleTypeDef* hdl, uint32_t value) {
+void prv_rtc_rc10_calculate_div(RTC_HandleTypeDef *hdl, uint32_t value) {
   hdl->Init.DivB = RC10K_SUB_SEC_DIVB;
 
   // 1 seconds has total 1/(x/(48*8))/256=1.5M/x cycles, times 2^14 for DIVA
@@ -115,7 +115,7 @@ static void prv_rtc_reconfig() {
   PBL_ASSERTN(ret == HAL_OK);
 }
 
-static void prv_rtc_cal_timer_cb(void* data) {
+static void prv_rtc_cal_timer_cb(void *data) {
   if (s_rtc_cycle_count_init == 0) {
     uint16_t sub;
     time_t t;
@@ -155,7 +155,7 @@ static void prv_rtc_cal_timer_cb(void* data) {
     if (s_delta_total > MAX_REASONABLE_CORRECTION_SECS ||
         s_delta_total < -MAX_REASONABLE_CORRECTION_SECS) {
       PBL_LOG_WRN("RTC calibration: delta_sum=%d exceeds max, resetting calibration state",
-              (int)(s_delta_total * 1000));
+                  (int)(s_delta_total * 1000));
       prv_reset_calibration_state();
       return;
     }
@@ -182,11 +182,10 @@ static void prv_rtc_cal_timer_cb(void* data) {
     }
 
     PBL_LOG_DBG("origin: f=%dHz,cycle=%d avr: f=%dHz cycle_ave=%d delta=%d, delta_sum=%d\n",
-            (int)(48000000ULL * HAL_RC_CAL_GetLPCycle() / s_rtc_cycle_count_init),
-            (int)s_rtc_cycle_count_init,
-            (int)(48000000ULL * HAL_RC_CAL_GetLPCycle() / ref_cycle),
-            (int)ref_cycle,
-            (int)(delta * 1000), (int)(s_delta_total * 1000));
+                (int)(48000000ULL * HAL_RC_CAL_GetLPCycle() / s_rtc_cycle_count_init),
+                (int)s_rtc_cycle_count_init,
+                (int)(48000000ULL * HAL_RC_CAL_GetLPCycle() / ref_cycle), (int)ref_cycle,
+                (int)(delta * 1000), (int)(s_delta_total * 1000));
   }
 }
 #endif
@@ -260,14 +259,12 @@ static void prv_rtc_set_time_no_cal_reset(time_t time) {
   // This ensures long-duration timers are properly rescheduled after calibration adjustments
   int32_t time_delta = (int32_t)(time - old_time);
   if (time_delta != 0) {
-    PebbleEvent e = {
-      .type = PEBBLE_SET_TIME_EVENT,
-      .set_time_info = {
-        .utc_time_delta = time_delta,
-        .gmt_offset_delta = 0,
-        .dst_changed = false,
-      }
-    };
+    PebbleEvent e = {.type = PEBBLE_SET_TIME_EVENT,
+                     .set_time_info = {
+                         .utc_time_delta = time_delta,
+                         .gmt_offset_delta = 0,
+                         .dst_changed = false,
+                     }};
     event_put(&e);
   }
 }
@@ -282,12 +279,12 @@ void rtc_set_time(time_t time) {
   prv_rtc_set_time_no_cal_reset(time);
 }
 
-void rtc_get_time_ms(time_t* out_seconds, uint16_t* out_ms) {
+void rtc_get_time_ms(time_t *out_seconds, uint16_t *out_ms) {
   RTC_DateTypeDef rtc_date;
   RTC_TimeTypeDef rtc_time;
 
   if (s_initialized) {
-    while((RTC_Handler.Instance->ISR & RTC_ISR_RSF) == (uint32_t)RESET) {
+    while ((RTC_Handler.Instance->ISR & RTC_ISR_RSF) == (uint32_t)RESET) {
       // Wait for RTC registers to synchronize
     }
   }
@@ -323,23 +320,17 @@ time_t rtc_get_time(void) {
   return seconds;
 }
 
-RtcTicks rtc_get_ticks(void) {
-  return get_ticks();
-}
+RtcTicks rtc_get_ticks(void) { return get_ticks(); }
 
 void rtc_alarm_init(void) {}
 
 void rtc_alarm_set(RtcTicks num_ticks) {}
 
-RtcTicks rtc_alarm_get_elapsed_ticks(void) {
-  return 0;
-}
+RtcTicks rtc_alarm_get_elapsed_ticks(void) { return 0; }
 
-bool rtc_alarm_is_initialized(void) {
-  return true;
-}
+bool rtc_alarm_is_initialized(void) { return true; }
 
-bool rtc_sanitize_struct_tm(struct tm* t) {
+bool rtc_sanitize_struct_tm(struct tm *t) {
   // These values come from time_t (which suffers from the 2038 problem) and our hardware which
   // only stores a 2 digit year, so we only represent values after 2000.
 
@@ -355,7 +346,7 @@ bool rtc_sanitize_struct_tm(struct tm* t) {
   return false;
 }
 
-bool rtc_sanitize_time_t(time_t* t) {
+bool rtc_sanitize_time_t(time_t *t) {
   struct tm time_struct;
   gmtime_r(t, &time_struct);
 
@@ -365,16 +356,14 @@ bool rtc_sanitize_time_t(time_t* t) {
   return result;
 }
 
-void rtc_get_time_tm(struct tm* time_tm) {
+void rtc_get_time_tm(struct tm *time_tm) {
   time_t t = rtc_get_time();
   localtime_r(&t, time_tm);
 }
 
-const char* rtc_get_time_string(char* buffer) {
-  return time_t_to_string(buffer, rtc_get_time());
-}
+const char *rtc_get_time_string(char *buffer) { return time_t_to_string(buffer, rtc_get_time()); }
 
-const char* time_t_to_string(char* buffer, time_t t) {
+const char *time_t_to_string(char *buffer, time_t t) {
   struct tm time;
   localtime_r(&t, &time);
 
@@ -388,40 +377,41 @@ const char* time_t_to_string(char* buffer, time_t t) {
 //! Versioned storage structure for timezone info in flash
 //! This allows for future migrations and avoids struct alignment issues
 typedef struct __attribute__((packed)) {
-  uint8_t version;            // Version number for future migrations
-  char tm_zone[TZ_LEN - 1];   // Up to 5 character timezone abbreviation
-  uint8_t dst_id;             // Daylight savings time zone index
-  int16_t timezone_id;        // Olson index of timezone
-  int32_t tm_gmtoff;          // GMT time offset
-  time_t dst_start;           // Timestamp of start of DST period (0 if none)
-  time_t dst_end;             // Timestamp of end of DST period (0 if none)
+  uint8_t version;           // Version number for future migrations
+  char tm_zone[TZ_LEN - 1];  // Up to 5 character timezone abbreviation
+  uint8_t dst_id;            // Daylight savings time zone index
+  int16_t timezone_id;       // Olson index of timezone
+  int32_t tm_gmtoff;         // GMT time offset
+  time_t dst_start;          // Timestamp of start of DST period (0 if none)
+  time_t dst_end;            // Timestamp of end of DST period (0 if none)
 } TzinfoFlashStorage;
 
 #define TZINFO_VERSION 1
 
-void rtc_set_timezone(TimezoneInfo* tzinfo) {
+void rtc_set_timezone(TimezoneInfo *tzinfo) {
   _Static_assert(sizeof(TzinfoFlashStorage) <= SUBSECTOR_SIZE_BYTES,
-      "TzinfoFlashStorage must fit in TZINFO flash region (4KB)");
+                 "TzinfoFlashStorage must fit in TZINFO flash region (4KB)");
 
   // Copy to versioned buffer
   TzinfoFlashStorage storage = {
-    .version = TZINFO_VERSION,
-    .dst_id = tzinfo->dst_id,
-    .timezone_id = tzinfo->timezone_id,
-    .tm_gmtoff = tzinfo->tm_gmtoff,
-    .dst_start = tzinfo->dst_start,
-    .dst_end = tzinfo->dst_end,
+      .version = TZINFO_VERSION,
+      .dst_id = tzinfo->dst_id,
+      .timezone_id = tzinfo->timezone_id,
+      .tm_gmtoff = tzinfo->tm_gmtoff,
+      .dst_start = tzinfo->dst_start,
+      .dst_end = tzinfo->dst_end,
   };
   memcpy(storage.tm_zone, tzinfo->tm_zone, TZ_LEN - 1);
 
   flash_erase_subsector_blocking(FLASH_REGION_TZINFO_BEGIN);
-  flash_write_bytes((const uint8_t*)&storage, FLASH_REGION_TZINFO_BEGIN, sizeof(TzinfoFlashStorage));
+  flash_write_bytes((const uint8_t *)&storage, FLASH_REGION_TZINFO_BEGIN,
+                    sizeof(TzinfoFlashStorage));
 }
 
-void rtc_get_timezone(TimezoneInfo* tzinfo) {
+void rtc_get_timezone(TimezoneInfo *tzinfo) {
   TzinfoFlashStorage storage;
 
-  flash_read_bytes((uint8_t*)&storage, FLASH_REGION_TZINFO_BEGIN, sizeof(TzinfoFlashStorage));
+  flash_read_bytes((uint8_t *)&storage, FLASH_REGION_TZINFO_BEGIN, sizeof(TzinfoFlashStorage));
 
   if (storage.version != TZINFO_VERSION) {
     // Future versions can handle migrations here
@@ -438,9 +428,7 @@ void rtc_get_timezone(TimezoneInfo* tzinfo) {
   tzinfo->dst_end = storage.dst_end;
 }
 
-void rtc_timezone_clear(void) {
-  flash_erase_subsector_blocking(FLASH_REGION_TZINFO_BEGIN);
-}
+void rtc_timezone_clear(void) { flash_erase_subsector_blocking(FLASH_REGION_TZINFO_BEGIN); }
 
 uint16_t rtc_get_timezone_id(void) {
   TimezoneInfo tzinfo;
@@ -453,7 +441,7 @@ uint16_t rtc_get_timezone_id(void) {
 bool rtc_is_timezone_set(void) {
   uint8_t version;
 
-  flash_read_bytes((uint8_t*)&version, FLASH_REGION_TZINFO_BEGIN, sizeof(version));
+  flash_read_bytes((uint8_t *)&version, FLASH_REGION_TZINFO_BEGIN, sizeof(version));
 
   return version == TZINFO_VERSION;
 }
@@ -467,8 +455,7 @@ void rtc_calibrate_frequency(uint32_t frequency) {
   s_rtc_cal_timer = new_timer_create();
   PBL_ASSERTN(s_rtc_cal_timer != TIMER_INVALID_ID);
 
-  bool success = new_timer_start(s_rtc_cal_timer, RTC_CAL_PERIOD_MS,
-                                 prv_rtc_cal_timer_cb, NULL,
+  bool success = new_timer_start(s_rtc_cal_timer, RTC_CAL_PERIOD_MS, prv_rtc_cal_timer_cb, NULL,
                                  TIMER_START_FLAG_REPEATING);
   PBL_ASSERTN(success);
 #endif

@@ -50,7 +50,7 @@
 
 //! @internal
 //! Constant to indicate that a menu item index is not found
-#define MENU_INDEX_NOT_FOUND ((const uint16_t) ~0)
+#define MENU_INDEX_NOT_FOUND ((const uint16_t)~0)
 
 //////////////////////
 // Menu Layer
@@ -67,7 +67,7 @@ typedef struct MenuIndex {
 } MenuIndex;
 
 //! Macro to create a MenuIndex
-#define MenuIndex(section, row) ((MenuIndex){ (section), (row) })
+#define MenuIndex(section, row) ((MenuIndex){(section), (row)})
 
 //! Comparator function to determine the order of two MenuIndex values.
 //! @param a Pointer to the menu index of the first item
@@ -117,8 +117,7 @@ typedef uint16_t (*MenuLayerGetNumberOfRowsInSectionsCallback)(struct MenuLayer 
 //! @see \ref menu_layer_set_callbacks()
 //! @see \ref MenuLayerCallbacks
 typedef int16_t (*MenuLayerGetCellHeightCallback)(struct MenuLayer *menu_layer,
-                                                  MenuIndex *cell_index,
-                                                  void *callback_context);
+                                                  MenuIndex *cell_index, void *callback_context);
 
 //! Function signature for the callback to get the height of the section header
 //! at a given section index.
@@ -130,8 +129,7 @@ typedef int16_t (*MenuLayerGetCellHeightCallback)(struct MenuLayer *menu_layer,
 //! @see \ref menu_layer_set_callbacks()
 //! @see \ref MenuLayerCallbacks
 typedef int16_t (*MenuLayerGetHeaderHeightCallback)(struct MenuLayer *menu_layer,
-                                                    uint16_t section_index,
-                                                    void *callback_context);
+                                                    uint16_t section_index, void *callback_context);
 
 //! Function signature for the callback to get the height of the separator
 //! at a given index.
@@ -157,10 +155,8 @@ typedef int16_t (*MenuLayerGetSeparatorHeightCallback)(struct MenuLayer *menu_la
 //! ignored.
 //! @see \ref menu_layer_set_callbacks()
 //! @see \ref MenuLayerCallbacks
-typedef void (*MenuLayerDrawRowCallback)(GContext* ctx,
-                                         const Layer *cell_layer,
-                                         MenuIndex *cell_index,
-                                         void *callback_context);
+typedef void (*MenuLayerDrawRowCallback)(GContext *ctx, const Layer *cell_layer,
+                                         MenuIndex *cell_index, void *callback_context);
 
 //! Function signature for the callback to render the section header at a given
 //! section index.
@@ -176,10 +172,8 @@ typedef void (*MenuLayerDrawRowCallback)(GContext* ctx,
 //! ignored.
 //! @see \ref menu_layer_set_callbacks()
 //! @see \ref MenuLayerCallbacks
-typedef void (*MenuLayerDrawHeaderCallback)(GContext* ctx,
-                                            const Layer *cell_layer,
-                                            uint16_t section_index,
-                                            void *callback_context);
+typedef void (*MenuLayerDrawHeaderCallback)(GContext *ctx, const Layer *cell_layer,
+                                            uint16_t section_index, void *callback_context);
 
 //! Function signature for the callback to render the separator at a given
 //! MenuIndex.
@@ -193,10 +187,8 @@ typedef void (*MenuLayerDrawHeaderCallback)(GContext* ctx,
 //! ignored.
 //! @see \ref menu_layer_set_callbacks()
 //! @see \ref MenuLayerCallbacks
-typedef void (*MenuLayerDrawSeparatorCallback)(GContext* ctx,
-                                               const Layer *cell_layer,
-                                               MenuIndex *cell_index,
-                                               void *callback_context);
+typedef void (*MenuLayerDrawSeparatorCallback)(GContext *ctx, const Layer *cell_layer,
+                                               MenuIndex *cell_index, void *callback_context);
 
 //! Function signature for the callback to handle the event that a user hits
 //! the SELECT button.
@@ -205,8 +197,7 @@ typedef void (*MenuLayerDrawSeparatorCallback)(GContext* ctx,
 //! @param callback_context The callback context
 //! @see \ref menu_layer_set_callbacks()
 //! @see \ref MenuLayerCallbacks
-typedef void (*MenuLayerSelectCallback)(struct MenuLayer *menu_layer,
-                                        MenuIndex *cell_index,
+typedef void (*MenuLayerSelectCallback)(struct MenuLayer *menu_layer, MenuIndex *cell_index,
                                         void *callback_context);
 
 //! Function signature for the callback to handle a change in the current
@@ -217,10 +208,8 @@ typedef void (*MenuLayerSelectCallback)(struct MenuLayer *menu_layer,
 //! @param callback_context The callback context
 //! @see \ref menu_layer_set_callbacks()
 //! @see \ref MenuLayerCallbacks
-typedef void (*MenuLayerSelectionChangedCallback)(struct MenuLayer *menu_layer,
-                                                  MenuIndex new_index,
-                                                  MenuIndex old_index,
-                                                  void *callback_context);
+typedef void (*MenuLayerSelectionChangedCallback)(struct MenuLayer *menu_layer, MenuIndex new_index,
+                                                  MenuIndex old_index, void *callback_context);
 
 //! Function signature for the callback which allows or changes selection behavior of the menu.
 //! In order to change the cell that should be selected, modify the passed in new_index.
@@ -232,8 +221,7 @@ typedef void (*MenuLayerSelectionChangedCallback)(struct MenuLayer *menu_layer,
 //! @note \ref menu_layer_set_selected_index will not trigger this callback when
 //! the selection changes, but \ref menu_layer_set_selected_next will.
 typedef void (*MenuLayerSelectionWillChangeCallback)(struct MenuLayer *menu_layer,
-                                                     MenuIndex *new_index,
-                                                     MenuIndex old_index,
+                                                     MenuIndex *new_index, MenuIndex old_index,
                                                      void *callback_context);
 
 //! Function signature for the callback which draws the menu's background.
@@ -243,10 +231,8 @@ typedef void (*MenuLayerSelectionWillChangeCallback)(struct MenuLayer *menu_laye
 //! @param bg_layer The background's layer, containing the geometry of the background.
 //! @param highlight Whether this should be rendered as highlighted or not. Highlight style
 //! should match the highlight style of cells, since this color can be used for animating selection.
-typedef void (*MenuLayerDrawBackgroundCallback)(GContext* ctx,
-                                                const Layer *bg_layer,
-                                                bool highlight,
-                                                void *callback_context);
+typedef void (*MenuLayerDrawBackgroundCallback)(GContext *ctx, const Layer *bg_layer,
+                                                bool highlight, void *callback_context);
 
 //! Data structure containing all the callbacks of a \ref MenuLayer.
 typedef struct MenuLayerCallbacks {
@@ -365,7 +351,7 @@ typedef struct MenuLayer {
     //! Cell index + geometry cache of a cell that was in frame during the last redraw
     MenuCellSpan cursor;
 
-    uint8_t button_repeat_scrolling:2;
+    uint8_t button_repeat_scrolling : 2;
   } cache;
   //! @internal
   //! Selected cell index + geometry cache of the selected cell
@@ -382,7 +368,7 @@ typedef struct MenuLayer {
   //! use this.
   struct {
     Animation *animation;
-    GRect target; //! The target frame of the animation
+    GRect target;  //! The target frame of the animation
     //! cell_layer's bounds.origin will be modified by this to allow for
     //! content scrolling without scrolling the actual cells
     int16_t cell_content_origin_offset_y;
@@ -402,8 +388,8 @@ typedef struct MenuLayer {
   //! vtable. Declared unconditionally (not under \c CONFIG_TOUCH) so the struct layout — and
   //! therefore \c sizeof(MenuLayer) — is identical on every board. It sits right after the
   //! pointer-aligned \c animation struct so it introduces no alignment padding of its own. A
-  //! build-time assert in menu_layer.c keeps this node's layout in sync with \ref TouchNavWidgetNode;
-  //! the applib_malloc size check tracks the (grown) \c sizeof(MenuLayer).
+  //! build-time assert in menu_layer.c keeps this node's layout in sync with \ref
+  //! TouchNavWidgetNode; the applib_malloc size check tracks the (grown) \c sizeof(MenuLayer).
   struct {
     void *next;
     void *layer;
@@ -416,12 +402,13 @@ typedef struct MenuLayer {
   //! behaviour: the last row a tap-select committed and when (\ref rtc_get_ticks). A second tap
   //! within the double-tap window activates that row without re-hit-testing (the row may have
   //! animated to the centre by then). Plain menus activate on the first tap and never arm this
-  //! window. Declared unconditionally (not under \c CONFIG_TOUCH) so \c sizeof(MenuLayer) is identical
-  //! on every board, and carved from \ref padding below like \ref touch_nav_node. The timestamp is
-  //! split into two 32-bit halves rather than a single 8-byte \ref RtcTicks on purpose: a naturally
-  //! 8-byte-aligned member would raise the struct's alignment to 8 and its size past the fixed
-  //! applib-malloc budget (the size check pins \c sizeof(MenuLayer)). Reassemble via the accessors in
-  //! menu_layer.c. All three fields are 4-/2-byte aligned, so they introduce no alignment padding.
+  //! window. Declared unconditionally (not under \c CONFIG_TOUCH) so \c sizeof(MenuLayer) is
+  //! identical on every board, and carved from \ref padding below like \ref touch_nav_node. The
+  //! timestamp is split into two 32-bit halves rather than a single 8-byte \ref RtcTicks on
+  //! purpose: a naturally 8-byte-aligned member would raise the struct's alignment to 8 and its
+  //! size past the fixed applib-malloc budget (the size check pins \c sizeof(MenuLayer)).
+  //! Reassemble via the accessors in menu_layer.c. All three fields are 4-/2-byte aligned, so they
+  //! introduce no alignment padding.
   uint32_t last_select_ticks_hi;
   uint32_t last_select_ticks_lo;
   MenuIndex last_selected_index;
@@ -435,50 +422,50 @@ typedef struct MenuLayer {
   //! @internal
   //! If true, there will be padding after the bottom item in the menu
   //! Defaults to 'true'
-  bool pad_bottom:1;
+  bool pad_bottom : 1;
 
   //! If true, the MenuLayer will generally scroll the content so that the selected row is
   //! on the center of the screen.
-  bool center_focused:1;
+  bool center_focused : 1;
 
   //! If true, the MenuLayer will not perform the selection cell clipping animation. This is
   //! independent of the scrolling animation.
-  bool selection_animation_disabled:1;
+  bool selection_animation_disabled : 1;
 
   //! If true, the MenuLayer will be able to wrap around the first element and the last element
   //! when scrolling.
-  bool scroll_wrap_around:1;
+  bool scroll_wrap_around : 1;
 
   //! If this is true alongside \ref scroll_wrap_around, the MenuLayer will be able to wrap around
-  //! even when the 'up' or 'down' button is held down. 
-  bool scroll_force_wrap_on_repeat:1;
+  //! even when the 'up' or 'down' button is held down.
+  bool scroll_force_wrap_on_repeat : 1;
 
   //! If True, a vibration will occur when wrapping around.
-  bool scroll_vibe_on_wrap_around:1;
+  bool scroll_vibe_on_wrap_around : 1;
 
   //! If True, a vibration will occur when cursor is getting blocked at the top or bottom
-  bool scroll_vibe_on_blocked:1;
+  bool scroll_vibe_on_blocked : 1;
 
   //! @internal
   //! True once a tap has committed a selection and started the double-tap window (see
-  //! \ref last_selected_index). Explicit arm flag so the window is never mistaken as open right after
-  //! boot, when \ref rtc_get_ticks is still small. Packs into the byte already reserved by the flags
-  //! above, so it does not change \c sizeof(MenuLayer).
-  bool double_tap_armed:1;
+  //! \ref last_selected_index). Explicit arm flag so the window is never mistaken as open right
+  //! after boot, when \ref rtc_get_ticks is still small. Packs into the byte already reserved by
+  //! the flags above, so it does not change \c sizeof(MenuLayer).
+  bool double_tap_armed : 1;
 
   //! @internal
   //! True while an inertial coast (touch fling) drives the scroll offset: set when the coast
   //! animation is scheduled, cleared by its stopped handler. The 8 flag bits above fill their
   //! byte exactly, so this bit starts a new one, carved from \ref padding to keep
   //! \c sizeof(MenuLayer) unchanged.
-  bool touch_fling_active:1;
+  bool touch_fling_active : 1;
 
   //! @internal
   //! True when the current touch gesture began by catching (stopping) a coasting fling: the tap it
   //! may become is a stop, not a select, and is swallowed. Assigned (never OR-ed) on every
   //! Touchdown so it always reflects the current gesture. Packs into \ref touch_fling_active's
   //! byte.
-  bool touch_tap_swallow:1;
+  bool touch_tap_swallow : 1;
 
   //! @internal
   //! True when a tap on a not-selected row of a plain (non-center-focused) menu must only select
@@ -486,30 +473,30 @@ typedef struct MenuLayer {
   //! For menus whose rows hold several items (the action menu's short-item columns), where the
   //! row-granular tap hit-test cannot tell which item the finger meant. See
   //! \ref menu_layer_set_tap_select_only. Packs into \ref touch_fling_active's byte.
-  bool tap_select_only:1;
+  bool tap_select_only : 1;
 
   //! If true, the transient scrollbar overlay is never shown. See
   //! \ref menu_layer_set_scrollbar_hidden. Packs into \ref touch_fling_active's byte.
-  bool scrollbar_hidden:1;
+  bool scrollbar_hidden : 1;
 
   //! @internal
   //! True while the scrollbar overlay is drawn: set while a touch gesture (pan or inertial coast)
   //! scrolls the content, cleared when \ref scrollbar_hide_timer fires. Packs into
   //! \ref touch_fling_active's byte.
-  bool scrollbar_visible:1;
+  bool scrollbar_visible : 1;
 
   //! @internal
   //! True while a touch overscroll stretches the selection background to the viewport edge.
   //! Derived purely from the (rubber-banded) scroll offset in the offset-changed handler. Packs
   //! into \ref touch_fling_active's byte.
-  bool overscroll_stretched:1;
+  bool overscroll_stretched : 1;
 
   //! @internal
   //! True while a touch gesture (pan, coast, or the settle that follows) pins a center-focused
   //! menu's selection highlight to the viewport centre, so rows slide through the fixed box the
   //! way button steps look. Cleared lazily when the settling row lands in the box. Packs into
   //! \ref touch_fling_active's byte.
-  bool touch_center_pin:1;
+  bool touch_center_pin : 1;
 
   //! Add some padding to keep track of the \ref MenuLayer size budget.
   //! As long as the size stays within this budget, 2.x apps can safely use the 3.x MenuLayer type.
@@ -547,12 +534,12 @@ void menu_layer_init(MenuLayer *menu_layer, const GRect *frame);
 //!   will be selected initially.
 //! @return A pointer to the \ref MenuLayer. `NULL` if the \ref MenuLayer could not
 //! be created
-MenuLayer* menu_layer_create(GRect frame);
+MenuLayer *menu_layer_create(GRect frame);
 
-void menu_layer_deinit(MenuLayer* menu_layer);
+void menu_layer_deinit(MenuLayer *menu_layer);
 
 //! Destroys a \ref MenuLayer previously created by menu_layer_create.
-void menu_layer_destroy(MenuLayer* menu_layer);
+void menu_layer_destroy(MenuLayer *menu_layer);
 
 //! Gets the "root" Layer of the \ref MenuLayer, which is the parent for the sub-
 //! layers used for its implementation.
@@ -560,7 +547,7 @@ void menu_layer_destroy(MenuLayer* menu_layer);
 //! @return The "root" Layer of the \ref MenuLayer.
 //! @internal
 //! @note The result is always equal to `(Layer *) menu_layer`.
-Layer* menu_layer_get_layer(const MenuLayer *menu_layer);
+Layer *menu_layer_get_layer(const MenuLayer *menu_layer);
 
 //! Gets the ScrollLayer of the \ref MenuLayer, which is the layer responsible for
 //! the scrolling of the \ref MenuLayer.
@@ -568,15 +555,14 @@ Layer* menu_layer_get_layer(const MenuLayer *menu_layer);
 //! @return The ScrollLayer of the \ref MenuLayer.
 //! @internal
 //! @note The result is always equal to `(ScrollLayer *) menu_layer`.
-ScrollLayer* menu_layer_get_scroll_layer(const MenuLayer *menu_layer);
+ScrollLayer *menu_layer_get_scroll_layer(const MenuLayer *menu_layer);
 
 //! @internal
 //! This function replaces \ref menu_layer_set_callbacks_by_value in order to change the callbacks
 //! parameter to be passed by a pointer instead of being passed by value. Callers consume much less
 //! code space when passing a pointer compared to passing structs by value.
 //! @see menu_layer_set_callbacks_by_value
-void menu_layer_set_callbacks(MenuLayer *menu_layer,
-                              void *callback_context,
+void menu_layer_set_callbacks(MenuLayer *menu_layer, void *callback_context,
                               const MenuLayerCallbacks *callbacks);
 
 //! Sets the callbacks for the MenuLayer.
@@ -605,8 +591,7 @@ void menu_layer_set_callbacks_by_value(MenuLayer *menu_layer, void *callback_con
 //! @see \ref Clicks
 //! @see \ref window_set_click_config_provider_with_context()
 //! @see \ref scroll_layer_set_click_config_onto_window()
-void menu_layer_set_click_config_onto_window(MenuLayer *menu_layer,
-                                             struct Window *window);
+void menu_layer_set_click_config_onto_window(MenuLayer *menu_layer, struct Window *window);
 
 //! This enables or disables padding at the bottom of the \ref MenuLayer.
 //! Padding at the bottom of the layer keeps the bottom item from being at the very bottom of the
@@ -646,9 +631,7 @@ typedef enum {
 //! @param animated Supply `true` to animate changing the selection, or `false`
 //! to change the selection instantly.
 //! @note If there is no next/previous item, this function is a no-op.
-void menu_layer_set_selected_next(MenuLayer *menu_layer,
-                                  bool up,
-                                  MenuRowAlign scroll_align,
+void menu_layer_set_selected_next(MenuLayer *menu_layer, bool up, MenuRowAlign scroll_align,
                                   bool animated);
 
 //! Selects the item with given \ref MenuIndex.
@@ -660,9 +643,8 @@ void menu_layer_set_selected_next(MenuLayer *menu_layer,
 //! @note If the section and/or row index exceeds the available number of sections
 //! or resp. rows, the exceeding index/indices will be capped, effectively
 //! selecting the last section and/or row, resp.
-void menu_layer_set_selected_index(MenuLayer *menu_layer,
-                                   MenuIndex index, MenuRowAlign scroll_align,
-                                   bool animated);
+void menu_layer_set_selected_index(MenuLayer *menu_layer, MenuIndex index,
+                                   MenuRowAlign scroll_align, bool animated);
 
 //! Gets the MenuIndex of the currently selected menu item.
 //! @param menu_layer The \ref MenuLayer for which to get the current selected index.
@@ -709,7 +691,6 @@ void menu_layer_set_normal_colors(MenuLayer *menu_layer, GColor background, GCol
 //! @see \ref menu_layer_set_normal_colors
 void menu_layer_set_highlight_colors(MenuLayer *menu_layer, GColor background, GColor foreground);
 
-
 //! True, if the \ref MenuLayer generally scrolls such that the selected row is in the center.
 //! @see \ref menu_layer_set_center_focused
 bool menu_layer_get_center_focused(MenuLayer *menu_layer);
@@ -744,10 +725,10 @@ void menu_layer_set_tap_select_only(MenuLayer *menu_layer, bool tap_select_only)
 //! @see \ref menu_layer_set_scroll_wrap_around
 bool menu_layer_get_scroll_wrap_around(MenuLayer *menu_layer);
 
-//! Controls if the \ref MenuLayer can wrap around from the first element to the last when going 
+//! Controls if the \ref MenuLayer can wrap around from the first element to the last when going
 //! up and from the last element to the first when going down.
-//! Even enabled, wrap around will stay disabled when holding down the navigation buttons (up or down).
-//! Defaults to false for every platform
+//! Even enabled, wrap around will stay disabled when holding down the navigation buttons (up or
+//! down). Defaults to false for every platform
 //! @param menu_layer The menu layer for which to enable or disable the behavior.
 //! @param scroll_wrap_around true = enable the wrap around, false = disable it.
 //! @see \ref menu_layer_get_scroll_wrap_around
@@ -780,4 +761,3 @@ void menu_layer_set_scroll_vibe_on_blocked(MenuLayer *menu_layer, bool scroll_vi
 //!     @} // end addtogroup MenuLayer
 //!   @} // end addtogroup Layer
 //! @} // end addtogroup UI
-

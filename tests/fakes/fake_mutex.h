@@ -38,7 +38,7 @@ static FakePebbleMutex *prv_get(struct pbl_mutex *m) {
       (FakePebbleMutex *)list_find((ListNode *)s_mutex_list, prv_find_by_mutex, m);
   if (fake == NULL) {
     fake = malloc(sizeof(FakePebbleMutex));
-    *fake = (FakePebbleMutex) { .mutex = m };
+    *fake = (FakePebbleMutex){.mutex = m};
     s_mutex_list = (FakePebbleMutex *)list_prepend((ListNode *)s_mutex_list, (ListNode *)fake);
   }
   return fake;
@@ -49,8 +49,7 @@ static bool prv_list_foreach_assert_unlocked(ListNode *node, void *context) {
   bool *failed = context;
   if (fake->lock_count != 0) {
     // If this is failing, set your breakpoint here to find out which mutex
-    printf("Mutex (%p) was not unlocked when fake_mutex_assert_all_unlocked called\n",
-           fake->mutex);
+    printf("Mutex (%p) was not unlocked when fake_mutex_assert_all_unlocked called\n", fake->mutex);
     s_assert_triggered = true;
     cl_assert(s_asserts_disabled);
     *failed = true;
@@ -94,13 +93,9 @@ bool fake_mutex_all_unlocked(void) {
   return true;
 }
 
-void fake_mutex_set_should_assert(bool should_assert) {
-  s_asserts_disabled = !should_assert;
-}
+void fake_mutex_set_should_assert(bool should_assert) { s_asserts_disabled = !should_assert; }
 
-bool fake_mutex_get_assert_triggered(void) {
-  return s_assert_triggered;
-}
+bool fake_mutex_get_assert_triggered(void) { return s_assert_triggered; }
 
 //
 // Mutex API

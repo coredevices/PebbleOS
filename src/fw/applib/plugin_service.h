@@ -14,15 +14,14 @@
 //!
 //! \brief Using the PlugInSErvice
 //!
-//! The PlugInService enables 3rd party apps to publish and subscribe to events for a custom service. For example,
-//! a background worker could publish events for a custom service and any foreground app that wants to can subscribe
-//! to those events.
+//! The PlugInService enables 3rd party apps to publish and subscribe to events for a custom
+//! service. For example, a background worker could publish events for a custom service and any
+//! foreground app that wants to can subscribe to those events.
 //!
-//! Plug-in services are identified by UUID. The client of a service will get a pointer to an event structure
-//! param block whose content is unique to each service.
+//! Plug-in services are identified by UUID. The client of a service will get a pointer to an event
+//! structure param block whose content is unique to each service.
 //!
 //!   @{
-
 
 //! Generic structure of a plug-in event that will be received by an app
 typedef struct {
@@ -33,7 +32,8 @@ typedef struct {
 
 //! Callback type for plug-in service events
 //! @param type the event type
-//! @param data pointer to event data. The client must know the structure of the data provided by the plug-in service.
+//! @param data pointer to event data. The client must know the structure of the data provided by
+//! the plug-in service.
 typedef void (*PluginServiceHandler)(uint8_t type, PluginEventData *data);
 
 //! Subscribe to a specific plugin service. Once subscribed, the handler
@@ -48,13 +48,11 @@ bool plugin_service_subscribe(Uuid *uuid, PluginServiceHandler handler);
 //! @return true on success
 bool plugin_service_unsubscribe(Uuid *uuid);
 
-
 //! Send an event for a plug-in service
 //! @param uuid The UUID of the plug-in service
 //! @param type the event type
 //! @param data the event data structure
 void plugin_service_send_event(Uuid *uuid, uint8_t type, PluginEventData *data);
-
 
 //!     @} // end addtogroup PlugInService
 //!   @} // end addtogroup EventService
@@ -63,4 +61,3 @@ void plugin_service_send_event(Uuid *uuid, uint8_t type, PluginEventData *data);
 //! @internal
 //! Register the accelerometer service with the event service system
 void plugin_service_init(void);
-

@@ -28,9 +28,7 @@ bool comm_session_is_valid(const CommSession *session) {
   return (s_valid_session == session);
 }
 
-void comm_session_send_next(CommSession *session) {
-}
-
+void comm_session_send_next(CommSession *session) {}
 
 // Helpers
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -42,9 +40,7 @@ typedef struct {
   uint8_t data[];
 } TestSendJob;
 
-static size_t prv_get_length(const TestSendJob *sb) {
-  return (sb->length - sb->consumed_length);
-}
+static size_t prv_get_length(const TestSendJob *sb) { return (sb->length - sb->consumed_length); }
 
 static const uint8_t *prv_get_read_pointer(const TestSendJob *sb) {
   return (sb->data + sb->consumed_length);
@@ -54,8 +50,8 @@ static size_t prv_send_job_impl_get_length(const SessionSendQueueJob *send_job) 
   return prv_get_length((TestSendJob *)send_job);
 }
 
-size_t prv_send_job_impl_copy(const SessionSendQueueJob *send_job, int start_offset,
-                              size_t length, uint8_t *data_out) {
+size_t prv_send_job_impl_copy(const SessionSendQueueJob *send_job, int start_offset, size_t length,
+                              uint8_t *data_out) {
   TestSendJob *sb = (TestSendJob *)send_job;
   const size_t length_remaining = prv_get_length(sb);
   const size_t length_after_offset = (length_remaining - start_offset);
@@ -84,21 +80,22 @@ void prv_send_job_impl_free(SessionSendQueueJob *send_job) {
 }
 
 static const SessionSendJobImpl s_test_job_impl = {
-  .get_length = prv_send_job_impl_get_length,
-  .copy = prv_send_job_impl_copy,
-  .get_read_pointer = prv_send_job_impl_get_read_pointer,
-  .consume = prv_send_job_impl_consume,
-  .free = prv_send_job_impl_free,
+    .get_length = prv_send_job_impl_get_length,
+    .copy = prv_send_job_impl_copy,
+    .get_read_pointer = prv_send_job_impl_get_read_pointer,
+    .consume = prv_send_job_impl_consume,
+    .free = prv_send_job_impl_free,
 };
 
 SessionSendQueueJob *prv_create_test_job(const uint8_t *data, size_t length) {
   TestSendJob *job = kernel_malloc(sizeof(TestSendJob) + length);
   cl_assert(job);
-  *job = (const TestSendJob) {
-    .job = {
-      .impl = &s_test_job_impl,
-    },
-    .length = length,
+  *job = (const TestSendJob){
+      .job =
+          {
+              .impl = &s_test_job_impl,
+          },
+      .length = length,
   };
   if (length && data) {
     memcpy(job->data, data, length);
@@ -117,7 +114,7 @@ void test_session_send_queue__initialize(void) {
   fake_kernel_malloc_init();
   fake_kernel_malloc_enable_stats(true);
   fake_kernel_malloc_mark();
-  s_session = (const CommSession) {};
+  s_session = (const CommSession){};
 }
 
 void test_session_send_queue__cleanup(void) {
@@ -175,9 +172,8 @@ void test_session_send_queue__copy_less_than_head_job_with_offset_shorter_than_j
   uint8_t data_out[1];
   memset(data_out, 0, sizeof(data_out));
   int offset = 1;
-  cl_assert_equal_i(sizeof(data_out),
-                    comm_session_send_queue_copy(s_valid_session, offset,
-                                                 sizeof(data_out), data_out));
+  cl_assert_equal_i(sizeof(data_out), comm_session_send_queue_copy(s_valid_session, offset,
+                                                                   sizeof(data_out), data_out));
   cl_assert_equal_m(data_out, TEST_DATA + offset, sizeof(data_out));
 }
 
@@ -188,9 +184,8 @@ void test_session_send_queue__copy_less_than_head_job_with_offset_longer_than_jo
   uint8_t data_out[sizeof(TEST_DATA) - 1];
   memset(data_out, 0, sizeof(data_out));
   int offset = sizeof(TEST_DATA) + 1;
-  cl_assert_equal_i(sizeof(data_out),
-                    comm_session_send_queue_copy(s_valid_session, offset,
-                                                 sizeof(data_out), data_out));
+  cl_assert_equal_i(sizeof(data_out), comm_session_send_queue_copy(s_valid_session, offset,
+                                                                   sizeof(data_out), data_out));
   cl_assert_equal_m(data_out, TEST_DATA + (offset % sizeof(TEST_DATA)), sizeof(data_out));
 }
 
@@ -201,14 +196,12 @@ void test_session_send_queue__copy_overlapping_multiple_jobs_with_offset(void) {
   uint8_t data_out[2 * sizeof(TEST_DATA)];
   memset(data_out, 0, sizeof(data_out));
   int offset = 1;
-  cl_assert_equal_i(sizeof(data_out),
-                    comm_session_send_queue_copy(s_valid_session, offset,
-                                                 sizeof(data_out), data_out));
+  cl_assert_equal_i(sizeof(data_out), comm_session_send_queue_copy(s_valid_session, offset,
+                                                                   sizeof(data_out), data_out));
   for (int i = 0; i < 2; ++i) {
-    cl_assert_equal_m(data_out + (i * sizeof(TEST_DATA)),
-                      TEST_DATA + offset, sizeof(TEST_DATA) - offset);
-    cl_assert_equal_m(data_out + ((i + 1) * sizeof(TEST_DATA)) - offset,
-                      TEST_DATA, offset);
+    cl_assert_equal_m(data_out + (i * sizeof(TEST_DATA)), TEST_DATA + offset,
+                      sizeof(TEST_DATA) - offset);
+    cl_assert_equal_m(data_out + ((i + 1) * sizeof(TEST_DATA)) - offset, TEST_DATA, offset);
   }
 }
 

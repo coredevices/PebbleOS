@@ -20,7 +20,7 @@
 #include "pbl/util/size.h"
 
 static CompositorTransitionDirection prv_flip_transition_direction(
-  CompositorTransitionDirection direction) {
+    CompositorTransitionDirection direction) {
   switch (direction) {
     case CompositorTransitionDirectionUp:
       return CompositorTransitionDirectionDown;
@@ -38,8 +38,8 @@ static CompositorTransitionDirection prv_flip_transition_direction(
 #if PBL_RECT
 //! linear interpolation between two GPoints, supports delay and clamping
 //! @param delay value to postpone interpolation (in range 0..ANIMATION_NORMALIZED_MAX)
-static GPoint prv_gpoint_interpolate(int32_t delay, int32_t normalized,
-                                     const GPoint from, const GPoint to) {
+static GPoint prv_gpoint_interpolate(int32_t delay, int32_t normalized, const GPoint from,
+                                     const GPoint to) {
   normalized = CLIP(normalized - delay, 0, ANIMATION_NORMALIZED_MAX);
   normalized = animation_timing_curve(normalized, AnimationCurveEaseInOut);
   GPoint result;
@@ -57,7 +57,6 @@ static GPoint prv_gpoint_mid(const GPoint a, const GPoint b) {
 //! This behaviour is configured by the inner bool.
 static void prv_collapse_animation(GContext *ctx, uint32_t distance_normalized, bool inner,
                                    GPathDrawFilledCallback ring_fill_cb) {
-
   const GRect bounds = ctx->draw_state.clip_box;
   PBL_ASSERTN(bounds.origin.x == 0 && bounds.origin.y == 0);
 
@@ -93,27 +92,23 @@ static void prv_collapse_animation(GContext *ctx, uint32_t distance_normalized, 
 
   if (inner) {
     // gpath that creates the inner section
-    GPoint path_points[] = { scaled_bl, scaled_br, scaled_tr, scaled_tl, };
-
-    GPath path = {
-      .num_points = ARRAY_LENGTH(path_points),
-      .points = path_points
+    GPoint path_points[] = {
+        scaled_bl,
+        scaled_br,
+        scaled_tr,
+        scaled_tl,
     };
+
+    GPath path = {.num_points = ARRAY_LENGTH(path_points), .points = path_points};
 
     gpath_draw_filled_with_cb(ctx, &path, ring_fill_cb, NULL);
   } else {
     // gpath that creates a solid "ring"
     GPoint path_points[] = {
-        tl, tr, br, bl,
-        l, scaled_l,
-        scaled_bl, scaled_br, scaled_tr, scaled_tl,
-        scaled_l, l,
+        tl, tr, br, bl, l, scaled_l, scaled_bl, scaled_br, scaled_tr, scaled_tl, scaled_l, l,
     };
 
-    GPath path = {
-      .num_points = ARRAY_LENGTH(path_points),
-      .points = path_points
-    };
+    GPath path = {.num_points = ARRAY_LENGTH(path_points), .points = path_points};
 
     gpath_draw_filled_with_cb(ctx, &path, ring_fill_cb, NULL);
   }
@@ -127,16 +122,14 @@ static void prv_collapse_animation(GContext *ctx, uint32_t distance_normalized, 
 }
 
 //! Callback to be used with prv_collapse_animation to fill with the current fill_color
-static void prv_gpath_draw_filled_cb(GContext *ctx, int16_t y,
-                                     Fixed_S16_3 x_range_begin, Fixed_S16_3 x_range_end,
-                                     Fixed_S16_3 delta_begin, Fixed_S16_3 delta_end,
-                                     void *user_data) {
-
-  const GRect fill_rect = GRect(x_range_begin.integer + 1, y,
-                                x_range_end.integer - x_range_begin.integer - 1, 1);
+static void prv_gpath_draw_filled_cb(GContext *ctx, int16_t y, Fixed_S16_3 x_range_begin,
+                                     Fixed_S16_3 x_range_end, Fixed_S16_3 delta_begin,
+                                     Fixed_S16_3 delta_end, void *user_data) {
+  const GRect fill_rect =
+      GRect(x_range_begin.integer + 1, y, x_range_end.integer - x_range_begin.integer - 1, 1);
   graphics_fill_rect(ctx, &fill_rect);
 }
-#endif // PBL_RECT
+#endif  // PBL_RECT
 
 //! Draw a dumb dot at the supplied position with the supplied color
 static void prv_draw_dot(GContext *ctx, GPoint pos, GColor color) {
@@ -150,9 +143,9 @@ typedef struct PACKED {
   union {
     struct {
       //! Whether or not to collapse the starting screen of the animation to a dot
-      bool collapse_starting_animation:1;
+      bool collapse_starting_animation : 1;
       //! The direction the animation is moving
-      CompositorTransitionDirection direction:3;
+      CompositorTransitionDirection direction : 3;
       //! The animation's dot color after collapsing
       GColor collapse_dot_color;
       //! The animation's final dot color
@@ -211,8 +204,8 @@ void compositor_dot_transitions_collapsing_ring_animation_update(GContext *ctx,
   const int16_t outer_radial_outer_radius = (bounds.size.w / 2) + (dot_radius * 2);
   const int16_t outer_radial_inner_radius_from = (bounds.size.w / 2) + dot_radius;
   const int16_t outer_radial_inner_radius_to = dot_radius;
-  const int16_t interpolated_outer_radial_inner_radius = interpolate_int16(distance_normalized,
-    outer_radial_inner_radius_from, outer_radial_inner_radius_to);
+  const int16_t interpolated_outer_radial_inner_radius = interpolate_int16(
+      distance_normalized, outer_radial_inner_radius_from, outer_radial_inner_radius_to);
   const int16_t inner_radial_outer_radius = interpolated_outer_radial_inner_radius;
   const int16_t inner_radial_inner_radius = inner_radial_outer_radius - dot_radius;
 
@@ -227,8 +220,7 @@ void compositor_dot_transitions_collapsing_ring_animation_update(GContext *ctx,
   graphics_context_set_stroke_color(ctx, inner_ring_color);
   graphics_context_set_fill_color(ctx, inner_ring_color);
   graphics_fill_radial_internal(ctx, center, inner_radial_inner_radius, inner_radial_outer_radius,
-                                0,
-                                TRIG_MAX_ANGLE);
+                                0, TRIG_MAX_ANGLE);
 }
 
 #if PBL_ROUND
@@ -237,46 +229,40 @@ static void prv_collapse_animation_update_round(GContext *ctx,
                                                 uint32_t distance_normalized) {
   // If we're expanding, blit the app framebuffer into the system framebuffer (so below the ring)
   if (!config.collapse_starting_animation) {
-    compositor_scaled_app_fb_copy(GRect(0, 0, DISP_COLS, DISP_ROWS), false /* copy_relative_to_origin */);
+    compositor_scaled_app_fb_copy(GRect(0, 0, DISP_COLS, DISP_ROWS),
+                                  false /* copy_relative_to_origin */);
   }
 
-  compositor_dot_transitions_collapsing_ring_animation_update(ctx, distance_normalized,
-                                                              config.background_color,
-                                                              config.collapse_dot_color);
+  compositor_dot_transitions_collapsing_ring_animation_update(
+      ctx, distance_normalized, config.background_color, config.collapse_dot_color);
 }
 #endif
 
-static void prv_collapse_animation_update(GContext *ctx,
-                                          DotTransitionAnimationConfiguration config,
+static void prv_collapse_animation_update(GContext *ctx, DotTransitionAnimationConfiguration config,
                                           uint32_t distance_normalized) {
-  PBL_IF_RECT_ELSE(prv_collapse_animation_update_rect,
-                   prv_collapse_animation_update_round)(ctx, config, distance_normalized);
+  PBL_IF_RECT_ELSE(prv_collapse_animation_update_rect, prv_collapse_animation_update_round)(
+      ctx, config, distance_normalized);
 }
 
-static void prv_static_dot_transition_animation_update(
-    GContext *ctx, Animation *animation, uint32_t distance_normalized) {
-  DotTransitionAnimationConfiguration config = {
-    .data = animation_get_context(animation)
-  };
+static void prv_static_dot_transition_animation_update(GContext *ctx, Animation *animation,
+                                                       uint32_t distance_normalized) {
+  DotTransitionAnimationConfiguration config = {.data = animation_get_context(animation)};
 
   const uint32_t COLLAPSE_END_DISTANCE = 7 * (ANIMATION_NORMALIZED_MAX / 8);
   const GRect bounds = ctx->draw_state.clip_box;
   const GPoint center = grect_center_point(&bounds);
 
   if (distance_normalized < COLLAPSE_END_DISTANCE) {
-    const uint32_t local_distance = animation_timing_scaled(distance_normalized,
-                                                            0,
-                                                            COLLAPSE_END_DISTANCE);
+    const uint32_t local_distance =
+        animation_timing_scaled(distance_normalized, 0, COLLAPSE_END_DISTANCE);
     prv_collapse_animation_update(ctx, config, local_distance);
   } else {
     prv_draw_dot(ctx, center, config.collapse_dot_color);
   }
 }
 
-static void prv_configure_dot_transition_animation(Animation *animation,
-                                                   GColor collapse_dot_color,
-                                                   GColor final_dot_color,
-                                                   GColor background_color,
+static void prv_configure_dot_transition_animation(Animation *animation, GColor collapse_dot_color,
+                                                   GColor final_dot_color, GColor background_color,
                                                    CompositorTransitionDirection direction,
                                                    uint32_t duration,
                                                    bool collapse_starting_animation) {
@@ -291,56 +277,49 @@ static void prv_configure_dot_transition_animation(Animation *animation,
   }
 
   DotTransitionAnimationConfiguration config = {
-    .collapse_starting_animation = collapse_starting_animation,
-    .collapse_dot_color = collapse_dot_color,
-    .final_dot_color = final_dot_color,
-    .background_color = background_color,
-    .direction = direction
-  };
+      .collapse_starting_animation = collapse_starting_animation,
+      .collapse_dot_color = collapse_dot_color,
+      .final_dot_color = final_dot_color,
+      .background_color = background_color,
+      .direction = direction};
 
   animation_set_curve(animation, AnimationCurveLinear);
   animation_set_duration(animation, duration);
-  animation_set_handlers(animation, (AnimationHandlers) { 0 }, config.data);
+  animation_set_handlers(animation, (AnimationHandlers){0}, config.data);
   animation_set_reverse(animation, !collapse_starting_animation);
 }
 
 static void prv_dot_transition_to_timeline_past_animation_init(Animation *animation) {
-  prv_configure_dot_transition_animation(animation, TIMELINE_DOT_COLOR,
-                                         TIMELINE_DOT_COLOR, TIMELINE_PAST_COLOR,
-                                         CompositorTransitionDirectionUp,
+  prv_configure_dot_transition_animation(animation, TIMELINE_DOT_COLOR, TIMELINE_DOT_COLOR,
+                                         TIMELINE_PAST_COLOR, CompositorTransitionDirectionUp,
                                          STATIC_DOT_ANIMATION_DURATION_MS, false);
 }
 
 static void prv_dot_transition_from_timeline_past_animation_init(Animation *animation) {
-  prv_configure_dot_transition_animation(animation, TIMELINE_DOT_COLOR,
-                                         TIMELINE_DOT_COLOR, TIMELINE_PAST_COLOR,
-                                         CompositorTransitionDirectionDown,
+  prv_configure_dot_transition_animation(animation, TIMELINE_DOT_COLOR, TIMELINE_DOT_COLOR,
+                                         TIMELINE_PAST_COLOR, CompositorTransitionDirectionDown,
                                          STATIC_DOT_ANIMATION_DURATION_MS, true);
 }
 
 static void prv_dot_transition_to_timeline_future_animation_init(Animation *animation) {
-  prv_configure_dot_transition_animation(animation, TIMELINE_DOT_COLOR,
-                                         TIMELINE_DOT_COLOR, TIMELINE_FUTURE_COLOR,
-                                         CompositorTransitionDirectionUp,
+  prv_configure_dot_transition_animation(animation, TIMELINE_DOT_COLOR, TIMELINE_DOT_COLOR,
+                                         TIMELINE_FUTURE_COLOR, CompositorTransitionDirectionUp,
                                          STATIC_DOT_ANIMATION_DURATION_MS, true);
 }
 
 static void prv_dot_transition_from_timeline_future_animation_init(Animation *animation) {
-  prv_configure_dot_transition_animation(animation, TIMELINE_DOT_COLOR,
-                                         TIMELINE_DOT_COLOR, TIMELINE_FUTURE_COLOR,
-                                         CompositorTransitionDirectionDown,
+  prv_configure_dot_transition_animation(animation, TIMELINE_DOT_COLOR, TIMELINE_DOT_COLOR,
+                                         TIMELINE_FUTURE_COLOR, CompositorTransitionDirectionDown,
                                          STATIC_DOT_ANIMATION_DURATION_MS, false);
 }
 
 static void prv_dot_transition_from_app_fetch_animation_init(Animation *animation) {
-  prv_configure_dot_transition_animation(animation, GColorWhite,
-                                         GColorWhite, GColorLightGray,
+  prv_configure_dot_transition_animation(animation, GColorWhite, GColorWhite, GColorLightGray,
                                          CompositorTransitionDirectionNone,
                                          STATIC_DOT_ANIMATION_DURATION_MS, false);
 }
 
-
-const CompositorTransition* compositor_dot_transition_timeline_get(bool timeline_is_future,
+const CompositorTransition *compositor_dot_transition_timeline_get(bool timeline_is_future,
                                                                    bool timeline_is_destination) {
   if (compositor_transition_app_to_app_should_be_skipped()) {
     return NULL;
@@ -349,42 +328,42 @@ const CompositorTransition* compositor_dot_transition_timeline_get(bool timeline
   if (timeline_is_future) {
     if (timeline_is_destination) {
       static const CompositorTransition s_impl = {
-        .init = prv_dot_transition_to_timeline_future_animation_init,
-        .update = prv_static_dot_transition_animation_update,
+          .init = prv_dot_transition_to_timeline_future_animation_init,
+          .update = prv_static_dot_transition_animation_update,
       };
       return &s_impl;
     } else {
       static const CompositorTransition s_impl = {
-        .init = prv_dot_transition_from_timeline_future_animation_init,
-        .update = prv_static_dot_transition_animation_update,
+          .init = prv_dot_transition_from_timeline_future_animation_init,
+          .update = prv_static_dot_transition_animation_update,
       };
       return &s_impl;
     }
   } else {
     if (timeline_is_destination) {
       static const CompositorTransition s_impl = {
-        .init = prv_dot_transition_from_timeline_past_animation_init,
-        .update = prv_static_dot_transition_animation_update,
+          .init = prv_dot_transition_from_timeline_past_animation_init,
+          .update = prv_static_dot_transition_animation_update,
       };
       return &s_impl;
     } else {
       static const CompositorTransition s_impl = {
-        .init = prv_dot_transition_to_timeline_past_animation_init,
-        .update = prv_static_dot_transition_animation_update,
+          .init = prv_dot_transition_to_timeline_past_animation_init,
+          .update = prv_static_dot_transition_animation_update,
       };
       return &s_impl;
     }
   }
 }
 
-const CompositorTransition* compositor_dot_transition_app_fetch_get(void) {
+const CompositorTransition *compositor_dot_transition_app_fetch_get(void) {
   if (compositor_transition_app_to_app_should_be_skipped()) {
     return NULL;
   }
 
   static const CompositorTransition s_impl = {
-    .init =  prv_dot_transition_from_app_fetch_animation_init,
-    .update = prv_static_dot_transition_animation_update,
+      .init = prv_dot_transition_from_app_fetch_animation_init,
+      .update = prv_static_dot_transition_animation_update,
   };
   return &s_impl;
 }

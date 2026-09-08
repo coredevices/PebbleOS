@@ -21,7 +21,7 @@ typedef struct FakePutBytesStorageData {
 
 FakePutBytesStorageData s_storage_data;
 
-bool pb_storage_raw_get_status(PutBytesObjectType obj_type,  PbInstallStatus *status) {
+bool pb_storage_raw_get_status(PutBytesObjectType obj_type, PbInstallStatus *status) {
   return false;
 }
 
@@ -50,7 +50,7 @@ uint32_t fake_pb_storage_mem_get_max_size(PutBytesObjectType object_type) {
   return FAKE_STORAGE_MAX_SIZE;
 }
 
-static void(*s_do_before_write)(void) = NULL;
+static void (*s_do_before_write)(void) = NULL;
 static void fake_pb_storage_mem_write(PutBytesStorage *storage, uint32_t offset,
                                       const uint8_t *buffer, uint32_t length) {
   PBL_ASSERTN(s_storage_data.total_size);
@@ -64,7 +64,8 @@ static void fake_pb_storage_mem_write(PutBytesStorage *storage, uint32_t offset,
   memcpy(s_storage_data.buffer + offset, buffer, length);
 }
 
-static uint32_t fake_pb_storage_mem_calculate_crc(PutBytesStorage *storage, PutBytesCrcType crc_type) {
+static uint32_t fake_pb_storage_mem_calculate_crc(PutBytesStorage *storage,
+                                                  PutBytesCrcType crc_type) {
   PBL_ASSERTN(storage->impl_data == &s_storage_data);
   return s_storage_data.crc;
 }
@@ -82,19 +83,19 @@ static void fake_pb_storage_mem_deinit(PutBytesStorage *storage, bool is_success
 }
 
 const PutBytesStorageImplementation s_raw_implementation = {
-  .init = fake_pb_storage_mem_init,
-  .get_max_size = fake_pb_storage_mem_get_max_size,
-  .write = fake_pb_storage_mem_write,
-  .calculate_crc = fake_pb_storage_mem_calculate_crc,
-  .deinit = fake_pb_storage_mem_deinit,
+    .init = fake_pb_storage_mem_init,
+    .get_max_size = fake_pb_storage_mem_get_max_size,
+    .write = fake_pb_storage_mem_write,
+    .calculate_crc = fake_pb_storage_mem_calculate_crc,
+    .deinit = fake_pb_storage_mem_deinit,
 };
 
 const PutBytesStorageImplementation s_file_implementation = {
-  .init = fake_pb_storage_mem_init,
-  .get_max_size = fake_pb_storage_mem_get_max_size,
-  .write = fake_pb_storage_mem_write,
-  .calculate_crc = fake_pb_storage_mem_calculate_crc,
-  .deinit = fake_pb_storage_mem_deinit,
+    .init = fake_pb_storage_mem_init,
+    .get_max_size = fake_pb_storage_mem_get_max_size,
+    .write = fake_pb_storage_mem_write,
+    .calculate_crc = fake_pb_storage_mem_calculate_crc,
+    .deinit = fake_pb_storage_mem_deinit,
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -106,16 +107,12 @@ void fake_pb_storage_register_cb_before_write(void (*cb_before_write)(void)) {
 
 void fake_pb_storage_mem_reset(void) {
   prv_cleanup();
-  s_storage_data = (FakePutBytesStorageData) {};
+  s_storage_data = (FakePutBytesStorageData){};
 }
 
-void fake_pb_storage_mem_set_crc(uint32_t crc) {
-  s_storage_data.crc = crc;
-}
+void fake_pb_storage_mem_set_crc(uint32_t crc) { s_storage_data.crc = crc; }
 
-bool fake_pb_storage_mem_get_last_success(void) {
-  return s_storage_data.last_is_success;
-}
+bool fake_pb_storage_mem_get_last_success(void) { return s_storage_data.last_is_success; }
 
 void fake_pb_storage_mem_assert_contents_written(const uint8_t contents[], size_t size) {
   cl_assert_equal_m(contents, s_storage_data.buffer + sizeof(FirmwareDescription), size);

@@ -10,18 +10,17 @@ static void prv_invert_pdc_colors(GDrawCommandProcessor *processor, GDrawCommand
                                   size_t processed_command_max_size, const GDrawCommandList *list,
                                   const GDrawCommand *command) {
   gdraw_command_set_stroke_color(
-      processed_command,
-      gcolor_invert(gdraw_command_get_stroke_color((GDrawCommand *)command)));
+      processed_command, gcolor_invert(gdraw_command_get_stroke_color((GDrawCommand *)command)));
   gdraw_command_set_fill_color(
-      processed_command,
-      gcolor_invert(gdraw_command_get_fill_color((GDrawCommand *)command)));
+      processed_command, gcolor_invert(gdraw_command_get_fill_color((GDrawCommand *)command)));
 }
 
 GDrawCommandProcessor prv_gdraw_inv_processor = {
-  .command = prv_invert_pdc_colors,
+    .command = prv_invert_pdc_colors,
 };
 
-KinoReelProcessor PRV_INVERT_COLORS_PROCESSOR = {.draw_command_processor = &prv_gdraw_inv_processor};
+KinoReelProcessor PRV_INVERT_COLORS_PROCESSOR = {.draw_command_processor =
+                                                     &prv_gdraw_inv_processor};
 
 static void prv_update_proc(Layer *layer, GContext *ctx) {
   KinoLayer *kino_layer = (KinoLayer *)layer;
@@ -40,7 +39,8 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
 
   const GRect reel_bounds = kino_layer_get_reel_bounds(kino_layer);
 
-  KinoReelProcessor processor = kino_layer->invert_colors ? PRV_INVERT_COLORS_PROCESSOR : (KinoReelProcessor){};
+  KinoReelProcessor processor =
+      kino_layer->invert_colors ? PRV_INVERT_COLORS_PROCESSOR : (KinoReelProcessor){};
   kino_player_draw_processed(&kino_layer->player, ctx, reel_bounds.origin, &processor);
 }
 
@@ -72,10 +72,12 @@ void kino_layer_init(KinoLayer *kino_layer, const GRect *frame) {
   // init kino layer
   kino_layer->background_color = GColorClear;
   // init kino player
-  kino_player_set_callbacks(&kino_layer->player, (KinoPlayerCallbacks){
-    .frame_did_change = prv_player_frame_did_change,
-    .did_stop = prv_player_did_stop,
-  }, kino_layer);
+  kino_player_set_callbacks(&kino_layer->player,
+                            (KinoPlayerCallbacks){
+                                .frame_did_change = prv_player_frame_did_change,
+                                .did_stop = prv_player_did_stop,
+                            },
+                            kino_layer);
 }
 
 void kino_layer_deinit(KinoLayer *kino_layer) {
@@ -132,9 +134,7 @@ KinoReel *kino_layer_get_reel(KinoLayer *kino_layer) {
   return kino_player_get_reel(&kino_layer->player);
 }
 
-KinoPlayer *kino_layer_get_player(KinoLayer *kino_layer) {
-  return &kino_layer->player;
-}
+KinoPlayer *kino_layer_get_player(KinoLayer *kino_layer) { return &kino_layer->player; }
 
 void kino_layer_set_alignment(KinoLayer *kino_layer, GAlign alignment) {
   kino_layer->alignment = alignment;
@@ -146,9 +146,7 @@ void kino_layer_set_background_color(KinoLayer *kino_layer, GColor color) {
   layer_mark_dirty(&kino_layer->layer);
 }
 
-void kino_layer_play(KinoLayer *kino_layer) {
-  kino_player_play(&kino_layer->player);
-}
+void kino_layer_play(KinoLayer *kino_layer) { kino_player_play(&kino_layer->player); }
 
 void kino_layer_play_section(KinoLayer *kino_layer, uint32_t from_position, uint32_t to_position) {
   kino_player_play_section(&kino_layer->player, from_position, to_position);
@@ -158,27 +156,21 @@ ImmutableAnimation *kino_layer_create_play_animation(KinoLayer *kino_layer) {
   return kino_player_create_play_animation(&kino_layer->player);
 }
 
-ImmutableAnimation *kino_layer_create_play_section_animation(
-    KinoLayer *kino_layer, uint32_t from_position, uint32_t to_position) {
-  return kino_player_create_play_section_animation(&kino_layer->player, from_position,
-                                                   to_position);
+ImmutableAnimation *kino_layer_create_play_section_animation(KinoLayer *kino_layer,
+                                                             uint32_t from_position,
+                                                             uint32_t to_position) {
+  return kino_player_create_play_section_animation(&kino_layer->player, from_position, to_position);
 }
 
-void kino_layer_pause(KinoLayer *kino_layer) {
-  kino_player_pause(&kino_layer->player);
-}
+void kino_layer_pause(KinoLayer *kino_layer) { kino_player_pause(&kino_layer->player); }
 
-void kino_layer_rewind(KinoLayer *kino_layer) {
-  kino_player_rewind(&kino_layer->player);
-}
+void kino_layer_rewind(KinoLayer *kino_layer) { kino_player_rewind(&kino_layer->player); }
 
 GColor kino_layer_get_background_color(KinoLayer *kino_layer) {
   return kino_layer->background_color;
 }
 
-GAlign kino_layer_get_alignment(KinoLayer *kino_layer) {
-  return kino_layer->alignment;
-}
+GAlign kino_layer_get_alignment(KinoLayer *kino_layer) { return kino_layer->alignment; }
 
 GRect kino_layer_get_reel_bounds(KinoLayer *kino_layer) {
   KinoPlayer *player = kino_layer_get_player(kino_layer);

@@ -13,11 +13,11 @@ typedef const struct UARTDevice UARTDevice;
 typedef struct UARTRXErrorFlags {
   union {
     struct {
-      uint8_t reserved:4;
-      bool parity_error:1;
-      bool overrun_error:1;
-      bool framing_error:1;
-      bool noise_detected:1;
+      uint8_t reserved : 4;
+      bool parity_error : 1;
+      bool overrun_error : 1;
+      bool framing_error : 1;
+      bool noise_detected : 1;
     };
     uint8_t error_mask;
   };

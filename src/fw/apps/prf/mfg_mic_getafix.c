@@ -33,32 +33,32 @@
 #include "os_support_custom.h"
 #include "kiss_fftr.h"
 
-#define SAMPLE_RATE_HZ           16000
-#define RECORDING_DURATION_MS    1000
-#define SAMPLE_BITS              16
-#define FFT_SIZE                 1024
-#define MAX_CHANNELS             2
-#define PCM_BUFFER_SIZE          1024
+#define SAMPLE_RATE_HZ 16000
+#define RECORDING_DURATION_MS 1000
+#define SAMPLE_BITS 16
+#define FFT_SIZE 1024
+#define MAX_CHANNELS 2
+#define PCM_BUFFER_SIZE 1024
 
 // Calculate total samples and flash requirements
-#define N_SAMPLES                (MAX_CHANNELS * ((SAMPLE_RATE_HZ * RECORDING_DURATION_MS) / 1000))
-#define SAMPLE_SIZE_BYTES        (SAMPLE_BITS / 8)
-#define BLOCK_SIZE               (N_SAMPLES * SAMPLE_SIZE_BYTES)
+#define N_SAMPLES (MAX_CHANNELS * ((SAMPLE_RATE_HZ * RECORDING_DURATION_MS) / 1000))
+#define SAMPLE_SIZE_BYTES (SAMPLE_BITS / 8)
+#define BLOCK_SIZE (N_SAMPLES * SAMPLE_SIZE_BYTES)
 
-#define FLASH_START              FLASH_REGION_FIRMWARE_DEST_BEGIN
-#define FLASH_END                (FLASH_REGION_FIRMWARE_DEST_BEGIN + \
-                                  ROUND_TO_MOD_CEIL(BLOCK_SIZE, SUBSECTOR_SIZE_BYTES))
+#define FLASH_START FLASH_REGION_FIRMWARE_DEST_BEGIN
+#define FLASH_END \
+  (FLASH_REGION_FIRMWARE_DEST_BEGIN + ROUND_TO_MOD_CEIL(BLOCK_SIZE, SUBSECTOR_SIZE_BYTES))
 
 // Target frequency: 1 kHz ± 100 Hz
-#define TARGET_FREQ_HZ           1000
-#define FREQ_TOLERANCE_HZ        100
+#define TARGET_FREQ_HZ 1000
+#define FREQ_TOLERANCE_HZ 100
 
 // Minimum peak magnitude threshold (to reject noise)
-#define MIN_PEAK_MAGNITUDE       1000
+#define MIN_PEAK_MAGNITUDE 1000
 
-#define RESULT_DISPLAY_MS        1000
+#define RESULT_DISPLAY_MS 1000
 
-#define STATUS_STR_LEN           128
+#define STATUS_STR_LEN 128
 
 typedef enum {
   TestState_Init,
@@ -130,8 +130,8 @@ static int prv_find_peak_frequency(int16_t *samples, size_t sample_count) {
   // Frequency = (bin * sample_rate) / FFT_SIZE
   int peak_freq = (peak_bin * SAMPLE_RATE_HZ) / FFT_SIZE;
 
-  PBL_LOG_INFO("Peak found at bin %d, frequency %d Hz, magnitude %ld",
-          peak_bin, peak_freq, (long)max_magnitude);
+  PBL_LOG_INFO("Peak found at bin %d, frequency %d Hz, magnitude %ld", peak_bin, peak_freq,
+               (long)max_magnitude);
 
   // Clean up
   kernel_free(freq_data);
@@ -187,28 +187,30 @@ static void prv_analyze_dual_mic(AppData *data) {
     }
 
     // Check if peaks are around target frequency
-    data->mic1_passed = data->mic1_passed || ((data->mic1_peak_freq > 0) &&
-                        (abs(data->mic1_peak_freq - TARGET_FREQ_HZ) <= FREQ_TOLERANCE_HZ));
+    data->mic1_passed =
+        data->mic1_passed || ((data->mic1_peak_freq > 0) &&
+                              (abs(data->mic1_peak_freq - TARGET_FREQ_HZ) <= FREQ_TOLERANCE_HZ));
 
     if (num_channels == 2) {
-      data->mic2_passed = data->mic2_passed || ((data->mic2_peak_freq > 0) &&
-                          (abs(data->mic2_peak_freq - TARGET_FREQ_HZ) <= FREQ_TOLERANCE_HZ));
+      data->mic2_passed =
+          data->mic2_passed || ((data->mic2_peak_freq > 0) &&
+                                (abs(data->mic2_peak_freq - TARGET_FREQ_HZ) <= FREQ_TOLERANCE_HZ));
     } else {
       data->mic2_passed = true;  // N/A for single mic
     }
 
     // Update status text
     if (data->mic1_peak_freq > 0) {
-      snprintf(data->mic1_text, STATUS_STR_LEN, "Mic 1: %d Hz %s",
-              TARGET_FREQ_HZ, data->mic1_passed ? "PASS" : "FAIL");
+      snprintf(data->mic1_text, STATUS_STR_LEN, "Mic 1: %d Hz %s", TARGET_FREQ_HZ,
+               data->mic1_passed ? "PASS" : "FAIL");
     } else {
       snprintf(data->mic1_text, STATUS_STR_LEN, "Mic 1: No signal");
     }
 
     if (num_channels == 2) {
       if (data->mic2_peak_freq > 0) {
-        snprintf(data->mic2_text, STATUS_STR_LEN, "Mic 2: %d Hz %s",
-                TARGET_FREQ_HZ, data->mic2_passed ? "PASS" : "FAIL");
+        snprintf(data->mic2_text, STATUS_STR_LEN, "Mic 2: %d Hz %s", TARGET_FREQ_HZ,
+                 data->mic2_passed ? "PASS" : "FAIL");
       } else {
         snprintf(data->mic2_text, STATUS_STR_LEN, "Mic 2: No signal");
       }
@@ -273,7 +275,7 @@ static void prv_start_test(void) {
   snprintf(data->status_text, STATUS_STR_LEN, "Recording...");
 
   PBL_LOG_INFO("Starting microphone test (channels=%lu, block_size=%lu)",
-          (unsigned long)num_channels, (unsigned long)BLOCK_SIZE);
+               (unsigned long)num_channels, (unsigned long)BLOCK_SIZE);
 
   mic_init(MIC);
   mic_set_volume(MIC, 100);  // maximum volume
@@ -400,8 +402,8 @@ const PebbleProcessMd *mfg_mic_getafix_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
       .common.main_func = &s_main,
       // UUID: 3e8f9a2c-1b4d-4f5e-9c6a-7d8e0f1a2b3c
-      .common.uuid = {0x3e, 0x8f, 0x9a, 0x2c, 0x1b, 0x4d, 0x4f, 0x5e,
-                      0x9c, 0x6a, 0x7d, 0x8e, 0x0f, 0x1a, 0x2b, 0x3c},
+      .common.uuid = {0x3e, 0x8f, 0x9a, 0x2c, 0x1b, 0x4d, 0x4f, 0x5e, 0x9c, 0x6a, 0x7d, 0x8e, 0x0f,
+                      0x1a, 0x2b, 0x3c},
       .name = "MfgMicGetafix",
   };
   return (const PebbleProcessMd *)&s_app_info;

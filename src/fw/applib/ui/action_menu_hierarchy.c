@@ -31,8 +31,8 @@ ActionMenuLevel *action_menu_level_create(uint16_t max_items) {
                                          max_items * applib_type_size(ActionMenuItem));
   if (!level) return NULL;
   *level = (ActionMenuLevel){
-    .max_items = max_items,
-    .display_mode = ActionMenuLevelDisplayModeWide,
+      .max_items = max_items,
+      .display_mode = ActionMenuLevelDisplayModeWide,
   };
 
   return level;
@@ -44,39 +44,34 @@ void action_menu_level_set_display_mode(ActionMenuLevel *level,
   level->display_mode = display_mode;
 }
 
-ActionMenuItem *action_menu_level_add_action(ActionMenuLevel *level,
-                             const char *label,
-                             ActionMenuPerformActionCb cb,
-                             void *action_data) {
-  if (!level || !label || !cb ||
-      (level->num_items >= level->max_items)) {
+ActionMenuItem *action_menu_level_add_action(ActionMenuLevel *level, const char *label,
+                                             ActionMenuPerformActionCb cb, void *action_data) {
+  if (!level || !label || !cb || (level->num_items >= level->max_items)) {
     return NULL;
   }
 
   ActionMenuItem *item = &level->items[level->num_items];
-  *item = (ActionMenuItem) {
-    .label = label,
-    .perform_action = cb,
-    .action_data = action_data,
+  *item = (ActionMenuItem){
+      .label = label,
+      .perform_action = cb,
+      .action_data = action_data,
   };
   ++level->num_items;
   return item;
 }
 
-ActionMenuItem *action_menu_level_add_child(ActionMenuLevel *level,
-                                 ActionMenuLevel *child,
-                                 const char *label) {
-  if (!level || !child || !label ||
-      (level->num_items >= level->max_items)) {
+ActionMenuItem *action_menu_level_add_child(ActionMenuLevel *level, ActionMenuLevel *child,
+                                            const char *label) {
+  if (!level || !child || !label || (level->num_items >= level->max_items)) {
     return NULL;
   }
 
   child->parent_level = level;
 
   ActionMenuItem *item = &level->items[level->num_items];
-  *item = (ActionMenuItem) {
-    .label = label,
-    .next_level = child,
+  *item = (ActionMenuItem){
+      .label = label,
+      .next_level = child,
   };
   ++level->num_items;
 
@@ -86,8 +81,7 @@ ActionMenuItem *action_menu_level_add_child(ActionMenuLevel *level,
 // Hierarchy
 /////////////////////////////////
 
-static void prv_cleanup_helper(const ActionMenuLevel *level,
-                               ActionMenuEachItemCb each_cb,
+static void prv_cleanup_helper(const ActionMenuLevel *level, ActionMenuEachItemCb each_cb,
                                void *context) {
   for (int i = 0; i < level->num_items; ++i) {
     const ActionMenuItem *item = &level->items[i];
@@ -102,8 +96,7 @@ static void prv_cleanup_helper(const ActionMenuLevel *level,
   applib_free((void *)level);
 }
 
-void action_menu_hierarchy_destroy(const ActionMenuLevel *root,
-                                   ActionMenuEachItemCb each_cb,
+void action_menu_hierarchy_destroy(const ActionMenuLevel *root, ActionMenuEachItemCb each_cb,
                                    void *context) {
   if (root) {
     prv_cleanup_helper(root, each_cb, context);

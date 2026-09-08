@@ -10,8 +10,8 @@
 //! Source that started a vibe pattern, so cancels can be scoped to their owner
 //! (e.g. a notification dismiss must not stop an alarm vibe).
 typedef enum VibePatternOwner {
-  VibePatternOwner_Other = 0,   // default for untagged kernel vibes
-  VibePatternOwner_App,         // any app/worker vibe; cleared on app cleanup
+  VibePatternOwner_Other = 0,  // default for untagged kernel vibes
+  VibePatternOwner_App,        // any app/worker vibe; cleared on app cleanup
   VibePatternOwner_Notification,
   VibePatternOwner_PhoneCall,
   VibePatternOwner_Alarm,

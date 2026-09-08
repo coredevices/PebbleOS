@@ -5,6 +5,4 @@
 
 #include "ispp.h"
 
-SPPContextRef ispp_get_context(BTContext *ctx) {
-  return NULL;
-}
+SPPContextRef ispp_get_context(BTContext *ctx) { return NULL; }

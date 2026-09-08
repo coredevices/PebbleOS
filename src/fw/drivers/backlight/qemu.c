@@ -12,16 +12,16 @@
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 
 // Display register offsets (must match QEMU pebble-display)
-#define DISP_CTRL        0x000
-#define DISP_BRIGHTNESS  0x018
-#define DISP_BL_RED      0x024
-#define DISP_BL_GREEN    0x028
-#define DISP_BL_BLUE     0x02C
-#define CTRL_UPDATE      (1 << 1)
+#define DISP_CTRL 0x000
+#define DISP_BRIGHTNESS 0x018
+#define DISP_BL_RED 0x024
+#define DISP_BL_GREEN 0x028
+#define DISP_BL_BLUE 0x02C
+#define CTRL_UPDATE (1 << 1)
 
 // Brightness levels for QEMU display grayscale path
-#define BACKLIGHT_OFF_LEVEL  180
-#define BACKLIGHT_ON_LEVEL   255
+#define BACKLIGHT_OFF_LEVEL 180
+#define BACKLIGHT_ON_LEVEL 255
 
 static bool s_initialized;
 
@@ -82,8 +82,7 @@ uint8_t backlight_get_level(uint8_t brightness) {
   return brightness;
 }
 
-void backlight_refresh(void) {
-}
+void backlight_refresh(void) {}
 
 #ifdef CONFIG_BACKLIGHT_QEMU_COLOR
 void backlight_set_color(uint32_t rgb_color) {
@@ -95,7 +94,5 @@ void backlight_set_color(uint32_t rgb_color) {
   s_rgb_current_color = rgb_color;
 }
 
-uint32_t backlight_get_color(void) {
-  return s_rgb_current_color;
-}
+uint32_t backlight_get_color(void) { return s_rgb_current_color; }
 #endif

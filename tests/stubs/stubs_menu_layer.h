@@ -6,30 +6,24 @@
 #include "applib/ui/menu_layer.h"
 #include "pbl/util/attributes.h"
 
-void WEAK menu_cell_basic_draw(GContext* ctx, const Layer *cell_layer, const char *title,
+void WEAK menu_cell_basic_draw(GContext *ctx, const Layer *cell_layer, const char *title,
                                const char *subtitle, GBitmap *icon) {}
 
-void WEAK menu_cell_title_draw(GContext* ctx, const Layer *cell_layer, const char *title) {}
+void WEAK menu_cell_title_draw(GContext *ctx, const Layer *cell_layer, const char *title) {}
 
-void WEAK menu_cell_basic_header_draw(GContext* ctx, const Layer *cell_layer, const char *title) {}
+void WEAK menu_cell_basic_header_draw(GContext *ctx, const Layer *cell_layer, const char *title) {}
 
 void WEAK menu_layer_init(MenuLayer *menu_layer, const GRect *frame) {}
 
-MenuLayer* WEAK menu_layer_create(GRect frame) {
-  return NULL;
-}
+MenuLayer *WEAK menu_layer_create(GRect frame) { return NULL; }
 
-void WEAK menu_layer_deinit(MenuLayer* menu_layer) {}
+void WEAK menu_layer_deinit(MenuLayer *menu_layer) {}
 
-void WEAK menu_layer_destroy(MenuLayer* menu_layer) {}
+void WEAK menu_layer_destroy(MenuLayer *menu_layer) {}
 
-Layer* WEAK menu_layer_get_layer(const MenuLayer *menu_layer) {
-  return NULL;
-}
+Layer *WEAK menu_layer_get_layer(const MenuLayer *menu_layer) { return NULL; }
 
-ScrollLayer* WEAK menu_layer_get_scroll_layer(const MenuLayer *menu_layer) {
-  return NULL;
-}
+ScrollLayer *WEAK menu_layer_get_scroll_layer(const MenuLayer *menu_layer) { return NULL; }
 
 void WEAK menu_layer_set_callbacks(MenuLayer *menu_layer, void *callback_context,
                                    const MenuLayerCallbacks *callbacks) {}

@@ -35,8 +35,8 @@ void prv_fill_mask_shape(GContext *ctx, const GRect *layer_bounds, const GSize *
 
   // Calculate the radial rect
   const GRect inset_layer_bounds = grect_inset((*layer_bounds), GEdgeInsets(shape_size->h / 2));
-  const GRect shape_rect = grect_centered_from_polar(inset_layer_bounds, oval_scale_mode,
-                                                     current_angle, (*shape_size));
+  const GRect shape_rect =
+      grect_centered_from_polar(inset_layer_bounds, oval_scale_mode, current_angle, (*shape_size));
 
   // Fill the radial circle
   graphics_fill_oval(ctx, shape_rect, oval_scale_mode);
@@ -71,21 +71,16 @@ static void prv_layer_update_proc(Layer *layer, GContext *ctx) {
   sys_get_time_ms(&system_time_seconds, &system_time_ms);
 
   const uint16_t current_time_progress_ms =
-    (uint16_t)((system_time_seconds % (full_revolution_time_ms / MS_PER_SECOND)) * MS_PER_SECOND +
-      (system_time_ms % MS_PER_SECOND));
+      (uint16_t)((system_time_seconds % (full_revolution_time_ms / MS_PER_SECOND)) * MS_PER_SECOND +
+                 (system_time_ms % MS_PER_SECOND));
 
   const AnimationProgress animation_progress =
-    current_time_progress_ms * ANIMATION_NORMALIZED_MAX / full_revolution_time_ms;
+      current_time_progress_ms * ANIMATION_NORMALIZED_MAX / full_revolution_time_ms;
 
-  const GColor mask_colors[3] = {
-    GColorLightGray,
-    GColorDarkGray,
-    GColorBlack
-  };
+  const GColor mask_colors[3] = {GColorLightGray, GColorDarkGray, GColorBlack};
   const unsigned int num_mask_levels = ARRAY_LENGTH(mask_colors);
 
-  const int16_t shape_width =
-    (int16_t)(MIN(layer_bounds.size.w, layer_bounds.size.h) / 2);
+  const int16_t shape_width = (int16_t)(MIN(layer_bounds.size.w, layer_bounds.size.h) / 2);
   const GSize shape_size = GSize(shape_width, shape_width);
 
   for (unsigned int i = 0; i < num_mask_levels; i++) {
@@ -93,7 +88,7 @@ static void prv_layer_update_proc(Layer *layer, GContext *ctx) {
     // Offset the angle to space each of the mask shapes equally apart
     const uint32_t starting_angle = (i * TRIG_MAX_ANGLE / num_mask_levels);
     const int32_t progress_angle_delta =
-      animation_progress * TRIG_MAX_ANGLE / ANIMATION_NORMALIZED_MAX;
+        animation_progress * TRIG_MAX_ANGLE / ANIMATION_NORMALIZED_MAX;
     const int32_t current_angle = normalize_angle(starting_angle + progress_angle_delta);
 
     // Set the color to fill, progressing through each of the mask levels
@@ -134,17 +129,15 @@ static void handle_init(void) {
   window_init(window, WINDOW_NAME("GDrawMask Demo"));
   window_set_user_data(window, data);
   window_set_window_handlers(window, &(WindowHandlers){
-    .load = prv_window_load,
-  });
+                                         .load = prv_window_load,
+                                     });
   const bool animated = true;
   app_window_stack_push(window, animated);
 
   app_light_enable(true);
 }
 
-static void handle_deinit(void) {
-  app_light_enable(false);
-}
+static void handle_deinit(void) { app_light_enable(false); }
 
 static void s_main(void) {
   handle_init();
@@ -155,9 +148,7 @@ static void s_main(void) {
 }
 
 const PebbleProcessMd *gdrawmask_demo_get_app_info() {
-  static const PebbleProcessMdSystem gdrawmask_demo_app_info = {
-    .common.main_func = s_main,
-    .name = "GDrawMask Demo"
-  };
-  return (const PebbleProcessMd*) &gdrawmask_demo_app_info;
+  static const PebbleProcessMdSystem gdrawmask_demo_app_info = {.common.main_func = s_main,
+                                                                .name = "GDrawMask Demo"};
+  return (const PebbleProcessMd *)&gdrawmask_demo_app_info;
 }

@@ -23,10 +23,10 @@
 #define PROMPT_RESP_MESSAGE (102)
 
 static void start_prompt(void);
-static void pulse_send_message(const int message_type, const char* response);
+static void pulse_send_message(const int message_type, const char *response);
 static void prv_pulse_done_command(void);
 
-static void prv_dbgserial_response_callback(const char* response) {
+static void prv_dbgserial_response_callback(const char *response) {
   if (serial_console_get_state() == SERIAL_CONSOLE_STATE_PULSE) {
     pulse_send_message(PROMPT_RESP_MESSAGE, response);
   } else {
@@ -44,15 +44,15 @@ static void prv_dbgserial_command_complete_callback(void) {
 }
 
 static PromptContext s_dbgserial_prompt_context = {
-  .response_callback = prv_dbgserial_response_callback,
-  .command_complete_callback = prv_dbgserial_command_complete_callback,
+    .response_callback = prv_dbgserial_response_callback,
+    .command_complete_callback = prv_dbgserial_command_complete_callback,
 };
 
 typedef enum {
   ExecutingCommandNone = 0,
-  ExecutingCommandDbgSerial, //!< Currently executing command through dbgserial
-  ExecutingCommandPulse,     //!< Currently executing command is through Pulse
-  ExecutingCommandContext,   //!< Currently executing command is a custom \ref PromptContext
+  ExecutingCommandDbgSerial,  //!< Currently executing command through dbgserial
+  ExecutingCommandPulse,      //!< Currently executing command is through Pulse
+  ExecutingCommandContext,    //!< Currently executing command is a custom \ref PromptContext
 } ExecutingCommand;
 
 static bool s_command_continues_after_return = false;
@@ -79,10 +79,10 @@ void console_switch_to_prompt(void) {
 /////////////////////////////////////////////////////////////////
 
 typedef void (*CommandFuncNoParam)(void);
-typedef void (*CommandFuncOneParam)(const char*);
-typedef void (*CommandFuncTwoParams)(const char*, const char*);
-typedef void (*CommandFuncThreeParams)(const char*, const char*, const char*);
-typedef void (*CommandFuncFourParams)(const char*, const char*, const char*, const char*);
+typedef void (*CommandFuncOneParam)(const char *);
+typedef void (*CommandFuncTwoParams)(const char *, const char *);
+typedef void (*CommandFuncThreeParams)(const char *, const char *, const char *);
+typedef void (*CommandFuncFourParams)(const char *, const char *, const char *, const char *);
 
 #define NUM_SUPPORTED_PARAM_COUNT 4
 
@@ -90,10 +90,10 @@ void command_help(void) {
   prompt_send_response("Available Commands:");
   char buffer[32];
   for (unsigned int i = 0; i < NUM_PROMPT_COMMANDS; ++i) {
-    const Command* cmd = &s_prompt_commands[i];
+    const Command *cmd = &s_prompt_commands[i];
     if (cmd->num_params) {
-      prompt_send_response_fmt(buffer, sizeof(buffer),
-                               "%s {%u args}", cmd->cmd_str, cmd->num_params);
+      prompt_send_response_fmt(buffer, sizeof(buffer), "%s {%u args}", cmd->cmd_str,
+                               cmd->num_params);
     } else {
       prompt_send_response(cmd->cmd_str);
     }
@@ -102,10 +102,10 @@ void command_help(void) {
 
 typedef struct CommandArgs {
   unsigned int num_args;
-  const char* args[NUM_SUPPORTED_PARAM_COUNT];
+  const char *args[NUM_SUPPORTED_PARAM_COUNT];
 } CommandArgs;
 
-static CommandArgs prv_parse_arguments(char* buffer, char* buffer_end) {
+static CommandArgs prv_parse_arguments(char *buffer, char *buffer_end) {
   CommandArgs args;
 
   for (int i = 0; i < NUM_SUPPORTED_PARAM_COUNT; ++i) {
@@ -132,27 +132,27 @@ static CommandArgs prv_parse_arguments(char* buffer, char* buffer_end) {
   return args;
 }
 
-static void prv_execute_given_command(const Command* cmd, char* param_str, char* param_str_end) {
+static void prv_execute_given_command(const Command *cmd, char *param_str, char *param_str_end) {
   CommandArgs args = prv_parse_arguments(param_str, param_str_end);
 
   if (args.num_args != cmd->num_params) {
     char buffer[128];
     prompt_send_response_fmt(buffer, sizeof(buffer),
-                             "Incorrect number of arguments: Wanted %u Got %u",
-                             cmd->num_params, args.num_args);
+                             "Incorrect number of arguments: Wanted %u Got %u", cmd->num_params,
+                             args.num_args);
     goto done;
   }
 
   if (cmd->num_params == 4) {
-    ((CommandFuncFourParams) cmd->func)(args.args[0], args.args[1], args.args[2], args.args[3]);
+    ((CommandFuncFourParams)cmd->func)(args.args[0], args.args[1], args.args[2], args.args[3]);
   } else if (cmd->num_params == 3) {
-    ((CommandFuncThreeParams) cmd->func)(args.args[0], args.args[1], args.args[2]);
+    ((CommandFuncThreeParams)cmd->func)(args.args[0], args.args[1], args.args[2]);
   } else if (cmd->num_params == 2) {
-    ((CommandFuncTwoParams) cmd->func)(args.args[0], args.args[1]);
+    ((CommandFuncTwoParams)cmd->func)(args.args[0], args.args[1]);
   } else if (cmd->num_params == 1) {
-    ((CommandFuncOneParam) cmd->func)(args.args[0]);
+    ((CommandFuncOneParam)cmd->func)(args.args[0]);
   } else if (cmd->num_params == 0) {
-    ((CommandFuncNoParam) cmd->func)();
+    ((CommandFuncNoParam)cmd->func)();
   }
 
 done:
@@ -161,7 +161,7 @@ done:
   }
 }
 
-static void prv_find_and_execute_command(char* cmd, size_t cmd_len, PromptContext *context) {
+static void prv_find_and_execute_command(char *cmd, size_t cmd_len, PromptContext *context) {
   if (!cmd_len) {
     // Empty command.
     s_executing_command = ExecutingCommandNone;
@@ -175,9 +175,7 @@ static void prv_find_and_execute_command(char* cmd, size_t cmd_len, PromptContex
     const Command *cmd_iter = &s_prompt_commands[i];
 
     const size_t cmd_iter_length = strlen(cmd_iter->cmd_str);
-    if (cmd_len >= cmd_iter_length &&
-        memcmp(cmd_iter->cmd_str, cmd, cmd_iter_length) == 0) {
-
+    if (cmd_len >= cmd_iter_length && memcmp(cmd_iter->cmd_str, cmd, cmd_iter_length) == 0) {
       prv_execute_given_command(cmd_iter, cmd + cmd_iter_length, cmd + cmd_len);
 
       command_found = true;
@@ -204,7 +202,7 @@ void prompt_context_execute(PromptContext *context) {
 static void prv_execute_command_from_dbgserial(void *data) {
   dbgserial_putstr("");
 
-  char* buffer = s_dbgserial_prompt_context.buffer;
+  char *buffer = s_dbgserial_prompt_context.buffer;
 
   if (s_dbgserial_prompt_context.write_index > 0 && buffer[0] == '!') {
     // Go to log mode immediately.
@@ -216,8 +214,7 @@ static void prv_execute_command_from_dbgserial(void *data) {
       s_dbgserial_prompt_context.buffer + s_dbgserial_prompt_context.write_index;
   const size_t buffer_length = end_of_buffer - buffer;
 
-  prv_find_and_execute_command(buffer, buffer_length,
-                               &s_dbgserial_prompt_context);
+  prv_find_and_execute_command(buffer, buffer_length, &s_dbgserial_prompt_context);
 }
 
 bool prompt_context_append_char(PromptContext *prompt_context, char c) {
@@ -230,7 +227,7 @@ bool prompt_context_append_char(PromptContext *prompt_context, char c) {
 }
 
 // Crank up the optimization on this bad boy.
-OPTIMIZE_FUNC(2) void prompt_handle_character(char c, bool* should_context_switch) {
+OPTIMIZE_FUNC(2) void prompt_handle_character(char c, bool *should_context_switch) {
   if (UNLIKELY(prompt_command_is_executing())) {
     return;
   }
@@ -238,7 +235,7 @@ OPTIMIZE_FUNC(2) void prompt_handle_character(char c, bool* should_context_switc
   if (LIKELY(c >= 0x20 && c < 127)) {
     // Printable character.
     if (!prompt_context_append_char(&s_dbgserial_prompt_context, c)) {
-      dbgserial_putchar(0x07); // bell
+      dbgserial_putchar(0x07);  // bell
       return;
     }
 
@@ -250,52 +247,48 @@ OPTIMIZE_FUNC(2) void prompt_handle_character(char c, bool* should_context_switc
 
   // Handle unprintable control characters.
 
-  if (UNLIKELY(c == 0x3)) { // CTRL-C
+  if (UNLIKELY(c == 0x3)) {  // CTRL-C
     dbgserial_putstr("");
-    start_prompt(); // Start over
+    start_prompt();  // Start over
     return;
   }
 
-  if (UNLIKELY(c == 0x4)) { // CTRL-D
+  if (UNLIKELY(c == 0x4)) {  // CTRL-D
     dbgserial_putstr("^D");
     serial_console_set_state(SERIAL_CONSOLE_STATE_LOGGING);
     return;
   }
 
-  if (UNLIKELY(c == 0xd)) { // Enter key
+  if (UNLIKELY(c == 0xd)) {  // Enter key
     s_executing_command = ExecutingCommandDbgSerial;
     system_task_add_callback_from_isr(prv_execute_command_from_dbgserial, NULL,
                                       should_context_switch);
     return;
   }
 
-  if (UNLIKELY(c == 0x7f)) { // Backspace
+  if (UNLIKELY(c == 0x7f)) {  // Backspace
     if (s_dbgserial_prompt_context.write_index != 0) {
       s_dbgserial_prompt_context.write_index--;
-      dbgserial_putchar(0x8); // move cursor back one character
-      dbgserial_putchar(0x20); // replace that character with a space, advancing the cursor
-      dbgserial_putchar(0x8); // move the cursor back again
+      dbgserial_putchar(0x8);   // move cursor back one character
+      dbgserial_putchar(0x20);  // replace that character with a space, advancing the cursor
+      dbgserial_putchar(0x8);   // move the cursor back again
     } else {
-      dbgserial_putchar(0x07); // bell
+      dbgserial_putchar(0x07);  // bell
     }
     return;
   }
 }
 
-bool prompt_command_is_executing(void) {
-  return s_executing_command != ExecutingCommandNone;
-}
+bool prompt_command_is_executing(void) { return s_executing_command != ExecutingCommandNone; }
 
-void prompt_watchdog_feed(void) {
-  system_task_watchdog_feed();
-}
+void prompt_watchdog_feed(void) { system_task_watchdog_feed(); }
 
-void prompt_send_response(const char* response) {
+void prompt_send_response(const char *response) {
   PBL_ASSERTN(s_current_context && s_current_context->response_callback);
   s_current_context->response_callback(response);
 }
 
-void prompt_send_response_fmt(char* buffer, size_t buffer_size, const char* fmt, ...) {
+void prompt_send_response_fmt(char *buffer, size_t buffer_size, const char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
   vsniprintf(buffer, buffer_size, fmt, ap);
@@ -304,9 +297,7 @@ void prompt_send_response_fmt(char* buffer, size_t buffer_size, const char* fmt,
   prompt_send_response(buffer);
 }
 
-void prompt_command_continues_after_returning(void) {
-  s_command_continues_after_return = true;
-}
+void prompt_command_continues_after_returning(void) { s_command_continues_after_return = true; }
 
 void prompt_command_finish(void) {
   PBL_ASSERTN(s_current_context);
@@ -341,16 +332,14 @@ typedef struct __attribute__((__packed__)) PromptResponseContents {
 static void pulse_send_message(const int message_type, const char *response) {
   size_t response_length = 0;
 #ifdef CONFIG_PULSE_EVERYWHERE
-  PromptResponseContents *contents = pulse_reliable_send_begin(
-      PULSE2_RELIABLE_PROMPT_PROTOCOL);
+  PromptResponseContents *contents = pulse_reliable_send_begin(PULSE2_RELIABLE_PROMPT_PROTOCOL);
   if (!contents) {
     // Transport went down while waiting to send. Just throw away the message;
     // there's not much else we can do.
     return;
   }
 #else
-  PromptResponseContents *contents = pulse_best_effort_send_begin(
-      PULSE_PROTOCOL_PROMPT);
+  PromptResponseContents *contents = pulse_best_effort_send_begin(PULSE_PROTOCOL_PROMPT);
 #endif
 
   if (response) {
@@ -363,7 +352,7 @@ static void pulse_send_message(const int message_type, const char *response) {
   time_t time_s;
   uint16_t time_ms;
   rtc_get_time_ms(&time_s, &time_ms);
-  contents->time_ms = (uint64_t) time_s * 1000 + time_ms;
+  contents->time_ms = (uint64_t)time_s * 1000 + time_ms;
 
   if (response_length > 0) {
     strncpy(contents->message, response, response_length);
@@ -384,8 +373,9 @@ static void prv_pulse_done_command(void) {
 
 void pulse2_prompt_packet_handler(void *packet, size_t length) {
   if (prompt_command_is_executing()) {
-    PBL_LOG_DBG("Ignoring prompt command as another command is "
-            "currently executing");
+    PBL_LOG_DBG(
+        "Ignoring prompt command as another command is "
+        "currently executing");
     return;
   }
 

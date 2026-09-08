@@ -18,9 +18,7 @@ static inline uint16_t ntohs(uint16_t v) {
   return __builtin_bswap16(v);
 }
 
-static inline uint16_t htons(uint16_t v) {
-  return ntohs(v);
-}
+static inline uint16_t htons(uint16_t v) { return ntohs(v); }
 
 static inline uint32_t ntohl(uint32_t v) {
   // return ((v & 0x000000ff) << 24) |
@@ -30,9 +28,7 @@ static inline uint32_t ntohl(uint32_t v) {
   return __builtin_bswap32(v);
 }
 
-static inline uint32_t htonl(uint32_t v) {
-  return ntohl(v);
-}
+static inline uint32_t htonl(uint32_t v) { return ntohl(v); }
 
 #define ltohs(v) (v)
 #define ltohl(v) (v)
@@ -50,18 +46,10 @@ typedef struct net32 {
   uint32_t v;
 } net32;
 
-static inline uint16_t ntoh16(net16 net) {
-  return ntohs(net.v);
-}
+static inline uint16_t ntoh16(net16 net) { return ntohs(net.v); }
 
-static inline net16 hton16(uint16_t v) {
-  return (net16){ htons(v) };
-}
+static inline net16 hton16(uint16_t v) { return (net16){htons(v)}; }
 
-static inline uint32_t ntoh32(net32 net) {
-  return ntohl(net.v);
-}
+static inline uint32_t ntoh32(net32 net) { return ntohl(net.v); }
 
-static inline net32 hton32(uint32_t v) {
-  return (net32){ htonl(v) };
-}
+static inline net32 hton32(uint32_t v) { return (net32){htonl(v)}; }

@@ -60,8 +60,8 @@ void test_animation_interpolate__moook(void) {
   const int num_frames = ARRAY_LENGTH(expected);
   for (int i = 0; i < num_frames; i++) {
     printf("frame: %d\n", i);
-    cl_assert_equal_i(interpolate_moook((i * ANIMATION_NORMALIZED_MAX) / num_frames,
-                                        -20000, 20000), expected[i]);
+    cl_assert_equal_i(interpolate_moook((i * ANIMATION_NORMALIZED_MAX) / num_frames, -20000, 20000),
+                      expected[i]);
   }
 }
 
@@ -70,11 +70,11 @@ void test_animation_interpolate__moook_in(void) {
   const int num_frames = ARRAY_LENGTH(expected);
   for (int i = 0; i < num_frames; i++) {
     printf("frame: %d\n", i);
-    cl_assert_equal_i(interpolate_moook_in_only((i * ANIMATION_NORMALIZED_MAX) / num_frames,
-                                                -20000, 20000), expected[i]);
+    cl_assert_equal_i(
+        interpolate_moook_in_only((i * ANIMATION_NORMALIZED_MAX) / num_frames, -20000, 20000),
+        expected[i]);
   }
-  cl_assert_equal_i(interpolate_moook_in_only(ANIMATION_NORMALIZED_MAX,
-                                              -20000, 20000), 20000);
+  cl_assert_equal_i(interpolate_moook_in_only(ANIMATION_NORMALIZED_MAX, -20000, 20000), 20000);
 }
 
 void test_animation_interpolate__moook_out(void) {
@@ -82,8 +82,9 @@ void test_animation_interpolate__moook_out(void) {
   const int num_frames = ARRAY_LENGTH(expected);
   for (int i = 0; i < num_frames; i++) {
     printf("frame: %d\n", i);
-    cl_assert_equal_i(interpolate_moook_out((i * ANIMATION_NORMALIZED_MAX) / num_frames,
-                                            -20000, 20000, 0, true), expected[i]);
+    cl_assert_equal_i(
+        interpolate_moook_out((i * ANIMATION_NORMALIZED_MAX) / num_frames, -20000, 20000, 0, true),
+        expected[i]);
   }
 }
 
@@ -92,21 +93,21 @@ void test_animation_interpolate__moook_soft(void) {
   cl_assert_equal_i(-20000, interpolate_moook_soft(0, -20000, 20000, moook_num_soft_frames));
 
   // mid frame is closer to end due to more end frames
-  cl_assert_equal_i(6676, interpolate_moook_soft(ANIMATION_NORMALIZED_MAX / 2, -20000,
-                                                 20000, moook_num_soft_frames));
+  cl_assert_equal_i(6676, interpolate_moook_soft(ANIMATION_NORMALIZED_MAX / 2, -20000, 20000,
+                                                 moook_num_soft_frames));
 
-  cl_assert_equal_i(20000, interpolate_moook_soft(ANIMATION_NORMALIZED_MAX, -20000,
-                                                  20000, moook_num_soft_frames));
+  cl_assert_equal_i(20000, interpolate_moook_soft(ANIMATION_NORMALIZED_MAX, -20000, 20000,
+                                                  moook_num_soft_frames));
 }
 
 static const int32_t s_custom_moook_in[] = {0, 2, 8};
 static const int32_t s_custom_moook_out[] = {21, 9, 3, 0};
 static const MoookConfig s_custom_moook = {
-  .frames_in = s_custom_moook_in,
-  .num_frames_in = ARRAY_LENGTH(s_custom_moook_in),
-  .frames_out = s_custom_moook_out,
-  .num_frames_out = ARRAY_LENGTH(s_custom_moook_out),
-  .num_frames_mid = 3,
+    .frames_in = s_custom_moook_in,
+    .num_frames_in = ARRAY_LENGTH(s_custom_moook_in),
+    .frames_out = s_custom_moook_out,
+    .num_frames_out = ARRAY_LENGTH(s_custom_moook_out),
+    .num_frames_mid = 3,
 };
 
 void test_animation_interpolate__moook_custom(void) {
@@ -115,9 +116,9 @@ void test_animation_interpolate__moook_custom(void) {
   cl_assert_equal_i(-20000, interpolate_moook_custom(0, -20000, 20000, &s_custom_moook));
 
   // mid frame is closer to end due to more end frames
-  cl_assert_equal_i(6683, interpolate_moook_custom(ANIMATION_NORMALIZED_MAX / 2, -20000, 20000,
-                                                   &s_custom_moook));
+  cl_assert_equal_i(
+      6683, interpolate_moook_custom(ANIMATION_NORMALIZED_MAX / 2, -20000, 20000, &s_custom_moook));
 
-  cl_assert_equal_i(20000, interpolate_moook_custom(ANIMATION_NORMALIZED_MAX, -20000, 20000,
-                                                    &s_custom_moook));
+  cl_assert_equal_i(
+      20000, interpolate_moook_custom(ANIMATION_NORMALIZED_MAX, -20000, 20000, &s_custom_moook));
 }

@@ -237,7 +237,6 @@ extern void accel_offload_work(AccelOffloadCallback cb);
 //! Note: Setting this value does not ensure that shake detection is enabled.
 void accel_set_shake_sensitivity_high(bool sensitivity_high);
 
-
 //! Update the accelerometer shake sensitivity as a percentage value from 0 to 100.
 //! Note: Setting this value does not ensure that shake detection is enabled.
 void accel_set_shake_sensitivity_percent(uint8_t percent);

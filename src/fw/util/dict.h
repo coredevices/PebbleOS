@@ -15,17 +15,17 @@
 //! \brief Data serialization utilities
 //!
 //!
-//! Data residing in different parts of Pebble memory (RAM) may need to be gathered and assembled into
-//! a single continuous block for transport over the network via Bluetooth. The process of gathering
-//! and assembling this continuous block of data is called serialization.
+//! Data residing in different parts of Pebble memory (RAM) may need to be gathered and assembled
+//! into a single continuous block for transport over the network via Bluetooth. The process of
+//! gathering and assembling this continuous block of data is called serialization.
 //!
-//! You use data serialization utilities, like Dictionary, Tuple and Tuplet data structures and accompanying
-//! functions, to accomplish this task. No transformations are performed on the actual data, however.
-//! These Pebble utilities simply help assemble the data into one continuous buffer according to a
-//! specific format.
+//! You use data serialization utilities, like Dictionary, Tuple and Tuplet data structures and
+//! accompanying functions, to accomplish this task. No transformations are performed on the actual
+//! data, however. These Pebble utilities simply help assemble the data into one continuous buffer
+//! according to a specific format.
 //!
-//! \ref AppMessage uses these utilities--in particular, Dictionary--to send information between mobile
-//! and Pebble watchapps.
+//! \ref AppMessage uses these utilities--in particular, Dictionary--to send information between
+//! mobile and Pebble watchapps.
 //!
 //! <h3>Writing key/value pairs</h3>
 //! To write two key/value pairs, without using Tuplets, you would do this:
@@ -139,7 +139,7 @@ typedef struct __attribute__((__packed__)) {
   //! The key
   uint32_t key;
   //! The type of data that the `.value` fields contains.
-  TupleType type:8;
+  TupleType type : 8;
   //! The length of `.value` in bytes
   uint16_t length;
   //! @brief The value itself.
@@ -197,7 +197,6 @@ typedef struct {
   Tuple *cursor;
 } DictionaryIterator;
 
-
 //! Calculates the number of bytes that a dictionary will occupy, given
 //! one or more value lengths that need to be stored in the dictionary.
 //! @note The formula to calculate the size of a Dictionary in bytes is:
@@ -216,7 +215,7 @@ uint32_t dict_calc_buffer_size(const uint8_t tuple_count, ...);
 //! than the size of the backing storage/backing buffer.
 //! @param iter The dictionary iterator
 //! @return The total number of bytes which have been written to the dictionary.
-uint32_t dict_size(DictionaryIterator* iter);
+uint32_t dict_size(DictionaryIterator *iter);
 
 //! Initializes the dictionary iterator with a given buffer and size,
 //! resets and empties it, in preparation of writing key/value tuples.
@@ -226,7 +225,8 @@ uint32_t dict_size(DictionaryIterator* iter);
 //! @return \ref DICT_OK, \ref DICT_NOT_ENOUGH_STORAGE or \ref DICT_INVALID_ARGS
 //! @see dict_calc_buffer_size
 //! @see dict_write_end
-DictionaryResult dict_write_begin(DictionaryIterator *iter, uint8_t * const buffer, const uint16_t size);
+DictionaryResult dict_write_begin(DictionaryIterator *iter, uint8_t *const buffer,
+                                  const uint16_t size);
 
 //! Adds a key with a byte array value pair to the dictionary.
 //! @param iter The dictionary iterator
@@ -236,7 +236,8 @@ DictionaryResult dict_write_begin(DictionaryIterator *iter, uint8_t * const buff
 //! @return \ref DICT_OK, \ref DICT_NOT_ENOUGH_STORAGE or \ref DICT_INVALID_ARGS
 //! @note The data will be copied into the backing storage of the dictionary.
 //! @note There is _no_ checking for duplicate keys.
-DictionaryResult dict_write_data(DictionaryIterator *iter, const uint32_t key, const uint8_t * const data, const uint16_t size);
+DictionaryResult dict_write_data(DictionaryIterator *iter, const uint32_t key,
+                                 const uint8_t *const data, const uint16_t size);
 
 //! Adds a key with a C string value pair to the dictionary.
 //! @param iter The dictionary iterator
@@ -245,7 +246,8 @@ DictionaryResult dict_write_data(DictionaryIterator *iter, const uint32_t key, c
 //! @return \ref DICT_OK, \ref DICT_NOT_ENOUGH_STORAGE or \ref DICT_INVALID_ARGS
 //! @note The string will be copied into the backing storage of the dictionary.
 //! @note There is _no_ checking for duplicate keys.
-DictionaryResult dict_write_cstring(DictionaryIterator *iter, const uint32_t key, const char * const cstring);
+DictionaryResult dict_write_cstring(DictionaryIterator *iter, const uint32_t key,
+                                    const char *const cstring);
 
 //! Adds a key with an integer value pair to the dictionary.
 //! @param iter The dictionary iterator
@@ -254,9 +256,10 @@ DictionaryResult dict_write_cstring(DictionaryIterator *iter, const uint32_t key
 //! @param width_bytes The width of the integer value
 //! @param is_signed Whether the integer's type is signed or not
 //! @return \ref DICT_OK, \ref DICT_NOT_ENOUGH_STORAGE or \ref DICT_INVALID_ARGS
-//! @note There is _no_ checking for duplicate keys. dict_write_int() is only for serializing a single
-//! integer. width_bytes can only be 1, 2, or 4.
-DictionaryResult dict_write_int(DictionaryIterator *iter, const uint32_t key, const void *integer, const uint8_t width_bytes, const bool is_signed);
+//! @note There is _no_ checking for duplicate keys. dict_write_int() is only for serializing a
+//! single integer. width_bytes can only be 1, 2, or 4.
+DictionaryResult dict_write_int(DictionaryIterator *iter, const uint32_t key, const void *integer,
+                                const uint8_t width_bytes, const bool is_signed);
 
 //! Adds a key with an unsigned, 8-bit integer value pair to the dictionary.
 //! @param iter The dictionary iterator
@@ -268,12 +271,17 @@ DictionaryResult dict_write_int(DictionaryIterator *iter, const uint32_t key, co
 //! `dict_write_uint16()`, `dict_write_uint32()`, `dict_write_int8()`,
 //! `dict_write_int16()` and `dict_write_int32()`. The documentation is not
 //! repeated for brevity's sake.
-DictionaryResult dict_write_uint8(DictionaryIterator *iter, const uint32_t key, const uint8_t value);
-DictionaryResult dict_write_uint16(DictionaryIterator *iter, const uint32_t key, const uint16_t value);
-DictionaryResult dict_write_uint32(DictionaryIterator *iter, const uint32_t key, const uint32_t value);
+DictionaryResult dict_write_uint8(DictionaryIterator *iter, const uint32_t key,
+                                  const uint8_t value);
+DictionaryResult dict_write_uint16(DictionaryIterator *iter, const uint32_t key,
+                                   const uint16_t value);
+DictionaryResult dict_write_uint32(DictionaryIterator *iter, const uint32_t key,
+                                   const uint32_t value);
 DictionaryResult dict_write_int8(DictionaryIterator *iter, const uint32_t key, const int8_t value);
-DictionaryResult dict_write_int16(DictionaryIterator *iter, const uint32_t key, const int16_t value);
-DictionaryResult dict_write_int32(DictionaryIterator *iter, const uint32_t key, const int32_t value);
+DictionaryResult dict_write_int16(DictionaryIterator *iter, const uint32_t key,
+                                  const int16_t value);
+DictionaryResult dict_write_int32(DictionaryIterator *iter, const uint32_t key,
+                                  const int32_t value);
 
 //! End a series of writing operations to a dictionary.
 //! This must be called before reading back from the dictionary.
@@ -286,18 +294,23 @@ uint32_t dict_write_end(DictionaryIterator *iter);
 //! @param iter The dictionary iterator
 //! @param buffer The storage of the dictionary
 //! @param size The storage size of the dictionary
-//! @return The first tuple in the dictionary, or NULL in case the dictionary was empty or if there was a parsing error.
-Tuple * dict_read_begin_from_buffer(DictionaryIterator *iter, const uint8_t * const buffer, const uint16_t size);
+//! @return The first tuple in the dictionary, or NULL in case the dictionary was empty or if there
+//! was a parsing error.
+Tuple *dict_read_begin_from_buffer(DictionaryIterator *iter, const uint8_t *const buffer,
+                                   const uint16_t size);
 
 //! Progresses the iterator to the next key/value pair.
 //! @param iter The dictionary iterator
-//! @return The next tuple in the dictionary, or NULL in case the end has been reached or if there was a parsing error.
-Tuple * dict_read_next(DictionaryIterator *iter);
+//! @return The next tuple in the dictionary, or NULL in case the end has been reached or if there
+//! was a parsing error.
+Tuple *dict_read_next(DictionaryIterator *iter);
 
-//! Resets the iterator back to the same state as a call to \ref dict_read_begin_from_buffer() would do.
+//! Resets the iterator back to the same state as a call to \ref dict_read_begin_from_buffer() would
+//! do.
 //! @param iter The dictionary iterator
-//! @return The first tuple in the dictionary, or NULL in case the dictionary was empty or if there was a parsing error.
-Tuple * dict_read_first(DictionaryIterator *iter);
+//! @return The first tuple in the dictionary, or NULL in case the dictionary was empty or if there
+//! was a parsing error.
+Tuple *dict_read_first(DictionaryIterator *iter);
 
 /** Dictionary Utilities */
 
@@ -339,7 +352,7 @@ typedef struct Tuplet {
       //! Width of the integer.
       const uint16_t width;
     } integer;
-  }; //!< See documentation of `.bytes`, `.cstring` and `.integer` fields.
+  };  //!< See documentation of `.bytes`, `.cstring` and `.integer` fields.
 } Tuplet;
 
 //! Macro to create a Tuplet with a byte array value
@@ -347,70 +360,94 @@ typedef struct Tuplet {
 //! @param _data Pointer to the bytes
 //! @param _length Length of the buffer
 #define TupletBytes(_key, _data, _length) \
-((const Tuplet) { .type = TUPLE_BYTE_ARRAY, .key = _key, .bytes = { .data = _data, .length = _length }})
+  ((const Tuplet){                        \
+      .type = TUPLE_BYTE_ARRAY, .key = _key, .bytes = {.data = _data, .length = _length}})
 
 //! Macro to create a Tuplet with a c-string value
 //! @param _key The key
 //! @param _cstring The c-string value
-#define TupletCString(_key, _cstring) \
-((const Tuplet) { .type = TUPLE_CSTRING, .key = _key, .cstring = { .data = _cstring, .length = _cstring ? strlen(_cstring) + 1 : 0 }})
+#define TupletCString(_key, _cstring)    \
+  ((const Tuplet){.type = TUPLE_CSTRING, \
+                  .key = _key,           \
+                  .cstring = {.data = _cstring, .length = _cstring ? strlen(_cstring) + 1 : 0}})
 
 //! Macro to create a Tuplet with an integer value
 //! @param _key The key
 //! @param _integer The integer value
-#define TupletInteger(_key, _integer) \
-((const Tuplet) { .type = IS_SIGNED(_integer) ? TUPLE_INT : TUPLE_UINT, .key = _key, .integer = { .storage = _integer, .width = sizeof(_integer) }})
+#define TupletInteger(_key, _integer)                                   \
+  ((const Tuplet){.type = IS_SIGNED(_integer) ? TUPLE_INT : TUPLE_UINT, \
+                  .key = _key,                                          \
+                  .integer = {.storage = _integer, .width = sizeof(_integer)}})
 
 //! Callback for \ref dict_serialize_tuplets() utility.
 //! @param data The data of the serialized dictionary
 //! @param size The size of data
 //! @param context The context pointer as passed in to \ref dict_serialize_tuplets()
 //! @see dict_serialize_tuplets
-typedef void (*DictionarySerializeCallback)(const uint8_t * const data, const uint16_t size, void *context);
+typedef void (*DictionarySerializeCallback)(const uint8_t *const data, const uint16_t size,
+                                            void *context);
 
 //! Utility function that takes a list of Tuplets from which a dictionary
 //! will be serialized, ready to transmit or store.
 //! @note The callback will be called before the function returns, so the data that
 //! that `context` points to, can be stack allocated.
-//! @param callback The callback that will be called with the serialized data of the generated dictionary.
+//! @param callback The callback that will be called with the serialized data of the generated
+//! dictionary.
 //! @param context Pointer to any application specific data that gets passed into the callback.
 //! @param tuplets An array of Tuplets that need to be serialized into the dictionary.
 //! @param tuplets_count The number of tuplets that follow.
 //! @return \ref DICT_OK, \ref DICT_NOT_ENOUGH_STORAGE or \ref DICT_INVALID_ARGS
-DictionaryResult dict_serialize_tuplets(DictionarySerializeCallback callback, void *context, const Tuplet * const tuplets, const uint8_t tuplets_count);
+DictionaryResult dict_serialize_tuplets(DictionarySerializeCallback callback, void *context,
+                                        const Tuplet *const tuplets, const uint8_t tuplets_count);
 
 // Legacy version to prevent previous app breakage, __deprecated preserves order
-DictionaryResult dict_serialize_tuplets__deprecated(DictionarySerializeCallback callback, void *context, const uint8_t tuplets_count, const Tuplet * const tuplets);
+DictionaryResult dict_serialize_tuplets__deprecated(DictionarySerializeCallback callback,
+                                                    void *context, const uint8_t tuplets_count,
+                                                    const Tuplet *const tuplets);
 
 //! Utility function that takes an array of Tuplets and serializes them into
 //! a dictionary with a given buffer and size.
 //! @param tuplets The array of tuplets
 //! @param tuplets_count The number of tuplets in the array
 //! @param buffer The buffer in which to write the serialized dictionary
-//! @param [in,out] size_in_out In: the available buffer size in bytes. Out: the number of bytes written.
+//! @param [in,out] size_in_out In: the available buffer size in bytes. Out: the number of bytes
+//! written.
 //! @return \ref DICT_OK, \ref DICT_NOT_ENOUGH_STORAGE or \ref DICT_INVALID_ARGS
-DictionaryResult dict_serialize_tuplets_to_buffer(const Tuplet * const tuplets, const uint8_t tuplets_count, uint8_t *buffer, uint32_t *size_in_out);
+DictionaryResult dict_serialize_tuplets_to_buffer(const Tuplet *const tuplets,
+                                                  const uint8_t tuplets_count, uint8_t *buffer,
+                                                  uint32_t *size_in_out);
 
 // Legacy version to prevent previous app breakage, __deprecated preserves order
-DictionaryResult dict_serialize_tuplets_to_buffer__deprecated(const uint8_t tuplets_count, const Tuplet * const tuplets, uint8_t *buffer, uint32_t *size_in_out);
+DictionaryResult dict_serialize_tuplets_to_buffer__deprecated(const uint8_t tuplets_count,
+                                                              const Tuplet *const tuplets,
+                                                              uint8_t *buffer,
+                                                              uint32_t *size_in_out);
 
 //! Serializes an array of Tuplets into a dictionary with a given buffer and size.
 //! @param iter The dictionary iterator
 //! @param tuplets The array of tuplets
 //! @param tuplets_count The number of tuplets in the array
 //! @param buffer The buffer in which to write the serialized dictionary
-//! @param [in,out] size_in_out In: the available buffer size in bytes. Out: the number of bytes written.
+//! @param [in,out] size_in_out In: the available buffer size in bytes. Out: the number of bytes
+//! written.
 //! @return \ref DICT_OK, \ref DICT_NOT_ENOUGH_STORAGE or \ref DICT_INVALID_ARGS
-DictionaryResult dict_serialize_tuplets_to_buffer_with_iter(DictionaryIterator *iter, const Tuplet * const tuplets, const uint8_t tuplets_count, uint8_t *buffer, uint32_t *size_in_out);
+DictionaryResult dict_serialize_tuplets_to_buffer_with_iter(DictionaryIterator *iter,
+                                                            const Tuplet *const tuplets,
+                                                            const uint8_t tuplets_count,
+                                                            uint8_t *buffer, uint32_t *size_in_out);
 
 // Legacy version to prevent previous app breakage, __deprecated preserves order
-DictionaryResult dict_serialize_tuplets_to_buffer_with_iter__deprecated(const uint8_t tuplets_count, const Tuplet * const tuplets, DictionaryIterator *iter, uint8_t *buffer, uint32_t *size_in_out);
+DictionaryResult dict_serialize_tuplets_to_buffer_with_iter__deprecated(const uint8_t tuplets_count,
+                                                                        const Tuplet *const tuplets,
+                                                                        DictionaryIterator *iter,
+                                                                        uint8_t *buffer,
+                                                                        uint32_t *size_in_out);
 
 //! Serializes a Tuplet and writes the resulting Tuple into a dictionary.
 //! @param iter The dictionary iterator
 //! @param tuplet The Tuplet describing the key/value pair to write
 //! @return \ref DICT_OK, \ref DICT_NOT_ENOUGH_STORAGE or \ref DICT_INVALID_ARGS
-DictionaryResult dict_write_tuplet(DictionaryIterator *iter, const Tuplet * const tuplet);
+DictionaryResult dict_write_tuplet(DictionaryIterator *iter, const Tuplet *const tuplet);
 
 //! Calculates the number of bytes that a dictionary will occupy, given
 //! one or more Tuplets that need to be stored in the dictionary.
@@ -419,44 +456,50 @@ DictionaryResult dict_write_tuplet(DictionaryIterator *iter, const Tuplet * cons
 //! @param tuplets_count The total number of Tuplets that follow.
 //! @return The total number of bytes of storage needed.
 //! @see Tuplet
-uint32_t dict_calc_buffer_size_from_tuplets(const Tuplet * const tuplets, const uint8_t tuplets_count);
+uint32_t dict_calc_buffer_size_from_tuplets(const Tuplet *const tuplets,
+                                            const uint8_t tuplets_count);
 
 // Legacy version to prevent previous app breakage, __deprecated preserves order
-uint32_t dict_calc_buffer_size_from_tuplets__deprecated(const uint8_t tuplets_count, const Tuplet * const tuplets);
+uint32_t dict_calc_buffer_size_from_tuplets__deprecated(const uint8_t tuplets_count,
+                                                        const Tuplet *const tuplets);
 
 //! Tuple that represents an empty tuple.
 //! @see DictionaryKeyUpdatedCallback
-extern const Tuple * const NULL_TUPLE;
+extern const Tuple *const NULL_TUPLE;
 
 //! Type of the callback used in \ref dict_merge()
 //! @param key The key that is being updated.
-//! @param new_tuple The new tuple. The tuple points to the actual, updated destination dictionary or NULL_TUPLE
-//! in case there was an error (e.g. backing buffer was too small).
-//! Therefore the Tuple can be used after the callback returns, until the destination dictionary
-//! storage is free'd (by the application itself).
-//! @param old_tuple The values that will be replaced with `new_tuple`. The key, value and type will be
-//! equal to the previous tuple in the old destination dictionary, however the `old_tuple` points
+//! @param new_tuple The new tuple. The tuple points to the actual, updated destination dictionary
+//! or NULL_TUPLE in case there was an error (e.g. backing buffer was too small). Therefore the
+//! Tuple can be used after the callback returns, until the destination dictionary storage is free'd
+//! (by the application itself).
+//! @param old_tuple The values that will be replaced with `new_tuple`. The key, value and type will
+//! be equal to the previous tuple in the old destination dictionary, however the `old_tuple` points
 //! to a stack-allocated copy of the old data.
 //! @param context Pointer to application specific data
 //! The storage backing `old_tuple` can only be used during the callback and
 //! will no longer be valid after the callback returns.
 //! @see dict_merge
-typedef void (*DictionaryKeyUpdatedCallback)(const uint32_t key, const Tuple *new_tuple, const Tuple *old_tuple, void *context);
+typedef void (*DictionaryKeyUpdatedCallback)(const uint32_t key, const Tuple *new_tuple,
+                                             const Tuple *old_tuple, void *context);
 
 //! Merges entries from another "source" dictionary into a "destination" dictionary.
 //! All Tuples from the source are written into the destination dictionary, while
 //! updating the existing Tuples with matching keys.
 //! @param dest The destination dictionary to update
-//! @param [in,out] dest_max_size_in_out In: the maximum size of buffer backing `dest`. Out: the final size of the updated dictionary.
+//! @param [in,out] dest_max_size_in_out In: the maximum size of buffer backing `dest`. Out: the
+//! final size of the updated dictionary.
 //! @param source The source dictionary of which its Tuples will be used to update dest.
-//! @param update_existing_keys_only Specify True if only the existing keys in `dest` should be updated.
-//! @param key_callback The callback that will be called for each Tuple in the merged destination dictionary.
-//! @param context Pointer to app specific data that will get passed in when `update_key_callback` is called.
+//! @param update_existing_keys_only Specify True if only the existing keys in `dest` should be
+//! updated.
+//! @param key_callback The callback that will be called for each Tuple in the merged destination
+//! dictionary.
+//! @param context Pointer to app specific data that will get passed in when `update_key_callback`
+//! is called.
 //! @return \ref DICT_OK, \ref DICT_INVALID_ARGS, \ref DICT_NOT_ENOUGH_STORAGE
 DictionaryResult dict_merge(DictionaryIterator *dest, uint32_t *dest_max_size_in_out,
-                             DictionaryIterator *source,
-                             const bool update_existing_keys_only,
-                             const DictionaryKeyUpdatedCallback key_callback, void *context);
+                            DictionaryIterator *source, const bool update_existing_keys_only,
+                            const DictionaryKeyUpdatedCallback key_callback, void *context);
 
 //! Tries to find a Tuple with specified key in a dictionary
 //! @param iter Iterator to the dictionary to search in.

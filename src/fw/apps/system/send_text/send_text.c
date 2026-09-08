@@ -35,7 +35,7 @@ typedef struct {
   ContactId id;
   char *name;
   char *display_number;
-  char *number; // Points to a substring within display_number (the part without the ❤)
+  char *number;  // Points to a substring within display_number (the part without the ❤)
 } ContactNode;
 
 typedef struct SendTextAppData {
@@ -48,7 +48,6 @@ typedef struct SendTextAppData {
 
   EventServiceInfo event_service_info;
 } SendTextAppData;
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Action menu functions
@@ -93,11 +92,9 @@ static TimelineItem *prv_create_timeline_item(const char *number) {
   AttributeList attr_list = {};
   attribute_list_add_cstring(&attr_list, AttributeIdSender, number);
 
-  TimelineItem *item = timeline_item_create_with_attributes(0, 0,
-                                                            TimelineItemTypeNotification,
-                                                            LayoutIdNotification,
-                                                            &attr_list,
-                                                            &notif_prefs->action_group);
+  TimelineItem *item =
+      timeline_item_create_with_attributes(0, 0, TimelineItemTypeNotification, LayoutIdNotification,
+                                           &attr_list, &notif_prefs->action_group);
   if (item) {
     item->header.id = (Uuid)UUID_SEND_SMS;
     item->header.parent_id = (Uuid)UUID_SEND_TEXT_DATA_SOURCE;
@@ -113,8 +110,8 @@ static void prv_open_action_menu(SendTextAppData *data, const char *number) {
   TimelineItem *item = prv_create_timeline_item(number);
 
   // This handles the case where item is NULL, so no need to check for that
-  TimelineItemAction *reply_action = timeline_item_find_action_by_type(
-      item, TimelineItemActionTypeResponse);
+  TimelineItemAction *reply_action =
+      timeline_item_find_action_by_type(item, TimelineItemActionTypeResponse);
 
   if (!reply_action) {
     PBL_LOG_ERR("Not opening response menu - unable to load reply action");
@@ -127,14 +124,13 @@ static void prv_open_action_menu(SendTextAppData *data, const char *number) {
                                       TimelineItemActionSourceSendTextApp,
                                       false /* standalone_reply */);
 
-  data->event_service_info = (EventServiceInfo) {
-    .type = PEBBLE_SYS_NOTIFICATION_EVENT,
-    .handler = prv_action_handle_response,
-    .context = data,
+  data->event_service_info = (EventServiceInfo){
+      .type = PEBBLE_SYS_NOTIFICATION_EVENT,
+      .handler = prv_action_handle_response,
+      .context = data,
   };
   event_service_client_subscribe(&data->event_service_info);
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Contact list functions
@@ -240,9 +236,9 @@ static int16_t prv_contact_list_get_cell_height_callback(MenuLayer *menu_layer,
                                                          MenuIndex *cell_index,
                                                          void *callback_context) {
   return PBL_IF_RECT_ELSE(menu_cell_basic_cell_height(),
-                          (menu_layer_is_index_selected(menu_layer, cell_index) ?
-                           MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT :
-                           MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT));
+                          (menu_layer_is_index_selected(menu_layer, cell_index)
+                               ? MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT
+                               : MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT));
 }
 
 #if PBL_ROUND
@@ -262,8 +258,8 @@ static void prv_contact_list_draw_row_callback(GContext *ctx, const Layer *cell_
                                                MenuIndex *cell_index, void *callback_context) {
   SendTextAppData *data = (SendTextAppData *)callback_context;
 
-  ContactNode *node = (ContactNode *)list_get_at((ListNode *)data->contact_list_head,
-                                                 cell_index->row);
+  ContactNode *node =
+      (ContactNode *)list_get_at((ListNode *)data->contact_list_head, cell_index->row);
   if (!node) {
     return;
   }
@@ -275,15 +271,14 @@ static void prv_contact_list_select_callback(MenuLayer *menu_layer, MenuIndex *c
                                              void *callback_context) {
   SendTextAppData *data = (SendTextAppData *)callback_context;
 
-  ContactNode *node = (ContactNode *)list_get_at((ListNode *)data->contact_list_head,
-                                                 cell_index->row);
+  ContactNode *node =
+      (ContactNode *)list_get_at((ListNode *)data->contact_list_head, cell_index->row);
   if (!node) {
-      return;
-    }
+    return;
+  }
 
   prv_open_action_menu(data, node->number);
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! App boilerplate
@@ -301,29 +296,33 @@ static void prv_init(void) {
   prv_update_contact_list(data);
 
   if (prv_has_contacts(data)) {
-    const GRect menu_layer_frame =
-        grect_inset(window_root_layer->bounds,
-                    GEdgeInsets(STATUS_BAR_LAYER_HEIGHT, 0,
-                                PBL_IF_ROUND_ELSE(STATUS_BAR_LAYER_HEIGHT, 0), 0));
+    const GRect menu_layer_frame = grect_inset(
+        window_root_layer->bounds,
+        GEdgeInsets(STATUS_BAR_LAYER_HEIGHT, 0, PBL_IF_ROUND_ELSE(STATUS_BAR_LAYER_HEIGHT, 0), 0));
     menu_layer_init(&data->menu_layer, &menu_layer_frame);
-    menu_layer_set_callbacks(&data->menu_layer, data, &(MenuLayerCallbacks) {
-      .get_num_rows = prv_contact_list_get_num_rows_callback,
-      .get_cell_height = prv_contact_list_get_cell_height_callback,
-      // On round we show the "Select Contact" text in a menu cell header, but on rect we show it
-      // in the status bar (see below)
+    menu_layer_set_callbacks(&data->menu_layer, data,
+                             &(MenuLayerCallbacks){
+                                 .get_num_rows = prv_contact_list_get_num_rows_callback,
+                                 .get_cell_height = prv_contact_list_get_cell_height_callback,
+    // On round we show the "Select Contact" text in a menu cell header, but on rect we show it
+    // in the status bar (see below)
 #if PBL_ROUND
-      .draw_header = prv_contact_list_draw_header_callback,
-      .get_header_height = prv_contact_list_get_header_height_callback,
+                                 .draw_header = prv_contact_list_draw_header_callback,
+                                 .get_header_height = prv_contact_list_get_header_height_callback,
 #endif
-      .draw_row = prv_contact_list_draw_row_callback,
-      .select_click = prv_contact_list_select_callback,
-    });
+                                 .draw_row = prv_contact_list_draw_row_callback,
+                                 .select_click = prv_contact_list_select_callback,
+                             });
 
     menu_layer_set_highlight_colors(&data->menu_layer, SEND_TEXT_APP_HIGHLIGHT_COLOR, GColorWhite);
     menu_layer_set_click_config_onto_window(&data->menu_layer, &data->window);
-    menu_layer_set_scroll_wrap_around(&data->menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
-    menu_layer_set_scroll_vibe_on_wrap(&data->menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnWrapAround);
-    menu_layer_set_scroll_vibe_on_blocked(&data->menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnLocked);
+    menu_layer_set_scroll_wrap_around(&data->menu_layer,
+                                      shell_prefs_get_menu_scroll_wrap_around_enable());
+    menu_layer_set_scroll_vibe_on_wrap(
+        &data->menu_layer,
+        shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnWrapAround);
+    menu_layer_set_scroll_vibe_on_blocked(
+        &data->menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnLocked);
     layer_add_child(&data->window.layer, menu_layer_get_layer(&data->menu_layer));
 
     StatusBarLayer *status_layer = &data->status_layer;
@@ -343,7 +342,7 @@ static void prv_init(void) {
     const GFont title_font = system_theme_get_font_for_default_size(TextStyleFont_Title);
     peek_layer_set_title_font(peek_layer, title_font);
     TimelineResourceInfo timeline_res = {
-      .res_id = TIMELINE_RESOURCE_GENERIC_WARNING,
+        .res_id = TIMELINE_RESOURCE_GENERIC_WARNING,
     };
     peek_layer_set_icon(peek_layer, &timeline_res);
     peek_layer_set_title(peek_layer, i18n_get("Add contacts in\nmobile app", data));
@@ -375,12 +374,13 @@ static void prv_main(void) {
 
 const PebbleProcessMd *send_text_app_get_info(void) {
   static const PebbleProcessMdSystem s_send_text_app_info = {
-    .common = {
-      .main_func = prv_main,
-      .uuid = UUID_SEND_TEXT_DATA_SOURCE,
-    },
-    .name = i18n_noop("Send Text"),
-    .icon_resource_id = RESOURCE_ID_SEND_TEXT_APP_GLANCE,
+      .common =
+          {
+              .main_func = prv_main,
+              .uuid = UUID_SEND_TEXT_DATA_SOURCE,
+          },
+      .name = i18n_noop("Send Text"),
+      .icon_resource_id = RESOURCE_ID_SEND_TEXT_APP_GLANCE,
   };
 
   // If the phone doesn't support this app, we will act as if it's not installed by returning NULL

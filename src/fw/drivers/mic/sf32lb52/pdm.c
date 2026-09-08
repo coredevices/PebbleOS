@@ -23,35 +23,34 @@ PBL_LOG_MODULE_DEFINE(driver_mic_sf32lb, CONFIG_DRIVER_MIC_LOG_LEVEL);
 #define PDM_POWER_NPM1300_LDO2 1
 #endif
 
-#define PDM_AUDIO_RECORD_PIPE_SIZE         (288)
-#define PDM_AUDIO_RECORD_GAIN_DEFAULT      (90)
-#define PDM_AUDIO_RECORD_GAIN_MAX          (120)
+#define PDM_AUDIO_RECORD_PIPE_SIZE (288)
+#define PDM_AUDIO_RECORD_GAIN_DEFAULT (90)
+#define PDM_AUDIO_RECORD_GAIN_MAX (120)
 
 // PDM Configuration
-#define PDM_BUFFER_SIZE_SAMPLES            (320)
+#define PDM_BUFFER_SIZE_SAMPLES (320)
 
 // Circular buffer configuration
-#define PDM_CIRCULAR_BUF_SIZE_MS           (320)
-#define PDM_CIRCULAR_BUF_SIZE_SAMPLES      ((MIC_SAMPLE_RATE * PDM_CIRCULAR_BUF_SIZE_MS) / 1000)
+#define PDM_CIRCULAR_BUF_SIZE_MS (320)
+#define PDM_CIRCULAR_BUF_SIZE_SAMPLES ((MIC_SAMPLE_RATE * PDM_CIRCULAR_BUF_SIZE_MS) / 1000)
 
 // Minimum fallback size
 // If it is any smaller than this, the transcription wont work well
-#define PDM_CIRCULAR_BUF_MIN_SIZE_MS       (128)
-#define PDM_CIRCULAR_BUF_MIN_SIZE_SAMPLES  ((MIC_SAMPLE_RATE * PDM_CIRCULAR_BUF_MIN_SIZE_MS) / 1000)
+#define PDM_CIRCULAR_BUF_MIN_SIZE_MS (128)
+#define PDM_CIRCULAR_BUF_MIN_SIZE_SAMPLES ((MIC_SAMPLE_RATE * PDM_CIRCULAR_BUF_MIN_SIZE_MS) / 1000)
 
 // Fallback step. 32 ms shrink per retry gives us ~7 attempts between 320 ms and 128 ms
-#define PDM_CIRCULAR_BUF_STEP_MS           (32)
-#define PDM_CIRCULAR_BUF_STEP_SAMPLES      ((MIC_SAMPLE_RATE * PDM_CIRCULAR_BUF_STEP_MS) / 1000)
+#define PDM_CIRCULAR_BUF_STEP_MS (32)
+#define PDM_CIRCULAR_BUF_STEP_SAMPLES ((MIC_SAMPLE_RATE * PDM_CIRCULAR_BUF_STEP_MS) / 1000)
 
-#define PDM_CIRCULAR_BUF_BYTES(samples, channels) \
-    ((size_t)(samples) * sizeof(int16_t) * (channels))
+#define PDM_CIRCULAR_BUF_BYTES(samples, channels) ((size_t)(samples) * sizeof(int16_t) * (channels))
 
 static PDM_HandleTypeDef s_hpdm;
-static MicDeviceState* s_state;
+static MicDeviceState *s_state;
 
 void mic_init(const MicDevice *this) {
   PBL_ASSERTN(this);
-  
+
   MicDeviceState *state = this->state;
   s_state = this->state;
   if (state && state->is_initialized) {
@@ -64,14 +63,14 @@ void mic_init(const MicDevice *this) {
 
   pbl_mutex_init(&state->mutex);
   state->volume = PDM_AUDIO_RECORD_GAIN_DEFAULT;
-  
-  //Pinmux configuration
+
+  // Pinmux configuration
   HAL_PIN_Set(this->clk_gpio.pad, this->clk_gpio.func, this->clk_gpio.flags, 1);
   HAL_PIN_Set(this->data_gpio.pad, this->data_gpio.func, this->data_gpio.flags, 1);
 
   this->state->hpdm = &s_hpdm;
-  PDM_HandleTypeDef* hpdm = this->state->hpdm;
-  //HPDM configuration
+  PDM_HandleTypeDef *hpdm = this->state->hpdm;
+  // HPDM configuration
   hpdm->Instance = this->pdm_instance;
   hpdm->hdmarx = &state->hdma;
   hpdm->Init.Mode = PDM_MODE_LOOP;
@@ -84,19 +83,19 @@ void mic_init(const MicDevice *this) {
   state->is_initialized = true;
 }
 
-//volume from 0~100
+// volume from 0~100
 void mic_set_volume(const MicDevice *this, uint16_t volume) {
   PBL_ASSERTN(this);
   PBL_ASSERTN(this->state);
-  
+
   MicDeviceState *state = this->state;
   if (state->is_running) {
     PBL_LOG_WRN("Cannot set volume while microphone is running");
     return;
   }
-  volume = volume * PDM_AUDIO_RECORD_GAIN_MAX/100;
+  volume = volume * PDM_AUDIO_RECORD_GAIN_MAX / 100;
   // volume form 0~120 on HAL
-  if(volume > PDM_AUDIO_RECORD_GAIN_MAX) volume = PDM_AUDIO_RECORD_GAIN_MAX;
+  if (volume > PDM_AUDIO_RECORD_GAIN_MAX) volume = PDM_AUDIO_RECORD_GAIN_MAX;
   state->volume = volume;
 }
 
@@ -121,8 +120,8 @@ static bool prv_allocate_buffers(const MicDevice *this) {
   if (!storage) {
     unsigned int used, free_bytes, max_free;
     heap_calc_totals(kernel_heap_get(), &used, &free_bytes, &max_free);
-    PBL_LOG_ERR("Failed to allocate PDM circular buffer (min %u B, max_free %u B)",
-                (unsigned)floor, max_free);
+    PBL_LOG_ERR("Failed to allocate PDM circular buffer (min %u B, max_free %u B)", (unsigned)floor,
+                max_free);
     return false;
   }
 
@@ -150,49 +149,50 @@ static void prv_free_buffers(MicDeviceState *state) {
 // other tasks (especially Bluetooth) to run and prevent send buffer overflow
 #define MAX_FRAMES_PER_SYSTEM_TASK_CALLBACK 5
 
-static void prv_dispatch_samples_system_task(void *data) {  
+static void prv_dispatch_samples_system_task(void *data) {
   // Defensive check
   if (!s_state || !s_state->is_initialized) {
     return;
   }
-  
+
   pbl_mutex_lock(&s_state->mutex, PBL_FOREVER);
 
   // Process a limited number of frames to provide backpressure
-  if (s_state->is_running && s_state->data_handler && s_state->audio_buffer && s_state->circ_buffer_storage) {
-    
+  if (s_state->is_running && s_state->data_handler && s_state->audio_buffer &&
+      s_state->circ_buffer_storage) {
     size_t frame_size_bytes = s_state->audio_buffer_len * sizeof(int16_t);
     int frames_processed = 0;
-    
-    while (s_state->is_running && s_state->data_handler && frames_processed < MAX_FRAMES_PER_SYSTEM_TASK_CALLBACK) {
+
+    while (s_state->is_running && s_state->data_handler &&
+           frames_processed < MAX_FRAMES_PER_SYSTEM_TASK_CALLBACK) {
       // Check if we have enough data for a complete frame
       uint16_t available_data = circular_buffer_get_read_space_remaining(&s_state->circ_buffer);
-      
+
       if (available_data < frame_size_bytes) {
         break;  // Not enough data for another frame
       }
 
       // Copy one frame
-      uint16_t bytes_copied = circular_buffer_copy(&s_state->circ_buffer,
-          (uint8_t *)s_state->audio_buffer,
-          frame_size_bytes);
+      uint16_t bytes_copied = circular_buffer_copy(
+          &s_state->circ_buffer, (uint8_t *)s_state->audio_buffer, frame_size_bytes);
 
       if (bytes_copied == frame_size_bytes) {
         // Call callback with the frame
-        s_state->data_handler(s_state->audio_buffer, s_state->audio_buffer_len, s_state->handler_context);
-        
+        s_state->data_handler(s_state->audio_buffer, s_state->audio_buffer_len,
+                              s_state->handler_context);
+
         // Consume the frame we processed
         circular_buffer_consume(&s_state->circ_buffer, bytes_copied);
-        
+
         frames_processed++;
-        
+
         // Feed the system task watchdog periodically during long processing
         system_task_watchdog_feed();
       } else {
         break;  // Failed to copy, stop processing
       }
     }
-    
+
     // If we still have data available after processing, reschedule immediately
     uint16_t remaining_data = circular_buffer_get_read_space_remaining(&s_state->circ_buffer);
     if (remaining_data >= frame_size_bytes && s_state->is_running && !s_state->main_pending) {
@@ -208,20 +208,19 @@ static void prv_dispatch_samples_system_task(void *data) {
     // Clear pending flag if we can't process
     s_state->main_pending = false;
   }
-  
+
   pbl_mutex_unlock(&s_state->mutex);
 }
 
-static void prv_dma_data_processing(uint8_t* data, uint16_t size)
-{
+static void prv_dma_data_processing(uint8_t *data, uint16_t size) {
   // Don't assert on is_running during shutdown - the PDM might send final events
   if (!s_state->is_running) {
     PBL_LOG_ERR("Microphone stopped, ignoring event");
     return;
   }
 
-   // Ensure circular buffer storage is allocated
-   if (!s_state->circ_buffer_storage) {
+  // Ensure circular buffer storage is allocated
+  if (!s_state->circ_buffer_storage) {
     PBL_LOG_ERR("No circular buffer storage, ignoring data");
     return;
   }
@@ -252,9 +251,9 @@ static void prv_dma_data_processing(uint8_t* data, uint16_t size)
   // Check if we have enough data for a complete frame
   size_t frame_size_bytes = s_state->audio_buffer_len * sizeof(int16_t);
   uint16_t available_data = circular_buffer_get_read_space_remaining(&s_state->circ_buffer);
-  if (available_data >= frame_size_bytes  && !s_state->main_pending) {
+  if (available_data >= frame_size_bytes && !s_state->main_pending) {
     s_state->main_pending = true;
-    
+
     // Dispatch to system task instead of kernel event queue (matches asterix behavior).
     // A drop is retried on the next PDM buffer event; losing samples beats
     // resetting the system over a full queue.
@@ -266,46 +265,36 @@ static void prv_dma_data_processing(uint8_t* data, uint16_t size)
   }
 }
 
-void HAL_PDM_RxCpltCallback(PDM_HandleTypeDef *hpdm)
-{
+void HAL_PDM_RxCpltCallback(PDM_HandleTypeDef *hpdm) {
   prv_dma_data_processing(hpdm->pRxBuffPtr + (hpdm->RxXferSize / 2), hpdm->RxXferSize / 2);
 }
 
-void HAL_PDM_RxHalfCpltCallback(PDM_HandleTypeDef *hpdm)
-{
+void HAL_PDM_RxHalfCpltCallback(PDM_HandleTypeDef *hpdm) {
   prv_dma_data_processing(hpdm->pRxBuffPtr, hpdm->RxXferSize / 2);
 }
 
-void pdm1_data_handler(MicDevice *this)
-{
-  HAL_PDM_IRQHandler(this->state->hpdm);
-}
+void pdm1_data_handler(MicDevice *this) { HAL_PDM_IRQHandler(this->state->hpdm); }
 
-void pdm1_l_dma_handler(MicDevice *this)
-{
-  HAL_DMA_IRQHandler(this->state->hpdm->hdmarx);
-}
+void pdm1_l_dma_handler(MicDevice *this) { HAL_DMA_IRQHandler(this->state->hpdm->hdmarx); }
 
-static bool prv_start_pdm_capture(const MicDevice *this)
-{
-  PDM_HandleTypeDef* hpdm = this->state->hpdm;
+static bool prv_start_pdm_capture(const MicDevice *this) {
+  PDM_HandleTypeDef *hpdm = this->state->hpdm;
 
   HAL_StatusTypeDef res;
   HAL_RCC_EnableModule(RCC_MOD_PDM1);
   res = HAL_PDM_Init(hpdm);
-  if (this->channels ==1) {
+  if (this->channels == 1) {
     hpdm->Init.Channels = PDM_CHANNEL_LEFT_ONLY;
   } else {
     hpdm->Init.Channels = PDM_CHANNEL_STEREO;
   }
   hpdm->Init.SampleRate = this->sample_rate;
-  hpdm->Init.ChannelDepth = (uint32_t) this->channel_depth;
+  hpdm->Init.ChannelDepth = (uint32_t)this->channel_depth;
   HAL_PDM_Config(hpdm, PDM_CFG_CHANNEL | PDM_CFG_SAMPLERATE | PDM_CFG_DEPTH);
   HAL_PDM_Set_Gain(hpdm, PDM_CHANNEL_STEREO, this->state->volume);
 
   // 3.072M = 49.152M(audpll)/16, 96k sampling use 3.072M as clock.
-  if (hpdm->Init.clkSrc == 3072000 || hpdm->Init.SampleRate == PDM_SAMPLE_96KHZ)
-  {
+  if (hpdm->Init.clkSrc == 3072000 || hpdm->Init.SampleRate == PDM_SAMPLE_96KHZ) {
     bf0_enable_pll(hpdm->Init.SampleRate, 0);
   }
   HAL_NVIC_EnableIRQ(this->pdm_dma_irq);
@@ -322,12 +311,12 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
   PBL_ASSERTN(data_handler);
   PBL_ASSERTN(audio_buffer);
   PBL_ASSERTN(audio_buffer_len > 0);
-  
+
   MicDeviceState *state = this->state;
-  PDM_HandleTypeDef* hpdm = this->state->hpdm;
-  
+  PDM_HandleTypeDef *hpdm = this->state->hpdm;
+
   pbl_mutex_lock(&state->mutex, PBL_FOREVER);
-  
+
   if (state->is_running) {
     pbl_mutex_unlock(&state->mutex);
     return false;
@@ -358,7 +347,7 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
   state->audio_buffer = audio_buffer;
   state->audio_buffer_len = audio_buffer_len;
   state->main_pending = false;
-  
+
 #if PDM_POWER_NPM1300_LDO2
   (void)NPM1300_OPS.ldo2_set_enabled(true);
 #endif
@@ -383,7 +372,7 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
     soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
     state->is_running = false;  // Reset on failure
 #if PDM_POWER_NPM1300_LDO2
-  (void)NPM1300_OPS.ldo2_set_enabled(false);
+    (void)NPM1300_OPS.ldo2_set_enabled(false);
 #endif
     prv_free_buffers(state);
     pbl_mutex_unlock(&state->mutex);
@@ -397,20 +386,20 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
 void mic_stop(const MicDevice *this) {
   PBL_ASSERTN(this);
   PBL_ASSERTN(this->state);
-  
+
   MicDeviceState *state = this->state;
-  PDM_HandleTypeDef* hpdm = this->state->hpdm;
-  
+  PDM_HandleTypeDef *hpdm = this->state->hpdm;
+
   pbl_mutex_lock(&state->mutex, PBL_FOREVER);
-  
+
   if (!state->is_running) {
     pbl_mutex_unlock(&state->mutex);
     return;
   }
-  
+
   // Mark as stopped first to prevent new buffer requests
   state->is_running = false;
-  
+
   HAL_NVIC_DisableIRQ(this->pdm_dma_irq);
   HAL_NVIC_DisableIRQ(this->pdm_irq);
   HAL_PDM_DMAStop(hpdm);
@@ -441,7 +430,8 @@ void mic_stop(const MicDevice *this) {
 
 #include "console/prompt.h"
 
-void command_mic_start(char *timeout_str, char *sample_size_str, char *sample_rate_str, char *format_str) {
+void command_mic_start(char *timeout_str, char *sample_size_str, char *sample_rate_str,
+                       char *format_str) {
   prompt_send_response("Microphone console commands not supported");
   prompt_send_response("Use the standard microphone API instead");
 }
@@ -454,7 +444,7 @@ void command_mic_read(void) {
 bool mic_is_running(const MicDevice *this) {
   PBL_ASSERTN(this);
   PBL_ASSERTN(this->state);
-  
+
   return this->state->is_running;
 }
 

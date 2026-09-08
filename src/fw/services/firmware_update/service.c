@@ -51,7 +51,7 @@ typedef struct {
   };
 } FwUpdateCurrentCompletionStatus;
 
-static FwUpdateCurrentCompletionStatus s_current_completion_status =  { 0 };
+static FwUpdateCurrentCompletionStatus s_current_completion_status = {0};
 
 //
 // Start handlers for legacy percentage status handling. Someday, we can hopefully
@@ -107,30 +107,22 @@ static bool prv_legacy_completion_status_init(PebbleSystemMessageEvent *event) {
   }
 
   s_current_completion_status.use_legacy_mode = true;
-  LegacyFwUpdateCompletionStatus *status =
-      &s_current_completion_status.legacy_status;
+  LegacyFwUpdateCompletionStatus *status = &s_current_completion_status.legacy_status;
 
-  *status = (LegacyFwUpdateCompletionStatus) {
-    .recovery_percent_completion = 0,
-    .resource_percent_completion = 0,
-    .firmware_percent_completion = 0
-  };
+  *status = (LegacyFwUpdateCompletionStatus){.recovery_percent_completion = 0,
+                                             .resource_percent_completion = 0,
+                                             .firmware_percent_completion = 0};
 
   return true;
 }
 
 // End Legacy completion handlers
 
-bool firmware_update_is_in_progress(void) {
-  return s_update_status == FirmwareUpdateRunning;
-}
+bool firmware_update_is_in_progress(void) { return s_update_status == FirmwareUpdateRunning; }
 
-FirmwareUpdateStatus firmware_update_current_status(void) {
-  return s_update_status;
-}
+FirmwareUpdateStatus firmware_update_current_status(void) { return s_update_status; }
 
-void firmware_update_init(void) {
-}
+void firmware_update_init(void) {}
 
 static void prv_initialize_completion_status(PebbleSystemMessageEvent *event) {
   if (prv_legacy_completion_status_init(event)) {
@@ -139,10 +131,8 @@ static void prv_initialize_completion_status(PebbleSystemMessageEvent *event) {
 
   s_current_completion_status.use_legacy_mode = false;
   FwUpdateCompletionStatus *status = &s_current_completion_status.status;
-  *status = (FwUpdateCompletionStatus) {
-    .bytes_transferred = event->bytes_transferred,
-    .total_size = event->total_transfer_size
-  };
+  *status = (FwUpdateCompletionStatus){.bytes_transferred = event->bytes_transferred,
+                                       .total_size = event->total_transfer_size};
 }
 
 // Initialization for a firmware update could involve an erase of 8 flash
@@ -167,12 +157,12 @@ static FirmwareUpdateStatus prv_firmware_update_start(PebbleSystemMessageEvent *
     modal_manager_pop_all();
 
     static const ProgressUIAppArgs s_update_args = {
-      .progress_source = PROGRESS_UI_SOURCE_FW_UPDATE,
+        .progress_source = PROGRESS_UI_SOURCE_FW_UPDATE,
     };
-    app_manager_launch_new_app(&(AppLaunchConfig) {
-      .md = progress_ui_app_get_info(),
-      .common.args = &s_update_args,
-      .restart = true,
+    app_manager_launch_new_app(&(AppLaunchConfig){
+        .md = progress_ui_app_get_info(),
+        .common.args = &s_update_args,
+        .restart = true,
     });
     put_bytes_expect_init(FIRMWARE_TIMEOUT_MS);
     result = FirmwareUpdateRunning;
@@ -185,8 +175,7 @@ static FirmwareUpdateStatus prv_firmware_update_start(PebbleSystemMessageEvent *
 static void prv_handle_firmware_update_start_msg(PebbleSystemMessageEvent *event) {
   FirmwareUpdateStatus result = prv_firmware_update_start(event);
   s_update_status = result;
-  PBL_ASSERTN((result == FirmwareUpdateRunning) ||
-              (result == FirmwareUpdateStopped) ||
+  PBL_ASSERTN((result == FirmwareUpdateRunning) || (result == FirmwareUpdateStopped) ||
               (result == FirmwareUpdateCancelled));
   system_message_send_firmware_start_response(result);
 }
@@ -221,7 +210,7 @@ unsigned int firmware_update_get_percent_progress(void) {
   return (status->bytes_transferred * 100) / status->total_size;
 }
 
-void firmware_update_event_handler(PebbleSystemMessageEvent* event) {
+void firmware_update_event_handler(PebbleSystemMessageEvent *event) {
   switch (event->type) {
     case PebbleSystemMessageFirmwareUpdateStartLegacy:
     case PebbleSystemMessageFirmwareUpdateStart:
@@ -247,7 +236,7 @@ static void prv_handle_progress(PebblePutBytesEvent *event) {
   }
 
   if (event->type != PebblePutBytesEventTypeProgress) {
-    return; // Only progress events report bytes_transferred updates
+    return;  // Only progress events report bytes_transferred updates
   }
 
   FwUpdateCompletionStatus *status = &s_current_completion_status.status;
@@ -256,7 +245,7 @@ static void prv_handle_progress(PebblePutBytesEvent *event) {
 
 void firmware_update_pb_event_handler(PebblePutBytesEvent *event) {
   if (!firmware_update_is_in_progress()) {
-    return; // not my pb transfer
+    return;  // not my pb transfer
   }
 
   switch (event->type) {

@@ -121,12 +121,11 @@
 #include <ctype.h>
 #include <stdbool.h>
 
-
 // Not using 64-bit division for Dialog Bluetooth. This saves *gobs* of memory.
 #ifdef ARCH_NO_NATIVE_LONG_DIVIDE
-  #define CONVERT_VALUE_TYPE uint32_t
+#define CONVERT_VALUE_TYPE uint32_t
 #else
-  #define CONVERT_VALUE_TYPE UINTMAX_T
+#define CONVERT_VALUE_TYPE UINTMAX_T
 #endif
 
 #define VA_START(ap, last) va_start(ap, last)
@@ -152,55 +151,56 @@
 #ifdef MAX_CONVERT_LENGTH
 #undef MAX_CONVERT_LENGTH
 #endif
-#define MAX_CONVERT_LENGTH      22
+#define MAX_CONVERT_LENGTH 22
 
 /* Format read states. */
-#define PRINT_S_DEFAULT         0
-#define PRINT_S_FLAGS           1
-#define PRINT_S_WIDTH           2
-#define PRINT_S_DOT             3
-#define PRINT_S_PRECISION       4
-#define PRINT_S_MOD             5
-#define PRINT_S_CONV            6
+#define PRINT_S_DEFAULT 0
+#define PRINT_S_FLAGS 1
+#define PRINT_S_WIDTH 2
+#define PRINT_S_DOT 3
+#define PRINT_S_PRECISION 4
+#define PRINT_S_MOD 5
+#define PRINT_S_CONV 6
 
 /* Format flags. */
-#define PRINT_F_MINUS           (1 << 0)
-#define PRINT_F_PLUS            (1 << 1)
-#define PRINT_F_SPACE           (1 << 2)
-#define PRINT_F_NUM             (1 << 3)
-#define PRINT_F_ZERO            (1 << 4)
-#define PRINT_F_UP              (1 << 6)
-#define PRINT_F_UNSIGNED        (1 << 7)
-#define PRINT_F_TYPE_G          (1 << 8)
-#define PRINT_F_TYPE_E          (1 << 9)
+#define PRINT_F_MINUS (1 << 0)
+#define PRINT_F_PLUS (1 << 1)
+#define PRINT_F_SPACE (1 << 2)
+#define PRINT_F_NUM (1 << 3)
+#define PRINT_F_ZERO (1 << 4)
+#define PRINT_F_UP (1 << 6)
+#define PRINT_F_UNSIGNED (1 << 7)
+#define PRINT_F_TYPE_G (1 << 8)
+#define PRINT_F_TYPE_E (1 << 9)
 
 /* Conversion flags. */
-#define PRINT_C_CHAR            1
-#define PRINT_C_SHORT           2
-#define PRINT_C_LONG            3
-#define PRINT_C_LLONG           4
-#define PRINT_C_SIZE            6
-#define PRINT_C_PTRDIFF         7
-#define PRINT_C_INTMAX          8
+#define PRINT_C_CHAR 1
+#define PRINT_C_SHORT 2
+#define PRINT_C_LONG 3
+#define PRINT_C_LLONG 4
+#define PRINT_C_SIZE 6
+#define PRINT_C_PTRDIFF 7
+#define PRINT_C_INTMAX 8
 
 #ifndef MAX
-# define MAX(x, y) ((x >= y) ? x : y)
+#define MAX(x, y) ((x >= y) ? x : y)
 #endif
 
 #ifndef CHARTOINT
-# define CHARTOINT(ch) (ch - '0')
+#define CHARTOINT(ch) (ch - '0')
 #endif
 
 #ifndef ISDIGIT
-# define ISDIGIT(ch) isdigit(ch)
+#define ISDIGIT(ch) isdigit(ch)
 #endif
 
-#define OUTCHAR(str, len, size, ch) do { \
-  if ((len) + 1 < size) { \
-    str[len] = ch; \
-  } \
-  (len)++; \
-} while (0)
+#define OUTCHAR(str, len, size, ch) \
+  do {                              \
+    if ((len) + 1 < size) {         \
+      str[len] = ch;                \
+    }                               \
+    (len)++;                        \
+  } while (0)
 
 static int prv_convert(CONVERT_VALUE_TYPE value, char *buf, size_t size, int base, int caps) {
   const char *digits = caps ? "0123456789ABCDEF" : "0123456789abcdef";
@@ -217,7 +217,7 @@ static int prv_convert(CONVERT_VALUE_TYPE value, char *buf, size_t size, int bas
 
 static void fmtstr(char *str, size_t *len, size_t size, const char *value, int width, int precision,
                    int flags) {
-  int padlen, strln;  /* Amount to pad. */
+  int padlen, strln; /* Amount to pad. */
   int noprecision = (precision == -1);
 
   if (value == NULL) { /* We're forgiving. */
@@ -236,7 +236,7 @@ static void fmtstr(char *str, size_t *len, size_t size, const char *value, int w
     padlen = -padlen;
   }
 
-  while (padlen > 0) {  /* Leading spaces. */
+  while (padlen > 0) { /* Leading spaces. */
     OUTCHAR(str, *len, size, ' ');
     padlen--;
   }
@@ -244,7 +244,7 @@ static void fmtstr(char *str, size_t *len, size_t size, const char *value, int w
     OUTCHAR(str, *len, size, *value);
     value++;
   }
-  while (padlen < 0) {  /* Trailing spaces. */
+  while (padlen < 0) { /* Trailing spaces. */
     OUTCHAR(str, *len, size, ' ');
     padlen++;
   }
@@ -257,8 +257,8 @@ static void fmtint(char *str, size_t *len, size_t size, INTMAX_T value, int base
   char iconvert[MAX_CONVERT_LENGTH];
   char sign = '\0';
   char hexprefix = '\0';
-  int spadlen = 0;  /* Amount to space pad. */
-  int zpadlen = 0;  /* Amount to zero pad. */
+  int spadlen = 0; /* Amount to space pad. */
+  int zpadlen = 0; /* Amount to zero pad. */
   int pos;
   bool noprecision = (precision == -1);
 
@@ -309,9 +309,9 @@ static void fmtint(char *str, size_t *len, size_t size, INTMAX_T value, int base
   }
 
   spadlen = width                         /* Minimum field width. */
-      - MAX(precision, pos)               /* Number of integer digits. */
-      - ((sign != 0) ? 1 : 0)             /* Will we print a sign? */
-      - ((hexprefix != 0) ? 2 : 0);       /* Will we print a prefix? */
+            - MAX(precision, pos)         /* Number of integer digits. */
+            - ((sign != 0) ? 1 : 0)       /* Will we print a sign? */
+            - ((hexprefix != 0) ? 2 : 0); /* Will we print a prefix? */
   if (spadlen < 0) {
     spadlen = 0;
   }
@@ -475,18 +475,19 @@ int vsnprintf(char *str, size_t size, const char *format, va_list args) {
            * (7.19.6.1, 5)
            */
           if ((precision = va_arg(args, int)) < 0) {
-            precision = 0; // amarshall: It actually means as if you did '%.d', not '%d'
+            precision = 0;  // amarshall: It actually means as if you did '%.d', not '%d'
           }
           ch = *format++;
           state = PRINT_S_MOD;
-        } else if (ch == '-') { // amarshall: added support for negative immediates in precision
+        } else if (ch == '-') {  // amarshall: added support for negative immediates in precision
           /*
            * C99 says: "A negative precision argument is
            * taken as if the precision were omitted."
            * (7.19.6.1, 5)
            */
           precision = 0;
-          while (isdigit(ch = *format++)) {}
+          while (isdigit(ch = *format++)) {
+          }
           state = PRINT_S_MOD;
         } else {
           state = PRINT_S_MOD;
@@ -496,7 +497,7 @@ int vsnprintf(char *str, size_t size, const char *format, va_list args) {
         switch (ch) {
           case 'h':
             ch = *format++;
-            if (ch == 'h') { // hh
+            if (ch == 'h') {  // hh
               ch = *format++;
               cflags = PRINT_C_CHAR;
             } else {
@@ -505,7 +506,7 @@ int vsnprintf(char *str, size_t size, const char *format, va_list args) {
             break;
           case 'l':
             ch = *format++;
-            if (ch == 'l') { // ll
+            if (ch == 'l') {  // ll
               ch = *format++;
               cflags = PRINT_C_LLONG;
             } else {
@@ -561,8 +562,7 @@ int vsnprintf(char *str, size_t size, const char *format, va_list args) {
                 value = (int32_t)va_arg(args, int);
                 break;
             }
-            fmtint(str, &len, size, value, 10, width,
-                   precision, flags);
+            fmtint(str, &len, size, value, 10, width, precision, flags);
             break;
           case 'X':
             flags |= PRINT_F_UP;
@@ -571,12 +571,10 @@ int vsnprintf(char *str, size_t size, const char *format, va_list args) {
             base = 16;
             /* FALLTHROUGH */
           case 'o':
-            if (base == 0)
-              base = 8;
+            if (base == 0) base = 8;
             /* FALLTHROUGH */
           case 'u':
-            if (base == 0)
-              base = 10;
+            if (base == 0) base = 10;
             flags |= PRINT_F_UNSIGNED;
             /* amarshall: Changed to machine-independent types
              * This will not affect native builds, useful for unit tests.
@@ -607,11 +605,10 @@ int vsnprintf(char *str, size_t size, const char *format, va_list args) {
                 value = (uint32_t)va_arg(args, unsigned int);
                 break;
             }
-            fmtint(str, &len, size, value, base, width,
-                   precision, flags);
+            fmtint(str, &len, size, value, base, width, precision, flags);
             break;
           case 'c':
-            while (width > 1) { // Leading spaces
+            while (width > 1) {  // Leading spaces
               OUTCHAR(str, len, size, ' ');
               width--;
             }
@@ -620,8 +617,7 @@ int vsnprintf(char *str, size_t size, const char *format, va_list args) {
             break;
           case 's':
             strvalue = va_arg(args, char *);
-            fmtstr(str, &len, size, strvalue, width,
-                   precision, flags);
+            fmtstr(str, &len, size, strvalue, width, precision, flags);
             break;
           case 'p':
             /*
@@ -634,9 +630,7 @@ int vsnprintf(char *str, size_t size, const char *format, va_list args) {
             // amarshall: Changed this to act like newlib (where it's basically %#x)
             flags |= PRINT_F_NUM;
             flags |= PRINT_F_UNSIGNED;
-            fmtint(str, &len, size,
-                   (UINTPTR_T)strvalue, 16, width,
-                   precision, flags);
+            fmtint(str, &len, size, (UINTPTR_T)strvalue, 16, width, precision, flags);
             break;
           case 'n':
             /* amarshall: Changed to machine-independent types
@@ -645,16 +639,16 @@ int vsnprintf(char *str, size_t size, const char *format, va_list args) {
             // amarshall: Removed pointer variables to try to improve stack footprint
             switch (cflags) {
               case PRINT_C_CHAR:
-                *(int8_t*)va_arg(args, int8_t*) = len;
+                *(int8_t *)va_arg(args, int8_t *) = len;
                 break;
               case PRINT_C_SHORT:
-                *(int16_t*)va_arg(args, int16_t*) = len;
+                *(int16_t *)va_arg(args, int16_t *) = len;
                 break;
               case PRINT_C_LONG:
-                *(int32_t*)va_arg(args, int32_t*) = len;
+                *(int32_t *)va_arg(args, int32_t *) = len;
                 break;
               case PRINT_C_LLONG:
-                *(LLONG*)va_arg(args, LLONG*) = len;
+                *(LLONG *)va_arg(args, LLONG *) = len;
                 break;
               case PRINT_C_SIZE:
                 /*
@@ -664,21 +658,21 @@ int vsnprintf(char *str, size_t size, const char *format, va_list args) {
                  * signed integer type corresponding to
                  * size_t argument." (7.19.6.1, 7)
                  */
-                *(SSIZE_T*)va_arg(args, SSIZE_T*) = len;
+                *(SSIZE_T *)va_arg(args, SSIZE_T *) = len;
                 break;
               case PRINT_C_INTMAX:
-                *(INTMAX_T*)va_arg(args, INTMAX_T*) = len;
+                *(INTMAX_T *)va_arg(args, INTMAX_T *) = len;
                 break;
               case PRINT_C_PTRDIFF:
-                *(PTRDIFF_T*)va_arg(args, PTRDIFF_T*) = len;
+                *(PTRDIFF_T *)va_arg(args, PTRDIFF_T *) = len;
                 break;
               default:
-                *(int32_t*)va_arg(args, int32_t*) = len;
+                *(int32_t *)va_arg(args, int32_t *) = len;
                 break;
             }
             break;
-          case '%': // Print a "%" character verbatim.
-          default: // amarshall: newlib's behavior is to just print the character.
+          case '%':  // Print a "%" character verbatim.
+          default:   // amarshall: newlib's behavior is to just print the character.
             OUTCHAR(str, len, size, ch);
             break;
         }

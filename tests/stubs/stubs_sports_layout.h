@@ -6,10 +6,6 @@
 #include "pbl/services/timeline/sports_layout.h"
 #include "pbl/util/attributes.h"
 
-LayoutLayer * WEAK sports_layout_create(const LayoutLayerConfig *config) {
-  return NULL;
-}
+LayoutLayer *WEAK sports_layout_create(const LayoutLayerConfig *config) { return NULL; }
 
-bool WEAK sports_layout_verify(bool existing_attributes[]) {
-  return false;
-}
+bool WEAK sports_layout_verify(bool existing_attributes[]) { return false; }

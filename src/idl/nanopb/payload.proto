@@ -15,7 +15,6 @@ the web, or if multiple devices are connected simultaneously to one mobile
 device.
 */
 
-
 syntax = "proto2";
 
 package pebble.pipeline;
@@ -27,11 +26,14 @@ import "event.proto";
 import "measurements.proto";
 
 message Payload {
-  required Tier sender = 2; /// Tier info represents who is sending a message. Payloads are uniquely identified by sender and time
-  required uint32 send_time_utc = 3; /// latest send attempt time
+  required Tier sender =
+      2;  /// Tier info represents who is sending a message. Payloads are
+          /// uniquely identified by sender and time
+  required uint32 send_time_utc = 3;  /// latest send attempt time
   optional uint32 send_retry_count = 4;
   optional User user = 6;  /// User info apply to all sub-messages contained
-  repeated bytes payloads = 10; /// recursive payloads form a tree structure to store arbitrary message history efficiently
+  repeated bytes payloads = 10;  /// recursive payloads form a tree structure to
+                                 /// store arbitrary message history efficiently
   // base analytics types function as tree leaves
   repeated Event events = 11;
   repeated MeasurementSet measurement_sets = 12;

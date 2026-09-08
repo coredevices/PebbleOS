@@ -21,14 +21,14 @@
 
 static void prv_show_action_bar_icon(ExpandableDialog *expandable_dialog, ButtonId button_id) {
   ActionBarLayer *action_bar = &expandable_dialog->action_bar;
-  const GBitmap *icon = (button_id ==
-      BUTTON_ID_UP) ? expandable_dialog->up_icon : expandable_dialog->down_icon;
+  const GBitmap *icon =
+      (button_id == BUTTON_ID_UP) ? expandable_dialog->up_icon : expandable_dialog->down_icon;
   action_bar_layer_set_icon_animated(action_bar, button_id, icon,
-      expandable_dialog->show_action_icon_animated);
+                                     expandable_dialog->show_action_icon_animated);
 
   ActionBarLayerIconPressAnimation animation = (button_id == BUTTON_ID_UP)
-      ? ActionBarLayerIconPressAnimationMoveUp
-      : ActionBarLayerIconPressAnimationMoveDown;
+                                                   ? ActionBarLayerIconPressAnimationMoveUp
+                                                   : ActionBarLayerIconPressAnimationMoveDown;
   action_bar_layer_set_icon_press_animation(action_bar, button_id, animation);
 }
 
@@ -130,7 +130,6 @@ static void prv_expandable_dialog_load(Window *window) {
   const GSize icon_size = icon ? kino_reel_get_size(icon) : GSizeZero;
   uint16_t icon_offset = (icon ? ICON_TOP_MARGIN_PX - status_layer_offset : 0);
 
-
   x = 0;
   y = status_layer_offset;
   w = frame.size.w;
@@ -140,18 +139,16 @@ static void prv_expandable_dialog_load(Window *window) {
   scroll_layer_init(scroll_layer, &GRect(x, y, w, h));
   layer_add_child(&window->layer, &scroll_layer->layer);
 
-
   // Set up the header if this dialog is set to have one.
-  GTextAlignment alignment = PBL_IF_RECT_ELSE(GTextAlignmentLeft,
-                                              (show_action_bar ?
-                                               GTextAlignmentRight : GTextAlignmentCenter));
+  GTextAlignment alignment = PBL_IF_RECT_ELSE(
+      GTextAlignmentLeft, (show_action_bar ? GTextAlignmentRight : GTextAlignmentCenter));
   uint16_t right_aligned_box_reduction = PBL_IF_RECT_ELSE(0, show_action_bar ? 10 : 0);
   if (has_header) {
     const uint16_t HEADER_OFFSET = 6;
 #if PBL_RECT
     x = left_margin_px;
-    w = frame.size.w - right_margin_px - left_margin_px - action_bar_offset
-        - right_aligned_box_reduction;
+    w = frame.size.w - right_margin_px - left_margin_px - action_bar_offset -
+        right_aligned_box_reduction;
 #else
     x = 0;
     w = frame.size.w - right_margin_px - action_bar_offset - right_aligned_box_reduction;
@@ -172,7 +169,7 @@ static void prv_expandable_dialog_load(Window *window) {
     // We account for a header that may be larger than the available space
     // by adjusting our height variable that is passed to the body layer
     GSize header_size = text_layer_get_content_size(ctx, header_layer);
-    header_size.h += 4; // See PBL-1741
+    header_size.h += 4;  // See PBL-1741
     header_size.w = w;
     header_content_height = header_size.h;
     text_layer_set_size(header_layer, header_size);
@@ -182,15 +179,15 @@ static void prv_expandable_dialog_load(Window *window) {
   const uint16_t TEXT_OFFSET = 6;
   x = left_margin_px;
   y = (icon ? icon_offset + icon_size.h : -TEXT_OFFSET) + header_content_height;
-  w = frame.size.w - right_margin_px - left_margin_px - action_bar_offset
-      - right_aligned_box_reduction;
+  w = frame.size.w - right_margin_px - left_margin_px - action_bar_offset -
+      right_aligned_box_reduction;
   h = INT16_MAX;  // height is clamped to content size
   GFont font = expandable_dialog->body_font;
 
   TextLayer *text_layer = &dialog->text_layer;
   text_layer_init_with_parameters(text_layer, &GRect(x, y, w, h), dialog->buffer, font,
-                                  dialog->text_color, GColorClear,
-                                  alignment, GTextOverflowModeWordWrap);
+                                  dialog->text_color, GColorClear, alignment,
+                                  GTextOverflowModeWordWrap);
   // layer must be added immediately to scroll layer for perimeter and paging
   scroll_layer_add_child(scroll_layer, &text_layer->layer);
 
@@ -200,17 +197,16 @@ static void prv_expandable_dialog_load(Window *window) {
 #endif
 
   int32_t text_content_height = text_layer_get_content_size(ctx, text_layer).h;
-  text_content_height += 4; // See PBL-1741
+  text_content_height += 4;  // See PBL-1741
   text_layer_set_size(text_layer, GSize(w, text_content_height));
 
-  uint16_t scroll_height = icon_offset + icon_size.h +
-      header_content_height + text_content_height + (icon ? BOTTOM_MARGIN_PX : 0);
+  uint16_t scroll_height = icon_offset + icon_size.h + header_content_height + text_content_height +
+                           (icon ? BOTTOM_MARGIN_PX : 0);
 
   scroll_layer_set_content_size(scroll_layer, GSize(frame.size.w, scroll_height));
   scroll_layer_set_shadow_hidden(scroll_layer, true);
-  scroll_layer_set_callbacks(scroll_layer, (ScrollLayerCallbacks) {
-        .content_offset_changed_handler = prv_offset_changed_handler
-      });
+  scroll_layer_set_callbacks(scroll_layer, (ScrollLayerCallbacks){.content_offset_changed_handler =
+                                                                      prv_offset_changed_handler});
   scroll_layer_set_context(scroll_layer, expandable_dialog);
 
 #if PBL_ROUND
@@ -220,10 +216,10 @@ static void prv_expandable_dialog_load(Window *window) {
   if (show_action_bar) {
     // Icons for up and down on the action bar.
 #ifndef CONFIG_RECOVERY_FW
-    expandable_dialog->up_icon = gbitmap_create_with_resource_system(SYSTEM_APP,
-        RESOURCE_ID_ACTION_BAR_ICON_UP);
-    expandable_dialog->down_icon = gbitmap_create_with_resource_system(SYSTEM_APP,
-        RESOURCE_ID_ACTION_BAR_ICON_DOWN);
+    expandable_dialog->up_icon =
+        gbitmap_create_with_resource_system(SYSTEM_APP, RESOURCE_ID_ACTION_BAR_ICON_UP);
+    expandable_dialog->down_icon =
+        gbitmap_create_with_resource_system(SYSTEM_APP, RESOURCE_ID_ACTION_BAR_ICON_DOWN);
     PBL_ASSERTN(expandable_dialog->down_icon && expandable_dialog->up_icon);
 #endif
 
@@ -236,7 +232,8 @@ static void prv_expandable_dialog_load(Window *window) {
     }
     if (expandable_dialog->select_icon) {
       action_bar_layer_set_icon_animated(action_bar, BUTTON_ID_SELECT,
-          expandable_dialog->select_icon, expandable_dialog->show_action_icon_animated);
+                                         expandable_dialog->select_icon,
+                                         expandable_dialog->show_action_icon_animated);
     }
     action_bar_layer_set_context(action_bar, expandable_dialog);
     action_bar_layer_set_click_config_provider(action_bar, prv_config_provider);
@@ -245,10 +242,11 @@ static void prv_expandable_dialog_load(Window *window) {
     window_set_click_config_provider_with_context(window, prv_config_provider, expandable_dialog);
   }
 
-  x = PBL_IF_RECT_ELSE(left_margin_px, (show_action_bar) ?
-      (frame.size.w - right_margin_px - left_margin_px -
-       action_bar_offset - right_aligned_box_reduction - icon_size.h) :
-      (90 - icon_size.h / 2));
+  x = PBL_IF_RECT_ELSE(left_margin_px,
+                       (show_action_bar)
+                           ? (frame.size.w - right_margin_px - left_margin_px - action_bar_offset -
+                              right_aligned_box_reduction - icon_size.h)
+                           : (90 - icon_size.h / 2));
   y = icon_offset + PBL_IF_RECT_ELSE(0, 5);
   if (dialog_init_icon_layer(dialog, icon, GPoint(x, y), false /* not animated */)) {
     scroll_layer_add_child(scroll_layer, &dialog->icon_layer.layer);
@@ -265,26 +263,26 @@ static void prv_expandable_dialog_load(Window *window) {
       ContentIndicator *indicator = scroll_layer_get_content_indicator(scroll_layer);
       content_indicator_configure_direction(
           indicator, ContentIndicatorDirectionUp,
-          &(ContentIndicatorConfig) {
-            .layer = &expandable_dialog->dialog.status_layer.layer,
-            .times_out = true,
-            .colors.foreground = dialog->text_color,
-            .colors.background = dialog->window.background_color,
-      });
-      layer_init(&expandable_dialog->content_down_arrow_layer, &GRect(
-                 0, frame.size.h - CONTENT_DOWN_ARROW_HEIGHT,
-                 PBL_IF_RECT_ELSE(frame.size.w - action_bar_offset, frame.size.w),
-                 CONTENT_DOWN_ARROW_HEIGHT));
+          &(ContentIndicatorConfig){
+              .layer = &expandable_dialog->dialog.status_layer.layer,
+              .times_out = true,
+              .colors.foreground = dialog->text_color,
+              .colors.background = dialog->window.background_color,
+          });
+      layer_init(&expandable_dialog->content_down_arrow_layer,
+                 &GRect(0, frame.size.h - CONTENT_DOWN_ARROW_HEIGHT,
+                        PBL_IF_RECT_ELSE(frame.size.w - action_bar_offset, frame.size.w),
+                        CONTENT_DOWN_ARROW_HEIGHT));
       layer_add_child(&window->layer, &expandable_dialog->content_down_arrow_layer);
       content_indicator_configure_direction(
           indicator, ContentIndicatorDirectionDown,
-          &(ContentIndicatorConfig) {
-            .layer = &expandable_dialog->content_down_arrow_layer,
-            .times_out = false,
-            .alignment = PBL_IF_RECT_ELSE(GAlignCenter, GAlignTop),
-            .colors.foreground = dialog->text_color,
-            .colors.background = dialog->window.background_color,
-      });
+          &(ContentIndicatorConfig){
+              .layer = &expandable_dialog->content_down_arrow_layer,
+              .times_out = false,
+              .alignment = PBL_IF_RECT_ELSE(GAlignCenter, GAlignTop),
+              .colors.foreground = dialog->text_color,
+              .colors.background = dialog->window.background_color,
+          });
     }
   }
 
@@ -321,18 +319,18 @@ Dialog *expandable_dialog_get_dialog(ExpandableDialog *expandable_dialog) {
 
 void expandable_dialog_init(ExpandableDialog *expandable_dialog, const char *dialog_name) {
   PBL_ASSERTN(expandable_dialog);
-  *expandable_dialog = (ExpandableDialog) {
-    .header_font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
-    .body_font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
+  *expandable_dialog = (ExpandableDialog){
+      .header_font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
+      .body_font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
   };
 
   dialog_init(&expandable_dialog->dialog, dialog_name);
   Window *window = &expandable_dialog->dialog.window;
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_expandable_dialog_load,
-    .unload = prv_expandable_dialog_unload,
-    .appear = prv_expandable_dialog_appear,
-  });
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_expandable_dialog_load,
+                                         .unload = prv_expandable_dialog_unload,
+                                         .appear = prv_expandable_dialog_appear,
+                                     });
   expandable_dialog->show_action_bar = true;
   window_set_user_data(window, expandable_dialog);
 }
@@ -370,8 +368,7 @@ ExpandableDialog *expandable_dialog_create_with_params(const char *dialog_name, 
   return expandable_dialog;
 }
 
-void expandable_dialog_show_action_bar(ExpandableDialog *expandable_dialog,
-                                       bool show_action_bar) {
+void expandable_dialog_show_action_bar(ExpandableDialog *expandable_dialog, bool show_action_bar) {
   expandable_dialog->show_action_bar = show_action_bar;
 }
 
@@ -402,8 +399,7 @@ void expandable_dialog_set_body_font(ExpandableDialog *expandable_dialog, GFont 
   expandable_dialog->body_font = body_font;
 }
 
-void expandable_dialog_set_select_action(ExpandableDialog *expandable_dialog,
-                                         uint32_t resource_id,
+void expandable_dialog_set_select_action(ExpandableDialog *expandable_dialog, uint32_t resource_id,
                                          ClickHandler select_click_handler) {
   if (expandable_dialog->select_icon) {
     gbitmap_destroy(expandable_dialog->select_icon);

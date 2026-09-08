@@ -51,24 +51,20 @@ static void window_load(Window *window) {
   layer_add_child(window_layer, text_layer_get_layer(s_data.text_layer));
 }
 
-static void window_unload(Window *window) {
-  text_layer_destroy(s_data.text_layer);
-}
+static void window_unload(Window *window) { text_layer_destroy(s_data.text_layer); }
 
 static void init(void) {
   s_data.window = window_create();
   window_set_click_config_provider(s_data.window, click_config_provider);
-  window_set_window_handlers(s_data.window, (WindowHandlers) {
-    .load = window_load,
-    .unload = window_unload,
-  });
+  window_set_window_handlers(s_data.window, (WindowHandlers){
+                                                .load = window_load,
+                                                .unload = window_unload,
+                                            });
   const bool animated = true;
   window_stack_push(s_data.window, animated);
 }
 
-static void deinit(void) {
-  window_destroy(s_data.window);
-}
+static void deinit(void) { window_destroy(s_data.window); }
 
 int main(void) {
   init();

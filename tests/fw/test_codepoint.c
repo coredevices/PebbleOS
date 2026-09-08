@@ -14,11 +14,9 @@
 ///////////////////////////////////////////////////////////
 // Tests
 
-void test_codepoint__initialize(void) {
-}
+void test_codepoint__initialize(void) {}
 
-void test_codepoint__cleanup(void) {
-}
+void test_codepoint__cleanup(void) {}
 
 void test_codepoint__is_unicode_space(void) {
   // All Unicode space variants should be recognized
@@ -104,14 +102,14 @@ void test_codepoint__should_skip_controls(void) {
   // deprecated formatting — none have visible glyphs in our fonts.
   // U+2060 WORD JOINER is excluded — it is needed for CJK word segmentation.
   cl_assert(!codepoint_should_skip(0x2060));  // word joiner — handled separately
-  cl_assert(codepoint_should_skip(0x2062));  // invisible times
-  cl_assert(codepoint_should_skip(0x2066));  // LRI
-  cl_assert(codepoint_should_skip(0x2069));  // PDI
-  cl_assert(codepoint_should_skip(0x206F));  // nominal digit shapes (deprecated)
+  cl_assert(codepoint_should_skip(0x2062));   // invisible times
+  cl_assert(codepoint_should_skip(0x2066));   // LRI
+  cl_assert(codepoint_should_skip(0x2069));   // PDI
+  cl_assert(codepoint_should_skip(0x206F));   // nominal digit shapes (deprecated)
 
   // Interlinear annotation anchors and tag characters
-  cl_assert(codepoint_should_skip(0xFFF9));  // interlinear anchor
-  cl_assert(codepoint_should_skip(0xFFFB));  // interlinear terminator
+  cl_assert(codepoint_should_skip(0xFFF9));   // interlinear anchor
+  cl_assert(codepoint_should_skip(0xFFFB));   // interlinear terminator
   cl_assert(codepoint_should_skip(0xE0001));  // language tag
   cl_assert(codepoint_should_skip(0xE007F));  // cancel tag
 
@@ -130,7 +128,8 @@ void test_codepoint__should_skip_controls(void) {
   cl_assert(!codepoint_should_skip(0x205F));  // medium math space — printable
   cl_assert(!codepoint_should_skip(0x2070));  // superscript zero — printable
   cl_assert(!codepoint_should_skip(0xFFF8));  // unassigned, but not in our skip range
-  cl_assert(!codepoint_should_skip(0xFFFC));  // object replacement — handled by formatting indicator
+  cl_assert(
+      !codepoint_should_skip(0xFFFC));  // object replacement — handled by formatting indicator
   cl_assert(!codepoint_should_skip(0xEFFFF));
 }
 

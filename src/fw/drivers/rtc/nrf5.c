@@ -72,7 +72,7 @@ static void prv_check_and_handle_rollover(RtcIntervalTicks rtc_ticks) {
     // nRF5, this is 0xFFFFFF; that's only 4.5 hours (at 1.024 kHz),
     // compared to STM32's available SECONDS_IN_A_DAY.  Sucks for us; oh
     // well.
-    
+
     s_coarse_ticks += TICKS_IN_AN_INTERVAL;
 
     save_needed = true;
@@ -113,12 +113,13 @@ RtcTicks rtc_get_ticks(void) {
  * Logic associated with converting extended RTC ticks to wall clock time.
  */
 
-//! This variable is a UNIX timestamp of what the current wall clock time was at tick s_time_tick_base.
+//! This variable is a UNIX timestamp of what the current wall clock time was at tick
+//! s_time_tick_base.
 static time_t s_time_base = 0;
-//! This variable is the tick where the wall clock time was equal to s_time_base. If you subtract this variable
-//! from the current tick count, you'll get the number of ticks that have elapsed since s_time_base, which will
-//! allow you to calculate the current wall clock time. Note that this value may be negative on startup, see
-//! prv_restore_rtc_time_state
+//! This variable is the tick where the wall clock time was equal to s_time_base. If you subtract
+//! this variable from the current tick count, you'll get the number of ticks that have elapsed
+//! since s_time_base, which will allow you to calculate the current wall clock time. Note that this
+//! value may be negative on startup, see prv_restore_rtc_time_state
 static int64_t s_time_tick_base = 0;
 
 static time_t prv_ticks_to_time(RtcTicks ticks) {
@@ -132,11 +133,9 @@ void rtc_set_time(time_t time) {
   prv_save_rtc_time_state(s_time_tick_base - s_coarse_ticks);
 }
 
-time_t rtc_get_time(void) {
-  return prv_ticks_to_time(rtc_get_ticks());
-}
+time_t rtc_get_time(void) { return prv_ticks_to_time(rtc_get_ticks()); }
 
-void rtc_get_time_ms(time_t* out_seconds, uint16_t* out_ms) {
+void rtc_get_time_ms(time_t *out_seconds, uint16_t *out_ms) {
   RtcTicks ticks = rtc_get_ticks();
 
   RtcTicks ticks_since_time_base = (ticks - s_time_tick_base);
@@ -163,7 +162,8 @@ static void prv_restore_rtc_time_state(void) {
     s_time_tick_base = 0;
   } else {
     RtcIntervalTicks current_ticks = prv_get_rtc_interval_ticks();
-    const int32_t ticks_since_last_save = prv_elapsed_ticks(last_save_time_ticks * RTC_TICKS_HZ, current_ticks);
+    const int32_t ticks_since_last_save =
+        prv_elapsed_ticks(last_save_time_ticks * RTC_TICKS_HZ, current_ticks);
     s_time_base = last_save_time + (ticks_since_last_save / RTC_TICKS_HZ);
     s_time_tick_base = -(((int64_t)current_ticks) % RTC_TICKS_HZ);
   }
@@ -184,9 +184,11 @@ static void prv_save_rtc_time_state(RtcIntervalTicks current_rtc_ticks) {
   }
 
   // Floor it to the latest second
-  const RtcIntervalTicks current_rtc_ticks_at_second = (current_rtc_ticks / RTC_TICKS_HZ) * RTC_TICKS_HZ;
+  const RtcIntervalTicks current_rtc_ticks_at_second =
+      (current_rtc_ticks / RTC_TICKS_HZ) * RTC_TICKS_HZ;
 
-  prv_save_rtc_time_state_exact(current_rtc_ticks_at_second, prv_ticks_to_time(s_coarse_ticks + current_rtc_ticks));
+  prv_save_rtc_time_state_exact(current_rtc_ticks_at_second,
+                                prv_ticks_to_time(s_coarse_ticks + current_rtc_ticks));
 }
 
 /*** Logic that ought be refactored into rtc_common, were it not stm32-only. ***/
@@ -217,14 +219,12 @@ bool rtc_sanitize_time_t(time_t *t) {
   return result;
 }
 
-void rtc_get_time_tm(struct tm* time_tm) {
+void rtc_get_time_tm(struct tm *time_tm) {
   time_t t = rtc_get_time();
   localtime_r(&t, time_tm);
 }
 
-const char *rtc_get_time_string(char *buffer) {
-  return time_t_to_string(buffer, rtc_get_time());
-}
+const char *rtc_get_time_string(char *buffer) { return time_t_to_string(buffer, rtc_get_time()); }
 
 const char *time_t_to_string(char *buffer, time_t t) {
   struct tm time;
@@ -238,9 +238,9 @@ const char *time_t_to_string(char *buffer, time_t t) {
 //! We attempt to save registers by placing both the timezone abbreviation
 //! timezone index and the daylight_savings_time into the same register set
 void rtc_set_timezone(TimezoneInfo *tzinfo) {
-  uint32_t *raw = (uint32_t*)tzinfo;
+  uint32_t *raw = (uint32_t *)tzinfo;
   _Static_assert(sizeof(TimezoneInfo) <= 5 * sizeof(uint32_t),
-      "RTC Set Timezone invalid data size");
+                 "RTC Set Timezone invalid data size");
 
   retained_write(RTC_TIMEZONE_ABBR_START, raw[0]);
   retained_write(RTC_TIMEZONE_ABBR_END_TZID_DSTID, raw[1]);
@@ -250,7 +250,7 @@ void rtc_set_timezone(TimezoneInfo *tzinfo) {
 }
 
 void rtc_get_timezone(TimezoneInfo *tzinfo) {
-  uint32_t *raw = (uint32_t*)tzinfo;
+  uint32_t *raw = (uint32_t *)tzinfo;
 
   raw[0] = retained_read(RTC_TIMEZONE_ABBR_START);
   raw[1] = retained_read(RTC_TIMEZONE_ABBR_END_TZID_DSTID);
@@ -276,9 +276,7 @@ bool rtc_is_timezone_set(void) {
   return (retained_read(RTC_TIMEZONE_ABBR_START) != 0);
 }
 
-void rtc_enable_backup_regs(void) {
-  /* we always use retained ram for this, so no problem */
-}
+void rtc_enable_backup_regs(void) { /* we always use retained ram for this, so no problem */ }
 
 void rtc_calibrate_frequency(uint32_t frequency) {
   /* On nRF5, there is no way to calibrate the RTC.  That crystal had better
@@ -323,13 +321,11 @@ void rtc_init(void) {
   board_early_init();
   for (int i = 0; i < 100; i++) {
     uint32_t ctr0 = nrf_rtc_counter_get(BOARD_RTC_INST);
-    while (nrf_rtc_counter_get(BOARD_RTC_INST) == ctr0)
-      ;
+    while (nrf_rtc_counter_get(BOARD_RTC_INST) == ctr0);
     ctr0 = nrf_rtc_counter_get(BOARD_RTC_INST) + 100;
     uint32_t iters = 0;
-    while (nrf_rtc_counter_get(BOARD_RTC_INST) != ctr0)
-      iters++;
-    PBL_LOG_INFO("RTC: 100 RTC ticks took %"PRIu32" iters", iters);
+    while (nrf_rtc_counter_get(BOARD_RTC_INST) != ctr0) iters++;
+    PBL_LOG_INFO("RTC: 100 RTC ticks took %" PRIu32 " iters", iters);
   }
 #endif
 }
@@ -362,12 +358,11 @@ void rtc_systick_resume(void) {
 
 //! Our RTC tick counter can overflow if nobody asks about it.  This
 //! repeating callback allows us to make sure this doesn't happen.
-static void prv_rtc_resync_timer_callback() {
-  rtc_get_ticks();
-}
+static void prv_rtc_resync_timer_callback() { rtc_get_ticks(); }
 
 void rtc_init_timers(void) {
-  static RegularTimerInfo rtc_sync_timer = { .list_node = { 0, 0 }, .cb = prv_rtc_resync_timer_callback};
+  static RegularTimerInfo rtc_sync_timer = {.list_node = {0, 0},
+                                            .cb = prv_rtc_resync_timer_callback};
   regular_timer_add_minutes_callback(&rtc_sync_timer);
 }
 
@@ -385,30 +380,26 @@ void rtc_alarm_init(void) {
 
 void rtc_alarm_set(RtcTicks num_ticks) {
   PBL_ASSERTN(s_tick_alarm_initialized);
-  
+
   nrf_rtc_event_disable(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
   nrf_rtc_event_clear(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
-  
+
   s_alarm_set_time = rtc_get_ticks();
   s_alarm_expiry_time = s_alarm_set_time + num_ticks - 1;
-  
+
   /* We're bounded by the regular_timer_add_minutes_callback for the
    * rtc_alarm_set, so we're not going to wrap around more than once -- one
    * minute is always less than 4.5 hours.
    */
   nrf_rtc_cc_set(BOARD_RTC_INST, 0, s_alarm_expiry_time & RTC_COUNTER_COUNTER_Msk);
-  
+
   nrf_rtc_event_enable(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
   nrf_rtc_int_enable(BOARD_RTC_INST, NRF_RTC_INT_COMPARE0_MASK);
 }
 
-RtcTicks rtc_alarm_get_elapsed_ticks(void) {
-  return rtc_get_ticks() - s_alarm_set_time;
-}
+RtcTicks rtc_alarm_get_elapsed_ticks(void) { return rtc_get_ticks() - s_alarm_set_time; }
 
-bool rtc_alarm_is_initialized(void) {
-  return s_tick_alarm_initialized;
-}
+bool rtc_alarm_is_initialized(void) { return s_tick_alarm_initialized; }
 
 //! Handler for the RTC alarm interrupt.  We don't actually have to do
 //! anything in that handler, just the interrupt firing is enough to bring

@@ -11,13 +11,13 @@ typedef struct TimelinePinWindow TimelinePinWindow;
 
 struct TimelinePinWindow {
   Window window;
-  Layer layer; //!< Used to perform a bounds animation of the window
+  Layer layer;  //!< Used to perform a bounds animation of the window
   Layer action_button_layer;
   StatusBarLayer status_layer;
   TimelineItemLayer item_detail_layer;
   TimelineLayoutInfo info;
   Animation *pop_animation;
-  EventServiceInfo blobdb_event_info; //!< Used for pin events when in modal window
+  EventServiceInfo blobdb_event_info;  //!< Used for pin events when in modal window
 };
 
 void timeline_pin_window_set_item(TimelinePinWindow *pin_window, TimelineItem *item,

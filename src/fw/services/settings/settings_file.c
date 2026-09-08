@@ -24,13 +24,12 @@ static status_t bootup_check(SettingsFile *file);
 static void compute_stats(SettingsFile *file);
 
 static bool file_hdr_is_uninitialized(SettingsFileHeader *file_hdr) {
-  return (file_hdr->magic == 0xffffffff) && (file_hdr->version == 0xffff)
-      && (file_hdr->flags == 0xffff);
+  return (file_hdr->magic == 0xffffffff) && (file_hdr->version == 0xffff) &&
+         (file_hdr->flags == 0xffff);
 }
 
-static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags,
-                          int max_used_space, int alloc_used_space,
-                          int min_alloc_used_space) {
+static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags, int max_used_space,
+                         int alloc_used_space, int min_alloc_used_space) {
   // Making the max_space_total at least a little bit larger than the
   // alloc_used_space allows us to avoid thrashing. Without it, if
   // max_space_total == alloc_used_space, then if the file is full, changing a
@@ -51,12 +50,12 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags,
     return fd;
   }
 
-  *file = (SettingsFile) {
-    .name = kernel_strdup_check(name),
-    .max_used_space = max_used_space,
-    .alloc_used_space = alloc_used_space,
-    .min_alloc_used_space = min_alloc_used_space,
-    .max_space_total = max_space_total,
+  *file = (SettingsFile){
+      .name = kernel_strdup_check(name),
+      .max_used_space = max_used_space,
+      .alloc_used_space = alloc_used_space,
+      .min_alloc_used_space = min_alloc_used_space,
+      .max_space_total = max_space_total,
   };
 
   settings_raw_iter_init(&file->iter, fd, file->name);
@@ -73,18 +72,17 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags,
     PBL_LOG_ERR("Attempted to open %s, not a settings file. Removing and recreating.", name);
     status_t rv = pfs_close_and_remove(fd);
     if (rv < 0) {
-      PBL_LOG_ERR("Could not remove corrupt settings file %s: %"PRId32, name, rv);
+      PBL_LOG_ERR("Could not remove corrupt settings file %s: %" PRId32, name, rv);
       return rv;
     }
     return prv_open(file, name, flags, max_used_space, alloc_used_space, min_alloc_used_space);
   }
 
   if (file_hdr.version > SETTINGS_FILE_VERSION) {
-    PBL_LOG_WRN("Unrecognized version %d for file %s, removing...",
-            file_hdr.version, name);
+    PBL_LOG_WRN("Unrecognized version %d for file %s, removing...", file_hdr.version, name);
     status_t rv = pfs_close_and_remove(fd);
     if (rv < 0) {
-      PBL_LOG_ERR("Could not remove old-version settings file %s: %"PRId32, name, rv);
+      PBL_LOG_ERR("Could not remove old-version settings file %s: %" PRId32, name, rv);
       return rv;
     }
     return prv_open(file, name, flags, max_used_space, alloc_used_space, min_alloc_used_space);
@@ -100,8 +98,10 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags,
 
   status_t status = bootup_check(file);
   if (status < 0) {
-    PBL_LOG_ERR("Bootup check failed (%"PRId32"), not good. "
-            "Attempting to recover by deleting %s...", status, name);
+    PBL_LOG_ERR("Bootup check failed (%" PRId32
+                "), not good. "
+                "Attempting to recover by deleting %s...",
+                status, name);
     pfs_close_and_remove(fd);
     return prv_open(file, name, flags, max_used_space, alloc_used_space, min_alloc_used_space);
   }
@@ -111,12 +111,11 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags,
   // firmware). If we detect that situation, let's re-write the file to the new larger requested
   // size.
   if (alloc_used_space >= max_used_space && actual_size < max_space_total) {
-    PBL_LOG_DBG("Re-writing settings file %s to increase its size from %d to %d.",
-            name, actual_size, max_space_total);
+    PBL_LOG_DBG("Re-writing settings file %s to increase its size from %d to %d.", name,
+                actual_size, max_space_total);
     status = settings_file_rewrite_filtered(file, NULL, NULL);
     if (status < 0) {
-      PBL_LOG_ERR("Could not resize file %s (error %"PRId32"). Creating new one",
-              name, status);
+      PBL_LOG_ERR("Could not resize file %s (error %" PRId32 "). Creating new one", name, status);
       return prv_open(file, name, flags, max_used_space, alloc_used_space, min_alloc_used_space);
     }
   }
@@ -126,18 +125,17 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags,
   return S_SUCCESS;
 }
 
-status_t settings_file_open(SettingsFile *file, const char *name,
-                            int max_used_space) {
-  return prv_open(file, name, OP_FLAG_READ | OP_FLAG_WRITE,
-                  max_used_space, max_used_space, max_used_space);
+status_t settings_file_open(SettingsFile *file, const char *name, int max_used_space) {
+  return prv_open(file, name, OP_FLAG_READ | OP_FLAG_WRITE, max_used_space, max_used_space,
+                  max_used_space);
 }
 
-status_t settings_file_open_growable(SettingsFile *file, const char *name,
-                                     int max_used_space, int initial_alloc_size) {
+status_t settings_file_open_growable(SettingsFile *file, const char *name, int max_used_space,
+                                     int initial_alloc_size) {
   // prv_grow doubles alloc_used_space; a zero seed would loop forever.
   PBL_ASSERTN(initial_alloc_size > 0);
-  return prv_open(file, name, OP_FLAG_READ | OP_FLAG_WRITE,
-                  max_used_space, initial_alloc_size, initial_alloc_size);
+  return prv_open(file, name, OP_FLAG_READ | OP_FLAG_WRITE, max_used_space, initial_alloc_size,
+                  initial_alloc_size);
 }
 
 void settings_file_close(SettingsFile *file) {
@@ -154,12 +152,8 @@ static int record_size(SettingsRecordHeader *hdr) {
 // zero denotes that the flag is set, a 1 means it is not. This is because our
 // flash chip is NOR flash, and thus is all 1's by default.
 // Once setting a flag, we cannot unset it.
-static void set_flag(SettingsRecordHeader *hdr, uint8_t flags) {
-  hdr->flags &= ~flags;
-}
-static void clear_flag(SettingsRecordHeader *hdr, uint8_t flags) {
-  hdr->flags |= flags;
-}
+static void set_flag(SettingsRecordHeader *hdr, uint8_t flags) { hdr->flags &= ~flags; }
+static void clear_flag(SettingsRecordHeader *hdr, uint8_t flags) { hdr->flags |= flags; }
 static bool flag_is_set(SettingsRecordHeader *hdr, uint8_t flags) {
   return (hdr->flags & flags) == 0;
 }
@@ -180,21 +174,18 @@ static bool partially_written(SettingsRecordHeader *hdr) {
   return !flag_is_set(hdr, SETTINGS_FLAG_WRITE_COMPLETE);
 }
 static bool partially_overwritten(SettingsRecordHeader *hdr) {
-  return flag_is_set(hdr, SETTINGS_FLAG_OVERWRITE_STARTED)
-      && !flag_is_set(hdr, SETTINGS_FLAG_OVERWRITE_COMPLETE);
+  return flag_is_set(hdr, SETTINGS_FLAG_OVERWRITE_STARTED) &&
+         !flag_is_set(hdr, SETTINGS_FLAG_OVERWRITE_COMPLETE);
 }
 static bool overwritten(SettingsRecordHeader *hdr) {
-  return flag_is_set(hdr, SETTINGS_FLAG_OVERWRITE_STARTED)
-      && flag_is_set(hdr, SETTINGS_FLAG_OVERWRITE_COMPLETE);
+  return flag_is_set(hdr, SETTINGS_FLAG_OVERWRITE_STARTED) &&
+         flag_is_set(hdr, SETTINGS_FLAG_OVERWRITE_COMPLETE);
 }
 
-static uint32_t utc_time() {
-  return rtc_get_time();
-}
+static uint32_t utc_time() { return rtc_get_time(); }
 
 static bool deleted_and_expired(SettingsRecordHeader *hdr) {
-  return (hdr->val_len == 0)
-      && (hdr->last_modified <= (utc_time() - DELETED_LIFETIME));
+  return (hdr->val_len == 0) && (hdr->last_modified <= (utc_time() - DELETED_LIFETIME));
 }
 
 static void compute_stats(SettingsFile *file) {
@@ -202,7 +193,7 @@ static void compute_stats(SettingsFile *file) {
   file->used_space = 0;
   file->last_modified = 0;
   file->used_space += sizeof(SettingsFileHeader);
-  file->used_space += sizeof(SettingsRecordHeader); // EOF Marker
+  file->used_space += sizeof(SettingsRecordHeader);  // EOF Marker
   for (settings_raw_iter_begin(&file->iter); !settings_raw_iter_end(&file->iter);
        settings_raw_iter_next(&file->iter)) {
     if (overwritten(&file->iter.hdr) || deleted_and_expired(&file->iter.hdr)) {
@@ -216,8 +207,9 @@ static void compute_stats(SettingsFile *file) {
   }
 }
 
-status_t settings_file_rewrite_filtered(
-    SettingsFile *file, SettingsFileRewriteFilterCallback filter_cb, void *context) {
+status_t settings_file_rewrite_filtered(SettingsFile *file,
+                                        SettingsFileRewriteFilterCallback filter_cb,
+                                        void *context) {
   // One reusable buffer for key+val per record; sized for the worst case.
   // Avoids two malloc/free pairs per record over what can be thousands of
   // records on a large persist file.
@@ -235,12 +227,12 @@ status_t settings_file_rewrite_filtered(
   task_watchdog_pause(60);
 
   SettingsFile new_file;
-  status_t status = prv_open(&new_file, file->name, OP_FLAG_OVERWRITE | OP_FLAG_READ,
-                             file->max_used_space, file->alloc_used_space,
-                             file->min_alloc_used_space);
+  status_t status =
+      prv_open(&new_file, file->name, OP_FLAG_OVERWRITE | OP_FLAG_READ, file->max_used_space,
+               file->alloc_used_space, file->min_alloc_used_space);
   if (status < 0) {
-    PBL_LOG_ERR("Could not open temporary file to compact settings file. Error %"PRIi32".",
-            status);
+    PBL_LOG_ERR("Could not open temporary file to compact settings file. Error %" PRIi32 ".",
+                status);
     kernel_free(kv_buf);
     kernel_free(name);
     task_watchdog_resume();
@@ -250,7 +242,7 @@ status_t settings_file_rewrite_filtered(
   settings_raw_iter_begin(&new_file.iter);
 
   for (settings_raw_iter_begin(&file->iter); !settings_raw_iter_end(&file->iter);
-      settings_raw_iter_next(&file->iter)) {
+       settings_raw_iter_next(&file->iter)) {
     SettingsRecordHeader *hdr = &file->iter.hdr;
     if (partially_written(hdr)) {
       // This should only happen if we reboot in the middle of writing a new
@@ -293,8 +285,8 @@ status_t settings_file_rewrite_filtered(
   int alloc_used_space = new_file.alloc_used_space;
   int min_alloc_used_space = new_file.min_alloc_used_space;
   settings_file_close(&new_file);
-  status = prv_open(file, name, OP_FLAG_READ | OP_FLAG_WRITE,
-                    file->max_used_space, alloc_used_space, min_alloc_used_space);
+  status = prv_open(file, name, OP_FLAG_READ | OP_FLAG_WRITE, file->max_used_space,
+                    alloc_used_space, min_alloc_used_space);
   kernel_free(name);
 
   task_watchdog_resume();
@@ -370,7 +362,7 @@ static bool search_forward(SettingsRawIter *iter, const uint8_t *key, int key_le
   // Wrap around to the beginning and search until we get to the `resumed_pos`
   settings_raw_iter_begin(iter);
   for (; settings_raw_iter_get_current_record_pos(iter) < resumed_pos;
-         settings_raw_iter_next(iter)) {
+       settings_raw_iter_next(iter)) {
     if (prv_is_desired_hdr(iter, key, key_len)) {
       return true;
     }
@@ -382,8 +374,7 @@ static bool search_forward(SettingsRawIter *iter, const uint8_t *key, int key_le
 
 static status_t cleanup_partial_transactions(SettingsFile *file) {
   for (settings_raw_iter_begin(&file->iter); !settings_raw_iter_end(&file->iter);
-      settings_raw_iter_next(&file->iter)) {
-
+       settings_raw_iter_next(&file->iter)) {
     if (partially_written(&file->iter.hdr)) {
       // Compact will remove partially written records. We could be smarter,
       // but this is something of an edge case.
@@ -394,11 +385,10 @@ static status_t cleanup_partial_transactions(SettingsFile *file) {
       continue;
     }
 
-    int partially_overwritten_record_pos =
-        settings_raw_iter_get_current_record_pos(&file->iter);
+    int partially_overwritten_record_pos = settings_raw_iter_get_current_record_pos(&file->iter);
     uint8_t key[file->iter.hdr.key_len];
     settings_raw_iter_read_key(&file->iter, key);
-    settings_raw_iter_next(&file->iter); // Skip the current record
+    settings_raw_iter_next(&file->iter);  // Skip the current record
     bool found_another = search_forward(&file->iter, key, file->iter.hdr.key_len);
 
     if (!found_another) {
@@ -413,17 +403,14 @@ static status_t cleanup_partial_transactions(SettingsFile *file) {
     // The overwrite completed, we just rebooted before getting a chance
     // to flip the completion bit on the previous record. Flip it now so
     // that we don't have to keep checking on every boot.
-    settings_raw_iter_set_current_record_pos(&file->iter,
-                                        partially_overwritten_record_pos);
+    settings_raw_iter_set_current_record_pos(&file->iter, partially_overwritten_record_pos);
     set_flag(&file->iter.hdr, SETTINGS_FLAG_OVERWRITE_COMPLETE);
     settings_raw_iter_write_header(&file->iter, &file->iter.hdr);
   }
   return S_SUCCESS;
 }
 
-static status_t bootup_check(SettingsFile* file) {
-  return cleanup_partial_transactions(file);
-}
+static status_t bootup_check(SettingsFile *file) { return cleanup_partial_transactions(file); }
 
 int settings_file_get_len(SettingsFile *file, const void *key, size_t key_len) {
   settings_raw_iter_resume(&file->iter);
@@ -438,8 +425,8 @@ bool settings_file_exists(SettingsFile *file, const void *key, size_t key_len) {
   return (settings_file_get_len(file, key, key_len) > 0);
 }
 
-status_t settings_file_get(SettingsFile *file, const void *key, size_t key_len,
-                           void *val_out, size_t val_out_len) {
+status_t settings_file_get(SettingsFile *file, const void *key, size_t key_len, void *val_out,
+                           size_t val_out_len) {
   settings_raw_iter_resume(&file->iter);
   if (!search_forward(&file->iter, key, key_len)) {
     memset(val_out, 0, val_out_len);
@@ -458,16 +445,15 @@ status_t settings_file_get(SettingsFile *file, const void *key, size_t key_len,
   return S_SUCCESS;
 }
 
-status_t settings_file_set_byte(SettingsFile *file, const void *key,
-                                size_t key_len, size_t offset, uint8_t byte) {
+status_t settings_file_set_byte(SettingsFile *file, const void *key, size_t key_len, size_t offset,
+                                uint8_t byte) {
   if (key_len > SETTINGS_KEY_MAX_LEN) {
     return E_RANGE;
   }
 
   // Find the record
   settings_raw_iter_resume(&file->iter);
-  if (!search_forward(&file->iter, key, key_len) ||
-      file->iter.hdr.val_len == 0) {
+  if (!search_forward(&file->iter, key, key_len) || file->iter.hdr.val_len == 0) {
     return E_DOES_NOT_EXIST;
   }
 
@@ -584,8 +570,8 @@ static status_t prv_settings_file_set_internal(SettingsFile *file, const void *k
   return S_SUCCESS;
 }
 
-status_t settings_file_set(SettingsFile *file, const void *key, size_t key_len,
-                           const void *val, size_t val_len) {
+status_t settings_file_set(SettingsFile *file, const void *key, size_t key_len, const void *val,
+                           size_t val_len) {
   return prv_settings_file_set_internal(file, key, key_len, val, val_len, utc_time());
 }
 
@@ -620,7 +606,7 @@ static void prv_mark_all_dirty_rewrite_cb(SettingsFile *old_file, SettingsFile *
 
   uint8_t *val = kernel_malloc(info->val_len);
   if (!val) {
-    return; // Skip this record on OOM
+    return;  // Skip this record on OOM
   }
   info->get_val(old_file, val, info->val_len);
 
@@ -635,8 +621,7 @@ status_t settings_file_mark_all_dirty(SettingsFile *file) {
   return settings_file_rewrite(file, prv_mark_all_dirty_rewrite_cb, NULL);
 }
 
-status_t settings_file_delete(SettingsFile *file,
-                              const void *key, size_t key_len) {
+status_t settings_file_delete(SettingsFile *file, const void *key, size_t key_len) {
   return settings_file_set(file, key, key_len, NULL, 0);
 }
 
@@ -650,23 +635,22 @@ static void prv_get_val(SettingsFile *file, void *val, size_t val_len) {
   settings_raw_iter_set_current_record_pos(&file->iter, file->cur_record_pos);
   settings_raw_iter_read_val(&file->iter, val, val_len);
 }
-status_t settings_file_each(SettingsFile *file, SettingsFileEachCallback cb,
-                            void *context) {
+status_t settings_file_each(SettingsFile *file, SettingsFileEachCallback cb, void *context) {
   // Cannot set keys while iterating
   PBL_ASSERTN(file->cur_record_pos == 0);
   SettingsRecordInfo info;
   for (settings_raw_iter_begin(&file->iter); !settings_raw_iter_end(&file->iter);
-      settings_raw_iter_next(&file->iter)) {
+       settings_raw_iter_next(&file->iter)) {
     if (overwritten(&file->iter.hdr) || deleted_and_expired(&file->iter.hdr)) {
       continue;
     }
-    info = (SettingsRecordInfo) {
-      .last_modified = file->iter.hdr.last_modified,
-      .get_key = prv_get_key,
-      .key_len = file->iter.hdr.key_len,
-      .get_val = prv_get_val,
-      .val_len = file->iter.hdr.val_len,
-      .dirty = !flag_is_set(&file->iter.hdr, SETTINGS_FLAG_SYNCED),
+    info = (SettingsRecordInfo){
+        .last_modified = file->iter.hdr.last_modified,
+        .get_key = prv_get_key,
+        .key_len = file->iter.hdr.key_len,
+        .get_val = prv_get_val,
+        .val_len = file->iter.hdr.val_len,
+        .dirty = !flag_is_set(&file->iter.hdr, SETTINGS_FLAG_SYNCED),
     };
     file->cur_record_pos = settings_raw_iter_get_current_record_pos(&file->iter);
     // if the callback returns false, stop iterating.
@@ -686,32 +670,29 @@ typedef struct {
   SettingsFile *new_file;
   void *user_context;
 } RewriteCbContext;
-static bool prv_rewrite_cb(SettingsFile *file, SettingsRecordInfo *info,
-                           void *context) {
-  RewriteCbContext *cb_ctx = (RewriteCbContext*)context;
+static bool prv_rewrite_cb(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+  RewriteCbContext *cb_ctx = (RewriteCbContext *)context;
   cb_ctx->cb(file, cb_ctx->new_file, info, cb_ctx->user_context);
-  return true; // continue iterating
+  return true;  // continue iterating
 }
-status_t settings_file_rewrite(SettingsFile *file,
-                               SettingsFileRewriteCallback cb, void *context) {
+status_t settings_file_rewrite(SettingsFile *file, SettingsFileRewriteCallback cb, void *context) {
   char *name = kernel_strdup(file->name);
   if (!name) {
     PBL_LOG_ERR("Could not allocate name to rewrite settings file %s", file->name);
     return E_OUT_OF_MEMORY;
   }
   SettingsFile new_file;
-  status_t status = prv_open(&new_file, file->name,
-                             OP_FLAG_OVERWRITE | OP_FLAG_READ,
-                             file->max_used_space, file->alloc_used_space,
-                             file->min_alloc_used_space);
+  status_t status =
+      prv_open(&new_file, file->name, OP_FLAG_OVERWRITE | OP_FLAG_READ, file->max_used_space,
+               file->alloc_used_space, file->min_alloc_used_space);
   if (status < 0) {
     kernel_free(name);
     return status;
   }
-  RewriteCbContext cb_ctx = (RewriteCbContext) {
-    .cb = cb,
-    .new_file = &new_file,
-    .user_context = context,
+  RewriteCbContext cb_ctx = (RewriteCbContext){
+      .cb = cb,
+      .new_file = &new_file,
+      .user_context = context,
   };
   settings_file_each(file, prv_rewrite_cb, &cb_ctx);
   settings_file_close(file);
@@ -722,8 +703,8 @@ status_t settings_file_rewrite(SettingsFile *file,
   int alloc_used_space = new_file.alloc_used_space;
   int min_alloc_used_space = new_file.min_alloc_used_space;
   settings_file_close(&new_file);
-  status = prv_open(file, name, OP_FLAG_READ | OP_FLAG_WRITE,
-                    file->max_used_space, alloc_used_space, min_alloc_used_space);
+  status = prv_open(file, name, OP_FLAG_READ | OP_FLAG_WRITE, file->max_used_space,
+                    alloc_used_space, min_alloc_used_space);
   kernel_free(name);
 
   return status;

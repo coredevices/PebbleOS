@@ -12,17 +12,17 @@
 #define BT_VENDOR_ID 0x0EEA
 #define BT_VENDOR_NAME "Core Devices LLC"
 
-extern UARTDevice * const DBG_UART;
+extern UARTDevice *const DBG_UART;
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
-extern UARTDevice * const HCI_TRACE_UART;
-#endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
-extern QSPIPort * const QSPI;
-extern QSPIFlash * const QSPI_FLASH;
+extern UARTDevice *const HCI_TRACE_UART;
+#endif  // NIMBLE_HCI_SF32LB52_TRACE_BINARY
+extern QSPIPort *const QSPI;
+extern QSPIFlash *const QSPI_FLASH;
 extern I2CBus *const I2C1_BUS;
 extern I2CBus *const I2C2_BUS;
 extern const LSM6DSOConfig *const LSM6DSO;
-extern I2CSlavePort * const I2C_MMC5603NJ;
-extern I2CSlavePort * const I2C_NPM1300;
+extern I2CSlavePort *const I2C_MMC5603NJ;
+extern I2CSlavePort *const I2C_NPM1300;
 extern I2CSlavePort *const I2C_AW86225;
 extern const AW86225Config *const AW86225;
 extern I2CSlavePort *const I2C_W1160;
@@ -34,31 +34,32 @@ extern DisplayJDIDevice *const DISPLAY;
 extern const BoardConfigPower BOARD_CONFIG_POWER;
 extern const BoardConfig BOARD_CONFIG;
 extern const BoardConfigButton BOARD_CONFIG_BUTTON;
-extern const MicDevice* MIC;
-extern HRMDevice * const HRM;
+extern const MicDevice *MIC;
+extern HRMDevice *const HRM;
 extern const TouchSensor *CST816;
-extern const AudioDevice* AUDIO;
+extern const AudioDevice *AUDIO;
 
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
-  .default_motion_sensitivity = 55U, // Medium
+    .default_motion_sensitivity = 55U,  // Medium
 };
 
 static const BoardConfigMag BOARD_CONFIG_MAG = {
-  .mag_config = {
+    .mag_config =
+        {
 #ifdef CONFIG_IS_BIGBOARD
-    .axes_offsets[AXIS_X] = 1,
-    .axes_offsets[AXIS_Y] = 0,
-    .axes_offsets[AXIS_Z] = 2,
-    .axes_inverts[AXIS_X] = true,
-    .axes_inverts[AXIS_Y] = false,
-    .axes_inverts[AXIS_Z] = false,
+            .axes_offsets[AXIS_X] = 1,
+            .axes_offsets[AXIS_Y] = 0,
+            .axes_offsets[AXIS_Z] = 2,
+            .axes_inverts[AXIS_X] = true,
+            .axes_inverts[AXIS_Y] = false,
+            .axes_inverts[AXIS_Z] = false,
 #else
-    .axes_offsets[AXIS_X] = 1,
-    .axes_offsets[AXIS_Y] = 0,
-    .axes_offsets[AXIS_Z] = 2,
-    .axes_inverts[AXIS_X] = false,
-    .axes_inverts[AXIS_Y] = true,
-    .axes_inverts[AXIS_Z] = false,
+            .axes_offsets[AXIS_X] = 1,
+            .axes_offsets[AXIS_Y] = 0,
+            .axes_offsets[AXIS_Z] = 2,
+            .axes_inverts[AXIS_X] = false,
+            .axes_inverts[AXIS_Y] = true,
+            .axes_inverts[AXIS_Z] = false,
 #endif
-  },
+        },
 };

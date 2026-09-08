@@ -14,16 +14,14 @@
 #define IRQ_PRIORITY_INVALID (1 << __NVIC_PRIO_BITS)
 
 enum {
-  #define IRQ_DEF(num, irq) IS_VALID_IRQ__##irq,
-  #include "irq_sf32lb52.def"
-  #undef IRQ_DEF
+#define IRQ_DEF(num, irq) IS_VALID_IRQ__##irq,
+#include "irq_sf32lb52.def"
+#undef IRQ_DEF
 };
 
 //! Creates a trampoline to the interrupt handler defined within the driver
-#define IRQ_MAP(irq, handler, device) \
-  void irq##_IRQHandler(void) { \
-    handler(device); \
-  } \
+#define IRQ_MAP(irq, handler, device)              \
+  void irq##_IRQHandler(void) { handler(device); } \
   _Static_assert(IS_VALID_IRQ__##irq || true, "(See comment below)")
 /*
  * The above static assert checks that the requested IRQ is valid by checking that the enum
@@ -46,9 +44,9 @@ typedef enum {
 } GPIOPuPd_TypeDef;
 
 typedef struct {
-  GPIO_TypeDef* const peripheral; ///< One of GPIOX. For example, GPIOA.
-  const uint32_t gpio_pin; ///< One of GPIO_Pin_X.
-  GPIOPuPd_TypeDef pull; ///< Pull-up / pull-down configuration for the pin
+  GPIO_TypeDef *const peripheral;  ///< One of GPIOX. For example, GPIOA.
+  const uint32_t gpio_pin;         ///< One of GPIO_Pin_X.
+  GPIOPuPd_TypeDef pull;           ///< Pull-up / pull-down configuration for the pin
 } ExtiConfig;
 
 typedef struct {
@@ -75,7 +73,7 @@ typedef struct {
   uint16_t resolution;
   int enabled;
   uint16_t channel;
-  uint8_t  is_comp;
+  uint8_t is_comp;
 } PwmState;
 
 typedef struct {
@@ -89,7 +87,7 @@ typedef struct {
 
 typedef struct {
   uint8_t backlight_on_percent;
-  //ambient light config
+  // ambient light config
   uint32_t ambient_light_dark_threshold;
   uint32_t ambient_k_delta_threshold;
   // Raw-count -> lux conversion: lux = (level - offset) * num / den.
@@ -105,8 +103,8 @@ typedef struct {
 } BoardConfig;
 
 typedef struct {
-  const char* name;
-  GPIO_TypeDef* const port;
+  const char *name;
+  GPIO_TypeDef *const port;
   uint8_t pin;
   GPIOPuPd_TypeDef pull;
   bool active_high;

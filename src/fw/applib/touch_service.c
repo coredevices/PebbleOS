@@ -53,9 +53,9 @@ static void prv_handle_touch_event(PebbleEvent *e, void *context) {
 static void prv_update_subscription(TouchServiceState *state) {
   const bool want = (state->system_handler != NULL) || (state->raw_handler != NULL);
   if (want && !state->subscribed) {
-    state->event_info = (EventServiceInfo) {
-      .type = PEBBLE_TOUCH_EVENT,
-      .handler = prv_handle_touch_event,
+    state->event_info = (EventServiceInfo){
+        .type = PEBBLE_TOUCH_EVENT,
+        .handler = prv_handle_touch_event,
     };
     event_service_client_subscribe(&state->event_info);
     state->subscribed = true;
@@ -99,14 +99,8 @@ void touch_service_unsubscribe(void) {
   prv_update_subscription(state);
 }
 
-bool touch_service_is_enabled(void) {
-  return sys_touch_service_is_enabled();
-}
+bool touch_service_is_enabled(void) { return sys_touch_service_is_enabled(); }
 
-void app_touch_navigation_enable(bool enable) {
-  sys_app_touch_navigation_enable(enable);
-}
+void app_touch_navigation_enable(bool enable) { sys_app_touch_navigation_enable(enable); }
 
-void touch_service_state_init(TouchServiceState *state) {
-  *state = (TouchServiceState){ 0 };
-}
+void touch_service_state_init(TouchServiceState *state) { *state = (TouchServiceState){0}; }

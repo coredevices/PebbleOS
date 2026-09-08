@@ -8,17 +8,17 @@
 
 // I-Cache definition doesn't always exist
 #ifndef __ICACHE_PRESENT
-# define __ICACHE_PRESENT 0U
+#define __ICACHE_PRESENT 0U
 #endif
 
 // D-Cache definition doesn't always exist
 #ifndef __DCACHE_PRESENT
-# define __DCACHE_PRESENT 0U
+#define __DCACHE_PRESENT 0U
 #endif
 
 // Most of these implementations are derived from CMSIS
 #define CCSIDR_LINESIZE(x) (((x) & SCB_CCSIDR_LINESIZE_Msk) >> SCB_CCSIDR_LINESIZE_Pos)
-#define CCSIDR_WAYS(x)     (((x) & SCB_CCSIDR_ASSOCIATIVITY_Msk) >> SCB_CCSIDR_ASSOCIATIVITY_Pos)
+#define CCSIDR_WAYS(x) (((x) & SCB_CCSIDR_ASSOCIATIVITY_Msk) >> SCB_CCSIDR_ASSOCIATIVITY_Pos)
 
 #define CSSELR_L1_DCACHE 0
 #define CSSELR_L1_ICACHE 1
@@ -32,9 +32,7 @@ static uint32_t s_dcache_cssidr;
 #endif
 
 #if __ICACHE_PRESENT || __DCACHE_PRESENT
-static uint32_t prv_get_line_size(uint32_t ccsidr) {
-  return ((CCSIDR_LINESIZE(ccsidr)) + 1) << 4;
-}
+static uint32_t prv_get_line_size(uint32_t ccsidr) { return ((CCSIDR_LINESIZE(ccsidr)) + 1) << 4; }
 
 static void prv_cache_operation_range(volatile uint32_t *reg, uint32_t line_size, uintptr_t addr,
                                       size_t size) {
@@ -89,7 +87,7 @@ MOCKABLE void icache_enable(void) {
 
   __DSB();
   __ISB();
-  SCB->CCR |= SCB_CCR_IC_Msk; // enable I-Cache
+  SCB->CCR |= SCB_CCR_IC_Msk;  // enable I-Cache
   __DSB();
   __ISB();
 #endif
@@ -99,7 +97,7 @@ MOCKABLE void icache_disable(void) {
 #if __ICACHE_PRESENT
   __DSB();
   __ISB();
-  SCB->CCR &= ~SCB_CCR_IC_Msk; // disable I-Cache
+  SCB->CCR &= ~SCB_CCR_IC_Msk;  // disable I-Cache
   __DSB();
   __ISB();
 
@@ -121,7 +119,6 @@ MOCKABLE uint32_t icache_line_size(void) {
   return 1;
 }
 
-
 MOCKABLE void dcache_enable(void) {
 #if __DCACHE_PRESENT
   SCB->CSSELR = CSSELR_L1_DCACHE;
@@ -130,7 +127,7 @@ MOCKABLE void dcache_enable(void) {
 
   dcache_invalidate_all();
   __DSB();
-  SCB->CCR |= SCB_CCR_DC_Msk; // enable D-Cache
+  SCB->CCR |= SCB_CCR_DC_Msk;  // enable D-Cache
   __DSB();
   __ISB();
 #endif
@@ -140,7 +137,7 @@ MOCKABLE void dcache_disable(void) {
 #if __DCACHE_PRESENT
   dcache_flush_invalidate_all();
   __DSB();
-  SCB->CCR &= ~SCB_CCR_DC_Msk; // disable D-Cache
+  SCB->CCR &= ~SCB_CCR_DC_Msk;  // disable D-Cache
   __DSB();
   __ISB();
 #endif
@@ -235,10 +232,6 @@ static void prv_align(uintptr_t *addr, size_t *size, uint32_t line_size) {
   }
 }
 
-void icache_align(uintptr_t *addr, size_t *size) {
-  prv_align(addr, size, icache_line_size());
-}
+void icache_align(uintptr_t *addr, size_t *size) { prv_align(addr, size, icache_line_size()); }
 
-void dcache_align(uintptr_t *addr, size_t *size) {
-  prv_align(addr, size, dcache_line_size());
-}
+void dcache_align(uintptr_t *addr, size_t *size) { prv_align(addr, size, dcache_line_size()); }

@@ -45,7 +45,7 @@ typedef struct CurrentWorkoutData {
   // Pace
   int32_t active_calories;
   int32_t current_bpm;
-  time_t current_bpm_timestamp_ts; // Time since boot
+  time_t current_bpm_timestamp_ts;  // Time since boot
   HRZone current_hr_zone;
   int32_t hr_zone_time_s[HRZoneCount];
   int32_t hr_samples_sum;
@@ -74,21 +74,15 @@ typedef struct WorkoutServiceData {
 
 static WorkoutServiceData s_workout_data;
 
-static void prv_lock(void) {
-  pbl_mutex_lock(&s_workout_data.s_workout_mutex, PBL_FOREVER);
-}
+static void prv_lock(void) { pbl_mutex_lock(&s_workout_data.s_workout_mutex, PBL_FOREVER); }
 
-static void prv_unlock(void) {
-  pbl_mutex_unlock(&s_workout_data.s_workout_mutex);
-}
+static void prv_unlock(void) { pbl_mutex_unlock(&s_workout_data.s_workout_mutex); }
 
 static void prv_put_event(PebbleWorkoutEventType e_type) {
-  PebbleEvent event = {
-    .type = PEBBLE_WORKOUT_EVENT,
-    .workout = {
-      .type = e_type,
-    }
-  };
+  PebbleEvent event = {.type = PEBBLE_WORKOUT_EVENT,
+                       .workout = {
+                           .type = e_type,
+                       }};
   event_put(&event);
 }
 
@@ -151,8 +145,8 @@ static void prv_handle_movement_update(HealthEventMovementUpdateData *event) {
     wrkt_data->distance_m += (delta_distance_mm / MM_PER_METER);
 
     // Calculate active calories
-    const int32_t active_calories = activity_private_compute_active_calories(delta_distance_mm,
-                                                                             delta_ms);
+    const int32_t active_calories =
+        activity_private_compute_active_calories(delta_distance_mm, delta_ms);
     wrkt_data->active_calories += active_calories;
   }
 
@@ -192,23 +186,19 @@ static void prv_handle_heart_rate_update(HealthEventHeartRateUpdateData *event) 
 
 // ---------------------------------------------------------------------------------------
 bool workout_service_is_workout_type_supported(ActivitySessionType type) {
-  return type == ActivitySessionType_Walk ||
-         type == ActivitySessionType_Run ||
+  return type == ActivitySessionType_Walk || type == ActivitySessionType_Run ||
          type == ActivitySessionType_Open;
 }
 
 // ---------------------------------------------------------------------------------------
-T_STATIC void prv_abandon_workout_timer_callback(void *unused) {
-  workout_service_stop_workout();
-}
+T_STATIC void prv_abandon_workout_timer_callback(void *unused) { workout_service_stop_workout(); }
 
 // ---------------------------------------------------------------------------------------
 T_STATIC void prv_abandoned_notification_timer_callback(void *unused) {
   workout_utils_send_abandoned_workout_notification();
 
-  s_workout_data.current_workout->workout_abandoned_timer =
-      evented_timer_register(WORKOUT_ABANDON_WORKOUT_TIMEOUT_MS, false,
-                             prv_abandon_workout_timer_callback, NULL);
+  s_workout_data.current_workout->workout_abandoned_timer = evented_timer_register(
+      WORKOUT_ABANDON_WORKOUT_TIMEOUT_MS, false, prv_abandon_workout_timer_callback, NULL);
 }
 
 // ---------------------------------------------------------------------------------------
@@ -282,9 +272,7 @@ unlock:
 }
 
 // ---------------------------------------------------------------------------------------
-void workout_service_init(void) {
-  pbl_mutex_init(&s_workout_data.s_workout_mutex);
-}
+void workout_service_init(void) { pbl_mutex_init(&s_workout_data.s_workout_mutex); }
 
 // ---------------------------------------------------------------------------------------
 // FIXME: We should probably handle this on KernelBG and not use the official app subscription
@@ -295,13 +283,12 @@ void workout_service_frontend_opened(void) {
 #ifdef CONFIG_HRM
     s_workout_data.hrm_session =
         sys_hrm_manager_app_subscribe(app_get_app_id(), 1, 0, HRMFeature_BPM);
-#endif // CONFIG_HRM
+#endif  // CONFIG_HRM
     s_workout_data.frontend_last_opened_ts = time_get_uptime_seconds();
     prv_put_event(PebbleWorkoutEvent_FrontendOpened);
   }
   prv_unlock();
 }
-
 
 // ---------------------------------------------------------------------------------------
 // FIXME: We should probably handle this on KernelBG and not use the official app subscription
@@ -343,13 +330,12 @@ void workout_service_frontend_closed(void) {
       // No time left. Kill the subscription
       sys_hrm_manager_unsubscribe(s_workout_data.hrm_session);
     }
-#endif // CONFIG_HRM
+#endif  // CONFIG_HRM
 
     prv_put_event(PebbleWorkoutEvent_FrontendClosed);
   }
   prv_unlock();
 }
-
 
 // ---------------------------------------------------------------------------------------
 bool workout_service_start_workout(ActivitySessionType type) {
@@ -369,8 +355,8 @@ bool workout_service_start_workout(ActivitySessionType type) {
 
     // Before starting this new session we need to deal with any in progress sessions
     uint32_t num_sessions = 0;
-    ActivitySession *sessions = kernel_zalloc_check(sizeof(ActivitySession) *
-                                                    ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT);
+    ActivitySession *sessions =
+        kernel_zalloc_check(sizeof(ActivitySession) * ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT);
     activity_get_sessions(&num_sessions, sessions);
     for (unsigned i = 0; i < num_sessions; i++) {
       // End and save any automatically detected ongoing sessions
@@ -387,8 +373,8 @@ bool workout_service_start_workout(ActivitySessionType type) {
     s_workout_data.current_workout->current_bpm_timestamp_ts = time_get_uptime_seconds();
     // FIXME: This probably doesn't need to be on a timer. We can just flush out a new time on each
     // API function call
-    s_workout_data.second_timer = (RegularTimerInfo) {
-      .cb = prv_workout_timer_cb,
+    s_workout_data.second_timer = (RegularTimerInfo){
+        .cb = prv_workout_timer_cb,
     };
 
     // Initialize all of our initial values for keeping track of metrics
@@ -469,20 +455,19 @@ bool workout_service_stop_workout(void) {
     // workout mutex. activity_insights_push_activity_session_notification
     // creates a notification (blob_db flash write) that can take long enough
     if (wrkt->duration_s >= SECONDS_PER_MINUTE) {
-      const time_t len_min = MIN(ACTIVITY_SESSION_MAX_LENGTH_MIN,
-                                 wrkt->duration_s / SECONDS_PER_MINUTE);
-      session_to_save = (ActivitySession) {
-        .type = wrkt->type,
-        .start_utc = wrkt->start_utc,
-        .length_min = len_min,
-        .ongoing = false,
-        .manual = true,
-        .step_data.steps = wrkt->steps,
-        .step_data.distance_meters = wrkt->distance_m,
-        .step_data.active_kcalories = ROUND(wrkt->active_calories,
-                                            ACTIVITY_CALORIES_PER_KCAL),
-        .step_data.resting_kcalories = ROUND(activity_private_compute_resting_calories(len_min),
-                                             ACTIVITY_CALORIES_PER_KCAL),
+      const time_t len_min =
+          MIN(ACTIVITY_SESSION_MAX_LENGTH_MIN, wrkt->duration_s / SECONDS_PER_MINUTE);
+      session_to_save = (ActivitySession){
+          .type = wrkt->type,
+          .start_utc = wrkt->start_utc,
+          .length_min = len_min,
+          .ongoing = false,
+          .manual = true,
+          .step_data.steps = wrkt->steps,
+          .step_data.distance_meters = wrkt->distance_m,
+          .step_data.active_kcalories = ROUND(wrkt->active_calories, ACTIVITY_CALORIES_PER_KCAL),
+          .step_data.resting_kcalories =
+              ROUND(activity_private_compute_resting_calories(len_min), ACTIVITY_CALORIES_PER_KCAL),
       };
       avg_hr_to_save = prv_get_avg_hr();
       memcpy(hr_zone_time_s_to_save, wrkt->hr_zone_time_s, sizeof(hr_zone_time_s_to_save));
@@ -501,7 +486,7 @@ bool workout_service_stop_workout(void) {
     // the user's preferred rate within a bounded window, regardless of when the app actually exits.
     sys_hrm_manager_set_update_interval(s_workout_data.hrm_session, 1,
                                         WORKOUT_ENDED_HR_SUBSCRIPTION_TS_EXPIRE);
-#endif // CONFIG_HRM
+#endif  // CONFIG_HRM
 
     PBL_LOG_INFO("Stopping a workout with type: %d", wrkt->type);
     prv_put_event(PebbleWorkoutEvent_Stopped);
@@ -569,7 +554,6 @@ bool workout_service_is_paused(void) {
   prv_unlock();
   return rv;
 }
-
 
 // ---------------------------------------------------------------------------------------
 bool workout_service_get_current_workout_type(ActivitySessionType *type_out) {
@@ -653,6 +637,6 @@ void workout_service_reset(void) {
   if (s_workout_data.current_workout) {
     kernel_free(s_workout_data.current_workout);
   }
-  s_workout_data = (WorkoutServiceData) {};
+  s_workout_data = (WorkoutServiceData){};
 }
 #endif

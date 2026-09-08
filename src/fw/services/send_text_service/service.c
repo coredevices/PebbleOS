@@ -9,7 +9,6 @@
 #include "pbl/services/blob_db/ios_notif_pref_db.h"
 #include "pbl/services/notifications/notification_constants.h"
 
-
 static bool s_has_send_text_reply_action = false;
 
 static bool prv_has_send_text_reply_action(void) {
@@ -43,12 +42,13 @@ static void prv_blobdb_event_handler(PebbleEvent *event, void *context) {
 
 void send_text_service_init(void) {
   // Save the initial state
-  s_has_send_text_reply_action = prv_has_send_text_reply_action();;
+  s_has_send_text_reply_action = prv_has_send_text_reply_action();
+  ;
 
   // Register for updates
   static EventServiceInfo s_blobdb_event_info = {
-    .type = PEBBLE_BLOBDB_EVENT,
-    .handler = prv_blobdb_event_handler,
+      .type = PEBBLE_BLOBDB_EVENT,
+      .handler = prv_blobdb_event_handler,
   };
   event_service_client_subscribe(&s_blobdb_event_info);
 }

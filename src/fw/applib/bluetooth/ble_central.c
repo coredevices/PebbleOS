@@ -23,8 +23,7 @@ void ble_central_handle_event(PebbleEvent *e) {
   }
   const PebbleBLEConnectionEvent *conn_event = &e->bluetooth.le.connection;
   const BTDeviceInternal device = PebbleEventToBTDeviceInternal(conn_event);
-  ble_app_state->connection_handler(device.opaque,
-                                    prv_bt_errno_for_event(conn_event));
+  ble_app_state->connection_handler(device.opaque, prv_bt_errno_for_event(conn_event));
 }
 
 BTErrno ble_central_set_connection_handler(BLEConnectionHandler handler) {

@@ -13,16 +13,14 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 int g_pbl_log_level = 0;
-void pbl_log(int level, const char* src_filename, int src_line_number, const char* fmt, ...) { }
+void pbl_log(int level, const char *src_filename, int src_line_number, const char *fmt, ...) {}
 
 // Tests
 ///////////////////////////////////////////////////////////
 
-void test_slist__initialize(void) {
-}
+void test_slist__initialize(void) {}
 
-void test_slist__cleanup(void) {
-}
+void test_slist__cleanup(void) {}
 
 void test_slist__insert_after(void) {
   SingleListNode *tail = NULL;
@@ -103,9 +101,7 @@ void test_slist__pop_head_single(void) {
   cl_assert(new_head == NULL);
 }
 
-void test_slist__pop_head_null(void) {
-  cl_assert(slist_pop_head(NULL) == NULL);
-}
+void test_slist__pop_head_null(void) { cl_assert(slist_pop_head(NULL) == NULL); }
 
 void test_slist__remove_head(void) {
   SingleListNode a = SINGLE_LIST_NODE_NULL;
@@ -235,9 +231,9 @@ static bool prv_filter_value(SingleListNode *node, void *data) {
 }
 
 void test_slist__find(void) {
-  SIntNode a = { .value = 10 };
-  SIntNode b = { .value = 20 };
-  SIntNode c = { .value = 30 };
+  SIntNode a = {.value = 10};
+  SIntNode b = {.value = 20};
+  SIntNode c = {.value = 30};
   slist_init(&a.list_node);
   slist_init(&b.list_node);
   slist_init(&c.list_node);
@@ -251,14 +247,12 @@ void test_slist__find(void) {
   cl_assert(slist_find(NULL, prv_filter_value, (void *)(intptr_t)10) == NULL);
 }
 
-static int prv_sort_comparator(SIntNode *a, SIntNode *b) {
-  return b->value - a->value;
-}
+static int prv_sort_comparator(SIntNode *a, SIntNode *b) { return b->value - a->value; }
 
 void test_slist__sort_ascending(void) {
-  SIntNode bar1 = { .value = 1 };
-  SIntNode bar2 = { .value = 2 };
-  SIntNode bar3 = { .value = 3 };
+  SIntNode bar1 = {.value = 1};
+  SIntNode bar2 = {.value = 2};
+  SIntNode bar3 = {.value = 3};
   slist_init(&bar1.list_node);
   slist_init(&bar2.list_node);
   slist_init(&bar3.list_node);
@@ -279,9 +273,9 @@ void test_slist__sort_ascending(void) {
 }
 
 void test_slist__sort_descending(void) {
-  SIntNode bar1 = { .value = 1 };
-  SIntNode bar2 = { .value = 2 };
-  SIntNode bar3 = { .value = 3 };
+  SIntNode bar1 = {.value = 1};
+  SIntNode bar2 = {.value = 2};
+  SIntNode bar3 = {.value = 3};
   slist_init(&bar1.list_node);
   slist_init(&bar2.list_node);
   slist_init(&bar3.list_node);

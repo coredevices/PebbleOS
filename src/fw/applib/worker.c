@@ -8,9 +8,8 @@
 #include "syscall/syscall.h"
 #include <pbl/logging/logging.h>
 
-
 // -------------------------------------------------------------------------------------------------
-static bool prv_handle_event(PebbleEvent* event) {
+static bool prv_handle_event(PebbleEvent *event) {
   PebbleEventType type = event->type;
 
   switch (type) {
@@ -23,7 +22,6 @@ static bool prv_handle_event(PebbleEvent* event) {
       return false;
   }
 }
-
 
 // -------------------------------------------------------------------------------------------------
 void worker_event_loop(void) {
@@ -47,9 +45,5 @@ void worker_event_loop(void) {
   }
 }
 
-
 // -------------------------------------------------------------------------------------------------
-void worker_launch_app(void) {
-  sys_launch_app_for_worker();
-}
-
+void worker_launch_app(void) { sys_launch_app_for_worker(); }

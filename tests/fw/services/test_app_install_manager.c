@@ -64,50 +64,31 @@
 const uint32_t g_num_file_resource_stores = 0;
 const FileResourceData g_file_resource_stores[] = {};
 
-bool build_id_contains_gnu_build_id(const ElfExternalNote *note) {
-  return false;
-}
+bool build_id_contains_gnu_build_id(const ElfExternalNote *note) { return false; }
 
-const char *app_custom_get_title(AppInstallId app_id) {
-  return "";
-}
+const char *app_custom_get_title(AppInstallId app_id) { return ""; }
 
-status_t pin_db_delete_with_parent(const TimelineItemId *parent_id) {
-  return S_SUCCESS;
-}
+status_t pin_db_delete_with_parent(const TimelineItemId *parent_id) { return S_SUCCESS; }
 
-bool pin_db_exists_with_parent(const TimelineItemId *parent_id) {
-  return true;
-}
+bool pin_db_exists_with_parent(const TimelineItemId *parent_id) { return true; }
 
-AppInstallId worker_preferences_get_default_worker(void) {
-  return 0;
-}
+AppInstallId worker_preferences_get_default_worker(void) { return 0; }
 
-bool app_fetch_in_progress(void) {
-  return false;
-}
+bool app_fetch_in_progress(void) { return false; }
 
-void app_fetch_cancel_from_system_task(void) {
-}
+void app_fetch_cancel_from_system_task(void) {}
 
-void comm_session_app_session_capabilities_evict(const Uuid *app_uuid) {
-}
+void comm_session_app_session_capabilities_evict(const Uuid *app_uuid) {}
 
-void put_bytes_cancel(void) {
-}
+void put_bytes_cancel(void) {}
 
 // Fakes
 ////////////////////////////////////
-uint32_t time_get_uptime_seconds(void) {
-  return rtc_get_time();
-}
+uint32_t time_get_uptime_seconds(void) { return rtc_get_time(); }
 
-void launcher_task_add_callback(void (*callback)(void *data), void *data) {
-  callback(data);
-}
+void launcher_task_add_callback(void (*callback)(void *data), void *data) { callback(data); }
 
-bool system_task_add_callback(void (*cb)(void*), void *data) {
+bool system_task_add_callback(void (*cb)(void *), void *data) {
   cb(data);
   return true;
 }
@@ -144,7 +125,6 @@ void load_fixture_on_pfs(const char *name, const char *pfs_name) {
   pfs_close(fd);
 }
 
-
 /* Start of test */
 
 static const AppInstallId CRAZY_ID = 171717;
@@ -153,7 +133,6 @@ bool app_install_get_entry_for_uuid(const Uuid *uuid, AppInstallEntry *entry) {
   AppInstallId id = app_install_get_id_for_uuid(uuid);
   return app_install_get_entry_for_install_id(id, entry);
 }
-
 
 static bool prv_app_install_is_watchface(AppInstallId id) {
   AppInstallEntry entry;
@@ -188,7 +167,7 @@ bool app_install_entries_equal(AppInstallEntry *one, AppInstallEntry *two) {
   bool visibility = (one->visibility == two->visibility);
   bool process_type = (one->process_type == two->process_type);
   bool uuid = !memcmp(&one->uuid, &two->uuid, sizeof(Uuid));
-  bool name = !strcmp(one->name,two->name);
+  bool name = !strcmp(one->name, two->name);
   bool icon = (one->icon_resource_id == two->icon_resource_id);
 
   return (id && type && visibility && process_type && uuid && name && icon);
@@ -197,46 +176,49 @@ bool app_install_entries_equal(AppInstallEntry *one, AppInstallEntry *two) {
 // background counter
 static const uint32_t bg_counter_size = (1132 + 276 + 4092);
 static const AppDBEntry bg_counter = {
-  .name = BACKGROUND_COUNTER_APP_NAME,
-  .uuid = {0x1e, 0xb1, 0xd3, 0x9b, 0x56, 0x98, 0x48, 0x44,
-           0xb3, 0x94, 0x1f, 0x87, 0xb6, 0xbe, 0xae, 0x67},
-  .info_flags = PROCESS_INFO_HAS_WORKER | PROCESS_INFO_STANDARD_APP,
-  .app_version = {
-    .major = 1,
-    .minor = 0,
-  },
-  .sdk_version = {
-    .major = 5,
-    .minor = 13,
-  },
-  .app_face_bg_color = {0},
-  .template_id = 0,
-  .icon_resource_id = 0,
+    .name = BACKGROUND_COUNTER_APP_NAME,
+    .uuid = {0x1e, 0xb1, 0xd3, 0x9b, 0x56, 0x98, 0x48, 0x44, 0xb3, 0x94, 0x1f, 0x87, 0xb6, 0xbe,
+             0xae, 0x67},
+    .info_flags = PROCESS_INFO_HAS_WORKER | PROCESS_INFO_STANDARD_APP,
+    .app_version =
+        {
+            .major = 1,
+            .minor = 0,
+        },
+    .sdk_version =
+        {
+            .major = 5,
+            .minor = 13,
+        },
+    .app_face_bg_color = {0},
+    .template_id = 0,
+    .icon_resource_id = 0,
 };
 
 // menu layer
 static const uint32_t menu_layer_size = (1140 + 7852);
 static const AppDBEntry menu_layer = {
-  .name = MENU_LAYER_APP_NAME,
-  .uuid = {0xb8, 0x26, 0x2e, 0x08, 0x57, 0xe9, 0x4e, 0x58,
-           0x88, 0x02, 0x45, 0xfd, 0xfe, 0xe0, 0xac, 0x77},
-  .info_flags = PROCESS_INFO_STANDARD_APP,
-  .app_version = {
-    .major = 2,
-    .minor = 0,
-  },
-  .sdk_version = {
-    .major = 5,
-    .minor = 13,
-  },
-  .app_face_bg_color = {0},
-  .template_id = 0,
-  .icon_resource_id = 0,
+    .name = MENU_LAYER_APP_NAME,
+    .uuid = {0xb8, 0x26, 0x2e, 0x08, 0x57, 0xe9, 0x4e, 0x58, 0x88, 0x02, 0x45, 0xfd, 0xfe, 0xe0,
+             0xac, 0x77},
+    .info_flags = PROCESS_INFO_STANDARD_APP,
+    .app_version =
+        {
+            .major = 2,
+            .minor = 0,
+        },
+    .sdk_version =
+        {
+            .major = 5,
+            .minor = 13,
+        },
+    .app_face_bg_color = {0},
+    .template_id = 0,
+    .icon_resource_id = 0,
 };
 
-
-static const Uuid tictoc_uuid = { 0x8f, 0x3c, 0x86, 0x86, 0x31, 0xa1, 0x4f, 0x5f,
-                                  0x91, 0xf5, 0x01, 0x60, 0x0c, 0x9b, 0xdc, 0x59 };
+static const Uuid tictoc_uuid = {0x8f, 0x3c, 0x86, 0x86, 0x31, 0xa1, 0x4f, 0x5f,
+                                 0x91, 0xf5, 0x01, 0x60, 0x0c, 0x9b, 0xdc, 0x59};
 
 static const Uuid music_uuid = {0x1f, 0x03, 0x29, 0x3d, 0x47, 0xaf, 0x4f, 0x28,
                                 0xb9, 0x60, 0xf2, 0xb0, 0x2a, 0x6d, 0xd7, 0x57};
@@ -249,7 +231,6 @@ AppInstallId music_id;
 AppInstallId sports_id;
 AppInstallId bg_counter_id;
 AppInstallId menu_layer_id;
-
 
 void test_app_install_manager__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
@@ -276,49 +257,44 @@ void test_app_install_manager__initialize(void) {
   resource_init();
 
   // simulate installing bg_counter on flash
-  app_db_insert((uint8_t *)&bg_counter.uuid, sizeof(Uuid),
-                (uint8_t *)&bg_counter, sizeof(AppDBEntry));
+  app_db_insert((uint8_t *)&bg_counter.uuid, sizeof(Uuid), (uint8_t *)&bg_counter,
+                sizeof(AppDBEntry));
   bg_counter_id = app_db_get_install_id_for_uuid(&bg_counter.uuid);
   app_cache_add_entry(bg_counter_id, bg_counter_size /* size */);
   cl_assert_equal_i(1, bg_counter_id);
 
   // load first app
   char filename_buf[32];
-  app_storage_get_file_name(filename_buf, sizeof(filename_buf), 1,
-                            PebbleTask_App);
+  app_storage_get_file_name(filename_buf, sizeof(filename_buf), 1, PebbleTask_App);
   load_fixture_on_pfs(APP1_APP_FIXTURE_NAME, filename_buf);
-  app_storage_get_file_name(filename_buf, sizeof(filename_buf), 1,
-                            PebbleTask_Worker);
+  app_storage_get_file_name(filename_buf, sizeof(filename_buf), 1, PebbleTask_Worker);
   load_fixture_on_pfs(APP1_WORKER_FIXTURE_NAME, filename_buf);
   resource_storage_get_file_name(filename_buf, sizeof(filename_buf), 1);
   load_fixture_on_pfs(APP1_RESOURCES_FIXTURE_NAME, filename_buf);
 
   // simulate installing app2 on flash
-  app_db_insert((uint8_t *)&menu_layer.uuid, sizeof(Uuid), (uint8_t *)&menu_layer, sizeof(AppDBEntry));
+  app_db_insert((uint8_t *)&menu_layer.uuid, sizeof(Uuid), (uint8_t *)&menu_layer,
+                sizeof(AppDBEntry));
   menu_layer_id = app_db_get_install_id_for_uuid(&menu_layer.uuid);
   app_cache_add_entry(menu_layer_id, menu_layer_size /* size */);
   cl_assert_equal_i(2, menu_layer_id);
 
   // load second app
-  app_storage_get_file_name(filename_buf, sizeof(filename_buf), 2,
-                            PebbleTask_App);
+  app_storage_get_file_name(filename_buf, sizeof(filename_buf), 2, PebbleTask_App);
   load_fixture_on_pfs(APP2_APP_FIXTURE_NAME, filename_buf);
   resource_storage_get_file_name(filename_buf, sizeof(filename_buf), 2);
   load_fixture_on_pfs(APP2_RESOURCES_FIXTURE_NAME, filename_buf);
 }
 
-void test_app_install_manager__cleanup(void) {
-
-}
+void test_app_install_manager__cleanup(void) {}
 
 /*************************************
 
  *************************************/
 
-
 void test_app_install_manager__get_id_invalid_uuid(void) {
   const Uuid made_up = {0x17, 0x17, 0x17, 0x17, 0x17, 0x17, 0x17, 0x17,
-                             0x17, 0x17, 0x17, 0x17, 0x17, 0x17, 0x17, 0x17};
+                        0x17, 0x17, 0x17, 0x17, 0x17, 0x17, 0x17, 0x17};
   cl_assert_equal_i(INSTALL_ID_INVALID, app_install_get_id_for_uuid(&made_up));
   cl_assert_equal_i(INSTALL_ID_INVALID, app_install_get_id_for_uuid(&UUID_INVALID));
   cl_assert_equal_i(INSTALL_ID_INVALID, app_install_get_id_for_uuid(&(const Uuid)UUID_SYSTEM));
@@ -350,7 +326,7 @@ void test_app_install_manager__compare_app_entry_retrieve_methods(void) {
 }
 
 void test_app_install_manager__is_watchface_via_install_id(void) {
-  cl_assert_equal_b(true,  app_install_is_watchface(tictoc_id));
+  cl_assert_equal_b(true, app_install_is_watchface(tictoc_id));
   cl_assert_equal_b(false, app_install_is_watchface(music_id));
   cl_assert_equal_b(false, app_install_is_watchface(sports_id));
   cl_assert_equal_b(false, app_install_is_watchface(bg_counter_id));
@@ -360,7 +336,7 @@ void test_app_install_manager__is_watchface_via_install_id(void) {
 }
 
 void test_app_install_manager__is_watchface_via_entry(void) {
-  cl_assert_equal_b(true,  prv_app_install_is_watchface(tictoc_id));
+  cl_assert_equal_b(true, prv_app_install_is_watchface(tictoc_id));
   cl_assert_equal_b(false, prv_app_install_is_watchface(music_id));
   cl_assert_equal_b(false, prv_app_install_is_watchface(sports_id));
   cl_assert_equal_b(false, prv_app_install_is_watchface(bg_counter_id));
@@ -373,11 +349,11 @@ void test_app_install_manager__get_uuid_for_install_id(void) {
   Uuid uuid = {};
   cl_assert_equal_b(false, app_install_get_uuid_for_install_id(INSTALL_ID_INVALID, &uuid));
   cl_assert_equal_uuid(uuid, UUID_INVALID);
-  cl_assert_equal_b(true,  app_install_get_uuid_for_install_id(tictoc_id, &uuid));
+  cl_assert_equal_b(true, app_install_get_uuid_for_install_id(tictoc_id, &uuid));
   cl_assert_equal_uuid(uuid, tictoc_uuid);
-  cl_assert_equal_b(true,  app_install_get_uuid_for_install_id(music_id, &uuid));
+  cl_assert_equal_b(true, app_install_get_uuid_for_install_id(music_id, &uuid));
   cl_assert_equal_uuid(uuid, music_uuid);
-  cl_assert_equal_b(true,  app_install_get_uuid_for_install_id(sports_id, &uuid));
+  cl_assert_equal_b(true, app_install_get_uuid_for_install_id(sports_id, &uuid));
   cl_assert_equal_uuid(uuid, sports_uuid);
   cl_assert_equal_b(false, app_install_get_uuid_for_install_id(CRAZY_ID, &uuid));
   cl_assert_equal_uuid(uuid, UUID_INVALID);
@@ -387,7 +363,7 @@ void test_app_install_manager__has_worker(void) {
   cl_assert_equal_b(false, app_install_has_worker(tictoc_id));
   cl_assert_equal_b(false, app_install_has_worker(music_id));
   cl_assert_equal_b(false, app_install_has_worker(sports_id));
-  cl_assert_equal_b(true,  app_install_has_worker(bg_counter_id));
+  cl_assert_equal_b(true, app_install_has_worker(bg_counter_id));
   cl_assert_equal_b(false, app_install_has_worker(menu_layer_id));
 
   cl_assert_equal_b(false, app_install_has_worker(CRAZY_ID));
@@ -396,7 +372,7 @@ void test_app_install_manager__has_worker(void) {
 void test_app_install_manager__is_hidden(void) {
   cl_assert_equal_b(false, app_install_is_hidden(tictoc_id));
   cl_assert_equal_b(false, app_install_is_hidden(music_id));
-  cl_assert_equal_b(true,  app_install_is_hidden(sports_id));
+  cl_assert_equal_b(true, app_install_is_hidden(sports_id));
   cl_assert_equal_b(false, app_install_is_hidden(bg_counter_id));
   cl_assert_equal_b(false, app_install_is_hidden(menu_layer_id));
 
@@ -483,7 +459,7 @@ void test_app_install_manager__hidden_app_recently_communicated(void) {
   fake_rtc_init(0, INIT_TIME);
 
   AppInstallEntry entry;
-  cl_assert(true  == app_install_get_entry_for_install_id(sports_id, &entry));
+  cl_assert(true == app_install_get_entry_for_install_id(sports_id, &entry));
   // hidden before communication
   cl_assert(true == app_install_entry_is_hidden(&entry));
 

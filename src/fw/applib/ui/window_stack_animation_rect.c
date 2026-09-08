@@ -61,14 +61,16 @@ static void prv_transition_teardown_destroy_animation(Animation *a) {
 static Animation *prv_window_transition_move(WindowTransitioningContext *ctx,
                                              int16_t start_delta_x) {
   static struct PropertyAnimationImplementation const impl = {
-    .base = {
-      .setup = prv_transition_setup_window_callbacks,
-      .update = prv_update_rect_compatible,
-      .teardown = prv_transition_teardown_destroy_animation,
-    },
-    .accessors = {
-      .setter.grect = prv_window_frame_setter,
-    },
+      .base =
+          {
+              .setup = prv_transition_setup_window_callbacks,
+              .update = prv_update_rect_compatible,
+              .teardown = prv_transition_teardown_destroy_animation,
+          },
+      .accessors =
+          {
+              .setter.grect = prv_window_frame_setter,
+          },
   };
 
   Window *window = ctx->window_to;
@@ -108,23 +110,23 @@ static void prv_window_transition_move_render(WindowTransitioningContext *contex
 }
 
 static Animation *prv_window_transition_move_from_right_create_animation(
-  WindowTransitioningContext *context) {
+    WindowTransitioningContext *context) {
   return prv_window_transition_move(context, DISP_COLS);
 }
 
 static Animation *prv_window_transition_move_from_left_create_animation(
-  WindowTransitioningContext *context) {
+    WindowTransitioningContext *context) {
   return prv_window_transition_move(context, -DISP_COLS);
 }
 
 const WindowTransitionImplementation g_window_transition_default_push_implementation_rect = {
-  .create_animation = prv_window_transition_move_from_right_create_animation,
-  .render = prv_window_transition_move_render,
+    .create_animation = prv_window_transition_move_from_right_create_animation,
+    .render = prv_window_transition_move_render,
 };
 
 const WindowTransitionImplementation g_window_transition_default_pop_implementation_rect = {
-  .create_animation = prv_window_transition_move_from_left_create_animation,
-  .render = prv_window_transition_move_render,
+    .create_animation = prv_window_transition_move_from_left_create_animation,
+    .render = prv_window_transition_move_render,
 };
 
 static void prv_update_null(Animation *animation, const AnimationProgress distance_normalized) {
@@ -133,9 +135,9 @@ static void prv_update_null(Animation *animation, const AnimationProgress distan
 
 static Animation *prv_window_transition_none_create_animation(WindowTransitioningContext *context) {
   static struct AnimationImplementation const impl = {
-    .setup = prv_transition_setup_window_callbacks,
-    .update = prv_update_null,
-    .teardown = prv_transition_teardown_destroy_animation,
+      .setup = prv_transition_setup_window_callbacks,
+      .update = prv_update_null,
+      .teardown = prv_transition_teardown_destroy_animation,
   };
   Animation *result = animation_create();
   animation_set_handlers(result, (AnimationHandlers){}, context);
@@ -145,6 +147,6 @@ static Animation *prv_window_transition_none_create_animation(WindowTransitionin
 }
 
 const WindowTransitionImplementation g_window_transition_none_implementation = {
-  .create_animation = prv_window_transition_none_create_animation,
-  .render = prv_window_transition_move_render,
+    .create_animation = prv_window_transition_none_create_animation,
+    .render = prv_window_transition_move_render,
 };

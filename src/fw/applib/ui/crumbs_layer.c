@@ -18,32 +18,36 @@ typedef struct CrumbsLayerSizeConfig {
 } CrumbsLayerSizeConfig;
 
 static const CrumbsLayerSizeConfig s_crumb_configs[NumPreferredContentSizes] = {
-  //! @note this is the same as Medium until Small is designed
-  [PreferredContentSizeSmall] = {
-    .layer_width = 14,
-    .crumb_radius = 2,
-    .crumb_spacing = 8,
-    .crumb_space_from_top = 8,
-  },
-  [PreferredContentSizeMedium] = {
-    .layer_width = 14,
-    .crumb_radius = 2,
-    .crumb_spacing = 8,
-    .crumb_space_from_top = 8,
-  },
-  [PreferredContentSizeLarge] = {
-    .layer_width = 16,
-    .crumb_radius = 2,
-    .crumb_spacing = 10,
-    .crumb_space_from_top = 10,
-  },
-  //! @note this is the same as Large until ExtraLarge is designed
-  [PreferredContentSizeExtraLarge] = {
-    .layer_width = 16,
-    .crumb_radius = 2,
-    .crumb_spacing = 10,
-    .crumb_space_from_top = 10,
-  },
+    //! @note this is the same as Medium until Small is designed
+    [PreferredContentSizeSmall] =
+        {
+            .layer_width = 14,
+            .crumb_radius = 2,
+            .crumb_spacing = 8,
+            .crumb_space_from_top = 8,
+        },
+    [PreferredContentSizeMedium] =
+        {
+            .layer_width = 14,
+            .crumb_radius = 2,
+            .crumb_spacing = 8,
+            .crumb_space_from_top = 8,
+        },
+    [PreferredContentSizeLarge] =
+        {
+            .layer_width = 16,
+            .crumb_radius = 2,
+            .crumb_spacing = 10,
+            .crumb_space_from_top = 10,
+        },
+    //! @note this is the same as Large until ExtraLarge is designed
+    [PreferredContentSizeExtraLarge] =
+        {
+            .layer_width = 16,
+            .crumb_radius = 2,
+            .crumb_spacing = 10,
+            .crumb_space_from_top = 10,
+        },
 };
 
 static const CrumbsLayerSizeConfig *prv_crumb_config(void) {
@@ -52,26 +56,16 @@ static const CrumbsLayerSizeConfig *prv_crumb_config(void) {
   return &s_crumb_configs[runtime_platform_default_size];
 }
 
-int crumbs_layer_width(void) {
-  return prv_crumb_config()->layer_width;
-}
+int crumbs_layer_width(void) { return prv_crumb_config()->layer_width; }
 
-static int prv_crumb_radius(void) {
-  return prv_crumb_config()->crumb_radius;
-}
+static int prv_crumb_radius(void) { return prv_crumb_config()->crumb_radius; }
 
 #if PBL_RECT
-static int prv_crumb_x_position(void) {
-  return prv_crumb_config()->layer_width / 2;
-}
+static int prv_crumb_x_position(void) { return prv_crumb_config()->layer_width / 2; }
 
-static int prv_crumb_spacing(void) {
-  return prv_crumb_config()->crumb_spacing;
-}
+static int prv_crumb_spacing(void) { return prv_crumb_config()->crumb_spacing; }
 
-static int prv_crumb_space_from_top(void) {
-  return prv_crumb_config()->crumb_space_from_top;
-}
+static int prv_crumb_space_from_top(void) { return prv_crumb_config()->crumb_space_from_top; }
 #endif
 
 static int prv_crumb_maximum_count(void) {
@@ -108,11 +102,9 @@ static void prv_crumbs_layer_update_proc_rect(Layer *layer, GContext *ctx) {
 static void prv_crumbs_layer_update_proc_round(Layer *layer, GContext *ctx) {
   CrumbsLayer *cl = (CrumbsLayer *)layer;
 
-
   graphics_context_set_fill_color(ctx, cl->bg_color);
   // TODO: remove stroke color again, once it's been fixed in fill_radial
   graphics_context_set_stroke_color(ctx, cl->bg_color);
-
 
   // compensate for problems with rounding errors and physical display shape
   const uint16_t overdraw = 2;
@@ -137,8 +129,8 @@ void crumbs_layer_init(CrumbsLayer *crumbs_layer, const GRect *frame, GColor bg_
   crumbs_layer->level = 0;
   crumbs_layer->fg_color = fg_color;
   crumbs_layer->bg_color = bg_color;
-  const LayerUpdateProc update_proc = PBL_IF_RECT_ELSE(prv_crumbs_layer_update_proc_rect,
-                                                       prv_crumbs_layer_update_proc_round);
+  const LayerUpdateProc update_proc =
+      PBL_IF_RECT_ELSE(prv_crumbs_layer_update_proc_rect, prv_crumbs_layer_update_proc_round);
   layer_set_update_proc(&crumbs_layer->layer, update_proc);
 }
 
@@ -176,13 +168,15 @@ void prv_x_setter(void *subject, int16_t int16) {
 }
 
 static const PropertyAnimationImplementation s_prop_impl = {
-  .base = {
-    .update = (AnimationUpdateImplementation)property_animation_update_int16,
-  },
-  .accessors = {
-    .getter.int16 = prv_x_getter,
-    .setter.int16 = prv_x_setter,
-  },
+    .base =
+        {
+            .update = (AnimationUpdateImplementation)property_animation_update_int16,
+        },
+    .accessors =
+        {
+            .getter.int16 = prv_x_getter,
+            .setter.int16 = prv_x_setter,
+        },
 };
 
 Animation *crumbs_layer_get_animation(CrumbsLayer *crumbs_layer) {

@@ -103,13 +103,12 @@ void music_request_reduced_latency(bool reduced_latency);
 void music_request_low_latency_for_period(uint32_t period_seconds);
 
 //! For testing purposes.
-const char * music_get_connected_server_debug_name(void);
+const char *music_get_connected_server_debug_name(void);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Album art
 
 struct GBitmap;
-
 
 //! @return An 8-bit generation token that changes whenever the current track changes (title, artist
 //! or album). The Music app re-requests art when it changes; servers echo it in album-art transfers
@@ -124,8 +123,8 @@ bool music_album_art_is_current(void);
 
 //! Borrow the current album art for drawing. Returns NULL if there is no art for the current track.
 //! The returned bitmap is owned by the music service and remains valid until music_album_art_unlock
-//! is called; the caller MUST call music_album_art_unlock when done, and MUST NOT retain the pointer
-//! past that point.
+//! is called; the caller MUST call music_album_art_unlock when done, and MUST NOT retain the
+//! pointer past that point.
 const struct GBitmap *music_album_art_lock(void);
 
 //! Release the album art borrowed with music_album_art_lock.

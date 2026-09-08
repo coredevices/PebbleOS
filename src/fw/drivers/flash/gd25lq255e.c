@@ -15,8 +15,8 @@ static FlashAddress s_protected_start;
 static FlashAddress s_protected_end;
 
 static const uint32_t prv_sec_regs[] = {
-  0x00002000,
-  0x00003000,
+    0x00002000,
+    0x00003000,
 };
 
 static QSPIFlashPart QSPI_FLASH_PART = {
@@ -57,17 +57,18 @@ static QSPIFlashPart QSPI_FLASH_PART = {
     .flag_status_bit_masks =
         {
             .sec_lock = (1 << 5) | (1 << 4), /* SR2, page 12 */
-            .erase_suspend = 1 << 7, /* SR2 SUS1, page 14 */
+            .erase_suspend = 1 << 7,         /* SR2 SUS1, page 14 */
         },
     .dummy_cycles =
         {
             .fast_read = 4,
         },
-    .sec_registers = {
-        .sec_regs = prv_sec_regs,
-        .num_sec_regs = ARRAY_LENGTH(prv_sec_regs),
-        .sec_reg_size = 1024,
-    },
+    .sec_registers =
+        {
+            .sec_regs = prv_sec_regs,
+            .num_sec_regs = ARRAY_LENGTH(prv_sec_regs),
+            .sec_reg_size = 1024,
+        },
     .supports_block_lock = false,
     .reset_latency_ms = 12,
     .suspend_to_read_latency_us = 20,

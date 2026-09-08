@@ -18,17 +18,14 @@
 
 static int s_watchface_launch_count;
 
-void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
-  callback(data);
-}
+void launcher_task_add_callback(CallbackEventCallback callback, void *data) { callback(data); }
 
-const CompositorTransition *shell_get_watchface_compositor_animation(bool watchface_is_destination) {
+const CompositorTransition *shell_get_watchface_compositor_animation(
+    bool watchface_is_destination) {
   return NULL;
 }
 
-void watchface_launch_default(const CompositorTransition *animation) {
-  s_watchface_launch_count++;
-}
+void watchface_launch_default(const CompositorTransition *animation) { s_watchface_launch_count++; }
 
 // Module state under test
 /////////////////////////////////////////////////////////////////////////
@@ -36,9 +33,7 @@ extern TimerID s_timer;
 extern bool s_app_paused;
 extern bool s_touch_held;
 
-static bool prv_is_scheduled(void) {
-  return stub_new_timer_is_scheduled(s_timer);
-}
+static bool prv_is_scheduled(void) { return stub_new_timer_is_scheduled(s_timer); }
 
 // Tests
 /////////////////////////////////////////////////////////////////////////

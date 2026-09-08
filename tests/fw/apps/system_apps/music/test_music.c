@@ -74,30 +74,22 @@ void music_get_now_playing(char *title, char *artist, char *album) {
   }
 }
 
-MusicPlayState music_get_playback_state(void) {
-  return s_music_play_state;
-}
+MusicPlayState music_get_playback_state(void) { return s_music_play_state; }
 
 void music_get_pos(uint32_t *track_pos_ms, uint32_t *track_length_ms) {
   *track_pos_ms = s_music_track_pos_ms;
   *track_length_ms = s_music_track_length_ms;
 }
 
-bool music_is_progress_reporting_supported(void) {
-  return s_music_progress_supported;
-}
+bool music_is_progress_reporting_supported(void) { return s_music_progress_supported; }
 
 bool music_needs_user_to_start_playback_on_phone(void) {
   return s_music_needs_user_to_start_playback;
 }
 
-bool music_is_command_supported(MusicCommand command) {
-  return true;
-}
+bool music_is_command_supported(MusicCommand command) { return true; }
 
-bool music_skip_seeks_within_track(void) {
-  return false;
-}
+bool music_skip_seeks_within_track(void) { return false; }
 
 void music_command_send(MusicCommand command) {}
 
@@ -105,15 +97,11 @@ void music_request_reduced_latency(bool reduced_latency) {}
 
 void music_request_low_latency_for_period(uint32_t period_ms) {}
 
-bool music_has_now_playing(void) {
-  return s_music_title[0] != '\0' || s_music_artist[0] != '\0';
-}
+bool music_has_now_playing(void) { return s_music_title[0] != '\0' || s_music_artist[0] != '\0'; }
 
 static uint8_t s_music_now_playing_generation;
 
-uint8_t music_get_now_playing_generation(void) {
-  return s_music_now_playing_generation;
-}
+uint8_t music_get_now_playing_generation(void) { return s_music_now_playing_generation; }
 
 // Album art fake: the tests hand the "service-owned" cover bitmap straight to the app.
 static GBitmap *s_album_art;
@@ -130,9 +118,7 @@ void music_album_art_unlock(void) {
   s_album_art_lock_depth--;
 }
 
-bool music_album_art_is_current(void) {
-  return s_album_art_current;
-}
+bool music_album_art_is_current(void) { return s_album_art_current; }
 
 // Imaging service fake: records the album art requests the app makes.
 static bool s_imaging_supported;
@@ -144,9 +130,7 @@ static uint16_t s_imaging_request_height;
 static char s_imaging_request_title[MUSIC_BUFFER_LENGTH];
 static char s_imaging_request_artist[MUSIC_BUFFER_LENGTH];
 
-bool imaging_is_type_supported(ImagingImageType image_type) {
-  return s_imaging_supported;
-}
+bool imaging_is_type_supported(ImagingImageType image_type) { return s_imaging_supported; }
 
 bool imaging_request_album_art(uint8_t token, ImagingFormat format, uint16_t width, uint16_t height,
                                const char *title, const char *artist) {
@@ -170,17 +154,11 @@ static bool s_prefs_music_show_volume_controls;
 static bool s_prefs_music_show_progress_bar;
 static bool s_prefs_music_show_album_art;
 
-bool shell_prefs_get_music_show_volume_controls(void) {
-  return s_prefs_music_show_volume_controls;
-}
+bool shell_prefs_get_music_show_volume_controls(void) { return s_prefs_music_show_volume_controls; }
 
-bool shell_prefs_get_music_show_progress_bar(void) {
-  return s_prefs_music_show_progress_bar;
-}
+bool shell_prefs_get_music_show_progress_bar(void) { return s_prefs_music_show_progress_bar; }
 
-bool shell_prefs_get_music_show_album_art(void) {
-  return s_prefs_music_show_album_art;
-}
+bool shell_prefs_get_music_show_album_art(void) { return s_prefs_music_show_album_art; }
 
 // Misc stubs
 /////////////////////
@@ -195,9 +173,7 @@ void accel_tap_service_subscribe(AccelTapHandler handler) {}
 
 void accel_tap_service_unsubscribe(void) {}
 
-VibeScore *vibe_score_create_with_resource(uint32_t resource_id) {
-  return NULL;
-}
+VibeScore *vibe_score_create_with_resource(uint32_t resource_id) { return NULL; }
 
 PropertyAnimation *property_animation_create_bounds_origin(struct Layer *layer, GPoint *from,
                                                            GPoint *to) {
@@ -207,17 +183,11 @@ PropertyAnimation *property_animation_create_bounds_origin(struct Layer *layer, 
 void property_animation_update_grect(PropertyAnimation *property_animation,
                                      const uint32_t distance_normalized) {}
 
-bool scroll_layer_is_instance(const Layer *layer) {
-  return false;
-}
+bool scroll_layer_is_instance(const Layer *layer) { return false; }
 
-uint16_t time_ms(time_t *tloc, uint16_t *out_ms) {
-  return 0;
-}
+uint16_t time_ms(time_t *tloc, uint16_t *out_ms) { return 0; }
 
-void clock_copy_time_string(char *buffer, uint8_t size) {
-  strncpy(buffer, "12:00 PM", size);
-}
+void clock_copy_time_string(char *buffer, uint8_t size) { strncpy(buffer, "12:00 PM", size); }
 
 // Mirror the real system theme font table for the default content size, so
 // text renders exactly as it does on the target platform.
@@ -254,9 +224,7 @@ GFont system_theme_get_font_for_default_size(TextStyleFont font) {
 static GContext s_ctx;
 static FrameBuffer s_fb;
 
-GContext *graphics_context_get_current_context(void) {
-  return &s_ctx;
-}
+GContext *graphics_context_get_current_context(void) { return &s_ctx; }
 
 void test_music__initialize(void) {
   s_music_title[0] = '\0';
@@ -280,7 +248,7 @@ void test_music__initialize(void) {
   s_prefs_music_show_progress_bar = true;
   s_prefs_music_show_album_art = false;
 
-  framebuffer_init(&s_fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(&s_fb, &(GSize){DISP_COLS, DISP_ROWS});
   framebuffer_clear(&s_fb);
   graphics_context_init(&s_ctx, &s_fb, GContextInitializationMode_App);
   s_app_state_get_graphics_context = &s_ctx;
@@ -352,8 +320,7 @@ void test_music__playing(void) {
 }
 
 void test_music__playing_long_text(void) {
-  prv_set_now_playing("It Could Be The First Day Of Springtime",
-                      "Godspeed You! Black Emperor");
+  prv_set_now_playing("It Could Be The First Day Of Springtime", "Godspeed You! Black Emperor");
   s_music_play_state = MusicPlayStatePlaying;
   s_music_track_pos_ms = 754 * 1000;
   s_music_track_length_ms = 3945 * 1000;
@@ -463,14 +430,14 @@ void test_music__album_art_shown_when_received(void) {
 
   prv_receive_album_art();
   PebbleEvent event = {
-    .type = PEBBLE_MEDIA_EVENT,
-    .media = { .type = PebbleMediaEventTypeAlbumArtUpdated },
+      .type = PEBBLE_MEDIA_EVENT,
+      .media = {.type = PebbleMediaEventTypeAlbumArtUpdated},
   };
   prv_music_event_handler(&event, NULL);
 
   prv_render();
-  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap,
-                          TEST_NAMED_PBI_FILE("test_music__playing_album_art")));
+  cl_check(
+      gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_NAMED_PBI_FILE("test_music__playing_album_art")));
 #endif
 }
 
@@ -492,11 +459,12 @@ void test_music__album_art_pref_toggled_off(void) {
 
   s_prefs_music_show_album_art = false;
   PebbleEvent event = {
-    .type = PEBBLE_PREF_CHANGE_EVENT,
-    .pref_change = {
-      .key = MUSIC_SHOW_ALBUM_ART_PREF_KEY,
-      .key_len = sizeof(MUSIC_SHOW_ALBUM_ART_PREF_KEY),
-    },
+      .type = PEBBLE_PREF_CHANGE_EVENT,
+      .pref_change =
+          {
+              .key = MUSIC_SHOW_ALBUM_ART_PREF_KEY,
+              .key_len = sizeof(MUSIC_SHOW_ALBUM_ART_PREF_KEY),
+          },
   };
   prv_pref_change_handler(&event, NULL);
 

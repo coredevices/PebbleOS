@@ -13,12 +13,12 @@
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 
 // External flash controller MMIO register offsets
-#define FLASH_CMD         0x00
-#define FLASH_ADDR        0x04
-#define FLASH_STATUS      0x08
-#define FLASH_INT_CTRL    0x0C
-#define FLASH_INT_STATUS  0x10
-#define FLASH_SIZE        0x14
+#define FLASH_CMD 0x00
+#define FLASH_ADDR 0x04
+#define FLASH_STATUS 0x08
+#define FLASH_INT_CTRL 0x0C
+#define FLASH_INT_STATUS 0x10
+#define FLASH_SIZE 0x14
 // Range-based persistence handshake with the QEMU pebble-extflash device.
 // The device used to auto-flush its in-RAM XIP storage on SIGTERM, but that
 // captured torn writes (flash_logging journal mid-update, PFS OVERWRITE_STARTED
@@ -29,22 +29,22 @@
 // QEMU then blk_pwrite()s just that range to the backing file.  Erases are
 // auto-flushed in QEMU (the geometry is implicit in FLASH_ADDR + CMD), so we
 // don't need to SYNC them from here.
-#define FLASH_SYNC_LEN    0x18
-#define FLASH_SYNC        0x1C
+#define FLASH_SYNC_LEN 0x18
+#define FLASH_SYNC 0x1C
 
 // CMD values
-#define CMD_ERASE_SUBSECTOR  1
-#define CMD_ERASE_SECTOR     2
-#define CMD_WRITE_ENABLE     3
+#define CMD_ERASE_SUBSECTOR 1
+#define CMD_ERASE_SECTOR 2
+#define CMD_WRITE_ENABLE 3
 
 // STATUS bits
-#define STATUS_BUSY      (1 << 0)
-#define STATUS_COMPLETE  (1 << 1)
+#define STATUS_BUSY (1 << 0)
+#define STATUS_COMPLETE (1 << 1)
 
 // Standard flash geometry
-#define QEMU_SECTOR_SIZE     0x10000   // 64 KB
-#define QEMU_SUBSECTOR_SIZE  0x1000    // 4 KB
-#define QEMU_PAGE_SIZE       256
+#define QEMU_SECTOR_SIZE 0x10000    // 64 KB
+#define QEMU_SUBSECTOR_SIZE 0x1000  // 4 KB
+#define QEMU_PAGE_SIZE 256
 
 static bool s_initialized;
 
@@ -67,17 +67,11 @@ FlashAddress flash_impl_get_subsector_base_address(FlashAddress addr) {
   return addr & ~(QEMU_SUBSECTOR_SIZE - 1);
 }
 
-size_t flash_impl_get_capacity(void) {
-  return REG32(QEMU_EXTFLASH_BASE + FLASH_SIZE);
-}
+size_t flash_impl_get_capacity(void) { return REG32(QEMU_EXTFLASH_BASE + FLASH_SIZE); }
 
-status_t flash_impl_enter_low_power_mode(void) {
-  return S_SUCCESS;
-}
+status_t flash_impl_enter_low_power_mode(void) { return S_SUCCESS; }
 
-status_t flash_impl_exit_low_power_mode(void) {
-  return S_SUCCESS;
-}
+status_t flash_impl_exit_low_power_mode(void) { return S_SUCCESS; }
 
 status_t flash_impl_read_sync(void *buffer, FlashAddress addr, size_t len) {
   // Flash addresses already include the XIP base (0x10000000), read directly
@@ -103,9 +97,7 @@ status_t flash_impl_write_protect(FlashAddress start_sector, FlashAddress end_se
   return S_SUCCESS;
 }
 
-status_t flash_impl_unprotect(void) {
-  return S_SUCCESS;
-}
+status_t flash_impl_unprotect(void) { return S_SUCCESS; }
 
 static size_t s_last_write_len;
 
@@ -224,12 +216,9 @@ void flash_impl_use(void) {
   // No power management needed for QEMU flash
 }
 
-void flash_impl_release(void) {
-}
+void flash_impl_release(void) {}
 
-void flash_impl_release_many(uint32_t num_locks) {
-  (void)num_locks;
-}
+void flash_impl_release_many(uint32_t num_locks) { (void)num_locks; }
 
 status_t flash_impl_read_security_register(uint32_t addr, uint8_t *val) {
   (void)addr;
@@ -255,11 +244,9 @@ status_t flash_impl_write_security_register(uint32_t addr, uint8_t val) {
 }
 
 static const FlashSecurityRegisters s_security_regs = {
-  .sec_regs = NULL,
-  .num_sec_regs = 0,
-  .sec_reg_size = 0,
+    .sec_regs = NULL,
+    .num_sec_regs = 0,
+    .sec_reg_size = 0,
 };
 
-const FlashSecurityRegisters *flash_impl_security_registers_info(void) {
-  return &s_security_regs;
-}
+const FlashSecurityRegisters *flash_impl_security_registers_info(void) { return &s_security_regs; }

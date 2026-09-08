@@ -37,18 +37,14 @@ WakeupId app_wakeup_schedule(time_t timestamp, int32_t cookie, bool notify_if_mi
   return sys_wakeup_schedule(timestamp, cookie, notify_if_missed);
 }
 
-void app_wakeup_cancel(WakeupId wakeup_id) {
-  sys_wakeup_delete(wakeup_id);
-}
+void app_wakeup_cancel(WakeupId wakeup_id) { sys_wakeup_delete(wakeup_id); }
 
-void app_wakeup_cancel_all(void) {
-  sys_wakeup_cancel_all_for_app();
-}
+void app_wakeup_cancel_all(void) { sys_wakeup_cancel_all_for_app(); }
 
 bool app_wakeup_get_launch_event(WakeupId *wakeup_id, int32_t *cookie) {
   WakeupInfo wakeup_info;
   sys_process_get_wakeup_info(&wakeup_info);
-  //If the id is invalid, return false
+  // If the id is invalid, return false
   if (wakeup_info.wakeup_id <= 0) {
     return false;
   }

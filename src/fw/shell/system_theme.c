@@ -17,97 +17,106 @@ typedef struct SystemThemeTextStyle {
 // Themes
 
 static const SystemThemeTextStyle s_text_styles[NumPreferredContentSizes] = {
-  [PreferredContentSizeSmall] = {
-    .fonts = {
-      [TextStyleFont_Header] = FONT_KEY_GOTHIC_18_BOLD,
+    [PreferredContentSizeSmall] =
+        {
+            .fonts =
+                {
+                    [TextStyleFont_Header] = FONT_KEY_GOTHIC_18_BOLD,
 #if !defined(CONFIG_RECOVERY_FW)
-      [TextStyleFont_Title] = FONT_KEY_GOTHIC_18_BOLD,
-      [TextStyleFont_Body] = FONT_KEY_GOTHIC_18,
+                    [TextStyleFont_Title] = FONT_KEY_GOTHIC_18_BOLD,
+                    [TextStyleFont_Body] = FONT_KEY_GOTHIC_18,
 #endif
-      [TextStyleFont_Subtitle] = FONT_KEY_GOTHIC_18_BOLD,
-      [TextStyleFont_Caption] = FONT_KEY_GOTHIC_14,
-      [TextStyleFont_Footer] = FONT_KEY_GOTHIC_14,
-      //! @note this is the same as the Title key (as that's what it's cloned from) until Small
-      //!       is designed
-      [TextStyleFont_MenuCellTitle] = FONT_KEY_GOTHIC_18_BOLD,
-      //! @note this is the same as Medium until Small is designed
-      [TextStyleFont_MenuCellSubtitle] = FONT_KEY_GOTHIC_18,
+                    [TextStyleFont_Subtitle] = FONT_KEY_GOTHIC_18_BOLD,
+                    [TextStyleFont_Caption] = FONT_KEY_GOTHIC_14,
+                    [TextStyleFont_Footer] = FONT_KEY_GOTHIC_14,
+                    //! @note this is the same as the Title key (as that's what it's cloned from)
+                    //! until Small
+                    //!       is designed
+                    [TextStyleFont_MenuCellTitle] = FONT_KEY_GOTHIC_18_BOLD,
+                    //! @note this is the same as Medium until Small is designed
+                    [TextStyleFont_MenuCellSubtitle] = FONT_KEY_GOTHIC_18,
 #if !defined(CONFIG_RECOVERY_FW)
-      //! @note this is the same as Medium until Small is designed
-      [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_LECO_20_BOLD_NUMBERS,
+                    //! @note this is the same as Medium until Small is designed
+                    [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_LECO_20_BOLD_NUMBERS,
 #endif
-      //! @note this is the same as Medium until Small is designed
-      [TextStyleFont_TimeHeaderWords] = FONT_KEY_GOTHIC_14_BOLD,
-      //! @note this is the same as Medium until Small is designed
-      [TextStyleFont_PinSubtitle] = FONT_KEY_GOTHIC_18,
-      //! @note this is the same as Medium until Small is designed
-      [TextStyleFont_ParagraphHeader] = FONT_KEY_GOTHIC_14,
-    },
-  },
-  [PreferredContentSizeMedium] = {
-    .fonts = {
-      [TextStyleFont_Header] = FONT_KEY_GOTHIC_18_BOLD,
+                    //! @note this is the same as Medium until Small is designed
+                    [TextStyleFont_TimeHeaderWords] = FONT_KEY_GOTHIC_14_BOLD,
+                    //! @note this is the same as Medium until Small is designed
+                    [TextStyleFont_PinSubtitle] = FONT_KEY_GOTHIC_18,
+                    //! @note this is the same as Medium until Small is designed
+                    [TextStyleFont_ParagraphHeader] = FONT_KEY_GOTHIC_14,
+                },
+        },
+    [PreferredContentSizeMedium] =
+        {
+            .fonts =
+                {
+                    [TextStyleFont_Header] = FONT_KEY_GOTHIC_18_BOLD,
 #if !defined(CONFIG_RECOVERY_FW)
-      [TextStyleFont_Title] = FONT_KEY_GOTHIC_24_BOLD,
-      [TextStyleFont_Body] = FONT_KEY_GOTHIC_24_BOLD,
+                    [TextStyleFont_Title] = FONT_KEY_GOTHIC_24_BOLD,
+                    [TextStyleFont_Body] = FONT_KEY_GOTHIC_24_BOLD,
 #endif
-      [TextStyleFont_Subtitle] = FONT_KEY_GOTHIC_24_BOLD,
-      [TextStyleFont_Caption] = FONT_KEY_GOTHIC_14,
-      [TextStyleFont_Footer] = FONT_KEY_GOTHIC_18,
-      [TextStyleFont_MenuCellTitle] = FONT_KEY_GOTHIC_24_BOLD,
-      [TextStyleFont_MenuCellSubtitle] = FONT_KEY_GOTHIC_18,
+                    [TextStyleFont_Subtitle] = FONT_KEY_GOTHIC_24_BOLD,
+                    [TextStyleFont_Caption] = FONT_KEY_GOTHIC_14,
+                    [TextStyleFont_Footer] = FONT_KEY_GOTHIC_18,
+                    [TextStyleFont_MenuCellTitle] = FONT_KEY_GOTHIC_24_BOLD,
+                    [TextStyleFont_MenuCellSubtitle] = FONT_KEY_GOTHIC_18,
 #if !defined(CONFIG_RECOVERY_FW)
-      [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_LECO_20_BOLD_NUMBERS,
+                    [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_LECO_20_BOLD_NUMBERS,
 #endif
-      [TextStyleFont_TimeHeaderWords] = FONT_KEY_GOTHIC_14_BOLD,
-      [TextStyleFont_PinSubtitle] = FONT_KEY_GOTHIC_18,
-      [TextStyleFont_ParagraphHeader] = FONT_KEY_GOTHIC_14,
-    },
-  },
-  [PreferredContentSizeLarge] = {
-    .fonts = {
-      [TextStyleFont_Header] = FONT_KEY_GOTHIC_24_BOLD,
+                    [TextStyleFont_TimeHeaderWords] = FONT_KEY_GOTHIC_14_BOLD,
+                    [TextStyleFont_PinSubtitle] = FONT_KEY_GOTHIC_18,
+                    [TextStyleFont_ParagraphHeader] = FONT_KEY_GOTHIC_14,
+                },
+        },
+    [PreferredContentSizeLarge] =
+        {
+            .fonts =
+                {
+                    [TextStyleFont_Header] = FONT_KEY_GOTHIC_24_BOLD,
 #if !defined(CONFIG_RECOVERY_FW)
-      [TextStyleFont_Title] = FONT_KEY_GOTHIC_28_BOLD,
-      [TextStyleFont_Body] = FONT_KEY_GOTHIC_28,
+                    [TextStyleFont_Title] = FONT_KEY_GOTHIC_28_BOLD,
+                    [TextStyleFont_Body] = FONT_KEY_GOTHIC_28,
 #endif
-      [TextStyleFont_Subtitle] = FONT_KEY_GOTHIC_28,
-      [TextStyleFont_Caption] = FONT_KEY_GOTHIC_18,
-      [TextStyleFont_Footer] = FONT_KEY_GOTHIC_18,
-      [TextStyleFont_MenuCellTitle] = FONT_KEY_GOTHIC_24_BOLD,
-      [TextStyleFont_MenuCellSubtitle] = FONT_KEY_GOTHIC_24,
+                    [TextStyleFont_Subtitle] = FONT_KEY_GOTHIC_28,
+                    [TextStyleFont_Caption] = FONT_KEY_GOTHIC_18,
+                    [TextStyleFont_Footer] = FONT_KEY_GOTHIC_18,
+                    [TextStyleFont_MenuCellTitle] = FONT_KEY_GOTHIC_24_BOLD,
+                    [TextStyleFont_MenuCellSubtitle] = FONT_KEY_GOTHIC_24,
 #if !defined(CONFIG_RECOVERY_FW)
-      [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM,
+                    [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM,
 #endif
-      [TextStyleFont_TimeHeaderWords] = FONT_KEY_GOTHIC_18_BOLD,
-      [TextStyleFont_PinSubtitle] = FONT_KEY_GOTHIC_24,
-      [TextStyleFont_ParagraphHeader] = FONT_KEY_GOTHIC_18_BOLD,
-    },
-  },
-  [PreferredContentSizeExtraLarge] = {
-    .fonts = {
-      [TextStyleFont_Header] = FONT_KEY_GOTHIC_28_BOLD,
+                    [TextStyleFont_TimeHeaderWords] = FONT_KEY_GOTHIC_18_BOLD,
+                    [TextStyleFont_PinSubtitle] = FONT_KEY_GOTHIC_24,
+                    [TextStyleFont_ParagraphHeader] = FONT_KEY_GOTHIC_18_BOLD,
+                },
+        },
+    [PreferredContentSizeExtraLarge] =
+        {
+            .fonts =
+                {
+                    [TextStyleFont_Header] = FONT_KEY_GOTHIC_28_BOLD,
 #if !defined(CONFIG_RECOVERY_FW)
-      [TextStyleFont_Title] = FONT_KEY_GOTHIC_36_BOLD,
-      [TextStyleFont_Body] = FONT_KEY_GOTHIC_36,
+                    [TextStyleFont_Title] = FONT_KEY_GOTHIC_36_BOLD,
+                    [TextStyleFont_Body] = FONT_KEY_GOTHIC_36,
 #endif
-      //! @note this is the same as Large until ExtraLarge is designed
-      [TextStyleFont_Subtitle] = FONT_KEY_GOTHIC_28,
-      [TextStyleFont_Caption] = FONT_KEY_GOTHIC_24,
-      [TextStyleFont_Footer] = FONT_KEY_GOTHIC_24,
-      [TextStyleFont_MenuCellTitle] = FONT_KEY_GOTHIC_28_BOLD,
-      [TextStyleFont_MenuCellSubtitle] = FONT_KEY_GOTHIC_28,
+                    //! @note this is the same as Large until ExtraLarge is designed
+                    [TextStyleFont_Subtitle] = FONT_KEY_GOTHIC_28,
+                    [TextStyleFont_Caption] = FONT_KEY_GOTHIC_24,
+                    [TextStyleFont_Footer] = FONT_KEY_GOTHIC_24,
+                    [TextStyleFont_MenuCellTitle] = FONT_KEY_GOTHIC_28_BOLD,
+                    [TextStyleFont_MenuCellSubtitle] = FONT_KEY_GOTHIC_28,
 #if !defined(CONFIG_RECOVERY_FW)
-      //! @note this is the same as Large until ExtraLarge is designed
-      [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM,
+                    //! @note this is the same as Large until ExtraLarge is designed
+                    [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM,
 #endif
-      //! @note this is the same as Large until ExtraLarge is designed
-      [TextStyleFont_TimeHeaderWords] = FONT_KEY_GOTHIC_18_BOLD,
-      //! @note this is the same as Large until ExtraLarge is designed
-      [TextStyleFont_PinSubtitle] = FONT_KEY_GOTHIC_24,
-      [TextStyleFont_ParagraphHeader] = FONT_KEY_GOTHIC_18_BOLD,
-    },
-  },
+                    //! @note this is the same as Large until ExtraLarge is designed
+                    [TextStyleFont_TimeHeaderWords] = FONT_KEY_GOTHIC_18_BOLD,
+                    //! @note this is the same as Large until ExtraLarge is designed
+                    [TextStyleFont_PinSubtitle] = FONT_KEY_GOTHIC_24,
+                    [TextStyleFont_ParagraphHeader] = FONT_KEY_GOTHIC_18_BOLD,
+                },
+        },
 };
 
 ////////////////////
@@ -159,18 +168,18 @@ GFont system_theme_get_font_for_size(PreferredContentSize size, TextStyleFont fo
 }
 
 GFont system_theme_get_font_for_default_size(TextStyleFont font) {
-  return fonts_get_system_font(system_theme_get_font_key_for_size(PreferredContentSizeDefault,
-                                                                  font));
+  return fonts_get_system_font(
+      system_theme_get_font_key_for_size(PreferredContentSizeDefault, font));
 }
 
 static const PreferredContentSize s_platform_default_content_sizes[] = {
-  [PlatformTypeAplite] = PreferredContentSizeMedium,
-  [PlatformTypeBasalt] = PreferredContentSizeMedium,
-  [PlatformTypeChalk] = PreferredContentSizeMedium,
-  [PlatformTypeDiorite] = PreferredContentSizeMedium,
-  [PlatformTypeEmery] = PreferredContentSizeLarge,
-  [PlatformTypeFlint] = PreferredContentSizeMedium,
-  [PlatformTypeGabbro] = PreferredContentSizeLarge,
+    [PlatformTypeAplite] = PreferredContentSizeMedium,
+    [PlatformTypeBasalt] = PreferredContentSizeMedium,
+    [PlatformTypeChalk] = PreferredContentSizeMedium,
+    [PlatformTypeDiorite] = PreferredContentSizeMedium,
+    [PlatformTypeEmery] = PreferredContentSizeLarge,
+    [PlatformTypeFlint] = PreferredContentSizeMedium,
+    [PlatformTypeGabbro] = PreferredContentSizeLarge,
 };
 
 T_STATIC PreferredContentSize prv_convert_content_size_between_platforms(PreferredContentSize size,
@@ -191,8 +200,7 @@ T_STATIC PreferredContentSize prv_convert_content_size_between_platforms(Preferr
 PreferredContentSize system_theme_get_default_content_size_for_runtime_platform(void) {
   const PlatformType runtime_platform = process_manager_current_platform();
   return prv_convert_content_size_between_platforms(PreferredContentSizeDefault,
-                                                    PBL_PLATFORM_TYPE_CURRENT,
-                                                    runtime_platform);
+                                                    PBL_PLATFORM_TYPE_CURRENT, runtime_platform);
 }
 
 PreferredContentSize system_theme_convert_host_content_size_to_runtime_platform(

@@ -14,7 +14,7 @@ void compositor_dot_transitions_collapsing_ring_animation_update(GContext *ctx,
                                                                  GColor outer_ring_color,
                                                                  GColor inner_ring_color);
 
-const CompositorTransition* compositor_dot_transition_timeline_get(bool timeline_is_future,
+const CompositorTransition *compositor_dot_transition_timeline_get(bool timeline_is_future,
                                                                    bool timeline_is_destination);
 
-const CompositorTransition* compositor_dot_transition_app_fetch_get(void);
+const CompositorTransition *compositor_dot_transition_app_fetch_get(void);

@@ -45,9 +45,7 @@ RecognizerList *window_get_recognizer_list(Window *window) {
   return NULL;
 }
 
-RecognizerManager *window_get_recognizer_manager(Window *window) {
-  return s_manager;
-}
+RecognizerManager *window_get_recognizer_manager(Window *window) { return s_manager; }
 
 struct Layer *window_get_root_layer(const Window *window) {
   if (!window) {
@@ -65,9 +63,7 @@ Layer *layer_find_layer_containing_point(const Layer *node, const GPoint *point)
 
 static bool s_nav_enabled;
 
-bool sys_touch_nav_enabled(void) {
-  return s_nav_enabled;
-}
+bool sys_touch_nav_enabled(void) { return s_nav_enabled; }
 
 bool sys_touch_app_nav_active(void) { return false; }
 
@@ -77,9 +73,9 @@ bool sys_touch_app_nav_active(void) { return false; }
 typedef struct FakeOps {
   bool animating;
   bool overrides_back;
-  bool bridge_disabled;         // the top window opted out (window_set_touch_bridge_disabled)
-  bool tap_requires_action_bar; // the top window only accepts taps on action-bar icon zones
-  bool app_has_raw_subscriber;  // the app installed its own raw touch subscriber
+  bool bridge_disabled;          // the top window opted out (window_set_touch_bridge_disabled)
+  bool tap_requires_action_bar;  // the top window only accepts taps on action-bar icon zones
+  bool app_has_raw_subscriber;   // the app installed its own raw touch subscriber
   int pop_count;
   int idle_refresh_count;
   int emit_count;
@@ -143,23 +139,23 @@ void test_touch_nav__initialize(void) {
   s_active_layer = NULL;
   s_fake = (FakeOps){0};
   s_ops = (TouchNavOps){
-    .is_animating = prv_is_animating,
-    .top_overrides_back = prv_top_overrides_back,
-    .top_tap_requires_action_bar = prv_top_tap_requires_action_bar,
-    .top_bridge_disabled = prv_top_bridge_disabled,
-    .pop_top = prv_pop_top,
-    .emit_button = prv_emit_button,
-    .idle_refresh = prv_idle_refresh,
-    .ctx = &s_fake,
+      .is_animating = prv_is_animating,
+      .top_overrides_back = prv_top_overrides_back,
+      .top_tap_requires_action_bar = prv_top_tap_requires_action_bar,
+      .top_bridge_disabled = prv_top_bridge_disabled,
+      .pop_top = prv_pop_top,
+      .emit_button = prv_emit_button,
+      .idle_refresh = prv_idle_refresh,
+      .ctx = &s_fake,
   };
 
   s_twin = (FakeTwin){0};
   s_twin_ops = (TouchNavTwinOps){
-    .pref_enabled = prv_twin_pref,
-    .master_enabled = prv_twin_master,
-    .install_handler = prv_twin_install,
-    .remove_handler = prv_twin_remove,
-    .ctx = &s_twin,
+      .pref_enabled = prv_twin_pref,
+      .master_enabled = prv_twin_master,
+      .install_handler = prv_twin_install,
+      .remove_handler = prv_twin_remove,
+      .ctx = &s_twin,
   };
 
   s_window = (Window){};
@@ -176,19 +172,17 @@ void test_touch_nav__initialize(void) {
   touch_nav_state_init(&s_state, &s_recognizer_manager, &s_ops);
 }
 
-void test_touch_nav__cleanup(void) {
-  touch_nav_state_deinit(&s_state);
-}
+void test_touch_nav__cleanup(void) { touch_nav_state_deinit(&s_state); }
 
 // ---------------------------------------------------------------------------------------------
 // Helpers
 
 static void prv_dispatch(TouchEventType type, int16_t x, int16_t y, bool non_navigational) {
   const TouchEvent e = {
-    .type = type,
-    .x = x,
-    .y = y,
-    .non_navigational = non_navigational,
+      .type = type,
+      .x = x,
+      .y = y,
+      .non_navigational = non_navigational,
   };
   touch_nav_dispatch(&e, &s_state);
 }
@@ -202,7 +196,8 @@ static void prv_advance_ms(uint32_t ms) {
 static void prv_swipe(int16_t sx, int16_t sy, int16_t ex, int16_t ey) {
   prv_dispatch(TouchEvent_Touchdown, sx, sy, false);
   prv_advance_ms(20);
-  prv_dispatch(TouchEvent_PositionUpdate, (int16_t)((sx + ex) / 2), (int16_t)((sy + ey) / 2), false);
+  prv_dispatch(TouchEvent_PositionUpdate, (int16_t)((sx + ex) / 2), (int16_t)((sy + ey) / 2),
+               false);
   prv_advance_ms(20);
   prv_dispatch(TouchEvent_PositionUpdate, ex, ey, false);
   prv_advance_ms(20);
@@ -216,9 +211,7 @@ static void prv_tap(int16_t x, int16_t y) {
   prv_dispatch(TouchEvent_Liftoff, 0, 0, false);
 }
 
-static RecognizerState prv_state(Recognizer *r) {
-  return recognizer_get_state(r);
-}
+static RecognizerState prv_state(Recognizer *r) { return recognizer_get_state(r); }
 
 // ---------------------------------------------------------------------------------------------
 // Criterion 7: Tier-2 → pan Failed immediately; swipe up → Completed.
@@ -400,7 +393,7 @@ void test_touch_nav__app_bridge_disabled_helper(void) {
 // synthesize NOTHING (route None), so the app's own raw handler is the only thing that runs.
 void test_touch_nav__raw_subscriber_suppresses_synthesis(void) {
   s_nav_enabled = true;
-  s_fake.bridge_disabled = false;      // window did NOT call window_set_touch_bridge_disabled
+  s_fake.bridge_disabled = false;        // window did NOT call window_set_touch_bridge_disabled
   s_fake.app_has_raw_subscriber = true;  // but the app called touch_service_subscribe
 
   prv_dispatch(TouchEvent_Touchdown, 50, 90, false);
@@ -585,10 +578,11 @@ void test_touch_nav__app_twin_subscribe_gate(void) {
 // (b) The launch-time classification (participate iff a system/negative install id) leaves an
 // INSTALL_ID_INVALID (unresolved) app non-participating, so the twin never installs for it.
 void test_touch_nav__app_twin_invalid_install_id_is_inert(void) {
-  // The exact rule app_state_init uses: app_install_id_from_system(app_manager_get_current_app_id()).
+  // The exact rule app_state_init uses:
+  // app_install_id_from_system(app_manager_get_current_app_id()).
   cl_assert(!app_install_id_from_system(INSTALL_ID_INVALID));  // 0 -> not a system app
-  cl_assert(!app_install_id_from_system(5));                   // third-party app-DB id -> not system
-  cl_assert(app_install_id_from_system(-3));                   // system/built-in -> participates
+  cl_assert(!app_install_id_from_system(5));  // third-party app-DB id -> not system
+  cl_assert(app_install_id_from_system(-3));  // system/built-in -> participates
 
   s_twin.pref = true;
   const bool participating = app_install_id_from_system(INSTALL_ID_INVALID);
@@ -716,7 +710,8 @@ void test_touch_nav__tier1_widget_wins(void) {
   cl_assert_equal_i(prv_state(s_state.swipe), RecognizerState_Failed);
 }
 
-// Registry dedupe: re-adding the same node is a no-op (still a single entry), and remove unlinks it.
+// Registry dedupe: re-adding the same node is a no-op (still a single entry), and remove unlinks
+// it.
 void test_touch_nav__registry_dedupe_and_remove(void) {
   static TouchNavWidgetNode node;
   node = (TouchNavWidgetNode){0};
@@ -772,7 +767,8 @@ void test_touch_nav__dead_zone_boundary(void) {
   cl_assert_equal_i(s_state.route, TouchNavRoute_Dropped);
   prv_dispatch(TouchEvent_Liftoff, 0, 0, false);
 
-  prv_dispatch(TouchEvent_Touchdown, 50, TOUCH_NAV_STATUS_BAR_DEAD_ZONE_PX /* at threshold */, false);
+  prv_dispatch(TouchEvent_Touchdown, 50, TOUCH_NAV_STATUS_BAR_DEAD_ZONE_PX /* at threshold */,
+               false);
   cl_assert_equal_i(s_state.route, TouchNavRoute_Tier2);
 }
 
@@ -792,32 +788,37 @@ void test_touch_nav__idle_refresh_gated_by_navigation(void) {
 
 // Pure zone-math + fallback, tested directly on the helper (no dispatcher).
 void test_touch_nav__action_bar_zone_math(void) {
-  // Bar at x[100,140), y[20,110); h = 90 -> zones of 30px: [20,50) UP, [50,80) SELECT, [80,110) DOWN.
+  // Bar at x[100,140), y[20,110); h = 90 -> zones of 30px: [20,50) UP, [50,80) SELECT, [80,110)
+  // DOWN.
   const TouchNavActionBar bar = {
-    .frame = GRect(100, 20, 40, 90),
-    .icon_mask = 0x7,  // all three zones have icons
-    .present = true,
+      .frame = GRect(100, 20, 40, 90),
+      .icon_mask = 0x7,  // all three zones have icons
+      .present = true,
   };
   // Top zone -> UP.
   cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(120, 20), false), BUTTON_ID_UP);
   cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(120, 49), false), BUTTON_ID_UP);
   // Middle zone -> SELECT (half-open boundary at 50).
-  cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(120, 50), false), BUTTON_ID_SELECT);
-  cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(120, 79), false), BUTTON_ID_SELECT);
+  cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(120, 50), false),
+                    BUTTON_ID_SELECT);
+  cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(120, 79), false),
+                    BUTTON_ID_SELECT);
   // Bottom zone -> DOWN (half-open boundary at 80; last pixel 109 inside).
   cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(120, 80), false), BUTTON_ID_DOWN);
-  cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(120, 109), false), BUTTON_ID_DOWN);
+  cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(120, 109), false),
+                    BUTTON_ID_DOWN);
 }
 
 // A zone whose icon bit is clear falls back to SELECT even though the point is in that zone.
 void test_touch_nav__action_bar_zone_without_icon_is_select(void) {
   const TouchNavActionBar bar = {
-    .frame = GRect(100, 20, 40, 90),
-    .icon_mask = 0x6,  // SELECT (bit1) + DOWN (bit2), but no UP (bit0)
-    .present = true,
+      .frame = GRect(100, 20, 40, 90),
+      .icon_mask = 0x6,  // SELECT (bit1) + DOWN (bit2), but no UP (bit0)
+      .present = true,
   };
   // UP zone has no icon -> SELECT.
-  cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(120, 30), false), BUTTON_ID_SELECT);
+  cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(120, 30), false),
+                    BUTTON_ID_SELECT);
   // DOWN zone still has its icon.
   cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(120, 95), false), BUTTON_ID_DOWN);
 }
@@ -825,17 +826,20 @@ void test_touch_nav__action_bar_zone_without_icon_is_select(void) {
 // A tap outside the bar frame, or on an absent snapshot, is a plain SELECT.
 void test_touch_nav__action_bar_outside_and_absent_are_select(void) {
   const TouchNavActionBar bar = {
-    .frame = GRect(100, 20, 40, 90),
-    .icon_mask = 0x7,
-    .present = true,
+      .frame = GRect(100, 20, 40, 90),
+      .icon_mask = 0x7,
+      .present = true,
   };
   // Left of the bar (x < 100) -> SELECT.
-  cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(50, 30), false), BUTTON_ID_SELECT);
+  cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(50, 30), false),
+                    BUTTON_ID_SELECT);
   // Above the bar (y < 20) -> SELECT.
-  cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(120, 10), false), BUTTON_ID_SELECT);
+  cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(120, 10), false),
+                    BUTTON_ID_SELECT);
   // Absent snapshot -> SELECT regardless of the point.
-  const TouchNavActionBar absent = { .present = false };
-  cl_assert_equal_i(touch_nav_action_bar_zone_button(&absent, GPoint(120, 30), false), BUTTON_ID_SELECT);
+  const TouchNavActionBar absent = {.present = false};
+  cl_assert_equal_i(touch_nav_action_bar_zone_button(&absent, GPoint(120, 30), false),
+                    BUTTON_ID_SELECT);
 }
 
 // Through the dispatcher: with a bar snapshot set, a tap inside a zone emulates that zone's button.
@@ -887,9 +891,9 @@ void test_touch_nav__action_bar_swipe_stays_fullscreen(void) {
 // a tap landing on an icon zone maps to a button.
 void test_touch_nav__action_bar_zone_math_require_icon_zone(void) {
   const TouchNavActionBar bar = {
-    .frame = GRect(100, 20, 40, 90),
-    .icon_mask = 0x5,  // UP (bit0) + DOWN (bit2), no SELECT icon
-    .present = true,
+      .frame = GRect(100, 20, 40, 90),
+      .icon_mask = 0x5,  // UP (bit0) + DOWN (bit2), no SELECT icon
+      .present = true,
   };
   // Icon zones still map.
   cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(120, 30), true), BUTTON_ID_UP);
@@ -899,7 +903,7 @@ void test_touch_nav__action_bar_zone_math_require_icon_zone(void) {
   // Outside the bar -> no button.
   cl_assert_equal_i(touch_nav_action_bar_zone_button(&bar, GPoint(50, 65), true), NUM_BUTTONS);
   // Absent snapshot -> no button.
-  const TouchNavActionBar absent = { .present = false };
+  const TouchNavActionBar absent = {.present = false};
   cl_assert_equal_i(touch_nav_action_bar_zone_button(&absent, GPoint(120, 30), true), NUM_BUTTONS);
 }
 
@@ -970,13 +974,13 @@ static void prv_txn_app_unsub(void *ctx) { prv_step(Step_AppUnsubscribe); }
 static void prv_txn_release_hold(void *ctx) { prv_step(Step_ReleaseHold); }
 
 static const TouchNavTxnOps s_txn_ops = {
-  .persist = prv_txn_persist,
-  .kernel_subscribe = prv_txn_kernel_subscribe,
-  .take_system_hold = prv_txn_take_hold,
-  .synthesize_liftoff = prv_txn_synth_liftoff,
-  .kernel_cancel_reset_unsub = prv_txn_kernel_cancel,
-  .app_unsubscribe = prv_txn_app_unsub,
-  .release_system_hold = prv_txn_release_hold,
+    .persist = prv_txn_persist,
+    .kernel_subscribe = prv_txn_kernel_subscribe,
+    .take_system_hold = prv_txn_take_hold,
+    .synthesize_liftoff = prv_txn_synth_liftoff,
+    .kernel_cancel_reset_unsub = prv_txn_kernel_cancel,
+    .app_unsubscribe = prv_txn_app_unsub,
+    .release_system_hold = prv_txn_release_hold,
 };
 
 void test_touch_nav__enable_transaction_order(void) {
@@ -1049,23 +1053,23 @@ static void prv_w_tap(void *w, GPoint pt) { ((FakeWidget *)w)->tap_calls++; }
 static void prv_w_swipe(void *w, SwipeDirection dir) { ((FakeWidget *)w)->swipe_calls++; }
 
 static const TouchNavWidgetOps s_fake_widget_ops = {
-  .can_start = prv_w_can_start,
-  .touchdown = prv_w_touchdown,
-  .pan_started = prv_w_pan_started,
-  .get_base_offset = prv_w_get_base_offset,
-  .pan_update = prv_w_pan_update,
-  .pan_snap = prv_w_pan_snap,
-  .pan_cancel = prv_w_pan_cancel,
-  .tap = prv_w_tap,
-  .swipe = prv_w_swipe,
+    .can_start = prv_w_can_start,
+    .touchdown = prv_w_touchdown,
+    .pan_started = prv_w_pan_started,
+    .get_base_offset = prv_w_get_base_offset,
+    .pan_update = prv_w_pan_update,
+    .pan_snap = prv_w_pan_snap,
+    .pan_cancel = prv_w_pan_cancel,
+    .tap = prv_w_tap,
+    .swipe = prv_w_swipe,
 };
 
 // Register the fake widget as a migrated (ops-bearing) node under the touched layer.
 static void prv_register_fake_widget(TouchNavWidgetNode *node) {
   s_widget = (FakeWidget){0};
   *node = (TouchNavWidgetNode){0};
-  touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, node, &s_child_layer, &s_fake_widget_ops,
-                         &s_widget);
+  touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, node, &s_child_layer,
+                         &s_fake_widget_ops, &s_widget);
   s_active_layer = &s_child_layer;
 }
 
@@ -1099,11 +1103,11 @@ void test_touch_nav__widget_can_start_decline_then_accept(void) {
   cl_assert_equal_i(s_widget.pan_update_calls, 0);
   cl_assert_equal_p(s_state.latched_target, &node);
 
-  prv_dispatch(TouchEvent_Liftoff, 0, 0, false);           // Completed: dropped
+  prv_dispatch(TouchEvent_Liftoff, 0, 0, false);  // Completed: dropped
   cl_assert_equal_i(s_widget.pan_snap_calls, 0);
   cl_assert_equal_i(s_widget.pan_cancel_calls, 0);
-  cl_assert_equal_p(s_state.latched_target, NULL);         // cleared on completion
-  cl_assert(!s_state.declined);                            // reset for the next gesture
+  cl_assert_equal_p(s_state.latched_target, NULL);  // cleared on completion
+  cl_assert(!s_state.declined);                     // reset for the next gesture
 
   // (d) Gesture 2: can_start now accepts -> a full pan drives the widget.
   s_widget.can_start_result = true;
@@ -1118,7 +1122,7 @@ void test_touch_nav__widget_can_start_decline_then_accept(void) {
   prv_advance_ms(20);
   prv_dispatch(TouchEvent_PositionUpdate, 50, 25, false);  // Updated -> live pan_update
   cl_assert_equal_i(s_widget.pan_update_calls, 1);
-  prv_dispatch(TouchEvent_Liftoff, 0, 0, false);           // Completed -> pan_snap
+  prv_dispatch(TouchEvent_Liftoff, 0, 0, false);  // Completed -> pan_snap
   cl_assert_equal_i(s_widget.pan_snap_calls, 1);
   // The snap carries the pan recognizer's liftoff velocity: the finger moved up (negative y) at
   // 30-35 px per 20 ms, so a vertical-only negative velocity in px/s must reach the widget.
@@ -1129,11 +1133,11 @@ void test_touch_nav__widget_can_start_decline_then_accept(void) {
 }
 
 // A non-navigational (wake / DnD) Touchdown pre-empting an in-flight pan drops the gesture cleanly:
-// the latch and `declined` are cleared and NO snap runs, so the pan is not committed. It does NOT run
-// ops->pan_cancel -- the pan recognizer's cancel op returns false (pan.c) and it never
-// self-transitions to Cancelled, so cancel_and_reset delivers no Cancelled event to the unified pan;
-// this matches the per-widget behaviour before the refactor (Ф1 is no-behaviour-change). The next
-// gesture still drives the widget, proving routing recovered.
+// the latch and `declined` are cleared and NO snap runs, so the pan is not committed. It does NOT
+// run ops->pan_cancel -- the pan recognizer's cancel op returns false (pan.c) and it never
+// self-transitions to Cancelled, so cancel_and_reset delivers no Cancelled event to the unified
+// pan; this matches the per-widget behaviour before the refactor (Ф1 is no-behaviour-change). The
+// next gesture still drives the widget, proving routing recovered.
 void test_touch_nav__gated_preemption_drops_active_pan(void) {
   static TouchNavWidgetNode node;
   prv_register_fake_widget(&node);
@@ -1222,24 +1226,24 @@ void test_touch_nav__widget_touchdown_op(void) {
   // the vtable still works.
   touch_nav_registry_remove(&s_state, TouchNavWidgetType_Menu, &node);
   static const TouchNavWidgetOps s_ops_no_touchdown = {
-    .can_start = prv_w_can_start,
-    .pan_started = prv_w_pan_started,
-    .get_base_offset = prv_w_get_base_offset,
-    .pan_update = prv_w_pan_update,
-    .pan_snap = prv_w_pan_snap,
-    .pan_cancel = prv_w_pan_cancel,
-    .tap = prv_w_tap,
-    .swipe = prv_w_swipe,
+      .can_start = prv_w_can_start,
+      .pan_started = prv_w_pan_started,
+      .get_base_offset = prv_w_get_base_offset,
+      .pan_update = prv_w_pan_update,
+      .pan_snap = prv_w_pan_snap,
+      .pan_cancel = prv_w_pan_cancel,
+      .tap = prv_w_tap,
+      .swipe = prv_w_swipe,
   };
   static TouchNavWidgetNode node2;
   node2 = (TouchNavWidgetNode){0};
   touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, &node2, &s_child_layer,
                          &s_ops_no_touchdown, &s_widget);
-  s_widget = (FakeWidget) { .can_start_result = true };
+  s_widget = (FakeWidget){.can_start_result = true};
   prv_dispatch(TouchEvent_Touchdown, 50, 90, false);
-  cl_assert_equal_i(s_widget.touchdown_calls, 0);   // op absent: never called
+  cl_assert_equal_i(s_widget.touchdown_calls, 0);  // op absent: never called
   prv_advance_ms(20);
-  prv_dispatch(TouchEvent_PositionUpdate, 50, 55, false);   // pan Starts -> widget still driven
+  prv_dispatch(TouchEvent_PositionUpdate, 50, 55, false);  // pan Starts -> widget still driven
   cl_assert_equal_i(s_widget.pan_started_calls, 1);
   prv_dispatch(TouchEvent_Liftoff, 0, 0, false);
   cl_assert_equal_i(s_widget.pan_snap_calls, 1);

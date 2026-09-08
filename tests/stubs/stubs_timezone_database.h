@@ -6,9 +6,7 @@
 #include "pbl/services/timezone_database.h"
 #include "pbl/util/attributes.h"
 
-int WEAK timezone_database_get_region_count(void) {
-  return 0;
-}
+int WEAK timezone_database_get_region_count(void) { return 0; }
 
 bool WEAK timezone_database_load_region_info(uint16_t region_id, TimezoneInfo *tz_info) {
   return false;

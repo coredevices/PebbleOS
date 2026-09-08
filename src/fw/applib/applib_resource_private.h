@@ -34,8 +34,8 @@ bool applib_resource_munmap_all();
 //! @param length The number of bytes to load
 //! @param used_aligned True, if you want this function to allocate 7 extra bytes if it cannot mmap
 //! @return NULL, if the resource couldn't be memory-mapped or allocated
-void *applib_resource_mmap_or_load(ResAppNum app_num, uint32_t resource_id,
-                                   size_t offset, size_t length, bool used_aligned);
+void *applib_resource_mmap_or_load(ResAppNum app_num, uint32_t resource_id, size_t offset,
+                                   size_t length, bool used_aligned);
 
 //! Updates reference counters if bytes is memory-mapped,
 //! alternatively it deallocates the data bytes points to.

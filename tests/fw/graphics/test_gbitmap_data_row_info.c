@@ -38,12 +38,12 @@ void test_gbitmap_data_row_info__get_info_rectangular(void) {
 void test_gbitmap_data_row_info__get_info_circular(void) {
   uint8_t some_addr;
   GBitmapDataRowInfoInternal infos[] = {
-      {.offset =  1, .min_x =  2, .max_x =  3}, // 0
-      {.offset =  4, .min_x =  5, .max_x =  6}, // 1
-      {.offset =  7, .min_x =  8, .max_x =  9}, // 2  // 0
-      {.offset = 10, .min_x = 11, .max_x = 12}, // 3  // 1
-      {.offset = 13, .min_x = 14, .max_x = 15}, // 4  // 2
-      {.offset = 16, .min_x = 17, .max_x = 18}, // 5  // 3
+      {.offset = 1, .min_x = 2, .max_x = 3},     // 0
+      {.offset = 4, .min_x = 5, .max_x = 6},     // 1
+      {.offset = 7, .min_x = 8, .max_x = 9},     // 2  // 0
+      {.offset = 10, .min_x = 11, .max_x = 12},  // 3  // 1
+      {.offset = 13, .min_x = 14, .max_x = 15},  // 4  // 2
+      {.offset = 16, .min_x = 17, .max_x = 18},  // 5  // 3
   };
   GBitmap bmp = {
       .addr = &some_addr,

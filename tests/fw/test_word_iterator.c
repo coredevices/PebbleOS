@@ -38,30 +38,28 @@
 static GContext s_ctx;
 static FrameBuffer s_fb;
 
-size_t framebuffer_get_size_bytes(FrameBuffer *f) {
-  return FRAMEBUFFER_SIZE_BYTES;
-}
+size_t framebuffer_get_size_bytes(FrameBuffer *f) { return FRAMEBUFFER_SIZE_BYTES; }
 
 ///////////////////////////////////////////////////////////
 // Tests
 
 void test_word_iterator__initialize(void) {
-  framebuffer_init(&s_fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(&s_fb, &(GSize){DISP_COLS, DISP_ROWS});
   graphics_context_init(&s_ctx, &s_fb, GContextInitializationMode_App);
 }
 
 void test_word_iterator__test_string_empty(void) {
   // Allocate mutable types
-  Iterator word_iter = (Iterator) { 0 };
-  WordIterState word_iter_state = (WordIterState) { 0 };
+  Iterator word_iter = (Iterator){0};
+  WordIterState word_iter_state = (WordIterState){0};
 
   // Allocate immutable types
   bool success = false;
   const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, "");
   cl_assert(success);
 
-  const TextBoxParams text_box_params = (TextBoxParams) {
-    .utf8_bounds = &utf8_bounds,
+  const TextBoxParams text_box_params = (TextBoxParams){
+      .utf8_bounds = &utf8_bounds,
   };
 
   // Init mutable types
@@ -75,16 +73,16 @@ void test_word_iterator__test_string_empty(void) {
 
 void test_word_iterator__test_unprintable(void) {
   // Allocate mutable types
-  Iterator word_iter = (Iterator) { 0 };
-  WordIterState word_iter_state = (WordIterState) { 0 };
+  Iterator word_iter = (Iterator){0};
+  WordIterState word_iter_state = (WordIterState){0};
 
   // Allocate immutable types
   bool success = false;
-  const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, (char[]) { 0x10, 0x0 });
+  const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, (char[]){0x10, 0x0});
   cl_assert(success);
 
-  const TextBoxParams text_box_params = (TextBoxParams) {
-    .utf8_bounds = &utf8_bounds,
+  const TextBoxParams text_box_params = (TextBoxParams){
+      .utf8_bounds = &utf8_bounds,
   };
 
   // Init mutable types
@@ -96,20 +94,18 @@ void test_word_iterator__test_unprintable(void) {
   cl_assert(word_iter_state.current.width_px == 0);
 }
 
-
-
 void test_word_iterator__test_string_single_word(void) {
   // Allocate mutable types
-  Iterator word_iter = (Iterator) { 0 };
-  WordIterState word_iter_state = (WordIterState) { 0 };
+  Iterator word_iter = (Iterator){0};
+  WordIterState word_iter_state = (WordIterState){0};
 
   // Allocate immutable types
   bool success = false;
   const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, "Animal\x02style");
   cl_assert(success);
 
-  const TextBoxParams text_box_params = (TextBoxParams) {
-    .utf8_bounds = &utf8_bounds,
+  const TextBoxParams text_box_params = (TextBoxParams){
+      .utf8_bounds = &utf8_bounds,
   };
 
   // Init mutable types
@@ -123,16 +119,16 @@ void test_word_iterator__test_string_single_word(void) {
 
 void test_word_iterator__test_string_consecutive_newlines(void) {
   // Allocate mutable types
-  Iterator word_iter = (Iterator) { 0 };
-  WordIterState word_iter_state = (WordIterState) { 0 };
+  Iterator word_iter = (Iterator){0};
+  WordIterState word_iter_state = (WordIterState){0};
 
   // Allocate immutable types
   bool success = false;
   const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, "In\n\n\nN\nout");
   cl_assert(success);
 
-  const TextBoxParams text_box_params = (TextBoxParams) {
-    .utf8_bounds = &utf8_bounds,
+  const TextBoxParams text_box_params = (TextBoxParams){
+      .utf8_bounds = &utf8_bounds,
   };
 
   // Init mutable types
@@ -174,17 +170,19 @@ void test_word_iterator__test_string_consecutive_newlines(void) {
 void test_word_iterator__test_em_space_word_break(void) {
   // EM SPACE (U+2003, UTF-8: \xe2\x80\x83) should act as a word break,
   // so the first word is "AB" (not "AB<em space>CD").
-  Iterator word_iter = (Iterator) { 0 };
-  WordIterState word_iter_state = (WordIterState) { 0 };
-  FontInfo font_info = { .max_height = 10 };
+  Iterator word_iter = (Iterator){0};
+  WordIterState word_iter_state = (WordIterState){0};
+  FontInfo font_info = {.max_height = 10};
 
   bool success = false;
-  const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, "AB\xe2\x80\x83" "CD");
+  const Utf8Bounds utf8_bounds = utf8_get_bounds(&success,
+                                                 "AB\xe2\x80\x83"
+                                                 "CD");
   cl_assert(success);
 
-  const TextBoxParams text_box_params = (TextBoxParams) {
-    .utf8_bounds = &utf8_bounds,
-    .font = &font_info,
+  const TextBoxParams text_box_params = (TextBoxParams){
+      .utf8_bounds = &utf8_bounds,
+      .font = &font_info,
   };
 
   word_iter_init(&word_iter, &word_iter_state, &s_ctx, &text_box_params, utf8_bounds.start);
@@ -198,17 +196,19 @@ void test_word_iterator__test_em_space_word_break(void) {
 
 void test_word_iterator__test_no_break_space_no_word_break(void) {
   // NO-BREAK SPACE (U+00A0, UTF-8: \xc2\xa0) should NOT act as a word break
-  Iterator word_iter = (Iterator) { 0 };
-  WordIterState word_iter_state = (WordIterState) { 0 };
-  FontInfo font_info = { .max_height = 10 };
+  Iterator word_iter = (Iterator){0};
+  WordIterState word_iter_state = (WordIterState){0};
+  FontInfo font_info = {.max_height = 10};
 
   bool success = false;
-  const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, "AB\xc2\xa0" "CD");
+  const Utf8Bounds utf8_bounds = utf8_get_bounds(&success,
+                                                 "AB\xc2\xa0"
+                                                 "CD");
   cl_assert(success);
 
-  const TextBoxParams text_box_params = (TextBoxParams) {
-    .utf8_bounds = &utf8_bounds,
-    .font = &font_info,
+  const TextBoxParams text_box_params = (TextBoxParams){
+      .utf8_bounds = &utf8_bounds,
+      .font = &font_info,
   };
 
   word_iter_init(&word_iter, &word_iter_state, &s_ctx, &text_box_params, utf8_bounds.start);
@@ -220,16 +220,16 @@ void test_word_iterator__test_no_break_space_no_word_break(void) {
 
 void test_word_iterator__test_string_terminating_newlines(void) {
   // Allocate mutable types
-  Iterator word_iter = (Iterator) { 0 };
-  WordIterState word_iter_state = (WordIterState) { 0 };
+  Iterator word_iter = (Iterator){0};
+  WordIterState word_iter_state = (WordIterState){0};
 
   // Allocate immutable types
   bool success = false;
   const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, "\nIn\nout\n");
   cl_assert(success);
 
-  const TextBoxParams text_box_params = (TextBoxParams) {
-    .utf8_bounds = &utf8_bounds,
+  const TextBoxParams text_box_params = (TextBoxParams){
+      .utf8_bounds = &utf8_bounds,
   };
 
   // Init mutable types
@@ -259,4 +259,3 @@ void test_word_iterator__test_string_terminating_newlines(void) {
 
   cl_assert(!iter_next(&word_iter));
 }
-

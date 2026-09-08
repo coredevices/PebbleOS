@@ -51,19 +51,15 @@ static void prv_update_active_time(bool is_active) {
 }
 
 static void prv_put_dnd_event(bool is_active) {
-  PebbleEvent e = (PebbleEvent) {
-    .type = PEBBLE_DO_NOT_DISTURB_EVENT,
-    .do_not_disturb = {
-      .is_active = is_active,
-    }
-  };
+  PebbleEvent e = (PebbleEvent){.type = PEBBLE_DO_NOT_DISTURB_EVENT,
+                                .do_not_disturb = {
+                                    .is_active = is_active,
+                                }};
 
   event_put(&e);
 }
 
-static char *prv_bool_to_string(bool active) {
-  return active ? "Active" : "Inactive";
-}
+static char *prv_bool_to_string(bool active) { return active ? "Active" : "Inactive"; }
 
 static void prv_do_update(void) {
   const bool is_active = do_not_disturb_is_active();
@@ -92,26 +88,29 @@ static void prv_toggle_manual_dnd_from_settings_menu(void *e_dialog) {
   do_not_disturb_set_manually_enabled(!do_not_disturb_is_manually_enabled());
 }
 
-static void prv_push_first_use_dialog(const char* msg,
-                                      DialogCallback dialog_close_cb) {
-  DialogCallbacks callbacks = { .unload = dialog_close_cb };
+static void prv_push_first_use_dialog(const char *msg, DialogCallback dialog_close_cb) {
+  DialogCallbacks callbacks = {.unload = dialog_close_cb};
   ExpandableDialog *first_use_dialog = expandable_dialog_create_with_params(
-      "DNDFirstUse", RESOURCE_ID_QUIET_TIME, msg, GColorBlack, GColorMediumAquamarine,
-      &callbacks, RESOURCE_ID_ACTION_BAR_ICON_CHECK, expandable_dialog_close_cb);
+      "DNDFirstUse", RESOURCE_ID_QUIET_TIME, msg, GColorBlack, GColorMediumAquamarine, &callbacks,
+      RESOURCE_ID_ACTION_BAR_ICON_CHECK, expandable_dialog_close_cb);
   i18n_free(msg, &s_data);
   expandable_dialog_push(first_use_dialog,
                          window_manager_get_window_stack(ModalPriorityNotification));
 }
 
 static void prv_push_smart_dnd_first_use_dialog(void) {
-  const char *msg = i18n_get("Calendar Aware enables Quiet Time automatically during " \
-      "calendar events.", &s_data);
+  const char *msg = i18n_get(
+      "Calendar Aware enables Quiet Time automatically during "
+      "calendar events.",
+      &s_data);
   prv_push_first_use_dialog(msg, prv_toggle_smart_dnd);
 }
 
 static void prv_push_manual_dnd_first_use_dialog(ManualDNDFirstUseSource source) {
-  const char *msg = i18n_get("Press and hold the Back button from a notification to turn " \
-      "Quiet Time on or off.", &s_data);
+  const char *msg = i18n_get(
+      "Press and hold the Back button from a notification to turn "
+      "Quiet Time on or off.",
+      &s_data);
   if (source == ManualDNDFirstUseSourceActionMenu) {
     prv_push_first_use_dialog(msg, prv_toggle_manual_dnd_from_action_menu);
   } else {
@@ -120,7 +119,7 @@ static void prv_push_manual_dnd_first_use_dialog(ManualDNDFirstUseSource source)
 }
 
 static void prv_try_update_schedule_mode(void *data) {
-  const bool clear_override = (bool) (uintptr_t) data;
+  const bool clear_override = (bool)(uintptr_t)data;
   if (clear_override) {
     s_data.manually_override_dnd = false;
   }
@@ -136,18 +135,17 @@ static void prv_try_update_schedule_mode(void *data) {
 }
 
 static void prv_try_update_schedule_mode_callback(bool clear_manual_override) {
-  system_task_add_callback(prv_try_update_schedule_mode, (void*)(uintptr_t) clear_manual_override);
+  system_task_add_callback(prv_try_update_schedule_mode, (void *)(uintptr_t)clear_manual_override);
 }
 
-static void prv_update_schedule_mode_timer_callback(void* not_used) {
+static void prv_update_schedule_mode_timer_callback(void *not_used) {
   prv_try_update_schedule_mode_callback(true);
 }
 
 static DoNotDisturbScheduleType prv_current_schedule_type(void) {
   struct tm time;
   rtc_get_time_tm(&time);
-  return ((time.tm_wday == Saturday || time.tm_wday == Sunday) ?
-          WeekendSchedule : WeekdaySchedule);
+  return ((time.tm_wday == Saturday || time.tm_wday == Sunday) ? WeekendSchedule : WeekdaySchedule);
 }
 
 // Updates the timer for scheduled DND check
@@ -164,16 +162,16 @@ static void prv_set_schedule_mode_timer() {
   time_t seconds_until_update;
   bool is_enable_next;
   int curr_day = time.tm_wday;
-  if (!curr_schedule_enabled) { // Only next schedule is enabled
+  if (!curr_schedule_enabled) {  // Only next schedule is enabled
     is_enable_next = true;
     // Depending on the current schedule, determine the first day index of the next schedule
     int next_schedule_day = (curr_schedule_type == WeekdaySchedule) ? Saturday : Monday;
     // Count the number of full days until next schedule (Sunday = 0)
     int num_full_days = ((next_schedule_day - curr_day + DAYS_PER_WEEK) % DAYS_PER_WEEK) - 1;
     // Calculate the number of seconds until the start of the next schedule, update then
-    seconds_until_update = time_util_get_seconds_until_daily_time(&time, 0, 0) +
-                           (num_full_days * SECONDS_PER_DAY);
-  } else { // Current schedule is enabled
+    seconds_until_update =
+        time_util_get_seconds_until_daily_time(&time, 0, 0) + (num_full_days * SECONDS_PER_DAY);
+  } else {  // Current schedule is enabled
     const time_t seconds_until_start = time_util_get_seconds_until_daily_time(
         &time, curr_schedule.from_hour, curr_schedule.from_minute);
     const time_t seconds_until_end = time_util_get_seconds_until_daily_time(
@@ -196,7 +194,7 @@ static void prv_set_schedule_mode_timer() {
   }
 
   PBL_LOG_INFO("%s scheduled period. %u seconds until update",
-      s_data.is_in_schedule_period ? "In" : "Out of", (unsigned int) seconds_until_update);
+               s_data.is_in_schedule_period ? "In" : "Out of", (unsigned int)seconds_until_update);
 
   bool success = new_timer_start(s_data.update_timer_id, seconds_until_update * 1000,
                                  prv_update_schedule_mode_timer_callback, NULL, 0 /*flags*/);
@@ -213,8 +211,7 @@ static bool prv_is_schedule_active(void) {
 }
 
 static bool prv_is_smart_dnd_active(void) {
-  return (calendar_event_is_ongoing() &&
-          do_not_disturb_is_smart_dnd_enabled() &&
+  return (calendar_event_is_ongoing() && do_not_disturb_is_smart_dnd_enabled() &&
           !s_data.manually_override_dnd);
 }
 
@@ -222,13 +219,10 @@ static bool prv_is_smart_dnd_active(void) {
 //! Public Functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-DEFINE_SYSCALL(bool, sys_do_not_disturb_is_active, void) {
-  return do_not_disturb_is_active();
-}
+DEFINE_SYSCALL(bool, sys_do_not_disturb_is_active, void) { return do_not_disturb_is_active(); }
 
 bool do_not_disturb_is_active(void) {
-  if (do_not_disturb_is_manually_enabled() ||
-      prv_is_schedule_active() ||
+  if (do_not_disturb_is_manually_enabled() || prv_is_schedule_active() ||
       prv_is_smart_dnd_active()) {
     return true;
   }
@@ -240,8 +234,8 @@ bool do_not_disturb_is_manually_enabled(void) {
 }
 
 void do_not_disturb_set_manually_enabled(bool enable) {
-  const bool is_auto_dnd = prv_is_current_schedule_enabled() ||
-                           do_not_disturb_is_smart_dnd_enabled();
+  const bool is_auto_dnd =
+      prv_is_current_schedule_enabled() || do_not_disturb_is_smart_dnd_enabled();
   const bool was_active = do_not_disturb_is_active();
 
   alerts_preferences_dnd_set_manually_enabled(enable);
@@ -265,9 +259,7 @@ void do_not_disturb_toggle_manually_enabled(ManualDNDFirstUseSource source) {
   }
 }
 
-bool do_not_disturb_is_smart_dnd_enabled(void) {
-  return alerts_preferences_dnd_is_smart_enabled();
-}
+bool do_not_disturb_is_smart_dnd_enabled(void) { return alerts_preferences_dnd_is_smart_enabled(); }
 
 void do_not_disturb_toggle_smart_dnd(void) {
   if (!alerts_preferences_check_and_set_first_use_complete(FirstUseSourceSmartDND)) {
@@ -303,35 +295,25 @@ void do_not_disturb_toggle_scheduled(DoNotDisturbScheduleType type) {
 }
 
 void do_not_disturb_init(void) {
-  s_data = (DoNotDisturbData) {
-    .update_timer_id = new_timer_create(),
-    .was_active = false,
+  s_data = (DoNotDisturbData){
+      .update_timer_id = new_timer_create(),
+      .was_active = false,
   };
-  prv_try_update_schedule_mode((void*) true);
+  prv_try_update_schedule_mode((void *)true);
 }
 
-void do_not_disturb_handle_clock_change(void) {
-  prv_try_update_schedule_mode_callback(false);
-}
+void do_not_disturb_handle_clock_change(void) { prv_try_update_schedule_mode_callback(false); }
 
-void do_not_disturb_handle_pref_synced(void) {
-  prv_try_update_schedule_mode_callback(false);
-}
+void do_not_disturb_handle_pref_synced(void) { prv_try_update_schedule_mode_callback(false); }
 
-void do_not_disturb_handle_calendar_event(PebbleCalendarEvent *e) {
-  prv_do_update();
-}
+void do_not_disturb_handle_calendar_event(PebbleCalendarEvent *e) { prv_do_update(); }
 
 void do_not_disturb_manual_toggle_with_dialog(void) {
   do_not_disturb_toggle_push(ActionTogglePrompt_Auto, false /* set_exit_reason */);
 }
 
 #ifdef UNITTEST
-TimerID get_dnd_timer_id(void) {
-  return s_data.update_timer_id;
-}
+TimerID get_dnd_timer_id(void) { return s_data.update_timer_id; }
 
-void set_dnd_timer_id(TimerID id) {
-  s_data.update_timer_id = id;
-}
+void set_dnd_timer_id(TimerID id) { s_data.update_timer_id = id; }
 #endif

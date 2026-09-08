@@ -36,39 +36,23 @@ void event_service_client_unsubscribe(EventServiceInfo *info) {
 //////////////////////////////////////////
 static TouchServiceState s_state;
 
-PebbleTask pebble_task_get_current(void) {
-  return PebbleTask_App;
-}
+PebbleTask pebble_task_get_current(void) { return PebbleTask_App; }
 
-bool sys_app_is_watchface(void) {
-  return false;
-}
+bool sys_app_is_watchface(void) { return false; }
 
-TouchServiceState *app_state_get_touch_service_state(void) {
-  return &s_state;
-}
+TouchServiceState *app_state_get_touch_service_state(void) { return &s_state; }
 
-TouchServiceState *kernel_applib_get_touch_service_state(void) {
-  return &s_state;
-}
+TouchServiceState *kernel_applib_get_touch_service_state(void) { return &s_state; }
 
 static int s_touch_reset_count;
-void sys_touch_reset(void) {
-  s_touch_reset_count++;
-}
+void sys_touch_reset(void) { s_touch_reset_count++; }
 
 static bool s_raw_subscribed;
-void sys_touch_set_raw_subscribed(bool subscribed) {
-  s_raw_subscribed = subscribed;
-}
+void sys_touch_set_raw_subscribed(bool subscribed) { s_raw_subscribed = subscribed; }
 
-bool sys_touch_service_is_enabled(void) {
-  return true;
-}
+bool sys_touch_service_is_enabled(void) { return true; }
 
-void sys_app_touch_navigation_enable(bool enable) {
-  (void)enable;
-}
+void sys_app_touch_navigation_enable(bool enable) { (void)enable; }
 
 // Handler bookkeeping
 //////////////////////////////////////////
@@ -105,21 +89,21 @@ static void prv_order_system_handler(const TouchEvent *event, void *context) {
   s_system_seq = ++s_seq;
 }
 
-static void prv_order_raw_handler(const TouchEvent *event, void *context) {
-  s_raw_seq = ++s_seq;
-}
+static void prv_order_raw_handler(const TouchEvent *event, void *context) { s_raw_seq = ++s_seq; }
 
 static void prv_deliver_touch(TouchEventType type, int16_t x, int16_t y) {
   cl_assert(s_subscribed_info != NULL);
   PebbleEvent e = {
-    .type = PEBBLE_TOUCH_EVENT,
-    .touch = {
-      .event = {
-        .type = type,
-        .x = x,
-        .y = y,
-      },
-    },
+      .type = PEBBLE_TOUCH_EVENT,
+      .touch =
+          {
+              .event =
+                  {
+                      .type = type,
+                      .x = x,
+                      .y = y,
+                  },
+          },
   };
   s_subscribed_info->handler(&e, s_subscribed_info->context);
 }
@@ -131,13 +115,12 @@ void test_touch_service__initialize(void) {
   s_unsubscribe_count = 0;
   s_subscribed_info = NULL;
   s_touch_reset_count = 0;
-  s_system_rec = (HandlerRecord){ 0 };
-  s_raw_rec = (HandlerRecord){ 0 };
+  s_system_rec = (HandlerRecord){0};
+  s_raw_rec = (HandlerRecord){0};
   touch_service_state_init(&s_state);
 }
 
-void test_touch_service__cleanup(void) {
-}
+void test_touch_service__cleanup(void) {}
 
 // tests
 //////////////////////////////////////////

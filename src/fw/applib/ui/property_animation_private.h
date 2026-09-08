@@ -48,8 +48,8 @@ typedef struct {
       //! Valid when the property being animated is of type uint32_t
       uint32_t uint32;
     } from;
-  } values; //! See detail table
-  void *subject; //! The subject of the animation of which the property should be animated.
+  } values;       //! See detail table
+  void *subject;  //! The subject of the animation of which the property should be animated.
 } PropertyAnimationPrivate;
 
-PropertyAnimationPrivate* property_animation_private_clone(PropertyAnimationPrivate *from);
+PropertyAnimationPrivate *property_animation_private_clone(PropertyAnimationPrivate *from);

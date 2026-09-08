@@ -31,9 +31,7 @@ void sys_touch_set_raw_subscribed(bool subscribed);
 
 // sys_touch_set_raw_subscribed marks the calling task; make it settable.
 static PebbleTask s_current_task = PebbleTask_App;
-PebbleTask pebble_task_get_current(void) {
-  return s_current_task;
-}
+PebbleTask pebble_task_get_current(void) { return s_current_task; }
 
 static EventServiceAddSubscriberCallback s_add_subscriber_cb;
 static EventServiceRemoveSubscriberCallback s_remove_subscriber_cb;
@@ -55,9 +53,7 @@ void touch_session_arm(TouchSessionArmSource source) {
 
 // touch.c hands the arm to KernelMain because touch_session is KernelMain-only. Run it inline so
 // the test observes the arm in the same order the event loop would.
-void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
-  callback(data);
-}
+void launcher_task_add_callback(CallbackEventCallback callback, void *data) { callback(data); }
 
 static int s_touch_sensor_enable_count;
 static int s_touch_sensor_disable_count;
@@ -93,8 +89,7 @@ void test_touch__initialize(void) {
   sys_touch_set_raw_subscribed(false);
 }
 
-void test_touch__cleanup(void) {
-}
+void test_touch__cleanup(void) {}
 
 static void prv_assert_touch_event(TouchEventType type, int16_t x, int16_t y) {
   PebbleEvent event = fake_event_get_last();

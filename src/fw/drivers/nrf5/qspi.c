@@ -397,9 +397,7 @@ bool qspi_flash_check_whoami(QSPIFlash *dev) {
   return val == part->qspi_id_value;
 }
 
-bool qspi_flash_is_in_coredump_mode(QSPIFlash *dev) {
-  return dev->state->coredump_mode;
-}
+bool qspi_flash_is_in_coredump_mode(QSPIFlash *dev) { return dev->state->coredump_mode; }
 
 status_t qspi_flash_erase_begin(QSPIFlash *dev, uint32_t addr, bool is_subsector) {
   nrf_qspi_erase_len_t len;
@@ -773,14 +771,8 @@ status_t qspi_flash_lock_security_register(QSPIFlash *dev, uint32_t addr) {
 }
 #endif  // CONFIG_RECOVERY_FW
 
-status_t qspi_flash_write_protection_enable(QSPIFlash *dev) {
-  return S_NO_ACTION_REQUIRED;
-}
+status_t qspi_flash_write_protection_enable(QSPIFlash *dev) { return S_NO_ACTION_REQUIRED; }
 
-status_t qspi_flash_lock_sector(QSPIFlash *dev, uint32_t addr) {
-  return S_SUCCESS;
-}
+status_t qspi_flash_lock_sector(QSPIFlash *dev, uint32_t addr) { return S_SUCCESS; }
 
-status_t qspi_flash_unlock_all(QSPIFlash *dev) {
-  return S_SUCCESS;
-}
+status_t qspi_flash_unlock_all(QSPIFlash *dev) { return S_SUCCESS; }

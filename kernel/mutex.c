@@ -61,9 +61,7 @@ void pbl_mutex_unlock(struct pbl_mutex *m) {
   pbl_irq_unlock();
 }
 
-bool pbl_mutex_is_owner(const struct pbl_mutex *m) {
-  return m->count > 0 && m->owner == pbl_cur;
-}
+bool pbl_mutex_is_owner(const struct pbl_mutex *m) { return m->count > 0 && m->owner == pbl_cur; }
 
 void pbl_mutex_assert_held(const struct pbl_mutex *m, bool held) {
   KERNEL_ASSERT(pbl_mutex_is_owner(m) == held);

@@ -82,10 +82,10 @@ static bool prv_allocate_buffers(MicDeviceState *state) {
     // Clear the buffer
     memset(state->pdm_buffers[i], 0, buffer_size);
   }
-  
+
   // Initialize circular buffer with allocated storage
   circular_buffer_init(&state->circ_buffer, state->circ_buffer_storage, try_size);
-  
+
   return true;
 }
 
@@ -96,7 +96,7 @@ static void prv_free_buffers(MicDeviceState *state) {
     state->circ_buffer_storage = NULL;
   }
   state->circ_buffer_size = 0;
-  
+
   // Free PDM buffers
   for (int i = 0; i < PDM_BUFFER_COUNT; i++) {
     if (state->pdm_buffers[i]) {
@@ -112,25 +112,24 @@ static void prv_process_pdm_buffer(MicDeviceState *state, int16_t *pdm_data) {
     PBL_LOG_DBG("prv_process_pdm_buffer: Not running, ignoring data");
     return;
   }
-  
+
   // Ensure circular buffer storage is allocated
   if (!state->circ_buffer_storage) {
     PBL_LOG_DBG("prv_process_pdm_buffer: No circular buffer storage, ignoring data");
     return;
   }
-  
+
   // Ensure we have valid audio buffer info
   if (!state->audio_buffer || state->audio_buffer_len == 0) {
     PBL_LOG_DBG("prv_process_pdm_buffer: No audio buffer configured, ignoring data");
     return;
   }
-  
+
   // Write samples to circular buffer
   uint32_t samples_written = 0;
   for (int i = 0; i < PDM_BUFFER_SIZE_SAMPLES; i++) {
-    if (!circular_buffer_write(&state->circ_buffer,
-                              (const uint8_t *)&pdm_data[i],
-                              sizeof(int16_t))) {
+    if (!circular_buffer_write(&state->circ_buffer, (const uint8_t *)&pdm_data[i],
+                               sizeof(int16_t))) {
       break;  // Buffer is full, drop remaining samples
     }
     samples_written++;
@@ -149,24 +148,26 @@ static void prv_process_pdm_buffer(MicDeviceState *state, int16_t *pdm_data) {
 
   // Log dropout statistics periodically
   static uint32_t log_counter = 0;
-  if (++log_counter >= 100) { // Every 100 buffers (~2 seconds)
+  if (++log_counter >= 100) {  // Every 100 buffers (~2 seconds)
     if (dropped_samples > 0) {
       // Calculate percentage using integer arithmetic (x10 for one decimal place)
       uint32_t percent_x10 = (dropped_samples * 1000) / total_samples;
-      PBL_LOG_DBG("Audio dropouts: %"PRIu32"/%"PRIu32" samples dropped (%"PRIu32".%"PRIu32" percent), buffer util: %"PRIu16,
-              dropped_samples, total_samples, percent_x10 / 10, percent_x10 % 10, buffer_utilization);
+      PBL_LOG_DBG("Audio dropouts: %" PRIu32 "/%" PRIu32 " samples dropped (%" PRIu32 ".%" PRIu32
+                  " percent), buffer util: %" PRIu16,
+                  dropped_samples, total_samples, percent_x10 / 10, percent_x10 % 10,
+                  buffer_utilization);
     } else {
-      PBL_LOG_DBG("Audio buffer utilization: %"PRIu16" (%"PRIu16"/%"PRIu16" bytes)",
-              buffer_utilization, buffer_used, buffer_total);
+      PBL_LOG_DBG("Audio buffer utilization: %" PRIu16 " (%" PRIu16 "/%" PRIu16 " bytes)",
+                  buffer_utilization, buffer_used, buffer_total);
     }
     log_counter = 0;
-    total_samples = dropped_samples = 0; // Reset counters
+    total_samples = dropped_samples = 0;  // Reset counters
   }
-  
+
   // Check if we have enough data for a complete frame
   size_t frame_size_bytes = state->audio_buffer_len * sizeof(int16_t);
   uint16_t available_data = circular_buffer_get_read_space_remaining(&state->circ_buffer);
-  
+
   if (available_data >= frame_size_bytes && !state->main_pending) {
     state->main_pending = true;
 
@@ -183,30 +184,29 @@ static void prv_process_pdm_buffer(MicDeviceState *state, int16_t *pdm_data) {
 
 static void prv_pdm_event_handler(nrfx_pdm_evt_t const *p_evt) {
   MicDeviceState *state = MIC->state;
-  
+
   PBL_ASSERTN(state->is_initialized);
-  
+
   // Don't assert on is_running during shutdown - the PDM might send final events
   if (!state->is_running) {
     PBL_LOG_DBG("prv_pdm_event_handler: Microphone stopped, ignoring event");
     return;
   }
-  
+
   PBL_ASSERTN(p_evt->error == NRFX_PDM_NO_ERROR);
-  
+
   if (p_evt->buffer_requested) {
     uint8_t next_buffer_idx = (state->current_buffer_idx + 1) % PDM_BUFFER_COUNT;
-    nrfx_err_t err = nrfx_pdm_buffer_set(&MIC->pdm_instance, 
-                                        state->pdm_buffers[next_buffer_idx], 
-                                        PDM_BUFFER_SIZE_SAMPLES);
+    nrfx_err_t err = nrfx_pdm_buffer_set(&MIC->pdm_instance, state->pdm_buffers[next_buffer_idx],
+                                         PDM_BUFFER_SIZE_SAMPLES);
     if (err == NRFX_SUCCESS) {
       state->current_buffer_idx = next_buffer_idx;
     }
   }
-  
+
   if (p_evt->buffer_released) {
     int16_t *pdm_data = (int16_t *)p_evt->buffer_released;
-    
+
     if (pdm_data && prv_is_valid_buffer(state, pdm_data)) {
       prv_process_pdm_buffer(state, pdm_data);
     }
@@ -215,31 +215,31 @@ static void prv_pdm_event_handler(nrfx_pdm_evt_t const *p_evt) {
 
 void mic_init(const MicDevice *this) {
   PBL_ASSERTN(this);
-  
+
   MicDeviceState *state = this->state;
-  
+
   if (state && state->is_initialized) {
     return;
   }
 
   memset(state, 0, sizeof(MicDeviceState));
-  
+
   // Initialize PDM configuration
   state->pdm_config = (nrfx_pdm_config_t)NRFX_PDM_DEFAULT_CONFIG(this->clk_pin, this->data_pin);
   state->pdm_config.clock_freq = NRF_PDM_FREQ_1280K;
   state->pdm_config.ratio = NRF_PDM_RATIO_80X;
   state->pdm_config.gain_l = BOARD_CONFIG.mic_config.gain;
   state->pdm_config.gain_r = BOARD_CONFIG.mic_config.gain;
-  
+
   pbl_mutex_init(&state->mutex);
-  
+
   // Initialize PDM driver once during init
   nrfx_err_t err = nrfx_pdm_init(&this->pdm_instance, &state->pdm_config, prv_pdm_event_handler);
   if (err != NRFX_SUCCESS) {
     PBL_LOG_ERR("Failed to initialize PDM: %d", err);
     return;
   }
-  
+
   state->is_initialized = true;
 }
 
@@ -261,12 +261,13 @@ static void prv_dispatch_samples_system_task(void *data) {
 
   // Process a limited number of frames to provide backpressure
   // This prevents overwhelming the Bluetooth send buffer
-  if (state->is_running && state->data_handler && state->audio_buffer && state->circ_buffer_storage) {
-
+  if (state->is_running && state->data_handler && state->audio_buffer &&
+      state->circ_buffer_storage) {
     size_t frame_size_bytes = state->audio_buffer_len * sizeof(int16_t);
     int frames_processed = 0;
 
-    while (state->is_running && state->data_handler && frames_processed < MAX_FRAMES_PER_SYSTEM_TASK_CALLBACK) {
+    while (state->is_running && state->data_handler &&
+           frames_processed < MAX_FRAMES_PER_SYSTEM_TASK_CALLBACK) {
       // Check if we have enough data for a complete frame
       uint16_t available_data = circular_buffer_get_read_space_remaining(&state->circ_buffer);
 
@@ -275,9 +276,8 @@ static void prv_dispatch_samples_system_task(void *data) {
       }
 
       // Copy one frame
-      uint16_t bytes_copied = circular_buffer_copy(&state->circ_buffer,
-          (uint8_t *)state->audio_buffer,
-          frame_size_bytes);
+      uint16_t bytes_copied = circular_buffer_copy(
+          &state->circ_buffer, (uint8_t *)state->audio_buffer, frame_size_bytes);
 
       if (bytes_copied == frame_size_bytes) {
         // Call callback with the frame
@@ -318,14 +318,14 @@ static void prv_dispatch_samples_system_task(void *data) {
 void mic_set_volume(const MicDevice *this, uint16_t volume) {
   PBL_ASSERTN(this);
   PBL_ASSERTN(this->state);
-  
+
   MicDeviceState *state = this->state;
-  
+
   if (state->is_running) {
     PBL_LOG_WRN("Cannot set volume while microphone is running");
     return;
   }
-  
+
   // Scale volume from 0-1024 range to nRF PDM gain range (0-80)
   // Volume 0 = minimum gain, 1024 = maximum gain
   uint16_t nrf_gain;
@@ -335,16 +335,17 @@ void mic_set_volume(const MicDevice *this, uint16_t volume) {
     nrf_gain = NRF_PDM_GAIN_MAXIMUM;
   } else {
     // Linear scaling: volume * (max - min) / 1024 + min
-    nrf_gain = (volume * (NRF_PDM_GAIN_MAXIMUM - NRF_PDM_GAIN_MINIMUM)) / 1024 + NRF_PDM_GAIN_MINIMUM;
+    nrf_gain =
+        (volume * (NRF_PDM_GAIN_MAXIMUM - NRF_PDM_GAIN_MINIMUM)) / 1024 + NRF_PDM_GAIN_MINIMUM;
   }
-  
+
   state->pdm_config.gain_l = nrf_gain;
   state->pdm_config.gain_r = nrf_gain;
 }
 
 static bool prv_start_pdm_capture(const MicDevice *this) {
   MicDeviceState *state = this->state;
-  
+
   // Clear buffers and set initial buffer
   for (int i = 0; i < PDM_BUFFER_COUNT; i++) {
     if (state->pdm_buffers[i]) {
@@ -352,21 +353,20 @@ static bool prv_start_pdm_capture(const MicDevice *this) {
     }
   }
   state->current_buffer_idx = 0;
-  
+
   // Check if buffers are valid
   if (!state->pdm_buffers[0] || !state->pdm_buffers[1]) {
-    PBL_LOG_ERR("Invalid PDM buffers: [0]=%p [1]=%p", 
-            state->pdm_buffers[0], state->pdm_buffers[1]);
+    PBL_LOG_ERR("Invalid PDM buffers: [0]=%p [1]=%p", state->pdm_buffers[0], state->pdm_buffers[1]);
     return false;
   }
-  
+
   // Try starting PDM first, then set buffer in event handler
   nrfx_err_t err = nrfx_pdm_start(&this->pdm_instance);
   if (err != NRFX_SUCCESS) {
     PBL_LOG_ERR("Failed to start PDM: %d", err);
     return false;
   }
-  
+
   return true;
 }
 
@@ -377,23 +377,23 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
   PBL_ASSERTN(data_handler);
   PBL_ASSERTN(audio_buffer);
   PBL_ASSERTN(audio_buffer_len > 0);
-  
+
   MicDeviceState *state = this->state;
-  
+
   pbl_mutex_lock(&state->mutex, PBL_FOREVER);
-  
+
   if (state->is_running) {
     PBL_LOG_WRN("Microphone is already running");
     pbl_mutex_unlock(&state->mutex);
     return false;
   }
-  
+
   if (!state->is_initialized) {
     PBL_LOG_ERR("Microphone not initialized");
     pbl_mutex_unlock(&state->mutex);
     return false;
   }
-  
+
   // Allocate buffers dynamically. prv_allocate_buffers also initializes the
   // circular buffer with the actual (possibly shrunk) size.
   if (!prv_allocate_buffers(state)) {
@@ -401,22 +401,22 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
     pbl_mutex_unlock(&state->mutex);
     return false;
   }
-  
+
   state->data_handler = data_handler;
   state->handler_context = context;
   state->audio_buffer = audio_buffer;
   state->audio_buffer_len = audio_buffer_len;
   state->main_pending = false;
-  
+
   // Request high frequency crystal oscillator
   clocksource_hfxo_request();
-  
+
   // Set is_running to true BEFORE starting PDM, since the event handler will be called immediately
   state->is_running = true;
-  
+
   // Start PDM capture
   if (!prv_start_pdm_capture(this)) {
-    state->is_running = false;  // Reset on failure    
+    state->is_running = false;  // Reset on failure
     clocksource_hfxo_release();
     prv_free_buffers(state);
     pbl_mutex_unlock(&state->mutex);
@@ -430,32 +430,32 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
 void mic_stop(const MicDevice *this) {
   PBL_ASSERTN(this);
   PBL_ASSERTN(this->state);
-  
+
   MicDeviceState *state = this->state;
-  
+
   pbl_mutex_lock(&state->mutex, PBL_FOREVER);
-  
+
   if (!state->is_running) {
     pbl_mutex_unlock(&state->mutex);
     return;
   }
-  
+
   // Mark as stopped first to prevent new buffer requests
   state->is_running = false;
-  
+
   // Stop PDM capture
   nrfx_pdm_stop(&this->pdm_instance);
-  
+
   // Give the PDM hardware a moment to finish any pending operations
   // This helps ensure no DMA operations are still accessing our buffers
-  psleep(1); // 1ms delay to let hardware settle
-  
+  psleep(1);  // 1ms delay to let hardware settle
+
   // Release high frequency oscillator
   clocksource_hfxo_release();
-  
+
   // Free dynamically allocated buffers
   prv_free_buffers(state);
-  
+
   // Clear state
   state->data_handler = NULL;
   state->handler_context = NULL;
@@ -472,7 +472,8 @@ void mic_stop(const MicDevice *this) {
 // These commands are defined in the console command table but Asterix doesn't need
 // the full accessory-based microphone streaming functionality
 
-void command_mic_start(char *timeout_str, char *sample_size_str, char *sample_rate_str, char *format_str) {
+void command_mic_start(char *timeout_str, char *sample_size_str, char *sample_rate_str,
+                       char *format_str) {
   prompt_send_response("Microphone console commands not supported on Asterix");
   prompt_send_response("Use the standard microphone API instead");
 }
@@ -485,7 +486,7 @@ void command_mic_read(void) {
 bool mic_is_running(const MicDevice *this) {
   PBL_ASSERTN(this);
   PBL_ASSERTN(this->state);
-  
+
   return this->state->is_running;
 }
 

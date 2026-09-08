@@ -17,13 +17,12 @@ static Subscribe *s_subscribe_head;
 static BTErrno s_subscribe_return_value;
 
 BTErrno gatt_client_subscriptions_subscribe(BLECharacteristic characteristic,
-                                            BLESubscription subscription_type,
-                                            GAPLEClient client) {
+                                            BLESubscription subscription_type, GAPLEClient client) {
   Subscribe *subscribe = malloc(sizeof(Subscribe));
-  *subscribe = (const Subscribe) {
-    .characteristic = characteristic,
-    .subscription_type = subscription_type,
-    .client = client,
+  *subscribe = (const Subscribe){
+      .characteristic = characteristic,
+      .subscription_type = subscription_type,
+      .client = client,
   };
   if (s_subscribe_head) {
     list_append((ListNode *)s_subscribe_head, &subscribe->node);
@@ -45,26 +44,20 @@ uint16_t gatt_client_subscriptions_consume_notification(BLECharacteristic *chara
   return 0;
 }
 
-void gatt_client_subscriptions_cleanup_by_client(GAPLEClient client) {
-
-}
+void gatt_client_subscriptions_cleanup_by_client(GAPLEClient client) {}
 
 void gatt_client_subscriptions_cleanup_by_connection(struct GAPLEConnection *connection,
-                                                     bool should_unsubscribe) {
-
-}
+                                                     bool should_unsubscribe) {}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Fake Manipulation
 
-void fake_gatt_client_subscriptions_init(void) {
-  s_subscribe_return_value = BTErrnoOK;
-}
+void fake_gatt_client_subscriptions_init(void) { s_subscribe_return_value = BTErrnoOK; }
 
 void fake_gatt_client_subscriptions_deinit(void) {
   Subscribe *subscribe = s_subscribe_head;
   while (subscribe) {
-    Subscribe *next = (Subscribe *) subscribe->node.next;
+    Subscribe *next = (Subscribe *)subscribe->node.next;
     free(subscribe);
     subscribe = next;
   }
@@ -85,5 +78,5 @@ void fake_gatt_client_subscriptions_assert_subscribe(BLECharacteristic character
   } else {
     cl_assert_(false, "No gatt_client_subscriptions_subscribe() has happened at all");
   }
-  s_subscribe_head = (Subscribe *) list_pop_head(&s_subscribe_head->node);
+  s_subscribe_head = (Subscribe *)list_pop_head(&s_subscribe_head->node);
 }

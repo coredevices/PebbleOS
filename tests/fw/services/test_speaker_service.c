@@ -100,8 +100,7 @@ void test_speaker_service__short_tone_drains_pipeline_before_stop(void) {
   const uint16_t duration_ms = 25;
   const uint32_t tone_samples = (SAMPLE_RATE * duration_ms) / 1000;
 
-  cl_assert(speaker_service_play_tone(1000, duration_ms, 0 /* sine */,
-                                      0 /* full velocity */,
+  cl_assert(speaker_service_play_tone(1000, duration_ms, 0 /* sine */, 0 /* full velocity */,
                                       SpeakerPriorityApp, 80));
   cl_assert_equal_i(speaker_service_get_state(), SpeakerStatePlaying);
 

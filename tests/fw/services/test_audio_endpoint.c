@@ -17,26 +17,29 @@
 #include "fake_system_task.h"
 #include "fake_new_timer.h"
 
-extern void audio_endpoint_protocol_msg_callback(CommSession *session,
-                                                 const uint8_t* data, size_t size);
+extern void audio_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *data,
+                                                 size_t size);
 
 static AudioEndpointSessionId s_session_id;
 
 static uint8_t s_test_frame[] = {
-  0x01, 0x02, 0x03, 0x04,
+    0x01,
+    0x02,
+    0x03,
+    0x04,
 };
 
 static CommSession *s_session;
 
-static void prv_test_data_transfer_msg(uint16_t endpoint_id, const uint8_t* data,
-    unsigned int length) {
+static void prv_test_data_transfer_msg(uint16_t endpoint_id, const uint8_t *data,
+                                       unsigned int length) {
   DataTransferMsg *msg = (DataTransferMsg *)data;
 
   cl_assert(msg->msg_id == MsgIdDataTransfer);
   cl_assert(msg->session_id == s_session_id);
 
-  for (unsigned int i = 0; i < msg->frame_count; i += (sizeof(msg->frame_count) +
-      sizeof(s_test_frame))) {
+  for (unsigned int i = 0; i < msg->frame_count;
+       i += (sizeof(msg->frame_count) + sizeof(s_test_frame))) {
     cl_assert(msg->frames[i] == sizeof(s_test_frame));
 
     for (unsigned int j = 0; j < sizeof(s_test_frame); j++) {
@@ -45,8 +48,8 @@ static void prv_test_data_transfer_msg(uint16_t endpoint_id, const uint8_t* data
   }
 }
 
-static void prv_test_stop_transfer_msg(uint16_t endpoint_id, const uint8_t* data,
-    unsigned int length) {
+static void prv_test_stop_transfer_msg(uint16_t endpoint_id, const uint8_t *data,
+                                       unsigned int length) {
   StopTransferMsg *msg = (StopTransferMsg *)data;
 
   cl_assert(msg->msg_id == MsgIdStopTransfer);
@@ -67,7 +70,6 @@ void test_audio_endpoint__initialize(void) {
   s_session_id = audio_endpoint_setup_transfer(prv_test_stop_transfer_callback);
   cl_assert(s_session_id != AUDIO_ENDPOINT_SESSION_INVALID_ID);
 }
-
 
 void test_audio_endpoint__session_control(void) {
   // Test that it is not possible to start another transfer session if one is already on-going:

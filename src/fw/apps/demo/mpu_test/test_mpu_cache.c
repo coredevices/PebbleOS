@@ -19,7 +19,7 @@
 typedef struct {
   Window window;
   TextLayer text;
-  ALIGN(32) uint32_t test;   // Align on 32-bit boundary (D-cache line on M7 is 32 bytes)
+  ALIGN(32) uint32_t test;  // Align on 32-bit boundary (D-cache line on M7 is 32 bytes)
 } AppData;
 
 static void prv_window_load(Window *window) {
@@ -28,15 +28,15 @@ static void prv_window_load(Window *window) {
   GRect frame;
   layer_get_frame(window_get_root_layer(&app_data->window), &frame);
   GRect text_frame = {
-    .size.h = 48,
-    .size.w = 100,
+      .size.h = 48,
+      .size.w = 100,
   };
   grect_align(&text_frame, &frame, GAlignCenter, false);
   text_layer_init(&app_data->text, &text_frame);
   GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_28);
   text_layer_set_font(&app_data->text, font);
   text_layer_set_text_alignment(&app_data->text, GTextAlignmentCenter);
-  layer_add_child(window_get_root_layer(&app_data->window), (Layer*)&app_data->text);
+  layer_add_child(window_get_root_layer(&app_data->window), (Layer *)&app_data->text);
 }
 
 static void prv_verify_modify_on_app_task(void *data) {
@@ -64,8 +64,7 @@ static void prv_handle_init(void) {
   app_state_set_user_data(app_data);
   window_init(&app_data->window, WINDOW_NAME("test_mpu"));
   window_set_user_data(&app_data->window, app_data);
-  window_set_window_handlers(&app_data->window, &(WindowHandlers) {
-      .load = prv_window_load });
+  window_set_window_handlers(&app_data->window, &(WindowHandlers){.load = prv_window_load});
 
   const bool animated = true;
   app_window_stack_push(&app_data->window, animated);
@@ -79,10 +78,8 @@ static void prv_main(void) {
   app_event_loop();
 }
 
-const PebbleProcessMd* test_mpu_cache_get_info() {
-  static const PebbleProcessMdSystem s_test_mpu_info = {
-    .common.main_func = prv_main,
-    .name = "Test MPU cache"
-  };
-  return (const PebbleProcessMd*) &s_test_mpu_info;
+const PebbleProcessMd *test_mpu_cache_get_info() {
+  static const PebbleProcessMdSystem s_test_mpu_info = {.common.main_func = prv_main,
+                                                        .name = "Test MPU cache"};
+  return (const PebbleProcessMd *)&s_test_mpu_info;
 }

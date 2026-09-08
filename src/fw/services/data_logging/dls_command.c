@@ -11,16 +11,15 @@
 static bool command_dls_list_cb(DataLoggingSession *session, void *data) {
   char buffer[80];
   prompt_send_response_fmt(buffer, sizeof(buffer),
-      "session_id : %"PRIu8", tag: %"PRIu32", bytes: %"PRIu32", write_offset: %"PRIu32,
-      session->comm.session_id, session->tag, session->storage.num_bytes,
-      session->storage.write_offset);
+                           "session_id : %" PRIu8 ", tag: %" PRIu32 ", bytes: %" PRIu32
+                           ", write_offset: %" PRIu32,
+                           session->comm.session_id, session->tag, session->storage.num_bytes,
+                           session->storage.write_offset);
 
   return true;
 }
 
-void command_dls_list(void) {
-  dls_list_for_each_session(command_dls_list_cb, 0);
-}
+void command_dls_list(void) { dls_list_for_each_session(command_dls_list_cb, 0); }
 
 // Unused, comment out to avoid pulling in the string literals
 #if 0
@@ -38,8 +37,7 @@ void command_dls_show(const char *id) {
 
   char buffer[80];
 
-#define WRITE_LINE(fmt, arg) \
-  prompt_send_response_fmt(buffer, sizeof(buffer), fmt, arg)
+#define WRITE_LINE(fmt, arg) prompt_send_response_fmt(buffer, sizeof(buffer), fmt, arg)
 
   WRITE_LINE("session_id %u", logging_session->comm.session_id);
   WRITE_LINE("uuid %s", uuid_b);
@@ -57,9 +55,7 @@ void command_dls_show(const char *id) {
 }
 #endif
 
-void command_dls_erase_all(void) {
-  dls_clear();
-}
+void command_dls_erase_all(void) { dls_clear(); }
 
 void command_dls_send_all(void) {
   // Use this to trigger a send of all data logging data to the phone, helpful for testing

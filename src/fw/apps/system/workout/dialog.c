@@ -66,20 +66,17 @@ static void prv_workout_dialog_load(Window *window) {
   // Check if the text takes up more than one line. If the dialog has a single line of text,
   // the icon and line of text are positioned lower so as to be more vertically centered.
   GContext *ctx = graphics_context_get_current_context();
-  const GTextAlignment text_alignment = PBL_IF_RECT_ELSE(GTextAlignmentCenter,
-      show_action_bar ? GTextAlignmentRight : GTextAlignmentCenter);
+  const GTextAlignment text_alignment = PBL_IF_RECT_ELSE(
+      GTextAlignmentCenter, show_action_bar ? GTextAlignmentRight : GTextAlignmentCenter);
   {
     // do all this in a block so we enforce that nobody uses these variables outside of the block
     // when dealing with round displays, sizes change depending on location.
-    const GRect probe_rect = GRect(x, y + text_single_line_text_offset_px,
-                                   w, max_text_line_height_px);
-    text_height = graphics_text_layout_get_max_used_size(ctx,
-                                                         dialog->buffer,
-                                                         dialog_text_font,
-                                                         probe_rect,
-                                                         GTextOverflowModeWordWrap,
-                                                         text_alignment,
-                                                         text_attributes).h;
+    const GRect probe_rect =
+        GRect(x, y + text_single_line_text_offset_px, w, max_text_line_height_px);
+    text_height = graphics_text_layout_get_max_used_size(ctx, dialog->buffer, dialog_text_font,
+                                                         probe_rect, GTextOverflowModeWordWrap,
+                                                         text_alignment, text_attributes)
+                      .h;
     if (text_height <= single_line_text_height_px) {
       text_top_margin_px += text_single_line_text_offset_px;
       icon_top_margin_px += icon_single_line_text_offset_px;
@@ -95,8 +92,7 @@ static void prv_workout_dialog_load(Window *window) {
 
   // Set up the text.
   TextLayer *text_layer = &dialog->text_layer;
-  text_layer_init_with_parameters(text_layer, &GRect(x, y, w, h),
-                                  dialog->buffer, dialog_text_font,
+  text_layer_init_with_parameters(text_layer, &GRect(x, y, w, h), dialog->buffer, dialog_text_font,
                                   dialog->text_color, GColorClear, text_alignment,
                                   GTextOverflowModeWordWrap);
 #if PBL_ROUND
@@ -110,10 +106,9 @@ static void prv_workout_dialog_load(Window *window) {
     y = subtext_top_margin_px;
 
     TextLayer *subtext_layer = &workout_dialog->subtext_layer;
-    text_layer_init_with_parameters(subtext_layer, &GRect(x, y, w, h),
-                                    workout_dialog->subtext_buffer, dialog_subtext_font,
-                                    dialog->text_color, GColorClear, text_alignment,
-                                    GTextOverflowModeWordWrap);
+    text_layer_init_with_parameters(
+        subtext_layer, &GRect(x, y, w, h), workout_dialog->subtext_buffer, dialog_subtext_font,
+        dialog->text_color, GColorClear, text_alignment, GTextOverflowModeWordWrap);
 #if PBL_ROUND
     text_layer_enable_screen_text_flow_and_paging(subtext_layer, TEXT_FLOW_INSET_PX);
 #endif
@@ -135,7 +130,7 @@ static void prv_workout_dialog_load(Window *window) {
   // text is right aligned to if action bar is present otherwise do what rect does
   if (show_action_bar) {
     x = grect_get_max_x(bounds) - action_bar_width - content_and_action_bar_horizontal_spacing -
-            icon_size.w;
+        icon_size.w;
   } else {
     x = (grect_get_max_x(bounds) - action_bar_width - icon_size.w) / 2;
   }
@@ -180,11 +175,11 @@ void workout_dialog_init(WorkoutDialog *workout_dialog, const char *dialog_name)
 
   dialog_init(&workout_dialog->dialog, dialog_name);
   Window *window = &workout_dialog->dialog.window;
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_workout_dialog_load,
-    .unload = prv_workout_dialog_unload,
-    .appear = prv_workout_dialog_appear,
-  });
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_workout_dialog_load,
+                                         .unload = prv_workout_dialog_unload,
+                                         .appear = prv_workout_dialog_appear,
+                                     });
   window_set_user_data(window, workout_dialog);
 
   gbitmap_init_with_resource(&workout_dialog->confirm_icon, RESOURCE_ID_ACTION_BAR_ICON_CHECK);
@@ -207,9 +202,7 @@ WorkoutDialog *workout_dialog_create(const char *dialog_name) {
   return workout_dialog;
 }
 
-Dialog *workout_dialog_get_dialog(WorkoutDialog *workout_dialog) {
-  return &workout_dialog->dialog;
-}
+Dialog *workout_dialog_get_dialog(WorkoutDialog *workout_dialog) { return &workout_dialog->dialog; }
 
 ActionBarLayer *workout_dialog_get_action_bar(WorkoutDialog *workout_dialog) {
   return &workout_dialog->action_bar;
@@ -240,9 +233,7 @@ void app_workout_dialog_push(WorkoutDialog *workout_dialog) {
   app_dialog_push(&workout_dialog->dialog);
 }
 
-void workout_dialog_pop(WorkoutDialog *workout_dialog) {
-  dialog_pop(&workout_dialog->dialog);
-}
+void workout_dialog_pop(WorkoutDialog *workout_dialog) { dialog_pop(&workout_dialog->dialog); }
 
 void workout_dialog_set_text(WorkoutDialog *workout_dialog, const char *text) {
   dialog_set_text(&workout_dialog->dialog, text);

@@ -18,35 +18,23 @@
 #include "pbl/util/size.h"
 #include "pbl/util/string.h"
 
-#define ARROW_SIZE_PX \
-    PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,     \
-      /* This is the same as Medium until Small is designed */     \
-      /* small */ PBL_IF_RECT_ELSE(8, 6),                          \
-      /* medium */ PBL_IF_RECT_ELSE(8, 6),                         \
-      /* large */ 6,                                               \
-      /* This is the same as Large until ExtraLarge is designed */ \
-      /* x-large */ 6                                              \
-    )
+#define ARROW_SIZE_PX                                                                         \
+  PREFERRED_CONTENT_SIZE_SWITCH(                                                              \
+      PreferredContentSizeDefault, /* This is the same as Medium until Small is designed */   \
+      /* small */ PBL_IF_RECT_ELSE(8, 6), /* medium */ PBL_IF_RECT_ELSE(8, 6), /* large */ 6, \
+      /* This is the same as Large until ExtraLarge is designed */ /* x-large */ 6)
 
-#define TIME_NUMBERS_MARGIN_W                                      \
-    PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,     \
-      /* This is the same as Medium until Small is designed */     \
-      /* small */ 0,                                               \
-      /* medium */ 0,                                              \
-      /* large */ 2,                                               \
-      /* This is the same as Large until ExtraLarge is designed */ \
-      /* x-large */ 2                                              \
-    )
+#define TIME_NUMBERS_MARGIN_W                                                               \
+  PREFERRED_CONTENT_SIZE_SWITCH(                                                            \
+      PreferredContentSizeDefault, /* This is the same as Medium until Small is designed */ \
+      /* small */ 0, /* medium */ 0, /* large */ 2,                                         \
+      /* This is the same as Large until ExtraLarge is designed */ /* x-large */ 2)
 
-#define TIME_WORDS_OFFSET_Y                                        \
-    PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,     \
-      /* This is the same as Medium until Small is designed */     \
-      /* small */ 0,                                               \
-      /* medium */ 0,                                              \
-      /* large */ 2,                                               \
-      /* This is the same as Large until ExtraLarge is designed */ \
-      /* x-large */ 2                                              \
-    )
+#define TIME_WORDS_OFFSET_Y                                                                 \
+  PREFERRED_CONTENT_SIZE_SWITCH(                                                            \
+      PreferredContentSizeDefault, /* This is the same as Medium until Small is designed */ \
+      /* small */ 0, /* medium */ 0, /* large */ 2,                                         \
+      /* This is the same as Large until ExtraLarge is designed */ /* x-large */ 2)
 
 typedef struct TimelineLayoutStyle {
   int16_t fat_time_margin_h;
@@ -62,41 +50,40 @@ typedef struct TimelineLayoutStyle {
 } TimelineLayoutStyle;
 
 static const TimelineLayoutStyle s_style_medium = {
-  .fat_time_margin_h = -8,
-  .thin_time_margin_h = -8,
-  .primary_list_margin_h = 6,
-  .primary_line_spacing_delta = -2,
-  .fat_future_title_offset_y = 0,
-  .fat_past_title_offset_y = 0,
-  .thin_future_title_offset_y = 0,
-  .thin_past_title_offset_y = 0,
+    .fat_time_margin_h = -8,
+    .thin_time_margin_h = -8,
+    .primary_list_margin_h = 6,
+    .primary_line_spacing_delta = -2,
+    .fat_future_title_offset_y = 0,
+    .fat_past_title_offset_y = 0,
+    .thin_future_title_offset_y = 0,
+    .thin_past_title_offset_y = 0,
 };
 
 static const TimelineLayoutStyle s_style_large = {
-  .fat_time_margin_h = -3,
-  .thin_time_margin_h = -6,
-  .primary_list_margin_h = 2,
-  // PBL-42540: This property is dependent on the screen size. Whether there can be a secondary
-  // depends on whether the remaining screen space after fat permits.
-  .primary_secondary_peek_margin_h = -5,
-  .thin_can_have_secondary = true,
-  .fat_future_title_offset_y = 25,
-  .fat_past_title_offset_y = -30,
-  .thin_future_title_offset_y = 45,
-  .thin_past_title_offset_y = 10,
+    .fat_time_margin_h = -3,
+    .thin_time_margin_h = -6,
+    .primary_list_margin_h = 2,
+    // PBL-42540: This property is dependent on the screen size. Whether there can be a secondary
+    // depends on whether the remaining screen space after fat permits.
+    .primary_secondary_peek_margin_h = -5,
+    .thin_can_have_secondary = true,
+    .fat_future_title_offset_y = 25,
+    .fat_past_title_offset_y = -30,
+    .thin_future_title_offset_y = 45,
+    .thin_past_title_offset_y = 10,
 };
 
-static const TimelineLayoutStyle * const s_styles[NumPreferredContentSizes] = {
-  [PreferredContentSizeSmall] = &s_style_medium,
-  [PreferredContentSizeMedium] = &s_style_medium,
-  [PreferredContentSizeLarge] = &s_style_large,
-  [PreferredContentSizeExtraLarge] = &s_style_large,
+static const TimelineLayoutStyle *const s_styles[NumPreferredContentSizes] = {
+    [PreferredContentSizeSmall] = &s_style_medium,
+    [PreferredContentSizeMedium] = &s_style_medium,
+    [PreferredContentSizeLarge] = &s_style_large,
+    [PreferredContentSizeExtraLarge] = &s_style_large,
 };
 
 static GPath s_page_break_arrow_path = {
-  .num_points = 3,
-  .points = (GPoint[]) {{-ARROW_SIZE_PX, 0}, {ARROW_SIZE_PX, 0}, {0, ARROW_SIZE_PX}}
-};
+    .num_points = 3,
+    .points = (GPoint[]){{-ARROW_SIZE_PX, 0}, {ARROW_SIZE_PX, 0}, {0, ARROW_SIZE_PX}}};
 
 static void prv_init_icon(TimelineLayout *layout, const GRect *icon_frame,
                           TimelineResourceSize icon_res_size, TimelineResourceId resource,
@@ -110,9 +97,10 @@ static const TimelineLayoutStyle *prv_get_style(void) {
   return s_styles[PreferredContentSizeDefault];
 }
 
-TimelineResourceId timeline_layout_get_icon_resource_id(
-    LayoutLayerMode mode, const AttributeList *attributes, TimelineResourceSize card_icon_size,
-    TimelineResourceId fallback_resource) {
+TimelineResourceId timeline_layout_get_icon_resource_id(LayoutLayerMode mode,
+                                                        const AttributeList *attributes,
+                                                        TimelineResourceSize card_icon_size,
+                                                        TimelineResourceId fallback_resource) {
   AttributeId card_attr_id;
   switch (card_icon_size) {
     default:
@@ -141,23 +129,24 @@ void timeline_layout_init_with_icon_id(TimelineLayout *layout, const LayoutLayer
   TimelineLayoutInfo *info = config->context;
 
   static const LayoutLayerImpl s_layout_layer_impl = {
-    .size_getter = timeline_layout_get_content_size,
-    .destructor = timeline_layout_destroy,
-    .mode_setter = timeline_layout_change_mode,
+      .size_getter = timeline_layout_get_content_size,
+      .destructor = timeline_layout_destroy,
+      .mode_setter = timeline_layout_change_mode,
 #if PBL_COLOR
-    .color_getter = timeline_layout_get_colors,
+      .color_getter = timeline_layout_get_colors,
 #endif
   };
 
-  *layout = (TimelineLayout) {
-    .layout_layer = {
-      .mode = config->mode,
-      .attributes = config->attributes,
-      .impl = &s_layout_layer_impl,
-    },
-    .impl = timeline_layout_impl,
-    .info = info,
-    .has_page_break = false,
+  *layout = (TimelineLayout){
+      .layout_layer =
+          {
+              .mode = config->mode,
+              .attributes = config->attributes,
+              .impl = &s_layout_layer_impl,
+          },
+      .impl = timeline_layout_impl,
+      .info = info,
+      .has_page_break = false,
   };
 
   prv_init_colors(layout);
@@ -167,10 +156,11 @@ void timeline_layout_init_with_icon_id(TimelineLayout *layout, const LayoutLayer
   layer_set_update_proc((Layer *)layout, prv_update_proc);
 
   GRect icon_frame;
-  timeline_layout_get_icon_frame(&(GRect) { GPointZero , config->frame->size },
-                                 info->scroll_direction, &icon_frame);
+  timeline_layout_get_icon_frame(&(GRect){GPointZero, config->frame->size}, info->scroll_direction,
+                                 &icon_frame);
   const TimelineResourceSize icon_size = (config->mode == LayoutLayerModeCard)
-      ? layout->impl->card_icon_size : TimelineResourceSizeTiny;
+                                             ? layout->impl->card_icon_size
+                                             : TimelineResourceSizeTiny;
   prv_init_icon(layout, &icon_frame, icon_size, icon_resource, layout->impl->default_icon,
                 config->app_id);
   timeline_layout_init_view(layout, layout->layout_layer.mode);
@@ -201,11 +191,11 @@ void timeline_layout_deinit(TimelineLayout *timeline_layout) {
 }
 
 void timeline_layout_init_info(TimelineLayoutInfo *info, TimelineItem *item, time_t current_day) {
-  *info = (TimelineLayoutInfo) {
-    .timestamp = item->header.timestamp,
-    .duration_s = item->header.duration * SECONDS_PER_MINUTE,
-    .current_day = current_day,
-    .all_day = item->header.all_day,
+  *info = (TimelineLayoutInfo){
+      .timestamp = item->header.timestamp,
+      .duration_s = item->header.duration * SECONDS_PER_MINUTE,
+      .current_day = current_day,
+      .all_day = item->header.all_day,
   };
 
   info->end_time = info->timestamp + info->duration_s;
@@ -219,7 +209,8 @@ void timeline_layout_init_info(TimelineLayoutInfo *info, TimelineItem *item, tim
   // Pins representing the last day of a multiday event use the end time
   info->pin_time = (!info->all_day && time_util_get_midnight_of(info->timestamp) != current_day &&
                     time_util_get_midnight_of(info->end_time) == current_day)
-      ? info->end_time : info->timestamp;
+                       ? info->end_time
+                       : info->timestamp;
 }
 
 void timeline_layout_get_icon_frame(const GRect *bounds, TimelineScrollDirection scroll_direction,
@@ -231,23 +222,22 @@ void timeline_layout_get_icon_frame(const GRect *bounds, TimelineScrollDirection
   const bool use_large_style = (PreferredContentSizeDefault >= PreferredContentSizeLarge);
   // s_style_large: future_top_margin=39, past layout origin=117, icon_offset_y=3
   // s_style_medium: future_top_margin=39, past layout origin=61, icon_offset_y=0
-  PBL_UNUSED const int offset_y_round = use_large_style ? (is_future ? 76 : -2)
-                                                        : (is_future ? 40 : 17);
+  PBL_UNUSED const int offset_y_round =
+      use_large_style ? (is_future ? 76 : -2) : (is_future ? 40 : 17);
   const GPoint origin = {
-    .x = bounds->size.w - size.w + 2,
-    .y = PBL_IF_RECT_ELSE(offset_y_rect, offset_y_round),
+      .x = bounds->size.w - size.w + 2,
+      .y = PBL_IF_RECT_ELSE(offset_y_rect, offset_y_round),
   };
-  *frame = (GRect) { gpoint_add(bounds->origin, origin), size };
+  *frame = (GRect){gpoint_add(bounds->origin, origin), size};
 }
 
-static KinoReel *prv_create_kino_reel_with_timeline_resource(
-    TimelineLayout *timeline_layout, TimelineResourceSize icon_res_size,
-    TimelineResourceId resource, TimelineResourceId fallback_resource, const Uuid *app_id) {
-  timeline_layout->icon_info = (TimelineResourceInfo) {
-    .res_id = resource,
-    .app_id = app_id,
-    .fallback_id = fallback_resource
-  };
+static KinoReel *prv_create_kino_reel_with_timeline_resource(TimelineLayout *timeline_layout,
+                                                             TimelineResourceSize icon_res_size,
+                                                             TimelineResourceId resource,
+                                                             TimelineResourceId fallback_resource,
+                                                             const Uuid *app_id) {
+  timeline_layout->icon_info = (TimelineResourceInfo){
+      .res_id = resource, .app_id = app_id, .fallback_id = fallback_resource};
   AppResourceInfo *res_info = &timeline_layout->icon_res_info;
   timeline_resources_get_id(&timeline_layout->icon_info, icon_res_size, res_info);
   return kino_reel_create_with_resource_system(res_info->res_app_num, res_info->res_id);
@@ -277,10 +267,10 @@ static void prv_init_icon(TimelineLayout *timeline_layout, const GRect *icon_fra
   }
 
   if (timeline_layout->layout_layer.mode == LayoutLayerModePeek) {
-    icon_size = GSize(TIMELINE_PEEK_ICON_BOX_WIDTH,
-                      timeline_layout->layout_layer.layer.frame.size.h);
+    icon_size =
+        GSize(TIMELINE_PEEK_ICON_BOX_WIDTH, timeline_layout->layout_layer.layer.frame.size.h);
   }
-  const GRect frame = { icon_frame->origin, icon_size };
+  const GRect frame = {icon_frame->origin, icon_size};
 
   // create the static reel
   timeline_layout->icon_size = frame.size;
@@ -298,9 +288,7 @@ static void prv_init_icon(TimelineLayout *timeline_layout, const GRect *icon_fra
   kino_layer_play(icon_layer);
 }
 
-static void prv_deinit_icon(TimelineLayout *layout) {
-  kino_layer_deinit(&layout->icon_layer);
-}
+static void prv_deinit_icon(TimelineLayout *layout) { kino_layer_deinit(&layout->icon_layer); }
 
 ////////////////////////
 // Layout Impl
@@ -329,15 +317,12 @@ void prv_init_colors(TimelineLayout *timeline_layout) {
   LayoutLayer *layout = &timeline_layout->layout_layer;
   const LayoutColors *default_colors = &timeline_layout->impl->default_colors;
   LayoutColors *colors = &timeline_layout->colors;
-  colors->bg_color =
-      (GColor) attribute_get_uint8(layout->attributes, AttributeIdBgColor,
-                                   default_colors->bg_color.argb);
-  colors->primary_color =
-      (GColor) attribute_get_uint8(layout->attributes, AttributeIdPrimaryColor,
-                                   default_colors->primary_color.argb);
-  colors->secondary_color =
-      (GColor) attribute_get_uint8(layout->attributes, AttributeIdSecondaryColor,
-                                   default_colors->secondary_color.argb);
+  colors->bg_color = (GColor)attribute_get_uint8(layout->attributes, AttributeIdBgColor,
+                                                 default_colors->bg_color.argb);
+  colors->primary_color = (GColor)attribute_get_uint8(layout->attributes, AttributeIdPrimaryColor,
+                                                      default_colors->primary_color.argb);
+  colors->secondary_color = (GColor)attribute_get_uint8(
+      layout->attributes, AttributeIdSecondaryColor, default_colors->secondary_color.argb);
 }
 
 const LayoutColors *timeline_layout_get_colors(const LayoutLayer *layout_ref) {
@@ -377,27 +362,27 @@ void timeline_layout_deinit_view(TimelineLayout *layout) {
 
 static GTextNode *prv_create_all_day_text_node(const TimelineLayout *layout) {
   static const LayoutNodeTextBufferConfig s_all_day_config = {
-    .text.extent.node.type = LayoutNodeType_TextBuffer,
-    .str = i18n_noop("All day"),
-    .use_i18n = true,
-    .text.style = LayoutContentSizeDefault,
-    .text.style_font = TextStyleFont_Title,
-    .text.fixed_lines = 1,
-    .text.alignment = PBL_IF_RECT_ELSE(LayoutTextAlignment_Left, LayoutTextAlignment_Right),
-    // The font leaves blank space above the text; this pulls the header back up. Large rect
-    // displays need less of a pull than the others.
-    .text.extent.offset.y = PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,
-      /* This is the same as Medium until Small is designed */
-      /* small */ -13,
-      /* medium */ -13,
-      /* large */ PBL_IF_RECT_ELSE(-8, -13),
-      /* This is the same as Large until ExtraLarge is designed */
-      /* extralarge */ PBL_IF_RECT_ELSE(-8, -13)),
-    .text.extent.margin.h = -7,
+      .text.extent.node.type = LayoutNodeType_TextBuffer,
+      .str = i18n_noop("All day"),
+      .use_i18n = true,
+      .text.style = LayoutContentSizeDefault,
+      .text.style_font = TextStyleFont_Title,
+      .text.fixed_lines = 1,
+      .text.alignment = PBL_IF_RECT_ELSE(LayoutTextAlignment_Left, LayoutTextAlignment_Right),
+      // The font leaves blank space above the text; this pulls the header back up. Large rect
+      // displays need less of a pull than the others.
+      .text.extent.offset.y =
+          PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,
+                                        /* This is the same as Medium until Small is designed */
+                                        /* small */ -13,
+                                        /* medium */ -13,
+                                        /* large */ PBL_IF_RECT_ELSE(-8, -13),
+                                        /* This is the same as Large until ExtraLarge is designed */
+                                        /* extralarge */ PBL_IF_RECT_ELSE(-8, -13)),
+      .text.extent.margin.h = -7,
   };
-  GTextNodeText *text_node =
-      (GTextNodeText *)layout_create_text_node_from_config(
-          &layout->layout_layer, &s_all_day_config.text.extent.node);
+  GTextNodeText *text_node = (GTextNodeText *)layout_create_text_node_from_config(
+      &layout->layout_layer, &s_all_day_config.text.extent.node);
   // TODO: PBL-30522 Enable timeline list view text flow
   // Remove when text flow is enabled
   if (PBL_IF_ROUND_ELSE(layout->layout_layer.mode == LayoutLayerModePinnedThin, false)) {
@@ -425,39 +410,38 @@ static void prv_time_word_update(const LayoutLayer *layout_ref,
 
 static GTextNode *prv_create_hour_text_node(const TimelineLayout *layout) {
   static const LayoutNodeTextDynamicConfig s_number_config = {
-    .text.extent.node.type = LayoutNodeType_TextDynamic,
-    .update = prv_time_number_update,
-    .buffer_size = TIME_STRING_REQUIRED_LENGTH,
-    .text.style = LayoutContentSizeDefault,
-    .text.style_font = TextStyleFont_TimeHeaderNumbers,
-    .text.fixed_lines = 1,
-    .text.alignment = LayoutTextAlignment_Left,
-    .text.extent.offset.y = -6,
-    .text.extent.margin.w = TIME_NUMBERS_MARGIN_W,
+      .text.extent.node.type = LayoutNodeType_TextDynamic,
+      .update = prv_time_number_update,
+      .buffer_size = TIME_STRING_REQUIRED_LENGTH,
+      .text.style = LayoutContentSizeDefault,
+      .text.style_font = TextStyleFont_TimeHeaderNumbers,
+      .text.fixed_lines = 1,
+      .text.alignment = LayoutTextAlignment_Left,
+      .text.extent.offset.y = -6,
+      .text.extent.margin.w = TIME_NUMBERS_MARGIN_W,
   };
   static const LayoutNodeTextDynamicConfig s_word_config = {
-    .text.extent.node.type = LayoutNodeType_TextDynamic,
-    .update = prv_time_word_update,
-    .buffer_size = TIME_STRING_REQUIRED_LENGTH,
-    .text.style = LayoutContentSizeDefault,
-    .text.style_font = TextStyleFont_TimeHeaderWords,
-    .text.fixed_lines = 1,
-    .text.alignment = LayoutTextAlignment_Left,
-    .text.extent.offset.y = TIME_WORDS_OFFSET_Y,
+      .text.extent.node.type = LayoutNodeType_TextDynamic,
+      .update = prv_time_word_update,
+      .buffer_size = TIME_STRING_REQUIRED_LENGTH,
+      .text.style = LayoutContentSizeDefault,
+      .text.style_font = TextStyleFont_TimeHeaderWords,
+      .text.fixed_lines = 1,
+      .text.alignment = LayoutTextAlignment_Left,
+      .text.extent.offset.y = TIME_WORDS_OFFSET_Y,
   };
-  static const LayoutNodeConfig * const s_horizontal_config_nodes[] = {
-    &s_number_config.text.extent.node,
-    &s_word_config.text.extent.node,
+  static const LayoutNodeConfig *const s_horizontal_config_nodes[] = {
+      &s_number_config.text.extent.node,
+      &s_word_config.text.extent.node,
   };
   static const LayoutNodeHorizontalConfig s_horizontal_config = {
-    .container.extent.node.type = LayoutNodeType_Horizontal,
-    .container.num_nodes = ARRAY_LENGTH(s_horizontal_config_nodes),
-    .container.nodes = (LayoutNodeConfig **)&s_horizontal_config_nodes,
+      .container.extent.node.type = LayoutNodeType_Horizontal,
+      .container.num_nodes = ARRAY_LENGTH(s_horizontal_config_nodes),
+      .container.nodes = (LayoutNodeConfig **)&s_horizontal_config_nodes,
   };
 
-  GTextNodeHorizontal *horizontal_node =
-      (GTextNodeHorizontal *)layout_create_text_node_from_config(
-          &layout->layout_layer, &s_horizontal_config.container.extent.node);
+  GTextNodeHorizontal *horizontal_node = (GTextNodeHorizontal *)layout_create_text_node_from_config(
+      &layout->layout_layer, &s_horizontal_config.container.extent.node);
   horizontal_node->horizontal_alignment = TIMELINE_LAYER_TEXT_ALIGNMENT;
   return &horizontal_node->container.node;
 }
@@ -472,13 +456,13 @@ static GTextNode *prv_create_time_text_node(const TimelineLayout *layout) {
 
 static const char *prv_get_secondary_text(const TimelineLayout *layout) {
   const AttributeList *attributes = layout->layout_layer.attributes;
-  return attribute_get_string(attributes, AttributeIdShortSubtitle, NULL) ?:
-      attribute_get_string(attributes, layout->impl->attributes.secondary_id, "");
+  return attribute_get_string(attributes, AttributeIdShortSubtitle, NULL)
+             ?: attribute_get_string(attributes, layout->impl->attributes.secondary_id, "");
 }
 
 static void prv_peek_time_text_update(const LayoutLayer *layout_ref,
-                                      const LayoutNodeTextDynamicConfig *config,
-                                      char *buffer, bool render) {
+                                      const LayoutNodeTextDynamicConfig *config, char *buffer,
+                                      bool render) {
   const TimelineLayout *layout = (TimelineLayout *)layout_ref;
   if (rtc_get_time() < layout->info->timestamp) {
     clock_get_until_time(buffer, config->buffer_size, layout->info->timestamp,
@@ -496,9 +480,10 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
   GTextNodeVertical *vertical_node = graphics_text_node_create_vertical(num_vertical_nodes);
   const bool is_future = (layout->info->scroll_direction == TimelineScrollDirectionDown);
   const bool is_peek = (layout->layout_layer.mode == LayoutLayerModePeek);
-  vertical_node->vertical_alignment = is_peek ? GVerticalAlignmentCenter :
-      PBL_IF_ROUND_ELSE((is_future ? GVerticalAlignmentBottom : GVerticalAlignmentTop),
-                        GVerticalAlignmentTop);
+  vertical_node->vertical_alignment =
+      is_peek ? GVerticalAlignmentCenter
+              : PBL_IF_ROUND_ELSE((is_future ? GVerticalAlignmentBottom : GVerticalAlignmentTop),
+                                  GVerticalAlignmentTop);
   GTextNode *time_text_node = !is_peek ? prv_create_time_text_node(layout) : NULL;
   if (time_text_node) {
     graphics_text_node_container_add_child(&vertical_node->container, time_text_node);
@@ -512,8 +497,7 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
   const bool has_secondary =
       (((is_peek || is_fat || thin_can_have_secondary) && !IS_EMPTY_STRING(secondary_text)) ||
        (is_peek && (rtc_get_time() < layout->info->timestamp)));
-  const int peek_text_width =
-      DISP_COLS - TIMELINE_PEEK_ICON_BOX_WIDTH - (2 * TIMELINE_PEEK_MARGIN);
+  const int peek_text_width = DISP_COLS - TIMELINE_PEEK_ICON_BOX_WIDTH - (2 * TIMELINE_PEEK_MARGIN);
   const GPoint peek_text_offset = GPoint(TIMELINE_PEEK_MARGIN, PBL_IF_RECT_ELSE(-5, -6));
   const GTextOverflowMode overflow =
       (has_secondary && !is_peek) ? GTextOverflowModeTrailingEllipsis : GTextOverflowModeFill;
@@ -525,18 +509,17 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
     }
 
     static const LayoutNodeTextConfig s_primary_config = {
-      .extent.node.type = LayoutNodeType_Text,
-      .style = LayoutContentSizeDefault,
-      .style_font = TextStyleFont_Title,
-      .alignment = ToLayoutTextAlignment(TIMELINE_LAYER_TEXT_ALIGNMENT),
+        .extent.node.type = LayoutNodeType_Text,
+        .style = LayoutContentSizeDefault,
+        .style_font = TextStyleFont_Title,
+        .alignment = ToLayoutTextAlignment(TIMELINE_LAYER_TEXT_ALIGNMENT),
     };
 
-    GTextNodeText *primary_node =
-        (GTextNodeText *)layout_create_text_node_from_config(
-            &layout->layout_layer, &s_primary_config.extent.node);
+    GTextNodeText *primary_node = (GTextNodeText *)layout_create_text_node_from_config(
+        &layout->layout_layer, &s_primary_config.extent.node);
     primary_node->text =
-        attribute_get_string(attributes, AttributeIdShortTitle, NULL) ?:
-        attribute_get_string(attributes, layout->impl->attributes.primary_id, "");
+        attribute_get_string(attributes, AttributeIdShortTitle, NULL)
+            ?: attribute_get_string(attributes, layout->impl->attributes.primary_id, "");
     primary_node->line_spacing_delta = style->primary_line_spacing_delta;
     int num_primary_lines = is_fat ? 2 : 1;
     if (is_peek) {
@@ -561,17 +544,16 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
 
   if (has_secondary) {
     LayoutNodeTextDynamicConfig secondary_config = {
-      .text.extent.node.type = is_peek ? LayoutNodeType_TextDynamic : LayoutNodeType_Text,
-      .update = prv_peek_time_text_update,
-      .buffer_size = ATTRIBUTE_SUBTITLE_MAX_LEN,
-      .text.style = LayoutContentSizeDefault,
-      .text.style_font = TextStyleFont_PinSubtitle,
-      .text.alignment = ToLayoutTextAlignment(TIMELINE_LAYER_TEXT_ALIGNMENT),
+        .text.extent.node.type = is_peek ? LayoutNodeType_TextDynamic : LayoutNodeType_Text,
+        .update = prv_peek_time_text_update,
+        .buffer_size = ATTRIBUTE_SUBTITLE_MAX_LEN,
+        .text.style = LayoutContentSizeDefault,
+        .text.style_font = TextStyleFont_PinSubtitle,
+        .text.alignment = ToLayoutTextAlignment(TIMELINE_LAYER_TEXT_ALIGNMENT),
     };
 
-    GTextNodeText *secondary_node =
-        (GTextNodeText *)layout_create_text_node_from_config(
-            &layout->layout_layer, &secondary_config.text.extent.node);
+    GTextNodeText *secondary_node = (GTextNodeText *)layout_create_text_node_from_config(
+        &layout->layout_layer, &secondary_config.text.extent.node);
     if (is_peek) {
       secondary_node->node.offset = peek_text_offset;
       secondary_node->max_size.w = peek_text_width;
@@ -620,9 +602,9 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
     GTextNodeCustom *icon_node = timeline_layout_create_icon_node(layout);
     const unsigned int num_concurrent = layout->info->num_concurrent;
     const unsigned int concurrent_height = timeline_peek_get_concurrent_height(num_concurrent);
-    gpoint_add_eq(&icon_node->node.offset,
-                  GPoint(PBL_IF_RECT_ELSE(1, 2),
-                         PBL_IF_RECT_ELSE(0, -1) - (concurrent_height / 2)));
+    gpoint_add_eq(
+        &icon_node->node.offset,
+        GPoint(PBL_IF_RECT_ELSE(1, 2), PBL_IF_RECT_ELSE(0, -1) - (concurrent_height / 2)));
     graphics_text_node_container_add_child(&vertical_icon_node->container, &icon_node->node);
     graphics_text_node_container_add_child(&horizontal_node->container,
                                            &horizontal_icon_node->container.node);
@@ -633,7 +615,7 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
 }
 
 static void prv_get_pin_view_bounds(TimelineLayout *layout, GRect *box_out) {
-  *box_out = (GRect) { GPointZero, layout->layout_layer.layer.frame.size };
+  *box_out = (GRect){GPointZero, layout->layout_layer.layer.frame.size};
   if (layout->layout_layer.mode == LayoutLayerModePeek) {
     const unsigned int num_concurrent = layout->info->num_concurrent;
     const unsigned int concurrent_height = timeline_peek_get_concurrent_height(num_concurrent);
@@ -665,17 +647,17 @@ static void prv_render_view(TimelineLayout *layout, GContext *ctx, bool render, 
   (is_card ? prv_get_card_view_bounds : prv_get_pin_view_bounds)(layout, &box);
   graphics_context_set_text_color(
       ctx, (is_card ? layout_get_colors((LayoutLayer *)layout)->primary_color : GColorBlack));
-  static const GRect page_frame_on_screen =
-     { { 0, STATUS_BAR_LAYER_HEIGHT }, { DISP_COLS, DISP_ROWS - STATUS_BAR_LAYER_HEIGHT } };
+  static const GRect page_frame_on_screen = {{0, STATUS_BAR_LAYER_HEIGHT},
+                                             {DISP_COLS, DISP_ROWS - STATUS_BAR_LAYER_HEIGHT}};
   const GTextNodeDrawConfig config = {
-    .page_frame = is_peek ? &GRectZero : &page_frame_on_screen,
-    .origin_on_screen = is_peek ? &GPointZero : &page_frame_on_screen.origin,
-    .content_inset = 8,
-    .text_flow = PBL_IF_ROUND_ELSE(paging, false),
-    .paging = PBL_IF_ROUND_ELSE(paging, false),
+      .page_frame = is_peek ? &GRectZero : &page_frame_on_screen,
+      .origin_on_screen = is_peek ? &GPointZero : &page_frame_on_screen.origin,
+      .content_inset = 8,
+      .text_flow = PBL_IF_ROUND_ELSE(paging, false),
+      .paging = PBL_IF_ROUND_ELSE(paging, false),
   };
-  (render ? graphics_text_node_draw :
-            graphics_text_node_get_size)(layout->view_node, ctx, &box, &config, size_out);
+  (render ? graphics_text_node_draw : graphics_text_node_get_size)(layout->view_node, ctx, &box,
+                                                                   &config, size_out);
 }
 
 void timeline_layout_render_view(TimelineLayout *layout, GContext *ctx) {
@@ -719,25 +701,26 @@ GTextNode *timeline_layout_create_card_view_from_config(const TimelineLayout *la
       &layout->layout_layer, &vertical_config.container.extent.node);
 
   const LayoutNodeHeadingsParagraphsConfig headings_paragraphs_config = {
-    .size = LayoutContentSizeDefault,
-    .heading_style_font = TextStyleFont_ParagraphHeader,
-    .paragraph_style_font = TextStyleFont_Body,
+      .size = LayoutContentSizeDefault,
+      .heading_style_font = TextStyleFont_ParagraphHeader,
+      .paragraph_style_font = TextStyleFont_Body,
   };
-  graphics_text_node_container_add_child((GTextNodeContainer *)vertical_node,
-      &layout_create_headings_paragraphs_node(
-          &layout->layout_layer, &headings_paragraphs_config)->container.node);
+  graphics_text_node_container_add_child(
+      (GTextNodeContainer *)vertical_node,
+      &layout_create_headings_paragraphs_node(&layout->layout_layer, &headings_paragraphs_config)
+           ->container.node);
 
   if (!has_last_updated) {
     return vertical_node;
   }
 
   static const LayoutNodeTextBufferConfig s_header_config = {
-    .text.extent.node.type = LayoutNodeType_TextBuffer,
-    .str = i18n_noop("Last updated"),
-    .use_i18n = true,
-    .text.style = LayoutContentSizeDefault,
-    .text.style_font = TextStyleFont_ParagraphHeader,
-    .text.extent.margin.h = TIMELINE_CARD_BODY_HEADER_MARGIN_HEIGHT,
+      .text.extent.node.type = LayoutNodeType_TextBuffer,
+      .str = i18n_noop("Last updated"),
+      .use_i18n = true,
+      .text.style = LayoutContentSizeDefault,
+      .text.style_font = TextStyleFont_ParagraphHeader,
+      .text.extent.margin.h = TIMELINE_CARD_BODY_HEADER_MARGIN_HEIGHT,
   };
   graphics_text_node_container_add_child(
       (GTextNodeContainer *)vertical_node,
@@ -745,17 +728,16 @@ GTextNode *timeline_layout_create_card_view_from_config(const TimelineLayout *la
                                           &s_header_config.text.extent.node));
 
   static const LayoutNodeTextDynamicConfig s_body_config = {
-    .text.extent.node.type = LayoutNodeType_TextDynamic,
-    .update = prv_last_updated_update,
-    .buffer_size = TIME_STRING_REQUIRED_LENGTH,
-    .text.style = LayoutContentSizeDefault,
-    .text.style_font = TextStyleFont_Body,
-    .text.extent.margin.h = TIMELINE_CARD_BODY_MARGIN_HEIGHT,
+      .text.extent.node.type = LayoutNodeType_TextDynamic,
+      .update = prv_last_updated_update,
+      .buffer_size = TIME_STRING_REQUIRED_LENGTH,
+      .text.style = LayoutContentSizeDefault,
+      .text.style_font = TextStyleFont_Body,
+      .text.extent.margin.h = TIMELINE_CARD_BODY_MARGIN_HEIGHT,
   };
   graphics_text_node_container_add_child(
       (GTextNodeContainer *)vertical_node,
-      layout_create_text_node_from_config(&layout->layout_layer,
-                                          &s_body_config.text.extent.node));
+      layout_create_text_node_from_config(&layout->layout_layer, &s_body_config.text.extent.node));
   return vertical_node;
 }
 
@@ -767,16 +749,16 @@ static void prv_page_break_node_callback(GContext *ctx, const GRect *box,
   const int16_t height = bounds->size.h - box->origin.y;
   if (render) {
     graphics_context_set_fill_color(ctx, layout_get_colors((LayoutLayer *)layout)->primary_color);
-    const int arrow_offset = ((int[NumPreferredContentSizes]) {
-      //! @note this is the same as Medium until Small is designed
-      [PreferredContentSizeSmall] = PBL_IF_ROUND_ELSE(-1, 0),
-      [PreferredContentSizeMedium] = PBL_IF_ROUND_ELSE(-1, 0),
-      [PreferredContentSizeLarge] = -1,
-      //! @note this is the same as Large until ExtraLarge is designed
-      [PreferredContentSizeExtraLarge] = -1,
+    const int arrow_offset = ((int[NumPreferredContentSizes]){
+        //! @note this is the same as Medium until Small is designed
+        [PreferredContentSizeSmall] = PBL_IF_ROUND_ELSE(-1, 0),
+        [PreferredContentSizeMedium] = PBL_IF_ROUND_ELSE(-1, 0),
+        [PreferredContentSizeLarge] = -1,
+        //! @note this is the same as Large until ExtraLarge is designed
+        [PreferredContentSizeExtraLarge] = -1,
     })[PreferredContentSizeDefault];
-    const GPoint origin = GPoint(bounds->size.w / 2,
-                                 bounds->size.h - TIMELINE_CARD_ARROW_HEIGHT + arrow_offset);
+    const GPoint origin =
+        GPoint(bounds->size.w / 2, bounds->size.h - TIMELINE_CARD_ARROW_HEIGHT + arrow_offset);
     gpath_move_to(&s_page_break_arrow_path, origin);
     gpath_draw_filled(ctx, &s_page_break_arrow_path);
   } else {
@@ -784,7 +766,7 @@ static void prv_page_break_node_callback(GContext *ctx, const GRect *box,
     layout->has_page_break = true;
   }
   if (size_out) {
-    *size_out = (GSize) { bounds->size.w, height };
+    *size_out = (GSize){bounds->size.w, height};
   }
 }
 
@@ -795,8 +777,8 @@ GTextNodeCustom *timeline_layout_create_page_break_node(const TimelineLayout *la
 }
 
 void timeline_layout_time_text_update(const LayoutLayer *layout_ref,
-                                      const LayoutNodeTextDynamicConfig *config,
-                                      char *buffer, bool render) {
+                                      const LayoutNodeTextDynamicConfig *config, char *buffer,
+                                      bool render) {
   const TimelineLayout *layout = (TimelineLayout *)layout_ref;
   clock_copy_time_string_timestamp(buffer, config->buffer_size, layout->info->timestamp);
 }

@@ -34,15 +34,15 @@ typedef enum ControlCode {
 } ControlCode;
 
 typedef enum LinkState {
-  LinkState_Initial,  //!< Lower layer is Down; this layer is Closed
-  LinkState_Starting,  //!< Lower layer is Down; this layer is Open
-  LinkState_Closed,  //!< Lower layer is Up; this layer is Closed
-  LinkState_Stopped,  //!< Waiting passively for a new connection
-  LinkState_Closing,  //!< Connection is being terminated before Closed
-  LinkState_Stopping,  //!< Connection is being terminated before Stopped
+  LinkState_Initial,      //!< Lower layer is Down; this layer is Closed
+  LinkState_Starting,     //!< Lower layer is Down; this layer is Open
+  LinkState_Closed,       //!< Lower layer is Up; this layer is Closed
+  LinkState_Stopped,      //!< Waiting passively for a new connection
+  LinkState_Closing,      //!< Connection is being terminated before Closed
+  LinkState_Stopping,     //!< Connection is being terminated before Stopped
   LinkState_RequestSent,  //!< Configure-Request sent
   LinkState_AckReceived,  //!< Configure-Request sent, Configure-Ack received
-  LinkState_AckSent,  //!< Configure-Request and Configure-Ack sent
+  LinkState_AckSent,      //!< Configure-Request and Configure-Ack sent
   LinkState_Opened,
 } LinkState;
 
@@ -58,14 +58,13 @@ typedef struct PPPControlProtocolState {
 
 typedef const struct PPPControlProtocol PPPControlProtocol;
 struct PPPControlProtocol {
-  PPPControlProtocolState * const state;
+  PPPControlProtocolState *const state;
   //! Called when the layer is ready to carry traffic.
   void (*const on_this_layer_up)(PPPControlProtocol *this);
   //! Called when the layer is no longe ready to carry traffic.
   void (*const on_this_layer_down)(PPPControlProtocol *this);
   //! Called when a Code-Reject packet is received.
-  void (*const on_receive_code_reject)(PPPControlProtocol *this,
-                                       LCPPacket *packet);
+  void (*const on_receive_code_reject)(PPPControlProtocol *this, LCPPacket *packet);
   //! Called when a packet is received with a code not handled by the
   //! base Control Protocol implementation. May be NULL if no extended
   //! codes are supported by the implementation.
@@ -76,8 +75,7 @@ struct PPPControlProtocol {
   //! If the code is unknown to the implementation, a Code-Reject
   //! response packet is sent by the base Control Protocol
   //! implementation.
-  bool (*const on_receive_unrecognized_code)(PPPControlProtocol *this,
-                                             LCPPacket *packet);
+  bool (*const on_receive_unrecognized_code)(PPPControlProtocol *this, LCPPacket *packet);
   //! PPP Encapsulation protocol number for the control protocol.
   uint16_t protocol_number;
 };

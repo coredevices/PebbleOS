@@ -17,25 +17,25 @@ static int8_t decode_char(uint8_t c) {
   return -1;
 }
 
-unsigned int base64_decode_inplace(char* buffer, unsigned int length) {
+unsigned int base64_decode_inplace(char *buffer, unsigned int length) {
   unsigned int read_index = 0;
   unsigned int write_index = 0;
   while (read_index < length) {
-
     int quad_index = 0;
     unsigned int v = 0;
     for (; quad_index < 4; ++quad_index) {
       int8_t c = decode_char(buffer[read_index + quad_index]);
-      if (c == -1) return 0; // Error, invalid character
-      if (c == 127) break; // Padding found
+      if (c == -1) return 0;  // Error, invalid character
+      if (c == 127) break;    // Padding found
 
       v = (v * 64) + c;
     }
 
     // Handle the padding if we broke out the loop early (0-2 '=' characters).
     const unsigned int padding_amount = 4 - quad_index;
-    if (padding_amount > 2) return 0; // Mades no sense to pad an entire triplet.
-    if (memcmp(buffer + read_index + quad_index, "==", padding_amount) != 0) return 0; // There are characters after our padding?
+    if (padding_amount > 2) return 0;  // Mades no sense to pad an entire triplet.
+    if (memcmp(buffer + read_index + quad_index, "==", padding_amount) != 0)
+      return 0;  // There are characters after our padding?
 
     // Chop off extra unused low bits if we're padded.
     // If there's only 2 6-bit characters (+ 2 '='s for padding), this results in 12-bits of data.
@@ -44,7 +44,7 @@ unsigned int base64_decode_inplace(char* buffer, unsigned int length) {
     //  We only want the first 16-bits, so shift out 2.
     v = v >> (padding_amount * 2);
 
-    const char* v_as_bytes = ((const char*) &v);
+    const char *v_as_bytes = ((const char *)&v);
     for (unsigned int i = 0; i < (3 - padding_amount); ++i) {
       buffer[write_index + i] = v_as_bytes[(2 - padding_amount) - i];
     }
@@ -59,7 +59,6 @@ unsigned int base64_decode_inplace(char* buffer, unsigned int length) {
   }
   return write_index;
 }
-
 
 static char prv_encode_char(uint8_t binary) {
   if (binary < 26) {
@@ -76,7 +75,6 @@ static char prv_encode_char(uint8_t binary) {
     WTF;
   }
 }
-
 
 int32_t base64_encode(char *out, int out_len, const uint8_t *data, int32_t data_len) {
   int result = (data_len + 2) / 3 * 4;

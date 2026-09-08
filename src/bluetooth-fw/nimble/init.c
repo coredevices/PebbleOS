@@ -126,8 +126,7 @@ bool bt_driver_start(BTDriverConfig *config) {
   }
 
   if (s_driver_state != DriverStateStopped) {
-    PBL_LOG_ERR("Unexpected driver state %u; refusing to start",
-                  (unsigned)s_driver_state);
+    PBL_LOG_ERR("Unexpected driver state %u; refusing to start", (unsigned)s_driver_state);
     return false;
   }
 

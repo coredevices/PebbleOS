@@ -57,13 +57,9 @@ uint32_t pcm_stream_read(PcmStreamState *s, void *out, uint32_t max) {
   return max;
 }
 
-void pcm_stream_mark_closing(PcmStreamState *s) {
-  s->closing = true;
-}
+void pcm_stream_mark_closing(PcmStreamState *s) { s->closing = true; }
 
-bool pcm_stream_is_done(PcmStreamState *s) {
-  return s->closing && s->count == 0;
-}
+bool pcm_stream_is_done(PcmStreamState *s) { return s->closing && s->count == 0; }
 
 void pcm_stream_deinit(PcmStreamState *s) {
   if (s->buffer) {
@@ -72,10 +68,6 @@ void pcm_stream_deinit(PcmStreamState *s) {
   memset(s, 0, sizeof(*s));
 }
 
-uint32_t pcm_stream_available(const PcmStreamState *s) {
-  return s->count;
-}
+uint32_t pcm_stream_available(const PcmStreamState *s) { return s->count; }
 
-uint32_t pcm_stream_free_space(const PcmStreamState *s) {
-  return s->size - s->count;
-}
+uint32_t pcm_stream_free_space(const PcmStreamState *s) { return s->size - s->count; }

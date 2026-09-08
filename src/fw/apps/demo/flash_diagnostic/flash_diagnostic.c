@@ -37,21 +37,11 @@ struct Region {
 };
 
 static struct Region s_flash_regions[] = {
-  {
-    "System Resources",
-    FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN,
-    FLASH_REGION_SYSTEM_RESOURCES_BANK_0_END
-  },
-  {
-    "System Resources",
-    FLASH_REGION_SYSTEM_RESOURCES_BANK_1_BEGIN,
-    FLASH_REGION_SYSTEM_RESOURCES_BANK_1_END
-  },
-  {
-    "File System",
-    FLASH_REGION_FILESYSTEM_BEGIN,
-    FLASH_REGION_FILESYSTEM_END
-  },
+    {"System Resources", FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN,
+     FLASH_REGION_SYSTEM_RESOURCES_BANK_0_END},
+    {"System Resources", FLASH_REGION_SYSTEM_RESOURCES_BANK_1_BEGIN,
+     FLASH_REGION_SYSTEM_RESOURCES_BANK_1_END},
+    {"File System", FLASH_REGION_FILESYSTEM_BEGIN, FLASH_REGION_FILESYSTEM_END},
 };
 
 typedef struct {
@@ -67,7 +57,6 @@ typedef struct {
   int stress_iteration;
   int stress_index;
 } FlashStressWindow;
-
 
 static bool check_region_erased(struct Region region) {
   PBL_LOG_SYNC_INFO("Checking Erase ...");
@@ -87,14 +76,12 @@ static bool check_region_erased(struct Region region) {
 // region: region to check (and possibly write)
 // use_rand: write random values
 // perform_writes: perform writes if true, else see if the region reads as 0
-static bool check_region_write(struct Region region, bool use_rand,
-    bool perform_writes) {
+static bool check_region_write(struct Region region, bool use_rand, bool perform_writes) {
   bool success = true;
   uint32_t write_rand = (use_rand && perform_writes) ? rand() : 0;
 
-  PBL_LOG_SYNC_INFO("%sChecking 0x%lx over 0x%lx 0x%lx",
-      (perform_writes) ? "Writing and " : "", write_rand, region.begin,
-      region.end);
+  PBL_LOG_SYNC_INFO("%sChecking 0x%lx over 0x%lx 0x%lx", (perform_writes) ? "Writing and " : "",
+                    write_rand, region.begin, region.end);
 
   for (uint32_t i = region.begin; i < region.end; i += sizeof(uint32_t)) {
     uint32_t write = write_rand;
@@ -104,8 +91,7 @@ static bool check_region_write(struct Region region, bool use_rand,
     }
     flash_read_bytes((uint8_t *)&read, i, sizeof(read));
     if (read != write) {
-      PBL_LOG_SYNC_INFO(">>>> Address 0x%lx failed to write: 0x%lx 0x%lx",
-          i, read, write);
+      PBL_LOG_SYNC_INFO(">>>> Address 0x%lx failed to write: 0x%lx 0x%lx", i, read, write);
       success = false;
     }
   }
@@ -129,7 +115,6 @@ static bool check_subsector_bitflip(struct Region region) {
   const uint32_t subsector_size = 4 * 1024;
 
   for (uint32_t i = region.begin; i < region.end; i += block_size) {
-
     struct Region write_region;
     write_region.begin = i;
     write_region.end = i + write_size;
@@ -140,10 +125,9 @@ static bool check_subsector_bitflip(struct Region region) {
     }
 
     uint32_t subsec_begin = block_size - write_size;
-    PBL_ASSERTN((subsec_begin % (32*1024)) == 0);
+    PBL_ASSERTN((subsec_begin % (32 * 1024)) == 0);
 
-    for (uint32_t subsec = subsec_begin; subsec < block_size;
-        subsec += subsector_size) {
+    for (uint32_t subsec = subsec_begin; subsec < block_size; subsec += subsector_size) {
       uint32_t erase = subsec + i;
       PBL_ASSERTN((erase % (4 * 1024)) == 0);
       PBL_LOG_SYNC_INFO("Subsector Erase of 0x%lx", erase);
@@ -176,8 +160,7 @@ static bool abort_stress_test;
 static void update_text(int iter, int tot, bool failed) {
   static char status[50];
 
-  snprintf(status, sizeof(status), "%d / %d %s", iter, tot,
-           failed ? "Failed Out" : "Complete");
+  snprintf(status, sizeof(status), "%d / %d %s", iter, tot, failed ? "Failed Out" : "Complete");
   text_layer_set_text(stress_data.text_layer, (char *)status);
 }
 
@@ -202,8 +185,8 @@ static void app_timer_cb(void *data) {
     update_text(++stress_data.stress_iteration, num_stress_iters, failed);
 
     if (!failed && (stress_data.stress_iteration < num_stress_iters)) {
-      app_timer_register(1000, app_timer_cb, NULL); // allow for animation to complete
-    } else { // clean up state
+      app_timer_register(1000, app_timer_cb, NULL);  // allow for animation to complete
+    } else {                                         // clean up state
       flash_region_erase_optimal_range(region.begin, region.begin, region.end, region.end);
     }
   }
@@ -224,36 +207,33 @@ static void stress_window_load(Window *data) {
   app_timer_register(500, app_timer_cb, NULL);
 };
 
-static void stress_window_unload(Window *data) {
-  abort_stress_test = true;
-}
+static void stress_window_unload(Window *data) { abort_stress_test = true; }
 
 static void file_system_stress_callback(int index, void *data) {
   stress_data.stress_iteration = 0;
   stress_data.stress_index = index;
   window_init(&stress_data.window, WINDOW_NAME("Stress Test"));
   window_set_user_data(&stress_data.window, &stress_data);
-  window_set_window_handlers(&stress_data.window, &(WindowHandlers) {
-      .load = stress_window_load,
-      .unload = stress_window_unload
-  });
+  window_set_window_handlers(
+      &stress_data.window,
+      &(WindowHandlers){.load = stress_window_load, .unload = stress_window_unload});
   app_window_stack_push(&stress_data.window, true);
 }
 
 static void populate_menu(SimpleMenuSection *menu_section, SimpleMenuItem *menu_items) {
   for (unsigned int i = 0; i < NUM_REGIONS; ++i) {
-    menu_items[i] = (SimpleMenuItem) {
-      .title = s_flash_regions[i].name,
-      .callback = menu_select_callback,
+    menu_items[i] = (SimpleMenuItem){
+        .title = s_flash_regions[i].name,
+        .callback = menu_select_callback,
     };
   }
-  menu_items[FILE_WRITE_STRESS] = (SimpleMenuItem) {
-    .title = "File Stress",
-    .callback = file_system_stress_callback,
+  menu_items[FILE_WRITE_STRESS] = (SimpleMenuItem){
+      .title = "File Stress",
+      .callback = file_system_stress_callback,
   };
-  menu_items[FILE_SUBSECTOR_STRESS] = (SimpleMenuItem) {
-    .title = "Subsector Stress",
-    .callback = file_system_stress_callback,
+  menu_items[FILE_SUBSECTOR_STRESS] = (SimpleMenuItem){
+      .title = "Subsector Stress",
+      .callback = file_system_stress_callback,
   };
 
   menu_section->num_items = NUM_MENU_ITEMS;
@@ -274,9 +254,9 @@ static void push_window(FlashDiagAppData *data) {
   Window *window = &data->window;
   window_init(window, WINDOW_NAME("Flash Diagnostic"));
   window_set_user_data(window, data);
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_window_load,
-  });
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_window_load,
+                                     });
   const bool animated = true;
   app_window_stack_push(window, animated);
 }
@@ -284,7 +264,7 @@ static void push_window(FlashDiagAppData *data) {
 ////////////////////
 // App boilerplate
 static void handle_init(void) {
-  FlashDiagAppData *data = (FlashDiagAppData*) app_malloc_check(sizeof(FlashDiagAppData));
+  FlashDiagAppData *data = (FlashDiagAppData *)app_malloc_check(sizeof(FlashDiagAppData));
   if (data == NULL) {
     PBL_CROAK("Out of memory");
   }
@@ -299,8 +279,7 @@ static void handle_deinit(void) {
 }
 
 static void s_main(void) {
-  if (resource_storage_flash_get_unused_bank()->begin ==
-      s_flash_regions[0].begin) {
+  if (resource_storage_flash_get_unused_bank()->begin == s_flash_regions[0].begin) {
     s_flash_regions[0].name = "Unused Resources";
   } else {
     s_flash_regions[1].name = "Unused Resources";
@@ -313,10 +292,8 @@ static void s_main(void) {
   handle_deinit();
 }
 
-const PebbleProcessMd* flash_diagnostic_app_get_info() {
-  static const PebbleProcessMdSystem s_flash_diagnostic_app_info = {
-    .common.main_func = s_main,
-    .name = "Flash Diagnostic"
-  };
-  return (const PebbleProcessMd*) &s_flash_diagnostic_app_info;
+const PebbleProcessMd *flash_diagnostic_app_get_info() {
+  static const PebbleProcessMdSystem s_flash_diagnostic_app_info = {.common.main_func = s_main,
+                                                                    .name = "Flash Diagnostic"};
+  return (const PebbleProcessMd *)&s_flash_diagnostic_app_info;
 }

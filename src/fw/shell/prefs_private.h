@@ -12,7 +12,6 @@
 // We want to use a full page, but requesting such a size can end up using two pages
 #define SHELL_PREFS_FILE_LEN (2048)
 
-
 //! Update the backing store for the given preference.
 //! @param[in] key the preference's name, as defined in prefs.c
 //! @param[in] key_len the length of key
@@ -20,7 +19,7 @@
 //! @param[in] value_len the length of the value
 //! @return true on success, false if failure
 bool prefs_private_write_backing(const uint8_t *key, size_t key_len, const void *value,
-                               int value_len);
+                                 int value_len);
 
 //! Get the length of a preference's value as stored in the backing store
 //! @param[in] key the preference's name, as defined in prefs.c

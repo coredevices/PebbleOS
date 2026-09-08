@@ -13,9 +13,7 @@ struct {
   RamStorage ram_storage;
 } s_test_db;
 
-void test_db_init(void) {
-  s_test_db.ram_storage = ram_storage_create();
-}
+void test_db_init(void) { s_test_db.ram_storage = ram_storage_create(); }
 
 status_t test_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   return ram_storage_insert(&s_test_db.ram_storage, key, key_len, val, val_len);
@@ -33,9 +31,7 @@ status_t test_db_delete(const uint8_t *key, int key_len) {
   return ram_storage_delete(&s_test_db.ram_storage, key, key_len);
 }
 
-status_t test_db_flush(void) {
-  return ram_storage_flush(&s_test_db.ram_storage);
-}
+status_t test_db_flush(void) { return ram_storage_flush(&s_test_db.ram_storage); }
 
 status_t test_db_is_dirty(bool *is_dirty_out) {
   return ram_storage_is_dirty(&s_test_db.ram_storage, is_dirty_out);
@@ -47,8 +43,8 @@ bool prv_dirty_items_each_cb(RamStorageEntry *entry, void *context) {
     BlobDBDirtyItem *new_item = kernel_zalloc_check(sizeof(BlobDBDirtyItem) + entry->key_len);
     memcpy(new_item->key, entry->key, entry->key_len);
     new_item->key_len = entry->key_len;
-    *dirty_items = (BlobDBDirtyItem *)list_insert_before((ListNode *)*dirty_items,
-                                                         (ListNode *)new_item);
+    *dirty_items =
+        (BlobDBDirtyItem *)list_insert_before((ListNode *)*dirty_items, (ListNode *)new_item);
   }
 
   return true;

@@ -9,8 +9,7 @@
 // BlobDB APIs
 ////////////////////////////////////////////////////////////////////////////////
 
-void prefs_db_init(void) {
-}
+void prefs_db_init(void) {}
 
 status_t prefs_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   bool success = prefs_private_write_backing(key, key_len, val, val_len);
@@ -38,10 +37,6 @@ status_t prefs_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int va
   }
 }
 
-status_t prefs_db_delete(const uint8_t *key, int key_len) {
-  return E_INVALID_OPERATION;
-}
+status_t prefs_db_delete(const uint8_t *key, int key_len) { return E_INVALID_OPERATION; }
 
-status_t prefs_db_flush(void) {
-  return E_INVALID_OPERATION;
-}
+status_t prefs_db_flush(void) { return E_INVALID_OPERATION; }

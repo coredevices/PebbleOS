@@ -5,11 +5,7 @@
 
 #include "board/board.h"
 
-typedef enum {
-  ExtiTrigger_Rising,
-  ExtiTrigger_Falling,
-  ExtiTrigger_RisingFalling
-} ExtiTrigger;
+typedef enum { ExtiTrigger_Rising, ExtiTrigger_Falling, ExtiTrigger_RisingFalling } ExtiTrigger;
 
 typedef void (*ExtiHandlerCallback)(bool *should_context_switch);
 

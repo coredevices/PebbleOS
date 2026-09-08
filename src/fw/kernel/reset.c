@@ -34,8 +34,7 @@ NORETURN system_reset(void) {
 
   // Skip safe teardown if doing so the first time already caused a second reset attempt; or
   // if we're in a critical section, interrupt or if the scheduler has been suspended
-  if (!already_failed && !mcu_state_is_isr() && !pbl_irq_is_locked() &&
-      (pbl_kernel_is_running())) {
+  if (!already_failed && !mcu_state_is_isr() && !pbl_irq_is_locked() && (pbl_kernel_is_running())) {
     system_reset_prepare();
     reboot_reason_set_restarted_safely();
   }
@@ -65,4 +64,3 @@ NORETURN system_hard_reset(void) {
 
   __builtin_unreachable();
 }
-

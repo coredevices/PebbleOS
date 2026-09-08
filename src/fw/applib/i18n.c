@@ -26,4 +26,3 @@ void app_i18n_get(const char *locale, const char *string, char *buffer, size_t l
     sys_i18n_get_with_buffer(string, buffer, length);
   }
 }
-

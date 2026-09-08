@@ -23,8 +23,8 @@
 PBL_LOG_MODULE_DEFINE(driver_pmic_npm1300, CONFIG_DRIVER_PMIC_LOG_LEVEL);
 
 #define CHARGER_DEBOUNCE_MS 400
-#define ADC_POLL_DELAY_MS   5     // Delay between ADC poll iterations to reduce I2C traffic
-#define ADC_POLL_TIMEOUT_MS 100   // Max time to wait for ADC measurement
+#define ADC_POLL_DELAY_MS 5      // Delay between ADC poll iterations to reduce I2C traffic
+#define ADC_POLL_TIMEOUT_MS 100  // Max time to wait for ADC measurement
 static TimerID s_debounce_charger_timer = TIMER_INVALID_ID;
 static uint32_t s_dischg_limit_ma;
 
@@ -79,10 +79,10 @@ typedef enum {
   PmicRegisters_BCHARGER_BCHGDEBUG = 0x0346,
   PmicRegisters_BCHARGER_BCHGDEBUG__DISABLEBATTERYDETECT = 0x04,
   PmicRegisters_BCHARGER_BCHGVBATLOWCHARGE = 0x0350,
-  PmicRegisters_ADC_TASKVBATMEASURE  = 0x0500,
-  PmicRegisters_ADC_TASKNTCMEASURE   = 0x0501,
-  PmicRegisters_ADC_TASKVSYSMEASURE  = 0x0503,
-  PmicRegisters_ADC_TASKIBATMEASURE  = 0x0506,
+  PmicRegisters_ADC_TASKVBATMEASURE = 0x0500,
+  PmicRegisters_ADC_TASKNTCMEASURE = 0x0501,
+  PmicRegisters_ADC_TASKVSYSMEASURE = 0x0503,
+  PmicRegisters_ADC_TASKIBATMEASURE = 0x0506,
   PmicRegisters_ADC_TASKVBUS7MEASURE = 0x0507,
   PmicRegisters_ADC_ADCIBATMEASSTATUS = 0x0510,
   PmicRegisters_ADC_ADCIBATMEASSTATUS__BCHARGERMODE_MASK = 0x0C,
@@ -167,17 +167,15 @@ static bool dischg_limit_ma_set(uint32_t dischg_limit_ma);
 static uint16_t prv_ntc_threshold_code(uint8_t celsius) {
   // Ref: PS v1.1 Section 6.2.5: K_NTCTEMP = round(1024 * R_T / (R_T + R_B))
   float t_k = (float)celsius + 273.15f;
-  float exponent = (float)NPM1300_CONFIG.thermistor_beta *
-                   ((1.f / 298.15f) - (1.f / t_k));
+  float exponent = (float)NPM1300_CONFIG.thermistor_beta * ((1.f / 298.15f) - (1.f / t_k));
   return (uint16_t)((1024.0f / (1.0f + exp(exponent))) + 0.5f);
 }
 
-void battery_init(void) {
-}
+void battery_init(void) {}
 
 static bool prv_read_register(uint16_t register_address, uint8_t *result) {
   i2c_use(I2C_NPM1300);
-  uint8_t regad[2] = { register_address >> 8, register_address & 0xFF };
+  uint8_t regad[2] = {register_address >> 8, register_address & 0xFF};
   bool rv = i2c_write_read_block(I2C_NPM1300, 2, regad, 1, result);
   i2c_release(I2C_NPM1300);
   return rv;
@@ -185,7 +183,7 @@ static bool prv_read_register(uint16_t register_address, uint8_t *result) {
 
 static bool prv_write_register(uint16_t register_address, uint8_t datum) {
   i2c_use(I2C_NPM1300);
-  uint8_t d[3] = { register_address >> 8, register_address & 0xFF, datum };
+  uint8_t d[3] = {register_address >> 8, register_address & 0xFF, datum};
   bool rv = i2c_write_block(I2C_NPM1300, 3, d);
   i2c_release(I2C_NPM1300);
   return rv;
@@ -224,37 +222,41 @@ static bool prv_buck_set_sw_ctrl(uint16_t normvout_reg, uint16_t voutstatus_reg,
 static void prv_handle_charge_state_change(void *null) {
   const bool is_charging = pmic_is_charging();
   const bool is_connected = pmic_is_usb_connected();
-  PBL_LOG_DBG("nPM1300 Interrupt: Charging? %s Plugged? %s",
-      is_charging ? "YES" : "NO", is_connected ? "YES" : "NO");
+  PBL_LOG_DBG("nPM1300 Interrupt: Charging? %s Plugged? %s", is_charging ? "YES" : "NO",
+              is_connected ? "YES" : "NO");
 
   if (is_connected && NPM1300_CONFIG.vbus_current_lim0 != 0) {
     bool ok = prv_write_register(PmicRegisters_VBUSIN_VBUSINILIM0,
-      NPM1300_CONFIG.vbus_current_lim0/NPM1300_VBUS_CURRENT_DIVISOR);
+                                 NPM1300_CONFIG.vbus_current_lim0 / NPM1300_VBUS_CURRENT_DIVISOR);
     ok &= prv_write_register(PmicRegisters_VBUSIN_TASKUPDATELIMSW,
-      PmicRegisters_VBUSIN_TASKUPDATELIMSW__EN);
+                             PmicRegisters_VBUSIN_TASKUPDATELIMSW__EN);
     if (!ok) {
       PBL_LOG_ERR("config vbus limite0 failed");
     }
   }
 
   PebbleEvent event = {
-    .type = PEBBLE_BATTERY_CONNECTION_EVENT,
-    .battery_connection = {
-      .is_connected = battery_is_usb_connected(),
-    },
+      .type = PEBBLE_BATTERY_CONNECTION_EVENT,
+      .battery_connection =
+          {
+              .is_connected = battery_is_usb_connected(),
+          },
   };
   event_put(&event);
 }
 
 static void prv_clear_pending_interrupts() {
-  prv_write_register(PmicRegisters_MAIN_EVENTSBCHARGER1CLR, PmicRegisters_MAIN_EVENTSBCHARGER1__EVENTCHGCOMPLETED);
-  prv_write_register(PmicRegisters_MAIN_EVENTSVBUSIN0CLR, PmicRegisters_MAIN_EVENTSVBUSIN0__EVENTVBUSDETECTED | PmicRegisters_MAIN_EVENTSVBUSIN0__EVENTVBUSREMOVED);
+  prv_write_register(PmicRegisters_MAIN_EVENTSBCHARGER1CLR,
+                     PmicRegisters_MAIN_EVENTSBCHARGER1__EVENTCHGCOMPLETED);
+  prv_write_register(PmicRegisters_MAIN_EVENTSVBUSIN0CLR,
+                     PmicRegisters_MAIN_EVENTSVBUSIN0__EVENTVBUSDETECTED |
+                         PmicRegisters_MAIN_EVENTSVBUSIN0__EVENTVBUSREMOVED);
 }
 
 static void prv_pmic_state_change_cb(void *null) {
   prv_clear_pending_interrupts();
-  new_timer_start(s_debounce_charger_timer, CHARGER_DEBOUNCE_MS,
-                  prv_handle_charge_state_change, NULL, 0 /*flags*/);
+  new_timer_start(s_debounce_charger_timer, CHARGER_DEBOUNCE_MS, prv_handle_charge_state_change,
+                  NULL, 0 /*flags*/);
 }
 
 static void prv_npm1300_interrupt_handler(bool *should_context_switch) {
@@ -264,7 +266,8 @@ static void prv_npm1300_interrupt_handler(bool *should_context_switch) {
 static void prv_configure_interrupts(void) {
   prv_clear_pending_interrupts();
 
-  exti_configure_pin(BOARD_CONFIG_POWER.pmic_int, ExtiTrigger_Rising, prv_npm1300_interrupt_handler);
+  exti_configure_pin(BOARD_CONFIG_POWER.pmic_int, ExtiTrigger_Rising,
+                     prv_npm1300_interrupt_handler);
   exti_enable(BOARD_CONFIG_POWER.pmic_int);
 }
 
@@ -277,15 +280,12 @@ bool pmic_init(void) {
   // TODO(NPM1300): This needs to be configurable at board level
 #ifdef CONFIG_BOARD_ASTERIX
   // Anomaly 27: set BUCK1/BUCK2 to SW control with workaround
-  ok &= prv_buck_set_sw_ctrl(PmicRegisters_BUCK_BUCK1NORMVOUT,
-                              PmicRegisters_BUCK_BUCK1VOUTSTATUS,
-                              PmicRegisters_BUCK_BUCKSWCTRLSEL__BUCK1SWCTRLSEL_SWCTRL,
-                              8 /* 1.8V */);
-  ok &= prv_buck_set_sw_ctrl(PmicRegisters_BUCK_BUCK2NORMVOUT,
-                              PmicRegisters_BUCK_BUCK2VOUTSTATUS,
-                              PmicRegisters_BUCK_BUCKSWCTRLSEL__BUCK2SWCTRLSEL_SWCTRL,
-                              20 /* 3.0V */);
-  
+  ok &= prv_buck_set_sw_ctrl(PmicRegisters_BUCK_BUCK1NORMVOUT, PmicRegisters_BUCK_BUCK1VOUTSTATUS,
+                             PmicRegisters_BUCK_BUCKSWCTRLSEL__BUCK1SWCTRLSEL_SWCTRL, 8 /* 1.8V */);
+  ok &=
+      prv_buck_set_sw_ctrl(PmicRegisters_BUCK_BUCK2NORMVOUT, PmicRegisters_BUCK_BUCK2VOUTSTATUS,
+                           PmicRegisters_BUCK_BUCKSWCTRLSEL__BUCK2SWCTRLSEL_SWCTRL, 20 /* 3.0V */);
+
   if (!prv_read_register(PmicRegisters_LDSW_LDSWSTATUS, &val)) {
     PBL_LOG_ERR("failed to read LDSWSTATUS");
     return false;
@@ -304,25 +304,30 @@ bool pmic_init(void) {
 // FIXME(OBELIX,GETAFIX): Needs to be configurable at board level
 #if defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX)
   // Anomaly 27: set BUCK1 to SW control with workaround, then disable it
-  ok &= prv_buck_set_sw_ctrl(PmicRegisters_BUCK_BUCK1NORMVOUT,
-                              PmicRegisters_BUCK_BUCK1VOUTSTATUS,
-                              PmicRegisters_BUCK_BUCKSWCTRLSEL__BUCK1SWCTRLSEL_SWCTRL,
-                              8 /* 1.8V */);
+  ok &= prv_buck_set_sw_ctrl(PmicRegisters_BUCK_BUCK1NORMVOUT, PmicRegisters_BUCK_BUCK1VOUTSTATUS,
+                             PmicRegisters_BUCK_BUCKSWCTRLSEL__BUCK1SWCTRLSEL_SWCTRL, 8 /* 1.8V */);
   ok &= prv_write_register(PmicRegisters_BUCK_BUCK1ENACLR, 1);
-  //enable 1.8V@LDO1
-  ok &= prv_write_register(PmicRegisters_LDSW_LDSW1LDOSEL, 1);  //LDO
-  ok &= prv_write_register(PmicRegisters_LDSW_LDSW1VOUTSEL, 8);  //1.8V
-  ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW1SET, 1); //enable
+  // enable 1.8V@LDO1
+  ok &= prv_write_register(PmicRegisters_LDSW_LDSW1LDOSEL, 1);   // LDO
+  ok &= prv_write_register(PmicRegisters_LDSW_LDSW1VOUTSEL, 8);  // 1.8V
+  ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW1SET, 1);  // enable
 #endif
 
-  ok &= prv_write_register(PmicRegisters_MAIN_EVENTSBCHARGER1CLR, PmicRegisters_MAIN_EVENTSBCHARGER1__EVENTCHGCOMPLETED);
-  ok &= prv_write_register(PmicRegisters_MAIN_INTENEVENTSBCHARGER1SET, PmicRegisters_MAIN_EVENTSBCHARGER1__EVENTCHGCOMPLETED);
-  ok &= prv_write_register(PmicRegisters_MAIN_EVENTSVBUSIN0CLR, PmicRegisters_MAIN_EVENTSVBUSIN0__EVENTVBUSDETECTED | PmicRegisters_MAIN_EVENTSVBUSIN0__EVENTVBUSREMOVED);
-  ok &= prv_write_register(PmicRegisters_MAIN_INTENEVENTSVBUSIN0SET, PmicRegisters_MAIN_EVENTSVBUSIN0__EVENTVBUSDETECTED | PmicRegisters_MAIN_EVENTSVBUSIN0__EVENTVBUSREMOVED);
+  ok &= prv_write_register(PmicRegisters_MAIN_EVENTSBCHARGER1CLR,
+                           PmicRegisters_MAIN_EVENTSBCHARGER1__EVENTCHGCOMPLETED);
+  ok &= prv_write_register(PmicRegisters_MAIN_INTENEVENTSBCHARGER1SET,
+                           PmicRegisters_MAIN_EVENTSBCHARGER1__EVENTCHGCOMPLETED);
+  ok &= prv_write_register(PmicRegisters_MAIN_EVENTSVBUSIN0CLR,
+                           PmicRegisters_MAIN_EVENTSVBUSIN0__EVENTVBUSDETECTED |
+                               PmicRegisters_MAIN_EVENTSVBUSIN0__EVENTVBUSREMOVED);
+  ok &= prv_write_register(PmicRegisters_MAIN_INTENEVENTSVBUSIN0SET,
+                           PmicRegisters_MAIN_EVENTSVBUSIN0__EVENTVBUSDETECTED |
+                               PmicRegisters_MAIN_EVENTSVBUSIN0__EVENTVBUSREMOVED);
   ok &= prv_write_register(PmicRegisters_GPIOS_GPIOMODE1, PmicRegisters_GPIOS_GPIOMODE__GPOIRQ);
   ok &= prv_write_register(PmicRegisters_GPIOS_GPIOOPENDRAIN1, 0);
 
-  ok &= prv_write_register(PmicRegisters_SHIP_SHPHLDCONFIG, PmicRegisters_SHIP_SHPHLDCONFIG__SHPHLDTIM_96MS);
+  ok &= prv_write_register(PmicRegisters_SHIP_SHPHLDCONFIG,
+                           PmicRegisters_SHIP_SHPHLDCONFIG__SHPHLDTIM_96MS);
   ok &= prv_write_register(PmicRegisters_SHIP_TASKSHPHLDCFGSTROBE, 1);
 
   // automatic IBAT measurement after VBAT
@@ -341,20 +346,29 @@ bool pmic_init(void) {
 
   // FIXME: this needs to be configurable at board level
 #ifdef CONFIG_BOARD_OBELIX
-  ok &= prv_write_register(PmicRegisters_ADC_ADCNTCRSEL, PmicRegisters_ADC_ADCNTCRSEL__ADCNTCRSEL_10K);
+  ok &= prv_write_register(PmicRegisters_ADC_ADCNTCRSEL,
+                           PmicRegisters_ADC_ADCNTCRSEL__ADCNTCRSEL_10K);
 
-  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERM, PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V35);
-  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERMR, PmicRegisters_BCHARGER_BCHGVTERMR__BCHGVTERMREDUCED_4V00);
+  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERM,
+                           PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V35);
+  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERMR,
+                           PmicRegisters_BCHARGER_BCHGVTERMR__BCHGVTERMREDUCED_4V00);
 #elif defined(CONFIG_BOARD_GETAFIX)
-  ok &= prv_write_register(PmicRegisters_ADC_ADCNTCRSEL, PmicRegisters_ADC_ADCNTCRSEL__ADCNTCRSEL_10K);
+  ok &= prv_write_register(PmicRegisters_ADC_ADCNTCRSEL,
+                           PmicRegisters_ADC_ADCNTCRSEL__ADCNTCRSEL_10K);
 
-  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERM, PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V45);
-  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERMR, PmicRegisters_BCHARGER_BCHGVTERMR__BCHGVTERMREDUCED_4V00);
+  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERM,
+                           PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V45);
+  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERMR,
+                           PmicRegisters_BCHARGER_BCHGVTERMR__BCHGVTERMREDUCED_4V00);
 #elif defined(CONFIG_BOARD_ASTERIX)
-  ok &= prv_write_register(PmicRegisters_ADC_ADCNTCRSEL, PmicRegisters_ADC_ADCNTCRSEL__ADCNTCRSEL_10K);
+  ok &= prv_write_register(PmicRegisters_ADC_ADCNTCRSEL,
+                           PmicRegisters_ADC_ADCNTCRSEL__ADCNTCRSEL_10K);
 
-  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERM, PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V20);
-  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERMR, PmicRegisters_BCHARGER_BCHGVTERMR__BCHGVTERMREDUCED_4V00);
+  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERM,
+                           PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V20);
+  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERMR,
+                           PmicRegisters_BCHARGER_BCHGVTERMR__BCHGVTERMREDUCED_4V00);
 #endif
 
   {
@@ -365,13 +379,15 @@ bool pmic_init(void) {
 
   // FIXME: this needs to be configurable at board level
 #ifdef CONFIG_BOARD_OBELIX
-  //3.3V @ LDO2
-  ok &= prv_write_register(PmicRegisters_LDSW_LDSW2LDOSEL, PmicRegisters_LDSW_LDSW2LDOSEL__LDO_MODE);
+  // 3.3V @ LDO2
+  ok &=
+      prv_write_register(PmicRegisters_LDSW_LDSW2LDOSEL, PmicRegisters_LDSW_LDSW2LDOSEL__LDO_MODE);
   ok &= prv_write_register(PmicRegisters_LDSW_LDSW2VOUTSEL, PmicRegisters_LDSW_LDSW2VOUTSEL__3V3);
   ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW2CLR, 1);
 #elif defined(CONFIG_BOARD_GETAFIX)
   // LDSW2 (3.3V for PDM)
-  ok &= prv_write_register(PmicRegisters_LDSW_LDSW2LDOSEL, PmicRegisters_LDSW_LDSW2LDOSEL__LDSW_MODE);
+  ok &=
+      prv_write_register(PmicRegisters_LDSW_LDSW2LDOSEL, PmicRegisters_LDSW_LDSW2LDOSEL__LDSW_MODE);
   ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW2CLR, 1);
 #endif
 
@@ -384,13 +400,13 @@ bool pmic_init(void) {
 
   if (NPM1300_CONFIG.vbus_current_startup != 0) {
     ok &= prv_write_register(PmicRegisters_VBUSIN_VBUSINILIMSTARTUP,
-      NPM1300_CONFIG.vbus_current_startup/NPM1300_VBUS_CURRENT_DIVISOR);
+                             NPM1300_CONFIG.vbus_current_startup / NPM1300_VBUS_CURRENT_DIVISOR);
   }
 
   if (NPM1300_CONFIG.term_current_pct == 10U) {
     ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGITERMSEL,
                              PmicRegisters_BCHARGER_BCHGITERMSEL__SEL10);
-  } else if(NPM1300_CONFIG.term_current_pct == 20U) {
+  } else if (NPM1300_CONFIG.term_current_pct == 20U) {
     ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGITERMSEL,
                              PmicRegisters_BCHARGER_BCHGITERMSEL__SEL20);
   } else {
@@ -398,14 +414,10 @@ bool pmic_init(void) {
     return false;
   }
 
-  ok &= prv_write_register(PmicRegisters_SYSTEM_TESTACCESS, 
-                           PmicRegisters_SYSTEM_TESTACCESS__VAL0);
-  ok &= prv_write_register(PmicRegisters_SYSTEM_TESTACCESS, 
-                           PmicRegisters_SYSTEM_TESTACCESS__VAL1);
-  ok &= prv_write_register(PmicRegisters_SYSTEM_TESTACCESS, 
-                           PmicRegisters_SYSTEM_TESTACCESS__VAL2);
-  ok &= prv_write_register(PmicRegisters_SYSTEM_TESTACCESS, 
-                           PmicRegisters_SYSTEM_TESTACCESS__VAL3);
+  ok &= prv_write_register(PmicRegisters_SYSTEM_TESTACCESS, PmicRegisters_SYSTEM_TESTACCESS__VAL0);
+  ok &= prv_write_register(PmicRegisters_SYSTEM_TESTACCESS, PmicRegisters_SYSTEM_TESTACCESS__VAL1);
+  ok &= prv_write_register(PmicRegisters_SYSTEM_TESTACCESS, PmicRegisters_SYSTEM_TESTACCESS__VAL2);
+  ok &= prv_write_register(PmicRegisters_SYSTEM_TESTACCESS, PmicRegisters_SYSTEM_TESTACCESS__VAL3);
 
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGDEBUG,
                            PmicRegisters_BCHARGER_BCHGDEBUG__DISABLEBATTERYDETECT);
@@ -441,9 +453,7 @@ bool pmic_power_off(void) {
   return false;
 }
 
-bool pmic_full_power_off(void) {
-  return pmic_power_off();
-}
+bool pmic_full_power_off(void) { return pmic_power_off(); }
 
 uint16_t pmic_get_vsys(void) {
   if (!prv_write_register(PmicRegisters_MAIN_EVENTSADCCLR, 0x08 /* EVENTADCVSYSRDY */)) {
@@ -466,7 +476,7 @@ uint16_t pmic_get_vsys(void) {
       elapsed += ADC_POLL_DELAY_MS;
     }
   }
-  
+
   uint8_t vsys_msb;
   uint8_t lsbs;
   if (!prv_read_register(PmicRegisters_ADC_ADCVSYSRESULTMSB, &vsys_msb)) {
@@ -477,7 +487,7 @@ uint16_t pmic_get_vsys(void) {
   }
   uint16_t vsys_raw = (vsys_msb << 2) | (lsbs >> 6);
   uint32_t vsys = vsys_raw * 6375 / 1023;
-  
+
   return vsys;
 }
 
@@ -502,7 +512,7 @@ int battery_get_millivolts(void) {
       elapsed += ADC_POLL_DELAY_MS;
     }
   }
-  
+
   uint8_t vbat_msb;
   uint8_t lsbs;
   if (!prv_read_register(PmicRegisters_ADC_ADCVBATRESULTMSB, &vbat_msb)) {
@@ -513,7 +523,7 @@ int battery_get_millivolts(void) {
   }
   uint16_t vbat_raw = (vbat_msb << 2) | (lsbs & 3);
   uint32_t vbat = vbat_raw * 5000 / 1023;
-  
+
   return vbat;
 }
 
@@ -536,16 +546,15 @@ int battery_get_constants(BatteryConstants *constants) {
         ((int32_t)NPM1300_CONFIG.chg_current_ma * 1000 * NPM1300_BCHARGER_ADC_CALC_CHARGE_MUL) /
         NPM1300_BCHARGER_ADC_CALC_CHARGE_DIV;
   } else {
-    full_scale_ua =
-        ((int32_t)s_dischg_limit_ma * 1000 * NPM1300_BCHARGER_ADC_CALC_DISCHARGE_MUL) /
-        NPM1300_BCHARGER_ADC_CALC_DISCHARGE_DIV;
+    full_scale_ua = ((int32_t)s_dischg_limit_ma * 1000 * NPM1300_BCHARGER_ADC_CALC_DISCHARGE_MUL) /
+                    NPM1300_BCHARGER_ADC_CALC_DISCHARGE_DIV;
   }
 
   // Clear the ADC ready events for VBAT, IBAT, and NTC
   if (!prv_write_register(PmicRegisters_MAIN_EVENTSADCCLR,
                           PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCVBATRDY |
-                          PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCIBATRDY |
-                          PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCNTCRDY)) {
+                              PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCIBATRDY |
+                              PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCNTCRDY)) {
     return -1;
   }
 
@@ -655,16 +664,13 @@ int battery_get_constants(BatteryConstants *constants) {
 }
 
 bool pmic_set_charger_state(bool enable) {
-  return prv_write_register(enable ? PmicRegisters_BCHARGER_BCHGENABLESET : PmicRegisters_BCHARGER_BCHGENABLECLR, 1);
+  return prv_write_register(
+      enable ? PmicRegisters_BCHARGER_BCHGENABLESET : PmicRegisters_BCHARGER_BCHGENABLECLR, 1);
 }
 
-void battery_set_charge_enable(bool charging_enabled) {
-  pmic_set_charger_state(charging_enabled);
-}
+void battery_set_charge_enable(bool charging_enabled) { pmic_set_charger_state(charging_enabled); }
 
-void battery_set_fast_charge(bool fast_charge_enabled) {
-  /* the PMIC handles this for us */
-}
+void battery_set_fast_charge(bool fast_charge_enabled) { /* the PMIC handles this for us */ }
 
 bool pmic_is_charging(void) {
   uint8_t status;
@@ -672,12 +678,12 @@ bool pmic_is_charging(void) {
     return false;
   }
 
-  return (status & (PmicRegisters_BCHARGER_BCHGCHARGESTATUS__TRICKLECHARGE | PmicRegisters_BCHARGER_BCHGCHARGESTATUS__CONSTANTCURRENT | PmicRegisters_BCHARGER_BCHGCHARGESTATUS__CONSTANTVOLTAGE)) != 0;
+  return (status & (PmicRegisters_BCHARGER_BCHGCHARGESTATUS__TRICKLECHARGE |
+                    PmicRegisters_BCHARGER_BCHGCHARGESTATUS__CONSTANTCURRENT |
+                    PmicRegisters_BCHARGER_BCHGCHARGESTATUS__CONSTANTVOLTAGE)) != 0;
 }
 
-bool battery_charge_controller_thinks_we_are_charging_impl(void) {
-  return pmic_is_charging();
-}
+bool battery_charge_controller_thinks_we_are_charging_impl(void) { return pmic_is_charging(); }
 
 bool pmic_is_usb_connected(void) {
   uint8_t status;
@@ -688,29 +694,19 @@ bool pmic_is_usb_connected(void) {
   return (status & PmicRegisters_VBUSIN_VBUSINSTATUS__VBUSINPRESENT) != 0;
 }
 
-bool battery_is_usb_connected_impl(void) {
-  return pmic_is_usb_connected();
-}
+bool battery_is_usb_connected_impl(void) { return pmic_is_usb_connected(); }
 
-void pmic_read_chip_info(uint8_t *chip_id, uint8_t *chip_revision, uint8_t *buck1_vset) {
-}
+void pmic_read_chip_info(uint8_t *chip_id, uint8_t *chip_revision, uint8_t *buck1_vset) {}
 
-bool pmic_enable_battery_measure(void) {
-  return true;
-}
+bool pmic_enable_battery_measure(void) { return true; }
 
-bool pmic_disable_battery_measure(void) {
-  return true;
-}
+bool pmic_disable_battery_measure(void) { return true; }
 
-void set_ldo3_power_state(bool enabled) {
-}
+void set_ldo3_power_state(bool enabled) {}
 
-void set_4V5_power_state(bool enabled) {
-}
+void set_4V5_power_state(bool enabled) {}
 
-void set_6V6_power_state(bool enabled) {
-}
+void set_6V6_power_state(bool enabled) {}
 
 int battery_charge_status_get(BatteryChargeStatus *status) {
   uint8_t chg_status;
@@ -745,7 +741,12 @@ int battery_charge_status_get(BatteryChargeStatus *status) {
 
 void command_pmic_read_registers(void) {
   char buffer[64];
-#define SAY(x) do { uint8_t reg; int rv = prv_read_register(PmicRegisters_##x, &reg); prompt_send_response_fmt(buffer, sizeof(buffer), "PMIC: " #x " = %02x (rv %d)", reg, rv); } while(0)
+#define SAY(x)                                                                                \
+  do {                                                                                        \
+    uint8_t reg;                                                                              \
+    int rv = prv_read_register(PmicRegisters_##x, &reg);                                      \
+    prompt_send_response_fmt(buffer, sizeof(buffer), "PMIC: " #x " = %02x (rv %d)", reg, rv); \
+  } while (0)
   SAY(ERRLOG_SCRATCH0);
   SAY(ERRLOG_SCRATCH1);
   SAY(BUCK_BUCK1NORMVOUT);
@@ -758,8 +759,7 @@ void command_pmic_read_registers(void) {
   prompt_send_response_fmt(buffer, sizeof(buffer), "PMIC: Vbat = %d mV", battery_get_millivolts());
 }
 
-void command_pmic_status(void) {
-}
+void command_pmic_status(void) {}
 
 void command_pmic_rails(void) {
   // TODO: Implement.
@@ -769,15 +769,19 @@ static bool gpio_set(Npm1300GpioId_t id, bool is_high) {
   bool rv = false;
   switch (id) {
     case Npm1300_Gpio2:
-      rv = prv_write_register(PmicRegisters_GPIOS_GPIOMODE2, 
-          is_high ? PmicRegisters_GPIOS_GPIOMODE__OUTPUT_HIGH : PmicRegisters_GPIOS_GPIOMODE__OUTPUT_LOW);
-      rv &= prv_write_register(PmicRegisters_GPIOS_GPIOPUEN2,
+      rv = prv_write_register(PmicRegisters_GPIOS_GPIOMODE2,
+                              is_high ? PmicRegisters_GPIOS_GPIOMODE__OUTPUT_HIGH
+                                      : PmicRegisters_GPIOS_GPIOMODE__OUTPUT_LOW);
+      rv &= prv_write_register(
+          PmicRegisters_GPIOS_GPIOPUEN2,
           is_high ? PmicRegisters_GPIOS_GPIOPUEN__EN : PmicRegisters_GPIOS_GPIOPUEN__DIS);
       break;
     case Npm1300_Gpio3: {
-      rv = prv_write_register(PmicRegisters_GPIOS_GPIOMODE3, 
-          is_high ? PmicRegisters_GPIOS_GPIOMODE__OUTPUT_HIGH : PmicRegisters_GPIOS_GPIOMODE__OUTPUT_LOW);
-      rv &= prv_write_register(PmicRegisters_GPIOS_GPIOPUEN3,
+      rv = prv_write_register(PmicRegisters_GPIOS_GPIOMODE3,
+                              is_high ? PmicRegisters_GPIOS_GPIOMODE__OUTPUT_HIGH
+                                      : PmicRegisters_GPIOS_GPIOMODE__OUTPUT_LOW);
+      rv &= prv_write_register(
+          PmicRegisters_GPIOS_GPIOPUEN3,
           is_high ? PmicRegisters_GPIOS_GPIOPUEN__EN : PmicRegisters_GPIOS_GPIOPUEN__DIS);
       break;
     }
@@ -838,7 +842,7 @@ static bool dischg_limit_ma_set(uint32_t dischg_limit_ma) {
 }
 
 Npm1300Ops_t NPM1300_OPS = {
-  .gpio_set = gpio_set,
-  .ldo2_set_enabled = ldo2_set_enabled,
-  .dischg_limit_ma_set = dischg_limit_ma_set,
+    .gpio_set = gpio_set,
+    .ldo2_set_enabled = ldo2_set_enabled,
+    .dischg_limit_ma_set = dischg_limit_ma_set,
 };

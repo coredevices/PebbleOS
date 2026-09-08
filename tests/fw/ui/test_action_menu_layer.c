@@ -92,8 +92,7 @@ uint16_t graphics_text_layout_get_text_height(GContext *ctx, const char *text, G
 }
 
 GSize graphics_text_layout_get_max_used_size(GContext *ctx, const char *text, GFont const font,
-                                             const GRect box,
-                                             const GTextOverflowMode overflow_mode,
+                                             const GRect box, const GTextOverflowMode overflow_mode,
                                              const GTextAlignment alignment,
                                              GTextLayoutCacheRef layout) {
   return GSize(10, FONT_HEIGHT);
@@ -156,17 +155,14 @@ static void prv_record_selection_changed(const ActionMenuItem *item, void *conte
 }
 
 static const ActionMenuItem s_wide_items[] = {
-  { .label = "Dismiss", .is_leaf = 1 },
-  { .label = "Reply", .is_leaf = 1 },
-  { .label = "Mark as Read", .is_leaf = 1 },
+    {.label = "Dismiss", .is_leaf = 1},
+    {.label = "Reply", .is_leaf = 1},
+    {.label = "Mark as Read", .is_leaf = 1},
 };
 
 static const ActionMenuItem s_short_items[] = {
-  { .label = "A", .is_leaf = 1 },
-  { .label = "B", .is_leaf = 1 },
-  { .label = "C", .is_leaf = 1 },
-  { .label = "D", .is_leaf = 1 },
-  { .label = "E", .is_leaf = 1 },
+    {.label = "A", .is_leaf = 1}, {.label = "B", .is_leaf = 1}, {.label = "C", .is_leaf = 1},
+    {.label = "D", .is_leaf = 1}, {.label = "E", .is_leaf = 1},
 };
 
 static ActionMenuLayer s_aml;
@@ -197,10 +193,12 @@ static void prv_init_aml_with_wide_items(void) {
   // action_menu_layer_init expects zeroed memory (the firmware always zallocs an AML).
   s_aml = (ActionMenuLayer){};
   action_menu_layer_init(&s_aml, &GRect(0, 0, 144, 168));
-  action_menu_layer_set_callbacks(&s_aml, (ActionMenuLayerCallbacks){
-    .select = prv_record_select,
-    .selection_changed = prv_record_selection_changed,
-  }, NULL);
+  action_menu_layer_set_callbacks(&s_aml,
+                                  (ActionMenuLayerCallbacks){
+                                      .select = prv_record_select,
+                                      .selection_changed = prv_record_selection_changed,
+                                  },
+                                  NULL);
   action_menu_layer_set_items(&s_aml, s_wide_items, ARRAY_LENGTH(s_wide_items), 0, 0);
   prv_reset_counters();
 }
@@ -218,8 +216,7 @@ void test_action_menu_layer__initialize(void) {
   prv_reset_counters();
 }
 
-void test_action_menu_layer__cleanup(void) {
-}
+void test_action_menu_layer__cleanup(void) {}
 
 // Tests
 ////////////////////////
@@ -255,10 +252,12 @@ void test_action_menu_layer__tap_other_item_selects_and_activates(void) {
 void test_action_menu_layer__tap_short_row_adopts_first_column(void) {
   s_aml = (ActionMenuLayer){};
   action_menu_layer_init(&s_aml, &GRect(0, 0, 144, 168));
-  action_menu_layer_set_callbacks(&s_aml, (ActionMenuLayerCallbacks){
-    .select = prv_record_select,
-    .selection_changed = prv_record_selection_changed,
-  }, NULL);
+  action_menu_layer_set_callbacks(&s_aml,
+                                  (ActionMenuLayerCallbacks){
+                                      .select = prv_record_select,
+                                      .selection_changed = prv_record_selection_changed,
+                                  },
+                                  NULL);
   // 5 items in columns of 3: row 0 = items 0-2, row 1 = items 3-4.
   action_menu_layer_set_short_items(&s_aml, s_short_items, ARRAY_LENGTH(s_short_items), 0);
   prv_reset_counters();

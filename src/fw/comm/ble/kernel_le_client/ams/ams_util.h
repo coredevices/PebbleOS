@@ -28,8 +28,8 @@ bool ams_util_float_string_parse(const char *number_str, uint32_t number_str_len
 //! @param index The index of the value in the total CSV list
 //! @param context User-specified callback, as passed into ams_util_csv_parse
 //! @return True to continue parsing, false to stop parsing
-typedef bool (*AMSUtilCSVCallback)(const char *value, uint32_t value_length,
-                                   uint32_t index, void *context);
+typedef bool (*AMSUtilCSVCallback)(const char *value, uint32_t value_length, uint32_t index,
+                                   void *context);
 
 //! Parses a comma separated value string.
 //! @param csv_value The buffer with the CSV string. The string does not necessarily need to be
@@ -39,5 +39,5 @@ typedef bool (*AMSUtilCSVCallback)(const char *value, uint32_t value_length,
 //! @param callback The function to call for each found value.
 //! @return The number of parsed values. In case the number of values in csv_value is different from
 //! the number of callbacks passed, only up to the smallest number will be parsed.
-uint8_t ams_util_csv_parse(const char *csv_value, uint32_t csv_length,
-                           void *context, AMSUtilCSVCallback callback);
+uint8_t ams_util_csv_parse(const char *csv_value, uint32_t csv_length, void *context,
+                           AMSUtilCSVCallback callback);

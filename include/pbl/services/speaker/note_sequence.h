@@ -34,8 +34,8 @@ typedef struct {
   uint32_t num_notes;
   uint32_t current_note;
   uint32_t samples_remaining;
-  uint32_t phase_acc;       // 16.16 fixed-point phase accumulator
-  uint32_t phase_inc;       // per-sample phase increment
+  uint32_t phase_acc;  // 16.16 fixed-point phase accumulator
+  uint32_t phase_inc;  // per-sample phase increment
   uint8_t current_waveform;
   uint8_t current_velocity;
   bool active;

@@ -9,8 +9,7 @@
 
 // Scales a total shape offset to an individual segment offset.
 // @param total_offset should not be larger than the segment's percent of total
-static int prv_total_offset_to_segment_offset(HealthProgressSegment *segment,
-                                              int total_offset) {
+static int prv_total_offset_to_segment_offset(HealthProgressSegment *segment, int total_offset) {
   return total_offset * HEALTH_PROGRESS_BAR_MAX_VALUE / segment->amount_of_total;
 }
 

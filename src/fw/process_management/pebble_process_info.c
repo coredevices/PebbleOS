@@ -9,4 +9,3 @@ int version_compare(Version a, Version b) {
   }
   return a.minor - b.minor;
 }
-

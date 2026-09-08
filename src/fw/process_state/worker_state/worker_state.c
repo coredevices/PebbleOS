@@ -42,13 +42,12 @@ typedef struct {
 KERNEL_READONLY_DATA static WorkerState *s_worker_state_ptr;
 
 bool worker_state_configure(MemorySegment *worker_state_ram) {
-  s_worker_state_ptr = memory_segment_split(worker_state_ram, NULL,
-                                            sizeof(WorkerState));
+  s_worker_state_ptr = memory_segment_split(worker_state_ram, NULL, sizeof(WorkerState));
   return s_worker_state_ptr != NULL;
 }
 
 void worker_state_init(void) {
-  s_worker_state_ptr->rand_seed.mat1 = 0; // Uninitialized
+  s_worker_state_ptr->rand_seed.mat1 = 0;  // Uninitialized
 
   accel_service_state_init(worker_state_get_accel_state());
 
@@ -69,26 +68,14 @@ void worker_state_deinit(void) {
   health_service_state_deinit(worker_state_get_health_service_state());
 }
 
-Heap *worker_state_get_heap(void) {
-  return &s_worker_state_ptr->heap;
-}
+Heap *worker_state_get_heap(void) { return &s_worker_state_ptr->heap; }
 
-struct tm *worker_state_get_gmtime_tm(void) {
-  return &s_worker_state_ptr->gmtime_tm;
-}
-struct tm *worker_state_get_localtime_tm(void) {
-  return &s_worker_state_ptr->localtime_tm;
-}
-char *worker_state_get_localtime_zone(void) {
-  return s_worker_state_ptr->localtime_zone;
-}
-void *worker_state_get_rand_ptr(void) {
-  return &s_worker_state_ptr->rand_seed;
-}
+struct tm *worker_state_get_gmtime_tm(void) { return &s_worker_state_ptr->gmtime_tm; }
+struct tm *worker_state_get_localtime_tm(void) { return &s_worker_state_ptr->localtime_tm; }
+char *worker_state_get_localtime_zone(void) { return s_worker_state_ptr->localtime_zone; }
+void *worker_state_get_rand_ptr(void) { return &s_worker_state_ptr->rand_seed; }
 
-AccelServiceState *worker_state_get_accel_state(void) {
-  return &s_worker_state_ptr->accel_state;
-}
+AccelServiceState *worker_state_get_accel_state(void) { return &s_worker_state_ptr->accel_state; }
 
 CompassServiceConfig **worker_state_get_compass_config(void) {
   return &s_worker_state_ptr->compass_config;
@@ -102,9 +89,7 @@ PluginServiceState *worker_state_get_plugin_service(void) {
   return &s_worker_state_ptr->plugin_service_state;
 }
 
-LogState *worker_state_get_log_state(void) {
-  return &s_worker_state_ptr->log_state;
-}
+LogState *worker_state_get_log_state(void) { return &s_worker_state_ptr->log_state; }
 
 BatteryStateServiceState *worker_state_get_battery_state_service_state(void) {
   return &s_worker_state_ptr->battery_state_service_state;
@@ -126,8 +111,6 @@ HealthServiceState *worker_state_get_health_service_state(void) {
   return &s_worker_state_ptr->health_service_state;
 }
 
-
-
 // ===================================================================================================
 // Serial Commands
 #ifdef CONFIG_MALLOC_INSTRUMENTATION
@@ -135,6 +118,3 @@ void command_dump_malloc_worker(void) {
   heap_dump_malloc_instrumentation_to_dbgserial(worker_state_get_heap());
 }
 #endif
-
-
-

@@ -29,8 +29,7 @@ typedef struct {
   TestPattern test_pattern;
 } AppData;
 
-
-static void prv_update_proc(struct Layer *layer, GContext* ctx) {
+static void prv_update_proc(struct Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorWhite);
   graphics_fill_rect(ctx, &layer->bounds);
 
@@ -39,23 +38,23 @@ static void prv_update_proc(struct Layer *layer, GContext* ctx) {
 
   PBL_LOG_INFO("backlight id:%d", app_data->test_pattern);
   switch (app_data->test_pattern) {
-  case TestPattern_White:
-    backlight_set_color(BACKLIGHT_COLOR_WHITE);
-    break;
-  case TestPattern_Red:
-    backlight_set_color(BACKLIGHT_COLOR_RED);
-    break;
-  case TestPattern_Green:
-    backlight_set_color(BACKLIGHT_COLOR_GREEN);
-    break;
-  case TestPattern_Blue:
-    backlight_set_color(BACKLIGHT_COLOR_BLUE);
-    break;
-  case TestPattern_Black:
-    backlight_set_color(BACKLIGHT_COLOR_BLACK);
-    break;
-  default:
-    break;
+    case TestPattern_White:
+      backlight_set_color(BACKLIGHT_COLOR_WHITE);
+      break;
+    case TestPattern_Red:
+      backlight_set_color(BACKLIGHT_COLOR_RED);
+      break;
+    case TestPattern_Green:
+      backlight_set_color(BACKLIGHT_COLOR_GREEN);
+      break;
+    case TestPattern_Blue:
+      backlight_set_color(BACKLIGHT_COLOR_BLUE);
+      break;
+    case TestPattern_Black:
+      backlight_set_color(BACKLIGHT_COLOR_BLACK);
+      break;
+    default:
+      break;
   }
 #endif
 }
@@ -108,9 +107,7 @@ static void prv_config_provider(void *data) {
 
 static void prv_handle_init(void) {
   AppData *data = app_malloc_check(sizeof(AppData));
-  *data = (AppData) {
-    .test_pattern = (TestPattern) app_manager_get_task_context()->args
-  };
+  *data = (AppData){.test_pattern = (TestPattern)app_manager_get_task_context()->args};
 
   app_state_set_user_data(data);
 
@@ -139,13 +136,13 @@ static void s_main(void) {
   light_enable(false);
 }
 
-const PebbleProcessMd* mfg_backlight_app_get_info(void) {
+const PebbleProcessMd *mfg_backlight_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = &s_main,
-    // UUID: 2d825a20-2fa3-4b26-be6f-ab41d1280c73
-    .common.uuid = { 0x2d, 0x82, 0x5a, 0x20, 0x2f, 0xa3, 0x4b, 0x26,
-                     0xbe, 0x6f, 0xab, 0x41, 0xd1, 0x28, 0x0c, 0x73 },
-    .name = "MfgBacklight",
+      .common.main_func = &s_main,
+      // UUID: 2d825a20-2fa3-4b26-be6f-ab41d1280c73
+      .common.uuid = {0x2d, 0x82, 0x5a, 0x20, 0x2f, 0xa3, 0x4b, 0x26, 0xbe, 0x6f, 0xab, 0x41, 0xd1,
+                      0x28, 0x0c, 0x73},
+      .name = "MfgBacklight",
   };
-  return (const PebbleProcessMd*) &s_app_info;
+  return (const PebbleProcessMd *)&s_app_info;
 }

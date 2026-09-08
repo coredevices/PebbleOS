@@ -15,7 +15,7 @@
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
-#define TRIGGER_PAIRING_NO_SEC_REQ    (1U << 1U)
+#define TRIGGER_PAIRING_NO_SEC_REQ (1U << 1U)
 #define TRIGGER_PAIRING_FORCE_SEC_REQ (1U << 2U)
 
 static int pebble_pairing_service_get_connectivity_status(
@@ -30,7 +30,7 @@ static int pebble_pairing_service_get_connectivity_status(
   }
 
   struct ble_store_key_sec key_sec = {
-    .peer_addr = desc.peer_id_addr,
+      .peer_addr = desc.peer_id_addr,
   };
   struct ble_store_value_sec value_sec;
   bool is_bonded = (ble_store_read_peer_sec(&key_sec, &value_sec) == 0);

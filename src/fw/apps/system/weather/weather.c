@@ -37,27 +37,28 @@ typedef struct WeatherAppData {
   EventServiceInfo weather_event_info;
 
   int location_count;
-  int active_index;          // which configured location is shown
+  int active_index;  // which configured location is shown
   unsigned int current_day_index;
   size_t days_received;
 
   WeatherLocationForecast days[WX_MAX_DAYS];
   char location_buf[64];
-  char phrase_buf0[32];               // day 0: the record's real short_phrase
-  char current_now_buf[32];           // day 0: current-hour phrase, translated
-  char phrase_buf[WX_MAX_DAYS][32];   // days 1+: derived from the type; row 0 unused (day 0 = phrase_buf0), kept for index parity with days[]
-  char label_buf[WX_MAX_DAYS][24];    // "Today", "Tomorrow" or a weekday name
+  char phrase_buf0[32];              // day 0: the record's real short_phrase
+  char current_now_buf[32];          // day 0: current-hour phrase, translated
+  char phrase_buf[WX_MAX_DAYS][32];  // days 1+: derived from the type; row 0 unused (day 0 =
+                                     // phrase_buf0), kept for index parity with days[]
+  char label_buf[WX_MAX_DAYS][24];   // "Today", "Tomorrow" or a weekday name
 
   // Today's hourly series (v4; clock dial glyphs + Select temperature reveal).
   // The v4 record carries hourly for TODAY only, so this applies to day 0.
   uint8_t hourly_type[24];
-  int8_t  hourly_temp[24];
-  bool    hourly_valid;
+  int8_t hourly_temp[24];
+  bool hourly_valid;
   // Tomorrow's hourly series (v4 minor 5): the clock dial's next-12-hours window
   // crosses midnight from early afternoon, and these feed those positions.
   uint8_t tomorrow_hourly_type[24];
-  int8_t  tomorrow_hourly_temp[24];
-  bool    tomorrow_hourly_valid;
+  int8_t tomorrow_hourly_temp[24];
+  bool tomorrow_hourly_valid;
   // Active location coordinates (v4; for the 3D globe).
   int16_t latitude_e2;
   int16_t longitude_e2;
@@ -68,7 +69,7 @@ typedef struct WeatherAppData {
   // NEVER the active selection. Feeds the globe's "My Location" entry and the
   // saved-locations Current row, so switching city on the globe can't overwrite
   // them with a duplicate of the selected city.
-  char    current_loc_buf[64];
+  char current_loc_buf[64];
   int16_t current_lat_e2;
   int16_t current_lon_e2;
   WeatherAppWarningDialog *warning_dialog;
@@ -93,17 +94,26 @@ static void prv_sync_glance_strings(WeatherAppData *data);
 // get a derived phrase; day 0 keeps the record's real short_phrase.
 static const char *prv_phrase_for_type(uint8_t type) {
   switch ((WeatherType)type) {
-    case WeatherType_Sun:          return i18n_noop("Sunny");
-    case WeatherType_PartlyCloudy: return i18n_noop("Partly Cloudy");
-    case WeatherType_CloudyDay:    return i18n_noop("Cloudy");
-    case WeatherType_LightRain:    return i18n_noop("Light Rain");
-    case WeatherType_HeavyRain:    return i18n_noop("Rain");
-    case WeatherType_LightSnow:    return i18n_noop("Light Snow");
-    case WeatherType_HeavySnow:    return i18n_noop("Snow");
-    case WeatherType_RainAndSnow:  return i18n_noop("Rain & Snow");
+    case WeatherType_Sun:
+      return i18n_noop("Sunny");
+    case WeatherType_PartlyCloudy:
+      return i18n_noop("Partly Cloudy");
+    case WeatherType_CloudyDay:
+      return i18n_noop("Cloudy");
+    case WeatherType_LightRain:
+      return i18n_noop("Light Rain");
+    case WeatherType_HeavyRain:
+      return i18n_noop("Rain");
+    case WeatherType_LightSnow:
+      return i18n_noop("Light Snow");
+    case WeatherType_HeavySnow:
+      return i18n_noop("Snow");
+    case WeatherType_RainAndSnow:
+      return i18n_noop("Rain & Snow");
     case WeatherType_Generic:
     case WeatherType_Unknown:
-    default:                       return NULL;
+    default:
+      return NULL;
   }
 }
 
@@ -128,8 +138,8 @@ static void prv_day_label(int day_offset, char *buf, size_t bufsize) {
     i18n_get_with_buffer(i18n_noop("Tomorrow"), buf, bufsize);
   } else {
     static const char *const kWday[7] = {
-      i18n_noop("Sunday"), i18n_noop("Monday"), i18n_noop("Tuesday"), i18n_noop("Wednesday"),
-      i18n_noop("Thursday"), i18n_noop("Friday"), i18n_noop("Saturday"),
+        i18n_noop("Sunday"),   i18n_noop("Monday"), i18n_noop("Tuesday"),  i18n_noop("Wednesday"),
+        i18n_noop("Thursday"), i18n_noop("Friday"), i18n_noop("Saturday"),
     };
     time_t t = rtc_get_time() + (time_t)day_offset * SECONDS_PER_DAY;
     struct tm *lt = localtime(&t);  // compat maps to pbl_override_localtime
@@ -150,8 +160,7 @@ static int prv_location_local_hour(const WxDsForecast *ds) {
   if (ds && ds->utc_offset_min != INT16_MIN) {
     // tm_gmtoff, not time_get_gmtoffset(): the latter excludes DST while lt does not, which
     // would skew the location's hour by the DST adjustment for half the year.
-    int mins = lt->tm_hour * 60 + lt->tm_min
-             - (int)(lt->tm_gmtoff / 60) + ds->utc_offset_min;
+    int mins = lt->tm_hour * 60 + lt->tm_min - (int)(lt->tm_gmtoff / 60) + ds->utc_offset_min;
     mins = ((mins % 1440) + 1440) % 1440;
     hour = mins / 60;
   }
@@ -200,31 +209,31 @@ static void prv_fill_days_from_ds(WeatherAppData *data, const WxDsForecast *ds) 
   // CURRENT-hour UV. The record's today_uv is the day's figure (peak), so a live value can
   // only come from the minor-4 hourly block; without it we fall back to the day's figure so
   // the screen shows something sane rather than "--".
-  data->days[0] = (WeatherLocationForecast) {
-    .location_name = data->location_buf,
-    .is_current_location = ds->is_current_location,
-    .current_temp = ds->current_temp,
-    .today_high = ds->today_high,
-    .today_low = ds->today_low,
-    .today_uv = ds->today_uv,
-    .today_uv_now = prv_uv_for_current_hour(ds),
-    .today_precip_mm = ds->today_precip,
-    .today_wind_mph = ds->today_wind,
-    .today_wind_dir_deg = ds->today_wind_dir,
-    .today_feels = ds->today_feels,
-    .today_wmo = ds->today_wmo,
-    .today_humidity = ds->today_humidity,
-    .today_visibility_m = (int)ds->today_visibility_m,
-    .today_precip_sum_mm = ds->today_precip_sum_mm,
-    .current_weather_type = (WeatherType)ds->current_weather_type,
-    .current_weather_phrase = data->phrase_buf0,
-    // Current-HOUR conditions for the round header. hourly_type entries are phone-provided:
-    // validate the enum range before trusting one; any gap falls back to the synced current.
-    .current_type_now = (WeatherType)ds->current_weather_type,
-    .current_temp_now = ds->current_temp,
-    .current_phrase_now = data->phrase_buf0,
-    .label = data->label_buf[0],
-    .time_updated_utc = ds->time_updated_utc,
+  data->days[0] = (WeatherLocationForecast){
+      .location_name = data->location_buf,
+      .is_current_location = ds->is_current_location,
+      .current_temp = ds->current_temp,
+      .today_high = ds->today_high,
+      .today_low = ds->today_low,
+      .today_uv = ds->today_uv,
+      .today_uv_now = prv_uv_for_current_hour(ds),
+      .today_precip_mm = ds->today_precip,
+      .today_wind_mph = ds->today_wind,
+      .today_wind_dir_deg = ds->today_wind_dir,
+      .today_feels = ds->today_feels,
+      .today_wmo = ds->today_wmo,
+      .today_humidity = ds->today_humidity,
+      .today_visibility_m = (int)ds->today_visibility_m,
+      .today_precip_sum_mm = ds->today_precip_sum_mm,
+      .current_weather_type = (WeatherType)ds->current_weather_type,
+      .current_weather_phrase = data->phrase_buf0,
+      // Current-HOUR conditions for the round header. hourly_type entries are phone-provided:
+      // validate the enum range before trusting one; any gap falls back to the synced current.
+      .current_type_now = (WeatherType)ds->current_weather_type,
+      .current_temp_now = ds->current_temp,
+      .current_phrase_now = data->phrase_buf0,
+      .label = data->label_buf[0],
+      .time_updated_utc = ds->time_updated_utc,
   };
   {
     // WATCH-local hour, deliberately NOT prv_location_local_hour: the header's spec is "what
@@ -237,14 +246,13 @@ static void prv_fill_days_from_ds(WeatherAppData *data, const WxDsForecast *ds) 
     const int hour = lt_h ? lt_h->tm_hour : -1;
     if (ds->hourly_count == WX_DS_HOURLY && hour >= 0 && hour < WX_DS_HOURLY &&
         ds->hourly_type[hour] <= WeatherType_RainAndSnow) {
-      data->days[0].current_type_now   = (WeatherType)ds->hourly_type[hour];
-      data->days[0].current_temp_now   = ds->hourly_temp[hour];
+      data->days[0].current_type_now = (WeatherType)ds->hourly_type[hour];
+      data->days[0].current_temp_now = ds->hourly_temp[hour];
       // The hourly block has no phrase; derive and translate one from the type.
       // Leave the record's own phrase in place when the type has no name.
       const char *hourly_phrase = prv_phrase_for_type(ds->hourly_type[hour]);
       if (hourly_phrase) {
-        i18n_get_with_buffer(hourly_phrase, data->current_now_buf,
-                             sizeof(data->current_now_buf));
+        i18n_get_with_buffer(hourly_phrase, data->current_now_buf, sizeof(data->current_now_buf));
         data->days[0].current_phrase_now = data->current_now_buf;
       }
     }
@@ -261,57 +269,56 @@ static void prv_fill_days_from_ds(WeatherAppData *data, const WxDsForecast *ds) 
     for (size_t i = 1; i < nd; i++) {
       prv_day_label((int)i, data->label_buf[i], sizeof(data->label_buf[i]));
       prv_fill_phrase(ds->daily[i].type, data->phrase_buf[i], sizeof(data->phrase_buf[i]));
-      data->days[i] = (WeatherLocationForecast) {
-        .location_name = data->location_buf,
-        .is_current_location = ds->is_current_location,
-        .current_temp = WX_DS_UNKNOWN_TEMP,
-        .today_high = ds->daily[i].high,
-        .today_low = ds->daily[i].low,
-        .today_uv = ds->daily[i].uv,             // per-day UV (v4.1 daily_metrics; -1 when absent)
-        .today_uv_now = -1,                      // hourly UV is today-only
-        .today_precip_mm = ds->daily[i].precip,  // per-day precip + wind (v4.1; -1 when absent)
-        .today_wind_mph = ds->daily[i].wind,
-        .today_wind_dir_deg = ds->daily[i].wind_dir,
-        .today_feels = ds->daily[i].feels,       // per-day feels-like (v4.2 daily_feels_like)
-        .today_wmo = -1,             // warning readings are today-only (v4.2)
-        .today_humidity = -1,
-        .today_visibility_m = -1,
-        .today_precip_sum_mm = -1,
-        .current_weather_type = (WeatherType)ds->daily[i].type,
-        .current_weather_phrase = data->phrase_buf[i],
-        .label = data->label_buf[i],
-        .time_updated_utc = ds->time_updated_utc,
+      data->days[i] = (WeatherLocationForecast){
+          .location_name = data->location_buf,
+          .is_current_location = ds->is_current_location,
+          .current_temp = WX_DS_UNKNOWN_TEMP,
+          .today_high = ds->daily[i].high,
+          .today_low = ds->daily[i].low,
+          .today_uv = ds->daily[i].uv,  // per-day UV (v4.1 daily_metrics; -1 when absent)
+          .today_uv_now = -1,           // hourly UV is today-only
+          .today_precip_mm = ds->daily[i].precip,  // per-day precip + wind (v4.1; -1 when absent)
+          .today_wind_mph = ds->daily[i].wind,
+          .today_wind_dir_deg = ds->daily[i].wind_dir,
+          .today_feels = ds->daily[i].feels,  // per-day feels-like (v4.2 daily_feels_like)
+          .today_wmo = -1,                    // warning readings are today-only (v4.2)
+          .today_humidity = -1,
+          .today_visibility_m = -1,
+          .today_precip_sum_mm = -1,
+          .current_weather_type = (WeatherType)ds->daily[i].type,
+          .current_weather_phrase = data->phrase_buf[i],
+          .label = data->label_buf[i],
+          .time_updated_utc = ds->time_updated_utc,
       };
     }
     data->days_received = nd;
   } else {
     // v3 fallback: day 1 = tomorrow from the v3 prefix fields (high/low/type).
-    const bool have_tomorrow = (ds->tomorrow_high != WX_DS_UNKNOWN_TEMP) ||
-                               (ds->tomorrow_low != WX_DS_UNKNOWN_TEMP);
+    const bool have_tomorrow =
+        (ds->tomorrow_high != WX_DS_UNKNOWN_TEMP) || (ds->tomorrow_low != WX_DS_UNKNOWN_TEMP);
     if (have_tomorrow) {
       prv_day_label(1, data->label_buf[1], sizeof(data->label_buf[1]));
-      prv_fill_phrase(ds->tomorrow_weather_type, data->phrase_buf[1],
-                      sizeof(data->phrase_buf[1]));
-      data->days[1] = (WeatherLocationForecast) {
-        .location_name = data->location_buf,
-        .is_current_location = ds->is_current_location,
-        .current_temp = WX_DS_UNKNOWN_TEMP,
-        .today_high = ds->tomorrow_high,
-        .today_low = ds->tomorrow_low,
-        .today_uv = -1,
-        .today_uv_now = -1,
-        .today_precip_mm = -1,
-        .today_wind_mph = -1,
-        .today_wind_dir_deg = -1,
-        .today_feels = WEATHER_SERVICE_LOCATION_FORECAST_UNKNOWN_TEMP,  // zeroed = a KNOWN 0°
-        .today_wmo = -1,
-        .today_humidity = -1,
-        .today_visibility_m = -1,
-        .today_precip_sum_mm = -1,
-        .current_weather_type = (WeatherType)ds->tomorrow_weather_type,
-        .current_weather_phrase = data->phrase_buf[1],
-        .label = data->label_buf[1],
-        .time_updated_utc = ds->time_updated_utc,
+      prv_fill_phrase(ds->tomorrow_weather_type, data->phrase_buf[1], sizeof(data->phrase_buf[1]));
+      data->days[1] = (WeatherLocationForecast){
+          .location_name = data->location_buf,
+          .is_current_location = ds->is_current_location,
+          .current_temp = WX_DS_UNKNOWN_TEMP,
+          .today_high = ds->tomorrow_high,
+          .today_low = ds->tomorrow_low,
+          .today_uv = -1,
+          .today_uv_now = -1,
+          .today_precip_mm = -1,
+          .today_wind_mph = -1,
+          .today_wind_dir_deg = -1,
+          .today_feels = WEATHER_SERVICE_LOCATION_FORECAST_UNKNOWN_TEMP,  // zeroed = a KNOWN 0°
+          .today_wmo = -1,
+          .today_humidity = -1,
+          .today_visibility_m = -1,
+          .today_precip_sum_mm = -1,
+          .current_weather_type = (WeatherType)ds->tomorrow_weather_type,
+          .current_weather_phrase = data->phrase_buf[1],
+          .label = data->label_buf[1],
+          .time_updated_utc = ds->time_updated_utc,
       };
       data->days_received = 2;
     }
@@ -323,13 +330,10 @@ static void prv_fill_days_from_ds(WeatherAppData *data, const WxDsForecast *ds) 
 static void prv_sync_glance_strings(WeatherAppData *data) {
   const WeatherLocationForecast *today = data->days_received >= 1 ? &data->days[0] : NULL;
   char sunset[40], temp[16], loc[64];
-  expanded_view_format_glance(today, data->latitude_e2, data->longitude_e2,
-                              data->utc_offset_min,
+  expanded_view_format_glance(today, data->latitude_e2, data->longitude_e2, data->utc_offset_min,
                               sunset, sizeof(sunset), temp, sizeof(temp), loc, sizeof(loc));
-  forecast_list_set_glance(sunset, temp,
-                           today ? today->today_uv : -1,
-                           today ? today->today_precip_mm : -1,
-                           today ? today->today_wind_mph : -1);
+  forecast_list_set_glance(sunset, temp, today ? today->today_uv : -1,
+                           today ? today->today_precip_mm : -1, today ? today->today_wind_mph : -1);
 }
 
 // Refresh the GPS ("My Location") identity from the record flagged is_current_location
@@ -366,8 +370,10 @@ static void prv_show_no_data_warning(WeatherAppData *data) {
   }
   app_window_stack_pop_all(false /* animated */);
   /// Shown when there are no forecasts available to show the user
-  const char *warning_text = i18n_get("No location information available. To see weather, add "
-                                      "locations in your Pebble mobile app.", data);
+  const char *warning_text = i18n_get(
+      "No location information available. To see weather, add "
+      "locations in your Pebble mobile app.",
+      data);
   data->warning_dialog =
       weather_app_warning_dialog_push(warning_text, prv_warning_dialog_dismiss_cb);
 }
@@ -395,12 +401,11 @@ static void prv_refresh(WeatherAppData *data) {
     // prv_refresh in prv_init runs before the base window is pushed).
     forecast_list_update_data(data->days, data->days_received);
     // Keep the expanded card current too if it happens to be showing (no-op otherwise).
-    expanded_view_update_data(data->days_received >= 1 ? &data->days[0] : NULL,
-                              data->latitude_e2, data->longitude_e2,
-                              data->utc_offset_min);
+    expanded_view_update_data(data->days_received >= 1 ? &data->days[0] : NULL, data->latitude_e2,
+                              data->longitude_e2, data->utc_offset_min);
     // And the weather report — it borrows days[] and must re-render today's edition.
     weather_report_update_data(data->days, data->days_received);
-    prv_sync_glance_strings(data);   // for the hero-fly text
+    prv_sync_glance_strings(data);  // for the hero-fly text
   }
 }
 
@@ -410,8 +415,14 @@ static void prv_refresh(WeatherAppData *data) {
 // {clock, globe, expanded card} sits on top of it, reached via buttons. s_page is a simple tag the
 // button handlers keep updated (the swipe carousel that once read it has been removed). PAGE_MAIN,
 // the old scrub screen, is gone; its enum value is retained only to keep the numbering stable.
-typedef enum { PAGE_MAIN = 0, PAGE_LIST, PAGE_CLOCK, PAGE_GLOBE, PAGE_EXPANDED, PAGE_COUNT }
-    WeatherCarouselPage;
+typedef enum {
+  PAGE_MAIN = 0,
+  PAGE_LIST,
+  PAGE_CLOCK,
+  PAGE_GLOBE,
+  PAGE_EXPANDED,
+  PAGE_COUNT
+} WeatherCarouselPage;
 static WeatherCarouselPage s_page = PAGE_LIST;
 
 // ---- Sub-view transitions ----
@@ -429,8 +440,8 @@ static void prv_push_clock(WeatherAppData *data, bool static_push) {
   // is synthesized from that day's high/low + type (a placeholder until the v4 struct is
   // extended to carry per-day hourly for the phone to populate — today is the only
   // day the record carries hourly for today).
-  uint8_t s_hourly_type[24];   // stack scratch — every consumer copies synchronously
-  int8_t  s_hourly_temp[24];
+  uint8_t s_hourly_type[24];  // stack scratch — every consumer copies synchronously
+  int8_t s_hourly_temp[24];
   const uint8_t *hourly_types = NULL;
   bool have_hourly = false;
 
@@ -442,7 +453,7 @@ static void prv_push_clock(WeatherAppData *data, bool static_push) {
   } else if (di < data->days_received) {
     const WeatherLocationForecast *d = &data->days[di];
     int hi = (d->today_high != WX_DS_UNKNOWN_TEMP) ? d->today_high : 20;
-    int lo = (d->today_low  != WX_DS_UNKNOWN_TEMP) ? d->today_low  : 12;
+    int lo = (d->today_low != WX_DS_UNKNOWN_TEMP) ? d->today_low : 12;
     if (hi <= lo) {
       hi = lo + 6;
     }
@@ -458,11 +469,11 @@ static void prv_push_clock(WeatherAppData *data, bool static_push) {
   }
 
   if (static_push) {
-    clock_face_push_static(data->days, data->days_received, (int)di,
-                           hourly_types, have_hourly ? 24 : 0, false);
+    clock_face_push_static(data->days, data->days_received, (int)di, hourly_types,
+                           have_hourly ? 24 : 0, false);
   } else {
-    clock_face_push(data->days, data->days_received, (int)di,
-                    hourly_types, have_hourly ? 24 : 0, false);
+    clock_face_push(data->days, data->days_received, (int)di, hourly_types, have_hourly ? 24 : 0,
+                    false);
   }
   if (have_hourly) {
     clock_face_update_hourly_temps_for_day((int)di, s_hourly_temp, 24);
@@ -470,8 +481,7 @@ static void prv_push_clock(WeatherAppData *data, bool static_push) {
   // Day 0's dial crosses midnight from early afternoon — hand it tomorrow's
   // hourly series (v4 minor 5) so those positions show real data.
   if (di == 0 && data->tomorrow_hourly_valid) {
-    clock_face_set_tomorrow_hourly(data->tomorrow_hourly_type,
-                                   data->tomorrow_hourly_temp, 24);
+    clock_face_set_tomorrow_hourly(data->tomorrow_hourly_type, data->tomorrow_hourly_temp, 24);
   }
 }
 
@@ -488,10 +498,8 @@ static void prv_on_clock_burst_requested(void *ctx) {
 // It borrows today's forecast (day 0) and takes the UP/DOWN callbacks that step the stack.
 static void prv_push_expanded(WeatherAppData *data, ExpandedViewEntrance entrance) {
   const WeatherLocationForecast *today = (data->days_received >= 1) ? &data->days[0] : NULL;
-  expanded_view_push(today, data->latitude_e2, data->longitude_e2,
-                     data->utc_offset_min, entrance,
-                     prv_expanded_down_to_main, data,
-                     prv_expanded_select_to_globe, data);
+  expanded_view_push(today, data->latitude_e2, data->longitude_e2, data->utc_offset_min, entrance,
+                     prv_expanded_down_to_main, data, prv_expanded_select_to_globe, data);
 }
 
 static void prv_on_list_up_to_expanded(void *ctx) {
@@ -509,16 +517,20 @@ static void prv_expanded_select_to_globe(void *ctx) {
   // SELECT on the card: the card has already slid out to the LEFT (expanded_view fired us on the
   // slide-out completion). Push the globe sliding in from the RIGHT on top, then dismiss the
   // now-hidden card underneath (its white slide-out already covered the base — no flash).
-  if (!data->globe_view) { expanded_view_dismiss(false); s_page = PAGE_LIST; return; }
+  if (!data->globe_view) {
+    expanded_view_dismiss(false);
+    s_page = PAGE_LIST;
+    return;
+  }
   if (data->current_lat_e2 != INT16_MIN && data->current_lon_e2 != INT16_MIN) {
-    globe_view_set_current_location(data->globe_view, data->current_loc_buf,
-                                    data->current_lat_e2, data->current_lon_e2);
+    globe_view_set_current_location(data->globe_view, data->current_loc_buf, data->current_lat_e2,
+                                    data->current_lon_e2);
   }
   // Open hovering the ACTIVE location's pin — the city last selected to look at.
   globe_view_focus_coords(data->globe_view, data->latitude_e2, data->longitude_e2);
   s_page = PAGE_GLOBE;
   globe_view_push_slide_in_right(data->globe_view);
-  expanded_view_dismiss(false);   // remove the card, now hidden beneath the globe
+  expanded_view_dismiss(false);  // remove the card, now hidden beneath the globe
 }
 
 static void prv_expanded_down_to_main(void *ctx) {
@@ -533,7 +545,7 @@ static void prv_expanded_down_to_main(void *ctx) {
 
 static void prv_report_after_exit(void *ctx) {
   WeatherAppData *data = (WeatherAppData *)ctx;
-  weather_report_arm_static_in();   // the unfold scene already delivered the entrance — hard cut
+  weather_report_arm_static_in();  // the unfold scene already delivered the entrance — hard cut
   weather_report_push(data->days, data->days_received, (int)data->current_day_index);
 }
 
@@ -560,10 +572,8 @@ static void prv_on_report_requested(void *ctx) {
 static void prv_on_list_transition_done(void *ctx) {
   WeatherAppData *data = (WeatherAppData *)ctx;
   // The animated forecast is the carousel base window — pushed once and never dismissed.
-  forecast_list_push(data->days, data->days_received,
-                     (int)data->current_day_index, false,
-                     NULL, NULL,
-                     prv_on_city_select_requested, data);
+  forecast_list_push(data->days, data->days_received, (int)data->current_day_index, false, NULL,
+                     NULL, prv_on_city_select_requested, data);
   forecast_list_set_on_clock_request(prv_on_clock_burst_requested, data);
   forecast_list_set_on_up_request(prv_on_list_up_to_expanded, data);
   forecast_list_set_on_select_request(prv_on_report_requested, data);
@@ -583,24 +593,22 @@ static void prv_push_globe(WeatherAppData *data, bool animated) {
     return;
   }
   if (data->current_lat_e2 != INT16_MIN && data->current_lon_e2 != INT16_MIN) {
-    globe_view_set_current_location(data->globe_view, data->current_loc_buf,
-                                    data->current_lat_e2, data->current_lon_e2);
+    globe_view_set_current_location(data->globe_view, data->current_loc_buf, data->current_lat_e2,
+                                    data->current_lon_e2);
   }
   globe_view_focus_coords(data->globe_view, data->latitude_e2, data->longitude_e2);
   globe_view_push_animated(data->globe_view, animated);
 }
 
-static void prv_on_city_select_requested(void *ctx) {
-  prv_push_globe((WeatherAppData *)ctx, true);
-}
+static void prv_on_city_select_requested(void *ctx) { prv_push_globe((WeatherAppData *)ctx, true); }
 
 // (globe DOWN-to-expanded path deleted with the dead main_callback chain)
 
 static void prv_globe_back_to_expanded(void *ctx) {
   WeatherAppData *data = (WeatherAppData *)ctx;
-  // BACK on the globe cradle: the globe has already slid out to the RIGHT (globe_view fired us on the
-  // slide-out completion). Dismiss it (revealing the forecast base) and bring the whole card back in
-  // from the LEFT — the exact mirror of the SELECT slide-out-left that got us here.
+  // BACK on the globe cradle: the globe has already slid out to the RIGHT (globe_view fired us on
+  // the slide-out completion). Dismiss it (revealing the forecast base) and bring the whole card
+  // back in from the LEFT — the exact mirror of the SELECT slide-out-left that got us here.
   if (data->globe_view) {
     globe_view_dismiss(data->globe_view, false);
   }
@@ -657,10 +665,10 @@ static void prv_open_saved_locations(void *ctx) {
     return;
   }
   SavedLocationsConfig config = {
-    // Both are weather-ds record indices now, so the active city pre-highlights.
-    .active_ds_index = data->active_index,
-    .select_callback = prv_on_saved_location_selected,
-    .select_context = data,
+      // Both are weather-ds record indices now, so the active city pre-highlights.
+      .active_ds_index = data->active_index,
+      .select_callback = prv_on_saved_location_selected,
+      .select_context = data,
   };
   saved_locations_push(&config);
 }
@@ -683,9 +691,7 @@ static void prv_on_clock_wrap_to_main(void *ctx) {
 // removed: screens are now reached only via buttons. s_page remains as a simple page-identity tag
 // the button handlers keep updated (ready for gesture nav to be re-added against the new layout).
 
-static void prv_handle_weather(PebbleEvent *event, void *context) {
-  prv_refresh(s_data);
-}
+static void prv_handle_weather(PebbleEvent *event, void *context) { prv_refresh(s_data); }
 
 static NOINLINE void prv_init(void) {
   // System-app statics survive across launches and a crashed run never reaches
@@ -725,28 +731,26 @@ static NOINLINE void prv_init(void) {
   // starfield + sequence resources). prv_refresh ran first, so lat/lon is set.
   data->globe_view = globe_view_create();
   if (data->globe_view) {
-    globe_view_set_location_select_callback(data->globe_view,
-                                            prv_globe_location_selected, data);
+    globe_view_set_location_select_callback(data->globe_view, prv_globe_location_selected, data);
     globe_view_set_back_callback(data->globe_view, prv_globe_back_to_expanded, data);
     globe_view_set_saved_locations_callback(data->globe_view, prv_open_saved_locations, data);
     if (data->current_lat_e2 != INT16_MIN && data->current_lon_e2 != INT16_MIN) {
-      globe_view_set_current_location(data->globe_view, data->current_loc_buf,
-                                      data->current_lat_e2, data->current_lon_e2);
+      globe_view_set_current_location(data->globe_view, data->current_loc_buf, data->current_lat_e2,
+                                      data->current_lon_e2);
     }
   }
   clock_face_set_wrap_callback(prv_on_clock_wrap_to_main, data);
 
   // App-global weather event subscription: re-read the BlobDB whenever the phone
   // writes a new weather record (there is no persistent main window to host it).
-  data->weather_event_info = (EventServiceInfo) {
-    .type = PEBBLE_WEATHER_EVENT,
-    .handler = prv_handle_weather,
+  data->weather_event_info = (EventServiceInfo){
+      .type = PEBBLE_WEATHER_EVENT,
+      .handler = prv_handle_weather,
   };
   event_service_client_subscribe(&data->weather_event_info);
 
   // Push the animated forecast as the carousel base window.
   prv_on_list_transition_done(data);
-
 }
 
 static void prv_deinit(void) {
@@ -770,14 +774,15 @@ static void prv_main(void) {
   prv_deinit();
 }
 
-const PebbleProcessMd* weather_app_get_info(void) {
+const PebbleProcessMd *weather_app_get_info(void) {
   static const PebbleProcessMdSystem s_weather_app_info = {
-    .common = {
-      .main_func = prv_main,
-      .uuid = UUID_WEATHER_DATA_SOURCE,
-    },
-    .name = i18n_noop("Weather"),
-    .icon_resource_id = RESOURCE_ID_GENERIC_WEATHER_TINY,
+      .common =
+          {
+              .main_func = prv_main,
+              .uuid = UUID_WEATHER_DATA_SOURCE,
+          },
+      .name = i18n_noop("Weather"),
+      .icon_resource_id = RESOURCE_ID_GENERIC_WEATHER_TINY,
   };
   return weather_ds_supported() ? (const PebbleProcessMd *)&s_weather_app_info : NULL;
 }

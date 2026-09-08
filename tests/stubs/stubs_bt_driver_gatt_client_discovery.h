@@ -8,10 +8,11 @@
 
 // TODO: Rethink how we want to stub out these new driver wrapper calls.
 
-BTErrno bt_driver_gatt_start_discovery_range(const GAPLEConnection *connection, const ATTHandleRange *data) {
+BTErrno bt_driver_gatt_start_discovery_range(const GAPLEConnection *connection,
+                                             const ATTHandleRange *data) {
   GATT_Attribute_Handle_Group_t hdl = {
-    .Starting_Handle = data->start,
-    .Ending_Handle = data->end,
+      .Starting_Handle = data->start,
+      .Ending_Handle = data->end,
   };
 
   int rv = GATT_Start_Service_Discovery_Handle_Range(bt_stack_id(), connection->gatt_connection_id,
@@ -24,7 +25,6 @@ BTErrno bt_driver_gatt_stop_discovery(GAPLEConnection *connection) {
   return 0;
 }
 
-void bt_driver_gatt_handle_finalize_discovery(GAPLEConnection *connection) {
-}
+void bt_driver_gatt_handle_finalize_discovery(GAPLEConnection *connection) {}
 
 void bt_driver_gatt_handle_discovery_abandoned(void) {}

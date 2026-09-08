@@ -65,7 +65,7 @@ static int64_t prv_get_precise_time(void) {
 
 inline static bool action_bar_is_highlighted(ActionBarLayer *action_bar, uint8_t index) {
   PBL_ASSERTN(index < NUM_ACTION_BAR_ITEMS);
-  return (bool) (action_bar->is_highlighted & (1 << index));
+  return (bool)(action_bar->is_highlighted & (1 << index));
 }
 
 static void prv_register_redraw_timer(ActionBarLayer *layer);
@@ -77,9 +77,9 @@ static void prv_timed_redraw(void *context) {
   int64_t now = prv_get_precise_time();
   for (int i = 0; i < NUM_ACTION_BAR_ITEMS; ++i) {
     if ((action_bar->state_change_times[i] != 0 &&
-          (now - action_bar->state_change_times[i]) <= PRESS_ANIMATION_DURATION_MS) ||
+         (now - action_bar->state_change_times[i]) <= PRESS_ANIMATION_DURATION_MS) ||
         (action_bar->icon_change_times[i] != 0 &&
-          (now - action_bar->icon_change_times[i]) <= ICON_CHANGE_ANIMATION_DURATION_MS)) {
+         (now - action_bar->icon_change_times[i]) <= ICON_CHANGE_ANIMATION_DURATION_MS)) {
       prv_register_redraw_timer(action_bar);
       return;
     }
@@ -88,13 +88,14 @@ static void prv_timed_redraw(void *context) {
 
 static void prv_register_redraw_timer(ActionBarLayer *action_bar) {
   if (!action_bar->redraw_timer) {
-    action_bar->redraw_timer = app_timer_register(MILLISECONDS_PER_FRAME, prv_timed_redraw,
-                                                  action_bar);
+    action_bar->redraw_timer =
+        app_timer_register(MILLISECONDS_PER_FRAME, prv_timed_redraw, action_bar);
   }
 }
 
-inline static void action_bar_set_highlighted(ActionBarLayer *action_bar, uint8_t index, bool highlighted) {
-  PBL_ASSERT(index < NUM_ACTION_BAR_ITEMS, "Index: %"PRIu8, index);
+inline static void action_bar_set_highlighted(ActionBarLayer *action_bar, uint8_t index,
+                                              bool highlighted) {
+  PBL_ASSERT(index < NUM_ACTION_BAR_ITEMS, "Index: %" PRIu8, index);
 
   const uint8_t bit = (1 << index);
   if (action_bar_is_highlighted(action_bar, index) == highlighted) {
@@ -110,7 +111,7 @@ inline static void action_bar_set_highlighted(ActionBarLayer *action_bar, uint8_
   layer_mark_dirty(&action_bar->layer);
 }
 
-void action_bar_changed_proc(ActionBarLayer *action_bar, GContext* ctx) {
+void action_bar_changed_proc(ActionBarLayer *action_bar, GContext *ctx) {
   if (action_bar->layer.window && action_bar->layer.window->on_screen == false) {
     // clear first, fixes issue of returning from other page while highlighted
     for (int i = 0; i < NUM_ACTION_BAR_ITEMS; i++) {
@@ -119,8 +120,7 @@ void action_bar_changed_proc(ActionBarLayer *action_bar, GContext* ctx) {
   }
 }
 
-static GPoint prv_offset_since_time(int64_t time_ms, int64_t duration_ms,
-                                     GPoint max_offset) {
+static GPoint prv_offset_since_time(int64_t time_ms, int64_t duration_ms, GPoint max_offset) {
   if (time_ms == 0) {
     return GPointZero;
   }
@@ -129,11 +129,11 @@ static GPoint prv_offset_since_time(int64_t time_ms, int64_t duration_ms,
     return GPointZero;
   }
   const uint32_t normalized_time = (delta_ms * ANIMATION_NORMALIZED_MAX) / duration_ms;
-  const uint32_t normalized_distance = animation_timing_curve(normalized_time,
-                                                             AnimationCurveEaseOut);
-  const GPoint real_offset = GPoint(
-      max_offset.x - ((normalized_distance * max_offset.x) / ANIMATION_NORMALIZED_MAX),
-      max_offset.y - ((normalized_distance * max_offset.y) / ANIMATION_NORMALIZED_MAX));
+  const uint32_t normalized_distance =
+      animation_timing_curve(normalized_time, AnimationCurveEaseOut);
+  const GPoint real_offset =
+      GPoint(max_offset.x - ((normalized_distance * max_offset.x) / ANIMATION_NORMALIZED_MAX),
+             max_offset.y - ((normalized_distance * max_offset.y) / ANIMATION_NORMALIZED_MAX));
   return real_offset;
 }
 
@@ -157,19 +157,18 @@ static void prv_draw_background_rect(ActionBarLayer *action_bar, GContext *ctx, 
 
 void prv_draw_background_round(ActionBarLayer *action_bar, GContext *ctx, GColor bg_color) {
   const uint32_t action_bar_circle_diameter = DISP_ROWS * 19 / 9;
-  GRect action_bar_circle_frame = (GRect) {
-      .size = GSize(action_bar_circle_diameter, action_bar_circle_diameter)
-  };
+  GRect action_bar_circle_frame =
+      (GRect){.size = GSize(action_bar_circle_diameter, action_bar_circle_diameter)};
   grect_align(&action_bar_circle_frame, &action_bar->layer.bounds, GAlignLeft, false /* clips */);
   graphics_fill_oval(ctx, action_bar_circle_frame, GOvalScaleModeFitCircle);
 }
 
-void action_bar_update_proc(ActionBarLayer *action_bar, GContext* ctx) {
+void action_bar_update_proc(ActionBarLayer *action_bar, GContext *ctx) {
   const GColor bg_color = action_bar->background_color;
   if (!gcolor_is_transparent(bg_color)) {
     graphics_context_set_fill_color(ctx, bg_color);
-    PBL_IF_RECT_ELSE(prv_draw_background_rect,
-                     prv_draw_background_round)(action_bar, ctx, bg_color);
+    PBL_IF_RECT_ELSE(prv_draw_background_rect, prv_draw_background_round)(action_bar, ctx,
+                                                                          bg_color);
   }
 
   for (unsigned int index = 0; index < NUM_ACTION_BAR_ITEMS; ++index) {
@@ -186,8 +185,7 @@ void action_bar_update_proc(ActionBarLayer *action_bar, GContext* ctx) {
           rect.origin.y = (action_bar->layer.bounds.size.h / 2) - (rect.size.h / 2);
           break;
         case BUTTON_ID_DOWN:
-          rect.origin.y = action_bar->layer.bounds.size.h - vertical_icon_margin -
-                          rect.size.h;
+          rect.origin.y = action_bar->layer.bounds.size.h - vertical_icon_margin - rect.size.h;
           break;
         default:
           WTF;
@@ -206,9 +204,9 @@ void action_bar_update_proc(ActionBarLayer *action_bar, GContext* ctx) {
       }
 
       const int64_t icon_change_time = action_bar->icon_change_times[index];
-      offset = gpoint_add(offset, prv_offset_since_time(icon_change_time,
-                                                        ICON_CHANGE_ANIMATION_DURATION_MS,
-                                                        GPoint(0, ICON_CHANGE_OFFSET[index])));
+      offset = gpoint_add(offset,
+                          prv_offset_since_time(icon_change_time, ICON_CHANGE_ANIMATION_DURATION_MS,
+                                                GPoint(0, ICON_CHANGE_OFFSET[index])));
 
       GRect icon_rect = icon->bounds;
       const bool clip = true;
@@ -227,7 +225,7 @@ void action_bar_update_proc(ActionBarLayer *action_bar, GContext* ctx) {
       } else {
         graphics_context_set_compositing_mode(ctx, GCompOpSet);
       }
-      graphics_draw_bitmap_in_rect(ctx, (GBitmap*)icon, &icon_rect);
+      graphics_draw_bitmap_in_rect(ctx, (GBitmap *)icon, &icon_rect);
     }
   }
 }
@@ -258,17 +256,16 @@ static void prv_publish_touch_nav_snapshot(ActionBarLayer *action_bar) {
 void action_bar_layer_init(ActionBarLayer *action_bar) {
   *action_bar = (ActionBarLayer){};
   layer_set_clips(&action_bar->layer, true);
-  action_bar->layer.update_proc = (LayerUpdateProc) action_bar_update_proc;
-  action_bar->layer.property_changed_proc =
-      (PropertyChangedProc) (void *) action_bar_changed_proc;
+  action_bar->layer.update_proc = (LayerUpdateProc)action_bar_update_proc;
+  action_bar->layer.property_changed_proc = (PropertyChangedProc)(void *)action_bar_changed_proc;
   action_bar->background_color = GColorBlack;
   for (unsigned int i = 0; i < NUM_ACTION_BAR_ITEMS; ++i) {
     action_bar->animation[i] = ActionBarLayerIconPressAnimationMoveLeft;
   }
 }
 
-ActionBarLayer* action_bar_layer_create(void) {
-  ActionBarLayer* layer = applib_type_malloc(ActionBarLayer);
+ActionBarLayer *action_bar_layer_create(void) {
+  ActionBarLayer *layer = applib_type_malloc(ActionBarLayer);
   if (layer) {
     action_bar_layer_init(layer);
   }
@@ -295,11 +292,11 @@ void action_bar_layer_destroy(ActionBarLayer *action_bar_layer) {
   applib_free(action_bar_layer);
 }
 
-Layer* action_bar_layer_get_layer(ActionBarLayer *action_bar_layer) {
+Layer *action_bar_layer_get_layer(ActionBarLayer *action_bar_layer) {
   return &action_bar_layer->layer;
 }
 
-inline static void* action_bar_get_context(ActionBarLayer *action_bar) {
+inline static void *action_bar_get_context(ActionBarLayer *action_bar) {
   return action_bar->context ? action_bar->context : action_bar;
 }
 
@@ -307,7 +304,8 @@ void action_bar_layer_set_context(ActionBarLayer *action_bar, void *context) {
   action_bar->context = context;
 }
 
-static void action_bar_raw_up_down_handler(ClickRecognizerRef recognizer, ActionBarLayer *action_bar, bool is_highlighted) {
+static void action_bar_raw_up_down_handler(ClickRecognizerRef recognizer,
+                                           ActionBarLayer *action_bar, bool is_highlighted) {
   const ButtonId button_id = click_recognizer_get_button_id(recognizer);
   const uint8_t index = button_id - 1;
 
@@ -330,7 +328,8 @@ static void action_bar_click_config_provider(void *config_context) {
   void *context = action_bar_get_context(action_bar);
   // For UP, SELECT and DOWN, setup the raw handler and assign the user specified context:
   for (ButtonId button_id = BUTTON_ID_UP; button_id < NUM_BUTTONS; ++button_id) {
-    window_raw_click_subscribe(button_id, action_bar_raw_down_handler, action_bar_raw_up_handler, action_bar);
+    window_raw_click_subscribe(button_id, action_bar_raw_down_handler, action_bar_raw_up_handler,
+                               action_bar);
     window_set_click_context(button_id, context);
   }
   // If back button is overridden, set context of BACK click recognizer as well:
@@ -345,11 +344,12 @@ static void action_bar_click_config_provider(void *config_context) {
 inline static void action_bar_update_click_config_provider(ActionBarLayer *action_bar) {
   if (action_bar->window) {
     window_set_click_config_provider_with_context(action_bar->window,
-        action_bar_click_config_provider, action_bar);
+                                                  action_bar_click_config_provider, action_bar);
   }
 }
 
-void action_bar_layer_set_click_config_provider(ActionBarLayer *action_bar, ClickConfigProvider click_config_provider) {
+void action_bar_layer_set_click_config_provider(ActionBarLayer *action_bar,
+                                                ClickConfigProvider click_config_provider) {
   action_bar->click_config_provider = click_config_provider;
   action_bar_update_click_config_provider(action_bar);
 }

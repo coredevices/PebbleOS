@@ -11,16 +11,16 @@
 typedef struct PACKED BleBonding {
   SMPairingInfo pairing_info;
   //! True if the remote device is capable of talking PPoGATT.
-  bool is_gateway:1;
+  bool is_gateway : 1;
 
   //! True if the local device address should be pinned.
-  bool should_pin_address:1;
+  bool should_pin_address : 1;
 
   //! @note bt_persistent_storage_... uses only 5 bits to store this!
   //! @see BleBondingFlag
-  uint8_t flags:5;
+  uint8_t flags : 5;
 
-  uint8_t rsvd:1;
+  uint8_t rsvd : 1;
 
   //! Valid iff should_pin_address is true
   BTDeviceAddress pinned_address;
@@ -34,7 +34,7 @@ typedef struct PACKED BleCCCD {
   //! Flags for the CCCD.
   uint16_t flags;
   //! True if the value has changed.
-  bool value_changed:1;
+  bool value_changed : 1;
 } BleCCCD;
 
 //! Called by the FW after starting the Bluetooth stack to register existing bondings.

@@ -3,17 +3,16 @@
 
 #include "pbl/services/accel_manager.h"
 
-AccelManagerState* sys_accel_manager_data_subscribe(
-    AccelSamplingRate rate, AccelDataReadyCallback data_cb, void* context,
-    PebbleTask handler_task) {
+AccelManagerState *sys_accel_manager_data_subscribe(AccelSamplingRate rate,
+                                                    AccelDataReadyCallback data_cb, void *context,
+                                                    PebbleTask handler_task) {
   return NULL;
 }
 
-bool sys_accel_manager_data_unsubscribe(AccelManagerState *state) {
-  return false;
-}
+bool sys_accel_manager_data_unsubscribe(AccelManagerState *state) { return false; }
 
-uint32_t accel_manager_set_jitterfree_sampling_rate(AccelManagerState *state, uint32_t min_rate_mhz) {
+uint32_t accel_manager_set_jitterfree_sampling_rate(AccelManagerState *state,
+                                                    uint32_t min_rate_mhz) {
   return 0;
 }
 
@@ -26,6 +25,4 @@ uint32_t sys_accel_manager_get_num_samples(AccelManagerState *state, uint64_t *t
   return 0;
 }
 
-bool sys_accel_manager_consume_samples(AccelManagerState *state, uint32_t samples) {
-  return false;
-}
+bool sys_accel_manager_consume_samples(AccelManagerState *state, uint32_t samples) { return false; }

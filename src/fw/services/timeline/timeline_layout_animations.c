@@ -14,7 +14,7 @@
 
 static void prv_change_reel(TimelineLayout *layout, KinoReel *reel) {
   // we most likely don't want that callback any more
-  kino_layer_set_callbacks(&layout->icon_layer, (KinoLayerCallbacks) {}, NULL);
+  kino_layer_set_callbacks(&layout->icon_layer, (KinoLayerCallbacks){}, NULL);
   kino_layer_set_reel(&layout->icon_layer, reel, true);
 }
 
@@ -41,8 +41,7 @@ static void prv_pin_to_card_second_half_stopped(KinoLayer *layer, bool finished,
 static void prv_pin_to_card_second_half(TimelineLayout *pin_timeline_layout,
                                         TimelineLayout *card_timeline_layout) {
   KinoReel *from_reel = kino_reel_create_with_resource_system(
-      card_timeline_layout->icon_res_info.res_app_num,
-      card_timeline_layout->icon_res_info.res_id);
+      card_timeline_layout->icon_res_info.res_app_num, card_timeline_layout->icon_res_info.res_id);
 
   if (!from_reel) {
     return;
@@ -68,13 +67,14 @@ static void prv_pin_to_card_second_half(TimelineLayout *pin_timeline_layout,
 
   kino_layer_play_section(&card_timeline_layout->icon_layer, duration / 2, duration);
 
-  kino_layer_set_callbacks(&card_timeline_layout->icon_layer, (KinoLayerCallbacks) {
-    .did_stop = prv_pin_to_card_second_half_stopped,
-  }, card_timeline_layout);
+  kino_layer_set_callbacks(&card_timeline_layout->icon_layer,
+                           (KinoLayerCallbacks){
+                               .did_stop = prv_pin_to_card_second_half_stopped,
+                           },
+                           card_timeline_layout);
 }
 
-static void prv_pin_to_card_first_half_stopped(KinoLayer *layer, bool finished,
-                                               void *context) {
+static void prv_pin_to_card_first_half_stopped(KinoLayer *layer, bool finished, void *context) {
   TimelineLayout *timeline_layout = context;
 
   // reset the first half of the animation
@@ -93,8 +93,7 @@ static void prv_pin_to_card_first_half_stopped(KinoLayer *layer, bool finished,
 void timeline_layout_transition_pin_to_card(TimelineLayout *pin_timeline_layout,
                                             TimelineLayout *card_timeline_layout) {
   KinoReel *from_reel = kino_reel_create_with_resource_system(
-      pin_timeline_layout->icon_res_info.res_app_num,
-      pin_timeline_layout->icon_res_info.res_id);
+      pin_timeline_layout->icon_res_info.res_app_num, pin_timeline_layout->icon_res_info.res_id);
 
   if (!from_reel) {
     return;
@@ -119,9 +118,11 @@ void timeline_layout_transition_pin_to_card(TimelineLayout *pin_timeline_layout,
   layer_set_clips((Layer *)pin_timeline_layout, false);
   layer_set_clips((Layer *)&pin_timeline_layout->icon_layer, false);
 
-  kino_layer_set_callbacks(&pin_timeline_layout->icon_layer, (KinoLayerCallbacks) {
-    .did_stop = prv_pin_to_card_first_half_stopped,
-  }, pin_timeline_layout);
+  kino_layer_set_callbacks(&pin_timeline_layout->icon_layer,
+                           (KinoLayerCallbacks){
+                               .did_stop = prv_pin_to_card_first_half_stopped,
+                           },
+                           pin_timeline_layout);
   kino_layer_play_section(&pin_timeline_layout->icon_layer, 0, duration / 2);
 
   pin_timeline_layout->transition_layout = card_timeline_layout;
@@ -137,8 +138,7 @@ static void prv_card_to_pin_stopped(KinoLayer *layer, bool finished, void *conte
 void timeline_layout_transition_card_to_pin(TimelineLayout *card_timeline_layout,
                                             TimelineLayout *pin_timeline_layout) {
   KinoReel *from_reel = kino_reel_create_with_resource_system(
-      card_timeline_layout->icon_res_info.res_app_num,
-      card_timeline_layout->icon_res_info.res_id);
+      card_timeline_layout->icon_res_info.res_app_num, card_timeline_layout->icon_res_info.res_id);
 
   if (!from_reel) {
     return;
@@ -156,13 +156,15 @@ void timeline_layout_transition_card_to_pin(TimelineLayout *card_timeline_layout
   KinoReel *new_reel = kino_reel_scale_segmented_create(from_reel, take_ownership, icon_from);
   kino_reel_transform_set_to_frame(new_reel, icon_to);
   kino_reel_transform_set_transform_duration(new_reel, duration / 2);
-  kino_reel_scale_segmented_set_delay_by_distance(
-      new_reel, GPoint(icon_from.size.w, icon_from.size.h / 2));
+  kino_reel_scale_segmented_set_delay_by_distance(new_reel,
+                                                  GPoint(icon_from.size.w, icon_from.size.h / 2));
   prv_change_reel(card_timeline_layout, new_reel);
 
-  kino_layer_set_callbacks(&card_timeline_layout->icon_layer, (KinoLayerCallbacks) {
-    .did_stop = prv_card_to_pin_stopped,
-  }, pin_timeline_layout);
+  kino_layer_set_callbacks(&card_timeline_layout->icon_layer,
+                           (KinoLayerCallbacks){
+                               .did_stop = prv_card_to_pin_stopped,
+                           },
+                           pin_timeline_layout);
   kino_layer_play(&card_timeline_layout->icon_layer);
 
   // for now, use the card icon for the entire animation, so hide the tiny icon
@@ -198,16 +200,18 @@ static void prv_up_down_stopped(Animation *animation, bool finished, void *conte
   }
 }
 
-Animation *timeline_layout_create_up_down_animation(
-    TimelineLayout *layout, const GRect *from, const GRect *to, const GRect *icon_from,
-    const GRect *icon_to, uint32_t duration, InterpolateInt64Function interpolate) {
+Animation *timeline_layout_create_up_down_animation(TimelineLayout *layout, const GRect *from,
+                                                    const GRect *to, const GRect *icon_from,
+                                                    const GRect *icon_to, uint32_t duration,
+                                                    InterpolateInt64Function interpolate) {
   KinoReel *from_reel = kino_reel_create_with_resource_system(layout->icon_res_info.res_app_num,
                                                               layout->icon_res_info.res_id);
   if (from_reel) {
-    GPoint target = (GPoint) {
-      .x = icon_from->size.w / 2, // pull from the middle
-      .y = (icon_to->origin.y > icon_from->origin.y) ? // if going up, pull from the top
-            icon_from->size.h : 0, // else pull from the bottom
+    GPoint target = (GPoint){
+        .x = icon_from->size.w / 2,                       // pull from the middle
+        .y = (icon_to->origin.y > icon_from->origin.y) ?  // if going up, pull from the top
+                 icon_from->size.h
+                                                       : 0,  // else pull from the bottom
     };
 
     const bool take_ownership = true;
@@ -232,8 +236,10 @@ Animation *timeline_layout_create_up_down_animation(
   Animation *animation = property_animation_get_animation(property_animation);
   animation_set_duration(animation, duration);
   animation_set_custom_interpolation(animation, interpolate);
-  animation_set_handlers(animation, (AnimationHandlers) {
-    .stopped = prv_up_down_stopped,
-  }, layout);
+  animation_set_handlers(animation,
+                         (AnimationHandlers){
+                             .stopped = prv_up_down_stopped,
+                         },
+                         layout);
   return animation;
 }

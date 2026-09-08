@@ -9,22 +9,18 @@
 
 WEAK void app_menu_data_source_init(AppMenuDataSource *source,
                                     const AppMenuDataSourceCallbacks *handlers,
-                                    void *callback_context) {
-}
+                                    void *callback_context) {}
 
-WEAK void app_menu_data_source_deinit(AppMenuDataSource *source) {
-}
+WEAK void app_menu_data_source_deinit(AppMenuDataSource *source) {}
 
 WEAK void app_menu_data_source_enable_icons(AppMenuDataSource *source, uint32_t fallback_icon_id) {}
 
-WEAK AppMenuNode* app_menu_data_source_get_node_at_index(AppMenuDataSource *source,
+WEAK AppMenuNode *app_menu_data_source_get_node_at_index(AppMenuDataSource *source,
                                                          uint16_t row_index) {
   return NULL;
 }
 
-WEAK uint16_t app_menu_data_source_get_count(AppMenuDataSource *source) {
-  return 0;
-}
+WEAK uint16_t app_menu_data_source_get_count(AppMenuDataSource *source) { return 0; }
 
 WEAK uint16_t app_menu_data_source_get_index_of_app_with_install_id(AppMenuDataSource *source,
                                                                     AppInstallId install_id) {

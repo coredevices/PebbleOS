@@ -13,12 +13,12 @@
 #define i18n_free_all(data)
 
 enum {
-  GOLF_FRONT_KEY = 0x0, // TUPLE_CSTRING
-  GOLF_MID_KEY = 0x1, // TUPLE_CSTRING
-  GOLF_BACK_KEY = 0x2, // TUPLE_CSTRING
-  GOLF_HOLE_KEY = 0x3, // TUPLE_CSTRING
-  GOLF_PAR_KEY = 0x4, // TUPLE_CSTRING
-  GOLF_CMD_KEY = 0x5, // TUPLE_INTEGER
+  GOLF_FRONT_KEY = 0x0,  // TUPLE_CSTRING
+  GOLF_MID_KEY = 0x1,    // TUPLE_CSTRING
+  GOLF_BACK_KEY = 0x2,   // TUPLE_CSTRING
+  GOLF_HOLE_KEY = 0x3,   // TUPLE_CSTRING
+  GOLF_PAR_KEY = 0x4,    // TUPLE_CSTRING
+  GOLF_CMD_KEY = 0x5,    // TUPLE_INTEGER
 };
 
 enum {
@@ -38,13 +38,11 @@ typedef enum {
   NumTextIdx
 } TextIdx;
 
-const int KEY_TO_TEXT_IDX[] = {
-  [GOLF_FRONT_KEY] = TextFront,
-  [GOLF_MID_KEY] = TextMid,
-  [GOLF_BACK_KEY] = TextBack,
-  [GOLF_HOLE_KEY] = TextHole,
-  [GOLF_PAR_KEY] = TextPar
-};
+const int KEY_TO_TEXT_IDX[] = {[GOLF_FRONT_KEY] = TextFront,
+                               [GOLF_MID_KEY] = TextMid,
+                               [GOLF_BACK_KEY] = TextBack,
+                               [GOLF_HOLE_KEY] = TextHole,
+                               [GOLF_PAR_KEY] = TextPar};
 
 typedef struct {
   Window *window;
@@ -98,15 +96,15 @@ static void sync_tuple_changed_callback(const uint32_t key, const Tuple *new_tup
   AppData *data = context;
   TextLayer **text = &data->text_layers[0];
   switch (key) {
-  case GOLF_BACK_KEY:
-  case GOLF_MID_KEY:
-  case GOLF_FRONT_KEY:
-  case GOLF_HOLE_KEY:
-  case GOLF_PAR_KEY:
-    text_layer_set_text(text[KEY_TO_TEXT_IDX[key]], new_tuple->value->cstring);
-  default:
-    // Unknown key
-    return;
+    case GOLF_BACK_KEY:
+    case GOLF_MID_KEY:
+    case GOLF_FRONT_KEY:
+    case GOLF_HOLE_KEY:
+    case GOLF_PAR_KEY:
+      text_layer_set_text(text[KEY_TO_TEXT_IDX[key]], new_tuple->value->cstring);
+    default:
+      // Unknown key
+      return;
   }
 }
 
@@ -115,8 +113,7 @@ static void send_golf_cmd(uint8_t cmd) {
 
   DictionaryIterator *iter;
   app_message_outbox_begin(&iter);
-  if (iter == NULL)
-    return;
+  if (iter == NULL) return;
 
   dict_write_tuplet(iter, &value);
   dict_write_end(iter);
@@ -137,9 +134,9 @@ static void select_click_handler(UNUSED ClickRecognizerRef recognizer, UNUSED Ap
 }
 
 static void config_provider(UNUSED AppData *data) {
-  window_single_click_subscribe(BUTTON_ID_UP, (ClickHandler) up_click_handler);
-  window_single_click_subscribe(BUTTON_ID_DOWN, (ClickHandler) down_click_handler);
-  window_single_click_subscribe(BUTTON_ID_SELECT, (ClickHandler) select_click_handler);
+  window_single_click_subscribe(BUTTON_ID_UP, (ClickHandler)up_click_handler);
+  window_single_click_subscribe(BUTTON_ID_DOWN, (ClickHandler)down_click_handler);
+  window_single_click_subscribe(BUTTON_ID_SELECT, (ClickHandler)select_click_handler);
 }
 
 static void window_unload(Window *window) {
@@ -171,8 +168,8 @@ static void background_update_proc(Layer *layer, GContext *ctx) {
   const int16_t horizontal_divider_width = PBL_IF_ROUND_ELSE(51, bounds.size.w - ACTION_BAR_WIDTH);
   const int16_t vertical_divider_x_offset = PBL_IF_ROUND_ELSE(72, horizontal_divider_width / 2);
   const int16_t horizontal_divider_x_offset = PBL_IF_ROUND_ELSE(vertical_divider_x_offset, 0);
-  const int16_t vertical_divider_y_offset = PBL_IF_ROUND_ELSE(
-      37, bounds.size.h - vertical_divider_height);
+  const int16_t vertical_divider_y_offset =
+      PBL_IF_ROUND_ELSE(37, bounds.size.h - vertical_divider_height);
   const uint16_t horizontal_divider_y_offset = PBL_IF_ROUND_ELSE(
       vertical_divider_y_offset + (vertical_divider_height / 2), vertical_divider_y_offset);
 
@@ -222,12 +219,10 @@ static void window_load(Window *window) {
   action_bar_layer_set_icon(data->action_bar, BUTTON_ID_SELECT, data->click_bitmap);
   action_bar_layer_set_icon(data->action_bar, BUTTON_ID_DOWN, data->down_bitmap);
   action_bar_layer_set_click_config_provider(data->action_bar,
-                                             (ClickConfigProvider) config_provider);
-  action_bar_layer_set_icon_press_animation(data->action_bar,
-                                            BUTTON_ID_UP,
+                                             (ClickConfigProvider)config_provider);
+  action_bar_layer_set_icon_press_animation(data->action_bar, BUTTON_ID_UP,
                                             ActionBarLayerIconPressAnimationMoveUp);
-  action_bar_layer_set_icon_press_animation(data->action_bar,
-                                            BUTTON_ID_DOWN,
+  action_bar_layer_set_icon_press_animation(data->action_bar, BUTTON_ID_DOWN,
                                             ActionBarLayerIconPressAnimationMoveDown);
   action_bar_layer_add_to_window(data->action_bar, data->window);
 
@@ -242,20 +237,20 @@ static void window_load(Window *window) {
   layer_add_child(background, status_bar_layer_get_layer(data->status_layer));
 
   // labels
-  const char * const font_key_label = FONT_KEY_GOTHIC_09;
+  const char *const font_key_label = FONT_KEY_GOTHIC_09;
   // back, mid, front numbers
-  const char * const font_key_small_numbers = PBL_IF_ROUND_ELSE(FONT_KEY_LECO_20_BOLD_NUMBERS,
-                                                                FONT_KEY_LECO_28_LIGHT_NUMBERS);
-  const char * const font_key_accent_numbers = PBL_IF_ROUND_ELSE(FONT_KEY_LECO_20_BOLD_NUMBERS,
-                                                                 FONT_KEY_LECO_38_BOLD_NUMBERS);
+  const char *const font_key_small_numbers =
+      PBL_IF_ROUND_ELSE(FONT_KEY_LECO_20_BOLD_NUMBERS, FONT_KEY_LECO_28_LIGHT_NUMBERS);
+  const char *const font_key_accent_numbers =
+      PBL_IF_ROUND_ELSE(FONT_KEY_LECO_20_BOLD_NUMBERS, FONT_KEY_LECO_38_BOLD_NUMBERS);
   // hole, par numbers
-  const char * const font_key_large_numbers = PBL_IF_ROUND_ELSE(FONT_KEY_LECO_32_BOLD_NUMBERS,
-                                                                FONT_KEY_LECO_38_BOLD_NUMBERS);
+  const char *const font_key_large_numbers =
+      PBL_IF_ROUND_ELSE(FONT_KEY_LECO_32_BOLD_NUMBERS, FONT_KEY_LECO_38_BOLD_NUMBERS);
   // "disconnected" text
-  const char * const font_key_disconnected = FONT_KEY_GOTHIC_24_BOLD;
+  const char *const font_key_disconnected = FONT_KEY_GOTHIC_24_BOLD;
 
-  static const GTextAlignment distance_text_alignment = PBL_IF_ROUND_ELSE(GTextAlignmentRight,
-                                                                          GTextAlignmentCenter);
+  static const GTextAlignment distance_text_alignment =
+      PBL_IF_ROUND_ELSE(GTextAlignmentRight, GTextAlignmentCenter);
 
   // text heights only used for setting text box height, not for layout
   const int16_t label_height = 10;
@@ -284,28 +279,28 @@ static void window_load(Window *window) {
   const int16_t par_value_y_offset = hole_value_y_offset + PBL_IF_ROUND_ELSE(stroke_box_height, 0);
 
   // Hole label.
-  text[TextHoleLabel] = text_layer_create(GRect(hole_box_x_offset, hole_label_y_offset,
-                                                stroke_box_width, label_height));
-  prv_setup_text_layer(text[TextHoleLabel], font_key_label,
-                       i18n_get("HOLE", data), GTextAlignmentCenter);
+  text[TextHoleLabel] = text_layer_create(
+      GRect(hole_box_x_offset, hole_label_y_offset, stroke_box_width, label_height));
+  prv_setup_text_layer(text[TextHoleLabel], font_key_label, i18n_get("HOLE", data),
+                       GTextAlignmentCenter);
   layer_add_child(background, text_layer_get_layer(text[TextHoleLabel]));
 
   // Hole value.
-  text[TextHole] = text_layer_create(GRect(hole_box_x_offset, hole_value_y_offset,
-                                           stroke_box_width, large_numbers_height));
+  text[TextHole] = text_layer_create(
+      GRect(hole_box_x_offset, hole_value_y_offset, stroke_box_width, large_numbers_height));
   prv_setup_text_layer(text[TextHole], font_key_large_numbers, NULL, GTextAlignmentCenter);
   layer_add_child(background, text_layer_get_layer(text[TextHole]));
 
   // Par label.
-  text[TextParLabel] = text_layer_create(GRect(par_box_x_offset, par_label_y_offset,
-                                               stroke_box_width, label_height));
+  text[TextParLabel] = text_layer_create(
+      GRect(par_box_x_offset, par_label_y_offset, stroke_box_width, label_height));
   prv_setup_text_layer(text[TextParLabel], font_key_label, i18n_get("PAR", data),
                        GTextAlignmentCenter);
   layer_add_child(background, text_layer_get_layer(text[TextParLabel]));
 
   // Par value.
-  text[TextPar] = text_layer_create(GRect(par_box_x_offset, par_value_y_offset,
-                                          stroke_box_width, large_numbers_height));
+  text[TextPar] = text_layer_create(
+      GRect(par_box_x_offset, par_value_y_offset, stroke_box_width, large_numbers_height));
   prv_setup_text_layer(text[TextPar], font_key_large_numbers, NULL, GTextAlignmentCenter);
   layer_add_child(background, text_layer_get_layer(text[TextPar]));
 
@@ -328,8 +323,8 @@ static void window_load(Window *window) {
   layer_add_child(background, text_layer_get_layer(text[TextFront]));
 
   // Disconnected text.
-  data->disconnected_text = text_layer_create(GRect(0, disconnected_text_y_offset,
-                                                    background_width, disconnected_text_height));
+  data->disconnected_text = text_layer_create(
+      GRect(0, disconnected_text_y_offset, background_width, disconnected_text_height));
   prv_setup_text_layer(data->disconnected_text, font_key_disconnected,
                        i18n_get("Disconnected", data), GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(data->disconnected_text));
@@ -337,11 +332,9 @@ static void window_load(Window *window) {
 
   // Sync setup:
   Tuplet initial_values[] = {
-    TupletCString(GOLF_PAR_KEY, "0"),
-    TupletCString(GOLF_HOLE_KEY, "0"),
-    TupletCString(GOLF_BACK_KEY, "000"),
-    TupletCString(GOLF_MID_KEY, "000"),
-    TupletCString(GOLF_FRONT_KEY, "000"),
+      TupletCString(GOLF_PAR_KEY, "0"),     TupletCString(GOLF_HOLE_KEY, "0"),
+      TupletCString(GOLF_BACK_KEY, "000"),  TupletCString(GOLF_MID_KEY, "000"),
+      TupletCString(GOLF_FRONT_KEY, "000"),
   };
   app_sync_init(&data->sync, data->sync_buffer, sizeof(data->sync_buffer), initial_values,
                 ARRAY_LENGTH(initial_values), sync_tuple_changed_callback, sync_error_callback,
@@ -353,12 +346,11 @@ static void push_window(AppData *data) {
   Window *window = data->window;
 
   window_set_user_data(window, data);
-  window_set_window_handlers(window, (WindowHandlers) {
-    .load = window_load,
-    .unload = window_unload,
-  });
-  window_set_click_config_provider_with_context(window, (ClickConfigProvider) config_provider,
-                                                data);
+  window_set_window_handlers(window, (WindowHandlers){
+                                         .load = window_load,
+                                         .unload = window_unload,
+                                     });
+  window_set_click_config_provider_with_context(window, (ClickConfigProvider)config_provider, data);
   window_set_background_color(window, PBL_IF_COLOR_ELSE(GColorMintGreen, GColorWhite));
   window_stack_push(window, true);
 }
@@ -370,10 +362,8 @@ static void handle_init(void) {
   // overall reduce the sniff-mode latency at the expense of some power...
   app_comm_set_sniff_interval(SNIFF_INTERVAL_REDUCED);
 
-  ConnectionHandlers handlers = {
-    .pebble_app_connection_handler = NULL,
-    .pebblekit_connection_handler = bluetooth_status_callback
-  };
+  ConnectionHandlers handlers = {.pebble_app_connection_handler = NULL,
+                                 .pebblekit_connection_handler = bluetooth_status_callback};
   connection_service_subscribe(handlers);
 }
 

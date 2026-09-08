@@ -46,8 +46,8 @@ void mic_set_volume(MicDevice *this, uint16_t volume) {
   // No gain stage to tweak on the QEMU stub.
 }
 
-bool mic_start(MicDevice *this, MicDataHandlerCB data_handler, void *context,
-               int16_t *audio_buffer, size_t audio_buffer_len) {
+bool mic_start(MicDevice *this, MicDataHandlerCB data_handler, void *context, int16_t *audio_buffer,
+               size_t audio_buffer_len) {
   PBL_ASSERTN(this);
   PBL_ASSERTN(this->state);
   PBL_ASSERTN(data_handler);
@@ -113,7 +113,7 @@ uint32_t mic_get_channels(MicDevice *this) {
 }
 
 void command_mic_start(char *timeout_str, char *sample_size_str, char *sample_rate_str,
-                      char *format_str) {
+                       char *format_str) {
   prompt_send_response("Microphone console commands not supported on QEMU");
 }
 

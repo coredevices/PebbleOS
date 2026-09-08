@@ -4,10 +4,10 @@
 #include "pbl/util/assert.h"
 #include "pbl/util/math_fixed.h"
 
-Fixed_S64_32 math_fixed_recursive_filter(Fixed_S64_32 x,
-                                         int num_input_coefficients, int num_output_coefficients,
-                                         const Fixed_S64_32 *cb, const Fixed_S64_32 *ca,
-                                         Fixed_S64_32 *state_x, Fixed_S64_32 *state_y) {
+Fixed_S64_32 math_fixed_recursive_filter(Fixed_S64_32 x, int num_input_coefficients,
+                                         int num_output_coefficients, const Fixed_S64_32 *cb,
+                                         const Fixed_S64_32 *ca, Fixed_S64_32 *state_x,
+                                         Fixed_S64_32 *state_y) {
   UTIL_ASSERT(num_input_coefficients >= 1);
 
   // shift the input over by one
@@ -29,7 +29,7 @@ Fixed_S64_32 math_fixed_recursive_filter(Fixed_S64_32 x,
 
   // shift the y output elements
   for (int k = num_output_coefficients - 1; k > 0; k--) {
-    state_y[k] = state_y[k-1];
+    state_y[k] = state_y[k - 1];
   }
   state_y[0] = ytmp;
 

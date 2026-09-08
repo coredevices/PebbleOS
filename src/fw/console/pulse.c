@@ -31,7 +31,6 @@
 #define FRAME_DELIMITER '\0'
 #define LINK_HEADER_LEN (1)
 
-
 typedef struct IncomingPulseFrame {
   uint16_t length;
   bool taken;
@@ -45,8 +44,8 @@ static CobsDecodeContext s_frame_decode_ctx;
 static bool s_drop_rest_of_frame;
 
 static PBL_MUTEX_DEFINE(s_tx_buffer_mutex);
-static char s_tx_buffer[MAX_SIZE_AFTER_COBS_ENCODING(
-        PULSE_MAX_SEND_SIZE + PULSE_MIN_FRAME_LENGTH) + COBS_OVERHEAD(PULSE_MAX_SEND_SIZE)];
+static char s_tx_buffer[MAX_SIZE_AFTER_COBS_ENCODING(PULSE_MAX_SEND_SIZE + PULSE_MIN_FRAME_LENGTH) +
+                        COBS_OVERHEAD(PULSE_MAX_SEND_SIZE)];
 
 typedef void (*ProtocolHandlerFunc)(void *packet, size_t length);
 typedef void (*LinkStateChangedHandlerFunc)(PulseLinkState link_state);
@@ -58,25 +57,19 @@ typedef struct PACKED ProtocolHandler {
 } ProtocolHandler;
 
 static const ProtocolHandler s_supported_protocols[] = {
-#define REGISTER_PROTOCOL(n, f1, f2) { \
-    .number = (n), \
-    .handler = (f1), \
-    .link_state_handler = (f2) \
-  },
+#define REGISTER_PROTOCOL(n, f1, f2) {.number = (n), .handler = (f1), .link_state_handler = (f2)},
 #include "console/pulse_protocol_registry.def"
 #undef REGISTER_PROTOCOL
 };
 
 static TimerID s_keepalive_timer = TIMER_INVALID_ID;
 
-
 static void prv_reset_receive_buffer(IncomingPulseFrame *buf) {
   buf->length = 0;
-  cobs_streaming_decode_start(&s_frame_decode_ctx, &buf->data,
-                              sizeof(buf->data));
+  cobs_streaming_decode_start(&s_frame_decode_ctx, &buf->data, sizeof(buf->data));
 }
 
-static IncomingPulseFrame* prv_take_receive_buffer(void) {
+static IncomingPulseFrame *prv_take_receive_buffer(void) {
   IncomingPulseFrame *buf = NULL;
   for (unsigned int i = 0; i < ARRAY_LENGTH(s_receive_buffers); ++i) {
     if (s_receive_buffers[i]->taken == false) {
@@ -89,21 +82,14 @@ static IncomingPulseFrame* prv_take_receive_buffer(void) {
   return NULL;
 }
 
-static void prv_return_receive_buffer(IncomingPulseFrame *buf) {
-  buf->taken = false;
-}
+static void prv_return_receive_buffer(IncomingPulseFrame *buf) { buf->taken = false; }
 
-static void prv_keepalive_timeout_expired(void *data) {
-  pulse_end();
-}
+static void prv_keepalive_timeout_expired(void *data) { pulse_end(); }
 
 static void prv_reset_keepalive_timer(void) {
   if (s_keepalive_timer) {
-    new_timer_start(s_keepalive_timer,
-                    PULSE_KEEPALIVE_TIMEOUT_DECISECONDS * 100,
-                    prv_keepalive_timeout_expired,
-                    NULL,
-                    TIMER_START_FLAG_FAIL_IF_EXECUTING);
+    new_timer_start(s_keepalive_timer, PULSE_KEEPALIVE_TIMEOUT_DECISECONDS * 100,
+                    prv_keepalive_timeout_expired, NULL, TIMER_START_FLAG_FAIL_IF_EXECUTING);
   }
 }
 
@@ -113,11 +99,9 @@ static void prv_handlers_notify_state_changed(PulseLinkState link_state) {
   }
 }
 
-void pulse_early_init(void) {
-}
+void pulse_early_init(void) {}
 
-void pulse_init(void) {
-}
+void pulse_init(void) {}
 
 void pulse_start(void) {
   for (unsigned int i = 0; i < ARRAY_LENGTH(s_receive_buffers); ++i) {
@@ -158,8 +142,7 @@ static void prv_process_received_frame(void *frame_ptr) {
   uint32_t fcs;
   // Comply with strict aliasing rules. The memcpy is optimized away.
   memcpy(&fcs, &frame->data[frame->length - sizeof(fcs)], sizeof(fcs));
-  uint32_t crc = legacy_defective_checksum_memory(
-      &frame->data, frame->length - sizeof(fcs));
+  uint32_t crc = legacy_defective_checksum_memory(&frame->data, frame->length - sizeof(fcs));
 
   if (fcs == crc) {
     prv_reset_keepalive_timer();
@@ -168,16 +151,14 @@ static void prv_process_received_frame(void *frame_ptr) {
     for (unsigned int i = 0; i < ARRAY_LENGTH(s_supported_protocols); ++i) {
       if (s_supported_protocols[i].number == protocol) {
         protocol_found = true;
-        s_supported_protocols[i].handler(
-            &frame->data[sizeof(protocol)],
-            frame->length - sizeof(protocol) - sizeof(fcs));
+        s_supported_protocols[i].handler(&frame->data[sizeof(protocol)],
+                                         frame->length - sizeof(protocol) - sizeof(fcs));
         break;
       }
     }
     if (!protocol_found) {
-      pulse_llc_unknown_protocol_handler(
-          protocol, &frame->data[sizeof(protocol)],
-          frame->length - sizeof(protocol) - sizeof(fcs));
+      pulse_llc_unknown_protocol_handler(protocol, &frame->data[sizeof(protocol)],
+                                         frame->length - sizeof(protocol) - sizeof(fcs));
     }
   }
   prv_return_receive_buffer(frame);
@@ -211,8 +192,7 @@ void pulse_handle_character(char c, bool *should_context_switch) {
     if (decoded_length >= PULSE_MIN_FRAME_LENGTH && decoded_length < SIZE_MAX) {
       // Potentially valid frame; queue up for further processing.
       s_current_receive_buffer->length = decoded_length;
-      system_task_add_callback_from_isr(prv_process_received_frame,
-                                        s_current_receive_buffer,
+      system_task_add_callback_from_isr(prv_process_received_frame, s_current_receive_buffer,
                                         should_context_switch);
       // Prepare to receive the next character.
       s_current_receive_buffer = prv_take_receive_buffer();
@@ -223,8 +203,7 @@ void pulse_handle_character(char c, bool *should_context_switch) {
   } else if (s_drop_rest_of_frame) {
     // The frame has already been found to be bad and we haven't yet
     // seen the start of the next frame.
-  } else if (UNLIKELY(s_current_receive_buffer->length >=
-             sizeof(s_current_receive_buffer->data))) {
+  } else if (UNLIKELY(s_current_receive_buffer->length >= sizeof(s_current_receive_buffer->data))) {
     // Frame too long; invalid.
     s_drop_rest_of_frame = true;
     prv_reset_receive_buffer(s_current_receive_buffer);
@@ -248,10 +227,10 @@ void pulse_best_effort_send(void *buf, const size_t payload_length) {
   PBL_ASSERT(payload_length <= PULSE_MAX_SEND_SIZE, "PULSE frame payload too long");
 
   // Rewind the pointer to the beginning of the buffer
-  char *frame = ((char *) buf) - COBS_OVERHEAD(PULSE_MAX_SEND_SIZE) - LINK_HEADER_LEN;
+  char *frame = ((char *)buf) - COBS_OVERHEAD(PULSE_MAX_SEND_SIZE) - LINK_HEADER_LEN;
   size_t length = LINK_HEADER_LEN + payload_length;
-  uint32_t fcs = legacy_defective_checksum_memory(
-      frame + COBS_OVERHEAD(PULSE_MAX_SEND_SIZE), length);
+  uint32_t fcs =
+      legacy_defective_checksum_memory(frame + COBS_OVERHEAD(PULSE_MAX_SEND_SIZE), length);
 
   memcpy(&frame[length + COBS_OVERHEAD(PULSE_MAX_SEND_SIZE)], &fcs, sizeof(fcs));
   length += sizeof(fcs);
@@ -272,7 +251,5 @@ void pulse_best_effort_send_cancel(void *buf) {
   pbl_mutex_unlock(&s_tx_buffer_mutex);
 }
 
-void pulse_change_baud_rate(uint32_t new_baud) {
-  dbgserial_change_baud_rate(new_baud);
-}
+void pulse_change_baud_rate(uint32_t new_baud) { dbgserial_change_baud_rate(new_baud); }
 #endif

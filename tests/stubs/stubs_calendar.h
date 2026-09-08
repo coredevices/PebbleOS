@@ -3,10 +3,6 @@
 
 #pragma once
 
-void calendar_handle_pin_change(void) {
-  return;
-}
+void calendar_handle_pin_change(void) { return; }
 
-bool calendar_event_is_ongoing(void) {
-  return false;
-}
+bool calendar_event_is_ongoing(void) { return false; }

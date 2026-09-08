@@ -6,12 +6,10 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-void dbgserial_putstr(const char* str) {
-  printf("%s\n", str);
-}
+void dbgserial_putstr(const char *str) { printf("%s\n", str); }
 
 FORMAT_PRINTF(3, 4)
-void dbgserial_putstr_fmt(char* str, unsigned int size, const char *fmt, ...) {
+void dbgserial_putstr_fmt(char *str, unsigned int size, const char *fmt, ...) {
   va_list fmt_args;
   va_start(fmt_args, fmt);
   vprintf(fmt, fmt_args);
@@ -19,10 +17,6 @@ void dbgserial_putstr_fmt(char* str, unsigned int size, const char *fmt, ...) {
   printf("\n");
 }
 
-void dbgserial_putchar(uint8_t character) {
-  printf("%c", character);
-}
+void dbgserial_putchar(uint8_t character) { printf("%c", character); }
 
-void dbgserial_putchar_lazy(uint8_t c) {
-  dbgserial_putchar(c);
-}
+void dbgserial_putchar_lazy(uint8_t c) { dbgserial_putchar(c); }

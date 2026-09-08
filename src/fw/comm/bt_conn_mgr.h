@@ -41,14 +41,13 @@ typedef struct GAPLEConnection GAPLEConnection;
 //!                            *as least* as responsive as the requested state.
 //!                            It will be executed on KernelMain.
 //!                            It is guaranteed to be called exactly once per call to this function.
-void conn_mgr_set_ble_conn_response_time_ext(
-    GAPLEConnection *hdl, BtConsumer consumer, ResponseTimeState state,
-    uint16_t max_period_secs, ResponsivenessGrantedHandler granted_handler);
+void conn_mgr_set_ble_conn_response_time_ext(GAPLEConnection *hdl, BtConsumer consumer,
+                                             ResponseTimeState state, uint16_t max_period_secs,
+                                             ResponsivenessGrantedHandler granted_handler);
 
 //! Same as conn_mgr_set_ble_conn_response_time_ext, but without granted_handler.
-void conn_mgr_set_ble_conn_response_time(
-    GAPLEConnection *hdl, BtConsumer consumer, ResponseTimeState state,
-    uint16_t max_period_secs);
+void conn_mgr_set_ble_conn_response_time(GAPLEConnection *hdl, BtConsumer consumer,
+                                         ResponseTimeState state, uint16_t max_period_secs);
 
 //! Informs the BT manager module that we want to run the provided classic
 //! connection at the requested rate.
@@ -65,14 +64,14 @@ void conn_mgr_set_ble_conn_response_time(
 //!                            *as least* as responsive as the requested state.
 //!                            It will be executed on KernelMain.
 //!                            It is guaranteed to be called exactly once per call to this function.
-void conn_mgr_set_bt_classic_conn_response_time_ext(
-    struct Remote *remote, BtConsumer consumer, ResponseTimeState state,
-    uint16_t max_period_secs, ResponsivenessGrantedHandler granted_handler);
+void conn_mgr_set_bt_classic_conn_response_time_ext(struct Remote *remote, BtConsumer consumer,
+                                                    ResponseTimeState state,
+                                                    uint16_t max_period_secs,
+                                                    ResponsivenessGrantedHandler granted_handler);
 
 //! Same as conn_mgr_set_bt_classic_conn_response_time_ext, but without granted_handler.s
-void conn_mgr_set_bt_classic_conn_response_time(
-    struct Remote *remote, BtConsumer consumer, ResponseTimeState state,
-    uint16_t max_period_secs);
+void conn_mgr_set_bt_classic_conn_response_time(struct Remote *remote, BtConsumer consumer,
+                                                ResponseTimeState state, uint16_t max_period_secs);
 
 //! @param[in] connection The connection for which to get the lowest requested latency.
 //! @param[out] secs_to_wait The longest amount of time that interval has been requested.

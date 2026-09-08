@@ -30,8 +30,8 @@ typedef void (*AppOutboxSentHandler)(AppOutboxStatus status, void *cb_ctx);
 //! after which the `data` buffer will be no longer in use. Note that the `sent_handler` MUST be
 //! white-listed in app_outbox_service.c.
 //! @param cb_ctx Pointer to user data that will be passed into the `sent_handler`
-void app_outbox_send(const uint8_t *data, size_t length,
-                     AppOutboxSentHandler sent_handler, void *cb_ctx);
+void app_outbox_send(const uint8_t *data, size_t length, AppOutboxSentHandler sent_handler,
+                     void *cb_ctx);
 
 //! To be called once per app launch by the system.
 void app_outbox_init(void);

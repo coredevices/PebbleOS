@@ -5,6 +5,4 @@
 
 #include "pbl/services/activity/activity.h"
 
-bool workout_utils_find_ongoing_activity_session(ActivitySession *session_out) {
-  return false;
-}
+bool workout_utils_find_ongoing_activity_session(ActivitySession *session_out) { return false; }

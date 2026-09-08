@@ -35,16 +35,10 @@
 // Fakes
 /////////////////////////
 static bool s_is_english = false;
-bool shell_prefs_get_language_english(void) {
-  return s_is_english;
-}
-void shell_prefs_set_language_english(bool english) {
-  s_is_english = english;
-}
+bool shell_prefs_get_language_english(void) { return s_is_english; }
+void shell_prefs_set_language_english(bool english) { s_is_english = english; }
 
-void launcher_task_add_callback(void (*callback)(void *data), void *data) {
-  callback(data);
-}
+void launcher_task_add_callback(void (*callback)(void *data), void *data) { callback(data); }
 
 // Setup
 /////////////////////////
@@ -57,10 +51,9 @@ void test_i18n__initialize(void) {
   i18n_set_resource(RESOURCE_ID_STRINGS);
 }
 
-void test_i18n__cleanup(void) {
-}
+void test_i18n__cleanup(void) {}
 
-extern I18nString *prv_list_find_string(const char *string, void * owner);
+extern I18nString *prv_list_find_string(const char *string, void *owner);
 
 void test_i18n__music(void) {
   const char *first = i18n_get("Music", (void *)0x12345);

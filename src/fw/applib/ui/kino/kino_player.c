@@ -35,7 +35,7 @@ T_STATIC void prv_play_animation_update(Animation *animation, const AnimationPro
   bool is_reel_infinite = (kino_reel_duration == PLAY_DURATION_INFINITE);
   bool is_animation_reversed = animation_get_reverse(animation);
   bool is_animation_infinite =
-    (animation_get_duration(animation, false, false) == PLAY_DURATION_INFINITE);
+      (animation_get_duration(animation, false, false) == PLAY_DURATION_INFINITE);
 
   if (!is_animation_infinite && !is_reel_infinite) {
     // If neither animation nor reel is infinite
@@ -66,11 +66,11 @@ static void prv_play_anim_stopped(Animation *anim, bool finished, void *context)
 }
 
 static const AnimationImplementation s_play_animation_impl = {
-  .update = prv_play_animation_update,
+    .update = prv_play_animation_update,
 };
 
 static const AnimationHandlers s_play_anim_handlers = {
-  .stopped = prv_play_anim_stopped,
+    .stopped = prv_play_anim_stopped,
 };
 
 //////////////////////////////////
@@ -114,9 +114,7 @@ void kino_player_set_reel_with_resource_system(KinoPlayer *player, ResAppNum app
   kino_player_set_reel(player, new_reel, true);
 }
 
-KinoReel *kino_player_get_reel(KinoPlayer *player) {
-  return player->reel;
-}
+KinoReel *kino_player_get_reel(KinoPlayer *player) { return player->reel; }
 
 static void prv_create_play_animation(KinoPlayer *player, uint32_t from_value, uint32_t to_value) {
   // stop any ongoing animation
@@ -165,8 +163,9 @@ ImmutableAnimation *kino_player_create_play_animation(KinoPlayer *player) {
   return NULL;
 }
 
-ImmutableAnimation *kino_player_create_play_section_animation(
-    KinoPlayer *player, uint32_t from_elapsed_ms, uint32_t to_elapsed_ms) {
+ImmutableAnimation *kino_player_create_play_section_animation(KinoPlayer *player,
+                                                              uint32_t from_elapsed_ms,
+                                                              uint32_t to_elapsed_ms) {
   if (player && player->reel) {
     prv_create_play_animation(player, from_elapsed_ms, to_elapsed_ms);
     return (ImmutableAnimation *)player->animation;
@@ -203,6 +202,6 @@ void kino_player_draw_processed(KinoPlayer *player, GContext *ctx, GPoint offset
 }
 
 void kino_player_deinit(KinoPlayer *player) {
-  player->callbacks = (KinoPlayerCallbacks) { 0 };
+  player->callbacks = (KinoPlayerCallbacks){0};
   kino_player_set_reel(player, NULL, false);
 }

@@ -86,9 +86,9 @@ static void prv_select_reset_results(int index, void *context) {
 #endif
 
 static const SimpleMenuItem s_menu_items[] = {
-  { .title = "Clear Bondings", .callback = prv_select_clear_bondings },
+    {.title = "Clear Bondings", .callback = prv_select_clear_bondings},
 #ifdef CONFIG_MFG
-  { .title = "Reset Results",  .callback = prv_select_reset_results },
+    {.title = "Reset Results", .callback = prv_select_reset_results},
 #endif
 };
 
@@ -98,10 +98,8 @@ static void prv_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(data->window);
   GRect bounds = window_layer->bounds;
 
-  data->menu_section = (SimpleMenuSection) {
-    .num_items = ARRAY_LENGTH(s_menu_items),
-    .items = s_menu_items
-  };
+  data->menu_section =
+      (SimpleMenuSection){.num_items = ARRAY_LENGTH(s_menu_items), .items = s_menu_items};
 
   data->menu_layer = simple_menu_layer_create(bounds, data->window, &data->menu_section, 1, NULL);
   layer_add_child(window_layer, simple_menu_layer_get_layer(data->menu_layer));
@@ -115,22 +113,22 @@ static void s_main(void) {
 
   data->window = window_create();
   window_init(data->window, "Utilities");
-  window_set_window_handlers(data->window, &(WindowHandlers) {
-    .load = prv_window_load,
-  });
+  window_set_window_handlers(data->window, &(WindowHandlers){
+                                               .load = prv_window_load,
+                                           });
   window_set_fullscreen(data->window, true);
   app_window_stack_push(data->window, true /*animated*/);
 
   app_event_loop();
 }
 
-const PebbleProcessMd* mfg_utilities_app_get_info(void) {
+const PebbleProcessMd *mfg_utilities_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = &s_main,
-    // UUID: 3e7b2c91-5a4d-4f68-b8e2-9c1d5f3a6b47
-    .common.uuid = { 0x3e, 0x7b, 0x2c, 0x91, 0x5a, 0x4d, 0x4f, 0x68,
-                     0xb8, 0xe2, 0x9c, 0x1d, 0x5f, 0x3a, 0x6b, 0x47 },
-    .name = "MfgUtilities",
+      .common.main_func = &s_main,
+      // UUID: 3e7b2c91-5a4d-4f68-b8e2-9c1d5f3a6b47
+      .common.uuid = {0x3e, 0x7b, 0x2c, 0x91, 0x5a, 0x4d, 0x4f, 0x68, 0xb8, 0xe2, 0x9c, 0x1d, 0x5f,
+                      0x3a, 0x6b, 0x47},
+      .name = "MfgUtilities",
   };
-  return (const PebbleProcessMd*) &s_app_info;
+  return (const PebbleProcessMd *)&s_app_info;
 }

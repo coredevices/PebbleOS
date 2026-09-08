@@ -16,8 +16,7 @@
 
 //! @return which status value we should use to indicate we have no compass
 static CompassStatus prv_get_status(void) {
-  if (process_manager_compiled_with_legacy2_sdk() ||
-      process_manager_compiled_with_legacy3_sdk()) {
+  if (process_manager_compiled_with_legacy2_sdk() || process_manager_compiled_with_legacy3_sdk()) {
     // This value is new in 4.x. Use the old CompassStatusDataInvalid value instead for old apps
     // that may not know how to handle the previously undefined status.
     return CompassStatusDataInvalid;
@@ -27,9 +26,7 @@ static CompassStatus prv_get_status(void) {
 }
 
 int compass_service_peek(CompassHeadingData *data) {
-  *data = (CompassHeadingData) {
-    .compass_status = prv_get_status()
-  };
+  *data = (CompassHeadingData){.compass_status = prv_get_status()};
 
   return 0;
 }
@@ -40,9 +37,7 @@ int compass_service_set_heading_filter(CompassHeading filter) {
 }
 
 void compass_service_subscribe(CompassHeadingHandler handler) {
-  CompassHeadingData data = {
-    .compass_status = prv_get_status()
-  };
+  CompassHeadingData data = {.compass_status = prv_get_status()};
 
   // Call the handler once to indicate status
   handler(data);

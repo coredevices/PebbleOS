@@ -104,29 +104,43 @@ static void config_provider(Window *window) {
   // See ui/click.h for more information and default values.
 
   // single click / repeat-on-hold config:
-  window_single_repeating_click_subscribe(BUTTON_ID_SELECT, 1000, (ClickHandler)select_single_click_handler); // "hold-to-repeat" gets overriden if there's a long click handler configured!
+  window_single_repeating_click_subscribe(
+      BUTTON_ID_SELECT, 1000,
+      (ClickHandler)select_single_click_handler);  // "hold-to-repeat" gets overriden if there's a
+                                                   // long click handler configured!
 
   // multi click config:
-  window_multi_click_subscribe(BUTTON_ID_SELECT, 2, 10, 0, false, (ClickHandler) select_multi_click_handler);
+  window_multi_click_subscribe(BUTTON_ID_SELECT, 2, 10, 0, false,
+                               (ClickHandler)select_multi_click_handler);
 
   // long click config:
-  window_long_click_subscribe(BUTTON_ID_SELECT, 700, (ClickHandler) select_long_click_handler, (ClickHandler) select_long_click_release_handler);
+  window_long_click_subscribe(BUTTON_ID_SELECT, 700, (ClickHandler)select_long_click_handler,
+                              (ClickHandler)select_long_click_release_handler);
 
   // single click / repeat-on-hold config:
-  window_single_repeating_click_subscribe(BUTTON_ID_UP, 1000, (ClickHandler) select_single_click_handler); // "hold-to-repeat" gets overriden if there's a long click handler configured!
+  window_single_repeating_click_subscribe(
+      BUTTON_ID_UP, 1000,
+      (ClickHandler)select_single_click_handler);  // "hold-to-repeat" gets overriden if there's a
+                                                   // long click handler configured!
 
   // multi click config:
-  window_multi_click_subscribe(BUTTON_ID_UP, 2, 10, 0, true, (ClickHandler) select_multi_click_handler);
+  window_multi_click_subscribe(BUTTON_ID_UP, 2, 10, 0, true,
+                               (ClickHandler)select_multi_click_handler);
 
   // raw:
-  window_raw_click_subscribe(BUTTON_ID_DOWN, (ClickHandler) raw_down_click_handler, (ClickHandler) raw_up_click_handler, NULL);
+  window_raw_click_subscribe(BUTTON_ID_DOWN, (ClickHandler)raw_down_click_handler,
+                             (ClickHandler)raw_up_click_handler, NULL);
 }
 
 static void prv_window_load(Window *window) {
   ClickAppData *data = window_get_user_data(window);
   TextLayer *text = &data->text;
   text_layer_init(text, &window->layer.bounds);
-  text_layer_set_text(text, "Use select button and try different clicks: single, hold-to-repeat, multiple, long press, etc.\n\nNOTE: a long click config will override hold-to-repeat config. Comment out the long_click section of the config to enable hold-to-repeat.");
+  text_layer_set_text(
+      text,
+      "Use select button and try different clicks: single, hold-to-repeat, multiple, long press, "
+      "etc.\n\nNOTE: a long click config will override hold-to-repeat config. Comment out the "
+      "long_click section of the config to enable hold-to-repeat.");
   layer_add_child(&window->layer, &text->layer);
 }
 
@@ -134,10 +148,10 @@ static void push_window(ClickAppData *data) {
   Window *window = &data->window;
   window_init(window, WINDOW_NAME("Click Demo"));
   window_set_user_data(window, data);
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_window_load,
-  });
-  window_set_click_config_provider(window, (ClickConfigProvider) config_provider);
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_window_load,
+                                     });
+  window_set_click_config_provider(window, (ClickConfigProvider)config_provider);
   const bool animated = true;
   app_window_stack_push(window, animated);
 }
@@ -146,7 +160,7 @@ static void push_window(ClickAppData *data) {
 // App boilerplate
 
 static void handle_init(void) {
-  ClickAppData *data = (ClickAppData*) app_malloc_check(sizeof(ClickAppData));
+  ClickAppData *data = (ClickAppData *)app_malloc_check(sizeof(ClickAppData));
   if (data == NULL) {
     PBL_CROAK("Out of memory");
   }
@@ -167,12 +181,10 @@ static void s_main(void) {
   handle_deinit();
 }
 
-const PebbleProcessMd* click_app_get_info() {
-  static const PebbleProcessMdSystem s_click_app_info = {
-    .common.main_func = s_main,
-    .name = "Clicks"
-  };
-  return (const PebbleProcessMd*) &s_click_app_info;
+const PebbleProcessMd *click_app_get_info() {
+  static const PebbleProcessMdSystem s_click_app_info = {.common.main_func = s_main,
+                                                         .name = "Clicks"};
+  return (const PebbleProcessMd *)&s_click_app_info;
 }
 
 #undef TEXT_BUFFER_SIZE

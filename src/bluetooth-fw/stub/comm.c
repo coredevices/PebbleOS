@@ -13,9 +13,7 @@ static void prv_send_job(void *data) {
 
 bool bt_driver_comm_schedule_send_next_job(CommSession *session) {
   launcher_task_add_callback(prv_send_job, session);
-  return true; // we croak if a task cannot be scheduled on KernelMain
+  return true;  // we croak if a task cannot be scheduled on KernelMain
 }
 
-bool bt_driver_comm_is_current_task_send_next_task(void) {
-  return launcher_task_is_current_task();
-}
+bool bt_driver_comm_is_current_task_send_next_task(void) { return launcher_task_is_current_task(); }

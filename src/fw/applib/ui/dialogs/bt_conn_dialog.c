@@ -53,11 +53,9 @@ void bt_conn_dialog_push(BtConnDialog *bt_dialog, BtConnDialogResultHandler hand
   bt_dialog->connected_handler = handler;
   bt_dialog->context = context;
 
-  bt_dialog->pebble_app_event_sub = (EventServiceInfo) {
-    .type = PEBBLE_COMM_SESSION_EVENT,
-    .handler = prv_handle_comm_session_event,
-    .context = bt_dialog
-  };
+  bt_dialog->pebble_app_event_sub = (EventServiceInfo){.type = PEBBLE_COMM_SESSION_EVENT,
+                                                       .handler = prv_handle_comm_session_event,
+                                                       .context = bt_dialog};
   event_service_client_subscribe(&bt_dialog->pebble_app_event_sub);
 
   WindowStack *window_stack = NULL;
@@ -97,7 +95,5 @@ void bt_conn_dialog_init(BtConnDialog *bt_dialog, char *text_buffer, size_t buff
   dialog_set_text(dialog, bt_dialog->text_buffer);
   dialog_set_icon(dialog, RESOURCE_ID_WATCH_DISCONNECTED_LARGE);
   dialog_show_status_bar_layer(dialog, true);
-  dialog_set_callbacks(dialog, &(DialogCallbacks) {
-    .unload = prv_bt_dialog_unload
-  }, bt_dialog);
+  dialog_set_callbacks(dialog, &(DialogCallbacks){.unload = prv_bt_dialog_unload}, bt_dialog);
 }

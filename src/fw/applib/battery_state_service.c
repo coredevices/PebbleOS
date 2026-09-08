@@ -12,9 +12,8 @@
 #include "process_state/app_state/app_state.h"
 #include "process_state/worker_state/worker_state.h"
 
-
 // ----------------------------------------------------------------------------------------------------
-static BatteryStateServiceState* prv_get_state(PebbleTask task) {
+static BatteryStateServiceState *prv_get_state(PebbleTask task) {
   if (task == PebbleTask_Unknown) {
     task = pebble_task_get_current();
   }
@@ -27,7 +26,6 @@ static BatteryStateServiceState* prv_get_state(PebbleTask task) {
     WTF;
   }
 }
-
 
 static void do_handle(PebbleEvent *e, void *context) {
   BatteryStateServiceState *state = prv_get_state(PebbleTask_Unknown);
@@ -45,9 +43,7 @@ void battery_state_service_subscribe(BatteryStateHandler handler) {
   event_service_client_subscribe(&state->bss_info);
 }
 
-BatteryChargeState battery_state_service_peek(void) {
-  return (sys_battery_get_charge_state());
-}
+BatteryChargeState battery_state_service_peek(void) { return (sys_battery_get_charge_state()); }
 
 void battery_state_service_unsubscribe(void) {
   BatteryStateServiceState *state = prv_get_state(PebbleTask_Unknown);
@@ -56,10 +52,11 @@ void battery_state_service_unsubscribe(void) {
 }
 
 void battery_state_service_state_init(BatteryStateServiceState *state) {
-  *state = (BatteryStateServiceState) {
-    .bss_info = {
-      .type = PEBBLE_BATTERY_STATE_CHANGE_EVENT,
-      .handler = &do_handle,
-    },
+  *state = (BatteryStateServiceState){
+      .bss_info =
+          {
+              .type = PEBBLE_BATTERY_STATE_CHANGE_EVENT,
+              .handler = &do_handle,
+          },
   };
 }

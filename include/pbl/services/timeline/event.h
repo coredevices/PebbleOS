@@ -40,8 +40,7 @@ typedef void (*TimelineEventDidUpdateCallback)(void **context);
 //! @param context Double pointer to a user context.
 //! @return < 0 to replace with `new_header`, > 0 to keep old_header, or 0 to use either one.
 typedef int (*TimelineEventComparator)(SerializedTimelineItemHeader *new_header,
-                                       SerializedTimelineItemHeader *old_header,
-                                       void **context);
+                                       SerializedTimelineItemHeader *old_header, void **context);
 
 //! Called with the nearest filtered event if any. If there was no filtered event, the update
 //! callback will be called with NULL. The update callback can optionally return a timeout until
@@ -102,5 +101,5 @@ bool timeline_event_is_ongoing(time_t now, time_t event_start, int event_duratio
 //! @param delta_end_s The delta seconds to apply to now to obtain the end time that the event
 //! can be within. Passing in TIMELINE_EVENT_DELTA_INFINITE means any future event.
 //! @return true if the event is within the specified time range, false otherwise.
-bool timeline_event_starts_within(CommonTimelineItemHeader *common, time_t now,
-                                  int delta_start_s, int delta_end_s);
+bool timeline_event_starts_within(CommonTimelineItemHeader *common, time_t now, int delta_start_s,
+                                  int delta_end_s);

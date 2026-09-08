@@ -30,7 +30,7 @@ static int external_flash_domain_read(uint8_t *buf, uint32_t address, uint32_t l
 }
 
 static int external_flash_domain_write(uint8_t *buf, uint32_t address, uint32_t length,
-                                      void *context) {
+                                       void *context) {
   flash_write_bytes(buf, address, length);
   return length;
 }
@@ -42,8 +42,7 @@ static int external_flash_domain_stat(uint8_t *resp, size_t resp_max_len, void *
 static void prv_erase_sector(void *context, status_t result) {
   ExternalFlashEraseState *state = context;
 
-  const unsigned int sectors_to_erase = (
-      state->length + SECTOR_SIZE_BYTES - 1) / SECTOR_SIZE_BYTES;
+  const unsigned int sectors_to_erase = (state->length + SECTOR_SIZE_BYTES - 1) / SECTOR_SIZE_BYTES;
 
   if (FAILED(result)) {
     pulse_bulkio_erase_message_send(PulseBulkIODomainType_ExternalFlash, result, state->cookie);
@@ -64,15 +63,11 @@ static status_t external_flash_domain_erase(uint8_t *packet_data, size_t length,
     return E_INVALID_ARGUMENT;
   }
 
-  ExternalFlashEraseOptions *options = (ExternalFlashEraseOptions*)packet_data;
+  ExternalFlashEraseOptions *options = (ExternalFlashEraseOptions *)packet_data;
 
   ExternalFlashEraseState *state = kernel_malloc(sizeof(ExternalFlashEraseState));
-  *state = (ExternalFlashEraseState) {
-    .address = options->address,
-    .length = options->length,
-    .next_sector = 0,
-    .cookie = cookie
-  };
+  *state = (ExternalFlashEraseState){
+      .address = options->address, .length = options->length, .next_sector = 0, .cookie = cookie};
 
   prv_erase_sector(state, 0);
 
@@ -84,16 +79,13 @@ static status_t external_flash_domain_open(uint8_t *packet_data, size_t length, 
   return S_SUCCESS;
 }
 
-static status_t external_flash_domain_close(void *context) {
-  return S_SUCCESS;
-}
+static status_t external_flash_domain_close(void *context) { return S_SUCCESS; }
 
 PulseBulkIODomainHandler pulse_bulkio_domain_external_flash = {
-  .id = PulseBulkIODomainType_ExternalFlash,
-  .open_proc = external_flash_domain_open,
-  .close_proc = external_flash_domain_close,
-  .read_proc = external_flash_domain_read,
-  .write_proc = external_flash_domain_write,
-  .stat_proc = external_flash_domain_stat,
-  .erase_proc = external_flash_domain_erase
-};
+    .id = PulseBulkIODomainType_ExternalFlash,
+    .open_proc = external_flash_domain_open,
+    .close_proc = external_flash_domain_close,
+    .read_proc = external_flash_domain_read,
+    .write_proc = external_flash_domain_write,
+    .stat_proc = external_flash_domain_stat,
+    .erase_proc = external_flash_domain_erase};

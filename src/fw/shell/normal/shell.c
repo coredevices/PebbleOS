@@ -48,20 +48,21 @@ static const CompositorTransition *prv_health_open_transition(const LaunchConfig
 static CompositorTransitionDirection prv_health_close_direction(void) {
   const ProcessContext *context = app_manager_get_task_context();
   return prv_health_launch_is_reversed(context->launch_reason, context->launch_button,
-                                       context->args) ?
-      CompositorTransitionDirectionUp : CompositorTransitionDirectionDown;
+                                       context->args)
+             ? CompositorTransitionDirectionUp
+             : CompositorTransitionDirectionDown;
 }
 
 static const CompositorTransition *prv_get_action_compositor_animation(
     CompositorTransitionDirection direction) {
-  return PBL_IF_RECT_ELSE(compositor_shutter_transition_get(direction, ACTION_SHUTTER_COLOR),
-                          NULL);
+  return PBL_IF_RECT_ELSE(compositor_shutter_transition_get(direction, ACTION_SHUTTER_COLOR), NULL);
 }
 
 const CompositorTransition *shell_get_watchface_compositor_animation(
     bool watchface_is_destination) {
-  const CompositorTransitionDirection direction = watchface_is_destination ?
-                CompositorTransitionDirectionLeft : CompositorTransitionDirectionRight;
+  const CompositorTransitionDirection direction = watchface_is_destination
+                                                      ? CompositorTransitionDirectionLeft
+                                                      : CompositorTransitionDirectionRight;
   return prv_get_watchface_compositor_animation(direction);
 }
 
@@ -106,8 +107,9 @@ done:
   return res;
 }
 
-const CompositorTransition *shell_get_open_compositor_animation(
-    AppInstallId current_app_id, AppInstallId next_app_id, const LaunchConfigCommon *config) {
+const CompositorTransition *shell_get_open_compositor_animation(AppInstallId current_app_id,
+                                                                AppInstallId next_app_id,
+                                                                const LaunchConfigCommon *config) {
   const CompositorTransition *res = NULL;
   AppInstallEntry *app_entry = kernel_zalloc_check(sizeof(AppInstallEntry));
 

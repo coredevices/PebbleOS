@@ -20,8 +20,7 @@
 static bool s_last_driver_allow_cycling;
 BTDeviceAddress s_last_driver_addr;
 bool s_last_driver_addr_is_null;
-void bt_driver_set_local_address(bool allow_cycling,
-                                 const BTDeviceAddress *pinned_address) {
+void bt_driver_set_local_address(bool allow_cycling, const BTDeviceAddress *pinned_address) {
   s_last_driver_allow_cycling = allow_cycling;
   if (pinned_address) {
     s_last_driver_addr_is_null = false;
@@ -57,12 +56,10 @@ bool bt_persistent_storage_set_ble_pinned_address(const BTDeviceAddress *addr) {
   return cl_mock_type(bool);
 }
 
-bool bt_persistent_storage_has_pinned_ble_pairings(void) {
-  return cl_mock_type(bool);
-}
+bool bt_persistent_storage_has_pinned_ble_pairings(void) { return cl_mock_type(bool); }
 
-#define TEST_PINNED_ADDR_1 ((BTDeviceAddress){ .octets = { 0x11, 0x22, 0x33, 0x33, 0x44, 0x55 } })
-#define TEST_PINNED_ADDR_2 ((BTDeviceAddress){ .octets = { 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff } })
+#define TEST_PINNED_ADDR_1 ((BTDeviceAddress){.octets = {0x11, 0x22, 0x33, 0x33, 0x44, 0x55}})
+#define TEST_PINNED_ADDR_2 ((BTDeviceAddress){.octets = {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff}})
 
 bool bt_driver_id_generate_private_resolvable_address(BTDeviceAddress *root_pinned_address_out) {
   *root_pinned_address_out = TEST_PINNED_ADDR_1;
@@ -72,7 +69,7 @@ bool bt_driver_id_generate_private_resolvable_address(BTDeviceAddress *root_pinn
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Tests
 
-#define TEST_BONDING_ID ((BTBondingID) 1)
+#define TEST_BONDING_ID ((BTBondingID)1)
 
 static void prv_init_no_pinnings_no_pinned_address(void) {
   cl_will_return(bt_persistent_storage_has_pinned_ble_pairings, false);
@@ -105,14 +102,13 @@ void test_local_addr__initialize(void) {
   s_last_driver_addr_is_null = false;
 }
 
-void test_local_addr__cleanup(void) {
-}
+void test_local_addr__cleanup(void) {}
 
 void test_local_addr__init_generates_pinned_address_if_needed(void) {
   prv_init_no_pinnings_no_pinned_address();
   cl_assert_equal_b(false, s_last_bt_persist_pinned_addr_is_null);
-  cl_assert_equal_m(&s_last_bt_persist_pinned_addr,
-                    &TEST_PINNED_ADDR_1, sizeof(s_last_bt_persist_pinned_addr));
+  cl_assert_equal_m(&s_last_bt_persist_pinned_addr, &TEST_PINNED_ADDR_1,
+                    sizeof(s_last_bt_persist_pinned_addr));
   cl_assert_equal_b(true, s_last_driver_allow_cycling);
 }
 

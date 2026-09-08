@@ -60,8 +60,8 @@ _Static_assert(PPoGATTPacketTypeResetRequest != 0, "Reset type can't be 0; see r
 _Static_assert(PPoGATTPacketTypeResetComplete != 0, "Reset type can't be 0; see reset_packet_byte");
 
 typedef struct PACKED {
-  PPoGATTPacketType type:3;
-  uint8_t sn:PPOGATT_SN_BITS;
+  PPoGATTPacketType type : 3;
+  uint8_t sn : PPOGATT_SN_BITS;
   uint8_t payload[];
 } PPoGATTPacket;
 
@@ -99,5 +99,5 @@ typedef struct PACKED {
   uint8_t ppogatt_min_version;
   uint8_t ppogatt_max_version;
   Uuid app_uuid;
-  PPoGATTSessionType pp_session_type:8;
+  PPoGATTSessionType pp_session_type : 8;
 } PPoGATTMetaV1;

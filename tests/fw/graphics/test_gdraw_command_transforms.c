@@ -35,22 +35,18 @@
 
 // stubs
 
-InterpolateInt64Function animation_private_current_interpolate_override(void) {
-  return NULL;
-}
+InterpolateInt64Function animation_private_current_interpolate_override(void) { return NULL; }
 
 static FrameBuffer *fb = NULL;
 
 // Setup
 void test_gdraw_command_transforms__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
 }
 
 // Teardown
-void test_gdraw_command_transforms__cleanup(void) {
-  free(fb);
-}
+void test_gdraw_command_transforms__cleanup(void) { free(fb); }
 
 void test_gdraw_command_transforms__to_square(void) {
   GContext ctx;
@@ -112,37 +108,34 @@ void _test_gdraw_command_transforms__to_square_sequence(void) {
   }
 }
 
-int16_t prv_int_scale_and_translate_to(
-    int16_t value, int16_t size, int16_t from_range, int16_t to_range,
-    int16_t from_min, int16_t to_min, int32_t normalized, InterpolateInt64Function interpolate);
+int16_t prv_int_scale_and_translate_to(int16_t value, int16_t size, int16_t from_range,
+                                       int16_t to_range, int16_t from_min, int16_t to_min,
+                                       int32_t normalized, InterpolateInt64Function interpolate);
 
 int64_t prv_default_interpolate(int32_t normalized, int64_t from, int64_t to);
 
 void test_gdraw_command_transforms__int_scale_to_translate_overflow(void) {
   InterpolateInt64Function interp = prv_default_interpolate;
-  int y = prv_int_scale_and_translate_to(255, 10, 10, 10, 0, 255, ANIMATION_NORMALIZED_MAX,
-                                         interp);
+  int y = prv_int_scale_and_translate_to(255, 10, 10, 10, 0, 255, ANIMATION_NORMALIZED_MAX, interp);
   cl_assert_equal_i(y, 255 + 255);
 }
 
 void test_gdraw_command_transforms__int_scale_to_translate_overflow_neg(void) {
   InterpolateInt64Function interp = prv_default_interpolate;
-  int y = prv_int_scale_and_translate_to(-255, 10, 10, 10, 0, -255, ANIMATION_NORMALIZED_MAX,
-                                         interp);
+  int y =
+      prv_int_scale_and_translate_to(-255, 10, 10, 10, 0, -255, ANIMATION_NORMALIZED_MAX, interp);
   cl_assert_equal_i(y, -255 + -255);
 }
 
 void test_gdraw_command_transforms__int_scale_to_scale_overflow(void) {
   InterpolateInt64Function interp = prv_default_interpolate;
-  int y = prv_int_scale_and_translate_to(181, 1, 1, 181, 0, 0, ANIMATION_NORMALIZED_MAX,
-                                         interp);
+  int y = prv_int_scale_and_translate_to(181, 1, 1, 181, 0, 0, ANIMATION_NORMALIZED_MAX, interp);
   cl_assert_equal_i(y, 181 * 181);
 }
 
 void test_gdraw_command_transforms__int_scale_to_scale_overflow_neg(void) {
   InterpolateInt64Function interp = prv_default_interpolate;
-  int y = prv_int_scale_and_translate_to(-181, 1, 1, 181, 0, 0, ANIMATION_NORMALIZED_MAX,
-                                         interp);
+  int y = prv_int_scale_and_translate_to(-181, 1, 1, 181, 0, 0, ANIMATION_NORMALIZED_MAX, interp);
   cl_assert_equal_i(y, -181 * 181);
 }
 
@@ -165,7 +158,7 @@ void test_gdraw_command_transforms__segmented_scale(void) {
   GRect to = GRect(90, 0, s, s);
 
   GPointIndexLookup *index_lookup = gdraw_command_list_create_index_lookup_by_distance(
-     gdraw_command_image_get_command_list(l), GPoint(s, s / 2));
+      gdraw_command_image_get_command_list(l), GPoint(s, s / 2));
 
   Fixed_S32_16 f = Fixed_S32_16(FIXED_S32_16_ONE.raw_value / 2);
 
@@ -191,7 +184,8 @@ void test_gdraw_command_transforms__segmented_scale(void) {
 
   free(index_lookup);
 
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "test_gdraw_command_transforms__segmented_scale.8bit.pbi"));
+  cl_check(
+      gbitmap_pbi_eq(&ctx.dest_bitmap, "test_gdraw_command_transforms__segmented_scale.8bit.pbi"));
 }
 
 // re-enable this "test" to debug per-frame transitions
@@ -211,7 +205,7 @@ void _test_gdraw_command_transforms__scale_segmented_sequence(void) {
 
   GDrawCommandImage *img = weather_app_resource_create_cloud();
   GPointIndexLookup *index_lookup = gdraw_command_list_create_index_lookup_by_distance(
-     gdraw_command_image_get_command_list(img), GPoint(s / 2, s));
+      gdraw_command_image_get_command_list(img), GPoint(s / 2, s));
   free(img);
 
   Fixed_S32_16 f = Fixed_S32_16(FIXED_S32_16_ONE.raw_value / 8);
@@ -228,4 +222,3 @@ void _test_gdraw_command_transforms__scale_segmented_sequence(void) {
     t += dt;
   }
 }
-

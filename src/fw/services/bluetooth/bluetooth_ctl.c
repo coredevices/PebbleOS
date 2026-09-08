@@ -67,8 +67,7 @@ static void prv_comm_start(void) {
   dis_get_info(&config->dis_info);
 #if defined(CONFIG_HRM) && !defined(CONFIG_RECOVERY_FW)
   config->is_hrm_supported_and_enabled = ble_hrm_is_supported_and_enabled();
-  PBL_LOG_INFO("BLE HRM sharing prefs: is_enabled=%u",
-          config->is_hrm_supported_and_enabled);
+  PBL_LOG_INFO("BLE HRM sharing prefs: is_enabled=%u", config->is_hrm_supported_and_enabled);
 #endif
   // Register existing bondings before bringing the connection up: NimBLE
   // restores them before the link is established. The other backends use
@@ -213,7 +212,6 @@ void bt_ctl_set_airplane_mode_async(bool enabled) {
 }
 
 void bt_ctl_init(void) {
-
   s_comm_airplane_mode_on = bt_persistent_storage_get_airplane_mode_enabled();
   s_comm_initialized = true;
 

@@ -25,8 +25,8 @@ static ListNode s_minutes_callbacks;
 // Set to 90 seconds because we do eventually drift. Make it in the middle of a minute so we can
 // be sure that it isn't due to drifting.
 #define MISSING_MINUTE_CB_LOG_THRESHOLD_S 90
-static time_t s_last_minute_fire_ts; // uses
-static int s_last_minute_fired = -1; // Track which minute we last fired on
+static time_t s_last_minute_fire_ts;  // uses
+static int s_last_minute_fired = -1;  // Track which minute we last fired on
 
 // -------------------------------------------------------------------------------------------
 // Passed to list_find() to determine if a callback is already registered or not
@@ -35,11 +35,11 @@ static bool prv_callback_registered_filter(ListNode *found_node, void *data) {
 }
 
 // -------------------------------------------------------------------------------------------
-static void do_callbacks(ListNode* list) {
+static void do_callbacks(ListNode *list) {
   pbl_mutex_lock(&s_callback_list_semaphore, PBL_FOREVER);
 
-  for (ListNode* iter = list_get_next(list); iter != 0; ) {
-    RegularTimerInfo* reg_timer = (RegularTimerInfo*) iter;
+  for (ListNode *iter = list_get_next(list); iter != 0;) {
+    RegularTimerInfo *reg_timer = (RegularTimerInfo *)iter;
 
     if (--reg_timer->private_count == 0) {
       reg_timer->private_count = reg_timer->private_reset_count;
@@ -70,8 +70,8 @@ static void do_callbacks(ListNode* list) {
 }
 
 // -------------------------------------------------------------------------------------------
-static void timer_callback(void* data) {
-  (void) data;
+static void timer_callback(void *data) {
+  (void)data;
 
   do_callbacks(&s_seconds_callbacks);
 
@@ -95,8 +95,8 @@ static void timer_callback(void* data) {
     // Keep the logging to detect large time jumps (multiple minutes skipped)
     const time_t now_ts = rtc_get_ticks() / PBL_TICK_HZ;
     if ((now_ts - s_last_minute_fire_ts) > MISSING_MINUTE_CB_LOG_THRESHOLD_S) {
-      PBL_LOG_WRN("Large time jump detected. Previous ts: %lu, Now ts: %lu",
-              s_last_minute_fire_ts, now_ts);
+      PBL_LOG_WRN("Large time jump detected. Previous ts: %lu, Now ts: %lu", s_last_minute_fire_ts,
+                  now_ts);
     }
     s_last_minute_fire_ts = now_ts;
 
@@ -106,7 +106,7 @@ static void timer_callback(void* data) {
 
 // -------------------------------------------------------------------------------------------
 //! Used only once when we first start up. This should be really close to the 0ms point.
-static void timer_callback_initializing(void* data) {
+static void timer_callback_initializing(void *data) {
   // FIXME: FreeRTOS timers are subject to skew if something else is running on the millisecond.
   // We'll need to continuously adjust our timer period in really annoying ways.
   new_timer_start(s_timer_id, 1000, timer_callback, NULL, TIMER_START_FLAG_REPEATING);
@@ -116,18 +116,17 @@ static void timer_callback_initializing(void* data) {
 
 // --------------------------------------------------------------------------------------------
 void regular_timer_init(void) {
-
   time_t seconds;
   uint16_t milliseconds;
   rtc_get_time_ms(&seconds, &milliseconds);
   s_timer_id = new_timer_create();
-  bool success = new_timer_start(s_timer_id, 1000-milliseconds, timer_callback_initializing, NULL, 0 /*flags*/);
+  bool success = new_timer_start(s_timer_id, 1000 - milliseconds, timer_callback_initializing, NULL,
+                                 0 /*flags*/);
   PBL_ASSERTN(success);
 }
 
 // -------------------------------------------------------------------------------------------
-void regular_timer_add_multisecond_callback(RegularTimerInfo* cb, uint16_t seconds) {
-
+void regular_timer_add_multisecond_callback(RegularTimerInfo *cb, uint16_t seconds) {
   pbl_mutex_lock(&s_callback_list_semaphore, PBL_FOREVER);
 
   cb->private_reset_count = seconds;
@@ -149,14 +148,13 @@ void regular_timer_add_multisecond_callback(RegularTimerInfo* cb, uint16_t secon
 }
 
 // --------------------------------------------------------------------------------------------
-void regular_timer_add_seconds_callback(RegularTimerInfo* cb) {
+void regular_timer_add_seconds_callback(RegularTimerInfo *cb) {
   // special case for triggering each second
   regular_timer_add_multisecond_callback(cb, 1);
 }
 
 // --------------------------------------------------------------------------------------------
-void regular_timer_add_multiminute_callback(RegularTimerInfo* cb, uint16_t minutes) {
-
+void regular_timer_add_multiminute_callback(RegularTimerInfo *cb, uint16_t minutes) {
   pbl_mutex_lock(&s_callback_list_semaphore, PBL_FOREVER);
 
   cb->private_reset_count = minutes;
@@ -177,7 +175,7 @@ void regular_timer_add_multiminute_callback(RegularTimerInfo* cb, uint16_t minut
 }
 
 // -----------------------------------------------------------------------------------------
-void regular_timer_add_minutes_callback(RegularTimerInfo* cb) {
+void regular_timer_add_minutes_callback(RegularTimerInfo *cb) {
   // special case for triggering each minute
   regular_timer_add_multiminute_callback(cb, 1);
 }
@@ -191,7 +189,6 @@ static bool prv_regular_timer_is_scheduled(RegularTimerInfo *cb) {
 
 // ------------------------------------------------------------------------------------------
 bool regular_timer_is_scheduled(RegularTimerInfo *cb) {
-
   pbl_mutex_lock(&s_callback_list_semaphore, PBL_FOREVER);
   bool rv = prv_regular_timer_is_scheduled(cb);
   pbl_mutex_unlock(&s_callback_list_semaphore);
@@ -199,12 +196,10 @@ bool regular_timer_is_scheduled(RegularTimerInfo *cb) {
   return (rv);
 }
 
-bool regular_timer_pending_deletion(RegularTimerInfo *cb) {
-  return cb->pending_delete;
-}
+bool regular_timer_pending_deletion(RegularTimerInfo *cb) { return cb->pending_delete; }
 
 // ------------------------------------------------------------------------------------------
-bool regular_timer_remove_callback(RegularTimerInfo* cb) {
+bool regular_timer_remove_callback(RegularTimerInfo *cb) {
   bool timer_removed = false;
   pbl_mutex_lock(&s_callback_list_semaphore, PBL_FOREVER);
 
@@ -235,9 +230,9 @@ void regular_timer_deinit(void) {
 
 static void prv_fire_callbacks(ListNode *list, uint16_t mod) {
   pbl_mutex_lock(&s_callback_list_semaphore, PBL_FOREVER);
-  ListNode* iter = list_get_next(list);
+  ListNode *iter = list_get_next(list);
   while (iter) {
-    RegularTimerInfo* reg_timer = (RegularTimerInfo*) iter;
+    RegularTimerInfo *reg_timer = (RegularTimerInfo *)iter;
     if (reg_timer->private_reset_count % mod == 0) {
       // Last one. Will trigger callback when do_callbacks() is called:
       reg_timer->private_count = 1;
@@ -249,13 +244,9 @@ static void prv_fire_callbacks(ListNode *list, uint16_t mod) {
   do_callbacks(list);
 }
 
-void regular_timer_fire_seconds(uint8_t secs) {
-  prv_fire_callbacks(&s_seconds_callbacks, secs);
-}
+void regular_timer_fire_seconds(uint8_t secs) { prv_fire_callbacks(&s_seconds_callbacks, secs); }
 
-void regular_timer_fire_minutes(uint8_t mins) {
-  prv_fire_callbacks(&s_minutes_callbacks, mins);
-}
+void regular_timer_fire_minutes(uint8_t mins) { prv_fire_callbacks(&s_minutes_callbacks, mins); }
 
 static uint32_t prv_count(ListNode *list) {
   uint32_t count = 0;
@@ -266,10 +257,6 @@ static uint32_t prv_count(ListNode *list) {
   return count;
 }
 
-uint32_t regular_timer_seconds_count(void) {
-  return prv_count(&s_seconds_callbacks);
-}
+uint32_t regular_timer_seconds_count(void) { return prv_count(&s_seconds_callbacks); }
 
-uint32_t regular_timer_minutes_count(void) {
-  return prv_count(&s_minutes_callbacks);
-}
+uint32_t regular_timer_minutes_count(void) { return prv_count(&s_minutes_callbacks); }

@@ -224,7 +224,6 @@ void npl_pebble_callout_init(struct ble_npl_callout *co, struct ble_npl_eventq *
   ble_npl_event_init(&co->ev, ev_cb, ev_arg);
 }
 
-
 ble_npl_error_t npl_pebble_callout_reset(struct ble_npl_callout *co, ble_npl_time_t ticks) {
   co->ticks = ticks;
 
@@ -287,4 +286,3 @@ ble_npl_error_t npl_pebble_time_ticks_to_ms(ble_npl_time_t ticks, uint32_t *out_
 
   return 0;
 }
-

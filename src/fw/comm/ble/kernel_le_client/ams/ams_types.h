@@ -143,8 +143,8 @@ typedef enum {
   NumAMSTrackAttributeID,
 } AMSTrackAttributeID;
 
-#define AMS_MAX_NUM_ATTRIBUTE_ID (MAX(MAX((int)NumAMSTrackAttributeID, \
-                                      (int)NumAMSQueueAttributeID), (int)NumAMSPlayerAttributeID))
+#define AMS_MAX_NUM_ATTRIBUTE_ID \
+  (MAX(MAX((int)NumAMSTrackAttributeID, (int)NumAMSQueueAttributeID), (int)NumAMSPlayerAttributeID))
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Packet Formats
@@ -152,14 +152,14 @@ typedef enum {
 //! Written (with Response) to the Remote Command characteristic,
 //! to execute the specified command on the AMS.
 typedef struct PACKED {
-  AMSRemoteCommandID command_id:8;
+  AMSRemoteCommandID command_id : 8;
 } AMSRemoteCommand;
 
 //! Written (without Response) to the Entity Update characteristic,
 //! to indicate that the client is interested in receiving updates for the specified entity
 //! and attributes.
 typedef struct PACKED {
-  AMSEntityID entity_id:8;
+  AMSEntityID entity_id : 8;
 
   //! Array of Attribute IDs for which the client wants to receive updates.
   //! Can be of type AMSPlayerAttributeID, AMSQueueAttributeID, AMSTrackAttributeID, depending on
@@ -170,14 +170,14 @@ typedef struct PACKED {
 //! Notification from the Entity Update characteristic,
 //! sent to notify the client of an updated attribute value.
 typedef struct PACKED {
-  AMSEntityID entity_id:8;
+  AMSEntityID entity_id : 8;
 
   //! The Attribute ID of the updated value.
   //! Can be of type AMSPlayerAttributeID, AMSQueueAttributeID, AMSTrackAttributeID, depending on
   //! the value of `entity_id`.
   uint8_t attribute_id;
 
-  AMSEntityUpdateFlag flags:8;
+  AMSEntityUpdateFlag flags : 8;
 
   //! The updated value.
   //! @note The string is never zero-terminated, so cannot be used as a C-string, as-is.

@@ -24,7 +24,8 @@ typedef struct {
 
 #ifdef CONFIG_BOARD_ASTERIX
 #include "displays/display_asterix.h"
-#elif defined(CONFIG_BOARD_OBELIX_DVT) || defined(CONFIG_BOARD_OBELIX_PVT) || defined(CONFIG_BOARD_OBELIX_BB2)
+#elif defined(CONFIG_BOARD_OBELIX_DVT) || defined(CONFIG_BOARD_OBELIX_PVT) || \
+    defined(CONFIG_BOARD_OBELIX_BB2)
 #include "displays/display_obelix.h"
 #elif defined(CONFIG_BOARD_GETAFIX_DVT) || defined(CONFIG_BOARD_GETAFIX_DVT2)
 #include "displays/display_getafix.h"
@@ -36,14 +37,14 @@ typedef struct {
 #include "displays/display_qemu_gabbro.h"
 #else
 #error "Unknown display definition for board"
-#endif // BOARD_*
+#endif  // BOARD_*
 
-#endif // UNITTEST
+#endif  // UNITTEST
 
 // For backwards compatibility, new code should use PBL_DISPLAY_WIDTH and PBL_DISPLAY_HEIGHT
 #if !defined(DISP_COLS) || !defined(DISP_ROWS)
 #define DISP_COLS PBL_DISPLAY_WIDTH
 #define DISP_ROWS PBL_DISPLAY_HEIGHT
-#endif // DISP_COLS || DISP_ROWS
+#endif  // DISP_COLS || DISP_ROWS
 
-#endif // !SDK
+#endif  // !SDK

@@ -13,12 +13,10 @@
 
 #include <stddef.h>
 
-
 typedef struct MemorySegment {
   void *start;  //!< The lowest address of the segment
   void *end;    //!< One past the highest address of the segment
 } MemorySegment;
-
 
 //! Returns the size of the largest object that the segment can contain.
 size_t memory_segment_get_size(MemorySegment *segment);
@@ -42,5 +40,5 @@ void memory_segment_align(MemorySegment *segment);
 //! @return start of child memory segment if successful, or NULL if
 //!         there is not enough space in the parent segment to split
 //!         with the requested size.
-void * memory_segment_split(MemorySegment * restrict parent,
-                            MemorySegment * restrict child, size_t size);
+void *memory_segment_split(MemorySegment *restrict parent, MemorySegment *restrict child,
+                           size_t size);

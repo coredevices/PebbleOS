@@ -32,7 +32,7 @@ bool app_message_receiver_open(size_t buffer_size) {
   // Allocate overhead for 1 (N)ACK + 1 Push message:
   static const uint32_t min_num_messages = 2;
   size_t final_buffer_size =
-    (sizeof(AppMessageReceiverHeader) * min_num_messages) + buffer_size + sizeof(AppMessageAck);
+      (sizeof(AppMessageReceiverHeader) * min_num_messages) + buffer_size + sizeof(AppMessageAck);
   AppInbox *inbox = app_inbox_create_and_register(final_buffer_size, min_num_messages,
                                                   app_message_receiver_message_handler,
                                                   app_message_receiver_dropped_handler);

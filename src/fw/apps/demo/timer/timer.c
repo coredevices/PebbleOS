@@ -12,9 +12,7 @@
 
 static AppTimer *s_timer = NULL;
 
-static void shouldnt_happen(void *context) {
-  WTF;
-}
+static void shouldnt_happen(void *context) { WTF; }
 
 static void stupid_cancel(void *context) {
   app_timer_cancel(s_timer);
@@ -40,7 +38,7 @@ static void prv_window_load(Window *window) {
 }
 
 static const WindowHandlers s_main_menu_handlers = {
-  .load = prv_window_load,
+    .load = prv_window_load,
 };
 
 static void handle_init(void) {
@@ -63,10 +61,8 @@ static void s_main(void) {
   handle_deinit();
 }
 
-const PebbleProcessMd* timer_app_get_info() {
-  static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = &s_main,
-    .name = "Timer Cancel Test"
-  };
-  return (const PebbleProcessMd*) &s_app_info;
+const PebbleProcessMd *timer_app_get_info() {
+  static const PebbleProcessMdSystem s_app_info = {.common.main_func = &s_main,
+                                                   .name = "Timer Cancel Test"};
+  return (const PebbleProcessMd *)&s_app_info;
 }

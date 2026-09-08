@@ -39,9 +39,9 @@ static bool s_debounced_state_is_connected[NumConnectionsToDebounce];
 
 static void prv_put_debounced_connection_event(DebounceConnection conn_id) {
   PebbleEvent event = {
-    .type = PEBBLE_BT_CONNECTION_DEBOUNCED_EVENT,
-    .bluetooth.comm_session_event.is_open = s_debounced_state_is_connected[conn_id],
-    .bluetooth.comm_session_event.is_system = (conn_id == MobileAppDebounce),
+      .type = PEBBLE_BT_CONNECTION_DEBOUNCED_EVENT,
+      .bluetooth.comm_session_event.is_open = s_debounced_state_is_connected[conn_id],
+      .bluetooth.comm_session_event.is_system = (conn_id == MobileAppDebounce),
   };
   event_put(&event);
 }
@@ -92,8 +92,8 @@ void debounced_connection_service_handle_event(PebbleCommSessionEvent *e) {
     // If we become disconnected don't update apps until we have had a chance
     // to recover the connection. This will make our BT connection seem more
     // reliable.
-    regular_timer_add_multisecond_callback(
-        &s_debounce_timers[conn_id], DISCONNECT_HIDE_DURATION_SECS);
+    regular_timer_add_multisecond_callback(&s_debounce_timers[conn_id],
+                                           DISCONNECT_HIDE_DURATION_SECS);
     return;
   }
 

@@ -44,7 +44,6 @@ static bool prv_decode_types(pb_istream_t *stream, const pb_field_t *field, void
   return success;
 }
 
-
 typedef struct PLogMeasurementsDecoderArg {
   uint32_t max_num_samples;
   uint32_t *num_samples;
@@ -72,18 +71,15 @@ static bool prv_decode_packed_measurement_data(pb_istream_t *stream, const pb_fi
   return true;
 }
 
-
 // -----------------------------------------------------------------------------------------
 // Callback used to decode measurements. Called once for each measurement
 static bool prv_decode_measurements(pb_istream_t *stream, const pb_field_t *field, void **arg) {
   PLogMeasurementsDecoderArg *decoder_info = *(PLogMeasurementsDecoderArg **)arg;
 
-  pebble_pipeline_Measurement msg = {
-    .data = {
-      .funcs.decode = prv_decode_packed_measurement_data,
-      .arg = decoder_info,
-    }
-  };
+  pebble_pipeline_Measurement msg = {.data = {
+                                         .funcs.decode = prv_decode_packed_measurement_data,
+                                         .arg = decoder_info,
+                                     }};
 
   if (!pb_decode(stream, pebble_pipeline_Measurement_fields, &msg)) {
     return false;
@@ -103,25 +99,27 @@ typedef struct PLogMeasurementSetDecoderArg {
   int32_t *utc_to_local;
 } PLogMeasurementSetDecoderArg;
 
-
 // -----------------------------------------------------------------------------------------
 // Callback used to decode a MeasurementSet. Called once for each MeasurementSet
 static bool prv_decode_measurement_set(pb_istream_t *stream, const pb_field_t *field, void **arg) {
   PLogMeasurementSetDecoderArg *decoder_info = *(PLogMeasurementSetDecoderArg **)arg;
 
   pebble_pipeline_MeasurementSet mset = {
-    .uuid = {
-      .funcs.decode = prv_decode_uuid,
-      .arg = decoder_info->uuid,
-    },
-    .types = {
-      .funcs.decode = prv_decode_types,
-      .arg = decoder_info->types_decoder_arg,
-    },
-    .measurements = {
-      .funcs.decode = prv_decode_measurements,
-      .arg = decoder_info->measurements_decoder_arg,
-    },
+      .uuid =
+          {
+              .funcs.decode = prv_decode_uuid,
+              .arg = decoder_info->uuid,
+          },
+      .types =
+          {
+              .funcs.decode = prv_decode_types,
+              .arg = decoder_info->types_decoder_arg,
+          },
+      .measurements =
+          {
+              .funcs.decode = prv_decode_measurements,
+              .arg = decoder_info->measurements_decoder_arg,
+          },
   };
 
   bool success = pb_decode(stream, pebble_pipeline_MeasurementSet_fields, &mset);
@@ -130,7 +128,6 @@ static bool prv_decode_measurement_set(pb_istream_t *stream, const pb_field_t *f
   *decoder_info->utc_to_local = mset.utc_to_local;
   return success;
 }
-
 
 typedef struct PLogEventsDecoderArg {
   uint32_t max_num_events;
@@ -142,8 +139,6 @@ typedef struct PLogEventsDecoderArg {
   ActivitySession *sessions;
 } PLogEventsDecoderArg;
 
-
-
 // -----------------------------------------------------------------------------------------
 // Callback used to decode a pebble_pipeline_Event. Called once for each Event
 static bool prv_decode_events(pb_istream_t *stream, const pb_field_t *field, void **arg) {
@@ -153,10 +148,11 @@ static bool prv_decode_events(pb_istream_t *stream, const pb_field_t *field, voi
 
   bool success;
   pebble_pipeline_Event event = {
-    .uuid = {
-      .funcs.decode = prv_decode_uuid,
-      .arg = &decoder_info->event_uuids[event_idx],
-    },
+      .uuid =
+          {
+              .funcs.decode = prv_decode_uuid,
+              .arg = &decoder_info->event_uuids[event_idx],
+          },
   };
 
   success = pb_decode(stream, pebble_pipeline_Event_fields, &event);
@@ -171,9 +167,6 @@ static bool prv_decode_events(pb_istream_t *stream, const pb_field_t *field, voi
   }
   return true;
 }
-
-
-
 
 // -----------------------------------------------------------------------------------------
 // Callback used to decode the payload sender type
@@ -208,25 +201,15 @@ static bool prv_decode_sender_version_patch(pb_istream_t *stream, const pb_field
 
 // ---------------------------------------------------------------------------------------------
 // Decode an encoded message. Used for debugging and unit tests.
-bool protobuf_log_private_mset_decode(ProtobufLogType *type,
-                                 void *encoded_buf,
-                                 uint32_t encoded_buf_size,
-                                 char payload_sender_type[PLOG_MAX_SENDER_TYPE_LEN],
-                                 char payload_sender_id[PLOG_MAX_SENDER_ID_LEN],
-                                 char payload_sender_version_patch[FW_METADATA_VERSION_TAG_BYTES],
-                                 uint32_t *payload_send_time,
-                                 uint32_t *payload_sender_v_major,
-                                 uint32_t *payload_sender_v_minor,
-                                 Uuid *uuid,
-                                 uint32_t *time_utc,
-                                 uint32_t *time_end_utc,
-                                 int32_t *utc_to_local,
-                                 uint32_t *num_types,
-                                 ProtobufLogMeasurementType *types,
-                                 uint32_t *num_samples,
-                                 uint32_t *offset_sec,
-                                 uint32_t *num_values,
-                                 uint32_t *values) {
+bool protobuf_log_private_mset_decode(
+    ProtobufLogType *type, void *encoded_buf, uint32_t encoded_buf_size,
+    char payload_sender_type[PLOG_MAX_SENDER_TYPE_LEN],
+    char payload_sender_id[PLOG_MAX_SENDER_ID_LEN],
+    char payload_sender_version_patch[FW_METADATA_VERSION_TAG_BYTES], uint32_t *payload_send_time,
+    uint32_t *payload_sender_v_major, uint32_t *payload_sender_v_minor, Uuid *uuid,
+    uint32_t *time_utc, uint32_t *time_end_utc, int32_t *utc_to_local, uint32_t *num_types,
+    ProtobufLogMeasurementType *types, uint32_t *num_samples, uint32_t *offset_sec,
+    uint32_t *num_values, uint32_t *values) {
   pb_istream_t stream = pb_istream_from_buffer(encoded_buf, encoded_buf_size);
 
   const uint32_t max_num_types = *num_types;
@@ -238,51 +221,55 @@ bool protobuf_log_private_mset_decode(ProtobufLogType *type,
   *num_types = 0;
 
   PLogTypesDecoderArg types_decoder_arg = {
-    .max_num_types = max_num_types,
-    .num_types = num_types,
-    .types = types,
+      .max_num_types = max_num_types,
+      .num_types = num_types,
+      .types = types,
   };
 
   PLogMeasurementsDecoderArg measurements_decoder_arg = {
-    .max_num_samples = max_num_samples,
-    .num_samples = num_samples,
-    .offset_sec = offset_sec,
-    .max_num_values = max_num_values,
-    .num_values = num_values,
-    .values = values,
+      .max_num_samples = max_num_samples,
+      .num_samples = num_samples,
+      .offset_sec = offset_sec,
+      .max_num_values = max_num_values,
+      .num_values = num_values,
+      .values = values,
   };
 
   PLogMeasurementSetDecoderArg mset_decoder_arg = {
-    .uuid = uuid,
-    .types_decoder_arg = &types_decoder_arg,
-    .measurements_decoder_arg = &measurements_decoder_arg,
-    .time_utc = time_utc,
-    .time_end_utc = time_end_utc,
-    .utc_to_local = utc_to_local,
+      .uuid = uuid,
+      .types_decoder_arg = &types_decoder_arg,
+      .measurements_decoder_arg = &measurements_decoder_arg,
+      .time_utc = time_utc,
+      .time_end_utc = time_end_utc,
+      .utc_to_local = utc_to_local,
   };
 
   pebble_pipeline_Payload payload = {
-    .sender = {
-      .type = {
-        .funcs.decode = prv_decode_sender_type,
-        .arg = payload_sender_type,
-      },
-      .id = {
-        .funcs.decode = prv_decode_sender_id,
-        .arg = payload_sender_id,
-      },
-      .version = {
-        .patch = {
-          .funcs.decode = prv_decode_sender_version_patch,
-          .arg = payload_sender_version_patch,
-        },
-      },
-    },
-    .measurement_sets = {
-      .funcs.decode = prv_decode_measurement_set,
-      .arg = &mset_decoder_arg,
-    }
-  };
+      .sender =
+          {
+              .type =
+                  {
+                      .funcs.decode = prv_decode_sender_type,
+                      .arg = payload_sender_type,
+                  },
+              .id =
+                  {
+                      .funcs.decode = prv_decode_sender_id,
+                      .arg = payload_sender_id,
+                  },
+              .version =
+                  {
+                      .patch =
+                          {
+                              .funcs.decode = prv_decode_sender_version_patch,
+                              .arg = payload_sender_version_patch,
+                          },
+                  },
+          },
+      .measurement_sets = {
+          .funcs.decode = prv_decode_measurement_set,
+          .arg = &mset_decoder_arg,
+      }};
 
   bool success = pb_decode(&stream, pebble_pipeline_Payload_fields, &payload);
   *payload_send_time = payload.send_time_utc;
@@ -295,20 +282,14 @@ bool protobuf_log_private_mset_decode(ProtobufLogType *type,
 }
 
 // ---------------------------------------------------------------------------------------------
-bool protobuf_log_private_events_decode(ProtobufLogType *type,
-                                        void *encoded_buf,
-                                        uint32_t encoded_buf_size,
-                                        char payload_sender_type[PLOG_MAX_SENDER_TYPE_LEN],
-                                        char payload_sender_id[PLOG_MAX_SENDER_ID_LEN],
-                                        char payload_sender_version_patch[FW_METADATA_VERSION_TAG_BYTES],
-                                        uint32_t *payload_send_time,
-                                        uint32_t *payload_sender_v_major,
-                                        uint32_t *payload_sender_v_minor,
-                                        uint32_t *num_events,
-                                        pebble_pipeline_Event *events,
-                                        Uuid *event_uuids,
-                                        uint32_t *num_sessions,
-                                        ActivitySession *sessions) {
+bool protobuf_log_private_events_decode(
+    ProtobufLogType *type, void *encoded_buf, uint32_t encoded_buf_size,
+    char payload_sender_type[PLOG_MAX_SENDER_TYPE_LEN],
+    char payload_sender_id[PLOG_MAX_SENDER_ID_LEN],
+    char payload_sender_version_patch[FW_METADATA_VERSION_TAG_BYTES], uint32_t *payload_send_time,
+    uint32_t *payload_sender_v_major, uint32_t *payload_sender_v_minor, uint32_t *num_events,
+    pebble_pipeline_Event *events, Uuid *event_uuids, uint32_t *num_sessions,
+    ActivitySession *sessions) {
   pb_istream_t stream = pb_istream_from_buffer(encoded_buf, encoded_buf_size);
 
   const uint32_t max_num_events = *num_events;
@@ -318,37 +299,38 @@ bool protobuf_log_private_events_decode(ProtobufLogType *type,
   *num_sessions = 0;
 
   PLogEventsDecoderArg event_arg = {
-    .max_num_events = max_num_events,
-    .num_events = num_events,
-    .events = events,
-    .event_uuids = event_uuids,
-    .max_num_sessions = max_num_sessions,
-    .num_sessions = num_sessions,
-    .sessions = sessions,
+      .max_num_events = max_num_events,
+      .num_events = num_events,
+      .events = events,
+      .event_uuids = event_uuids,
+      .max_num_sessions = max_num_sessions,
+      .num_sessions = num_sessions,
+      .sessions = sessions,
   };
 
   pebble_pipeline_Payload payload = {
-    .sender = {
-      .type = {
-        .funcs.decode = prv_decode_sender_type,
-        .arg = payload_sender_type,
-      },
-      .id = {
-        .funcs.decode = prv_decode_sender_id,
-        .arg = payload_sender_id,
-      },
-      .version = {
-        .patch = {
-          .funcs.decode = prv_decode_sender_version_patch,
-          .arg = payload_sender_version_patch,
-        },
-      },
-    },
-    .events = {
-      .funcs.decode = prv_decode_events,
-      .arg = &event_arg
-    }
-  };
+      .sender =
+          {
+              .type =
+                  {
+                      .funcs.decode = prv_decode_sender_type,
+                      .arg = payload_sender_type,
+                  },
+              .id =
+                  {
+                      .funcs.decode = prv_decode_sender_id,
+                      .arg = payload_sender_id,
+                  },
+              .version =
+                  {
+                      .patch =
+                          {
+                              .funcs.decode = prv_decode_sender_version_patch,
+                              .arg = payload_sender_version_patch,
+                          },
+                  },
+          },
+      .events = {.funcs.decode = prv_decode_events, .arg = &event_arg}};
 
   bool success = pb_decode(&stream, pebble_pipeline_Payload_fields, &payload);
   *payload_send_time = payload.send_time_utc;

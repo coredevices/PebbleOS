@@ -21,34 +21,23 @@
 #include "stubs_rand_ptr.h"
 #include "stubs_rtc.h"
 
-void ams_create(void) {
-}
+void ams_create(void) {}
 
-void ams_destroy(void) {
-}
+void ams_destroy(void) {}
 
-void ancs_create(void) {
-}
+void ancs_create(void) {}
 
-void ancs_destroy(void) {
-}
+void ancs_destroy(void) {}
 
-void app_launch_handle_disconnection(void) {
-}
+void app_launch_handle_disconnection(void) {}
 
-BTBondingID bt_persistent_storage_get_ble_ancs_bonding(void) {
-  return 1;
-}
+BTBondingID bt_persistent_storage_get_ble_ancs_bonding(void) { return 1; }
 
-bool bt_persistent_storage_is_ble_ancs_bonding(BTBondingID bonding) {
-  return true;
-}
+bool bt_persistent_storage_is_ble_ancs_bonding(BTBondingID bonding) { return true; }
 
-void gap_le_advert_unschedule_job_types(GAPLEAdvertisingJobTag *tag_types, size_t num_types) {
-}
+void gap_le_advert_unschedule_job_types(GAPLEAdvertisingJobTag *tag_types, size_t num_types) {}
 
-void gap_le_connect_cancel_all(GAPLEClient client) {
-}
+void gap_le_connect_cancel_all(GAPLEClient client) {}
 
 BTErrno gap_le_connect_cancel_by_bonding(BTBondingID bonding_id, GAPLEClient client) {
   return BTErrnoOK;
@@ -59,15 +48,11 @@ BTErrno gap_le_connect_connect_by_bonding(BTBondingID bonding_id, bool auto_reco
   return BTErrnoOK;
 }
 
-void gap_le_slave_reconnect_start(void) {
-}
+void gap_le_slave_reconnect_start(void) {}
 
-void gap_le_slave_reconnect_stop(void) {
-}
+void gap_le_slave_reconnect_stop(void) {}
 
-BTErrno gatt_client_discovery_discover_all(const BTDeviceInternal *device) {
-  return BTErrnoOK;
-}
+BTErrno gatt_client_discovery_discover_all(const BTDeviceInternal *device) { return BTErrnoOK; }
 
 uint16_t gatt_client_subscriptions_consume_notification(BLECharacteristic *characteristic_ref_out,
                                                         uint8_t *value_out,
@@ -81,36 +66,31 @@ bool gatt_client_subscriptions_get_notification_header(GAPLEClient client,
   return false;
 }
 
-void gatt_client_subscriptions_reschedule(GAPLEClient c) {
-}
+void gatt_client_subscriptions_reschedule(GAPLEClient c) {}
 
 void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
   // Use fake_system_task as mock:
   system_task_add_callback(callback, data);
 }
 
-void ppogatt_create(void) {
-}
+void ppogatt_create(void) {}
 
-void ppogatt_destroy(void) {
-}
+void ppogatt_destroy(void) {}
 
-void ppogatt_handle_buffer_empty(void) {
-}
+void ppogatt_handle_buffer_empty(void) {}
 
-void gatt_client_op_cleanup(GAPLEClient client) {
-}
+void gatt_client_op_cleanup(GAPLEClient client) {}
 
-void ppogatt_reset_disconnect_counter(void) {
-}
+void ppogatt_reset_disconnect_counter(void) {}
 
 // Fakes & Helpers
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static const BTDeviceInternal s_test_device = {
-  .address = (const BTDeviceAddress) {
-    .octets = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66},
-  },
+    .address =
+        (const BTDeviceAddress){
+            .octets = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66},
+        },
 };
 
 typedef enum {
@@ -120,9 +100,9 @@ typedef enum {
 } TestServiceInstance;
 
 static BLEService s_service_handles[] = {
-  TestServiceInstanceComplete,
-  TestServiceInstanceIncomplete,
-  TestServiceInstanceUnsupported,
+    TestServiceInstanceComplete,
+    TestServiceInstanceIncomplete,
+    TestServiceInstanceUnsupported,
 };
 
 typedef enum {
@@ -144,10 +124,9 @@ Uuid gatt_client_service_get_uuid(BLEService service_ref) {
   }
 }
 
-uint8_t gatt_client_service_get_characteristics_matching_uuids(BLEService service_ref,
-                                                         BLECharacteristic characteristics_out[],
-                                                         const Uuid matching_characteristic_uuids[],
-                                                         uint8_t num_characteristics) {
+uint8_t gatt_client_service_get_characteristics_matching_uuids(
+    BLEService service_ref, BLECharacteristic characteristics_out[],
+    const Uuid matching_characteristic_uuids[], uint8_t num_characteristics) {
   cl_assert_equal_i(num_characteristics, TestCharacteristicCount);
   switch (service_ref) {
     case TestServiceInstanceComplete:
@@ -166,10 +145,8 @@ uint8_t gatt_client_service_get_characteristics_matching_uuids(BLEService servic
 }
 
 static int s_read_responses_consumed_count;
-void gatt_client_consume_read_response(uintptr_t object_ref,
-                                       uint8_t value_out[],
-                                       uint16_t value_length,
-                                       GAPLEClient client) {
+void gatt_client_consume_read_response(uintptr_t object_ref, uint8_t value_out[],
+                                       uint16_t value_length, GAPLEClient client) {
   ++s_read_responses_consumed_count;
 }
 
@@ -178,34 +155,23 @@ void test_client_handle_service_discovered(BLECharacteristic *characteristics) {
   ++s_services_discovered_count;
 }
 
-void test_client_invalidate_all_references(void) {
-
-}
+void test_client_invalidate_all_references(void) {}
 
 void test_client_handle_service_removed(BLECharacteristic *characteristics,
-                                        uint8_t num_characteristics) {
-
-}
+                                        uint8_t num_characteristics) {}
 
 static bool s_can_handle_characteristic;
 bool test_client_can_handle_characteristic(BLECharacteristic characteristic) {
   return s_can_handle_characteristic;
 }
 
-void test_client_handle_write_response(BLECharacteristic characteristic, BLEGATTError error) {
-
-}
+void test_client_handle_write_response(BLECharacteristic characteristic, BLEGATTError error) {}
 
 void test_client_handle_subscribe(BLECharacteristic characteristic,
-                                  BLESubscription subscription_type, BLEGATTError error) {
-
-}
+                                  BLESubscription subscription_type, BLEGATTError error) {}
 
 void test_client_handle_read_or_notification(BLECharacteristic characteristic, const uint8_t *value,
-                                             size_t value_length, BLEGATTError error) {
-
-}
-
+                                             size_t value_length, BLEGATTError error) {}
 
 // Tests
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -226,14 +192,15 @@ void test_kernel_le_client__read_response_consumed_even_if_client_is_gone(void) 
   // Simulate the client goes away:
   s_can_handle_characteristic = false;
 
-  PebbleEvent e = (PebbleEvent) {
-    .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
-    .bluetooth.le.gatt_client = {
-      .object_ref = TestCharacteristicInstanceCompleteOne,
-      .value_length = 1,
-      .gatt_error = BLEGATTErrorSuccess,
-      .subtype = PebbleBLEGATTClientEventTypeCharacteristicRead,
-    },
+  PebbleEvent e = (PebbleEvent){
+      .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
+      .bluetooth.le.gatt_client =
+          {
+              .object_ref = TestCharacteristicInstanceCompleteOne,
+              .value_length = 1,
+              .gatt_error = BLEGATTErrorSuccess,
+              .subtype = PebbleBLEGATTClientEventTypeCharacteristicRead,
+          },
   };
 
   kernel_le_client_handle_event(&e);
@@ -250,24 +217,24 @@ void test_kernel_le_client__read_response_consumed_even_if_client_is_gone(void) 
 
 void test_kernel_le_client__service_added(void) {
   uint8_t num_services_added = ARRAY_LENGTH(s_service_handles);
-  PebbleBLEGATTClientServiceEventInfo *info =
-      kernel_malloc(sizeof(PebbleBLEGATTClientServiceEventInfo) +
-                    (num_services_added * sizeof(BLEService)));
+  PebbleBLEGATTClientServiceEventInfo *info = kernel_malloc(
+      sizeof(PebbleBLEGATTClientServiceEventInfo) + (num_services_added * sizeof(BLEService)));
 
-  *info = (PebbleBLEGATTClientServiceEventInfo) {
-    .status = BTErrnoOK,
-    .type = PebbleServicesAdded,
-    .device = s_test_device,
+  *info = (PebbleBLEGATTClientServiceEventInfo){
+      .status = BTErrnoOK,
+      .type = PebbleServicesAdded,
+      .device = s_test_device,
   };
   info->services_added_data.num_services_added = num_services_added;
   memcpy(info->services_added_data.services, s_service_handles, sizeof(s_service_handles));
 
-  PebbleEvent e = (PebbleEvent) {
-    .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
-    .bluetooth.le.gatt_client_service = {
-      .info = info,
-      .subtype = PebbleBLEGATTClientEventTypeServiceChange,
-    },
+  PebbleEvent e = (PebbleEvent){
+      .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
+      .bluetooth.le.gatt_client_service =
+          {
+              .info = info,
+              .subtype = PebbleBLEGATTClientEventTypeServiceChange,
+          },
   };
 
   kernel_le_client_handle_event(&e);

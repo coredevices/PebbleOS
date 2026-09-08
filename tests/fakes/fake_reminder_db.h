@@ -3,11 +3,6 @@
 
 bool s_empty = true;
 
-void fake_reminder_db_set_empty(bool empty) {
-  s_empty = empty;
-}
+void fake_reminder_db_set_empty(bool empty) { s_empty = empty; }
 
-bool reminder_db_is_empty() {
-  return s_empty;
-}
-
+bool reminder_db_is_empty() { return s_empty; }

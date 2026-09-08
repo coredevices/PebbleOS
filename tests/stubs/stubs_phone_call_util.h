@@ -5,9 +5,8 @@
 
 #include "pbl/services/phone_call.h"
 
-PebblePhoneCaller* phone_call_util_create_caller(const char *number, const char *name) {
+PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char *name) {
   return NULL;
 }
 
-void phone_call_util_destroy_caller(PebblePhoneCaller *caller) {
-}
+void phone_call_util_destroy_caller(PebblePhoneCaller *caller) {}

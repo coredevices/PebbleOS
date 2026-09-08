@@ -18,7 +18,7 @@ void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype) {
   } else {
     WTF;
   }
-  HAL_PIN_Set(PAD_PA00 + pin_config->gpio_pin, GPIO_A0 + pin_config->gpio_pin, PIN_NOPULL, 1); 
+  HAL_PIN_Set(PAD_PA00 + pin_config->gpio_pin, GPIO_A0 + pin_config->gpio_pin, PIN_NOPULL, 1);
   GPIO_InitStruct.Pull = GPIO_NOPULL;
 
   HAL_GPIO_Init(pin_config->gpio, &GPIO_InitStruct);

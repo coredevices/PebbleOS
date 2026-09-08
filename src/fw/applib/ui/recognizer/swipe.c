@@ -40,11 +40,12 @@ struct SwipeRecognizerData {
 
   // Gesture state
   struct {
-    GPoint touch_down_point;   // Touchdown point; the path is measured from here
-    GPoint last_point;         // Most recent position update point (liftoff coords are ignored)
-    RtcTicks touch_down_ticks; // Touchdown time, used for the duration check
-    SwipeDirection direction;  // Recognized direction, valid once Completed
-    // Velocity sample ring buffer; sample_head indexes the newest, filled up to sample_count entries
+    GPoint touch_down_point;    // Touchdown point; the path is measured from here
+    GPoint last_point;          // Most recent position update point (liftoff coords are ignored)
+    RtcTicks touch_down_ticks;  // Touchdown time, used for the duration check
+    SwipeDirection direction;   // Recognized direction, valid once Completed
+    // Velocity sample ring buffer; sample_head indexes the newest, filled up to sample_count
+    // entries
     SwipeVelocitySample samples[SWIPE_VELOCITY_SAMPLE_COUNT];
     uint8_t sample_head;
     uint8_t sample_count;
@@ -56,10 +57,7 @@ static void prv_reset(Recognizer *recognizer);
 static bool prv_cancel(Recognizer *recognizer);
 
 static const RecognizerImpl s_swipe_recognizer_impl = {
-  .handle_touch_event = prv_handle_touch_event,
-  .reset = prv_reset,
-  .cancel = prv_cancel
-};
+    .handle_touch_event = prv_handle_touch_event, .reset = prv_reset, .cancel = prv_cancel};
 
 static uint32_t prv_ticks_to_ms(RtcTicks ticks) {
   return (uint32_t)((ticks * MS_PER_SECOND) / RTC_TICKS_HZ);
@@ -70,9 +68,10 @@ static uint32_t prv_touch_duration_ms(const SwipeRecognizerData *data) {
 }
 
 static void prv_record_sample(SwipeRecognizerData *data, GPoint point, RtcTicks ticks) {
-  const uint8_t next = (data->state.sample_count == 0) ?
-      0 : (uint8_t)((data->state.sample_head + 1) % SWIPE_VELOCITY_SAMPLE_COUNT);
-  data->state.samples[next] = (SwipeVelocitySample) { .point = point, .ticks = ticks };
+  const uint8_t next = (data->state.sample_count == 0)
+                           ? 0
+                           : (uint8_t)((data->state.sample_head + 1) % SWIPE_VELOCITY_SAMPLE_COUNT);
+  data->state.samples[next] = (SwipeVelocitySample){.point = point, .ticks = ticks};
   data->state.sample_head = next;
   if (data->state.sample_count < SWIPE_VELOCITY_SAMPLE_COUNT) {
     data->state.sample_count++;
@@ -104,8 +103,10 @@ static GPoint prv_compute_velocity(const SwipeRecognizerData *data) {
   if (dt_ms == 0) {
     return GPointZero;
   }
-  const int32_t vx = ((int32_t)(newest->point.x - oldest->point.x) * MS_PER_SECOND) / (int32_t)dt_ms;
-  const int32_t vy = ((int32_t)(newest->point.y - oldest->point.y) * MS_PER_SECOND) / (int32_t)dt_ms;
+  const int32_t vx =
+      ((int32_t)(newest->point.x - oldest->point.x) * MS_PER_SECOND) / (int32_t)dt_ms;
+  const int32_t vy =
+      ((int32_t)(newest->point.y - oldest->point.y) * MS_PER_SECOND) / (int32_t)dt_ms;
   return GPoint((int16_t)vx, (int16_t)vy);
 }
 
@@ -121,8 +122,8 @@ static SwipeDirection prv_direction_from_delta(GPoint delta) {
 }
 
 static void prv_handle_touch_event(Recognizer *recognizer, const TouchEvent *touch_event) {
-  SwipeRecognizerData *data = recognizer_get_impl_data((Recognizer *)recognizer,
-                                                       &s_swipe_recognizer_impl);
+  SwipeRecognizerData *data =
+      recognizer_get_impl_data((Recognizer *)recognizer, &s_swipe_recognizer_impl);
 
   switch (touch_event->type) {
     case TouchEvent_Touchdown: {
@@ -149,8 +150,9 @@ static void prv_handle_touch_event(Recognizer *recognizer, const TouchEvent *tou
       const int32_t major = MAX(adx, ady);
       const int32_t minor = MIN(adx, ady);
 
-      // Too crooked: once the path is committed (major axis past the drag threshold), the minor-axis
-      // projection must stay within half the major axis, otherwise this is not a straight swipe.
+      // Too crooked: once the path is committed (major axis past the drag threshold), the
+      // minor-axis projection must stay within half the major axis, otherwise this is not a
+      // straight swipe.
       if ((major > SWIPE_STRAIGHTNESS_MIN_PX) && ((minor * 2) > major)) {
         recognizer_transition_state(recognizer, RecognizerState_Failed);
         break;
@@ -164,8 +166,8 @@ static void prv_handle_touch_event(Recognizer *recognizer, const TouchEvent *tou
     }
 
     case TouchEvent_Liftoff: {
-      // Liftoff coordinates are ignored (the driver reports finger-up at (0, 0)); the gesture end is
-      // the last position update.
+      // Liftoff coordinates are ignored (the driver reports finger-up at (0, 0)); the gesture end
+      // is the last position update.
       const GPoint total_delta = gpoint_sub(data->state.last_point, data->state.touch_down_point);
       const int32_t adx = ABS(total_delta.x);
       const int32_t ady = ABS(total_delta.y);
@@ -192,8 +194,8 @@ static void prv_handle_touch_event(Recognizer *recognizer, const TouchEvent *tou
 }
 
 static void prv_reset(Recognizer *recognizer) {
-  SwipeRecognizerData *data = recognizer_get_impl_data((Recognizer *)recognizer,
-                                                       &s_swipe_recognizer_impl);
+  SwipeRecognizerData *data =
+      recognizer_get_impl_data((Recognizer *)recognizer, &s_swipe_recognizer_impl);
   memset(&data->state, 0, sizeof(data->state));
 }
 
@@ -205,9 +207,10 @@ static bool prv_cancel(Recognizer *recognizer) {
 Recognizer *swipe_recognizer_create(RecognizerEventCb event_cb, void *user_data,
                                     uint8_t direction_mask) {
   SwipeRecognizerData data = {
-    .config = {
-      .direction_mask = direction_mask,
-    },
+      .config =
+          {
+              .direction_mask = direction_mask,
+          },
   };
 
   return recognizer_create_with_data(&s_swipe_recognizer_impl, &data, sizeof(data), event_cb,
@@ -220,9 +223,10 @@ Recognizer *swipe_recognizer_init_static(void *storage, RecognizerEventCb event_
       RECOGNIZER_INSTANCE_SIZE + sizeof(SwipeRecognizerData) <= SWIPE_RECOGNIZER_STATIC_SIZE,
       "SWIPE_RECOGNIZER_STATIC_SIZE too small for a static swipe recognizer");
   SwipeRecognizerData data = {
-    .config = {
-      .direction_mask = direction_mask,
-    },
+      .config =
+          {
+              .direction_mask = direction_mask,
+          },
   };
 
   return recognizer_init_static_with_data(storage, &s_swipe_recognizer_impl, &data, sizeof(data),
@@ -234,8 +238,8 @@ const SwipeRecognizerData *swipe_recognizer_get_data(const Recognizer *recognize
 }
 
 SwipeDirection swipe_recognizer_get_direction(const Recognizer *recognizer) {
-  const SwipeRecognizerData *data = recognizer_get_impl_data((Recognizer *)recognizer,
-                                                             &s_swipe_recognizer_impl);
+  const SwipeRecognizerData *data =
+      recognizer_get_impl_data((Recognizer *)recognizer, &s_swipe_recognizer_impl);
   if (!data) {
     // SDK-reachable with a NULL or non-swipe recognizer: reject, don't crash.
     return SwipeDirection_None;
@@ -244,8 +248,8 @@ SwipeDirection swipe_recognizer_get_direction(const Recognizer *recognizer) {
 }
 
 GPoint swipe_recognizer_get_velocity(const Recognizer *recognizer) {
-  const SwipeRecognizerData *data = recognizer_get_impl_data((Recognizer *)recognizer,
-                                                             &s_swipe_recognizer_impl);
+  const SwipeRecognizerData *data =
+      recognizer_get_impl_data((Recognizer *)recognizer, &s_swipe_recognizer_impl);
   if (!data) {
     return GPointZero;
   }

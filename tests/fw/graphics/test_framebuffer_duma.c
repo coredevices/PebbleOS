@@ -25,30 +25,26 @@
 
 static FrameBuffer *fb = NULL;
 
-#define COLOR(x) ((GColor){.argb=GColor ## x ## ARGB8})
+#define COLOR(x) ((GColor){.argb = GColor##x##ARGB8})
 #define NUM_COLORS 4
 GColor color_table[NUM_COLORS] = {
-  COLOR(Red), 
-  COLOR(Yellow),
-  COLOR(Cyan),
-  COLOR(Black),
+    COLOR(Red),
+    COLOR(Yellow),
+    COLOR(Cyan),
+    COLOR(Black),
 };
 
 // Setup
 void test_framebuffer_duma__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize) { DISP_COLS, DISP_ROWS });
+  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
 }
 
 // Teardown
-void test_framebuffer_duma__cleanup(void) {
-  free(fb);
-}
+void test_framebuffer_duma__cleanup(void) { free(fb); }
 
 // Intentionally unchecked framebuffer drawing function
-static void draw_fb_raw(uint8_t *buffer, int offset, GColor8 color) {
-  buffer[offset] = color.argb;
-}
+static void draw_fb_raw(uint8_t *buffer, int offset, GColor8 color) { buffer[offset] = color.argb; }
 
 // Tests
 ////////////////////////////////////
@@ -72,7 +68,7 @@ void test_framebuffer_duma__draw_within_framebuffer(void) {
     }
   }
 }
-  
+
 // This test validates that a duma assert is caught when drawing outside of the framebuffer
 void test_framebuffer_duma__draw_beyond_framebuffer(void) {
   GContext ctx;
@@ -82,7 +78,7 @@ void test_framebuffer_duma__draw_beyond_framebuffer(void) {
   cl_assert(ctx.dest_bitmap.info.format == GBitmapFormat8Bit ||
             ctx.dest_bitmap.info.format == GBitmapFormat8BitCircular);
 
-  uint8_t *buffer = (uint8_t*)ctx.dest_bitmap.addr;
+  uint8_t *buffer = (uint8_t *)ctx.dest_bitmap.addr;
   // Expect this to assert using duma protection, we are writing past framebuffer
   cl_assert_passert(draw_fb_raw(buffer, FRAMEBUFFER_SIZE_BYTES + 1, GColorWhite));
 }

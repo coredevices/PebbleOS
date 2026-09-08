@@ -3,10 +3,6 @@
 
 #pragma once
 
-void* app_malloc(size_t bytes) {
-  return malloc(bytes);
-}
+void *app_malloc(size_t bytes) { return malloc(bytes); }
 
-void app_free(void* ptr) {
-  free(ptr);
-}
+void app_free(void *ptr) { free(ptr); }

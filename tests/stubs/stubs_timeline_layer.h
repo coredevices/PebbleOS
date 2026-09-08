@@ -6,6 +6,4 @@
 #include "apps/system/timeline/layer.h"
 #include "pbl/util/attributes.h"
 
-uint16_t WEAK timeline_layer_get_ideal_sidebar_width(void) {
-  return 0;
-}
+uint16_t WEAK timeline_layer_get_ideal_sidebar_width(void) { return 0; }

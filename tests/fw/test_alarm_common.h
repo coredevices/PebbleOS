@@ -22,7 +22,6 @@
 
 #include "clar.h"
 
-
 // Stubs
 #include "stubs_analytics.h"
 #include "stubs_app_cache.h"
@@ -49,18 +48,17 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Stubs
 
-status_t reminder_db_delete_with_parent(const TimelineItemId *id) {
-  return S_SUCCESS;
-}
+status_t reminder_db_delete_with_parent(const TimelineItemId *id) { return S_SUCCESS; }
 
-const PebbleProcessMd* alarms_app_get_info() {
+const PebbleProcessMd *alarms_app_get_info() {
   static const PebbleProcessMdSystem s_alarms_app_info = {
-    .common = {
-      .uuid = {0x67, 0xa3, 0x2d, 0x95, 0xef, 0x69, 0x46, 0xd4,
-               0xa0, 0xb9, 0x85, 0x4c, 0xc6, 0x2f, 0x97, 0xf9},
-    },
+      .common =
+          {
+              .uuid = {0x67, 0xa3, 0x2d, 0x95, 0xef, 0x69, 0x46, 0xd4, 0xa0, 0xb9, 0x85, 0x4c, 0xc6,
+                       0x2f, 0x97, 0xf9},
+          },
   };
-  return (const PebbleProcessMd*) &s_alarms_app_info;
+  return (const PebbleProcessMd *)&s_alarms_app_info;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -75,18 +73,17 @@ typedef enum AlarmDataType {
 
 typedef struct PACKED AlarmStorageKey {
   AlarmId id;
-  AlarmDataType type:8;
+  AlarmDataType type : 8;
 } AlarmStorageKey;
 
 typedef struct PACKED {
-  AlarmKind kind:8;
+  AlarmKind kind : 8;
   bool is_disabled;
   uint8_t hour;
   uint8_t minute;
   // 1 entry per week day. True if the alarm should go off on that week day. Sunday = 0.
   bool scheduled_days[7];
 } AlarmConfig;
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! State variables
@@ -115,14 +112,12 @@ static const int s_wednesday = 1426636800;
 static TimelineItem *s_last_timeline_item_added = NULL;
 static Uuid s_last_timeline_item_removed_uuid = {};
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Counter variables
 static int s_num_timeline_adds = 0;
 static int s_num_timeline_removes = 0;
 static int s_num_alarm_events_put = 0;
 static int s_num_alarms_fired = 0;
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Fakes
@@ -143,9 +138,7 @@ int prv_hours_and_minutes_to_seconds(int hour, int minute) {
   return (hour * SECONDS_PER_HOUR) + (minute * SECONDS_PER_MINUTE);
 }
 
-const char *timeline_get_private_data_source(Uuid *parent_id) {
-  return NULL;
-}
+const char *timeline_get_private_data_source(Uuid *parent_id) { return NULL; }
 
 status_t pin_db_insert_item_without_event(TimelineItem *item) {
   s_num_timeline_adds++;
@@ -160,9 +153,7 @@ status_t pin_db_delete(const uint8_t *key, int key_len) {
   return true;
 }
 
-void event_put(PebbleEvent* event) {
-  s_num_alarm_events_put++;
-}
+void event_put(PebbleEvent *event) { s_num_alarm_events_put++; }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Helper Functions
@@ -174,8 +165,8 @@ void prv_assert_settings_key_absent(const void *key, size_t key_len) {
   settings_file_close(&file);
 }
 
-void prv_assert_settings_value(const void *key, size_t key_len,
-                               const void *expected_value, size_t value_len) {
+void prv_assert_settings_value(const void *key, size_t key_len, const void *expected_value,
+                               size_t value_len) {
   SettingsFile file;
   char buffer[value_len];
   cl_must_pass(settings_file_open(&file, "alarms", 1024));
@@ -184,14 +175,14 @@ void prv_assert_settings_value(const void *key, size_t key_len,
   cl_assert_equal_m(expected_value, buffer, value_len);
 }
 
-void prv_assert_alarm_config(AlarmId id, uint8_t hour, uint8_t minute,
-                             bool disabled, AlarmKind kind, const bool scheduled_days[7]) {
-  AlarmStorageKey key = { .id = id, .type = ALARM_DATA_CONFIG };
+void prv_assert_alarm_config(AlarmId id, uint8_t hour, uint8_t minute, bool disabled,
+                             AlarmKind kind, const bool scheduled_days[7]) {
+  AlarmStorageKey key = {.id = id, .type = ALARM_DATA_CONFIG};
   AlarmConfig config = {
-    .kind = kind,
-    .is_disabled = disabled,
-    .hour = hour,
-    .minute = minute,
+      .kind = kind,
+      .is_disabled = disabled,
+      .hour = hour,
+      .minute = minute,
   };
   memcpy(&config.scheduled_days, scheduled_days, 7);
   prv_assert_settings_value(&key, sizeof(key), &config, sizeof(config));
@@ -210,11 +201,11 @@ void prv_assert_alarm_config(AlarmId id, uint8_t hour, uint8_t minute,
 }
 
 void prv_assert_alarm_config_absent(AlarmId id) {
-  AlarmStorageKey key = { .id = id, .type = ALARM_DATA_CONFIG };
+  AlarmStorageKey key = {.id = id, .type = ALARM_DATA_CONFIG};
   prv_assert_settings_key_absent(&key, sizeof(key));
 }
 
 void assert_alarm_pins_absent(AlarmId id) {
-  AlarmStorageKey key = { .id = id, .type = ALARM_DATA_PINS };
+  AlarmStorageKey key = {.id = id, .type = ALARM_DATA_PINS};
   prv_assert_settings_key_absent(&key, sizeof(key));
 }

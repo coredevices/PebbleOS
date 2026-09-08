@@ -9,14 +9,14 @@
 #include "util/pstring.h"
 
 PascalString16 *pstring_create_pstring16(uint16_t size) {
-  PascalString16* pstring = task_malloc_check(sizeof(uint16_t) + sizeof(char) * size);
+  PascalString16 *pstring = task_malloc_check(sizeof(uint16_t) + sizeof(char) * size);
   pstring->str_length = 0;
   return pstring;
 }
 
 PascalString16 *pstring_create_pstring16_from_string(char string[]) {
   uint16_t length = strlen(string);
-  PascalString16* pstring;
+  PascalString16 *pstring;
   if (length == 0) {
     // Empty string
     pstring = task_malloc_check(sizeof(uint16_t) + sizeof(char) * 1);
@@ -30,9 +30,7 @@ PascalString16 *pstring_create_pstring16_from_string(char string[]) {
   return pstring;
 }
 
-void pstring_destroy_pstring16(PascalString16 *pstring) {
-  task_free(pstring);
-}
+void pstring_destroy_pstring16(PascalString16 *pstring) { task_free(pstring); }
 
 void pstring_pstring16_to_string(const PascalString16 *pstring, char *string_out) {
   strncpy(string_out, pstring->str_value, pstring->str_length);
@@ -71,7 +69,7 @@ SerializedArray *pstring_create_serialized_array(uint16_t data_size) {
   return serialized_array;
 }
 
-void pstring_destroy_serialized_array(SerializedArray* serialized_array) {
+void pstring_destroy_serialized_array(SerializedArray *serialized_array) {
   task_free(serialized_array);
 }
 
@@ -85,7 +83,7 @@ uint16_t pstring_get_number_of_pstring16s_in_list(PascalString16List *pstring16_
   uint8_t *data_ptr = (pstring16_list->pstrings)->data;
   uint16_t pstring_length;
   do {
-    pstring_length = (uint16_t) *data_ptr;
+    pstring_length = (uint16_t)*data_ptr;
     if (pstring_length == 0) {
       empty_count++;
     } else {
@@ -94,7 +92,7 @@ uint16_t pstring_get_number_of_pstring16s_in_list(PascalString16List *pstring16_
     }
     data_ptr += pstring_length + size;
   } while ((&((pstring16_list->pstrings)->data[(pstring16_list->pstrings)->data_size]) - data_ptr) >
-           1); // Need at least 2 bytes for another pstring
+           1);  // Need at least 2 bytes for another pstring
 
   if (count != 0) {
     count += empty_count;
@@ -109,7 +107,7 @@ void pstring_project_list_on_serialized_array(PascalString16List *pstring16_list
   pstring16_list->count = pstring_get_number_of_pstring16s_in_list(pstring16_list);
 }
 
-bool pstring_add_pstring16_to_list(PascalString16List *pstring16_list, PascalString16* pstring) {
+bool pstring_add_pstring16_to_list(PascalString16List *pstring16_list, PascalString16 *pstring) {
   size_t size = sizeof(uint16_t);
 
   // Traverse list
@@ -126,11 +124,11 @@ bool pstring_add_pstring16_to_list(PascalString16List *pstring16_list, PascalStr
       return true;
     }
     // Advance pointer and index
-    pstring_length = (uint16_t) *data_ptr;
+    pstring_length = (uint16_t)*data_ptr;
     data_ptr += pstring_length + size;
     idx++;
   } while ((&((pstring16_list->pstrings)->data[(pstring16_list->pstrings)->data_size]) - data_ptr) >
-           1); // Need at least 2 bytes for another pstring
+           1);  // Need at least 2 bytes for another pstring
 
   return false;
 }
@@ -151,14 +149,14 @@ PascalString16 *pstring_get_pstring16_from_list(PascalString16List *pstring16_li
   do {
     if (idx == index) {
       // Found the requested pstring
-      pstring = (PascalString16*) data_ptr;
+      pstring = (PascalString16 *)data_ptr;
       break;
     }
-    pstring_length = (uint16_t) *data_ptr;
+    pstring_length = (uint16_t)*data_ptr;
     data_ptr += pstring_length + size;
     idx++;
   } while ((&((pstring16_list->pstrings)->data[(pstring16_list->pstrings)->data_size]) - data_ptr) >
-           1); // Need at least 2 bytes for another pstring
+           1);  // Need at least 2 bytes for another pstring
 
   return pstring;
 }

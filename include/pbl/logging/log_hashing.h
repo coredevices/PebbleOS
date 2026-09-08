@@ -81,31 +81,31 @@
 
 #define LOG_STRINGS_SECTION_ADDRESS 0xC0000000
 
-#define PACKED_CORE_OFFSET 30        // 2 bits - Core number
-#define PACKED_CORE_MASK   0x03
+#define PACKED_CORE_OFFSET 30  // 2 bits - Core number
+#define PACKED_CORE_MASK 0x03
 
-#define PACKED_NUM_FMT_OFFSET 29     // 3 bits - Number format conversions
+#define PACKED_NUM_FMT_OFFSET 29  // 3 bits - Number format conversions
 #define PACKED_NUM_FMT_MASK 0x07
-#define PACKED_STR1FMT_OFFSET 26     // 3 bits - indicies of string parameter 1 format conversion
+#define PACKED_STR1FMT_OFFSET 26  // 3 bits - indicies of string parameter 1 format conversion
 #define PACKED_STR1FMT_MASK 0x07
-#define PACKED_STR2FMT_OFFSET 23     // 3 bits - indicies of string parameter 2 format conversion
+#define PACKED_STR2FMT_OFFSET 23  // 3 bits - indicies of string parameter 2 format conversion
 #define PACKED_STR2FMT_MASK 0x07
-#define PACKED_STRFMTS_OFFSET 23     // 6 bits - indicies of string parameters 1 & 2.
+#define PACKED_STRFMTS_OFFSET 23  // 6 bits - indicies of string parameters 1 & 2.
 #define PACKED_STRFMTS_MASK 0x3f
-#define PACKED_LEVEL_OFFSET 20       // 3 bits  - log level
+#define PACKED_LEVEL_OFFSET 20  // 3 bits  - log level
 #define PACKED_LEVEL_MASK 0x07
 #define PACKED_HASH_OFFSET 0
-#define PACKED_HASH_MASK 0x7FFFF     // 19 bits - string table offset (512 KB)
+#define PACKED_HASH_MASK 0x7FFFF  // 19 bits - string table offset (512 KB)
 
-#define MSGID_STR_AND_HASH_MASK ((PACKED_STRFMTS_MASK << PACKED_STRFMTS_OFFSET) | \
-                                 (PACKED_HASH_MASK << PACKED_HASH_OFFSET))
-#define MSGID_CORE_AND_HASH_MASK ((PACKED_CORE_MASK << PACKED_CORE_OFFSET) | \
-                                  (PACKED_HASH_MASK << PACKED_HASH_OFFSET))
+#define MSGID_STR_AND_HASH_MASK \
+  ((PACKED_STRFMTS_MASK << PACKED_STRFMTS_OFFSET) | (PACKED_HASH_MASK << PACKED_HASH_OFFSET))
+#define MSGID_CORE_AND_HASH_MASK \
+  ((PACKED_CORE_MASK << PACKED_CORE_OFFSET) | (PACKED_HASH_MASK << PACKED_HASH_OFFSET))
 
 #ifndef STRINGIFY
-  #define STRINGIFY_NX(a) #a
-  #define STRINGIFY(a) STRINGIFY_NX(a)
-#endif // STRINGIFY
+#define STRINGIFY_NX(a) #a
+#define STRINGIFY(a) STRINGIFY_NX(a)
+#endif  // STRINGIFY
 
 /* Printf Format argument checking.
  *
@@ -118,15 +118,16 @@
  */
 void PBL_LOG_x_printf_arg_check(const char *fmt, ...) FORMAT_PRINTF(1, 2);
 
-#define NEW_LOG_HASH(logfunc, level, color, fmt, ...) \
-{ \
-  static const char str[] __attribute__((nocommon, section(".log_strings"))) = \
-    __FILE__ ":" STRINGIFY(__LINE__) ":" STRINGIFY(level) ":" color ":" fmt; \
-  _Pragma("GCC diagnostic push"); _Pragma("GCC diagnostic ignored \"-Warray-bounds\""); \
-  logfunc((uint32_t)&str[LOG_SECTION_OFFSET(level, fmt)], ##__VA_ARGS__); \
-  _Pragma("GCC diagnostic pop"); \
-  if (0) PBL_LOG_x_printf_arg_check(fmt, ##__VA_ARGS__); \
-}
+#define NEW_LOG_HASH(logfunc, level, color, fmt, ...)                            \
+  {                                                                              \
+    static const char str[] __attribute__((nocommon, section(".log_strings"))) = \
+        __FILE__ ":" STRINGIFY(__LINE__) ":" STRINGIFY(level) ":" color ":" fmt; \
+    _Pragma("GCC diagnostic push");                                              \
+    _Pragma("GCC diagnostic ignored \"-Warray-bounds\"");                        \
+    logfunc((uint32_t)&str[LOG_SECTION_OFFSET(level, fmt)], ##__VA_ARGS__);      \
+    _Pragma("GCC diagnostic pop");                                               \
+    if (0) PBL_LOG_x_printf_arg_check(fmt, ##__VA_ARGS__);                       \
+  }
 
 ALWAYS_INLINE static uint32_t LOG_SECTION_OFFSET(const uint8_t level, const char *fmt) {
   const char *p1 = NULL, *p2 = NULL, *p3 = NULL, *p4 = NULL;
@@ -147,8 +148,8 @@ ALWAYS_INLINE static uint32_t LOG_SECTION_OFFSET(const uint8_t level, const char
 
   // Check that fmt doesn't contain the escaped % symbol, '%%'. It's too hard to handle correctly
   // in every case.
-  if ((p1 + 1 == p2) || (p2 + 1 == p3) || (p3 + 1 == p4) || (p4 + 1 == p5) ||
-      (p5 + 1 == p6) || (p6 + 1 == p7) || (p7 + 1 == p8)) {
+  if ((p1 + 1 == p2) || (p2 + 1 == p3) || (p3 + 1 == p4) || (p4 + 1 == p5) || (p5 + 1 == p6) ||
+      (p6 + 1 == p7) || (p7 + 1 == p8)) {
     return 0;
   }
 
@@ -201,7 +202,6 @@ ALWAYS_INLINE static uint32_t LOG_SECTION_OFFSET(const uint8_t level, const char
   const int a7 = ps7 ? (a6 << 3) + 7 : a6;
   const int string_indicies = a7;
 
-
   // Convert level to packed_level
   int packed_level = LOG_LEVEL_ALWAYS;
   if (level == LOG_LEVEL_ERROR) {
@@ -216,9 +216,9 @@ ALWAYS_INLINE static uint32_t LOG_SECTION_OFFSET(const uint8_t level, const char
     packed_level = 5;
   }
 
-  const uint32_t offset =  (((num_params & PACKED_NUM_FMT_MASK) << PACKED_NUM_FMT_OFFSET) |
-                            ((packed_level & PACKED_LEVEL_MASK) << PACKED_LEVEL_OFFSET) |
-                            ((string_indicies & PACKED_STRFMTS_MASK) << PACKED_STRFMTS_OFFSET));
+  const uint32_t offset = (((num_params & PACKED_NUM_FMT_MASK) << PACKED_NUM_FMT_OFFSET) |
+                           ((packed_level & PACKED_LEVEL_MASK) << PACKED_LEVEL_OFFSET) |
+                           ((string_indicies & PACKED_STRFMTS_MASK) << PACKED_STRFMTS_OFFSET));
 
   return (offset - LOG_STRINGS_SECTION_ADDRESS);
 }

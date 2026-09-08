@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-
 #include "applib/graphics/gtypes.h"
 #include "applib/graphics/graphics.h"
 #include "applib/graphics/framebuffer.h"
@@ -19,7 +18,6 @@
 #include "stubs_resources.h"
 #include "stubs_syscalls.h"
 
-
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -32,21 +30,15 @@
 static char *s_pbi2png_path;
 
 // Stubs
-void passert_failed(const char* filename, int line_number, const char* message, ...) {
+void passert_failed(const char *filename, int line_number, const char *message, ...) {
   exit(EXIT_FAILURE);
 }
 
-void passert_failed_no_message(const char* filename, int line_number) {
-  exit(EXIT_FAILURE);
-}
+void passert_failed_no_message(const char *filename, int line_number) { exit(EXIT_FAILURE); }
 
-void wtf(void) {
-  exit(EXIT_FAILURE);
-}
+void wtf(void) { exit(EXIT_FAILURE); }
 
-bool process_manager_compiled_with_legacy2_sdk(void) {
-  return false;
-}
+bool process_manager_compiled_with_legacy2_sdk(void) { return false; }
 
 const uint8_t *resource_get_builtin_bytes(ResAppNum app_num, uint32_t resource_id,
                                           uint32_t *num_bytes_out) {
@@ -81,11 +73,11 @@ static void prv_setup_context(GContext *ctx, GSize bounds) {
 
   const uint16_t row_size_bytes = bounds.w;
   ctx->dest_bitmap = (GBitmap){
-    .addr = malloc(row_size_bytes * bounds.h),
-    .bounds = (GRect){.size = bounds},
-    .row_size_bytes = row_size_bytes,
-    .info.version = 1,
-    .info.format = GBitmapFormat8Bit,
+      .addr = malloc(row_size_bytes * bounds.h),
+      .bounds = (GRect){.size = bounds},
+      .row_size_bytes = row_size_bytes,
+      .info.version = 1,
+      .info.format = GBitmapFormat8Bit,
   };
 
   ctx->draw_state.clip_box = ctx->dest_bitmap.bounds;
@@ -115,7 +107,7 @@ void prv_convert_sequence(const char *filename, void *data, size_t size) {
   }
 
   // Create directory from base name (with extension stripped)
-  char output[strlen(filename) + 1 + strlen("_65535.png")]; // max size of a file path
+  char output[strlen(filename) + 1 + strlen("_65535.png")];  // max size of a file path
   size_t len = prv_get_base_path(filename, output);
 
   // Write out each frame as a PNG
@@ -160,7 +152,6 @@ void prv_convert_image(const char *filename, void *data, size_t size) {
 }
 
 static void prv_convert_pdc(const char *filename) {
-
   FILE *f = fopen(filename, "rb");
   if (f == NULL) {
     printf("File not found: %s\n", filename);
@@ -203,14 +194,15 @@ static void prv_convert_pdc(const char *filename) {
   free(data);
 }
 
-int main(int argc, const char* argv[]) {
+int main(int argc, const char *argv[]) {
   // pdc2png file path always passed in as first argument
   if (argc == 1) {
-    printf("No files specified. Pass a list of file paths to convert "
+    printf(
+        "No files specified. Pass a list of file paths to convert "
         "(e.g. pdc2png [path-to-file1] [path-to-file2] ...)\n");
   }
 
-  char *dir = dirname((char *) argv[0]);
+  char *dir = dirname((char *)argv[0]);
   printf("%s\n", dir);
   s_pbi2png_path = malloc(strlen(dir) + 1 + strlen(PBI2PNG_EXE) + 1);
   sprintf(s_pbi2png_path, "%s/%s", dir, PBI2PNG_EXE);

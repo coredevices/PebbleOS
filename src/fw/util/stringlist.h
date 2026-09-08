@@ -14,7 +14,7 @@
 
 //! Calculate the maximum string list size given the number of values and their max length
 #define StringListSize(num_values, max_value_size) \
-    (sizeof(StringList) + ((num_values) * (max_value_size)))
+  (sizeof(StringList) + ((num_values) * (max_value_size)))
 
 typedef struct {
   uint16_t serialized_byte_length;

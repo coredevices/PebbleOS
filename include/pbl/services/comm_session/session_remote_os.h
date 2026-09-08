@@ -4,7 +4,7 @@
 #pragma once
 
 typedef enum {
-  RemoteBitmaskOS = 0x7, // bits 0 - 2
+  RemoteBitmaskOS = 0x7,  // bits 0 - 2
 } RemoteBitmask;
 
 typedef enum {

@@ -15,23 +15,22 @@ static NotifList *s_current_notif;
 // The UI can access only notifications of this list
 static NotifList *s_presented_notifs;
 
-
 static bool prv_filter_presented_notification_by_id(ListNode *found_node, void *data) {
-  return uuid_equal(&((NotifList*)found_node)->notif.id, (Uuid *)data);
+  return uuid_equal(&((NotifList *)found_node)->notif.id, (Uuid *)data);
 }
 
 static NotifList *prv_find_listnode_for_notif(Uuid *id) {
-  return (NotifList*) list_find((ListNode *) s_presented_notifs,
+  return (NotifList *)list_find((ListNode *)s_presented_notifs,
                                 prv_filter_presented_notification_by_id, id);
 }
 
 Uuid *notifications_presented_list_first(void) {
-  NotifList * node = (NotifList *)list_get_head((ListNode*)s_presented_notifs);
+  NotifList *node = (NotifList *)list_get_head((ListNode *)s_presented_notifs);
   return node ? &node->notif.id : NULL;
 }
 
 Uuid *notifications_presented_list_last(void) {
-  NotifList * node = (NotifList *)list_get_tail((ListNode*)s_presented_notifs);
+  NotifList *node = (NotifList *)list_get_tail((ListNode *)s_presented_notifs);
   return node ? &node->notif.id : NULL;
 }
 
@@ -42,9 +41,7 @@ Uuid *notifications_presented_list_relative(Uuid *id, int offset) {
   return end_node ? &end_node->notif.id : NULL;
 }
 
-int notifications_presented_list_count(void) {
-  return list_count((ListNode*)s_presented_notifs);
-}
+int notifications_presented_list_count(void) { return list_count((ListNode *)s_presented_notifs); }
 
 void notifications_presented_list_remove(Uuid *id) {
   NotifList *node = prv_find_listnode_for_notif(id);
@@ -65,15 +62,15 @@ void notifications_presented_list_remove(Uuid *id) {
     }
   }
 
-  list_remove((ListNode*)node, (ListNode**)&s_presented_notifs, NULL);
+  list_remove((ListNode *)node, (ListNode **)&s_presented_notifs, NULL);
   task_free(node);
 }
 
-static NotifList* prv_add_notification_common(Uuid *id, NotificationType type) {
+static NotifList *prv_add_notification_common(Uuid *id, NotificationType type) {
   notifications_presented_list_remove(id);
 
   NotifList *new_entry = task_malloc_check(sizeof(NotifList));
-  list_init((ListNode*)new_entry);
+  list_init((ListNode *)new_entry);
   new_entry->notif.type = type;
   new_entry->notif.id = *id;
 
@@ -82,15 +79,15 @@ static NotifList* prv_add_notification_common(Uuid *id, NotificationType type) {
 
 void notifications_presented_list_add(Uuid *id, NotificationType type) {
   NotifList *new_entry = prv_add_notification_common(id, type);
-  s_presented_notifs = (NotifList *)
-      list_prepend(&s_presented_notifs->list_node, &new_entry->list_node);
+  s_presented_notifs =
+      (NotifList *)list_prepend(&s_presented_notifs->list_node, &new_entry->list_node);
 }
 
-void notifications_presented_list_add_sorted(Uuid *id, NotificationType type,
-                                             Comparator comparator, bool ascending) {
+void notifications_presented_list_add_sorted(Uuid *id, NotificationType type, Comparator comparator,
+                                             bool ascending) {
   NotifList *new_entry = prv_add_notification_common(id, type);
-  s_presented_notifs = (NotifList *) list_sorted_add(&s_presented_notifs->list_node,
-      &new_entry->list_node, comparator, ascending);
+  s_presented_notifs = (NotifList *)list_sorted_add(&s_presented_notifs->list_node,
+                                                    &new_entry->list_node, comparator, ascending);
 }
 
 NotificationType notifications_presented_list_get_type(Uuid *id) {
@@ -131,7 +128,7 @@ int notifications_presented_list_current_idx(void) {
   if (uuid_is_invalid(id)) {
     return -1;
   }
-  return list_count_to_head_from((ListNode*) prv_find_listnode_for_notif(id)) - 1;
+  return list_count_to_head_from((ListNode *)prv_find_listnode_for_notif(id)) - 1;
 }
 
 void notifications_presented_list_init(void) {

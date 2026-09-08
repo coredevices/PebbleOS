@@ -8,8 +8,7 @@
 // Setup and Teardown
 ////////////////////////////////////
 
-void test_fake_mutex__initialize(void) {
-}
+void test_fake_mutex__initialize(void) {}
 
 void test_fake_mutex__cleanup(void) {
   const bool assert_all_unlocked = false;

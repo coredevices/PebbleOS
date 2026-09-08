@@ -28,7 +28,7 @@ typedef struct FSRegion {
 // header included below.
 
 // Typical single region filesystem layout
-#define FILE_SYSTEM_REGIONS(MACRO_OPERATOR)                             \
+#define FILE_SYSTEM_REGIONS(MACRO_OPERATOR) \
   MACRO_OPERATOR(FLASH_REGION_FILESYSTEM_BEGIN, FLASH_REGION_FILESYSTEM_END)
 
 // Notes:
@@ -47,19 +47,18 @@ typedef struct FSRegion {
 // Bonus Fun fact: 'analytics_metric_table.h' uses this same strategy to turn our analytics list
 // into an enum, switch case statement, and AnalyticsMetricDataType array.
 
-#define FILE_SYSTEM_LAYOUT_CHECK(s, e) \
+#define FILE_SYSTEM_LAYOUT_CHECK(s, e)                                                        \
   _Static_assert((s % SECTOR_SIZE_BYTES) == 0, "Filesystem region start not sector aligned"); \
-  _Static_assert((e % SECTOR_SIZE_BYTES) == 0, "Filesystem end region not sector aligned"); \
+  _Static_assert((e % SECTOR_SIZE_BYTES) == 0, "Filesystem end region not sector aligned");
 
-#define FILE_SYSTEM_FS_REGION_ENTRY_CONSTRUCTOR(s, e) { .start = s, .end = e },
+#define FILE_SYSTEM_FS_REGION_ENTRY_CONSTRUCTOR(s, e) {.start = s, .end = e},
 
 // Make sure all the filesystem regions are flash sector aligned
 FILE_SYSTEM_REGIONS(FILE_SYSTEM_LAYOUT_CHECK)
 
 // Build the flash region list
 static const FSRegion s_region_list[] = {
-  FILE_SYSTEM_REGIONS(FILE_SYSTEM_FS_REGION_ENTRY_CONSTRUCTOR)
-};
+    FILE_SYSTEM_REGIONS(FILE_SYSTEM_FS_REGION_ENTRY_CONSTRUCTOR)};
 
 //! Erase all the regions that belong to our filesystem. Note that this is just a flash erase,
 //! if you want to leave behind a fully erased and initialized filesystem you should be using

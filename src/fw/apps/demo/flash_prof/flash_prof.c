@@ -40,18 +40,18 @@ static void do_timed_read(NumberWindow *nw, void *data) {
 #define NUM_BYTES 1000
 
 static void handle_init(void) {
-  number_window_init(&number_window, "Num Writes", (NumberWindowCallbacks) {
-    .selected = (NumberWindowCallback) do_timed_read,
-  }, NULL);
+  number_window_init(&number_window, "Num Writes",
+                     (NumberWindowCallbacks){
+                         .selected = (NumberWindowCallback)do_timed_read,
+                     },
+                     NULL);
   number_window_set_min(&number_window, 1000);
   number_window_set_max(&number_window, 1000000);
   number_window_set_step_size(&number_window, 1000);
   app_window_stack_push((Window *)&number_window, true);
 }
 
-static void handle_deinit(void) {
-
-}
+static void handle_deinit(void) {}
 
 static void s_main(void) {
   handle_init();
@@ -59,11 +59,9 @@ static void s_main(void) {
   handle_deinit();
 }
 
-const PebbleProcessMd* flash_prof_get_app_info() {
-  static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = &s_main,
-    .name = "Flash Prof"
-  };
+const PebbleProcessMd *flash_prof_get_app_info() {
+  static const PebbleProcessMdSystem s_app_info = {.common.main_func = &s_main,
+                                                   .name = "Flash Prof"};
 
-  return (const PebbleProcessMd*) &s_app_info;
+  return (const PebbleProcessMd *)&s_app_info;
 }

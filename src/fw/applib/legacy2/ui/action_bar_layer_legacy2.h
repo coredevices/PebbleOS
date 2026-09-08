@@ -110,8 +110,8 @@ typedef struct ActionBarLayerLegacy2 {
   struct Window *window;
   void *context;
   ClickConfigProvider click_config_provider;
-  unsigned is_highlighted:NUM_ACTION_BAR_LEGACY2_ITEMS;
-  GColor2 background_color:2;
+  unsigned is_highlighted : NUM_ACTION_BAR_LEGACY2_ITEMS;
+  GColor2 background_color : 2;
 } ActionBarLayerLegacy2;
 
 //! Initializes the action bar and reverts any state back to the default state:
@@ -143,7 +143,7 @@ void action_bar_layer_legacy2_destroy(ActionBarLayerLegacy2 *action_bar_layer);
 //! @return The "root" Layer of the action bar layer.
 //! @internal
 //! @note The result is always equal to `(Layer *) action_bar_layer`.
-Layer*action_bar_layer_legacy2_get_layer(ActionBarLayerLegacy2 *action_bar_layer);
+Layer *action_bar_layer_legacy2_get_layer(ActionBarLayerLegacy2 *action_bar_layer);
 
 //! Sets the context parameter, which will be passed in to \ref ClickHandler
 //! callbacks and the \ref ClickConfigProvider callback of the action bar.

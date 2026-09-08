@@ -28,15 +28,15 @@ typedef struct {
 //! This is because 2 pixels of white padding are placed around the progress
 //! bar, and the progress bar itself is bounded by a 2 pixel black rounded rect.
 //! For greatest sex appeal, make the progress bar larger than 8x8.
-void progress_layer_init(ProgressLayer* progress_layer, const GRect *frame);
+void progress_layer_init(ProgressLayer *progress_layer, const GRect *frame);
 
-void progress_layer_deinit(ProgressLayer* progress_layer);
+void progress_layer_deinit(ProgressLayer *progress_layer);
 
-void progress_layer_set_foreground_color(ProgressLayer* progress_layer, GColor color);
+void progress_layer_set_foreground_color(ProgressLayer *progress_layer, GColor color);
 
-void progress_layer_set_background_color(ProgressLayer* progress_layer, GColor color);
+void progress_layer_set_background_color(ProgressLayer *progress_layer, GColor color);
 //! Convenience function to set the progress layer's progress and mark the
 //! layer dirty.
-void progress_layer_set_progress(ProgressLayer* progress_layer, unsigned int progress_percent);
+void progress_layer_set_progress(ProgressLayer *progress_layer, unsigned int progress_percent);
 
-void progress_layer_set_corner_radius(ProgressLayer* progress_layer, uint16_t corner_radius);
+void progress_layer_set_corner_radius(ProgressLayer *progress_layer, uint16_t corner_radius);

@@ -86,7 +86,7 @@ void health_util_duration_to_hours_and_minutes_text_node(int duration_s, void *i
 //! @param[out] whole_part the whole part of the decimal representation
 //! @param[out] decimal_part the decimal part of the decimal representation
 void health_util_convert_fraction_to_whole_and_decimal_part(int numerator, int denominator,
-                                                            int* whole_part, int *decimal_part);
+                                                            int *whole_part, int *decimal_part);
 
 //! Formats a fraction into its whole and decimal parts, e.g. "42.3"
 //! @param[in,out] buffer the string buffer to write to

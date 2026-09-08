@@ -39,33 +39,28 @@ typedef struct {
   MenuLayerStyle style;
 } MenuDetailWindowData;
 
-
 static const MenuDetailRowData menu_detail_row_data_notifications[] = {
-  {"Liron Damir", "Late again. Sorry, I'll be on time in the future.", NULL},
-  {"Angela Tam", "Late again? Can you be on time for once?", NULL},
-  {"Eric Migicovsky", "Friday meeting will be held in the big room.", NULL},
-  {"Instagram", "Keep scrolling down.", NULL},
-  {"Liron Levak", "That's not my name.", NULL},
-  {"Kimberly North West Kardashian", "I broke the Internet again.", NULL},
-  {"Henry Damir", "That's not my name.", NULL},
-  {"Kevin Conley", "Wubalubadubdub!", NULL},
+    {"Liron Damir", "Late again. Sorry, I'll be on time in the future.", NULL},
+    {"Angela Tam", "Late again? Can you be on time for once?", NULL},
+    {"Eric Migicovsky", "Friday meeting will be held in the big room.", NULL},
+    {"Instagram", "Keep scrolling down.", NULL},
+    {"Liron Levak", "That's not my name.", NULL},
+    {"Kimberly North West Kardashian", "I broke the Internet again.", NULL},
+    {"Henry Damir", "That's not my name.", NULL},
+    {"Kevin Conley", "Wubalubadubdub!", NULL},
 };
 
 static const MenuDetailRowData menu_detail_row_data_days[] = {
-  {"Monday", NULL, NULL},
-  {"Tuesday", NULL, NULL},
-  {"Wednesday", NULL, NULL},
-  {"Thursday", NULL, NULL},
-  {"Friday", NULL, NULL},
-  {"Saturday", NULL, NULL},
-  {"Sunday", NULL, NULL},
+    {"Monday", NULL, NULL},   {"Tuesday", NULL, NULL}, {"Wednesday", NULL, NULL},
+    {"Thursday", NULL, NULL}, {"Friday", NULL, NULL},  {"Saturday", NULL, NULL},
+    {"Sunday", NULL, NULL},
 };
 
 static const MenuDetailRowData menu_detail_row_data_alarms[] = {
-  {"8:00 AM", "Workdays", "ON"},
-  {"10:00 AM", "Sat, Sun, Mon", "OFF"},
-  {"11:30 AM", "Weekends", "ON"},
-  {"5:00 PM", "Weekdays", "ON"},
+    {"8:00 AM", "Workdays", "ON"},
+    {"10:00 AM", "Sat, Sun, Mon", "OFF"},
+    {"11:30 AM", "Weekends", "ON"},
+    {"5:00 PM", "Weekdays", "ON"},
 };
 
 typedef struct {
@@ -79,44 +74,44 @@ typedef struct {
 static MenuDetailInfo prv_get_row_details_for_style(MenuLayerStyle style) {
   switch (style) {
     case MenuLayerStyleTitle:
-      return (MenuDetailInfo) {
-        .rows = menu_detail_row_data_notifications,
-        .num_rows = ARRAY_LENGTH(menu_detail_row_data_notifications),
-        .selected_cell_height = MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT,
-        .unselected_cell_height = MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT,
-        .highlight_background_color = GColorFolly,
+      return (MenuDetailInfo){
+          .rows = menu_detail_row_data_notifications,
+          .num_rows = ARRAY_LENGTH(menu_detail_row_data_notifications),
+          .selected_cell_height = MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT,
+          .unselected_cell_height = MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT,
+          .highlight_background_color = GColorFolly,
       };
     case MenuLayerStyleTitleAndSubtitle:
-      return (MenuDetailInfo) {
-        .rows = menu_detail_row_data_notifications,
-        .num_rows = ARRAY_LENGTH(menu_detail_row_data_notifications),
-        .selected_cell_height = MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT,
-        .unselected_cell_height = MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT,
-        .highlight_background_color = GColorIslamicGreen,
+      return (MenuDetailInfo){
+          .rows = menu_detail_row_data_notifications,
+          .num_rows = ARRAY_LENGTH(menu_detail_row_data_notifications),
+          .selected_cell_height = MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT,
+          .unselected_cell_height = MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT,
+          .highlight_background_color = GColorIslamicGreen,
       };
     case MenuLayerStyleTitleAndSubtitleAndIcon:
-      return (MenuDetailInfo) {
-        .rows = menu_detail_row_data_notifications,
-        .num_rows = ARRAY_LENGTH(menu_detail_row_data_notifications),
-        .selected_cell_height = MENU_CELL_ROUND_FOCUSED_TALL_CELL_HEIGHT,
-        .unselected_cell_height = MENU_CELL_ROUND_UNFOCUSED_SHORT_CELL_HEIGHT,
-        .highlight_background_color = GColorFolly,
+      return (MenuDetailInfo){
+          .rows = menu_detail_row_data_notifications,
+          .num_rows = ARRAY_LENGTH(menu_detail_row_data_notifications),
+          .selected_cell_height = MENU_CELL_ROUND_FOCUSED_TALL_CELL_HEIGHT,
+          .unselected_cell_height = MENU_CELL_ROUND_UNFOCUSED_SHORT_CELL_HEIGHT,
+          .highlight_background_color = GColorFolly,
       };
     case MenuLayerStyleTitleAndIconOnRight:
-      return (MenuDetailInfo) {
-        .rows = menu_detail_row_data_days,
-        .num_rows = ARRAY_LENGTH(menu_detail_row_data_days),
-        .selected_cell_height = menu_cell_basic_cell_height(),
-        .unselected_cell_height = MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT,
-        .highlight_background_color = GColorIslamicGreen,
+      return (MenuDetailInfo){
+          .rows = menu_detail_row_data_days,
+          .num_rows = ARRAY_LENGTH(menu_detail_row_data_days),
+          .selected_cell_height = menu_cell_basic_cell_height(),
+          .unselected_cell_height = MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT,
+          .highlight_background_color = GColorIslamicGreen,
       };
     case MenuLayerStyleTitleAndSubtitleAndValue:
-      return (MenuDetailInfo) {
-        .rows = menu_detail_row_data_alarms,
-        .num_rows = ARRAY_LENGTH(menu_detail_row_data_alarms),
-        .selected_cell_height = MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT,
-        .unselected_cell_height = MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT,
-        .highlight_background_color = GColorIslamicGreen,
+      return (MenuDetailInfo){
+          .rows = menu_detail_row_data_alarms,
+          .num_rows = ARRAY_LENGTH(menu_detail_row_data_alarms),
+          .selected_cell_height = MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT,
+          .unselected_cell_height = MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT,
+          .highlight_background_color = GColorIslamicGreen,
       };
     default:
       WTF;
@@ -126,9 +121,8 @@ static MenuDetailInfo prv_get_row_details_for_style(MenuLayerStyle style) {
 static int16_t prv_get_cell_height_for_menu_layer(MenuLayer *menu_layer, MenuIndex *cell_index,
                                                   MenuLayerStyle style) {
   const MenuDetailInfo row_details = prv_get_row_details_for_style(style);
-  return menu_layer_is_index_selected(menu_layer, cell_index) ?
-         row_details.selected_cell_height :
-         row_details.unselected_cell_height;
+  return menu_layer_is_index_selected(menu_layer, cell_index) ? row_details.selected_cell_height
+                                                              : row_details.unselected_cell_height;
 }
 
 static int16_t prv_menu_detail_get_cell_height(struct MenuLayer *menu_layer, MenuIndex *cell_index,
@@ -136,8 +130,7 @@ static int16_t prv_menu_detail_get_cell_height(struct MenuLayer *menu_layer, Men
   MenuDetailWindowData *data = context;
   return prv_get_cell_height_for_menu_layer(menu_layer, cell_index, data->style);
 }
-static uint16_t prv_menu_detail_get_num_rows_callback(MenuLayer *menu_layer,
-                                                      uint16_t section_index,
+static uint16_t prv_menu_detail_get_num_rows_callback(MenuLayer *menu_layer, uint16_t section_index,
                                                       void *context) {
   MenuDetailWindowData *data = context;
   return prv_get_row_details_for_style(data->style).num_rows;
@@ -183,8 +176,8 @@ static void prv_menu_detail_draw_row(GContext *ctx, const Layer *cell_layer,
   }
 }
 
-static void prv_menu_detail_draw_row_callback(GContext* ctx, const Layer *cell_layer,
-                                               MenuIndex *cell_index, void *context) {
+static void prv_menu_detail_draw_row_callback(GContext *ctx, const Layer *cell_layer,
+                                              MenuIndex *cell_index, void *context) {
   MenuDetailWindowData *data = context;
   const MenuDetailInfo menu_info = prv_get_row_details_for_style(data->style);
   MenuDetailRowData row_data = menu_info.rows[cell_index->row];
@@ -195,14 +188,15 @@ static void prv_detail_window_load(Window *window) {
   MenuDetailWindowData *data = window_get_user_data(window);
 
   MenuLayer *menu_layer = &data->menu_layer;
-  const GRect menu_layer_frame = grect_inset_internal(window->layer.bounds, 0,
-                                                      STATUS_BAR_LAYER_HEIGHT);
+  const GRect menu_layer_frame =
+      grect_inset_internal(window->layer.bounds, 0, STATUS_BAR_LAYER_HEIGHT);
   menu_layer_init(menu_layer, &menu_layer_frame);
-  menu_layer_set_callbacks(menu_layer, data, &(MenuLayerCallbacks) {
-    .get_cell_height = prv_menu_detail_get_cell_height,
-    .get_num_rows = prv_menu_detail_get_num_rows_callback,
-    .draw_row = prv_menu_detail_draw_row_callback,
-  });
+  menu_layer_set_callbacks(menu_layer, data,
+                           &(MenuLayerCallbacks){
+                               .get_cell_height = prv_menu_detail_get_cell_height,
+                               .get_num_rows = prv_menu_detail_get_num_rows_callback,
+                               .draw_row = prv_menu_detail_draw_row_callback,
+                           });
   menu_layer_set_click_config_onto_window(menu_layer, window);
   menu_layer_set_selected_index(menu_layer, MenuIndex(0, 1), MenuRowAlignCenter, false);
   const MenuDetailInfo menu_info = prv_get_row_details_for_style(data->style);
@@ -228,10 +222,10 @@ static void prv_push_detail_window(MenuLayerStyle menu_layer_style) {
   Window *window = &data->window;
   window_init(window, WINDOW_NAME("MenuLayer Round Demo Detail Menu"));
   window_set_user_data(window, data);
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_detail_window_load,
-    .unload = prv_detail_window_unload,
-  });
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_detail_window_load,
+                                         .unload = prv_detail_window_unload,
+                                     });
   const bool animated = true;
   app_window_stack_push(window, animated);
 }
@@ -251,11 +245,11 @@ typedef struct {
 } MenuChooserRowData;
 
 static const MenuChooserRowData menu_chooser_row_data[] = {
-  {"Title Only", MenuLayerStyleTitle},
-  {"Title & Subtitle", MenuLayerStyleTitleAndSubtitle},
-  {"Title & Right Icon", MenuLayerStyleTitleAndIconOnRight},
-  {"Title, Sub, Value", MenuLayerStyleTitleAndSubtitleAndValue},
-  {"Title, Sub, Icon", MenuLayerStyleTitleAndSubtitleAndIcon},
+    {"Title Only", MenuLayerStyleTitle},
+    {"Title & Subtitle", MenuLayerStyleTitleAndSubtitle},
+    {"Title & Right Icon", MenuLayerStyleTitleAndIconOnRight},
+    {"Title, Sub, Value", MenuLayerStyleTitleAndSubtitleAndValue},
+    {"Title, Sub, Icon", MenuLayerStyleTitleAndSubtitleAndIcon},
 };
 
 static int16_t prv_menu_chooser_get_cell_height(struct MenuLayer *menu_layer, MenuIndex *cell_index,
@@ -264,12 +258,11 @@ static int16_t prv_menu_chooser_get_cell_height(struct MenuLayer *menu_layer, Me
 }
 
 static uint16_t prv_menu_chooser_get_num_rows_callback(struct MenuLayer *menu_layer,
-                                                       uint16_t section_index,
-                                                       void *context) {
+                                                       uint16_t section_index, void *context) {
   return ARRAY_LENGTH(menu_chooser_row_data);
 }
 
-static void prv_menu_chooser_draw_row_callback(GContext* ctx, const Layer *cell_layer,
+static void prv_menu_chooser_draw_row_callback(GContext *ctx, const Layer *cell_layer,
                                                MenuIndex *cell_index, void *context) {
   MenuChooserRowData row_data = menu_chooser_row_data[cell_index->row];
   menu_cell_basic_draw(ctx, cell_layer, row_data.title, NULL, NULL);
@@ -284,15 +277,16 @@ static void prv_window_load(Window *window) {
   MenuChooserData *data = window_get_user_data(window);
 
   MenuLayer *menu_layer = &data->menu_layer;
-  const GRect menu_layer_frame = grect_inset_internal(window->layer.bounds, 0,
-                                                      STATUS_BAR_LAYER_HEIGHT);
+  const GRect menu_layer_frame =
+      grect_inset_internal(window->layer.bounds, 0, STATUS_BAR_LAYER_HEIGHT);
   menu_layer_init(menu_layer, &menu_layer_frame);
-  menu_layer_set_callbacks(menu_layer, data, &(MenuLayerCallbacks) {
-    .get_cell_height = prv_menu_chooser_get_cell_height,
-    .get_num_rows = prv_menu_chooser_get_num_rows_callback,
-    .draw_row = prv_menu_chooser_draw_row_callback,
-    .select_click = prv_menu_chooser_select_callback,
-  });
+  menu_layer_set_callbacks(menu_layer, data,
+                           &(MenuLayerCallbacks){
+                               .get_cell_height = prv_menu_chooser_get_cell_height,
+                               .get_num_rows = prv_menu_chooser_get_num_rows_callback,
+                               .draw_row = prv_menu_chooser_draw_row_callback,
+                               .select_click = prv_menu_chooser_select_callback,
+                           });
   menu_layer_set_click_config_onto_window(menu_layer, window);
   menu_layer_set_selected_index(menu_layer, MenuIndex(0, 1), MenuRowAlignCenter, false);
   menu_layer_set_highlight_colors(menu_layer, GColorPictonBlue, GColorWhite);
@@ -320,10 +314,10 @@ static void prv_init(void) {
   Window *window = &data->window;
   window_init(window, WINDOW_NAME("MenuLayer Round Demo Chooser Menu"));
   window_set_user_data(window, data);
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_window_load,
-    .unload = prv_window_unload,
-  });
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_window_load,
+                                         .unload = prv_window_unload,
+                                     });
   const bool animated = true;
   app_window_stack_push(window, animated);
 }
@@ -339,10 +333,8 @@ static void s_main(void) {
   prv_deinit();
 }
 
-const PebbleProcessMd* menu_round_app_get_info() {
-  static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = &s_main,
-    .name = "MenuLayer Round Demo"
-  };
-  return (const PebbleProcessMd*) &s_app_info;
+const PebbleProcessMd *menu_round_app_get_info() {
+  static const PebbleProcessMdSystem s_app_info = {.common.main_func = &s_main,
+                                                   .name = "MenuLayer Round Demo"};
+  return (const PebbleProcessMd *)&s_app_info;
 }

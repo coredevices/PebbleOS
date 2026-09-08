@@ -44,7 +44,7 @@ static int prv_access_data_write(uint16_t conn_handle, uint16_t attr_handle,
   uint16_t out_len = 0;
   int rc = ble_hs_mbuf_to_flat(ctxt->om, buf, pkt_len, &out_len);
   if (rc != 0) {
-    PBL_LOG_ERR("Reversed PPoG write flatten failed: 0x%04x", (uint16_t) rc);
+    PBL_LOG_ERR("Reversed PPoG write flatten failed: 0x%04x", (uint16_t)rc);
     kernel_free(buf);
     return BLE_ATT_ERR_UNLIKELY;
   }
@@ -131,8 +131,7 @@ void ppog_reversed_service_init(void) {
   PBL_ASSERTN(rc == 0 || rc == BLE_HS_EALREADY);
 }
 
-BTErrno bt_driver_ppog_reversed_notify(uint16_t conn_handle,
-                                       const uint8_t *buf, uint16_t len) {
+BTErrno bt_driver_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf, uint16_t len) {
   struct os_mbuf *om = ble_hs_mbuf_from_flat(buf, len);
   if (!om) {
     return BTErrnoNotEnoughResources;
@@ -147,7 +146,7 @@ BTErrno bt_driver_ppog_reversed_notify(uint16_t conn_handle,
     case BLE_HS_ENOTCONN:
       return BTErrnoInvalidState;
     default:
-      PBL_LOG_ERR("ble_gatts_notify_custom failed: 0x%04x", (uint16_t) rc);
+      PBL_LOG_ERR("ble_gatts_notify_custom failed: 0x%04x", (uint16_t)rc);
       return (BTErrno)(BTErrnoInternalErrorBegin + rc);
   }
 }

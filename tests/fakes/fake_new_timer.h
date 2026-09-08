@@ -17,11 +17,11 @@ typedef struct StubTimer {
   //! (s_idle_timers)
   ListNode list_node;
 
-  TimerID id; //<! ID assigned to this timer
+  TimerID id;  //<! ID assigned to this timer
 
   //! client provided callback function and argument
   NewTimerCallback cb;
-  void* cb_data;
+  void *cb_data;
 
   //! The tick value when this timer will expire (in milliseconds). If the timer isn't currently
   //! running (scheduled) this value will be zero.
@@ -39,8 +39,6 @@ typedef struct StubTimer {
 
 } StubTimer;
 
-
-
 // =============================================================================================
 // Stubs
 static ListNode *s_running_timers = NULL;
@@ -57,7 +55,7 @@ static int s_num_new_timer_schedule_calls = 0;
 static TimerID s_new_timer_start_param_timer_id;
 static uint32_t s_new_timer_start_param_timeout_ms;
 static NewTimerCallback s_new_timer_start_param_cb;
-static void * s_new_timer_start_param_cb_data;
+static void *s_new_timer_start_param_cb_data;
 
 // Debug utility
 /*
@@ -77,32 +75,29 @@ static void prv_print_idle_list(char* title) {
 }
 */
 
-
-static bool prv_id_list_filter(ListNode* node, void* data) {
-  StubTimer* timer = (StubTimer*)node;
-  return timer->id == (uint32_t) data;
+static bool prv_id_list_filter(ListNode *node, void *data) {
+  StubTimer *timer = (StubTimer *)node;
+  return timer->id == (uint32_t)data;
 }
 
-static StubTimer* prv_find_timer(TimerID timer_id)
-{
+static StubTimer *prv_find_timer(TimerID timer_id) {
   // Look for this timer in either the running or idle list
-  ListNode* node = list_find(s_running_timers, prv_id_list_filter, (void*)(intptr_t)timer_id);
+  ListNode *node = list_find(s_running_timers, prv_id_list_filter, (void *)(intptr_t)timer_id);
   if (!node) {
-    node = list_find(s_idle_timers, prv_id_list_filter, (void*)(intptr_t)timer_id);
+    node = list_find(s_idle_timers, prv_id_list_filter, (void *)(intptr_t)timer_id);
   }
   return (StubTimer *)node;
 }
 
-static int prv_timer_expire_compare_func(void* a, void* b) {
-  return (((StubTimer*)b)->timeout_ms - ((StubTimer*)a)->timeout_ms);
+static int prv_timer_expire_compare_func(void *a, void *b) {
+  return (((StubTimer *)b)->timeout_ms - ((StubTimer *)a)->timeout_ms);
 }
 
-
 static int stub_new_timer_create(void) {
-  StubTimer *timer = (StubTimer *) kernel_malloc(sizeof(StubTimer));
+  StubTimer *timer = (StubTimer *)kernel_malloc(sizeof(StubTimer));
   static int s_next_timer_id = 1;
-  *timer = (StubTimer) {
-    .id = s_next_timer_id++,
+  *timer = (StubTimer){
+      .id = s_next_timer_id++,
   };
   s_idle_timers = list_insert_before(s_idle_timers, &timer->list_node);
   return timer->id;
@@ -113,7 +108,7 @@ static int stub_new_timer_create(void) {
 //
 bool stub_new_timer_start(TimerID timer_id, uint32_t timeout_ms, NewTimerCallback cb, void *cb_data,
                           uint32_t flags) {
-  StubTimer* timer = prv_find_timer(timer_id);
+  StubTimer *timer = prv_find_timer(timer_id);
 
   // Remove it from its current list
   if (list_contains(s_running_timers, &timer->list_node)) {
@@ -130,13 +125,13 @@ bool stub_new_timer_start(TimerID timer_id, uint32_t timeout_ms, NewTimerCallbac
   timer->period_ms = timeout_ms;
 
   // Insert into sorted order in the running list
-  s_running_timers = list_sorted_add(s_running_timers, &timer->list_node,
-                                     prv_timer_expire_compare_func, true);
+  s_running_timers =
+      list_sorted_add(s_running_timers, &timer->list_node, prv_timer_expire_compare_func, true);
   return true;
 }
 
 bool stub_new_timer_stop(TimerID timer_id) {
-  StubTimer* timer = prv_find_timer(timer_id);
+  StubTimer *timer = prv_find_timer(timer_id);
 
   // Move it to the idle list if it's currently running
   if (list_contains(s_running_timers, &timer->list_node)) {
@@ -152,7 +147,7 @@ bool stub_new_timer_stop(TimerID timer_id) {
 }
 
 void stub_new_timer_delete(TimerID timer_id) {
-  StubTimer* timer = prv_find_timer(timer_id);
+  StubTimer *timer = prv_find_timer(timer_id);
 
   // Automatically stop it if it it's not stopped already
   if (list_contains(s_running_timers, &timer->list_node)) {
@@ -160,7 +155,7 @@ void stub_new_timer_delete(TimerID timer_id) {
     list_remove(&timer->list_node, &s_running_timers /* &head */, NULL /* &tail */);
     s_idle_timers = list_insert_before(s_idle_timers, &timer->list_node);
   }
-  timer->repeating = false; // In case it's currently executing, make sure we don't reschedule it
+  timer->repeating = false;  // In case it's currently executing, make sure we don't reschedule it
 
   if (!timer->executing) {
     list_remove(&timer->list_node, &s_idle_timers /* &head */, NULL /* &tail */);
@@ -171,7 +166,7 @@ void stub_new_timer_delete(TimerID timer_id) {
 }
 
 bool stub_new_timer_is_scheduled(TimerID timer_id) {
-  StubTimer* timer = prv_find_timer(timer_id);
+  StubTimer *timer = prv_find_timer(timer_id);
   if (timer == NULL) {
     return false;
   }
@@ -179,7 +174,7 @@ bool stub_new_timer_is_scheduled(TimerID timer_id) {
 }
 
 uint32_t stub_new_timer_timeout(TimerID timer_id) {
-  StubTimer* timer = prv_find_timer(timer_id);
+  StubTimer *timer = prv_find_timer(timer_id);
   if (timer == NULL) {
     return false;
   }
@@ -189,13 +184,13 @@ uint32_t stub_new_timer_timeout(TimerID timer_id) {
 // Mark the timer as executing. This prevents it from getting deleted. In the real implementation,
 // it would get deleted after it's callback returned
 void stub_new_timer_set_executing(TimerID timer_id, bool set) {
-  StubTimer* timer = prv_find_timer(timer_id);
+  StubTimer *timer = prv_find_timer(timer_id);
   PBL_ASSERTN(timer != NULL);
   timer->executing = true;
 }
 
-void * stub_new_timer_callback_data(TimerID timer_id) {
-  StubTimer* timer = prv_find_timer(timer_id);
+void *stub_new_timer_callback_data(TimerID timer_id) {
+  StubTimer *timer = prv_find_timer(timer_id);
   if (timer == NULL) {
     return false;
   }
@@ -203,7 +198,7 @@ void * stub_new_timer_callback_data(TimerID timer_id) {
 }
 
 bool stub_new_timer_fire(TimerID timer_id) {
-  StubTimer* timer = prv_find_timer(timer_id);
+  StubTimer *timer = prv_find_timer(timer_id);
   if (timer == NULL) {
     return false;
   }
@@ -236,18 +231,18 @@ bool stub_new_timer_fire(TimerID timer_id) {
 }
 
 void stub_new_timer_cleanup(void) {
-  StubTimer *node = (StubTimer *) s_running_timers;
+  StubTimer *node = (StubTimer *)s_running_timers;
   while (node) {
-    StubTimer *next = (StubTimer *) list_get_next(&node->list_node);
+    StubTimer *next = (StubTimer *)list_get_next(&node->list_node);
     list_remove(&node->list_node, &s_running_timers, NULL);
     kernel_free(node);
     node = next;
   }
   PBL_ASSERTN(s_running_timers == NULL);
 
-  node = (StubTimer *) s_idle_timers;
+  node = (StubTimer *)s_idle_timers;
   while (node) {
-    StubTimer *next = (StubTimer *) list_get_next(&node->list_node);
+    StubTimer *next = (StubTimer *)list_get_next(&node->list_node);
     list_remove(&node->list_node, &s_idle_timers, NULL);
     kernel_free(node);
     node = next;
@@ -256,7 +251,7 @@ void stub_new_timer_cleanup(void) {
 }
 
 TimerID stub_new_timer_get_next(void) {
-  StubTimer *timer = (StubTimer *) list_get_head(s_running_timers);
+  StubTimer *timer = (StubTimer *)list_get_head(s_running_timers);
   return timer ? timer->id : TIMER_INVALID_ID;
 }
 
@@ -304,4 +299,3 @@ bool new_timer_scheduled(TimerID timer, uint32_t *expire_ms_p) {
   s_num_new_timer_schedule_calls++;
   return stub_new_timer_is_scheduled(timer);
 }
-

@@ -19,9 +19,7 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 
-bool workout_service_is_workout_type_supported(ActivitySessionType type) {
-  return true;
-}
+bool workout_service_is_workout_type_supported(ActivitySessionType type) { return true; }
 
 // Fakes
 ///////////////////////////////////////////////////////////
@@ -41,12 +39,9 @@ bool activity_get_sessions(uint32_t *session_entries, ActivitySession *sessions)
 }
 
 // ---------------------------------------------------------------------------------------
-void test_workout_utils__initialize(void) {
-  s_num_sessions = 0;
-}
+void test_workout_utils__initialize(void) { s_num_sessions = 0; }
 
-void test_workout_utils__cleanup(void) {
-}
+void test_workout_utils__cleanup(void) {}
 
 // ---------------------------------------------------------------------------------------
 // Tests
@@ -63,8 +58,8 @@ void test_workout_utils__find_ongoing_activity_session(void) {
 
   // Add a non-ongoing walk session
   prv_add_session(&(ActivitySession){
-    .type = ActivitySessionType_Walk,
-    .ongoing = false,
+      .type = ActivitySessionType_Walk,
+      .ongoing = false,
   });
 
   // Make sure the session was added
@@ -79,8 +74,8 @@ void test_workout_utils__find_ongoing_activity_session(void) {
 
   // Add an ongoing run session
   prv_add_session(&(ActivitySession){
-    .type = ActivitySessionType_Run,
-    .ongoing = true,
+      .type = ActivitySessionType_Run,
+      .ongoing = true,
   });
 
   // Make sure the session was added

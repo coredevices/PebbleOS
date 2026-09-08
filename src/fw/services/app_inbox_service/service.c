@@ -57,7 +57,6 @@ typedef struct AppInboxConsumerInfo {
   uint8_t *end;
 } AppInboxConsumerInfo;
 
-
 _Static_assert(sizeof(AppInboxServiceTag) <= sizeof(void *),
                "AppInboxServiceTag should fit inside a void *");
 
@@ -89,20 +88,22 @@ static AppInboxServiceTag prv_tag_for_event_handlers(const AppInboxMessageHandle
   static const struct {
     AppInboxMessageHandler message_handler;
     AppInboxDroppedHandler dropped_handler;
-  } s_event_handler_map[] = {
-    [AppInboxServiceTagAppMessageReceiver] = {
-      .message_handler = app_message_receiver_message_handler,
-      .dropped_handler = app_message_receiver_dropped_handler,
-    },
+  } s_event_handler_map[] = {[AppInboxServiceTagAppMessageReceiver] =
+                                 {
+                                     .message_handler = app_message_receiver_message_handler,
+                                     .dropped_handler = app_message_receiver_dropped_handler,
+                                 },
 #ifdef UNITTEST
-    [AppInboxServiceTagUnitTest] = {
-      .message_handler = test_message_handler,
-      .dropped_handler = test_dropped_handler,
-    },
-    [AppInboxServiceTagUnitTestAlt] = {
-      .message_handler = test_alt_message_handler,
-      .dropped_handler = test_alt_dropped_handler,
-    }
+                             [AppInboxServiceTagUnitTest] =
+                                 {
+                                     .message_handler = test_message_handler,
+                                     .dropped_handler = test_dropped_handler,
+                                 },
+                             [AppInboxServiceTagUnitTestAlt] =
+                                 {
+                                     .message_handler = test_alt_message_handler,
+                                     .dropped_handler = test_alt_dropped_handler,
+                                 }
 #endif
   };
   for (AppInboxServiceTag tag = 0; tag < NumAppInboxServiceTag; ++tag) {
@@ -119,17 +120,17 @@ DEFINE_SYSCALL(bool, sys_app_inbox_service_register, uint8_t *storage, size_t st
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(storage, storage_size);
   }
-  const AppInboxServiceTag service_tag = prv_tag_for_event_handlers(message_handler,
-                                                                    dropped_handler);
+  const AppInboxServiceTag service_tag =
+      prv_tag_for_event_handlers(message_handler, dropped_handler);
   if (AppInboxServiceTagInvalid == service_tag) {
-    PBL_LOG_ERR("AppInbox event handlers not allowed <0x%"PRIx32", 0x%"PRIx32">",
-            // Ugh.. no more format signature slots free for %p %p...
-            (uint32_t)(uintptr_t)message_handler, (uint32_t)(uintptr_t)dropped_handler);
+    PBL_LOG_ERR("AppInbox event handlers not allowed <0x%" PRIx32 ", 0x%" PRIx32 ">",
+                // Ugh.. no more format signature slots free for %p %p...
+                (uint32_t)(uintptr_t)message_handler, (uint32_t)(uintptr_t)dropped_handler);
     syscall_failed();
   }
 
-  return app_inbox_service_register(storage, storage_size,
-                                    message_handler, dropped_handler, service_tag);
+  return app_inbox_service_register(storage, storage_size, message_handler, dropped_handler,
+                                    service_tag);
 }
 
 DEFINE_SYSCALL(uint32_t, sys_app_inbox_service_unregister, uint8_t *storage) {
@@ -139,8 +140,8 @@ DEFINE_SYSCALL(uint32_t, sys_app_inbox_service_unregister, uint8_t *storage) {
 
 static bool prv_get_consumer_info(AppInboxServiceTag tag, AppInboxConsumerInfo *info_in_out);
 
-DEFINE_SYSCALL(bool, sys_app_inbox_service_get_consumer_info,
-               AppInboxServiceTag tag, AppInboxConsumerInfo *info_out) {
+DEFINE_SYSCALL(bool, sys_app_inbox_service_get_consumer_info, AppInboxServiceTag tag,
+               AppInboxConsumerInfo *info_out) {
   if (PRIVILEGE_WAS_ELEVATED) {
     if (info_out) {
       syscall_assert_userspace_buffer(info_out, sizeof(*info_out));
@@ -166,17 +167,15 @@ static void prv_lock(void) {
   pbl_mutex_lock(&s_app_inbox_mutex, PBL_FOREVER);
 }
 
-static void prv_unlock(void) {
-  pbl_mutex_unlock(&s_app_inbox_mutex);
-}
+static void prv_unlock(void) { pbl_mutex_unlock(&s_app_inbox_mutex); }
 
 static bool prv_list_filter_by_storage(ListNode *found_node, void *data) {
   return ((AppInboxNode *)found_node)->buffer.storage == (uint8_t *)data;
 }
 
 static AppInboxNode *prv_find_inbox_by_storage(uint8_t *storage) {
-  return (AppInboxNode *) list_find((ListNode *)s_app_inbox_head,
-                                    prv_list_filter_by_storage, storage);
+  return (AppInboxNode *)list_find((ListNode *)s_app_inbox_head, prv_list_filter_by_storage,
+                                   storage);
 }
 
 static bool prv_list_filter_by_tag(ListNode *found_node, void *data) {
@@ -184,8 +183,8 @@ static bool prv_list_filter_by_tag(ListNode *found_node, void *data) {
 }
 
 static AppInboxNode *prv_find_inbox_by_tag(AppInboxServiceTag tag) {
-  return (AppInboxNode *) list_find((ListNode *)s_app_inbox_head,
-                                    prv_list_filter_by_tag, (void *)(uintptr_t)tag);
+  return (AppInboxNode *)list_find((ListNode *)s_app_inbox_head, prv_list_filter_by_tag,
+                                   (void *)(uintptr_t)tag);
 }
 
 static AppInboxNode *prv_find_inbox_by_tag_and_log_if_not_found(AppInboxServiceTag tag) {
@@ -209,9 +208,8 @@ static void prv_consume(AppInboxConsumerInfo *consumer_info) {
       goto unlock;
     }
     uint8_t *const consumed_up_to_ptr = consumer_info->it;
-    uint8_t * const completed_messages_end = (inbox->buffer.storage + inbox->buffer.write_index);
-    if (consumed_up_to_ptr < inbox->buffer.storage ||
-        consumed_up_to_ptr > completed_messages_end) {
+    uint8_t *const completed_messages_end = (inbox->buffer.storage + inbox->buffer.write_index);
+    if (consumed_up_to_ptr < inbox->buffer.storage || consumed_up_to_ptr > completed_messages_end) {
       PBL_LOG_ERR("Out of bounds");
       goto unlock;
     }
@@ -219,7 +217,7 @@ static void prv_consume(AppInboxConsumerInfo *consumer_info) {
     if (0 == bytes_consumed) {
       goto unlock;
     }
-    uint8_t * const partial_message_end = completed_messages_end + inbox->buffer.current_offset;
+    uint8_t *const partial_message_end = completed_messages_end + inbox->buffer.current_offset;
     const size_t remaining_size = partial_message_end - consumed_up_to_ptr;
     consumer_info->it = inbox->buffer.storage;
     consumer_info->end = inbox->buffer.storage + remaining_size;
@@ -245,14 +243,14 @@ static bool prv_get_consumer_info(AppInboxServiceTag tag, AppInboxConsumerInfo *
       goto unlock;
     }
 
-    *info_out = (const AppInboxConsumerInfo) {
-      .tag = tag,
-      .message_handler = inbox->message_handler,
-      .dropped_handler = inbox->dropped_handler,
-      .num_failed = inbox->num_failed,
-      .num_success = inbox->num_success,
-      .it = inbox->buffer.storage,
-      .end = inbox->buffer.storage + inbox->buffer.write_index,
+    *info_out = (const AppInboxConsumerInfo){
+        .tag = tag,
+        .message_handler = inbox->message_handler,
+        .dropped_handler = inbox->dropped_handler,
+        .num_failed = inbox->num_failed,
+        .num_success = inbox->num_success,
+        .it = inbox->buffer.storage,
+        .end = inbox->buffer.storage + inbox->buffer.write_index,
     };
 
     // Also mark that there is no event pending any more:
@@ -310,8 +308,7 @@ static void prv_callback_event_handler(void *ctx) {
     if (info.dropped_handler) {
       info.dropped_handler(info.num_failed);
     } else {
-      PBL_LOG_ERR("Dropped %"PRIu32" messages but no dropped_handler",
-              info.num_failed);
+      PBL_LOG_ERR("Dropped %" PRIu32 " messages but no dropped_handler", info.num_failed);
     }
   }
 
@@ -354,8 +351,8 @@ bool app_inbox_service_register(uint8_t *storage, size_t storage_size,
       new_node->event_handler_task = pebble_task_get_current();
       new_node->buffer.storage = storage;
       new_node->buffer.size = storage_size;
-      s_app_inbox_head = (AppInboxNode *)list_prepend((ListNode *)s_app_inbox_head,
-                                                      (ListNode *)new_node);
+      s_app_inbox_head =
+          (AppInboxNode *)list_prepend((ListNode *)s_app_inbox_head, (ListNode *)new_node);
     }
   }
   prv_unlock();
@@ -383,7 +380,7 @@ void app_inbox_service_unregister_all(void) {
   {
     AppInboxNode *node = s_app_inbox_head;
     while (node) {
-      AppInboxNode *next = (AppInboxNode *) node->node.next;
+      AppInboxNode *next = (AppInboxNode *)node->node.next;
       kernel_free(node);
       node = next;
     }
@@ -392,9 +389,7 @@ void app_inbox_service_unregister_all(void) {
   prv_unlock();
 }
 
-static bool prv_is_inbox_being_written(AppInboxNode *inbox) {
-  return (inbox->writer != NULL);
-}
+static bool prv_is_inbox_being_written(AppInboxNode *inbox) { return (inbox->writer != NULL); }
 
 static size_t prv_get_space_remaining(AppInboxNode *inbox) {
   return (inbox->buffer.size - inbox->buffer.write_index - inbox->buffer.current_offset);
@@ -403,8 +398,8 @@ static size_t prv_get_space_remaining(AppInboxNode *inbox) {
 bool prv_check_space_remaining(AppInboxNode *inbox, size_t required_free_length) {
   const size_t space_remaining = prv_get_space_remaining(inbox);
   if (required_free_length > space_remaining) {
-    PBL_LOG_ERR("Dropping data, not enough space %"PRIu32" vs %"PRIu32,
-            (uint32_t)required_free_length, (uint32_t)space_remaining);
+    PBL_LOG_ERR("Dropping data, not enough space %" PRIu32 " vs %" PRIu32,
+                (uint32_t)required_free_length, (uint32_t)space_remaining);
     return false;
   }
   return true;
@@ -415,14 +410,15 @@ static void prv_send_event_if_needed(AppInboxNode *inbox) {
     return;
   }
   PebbleEvent event = {
-    .type = PEBBLE_CALLBACK_EVENT,
-    .callback = {
-      .callback = prv_callback_event_handler,
-      .data = (void *)(uintptr_t) inbox->tag,
-    },
+      .type = PEBBLE_CALLBACK_EVENT,
+      .callback =
+          {
+              .callback = prv_callback_event_handler,
+              .data = (void *)(uintptr_t)inbox->tag,
+          },
   };
-  const bool is_event_enqueued = process_manager_send_event_to_process(inbox->event_handler_task,
-                                                                       &event);
+  const bool is_event_enqueued =
+      process_manager_send_event_to_process(inbox->event_handler_task, &event);
   if (!is_event_enqueued) {
     PBL_LOG_ERR("Event queue full");
   }
@@ -489,8 +485,8 @@ bool app_inbox_service_write(AppInboxServiceTag tag, const uint8_t *data, size_t
       inbox->write_failed = true;
       goto unlock;
     }
-    memcpy(inbox->buffer.storage + inbox->buffer.write_index + inbox->buffer.current_offset,
-           data, length);
+    memcpy(inbox->buffer.storage + inbox->buffer.write_index + inbox->buffer.current_offset, data,
+           length);
     inbox->buffer.current_offset += length;
     success = true;
   }
@@ -504,8 +500,7 @@ static void prv_finish(AppInboxNode *inbox) {
   inbox->buffer.current_offset = 0;
 }
 
-void app_inbox_service_init(void) {
-}
+void app_inbox_service_init(void) {}
 
 bool app_inbox_service_end(AppInboxServiceTag tag) {
   bool success = false;
@@ -519,10 +514,10 @@ bool app_inbox_service_end(AppInboxServiceTag tag) {
     if (inbox->write_failed) {
       ++inbox->num_failed;
     } else {
-      const AppInboxMessageHeader header = (const AppInboxMessageHeader) {
-        .length = inbox->buffer.current_offset - sizeof(AppInboxMessageHeader),
-        // Fill with something that might aid debugging one day:
-        .padding = { 0xaa, 0xaa, 0xaa, 0xaa },
+      const AppInboxMessageHeader header = (const AppInboxMessageHeader){
+          .length = inbox->buffer.current_offset - sizeof(AppInboxMessageHeader),
+          // Fill with something that might aid debugging one day:
+          .padding = {0xaa, 0xaa, 0xaa, 0xaa},
       };
       memcpy(inbox->buffer.storage + inbox->buffer.write_index, &header, sizeof(header));
       inbox->buffer.write_index += inbox->buffer.current_offset;

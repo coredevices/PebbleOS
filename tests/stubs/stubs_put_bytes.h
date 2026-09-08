@@ -7,4 +7,3 @@
 #include "pbl/util/attributes.h"
 
 void WEAK put_bytes_cancel(void) {}
-

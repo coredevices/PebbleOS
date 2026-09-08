@@ -19,7 +19,7 @@ typedef struct {
   int num_samps;
 } LeConnectionParams;
 
-static LeConnectionParams s_le_conn_params = { 0 };
+static LeConnectionParams s_le_conn_params = {0};
 
 void bluetooth_analytics_get_param_averages(uint16_t *params) {
   int num_samps = s_le_conn_params.num_samps;
@@ -31,8 +31,7 @@ void bluetooth_analytics_get_param_averages(uint16_t *params) {
   s_le_conn_params = (LeConnectionParams){};
 }
 
-static void prv_update_conn_params(uint16_t slave_latency_events,
-                                   uint16_t supervision_to_10ms) {
+static void prv_update_conn_params(uint16_t slave_latency_events, uint16_t supervision_to_10ms) {
   bt_lock();
   s_le_conn_params.slave_latency_events += slave_latency_events;
   s_le_conn_params.supervision_to_ms += (supervision_to_10ms * 10);
@@ -40,8 +39,7 @@ static void prv_update_conn_params(uint16_t slave_latency_events,
   bt_unlock();
 }
 
-void bluetooth_analytics_handle_param_update_failed(void) {
-}
+void bluetooth_analytics_handle_param_update_failed(void) {}
 
 //! only called when we are connected as a slave
 void bluetooth_analytics_handle_connection_params_update(const BleConnectionParams *params) {
@@ -85,22 +83,22 @@ void bluetooth_analytics_handle_connection_disconnection_event(
       break;
   }
 
-  if (num_events_logged > 100) { // don't log a ridiculous amount of tightly looped disconnects
+  if (num_events_logged > 100) {  // don't log a ridiculous amount of tightly looped disconnects
     return;
   }
 
   // It's okay to log to analytics directly from the BT02 callback thread
   // because flash writes are dispatched to KernelBG if the datalogging session
   // is buffered
-  if (!vers_info) { // We expect version info
+  if (!vers_info) {  // We expect version info
     PBL_LOG_WRN("Le Disconnect but no version info?");
   }
 
   num_events_logged++;
 }
 
-void bluetooth_analytics_handle_connect(
-    const BTDeviceInternal *peer_addr, const BleConnectionParams *conn_params) {
+void bluetooth_analytics_handle_connect(const BTDeviceInternal *peer_addr,
+                                        const BleConnectionParams *conn_params) {
   bluetooth_analytics_handle_connection_params_update(conn_params);
 }
 
@@ -109,20 +107,16 @@ void bluetooth_analytics_handle_disconnect(bool local_is_master) {
   }
 }
 
-void bluetooth_analytics_handle_encryption_change(void) {
-}
+void bluetooth_analytics_handle_encryption_change(void) {}
 
-void bluetooth_analytics_handle_no_intent_for_connection(void) {
-}
+void bluetooth_analytics_handle_no_intent_for_connection(void) {}
 
-void bluetooth_analytics_handle_ble_pairing_request(void) {
-}
+void bluetooth_analytics_handle_ble_pairing_request(void) {}
 
-void bluetooth_analytics_handle_ble_pairing_error(uint32_t error) {
-}
+void bluetooth_analytics_handle_ble_pairing_error(uint32_t error) {}
 
 static bool prv_calc_stats_and_print(const SlaveConnEventStats *orig_stats,
-                                           SlaveConnEventStats *stats_buf, bool is_putbytes) {
+                                     SlaveConnEventStats *stats_buf, bool is_putbytes) {
   return false;
 }
 
@@ -131,7 +125,6 @@ void bluetooth_analytics_handle_put_bytes_stats(bool successful, uint8_t type, u
                                                 const SlaveConnEventStats *orig_stats) {
   SlaveConnEventStats new_stats = {};
   prv_calc_stats_and_print(orig_stats, &new_stats, true /* is_putbytes */);
-
 }
 
 void bluetooth_analytics_handle_get_bytes_stats(uint8_t type, uint32_t total_size,
@@ -139,5 +132,4 @@ void bluetooth_analytics_handle_get_bytes_stats(uint8_t type, uint32_t total_siz
                                                 const SlaveConnEventStats *orig_stats) {
   SlaveConnEventStats new_stats = {};
   prv_calc_stats_and_print(orig_stats, &new_stats, false /* is_putbytes */);
-
 }

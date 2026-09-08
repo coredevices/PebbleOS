@@ -5,6 +5,4 @@
 
 #include "pbl/services/activity/hr_util.h"
 
-HRZone hr_util_get_hr_zone(int bpm) {
-  return HRZone_Zone1;
-}
+HRZone hr_util_get_hr_zone(int bpm) { return HRZone_Zone1; }

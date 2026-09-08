@@ -57,7 +57,6 @@ typedef enum TextStyleFont {
   TextStyleFontCount
 } TextStyleFont;
 
-
 //! @param font The desired font class to obtain a font key of.
 //! @return The font key of the font class using the user's preferred content size.
 const char *system_theme_get_font_key(TextStyleFont font);

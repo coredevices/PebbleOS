@@ -21,7 +21,7 @@
 #include "fake_rtc.h"
 
 static TimezoneInfo tz = {
-  .tm_gmtoff = -8 * 60 * 60, // PST
+    .tm_gmtoff = -8 * 60 * 60,  // PST
 };
 
 // Stubs
@@ -55,179 +55,194 @@ static TimezoneInfo tz = {
 #include "stubs_task_watchdog.h"
 #include "stubs_window_stack.h"
 
-void ancs_notifications_enable_bulk_action_mode(bool enable) {
-  return;
-}
+void ancs_notifications_enable_bulk_action_mode(bool enable) { return; }
 
-bool ancs_notifications_is_bulk_action_mode_enabled(void) {
-  return false;
-}
+bool ancs_notifications_is_bulk_action_mode_enabled(void) { return false; }
 
-status_t reminder_db_delete_with_parent(const TimelineItemId *id) {
-  return S_SUCCESS;
-}
+status_t reminder_db_delete_with_parent(const TimelineItemId *id) { return S_SUCCESS; }
 
-void timeline_action_endpoint_invoke_action(const Uuid *id,
-    uint8_t action_id, AttributeList *attributes) {
-}
+void timeline_action_endpoint_invoke_action(const Uuid *id, uint8_t action_id,
+                                            AttributeList *attributes) {}
 
-void launcher_task_add_callback(void (*callback)(void *data), void *data) {
-}
+void launcher_task_add_callback(void (*callback)(void *data), void *data) {}
 
-void timeline_pin_window_push_modal(TimelineItem *item) {
-}
+void timeline_pin_window_push_modal(TimelineItem *item) {}
 
-const PebbleProcessMd *timeline_get_app_info(void) {
+const PebbleProcessMd *timeline_get_app_info(void) { return NULL; }
+
+PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char *name) {
   return NULL;
 }
 
-PebblePhoneCaller* phone_call_util_create_caller(const char *number, const char *name) {
-  return NULL;
-}
-
-void ancs_perform_action(uint32_t notification_uid, uint8_t action_id) {
-}
+void ancs_perform_action(uint32_t notification_uid, uint8_t action_id) {}
 
 void notifications_handle_notification_action_result(
-    PebbleSysNotificationActionResult *action_result) {
-}
+    PebbleSysNotificationActionResult *action_result) {}
 
-void notification_storage_set_status(const Uuid *id, uint8_t status) {
-}
+void notification_storage_set_status(const Uuid *id, uint8_t status) {}
 
-void notifications_handle_notification_acted_upon(Uuid *notification_id) {
-  return;
-}
+void notifications_handle_notification_acted_upon(Uuid *notification_id) { return; }
 
-void notifications_handle_notification_removed(Uuid *notification_id) {
-  return;
-}
+void notifications_handle_notification_removed(Uuid *notification_id) { return; }
 
 // Data
 /////////////////////////
-static TimelineItem s_items[] = {
-  {
-    .header = { // [0]
-        .id = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
-                 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb1},
-        .parent_id = {0},
-        .timestamp =  1421178061, // Tue Jan 13 11:41:01 2015 PST
-        .duration = 1,
-        .type = TimelineItemTypePin,
-        .flags = 0,
-        .layout = LayoutIdTest,
-    },
-    .attr_list = {
-        .num_attributes = 0,
-        .attributes = NULL,
-    },
-    .action_group = {
-        .num_actions = 0,
-        .actions = NULL,
-    },
-    .allocated_buffer = NULL,
-  }, {
-    .header = { // [1]
-        .id = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
-                 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb2},
-        .parent_id = {0},
-        .timestamp =  1421183642, // Tue Jan 13 13:14:02 2015 PST
-        .duration = 10,
-        .type = TimelineItemTypePin,
-        .flags = 0,
-        .layout = LayoutIdTest,
-    },
-    .attr_list = {
-        .num_attributes = 0,
-        .attributes = NULL,
-    },
-    .action_group = {
-        .num_actions = 0,
-        .actions = NULL,
-    },
-    .allocated_buffer = NULL,
-  }, {
-    .header = { // [2]
-        .id = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
-                 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb3},
-        .parent_id = {0},
-        .timestamp =  1421183642, // Tue Jan 13 13:14:02 2015 PST
-        .duration = 2,
-        .type = TimelineItemTypePin,
-        .flags = 0,
-        .layout = LayoutIdTest,
-    },
-    .attr_list = {
-        .num_attributes = 0,
-        .attributes = NULL,
-    },
-    .action_group = {
-        .num_actions = 0,
-        .actions = NULL,
-    },
-    .allocated_buffer = NULL,
-  }, {
-    .header = { // [3]
-        .id = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
-                 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb4},
-        .parent_id = {0},
-        .timestamp =  1421183642, // Tue Jan 13 13:14:02 2015 PST
-        .duration = 30,
-        .type = TimelineItemTypePin,
-        .flags = 0,
-        .layout = LayoutIdTest,
-    },
-    .attr_list = {
-        .num_attributes = 0,
-        .attributes = NULL,
-    },
-    .action_group = {
-        .num_actions = 0,
-        .actions = NULL,
-    },
-    .allocated_buffer = NULL,
-  }, {
-    .header = { // [4]
-        .id = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
-                 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb5},
-        .parent_id = {0},
-        .timestamp =  1421178061, // Tue Jan 13 11:41:01 2015 PST
-        .duration = 5,
-        .type = TimelineItemTypePin,
-        .flags = 0,
-        .layout = LayoutIdTest,
-    },
-    .attr_list = {
-        .num_attributes = 0,
-        .attributes = NULL,
-    },
-    .action_group = {
-        .num_actions = 0,
-        .actions = NULL,
-    },
-    .allocated_buffer = NULL,
-  }, {
-    .header = { // [5]
-        .id = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
-                 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb6},
-        .parent_id = {0},
-        .timestamp =  1421183462, // Tue Jan 13 13:11:02 PST 2015
-        .duration = 4,
-        .type = TimelineItemTypePin,
-        .flags = 0,
-        .layout = LayoutIdTest,
-    },
-    .attr_list = {
-        .num_attributes = 0,
-        .attributes = NULL,
-    },
-    .action_group = {
-        .num_actions = 0,
-        .actions = NULL,
-    },
-    .allocated_buffer = NULL,
-  }
-};
+static TimelineItem s_items[] = {{
+                                     .header =
+                                         {
+                                             // [0]
+                                             .id = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
+                                                    0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb1},
+                                             .parent_id = {0},
+                                             .timestamp =
+                                                 1421178061,  // Tue Jan 13 11:41:01 2015 PST
+                                             .duration = 1,
+                                             .type = TimelineItemTypePin,
+                                             .flags = 0,
+                                             .layout = LayoutIdTest,
+                                         },
+                                     .attr_list =
+                                         {
+                                             .num_attributes = 0,
+                                             .attributes = NULL,
+                                         },
+                                     .action_group =
+                                         {
+                                             .num_actions = 0,
+                                             .actions = NULL,
+                                         },
+                                     .allocated_buffer = NULL,
+                                 },
+                                 {
+                                     .header =
+                                         {
+                                             // [1]
+                                             .id = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
+                                                    0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb2},
+                                             .parent_id = {0},
+                                             .timestamp =
+                                                 1421183642,  // Tue Jan 13 13:14:02 2015 PST
+                                             .duration = 10,
+                                             .type = TimelineItemTypePin,
+                                             .flags = 0,
+                                             .layout = LayoutIdTest,
+                                         },
+                                     .attr_list =
+                                         {
+                                             .num_attributes = 0,
+                                             .attributes = NULL,
+                                         },
+                                     .action_group =
+                                         {
+                                             .num_actions = 0,
+                                             .actions = NULL,
+                                         },
+                                     .allocated_buffer = NULL,
+                                 },
+                                 {
+                                     .header =
+                                         {
+                                             // [2]
+                                             .id = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
+                                                    0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb3},
+                                             .parent_id = {0},
+                                             .timestamp =
+                                                 1421183642,  // Tue Jan 13 13:14:02 2015 PST
+                                             .duration = 2,
+                                             .type = TimelineItemTypePin,
+                                             .flags = 0,
+                                             .layout = LayoutIdTest,
+                                         },
+                                     .attr_list =
+                                         {
+                                             .num_attributes = 0,
+                                             .attributes = NULL,
+                                         },
+                                     .action_group =
+                                         {
+                                             .num_actions = 0,
+                                             .actions = NULL,
+                                         },
+                                     .allocated_buffer = NULL,
+                                 },
+                                 {
+                                     .header =
+                                         {
+                                             // [3]
+                                             .id = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
+                                                    0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb4},
+                                             .parent_id = {0},
+                                             .timestamp =
+                                                 1421183642,  // Tue Jan 13 13:14:02 2015 PST
+                                             .duration = 30,
+                                             .type = TimelineItemTypePin,
+                                             .flags = 0,
+                                             .layout = LayoutIdTest,
+                                         },
+                                     .attr_list =
+                                         {
+                                             .num_attributes = 0,
+                                             .attributes = NULL,
+                                         },
+                                     .action_group =
+                                         {
+                                             .num_actions = 0,
+                                             .actions = NULL,
+                                         },
+                                     .allocated_buffer = NULL,
+                                 },
+                                 {
+                                     .header =
+                                         {
+                                             // [4]
+                                             .id = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
+                                                    0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb5},
+                                             .parent_id = {0},
+                                             .timestamp =
+                                                 1421178061,  // Tue Jan 13 11:41:01 2015 PST
+                                             .duration = 5,
+                                             .type = TimelineItemTypePin,
+                                             .flags = 0,
+                                             .layout = LayoutIdTest,
+                                         },
+                                     .attr_list =
+                                         {
+                                             .num_attributes = 0,
+                                             .attributes = NULL,
+                                         },
+                                     .action_group =
+                                         {
+                                             .num_actions = 0,
+                                             .actions = NULL,
+                                         },
+                                     .allocated_buffer = NULL,
+                                 },
+                                 {
+                                     .header =
+                                         {
+                                             // [5]
+                                             .id = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
+                                                    0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb6},
+                                             .parent_id = {0},
+                                             .timestamp =
+                                                 1421183462,  // Tue Jan 13 13:11:02 PST 2015
+                                             .duration = 4,
+                                             .type = TimelineItemTypePin,
+                                             .flags = 0,
+                                             .layout = LayoutIdTest,
+                                         },
+                                     .attr_list =
+                                         {
+                                             .num_attributes = 0,
+                                             .attributes = NULL,
+                                         },
+                                     .action_group =
+                                         {
+                                             .num_actions = 0,
+                                             .actions = NULL,
+                                         },
+                                     .allocated_buffer = NULL,
+                                 }};
 
 // Setup
 /////////////////////////
@@ -246,8 +261,7 @@ void test_timeline_model__initialize(void) {
   cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), 0);
 }
 
-void test_timeline_model__cleanup(void) {
-}
+void test_timeline_model__cleanup(void) {}
 
 // Tests
 ///////////////////////////
@@ -263,9 +277,9 @@ void test_timeline_model__future(void) {
 
   cl_assert_equal_i(timeline_model_get_num_items(), 2);
   cl_assert(uuid_equal(&s_items[s_correct_order[0]].header.id,
-      &timeline_model_get_iter_state(0)->pin.header.id));
+                       &timeline_model_get_iter_state(0)->pin.header.id));
   cl_assert(uuid_equal(&s_items[s_correct_order[1]].header.id,
-      &timeline_model_get_iter_state(1)->pin.header.id));
+                       &timeline_model_get_iter_state(1)->pin.header.id));
   cl_assert(timeline_model_get_iter_state(0) == timeline_model_get_iter_state_with_timeline_idx(0));
   cl_assert(timeline_model_get_iter_state(1) == timeline_model_get_iter_state_with_timeline_idx(1));
 
@@ -276,11 +290,11 @@ void test_timeline_model__future(void) {
   cl_assert_equal_i(new_idx, 2);
   cl_assert_equal_i(timeline_model_get_num_items(), 2);
   cl_assert(uuid_equal(&s_items[s_correct_order[0]].header.id,
-      &timeline_model_get_iter_state(-1)->pin.header.id));
+                       &timeline_model_get_iter_state(-1)->pin.header.id));
   cl_assert(uuid_equal(&s_items[s_correct_order[1]].header.id,
-      &timeline_model_get_iter_state(0)->pin.header.id));
+                       &timeline_model_get_iter_state(0)->pin.header.id));
   cl_assert(uuid_equal(&s_items[s_correct_order[2]].header.id,
-      &timeline_model_get_iter_state(1)->pin.header.id));
+                       &timeline_model_get_iter_state(1)->pin.header.id));
   cl_assert(timeline_model_get_iter_state(0) == timeline_model_get_iter_state_with_timeline_idx(1));
   cl_assert(timeline_model_get_iter_state(1) == timeline_model_get_iter_state_with_timeline_idx(2));
 
@@ -289,11 +303,11 @@ void test_timeline_model__future(void) {
   cl_assert_equal_i(new_idx, 3);
   cl_assert_equal_i(timeline_model_get_num_items(), 2);
   cl_assert(uuid_equal(&s_items[s_correct_order[1]].header.id,
-      &timeline_model_get_iter_state(-1)->pin.header.id));
+                       &timeline_model_get_iter_state(-1)->pin.header.id));
   cl_assert(uuid_equal(&s_items[s_correct_order[2]].header.id,
-      &timeline_model_get_iter_state(0)->pin.header.id));
+                       &timeline_model_get_iter_state(0)->pin.header.id));
   cl_assert(uuid_equal(&s_items[s_correct_order[3]].header.id,
-      &timeline_model_get_iter_state(1)->pin.header.id));
+                       &timeline_model_get_iter_state(1)->pin.header.id));
   cl_assert(timeline_model_get_iter_state(0) == timeline_model_get_iter_state_with_timeline_idx(2));
   cl_assert(timeline_model_get_iter_state(1) == timeline_model_get_iter_state_with_timeline_idx(3));
 
@@ -302,11 +316,11 @@ void test_timeline_model__future(void) {
   cl_assert_equal_i(new_idx, 4);
   cl_assert_equal_i(timeline_model_get_num_items(), 2);
   cl_assert(uuid_equal(&s_items[s_correct_order[2]].header.id,
-      &timeline_model_get_iter_state(-1)->pin.header.id));
+                       &timeline_model_get_iter_state(-1)->pin.header.id));
   cl_assert(uuid_equal(&s_items[s_correct_order[3]].header.id,
-      &timeline_model_get_iter_state(0)->pin.header.id));
+                       &timeline_model_get_iter_state(0)->pin.header.id));
   cl_assert(uuid_equal(&s_items[s_correct_order[4]].header.id,
-      &timeline_model_get_iter_state(1)->pin.header.id));
+                       &timeline_model_get_iter_state(1)->pin.header.id));
   cl_assert(timeline_model_get_iter_state(0) == timeline_model_get_iter_state_with_timeline_idx(3));
   cl_assert(timeline_model_get_iter_state(1) == timeline_model_get_iter_state_with_timeline_idx(4));
 
@@ -315,11 +329,11 @@ void test_timeline_model__future(void) {
   cl_assert_equal_i(new_idx, 5);
   cl_assert_equal_i(timeline_model_get_num_items(), 2);
   cl_assert(uuid_equal(&s_items[s_correct_order[3]].header.id,
-      &timeline_model_get_iter_state(-1)->pin.header.id));
+                       &timeline_model_get_iter_state(-1)->pin.header.id));
   cl_assert(uuid_equal(&s_items[s_correct_order[4]].header.id,
-      &timeline_model_get_iter_state(0)->pin.header.id));
+                       &timeline_model_get_iter_state(0)->pin.header.id));
   cl_assert(uuid_equal(&s_items[s_correct_order[5]].header.id,
-      &timeline_model_get_iter_state(1)->pin.header.id));
+                       &timeline_model_get_iter_state(1)->pin.header.id));
   cl_assert(timeline_model_get_iter_state(0) == timeline_model_get_iter_state_with_timeline_idx(4));
   cl_assert(timeline_model_get_iter_state(1) == timeline_model_get_iter_state_with_timeline_idx(5));
 
@@ -327,9 +341,9 @@ void test_timeline_model__future(void) {
   cl_assert(!has_next);
   cl_assert_equal_i(timeline_model_get_num_items(), 1);
   cl_assert(uuid_equal(&s_items[s_correct_order[4]].header.id,
-      &timeline_model_get_iter_state(-1)->pin.header.id));
+                       &timeline_model_get_iter_state(-1)->pin.header.id));
   cl_assert(uuid_equal(&s_items[s_correct_order[5]].header.id,
-      &timeline_model_get_iter_state(0)->pin.header.id));
+                       &timeline_model_get_iter_state(0)->pin.header.id));
 
   cl_assert(!timeline_model_iter_next(&new_idx, &has_next));
 }
@@ -353,20 +367,20 @@ void test_timeline_model__and_back(void) {
   cl_assert_equal_i(new_idx, 4);
   cl_assert_equal_i(timeline_model_get_num_items(), 2);
   cl_assert(uuid_equal(&s_items[s_correct_order[4]].header.id,
-      &timeline_model_get_iter_state(0)->pin.header.id));
+                       &timeline_model_get_iter_state(0)->pin.header.id));
   cl_assert(uuid_equal(&s_items[s_correct_order[5]].header.id,
-      &timeline_model_get_iter_state(1)->pin.header.id));
+                       &timeline_model_get_iter_state(1)->pin.header.id));
   cl_assert(timeline_model_get_iter_state(0) == timeline_model_get_iter_state_with_timeline_idx(4));
 
   cl_assert(timeline_model_iter_prev(&new_idx, NULL));
   cl_assert_equal_i(new_idx, 3);
   cl_assert_equal_i(timeline_model_get_num_items(), 2);
   cl_assert(uuid_equal(&s_items[s_correct_order[3]].header.id,
-      &timeline_model_get_iter_state(0)->pin.header.id));
+                       &timeline_model_get_iter_state(0)->pin.header.id));
   cl_assert(uuid_equal(&s_items[s_correct_order[4]].header.id,
-      &timeline_model_get_iter_state(1)->pin.header.id));
+                       &timeline_model_get_iter_state(1)->pin.header.id));
   cl_assert(uuid_equal(&s_items[s_correct_order[5]].header.id,
-      &timeline_model_get_iter_state(2)->pin.header.id));
+                       &timeline_model_get_iter_state(2)->pin.header.id));
   cl_assert(timeline_model_get_iter_state(0) == timeline_model_get_iter_state_with_timeline_idx(3));
   cl_assert(timeline_model_get_iter_state(1) == timeline_model_get_iter_state_with_timeline_idx(4));
   cl_assert(timeline_model_get_iter_state(2) == timeline_model_get_iter_state_with_timeline_idx(5));
@@ -375,11 +389,11 @@ void test_timeline_model__and_back(void) {
   cl_assert_equal_i(new_idx, 2);
   cl_assert_equal_i(timeline_model_get_num_items(), 2);
   cl_assert(uuid_equal(&s_items[s_correct_order[2]].header.id,
-      &timeline_model_get_iter_state(0)->pin.header.id));
+                       &timeline_model_get_iter_state(0)->pin.header.id));
   cl_assert(uuid_equal(&s_items[s_correct_order[3]].header.id,
-      &timeline_model_get_iter_state(1)->pin.header.id));
+                       &timeline_model_get_iter_state(1)->pin.header.id));
   cl_assert(uuid_equal(&s_items[s_correct_order[4]].header.id,
-      &timeline_model_get_iter_state(2)->pin.header.id));
+                       &timeline_model_get_iter_state(2)->pin.header.id));
   cl_assert(timeline_model_get_iter_state(0) == timeline_model_get_iter_state_with_timeline_idx(2));
   cl_assert(timeline_model_get_iter_state(1) == timeline_model_get_iter_state_with_timeline_idx(3));
   cl_assert(timeline_model_get_iter_state(2) == timeline_model_get_iter_state_with_timeline_idx(4));
@@ -388,11 +402,11 @@ void test_timeline_model__and_back(void) {
   cl_assert_equal_i(new_idx, 1);
   cl_assert_equal_i(timeline_model_get_num_items(), 2);
   cl_assert(uuid_equal(&s_items[s_correct_order[1]].header.id,
-      &timeline_model_get_iter_state(0)->pin.header.id));
+                       &timeline_model_get_iter_state(0)->pin.header.id));
   cl_assert(uuid_equal(&s_items[s_correct_order[2]].header.id,
-      &timeline_model_get_iter_state(1)->pin.header.id));
+                       &timeline_model_get_iter_state(1)->pin.header.id));
   cl_assert(uuid_equal(&s_items[s_correct_order[3]].header.id,
-      &timeline_model_get_iter_state(2)->pin.header.id));
+                       &timeline_model_get_iter_state(2)->pin.header.id));
   cl_assert(timeline_model_get_iter_state(0) == timeline_model_get_iter_state_with_timeline_idx(1));
   cl_assert(timeline_model_get_iter_state(1) == timeline_model_get_iter_state_with_timeline_idx(2));
   cl_assert(timeline_model_get_iter_state(2) == timeline_model_get_iter_state_with_timeline_idx(3));
@@ -401,11 +415,11 @@ void test_timeline_model__and_back(void) {
   cl_assert_equal_i(new_idx, 0);
   cl_assert_equal_i(timeline_model_get_num_items(), 2);
   cl_assert(uuid_equal(&s_items[s_correct_order[0]].header.id,
-      &timeline_model_get_iter_state(0)->pin.header.id));
+                       &timeline_model_get_iter_state(0)->pin.header.id));
   cl_assert(uuid_equal(&s_items[s_correct_order[1]].header.id,
-      &timeline_model_get_iter_state(1)->pin.header.id));
+                       &timeline_model_get_iter_state(1)->pin.header.id));
   cl_assert(uuid_equal(&s_items[s_correct_order[2]].header.id,
-      &timeline_model_get_iter_state(2)->pin.header.id));
+                       &timeline_model_get_iter_state(2)->pin.header.id));
   cl_assert(timeline_model_get_iter_state(0) == timeline_model_get_iter_state_with_timeline_idx(0));
   cl_assert(timeline_model_get_iter_state(1) == timeline_model_get_iter_state_with_timeline_idx(1));
   cl_assert(timeline_model_get_iter_state(2) == timeline_model_get_iter_state_with_timeline_idx(2));
@@ -423,9 +437,9 @@ void test_timeline_model__graceful_delete_middle(void) {
   timeline_model_remove(&s_items[s_correct_order[1]].header.id);
   cl_assert_equal_i(timeline_model_get_num_items(), 2);
   cl_assert(uuid_equal(&s_items[s_correct_order[0]].header.id,
-      &timeline_model_get_iter_state(0)->pin.header.id));
+                       &timeline_model_get_iter_state(0)->pin.header.id));
   cl_assert(uuid_equal(&s_items[s_correct_order[2]].header.id,
-      &timeline_model_get_iter_state(1)->pin.header.id));
+                       &timeline_model_get_iter_state(1)->pin.header.id));
   cl_assert(timeline_model_get_iter_state(0) == timeline_model_get_iter_state_with_timeline_idx(0));
   cl_assert(timeline_model_get_iter_state(1) == timeline_model_get_iter_state_with_timeline_idx(2));
 }
@@ -440,9 +454,9 @@ void test_timeline_model__graceful_delete_first(void) {
   timeline_model_remove(&s_items[s_correct_order[0]].header.id);
   cl_assert_equal_i(timeline_model_get_num_items(), 2);
   cl_assert(uuid_equal(&s_items[s_correct_order[1]].header.id,
-      &timeline_model_get_iter_state(0)->pin.header.id));
+                       &timeline_model_get_iter_state(0)->pin.header.id));
   cl_assert(uuid_equal(&s_items[s_correct_order[2]].header.id,
-      &timeline_model_get_iter_state(1)->pin.header.id));
+                       &timeline_model_get_iter_state(1)->pin.header.id));
   cl_assert(timeline_model_get_iter_state(0) == timeline_model_get_iter_state_with_timeline_idx(1));
   cl_assert(timeline_model_get_iter_state(1) == timeline_model_get_iter_state_with_timeline_idx(2));
 }

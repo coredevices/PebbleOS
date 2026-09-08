@@ -15,8 +15,8 @@
 // Do NOT add entries here. See weather_type_tuples.def
 // TODO (PBL-36438): use proper enum naming
 typedef enum {
-#define WEATHER_TYPE_TUPLE(id, numeric_id, bg_color, text_color, timeline_resource_id)\
-    WeatherType_##id = numeric_id,
+#define WEATHER_TYPE_TUPLE(id, numeric_id, bg_color, text_color, timeline_resource_id) \
+  WeatherType_##id = numeric_id,
 #include "weather_type_tuples.def"
 } WeatherType;
 

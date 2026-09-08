@@ -31,9 +31,7 @@ typedef struct ConfirmUIData {
 } ConfirmUIData;
 
 //! Wipe registry + Reboot
-static void start_factory_reset(void *data) {
-  factory_reset(false /* should_shutdown */);
-}
+static void start_factory_reset(void *data) { factory_reset(false /* should_shutdown */); }
 
 static void prv_lockout_back_button(Window *window) {
   window_set_overrides_back_button(window, true);
@@ -50,7 +48,7 @@ static void confirm_click_handler(ClickRecognizerRef recognizer, Window *window)
   peek_layer_init(peek_layer, &window->layer.bounds);
   peek_layer_set_title_font(peek_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   TimelineResourceInfo timeline_res = {
-    .res_id = TIMELINE_RESOURCE_GENERIC_WARNING,
+      .res_id = TIMELINE_RESOURCE_GENERIC_WARNING,
   };
   peek_layer_set_icon(peek_layer, &timeline_res);
   peek_layer_set_title(peek_layer, i18n_get("Resetting...", data));
@@ -60,8 +58,8 @@ static void confirm_click_handler(ClickRecognizerRef recognizer, Window *window)
 
   // give it a chance to animate
   const uint32_t factory_reset_start_delay = 100;
-  app_timer_register(PEEK_LAYER_UNFOLD_DURATION + factory_reset_start_delay,
-                     start_factory_reset, NULL);
+  app_timer_register(PEEK_LAYER_UNFOLD_DURATION + factory_reset_start_delay, start_factory_reset,
+                     NULL);
 }
 
 //! Wipe registry + Enter Standby (for factory)
@@ -80,9 +78,9 @@ static void decline_click_handler(ClickRecognizerRef recognizer, Window *window)
 }
 
 static void config_provider(Window *window) {
-  window_single_click_subscribe(BUTTON_ID_UP, (ClickHandler) confirm_click_handler);
-  window_long_click_subscribe(BUTTON_ID_UP, 1200, (ClickHandler) confirm_long_click_handler, NULL);
-  window_single_click_subscribe(BUTTON_ID_DOWN, (ClickHandler) decline_click_handler);
+  window_single_click_subscribe(BUTTON_ID_UP, (ClickHandler)confirm_click_handler);
+  window_long_click_subscribe(BUTTON_ID_UP, 1200, (ClickHandler)confirm_long_click_handler, NULL);
+  window_single_click_subscribe(BUTTON_ID_DOWN, (ClickHandler)decline_click_handler);
   (void)window;
 }
 
@@ -100,10 +98,8 @@ static void prv_window_load(Window *window) {
   const GColor text_color = PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack);
 
   TextLayer *msg_text_layer = &data->msg_text_layer;
-  GRect msg_text_frame = (GRect) {
-    .origin = GPoint(x_margin_px, msg_text_y_offset_px),
-    .size =  GSize(width - (2 * x_margin_px), msg_text_max_height_px)
-  };
+  GRect msg_text_frame = (GRect){.origin = GPoint(x_margin_px, msg_text_y_offset_px),
+                                 .size = GSize(width - (2 * x_margin_px), msg_text_max_height_px)};
   text_layer_init_with_parameters(msg_text_layer, &msg_text_frame,
                                   i18n_get("Perform factory reset?", data),
                                   fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), text_color,
@@ -121,14 +117,13 @@ static void prv_window_load(Window *window) {
   const uint16_t forget_text_y_offset_px = msg_text_y_offset_px + msg_text_height_px + text_spacing;
 
   TextLayer *forget_text_layer = &data->forget_text_layer;
-  const GRect forget_text_frame = (GRect) {
-    .origin = GPoint(x_margin_px, forget_text_y_offset_px),
-    .size =  GSize(width - (2 * x_margin_px), root_layer_bounds->size.h - forget_text_y_offset_px)
-  };
-  text_layer_init_with_parameters(forget_text_layer, &forget_text_frame,
-                                  i18n_get(BT_FORGET_PAIRING_STR, data),
-                                  fonts_get_system_font(FONT_KEY_GOTHIC_18), text_color,
-                                  GColorClear, alignment, overflow_mode);
+  const GRect forget_text_frame =
+      (GRect){.origin = GPoint(x_margin_px, forget_text_y_offset_px),
+              .size = GSize(width - (2 * x_margin_px),
+                            root_layer_bounds->size.h - forget_text_y_offset_px)};
+  text_layer_init_with_parameters(
+      forget_text_layer, &forget_text_frame, i18n_get(BT_FORGET_PAIRING_STR, data),
+      fonts_get_system_font(FONT_KEY_GOTHIC_18), text_color, GColorClear, alignment, overflow_mode);
   layer_add_child(&window->layer, &forget_text_layer->layer);
 #if PBL_ROUND
   text_layer_enable_screen_text_flow_and_paging(forget_text_layer, text_flow_inset);
@@ -139,7 +134,7 @@ static void prv_window_load(Window *window) {
   action_bar_layer_init(action_bar);
   action_bar_layer_set_context(action_bar, window);
   action_bar_layer_add_to_window(action_bar, window);
-  action_bar_layer_set_click_config_provider(action_bar, (ClickConfigProvider) config_provider);
+  action_bar_layer_set_click_config_provider(action_bar, (ClickConfigProvider)config_provider);
   action_bar_layer_set_icon(action_bar, BUTTON_ID_UP, data->action_bar_icon_check);
   action_bar_layer_set_icon(action_bar, BUTTON_ID_DOWN, data->action_bar_icon_x);
 }
@@ -153,15 +148,15 @@ static void prv_window_unload(Window *window) {
 }
 
 void settings_factory_reset_window_push(void) {
-  ConfirmUIData *data = (ConfirmUIData*)app_malloc_check(sizeof(ConfirmUIData));
+  ConfirmUIData *data = (ConfirmUIData *)app_malloc_check(sizeof(ConfirmUIData));
   *data = (ConfirmUIData){};
 
   Window *window = &data->window;
   window_init(window, "Settings Factory Reset");
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_window_load,
-    .unload = prv_window_unload,
-  });
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_window_load,
+                                         .unload = prv_window_unload,
+                                     });
 #if PBL_COLOR
   window_set_background_color(window, GColorCobaltBlue);
 #endif

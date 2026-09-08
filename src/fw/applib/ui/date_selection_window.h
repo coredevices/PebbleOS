@@ -47,9 +47,8 @@ void date_selection_window_set_to_current_date(DateSelectionWindowData *window);
 //! @param color     Highlight colour for the active selection cell.
 //! @param complete  Callback invoked when the user confirms their selection.
 //! @param context   Caller-provided pointer passed to the callback.
-void date_selection_window_init(DateSelectionWindowData *window, const char *label,
-                                GColor color, DateSelectionCompleteCallback complete,
-                                void *context);
+void date_selection_window_init(DateSelectionWindowData *window, const char *label, GColor color,
+                                DateSelectionCompleteCallback complete, void *context);
 
 //! Deinitialize the date selection window.
 void date_selection_window_deinit(DateSelectionWindowData *window);

@@ -11,8 +11,8 @@
 void bt_driver_gatt_send_changed_indication(const BTDeviceInternal *device,
                                             const ATTHandleRange *data) {
   GATT_Service_Changed_Data_t all_changed_range = {
-    .Affected_Start_Handle = data->start,
-    .Affected_End_Handle = data->end,
+      .Affected_Start_Handle = data->start,
+      .Affected_End_Handle = data->end,
   };
   // The legacy Bluetopia test stub needs a connection ID to pass through to
   // GATT_Service_Changed_Indication. Look up the connection by device address.
@@ -27,7 +27,5 @@ void bt_driver_gatt_send_changed_indication(const BTDeviceInternal *device,
 }
 
 void bt_driver_gatt_respond_read_subscription(uint32_t transaction_id, uint16_t response_code) {
-  GATT_Service_Changed_CCCD_Read_Response(bt_stack_id(),
-                                          transaction_id,
-                                          response_code);
+  GATT_Service_Changed_CCCD_Read_Response(bt_stack_id(), transaction_id, response_code);
 }

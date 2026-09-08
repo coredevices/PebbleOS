@@ -34,24 +34,9 @@ static GColor s_display_colors[NUM_SHAPES];
 
 #define MAX_STROKE_WIDTH 20
 
-static const GPathInfo s_triangle_path = {
-  3,
-  (GPoint[]) {
-    { -10, 0 },
-    { 0, 10 },
-    { 10, 0 }
-  }
-};
+static const GPathInfo s_triangle_path = {3, (GPoint[]){{-10, 0}, {0, 10}, {10, 0}}};
 
-static const GPathInfo s_bucket_path = {
-  4,
-  (GPoint[]) {
-    { -10, 0 },
-    { -10, 30 },
-    { 10, 30 },
-    { 10, 0 }
-  }
-};
+static const GPathInfo s_bucket_path = {4, (GPoint[]){{-10, 0}, {-10, 30}, {10, 30}, {10, 0}}};
 
 static const int TARGET_FPS = 40;
 static const int PIXEL_SPEED_PER_FRAME = 2;
@@ -134,24 +119,19 @@ typedef struct AppData {
   bool antialiased;
 } AppData;
 
-
 static void log_state(AppData *data) {
   switch (data->state_index) {
     case APP_STATE_FILL_NON_AA:
-      PBL_LOG_DBG("State: Fill Non-Antialiased; SW: N/A (but currently: %d)",
-              data->stroke_width);
+      PBL_LOG_DBG("State: Fill Non-Antialiased; SW: N/A (but currently: %d)", data->stroke_width);
       break;
     case APP_STATE_FILL_AA:
-      PBL_LOG_DBG("State: Fill Antialiased; SW: N/A (but currently: %d)",
-              data->stroke_width);
+      PBL_LOG_DBG("State: Fill Antialiased; SW: N/A (but currently: %d)", data->stroke_width);
       break;
     case APP_STATE_DRAW_NON_AA_NO_SW:
-      PBL_LOG_DBG("State: Draw Non-Antialiased; SW: N/A (but currently: %d)",
-              data->stroke_width);
+      PBL_LOG_DBG("State: Draw Non-Antialiased; SW: N/A (but currently: %d)", data->stroke_width);
       break;
     case APP_STATE_DRAW_AA_NO_SW:
-      PBL_LOG_DBG("State: Draw Antialiased; SW: N/A (but currently: %d)",
-              data->stroke_width);
+      PBL_LOG_DBG("State: Draw Antialiased; SW: N/A (but currently: %d)", data->stroke_width);
       break;
     case APP_STATE_DRAW_NON_AA_SW:
       PBL_LOG_DBG("State: Draw Non-Antialiased; SW: %d", data->stroke_width);
@@ -171,11 +151,11 @@ static bool stroke_width_enabled(AppStateIndex state_index) {
 
 static void update_state(AppData *data, AppStateIndex state_index) {
   data->state_index = state_index;
-  data->fill = ((data->state_index == APP_STATE_FILL_NON_AA) ||
-                (data->state_index == APP_STATE_FILL_AA));
-  data->antialiased = ((data->state_index == APP_STATE_DRAW_AA_NO_SW) ||
-                       (data->state_index == APP_STATE_DRAW_AA_SW) ||
-                       (data->state_index == APP_STATE_FILL_AA));
+  data->fill =
+      ((data->state_index == APP_STATE_FILL_NON_AA) || (data->state_index == APP_STATE_FILL_AA));
+  data->antialiased =
+      ((data->state_index == APP_STATE_DRAW_AA_NO_SW) ||
+       (data->state_index == APP_STATE_DRAW_AA_SW) || (data->state_index == APP_STATE_FILL_AA));
 }
 
 static void back_handler(ClickRecognizerRef recognizer, void *context) {
@@ -237,14 +217,14 @@ static void prv_move_shape(AppData *data) {
       data->line_p0.x += (data->line_velocity_x * PIXEL_SPEED_PER_FRAME * 2);
       data->line_p1.x += (data->line_velocity_x * PIXEL_SPEED_PER_FRAME * 2);
       if (data->line_p0.x < 0 || data->line_p0.x > data->window.layer.bounds.size.w ||
-          data->line_p1.x < 0 || data->line_p1.x > data->window.layer.bounds.size.w ) {
+          data->line_p1.x < 0 || data->line_p1.x > data->window.layer.bounds.size.w) {
         data->line_velocity_x = data->line_velocity_x * -1;
       }
 
       data->line_p0.y += (data->line_velocity_y * PIXEL_SPEED_PER_FRAME);
       data->line_p1.y += (data->line_velocity_y * PIXEL_SPEED_PER_FRAME);
       if (data->line_p0.y < 0 || data->line_p0.y > data->window.layer.bounds.size.h ||
-          data->line_p1.y < 0 || data->line_p1.y > data->window.layer.bounds.size.h ) {
+          data->line_p1.y < 0 || data->line_p1.y > data->window.layer.bounds.size.h) {
         data->line_velocity_y = data->line_velocity_y * -1;
       }
     } else if (shape == SQUARE) {
@@ -290,14 +270,14 @@ static void prv_move_shape(AppData *data) {
       // Move the line X per Y
       data->circle_origin.x += (data->circle_velocity_x * PIXEL_SPEED_PER_FRAME);
       if (data->circle_origin.x - data->circle_radius < 0 ||
-          data->circle_origin.x + data->circle_radius  > data->window.layer.bounds.size.w) {
+          data->circle_origin.x + data->circle_radius > data->window.layer.bounds.size.w) {
         data->circle_velocity_x = data->circle_velocity_x * -1;
         data->circle_color.argb = (((data->circle_color.argb + 1) & 0x3F) | 0xC0);
       }
 
       data->circle_origin.y += (data->circle_velocity_y * PIXEL_SPEED_PER_FRAME);
       if (data->circle_origin.y - data->circle_radius < 0 ||
-          data->circle_origin.y + data->circle_radius  > data->window.layer.bounds.size.h) {
+          data->circle_origin.y + data->circle_radius > data->window.layer.bounds.size.h) {
         data->circle_velocity_y = data->circle_velocity_y * -1;
         data->circle_color.argb = (((data->circle_color.argb + 1) & 0x3F) | 0xC0);
       }
@@ -318,14 +298,12 @@ static void prv_move_shape(AppData *data) {
     } else if (shape == GPATH_OPEN_BUCKET) {
       // Move the line 2*X per 3*Y
       data->bucket_offset.x += (data->bucket_velocity_x * PIXEL_SPEED_PER_FRAME * 2);
-      if (data->bucket_offset.x < 0 ||
-          data->bucket_offset.x > data->window.layer.bounds.size.w) {
+      if (data->bucket_offset.x < 0 || data->bucket_offset.x > data->window.layer.bounds.size.w) {
         data->bucket_velocity_x = data->bucket_velocity_x * -1;
       }
 
       data->bucket_offset.y += (data->bucket_velocity_y * PIXEL_SPEED_PER_FRAME * 3);
-      if (data->bucket_offset.y < 0 ||
-          data->bucket_offset.y > data->window.layer.bounds.size.h) {
+      if (data->bucket_offset.y < 0 || data->bucket_offset.y > data->window.layer.bounds.size.h) {
         data->bucket_velocity_y = data->bucket_velocity_y * -1;
       }
       gpath_move_to(data->bucket, data->bucket_offset);
@@ -333,7 +311,7 @@ static void prv_move_shape(AppData *data) {
   }
 }
 
-static void draw_shape(GContext* ctx, AppData *data, DrawShape shape, GColor color) {
+static void draw_shape(GContext *ctx, AppData *data, DrawShape shape, GColor color) {
   graphics_context_set_fill_color(ctx, color);
   graphics_context_set_stroke_color(ctx, color);
   if (data->fill) {
@@ -386,7 +364,7 @@ static int64_t prv_time_64(void) {
   return (int64_t)s * 1000 + ms;
 }
 
-static void layer_update_proc(Layer *layer, GContext* ctx) {
+static void layer_update_proc(Layer *layer, GContext *ctx) {
   AppData *data = app_state_get_user_data();
 
   graphics_context_set_fill_color(ctx, GColorBlack);
@@ -404,20 +382,18 @@ static void layer_update_proc(Layer *layer, GContext* ctx) {
     draw_shape(ctx, data, (DrawShape)shape_index, (GColor)s_display_colors[color_index++]);
   }
 
-
   if (data->rendered_frames == 0) {
     data->time_started = prv_time_64();
   } else {
     int64_t time_rendered = prv_time_64() - data->time_started;
     if ((data->rendered_frames % 64) == 0) {
       PBL_LOG_DBG("## %d frames rendered", (int)data->rendered_frames);
-      PBL_LOG_DBG("## at %"PRIu32" FPS",
-              (uint32_t)((uint64_t)data->rendered_frames*1000/time_rendered));
+      PBL_LOG_DBG("## at %" PRIu32 " FPS",
+                  (uint32_t)((uint64_t)data->rendered_frames * 1000 / time_rendered));
     }
   }
   data->rendered_frames++;
 }
-
 
 static void timer_callback(void *cb_data) {
   AppData *data = app_state_get_user_data();
@@ -443,7 +419,6 @@ static void init(void) {
   s_display_colors[5] = (GColor)((uint8_t)0b11001111);
   s_display_colors[6] = (GColor)((uint8_t)0b11110101);
   s_display_colors[7] = GColorWhite;
-
 
   app_state_set_user_data(data);
 
@@ -529,10 +504,8 @@ static void s_main(void) {
   deinit();
 }
 
-const PebbleProcessMd* pebble_shapes_get_app_info(void) {
-  static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = s_main,
-    .name = "Pebble Shapes"
-  };
-  return (const PebbleProcessMd*) &s_app_info;
+const PebbleProcessMd *pebble_shapes_get_app_info(void) {
+  static const PebbleProcessMdSystem s_app_info = {.common.main_func = s_main,
+                                                   .name = "Pebble Shapes"};
+  return (const PebbleProcessMd *)&s_app_info;
 }

@@ -11,12 +11,12 @@
 //! @internal
 //! Structure containing 3-axis magnetometer data
 typedef struct PACKED {
- //! magnetic field along the x axis
- int16_t x;
- //! magnetic field along the y axis
- int16_t y;
- //! magnetic field along the z axis
- int16_t z;
+  //! magnetic field along the x axis
+  int16_t x;
+  //! magnetic field along the y axis
+  int16_t y;
+  //! magnetic field along the z axis
+  int16_t z;
 } MagData;
 
 typedef enum {
@@ -27,10 +27,7 @@ typedef enum {
   MagReadNoMag = -4,
 } MagReadStatus;
 
-typedef enum {
-  MagSampleRate20Hz,
-  MagSampleRate5Hz
-} MagSampleRate;
+typedef enum { MagSampleRate20Hz, MagSampleRate5Hz } MagSampleRate;
 
 //! Initialize magnetometer
 void mag_init(void);
@@ -50,4 +47,3 @@ void mag_release(void);
 MagReadStatus mag_read_data(MagData *data);
 
 bool mag_change_sample_rate(MagSampleRate rate);
-

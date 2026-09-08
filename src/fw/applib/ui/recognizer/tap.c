@@ -45,16 +45,12 @@ static void prv_reset(Recognizer *recognizer);
 static bool prv_cancel(Recognizer *recognizer);
 
 static const RecognizerImpl s_tap_recognizer_impl = {
-  .handle_touch_event = prv_handle_touch_event,
-  .reset = prv_reset,
-  .cancel = prv_cancel
-};
+    .handle_touch_event = prv_handle_touch_event, .reset = prv_reset, .cancel = prv_cancel};
 
 static bool prv_moved_too_far(const TapRecognizerData *data, const TouchEvent *touch_event) {
   const int16_t dx = ABS(touch_event->x - data->state.touch_down_point.x);
   const int16_t dy = ABS(touch_event->y - data->state.touch_down_point.y);
-  return (dx > data->config.movement_threshold.x) ||
-         (dy > data->config.movement_threshold.y);
+  return (dx > data->config.movement_threshold.x) || (dy > data->config.movement_threshold.y);
 }
 
 static uint32_t prv_touch_duration_ms(const TapRecognizerData *data) {
@@ -63,8 +59,8 @@ static uint32_t prv_touch_duration_ms(const TapRecognizerData *data) {
 }
 
 static void prv_handle_touch_event(Recognizer *recognizer, const TouchEvent *touch_event) {
-  TapRecognizerData *data = recognizer_get_impl_data((Recognizer *)recognizer,
-                                                     &s_tap_recognizer_impl);
+  TapRecognizerData *data =
+      recognizer_get_impl_data((Recognizer *)recognizer, &s_tap_recognizer_impl);
 
   switch (touch_event->type) {
     case TouchEvent_Touchdown:
@@ -96,8 +92,8 @@ static void prv_handle_touch_event(Recognizer *recognizer, const TouchEvent *tou
 }
 
 static void prv_reset(Recognizer *recognizer) {
-  TapRecognizerData *data = recognizer_get_impl_data((Recognizer *)recognizer,
-                                                     &s_tap_recognizer_impl);
+  TapRecognizerData *data =
+      recognizer_get_impl_data((Recognizer *)recognizer, &s_tap_recognizer_impl);
   memset(&data->state, 0, sizeof(data->state));
 }
 
@@ -108,11 +104,12 @@ static bool prv_cancel(Recognizer *recognizer) {
 
 Recognizer *tap_recognizer_create(RecognizerEventCb event_cb, void *user_data) {
   TapRecognizerData data = {
-    .config = {
-      .taps_required = 1,
-      .fingers_required = 1,
-      .movement_threshold = GPoint(TAP_MOVEMENT_THRESHOLD_PX, TAP_MOVEMENT_THRESHOLD_PX),
-    },
+      .config =
+          {
+              .taps_required = 1,
+              .fingers_required = 1,
+              .movement_threshold = GPoint(TAP_MOVEMENT_THRESHOLD_PX, TAP_MOVEMENT_THRESHOLD_PX),
+          },
   };
 
   return recognizer_create_with_data(&s_tap_recognizer_impl, &data, sizeof(data), event_cb,
@@ -123,11 +120,12 @@ Recognizer *tap_recognizer_init_static(void *storage, RecognizerEventCb event_cb
   _Static_assert(RECOGNIZER_INSTANCE_SIZE + sizeof(TapRecognizerData) <= TAP_RECOGNIZER_STATIC_SIZE,
                  "TAP_RECOGNIZER_STATIC_SIZE too small for a static tap recognizer");
   TapRecognizerData data = {
-    .config = {
-      .taps_required = 1,
-      .fingers_required = 1,
-      .movement_threshold = GPoint(TAP_MOVEMENT_THRESHOLD_PX, TAP_MOVEMENT_THRESHOLD_PX),
-    },
+      .config =
+          {
+              .taps_required = 1,
+              .fingers_required = 1,
+              .movement_threshold = GPoint(TAP_MOVEMENT_THRESHOLD_PX, TAP_MOVEMENT_THRESHOLD_PX),
+          },
   };
 
   return recognizer_init_static_with_data(storage, &s_tap_recognizer_impl, &data, sizeof(data),
@@ -139,8 +137,8 @@ const TapRecognizerData *tap_recognizer_get_data(const Recognizer *recognizer) {
 }
 
 GPoint tap_recognizer_get_tap_point(const Recognizer *recognizer) {
-  const TapRecognizerData *data = recognizer_get_impl_data((Recognizer *)recognizer,
-                                                           &s_tap_recognizer_impl);
+  const TapRecognizerData *data =
+      recognizer_get_impl_data((Recognizer *)recognizer, &s_tap_recognizer_impl);
   if (!data) {
     // SDK-reachable with a NULL or non-tap recognizer: reject, don't crash.
     return GPointZero;

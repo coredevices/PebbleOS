@@ -18,8 +18,8 @@ static uint32_t s_results_lengths[10];
 static uint8_t s_results_count;
 static uint32_t s_max_results_count;
 
-static bool prv_result_callback(const char *value, uint32_t value_length,
-                                uint32_t index, void *context) {
+static bool prv_result_callback(const char *value, uint32_t value_length, uint32_t index,
+                                void *context) {
   strcpy(s_results[s_results_count], value);
   s_results_lengths[s_results_count] = value_length;
   cl_assert_equal_i(index, s_results_count);
@@ -37,23 +37,22 @@ void test_ams_util__initialize(void) {
   s_max_results_count = ~0;
 }
 
-void test_ams_util__cleanup(void) {
-}
+void test_ams_util__cleanup(void) {}
 
 // ams_util_float_string_parse() tests
 ///////////////////////////////////////////////////////////
 
-#define assert_float_parse(in, mul, succeeds, expected_result) \
-  { \
-    const char *input = (const char *)in; \
-    const uint32_t input_length = input ? sizeof(in) : 0; \
-    const uint32_t multiplier = mul; \
-    int32_t result = 0; \
-    cl_assert_equal_b(succeeds, \
-          ams_util_float_string_parse((const char *)in, input_length, multiplier, &result)); \
-    if (succeeds) { \
-      cl_assert_equal_i(result, expected_result); \
-    } \
+#define assert_float_parse(in, mul, succeeds, expected_result)                              \
+  {                                                                                         \
+    const char *input = (const char *)in;                                                   \
+    const uint32_t input_length = input ? sizeof(in) : 0;                                   \
+    const uint32_t multiplier = mul;                                                        \
+    int32_t result = 0;                                                                     \
+    cl_assert_equal_b(succeeds, ams_util_float_string_parse((const char *)in, input_length, \
+                                                            multiplier, &result));          \
+    if (succeeds) {                                                                         \
+      cl_assert_equal_i(result, expected_result);                                           \
+    }                                                                                       \
   }
 
 void test_ams_util__float_string_parse_negative_number(void) {
@@ -167,14 +166,15 @@ void test_ams_util__float_string_parse_overflow_negative(void) {
 // ams_util_csv_parse() tests
 ///////////////////////////////////////////////////////////
 
-#define assert_result(idx, val, len); \
+#define assert_result(idx, val, len)              \
+  ;                                               \
   cl_assert_equal_i(len, s_results_lengths[idx]); \
   cl_assert_equal_i(memcmp(val, s_results[idx], len), 0);
 
 void test_ams_util__csv_empty_string(void) {
   const char empty_string[] = "";
-  const uint8_t count = ams_util_csv_parse(empty_string, sizeof(empty_string), NULL,
-                                           prv_result_callback);
+  const uint8_t count =
+      ams_util_csv_parse(empty_string, sizeof(empty_string), NULL, prv_result_callback);
   cl_assert_equal_i(s_results_count, 1);
   cl_assert_equal_i(count, 1);
   cl_assert_equal_s(empty_string, s_results[0]);
@@ -182,8 +182,7 @@ void test_ams_util__csv_empty_string(void) {
 
 void test_ams_util__csv_empty_values(void) {
   const char one_value[] = ",";
-  const uint8_t count = ams_util_csv_parse(one_value, sizeof(one_value), NULL,
-                                           prv_result_callback);
+  const uint8_t count = ams_util_csv_parse(one_value, sizeof(one_value), NULL, prv_result_callback);
   cl_assert_equal_i(s_results_count, 2);
   cl_assert_equal_i(count, 2);
   assert_result(0, "", 0);
@@ -191,16 +190,14 @@ void test_ams_util__csv_empty_values(void) {
 }
 
 void test_ams_util__csv_null(void) {
-  const uint8_t count = ams_util_csv_parse(NULL, 0, NULL,
-                                           prv_result_callback);
+  const uint8_t count = ams_util_csv_parse(NULL, 0, NULL, prv_result_callback);
   cl_assert_equal_i(s_results_count, 0);
   cl_assert_equal_i(count, 0);
 }
 
 void test_ams_util__csv_one_value(void) {
   const char one_value[] = "A";
-  const uint8_t count = ams_util_csv_parse(one_value, sizeof(one_value), NULL,
-                                           prv_result_callback);
+  const uint8_t count = ams_util_csv_parse(one_value, sizeof(one_value), NULL, prv_result_callback);
   cl_assert_equal_i(s_results_count, 1);
   cl_assert_equal_i(count, 1);
   cl_assert_equal_s(one_value, s_results[0]);
@@ -208,8 +205,8 @@ void test_ams_util__csv_one_value(void) {
 
 void test_ams_util__csv_multiple_values(void) {
   const char multi_values[] = "A,B,C";
-  const uint8_t count = ams_util_csv_parse(multi_values, sizeof(multi_values), NULL,
-                                           prv_result_callback);
+  const uint8_t count =
+      ams_util_csv_parse(multi_values, sizeof(multi_values), NULL, prv_result_callback);
   cl_assert_equal_i(s_results_count, 3);
   cl_assert_equal_i(count, 3);
   assert_result(0, "A", 1);
@@ -220,8 +217,8 @@ void test_ams_util__csv_multiple_values(void) {
 void test_ams_util__csv_stop_after_one_value(void) {
   const char multi_values[] = "A,B,C";
   s_max_results_count = 1;
-  const uint8_t count = ams_util_csv_parse(multi_values, sizeof(multi_values), NULL,
-                                           prv_result_callback);
+  const uint8_t count =
+      ams_util_csv_parse(multi_values, sizeof(multi_values), NULL, prv_result_callback);
   cl_assert_equal_i(s_results_count, 1);
   cl_assert_equal_i(count, 1);
   assert_result(0, "A", 1);
@@ -230,8 +227,8 @@ void test_ams_util__csv_stop_after_one_value(void) {
 void test_ams_util__csv_null_in_the_middle(void) {
   const char null_middle_value[] = "A\x00 BCD,1234";
   cl_assert(sizeof(null_middle_value) > 2);
-  const uint8_t count = ams_util_csv_parse(null_middle_value, sizeof(null_middle_value), NULL,
-                                           prv_result_callback);
+  const uint8_t count =
+      ams_util_csv_parse(null_middle_value, sizeof(null_middle_value), NULL, prv_result_callback);
   cl_assert_equal_i(s_results_count, 1);
   cl_assert_equal_i(count, 1);
   assert_result(0, "A", 1);
@@ -240,11 +237,9 @@ void test_ams_util__csv_null_in_the_middle(void) {
 void test_ams_util__csv_buffer_not_zero_terminated(void) {
   const char one_value[] = "ABCDEF";
   cl_assert(sizeof(one_value) > 2);
-  const uint8_t count = ams_util_csv_parse(one_value,
-                                           sizeof(one_value) - 1 /* omit zero terminator */, NULL,
-                                           prv_result_callback);
+  const uint8_t count = ams_util_csv_parse(
+      one_value, sizeof(one_value) - 1 /* omit zero terminator */, NULL, prv_result_callback);
   cl_assert_equal_i(s_results_count, 1);
   cl_assert_equal_i(count, 1);
   assert_result(0, "ABCDEF", 6);
 }
-

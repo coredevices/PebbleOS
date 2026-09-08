@@ -11,35 +11,33 @@ typedef struct {
   uint32_t data_version;
 
   uint32_t color;
-  char model[MFG_INFO_MODEL_STRING_LENGTH]; //!< Null terminated model string
-  uint8_t vibe_cali; //!< Vibration motor trim, MFG_INFO_VIBE_CALI_INVALID if unset
+  char model[MFG_INFO_MODEL_STRING_LENGTH];  //!< Null terminated model string
+  uint8_t vibe_cali;  //!< Vibration motor trim, MFG_INFO_VIBE_CALI_INVALID if unset
 } MfgData;
 
 static void prv_update_struct(const MfgData *data) {
   flash_erase_subsector_blocking(FLASH_REGION_MFG_INFO_BEGIN);
-  flash_write_bytes((const uint8_t*) data, FLASH_REGION_MFG_INFO_BEGIN, sizeof(*data));
+  flash_write_bytes((const uint8_t *)data, FLASH_REGION_MFG_INFO_BEGIN, sizeof(*data));
 }
 
 static MfgData prv_fetch_struct(void) {
   MfgData result;
 
-  flash_read_bytes((uint8_t*) &result, FLASH_REGION_MFG_INFO_BEGIN, sizeof(result));
+  flash_read_bytes((uint8_t *)&result, FLASH_REGION_MFG_INFO_BEGIN, sizeof(result));
 
   // Fallback data if not available
   if (result.data_version != CURRENT_DATA_VERSION) {
-      result.data_version = CURRENT_DATA_VERSION;
-      result.color = WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_GREY;
-      strncpy(result.model, "obelix", sizeof(result.model));
-      result.model[MFG_INFO_MODEL_STRING_LENGTH - 1] = '\0';
-      result.vibe_cali = MFG_INFO_VIBE_CALI_INVALID;
+    result.data_version = CURRENT_DATA_VERSION;
+    result.color = WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_GREY;
+    strncpy(result.model, "obelix", sizeof(result.model));
+    result.model[MFG_INFO_MODEL_STRING_LENGTH - 1] = '\0';
+    result.vibe_cali = MFG_INFO_VIBE_CALI_INVALID;
   }
 
   return result;
 }
 
-WatchInfoColor mfg_info_get_watch_color(void) {
-  return prv_fetch_struct().color;
-}
+WatchInfoColor mfg_info_get_watch_color(void) { return prv_fetch_struct().color; }
 
 void mfg_info_set_watch_color(WatchInfoColor color) {
   MfgData data = prv_fetch_struct();
@@ -47,21 +45,19 @@ void mfg_info_set_watch_color(WatchInfoColor color) {
   prv_update_struct(&data);
 }
 
-void mfg_info_get_model(char* buffer) {
+void mfg_info_get_model(char *buffer) {
   MfgData data = prv_fetch_struct();
   strcpy(buffer, data.model);
 }
 
-void mfg_info_set_model(const char* model) {
+void mfg_info_set_model(const char *model) {
   MfgData data = prv_fetch_struct();
   strncpy(data.model, model, sizeof(data.model));
   data.model[MFG_INFO_MODEL_STRING_LENGTH - 1] = '\0';
   prv_update_struct(&data);
 }
 
-uint8_t mfg_info_get_vibe_cali(void) {
-  return prv_fetch_struct().vibe_cali;
-}
+uint8_t mfg_info_get_vibe_cali(void) { return prv_fetch_struct().vibe_cali; }
 
 void mfg_info_set_vibe_cali(uint8_t cali) {
   MfgData data = prv_fetch_struct();

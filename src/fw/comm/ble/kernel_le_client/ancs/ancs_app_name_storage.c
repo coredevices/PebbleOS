@@ -46,14 +46,10 @@ void ancs_app_name_storage_init(void) {
   s_cache = kernel_zalloc_check(sizeof(*s_cache));
   uint8_t *buffer =
       kernel_zalloc_check(sizeof(AncsAppNameStorageEntry) * ANCS_APP_NAME_STORAGE_SIZE);
-  circular_cache_init(s_cache,
-                      buffer,
-                      sizeof(AncsAppNameStorageEntry),
-                      ANCS_APP_NAME_STORAGE_SIZE,
+  circular_cache_init(s_cache, buffer, sizeof(AncsAppNameStorageEntry), ANCS_APP_NAME_STORAGE_SIZE,
                       prv_comparator);
   circular_cache_set_item_destructor(s_cache, prv_destructor);
 }
-
 
 void ancs_app_name_storage_deinit(void) {
   if (s_cache) {
@@ -70,21 +66,23 @@ void ancs_app_name_storage_store(const ANCSAttribute *app_id, const ANCSAttribut
   }
 
   // copy app id
-  ANCSAttribute *app_id_copy = kernel_zalloc_check(sizeof(ANCSAttribute) + app_id->length);;
+  ANCSAttribute *app_id_copy = kernel_zalloc_check(sizeof(ANCSAttribute) + app_id->length);
+  ;
   memcpy(app_id_copy, app_id, sizeof(ANCSAttribute) + app_id->length);
   // copy app name
-  ANCSAttribute *app_name_copy = kernel_zalloc_check(sizeof(ANCSAttribute) + app_name->length);;
+  ANCSAttribute *app_name_copy = kernel_zalloc_check(sizeof(ANCSAttribute) + app_name->length);
+  ;
   memcpy(app_name_copy, app_name, sizeof(ANCSAttribute) + app_name->length);
   AncsAppNameStorageEntry entry = {
-    .app_id = app_id_copy,
-    .app_name = app_name_copy,
+      .app_id = app_id_copy,
+      .app_name = app_name_copy,
   };
   circular_cache_push(s_cache, &entry);
 }
 
 ANCSAttribute *ancs_app_name_storage_get(const ANCSAttribute *app_id) {
   AncsAppNameStorageEntry entry = {
-    .app_id = (ANCSAttribute *)app_id,
+      .app_id = (ANCSAttribute *)app_id,
   };
   AncsAppNameStorageEntry *found = circular_cache_get(s_cache, &entry);
   if (found) {

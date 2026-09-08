@@ -20,15 +20,15 @@ typedef struct AppState {
   TextLayer box;
 } AppState;
 
-static const char* QUOTE_BUF_1 =
-  "Space, the final frontier. These are the voyages of the starship Enterprise. "
-  "Its 5-year mission: to explore strange new worlds, "
-  "to seek out new life and new civilizations, to boldly go where no man has gone before. ";
+static const char *QUOTE_BUF_1 =
+    "Space, the final frontier. These are the voyages of the starship Enterprise. "
+    "Its 5-year mission: to explore strange new worlds, "
+    "to seek out new life and new civilizations, to boldly go where no man has gone before. ";
 
-static const char* QUOTE_BUF_2 =
-  "Dib: You're just jealous...\n"
-  "Zim: This has nothing to do with jelly!\n"
-  "Zim: You dare agree with me? Prepare to meet your horrible doom!";
+static const char *QUOTE_BUF_2 =
+    "Dib: You're just jealous...\n"
+    "Zim: This has nothing to do with jelly!\n"
+    "Zim: You dare agree with me? Prepare to meet your horrible doom!";
 
 static void prv_window_load(Window *window) {
   graphics_text_perimeter_debugging_enable(true);
@@ -87,34 +87,33 @@ static void prv_window_load(Window *window) {
   // Setup paging before getting content size
   scroll_layer_set_paging(&data->scroll_layer, true);
   // Trim text layer and scroll content to fit text box
-  scroll_layer_set_content_size(
-    &data->scroll_layer, GSize(scroll_bounds.size.w, max_size_1.h + max_size_2.h));
+  scroll_layer_set_content_size(&data->scroll_layer,
+                                GSize(scroll_bounds.size.w, max_size_1.h + max_size_2.h));
 }
 
 static void push_window(struct AppState *data) {
-  Window* window = &data->window;
+  Window *window = &data->window;
   window_init(window, WINDOW_NAME("Text Flow"));
   window_set_user_data(window, data);
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_window_load,
-  });
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_window_load,
+                                     });
   const bool animated = true;
   app_window_stack_push(window, animated);
 }
-
 
 ////////////////////
 // App boilerplate
 
 static void handle_init(void) {
-  struct AppState* data = app_zalloc_check(sizeof(struct AppState));
+  struct AppState *data = app_zalloc_check(sizeof(struct AppState));
 
   app_state_set_user_data(data);
   push_window(data);
 }
 
 static void handle_deinit(void) {
-  struct AppState* data = app_state_get_user_data();
+  struct AppState *data = app_state_get_user_data();
   app_free(data);
 }
 
@@ -126,10 +125,8 @@ static void s_main(void) {
   handle_deinit();
 }
 
-const PebbleProcessMd* text_flow_app_get_info() {
-  static const PebbleProcessMdSystem text_flow_info = {
-    .common.main_func = &s_main,
-    .name = "Text Flow"
-  };
-  return (const PebbleProcessMd*) &text_flow_info;
+const PebbleProcessMd *text_flow_app_get_info() {
+  static const PebbleProcessMdSystem text_flow_info = {.common.main_func = &s_main,
+                                                       .name = "Text Flow"};
+  return (const PebbleProcessMd *)&text_flow_info;
 }

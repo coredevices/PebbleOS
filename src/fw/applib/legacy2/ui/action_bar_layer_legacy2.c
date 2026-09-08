@@ -11,12 +11,12 @@
 inline static bool action_bar_legacy2_is_highlighted(ActionBarLayerLegacy2 *action_bar,
                                                      uint8_t index) {
   PBL_ASSERTN(index < NUM_ACTION_BAR_LEGACY2_ITEMS);
-  return (bool) (action_bar->is_highlighted & (1 << index));
+  return (bool)(action_bar->is_highlighted & (1 << index));
 }
 
 inline static void action_bar_legacy2_set_highlighted(ActionBarLayerLegacy2 *action_bar,
                                                       uint8_t index, bool highlighted) {
-  PBL_ASSERT(index < NUM_ACTION_BAR_LEGACY2_ITEMS, "Index: %"PRIu8, index);
+  PBL_ASSERT(index < NUM_ACTION_BAR_LEGACY2_ITEMS, "Index: %" PRIu8, index);
 
   const uint8_t bit = (1 << index);
   if (highlighted) {
@@ -26,7 +26,7 @@ inline static void action_bar_legacy2_set_highlighted(ActionBarLayerLegacy2 *act
   }
 }
 
-static void action_bar_legacy2_changed_proc(ActionBarLayerLegacy2 *action_bar, GContext* ctx) {
+static void action_bar_legacy2_changed_proc(ActionBarLayerLegacy2 *action_bar, GContext *ctx) {
   if (action_bar->layer.window && action_bar->layer.window->on_screen == false) {
     // clear first, fixes issue of returning from other page while highlighted
     for (int i = 0; i < NUM_ACTION_BAR_LEGACY2_ITEMS; i++) {
@@ -35,7 +35,7 @@ static void action_bar_legacy2_changed_proc(ActionBarLayerLegacy2 *action_bar, G
   }
 }
 
-static void action_bar_legacy2_update_proc(ActionBarLayerLegacy2 *action_bar, GContext* ctx) {
+static void action_bar_legacy2_update_proc(ActionBarLayerLegacy2 *action_bar, GContext *ctx) {
   const GColor bg_color = get_native_color(action_bar->background_color);
   graphics_context_set_fill_color(ctx, bg_color);
   const uint8_t radius = 3;
@@ -58,9 +58,15 @@ static void action_bar_legacy2_update_proc(ActionBarLayerLegacy2 *action_bar, GC
         graphics_context_set_fill_color(ctx, highlighted_color);
         GCornerMask corner;
         switch (index) {
-          case 0: corner = GCornerTopLeft; break;
-          case NUM_ACTION_BAR_LEGACY2_ITEMS - 1: corner = GCornerBottomLeft; break;
-          default: corner = GCornerNone; break;
+          case 0:
+            corner = GCornerTopLeft;
+            break;
+          case NUM_ACTION_BAR_LEGACY2_ITEMS - 1:
+            corner = GCornerBottomLeft;
+            break;
+          default:
+            corner = GCornerNone;
+            break;
         }
         graphics_fill_round_rect(ctx, &rect, radius - margin, corner);
       }
@@ -69,7 +75,7 @@ static void action_bar_legacy2_update_proc(ActionBarLayerLegacy2 *action_bar, GC
       grect_align(&icon_rect, &rect, GAlignCenter, clip);
       const GCompOp op = (is_white != is_highlighted) ? GCompOpAssign : GCompOpAssignInverted;
       graphics_context_set_compositing_mode(ctx, op);
-      graphics_draw_bitmap_in_rect(ctx, (GBitmap*)icon, &icon_rect);
+      graphics_draw_bitmap_in_rect(ctx, (GBitmap *)icon, &icon_rect);
     }
     rect.origin.y += rect.size.h;
   }
@@ -78,14 +84,14 @@ static void action_bar_legacy2_update_proc(ActionBarLayerLegacy2 *action_bar, GC
 void action_bar_layer_legacy2_init(ActionBarLayerLegacy2 *action_bar) {
   *action_bar = (ActionBarLayerLegacy2){};
   layer_init(&action_bar->layer, &GRectZero);
-  action_bar->layer.update_proc = (LayerUpdateProc) action_bar_legacy2_update_proc;
+  action_bar->layer.update_proc = (LayerUpdateProc)action_bar_legacy2_update_proc;
   action_bar->layer.property_changed_proc =
-      (PropertyChangedProc) (void *) action_bar_legacy2_changed_proc;
+      (PropertyChangedProc)(void *)action_bar_legacy2_changed_proc;
   action_bar->background_color = GColor2Black;
 }
 
 ActionBarLayerLegacy2 *action_bar_layer_legacy2_create(void) {
-  ActionBarLayerLegacy2 * layer = task_malloc(sizeof(ActionBarLayerLegacy2));
+  ActionBarLayerLegacy2 *layer = task_malloc(sizeof(ActionBarLayerLegacy2));
   if (layer) {
     action_bar_layer_legacy2_init(layer);
   }
@@ -104,11 +110,11 @@ void action_bar_layer_legacy2_destroy(ActionBarLayerLegacy2 *action_bar_layer) {
   task_free(action_bar_layer);
 }
 
-Layer* action_bar_layer_legacy2_get_layer(ActionBarLayerLegacy2 *action_bar_layer) {
+Layer *action_bar_layer_legacy2_get_layer(ActionBarLayerLegacy2 *action_bar_layer) {
   return &action_bar_layer->layer;
 }
 
-inline static void* action_bar_legacy2_get_context(ActionBarLayerLegacy2 *action_bar) {
+inline static void *action_bar_legacy2_get_context(ActionBarLayerLegacy2 *action_bar) {
   return action_bar->context ? action_bar->context : action_bar;
 }
 
@@ -163,8 +169,7 @@ inline static void action_bar_legacy2_update_click_config_provider(
     ActionBarLayerLegacy2 *action_bar) {
   if (action_bar->window) {
     window_set_click_config_provider_with_context(
-        action_bar->window,
-        (ClickConfigProvider) action_bar_legacy2_click_config_provider,
+        action_bar->window, (ClickConfigProvider)action_bar_legacy2_click_config_provider,
         action_bar);
   }
 }
@@ -195,8 +200,7 @@ void action_bar_layer_legacy2_add_to_window(ActionBarLayerLegacy2 *action_bar,
                                             struct Window *window) {
   const uint8_t vertical_margin = 3;
   const GRect *window_bounds = &window->layer.bounds;
-  GRect rect = GRect(0, 0, ACTION_BAR_LEGACY2_WIDTH,
-                     window_bounds->size.h - (vertical_margin * 2));
+  GRect rect = GRect(0, 0, ACTION_BAR_LEGACY2_WIDTH, window_bounds->size.h - (vertical_margin * 2));
   layer_set_bounds(&action_bar->layer, &rect);
   rect.origin.x = window_bounds->size.w - ACTION_BAR_LEGACY2_WIDTH;
   rect.origin.y = vertical_margin;
@@ -217,7 +221,7 @@ void action_bar_layer_legacy2_remove_from_window(ActionBarLayerLegacy2 *action_b
 }
 
 void action_bar_layer_legacy2_set_background_color_2bit(ActionBarLayerLegacy2 *action_bar,
-    GColor2 background_color) {
+                                                        GColor2 background_color) {
   GColor native_background_color = get_native_color(background_color);
   if (gcolor_equal(native_background_color, get_native_color(action_bar->background_color))) {
     return;

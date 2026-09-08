@@ -29,14 +29,10 @@ void app_install_mark_prioritized(AppInstallId install_id, bool can_expire) {
   ++s_app_install_timestamp_update_count;
 }
 
-AppInstallId app_manager_get_current_app_id(void) {
-  return INSTALL_ID_INVALID;
-}
+AppInstallId app_manager_get_current_app_id(void) { return INSTALL_ID_INVALID; }
 
 static PebbleProcessMd s_process_md;
-const PebbleProcessMd* app_manager_get_current_app_md(void) {
-  return &s_process_md;
-}
+const PebbleProcessMd *app_manager_get_current_app_md(void) { return &s_process_md; }
 
 static int s_consumed_count;
 static AppOutboxStatus s_last_status_code;
@@ -49,8 +45,7 @@ void app_outbox_service_consume_message(AppOutboxMessage *message, AppOutboxStat
 static AppOutboxMessageHandler s_outbox_message_handler;
 static size_t s_service_data_size;
 void app_outbox_service_register(AppOutboxServiceTag service_tag,
-                                 AppOutboxMessageHandler message_handler,
-                                 PebbleTask consumer_task,
+                                 AppOutboxMessageHandler message_handler, PebbleTask consumer_task,
                                  size_t service_data_size) {
   s_outbox_message_handler = message_handler;
   s_service_data_size = service_data_size;
@@ -61,15 +56,11 @@ bool app_outbox_service_is_message_cancelled(AppOutboxMessage *message) {
   return s_is_message_cancelled;
 }
 
-void app_outbox_service_cleanup_all_pending_messages(void) {
-  s_is_message_cancelled = true;
-}
+void app_outbox_service_cleanup_all_pending_messages(void) { s_is_message_cancelled = true; }
 
 static CommSession s_system_session;
 static CommSession *s_system_session_ptr;
-CommSession *comm_session_get_system_session(void) {
-  return s_system_session_ptr;
-}
+CommSession *comm_session_get_system_session(void) { return s_system_session_ptr; }
 
 static CommSession s_app_session;
 static CommSession *s_app_session_ptr;
@@ -89,18 +80,15 @@ bool comm_session_is_valid(const CommSession *session) {
 }
 
 static int s_send_next_count = 0;
-void comm_session_send_next(CommSession *session) {
-  ++s_send_next_count;
-}
+void comm_session_send_next(CommSession *session) { ++s_send_next_count; }
 
 void comm_session_set_responsiveness(CommSession *session, BtConsumer consumer,
-                                     ResponseTimeState state, uint16_t max_period_secs) {
-}
+                                     ResponseTimeState state, uint16_t max_period_secs) {}
 
 void comm_session_sanitize_app_session(CommSession **session_in_out) {
   CommSession *permitted_session = comm_session_get_current_app_session();
-  *session_in_out = ((!*session_in_out) ||
-                     (*session_in_out == permitted_session)) ? permitted_session : NULL;
+  *session_in_out =
+      ((!*session_in_out) || (*session_in_out == permitted_session)) ? permitted_session : NULL;
 }
 
 // Helpers
@@ -137,13 +125,12 @@ static void prv_process_send_queue(CommSession *session) {
 }
 
 #define assert_consumed(expected_last_status, expected_consumed_count) \
-{ \
-  cl_assert_equal_i(expected_last_status, s_last_status_code); \
-  cl_assert_equal_i(expected_consumed_count, s_consumed_count); \
-}
+  {                                                                    \
+    cl_assert_equal_i(expected_last_status, s_last_status_code);       \
+    cl_assert_equal_i(expected_consumed_count, s_consumed_count);      \
+  }
 
-#define assert_not_consumed() \
-  cl_assert_equal_i(0, s_consumed_count);
+#define assert_not_consumed() cl_assert_equal_i(0, s_consumed_count);
 
 // Tests
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -201,26 +188,23 @@ void test_app_message_sender__outbox_data_too_short(void) {
 }
 
 void test_app_message_sender__disallowed_endpoint(void) {
-  AppMessageAppOutboxData *outbox_data =
-      prv_create_and_send_outbox_message(s_system_session_ptr, DISALLOWED_ENDPOINT_ID,
-                                         TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
+  AppMessageAppOutboxData *outbox_data = prv_create_and_send_outbox_message(
+      s_system_session_ptr, DISALLOWED_ENDPOINT_ID, TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
   assert_consumed(AppMessageSenderErrorEndpointDisallowed, 1);
   app_free(outbox_data);
 }
 
 void test_app_message_sender__system_session_but_not_js_app(void) {
-  AppMessageAppOutboxData *outbox_data =
-      prv_create_and_send_outbox_message(s_system_session_ptr, ALLOWED_ENDPOINT_ID,
-                                         TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
+  AppMessageAppOutboxData *outbox_data = prv_create_and_send_outbox_message(
+      s_system_session_ptr, ALLOWED_ENDPOINT_ID, TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
   assert_consumed(AppMessageSenderErrorDisconnected, 1);
   app_free(outbox_data);
 }
 
 void test_app_message_sender__app_session_but_js_app(void) {
   s_process_md.allow_js = true;
-  AppMessageAppOutboxData *outbox_data =
-      prv_create_and_send_outbox_message(s_app_session_ptr, ALLOWED_ENDPOINT_ID,
-                                         TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
+  AppMessageAppOutboxData *outbox_data = prv_create_and_send_outbox_message(
+      s_app_session_ptr, ALLOWED_ENDPOINT_ID, TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
   assert_consumed(AppMessageSenderErrorDisconnected, 1);
   app_free(outbox_data);
 }
@@ -228,17 +212,15 @@ void test_app_message_sender__app_session_but_js_app(void) {
 void test_app_message_sender__no_sessions_connected(void) {
   s_system_session_ptr = NULL;
   s_app_session_ptr = NULL;
-  AppMessageAppOutboxData *outbox_data =
-      prv_create_and_send_outbox_message(NULL /* auto-select */, ALLOWED_ENDPOINT_ID,
-                                         TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
+  AppMessageAppOutboxData *outbox_data = prv_create_and_send_outbox_message(
+      NULL /* auto-select */, ALLOWED_ENDPOINT_ID, TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
   assert_consumed(AppMessageSenderErrorDisconnected, 1);
   app_free(outbox_data);
 }
 
 void test_app_message_sender__auto_select_not_js_app(void) {
-  AppMessageAppOutboxData *outbox_data =
-      prv_create_and_send_outbox_message(NULL /* auto-select */, ALLOWED_ENDPOINT_ID,
-                                         TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
+  AppMessageAppOutboxData *outbox_data = prv_create_and_send_outbox_message(
+      NULL /* auto-select */, ALLOWED_ENDPOINT_ID, TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
   prv_process_send_queue(s_system_session_ptr);
   assert_not_consumed();
 
@@ -250,9 +232,8 @@ void test_app_message_sender__auto_select_not_js_app(void) {
 
 void test_app_message_sender__auto_select_js_app(void) {
   s_process_md.allow_js = true;
-  AppMessageAppOutboxData *outbox_data =
-      prv_create_and_send_outbox_message(NULL /* auto-select */, ALLOWED_ENDPOINT_ID,
-                                         TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
+  AppMessageAppOutboxData *outbox_data = prv_create_and_send_outbox_message(
+      NULL /* auto-select */, ALLOWED_ENDPOINT_ID, TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
   prv_process_send_queue(s_app_session_ptr);
   assert_not_consumed();
 
@@ -264,9 +245,8 @@ void test_app_message_sender__auto_select_js_app(void) {
 
 void test_app_message_sender__system_session_and_js_app(void) {
   s_process_md.allow_js = true;
-  AppMessageAppOutboxData *outbox_data =
-      prv_create_and_send_outbox_message(s_system_session_ptr, ALLOWED_ENDPOINT_ID,
-                                         TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
+  AppMessageAppOutboxData *outbox_data = prv_create_and_send_outbox_message(
+      s_system_session_ptr, ALLOWED_ENDPOINT_ID, TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
   assert_not_consumed();
   prv_process_send_queue(s_system_session_ptr);
   assert_consumed(AppMessageSenderErrorSuccess, 1);
@@ -278,9 +258,8 @@ void test_app_message_sender__system_session_and_js_app(void) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void test_app_message_sender__freed_but_not_sent_entirely(void) {
-  AppMessageAppOutboxData *outbox_data =
-      prv_create_and_send_outbox_message(NULL /* auto-select */, ALLOWED_ENDPOINT_ID,
-                                         TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
+  AppMessageAppOutboxData *outbox_data = prv_create_and_send_outbox_message(
+      NULL /* auto-select */, ALLOWED_ENDPOINT_ID, TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
   size_t length = comm_session_send_queue_get_length(s_app_session_ptr);
   comm_session_send_queue_consume(s_app_session_ptr, length - 1);
   comm_session_send_queue_cleanup(s_app_session_ptr);
@@ -290,9 +269,8 @@ void test_app_message_sender__freed_but_not_sent_entirely(void) {
 }
 
 void test_app_message_sender__byte_by_byte_consume(void) {
-  AppMessageAppOutboxData *outbox_data =
-      prv_create_and_send_outbox_message(NULL /* auto-select */, ALLOWED_ENDPOINT_ID,
-                                         TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
+  AppMessageAppOutboxData *outbox_data = prv_create_and_send_outbox_message(
+      NULL /* auto-select */, ALLOWED_ENDPOINT_ID, TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
   size_t length = comm_session_send_queue_get_length(s_app_session_ptr);
   cl_assert_equal_i(length, sizeof(PebbleProtocolHeader) + sizeof(TEST_PAYLOAD));
 
@@ -302,8 +280,8 @@ void test_app_message_sender__byte_by_byte_consume(void) {
 
     // Test the `read_pointer` implementation:
     const uint8_t *read_pointer = NULL;
-    size_t length_available = comm_session_send_queue_get_read_pointer(s_app_session_ptr,
-                                                                       &read_pointer);
+    size_t length_available =
+        comm_session_send_queue_get_read_pointer(s_app_session_ptr, &read_pointer);
     cl_assert(read_pointer);
     cl_assert_equal_i(TEST_EXPECTED_PP_MSG[i], *read_pointer);
     // Expect that the header and payload will be non-contiguous:
@@ -328,9 +306,8 @@ void test_app_message_sender__byte_by_byte_consume(void) {
 }
 
 void test_app_message_sender__byte_by_byte_copy_with_offset(void) {
-  AppMessageAppOutboxData *outbox_data =
-      prv_create_and_send_outbox_message(NULL /* auto-select */, ALLOWED_ENDPOINT_ID,
-                                         TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
+  AppMessageAppOutboxData *outbox_data = prv_create_and_send_outbox_message(
+      NULL /* auto-select */, ALLOWED_ENDPOINT_ID, TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
   size_t length = comm_session_send_queue_get_length(s_app_session_ptr);
   cl_assert_equal_i(length, sizeof(PebbleProtocolHeader) + sizeof(TEST_PAYLOAD));
 
@@ -361,9 +338,8 @@ void test_app_message_sender__byte_by_byte_copy_with_offset(void) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static void prv_quit_app_after_pp_msg_byte(uint32_t num_bytes) {
-  AppMessageAppOutboxData *outbox_data =
-  prv_create_and_send_outbox_message(NULL /* auto-select */, ALLOWED_ENDPOINT_ID,
-                                     TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
+  AppMessageAppOutboxData *outbox_data = prv_create_and_send_outbox_message(
+      NULL /* auto-select */, ALLOWED_ENDPOINT_ID, TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
 
   size_t length = comm_session_send_queue_get_length(s_app_session_ptr);
   uint8_t bytes_out[length];
@@ -371,8 +347,8 @@ static void prv_quit_app_after_pp_msg_byte(uint32_t num_bytes) {
 
   // Copy & consume one byte of the header -- note the header is 4 bytes total:
   size_t first_length = num_bytes;
-  cl_assert_equal_i(first_length, comm_session_send_queue_copy(s_app_session_ptr, 0,
-                                                               first_length, bytes_out));
+  cl_assert_equal_i(first_length,
+                    comm_session_send_queue_copy(s_app_session_ptr, 0, first_length, bytes_out));
   comm_session_send_queue_consume(s_app_session_ptr, first_length);
 
   // App quits with only one header byte consumed:
@@ -380,8 +356,7 @@ static void prv_quit_app_after_pp_msg_byte(uint32_t num_bytes) {
 
   // Copy & consume the rest:
   size_t second_length = (length - first_length);
-  cl_assert_equal_i(second_length, comm_session_send_queue_copy(s_app_session_ptr, 0,
-                                                                second_length,
+  cl_assert_equal_i(second_length, comm_session_send_queue_copy(s_app_session_ptr, 0, second_length,
                                                                 bytes_out + first_length));
   comm_session_send_queue_consume(s_app_session_ptr, second_length);
 

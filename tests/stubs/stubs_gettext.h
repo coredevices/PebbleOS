@@ -3,6 +3,4 @@
 
 #pragma once
 
-const char *gettext(const char *msg) {
-  return msg;
-}
+const char *gettext(const char *msg) { return msg; }

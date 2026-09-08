@@ -19,10 +19,10 @@ typedef struct {
   pbl_tick_t ticks;
 } pbl_timeout_t;
 
-#define PBL_NO_WAIT ((pbl_timeout_t){ .ticks = 0 })
-#define PBL_FOREVER ((pbl_timeout_t){ .ticks = PBL_TICK_FOREVER })
-#define PBL_TICKS(t) ((pbl_timeout_t){ .ticks = (t) })
-#define PBL_MSEC(ms) ((pbl_timeout_t){ .ticks = pbl_ms_to_ticks(ms) })
+#define PBL_NO_WAIT ((pbl_timeout_t){.ticks = 0})
+#define PBL_FOREVER ((pbl_timeout_t){.ticks = PBL_TICK_FOREVER})
+#define PBL_TICKS(t) ((pbl_timeout_t){.ticks = (t)})
+#define PBL_MSEC(ms) ((pbl_timeout_t){.ticks = pbl_ms_to_ticks(ms)})
 #define PBL_SEC(s) PBL_MSEC((s) * 1000U)
 
 pbl_tick_t pbl_ms_to_ticks(uint32_t ms);
@@ -37,4 +37,3 @@ typedef uint8_t pbl_prio_t;
 #define PBL_PRIO_MAX ((pbl_prio_t)(CONFIG_KERNEL_NUM_PRIORITIES - 1))
 
 struct pbl_thread;
-

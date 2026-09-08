@@ -10,19 +10,18 @@
 
 BTDevice bt_device_init_with_address(BTDeviceAddress address, bool is_random) {
   BTDeviceInternal device = {
-    .address = address,
-    .is_classic = false,
-    .is_random_address = is_random,
+      .address = address,
+      .is_classic = false,
+      .is_random_address = is_random,
   };
   return device.opaque;
 }
 
 BTDeviceAddress bt_device_get_address(BTDevice device) {
-  return ((BTDeviceInternal *) &device)->address;
+  return ((BTDeviceInternal *)&device)->address;
 }
 
-bool bt_device_address_equal(const BTDeviceAddress *addr1,
-                             const BTDeviceAddress *addr2) {
+bool bt_device_address_equal(const BTDeviceAddress *addr1, const BTDeviceAddress *addr2) {
   if (addr1 == NULL || addr2 == NULL) {
     return false;
   }
@@ -48,8 +47,8 @@ bool bt_device_internal_equal(const BTDeviceInternal *device1_int,
 }
 
 bool bt_device_equal(const BTDevice *device1, const BTDevice *device2) {
-  const BTDeviceInternal *device1_int = (const BTDeviceInternal *) device1;
-  const BTDeviceInternal *device2_int = (const BTDeviceInternal *) device2;
+  const BTDeviceInternal *device1_int = (const BTDeviceInternal *)device1;
+  const BTDeviceInternal *device2_int = (const BTDeviceInternal *)device2;
   return bt_device_internal_equal(device1_int, device2_int);
 }
 

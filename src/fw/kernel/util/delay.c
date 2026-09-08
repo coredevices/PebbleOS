@@ -12,20 +12,14 @@
 #endif
 
 #ifdef CONFIG_SOC_NRF52
-void NOINLINE delay_us(uint32_t us) {
-  nrfx_coredep_delay_us(us);
-}
+void NOINLINE delay_us(uint32_t us) { nrfx_coredep_delay_us(us); }
 
-void delay_init(void) {
-}
+void delay_init(void) {}
 
 #elif defined(CONFIG_SOC_SF32LB52)
-void NOINLINE delay_us(uint32_t us) {
-  HAL_Delay_us(us);
-}
+void NOINLINE delay_us(uint32_t us) { HAL_Delay_us(us); }
 
-void delay_init(void) {
-}
+void delay_init(void) {}
 
 #elif defined(CONFIG_QEMU)
 #include <cmsis_core.h>
@@ -34,7 +28,8 @@ void NOINLINE delay_us(uint32_t us) {
   // Use DWT cycle counter for accurate delays
   uint32_t cycles = us * (SystemCoreClock / 1000000);
   uint32_t start = DWT->CYCCNT;
-  while ((DWT->CYCCNT - start) < cycles) {}
+  while ((DWT->CYCCNT - start) < cycles) {
+  }
 }
 
 void delay_init(void) {

@@ -21,22 +21,14 @@
 void flash_api_reset_for_test(void);
 TimerID flash_api_get_erase_poll_timer_for_test(void);
 
+status_t return_success(void) { return S_SUCCESS; }
 
-status_t return_success(void) {
-  return S_SUCCESS;
-}
+status_t return_error(void) { return E_ERROR; }
 
-status_t return_error(void) {
-  return E_ERROR;
-}
-
-status_t flash_impl_init(bool coredump_mode) {
-  return S_SUCCESS;
-}
+status_t flash_impl_init(bool coredump_mode) { return S_SUCCESS; }
 
 void flash_impl_use(void) {}
 void flash_impl_release_many(uint32_t num_locks) {}
-
 
 int get_subsector_base_calls = 0;
 FlashAddress flash_impl_get_subsector_base_address(FlashAddress addr) {
@@ -85,97 +77,60 @@ status_t flash_impl_blank_check_sector(FlashAddress addr) {
   return blank_check_sector_return;
 }
 
-status_t flash_impl_enter_low_power_mode(void) {
-  return S_SUCCESS;
-}
+status_t flash_impl_enter_low_power_mode(void) { return S_SUCCESS; }
 
-status_t flash_impl_exit_low_power_mode(void) {
-  return S_SUCCESS;
-}
+status_t flash_impl_exit_low_power_mode(void) { return S_SUCCESS; }
 
-status_t flash_impl_erase_suspend(FlashAddress addr) {
-  return S_SUCCESS;
-}
+status_t flash_impl_erase_suspend(FlashAddress addr) { return S_SUCCESS; }
 
-status_t flash_impl_erase_resume(FlashAddress addr) {
-  return S_SUCCESS;
-}
+status_t flash_impl_erase_resume(FlashAddress addr) { return S_SUCCESS; }
 
-uint32_t flash_impl_get_typical_subsector_erase_duration_ms(void) {
-  return 100;
-}
+uint32_t flash_impl_get_typical_subsector_erase_duration_ms(void) { return 100; }
 
-uint32_t flash_impl_get_typical_sector_erase_duration_ms(void) {
-  return 100;
-}
+uint32_t flash_impl_get_typical_sector_erase_duration_ms(void) { return 100; }
 
-status_t flash_impl_get_write_status(void) {
+status_t flash_impl_get_write_status(void) { return E_UNKNOWN; }
+
+status_t flash_impl_read_sync(void *buffer, FlashAddress addr, size_t len) { return E_UNKNOWN; }
+
+status_t flash_impl_set_burst_mode(bool enable) { return E_UNKNOWN; }
+
+status_t flash_impl_unprotect(void) { return S_SUCCESS; }
+
+int flash_impl_write_page_begin(const void *buffer, FlashAddress addr, size_t len) {
   return E_UNKNOWN;
 }
 
-status_t flash_impl_read_sync(void *buffer, FlashAddress addr, size_t len) {
+void flash_impl_enable_write_protection(void) {}
+
+status_t flash_impl_write_protect(FlashAddress start_sector, FlashAddress end_sector) {
   return E_UNKNOWN;
 }
 
-status_t flash_impl_set_burst_mode(bool enable) {
-  return E_UNKNOWN;
-}
-
-status_t flash_impl_unprotect(void) {
+status_t flash_impl_set_nvram_erase_status(bool is_subsector, FlashAddress addr) {
   return S_SUCCESS;
 }
 
-int flash_impl_write_page_begin(const void *buffer, FlashAddress addr,
-                                size_t len) {
-  return E_UNKNOWN;
-}
+status_t flash_impl_clear_nvram_erase_status(void) { return S_SUCCESS; }
 
-void flash_impl_enable_write_protection(void) {
-}
-
-status_t flash_impl_write_protect(FlashAddress start_sector,
-                                  FlashAddress end_sector) {
-  return E_UNKNOWN;
-}
-
-status_t flash_impl_set_nvram_erase_status(bool is_subsector,
-                                           FlashAddress addr) {
-  return S_SUCCESS;
-}
-
-status_t flash_impl_clear_nvram_erase_status(void) {
-  return S_SUCCESS;
-}
-
-status_t flash_impl_get_nvram_erase_status(bool *is_subsector,
-                                           FlashAddress *addr) {
+status_t flash_impl_get_nvram_erase_status(bool *is_subsector, FlashAddress *addr) {
   return S_FALSE;
 }
 
-status_t flash_impl_read_security_register(uint32_t addr, uint8_t *val) {
-  return S_SUCCESS;
-}
+status_t flash_impl_read_security_register(uint32_t addr, uint8_t *val) { return S_SUCCESS; }
 
 status_t flash_impl_security_register_is_locked(uint32_t address, bool *locked) {
   *locked = false;
   return S_SUCCESS;
 }
 
-status_t flash_impl_erase_security_register(uint32_t addr) {
-  return S_SUCCESS;
-}
+status_t flash_impl_erase_security_register(uint32_t addr) { return S_SUCCESS; }
 
-status_t flash_impl_write_security_register(uint32_t addr, uint8_t val) {
-  return S_SUCCESS;
-}
+status_t flash_impl_write_security_register(uint32_t addr, uint8_t val) { return S_SUCCESS; }
 
-const FlashSecurityRegisters *flash_impl_security_registers_info(void) {
-  return NULL;
-}
+const FlashSecurityRegisters *flash_impl_security_registers_info(void) { return NULL; }
 
-void flash_erase_init(void) {
-}
-
+void flash_erase_init(void) {}
 
 void *callback_context = NULL;
 status_t callback_status = -12345;
@@ -201,9 +156,7 @@ void test_flash_api__initialize(void) {
   flash_init();
 }
 
-void test_flash_api__cleanup(void) {
-  stub_new_timer_cleanup();
-}
+void test_flash_api__cleanup(void) { stub_new_timer_cleanup(); }
 
 void test_flash_api__erase_subsector_calls_right_impl_func(void) {
   flash_erase_subsector(0, callback, NULL);

@@ -5,4 +5,4 @@
 
 #include "process_management/pebble_process_md.h"
 
-const PebbleProcessMd* test_mpu_violation_get_info(void);
+const PebbleProcessMd *test_mpu_violation_get_info(void);

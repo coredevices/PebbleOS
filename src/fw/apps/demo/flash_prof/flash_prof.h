@@ -5,4 +5,4 @@
 
 #include "process_management/pebble_process_md.h"
 
-const PebbleProcessMd* flash_prof_get_app_info();
+const PebbleProcessMd *flash_prof_get_app_info();

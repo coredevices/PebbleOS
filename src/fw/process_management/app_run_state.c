@@ -13,28 +13,27 @@
 #include <pbl/logging/logging.h>
 #include "pbl/util/attributes.h"
 
-#define PB_APP_STATE_ENDPOINT_ID       0x34
+#define PB_APP_STATE_ENDPOINT_ID 0x34
 
 typedef struct PACKED {
-  AppState state:8;
+  AppState state : 8;
   Uuid uuid;
 } AppRunState;
 
-
 static void prv_send_response(void *data) {
-  AppRunState *app_run_state = (AppRunState*)data;
+  AppRunState *app_run_state = (AppRunState *)data;
 
   CommSession *session = comm_session_get_system_session();
   if (session) {
     if (comm_session_has_capability(session, CommSessionRunState)) {
       char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
-      bool success = comm_session_send_data(session, PB_APP_STATE_ENDPOINT_ID,
-                                            (uint8_t*)app_run_state, sizeof(*app_run_state),
-                                            COMM_SESSION_DEFAULT_TIMEOUT);
+      bool success =
+          comm_session_send_data(session, PB_APP_STATE_ENDPOINT_ID, (uint8_t *)app_run_state,
+                                 sizeof(*app_run_state), COMM_SESSION_DEFAULT_TIMEOUT);
 
       uuid_to_string(&app_run_state->uuid, uuid_buffer);
-      PBL_LOG_DBG("AppRunState(0x34) %s sending status: %s - %u",
-              (success ? "success" : "failed"), uuid_buffer, app_run_state->state);
+      PBL_LOG_DBG("AppRunState(0x34) %s sending status: %s - %u", (success ? "success" : "failed"),
+                  uuid_buffer, app_run_state->state);
     } else {
       PBL_LOG_DBG("Using deprecated launcher_app_message");
       const bool is_running = ((app_run_state->state == RUNNING) ? true : false);
@@ -61,9 +60,9 @@ void app_run_state_command(CommSession *session, AppRunStateCommand cmd, const U
   switch (cmd) {
     case APP_RUN_STATE_RUN_COMMAND:
       // Launch the application provided it isn't running, otherwise this is a noop
-      app_manager_put_launch_app_event(&(AppLaunchEventConfig) {
-        .id = install_id,
-        .common.reason = APP_LAUNCH_PHONE,
+      app_manager_put_launch_app_event(&(AppLaunchEventConfig){
+          .id = install_id,
+          .common.reason = APP_LAUNCH_PHONE,
       });
       break;
     case APP_RUN_STATE_STOP_COMMAND:
@@ -99,12 +98,12 @@ void app_run_state_protocol_msg_callback(CommSession *session, const uint8_t *da
     Uuid uuid;
   } AppStateMessage;
 
-  const AppStateMessage *msg = (const AppStateMessage*)data;
+  const AppStateMessage *msg = (const AppStateMessage *)data;
 
   if (msg->command != APP_RUN_STATE_STATUS_COMMAND) {
     if (length < sizeof(AppStateMessage)) {
-      PBL_LOG_ERR("length mismatch, expected %"PRIu32" byte(s), got %"PRIu32" bytes",
-              (uint32_t) sizeof(AppStateMessage), (uint32_t) length);
+      PBL_LOG_ERR("length mismatch, expected %" PRIu32 " byte(s), got %" PRIu32 " bytes",
+                  (uint32_t)sizeof(AppStateMessage), (uint32_t)length);
       return;
     }
   }

@@ -7,9 +7,7 @@
 #include "apps/system/timeline/peek_layer.h"
 #include "pbl/util/attributes.h"
 
-PeekLayer * WEAK peek_layer_create(GRect frame) {
-  return NULL;
-}
+PeekLayer *WEAK peek_layer_create(GRect frame) { return NULL; }
 
 void WEAK peek_layer_destroy(PeekLayer *peek_layer) {}
 
@@ -36,17 +34,13 @@ void WEAK peek_layer_set_duration(PeekLayer *peek_layer, uint32_t duration);
 
 void WEAK peek_layer_play(PeekLayer *peek_layer) {}
 
-GSize WEAK peek_layer_get_size(PeekLayer *peek_layer) {
-  return GSizeZero;
-}
+GSize WEAK peek_layer_get_size(PeekLayer *peek_layer) { return GSizeZero; }
 
-ImmutableAnimation * WEAK peek_layer_create_play_animation(PeekLayer *peek_layer) {
-  return NULL;
-}
+ImmutableAnimation *WEAK peek_layer_create_play_animation(PeekLayer *peek_layer) { return NULL; }
 
-ImmutableAnimation * WEAK peek_layer_create_play_section_animation(PeekLayer *peek_layer,
-                                                                   uint32_t from_elapsed_ms,
-                                                                   uint32_t to_elapsed_ms) {
+ImmutableAnimation *WEAK peek_layer_create_play_section_animation(PeekLayer *peek_layer,
+                                                                  uint32_t from_elapsed_ms,
+                                                                  uint32_t to_elapsed_ms) {
   return NULL;
 }
 

@@ -17,11 +17,9 @@
 
 // Tests
 ////////////////////////////////////////////////////////////////
-void test_ancs_notifications_util__initialize(void) {
-}
+void test_ancs_notifications_util__initialize(void) {}
 
-void test_ancs_notifications_util__cleanup(void) {
-}
+void test_ancs_notifications_util__cleanup(void) {}
 
 static ANCSAttribute *prv_create_ancs_attr(const char *str) {
   const size_t len = strlen(str);
@@ -31,26 +29,24 @@ static ANCSAttribute *prv_create_ancs_attr(const char *str) {
   return attr;
 }
 
-static void prv_destroy_ancs_attr(ANCSAttribute *attr) {
-  free(attr);
-}
+static void prv_destroy_ancs_attr(ANCSAttribute *attr) { free(attr); }
 
 void test_ancs_notifications_util__parse_timestamp(void) {
   struct tm apr_3_13_00 = {
-    .tm_sec = 0,
-    .tm_min = 0,
-    .tm_hour = 13,
-    .tm_mday = 3,
-    .tm_mon = 3, // Apr
-    .tm_year = 2015 - 1900,
-    .tm_isdst = 1,
-    .tm_gmtoff = SECONDS_PER_HOUR, // DST offset (base 0 + 1h DST)
+      .tm_sec = 0,
+      .tm_min = 0,
+      .tm_hour = 13,
+      .tm_mday = 3,
+      .tm_mon = 3,  // Apr
+      .tm_year = 2015 - 1900,
+      .tm_isdst = 1,
+      .tm_gmtoff = SECONDS_PER_HOUR,  // DST offset (base 0 + 1h DST)
   };
 
   // DST info for US/Canada 2015
   TimezoneInfo tz_info = {
-    .dst_start = 1425780000, // Sun, 08 Mar 2015 02:00
-    .dst_end = 1446343200 // Sun, 01 Nov 2015 02:00
+      .dst_start = 1425780000,  // Sun, 08 Mar 2015 02:00
+      .dst_end = 1446343200     // Sun, 01 Nov 2015 02:00
   };
   time_util_update_timezone(&tz_info);
 

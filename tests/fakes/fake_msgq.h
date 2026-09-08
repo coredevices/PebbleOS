@@ -35,7 +35,7 @@ static FakeMsgq *prv_fake_msgq_get(struct pbl_msgq *q) {
   if (fake == NULL) {
     fake = malloc(sizeof(FakeMsgq));
     const size_t size = q->msg_size * q->max_msgs;
-    *fake = (FakeMsgq) { .q = q, .storage = malloc(size) };
+    *fake = (FakeMsgq){.q = q, .storage = malloc(size)};
     circular_buffer_init(&fake->ring, fake->storage, size);
     s_fake_msgq_list = (FakeMsgq *)list_prepend((ListNode *)s_fake_msgq_list, (ListNode *)fake);
   }
@@ -126,6 +126,4 @@ uint32_t pbl_msgq_num_used(const struct pbl_msgq *q) {
   return circular_buffer_get_read_space_remaining(&fake->ring) / q->msg_size;
 }
 
-uint32_t pbl_msgq_num_free(const struct pbl_msgq *q) {
-  return q->max_msgs - pbl_msgq_num_used(q);
-}
+uint32_t pbl_msgq_num_free(const struct pbl_msgq *q) { return q->max_msgs - pbl_msgq_num_used(q); }

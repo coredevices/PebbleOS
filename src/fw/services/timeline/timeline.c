@@ -96,7 +96,7 @@ static bool prv_is_in_window(time_t node_timestamp, uint16_t node_duration, time
 }
 
 static bool prv_show_event(TimelineNode *node, time_t timestamp, time_t midnight,
-  TimelineIterDirection direction, bool show_all_day_events) {
+                           TimelineIterDirection direction, bool show_all_day_events) {
   // hide events outside of the window
   if (!prv_is_in_window(node->timestamp, node->duration, timestamp)) {
     return false;
@@ -109,7 +109,7 @@ static bool prv_show_event(TimelineNode *node, time_t timestamp, time_t midnight
     return show_all_day_events;
   } else if (direction == TimelineIterDirectionFuture) {
     return (node->timestamp >= timestamp - fudge_time);
-  } else { // direction == TimelineIterDirectionPast
+  } else {  // direction == TimelineIterDirectionPast
     return (node->timestamp < timestamp - fudge_time);
   }
 }
@@ -118,7 +118,7 @@ static bool prv_show_event(TimelineNode *node, time_t timestamp, time_t midnight
 // i.e. no events exist between midnight today and now
 // iterate and figure out if we had a timed event pass today
 static bool prv_should_show_all_day_events(TimelineNode *head, time_t now, time_t today_midnight,
-  TimelineIterDirection direction) {
+                                           TimelineIterDirection direction) {
   TimelineNode *current = head;
   // show in future / hide in past all day events unless we find a timed event
   // between midnight and now
@@ -137,11 +137,11 @@ static bool prv_should_show_all_day_events(TimelineNode *head, time_t now, time_
 }
 
 static TimelineNode *prv_find_first_past(TimelineNode *head, time_t timestamp,
-  time_t today_midnight, bool show_all_day_events) {
+                                         time_t today_midnight, bool show_all_day_events) {
   TimelineNode *current = (TimelineNode *)list_get_tail((ListNode *)head);
   while (current) {
     if (prv_show_event(current, timestamp, today_midnight, TimelineIterDirectionPast,
-     show_all_day_events)) {
+                       show_all_day_events)) {
       break;
     }
     current = (TimelineNode *)current->node.prev;
@@ -150,11 +150,11 @@ static TimelineNode *prv_find_first_past(TimelineNode *head, time_t timestamp,
 }
 
 static TimelineNode *prv_find_first_future(TimelineNode *head, time_t timestamp,
-  time_t today_midnight, bool show_all_day_events) {
+                                           time_t today_midnight, bool show_all_day_events) {
   TimelineNode *current = head;
   while (current) {
     if (prv_show_event(current, timestamp, today_midnight, TimelineIterDirectionFuture,
-      show_all_day_events)) {
+                       show_all_day_events)) {
       break;
     }
     current = (TimelineNode *)current->node.next;
@@ -163,7 +163,8 @@ static TimelineNode *prv_find_first_future(TimelineNode *head, time_t timestamp,
 }
 
 static TimelineNode *prv_find_first(TimelineNode *head, TimelineIterDirection direction,
-  time_t timestamp, time_t today_midnight, bool show_all_day_events) {
+                                    time_t timestamp, time_t today_midnight,
+                                    bool show_all_day_events) {
   if (direction == TimelineIterDirectionPast) {
     return prv_find_first_past(head, timestamp, today_midnight, show_all_day_events);
   } else {
@@ -184,8 +185,8 @@ static int prv_num_nodes_for_serialized_item(CommonTimelineItemHeader *header) {
     // The span is the time between 0:00 on the first day of the event
     // and 24:00 on the last day of the event
     const time_t start_span = time_util_get_midnight_of(header->timestamp - SECONDS_PER_DAY + 1);
-    const time_t end_span = time_util_get_midnight_of(header->timestamp + header->duration *
-                                                      SECONDS_PER_MINUTE - 1);
+    const time_t end_span =
+        time_util_get_midnight_of(header->timestamp + header->duration * SECONDS_PER_MINUTE - 1);
     const time_t full_span = end_span - start_span;
     num_days = full_span / SECONDS_PER_DAY;
   }
@@ -215,8 +216,8 @@ static void prv_set_nodes(TimelineNode *nodes[], CommonTimelineItemHeader *heade
     nodes[num_nodes - 1]->duration = 0;
     nodes[num_nodes - 1]->all_day = false;
   }
-  nodes[0]->all_day = (nodes[0]->duration == MINUTES_PER_DAY &&
-                       nodes[0]->timestamp == midnight_first);
+  nodes[0]->all_day =
+      (nodes[0]->duration == MINUTES_PER_DAY && nodes[0]->timestamp == midnight_first);
 
   // middle days are all day events
   time_t midnight = time_util_get_midnight_of(header->timestamp);
@@ -229,7 +230,7 @@ static void prv_set_nodes(TimelineNode *nodes[], CommonTimelineItemHeader *heade
 }
 
 static void prv_set_nodes_all_day(TimelineNode *nodes[], CommonTimelineItemHeader *header,
-  int num_nodes) {
+                                  int num_nodes) {
   // Multiday events:
   // Each day is an all day event
 
@@ -250,7 +251,7 @@ static void prv_set_nodes_all_day(TimelineNode *nodes[], CommonTimelineItemHeade
 }
 
 static void prv_add_nodes_for_serialized_item(TimelineNode **list_head,
-  CommonTimelineItemHeader *header) {
+                                              CommonTimelineItemHeader *header) {
   int num_nodes = prv_num_nodes_for_serialized_item(header);
   TimelineNode *nodes[num_nodes];
 
@@ -270,14 +271,14 @@ static void prv_add_nodes_for_serialized_item(TimelineNode **list_head,
 
   for (int i = 0; i < num_nodes; i++) {
     *list_head = (TimelineNode *)list_sorted_add((ListNode *)*list_head, (ListNode *)nodes[i],
-      prv_time_comparator, true);
+                                                 prv_time_comparator, true);
   }
 }
 
 static bool prv_each(SettingsFile *file, SettingsRecordInfo *info, void *context) {
   // check entry is valid
   if (info->key_len != UUID_SIZE || info->val_len == 0) {
-    return true; // continue iteration
+    return true;  // continue iteration
   }
 
   TimelineNode **list_head = context;
@@ -291,7 +292,7 @@ static bool prv_each(SettingsFile *file, SettingsRecordInfo *info, void *context
 
   prv_add_nodes_for_serialized_item(list_head, &header);
 
-  return true; // continue iteration
+  return true;  // continue iteration
 }
 static void prv_set_indices(TimelineNode *timeline) {
   TimelineNode *node = timeline;
@@ -318,7 +319,7 @@ static int prv_first_event_comparator(TimelineNode *new_node, TimelineNode *old_
 }
 
 static void prv_set_node_from_header(CommonTimelineItemHeader *header, TimelineNode *node_out) {
-  prv_set_nodes(&(TimelineNode *) { node_out }, header, 1 /* num_nodes */);
+  prv_set_nodes(&(TimelineNode *){node_out}, header, 1 /* num_nodes */);
 }
 
 int timeline_item_time_comparator(CommonTimelineItemHeader *new_common,
@@ -349,7 +350,7 @@ static void prv_debug_print_pins(TimelineNode *node0) {
     PBL_LOG_DBG("Index %d", node->index);
     PBL_LOG_DBG("Timestamp %ld", node->timestamp);
     PBL_LOG_DBG("Duration %hu", node->duration);
-    PBL_LOG_DBG("All day? %s", node->all_day ? "True": "False");
+    PBL_LOG_DBG("All day? %s", node->all_day ? "True" : "False");
     PBL_LOG_DBG("Address %p", node);
     node = (TimelineNode *)node->node.next;
   }
@@ -359,9 +360,7 @@ static void prv_debug_print_pins(TimelineNode *node0) {
 // dummy iterator that always returns false
 // Useful for when there aren't any items in pindb
 // but we don't want an invalid iterator.
-static bool prv_iter_dummy(IteratorState state) {
-  return false;
-}
+static bool prv_iter_dummy(IteratorState state) { return false; }
 
 static bool prv_iter_next(IteratorState state) {
   TimelineIterState *timeline_iter_state = (TimelineIterState *)state;
@@ -377,16 +376,16 @@ static bool prv_iter_next(IteratorState state) {
       return false;
     }
   } while (!prv_show_event(timeline_iter_state->node, timeline_iter_state->start_time,
-      timeline_iter_state->midnight, timeline_iter_state->direction,
-      timeline_iter_state->show_all_day_events) ||
-      !timeline_exists(&timeline_iter_state->node->id));
+                           timeline_iter_state->midnight, timeline_iter_state->direction,
+                           timeline_iter_state->show_all_day_events) ||
+           !timeline_exists(&timeline_iter_state->node->id));
 
   timeline_item_free_allocated_buffer(&timeline_iter_state->pin);
   timeline_iter_state->pin = (TimelineItem){};
 
   status_t rv = pin_db_get(&timeline_iter_state->node->id, &timeline_iter_state->pin);
-  timeline_iter_state->current_day = time_util_get_midnight_of(
-    timeline_iter_state->node->timestamp);
+  timeline_iter_state->current_day =
+      time_util_get_midnight_of(timeline_iter_state->node->timestamp);
   timeline_iter_state->index = timeline_iter_state->node->index;
 #ifdef TIMELINE_SERVICE_DEBUG
   prv_debug_print_pins(timeline_iter_state->node);
@@ -408,16 +407,16 @@ static bool prv_iter_prev(IteratorState state) {
       return false;
     }
   } while (!prv_show_event(timeline_iter_state->node, timeline_iter_state->start_time,
-      timeline_iter_state->midnight, timeline_iter_state->direction,
-      timeline_iter_state->show_all_day_events) ||
-      !timeline_exists(&timeline_iter_state->node->id));
+                           timeline_iter_state->midnight, timeline_iter_state->direction,
+                           timeline_iter_state->show_all_day_events) ||
+           !timeline_exists(&timeline_iter_state->node->id));
 
   timeline_item_free_allocated_buffer(&timeline_iter_state->pin);
   timeline_iter_state->pin = (TimelineItem){};
 
   status_t rv = pin_db_get(&timeline_iter_state->node->id, &timeline_iter_state->pin);
-  timeline_iter_state->current_day = time_util_get_midnight_of(
-    timeline_iter_state->node->timestamp);
+  timeline_iter_state->current_day =
+      time_util_get_midnight_of(timeline_iter_state->node->timestamp);
   timeline_iter_state->index = timeline_iter_state->node->index;
 #ifdef TIMELINE_SERVICE_DEBUG
   prv_debug_print_pins(timeline_iter_state->node);
@@ -438,22 +437,20 @@ static void prv_prune_ordered_timeline_list(TimelineNode **head) {
       // remove the node from out list
       timeline_iter_remove_node(head, node);
     } else {
-      break; // the list is ordered so we are done
+      break;  // the list is ordered so we are done
     }
     node = next_node;
   }
 }
 
 static void prv_put_outgoing_call_event(uint32_t call_identifier, const char *caller_id) {
-  PebbleEvent event = {
-    .type = PEBBLE_PHONE_EVENT,
-    .phone = {
-      .type = PhoneEventType_Outgoing,
-      .source = PhoneCallSource_ANCS_Legacy,
-      .call_identifier = call_identifier,
-      .caller = phone_call_util_create_caller(caller_id, NULL),
-    }
-  };
+  PebbleEvent event = {.type = PEBBLE_PHONE_EVENT,
+                       .phone = {
+                           .type = PhoneEventType_Outgoing,
+                           .source = PhoneCallSource_ANCS_Legacy,
+                           .call_identifier = call_identifier,
+                           .caller = phone_call_util_create_caller(caller_id, NULL),
+                       }};
 
   event_put(&event);
 }
@@ -474,21 +471,17 @@ status_t timeline_init(TimelineNode **timeline) {
   return rv;
 }
 
-bool timeline_add(TimelineItem *item) {
-  return (S_SUCCESS == pin_db_insert_item(item));
-}
+bool timeline_add(TimelineItem *item) { return (S_SUCCESS == pin_db_insert_item(item)); }
 
-bool timeline_exists(Uuid *id) {
-  return (pin_db_get_len((uint8_t *)id, UUID_SIZE) > 0);
-}
+bool timeline_exists(Uuid *id) { return (pin_db_get_len((uint8_t *)id, UUID_SIZE) > 0); }
 
 bool timeline_remove(const Uuid *id) {
   // Use BlobDB directly in order to emit the BlobDB delete event
   return (S_SUCCESS == blob_db_delete(BlobDBIdPins, (uint8_t *)id, UUID_SIZE));
 }
 
-TimelineIterDirection timeline_direction_for_item(TimelineItem *item,
-     TimelineNode *timeline, time_t now) {
+TimelineIterDirection timeline_direction_for_item(TimelineItem *item, TimelineNode *timeline,
+                                                  time_t now) {
   if (item->header.all_day) {
     time_t today_midnight = time_util_get_midnight_of(now);
     if (today_midnight > item->header.timestamp ||
@@ -546,7 +539,6 @@ bool timeline_get_originator_id(const TimelineItem *item, Uuid *uuid) {
   return true;
 }
 
-
 //
 // Iter functions
 //
@@ -570,15 +562,15 @@ bool timeline_iter_remove_node_with_id(TimelineNode **head, Uuid *key) {
 }
 
 status_t timeline_iter_init(Iterator *iter, TimelineIterState *iter_state, TimelineNode **head,
-    TimelineIterDirection direction, time_t timestamp) {
+                            TimelineIterDirection direction, time_t timestamp) {
   iter_state->direction = direction;
   iter_state->start_time = timestamp;
   iter_state->midnight = time_util_get_midnight_of(timestamp);
   iter_state->current_day = iter_state->midnight;
-  iter_state->show_all_day_events = prv_should_show_all_day_events(*head, timestamp,
-    iter_state->midnight, direction);
+  iter_state->show_all_day_events =
+      prv_should_show_all_day_events(*head, timestamp, iter_state->midnight, direction);
   TimelineNode *node = prv_find_first(*head, direction, timestamp, iter_state->midnight,
-    iter_state->show_all_day_events);
+                                      iter_state->show_all_day_events);
   if (node == NULL) {
     iter_init(iter, prv_iter_dummy, prv_iter_dummy, iter_state);
     return S_NO_MORE_ITEMS;
@@ -596,7 +588,7 @@ status_t timeline_iter_init(Iterator *iter, TimelineIterState *iter_state, Timel
   iter_state->index = iter_state->node->index;
   if (direction == TimelineIterDirectionPast) {
     iter_init(iter, prv_iter_prev, prv_iter_next, iter_state);
-  } else { // Future
+  } else {  // Future
     iter_init(iter, prv_iter_next, prv_iter_prev, iter_state);
   }
 
@@ -653,7 +645,7 @@ bool timeline_add_missed_call_pin(TimelineItem *pin, uint32_t uid) {
   // TODO: PBL-23915
   // We leak this i18n'd string because not leaking it is really hard.
   // We make sure we only ever allocate it once though, so it's not the end of the world.
-  remove_action->attr_list.attributes[1].cstring = (char*)i18n_get("Remove", &i18n_key);
+  remove_action->attr_list.attributes[1].cstring = (char *)i18n_get("Remove", &i18n_key);
   remove_action->type = TimelineItemActionTypeRemove;
 
   return timeline_add(pin);
@@ -667,28 +659,27 @@ static void prv_put_notification_action_result(const Uuid *id, const char *msg,
                                                uint32_t timeline_res_id, ActionResultType type) {
   // send action result event
   PebbleSysNotificationActionResult *action_result =
-    kernel_malloc_check(sizeof(PebbleSysNotificationActionResult) + 2 * sizeof(Attribute));
+      kernel_malloc_check(sizeof(PebbleSysNotificationActionResult) + 2 * sizeof(Attribute));
 
   AttributeList result_attributes = {
-    .num_attributes = 2,
-    .attributes = (Attribute *)(((uint8_t *)action_result) + sizeof(*action_result)),
+      .num_attributes = 2,
+      .attributes = (Attribute *)(((uint8_t *)action_result) + sizeof(*action_result)),
   };
   result_attributes.attributes[0].id = AttributeIdSubtitle;
   result_attributes.attributes[0].cstring = (char *)msg;
   result_attributes.attributes[1].id = AttributeIdIconLarge;
   result_attributes.attributes[1].uint32 = timeline_res_id;
 
-  *action_result = (PebbleSysNotificationActionResult) {
-    .id = *id,
-    .type = type,
-    .attr_list = result_attributes,
+  *action_result = (PebbleSysNotificationActionResult){
+      .id = *id,
+      .type = type,
+      .attr_list = result_attributes,
   };
   notifications_handle_notification_action_result(action_result);
 }
 
-static void prv_do_remote_action(const Uuid *id, TimelineItemActionType type,
-                                 uint8_t action_id, const AttributeList *attributes,
-                                 bool do_async) {
+static void prv_do_remote_action(const Uuid *id, TimelineItemActionType type, uint8_t action_id,
+                                 const AttributeList *attributes, bool do_async) {
   if (comm_session_get_system_session()) {
     timeline_action_endpoint_invoke_action(id, type, action_id, attributes, do_async);
   } else {
@@ -699,8 +690,7 @@ static void prv_do_remote_action(const Uuid *id, TimelineItemActionType type,
   }
 }
 
-static void prv_remove_pin_action(const TimelineItem *item,
-                                  const TimelineItemAction *action,
+static void prv_remove_pin_action(const TimelineItem *item, const TimelineItemAction *action,
                                   const AttributeList *attributes) {
   if (item->header.from_watch) {
     // remove it via BlobDB
@@ -713,8 +703,7 @@ static void prv_remove_pin_action(const TimelineItem *item,
                                        TIMELINE_RESOURCE_RESULT_DELETED, ActionResultTypeSuccess);
   } else {
     const bool do_async = true;
-    prv_do_remote_action(&item->header.id, action->type,
-                         action->id, attributes, do_async);
+    prv_do_remote_action(&item->header.id, action->type, action->id, attributes, do_async);
   }
 }
 
@@ -728,16 +717,15 @@ static void prv_dismiss_local_notification_action(const TimelineItem *item) {
 
 static void prv_perform_ancs_negative_action(const TimelineItem *item,
                                              const TimelineItemAction *action) {
-  uint8_t action_id = attribute_get_uint8(&action->attr_list, AttributeIdAncsAction,
-                                          TIMELINE_INVALID_ACTION_ID);
+  uint8_t action_id =
+      attribute_get_uint8(&action->attr_list, AttributeIdAncsAction, TIMELINE_INVALID_ACTION_ID);
 
   // Try to load the ancs id from attributes first in case the item's parent id points to another
   // timeline item. If the attribute isn't found, we assume the ancs id is stored in the header
-  uint32_t ancs_uid = attribute_get_uint32(&action->attr_list, AttributeIdAncsId,
-                                           item->header.ancs_uid);
+  uint32_t ancs_uid =
+      attribute_get_uint32(&action->attr_list, AttributeIdAncsId, item->header.ancs_uid);
 
-  PBL_LOG_DBG("Perform ancs notification action (%"PRIu32", %"PRIu8")", ancs_uid,
-          action_id);
+  PBL_LOG_DBG("Perform ancs notification action (%" PRIu32 ", %" PRIu8 ")", ancs_uid, action_id);
   ancs_perform_action(ancs_uid, action_id);
 
   if (!timeline_is_bulk_ancs_action_mode_enabled()) {
@@ -762,7 +750,7 @@ static void prv_perform_ancs_negative_action(const TimelineItem *item,
 
 static void prv_get_pin_and_push_pin_window(void *data) {
   Uuid *parent_id = data;
-  TimelineItem *pin = task_malloc(sizeof(TimelineItem)); // cleaned-up by the modal
+  TimelineItem *pin = task_malloc(sizeof(TimelineItem));  // cleaned-up by the modal
   if (pin && pin_db_get(parent_id, pin) == S_SUCCESS) {
     timeline_pin_window_push_modal(pin);
   } else {
@@ -779,20 +767,16 @@ static void prv_perform_health_response_action(const TimelineItem *item,
   const char *message = attribute_get_string(&action->attr_list, AttributeIdBody,
                                              (char *)i18n_get("Thanks!", &i18n_key));
 
-  const uint32_t timeline_res_id = attribute_get_uint32(&action->attr_list, AttributeIdIconLarge,
-                                                        TIMELINE_RESOURCE_THUMBS_UP);
+  const uint32_t timeline_res_id =
+      attribute_get_uint32(&action->attr_list, AttributeIdIconLarge, TIMELINE_RESOURCE_THUMBS_UP);
 
   prv_put_notification_action_result(&item->header.id, message, timeline_res_id,
                                      ActionResultTypeSuccess);
 }
 
-void timeline_enable_ancs_bulk_action_mode(bool enable) {
-  s_bulk_action_mode = enable;
-}
+void timeline_enable_ancs_bulk_action_mode(bool enable) { s_bulk_action_mode = enable; }
 
-bool timeline_is_bulk_ancs_action_mode_enabled(void) {
-  return s_bulk_action_mode;
-}
+bool timeline_is_bulk_ancs_action_mode_enabled(void) { return s_bulk_action_mode; }
 
 typedef struct OpenAppContext {
   EventServiceInfo event_info;
@@ -817,8 +801,7 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
   uuid_to_string(&item->header.parent_id, uuid_buffer);
 
   switch (action->type) {
-    case TimelineItemActionTypeOpenWatchApp:
-    {
+    case TimelineItemActionTypeOpenWatchApp: {
       // find parent app
       AppInstallId install_id = app_install_get_id_for_uuid(&item->header.parent_id);
       if (install_id == INSTALL_ID_INVALID) {
@@ -829,29 +812,29 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
       // fetch the relevant attribute
       const uint32_t launch_code =
           attribute_get_uint32(&action->attr_list, AttributeIdLaunchCode, 0);
-      app_manager_put_launch_app_event(&(AppLaunchEventConfig) {
-        .id = install_id,
-        .common.args = (void *)(uintptr_t)launch_code,
-        .common.reason = APP_LAUNCH_TIMELINE_ACTION,
+      app_manager_put_launch_app_event(&(AppLaunchEventConfig){
+          .id = install_id,
+          .common.args = (void *)(uintptr_t)launch_code,
+          .common.reason = APP_LAUNCH_TIMELINE_ACTION,
       });
       PBL_LOG_INFO("Opening watch app %s", uuid_buffer);
 
       // Wait for the app we just launched to have something to render before hiding all modals.
       // If we don't we'll end up with flashing in a blank framebuffer.
       OpenAppContext *ctx = kernel_malloc_check(sizeof(OpenAppContext));
-      *ctx = (OpenAppContext) {
-        .event_info = {
-          .type = PEBBLE_RENDER_READY_EVENT,
-          .handler = prv_app_render_ready,
-          .context = ctx,
-        },
-        .install_id = install_id,
+      *ctx = (OpenAppContext){
+          .event_info =
+              {
+                  .type = PEBBLE_RENDER_READY_EVENT,
+                  .handler = prv_app_render_ready,
+                  .context = ctx,
+              },
+          .install_id = install_id,
       };
       event_service_client_subscribe(&ctx->event_info);
       break;
     }
-    case TimelineItemActionTypeOpenPin:
-    {
+    case TimelineItemActionTypeOpenPin: {
       Uuid *parent_id = kernel_malloc(sizeof(Uuid));
       if (parent_id) {
         *parent_id = item->header.parent_id;
@@ -860,10 +843,8 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
       }
       break;
     }
-    case TimelineItemActionTypeAncsDial:
-    {
-      const char *caller_id = attribute_get_string(&item->attr_list,
-                                                   AttributeIdTitle, "Unknown");
+    case TimelineItemActionTypeAncsDial: {
+      const char *caller_id = attribute_get_string(&item->attr_list, AttributeIdTitle, "Unknown");
       prv_put_outgoing_call_event(item->header.ancs_uid, caller_id);
       notifications_handle_notification_action_result(NULL);
       ancs_perform_action(item->header.ancs_uid, ActionIDPositive);
@@ -872,8 +853,7 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
     // FIXME PBL-18673 this is not necessarily dismiss
     case TimelineItemActionTypeAncsPositive:
     case TimelineItemActionTypeAncsNegative:
-    case TimelineItemActionTypeAncsDelete:
-    {
+    case TimelineItemActionTypeAncsDelete: {
       prv_perform_ancs_negative_action(item, action);
       notification_storage_set_status(&item->header.id, TimelineItemStatusDismissed);
       break;
@@ -883,7 +863,7 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
       // about dismissing it. We just confirm and dismiss locally.
       if (item->header.from_watch ||
           (((item->header.type == TimelineItemTypeNotification) ||
-           (item->header.type == TimelineItemTypeReminder)) &&
+            (item->header.type == TimelineItemTypeReminder)) &&
            !timeline_get_private_data_source((Uuid *)&item->header.parent_id))) {
         prv_dismiss_local_notification_action(item);
         return;
@@ -897,12 +877,10 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
     case TimelineItemActionTypeHttp:
     case TimelineItemActionTypeComplete:
     case TimelineItemActionTypePostpone:
-    case TimelineItemActionTypeRemoteRemove:
-    {
+    case TimelineItemActionTypeRemoteRemove: {
       // remote action, send it to the phone
       const bool do_async = false;
-      prv_do_remote_action(&item->header.id, action->type,
-                           action->id, attributes, do_async);
+      prv_do_remote_action(&item->header.id, action->type, action->id, attributes, do_async);
       break;
     }
     case TimelineItemActionTypeRemove:
@@ -927,38 +905,38 @@ typedef struct {
 } PrivateDataSourceInfo;
 
 static const PrivateDataSourceInfo s_data_sources[] = {
-  {
-    .id = UUID_NOTIFICATIONS_DATA_SOURCE,
-    .name = i18n_noop("Notifications"),
-  },
-  {
-    .id = UUID_CALENDAR_DATA_SOURCE,
-    .name = i18n_noop("Calendar"),
-  },
-  {
-    .id = UUID_WEATHER_DATA_SOURCE,
-    .name = i18n_noop("Weather"),
-  },
-  {
-    .id = UUID_REMINDERS_DATA_SOURCE,
-    .name = i18n_noop("Reminders"),
-  },
-  {
-    .id = UUID_ALARMS_DATA_SOURCE,
-    .name = i18n_noop("Alarms"),
-  },
-  {
-    .id = UUID_HEALTH_DATA_SOURCE,
-    .name = i18n_noop("Health"),
-  },
-  {
-    .id = UUID_INTERCOM_DATA_SOURCE,
-    .name = i18n_noop("Intercom"),
-  },
+    {
+        .id = UUID_NOTIFICATIONS_DATA_SOURCE,
+        .name = i18n_noop("Notifications"),
+    },
+    {
+        .id = UUID_CALENDAR_DATA_SOURCE,
+        .name = i18n_noop("Calendar"),
+    },
+    {
+        .id = UUID_WEATHER_DATA_SOURCE,
+        .name = i18n_noop("Weather"),
+    },
+    {
+        .id = UUID_REMINDERS_DATA_SOURCE,
+        .name = i18n_noop("Reminders"),
+    },
+    {
+        .id = UUID_ALARMS_DATA_SOURCE,
+        .name = i18n_noop("Alarms"),
+    },
+    {
+        .id = UUID_HEALTH_DATA_SOURCE,
+        .name = i18n_noop("Health"),
+    },
+    {
+        .id = UUID_INTERCOM_DATA_SOURCE,
+        .name = i18n_noop("Intercom"),
+    },
 };
 
 const char *timeline_get_private_data_source(Uuid *parent_id) {
-  for (int i = 0; i < (int) ARRAY_LENGTH(s_data_sources); i++) {
+  for (int i = 0; i < (int)ARRAY_LENGTH(s_data_sources); i++) {
     if (uuid_equal(parent_id, &s_data_sources[i].id)) {
       return s_data_sources[i].name;
     }

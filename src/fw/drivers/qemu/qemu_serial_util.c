@@ -13,9 +13,7 @@
 #include "util/net.h"
 
 // -----------------------------------------------------------------------------------------
-void qemu_serial_private_init_state(QemuSerialGlobals *state)
-{
-
+void qemu_serial_private_init_state(QemuSerialGlobals *state) {
   // Create our mutex
   pbl_mutex_init(&state->qemu_comm_lock);
   state->initialized = true;
@@ -23,15 +21,13 @@ void qemu_serial_private_init_state(QemuSerialGlobals *state)
   // Allocate buffer for received characters from the ISR
   uint32_t buffer_size = QEMU_ISR_RECV_BUFFER_SIZE;
   uint8_t *buffer_data = kernel_malloc_check(buffer_size);
-  shared_circular_buffer_init(&state->isr_buffer, buffer_data,  buffer_size);
+  shared_circular_buffer_init(&state->isr_buffer, buffer_data, buffer_size);
   shared_circular_buffer_add_client(&state->isr_buffer, &state->isr_buffer_client);
 
   // Allocate buffer for the received message
   state->msg_buffer = kernel_malloc_check(QEMU_MAX_DATA_LEN);
   state->msg_buffer_bytes = 0;
-
 }
-
 
 // -----------------------------------------------------------------------------------------
 // Helper function triggered by our ISR handler when we detect a high water mark on our receive
@@ -47,16 +43,16 @@ void qemu_serial_private_init_state(QemuSerialGlobals *state)
 // @param[out] *protocol protocol for the message
 // @return pointer to message, or NULL if no message available yet
 uint8_t *qemu_serial_private_assemble_message(QemuSerialGlobals *state, uint32_t *msg_bytes,
-            uint16_t *protocol) {
+                                              uint16_t *protocol) {
   uint16_t bytes_read;
   uint8_t byte;
   bool exit = false;
   bool got_msg = false;
-  time_t  cur_time = rtc_get_time();
+  time_t cur_time = rtc_get_time();
 
   // Reset our state if too much time has passed since we detected start of a packet
-  if (state->recv_state != QemuRecvState_WaitingHdrSignatureMSB
-      && cur_time > state->start_recv_packet_time + QEMU_RECV_PACKET_TIMEOUT_SEC) {
+  if (state->recv_state != QemuRecvState_WaitingHdrSignatureMSB &&
+      cur_time > state->start_recv_packet_time + QEMU_RECV_PACKET_TIMEOUT_SEC) {
     state->recv_state = QemuRecvState_WaitingHdrSignatureMSB;
     PBL_LOG_WRN("Resetting receive state - max packet time expired");
   }
@@ -64,34 +60,32 @@ uint8_t *qemu_serial_private_assemble_message(QemuSerialGlobals *state, uint32_t
   state->callback_pending = false;
 
   uint16_t bytes_avail = shared_circular_buffer_get_read_space_remaining(&state->isr_buffer,
-                &state->isr_buffer_client);
-  PBL_LOG_VERBOSE("prv_assemble_packet, state:%d, bytes:%d", state->recv_state,
-            bytes_avail);
+                                                                         &state->isr_buffer_client);
+  PBL_LOG_VERBOSE("prv_assemble_packet, state:%d, bytes:%d", state->recv_state, bytes_avail);
 
   // Log message if we detected any receive errors
   if (state->recv_error_count) {
-    PBL_LOG_ERR("%"PRIu32" receive errors detected", state->recv_error_count);
+    PBL_LOG_ERR("%" PRIu32 " receive errors detected", state->recv_error_count);
     state->recv_error_count = 0;
   }
 
   while (!exit && bytes_avail) {
     switch (state->recv_state) {
-      case QemuRecvState_WaitingHdrSignatureMSB:  {
+      case QemuRecvState_WaitingHdrSignatureMSB: {
         state->msg_buffer_bytes = 0;
         shared_circular_buffer_read_consume(&state->isr_buffer, &state->isr_buffer_client, 1, &byte,
-              &bytes_read);
+                                            &bytes_read);
         bytes_avail -= bytes_read;
         if (byte == QEMU_HEADER_MSB) {
           PBL_LOG_VERBOSE("got header signature MSB");
           state->recv_state = QemuRecvState_WaitingHdrSignatureLSB;
           state->start_recv_packet_time = cur_time;
         }
-      }
-      break;
+      } break;
 
-      case QemuRecvState_WaitingHdrSignatureLSB:  {
+      case QemuRecvState_WaitingHdrSignatureLSB: {
         shared_circular_buffer_read_consume(&state->isr_buffer, &state->isr_buffer_client, 1, &byte,
-              &bytes_read);
+                                            &bytes_read);
         bytes_avail -= bytes_read;
         if (byte == QEMU_HEADER_LSB) {
           state->recv_state = QemuRecvState_WaitingHdr;
@@ -99,10 +93,9 @@ uint8_t *qemu_serial_private_assemble_message(QemuSerialGlobals *state, uint32_t
         } else {
           state->recv_state = QemuRecvState_WaitingHdr;
         }
-      }
-      break;
+      } break;
 
-      case QemuRecvState_WaitingHdr:  {
+      case QemuRecvState_WaitingHdr: {
         // We already read in the header signature
         uint16_t req_bytes = sizeof(state->hdr) - sizeof(state->hdr.signature);
         if (bytes_avail < req_bytes) {
@@ -110,7 +103,8 @@ uint8_t *qemu_serial_private_assemble_message(QemuSerialGlobals *state, uint32_t
           break;
         }
         shared_circular_buffer_read_consume(&state->isr_buffer, &state->isr_buffer_client,
-              req_bytes, (uint8_t *)&state->hdr.protocol, &bytes_read);
+                                            req_bytes, (uint8_t *)&state->hdr.protocol,
+                                            &bytes_read);
         bytes_avail -= bytes_read;
 
         // Do byte swapping
@@ -126,14 +120,13 @@ uint8_t *qemu_serial_private_assemble_message(QemuSerialGlobals *state, uint32_t
           PBL_LOG_VERBOSE("got header: protocol: %d, len: %d", state->hdr.protocol, state->hdr.len);
           state->recv_state = QemuRecvState_WaitingData;
         }
-      }
-      break;
+      } break;
 
       case QemuRecvState_WaitingData: {
         uint16_t bytes_needed = state->hdr.len - state->msg_buffer_bytes;
-        shared_circular_buffer_read_consume(&state->isr_buffer, &state->isr_buffer_client,
-              MIN(bytes_avail, bytes_needed), state->msg_buffer + state->msg_buffer_bytes,
-              &bytes_read);
+        shared_circular_buffer_read_consume(
+            &state->isr_buffer, &state->isr_buffer_client, MIN(bytes_avail, bytes_needed),
+            state->msg_buffer + state->msg_buffer_bytes, &bytes_read);
         state->msg_buffer_bytes += bytes_read;
         bytes_avail -= bytes_read;
 
@@ -146,8 +139,7 @@ uint8_t *qemu_serial_private_assemble_message(QemuSerialGlobals *state, uint32_t
           got_msg = true;
           exit = true;
         }
-      }
-      break;
+      } break;
 
       case QemuRecvState_WaitingFooter: {
         QemuCommChannelFooter footer;
@@ -155,7 +147,7 @@ uint8_t *qemu_serial_private_assemble_message(QemuSerialGlobals *state, uint32_t
           exit = true;
         } else {
           shared_circular_buffer_read_consume(&state->isr_buffer, &state->isr_buffer_client,
-                sizeof(footer), (uint8_t *)&footer, &bytes_read);
+                                              sizeof(footer), (uint8_t *)&footer, &bytes_read);
           bytes_avail -= bytes_read;
           footer.signature = ntohs(footer.signature);
           if (footer.signature != QEMU_FOOTER_SIGNATURE) {
@@ -163,22 +155,19 @@ uint8_t *qemu_serial_private_assemble_message(QemuSerialGlobals *state, uint32_t
           }
           state->recv_state = QemuRecvState_WaitingHdrSignatureMSB;
         }
-      }
-      break;
-    } // switch()
-  } // while (!exit && bytes_avail)
+      } break;
+    }  // switch()
+  }  // while (!exit && bytes_avail)
 
   // Return pointer if we got a complete message
   if (got_msg) {
-    *msg_bytes= state->msg_buffer_bytes;
+    *msg_bytes = state->msg_buffer_bytes;
     *protocol = state->hdr.protocol;
     return state->msg_buffer;
   } else {
     return NULL;
   }
 }
-
-
 
 // ------------------------------------------------------------------------------------------
 // Unit test support

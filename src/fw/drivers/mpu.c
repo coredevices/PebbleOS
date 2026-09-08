@@ -6,7 +6,6 @@
 #include "pbl/mcu/cache.h"
 #include "system/passert.h"
 
-
 #include <cmsis_core.h>
 
 extern const uint32_t __SRAM_size__[];
@@ -20,9 +19,7 @@ extern const uint32_t __SRAM_size__[];
 #endif
 #define SRAM_END (SRAM_BASE + (uint32_t)__SRAM_size__)
 
-void mpu_disable(void) {
-  ARM_MPU_Disable();
-}
+void mpu_disable(void) { ARM_MPU_Disable(); }
 
 bool mpu_memory_is_cachable(const void *addr) {
   if (!dcache_is_enabled()) {
@@ -39,6 +36,5 @@ void mpu_init_region_from_region(MpuRegion *copy, const MpuRegion *from, bool al
   // Toggle user RW based on which task is about to run.
   PBL_ASSERTN(from->permissions == MpuPermissions_PrivRW);
   *copy = *from;
-  copy->permissions = allow_user_access ? MpuPermissions_PrivRW_UserRW
-                                        : MpuPermissions_PrivRW;
+  copy->permissions = allow_user_access ? MpuPermissions_PrivRW_UserRW : MpuPermissions_PrivRW;
 }

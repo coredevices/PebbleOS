@@ -7,11 +7,9 @@
 #include <stddef.h>
 #include <stdio.h>
 
-void slist_init(SingleListNode *node) {
-  node->next = NULL;
-}
+void slist_init(SingleListNode *node) { node->next = NULL; }
 
-SingleListNode* slist_insert_after(SingleListNode *node, SingleListNode *new_node) {
+SingleListNode *slist_insert_after(SingleListNode *node, SingleListNode *new_node) {
   if (node == NULL) {
     return new_node;
   }
@@ -21,7 +19,7 @@ SingleListNode* slist_insert_after(SingleListNode *node, SingleListNode *new_nod
   return new_node;
 }
 
-SingleListNode* slist_prepend(SingleListNode *head, SingleListNode *new_node) {
+SingleListNode *slist_prepend(SingleListNode *head, SingleListNode *new_node) {
   if (new_node == NULL) {
     return head;
   }
@@ -29,11 +27,11 @@ SingleListNode* slist_prepend(SingleListNode *head, SingleListNode *new_node) {
   return new_node;
 }
 
-SingleListNode* slist_append(SingleListNode *head, SingleListNode *new_node) {
+SingleListNode *slist_append(SingleListNode *head, SingleListNode *new_node) {
   return slist_insert_after(slist_get_tail(head), new_node);
 }
 
-SingleListNode* slist_pop_head(SingleListNode *head) {
+SingleListNode *slist_pop_head(SingleListNode *head) {
   if (head == NULL) {
     return NULL;
   }
@@ -64,14 +62,14 @@ void slist_remove(SingleListNode *node, SingleListNode **head) {
   }
 }
 
-SingleListNode* slist_get_next(SingleListNode *node) {
+SingleListNode *slist_get_next(SingleListNode *node) {
   if (node == NULL) {
     return NULL;
   }
   return node->next;
 }
 
-SingleListNode* slist_get_tail(SingleListNode *node) {
+SingleListNode *slist_get_tail(SingleListNode *node) {
   if (node == NULL) {
     return NULL;
   }
@@ -112,7 +110,7 @@ bool slist_contains(const SingleListNode *head, const SingleListNode *node) {
   return false;
 }
 
-SingleListNode* slist_find(SingleListNode *head, SingleListFilterCallback filter_callback,
+SingleListNode *slist_find(SingleListNode *head, SingleListFilterCallback filter_callback,
                            void *data) {
   if (head == NULL) {
     return NULL;
@@ -126,7 +124,7 @@ SingleListNode* slist_find(SingleListNode *head, SingleListFilterCallback filter
   return NULL;
 }
 
-SingleListNode* slist_sorted_add(SingleListNode *head, SingleListNode *new_node,
+SingleListNode *slist_sorted_add(SingleListNode *head, SingleListNode *new_node,
                                  Comparator comparator, bool ascending) {
   if (head == NULL) {
     return new_node;
@@ -164,7 +162,7 @@ SingleListNode* slist_sorted_add(SingleListNode *head, SingleListNode *new_node,
   }
 }
 
-SingleListNode* slist_concatenate(SingleListNode *restrict list_a,
+SingleListNode *slist_concatenate(SingleListNode *restrict list_a,
                                   SingleListNode *restrict list_b) {
   if (list_a == NULL) {
     return list_b;

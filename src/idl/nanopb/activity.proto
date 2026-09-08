@@ -16,7 +16,7 @@ option java_package = "com.getpebble.pipeline";
 import "measurements.proto";
 
 message ActivityInterval {
-  required uint32 offset_sec = 1; /// Relative to event.time_utc
+  required uint32 offset_sec = 1;  /// Relative to event.time_utc
   required uint32 duration_sec = 2;
 }
 
@@ -30,14 +30,15 @@ message ActivityInterval {
  */
 message ActivitySession {
   enum StartReason {
-    UnknownReason = 0; /// Protocol Buffers uses the first enum as the default
+    UnknownReason = 0;  /// Protocol Buffers uses the first enum as the default
     Automatic = 1;
     Manual = 2;
     AutomaticConvertedToManual = 3;
   }
 
   message Summary {
-    repeated MeasurementSet.Type types = 1; /// denotes types and order of packed data in each Sample
+    repeated MeasurementSet.Type types =
+        1;  /// denotes types and order of packed data in each Sample
     required Measurement measurement = 2;
   }
 
@@ -62,7 +63,7 @@ message ActivitySession {
 
 message ActivityType {
   enum InternalType {
-    UnknownType = 0; /// Protocol Buffers uses the first enum as the default
+    UnknownType = 0;  /// Protocol Buffers uses the first enum as the default
     Sleep = 1;
     DeepSleep = 2;
     Nap = 3;
@@ -75,7 +76,7 @@ message ActivityType {
 
   oneof type {
     InternalType internal_type = 1;
-    string custom_type = 2; /// Identifier, locally unique to Pebble/Phone
+    string custom_type = 2;  /// Identifier, locally unique to Pebble/Phone
   }
 
   optional string name = 3;
@@ -86,7 +87,7 @@ message ActivityType {
  */
 message ActivityPreset {
   enum Widget {
-    UnknownWidget = 0; /// Protocol Buffers uses the first enum as the default
+    UnknownWidget = 0;  /// Protocol Buffers uses the first enum as the default
 
     PaceTimePerDistance = 1;
     SpeedDistancePerTime = 2;
@@ -98,7 +99,7 @@ message ActivityPreset {
   required ActivityType type = 1;
 
   optional Widget main_widget = 4;
-  repeated Widget bottom_widgets = 5; /// (Probably up to 3)
+  repeated Widget bottom_widgets = 5;  /// (Probably up to 3)
 }
 
 /**

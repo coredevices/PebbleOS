@@ -4,26 +4,25 @@
 #include "pebble.h"
 #include <inttypes.h>
 
-
 // -------------------------------------------------------------------------------
 // Defines
 // Rect: left, top, width, height
 #define STEPS_HEIGHT 45
-#define STEPS_TOP ((DISP_ROWS - 3 * STEPS_HEIGHT)/2)
+#define STEPS_TOP ((DISP_ROWS - 3 * STEPS_HEIGHT) / 2)
 
 #if PBL_RECT
-  #define DISP_COLS 144
-  #define DISP_ROWS 168
+#define DISP_COLS 144
+#define DISP_ROWS 168
 #elif PBL_ROUND
-  #define DISP_COLS 180
-  #define DISP_ROWS 180
+#define DISP_COLS 180
+#define DISP_ROWS 180
 #endif
 
 #define CUR_STEP_RECT GRect(0, STEPS_TOP, DISP_COLS, STEPS_HEIGHT)
 #define TIME_RECT GRect(0, STEPS_TOP + STEPS_HEIGHT, DISP_COLS, STEPS_HEIGHT)
 #define DELTA_STEP_RECT GRect(0, STEPS_TOP + 2 * STEPS_HEIGHT, 144, STEPS_HEIGHT)
-#define TEXT_RECT GRect(0, STEPS_TOP + 3 * STEPS_HEIGHT - 3, \
-                        DISP_COLS, DISP_ROWS - STEPS_HEIGHT * 3 + 3)
+#define TEXT_RECT \
+  GRect(0, STEPS_TOP + 3 * STEPS_HEIGHT - 3, DISP_COLS, DISP_ROWS - STEPS_HEIGHT * 3 + 3)
 
 #define CURRENT_STEP_AVG 500
 #define DAILY_STEP_AVG 1000
@@ -34,7 +33,6 @@
 typedef enum {
   AppPersistKeyLapSteps = 0,
 } AppPersistKey;
-
 
 // -------------------------------------------------------------------------------
 // Structures
@@ -98,9 +96,8 @@ static HealthAPITestAppData *s_data;
 
 static void steps_update_text(HealthAPITestAppData *data);
 static void prv_debug_cmd_sleep_sessions(int index, void *context);
-static void results_update_text(HealthAPITestAppData *data, const char* text);
+static void results_update_text(HealthAPITestAppData *data, const char *text);
 static void prv_hr_update_text(HealthAPITestAppData *data);
-
 
 // -------------------------------------------------------------------------------
 // Return current time in ms
@@ -110,16 +107,13 @@ static uint64_t prv_ms(void) {
   return ((uint64_t)cur_sec * 1000) + cur_ms;
 }
 
-
 // -------------------------------------------------------------------------------
-static void prv_convert_seconds_to_time(uint32_t secs_after_midnight, char *text,
-                                        int text_len) {
+static void prv_convert_seconds_to_time(uint32_t secs_after_midnight, char *text, int text_len) {
   uint32_t minutes_after_midnight = secs_after_midnight / SECONDS_PER_MINUTE;
   uint32_t hour = minutes_after_midnight / MINUTES_PER_HOUR;
   uint32_t minute = minutes_after_midnight % MINUTES_PER_HOUR;
   snprintf(text, text_len, "%d:%02d", (int)hour, (int)minute);
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_display_alert(const char *text) {
@@ -128,16 +122,14 @@ static void prv_display_alert(const char *text) {
   results_update_text(s_data, text);
 }
 
-
 // -----------------------------------------------------------------------------------------
-static void prv_safe_strcat(char* dst, const char* src, int dst_space) {
+static void prv_safe_strcat(char *dst, const char *src, int dst_space) {
   int remaining = dst_space - strlen(dst);
   if (dst_space > 0) {
     strncat(dst, src, remaining);
   }
-  dst[dst_space-1] = 0;
+  dst[dst_space - 1] = 0;
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_display_scalar_history_alert(HealthAPITestAppData *data, const char *title,
@@ -157,7 +149,6 @@ static void prv_display_scalar_history_alert(HealthAPITestAppData *data, const c
 
   prv_display_alert(data->debug_card.dialog_text);
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_display_seconds_history_alert(HealthAPITestAppData *data, const char *title,
@@ -180,11 +171,8 @@ static void prv_display_seconds_history_alert(HealthAPITestAppData *data, const 
   prv_display_alert(data->debug_card.dialog_text);
 }
 
-
 // -------------------------------------------------------------------------------
-static void sleep_select_click_handler(ClickRecognizerRef recognizer, void *context) {
-}
-
+static void sleep_select_click_handler(ClickRecognizerRef recognizer, void *context) {}
 
 // -------------------------------------------------------------------------------
 static void sleep_up_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -192,7 +180,6 @@ static void sleep_up_click_handler(ClickRecognizerRef recognizer, void *context)
   window_stack_pop(true);
   window_stack_push(data->hr_window, true);
 }
-
 
 // -------------------------------------------------------------------------------
 static void sleep_down_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -207,7 +194,6 @@ static void sleep_down_long_click_handler(ClickRecognizerRef recognizer, void *c
   window_stack_push(data->debug_window, true /* Animated */);
 }
 
-
 // -------------------------------------------------------------------------------
 static void sleep_click_config_provider(void *context) {
   const int k_long_press_timeout_ms = 1000;
@@ -217,7 +203,6 @@ static void sleep_click_config_provider(void *context) {
   window_long_click_subscribe(BUTTON_ID_DOWN, k_long_press_timeout_ms,
                               sleep_down_long_click_handler, NULL);
 }
-
 
 // -------------------------------------------------------------------------------
 static void sleep_update_text(HealthAPITestAppData *data) {
@@ -232,12 +217,11 @@ static void sleep_update_text(HealthAPITestAppData *data) {
 
   char bed_time_str[8];
   struct tm *local_tm = localtime(&s_data->bed_time_utc);
-  strftime(bed_time_str, sizeof(bed_time_str),  "%H:%M", local_tm);
+  strftime(bed_time_str, sizeof(bed_time_str), "%H:%M", local_tm);
 
   char wake_time_str[8];
   local_tm = localtime(&s_data->awake_time_utc);
-  strftime(wake_time_str, sizeof(wake_time_str),  "%H:%M", local_tm);
-
+  strftime(wake_time_str, sizeof(wake_time_str), "%H:%M", local_tm);
 
   char total_sleep_str[8];
   char deep_sleep_str[8];
@@ -245,11 +229,10 @@ static void sleep_update_text(HealthAPITestAppData *data) {
   prv_convert_seconds_to_time(sleep_deep_sec, deep_sleep_str, sizeof(deep_sleep_str));
 
   snprintf(data->sleep_card.text, sizeof(data->sleep_card.text),
-           "Zzz..\ntotal: %s\ndeep: %s\nenter: %s\nexit: %s",
-           total_sleep_str, deep_sleep_str, bed_time_str, wake_time_str);
+           "Zzz..\ntotal: %s\ndeep: %s\nenter: %s\nexit: %s", total_sleep_str, deep_sleep_str,
+           bed_time_str, wake_time_str);
   text_layer_set_text(data->sleep_card.text_layer, data->sleep_card.text);
 }
-
 
 // -------------------------------------------------------------------------------
 static void sleep_window_load(Window *window) {
@@ -260,8 +243,7 @@ static void sleep_window_load(Window *window) {
   data->sleep_card.text_layer = text_layer_create(root_bounds);
   text_layer_set_text_alignment(data->sleep_card.text_layer, GTextAlignmentCenter);
   text_layer_set_background_color(data->sleep_card.text_layer, GColorClear);
-  text_layer_set_font(data->sleep_card.text_layer,
-                      fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+  text_layer_set_font(data->sleep_card.text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
   text_layer_set_text_color(data->sleep_card.text_layer, GColorWhite);
   layer_add_child(window_layer, text_layer_get_layer(data->sleep_card.text_layer));
 
@@ -269,14 +251,12 @@ static void sleep_window_load(Window *window) {
   sleep_update_text(data);
 }
 
-
 // -------------------------------------------------------------------------------
 static void sleep_window_unload(Window *window) {
   HealthAPITestAppData *data = window_get_user_data(window);
   text_layer_destroy(data->sleep_card.text_layer);
   data->sleep_card.text_layer = NULL;
 }
-
 
 // -------------------------------------------------------------------------------
 static void steps_select_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -301,7 +281,6 @@ static void steps_up_click_handler(ClickRecognizerRef recognizer, void *context)
   window_stack_push(data->sleep_window, true /* Animated */);
 }
 
-
 // -------------------------------------------------------------------------------
 static void steps_down_click_handler(ClickRecognizerRef recognizer, void *context) {
   HealthAPITestAppData *data = (HealthAPITestAppData *)context;
@@ -309,13 +288,11 @@ static void steps_down_click_handler(ClickRecognizerRef recognizer, void *contex
   window_stack_push(data->hr_window, true /* Animated */);
 }
 
-
 // -------------------------------------------------------------------------------
 static void steps_down_long_click_handler(ClickRecognizerRef recognizer, void *context) {
   HealthAPITestAppData *data = (HealthAPITestAppData *)context;
   window_stack_push(data->debug_window, true /* Animated */);
 }
-
 
 // -------------------------------------------------------------------------------
 static void steps_click_config_provider(void *context) {
@@ -325,26 +302,23 @@ static void steps_click_config_provider(void *context) {
   window_long_click_subscribe(BUTTON_ID_DOWN, 1000, steps_down_long_click_handler, NULL);
 }
 
-
 // -------------------------------------------------------------------------------
 static void steps_update_text(HealthAPITestAppData *data) {
   // Show total steps
   if (data->steps_card.cur_step_layer) {
-    snprintf(data->steps_card.cur_step_text, sizeof(data->steps_card.cur_step_text),
-             "%d", (int) data->cur_steps);
+    snprintf(data->steps_card.cur_step_text, sizeof(data->steps_card.cur_step_text), "%d",
+             (int)data->cur_steps);
     text_layer_set_text(data->steps_card.cur_step_layer, data->steps_card.cur_step_text);
   }
 
   // Show time
   if (data->steps_card.time_layer) {
     time_t now = time(NULL);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "new time: %d", (int) now);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "new time: %d", (int)now);
     struct tm *local_tm = localtime(&now);
-    strftime(data->steps_card.time_text, sizeof(data->steps_card.time_text),
-             "%I:%M", local_tm);
+    strftime(data->steps_card.time_text, sizeof(data->steps_card.time_text), "%I:%M", local_tm);
     text_layer_set_text(data->steps_card.time_layer, data->steps_card.time_text);
   }
-
 
   if (data->lap_steps > data->cur_steps) {
     // We probably encountered a midnight rollover, reset the persistent storage too
@@ -353,25 +327,22 @@ static void steps_update_text(HealthAPITestAppData *data) {
   }
   if (data->steps_card.delta_step_layer) {
     if (data->lap_steps) {
-      snprintf(data->steps_card.delta_step_text, sizeof(data->steps_card.delta_step_text),
-               "%d", (int) (data->cur_steps - data->lap_steps));
+      snprintf(data->steps_card.delta_step_text, sizeof(data->steps_card.delta_step_text), "%d",
+               (int)(data->cur_steps - data->lap_steps));
       text_layer_set_text(data->steps_card.delta_step_layer, data->steps_card.delta_step_text);
     }
   }
 }
 
-
 // -------------------------------------------------------------------------------
-static void prv_health_event_handler(HealthEventType event,
-                                     void *context) {
+static void prv_health_event_handler(HealthEventType event, void *context) {
   HealthAPITestAppData *data = (HealthAPITestAppData *)context;
 
   if (event == HealthEventMovementUpdate) {
     // Test the peek function
     int32_t peek_steps = health_service_sum_today(HealthMetricStepCount);
 
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Got steps update event. (peek value: %d)",
-            (int)peek_steps);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Got steps update event. (peek value: %d)", (int)peek_steps);
 
     data->cur_steps = peek_steps + data->steps_offset;
     steps_update_text(data);
@@ -388,16 +359,15 @@ static void prv_health_event_handler(HealthEventType event,
 
   } else if (event == HealthEventMetricAlert) {
     HealthValue now_bpm = health_service_peek_current_value(HealthMetricHeartRateBPM);
-    APP_LOG(APP_LOG_LEVEL_INFO, "Crossed HR threshold of %d. HR: %"PRIi32" ",
+    APP_LOG(APP_LOG_LEVEL_INFO, "Crossed HR threshold of %d. HR: %" PRIi32 " ",
             (int)HEART_RATE_THRESHOLD, now_bpm);
     data->num_hr_alerts++;
     prv_hr_update_text(data);
   }
 }
 
-
 // -------------------------------------------------------------------------------
-static void steps_base_layer_update_proc(Layer *layer, GContext* ctx) {
+static void steps_base_layer_update_proc(Layer *layer, GContext *ctx) {
   const GRect bounds = layer_get_bounds(layer);
 
   graphics_context_set_fill_color(ctx, GColorBlack);
@@ -415,19 +385,16 @@ static void steps_base_layer_update_proc(Layer *layer, GContext* ctx) {
   graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, 15, 0, TRIG_MAX_ANGLE * percent / 100);
 }
 
-
 // -------------------------------------------------------------------------------
 static void handle_battery(BatteryChargeState charge_state) {
   layer_mark_dirty(window_get_root_layer(s_data->steps_window));
 }
 
-
 // -------------------------------------------------------------------------------
-static void handle_minute_tick(struct tm* tick_time, TimeUnits units_changed) {
+static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Got minute update");
   steps_update_text(s_data);
 }
-
 
 // -------------------------------------------------------------------------------
 static void steps_window_load(Window *window) {
@@ -467,8 +434,7 @@ static void steps_window_load(Window *window) {
   // "Tracking disabled" message
   data->steps_card.msg_layer = text_layer_create(root_bounds);
   text_layer_set_text_alignment(data->steps_card.msg_layer, GTextAlignmentCenter);
-  text_layer_set_font(data->steps_card.msg_layer,
-                      fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+  text_layer_set_font(data->steps_card.msg_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   text_layer_set_background_color(data->steps_card.msg_layer, GColorClear);
   text_layer_set_text_color(data->steps_card.msg_layer, GColorWhite);
   layer_add_child(window_layer, text_layer_get_layer(data->steps_card.msg_layer));
@@ -505,7 +471,6 @@ static void steps_window_load(Window *window) {
   battery_state_service_subscribe(handle_battery);
 }
 
-
 // -------------------------------------------------------------------------------
 static void steps_window_unload(Window *window) {
   HealthAPITestAppData *data = window_get_user_data(window);
@@ -518,7 +483,6 @@ static void steps_window_unload(Window *window) {
   tick_timer_service_unsubscribe();
   battery_state_service_unsubscribe();
 }
-
 
 // -------------------------------------------------------------------------------
 static void steps_window_appear(Window *window) {
@@ -534,21 +498,18 @@ static void prv_results_back_click_handler(ClickRecognizerRef recognizer, void *
   window_stack_pop(true);
 }
 
-
 // -------------------------------------------------------------------------------
 static void results_click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_BACK, prv_results_back_click_handler);
 }
 
-
 // -------------------------------------------------------------------------------
-static void results_update_text(HealthAPITestAppData *data, const char* text) {
+static void results_update_text(HealthAPITestAppData *data, const char *text) {
   strncpy(data->results_card.text, text, sizeof(data->results_card.text));
   data->results_card.text[sizeof(data->results_card.text) - 1] = 0;
   text_layer_set_text(data->results_card.text_layer, data->results_card.text);
   layer_mark_dirty(text_layer_get_layer(data->results_card.text_layer));
 }
-
 
 // -------------------------------------------------------------------------------
 static void results_window_load(Window *window) {
@@ -568,19 +529,14 @@ static void results_window_load(Window *window) {
   results_update_text(data, " ");
 }
 
-
 // -------------------------------------------------------------------------------
 static void results_window_unload(Window *window) {
   HealthAPITestAppData *data = window_get_user_data(window);
   text_layer_destroy(data->results_card.text_layer);
 }
 
-
-
 // -------------------------------------------------------------------------------
-static void prv_hr_select_click_handler(ClickRecognizerRef recognizer, void *context) {
-}
-
+static void prv_hr_select_click_handler(ClickRecognizerRef recognizer, void *context) {}
 
 // -------------------------------------------------------------------------------
 static void prv_hr_up_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -588,7 +544,6 @@ static void prv_hr_up_click_handler(ClickRecognizerRef recognizer, void *context
   window_stack_pop(true);
   window_stack_push(data->steps_window, true /* Animated */);
 }
-
 
 // -------------------------------------------------------------------------------
 static void prv_hr_down_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -603,7 +558,6 @@ static void prv_hr_down_long_click_handler(ClickRecognizerRef recognizer, void *
   window_stack_push(data->debug_window, true /* Animated */);
 }
 
-
 // -------------------------------------------------------------------------------
 static void prv_hr_click_config_provider(void *context) {
   const int k_long_press_timeout_ms = 1000;
@@ -614,7 +568,6 @@ static void prv_hr_click_config_provider(void *context) {
                               prv_hr_down_long_click_handler, NULL);
 }
 
-
 // -------------------------------------------------------------------------------
 static void prv_hr_update_text(HealthAPITestAppData *data) {
   if (!data->hr_card.text_layer) {
@@ -623,19 +576,18 @@ static void prv_hr_update_text(HealthAPITestAppData *data) {
   // Get the latest heart rate
   HealthValue now_bpm = health_service_peek_current_value(HealthMetricHeartRateBPM);
   HealthValue resting_bpm = health_service_peek_current_value(HealthMetricRestingHeartRateBPM);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Got HR data. Now: %"PRIi32", Resting: %"PRIi32"",
-          now_bpm, resting_bpm);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Got HR data. Now: %" PRIi32 ", Resting: %" PRIi32 "", now_bpm,
+          resting_bpm);
 
   data->cur_hr_bpm = now_bpm;
   data->resting_hr_bpm = resting_bpm;
 
   snprintf(data->hr_card.text, sizeof(data->hr_card.text),
-           "HR❤️\nNow: %"PRIu32"\nRest: %"PRIu32"\n Alerts: %"PRIu32" ",
-           data->cur_hr_bpm, data->resting_hr_bpm, data->num_hr_alerts);
+           "HR❤️\nNow: %" PRIu32 "\nRest: %" PRIu32 "\n Alerts: %" PRIu32 " ", data->cur_hr_bpm,
+           data->resting_hr_bpm, data->num_hr_alerts);
   text_layer_set_text(data->hr_card.text_layer, data->hr_card.text);
   layer_mark_dirty(text_layer_get_layer(data->hr_card.text_layer));
 }
-
 
 // -------------------------------------------------------------------------------
 static void prv_hr_window_load(Window *window) {
@@ -646,8 +598,7 @@ static void prv_hr_window_load(Window *window) {
   data->hr_card.text_layer = text_layer_create(root_bounds);
   text_layer_set_text_alignment(data->hr_card.text_layer, GTextAlignmentCenter);
   text_layer_set_background_color(data->hr_card.text_layer, GColorClear);
-  text_layer_set_font(data->hr_card.text_layer,
-                      fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+  text_layer_set_font(data->hr_card.text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
   text_layer_set_text_color(data->hr_card.text_layer, GColorWhite);
   layer_add_child(window_layer, text_layer_get_layer(data->hr_card.text_layer));
 
@@ -657,7 +608,6 @@ static void prv_hr_window_load(Window *window) {
   // Sample the Heart rate at a higher rate while in this view
   health_service_set_heart_rate_sample_period(1 /*interval_s*/);
 }
-
 
 // -------------------------------------------------------------------------------
 static void prv_hr_window_unload(Window *window) {
@@ -669,13 +619,11 @@ static void prv_hr_window_unload(Window *window) {
   health_service_set_heart_rate_sample_period(0 /*interval_s*/);
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_step_history(int index, void *context) {
   HealthAPITestAppData *data = context;
   prv_display_scalar_history_alert(data, "Steps", HealthMetricStepCount);
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_sleep_history(int index, void *context) {
@@ -683,20 +631,17 @@ static void prv_debug_cmd_sleep_history(int index, void *context) {
   prv_display_seconds_history_alert(data, "Sleep total", HealthMetricSleepSeconds);
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_active_time_history(int index, void *context) {
   HealthAPITestAppData *data = context;
   prv_display_seconds_history_alert(data, "Active Time", HealthMetricActiveSeconds);
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_distance_history(int index, void *context) {
   HealthAPITestAppData *data = context;
   prv_display_scalar_history_alert(data, "Distance(m)", HealthMetricWalkedDistanceMeters);
 }
-
 
 // -----------------------------------------------------------------------------------------
 static bool prv_activity_iterate_cb(HealthActivity activity, time_t time_start, time_t time_end,
@@ -729,11 +674,11 @@ static bool prv_activity_iterate_cb(HealthActivity activity, time_t time_start, 
 
   char time_start_text[64];
   struct tm *local_tm = localtime(&time_start);
-  strftime(time_start_text, sizeof(time_start_text),  "%F %r", local_tm);
+  strftime(time_start_text, sizeof(time_start_text), "%F %r", local_tm);
 
   char time_end_text[64];
   local_tm = localtime(&time_end);
-  strftime(time_end_text, sizeof(time_end_text),  "%F %r", local_tm);
+  strftime(time_end_text, sizeof(time_end_text), "%F %r", local_tm);
 
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Got activity: %s %s to %s (%d min)", activity_name, time_start_text,
           time_end_text, (int)((time_end - time_start) / SECONDS_PER_MINUTE));
@@ -752,14 +697,13 @@ static void prv_debug_cmd_sleep_sessions(int index, void *context) {
 
   char time_now_text[64];
   struct tm *local_tm = localtime(&now);
-  strftime(time_now_text, sizeof(time_now_text),  "%F %r", local_tm);
+  strftime(time_now_text, sizeof(time_now_text), "%F %r", local_tm);
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Current time: %s", time_now_text);
-
 
   // Check for correct operation of health_service_any_activity_accessible()
   time_t t_24_hrs_ago = now - SECONDS_PER_DAY;
-  HealthServiceAccessibilityMask mask = health_service_any_activity_accessible(HealthActivitySleep,
-                                                                               t_24_hrs_ago, now);
+  HealthServiceAccessibilityMask mask =
+      health_service_any_activity_accessible(HealthActivitySleep, t_24_hrs_ago, now);
   if (mask != HealthServiceAccessibilityMaskAvailable) {
     APP_LOG(APP_LOG_LEVEL_ERROR, "Unexpected accessibility result: %d", (int)mask);
   }
@@ -767,9 +711,8 @@ static void prv_debug_cmd_sleep_sessions(int index, void *context) {
   health_service_activities_iterate(HealthActivityMaskAll, now - (2 * SECONDS_PER_DAY), now,
                                     HealthIterationDirectionFuture, prv_activity_iterate_cb,
                                     &num_activities_found);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Found %"PRIu32" activities", num_activities_found);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Found %" PRIu32 " activities", num_activities_found);
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_minute_data(int index, void *context) {
@@ -778,8 +721,7 @@ static void prv_debug_cmd_minute_data(int index, void *context) {
   const uint32_t k_size = 1000;
   HealthMinuteData *minute_data = malloc(k_size * sizeof(HealthMinuteData));
   if (!minute_data) {
-    snprintf(data->debug_card.dialog_text, sizeof(data->debug_card.dialog_text),
-             "Out of memory");
+    snprintf(data->debug_card.dialog_text, sizeof(data->debug_card.dialog_text), "Out of memory");
     prv_display_alert(data->debug_card.dialog_text);
     goto exit;
   }
@@ -787,7 +729,7 @@ static void prv_debug_cmd_minute_data(int index, void *context) {
   time_t now = time(NULL);
   char time_now_text[64];
   struct tm *local_tm = localtime(&now);
-  strftime(time_now_text, sizeof(time_now_text),  "%F %r", local_tm);
+  strftime(time_now_text, sizeof(time_now_text), "%F %r", local_tm);
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Current time: %s", time_now_text);
 
   // Start as far back as 30 days ago
@@ -809,7 +751,7 @@ static void prv_debug_cmd_minute_data(int index, void *context) {
 
     if (num_minutes > 0) {
       APP_LOG(APP_LOG_LEVEL_DEBUG, "Got %d minutes: %s to %s", num_minutes, time_start_text,
-            time_end_text);
+              time_end_text);
     } else {
       APP_LOG(APP_LOG_LEVEL_DEBUG, "No more data");
     }
@@ -824,28 +766,27 @@ static void prv_debug_cmd_minute_data(int index, void *context) {
   // Print summary
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Retrieved %d minute data records", (int)num_records);
 
-
   // Print detail on the last few minutes
   const int k_print_batch_size = 30;
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Fetching last %d minutes", k_print_batch_size);
   utc_start = time(NULL) - (k_print_batch_size * SECONDS_PER_MINUTE);
   utc_end = time(NULL);
   uint64_t start_ms = prv_ms();
-  num_minutes = health_service_get_minute_history(minute_data, k_print_batch_size, &utc_start,
-                                                  &utc_end);
+  num_minutes =
+      health_service_get_minute_history(minute_data, k_print_batch_size, &utc_start, &utc_end);
   uint64_t elapsed_ms = prv_ms() - start_ms;
 
   char time_start_text[64];
   local_tm = localtime(&utc_start);
-  strftime(time_start_text, sizeof(time_start_text),  "%F %r", local_tm);
+  strftime(time_start_text, sizeof(time_start_text), "%F %r", local_tm);
 
   char time_end_text[64];
   local_tm = localtime(&utc_end);
-  strftime(time_end_text, sizeof(time_end_text),  "%F %r", local_tm);
+  strftime(time_end_text, sizeof(time_end_text), "%F %r", local_tm);
 
   if (num_minutes > 0) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Got %d minutes in %"PRIu32" ms: %s to %s", num_minutes,
-            (uint32_t) elapsed_ms, time_start_text, time_end_text);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Got %d minutes in %" PRIu32 " ms: %s to %s", num_minutes,
+            (uint32_t)elapsed_ms, time_start_text, time_end_text);
   } else {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "No data available in last %d minutes", k_print_batch_size);
   }
@@ -854,15 +795,14 @@ static void prv_debug_cmd_minute_data(int index, void *context) {
   if (num_minutes >= k_num_last_minutes) {
     for (int i = num_minutes - k_num_last_minutes; i < num_minutes; i++) {
       HealthMinuteData *m_data = &minute_data[i];
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "%"PRId8", 0x%"PRIx8", %"PRIu16", %"PRId8" ",
-               m_data->steps, m_data->orientation, m_data->vmc, m_data->light);
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "%" PRId8 ", 0x%" PRIx8 ", %" PRIu16 ", %" PRId8 " ",
+              m_data->steps, m_data->orientation, m_data->vmc, m_data->light);
     }
   }
 
 exit:
   free(minute_data);
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_daily_metric_avg(HealthAPITestAppData *data, HealthMetric metric,
@@ -898,10 +838,8 @@ static void prv_daily_metric_avg(HealthAPITestAppData *data, HealthMetric metric
   snprintf(temp, sizeof(temp), "\ndaily: %d", (int)avg);
   prv_safe_strcat(data->debug_card.dialog_text, temp, sizeof(data->debug_card.dialog_text));
 
-
   prv_display_alert(data->debug_card.dialog_text);
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_intraday_metric_avg(HealthAPITestAppData *data, HealthMetric metric,
@@ -930,13 +868,11 @@ static void prv_intraday_metric_avg(HealthAPITestAppData *data, HealthMetric met
   prv_display_alert(data->debug_card.dialog_text);
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_daily_step_avg(int index, void *context) {
   HealthAPITestAppData *data = context;
   prv_daily_metric_avg(data, HealthMetricStepCount, "Steps:");
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_intraday_step_avg(int index, void *context) {
@@ -944,20 +880,17 @@ static void prv_debug_cmd_intraday_step_avg(int index, void *context) {
   prv_intraday_metric_avg(data, HealthMetricStepCount, "Steps:");
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_daily_active_seconds_avg(int index, void *context) {
   HealthAPITestAppData *data = context;
   prv_daily_metric_avg(data, HealthMetricActiveSeconds, "Active seconds:");
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_intraday_active_seconds_avg(int index, void *context) {
   HealthAPITestAppData *data = context;
   prv_intraday_metric_avg(data, HealthMetricActiveSeconds, "Active seconds:");
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_heart_rate_api(int index, void *context) {
@@ -969,7 +902,7 @@ static void prv_debug_cmd_heart_rate_api(int index, void *context) {
   value = health_service_aggregate_averaged(HealthMetricRestingKCalories, time_start_of_today(),
                                             time(NULL), HealthAggregationSum,
                                             HealthServiceTimeScopeOnce);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Result from aggregate_averaged resting cals: %"PRIi32" ", value);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Result from aggregate_averaged resting cals: %" PRIi32 " ", value);
   if (value == 0) {
     passed = false;
     goto exit;
@@ -979,17 +912,17 @@ static void prv_debug_cmd_heart_rate_api(int index, void *context) {
   value = health_service_aggregate_averaged(HealthMetricRestingKCalories, time_start_of_today(),
                                             time(NULL), HealthAggregationAvg,
                                             HealthServiceTimeScopeOnce);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Result from aggregate_averaged resting cals: %"PRIi32" ", value);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Result from aggregate_averaged resting cals: %" PRIi32 " ", value);
   if (value != 0) {
     passed = false;
     goto exit;
   }
 
   // Getting heart rate using sum should fail
-  value = health_service_aggregate_averaged(HealthMetricHeartRateBPM, time_start_of_today(),
-                                            time(NULL), HealthAggregationSum,
-                                            HealthServiceTimeScopeOnce);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Result from aggregate_averaged heart-rate: %"PRIi32" ", value);
+  value =
+      health_service_aggregate_averaged(HealthMetricHeartRateBPM, time_start_of_today(), time(NULL),
+                                        HealthAggregationSum, HealthServiceTimeScopeOnce);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Result from aggregate_averaged heart-rate: %" PRIi32 " ", value);
   if (value != 0) {
     passed = false;
     goto exit;
@@ -1008,11 +941,9 @@ static void prv_debug_cmd_heart_rate_api(int index, void *context) {
   }
 
   // accessibility with heart rate should work
-  access = health_service_metric_aggregate_averaged_accessible(HealthMetricHeartRateBPM,
-                                                               time_start_of_today(),
-                                                               time(NULL),
-                                                               HealthAggregationAvg,
-                                                               HealthServiceTimeScopeOnce);
+  access = health_service_metric_aggregate_averaged_accessible(
+      HealthMetricHeartRateBPM, time_start_of_today(), time(NULL), HealthAggregationAvg,
+      HealthServiceTimeScopeOnce);
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Result from aggregate_averaged_accessible heart rate, sum: 0x%x",
           access);
   if (access != HealthServiceAccessibilityMaskAvailable) {
@@ -1035,12 +966,11 @@ static void prv_debug_cmd_heart_rate_api(int index, void *context) {
     goto exit;
   }
 
-  exit:
+exit:
   strncpy(data->debug_card.dialog_text, passed ? "PASS" : "FAIL",
           sizeof(data->debug_card.dialog_text));
   prv_display_alert(data->debug_card.dialog_text);
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_heart_rate_stats(int index, void *context) {
@@ -1057,8 +987,8 @@ static void prv_debug_cmd_heart_rate_stats(int index, void *context) {
   } TimeRange;
 
   TimeRange ranges[] = {
-    {1 * SECONDS_PER_HOUR, "1 hour"},
-    {30 * SECONDS_PER_MINUTE, "30 min"},
+      {1 * SECONDS_PER_HOUR, "1 hour"},
+      {30 * SECONDS_PER_MINUTE, "30 min"},
   };
 
   unsigned num_ranges = ARRAY_LENGTH(ranges);
@@ -1068,15 +998,15 @@ static void prv_debug_cmd_heart_rate_stats(int index, void *context) {
         HealthServiceTimeScopeOnce);
 
     HealthValue max = health_service_aggregate_averaged(
-      HealthMetricHeartRateBPM, end_time - ranges[i].seconds, end_time, HealthAggregationMax,
-      HealthServiceTimeScopeOnce);
+        HealthMetricHeartRateBPM, end_time - ranges[i].seconds, end_time, HealthAggregationMax,
+        HealthServiceTimeScopeOnce);
 
     HealthValue avg = health_service_aggregate_averaged(
-      HealthMetricHeartRateBPM, end_time - ranges[i].seconds, end_time, HealthAggregationAvg,
-      HealthServiceTimeScopeOnce);
+        HealthMetricHeartRateBPM, end_time - ranges[i].seconds, end_time, HealthAggregationAvg,
+        HealthServiceTimeScopeOnce);
 
     char temp[64];
-    snprintf(temp, sizeof(temp), "%s: min: %"PRIi32", max: %"PRIi32", avg: %"PRIi32" \n",
+    snprintf(temp, sizeof(temp), "%s: min: %" PRIi32 ", max: %" PRIi32 ", avg: %" PRIi32 " \n",
              ranges[i].desc, min, max, avg);
     APP_LOG(APP_LOG_LEVEL_DEBUG, "%s", temp);
     prv_safe_strcat(data->debug_card.dialog_text, temp, sizeof(data->debug_card.dialog_text));
@@ -1084,71 +1014,73 @@ static void prv_debug_cmd_heart_rate_stats(int index, void *context) {
   prv_display_alert(data->debug_card.dialog_text);
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void debug_window_load(Window *window) {
   HealthAPITestAppData *data = window_get_user_data(window);
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
 
-  static SimpleMenuItem menu_items[] = {
-    {
-      .title = "Step History",
-      .callback = prv_debug_cmd_step_history,
-    }, {
-      .title = "Active Minutes History",
-      .callback = prv_debug_cmd_active_time_history,
-    }, {
-      .title = "Distance(m) History",
-      .callback = prv_debug_cmd_distance_history,
-    }, {
-      .title = "Sleep History",
-      .callback = prv_debug_cmd_sleep_history,
-    }, {
-      .title = "Sleep Sessions",
-      .callback = prv_debug_cmd_sleep_sessions,
-    }, {
-      .title = "Read Minute data",
-      .callback = prv_debug_cmd_minute_data,
-    }, {
-      .title = "Daily step avg",
-      .callback = prv_debug_cmd_daily_step_avg,
-    }, {
-      .title = "Intraday step avg",
-      .callback = prv_debug_cmd_intraday_step_avg,
-    }, {
-      .title = "Daily active sec. avg",
-      .callback = prv_debug_cmd_daily_active_seconds_avg,
-    }, {
-      .title = "Intraday active sec. avg",
-      .callback = prv_debug_cmd_intraday_active_seconds_avg,
-    }, {
-      .title = "Heart Rate Stats",
-      .callback = prv_debug_cmd_heart_rate_stats,
-    }, {
-      .title = "Heart Rate API",
-      .callback = prv_debug_cmd_heart_rate_api,
-    }
-  };
+  static SimpleMenuItem menu_items[] = {{
+                                            .title = "Step History",
+                                            .callback = prv_debug_cmd_step_history,
+                                        },
+                                        {
+                                            .title = "Active Minutes History",
+                                            .callback = prv_debug_cmd_active_time_history,
+                                        },
+                                        {
+                                            .title = "Distance(m) History",
+                                            .callback = prv_debug_cmd_distance_history,
+                                        },
+                                        {
+                                            .title = "Sleep History",
+                                            .callback = prv_debug_cmd_sleep_history,
+                                        },
+                                        {
+                                            .title = "Sleep Sessions",
+                                            .callback = prv_debug_cmd_sleep_sessions,
+                                        },
+                                        {
+                                            .title = "Read Minute data",
+                                            .callback = prv_debug_cmd_minute_data,
+                                        },
+                                        {
+                                            .title = "Daily step avg",
+                                            .callback = prv_debug_cmd_daily_step_avg,
+                                        },
+                                        {
+                                            .title = "Intraday step avg",
+                                            .callback = prv_debug_cmd_intraday_step_avg,
+                                        },
+                                        {
+                                            .title = "Daily active sec. avg",
+                                            .callback = prv_debug_cmd_daily_active_seconds_avg,
+                                        },
+                                        {
+                                            .title = "Intraday active sec. avg",
+                                            .callback = prv_debug_cmd_intraday_active_seconds_avg,
+                                        },
+                                        {
+                                            .title = "Heart Rate Stats",
+                                            .callback = prv_debug_cmd_heart_rate_stats,
+                                        },
+                                        {
+                                            .title = "Heart Rate API",
+                                            .callback = prv_debug_cmd_heart_rate_api,
+                                        }};
   static const SimpleMenuSection sections[] = {
-    {
-      .items = menu_items,
-      .num_items = ARRAY_LENGTH(menu_items)
-    }
-  };
+      {.items = menu_items, .num_items = ARRAY_LENGTH(menu_items)}};
 
   data->debug_card.menu_items = menu_items;
-  data->debug_card.menu_layer = simple_menu_layer_create(bounds, window, sections,
-                                                         ARRAY_LENGTH(sections), data);
+  data->debug_card.menu_layer =
+      simple_menu_layer_create(bounds, window, sections, ARRAY_LENGTH(sections), data);
   layer_add_child(window_layer, simple_menu_layer_get_layer(data->debug_card.menu_layer));
 }
-
 
 // -------------------------------------------------------------------------------
 static void debug_window_unload(Window *window) {
   simple_menu_layer_destroy(s_data->debug_card.menu_layer);
 }
-
 
 // -------------------------------------------------------------------------------
 static void deinit(void) {
@@ -1156,7 +1088,6 @@ static void deinit(void) {
   free(s_data);
   s_data = NULL;
 }
-
 
 // -------------------------------------------------------------------------------
 static void init(void) {
@@ -1173,11 +1104,11 @@ static void init(void) {
   window_set_user_data(data->steps_window, data);
   window_set_click_config_provider_with_context(data->steps_window, steps_click_config_provider,
                                                 data);
-  window_set_window_handlers(data->steps_window, (WindowHandlers) {
-    .load = steps_window_load,
-    .unload = steps_window_unload,
-    .appear = steps_window_appear,
-  });
+  window_set_window_handlers(data->steps_window, (WindowHandlers){
+                                                     .load = steps_window_load,
+                                                     .unload = steps_window_unload,
+                                                     .appear = steps_window_appear,
+                                                 });
 
   // Sleep window
   data->sleep_window = window_create();
@@ -1185,18 +1116,18 @@ static void init(void) {
   window_set_user_data(data->sleep_window, data);
   window_set_click_config_provider_with_context(data->sleep_window, sleep_click_config_provider,
                                                 data);
-  window_set_window_handlers(data->sleep_window, (WindowHandlers) {
-    .load = sleep_window_load,
-    .unload = sleep_window_unload,
-  });
+  window_set_window_handlers(data->sleep_window, (WindowHandlers){
+                                                     .load = sleep_window_load,
+                                                     .unload = sleep_window_unload,
+                                                 });
 
   // Debug window
   data->debug_window = window_create();
   window_set_user_data(data->debug_window, data);
-  window_set_window_handlers(data->debug_window, (WindowHandlers) {
-    .load = debug_window_load,
-    .unload = debug_window_unload,
-  });
+  window_set_window_handlers(data->debug_window, (WindowHandlers){
+                                                     .load = debug_window_load,
+                                                     .unload = debug_window_unload,
+                                                 });
 
   // Results window
   data->results_window = window_create();
@@ -1204,10 +1135,10 @@ static void init(void) {
   window_set_user_data(data->results_window, data);
   window_set_click_config_provider_with_context(data->results_window, results_click_config_provider,
                                                 data);
-  window_set_window_handlers(data->results_window, (WindowHandlers) {
-    .load = results_window_load,
-    .unload = results_window_unload,
-  });
+  window_set_window_handlers(data->results_window, (WindowHandlers){
+                                                       .load = results_window_load,
+                                                       .unload = results_window_unload,
+                                                   });
 
   // Heart rate window
   data->hr_window = window_create();
@@ -1215,14 +1146,13 @@ static void init(void) {
   window_set_user_data(data->hr_window, data);
   window_set_click_config_provider_with_context(data->hr_window, prv_hr_click_config_provider,
                                                 data);
-  window_set_window_handlers(data->hr_window, (WindowHandlers) {
-    .load = prv_hr_window_load,
-    .unload = prv_hr_window_unload,
-  });
+  window_set_window_handlers(data->hr_window, (WindowHandlers){
+                                                  .load = prv_hr_window_load,
+                                                  .unload = prv_hr_window_unload,
+                                              });
 
   window_stack_push(data->steps_window, true /* Animated */);
 }
-
 
 // -------------------------------------------------------------------------------
 int main(void) {

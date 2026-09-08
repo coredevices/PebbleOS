@@ -8,12 +8,12 @@
 #include <stddef.h>
 #include <stdio.h>
 
-void list_init(ListNode* node) {
+void list_init(ListNode *node) {
   node->next = NULL;
   node->prev = NULL;
 }
 
-ListNode* list_insert_after(ListNode* node, ListNode* new_node) {
+ListNode *list_insert_after(ListNode *node, ListNode *new_node) {
   if (node == NULL) {
     return new_node;
   }
@@ -28,7 +28,7 @@ ListNode* list_insert_after(ListNode* node, ListNode* new_node) {
   return new_node;
 }
 
-ListNode* list_insert_before(ListNode* node, ListNode* new_node) {
+ListNode *list_insert_before(ListNode *node, ListNode *new_node) {
   if (node == NULL) {
     return new_node;
   }
@@ -43,7 +43,7 @@ ListNode* list_insert_before(ListNode* node, ListNode* new_node) {
   return new_node;
 }
 
-ListNode* list_pop_head(ListNode *node) {
+ListNode *list_pop_head(ListNode *node) {
   if (node == NULL) {
     return NULL;
   }
@@ -53,17 +53,17 @@ ListNode* list_pop_head(ListNode *node) {
   return new_head;
 }
 
-ListNode* list_pop_tail(ListNode *node) {
+ListNode *list_pop_tail(ListNode *node) {
   if (node == NULL) {
     return NULL;
   }
-  ListNode* tail = list_get_tail(node);
-  ListNode* new_tail = tail->prev;
+  ListNode *tail = list_get_tail(node);
+  ListNode *new_tail = tail->prev;
   list_remove(tail, NULL, NULL);
   return new_tail;
 }
 
-void list_remove(ListNode* node, ListNode **head, ListNode **tail) {
+void list_remove(ListNode *node, ListNode **head, ListNode **tail) {
   if (node == NULL) {
     return;
   }
@@ -83,29 +83,29 @@ void list_remove(ListNode* node, ListNode **head, ListNode **tail) {
   node->next = NULL;
 }
 
-ListNode* list_append(ListNode* node, ListNode* new_node) {
+ListNode *list_append(ListNode *node, ListNode *new_node) {
   return list_insert_after(list_get_tail(node), new_node);
 }
 
-ListNode* list_prepend(ListNode* node, ListNode* new_node) {
+ListNode *list_prepend(ListNode *node, ListNode *new_node) {
   return list_insert_before(list_get_head(node), new_node);
 }
 
-ListNode* list_get_next(ListNode* node) {
+ListNode *list_get_next(ListNode *node) {
   if (node == NULL) {
     return NULL;
   }
   return node->next;
 }
 
-ListNode* list_get_prev(ListNode* node) {
+ListNode *list_get_prev(ListNode *node) {
   if (node == NULL) {
     return NULL;
   }
   return node->prev;
 }
 
-ListNode* list_get_tail(ListNode* node) {
+ListNode *list_get_tail(ListNode *node) {
   if (node == NULL) {
     return NULL;
   }
@@ -115,7 +115,7 @@ ListNode* list_get_tail(ListNode* node) {
   return node;
 }
 
-ListNode* list_get_head(ListNode* node) {
+ListNode *list_get_head(ListNode *node) {
   if (node == NULL) {
     return NULL;
   }
@@ -139,7 +139,7 @@ bool list_is_tail(const ListNode *node) {
   return !node->next;
 }
 
-uint32_t list_count_to_tail_from(ListNode* node) {
+uint32_t list_count_to_tail_from(ListNode *node) {
   if (node == NULL) {
     return 0;
   }
@@ -161,11 +161,9 @@ uint32_t list_count_to_head_from(ListNode *node) {
   return count;
 }
 
-uint32_t list_count(ListNode* node) {
-  return list_count_to_tail_from(list_get_head(node));
-}
+uint32_t list_count(ListNode *node) { return list_count_to_tail_from(list_get_head(node)); }
 
-ListNode* list_get_at(ListNode *node, int32_t index) {
+ListNode *list_get_at(ListNode *node, int32_t index) {
   while (node != NULL && index != 0) {
     if (index > 0) {
       node = node->next;
@@ -178,15 +176,16 @@ ListNode* list_get_at(ListNode *node, int32_t index) {
   return node;
 }
 
-ListNode* list_sorted_add(ListNode *node, ListNode *new_node, Comparator comparator, bool ascending) {
+ListNode *list_sorted_add(ListNode *node, ListNode *new_node, Comparator comparator,
+                          bool ascending) {
   if (node == NULL) {
     return new_node;
   }
   if (new_node == NULL) {
     return node;
   }
-  ListNode * const head = node;
-  for(;;) {
+  ListNode *const head = node;
+  for (;;) {
     int order = comparator(node, new_node);
     if (!ascending) {
       order = -order;
@@ -222,7 +221,7 @@ bool list_contains(const ListNode *node, const ListNode *node_to_search) {
   return false;
 }
 
-ListNode* list_find(ListNode *node, ListFilterCallback filter_callback, void *data) {
+ListNode *list_find(ListNode *node, ListFilterCallback filter_callback, void *data) {
   if (node == NULL) {
     return NULL;
   }
@@ -235,7 +234,8 @@ ListNode* list_find(ListNode *node, ListFilterCallback filter_callback, void *da
   return NULL;
 }
 
-ListNode* list_find_next(ListNode *node, ListFilterCallback filter_callback, bool wrap_around, void *data) {
+ListNode *list_find_next(ListNode *node, ListFilterCallback filter_callback, bool wrap_around,
+                         void *data) {
   if (node == NULL) {
     return NULL;
   }
@@ -263,7 +263,8 @@ ListNode* list_find_next(ListNode *node, ListFilterCallback filter_callback, boo
   return NULL;
 }
 
-ListNode* list_find_prev(ListNode *node, ListFilterCallback filter_callback, bool wrap_around, void *data) {
+ListNode *list_find_prev(ListNode *node, ListFilterCallback filter_callback, bool wrap_around,
+                         void *data) {
   if (node == NULL) {
     return NULL;
   }
@@ -340,4 +341,3 @@ void list_debug_dump(ListNode *head) {
     iter = iter->next;
   }
 }
-

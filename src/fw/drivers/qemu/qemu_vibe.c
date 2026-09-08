@@ -10,13 +10,9 @@
 
 static bool s_vibe_on;
 
-void vibe_init(void) {
-  s_vibe_on = false;
-}
+void vibe_init(void) { s_vibe_on = false; }
 
-void vibe_set_strength(int8_t strength) {
-  (void)strength;
-}
+void vibe_set_strength(int8_t strength) { (void)strength; }
 
 void vibe_ctl(bool on) {
   if (s_vibe_on == on) {
@@ -26,31 +22,20 @@ void vibe_ctl(bool on) {
 
   // Notify QEMU host of vibration state change
   QemuProtocolVibrationNotificationHeader notification = {
-    .on = on ? 1 : 0,
+      .on = on ? 1 : 0,
   };
-  qemu_serial_send(QemuProtocol_Vibration,
-                   (const uint8_t *)&notification,
-                   sizeof(notification));
+  qemu_serial_send(QemuProtocol_Vibration, (const uint8_t *)&notification, sizeof(notification));
 }
 
-void vibe_force_off(void) {
-  vibe_ctl(false);
-}
+void vibe_force_off(void) { vibe_ctl(false); }
 
-int8_t vibe_get_braking_strength(void) {
-  return VIBE_STRENGTH_OFF;
-}
+int8_t vibe_get_braking_strength(void) { return VIBE_STRENGTH_OFF; }
 
-status_t vibe_calibrate(void) {
-  return E_INVALID_OPERATION;
-}
+status_t vibe_calibrate(void) { return E_INVALID_OPERATION; }
 
-uint8_t vibe_get_calibration(void) {
-  return 0xFF;
-}
+uint8_t vibe_get_calibration(void) { return 0xFF; }
 
-void vibe_apply_calibration(uint8_t cali) {
-}
+void vibe_apply_calibration(uint8_t cali) {}
 
 void command_vibe_ctl(const char *arg) {
   int strength = atoi(arg);

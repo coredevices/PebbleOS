@@ -15,7 +15,6 @@
 //!   @addtogroup DrawCommand Draw Commands
 //!   @{
 
-
 struct GDrawCommandImage;
 
 //! Draw command images contain a list of commands that can be drawn. An image can be loaded from

@@ -25,4 +25,3 @@ void fake_cron_job_fire(void) {
   s_job = NULL;
   job->cb(job, job->cb_data);
 }
-

@@ -11,15 +11,15 @@
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 
 // RTC MMIO register offsets (must match QEMU pebble-rtc device)
-#define RTC_TIME_LO    0x00  // Unix timestamp low 32 bits (r/w)
-#define RTC_TIME_HI    0x04  // Unix timestamp high 32 bits (r)
-#define RTC_ALARM      0x08
-#define RTC_CTRL       0x0C
-#define RTC_TICKS_REG  0x10  // Monotonic 1000Hz tick counter (r)
+#define RTC_TIME_LO 0x00  // Unix timestamp low 32 bits (r/w)
+#define RTC_TIME_HI 0x04  // Unix timestamp high 32 bits (r)
+#define RTC_ALARM 0x08
+#define RTC_CTRL 0x0C
+#define RTC_TICKS_REG 0x10  // Monotonic 1000Hz tick counter (r)
 #define RTC_BACKUP_BASE 0x40
 
 // CTRL bits
-#define CTRL_ALARM_IE  (1 << 0)
+#define CTRL_ALARM_IE (1 << 0)
 
 // STATUS bits
 #define STATUS_ALARM_PENDING (1 << 0)
@@ -60,13 +60,9 @@ void rtc_init_timers(void) {
   // No additional timers needed for QEMU RTC
 }
 
-void rtc_set_time(time_t time) {
-  REG32(QEMU_RTC_BASE + RTC_TIME_LO) = (uint32_t)time;
-}
+void rtc_set_time(time_t time) { REG32(QEMU_RTC_BASE + RTC_TIME_LO) = (uint32_t)time; }
 
-time_t rtc_get_time(void) {
-  return (time_t)REG32(QEMU_RTC_BASE + RTC_TIME_LO);
-}
+time_t rtc_get_time(void) { return (time_t)REG32(QEMU_RTC_BASE + RTC_TIME_LO); }
 
 void rtc_set_time_tm(struct tm *time_tm) {
   time_t t = mktime(time_tm);
@@ -122,13 +118,9 @@ void rtc_alarm_set(RtcTicks num_ticks) {
   REG32(QEMU_RTC_BASE + RTC_CTRL) |= CTRL_ALARM_IE;
 }
 
-RtcTicks rtc_alarm_get_elapsed_ticks(void) {
-  return 0;
-}
+RtcTicks rtc_alarm_get_elapsed_ticks(void) { return 0; }
 
-bool rtc_alarm_is_initialized(void) {
-  return true;
-}
+bool rtc_alarm_is_initialized(void) { return true; }
 
 // Timezone uses backup registers 11-15 to avoid conflicts with bootbits (0-10)
 #define TZ_BACKUP_BASE 11
@@ -136,7 +128,7 @@ bool rtc_alarm_is_initialized(void) {
 void rtc_set_timezone(TimezoneInfo *tzinfo) {
   uint32_t *raw = (uint32_t *)tzinfo;
   _Static_assert(sizeof(TimezoneInfo) <= 5 * sizeof(uint32_t),
-      "RTC Set Timezone invalid data size");
+                 "RTC Set Timezone invalid data size");
 
   RTC_WriteBackupRegister(TZ_BACKUP_BASE + 0, raw[0]);
   RTC_WriteBackupRegister(TZ_BACKUP_BASE + 1, raw[1]);
@@ -165,9 +157,7 @@ bool rtc_is_timezone_set(void) {
   return (RTC_ReadBackupRegister(TZ_BACKUP_BASE + 0) != 0);
 }
 
-const char *rtc_get_time_string(char *buffer) {
-  return time_t_to_string(buffer, rtc_get_time());
-}
+const char *rtc_get_time_string(char *buffer) { return time_t_to_string(buffer, rtc_get_time()); }
 
 const char *time_t_to_string(char *buffer, time_t t) {
   struct tm time;

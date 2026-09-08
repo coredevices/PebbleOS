@@ -7,7 +7,7 @@ void progress_window_init(ProgressWindow *data) {};
 
 void progress_window_deinit(ProgressWindow *data) {};
 
-ProgressWindow *progress_window_create(void) {return NULL;};
+ProgressWindow *progress_window_create(void) { return NULL; };
 
 void progress_window_destroy(ProgressWindow *window) {};
 
@@ -24,7 +24,7 @@ void progress_window_set_progress(ProgressWindow *window, int16_t progress) {};
 void progress_window_set_result_success(ProgressWindow *window) {};
 
 void progress_window_set_result_failure(ProgressWindow *window, uint32_t timeline_res_id,
-                                          const char *message, uint32_t delay) {};
+                                        const char *message, uint32_t delay) {};
 
 void progress_window_set_callbacks(ProgressWindow *window, ProgressWindowCallbacks callbacks,
                                    void *context) {};

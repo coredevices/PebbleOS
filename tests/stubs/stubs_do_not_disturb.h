@@ -6,9 +6,7 @@
 #include "pbl/services/notifications/do_not_disturb.h"
 #include "pbl/util/attributes.h"
 
-bool WEAK do_not_disturb_is_active(void) {
-  return false;
-}
+bool WEAK do_not_disturb_is_active(void) { return false; }
 
 void WEAK do_not_disturb_init(void) {}
 

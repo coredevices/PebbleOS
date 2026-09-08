@@ -57,8 +57,8 @@ static bool prv_fill_forecast_from_entry(WeatherDBEntry *entry,
   const uint16_t location_pstring_length = location_pstring->str_length;
 
   if (!is_valid_entry_update_time || (location_pstring_length == 0)) {
-    PBL_LOG_ERR("Invalid entry. Valid UT: %u, location length: %"PRIu16,
-            is_valid_entry_update_time, location_pstring_length);
+    PBL_LOG_ERR("Invalid entry. Valid UT: %u, location length: %" PRIu16,
+                is_valid_entry_update_time, location_pstring_length);
     return false;
   }
 
@@ -67,16 +67,16 @@ static bool prv_fill_forecast_from_entry(WeatherDBEntry *entry,
     return false;
   }
 
-  *forecast_out = (WeatherLocationForecast) {
-    .is_current_location = entry->is_current_location,
-    .current_temp = entry->current_temp,
-    .today_high = entry->today_high_temp,
-    .today_low = entry->today_low_temp,
-    .current_weather_type = entry->current_weather_type,
-    .tomorrow_high = entry->tomorrow_high_temp,
-    .tomorrow_low = entry->tomorrow_low_temp,
-    .tomorrow_weather_type = entry->tomorrow_weather_type,
-    .time_updated_utc = entry->last_update_time_utc,
+  *forecast_out = (WeatherLocationForecast){
+      .is_current_location = entry->is_current_location,
+      .current_temp = entry->current_temp,
+      .today_high = entry->today_high_temp,
+      .today_low = entry->today_low_temp,
+      .current_weather_type = entry->current_weather_type,
+      .tomorrow_high = entry->tomorrow_high_temp,
+      .tomorrow_low = entry->tomorrow_low_temp,
+      .tomorrow_weather_type = entry->tomorrow_weather_type,
+      .time_updated_utc = entry->last_update_time_utc,
   };
 
   // add 1 for null terminator
@@ -104,8 +104,7 @@ static bool prv_get_location_index(Uuid *location, SerializedWeatherAppPrefs *pr
   return false;
 }
 
-static void prv_add_to_list_if_valid(WeatherDBKey *key, WeatherDBEntry *entry,
-                                     void *context) {
+static void prv_add_to_list_if_valid(WeatherDBKey *key, WeatherDBEntry *entry, void *context) {
   WeatherDBIteratorContext *iterator_context = context;
   SerializedWeatherAppPrefs *prefs = iterator_context->serialized_prefs;
   char key_string_buffer[UUID_STRING_BUFFER_LENGTH] = {0};
@@ -113,9 +112,8 @@ static void prv_add_to_list_if_valid(WeatherDBKey *key, WeatherDBEntry *entry,
 
   if (!prv_get_location_index(key, prefs, &location_index)) {
     uuid_to_string(key, key_string_buffer);
-    PBL_LOG_WRN("Weather location %s has no known ordering! Skipping",
-            key_string_buffer);
-    return; // location not found in ordering list, skip over
+    PBL_LOG_WRN("Weather location %s has no known ordering! Skipping", key_string_buffer);
+    return;  // location not found in ordering list, skip over
   }
 
   WeatherDataListNode *node = task_zalloc_check(sizeof(WeatherDataListNode));
@@ -133,11 +131,8 @@ static void prv_add_to_list_if_valid(WeatherDBKey *key, WeatherDBEntry *entry,
   list_init(to_add);
 
   const bool ascending = true;
-  iterator_context->head =
-      (WeatherDataListNode *)list_sorted_add((ListNode *)iterator_context->head,
-                                              to_add,
-                                              prv_weather_data_list_node_comparator,
-                                              ascending);
+  iterator_context->head = (WeatherDataListNode *)list_sorted_add(
+      (ListNode *)iterator_context->head, to_add, prv_weather_data_list_node_comparator, ascending);
   iterator_context->count++;
 }
 
@@ -171,8 +166,8 @@ static void prv_update_default_location_cache(void) {
     goto cleanup;
   }
 
-  const int entry_len = weather_db_get_len((uint8_t *)&default_location_key,
-                                           sizeof(default_location_key));
+  const int entry_len =
+      weather_db_get_len((uint8_t *)&default_location_key, sizeof(default_location_key));
   if (entry_len == 0) {
     goto cleanup;
   }
@@ -233,35 +228,36 @@ static void prv_blobdb_event_handler(PebbleEvent *event, void *context) {
 
   WeatherEventType type;
 
-  const bool is_key_weather_app_pref = blobdb_event->key &&
+  const bool is_key_weather_app_pref =
+      blobdb_event->key &&
       (memcmp(blobdb_event->key, PREF_KEY_WEATHER_APP, strlen(PREF_KEY_WEATHER_APP)) == 0);
   if (blobdb_id == BlobDBIdWatchAppPrefs &&
       ((blobdb_event->type == BlobDBEventTypeFlush) || is_key_weather_app_pref)) {
     type = WeatherEventType_WeatherOrderChanged;
   } else if (blobdb_id == BlobDBIdWeather) {
-    type = blobdb_event->type == BlobDBEventTypeInsert ? WeatherEventType_WeatherDataAdded :
-                                                         WeatherEventType_WeatherDataRemoved;
+    type = blobdb_event->type == BlobDBEventTypeInsert ? WeatherEventType_WeatherDataAdded
+                                                       : WeatherEventType_WeatherDataRemoved;
   } else {
     return;
   }
 
   prv_update_default_location_cache();
 
-  PebbleEvent e = (PebbleEvent) {
-    .type = PEBBLE_WEATHER_EVENT,
-    .weather = (PebbleWeatherEvent) {
-      .type = type,
-    },
+  PebbleEvent e = (PebbleEvent){
+      .type = PEBBLE_WEATHER_EVENT,
+      .weather =
+          (PebbleWeatherEvent){
+              .type = type,
+          },
   };
 
   event_put(&e);
 }
 
 void weather_service_init(void) {
-
   static EventServiceInfo s_blobdb_event_info = {
-    .type = PEBBLE_BLOBDB_EVENT,
-    .handler = prv_blobdb_event_handler,
+      .type = PEBBLE_BLOBDB_EVENT,
+      .handler = prv_blobdb_event_handler,
   };
 
   prv_update_default_location_cache();
@@ -269,7 +265,7 @@ void weather_service_init(void) {
 }
 
 WeatherDataListNode *weather_service_locations_list_create(size_t *count_out) {
-  WeatherDBIteratorContext context = (WeatherDBIteratorContext) {};
+  WeatherDBIteratorContext context = (WeatherDBIteratorContext){};
   SerializedWeatherAppPrefs *prefs = watch_app_prefs_get_weather();
   if (!prefs) {
     return NULL;

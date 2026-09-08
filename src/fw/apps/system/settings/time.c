@@ -41,8 +41,8 @@ typedef struct {
   // Timezone data
   uint16_t region_count;
   uint16_t continent_selected;
-  uint16_t continent_start[NUM_CONTINENTS + 1]; //!< First region id for the continent
-  uint16_t continent_end[NUM_CONTINENTS]; //!< Last+1 region id for the continent
+  uint16_t continent_start[NUM_CONTINENTS + 1];  //!< First region id for the continent
+  uint16_t continent_end[NUM_CONTINENTS];        //!< Last+1 region id for the continent
 
   const char **continent_names;
   const char **region_names;
@@ -101,7 +101,6 @@ static uint16_t prv_visible_row_count(void) {
   return count;
 }
 
-
 // Timezone Window Setup
 ////////////////////////////
 
@@ -117,7 +116,7 @@ static void prv_format_region_name(char *region_name) {
 //! Initialize the continent and region names for the timezone windows
 static void prv_init_continent_and_region_names(SettingsTimeData *data) {
   const uint16_t region_count = data->region_count = timezone_database_get_region_count();
-  char * const region_names_buffer = app_zalloc_check(region_count * TIMEZONE_NAME_LENGTH);
+  char *const region_names_buffer = app_zalloc_check(region_count * TIMEZONE_NAME_LENGTH);
   char *cursor = region_names_buffer;
   char *last_cursor = cursor;
   const char **continent_names = app_zalloc_check(NUM_CONTINENTS * sizeof(char *));
@@ -141,7 +140,7 @@ static void prv_init_continent_and_region_names(SettingsTimeData *data) {
     }
     // If the new continent is filtered out, don't create a new continent or update the last
     // continent pointer.
-    if (strcmp(cursor, "Etc") == 0) { // Filter out 'Etc' fake-continent
+    if (strcmp(cursor, "Etc") == 0) {  // Filter out 'Etc' fake-continent
       continue;
     }
     // Set pointer for the continent name
@@ -181,13 +180,13 @@ static void prv_region_menu_select(OptionMenu *option_menu, int selection, void 
 static void prv_region_menu_push(SettingsTimeData *data) {
   const char *title = prv_get_timezone_title();
   const OptionMenuCallbacks callbacks = {
-    .select = prv_region_menu_select,
+      .select = prv_region_menu_select,
   };
   const int start_index = data->continent_start[data->continent_selected];
   const int end_index = data->continent_end[data->continent_selected];
-  settings_option_menu_push(
-      title, OptionMenuContentType_SingleLine, OPTION_MENU_CHOICE_NONE, &callbacks,
-      end_index - start_index, true /* icons_enabled */, &data->region_names[start_index], data);
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine, OPTION_MENU_CHOICE_NONE,
+                            &callbacks, end_index - start_index, true /* icons_enabled */,
+                            &data->region_names[start_index], data);
 }
 
 // Timezone Continent Menu
@@ -201,10 +200,10 @@ static void prv_continent_menu_select(OptionMenu *option_menu, int selection, vo
 
 static void prv_continent_menu_push(SettingsTimeData *data) {
   const char *title = prv_get_timezone_title();
-  const OptionMenuCallbacks callbacks =  {
-    .select = prv_continent_menu_select,
+  const OptionMenuCallbacks callbacks = {
+      .select = prv_continent_menu_select,
   };
-  OptionMenu * const continent_menu = settings_option_menu_push(
+  OptionMenu *const continent_menu = settings_option_menu_push(
       title, OptionMenuContentType_SingleLine, OPTION_MENU_CHOICE_NONE, &callbacks, NUM_CONTINENTS,
       false /* icons_enabled */, data->continent_names, data);
   data->continent_window = &continent_menu->window;
@@ -213,9 +212,7 @@ static void prv_continent_menu_push(SettingsTimeData *data) {
 // 24h Switch
 /////////////////////////
 
-static void prv_cycle_clock_style(void) {
-  clock_set_24h_style(!clock_is_24h_style());
-}
+static void prv_cycle_clock_style(void) { clock_set_24h_style(!clock_is_24h_style()); }
 
 static void prv_cycle_clock_time_source(void) {
   const bool was_manual = clock_time_source_is_manual();
@@ -261,14 +258,15 @@ static void prv_time_picker_push(SettingsTimeData *data) {
   time_selection_window_deinit(picker);
 
   const TimeSelectionWindowConfig config = {
-    .label = i18n_noop("Set Time"),
-    .color = PBL_IF_COLOR_ELSE(GColorJaegerGreen, GColorBlack),
-    .range = { .update = true, .enabled = false },
-    .callback = {
-      .update = true,
-      .complete = prv_time_picker_complete,
-      .context = data,
-    },
+      .label = i18n_noop("Set Time"),
+      .color = PBL_IF_COLOR_ELSE(GColorJaegerGreen, GColorBlack),
+      .range = {.update = true, .enabled = false},
+      .callback =
+          {
+              .update = true,
+              .complete = prv_time_picker_complete,
+              .context = data,
+          },
   };
   time_selection_window_init(picker, &config);
   time_selection_window_set_to_current_time(picker);
@@ -311,7 +309,7 @@ static void prv_date_picker_push(SettingsTimeData *data) {
 // Date & Time Menu
 ////////////////////////////
 static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
-  SettingsTimeData *data = (SettingsTimeData*) context;
+  SettingsTimeData *data = (SettingsTimeData *)context;
   switch (prv_row_for_index(row)) {
     case TimeRow_TimeSource:
       // Toggle automatic / manual time
@@ -346,9 +344,9 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
   settings_menu_mark_dirty(SettingsMenuItemDateTime);
 }
 
-static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
-                            const Layer *cell_layer, uint16_t row, bool selected) {
-  SettingsTimeData *data = (SettingsTimeData*) context;
+static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Layer *cell_layer,
+                            uint16_t row, bool selected) {
+  SettingsTimeData *data = (SettingsTimeData *)context;
 
   const char *title = NULL;
   const char *subtitle = NULL;
@@ -360,16 +358,14 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
   switch (prv_row_for_index(row)) {
     case TimeRow_TimeSource: {
       title = i18n_noop("Time Source");
-      subtitle = clock_time_source_is_manual() ? i18n_noop("Manual") :
-                                                 i18n_noop("Automatic");
+      subtitle = clock_time_source_is_manual() ? i18n_noop("Manual") : i18n_noop("Automatic");
       break;
     }
     case TimeRow_SetTime: {
       title = i18n_noop("Set Time");
       struct tm local_now;
       clock_get_time_tm(&local_now);
-      clock_format_time(time_buf, sizeof(time_buf),
-                        local_now.tm_hour, local_now.tm_min, true);
+      clock_format_time(time_buf, sizeof(time_buf), local_now.tm_hour, local_now.tm_min, true);
       subtitle = time_buf;
       break;
     }
@@ -393,8 +389,8 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       } else if (clock_is_timezone_set()) {
         // Show the active timezone since the Timezone row is hidden
         clock_get_timezone_region(current_timezone_region, TIMEZONE_NAME_LENGTH);
-        snprintf(tz_source_buf, sizeof(tz_source_buf), "%s (%s)",
-                 i18n_get("Automatic", data), current_timezone_region);
+        snprintf(tz_source_buf, sizeof(tz_source_buf), "%s (%s)", i18n_get("Automatic", data),
+                 current_timezone_region);
         subtitle = tz_source_buf;
       } else {
         subtitle = i18n_noop("Automatic");
@@ -414,12 +410,10 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
   menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), NULL);
 }
 
-static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
-  return prv_visible_row_count();
-}
+static uint16_t prv_num_rows_cb(SettingsCallbacks *context) { return prv_visible_row_count(); }
 
 static void prv_deinit_cb(SettingsCallbacks *context) {
-  SettingsTimeData *data = (SettingsTimeData*) context;
+  SettingsTimeData *data = (SettingsTimeData *)context;
   i18n_free_all(data);
   app_free(data->continent_names);
   app_free(data->region_names);
@@ -433,11 +427,11 @@ static Window *prv_init(void) {
   SettingsTimeData *data = app_malloc_check(sizeof(*data));
   *data = (SettingsTimeData){};
 
-  data->callbacks = (SettingsCallbacks) {
-    .deinit = prv_deinit_cb,
-    .draw_row = prv_draw_row_cb,
-    .select_click = prv_select_click_cb,
-    .num_rows = prv_num_rows_cb,
+  data->callbacks = (SettingsCallbacks){
+      .deinit = prv_deinit_cb,
+      .draw_row = prv_draw_row_cb,
+      .select_click = prv_select_click_cb,
+      .num_rows = prv_num_rows_cb,
   };
 
   prv_init_continent_and_region_names(data);
@@ -447,8 +441,8 @@ static Window *prv_init(void) {
 
 const SettingsModuleMetadata *settings_time_get_info(void) {
   static const SettingsModuleMetadata s_module_info = {
-    .name = i18n_noop("Date & Time"),
-    .init = prv_init,
+      .name = i18n_noop("Date & Time"),
+      .init = prv_init,
   };
 
   return &s_module_info;

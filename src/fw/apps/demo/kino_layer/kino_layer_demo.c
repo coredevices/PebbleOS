@@ -20,9 +20,9 @@ typedef struct {
 } KinoLayerDemoData;
 
 uint32_t resources[] = {
-  RESOURCE_ID_RESULT_SENT_LARGE,
-  RESOURCE_ID_GENERIC_QUESTION_LARGE,
-  RESOURCE_ID_VOICE_MICROPHONE_LARGE,
+    RESOURCE_ID_RESULT_SENT_LARGE,
+    RESOURCE_ID_GENERIC_QUESTION_LARGE,
+    RESOURCE_ID_VOICE_MICROPHONE_LARGE,
 };
 
 static void prv_select_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -62,10 +62,10 @@ static void prv_init(void) {
   Window *window = &data->window;
   window_init(window, WINDOW_NAME("Kino Layer"));
   window_set_user_data(window, data);
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_window_load,
-    .appear = prv_window_appear,
-  });
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_window_load,
+                                         .appear = prv_window_appear,
+                                     });
 
   window_set_click_config_provider_with_context(window, prv_click_config_provider, data);
   app_window_stack_push(window, true /*animated*/);
@@ -89,14 +89,15 @@ static void s_main(void) {
 
 const PebbleProcessMd *kino_layer_demo_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-    .common = {
-      .main_func = s_main,
-      // UUID: 67a32d95-ef69-46d4-a0b9-854cc62f97fa
-      .uuid = {0x12, 0xa3, 0x2d, 0x95, 0xef, 0x69, 0x46, 0xd4,
-               0xa0, 0xb9, 0x85, 0x4c, 0xc6, 0x2f, 0x97, 0xfa},
-    },
-    .name = "KinoLayer Demo",
+      .common =
+          {
+              .main_func = s_main,
+              // UUID: 67a32d95-ef69-46d4-a0b9-854cc62f97fa
+              .uuid = {0x12, 0xa3, 0x2d, 0x95, 0xef, 0x69, 0x46, 0xd4, 0xa0, 0xb9, 0x85, 0x4c, 0xc6,
+                       0x2f, 0x97, 0xfa},
+          },
+      .name = "KinoLayer Demo",
   };
 
-  return (const PebbleProcessMd*) &s_app_info;
+  return (const PebbleProcessMd *)&s_app_info;
 }

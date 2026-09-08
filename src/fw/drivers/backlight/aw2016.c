@@ -149,9 +149,7 @@ void backlight_set_color(uint32_t rgb_color) {
   s_rgb_current_color = rgb_color;
 }
 
-uint32_t backlight_get_color(void) {
-  return s_rgb_current_color;
-}
+uint32_t backlight_get_color(void) { return s_rgb_current_color; }
 
 uint8_t backlight_get_level(uint8_t brightness) {
   // 255-step current control: every brightness value is distinct.
@@ -165,8 +163,7 @@ void backlight_refresh(void) {
     return;
   }
 
-  ret = prv_write_register(AW2016_REG_GCR1,
-                           AW2016_REG_GCR1_CHGDIS_DIS | AW2016_REG_GCR1_CHIPEN_EN);
+  ret = prv_write_register(AW2016_REG_GCR1, AW2016_REG_GCR1_CHGDIS_DIS | AW2016_REG_GCR1_CHIPEN_EN);
   ret &= prv_configure_registers();
   if (!ret) {
     PBL_LOG_ERR("AW2016 refresh failed (i2c)");

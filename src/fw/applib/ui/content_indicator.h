@@ -23,20 +23,21 @@ typedef struct ScrollLayer ScrollLayer;
 //! @see \ref content_indicator_configure_direction
 //! @see \ref content_indicator_set_content_available
 typedef enum {
-  ContentIndicatorDirectionUp = 0, //!< The up direction.
-  ContentIndicatorDirectionDown, //!< The down direction.
-  NumContentIndicatorDirections //!< The number of supported directions.
+  ContentIndicatorDirectionUp = 0,  //!< The up direction.
+  ContentIndicatorDirectionDown,    //!< The down direction.
+  NumContentIndicatorDirections     //!< The number of supported directions.
 } ContentIndicatorDirection;
 
 //! Struct used to configure directions for \ref ContentIndicator.
 //! @see \ref content_indicator_configure_direction
 typedef struct {
-  Layer *layer; //!< The layer where the arrow indicator will be rendered when content is available.
-  bool times_out; //!< Whether the display of the arrow indicator should timeout.
-  GAlign alignment; //!< The alignment of the arrow within the provided layer.
+  Layer
+      *layer;  //!< The layer where the arrow indicator will be rendered when content is available.
+  bool times_out;    //!< Whether the display of the arrow indicator should timeout.
+  GAlign alignment;  //!< The alignment of the arrow within the provided layer.
   struct {
-    GColor foreground; //!< The color of the arrow.
-    GColor background; //!< The color of the layer behind the arrow.
+    GColor foreground;  //!< The color of the arrow.
+    GColor background;  //!< The color of the layer behind the arrow.
   } colors;
 } ContentIndicatorConfig;
 
@@ -98,8 +99,7 @@ bool content_indicator_get_content_available(ContentIndicator *content_indicator
 //! @note If times_out is enabled, calling this function resets any previously scheduled timeout
 //! timer for the ContentIndicator.
 void content_indicator_set_content_available(ContentIndicator *content_indicator,
-                                             ContentIndicatorDirection direction,
-                                             bool available);
+                                             ContentIndicatorDirection direction, bool available);
 
 //!   @} // end addtogroup ContentIndicator
 //! @} // end addtogroup UI

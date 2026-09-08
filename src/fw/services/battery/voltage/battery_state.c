@@ -46,10 +46,9 @@ static void prv_update_plugged_change(void);
 static void prv_update_done_charging(void);
 
 static const ConnectionState s_transitions[] = {
-  [ConnectionStateChargingPlugged] = { .enter = prv_update_plugged_change },
-  [ConnectionStateDischargingPlugged] = { .enter = prv_update_done_charging },
-  [ConnectionStateDischargingUnplugged] = { .enter = prv_update_plugged_change }
-};
+    [ConnectionStateChargingPlugged] = {.enter = prv_update_plugged_change},
+    [ConnectionStateDischargingPlugged] = {.enter = prv_update_done_charging},
+    [ConnectionStateDischargingUnplugged] = {.enter = prv_update_plugged_change}};
 
 typedef struct BatteryState {
   uint64_t init_time;
@@ -105,10 +104,11 @@ static void prv_update_done_charging(void) {
 
 static void battery_state_put_change_event(PreciseBatteryChargeState state) {
   PebbleEvent e = {
-    .type = PEBBLE_BATTERY_STATE_CHANGE_EVENT,
-    .battery_state = {
-      .new_state = state,
-    },
+      .type = PEBBLE_BATTERY_STATE_CHANGE_EVENT,
+      .battery_state =
+          {
+              .new_state = state,
+          },
   };
   event_put(&e);
 }
@@ -173,8 +173,8 @@ static void prv_update_state(void *force_update) {
     }
   }
 
-  s_last_battery_state.voltage = prv_filter_voltage(s_last_battery_state.voltage,
-                                                    battery_get_millivolts());
+  s_last_battery_state.voltage =
+      prv_filter_voltage(s_last_battery_state.voltage, battery_get_millivolts());
   bool charging = (s_last_battery_state.connection == ConnectionStateChargingPlugged);
 
   // Update Percent & Filtering
@@ -190,8 +190,7 @@ static void prv_update_state(void *force_update) {
   //    - The readings have stabilized and the battery percent did not go up
   //    - The readings have not yet stabilized
   // TL;DR: Allow updates unless we're stable and discharging but the % went up.
-  if (!charging && likely_stable &&
-      new_charge_percent > s_last_battery_state.percent) {
+  if (!charging && likely_stable && new_charge_percent > s_last_battery_state.percent) {
     // It's okay to return early since any connection/plugged changes will reset the filter,
     // so we won't catch those.
     return;
@@ -199,9 +198,9 @@ static void prv_update_state(void *force_update) {
 
   s_last_battery_state.percent = new_charge_percent;
 
-  PBL_LOG_DBG("mV Raw: %"PRIu16" Ratio: %"PRIu32" Percent: %"PRIu32,
-          s_last_battery_state.voltage, s_last_battery_state.percent,
-          ratio32_to_percent(s_last_battery_state.percent));
+  PBL_LOG_DBG("mV Raw: %" PRIu16 " Ratio: %" PRIu32 " Percent: %" PRIu32,
+              s_last_battery_state.voltage, s_last_battery_state.percent,
+              ratio32_to_percent(s_last_battery_state.percent));
 
   PWR_TRACK_BATT(charging ? "CHARGING" : "DISCHARGING", s_last_battery_state.voltage);
 
@@ -223,7 +222,7 @@ static void prv_update_callback(void *data) {
 
 static void prv_schedule_update(uint32_t delay, bool force_update) {
   bool success = new_timer_start(s_periodic_timer_id, delay, prv_update_callback,
-      (void *)force_update, 0 /*flags*/);
+                                 (void *)force_update, 0 /*flags*/);
   PBL_ASSERTN(success);
 }
 
@@ -239,7 +238,7 @@ void battery_state_force_update(void) {
 void battery_state_init(void) {
   s_periodic_timer_id = new_timer_create();
 
-  s_last_battery_state = (BatteryState) { .connection = ConnectionStateDischargingUnplugged };
+  s_last_battery_state = (BatteryState){.connection = ConnectionStateDischargingUnplugged};
   battery_state_reset_filter();
   battery_state_force_update();
 
@@ -259,11 +258,10 @@ void battery_state_handle_connection_event(bool is_connected) {
 
 PreciseBatteryChargeState prv_get_precise_charge_state(const BatteryState *state) {
   PreciseBatteryChargeState event_state = {
-    .charge_percent = state->percent,
-    .pct = ratio32_to_percent(state->percent),
-    .is_charging = (s_last_battery_state.connection == ConnectionStateChargingPlugged),
-    .is_plugged = (s_last_battery_state.connection != ConnectionStateDischargingUnplugged)
-  };
+      .charge_percent = state->percent,
+      .pct = ratio32_to_percent(state->percent),
+      .is_charging = (s_last_battery_state.connection == ConnectionStateChargingPlugged),
+      .is_plugged = (s_last_battery_state.connection != ConnectionStateDischargingUnplugged)};
   return event_state;
 }
 
@@ -285,8 +283,9 @@ BatteryChargeState battery_get_charge_state(void) {
   int32_t percent = ratio32_to_percent(s_last_battery_state.percent);
 
   // subtract low power reserve, so developer will see 0% when we're approaching low power mode
-  int32_t percent_normalized = MAX((percent - BOARD_CONFIG_POWER.low_power_threshold
-                  + percent / (100 / BOARD_CONFIG_POWER.low_power_threshold)), 0);
+  int32_t percent_normalized = MAX((percent - BOARD_CONFIG_POWER.low_power_threshold +
+                                    percent / (100 / BOARD_CONFIG_POWER.low_power_threshold)),
+                                   0);
 
   // massage rounding factor so that between 100% to 50% charge the SOC reported is biased to a
   // higher charge percent bin.
@@ -294,33 +293,27 @@ BatteryChargeState battery_get_charge_state(void) {
   uint8_t charge_percent = MIN(10 * ((percent_normalized + rounding_factor) / 10), 100);
 #endif
   BatteryChargeState state = {
-    .charge_percent = charge_percent,
-    .is_charging = is_plugged && percent_normalized < 100,
-    .is_plugged = is_plugged,
+      .charge_percent = charge_percent,
+      .is_charging = is_plugged && percent_normalized < 100,
+      .is_plugged = is_plugged,
   };
   return state;
 }
 
 // For unit tests
-TimerID battery_state_get_periodic_timer_id(void) {
-  return s_periodic_timer_id;
-}
+TimerID battery_state_get_periodic_timer_id(void) { return s_periodic_timer_id; }
 
-uint16_t battery_state_get_voltage(void) {
-  return s_last_battery_state.voltage;
-}
+uint16_t battery_state_get_voltage(void) { return s_last_battery_state.voltage; }
 
-int32_t battery_state_get_temp(void) {
-  return 0;
-}
+int32_t battery_state_get_temp(void) { return 0; }
 
 #include "console/prompt.h"
 void command_print_battery_status(void) {
   char buffer[32];
   PreciseBatteryChargeState state = prv_get_precise_charge_state(&s_last_battery_state);
-  prompt_send_response_fmt(buffer, 32, "%"PRIu16" mV", s_last_battery_state.voltage);
-  prompt_send_response_fmt(buffer, 32,
-      "batt_percent: %"PRIu32"%%", ratio32_to_percent(state.charge_percent));
+  prompt_send_response_fmt(buffer, 32, "%" PRIu16 " mV", s_last_battery_state.voltage);
+  prompt_send_response_fmt(buffer, 32, "batt_percent: %" PRIu32 "%%",
+                           ratio32_to_percent(state.charge_percent));
   prompt_send_response_fmt(buffer, 32, "plugged: %s", state.is_plugged ? "YES" : "NO");
   prompt_send_response_fmt(buffer, 32, "charging: %s", state.is_charging ? "YES" : "NO");
 }
@@ -353,7 +346,7 @@ static void prv_set_forced_charge_state(bool is_charging) {
   battery_state_force_update();
 }
 
-void command_battery_charge_option(const char* option) {
+void command_battery_charge_option(const char *option) {
   if (!strcmp("disable", option)) {
     prv_set_forced_charge_state(false);
   } else if (!strcmp("enable", option)) {

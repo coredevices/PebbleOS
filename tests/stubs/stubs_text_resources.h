@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#pragma once 
+#pragma once
 
 #include "applib/fonts/fonts_private.h"
 #include "applib/graphics/text_resources.h"
@@ -12,11 +12,10 @@
 
 #define HORIZ_ADVANCE_PX (2)
 
-bool text_resources_setup_font(FontCache* font_cache, FontInfo* fontinfo) {
-  return true;
-}
+bool text_resources_setup_font(FontCache *font_cache, FontInfo *fontinfo) { return true; }
 
-int8_t text_resources_get_glyph_horiz_advance(FontCache* font_cache, Codepoint codepoint, FontInfo* fontinfo) {
+int8_t text_resources_get_glyph_horiz_advance(FontCache *font_cache, Codepoint codepoint,
+                                              FontInfo *fontinfo) {
   if (codepoint_is_zero_width(codepoint)) {
     return 0;
   }
@@ -27,15 +26,15 @@ int8_t text_resources_get_glyph_horiz_advance(FontCache* font_cache, Codepoint c
   return HORIZ_ADVANCE_PX;
 }
 
-int8_t text_resources_get_glyph_height(FontCache* font_cache, Codepoint codepoint, FontInfo* fontinfo) {
+int8_t text_resources_get_glyph_height(FontCache *font_cache, Codepoint codepoint,
+                                       FontInfo *fontinfo) {
   return 10;
 }
 
-const GlyphData *text_resources_get_glyph(FontCache* font_cache, Codepoint codepoint,
-                                          FontInfo* fontinfo, int16_t *baseline_adjust_out) {
+const GlyphData *text_resources_get_glyph(FontCache *font_cache, Codepoint codepoint,
+                                          FontInfo *fontinfo, int16_t *baseline_adjust_out) {
   if (baseline_adjust_out) {
     *baseline_adjust_out = 0;
   }
   return NULL;
 }
-

@@ -14,9 +14,7 @@
 #include "resource/resource_ids.auto.h"
 #include "system/passert.h"
 
-static void prv_app_timer_callback(void *context) {
-  dialog_pop(context);
-}
+static void prv_app_timer_callback(void *context) { dialog_pop(context); }
 
 void dialog_init(Dialog *dialog, const char *dialog_name) {
   PBL_ASSERTN(dialog);
@@ -31,17 +29,13 @@ void dialog_init(Dialog *dialog, const char *dialog_name) {
   dialog->text_color = GColorBlack;
 }
 
-void dialog_pop(Dialog *dialog) {
-  window_stack_remove(&dialog->window, DIALOG_IS_ANIMATED);
-}
+void dialog_pop(Dialog *dialog) { window_stack_remove(&dialog->window, DIALOG_IS_ANIMATED); }
 
 void dialog_push(Dialog *dialog, WindowStack *window_stack) {
   window_stack_push(window_stack, &dialog->window, DIALOG_IS_ANIMATED);
 }
 
-void app_dialog_push(Dialog *dialog) {
-  dialog_push(dialog, app_state_get_window_stack());
-}
+void app_dialog_push(Dialog *dialog) { dialog_push(dialog, app_state_get_window_stack()); }
 
 // Loads the core dialog. Should be called from each dialog window's load callback.
 void dialog_load(Dialog *dialog) {
@@ -97,16 +91,12 @@ KinoReel *dialog_create_icon(Dialog *dialog) {
   return kino_reel_create_with_resource_system(SYSTEM_APP, dialog->icon_id);
 }
 
-bool dialog_init_icon_layer(Dialog *dialog, KinoReel *image,
-                            GPoint icon_origin, bool animated) {
+bool dialog_init_icon_layer(Dialog *dialog, KinoReel *image, GPoint icon_origin, bool animated) {
   if (!image) {
     return false;
   }
 
-  const GRect icon_rect = (GRect) {
-    .origin = icon_origin,
-    .size = kino_reel_get_size(image)
-  };
+  const GRect icon_rect = (GRect){.origin = icon_origin, .size = kino_reel_get_size(image)};
 
   KinoLayer *icon_layer = &dialog->icon_layer;
   kino_layer_init(icon_layer, &icon_rect);
@@ -132,8 +122,8 @@ bool dialog_init_icon_layer(Dialog *dialog, KinoReel *image,
     kino_reel_transform_set_from_frame(reel, from);
     kino_reel_transform_set_transform_duration(reel, 300);
     kino_reel_scale_segmented_set_deflate_effect(reel, 10);
-    kino_reel_scale_segmented_set_delay_by_distance(
-        reel, GPoint(ICON_TARGET_PT_X, ICON_TARGET_PT_Y));
+    kino_reel_scale_segmented_set_delay_by_distance(reel,
+                                                    GPoint(ICON_TARGET_PT_X, ICON_TARGET_PT_Y));
   }
 
   if (!reel) {
@@ -145,8 +135,8 @@ bool dialog_init_icon_layer(Dialog *dialog, KinoReel *image,
   kino_layer_play(icon_layer);
 
   uint32_t icon_duration = kino_reel_get_duration(image);
-  if (dialog->timeout != DIALOG_TIMEOUT_INFINITE && // Don't shorten infinite dialogs
-      icon_duration != PLAY_DURATION_INFINITE && // Don't extend dialogs with infinite animations
+  if (dialog->timeout != DIALOG_TIMEOUT_INFINITE &&  // Don't shorten infinite dialogs
+      icon_duration != PLAY_DURATION_INFINITE &&  // Don't extend dialogs with infinite animations
       icon_duration > dialog->timeout) {
     // The finite image animation is longer, increase the finite dialog timeout
     dialog_set_timeout(dialog, icon_duration);

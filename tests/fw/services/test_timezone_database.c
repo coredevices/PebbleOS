@@ -20,7 +20,7 @@ int timezone_database_find_region_by_name(const char *region_name, int region_na
 #include "resource/resource.h"
 size_t resource_load_byte_range_system(ResAppNum app_num, uint32_t resource_id,
                                        uint32_t start_offset, uint8_t *data, size_t num_bytes) {
-  memcpy(data, ((uint8_t*) s_timezone_database) + start_offset, num_bytes);
+  memcpy(data, ((uint8_t *)s_timezone_database) + start_offset, num_bytes);
   return num_bytes;
 }
 
@@ -113,9 +113,9 @@ void test_timezone_database__kazakhstan(void) {
     bool result = timezone_database_load_region_info(almaty_region, &tz_info);
 
     cl_assert(result);
-    cl_assert_equal_i(tz_info.dst_id, 0); // No DST
+    cl_assert_equal_i(tz_info.dst_id, 0);  // No DST
     // Kazakhstan unified its time zones and moved from UTC+6 to UTC+5 on
     // 2024-03-01 (tzdata 2024a); Asia/Almaty's current offset is now +5 hours.
-    cl_assert_equal_i(tz_info.tm_gmtoff, 5 * 60 * 60); // +5 hours
+    cl_assert_equal_i(tz_info.tm_gmtoff, 5 * 60 * 60);  // +5 hours
   }
 }

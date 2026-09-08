@@ -33,13 +33,13 @@ static void poll_callback(int index, void *ctx) {
 }
 
 static const SimpleMenuItem s_menu_items[] = {
-  { "Poll Mail", "", NULL, poll_callback },
-  { "Title A", "Callback A", NULL, callback_a },
-  { "Another Title", NULL, NULL, other_callback },
-  { "Last Title", "Last subtitle", NULL, other_callback }
-};
+    {"Poll Mail", "", NULL, poll_callback},
+    {"Title A", "Callback A", NULL, callback_a},
+    {"Another Title", NULL, NULL, other_callback},
+    {"Last Title", "Last subtitle", NULL, other_callback}};
 
-static const SimpleMenuSection s_menu_sections[] = {{ .title = NULL, .items = s_menu_items, .num_items = ARRAY_LENGTH(s_menu_items) }};
+static const SimpleMenuSection s_menu_sections[] = {
+    {.title = NULL, .items = s_menu_items, .num_items = ARRAY_LENGTH(s_menu_items)}};
 
 static void prv_window_load(Window *window) {
   AppData *data = window_get_user_data(window);
@@ -58,9 +58,7 @@ static void handle_init(void) {
   Window *window = &data->window;
   window_init(window, WINDOW_NAME("Simple Menu Demo"));
   window_set_user_data(window, data);
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_window_load
-  });
+  window_set_window_handlers(window, &(WindowHandlers){.load = prv_window_load});
 
   const bool animated = true;
   app_window_stack_push(window, animated);
@@ -80,11 +78,8 @@ static void s_main(void) {
   handle_deinit();
 }
 
-const PebbleProcessMd* simple_menu_app_get_info() {
-  static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = &s_main,
-    .name = "SimpleMenuLayer Demo"
-  };
-  return (const PebbleProcessMd*) &s_app_info;
+const PebbleProcessMd *simple_menu_app_get_info() {
+  static const PebbleProcessMdSystem s_app_info = {.common.main_func = &s_main,
+                                                   .name = "SimpleMenuLayer Demo"};
+  return (const PebbleProcessMd *)&s_app_info;
 }
-

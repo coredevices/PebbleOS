@@ -11,7 +11,7 @@ const CompositorTransition *WEAK compositor_slide_transition_timeline_get(
   return NULL;
 }
 
-const CompositorTransition *WEAK compositor_dot_transition_timeline_get(
-    bool timeline_is_future, bool timeline_is_destination) {
+const CompositorTransition *WEAK
+compositor_dot_transition_timeline_get(bool timeline_is_future, bool timeline_is_destination) {
   return NULL;
 }

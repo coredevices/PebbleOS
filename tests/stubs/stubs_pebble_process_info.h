@@ -5,6 +5,4 @@
 
 #include "process_management/pebble_process_info.h"
 
-int version_compare(Version a, Version b) {
-  return 0;
-}
+int version_compare(Version a, Version b) { return 0; }

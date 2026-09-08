@@ -23,7 +23,7 @@ typedef enum {
 typedef enum {
   // Subscribe-able:
   ANCSCharacteristicNotification = 0,  //<! Notification Source
-  ANCSCharacteristicData = 1,  //<! Data Source
+  ANCSCharacteristicData = 1,          //<! Data Source
 
   // Writable:
   ANCSCharacteristicControl = 2,  //<! Control Point
@@ -60,8 +60,8 @@ void ancs_handle_write_response(BLECharacteristic characteristic, BLEGATTError e
 //! Handles GATT subscriptions
 //! @see BLEClientSubscribeHandler
 //! Must only be called from KernelMain!
-void ancs_handle_subscribe(BLECharacteristic characteristic,
-                           BLESubscription subscription_type, BLEGATTError error);
+void ancs_handle_subscribe(BLECharacteristic characteristic, BLESubscription subscription_type,
+                           BLEGATTError error);
 
 //! Handles GATT notifications
 //! Must only be called from KernelMain!

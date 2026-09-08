@@ -29,7 +29,6 @@ typedef struct {
 
 #define NUM_CUSTOM_CELLS 1
 
-
 /* Callback Functions */
 
 static bool prv_app_filter_callback(struct AppMenuDataSource *source, AppInstallEntry *entry) {
@@ -37,15 +36,15 @@ static bool prv_app_filter_callback(struct AppMenuDataSource *source, AppInstall
   const Uuid timeline_future_uuid = TIMELINE_UUID_INIT;
   const Uuid timeline_past_uuid = TIMELINE_PAST_UUID_INIT;
   const Uuid timeline_full_uuid = TIMELINE_FULL_UUID_INIT;
-  
+
   if (app_install_entry_is_watchface(entry)) {
-    return false; // Skip watchfaces
+    return false;  // Skip watchfaces
   }
   if (app_install_entry_is_hidden(entry) &&
       !app_install_entry_is_quick_launch_visible_only(entry)) {
-    return false; // Skip hidden apps unless they are quick launch visible
+    return false;  // Skip hidden apps unless they are quick launch visible
   }
-  
+
   // For tap buttons, filter Timeline apps based on button
   if (data->is_tap) {
     if (data->button == BUTTON_ID_UP) {
@@ -66,7 +65,7 @@ static bool prv_app_filter_callback(struct AppMenuDataSource *source, AppInstall
       }
     }
   }
-  
+
   return true;
 }
 
@@ -75,16 +74,15 @@ static uint16_t prv_menu_get_num_rows(OptionMenu *option_menu, void *context) {
   return app_menu_data_source_get_count(&data->data_source) + NUM_CUSTOM_CELLS;
 }
 
-static void prv_menu_draw_row(OptionMenu *option_menu, GContext* ctx, const Layer *cell_layer,
+static void prv_menu_draw_row(OptionMenu *option_menu, GContext *ctx, const Layer *cell_layer,
                               const GRect *text_frame, uint32_t row, bool selected, void *context) {
-
   QuickLaunchAppMenuData *data = context;
   const char *text = NULL;
   if (row == 0) {
     text = i18n_get("Disable", data);
   } else {
-    AppMenuNode *node = app_menu_data_source_get_node_at_index(&data->data_source,
-                                                               row - NUM_CUSTOM_CELLS);
+    AppMenuNode *node =
+        app_menu_data_source_get_node_at_index(&data->data_source, row - NUM_CUSTOM_CELLS);
     text = node->name;
   }
   option_menu_system_draw_row(option_menu, ctx, cell_layer, text_frame, text, selected, context);
@@ -104,7 +102,7 @@ static void prv_menu_select(OptionMenu *option_menu, int selection, void *contex
     }
     app_window_stack_pop(true);
   } else {
-    AppMenuNode* app_menu_node =
+    AppMenuNode *app_menu_node =
         app_menu_data_source_get_node_at_index(&data->data_source, selection - NUM_CUSTOM_CELLS);
     if (data->is_tap) {
       quick_launch_single_click_set_app(data->button, app_menu_node->install_id);
@@ -137,31 +135,39 @@ void quick_launch_app_menu_window_push(ButtonId button, bool is_tap) {
   OptionMenu *option_menu = option_menu_create();
   data->option_menu = option_menu;
 
-  app_menu_data_source_init(&data->data_source, &(AppMenuDataSourceCallbacks) {
-    .changed = prv_menu_reload_data,
-    .filter = prv_app_filter_callback,
-  }, data);
+  app_menu_data_source_init(&data->data_source,
+                            &(AppMenuDataSourceCallbacks){
+                                .changed = prv_menu_reload_data,
+                                .filter = prv_app_filter_callback,
+                            },
+                            data);
 
-  const AppInstallId install_id = is_tap ? quick_launch_single_click_get_app(button)
-                                          : quick_launch_get_app(button);
-  const int app_index = app_menu_data_source_get_index_of_app_with_install_id(&data->data_source,
-                                                                              install_id);
+  const AppInstallId install_id =
+      is_tap ? quick_launch_single_click_get_app(button) : quick_launch_get_app(button);
+  const int app_index =
+      app_menu_data_source_get_index_of_app_with_install_id(&data->data_source, install_id);
 
   GColor highlight_bg = shell_prefs_get_theme_highlight_color();
   const OptionMenuConfig config = {
-    .title = i18n_get(i18n_noop("Quick Launch"), data),
-    .choice = (install_id == INSTALL_ID_INVALID) ? 0 : (app_index + NUM_CUSTOM_CELLS),
-    .status_colors = { GColorWhite, GColorBlack, },
-    .highlight_colors = { highlight_bg, gcolor_legible_over(highlight_bg) },
-    .icons_enabled = true,
+      .title = i18n_get(i18n_noop("Quick Launch"), data),
+      .choice = (install_id == INSTALL_ID_INVALID) ? 0 : (app_index + NUM_CUSTOM_CELLS),
+      .status_colors =
+          {
+              GColorWhite,
+              GColorBlack,
+          },
+      .highlight_colors = {highlight_bg, gcolor_legible_over(highlight_bg)},
+      .icons_enabled = true,
   };
   option_menu_configure(option_menu, &config);
-  option_menu_set_callbacks(option_menu, &(OptionMenuCallbacks) {
-    .select = prv_menu_select,
-    .get_num_rows = prv_menu_get_num_rows,
-    .draw_row = prv_menu_draw_row,
-    .unload = prv_menu_unload,
-  }, data);
+  option_menu_set_callbacks(option_menu,
+                            &(OptionMenuCallbacks){
+                                .select = prv_menu_select,
+                                .get_num_rows = prv_menu_get_num_rows,
+                                .draw_row = prv_menu_draw_row,
+                                .unload = prv_menu_unload,
+                            },
+                            data);
 
   const bool animated = true;
   app_window_stack_push(&option_menu->window, animated);

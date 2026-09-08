@@ -47,35 +47,33 @@ enum SupervisoryKind {
 };
 
 typedef union ReliablePacket {
-  bool is_supervisory:1;
+  bool is_supervisory : 1;
   struct PACKED ReliableInfoPacket {
-    bool is_supervisory:1;
-    uint8_t sequence_number:7;
-    bool poll:1;
-    uint8_t ack_number:7;
+    bool is_supervisory : 1;
+    uint8_t sequence_number : 7;
+    bool poll : 1;
+    uint8_t ack_number : 7;
     net16 protocol;
     net16 length;
     char information[];
   } i;
   struct PACKED ReliableSupervisoryPacket {
-    bool is_supervisory:1;
-    bool is_unnumbered:1;  // is_unnumbered=true is unsupported
-    enum SupervisoryKind kind:2;
-    char _reserved:4;
-    bool poll_or_final:1;
-    uint8_t ack_number:7;
+    bool is_supervisory : 1;
+    bool is_unnumbered : 1;  // is_unnumbered=true is unsupported
+    enum SupervisoryKind kind : 2;
+    char _reserved : 4;
+    bool poll_or_final : 1;
+    uint8_t ack_number : 7;
   } s;
 } ReliablePacket;
 
 static PulseControlMessageProtocol s_reliable_pcmp = {
-  .send_begin_fn = pulse_reliable_send_begin,
-  .send_fn = pulse_reliable_send,
+    .send_begin_fn = pulse_reliable_send_begin,
+    .send_fn = pulse_reliable_send,
 };
 
-_Static_assert(sizeof((ReliablePacket){0}.i) == 6,
-               "sizeof ReliablePacket.i is wrong");
-_Static_assert(sizeof((ReliablePacket){0}.s) == 2,
-               "sizeof ReliablePacket.s is wrong");
+_Static_assert(sizeof((ReliablePacket){0}.i) == 6, "sizeof ReliablePacket.i is wrong");
+_Static_assert(sizeof((ReliablePacket){0}.s) == 2, "sizeof ReliablePacket.s is wrong");
 _Static_assert(sizeof((ReliablePacket){0}.i) == sizeof(ReliablePacket),
                "Something is really wrong here");
 
@@ -87,7 +85,7 @@ static PBL_SEM_DEFINE(s_tx_lock, 0, 1);
 //! V(S) in the LAPB spec.
 static uint8_t s_send_variable;
 static uint8_t s_retransmit_count;
-static uint8_t s_last_ack_number;  //!< N(R) of most recently received packet.
+static uint8_t s_last_ack_number;   //!< N(R) of most recently received packet.
 static uint8_t s_receive_variable;  //!< V(R) in the LAPB spec.
 
 static void prv_bounce_ncp_state(void);
@@ -96,35 +94,29 @@ size_t pulse_reliable_max_send_size(void) {
   return pulse_link_max_send_size() - sizeof(ReliablePacket);
 }
 
-static void prv_send_supervisory_response(enum SupervisoryKind kind,
-                                          bool final) {
-  ReliablePacket *packet = pulse_link_send_begin(
-      PULSE2_RELIABLE_TRANSPORT_RESPONSE);
-  packet->s = (struct ReliableSupervisoryPacket) {
-    .is_supervisory = true,
-    .kind = kind,
-    .poll_or_final = final,
-    .ack_number = s_receive_variable,
+static void prv_send_supervisory_response(enum SupervisoryKind kind, bool final) {
+  ReliablePacket *packet = pulse_link_send_begin(PULSE2_RELIABLE_TRANSPORT_RESPONSE);
+  packet->s = (struct ReliableSupervisoryPacket){
+      .is_supervisory = true,
+      .kind = kind,
+      .poll_or_final = final,
+      .ack_number = s_receive_variable,
   };
   pulse_link_send(packet, sizeof(packet->s));
 }
 
-static void prv_send_info_packet(uint8_t sequence_number,
-                                 uint16_t app_protocol,
-                                 const char *information,
-                                 uint16_t info_length) {
-  PBL_ASSERT(info_length <= pulse_reliable_max_send_size(),
-             "Packet too big to send");
+static void prv_send_info_packet(uint8_t sequence_number, uint16_t app_protocol,
+                                 const char *information, uint16_t info_length) {
+  PBL_ASSERT(info_length <= pulse_reliable_max_send_size(), "Packet too big to send");
 
-  ReliablePacket *packet = pulse_link_send_begin(
-      PULSE2_RELIABLE_TRANSPORT_COMMAND);
+  ReliablePacket *packet = pulse_link_send_begin(PULSE2_RELIABLE_TRANSPORT_COMMAND);
   size_t packet_size = sizeof(ReliablePacket) + info_length;
-  packet->i = (struct ReliableInfoPacket) {
-    .sequence_number = sequence_number,
-    .poll = true,
-    .ack_number = s_receive_variable,
-    .protocol = hton16(app_protocol),
-    .length = hton16(packet_size),
+  packet->i = (struct ReliableInfoPacket){
+      .sequence_number = sequence_number,
+      .poll = true,
+      .ack_number = s_receive_variable,
+      .protocol = hton16(app_protocol),
+      .length = hton16(packet_size),
   };
   memcpy(&packet->i.information[0], information, info_length);
   pulse_link_send(packet, packet_size);
@@ -142,12 +134,10 @@ static void prv_process_ack(uint8_t ack_number) {
 static void prv_send_port_closed_message(void *context) {
   net16 bad_port;
   memcpy(&bad_port, &context, sizeof(bad_port));
-  pulse_control_message_protocol_send_port_closed_message(
-      &s_reliable_pcmp, bad_port);
+  pulse_control_message_protocol_send_port_closed_message(&s_reliable_pcmp, bad_port);
 }
 
-void pulse2_reliable_transport_on_command_packet(
-    void *raw_packet, size_t length) {
+void pulse2_reliable_transport_on_command_packet(void *raw_packet, size_t length) {
   if (!s_layer_up) {
     return;
   }
@@ -163,8 +153,8 @@ void pulse2_reliable_transport_on_command_packet(
     if (packet->s.kind != SupervisoryKind_ReceiveReady &&
         packet->s.kind != SupervisoryKind_Reject) {
       PBL_LOG_DBG("Received a command packet of type %" PRIu8
-              " which is not supported by this implementation.",
-              (uint8_t)packet->s.kind);
+                  " which is not supported by this implementation.",
+                  (uint8_t)packet->s.kind);
       // Pretend it is an RR packet
     }
     prv_process_ack(packet->s.ack_number);
@@ -193,10 +183,10 @@ void pulse2_reliable_transport_on_command_packet(
             // pulse_control_message_protocol_on_packet(
             //    &s_reliable_pcmp, packet->i.information, info_length);
             break;
-#define ON_PACKET(N, HANDLER) \
-          case N: \
-            HANDLER(packet->i.information, info_length); \
-            break;
+#define ON_PACKET(N, HANDLER)                    \
+  case N:                                        \
+    HANDLER(packet->i.information, info_length); \
+    break;
 #define ON_TRANSPORT_STATE_CHANGE(...)
 #include "console/pulse2_reliable_protocol_registry.def"
 #undef ON_PACKET
@@ -206,15 +196,17 @@ void pulse2_reliable_transport_on_command_packet(
             // from KernelBG.
             uintptr_t bad_port;
             memcpy(&bad_port, &packet->i.protocol, sizeof(packet->i.protocol));
-            system_task_add_callback(prv_send_port_closed_message,
-                                     (void *)bad_port);
+            system_task_add_callback(prv_send_port_closed_message, (void *)bad_port);
             break;
           }
         }
       } else {
-        PBL_LOG_DBG("Received truncated or corrupt info packet "
-                "field (expected %" PRIu16 ", got %" PRIu16 " data bytes). "
-                "Discarding.", ntoh16(packet->i.length), (uint16_t)length);
+        PBL_LOG_DBG(
+            "Received truncated or corrupt info packet "
+            "field (expected %" PRIu16 ", got %" PRIu16
+            " data bytes). "
+            "Discarding.",
+            ntoh16(packet->i.length), (uint16_t)length);
         return;
       }
     }
@@ -222,8 +214,7 @@ void pulse2_reliable_transport_on_command_packet(
   }
 }
 
-void pulse2_reliable_transport_on_response_packet(
-    void *raw_packet, size_t length) {
+void pulse2_reliable_transport_on_response_packet(void *raw_packet, size_t length) {
   if (!s_layer_up) {
     return;
   }
@@ -236,36 +227,33 @@ void pulse2_reliable_transport_on_response_packet(
   ReliablePacket *packet = raw_packet;
 
   if (!packet->is_supervisory) {
-    PBL_LOG_DBG("Received Information packet response; this is "
-            "not permitted by the protocol (Information packets can only be "
-            "commands). Discarding.");
+    PBL_LOG_DBG(
+        "Received Information packet response; this is "
+        "not permitted by the protocol (Information packets can only be "
+        "commands). Discarding.");
     return;
   }
 
   prv_process_ack(packet->s.ack_number);
 
-  if (packet->s.kind != SupervisoryKind_ReceiveReady &&
-      packet->s.kind != SupervisoryKind_Reject) {
+  if (packet->s.kind != SupervisoryKind_ReceiveReady && packet->s.kind != SupervisoryKind_Reject) {
     PBL_LOG_DBG("Received a command packet of type %" PRIu8
-            " which is not supported by this implementation.",
-            (uint8_t)packet->s.kind);
+                " which is not supported by this implementation.",
+                (uint8_t)packet->s.kind);
   }
 }
 
 static void prv_start_retransmit_timer(uint8_t sequence_number);
 
-void pulse2_reliable_retransmit_timer_expired_handler(
-    uint8_t retransmit_sequence_number) {
+void pulse2_reliable_retransmit_timer_expired_handler(uint8_t retransmit_sequence_number) {
   if (s_send_variable != retransmit_sequence_number) {
     // ACK was received and processed between the time that the
     // retransmit timer expired and this callback ran.
     return;
   }
   if (++s_retransmit_count < MAX_RETRANSMITS) {
-        prv_send_info_packet(retransmit_sequence_number,
-                             s_tx_buffer->app_protocol,
-                             &s_tx_buffer->information[0],
-                             s_tx_buffer->length);
+    prv_send_info_packet(retransmit_sequence_number, s_tx_buffer->app_protocol,
+                         &s_tx_buffer->information[0], s_tx_buffer->length);
     prv_start_retransmit_timer(retransmit_sequence_number);
   } else {
     PBL_LOG_DBG("Reached maximum number of retransmit attempts.");
@@ -274,8 +262,7 @@ void pulse2_reliable_retransmit_timer_expired_handler(
 }
 
 static void prv_start_retransmit_timer(uint8_t sequence_number) {
-  pulse2_reliable_retransmit_timer_start(
-      RETRANSMIT_TIMEOUT_MS, sequence_number);
+  pulse2_reliable_retransmit_timer_start(RETRANSMIT_TIMEOUT_MS, sequence_number);
 }
 
 static void prv_assert_reliable_buffer(void *buf) {
@@ -319,9 +306,7 @@ void pulse_reliable_send(void *buf, const size_t length) {
 
   prv_start_retransmit_timer(sequence_number);
 
-  prv_send_info_packet(sequence_number,
-                       s_tx_buffer->app_protocol,
-                       &s_tx_buffer->information[0],
+  prv_send_info_packet(sequence_number, s_tx_buffer->app_protocol, &s_tx_buffer->information[0],
                        s_tx_buffer->length);
 
   // As soon as we send the packet we could get ACK'd, preempting this thread and releasing the
@@ -340,8 +325,7 @@ static void prv_on_this_layer_up(PPPControlProtocol *this) {
   pbl_sem_give(&s_tx_lock);
 
 #define ON_PACKET(...)
-#define ON_TRANSPORT_STATE_CHANGE(UP_HANDLER, DOWN_HANDLER) \
-  UP_HANDLER();
+#define ON_TRANSPORT_STATE_CHANGE(UP_HANDLER, DOWN_HANDLER) UP_HANDLER();
 #include "console/pulse2_reliable_protocol_registry.def"
 #undef ON_PACKET
 #undef ON_TRANSPORT_STATE_CHANGE
@@ -353,29 +337,27 @@ static void prv_on_this_layer_down(PPPControlProtocol *this) {
   pbl_sem_give(&s_tx_lock);
 
 #define ON_PACKET(...)
-#define ON_TRANSPORT_STATE_CHANGE(UP_HANDLER, DOWN_HANDLER) \
-  DOWN_HANDLER();
+#define ON_TRANSPORT_STATE_CHANGE(UP_HANDLER, DOWN_HANDLER) DOWN_HANDLER();
 #include "console/pulse2_reliable_protocol_registry.def"
 #undef ON_PACKET
 #undef ON_TRANSPORT_STATE_CHANGE
 }
 
-static void prv_on_receive_code_reject(PPPControlProtocol *this,
-                                       LCPPacket *packet) {
+static void prv_on_receive_code_reject(PPPControlProtocol *this, LCPPacket *packet) {
   // TODO
 }
 
 static PPPControlProtocolState s_traincp_state = {};
 
 static PPPControlProtocol s_traincp_protocol = {
-  .protocol_number = PULSE2_RELIABLE_CONTROL_PROTOCOL,
-  .state = &s_traincp_state,
-  .on_this_layer_up = prv_on_this_layer_up,
-  .on_this_layer_down = prv_on_this_layer_down,
-  .on_receive_code_reject = prv_on_receive_code_reject,
+    .protocol_number = PULSE2_RELIABLE_CONTROL_PROTOCOL,
+    .state = &s_traincp_state,
+    .on_this_layer_up = prv_on_this_layer_up,
+    .on_this_layer_down = prv_on_this_layer_down,
+    .on_receive_code_reject = prv_on_receive_code_reject,
 };
 
-PPPControlProtocol * const PULSE2_TRAINCP = &s_traincp_protocol;
+PPPControlProtocol *const PULSE2_TRAINCP = &s_traincp_protocol;
 
 void pulse2_reliable_control_on_packet(void *packet, size_t length) {
   ppp_control_protocol_handle_incoming_packet(PULSE2_TRAINCP, packet, length);
@@ -383,9 +365,7 @@ void pulse2_reliable_control_on_packet(void *packet, size_t length) {
 
 // Shared events
 // =============
-void pulse2_reliable_on_link_up(void) {
-  ppp_control_protocol_lower_layer_is_up(PULSE2_TRAINCP);
-}
+void pulse2_reliable_on_link_up(void) { ppp_control_protocol_lower_layer_is_up(PULSE2_TRAINCP); }
 
 void pulse2_reliable_on_link_down(void) {
   ppp_control_protocol_lower_layer_is_down(PULSE2_TRAINCP);
@@ -394,8 +374,7 @@ void pulse2_reliable_on_link_down(void) {
 void pulse2_reliable_init(void) {
   ppp_control_protocol_init(PULSE2_TRAINCP);
   ppp_control_protocol_open(PULSE2_TRAINCP);
-  s_tx_buffer = kernel_zalloc_check(sizeof(ReliableInfoBuffer) +
-                                    pulse_reliable_max_send_size());
+  s_tx_buffer = kernel_zalloc_check(sizeof(ReliableInfoBuffer) + pulse_reliable_max_send_size());
   pbl_sem_give(&s_tx_lock);
 }
 

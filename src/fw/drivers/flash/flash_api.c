@@ -40,7 +40,7 @@ static struct FlashEraseContext {
   FlashOperationCompleteCb on_complete_cb;
   void *cb_context;
   uint32_t expected_duration;
-} s_erase = { 0 };
+} s_erase = {0};
 
 static TimerID s_erase_poll_timer;
 static TimerID s_erase_suspend_timer;
@@ -58,13 +58,11 @@ void flash_init(void) {
 
 #if UNITTEST
 void flash_api_reset_for_test(void) {
-  s_erase = (struct FlashEraseContext) {0};
+  s_erase = (struct FlashEraseContext){0};
   s_flash_initialized = false;
 }
 
-TimerID flash_api_get_erase_poll_timer_for_test(void) {
-  return s_erase_poll_timer;
-}
+TimerID flash_api_get_erase_poll_timer_for_test(void) { return s_erase_poll_timer; }
 #endif
 
 //! Assumes that s_flash_lock is held.
@@ -100,8 +98,7 @@ static void prv_erase_suspend_timer_cb(void *unused) {
   pbl_mutex_unlock(&s_flash_lock);
 }
 
-void flash_read_bytes(uint8_t* buffer, uint32_t start_addr,
-                      uint32_t buffer_size) {
+void flash_read_bytes(uint8_t *buffer, uint32_t start_addr, uint32_t buffer_size) {
   pbl_mutex_lock(&s_flash_lock, PBL_FOREVER);
   // TODO: use DMA when possible
   // TODO: be smarter about pausing erases. Some flash chips allow concurrent
@@ -117,13 +114,10 @@ void flash_read_bytes(uint8_t* buffer, uint32_t start_addr,
 
 #ifdef TEST_FLASH_LOCK_PROTECTION
 static bool s_assert_write_error = false;
-void flash_expect_program_failure(bool expect_failure) {
-  s_assert_write_error = expect_failure;
-}
+void flash_expect_program_failure(bool expect_failure) { s_assert_write_error = expect_failure; }
 #endif
 
-void flash_write_bytes(const uint8_t *buffer, uint32_t start_addr,
-                       uint32_t buffer_size) {
+void flash_write_bytes(const uint8_t *buffer, uint32_t start_addr, uint32_t buffer_size) {
   pbl_mutex_lock(&s_flash_lock, PBL_FOREVER);
   prv_erase_pause();
   if (s_erase.suspended) {
@@ -138,7 +132,7 @@ void flash_write_bytes(const uint8_t *buffer, uint32_t start_addr,
 #ifdef TEST_FLASH_LOCK_PROTECTION
         s_assert_write_error ||
 #endif
-        PASSED(written),
+            PASSED(written),
         "flash_impl_write_page_begin failed: %d", written);
     status_t status;
     while ((status = flash_impl_get_write_status()) == E_BUSY) {
@@ -146,12 +140,10 @@ void flash_write_bytes(const uint8_t *buffer, uint32_t start_addr,
     }
 #ifdef TEST_FLASH_LOCK_PROTECTION
     if (s_assert_write_error) {
-      PBL_ASSERT(FAILED(status), "flash write unexpectedly succeeded: %" PRId32,
-                 status);
+      PBL_ASSERT(FAILED(status), "flash write unexpectedly succeeded: %" PRId32, status);
     } else {
 #endif
-    PBL_ASSERT(PASSED(status), "flash_impl_get_write_status returned %" PRId32,
-               status);
+      PBL_ASSERT(PASSED(status), "flash_impl_get_write_status returned %" PRId32, status);
 #ifdef TEST_FLASH_LOCK_PROTECTION
     }
 #endif
@@ -173,33 +165,29 @@ void flash_write_bytes(const uint8_t *buffer, uint32_t start_addr,
 // ms) if not. If the erase has not finished (non-zero has been returned), the
 // caller is responsible for calling the prv_flash_erase_poll() method until
 // the erase completes.
-static uint32_t prv_flash_erase_start(uint32_t addr,
-                                      FlashOperationCompleteCb on_complete_cb,
-                                      void *context,
-                                      bool is_subsector,
-                                      uint8_t retries) {
+static uint32_t prv_flash_erase_start(uint32_t addr, FlashOperationCompleteCb on_complete_cb,
+                                      void *context, bool is_subsector, uint8_t retries) {
   pbl_sem_take(&s_erase_semphr, PBL_FOREVER);
   pbl_mutex_lock(&s_flash_lock, PBL_FOREVER);
   PBL_ASSERTN(s_erase.in_progress == false);
-  s_erase = (struct FlashEraseContext) {
-    .in_progress = true,
-    .task = pebble_task_get_current(),
-    .retries = retries,
-  // FIXME: We should just assert that the address is already aligned. If
-  // someone is depending on this behaviour without already knowing the range
-  // that's being erased they're going to have a bad time. This will probably
-  // cause some client fallout though, so tackle this later.
-    .is_subsector = is_subsector,
-    .address = is_subsector? flash_impl_get_subsector_base_address(addr)
-                           : flash_impl_get_sector_base_address(addr),
-    .on_complete_cb = on_complete_cb,
-    .cb_context = context,
-    .expected_duration = is_subsector?
-        flash_impl_get_typical_subsector_erase_duration_ms() :
-        flash_impl_get_typical_sector_erase_duration_ms(),
+  s_erase = (struct FlashEraseContext){
+      .in_progress = true,
+      .task = pebble_task_get_current(),
+      .retries = retries,
+      // FIXME: We should just assert that the address is already aligned. If
+      // someone is depending on this behaviour without already knowing the range
+      // that's being erased they're going to have a bad time. This will probably
+      // cause some client fallout though, so tackle this later.
+      .is_subsector = is_subsector,
+      .address = is_subsector ? flash_impl_get_subsector_base_address(addr)
+                              : flash_impl_get_sector_base_address(addr),
+      .on_complete_cb = on_complete_cb,
+      .cb_context = context,
+      .expected_duration = is_subsector ? flash_impl_get_typical_subsector_erase_duration_ms()
+                                        : flash_impl_get_typical_sector_erase_duration_ms(),
   };
-  status_t status = is_subsector? flash_impl_blank_check_subsector(addr)
-                                : flash_impl_blank_check_sector(addr);
+  status_t status =
+      is_subsector ? flash_impl_blank_check_subsector(addr) : flash_impl_blank_check_sector(addr);
   PBL_ASSERT(PASSED(status), "Blank check error: %" PRId32, status);
   if (status != S_FALSE) {
     s_erase.in_progress = false;
@@ -211,8 +199,8 @@ static uint32_t prv_flash_erase_start(uint32_t addr,
     return 0;
   }
 
-  status = is_subsector? flash_impl_erase_subsector_begin(addr)
-                       : flash_impl_erase_sector_begin(addr);
+  status =
+      is_subsector ? flash_impl_erase_subsector_begin(addr) : flash_impl_erase_sector_begin(addr);
 
   if (PASSED(status)) {
     pbl_mutex_unlock(&s_flash_lock);
@@ -260,11 +248,12 @@ static uint32_t prv_flash_erase_poll(void) {
   pbl_sem_give(&s_erase_semphr);
   if (status == E_ERROR && saved_ctx.retries < MAX_ERASE_RETRIES) {
     // Try issuing the erase again. It might succeed this time around.
-    PBL_LOG_DBG("Erase of 0x%"PRIx32" failed (attempt %d)."
-            " Trying again...", saved_ctx.address, saved_ctx.retries);
-    return prv_flash_erase_start(
-        saved_ctx.address, saved_ctx.on_complete_cb, saved_ctx.cb_context,
-        saved_ctx.is_subsector, saved_ctx.retries + 1);
+    PBL_LOG_DBG("Erase of 0x%" PRIx32
+                " failed (attempt %d)."
+                " Trying again...",
+                saved_ctx.address, saved_ctx.retries);
+    return prv_flash_erase_start(saved_ctx.address, saved_ctx.on_complete_cb, saved_ctx.cb_context,
+                                 saved_ctx.is_subsector, saved_ctx.retries + 1);
   } else {
     if (status == S_SUCCESS) {
       PBL_ANALYTICS_ADD(flash_spi_erase_bytes,
@@ -287,11 +276,10 @@ static void prv_flash_erase_timer_cb(void *context) {
   }
 }
 
-static void prv_flash_erase_async(
-    uint32_t sector_addr, bool is_subsector, FlashOperationCompleteCb on_complete_cb,
-    void *context) {
-  uint32_t remaining_ms = prv_flash_erase_start(sector_addr, on_complete_cb,
-                                                context, is_subsector, 0);
+static void prv_flash_erase_async(uint32_t sector_addr, bool is_subsector,
+                                  FlashOperationCompleteCb on_complete_cb, void *context) {
+  uint32_t remaining_ms =
+      prv_flash_erase_start(sector_addr, on_complete_cb, context, is_subsector, 0);
   if (remaining_ms) {
     // Start timer that will periodically check for the erase to complete
     new_timer_start(s_erase_poll_timer, remaining_ms, prv_flash_erase_timer_cb, NULL, 0);
@@ -305,8 +293,8 @@ static void prv_blocking_erase_complete(void *context, status_t status) {
 static void prv_flash_erase_blocking(uint32_t sector_addr, bool is_subsector) {
   uint32_t total_time_spent_waiting_ms = 0;
 
-  uint32_t remaining_ms = prv_flash_erase_start(
-      sector_addr, prv_blocking_erase_complete, NULL, is_subsector, 0);
+  uint32_t remaining_ms =
+      prv_flash_erase_start(sector_addr, prv_blocking_erase_complete, NULL, is_subsector, 0);
   while (remaining_ms) {
     psleep(remaining_ms);
     total_time_spent_waiting_ms += remaining_ms;
@@ -349,14 +337,12 @@ static void prv_flash_erase_blocking(uint32_t sector_addr, bool is_subsector) {
   }
 }
 
-void flash_erase_sector(uint32_t sector_addr,
-                        FlashOperationCompleteCb on_complete_cb,
+void flash_erase_sector(uint32_t sector_addr, FlashOperationCompleteCb on_complete_cb,
                         void *context) {
   prv_flash_erase_async(sector_addr, false /* is_subsector */, on_complete_cb, context);
 }
 
-void flash_erase_subsector(uint32_t sector_addr,
-                           FlashOperationCompleteCb on_complete_cb,
+void flash_erase_subsector(uint32_t sector_addr, FlashOperationCompleteCb on_complete_cb,
                            void *context) {
   prv_flash_erase_async(sector_addr, true /* is_subsector */, on_complete_cb, context);
 }
@@ -369,17 +355,14 @@ void flash_erase_subsector_blocking(uint32_t subsector_addr) {
   prv_flash_erase_blocking(subsector_addr, true /* is_subsector */);
 }
 
-void flash_enable_write_protection(void) {
-  flash_impl_enable_write_protection();
-}
+void flash_enable_write_protection(void) { flash_impl_enable_write_protection(); }
 
 void flash_prf_set_protection(bool do_protect) {
   status_t status;
   pbl_mutex_lock(&s_flash_lock, PBL_FOREVER);
   if (do_protect) {
-    status = flash_impl_write_protect(
-        FLASH_REGION_SAFE_FIRMWARE_BEGIN,
-        (FLASH_REGION_SAFE_FIRMWARE_END - SECTOR_SIZE_BYTES));
+    status = flash_impl_write_protect(FLASH_REGION_SAFE_FIRMWARE_BEGIN,
+                                      (FLASH_REGION_SAFE_FIRMWARE_END - SECTOR_SIZE_BYTES));
   } else {
     status = flash_impl_unprotect();
   }
@@ -402,13 +385,9 @@ void flash_sleep_when_idle(bool enable) {
   // the S29VS flash automatically enters and exits standby
 }
 
-bool flash_get_sleep_when_idle(void) {
-  return false;
-}
+bool flash_get_sleep_when_idle(void) { return false; }
 
-bool flash_is_initialized(void) {
-  return s_flash_initialized;
-}
+bool flash_is_initialized(void) { return s_flash_initialized; }
 
 void flash_stop(void) {
   if (!flash_is_initialized()) {
@@ -441,13 +420,9 @@ uint32_t flash_get_subsector_base_address(uint32_t flash_addr) {
   return flash_impl_get_subsector_base_address(flash_addr);
 }
 
-void flash_power_down_for_stop_mode(void) {
-  flash_impl_enter_low_power_mode();
-}
+void flash_power_down_for_stop_mode(void) { flash_impl_enter_low_power_mode(); }
 
-void flash_power_up_after_stop_mode(void) {
-  flash_impl_exit_low_power_mode();
-}
+void flash_power_up_after_stop_mode(void) { flash_impl_exit_low_power_mode(); }
 
 bool flash_sector_is_erased(uint32_t sector_addr) {
   return flash_impl_blank_check_sector(flash_impl_get_sector_base_address(sector_addr));
@@ -523,7 +498,7 @@ status_t flash_lock_security_register(uint32_t addr) {
 
   return status;
 }
-#endif // CONFIG_RECOVERY_FW
+#endif  // CONFIG_RECOVERY_FW
 
 #include "console/prompt.h"
 void command_flash_unprotect(void) {

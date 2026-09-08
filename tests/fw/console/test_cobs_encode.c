@@ -12,16 +12,13 @@
 
 unsigned char out[1024];
 
-static void assert_out_not_touched(size_t index) {
-  cl_assert_equal_i(out[index], 0xcc);
-}
+static void assert_out_not_touched(size_t index) { cl_assert_equal_i(out[index], 0xcc); }
 
-static void assert_out_equal(const void * restrict expected, size_t length) {
+static void assert_out_equal(const void *restrict expected, size_t length) {
   cl_assert(memcmp(out, expected, length) == 0);
 }
 
-static void assert_encode(const void * restrict src, size_t in_length,
-                          size_t expected_length) {
+static void assert_encode(const void *restrict src, size_t in_length, size_t expected_length) {
   size_t out_length = cobs_encode(out, src, in_length);
   cl_assert_equal_i(out_length, expected_length);
   if (expected_length != SIZE_MAX) {
@@ -29,10 +26,7 @@ static void assert_encode(const void * restrict src, size_t in_length,
   }
 }
 
-
-void test_cobs_encode__initialize(void) {
-  memset(out, 0xcc, sizeof(out));
-}
+void test_cobs_encode__initialize(void) { memset(out, 0xcc, sizeof(out)); }
 
 void test_cobs_encode__empty(void) {
   assert_encode("", 0, 1);

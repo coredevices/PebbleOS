@@ -26,21 +26,13 @@ void watchdog_init(void) {
   __HAL_SYSCFG_Enable_WDT_REBOOT(1);
 }
 
-void watchdog_start(void) {
-  __HAL_WDT_START(&hwdt);
-}
+void watchdog_start(void) { __HAL_WDT_START(&hwdt); }
 
-void watchdog_stop(void) {
-  __HAL_WDT_STOP(&hwdt);
-}
+void watchdog_stop(void) { __HAL_WDT_STOP(&hwdt); }
 
-void watchdog_feed(void) {
-  __HAL_WDT_START(&hwdt);
-}
+void watchdog_feed(void) { __HAL_WDT_START(&hwdt); }
 
-bool watchdog_check_reset_flag(void) {
-  return (HAL_PMU_GET_WSR() & PMUC_WSR_WDT1) != 0;
-}
+bool watchdog_check_reset_flag(void) { return (HAL_PMU_GET_WSR() & PMUC_WSR_WDT1) != 0; }
 
 McuRebootReason watchdog_clear_reset_flag(void) {
   uint32_t wsr = HAL_PMU_GET_WSR();
@@ -60,6 +52,4 @@ McuRebootReason watchdog_clear_reset_flag(void) {
   return s_cached_reset_flag;
 }
 
-McuRebootReason watchdog_get_reset_flag(void) {
-  return s_cached_reset_flag;
-}
+McuRebootReason watchdog_get_reset_flag(void) { return s_cached_reset_flag; }

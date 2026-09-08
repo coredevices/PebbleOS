@@ -65,9 +65,7 @@ static void prv_kernel_subscribe_cb(void *unused) {
   touch_set_system_hold(true);
 }
 
-static void prv_kernel_unsubscribe_cb(void *unused) {
-  modal_touch_nav_unsubscribe();
-}
+static void prv_kernel_unsubscribe_cb(void *unused) { modal_touch_nav_unsubscribe(); }
 
 static void prv_kernel_release_hold_cb(void *unused) {
   // Release the permanent sensor hold on KernelMain. Queued AFTER prv_kernel_unsubscribe_cb so the
@@ -77,9 +75,7 @@ static void prv_kernel_release_hold_cb(void *unused) {
 
 // --- App-task-bound effects -------------------------------------------------------------------
 
-static void prv_app_subscribe_cb(void *unused) {
-  app_touch_nav_subscribe();
-}
+static void prv_app_subscribe_cb(void *unused) { app_touch_nav_subscribe(); }
 
 static void prv_app_resync_cb(void *unused) {
   // Re-evaluate rather than blindly unsubscribe: an app that explicitly opted in follows the
@@ -123,13 +119,13 @@ static void prv_release_system_hold(void *ctx) {
 }
 
 static const TouchNavTxnOps s_txn_ops = {
-  .persist = prv_persist,
-  .kernel_subscribe = prv_kernel_subscribe,
-  .take_system_hold = prv_take_system_hold,
-  .synthesize_liftoff = prv_synthesize_liftoff,
-  .kernel_cancel_reset_unsub = prv_kernel_cancel_reset_unsub,
-  .app_unsubscribe = prv_app_unsubscribe,
-  .release_system_hold = prv_release_system_hold,
+    .persist = prv_persist,
+    .kernel_subscribe = prv_kernel_subscribe,
+    .take_system_hold = prv_take_system_hold,
+    .synthesize_liftoff = prv_synthesize_liftoff,
+    .kernel_cancel_reset_unsub = prv_kernel_cancel_reset_unsub,
+    .app_unsubscribe = prv_app_unsubscribe,
+    .release_system_hold = prv_release_system_hold,
 };
 
 void touch_nav_set_enabled(bool enable) {

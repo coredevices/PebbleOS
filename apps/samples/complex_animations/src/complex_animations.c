@@ -23,7 +23,6 @@ static void animation_stopped(Animation *animation, bool finished, void *data) {
   text_layer_set_text(s_text_layer_a, finished ? "Hi, I'm a TextLayer!" : "Just Stopped.");
 }
 
-
 // --------------------------------------------------------------------------------------
 // setup handler
 static void prv_setup_handler(Animation *animation) {
@@ -45,10 +44,7 @@ static void prv_update_handler(Animation *animation, const uint32_t distance) {
 
 // --------------------------------------------------------------------------------------
 static const AnimationImplementation s_custom_implementation = {
-  .setup = prv_setup_handler,
-  .update = prv_update_handler,
-  .teardown = prv_teardown_handler
-};
+    .setup = prv_setup_handler, .update = prv_update_handler, .teardown = prv_teardown_handler};
 
 // --------------------------------------------------------------------------------------
 static Animation *prv_create_custom_animation(void) {
@@ -58,7 +54,6 @@ static Animation *prv_create_custom_animation(void) {
   animation_set_duration(d, DURATION);
   return d;
 }
-
 
 static void click_handler(ClickRecognizerRef recognizer, Window *window) {
   // If the animation is still running, fast-forward to 300ms from the end
@@ -84,47 +79,49 @@ static void click_handler(ClickRecognizerRef recognizer, Window *window) {
   }
   toggle = !toggle;
 
-
   animation_destroy(s_animation);
   s_animation = NULL;
 
   PropertyAnimation *a = property_animation_create_layer_frame(layer, &from_rect_a, &to_rect_a);
-  animation_set_duration((Animation*)a, DURATION);
-  animation_set_handlers((Animation*) a, (AnimationHandlers) {
-    .started = (AnimationStartedHandler) animation_started,
-    .stopped = (AnimationStoppedHandler) animation_stopped,
-  }, NULL /* callback data */);
+  animation_set_duration((Animation *)a, DURATION);
+  animation_set_handlers((Animation *)a,
+                         (AnimationHandlers){
+                             .started = (AnimationStartedHandler)animation_started,
+                             .stopped = (AnimationStoppedHandler)animation_stopped,
+                         },
+                         NULL /* callback data */);
 
   PropertyAnimation *a_rev = property_animation_clone(a);
-  animation_set_handlers((Animation*) a_rev, (AnimationHandlers) {
-    .started = (AnimationStartedHandler) animation_started,
-    .stopped = (AnimationStoppedHandler) animation_stopped,
-  }, NULL /* callback data */);
-  animation_set_delay((Animation*)a_rev, 400);
-  animation_set_duration((Animation*)a_rev, DURATION);
+  animation_set_handlers((Animation *)a_rev,
+                         (AnimationHandlers){
+                             .started = (AnimationStartedHandler)animation_started,
+                             .stopped = (AnimationStoppedHandler)animation_stopped,
+                         },
+                         NULL /* callback data */);
+  animation_set_delay((Animation *)a_rev, 400);
+  animation_set_duration((Animation *)a_rev, DURATION);
   animation_set_reverse((Animation *)a_rev, true);
 
   GRect test_rect;
   property_animation_get_to_grect(a, &test_rect);
   APP_LOG(APP_LOG_LEVEL_DEBUG, "rect is %d, %d, %d, %d", test_rect.origin.x, test_rect.origin.y,
-        test_rect.size.w, test_rect.size.h);
-
+          test_rect.size.w, test_rect.size.h);
 
   switch (click_recognizer_get_button_id(recognizer)) {
     case BUTTON_ID_UP:
-      animation_set_curve((Animation*) a, AnimationCurveEaseOut);
-      animation_set_curve((Animation*) a_rev, AnimationCurveEaseOut);
+      animation_set_curve((Animation *)a, AnimationCurveEaseOut);
+      animation_set_curve((Animation *)a_rev, AnimationCurveEaseOut);
       break;
 
     case BUTTON_ID_DOWN:
-      animation_set_curve((Animation*) a, AnimationCurveEaseIn);
-      animation_set_curve((Animation*) a_rev, AnimationCurveEaseIn);
+      animation_set_curve((Animation *)a, AnimationCurveEaseIn);
+      animation_set_curve((Animation *)a_rev, AnimationCurveEaseIn);
       break;
 
     default:
     case BUTTON_ID_SELECT:
-      animation_set_curve((Animation*) a, AnimationCurveEaseInOut);
-      animation_set_curve((Animation*) a_rev, AnimationCurveEaseInOut);
+      animation_set_curve((Animation *)a, AnimationCurveEaseInOut);
+      animation_set_curve((Animation *)a_rev, AnimationCurveEaseInOut);
       break;
   }
 
@@ -141,12 +138,11 @@ static void click_handler(ClickRecognizerRef recognizer, Window *window) {
    animation_set_delay(&prop_animation->animation, 1000);
    */
 
-
   Animation *seq = animation_sequence_create((Animation *)a, (Animation *)a_rev, NULL);
 
-  PropertyAnimation *c = property_animation_create_layer_frame(
-                              text_layer_get_layer(s_text_layer_b), &from_rect_b, &to_rect_b);
-  animation_set_duration((Animation*)c, DURATION);
+  PropertyAnimation *c = property_animation_create_layer_frame(text_layer_get_layer(s_text_layer_b),
+                                                               &from_rect_b, &to_rect_b);
+  animation_set_duration((Animation *)c, DURATION);
 
   s_animation = animation_spawn_create(seq, (Animation *)c, prv_create_custom_animation());
 
@@ -154,15 +150,14 @@ static void click_handler(ClickRecognizerRef recognizer, Window *window) {
 }
 
 static void config_provider(Window *window) {
-  window_single_click_subscribe(BUTTON_ID_UP, (ClickHandler) click_handler);
-  window_single_click_subscribe(BUTTON_ID_SELECT, (ClickHandler) click_handler);
-  window_single_click_subscribe(BUTTON_ID_DOWN, (ClickHandler) click_handler);
+  window_single_click_subscribe(BUTTON_ID_UP, (ClickHandler)click_handler);
+  window_single_click_subscribe(BUTTON_ID_SELECT, (ClickHandler)click_handler);
+  window_single_click_subscribe(BUTTON_ID_DOWN, (ClickHandler)click_handler);
 }
-
 
 static void init(void) {
   window = window_create();
-  window_set_click_config_provider(window, (ClickConfigProvider) config_provider);
+  window_set_click_config_provider(window, (ClickConfigProvider)config_provider);
   window_stack_push(window, false);
 
   GRect from_rect_a = GRect(0, 0, 60, 60);
@@ -179,25 +174,22 @@ static void init(void) {
   text_layer_set_text(s_text_layer_b, "Spawned");
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_text_layer_b));
 
-
   // Animate text layer a from top-left to bottom right and back
-  PropertyAnimation *a = property_animation_create_layer_frame(
-                          text_layer_get_layer(s_text_layer_a), &from_rect_a, &to_rect_a);
-  animation_set_duration((Animation*)a, DURATION);
+  PropertyAnimation *a = property_animation_create_layer_frame(text_layer_get_layer(s_text_layer_a),
+                                                               &from_rect_a, &to_rect_a);
+  animation_set_duration((Animation *)a, DURATION);
 
   PropertyAnimation *a_rev = property_animation_clone(a);
-  animation_set_delay((Animation*) a_rev, 400);
-  animation_set_duration((Animation*)a_rev, DURATION);
-  animation_set_reverse((Animation*) a_rev, true);
+  animation_set_delay((Animation *)a_rev, 400);
+  animation_set_duration((Animation *)a_rev, DURATION);
+  animation_set_reverse((Animation *)a_rev, true);
   Animation *seq = animation_sequence_create((Animation *)a, (Animation *)a_rev, NULL);
 
-
   // Animate text layer b from top-right to bottom-left
-  PropertyAnimation *c = property_animation_create_layer_frame(
-                            text_layer_get_layer(s_text_layer_b), &from_rect_b, &to_rect_b);
-  animation_set_duration((Animation*)c, DURATION);
+  PropertyAnimation *c = property_animation_create_layer_frame(text_layer_get_layer(s_text_layer_b),
+                                                               &from_rect_b, &to_rect_b);
+  animation_set_duration((Animation *)c, DURATION);
   toggle = !toggle;
-
 
   s_animation = animation_spawn_create(seq, (Animation *)c, prv_create_custom_animation(), NULL);
   animation_schedule(s_animation);

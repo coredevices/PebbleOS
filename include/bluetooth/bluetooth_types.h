@@ -116,10 +116,10 @@ typedef enum {
 } BLEGATTError;
 
 //! @internal Macro to map Bluetopia errors to BTErrno
-#define BTErrnoWithBluetopiaError(e) ((int) BTErrnoInternalErrorBegin - e)
+#define BTErrnoWithBluetopiaError(e) ((int)BTErrnoInternalErrorBegin - e)
 
 //! @internal Macro to map HCI errors to BTErrno
-#define BTErrnoWithHCIError(e) ((int) BTErrnoHCIErrorBegin + e)
+#define BTErrnoWithHCIError(e) ((int)BTErrnoHCIErrorBegin + e)
 
 //! Property bits of a characteristic
 //! See the Bluetooth 4.0 Specification, Volume 3, Part G,
@@ -154,9 +154,9 @@ typedef uintptr_t BLEDescriptor;
 _Static_assert(sizeof(BLEDescriptor) == sizeof(uintptr_t), "BLEDescriptor is invalid size");
 _Static_assert(sizeof(BLECharacteristic) == sizeof(uintptr_t), "BLECharacteristic is invalid size");
 
-#define BLE_SERVICE_INVALID ((BLEService) 0)
-#define BLE_CHARACTERISTIC_INVALID ((BLECharacteristic) 0)
-#define BLE_DESCRIPTOR_INVALID ((BLEDescriptor) 0)
+#define BLE_SERVICE_INVALID ((BLEService)0)
+#define BLE_CHARACTERISTIC_INVALID ((BLECharacteristic)0)
+#define BLE_DESCRIPTOR_INVALID ((BLEDescriptor)0)
 
 //! Identifier for a device bonding.
 //! They stay the same across reboots, so they can be persisted by apps.
@@ -178,22 +178,20 @@ typedef struct __attribute__((__packed__)) BTDeviceAddress {
 //! Print format for printing BTDeviceAddress structs
 //! @see BT_DEVICE_ADDRESS_XPLODE
 #define BT_DEVICE_ADDRESS_FMT "%02X:%02X:%02X:%02X:%02X:%02X"
-#define BT_DEVICE_ADDRESS_FMT_BUFFER_SIZE   (18)
+#define BT_DEVICE_ADDRESS_FMT_BUFFER_SIZE (18)
 
 #define BD_ADDR_FMT "0x%02X%02X%02X%02X%02X%02X"
-#define BT_ADDR_FMT_BUFFER_SIZE_BYTES   (15)
+#define BT_ADDR_FMT_BUFFER_SIZE_BYTES (15)
 
-#define BT_DEVICE_NAME_BUFFER_SIZE      (20)
+#define BT_DEVICE_NAME_BUFFER_SIZE (20)
 
 //! Macro decompose a BTDeviceAddress struct into its parts, so it can be used
 //! with the BT_DEVICE_ADDRESS_FMT format macro
 #define BT_DEVICE_ADDRESS_XPLODE(a) \
-    (a).octets[5], (a).octets[4], (a).octets[3], \
-    (a).octets[2], (a).octets[1], (a).octets[0]
+  (a).octets[5], (a).octets[4], (a).octets[3], (a).octets[2], (a).octets[1], (a).octets[0]
 
 #define BT_DEVICE_ADDRESS_XPLODE_PTR(a) \
-    (a)->octets[5], (a)->octets[4], (a)->octets[3], \
-    (a)->octets[2], (a)->octets[1], (a)->octets[0]
+  (a)->octets[5], (a)->octets[4], (a)->octets[3], (a)->octets[2], (a)->octets[1], (a)->octets[0]
 
 //! Data structure that represents a remote Bluetooth device.
 //! The fields of the structure are opaque. Its contents should not be changed
@@ -212,18 +210,18 @@ typedef struct __attribute__((__packed__)) BTDeviceInternal {
   union {
     struct __attribute__((__packed__)) {
       BTDeviceAddress address;
-      bool is_classic:1;
-      bool is_random_address:1;
+      bool is_classic : 1;
+      bool is_random_address : 1;
       //! !!! WARNING: If you're adding more flags here, you need to update
       //! the bt_device_bits field in PebbleBLEGATTClientEvent and PebbleBLEConnectionEvent !!!
-      uint16_t zero:14;
+      uint16_t zero : 14;
     };
     BTDevice opaque;
   };
 } BTDeviceInternal;
 
-#define BT_DEVICE_INVALID ((const BTDevice) {})
-#define BT_DEVICE_INTERNAL_INVALID ((const BTDeviceInternal) {})
+#define BT_DEVICE_INVALID ((const BTDevice){})
+#define BT_DEVICE_INTERNAL_INVALID ((const BTDeviceInternal){})
 
 _Static_assert(sizeof(BTDeviceInternal) == sizeof(BTDevice),
                "BTDeviceInternal should be equal in size to BTDevice");
@@ -238,14 +236,14 @@ struct BLEAdData;
 
 //! Flags used in an LE Advertising packet. Listed in
 //! Supplement to Bluetooth Core Specification | CSSv6, Part A, 1.3.1
-#define GAP_LE_AD_FLAGS_LIM_DISCOVERABLE_MASK            (1 << 0)
-#define GAP_LE_AD_FLAGS_GEN_DISCOVERABLE_MASK            (1 << 1)
-#define GAP_LE_AD_FLAGS_BR_EDR_NOT_SUPPORTED_MASK        (1 << 2)
+#define GAP_LE_AD_FLAGS_LIM_DISCOVERABLE_MASK (1 << 0)
+#define GAP_LE_AD_FLAGS_GEN_DISCOVERABLE_MASK (1 << 1)
+#define GAP_LE_AD_FLAGS_BR_EDR_NOT_SUPPORTED_MASK (1 << 2)
 #define GAP_LE_AD_FLAGS_LE_BR_EDR_SIMULT_CONTROLLER_MASK (1 << 3)
-#define GAP_LE_AD_FLAGS_LE_BR_EDR_SIMULT_HOST_MASK       (1 << 4)
+#define GAP_LE_AD_FLAGS_LE_BR_EDR_SIMULT_HOST_MASK (1 << 4)
 
-#define LL_CONN_INTV_MIN_SLOTS (6)    // 1.25ms / slot
-#define LL_CONN_INTV_MAX_SLOTS (3200) // 1.25ms / slot
+#define LL_CONN_INTV_MIN_SLOTS (6)     // 1.25ms / slot
+#define LL_CONN_INTV_MAX_SLOTS (3200)  // 1.25ms / slot
 #define LL_SUPERVISION_TIMEOUT_MIN_MS (100)
 
 //! Advertisement and scan response data
@@ -262,11 +260,7 @@ typedef struct BLEAdData {
 } BLEAdData;
 
 //! Macro that does the same as bt_uuid_expand_32bit / bt_uuid_expand_16bit, but at compile-time
-#define BT_UUID_EXPAND(u) \
-  (0xff & ((uint32_t) u) >> 24), \
-  (0xff & ((uint32_t) u) >> 16), \
-  (0xff & ((uint32_t) u) >> 8), \
-  (0xff & ((uint32_t) u) >> 0), \
-  0x00, 0x00, 0x10, 0x00, \
-  0x80, 0x00, 0x00, 0x80, \
-  0x5F, 0x9B, 0x34, 0xFB
+#define BT_UUID_EXPAND(u)                                                                      \
+  (0xff & ((uint32_t)u) >> 24), (0xff & ((uint32_t)u) >> 16), (0xff & ((uint32_t)u) >> 8),     \
+      (0xff & ((uint32_t)u) >> 0), 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, \
+      0x34, 0xFB

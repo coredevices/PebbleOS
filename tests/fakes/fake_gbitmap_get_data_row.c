@@ -24,9 +24,9 @@ GBitmapDataRowInfo gbitmap_get_data_row_info(const GBitmap *bitmap, uint16_t y) 
       y = bitmap->bounds.size.h - y - 1;
     }
     return (GBitmapDataRowInfo){
-      .data = prv_gbitmap_get_data_row_info(bitmap, y).data,
-      .min_x = min_x,
-      .max_x = grect_get_max_x(&bitmap->bounds) - diamond_offset - 1,
+        .data = prv_gbitmap_get_data_row_info(bitmap, y).data,
+        .min_x = min_x,
+        .max_x = grect_get_max_x(&bitmap->bounds) - diamond_offset - 1,
     };
   }
   return prv_gbitmap_get_data_row_info(bitmap, y);

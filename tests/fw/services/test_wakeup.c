@@ -40,16 +40,18 @@
 #include "stubs_compiled_with_legacy2_sdk.h"
 #include "stubs_memory_layout.h"
 
-#define TEST_UUID UuidMake(0xF9, 0xC6, 0xEB, 0xE4, 0x06, 0xCD, 0x46, 0xF1, 0xB1, 0x51, 0x24, 0x08, 0x74, 0xD2, 0x07, 0x73)
-
+#define TEST_UUID                                                                              \
+  UuidMake(0xF9, 0xC6, 0xEB, 0xE4, 0x06, 0xCD, 0x46, 0xF1, 0xB1, 0x51, 0x24, 0x08, 0x74, 0xD2, \
+           0x07, 0x73)
 
 // Stubs
 ////////////////////////////////////
-//int g_pbl_log_level = 0;
-//void pbl_log(uint8_t level, const char* src_filename, int src_line_number, const char* fmt, ...) {}
-int time_util_get_num_hours(int hours, bool is24h) {return 0;}
+// int g_pbl_log_level = 0;
+// void pbl_log(uint8_t level, const char* src_filename, int src_line_number, const char* fmt, ...)
+// {}
+int time_util_get_num_hours(int hours, bool is24h) { return 0; }
 
-bool sys_clock_is_24h_style(void) {return false;}
+bool sys_clock_is_24h_style(void) { return false; }
 
 void event_service_init(PebbleEventType type, EventServiceAddSubscriberCallback start_cb,
                         EventServiceRemoveSubscriberCallback stop_cb) {}
@@ -59,12 +61,9 @@ void wakeup_popup_window(uint8_t missed_apps_count, uint8_t *missed_apps_banks) 
   s_popup_occurred = true;
 }
 
-static PebbleProcessMd s_test_app_md = { .uuid = TEST_UUID };
+static PebbleProcessMd s_test_app_md = {.uuid = TEST_UUID};
 
-bool clock_is_timezone_set(void) {
-  return false;
-}
-
+bool clock_is_timezone_set(void) { return false; }
 
 // Tests
 ///////////////////////////////////////////////////////////
@@ -74,7 +73,7 @@ void test_wakeup__initialize(void) {
   fake_rtc_init(0, 1388563200);
 
   // Init fake filesystem used to load/store wakeup events
-  fake_spi_flash_init(0, 0x1000000); //from test_settings_file.c
+  fake_spi_flash_init(0, 0x1000000);  // from test_settings_file.c
   pfs_init(false);
 
   stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
@@ -122,7 +121,8 @@ void test_wakeup__max_events(void) {
   }
 
   // Test that the 9th wakeup event fails to schedule (E_DOES_NOT_EXIST)
-  wakeup_id = sys_wakeup_schedule(sys_get_time() + ((MAX_WAKEUP_EVENTS_PER_APP + 1) * WAKEUP_EVENT_WINDOW), 0, false);
+  wakeup_id = sys_wakeup_schedule(
+      sys_get_time() + ((MAX_WAKEUP_EVENTS_PER_APP + 1) * WAKEUP_EVENT_WINDOW), 0, false);
   cl_assert_equal_i(sys_wakeup_query(wakeup_id), E_DOES_NOT_EXIST);
 }
 
@@ -215,7 +215,6 @@ void test_wakeup__time_jump(void) {
   // Wakeup should still return the first event as scheduled
   cl_assert_equal_i(first_timer, test_timer);
 
-
   // Schedule another in the future
   time_t third_event = sys_get_time() + WAKEUP_EVENT_WINDOW * 3;
   WakeupId third_wakeup_id = sys_wakeup_schedule(third_event, 0, false);
@@ -245,11 +244,12 @@ void test_wakeup__time_jump(void) {
   stub_new_timer_fire(wakeup_get_current());
   wakeup_dispatcher_system_task((void *)(uintptr_t)second_wakeup_id);
 
-  // The current timer should be the third event, with a WAKEUP_CATCHUP_WINDOW second gap again (catchup)
+  // The current timer should be the third event, with a WAKEUP_CATCHUP_WINDOW second gap again
+  // (catchup)
   gap_timer = wakeup_get_current();
   cl_assert_equal_i(stub_new_timer_timeout(gap_timer) / 1000, WAKEUP_CATCHUP_WINDOW);
 
-  rtc_set_time(third_event); // manually move time forward to after third event
+  rtc_set_time(third_event);  // manually move time forward to after third event
   stub_new_timer_fire(wakeup_get_current());
   wakeup_dispatcher_system_task((void *)(uintptr_t)third_wakeup_id);
 
@@ -262,7 +262,7 @@ void test_wakeup__time_jump(void) {
 void test_wakeup__handle_clock_change_not_scheduled(void) {
   // Test clock change without wakeup event scheduled
   wakeup_handle_clock_change();
-  
+
   // Make sure no wakeup event is scheduled
   cl_assert_equal_i(sys_wakeup_query(wakeup_get_next_scheduled()), E_DOES_NOT_EXIST);
   // There should be no wakeup event missed or popup displayed
@@ -274,9 +274,9 @@ void test_wakeup__handle_clock_change_scheduled_jump(void) {
   time_t first_event = sys_get_time() + WAKEUP_EVENT_WINDOW;
   WakeupId first_wakeup_id = sys_wakeup_schedule(first_event, 0, true);
   cl_assert_equal_i(sys_wakeup_query(first_wakeup_id), first_event);
-  
+
   TimerID first_timer = wakeup_get_current();
-  
+
   // Jump 30 seconds in the future
   uint32_t initial_timeout = stub_new_timer_timeout(first_timer);
   uint32_t time_jump_seconds = 30;

@@ -10,22 +10,22 @@
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 
 // QEMU pebble-simple-uart register offsets
-#define UART_DATA    0x00
-#define UART_STATE   0x04
-#define UART_CTRL    0x08
-#define UART_INT     0x0C
+#define UART_DATA 0x00
+#define UART_STATE 0x04
+#define UART_CTRL 0x08
+#define UART_INT 0x0C
 
 // STATE register bits
-#define STATE_TX_READY  (1 << 0)
-#define STATE_RX_READY  (1 << 1)
+#define STATE_TX_READY (1 << 0)
+#define STATE_RX_READY (1 << 1)
 
 // CTRL register bits (must match QEMU pebble-simple-uart)
-#define CTRL_TX_IE  (1 << 0)
-#define CTRL_RX_IE  (1 << 1)
+#define CTRL_TX_IE (1 << 0)
+#define CTRL_RX_IE (1 << 1)
 
 // INT register bits (must match QEMU pebble-simple-uart)
-#define INT_TX_PENDING  (1 << 0)
-#define INT_RX_PENDING  (1 << 1)
+#define INT_TX_PENDING (1 << 0)
+#define INT_RX_PENDING (1 << 1)
 
 void uart_init(UARTDevice *dev) {
   // Clear any pending interrupts
@@ -37,17 +37,11 @@ void uart_init(UARTDevice *dev) {
   NVIC_EnableIRQ(dev->irqn);
 }
 
-void uart_init_open_drain(UARTDevice *dev) {
-  uart_init(dev);
-}
+void uart_init_open_drain(UARTDevice *dev) { uart_init(dev); }
 
-void uart_init_tx_only(UARTDevice *dev) {
-  uart_init(dev);
-}
+void uart_init_tx_only(UARTDevice *dev) { uart_init(dev); }
 
-void uart_init_rx_only(UARTDevice *dev) {
-  uart_init(dev);
-}
+void uart_init_rx_only(UARTDevice *dev) { uart_init(dev); }
 
 void uart_deinit(UARTDevice *dev) {
   REG32(dev->base_addr + UART_CTRL) = 0;
@@ -160,13 +154,9 @@ void uart_start_rx_dma(UARTDevice *dev, void *buffer, uint32_t length) {
   (void)length;
 }
 
-void uart_stop_rx_dma(UARTDevice *dev) {
-  (void)dev;
-}
+void uart_stop_rx_dma(UARTDevice *dev) { (void)dev; }
 
-void uart_clear_rx_dma_buffer(UARTDevice *dev) {
-  (void)dev;
-}
+void uart_clear_rx_dma_buffer(UARTDevice *dev) { (void)dev; }
 
 // Called from the IRQ handler trampoline defined via IRQ_MAP in the board file
 void uart_irq_handler(UARTDevice *dev) {
@@ -177,8 +167,7 @@ void uart_irq_handler(UARTDevice *dev) {
     if (dev->state->rx_irq_handler && dev->state->rx_int_enabled) {
       // Stop if the handler disables RX interrupts (e.g. ISR buffer full);
       // remaining bytes stay in the UART FIFO for the next interrupt.
-      while (dev->state->rx_int_enabled &&
-             (REG32(dev->base_addr + UART_STATE) & STATE_RX_READY)) {
+      while (dev->state->rx_int_enabled && (REG32(dev->base_addr + UART_STATE) & STATE_RX_READY)) {
         uint8_t byte = (uint8_t)(REG32(dev->base_addr + UART_DATA) & 0xFF);
         UARTRXErrorFlags err = {};
         dev->state->rx_irq_handler(dev, byte, &err);
@@ -192,5 +181,4 @@ void uart_irq_handler(UARTDevice *dev) {
       dev->state->tx_irq_handler(dev);
     }
   }
-
 }

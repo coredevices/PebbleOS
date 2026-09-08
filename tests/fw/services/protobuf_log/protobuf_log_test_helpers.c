@@ -19,6 +19,7 @@ void protobuf_log_test_parse_protoc(uint8_t *msg) {
   fwrite(msg + sizeof(*hdr), 1, hdr->msg_size, file);
   fclose(file);
 
-  system(PROTOC_PATH" --proto_path="TINTIN_PATH""PROTO_PATH" --decode=pebble.pipeline.Payload "
-           ""TINTIN_PATH""PROTO_PATH"/payload.proto < "TMP_FILE" 2>&1");
+  system(PROTOC_PATH " --proto_path=" TINTIN_PATH "" PROTO_PATH
+                     " --decode=pebble.pipeline.Payload "
+                     "" TINTIN_PATH "" PROTO_PATH "/payload.proto < " TMP_FILE " 2>&1");
 }

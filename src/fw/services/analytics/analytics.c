@@ -125,14 +125,13 @@ DEFINE_SYSCALL(void, sys_pbl_analytics_set_unsigned, enum pbl_analytics_key key,
   }
 }
 
-DEFINE_SYSCALL(void, sys_pbl_analytics_set_string, enum pbl_analytics_key key,
-               const char *value) {
+DEFINE_SYSCALL(void, sys_pbl_analytics_set_string, enum pbl_analytics_key key, const char *value) {
   if (!prv_analytics_key_in_range(key)) {
     return;
   }
   if (PRIVILEGE_WAS_ELEVATED) {
-    if (!memory_layout_is_cstring_in_region(
-          memory_layout_get_app_region(), value, ANALYTICS_STRING_MAX_LEN)) {
+    if (!memory_layout_is_cstring_in_region(memory_layout_get_app_region(), value,
+                                            ANALYTICS_STRING_MAX_LEN)) {
       syscall_failed();
     }
   }
@@ -180,8 +179,7 @@ DEFINE_SYSCALL(void, sys_pbl_analytics_set_signed, enum pbl_analytics_key key,
                int32_t signed_value) {}
 DEFINE_SYSCALL(void, sys_pbl_analytics_set_unsigned, enum pbl_analytics_key key,
                uint32_t unsigned_value) {}
-DEFINE_SYSCALL(void, sys_pbl_analytics_set_string, enum pbl_analytics_key key,
-               const char *value) {}
+DEFINE_SYSCALL(void, sys_pbl_analytics_set_string, enum pbl_analytics_key key, const char *value) {}
 DEFINE_SYSCALL(void, sys_pbl_analytics_timer_start, enum pbl_analytics_key key) {}
 DEFINE_SYSCALL(void, sys_pbl_analytics_timer_stop, enum pbl_analytics_key key) {}
 DEFINE_SYSCALL(void, sys_pbl_analytics_add, enum pbl_analytics_key key, int32_t amount) {}

@@ -8,18 +8,10 @@
 #include "applib/ui/window_stack_private.h"
 #include "pbl/util/attributes.h"
 
-Window *WEAK window_manager_get_top_window(void) {
-  return NULL;
-}
+Window *WEAK window_manager_get_top_window(void) { return NULL; }
 
-WindowStack *WEAK window_manager_get_window_stack(void) {
-  return NULL;
-}
+WindowStack *WEAK window_manager_get_window_stack(void) { return NULL; }
 
-ClickManager *WEAK window_manager_get_window_click_manager(void) {
-  return NULL;
-}
+ClickManager *WEAK window_manager_get_window_click_manager(void) { return NULL; }
 
-bool window_manager_is_window_visible(Window *window) {
-  return true;
-}
+bool window_manager_is_window_visible(Window *window) { return true; }

@@ -15,29 +15,19 @@
 
 // The session's environmental overrides; each test drives them directly.
 static bool s_watchface_running;
-bool app_manager_is_watchface_running(void) {
-  return s_watchface_running;
-}
+bool app_manager_is_watchface_running(void) { return s_watchface_running; }
 
 static bool s_modal_enabled;
 static ModalProperty s_modal_properties;
-bool modal_manager_get_enabled(void) {
-  return s_modal_enabled;
-}
-ModalProperty modal_manager_get_properties(void) {
-  return s_modal_properties;
-}
+bool modal_manager_get_enabled(void) { return s_modal_enabled; }
+ModalProperty modal_manager_get_properties(void) { return s_modal_properties; }
 
 static bool s_light_on;
-bool light_is_on(void) {
-  return s_light_on;
-}
+bool light_is_on(void) { return s_light_on; }
 
 // The session deadline follows the backlight timeout pref, sampled per arm.
 static uint32_t s_backlight_timeout_ms;
-uint32_t backlight_get_timeout_ms(void) {
-  return s_backlight_timeout_ms;
-}
+uint32_t backlight_get_timeout_ms(void) { return s_backlight_timeout_ms; }
 
 #define MS_TO_TICKS(ms) (((ms) * (RtcTicks)RTC_TICKS_HZ) / 1000)
 #define TIMEOUT_TICKS MS_TO_TICKS(s_backlight_timeout_ms)
@@ -54,13 +44,10 @@ void test_touch_session__initialize(void) {
   touch_session_reset();
 }
 
-void test_touch_session__cleanup(void) {
-}
+void test_touch_session__cleanup(void) {}
 
 // tests
-void test_touch_session__inactive_by_default(void) {
-  cl_assert(!touch_session_is_active());
-}
+void test_touch_session__inactive_by_default(void) { cl_assert(!touch_session_is_active()); }
 
 void test_touch_session__arm_activates_until_deadline(void) {
   touch_session_arm(TouchSessionArmSource_WakeGesture);

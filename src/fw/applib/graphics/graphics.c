@@ -19,10 +19,10 @@
 #include <string.h>
 
 #if !defined(__clang__)
-#pragma GCC optimize ("O3")
+#pragma GCC optimize("O3")
 #endif
 
-void graphics_draw_pixel(GContext* ctx, GPoint point) {
+void graphics_draw_pixel(GContext *ctx, GPoint point) {
   PBL_ASSERTN(ctx);
   if (ctx->lock) {
     return;
@@ -35,7 +35,7 @@ void graphics_draw_pixel(GContext* ctx, GPoint point) {
 }
 
 T_STATIC void prv_fill_rect_legacy2(GContext *ctx, GRect rect, uint16_t radius,
-    GCornerMask corner_mask, GColor fill_color) {
+                                    GCornerMask corner_mask, GColor fill_color) {
   if (gcolor_is_transparent(fill_color)) {
     fill_color = GColorWhite;
   }
@@ -43,7 +43,7 @@ T_STATIC void prv_fill_rect_legacy2(GContext *ctx, GRect rect, uint16_t radius,
   // as this function will only be called with radius 0 to or
   // to support the legacy2 behavior (where the radius is clamped to 8) it's safe to assume 8px here
   PBL_ASSERTN(radius <= 8);
-  GBitmap* bitmap = graphics_context_get_bitmap(ctx);
+  GBitmap *bitmap = graphics_context_get_bitmap(ctx);
 
   // translate to absolute bitmap coordinates:
   rect.origin.x += ctx->draw_state.drawing_box.origin.x;
@@ -58,22 +58,25 @@ T_STATIC void prv_fill_rect_legacy2(GContext *ctx, GRect rect, uint16_t radius,
     return;
   }
 
-  // All the row insets are packed into an uint32, taking 4 bits per inset (hence the 8px radius limit):
+  // All the row insets are packed into an uint32, taking 4 bits per inset (hence the 8px radius
+  // limit):
   static const uint32_t round_top_corner_lookup[] = {
-    0x0, 0x01, 0x01, 0x12, 0x113, 0x123, 0x1234, 0x11235, 0x112346,
+      0x0, 0x01, 0x01, 0x12, 0x113, 0x123, 0x1234, 0x11235, 0x112346,
   };
   static const uint32_t round_bottom_corner_lookup[] = {
-    0x0, 0x01, 0x10, 0x210, 0x3110, 0x32100, 0x432100, 0x5321100, 0x64321100,
+      0x0, 0x01, 0x10, 0x210, 0x3110, 0x32100, 0x432100, 0x5321100, 0x64321100,
   };
 
   // Set up the insets for doing the top corners.
-  uint32_t corner_insets_left = (corner_mask & GCornerTopLeft) ? round_top_corner_lookup[radius] : 0;
-  uint32_t corner_insets_right = (corner_mask & GCornerTopRight) ? round_top_corner_lookup[radius] : 0;
+  uint32_t corner_insets_left =
+      (corner_mask & GCornerTopLeft) ? round_top_corner_lookup[radius] : 0;
+  uint32_t corner_insets_right =
+      (corner_mask & GCornerTopRight) ? round_top_corner_lookup[radius] : 0;
 
   const unsigned int top_cropped_rows_count = clipped_rect.origin.y - rect.origin.y;
   const int32_t left_cropped_columns_count = MAX(0, clipped_rect.origin.x - rect.origin.x);
-  const int32_t right_cropped_columns_count = MAX(0, rect.size.w - clipped_rect.size.w -
-                                                  left_cropped_columns_count);
+  const int32_t right_cropped_columns_count =
+      MAX(0, rect.size.w - clipped_rect.size.w - left_cropped_columns_count);
 
   if (top_cropped_rows_count) {
     // Skip over rows for each one that's cropped off the top.
@@ -87,8 +90,8 @@ T_STATIC void prv_fill_rect_legacy2(GContext *ctx, GRect rect, uint16_t radius,
   // bit-block fiddling:
   const int16_t max_y = clipped_rect.origin.y + clipped_rect.size.h;
   for (; clipped_rect.origin.y < max_y; ++clipped_rect.origin.y) {
-
-    if ((clipped_rect.origin.y == (rect.origin.y + rect.size.h) - radius) && (corner_mask & GCornersBottom)) {
+    if ((clipped_rect.origin.y == (rect.origin.y + rect.size.h) - radius) &&
+        (corner_mask & GCornersBottom)) {
       if (corner_mask & GCornerBottomLeft) {
         corner_insets_left = round_bottom_corner_lookup[radius];
       }
@@ -152,8 +155,8 @@ void prv_fill_rect_internal(GContext *ctx, const GRect *rect, uint16_t radius,
 
     // Fill 3 rectangles and 4 quadrants
     if (corner_mask & GCornerTopLeft) {
-      circle_func(ctx, GPoint(rect->origin.x + radius, rect->origin.y + radius),
-                  radius, GCornerTopLeft);
+      circle_func(ctx, GPoint(rect->origin.x + radius, rect->origin.y + radius), radius,
+                  GCornerTopLeft);
       top_rect_origin_x += radius;
       top_rect_size_w -= radius;
     }
@@ -169,31 +172,33 @@ void prv_fill_rect_internal(GContext *ctx, const GRect *rect, uint16_t radius,
       top_rect_size_w -= radius;
     }
     if (corner_mask & GCornerBottomRight) {
-      circle_func(ctx, GPoint(rect->origin.x + rect->size.w - radius - 1,
-                              rect->origin.y + rect->size.h - radius - 1),
+      circle_func(ctx,
+                  GPoint(rect->origin.x + rect->size.w - radius - 1,
+                         rect->origin.y + rect->size.h - radius - 1),
                   radius, GCornerBottomRight);
       bottom_rect_size_w -= radius;
     }
 
     // Top Rect
-    prv_fill_rect_legacy2(ctx, GRect(top_rect_origin_x, rect->origin.y, top_rect_size_w, radius),
-                          0, GCornerNone, fill_color);
+    prv_fill_rect_legacy2(ctx, GRect(top_rect_origin_x, rect->origin.y, top_rect_size_w, radius), 0,
+                          GCornerNone, fill_color);
 
     // Middle Rect
-    prv_fill_rect_legacy2(ctx, GRect(rect->origin.x, rect->origin.y + radius,
-                                     rect->size.w, rect->size.h - 2 * radius),
-                          0, GCornerNone, fill_color);
+    prv_fill_rect_legacy2(
+        ctx,
+        GRect(rect->origin.x, rect->origin.y + radius, rect->size.w, rect->size.h - 2 * radius), 0,
+        GCornerNone, fill_color);
 
     // Bottom Rect
-    prv_fill_rect_legacy2(ctx, GRect(bottom_rect_origin_x, rect->origin.y + rect->size.h - radius,
-                                     bottom_rect_size_w, radius),
+    prv_fill_rect_legacy2(ctx,
+                          GRect(bottom_rect_origin_x, rect->origin.y + rect->size.h - radius,
+                                bottom_rect_size_w, radius),
                           0, GCornerNone, fill_color);
   }
 }
 
-T_STATIC void prv_fill_rect_non_aa(GContext* ctx, const GRect *rect, uint16_t radius,
+T_STATIC void prv_fill_rect_non_aa(GContext *ctx, const GRect *rect, uint16_t radius,
                                    GCornerMask corner_mask, GColor fill_color) {
-
   // for radii <= 8 we can safely use the legacy2 behavior
   const uint16_t alt_radius = 8;
   FillCircleImplFunc circle_func = graphics_circle_quadrant_fill_non_aa;
@@ -201,14 +206,14 @@ T_STATIC void prv_fill_rect_non_aa(GContext* ctx, const GRect *rect, uint16_t ra
 }
 
 #if PBL_COLOR
-T_STATIC void prv_fill_rect_aa(GContext* ctx, const GRect *rect, uint16_t radius,
+T_STATIC void prv_fill_rect_aa(GContext *ctx, const GRect *rect, uint16_t radius,
                                GCornerMask corner_mask, GColor fill_color) {
   FillCircleImplFunc circle_func = graphics_internal_circle_quadrant_fill_aa;
   prv_fill_rect_internal(ctx, rect, radius, corner_mask, fill_color, 0, circle_func);
 }
-#endif // PBL_COLOR
+#endif  // PBL_COLOR
 
-void graphics_fill_round_rect(GContext* ctx, const GRect *rect, uint16_t radius,
+void graphics_fill_round_rect(GContext *ctx, const GRect *rect, uint16_t radius,
                               GCornerMask corner_mask) {
   PBL_ASSERTN(ctx);
   if (!rect || ctx->lock) {
@@ -225,24 +230,24 @@ void graphics_fill_round_rect(GContext* ctx, const GRect *rect, uint16_t radius,
   prv_fill_rect_non_aa(ctx, rect, radius, corner_mask, ctx->draw_state.fill_color);
 }
 
-void graphics_fill_round_rect_by_value(GContext* ctx, GRect rect, uint16_t radius,
-                                 GCornerMask corner_mask) {
+void graphics_fill_round_rect_by_value(GContext *ctx, GRect rect, uint16_t radius,
+                                       GCornerMask corner_mask) {
   graphics_fill_round_rect(ctx, &rect, radius, corner_mask);
 }
 
-void graphics_fill_rect(GContext* ctx, const GRect *rect) {
+void graphics_fill_rect(GContext *ctx, const GRect *rect) {
   graphics_fill_round_rect(ctx, rect, 0, GCornerNone);
 }
 
 T_STATIC void prv_draw_rect(GContext *ctx, const GRect *rect) {
   GColor fill_color = ctx->draw_state.fill_color;
   ctx->draw_state.fill_color = ctx->draw_state.stroke_color;
-  graphics_fill_rect(ctx, &GRect(rect->origin.x, rect->origin.y, rect->size.w, 1)); // top
-  graphics_fill_rect(ctx, &GRect(rect->origin.x, rect->origin.y + rect->size.h - 1,
-                                 rect->size.w, 1)); // bottom
-  graphics_fill_rect(ctx, &GRect(rect->origin.x, rect->origin.y + 1, 1, rect->size.h - 2)); // left
-  graphics_fill_rect(ctx, &GRect(rect->origin.x + rect->size.w - 1,
-                                 rect->origin.y + 1, 1, rect->size.h - 2)); // right
+  graphics_fill_rect(ctx, &GRect(rect->origin.x, rect->origin.y, rect->size.w, 1));  // top
+  graphics_fill_rect(
+      ctx, &GRect(rect->origin.x, rect->origin.y + rect->size.h - 1, rect->size.w, 1));  // bottom
+  graphics_fill_rect(ctx, &GRect(rect->origin.x, rect->origin.y + 1, 1, rect->size.h - 2));  // left
+  graphics_fill_rect(ctx, &GRect(rect->origin.x + rect->size.w - 1, rect->origin.y + 1, 1,
+                                 rect->size.h - 2));  // right
   ctx->draw_state.fill_color = fill_color;
 }
 
@@ -258,7 +263,7 @@ T_STATIC void prv_draw_rect_aa_stroked(GContext *ctx, const GRect *rect, uint8_t
   graphics_line_draw_stroked_aa(ctx, tr, br, stroke_width);
   graphics_line_draw_stroked_aa(ctx, bl, br, stroke_width);
 }
-#endif // PBL_COLOR
+#endif  // PBL_COLOR
 
 T_STATIC void prv_draw_rect_stroked(GContext *ctx, const GRect *rect, uint8_t stroke_width) {
   const GPoint tl = GPoint(rect->origin.x, rect->origin.y);
@@ -272,7 +277,7 @@ T_STATIC void prv_draw_rect_stroked(GContext *ctx, const GRect *rect, uint8_t st
   graphics_line_draw_stroked_non_aa(ctx, bl, br, stroke_width);
 }
 
-void graphics_draw_rect(GContext* ctx, const GRect *rect) {
+void graphics_draw_rect(GContext *ctx, const GRect *rect) {
   PBL_ASSERTN(ctx);
   if (!rect || ctx->lock) {
     return;
@@ -295,11 +300,9 @@ void graphics_draw_rect(GContext* ctx, const GRect *rect) {
   prv_draw_rect_stroked(ctx, rect, ctx->draw_state.stroke_width);
 }
 
-void graphics_draw_rect_by_value(GContext* ctx, GRect rect) {
-  graphics_draw_rect(ctx, &rect);
-}
+void graphics_draw_rect_by_value(GContext *ctx, GRect rect) { graphics_draw_rect(ctx, &rect); }
 
-void graphics_draw_rect_precise(GContext* ctx, const GRectPrecise *rect) {
+void graphics_draw_rect_precise(GContext *ctx, const GRectPrecise *rect) {
   const Fixed_S16_3 right = grect_precise_get_max_x(rect);
   const Fixed_S16_3 bottom = grect_precise_get_max_y(rect);
 
@@ -316,7 +319,7 @@ void graphics_draw_rect_precise(GContext* ctx, const GRectPrecise *rect) {
 
 // This takes care of all routines since it re-uses existing AA and SW functionality in draw line
 // and draw circle
-T_STATIC void prv_draw_round_rect(GContext* ctx, const GRect *rect, uint16_t radius) {
+T_STATIC void prv_draw_round_rect(GContext *ctx, const GRect *rect, uint16_t radius) {
   const GPoint origin = rect->origin;
   const int16_t width = rect->size.w;
   const int16_t height = rect->size.h;
@@ -340,10 +343,10 @@ T_STATIC void prv_draw_round_rect(GContext* ctx, const GRect *rect, uint16_t rad
   const GPoint right_b = GPoint(origin.x + width - 1, origin.y + radius + height_actual - 1);
 
   // Draw lines between each transformed corner point
-  graphics_draw_line(ctx, top_l, top_r);       // top
-  graphics_draw_line(ctx, bottom_l, bottom_r); // bottom
-  graphics_draw_line(ctx, left_t, left_b);     // left
-  graphics_draw_line(ctx, right_t, right_b);   // right
+  graphics_draw_line(ctx, top_l, top_r);        // top
+  graphics_draw_line(ctx, bottom_l, bottom_r);  // bottom
+  graphics_draw_line(ctx, left_t, left_b);      // left
+  graphics_draw_line(ctx, right_t, right_b);    // right
 
   // Draw quadrants
   const GPoint tl = GPoint(origin.x + radius, origin.y + radius);
@@ -358,19 +361,19 @@ T_STATIC void prv_draw_round_rect(GContext* ctx, const GRect *rect, uint16_t rad
 }
 
 #if PBL_COLOR
-T_STATIC void prv_draw_round_rect_aa(GContext* ctx, const GRect *rect, uint16_t radius) {
+T_STATIC void prv_draw_round_rect_aa(GContext *ctx, const GRect *rect, uint16_t radius) {
   // Assumes AA and stroke_width is set appropriately in ctx
   prv_draw_round_rect(ctx, rect, radius);
 }
 
-T_STATIC void prv_draw_round_rect_aa_stroked(GContext* ctx, const GRect *rect,
-                                             uint16_t radius, uint8_t stroke_width) {
+T_STATIC void prv_draw_round_rect_aa_stroked(GContext *ctx, const GRect *rect, uint16_t radius,
+                                             uint8_t stroke_width) {
   // Assumes AA and stroke_width is set appropriately in ctx
   prv_draw_round_rect(ctx, rect, radius);
 }
-#endif // CONFIG_SCREEN_COLOR_DEPTH_BITS
+#endif  // CONFIG_SCREEN_COLOR_DEPTH_BITS
 
-T_STATIC void prv_draw_round_rect_stroked(GContext* ctx, const GRect *rect, uint16_t radius,
+T_STATIC void prv_draw_round_rect_stroked(GContext *ctx, const GRect *rect, uint16_t radius,
                                           uint8_t stroke_width) {
   // Assumes AA and stroke_width is set appropriately in ctx
   prv_draw_round_rect(ctx, rect, radius);
@@ -378,7 +381,7 @@ T_STATIC void prv_draw_round_rect_stroked(GContext* ctx, const GRect *rect, uint
 
 static void prv_graphics_convert_8_bit_to_1_bit(const GBitmap *from, GBitmap *to) {
   const GRect bounds = from->bounds;
-  uint8_t *to_buffer = (uint8_t *) to->addr;
+  uint8_t *to_buffer = (uint8_t *)to->addr;
 
   const int y_start = bounds.origin.y;
   const int y_end = y_start + bounds.size.h;
@@ -394,7 +397,7 @@ static void prv_graphics_convert_8_bit_to_1_bit(const GBitmap *from, GBitmap *to
   }
 }
 
-void graphics_draw_round_rect(GContext* ctx, const GRect *rect, uint16_t radius) {
+void graphics_draw_round_rect(GContext *ctx, const GRect *rect, uint16_t radius) {
   PBL_ASSERTN(ctx);
   if (!rect || ctx->lock) {
     return;
@@ -432,7 +435,7 @@ void graphics_draw_round_rect(GContext* ctx, const GRect *rect, uint16_t radius)
   }
 }
 
-void graphics_draw_round_rect_by_value(GContext* ctx, GRect rect, uint16_t radius) {
+void graphics_draw_round_rect_by_value(GContext *ctx, GRect rect, uint16_t radius) {
   graphics_draw_round_rect(ctx, &rect, radius);
 }
 
@@ -441,21 +444,20 @@ void graphics_context_init(GContext *context, FrameBuffer *framebuffer,
   PBL_ASSERTN(context);
   PBL_ASSERTN(framebuffer);
 
-  *context = (GContext) {
-    // For apps, this is run before the app has a chance to run, so there's no concern here of the
-    // app changing its framebuffer size.
-    .dest_bitmap = framebuffer_get_as_bitmap(framebuffer, &framebuffer->size),
-    .parent_framebuffer = framebuffer,
-    .parent_framebuffer_vertical_offset = 0,
-    .lock = false
-  };
+  *context = (GContext){
+      // For apps, this is run before the app has a chance to run, so there's no concern here of the
+      // app changing its framebuffer size.
+      .dest_bitmap = framebuffer_get_as_bitmap(framebuffer, &framebuffer->size),
+      .parent_framebuffer = framebuffer,
+      .parent_framebuffer_vertical_offset = 0,
+      .lock = false};
 
   // init the font cache
   FontCache *font_cache = &context->font_cache;
   memset(font_cache->cache_keys, 0, sizeof(font_cache->cache_keys));
   memset(font_cache->cache_data, 0, sizeof(font_cache->cache_data));
-  keyed_circular_cache_init(&font_cache->line_cache, font_cache->cache_keys,
-                            font_cache->cache_data, sizeof(LineCacheData), LINE_CACHE_SIZE);
+  keyed_circular_cache_init(&font_cache->line_cache, font_cache->cache_keys, font_cache->cache_data,
+                            sizeof(LineCacheData), LINE_CACHE_SIZE);
 
   graphics_context_set_default_drawing_state(context, init_mode);
 }
@@ -463,91 +465,91 @@ void graphics_context_init(GContext *context, FrameBuffer *framebuffer,
 void graphics_context_set_default_drawing_state(GContext *ctx,
                                                 GContextInitializationMode init_mode) {
   PBL_ASSERTN(ctx);
-  GBitmap* bitmap = graphics_context_get_bitmap(ctx);
+  GBitmap *bitmap = graphics_context_get_bitmap(ctx);
 
-  ctx->draw_state = (GDrawState) {
-    .stroke_color = GColorBlack,
-    .fill_color = GColorBlack,
-    .text_color = GColorWhite,
-    .tint_color = GColorWhite,
-    .compositing_mode = GCompOpAssign,
-    .clip_box = bitmap->bounds,
-    .drawing_box = bitmap->bounds,
+  ctx->draw_state = (GDrawState){
+      .stroke_color = GColorBlack,
+      .fill_color = GColorBlack,
+      .text_color = GColorWhite,
+      .tint_color = GColorWhite,
+      .compositing_mode = GCompOpAssign,
+      .clip_box = bitmap->bounds,
+      .drawing_box = bitmap->bounds,
 #if PBL_COLOR
-    .antialiased = !process_manager_compiled_with_legacy2_sdk(),
+      .antialiased = !process_manager_compiled_with_legacy2_sdk(),
 #endif
-    .stroke_width = 1,
-    .draw_implementation = &g_default_draw_implementation,
-    .avoid_text_orphans = (init_mode == GContextInitializationMode_System),
+      .stroke_width = 1,
+      .draw_implementation = &g_default_draw_implementation,
+      .avoid_text_orphans = (init_mode == GContextInitializationMode_System),
   };
 }
 
-GDrawState graphics_context_get_drawing_state(GContext* ctx) {
+GDrawState graphics_context_get_drawing_state(GContext *ctx) {
   PBL_ASSERTN(ctx);
   return ctx->draw_state;
 }
 
-void graphics_context_set_drawing_state(GContext* ctx, GDrawState draw_state) {
+void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {
   PBL_ASSERTN(ctx);
   ctx->draw_state = draw_state;
 }
 
-void graphics_context_move_draw_box(GContext* ctx, GPoint offset) {
+void graphics_context_move_draw_box(GContext *ctx, GPoint offset) {
   PBL_ASSERTN(ctx);
   ctx->draw_state.drawing_box.origin = gpoint_add(ctx->draw_state.drawing_box.origin, offset);
 }
 
-void graphics_context_set_stroke_color(GContext* ctx, GColor color) {
+void graphics_context_set_stroke_color(GContext *ctx, GColor color) {
   PBL_ASSERTN(ctx);
   if (ctx->lock) {
     return;
   }
 
-  #if PBL_BW
-    color = gcolor_get_bw(color);
-  #else
-    color = gcolor_closest_opaque(color);
-  #endif
+#if PBL_BW
+  color = gcolor_get_bw(color);
+#else
+  color = gcolor_closest_opaque(color);
+#endif
   ctx->draw_state.stroke_color = color;
 }
 
-void graphics_context_set_stroke_color_2bit(GContext* ctx, GColor2 color) {
+void graphics_context_set_stroke_color_2bit(GContext *ctx, GColor2 color) {
   graphics_context_set_stroke_color(ctx, get_native_color(color));
 }
 
-void graphics_context_set_fill_color(GContext* ctx, GColor color) {
+void graphics_context_set_fill_color(GContext *ctx, GColor color) {
   PBL_ASSERTN(ctx);
   if (ctx->lock) {
     return;
   }
 
-  #if PBL_BW
-    color = gcolor_get_grayscale(color);
-  #else
-    color = gcolor_closest_opaque(color);
-  #endif
+#if PBL_BW
+  color = gcolor_get_grayscale(color);
+#else
+  color = gcolor_closest_opaque(color);
+#endif
   ctx->draw_state.fill_color = color;
 }
 
-void graphics_context_set_fill_color_2bit(GContext* ctx, GColor2 color) {
+void graphics_context_set_fill_color_2bit(GContext *ctx, GColor2 color) {
   graphics_context_set_fill_color(ctx, get_native_color(color));
 }
 
-void graphics_context_set_text_color(GContext* ctx, GColor color) {
+void graphics_context_set_text_color(GContext *ctx, GColor color) {
   PBL_ASSERTN(ctx);
   if (ctx->lock) {
     return;
   }
 
-  #if PBL_BW
-    color = gcolor_get_bw(color);
-  #else
-    color = gcolor_closest_opaque(color);
-  #endif
+#if PBL_BW
+  color = gcolor_get_bw(color);
+#else
+  color = gcolor_closest_opaque(color);
+#endif
   ctx->draw_state.text_color = color;
 }
 
-void graphics_context_set_text_color_2bit(GContext* ctx, GColor2 color) {
+void graphics_context_set_text_color_2bit(GContext *ctx, GColor2 color) {
   graphics_context_set_text_color(ctx, get_native_color(color));
 }
 
@@ -559,7 +561,7 @@ void graphics_context_set_tint_color(GContext *ctx, GColor color) {
   ctx->draw_state.tint_color = gcolor_closest_opaque(color);
 }
 
-void graphics_context_set_compositing_mode(GContext* ctx, GCompOp mode) {
+void graphics_context_set_compositing_mode(GContext *ctx, GCompOp mode) {
   PBL_ASSERTN(ctx);
   if (ctx->lock) {
     return;
@@ -568,7 +570,7 @@ void graphics_context_set_compositing_mode(GContext* ctx, GCompOp mode) {
   ctx->draw_state.compositing_mode = mode;
 }
 
-void graphics_context_set_antialiased(GContext* ctx, bool enable) {
+void graphics_context_set_antialiased(GContext *ctx, bool enable) {
   PBL_ASSERTN(ctx);
   if (ctx->lock) {
     return;
@@ -583,7 +585,7 @@ bool graphics_context_get_antialiased(GContext *ctx) {
   return PBL_IF_COLOR_ELSE(ctx->draw_state.antialiased, false);
 }
 
-void graphics_context_set_stroke_width(GContext* ctx, uint8_t stroke_width) {
+void graphics_context_set_stroke_width(GContext *ctx, uint8_t stroke_width) {
   PBL_ASSERTN(ctx);
   if (ctx->lock) {
     return;
@@ -603,24 +605,24 @@ GSize graphics_context_get_framebuffer_size(GContext *ctx) {
   }
 }
 
-GBitmap* graphics_context_get_bitmap(GContext* ctx) {
+GBitmap *graphics_context_get_bitmap(GContext *ctx) {
   PBL_ASSERTN(ctx);
   return &ctx->dest_bitmap;
 }
 
-void graphics_context_mark_dirty_rect(GContext* ctx, GRect rect) {
+void graphics_context_mark_dirty_rect(GContext *ctx, GRect rect) {
   PBL_ASSERTN(ctx);
   if (ctx->parent_framebuffer) {
     framebuffer_mark_dirty_rect(ctx->parent_framebuffer, rect);
   }
 }
 
-bool graphics_frame_buffer_is_captured(GContext* ctx) {
+bool graphics_frame_buffer_is_captured(GContext *ctx) {
   PBL_ASSERTN(ctx);
   return ctx->lock;
 }
 
-GBitmap* graphics_capture_frame_buffer_format(GContext *ctx, GBitmapFormat format) {
+GBitmap *graphics_capture_frame_buffer_format(GContext *ctx, GBitmapFormat format) {
   PBL_ASSERTN(ctx);
   if (ctx->lock) {
     APP_LOG(APP_LOG_LEVEL_WARNING,
@@ -630,7 +632,7 @@ GBitmap* graphics_capture_frame_buffer_format(GContext *ctx, GBitmapFormat forma
   }
   ctx->lock = true;
 
-  GBitmap *native =  graphics_context_get_bitmap(ctx);
+  GBitmap *native = graphics_context_get_bitmap(ctx);
 
   if (format == native->info.format) {
     return native;
@@ -659,7 +661,7 @@ GBitmap* graphics_capture_frame_buffer_format(GContext *ctx, GBitmapFormat forma
   return result;
 }
 
-GBitmap* graphics_capture_frame_buffer_2bit(GContext *ctx) {
+GBitmap *graphics_capture_frame_buffer_2bit(GContext *ctx) {
   return graphics_capture_frame_buffer_format(ctx, GBitmapFormat1Bit);
 }
 
@@ -673,8 +675,7 @@ MOCKABLE bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) {
   GBitmap *native_framebuffer = graphics_context_get_bitmap(ctx);
   if (gbitmap_get_format(buffer) != GBITMAP_NATIVE_FORMAT) {
     ctx->lock = false;
-    bitblt_bitmap_into_bitmap(native_framebuffer, buffer, GPointZero,
-        GCompOpAssign, GColorWhite);
+    bitblt_bitmap_into_bitmap(native_framebuffer, buffer, GPointZero, GCompOpAssign, GColorWhite);
     framebuffer_dirty_all(ctx->parent_framebuffer);
 
     // Don't destroy the bitmap we got from app_state_legacy2_get_2bit_framebuffer()

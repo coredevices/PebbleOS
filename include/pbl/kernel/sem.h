@@ -13,7 +13,7 @@ struct pbl_sem {
 };
 
 #define PBL_SEM_INITIALIZER(init, lim) \
-  { .initial = (init), .limit = (lim), .backend = PBL_SEM_BACKEND_INITIALIZER(init) }
+  {.initial = (init), .limit = (lim), .backend = PBL_SEM_BACKEND_INITIALIZER(init)}
 
 #define PBL_SEM_DEFINE(name, initial, limit) \
   struct pbl_sem name = PBL_SEM_INITIALIZER(initial, limit)

@@ -20,20 +20,9 @@
 
 static Window *s_window;
 
-typedef enum PixelBit {
-  PIXEL_BIT_BOTH,
-  PIXEL_BIT_MSB,
-  PIXEL_BIT_LSB,
-  PIXEL_BIT_COUNT
-} PixelBit;
+typedef enum PixelBit { PIXEL_BIT_BOTH, PIXEL_BIT_MSB, PIXEL_BIT_LSB, PIXEL_BIT_COUNT } PixelBit;
 
-typedef enum LineHue {
-  HUE_RED,
-  HUE_GREEN,
-  HUE_BLUE,
-  HUE_WHITE,
-  HUE_COUNT
-} LineHue;
+typedef enum LineHue { HUE_RED, HUE_GREEN, HUE_BLUE, HUE_WHITE, HUE_COUNT } LineHue;
 
 typedef enum LineAttribute {
   ATTRIBUTE_HUE,
@@ -42,7 +31,6 @@ typedef enum LineAttribute {
   ATTRIBUTE_Y,
   ATTRIBUTE_COUNT
 } LineAttribute;
-
 
 typedef struct AppData {
   Layer *canvas_layer;
@@ -133,18 +121,16 @@ static void select_handler(ClickRecognizerRef recognizer, void *context) {
   layer_mark_dirty(data->canvas_layer);
 }
 
-
 static void click_config_provider(void *context) {
   window_single_repeating_click_subscribe(BUTTON_ID_UP, 100, up_handler);
   window_single_repeating_click_subscribe(BUTTON_ID_SELECT, 100, select_handler);
   window_single_repeating_click_subscribe(BUTTON_ID_DOWN, 100, down_handler);
 }
 
-static void draw_ui_element(GContext *ctx, GRect bounds, const char *text,
-                            bool chosen, bool selected) {
-  GFont font = fonts_get_system_font(chosen || selected?
-                                       FONT_KEY_GOTHIC_14_BOLD
-                                     : FONT_KEY_GOTHIC_14);
+static void draw_ui_element(GContext *ctx, GRect bounds, const char *text, bool chosen,
+                            bool selected) {
+  GFont font =
+      fonts_get_system_font(chosen || selected ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_14);
   if (chosen && selected) {
     // Draw rectangle behind text, invert text color
     graphics_context_set_fill_color(ctx, GColorWhite);
@@ -153,11 +139,10 @@ static void draw_ui_element(GContext *ctx, GRect bounds, const char *text,
   } else {
     graphics_context_set_text_color(ctx, GColorWhite);
   }
-  graphics_draw_text(ctx, text, font, bounds, GTextOverflowModeFill,
-                     GTextAlignmentCenter, NULL);
+  graphics_draw_text(ctx, text, font, bounds, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 }
 
-static void canvas_update_proc(Layer *layer, GContext* ctx) {
+static void canvas_update_proc(Layer *layer, GContext *ctx) {
   AppData *data = window_get_user_data(s_window);
   GRect bounds = layer->bounds;
 
@@ -175,24 +160,19 @@ static void canvas_update_proc(Layer *layer, GContext* ctx) {
   draw_ui_element(ctx, GRect(90, 80, 20, 20), "W", data->hue == HUE_WHITE,
                   data->selection == ATTRIBUTE_HUE);
 
-  draw_ui_element(ctx, GRect(30, 100, 35, 20), "Both",
-                  data->pixel_bit == PIXEL_BIT_BOTH,
+  draw_ui_element(ctx, GRect(30, 100, 35, 20), "Both", data->pixel_bit == PIXEL_BIT_BOTH,
                   data->selection == ATTRIBUTE_PIXEL_BIT);
-  draw_ui_element(ctx, GRect(65, 100, 30, 20), "MSB",
-                  data->pixel_bit == PIXEL_BIT_MSB,
+  draw_ui_element(ctx, GRect(65, 100, 30, 20), "MSB", data->pixel_bit == PIXEL_BIT_MSB,
                   data->selection == ATTRIBUTE_PIXEL_BIT);
-  draw_ui_element(ctx, GRect(95, 100, 30, 20), "LSB",
-                  data->pixel_bit == PIXEL_BIT_LSB,
+  draw_ui_element(ctx, GRect(95, 100, 30, 20), "LSB", data->pixel_bit == PIXEL_BIT_LSB,
                   data->selection == ATTRIBUTE_PIXEL_BIT);
 
   char text[10];
-  snprintf(text, sizeof(text), "x=%"PRId16, data->intersection.x);
-  draw_ui_element(ctx, GRect(30, 120, 40, 20), text,
-                  data->selection == ATTRIBUTE_X,
+  snprintf(text, sizeof(text), "x=%" PRId16, data->intersection.x);
+  draw_ui_element(ctx, GRect(30, 120, 40, 20), text, data->selection == ATTRIBUTE_X,
                   data->selection == ATTRIBUTE_X);
-  snprintf(text, sizeof(text), "y=%"PRId16, data->intersection.y);
-  draw_ui_element(ctx, GRect(70, 120, 40, 20), text,
-                  data->selection == ATTRIBUTE_Y,
+  snprintf(text, sizeof(text), "y=%" PRId16, data->intersection.y);
+  draw_ui_element(ctx, GRect(70, 120, 40, 20), text, data->selection == ATTRIBUTE_Y,
                   data->selection == ATTRIBUTE_Y);
 
   // Draw the lines
@@ -216,8 +196,7 @@ static void canvas_update_proc(Layer *layer, GContext* ctx) {
     g = 1;
     b = 1;
   }
-  GColor line_color = GColorFromRGB(r * saturation, g * saturation,
-                                    b * saturation);
+  GColor line_color = GColorFromRGB(r * saturation, g * saturation, b * saturation);
   graphics_context_set_stroke_color(ctx, line_color);
   graphics_draw_line(ctx, GPoint(0, data->intersection.y),
                      GPoint(bounds.size.w, data->intersection.y));
@@ -230,8 +209,7 @@ static void main_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect window_bounds = window_layer->bounds;
 
-  data->canvas_layer = layer_create(GRect(0, 0, window_bounds.size.w,
-                                          window_bounds.size.h));
+  data->canvas_layer = layer_create(GRect(0, 0, window_bounds.size.w, window_bounds.size.h));
   layer_set_update_proc(data->canvas_layer, canvas_update_proc);
   layer_add_child(window_layer, data->canvas_layer);
 }
@@ -250,10 +228,10 @@ static void init(void) {
   s_window = window_create();
   window_set_user_data(s_window, data);
   window_set_fullscreen(s_window, true);
-  window_set_window_handlers(s_window, &(WindowHandlers) {
-    .load = main_window_load,
-    .unload = main_window_unload,
-  });
+  window_set_window_handlers(s_window, &(WindowHandlers){
+                                           .load = main_window_load,
+                                           .unload = main_window_unload,
+                                       });
 
   window_set_click_config_provider(s_window, click_config_provider);
 
@@ -273,10 +251,8 @@ static void s_main(void) {
   deinit();
 }
 
-const PebbleProcessMd* movable_line_get_app_info(void) {
-  static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = s_main,
-    .name = "Movable Line"
-  };
-  return (const PebbleProcessMd*) &s_app_info;
+const PebbleProcessMd *movable_line_get_app_info(void) {
+  static const PebbleProcessMdSystem s_app_info = {.common.main_func = s_main,
+                                                   .name = "Movable Line"};
+  return (const PebbleProcessMd *)&s_app_info;
 }

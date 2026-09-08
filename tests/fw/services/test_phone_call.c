@@ -13,7 +13,6 @@ extern T_STATIC void prv_handle_phone_event(PebbleEvent *e, void *context);
 extern T_STATIC void prv_handle_mobile_app_event(PebbleEvent *e, void *context);
 extern T_STATIC void prv_handle_ancs_disconnected_event(PebbleEvent *e, void *context);
 
-
 ///////////////////////////////////////////////////////////
 // Stubs
 ///////////////////////////////////////////////////////////
@@ -26,9 +25,7 @@ extern T_STATIC void prv_handle_ancs_disconnected_event(PebbleEvent *e, void *co
 #include "stubs_session.h"
 #include "stubs_system_task.h"
 
-bool alerts_should_notify_for_type(AlertType type) {
-  return true;
-}
+bool alerts_should_notify_for_type(AlertType type) { return true; }
 
 void ancs_perform_action(uint32_t notification_uid, uint8_t action_id) {}
 
@@ -53,26 +50,19 @@ void phone_ui_handle_outgoing_call(PebblePhoneCaller *caller) {
   s_last_phone_ui_event = PhoneEventType_Outgoing;
 }
 
-void phone_ui_handle_missed_call(void) {
-  s_last_phone_ui_event = PhoneEventType_Missed;
-}
+void phone_ui_handle_missed_call(void) { s_last_phone_ui_event = PhoneEventType_Missed; }
 
-void phone_ui_handle_call_start(bool can_decline) {
-  s_last_phone_ui_event = PhoneEventType_Start;
-}
+void phone_ui_handle_call_start(bool can_decline) { s_last_phone_ui_event = PhoneEventType_Start; }
 
 void phone_ui_handle_call_end(bool call_accepted, bool disconnected) {
   s_last_phone_ui_event = PhoneEventType_End;
 }
 
-void phone_ui_handle_call_hide(void) {
-  s_last_phone_ui_event = PhoneEventType_Hide;
-}
+void phone_ui_handle_call_hide(void) { s_last_phone_ui_event = PhoneEventType_Hide; }
 
 void phone_ui_handle_caller_id(PebblePhoneCaller *caller) {
   s_last_phone_ui_event = PhoneEventType_CallerID;
 }
-
 
 ///////////////////////////////////////////////////////////
 // Helpers
@@ -83,32 +73,28 @@ void phone_ui_handle_caller_id(PebblePhoneCaller *caller) {
 
 // Whenever we check the last phone ui event, we reset s_last_phone_ui_event so we don't end up
 // checking the same event twice and assume everything went well
-#define ASSERT_LAST_EVENT(event) \
+#define ASSERT_LAST_EVENT(event)                   \
   cl_assert_equal_i(s_last_phone_ui_event, event); \
   s_last_phone_ui_event = PhoneEventType_Invalid;
 
 static void prv_put_comm_session_event(bool app_connected) {
-  PebbleEvent comm_session_event = {
-    .type = PEBBLE_COMM_SESSION_EVENT,
-    .bluetooth.comm_session_event = (PebbleCommSessionEvent) {
-      .is_system = true,
-      .is_open = app_connected,
-    }
-  };
+  PebbleEvent comm_session_event = {.type = PEBBLE_COMM_SESSION_EVENT,
+                                    .bluetooth.comm_session_event = (PebbleCommSessionEvent){
+                                        .is_system = true,
+                                        .is_open = app_connected,
+                                    }};
   prv_handle_mobile_app_event(&comm_session_event, NULL);
 }
 
 static void prv_put_phone_event(PhoneEventType type, PhoneCallSource source,
                                 uint32_t call_identifier) {
-  PebbleEvent phone_event = {
-    .type = PEBBLE_PHONE_EVENT,
-    .phone = {
-      .type = type,
-      .source = source,
-      .call_identifier = call_identifier,
-      .caller = NULL,
-    }
-  };
+  PebbleEvent phone_event = {.type = PEBBLE_PHONE_EVENT,
+                             .phone = {
+                                 .type = type,
+                                 .source = source,
+                                 .call_identifier = call_identifier,
+                                 .caller = NULL,
+                             }};
   prv_handle_phone_event(&phone_event, NULL);
 }
 
@@ -134,32 +120,29 @@ static void prv_call_hide(uint32_t call_identifier) {
 
 static void prv_ancs_disconnect(void) {
   PebbleEvent ancs_event = {
-    .type = PEBBLE_ANCS_DISCONNECTED_EVENT,
+      .type = PEBBLE_ANCS_DISCONNECTED_EVENT,
   };
   prv_handle_ancs_disconnected_event(&ancs_event, NULL);
 }
-
 
 ///////////////////////////////////////////////////////////
 // Tests
 ///////////////////////////////////////////////////////////
 
 void test_phone_call__initialize(void) {
-  //fake_comm_session_init();
+  // fake_comm_session_init();
   phone_call_service_init();
   prv_call_end();
   s_last_phone_ui_event = PhoneEventType_Invalid;
-//  s_transport = fake_transport_create(TransportDestinationSystem, NULL, NULL);
-//  s_session = fake_transport_set_connected(s_transport, true /* connected */);
-//  pp_get_phone_state_set_enabled(false);
+  //  s_transport = fake_transport_create(TransportDestinationSystem, NULL, NULL);
+  //  s_session = fake_transport_set_connected(s_transport, true /* connected */);
+  //  pp_get_phone_state_set_enabled(false);
 }
-
 
 // ---------------------------------------------------------------------------------------
 void test_phone_call__cleanup(void) {
-//  fake_comm_session_cleanup();
+  //  fake_comm_session_cleanup();
 }
-
 
 // ---------------------------------------------------------------------------------------
 // Basic test for incoming calls over PP
@@ -185,7 +168,6 @@ void test_phone_call__pp_incoming(void) {
   ASSERT_LAST_EVENT(PhoneEventType_End);
 }
 
-
 // ---------------------------------------------------------------------------------------
 // Basic test for incoming calls over ANCS on iOS 8 and below
 void test_phone_call__ancs_legacy_incoming(void) {
@@ -208,7 +190,6 @@ void test_phone_call__ancs_legacy_incoming(void) {
   prv_put_comm_session_event(false /* app_connected */);
   ASSERT_LAST_EVENT(PhoneEventType_End);
 }
-
 
 // ---------------------------------------------------------------------------------------
 // Basic test for incoming calls on iOS 9 and up
@@ -236,7 +217,6 @@ void test_phone_call__ancs_incoming(void) {
   ASSERT_LAST_EVENT(PhoneEventType_End);
 }
 
-
 // ---------------------------------------------------------------------------------------
 // Basic test for call start events
 void test_phone_call__call_start(void) {
@@ -254,7 +234,6 @@ void test_phone_call__call_start(void) {
   prv_call_start();
   ASSERT_LAST_EVENT(PhoneEventType_Start);
 }
-
 
 // ---------------------------------------------------------------------------------------
 // Make sure we handle ANCS notification removals properly

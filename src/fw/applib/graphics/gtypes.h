@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <pbl/drivers/display/display.h> // FIXME: Need display dimensions
+#include <pbl/drivers/display/display.h>  // FIXME: Need display dimensions
 #include "resource/resource.h"
 #include "pbl/util/attributes.h"
 #include "pbl/util/math.h"
@@ -48,10 +48,10 @@ typedef uint8_t GColor8Component;
 typedef union GColor8 {
   uint8_t argb;
   struct {
-    uint8_t b:2; //!< Blue
-    uint8_t g:2; //!< Green
-    uint8_t r:2; //!< Red
-    uint8_t a:2; //!< Alpha. 3 = 100% opaque, 2 = 66% opaque, 1 = 33% opaque, 0 = transparent.
+    uint8_t b : 2;  //!< Blue
+    uint8_t g : 2;  //!< Green
+    uint8_t r : 2;  //!< Red
+    uint8_t a : 2;  //!< Alpha. 3 = 100% opaque, 2 = 66% opaque, 1 = 33% opaque, 0 = transparent.
   };
 } GColor8;
 
@@ -86,7 +86,6 @@ GColor8 gcolor_get_grayscale(GColor8 color);
 //! @return A legible color for the given background color
 GColor8 gcolor_legible_over(GColor8 background_color);
 
-
 //! This method inverts a color.
 //! @param color The color to invert
 //! @return The inverted color
@@ -120,8 +119,7 @@ GColor8 gcolor_alpha_blend(GColor8 src_color, GColor8 dest_color);
 //! Initialize a lookup table for tinting with luminance based on the provided tint_color.
 //! @note This function is extracted to optimize performing multiple lookups using the same tint
 //! color via \ref gcolor_perform_lookup_using_color_luminance_and_multiply_alpha.
-void gcolor_tint_luminance_lookup_table_init(
-    GColor8 tint_color, GColor8 *lookup_table_out);
+void gcolor_tint_luminance_lookup_table_init(GColor8 tint_color, GColor8 *lookup_table_out);
 
 //! @internal
 //! Lookup a color in the provided lookup_table using the luminance of the src_color and multiply
@@ -245,7 +243,7 @@ typedef GPoint GPointReturn;
 //! A GPoint Comparator returns the Order in which (a, b) occurs
 //! @return negative int for a descending value (a > b), positive for an ascending value (b > a),
 //! 0 for equal
-typedef int (*GPointComparator)(const GPoint * const a, const GPoint * const b, void *context);
+typedef int (*GPointComparator)(const GPoint *const a, const GPoint *const b, void *context);
 
 //! Convenience macro to make a GPoint.
 #define GPoint(x, y) ((GPoint){(x), (y)})
@@ -267,9 +265,7 @@ static inline GPoint gpoint_scalar_rshift(const GPoint point, int8_t s) {
 //! Returns the negation of a GPoint
 //! @note In some cases `gpoint_sub(GPointZero, ...)` uses less code space, please try both
 //! @see gpoint_sub
-static inline GPoint gpoint_neg(const GPoint a) {
-  return GPoint(-a.x, -a.y);
-}
+static inline GPoint gpoint_neg(const GPoint a) { return GPoint(-a.x, -a.y); }
 
 //! @internal
 //! Adds two GPoints together
@@ -319,7 +315,7 @@ static inline uint32_t gpoint_distance_squared(GPoint a, GPoint b) {
 //! @param point_a Pointer to the first point
 //! @param point_b Pointer to the second point
 //! @return `true` if both points are equal, `false` if not.
-bool gpoint_equal(const GPoint * const point_a, const GPoint * const point_b);
+bool gpoint_equal(const GPoint *const point_a, const GPoint *const point_b);
 
 //! Sorts an array of gpoints using a given GPointComparator
 //! @param points Array of points to sort
@@ -328,16 +324,16 @@ bool gpoint_equal(const GPoint * const point_a, const GPoint * const point_b);
 //! @param context Callback context passed to the comparator
 //! @param reverse false to maintain order, true to reverse the order
 void gpoint_sort(GPoint *points, size_t num_points, GPointComparator comparator, void *context,
-    bool reverse);
+                 bool reverse);
 
-#define GPOINT_PRECISE_MAX        0x2000 // 12 bit resolution
-#define GPOINT_PRECISE_PRECISION  FIXED_S16_3_PRECISION
-#define GPOINT_PRECISE_FACTOR     FIXED_S16_3_FACTOR
+#define GPOINT_PRECISE_MAX 0x2000  // 12 bit resolution
+#define GPOINT_PRECISE_PRECISION FIXED_S16_3_PRECISION
+#define GPOINT_PRECISE_FACTOR FIXED_S16_3_FACTOR
 
 //! Internal respresentation of a point
 //! 1 bit for sign, 12 bits represent the coordinate, 3 bits represent the precision
 //! Supports -4096.000 px to 4095.875 px resolution
-typedef struct __attribute__ ((__packed__)) GPointPrecise {
+typedef struct __attribute__((__packed__)) GPointPrecise {
   //! The x-coordinate.
   Fixed_S16_3 x;
   //! The y-coordinate.
@@ -348,29 +344,25 @@ typedef struct __attribute__ ((__packed__)) GPointPrecise {
 #define GPointPrecise(x, y) ((GPointPrecise){{(x)}, {(y)}})
 
 //! Convenience macro to convert from GPoint to GPointPrecise.
-#define GPointPreciseFromGPoint(point) \
-        GPointPrecise((point.x % GPOINT_PRECISE_MAX) * GPOINT_PRECISE_FACTOR, \
-                      (point.y % GPOINT_PRECISE_MAX) * GPOINT_PRECISE_FACTOR)
+#define GPointPreciseFromGPoint(point)                                  \
+  GPointPrecise((point.x % GPOINT_PRECISE_MAX) * GPOINT_PRECISE_FACTOR, \
+                (point.y % GPOINT_PRECISE_MAX) * GPOINT_PRECISE_FACTOR)
 
 //! Convenience macro to convert from GPointPrecise to GPoint.
-#define GPointFromGPointPrecise(pointP) \
-        GPoint(pointP.x.raw_value >> GPOINT_PRECISE_PRECISION, \
-               pointP.y.raw_value >> GPOINT_PRECISE_PRECISION)
+#define GPointFromGPointPrecise(pointP)                  \
+  GPoint(pointP.x.raw_value >> GPOINT_PRECISE_PRECISION, \
+         pointP.y.raw_value >> GPOINT_PRECISE_PRECISION)
 
 //! Tests whether 2 precise points are equal.
 //! @param pointP_a Pointer to the first precise point
 //! @param pointP_b Pointer to the second precise point
 //! @return `true` if both points are equal, `false` if not.
-bool gpointprecise_equal(const GPointPrecise * const pointP_a,
-                         const GPointPrecise * const pointP_b);
+bool gpointprecise_equal(const GPointPrecise *const pointP_a, const GPointPrecise *const pointP_b);
 
-GPointPrecise gpointprecise_midpoint(const GPointPrecise a,
-                                     const GPointPrecise b);
+GPointPrecise gpointprecise_midpoint(const GPointPrecise a, const GPointPrecise b);
 
-GPointPrecise gpointprecise_add(const GPointPrecise a,
-                                const GPointPrecise b);
-GPointPrecise gpointprecise_sub(const GPointPrecise a,
-                                const GPointPrecise b);
+GPointPrecise gpointprecise_add(const GPointPrecise a, const GPointPrecise b);
+GPointPrecise gpointprecise_sub(const GPointPrecise a, const GPointPrecise b);
 
 //! Represents a vector in a 2-dimensional coordinate system.
 typedef struct GVector {
@@ -382,8 +374,8 @@ typedef struct GVector {
 
 #define GVector(dx, dy) ((GVector){(dx), (dy)})
 
-#define GVECTOR_PRECISE_MAX            GPOINT_PRECISE_MAX
-#define GVECTOR_PRECISE_PRECISION      GPOINT_PRECISE_PRECISION
+#define GVECTOR_PRECISE_MAX GPOINT_PRECISE_MAX
+#define GVECTOR_PRECISE_PRECISION GPOINT_PRECISE_PRECISION
 
 //! Represents a transformed vector in a 2-dimensional coordinate system.
 typedef struct GVectorPrecise {
@@ -397,21 +389,21 @@ typedef struct GVectorPrecise {
 #define GVectorPrecise(dx, dy) ((GVectorPrecise){{(dx)}, {(dy)}})
 
 //! Convenience macro to convert from GVector to GVectorPrecise.
-#define GVectorPreciseFromGVector(vector) \
-        GVectorPrecise((vector.dx % GVECTOR_PRECISE_MAX) << GVECTOR_PRECISE_PRECISION, \
-                      (vector.dy % GVECTOR_PRECISE_MAX) << GVECTOR_PRECISE_PRECISION)
+#define GVectorPreciseFromGVector(vector)                                        \
+  GVectorPrecise((vector.dx % GVECTOR_PRECISE_MAX) << GVECTOR_PRECISE_PRECISION, \
+                 (vector.dy % GVECTOR_PRECISE_MAX) << GVECTOR_PRECISE_PRECISION)
 
 //! Convenience macro to convert from GVectorPrecise to GVector.
-#define GVectorFromGVectorPrecise(vectorP) \
-        GVector(vectorP.dx.raw_value >> GVECTOR_PRECISE_PRECISION, \
-                vectorP.dy.raw_value >> GVECTOR_PRECISE_PRECISION)
+#define GVectorFromGVectorPrecise(vectorP)                   \
+  GVector(vectorP.dx.raw_value >> GVECTOR_PRECISE_PRECISION, \
+          vectorP.dy.raw_value >> GVECTOR_PRECISE_PRECISION)
 
 //! Tests whether 2 precise vectors are equal.
 //! @param vectorP_a Pointer to the first precise vector
 //! @param vectorP_b Pointer to the second precise vector
 //! @return `true` if both vectors are equal, `false` if not.
-bool gvectorprecise_equal(const GVectorPrecise * const vectorP_a,
-                          const GVectorPrecise * const vectorP_b);
+bool gvectorprecise_equal(const GVectorPrecise *const vectorP_a,
+                          const GVectorPrecise *const vectorP_b);
 
 typedef struct GSizePrecise {
   Fixed_S16_3 w;
@@ -424,11 +416,11 @@ typedef struct GRectPrecise {
 } GRectPrecise;
 
 static inline Fixed_S16_3 grect_precise_get_max_x(const GRectPrecise *rect) {
-  return (Fixed_S16_3) {.raw_value = rect->origin.x.raw_value + rect->size.w.raw_value};
+  return (Fixed_S16_3){.raw_value = rect->origin.x.raw_value + rect->size.w.raw_value};
 }
 
 static inline Fixed_S16_3 grect_precise_get_max_y(const GRectPrecise *rect) {
-  return (Fixed_S16_3) {.raw_value = rect->origin.y.raw_value + rect->size.h.raw_value};
+  return (Fixed_S16_3){.raw_value = rect->origin.y.raw_value + rect->size.h.raw_value};
 }
 
 void grect_precise_standardize(GRectPrecise *rect);
@@ -456,9 +448,7 @@ typedef GSize GSizeReturn;
 //! Adds two GSizes together
 //! @note In some cases \ref gsize_add_eq uses less code space, please try both functions
 //! @see gsize_add_eq
-static inline GSize gsize_add(const GSize a, const GSize b) {
-  return GSize(a.w + b.w, a.h + b.h);
-}
+static inline GSize gsize_add(const GSize a, const GSize b) { return GSize(a.w + b.w, a.h + b.h); }
 
 //! @internal
 //! Mutably adds a GSize to the first
@@ -511,37 +501,36 @@ typedef GRect GRectReturn;
 //! Convenience macro to make a GRect of ((0, 0), (0, 0)).
 #define GRectZero GRect(0, 0, 0, 0)
 
-#define GRECT_PRINTF_FORMAT "{ %"PRId16", %"PRId16" } { %"PRId16", %"PRId16" }"
+#define GRECT_PRINTF_FORMAT "{ %" PRId16 ", %" PRId16 " } { %" PRId16 ", %" PRId16 " }"
 #define GRECT_PRINTF_FORMAT_EXPLODE(r) (r).origin.x, (r).origin.y, (r).size.w, (r).size.h
 
 #define DISP_FRAME (GRect(0, 0, DISP_COLS, DISP_ROWS))
 
 //! @internal
 static inline GRect grect_scalar_lshift(const GRect rect, int8_t s) {
-  return (GRect) {
-    .origin.x = rect.origin.x << s,
-    .origin.y = rect.origin.y << s,
-    .size.w = rect.size.w << s,
-    .size.h = rect.size.h << s,
+  return (GRect){
+      .origin.x = rect.origin.x << s,
+      .origin.y = rect.origin.y << s,
+      .size.w = rect.size.w << s,
+      .size.h = rect.size.h << s,
   };
 }
 
 //! @internal
 static inline GRect grect_scalar_rshift(const GRect rect, int8_t s) {
-  return (GRect) {
-    .origin.x = rect.origin.x >> s,
-    .origin.y = rect.origin.y >> s,
-    .size.w = rect.size.w >> s,
-    .size.h = rect.size.h >> s,
+  return (GRect){
+      .origin.x = rect.origin.x >> s,
+      .origin.y = rect.origin.y >> s,
+      .size.w = rect.size.w >> s,
+      .size.h = rect.size.h >> s,
   };
 }
 
 //! @internal
 //! Resizes a GPoint from one GSize to another
 static inline GPoint gpoint_scale_by_gsize(GPoint point, GSize from, GSize to) {
-  return GPoint(
-      (from.w != 0) ? (((int32_t) point.x * to.w) / from.w) : 0,
-      (from.h != 0) ? (((int32_t) point.y * to.h) / from.h) : 0);
+  return GPoint((from.w != 0) ? (((int32_t)point.x * to.w) / from.w) : 0,
+                (from.h != 0) ? (((int32_t)point.y * to.h) / from.h) : 0);
 }
 
 //! @internal
@@ -554,14 +543,14 @@ static inline GRect grect_scalar_expand(GRect box, int16_t x) {
 //! @param rect_a Pointer to the first rectangle
 //! @param rect_b Pointer to the second rectangle
 //! @return `true` if both rectangles are equal, `false` if not.
-bool grect_equal(const GRect* const rect_a, const GRect* const rect_b);
+bool grect_equal(const GRect *const rect_a, const GRect *const rect_b);
 
 //! Tests whether the size of the rectangle is (0, 0).
 //! @param rect Pointer to the rectangle
 //! @return `true` if the rectangle its size is (0, 0), or `false` if not.
 //! @note If the width and/or height of a rectangle is negative, this
 //! function will return `true`!
-bool grect_is_empty(const GRect* const rect);
+bool grect_is_empty(const GRect *const rect);
 
 //! Converts a rectangle's values so that the components of its size
 //! (width and/or height) are both positive. In the width and/or height are negative,
@@ -575,7 +564,7 @@ void grect_standardize(GRect *rect);
 //! @param[in,out] rect_to_clip The rectangle that needs to be clipped (in place).
 //! @param rect_clipper The rectangle of which the edges will serve as "scissors"
 //! in order to trim `rect_to_clip`.
-void grect_clip(GRect * const rect_to_clip, const GRect * const rect_clipper);
+void grect_clip(GRect *const rect_to_clip, const GRect *const rect_clipper);
 
 //! Calculate the smallest rectangle that contains both r1 and r2.
 GRect grect_union(const GRect *r1, const GRect *r2);
@@ -594,7 +583,8 @@ GPoint grect_center_point(const GRect *rect);
 
 //! Reduce the width and height of a rectangle by insetting each of the edges with
 //! a fixed inset. The returned rectangle will be centered relative to the input rectangle.
-//! @note The function will trip an assertion if the crop yields a rectangle with negative width or height.
+//! @note The function will trip an assertion if the crop yields a rectangle with negative width or
+//! height.
 //! @param rect The rectangle that will be inset
 //! @param crop_size_px The inset by which each of the rectangle will be inset.
 //! A positive inset value results in a smaller rectangle, while negative inset value results
@@ -623,20 +613,16 @@ typedef struct {
 } GEdgeInsets;
 
 //! helper for \ref GEdgeInsets macro
-#define GEdgeInsets4(t, r, b, l) \
-  ((GEdgeInsets){.top = t, .right = r, .bottom = b, .left = l})
+#define GEdgeInsets4(t, r, b, l) ((GEdgeInsets){.top = t, .right = r, .bottom = b, .left = l})
 
 //! helper for \ref GEdgeInsets macro
-#define GEdgeInsets3(t, rl, b) \
-  ((GEdgeInsets){.top = t, .right = rl, .bottom = b, .left = rl})
+#define GEdgeInsets3(t, rl, b) ((GEdgeInsets){.top = t, .right = rl, .bottom = b, .left = rl})
 
 //! helper for \ref GEdgeInsets macro
-#define GEdgeInsets2(tb, rl) \
-  ((GEdgeInsets){.top = tb, .right = rl, .bottom = tb, .left = rl})
+#define GEdgeInsets2(tb, rl) ((GEdgeInsets){.top = tb, .right = rl, .bottom = tb, .left = rl})
 
 //! helper for \ref GEdgeInsets macro
-#define GEdgeInsets1(trbl) \
-  ((GEdgeInsets){.top = trbl, .right = trbl, .bottom = trbl, .left = trbl})
+#define GEdgeInsets1(trbl) ((GEdgeInsets){.top = trbl, .right = trbl, .bottom = trbl, .left = trbl})
 
 //! helper for \ref GEdgeInsets macro
 #define GEdgeInsetsN(_1, _2, _3, _4, NAME, ...) NAME
@@ -672,17 +658,13 @@ GRect grect_inset(GRect rect, GEdgeInsets insets);
 //! Convenience function to compute the max x-coordinate of a given rectangle.
 //! @param rect The rectangle for which to calculate the max x-coordinate.
 //! @return The max x-coordinate of the rect
-static inline int16_t grect_get_max_x(const GRect *rect) {
-  return rect->origin.x + rect->size.w;
-}
+static inline int16_t grect_get_max_x(const GRect *rect) { return rect->origin.x + rect->size.w; }
 
 //! Convenience function to compute the max y-coordinate of a given rectangle.
 //! @internal
 //! @param rect The rectangle for which to calculate the max y-coordinate.
 //! @return The max y-coordinate of the rect
-static inline int16_t grect_get_max_y(const GRect *rect) {
-  return rect->origin.y + rect->size.h;
-}
+static inline int16_t grect_get_max_y(const GRect *rect) { return rect->origin.y + rect->size.h; }
 
 //! @internal
 //! Convenience function to return the length of the longest side of a rect
@@ -713,7 +695,7 @@ typedef struct GBoxModel {
 
 //! The format of a GBitmap can either be 1-bit or 8-bit.
 typedef enum GBitmapFormat {
-  GBitmapFormat1Bit = 0, //<! 1-bit black and white. 0 = black, 1 = white.
+  GBitmapFormat1Bit = 0,  //<! 1-bit black and white. 0 = black, 1 = white.
   GBitmapFormat8Bit,      //<! 6-bit color + 2 bit alpha channel. See \ref GColor8 for pixel format.
   GBitmapFormat1BitPalette,
   GBitmapFormat2BitPalette,
@@ -731,7 +713,7 @@ typedef enum GBitmapFormat {
 #define GBITMAP_VERSION_1 1
 #define GBITMAP_VERSION_CURRENT GBITMAP_VERSION_1
 
-typedef struct __attribute__ ((__packed__)) GBitmapLegacy2 {
+typedef struct __attribute__((__packed__)) GBitmapLegacy2 {
   //! Pointer to the address where the image data lives
   void *addr;
   //! @note The number of bytes per row may have restrictions depending on the format:
@@ -749,10 +731,10 @@ typedef struct __attribute__ ((__packed__)) GBitmapLegacy2 {
 
     struct {
       //! Is .addr heap allocated? Do we need to free .addr in gbitmap_deinit?
-      bool is_heap_allocated:1;
-      uint16_t reserved:11;
-       //! Version of bitmap structure and image data.
-      uint16_t version:4;
+      bool is_heap_allocated : 1;
+      uint16_t reserved : 11;
+      //! Version of bitmap structure and image data.
+      uint16_t version : 4;
     };
   };
 
@@ -762,7 +744,6 @@ typedef struct __attribute__ ((__packed__)) GBitmapLegacy2 {
   GRect bounds;
 } GBitmapLegacy2;
 
-
 //! Description of a single data row in the pixel data of a bitmap
 //! @note This data type describes the actual pixel data of a bitmap and does not respect the
 //!       bitmap's bounds.
@@ -770,36 +751,36 @@ typedef struct __attribute__ ((__packed__)) GBitmapLegacy2 {
 //! @see \ref gbitmap_get_data
 //! @see \ref gbitmap_get_bounds
 typedef struct {
-    //! Address of the byte at column 0 of a given data row in a bitmap. Use this to calculate the
-    //! memory address of a pixel. For GBitmapFormat8BitCircular or GBitmapFormat8Bit this would
-    //! be: `uint8_t *pixel_addr = row_info.addr + x`.
-    //! Note that this byte can be outside of the valid range for this row.
-    //! For example: The first valid pixel (`min_x=76`) of a row might start at 76 bytes after the
-    //! given data pointer (assuming that 1 pixel is represented as 1 byte as in
-    //! GBitmapFormat8BitCircular or GBitmapFormat8Bit).
-    uint8_t *data;
-    //! The absolute column of a first valid pixel for a given data row.
-    int16_t min_x;
-    //! The absolute column of the last valid pixel for a given data row.
-    //! For optimization reasons the result can be anywhere between
-    //! grect_get_max_x(bitmap_bounds) - 1 and the physical data boundary.
-    int16_t max_x;
+  //! Address of the byte at column 0 of a given data row in a bitmap. Use this to calculate the
+  //! memory address of a pixel. For GBitmapFormat8BitCircular or GBitmapFormat8Bit this would
+  //! be: `uint8_t *pixel_addr = row_info.addr + x`.
+  //! Note that this byte can be outside of the valid range for this row.
+  //! For example: The first valid pixel (`min_x=76`) of a row might start at 76 bytes after the
+  //! given data pointer (assuming that 1 pixel is represented as 1 byte as in
+  //! GBitmapFormat8BitCircular or GBitmapFormat8Bit).
+  uint8_t *data;
+  //! The absolute column of a first valid pixel for a given data row.
+  int16_t min_x;
+  //! The absolute column of the last valid pixel for a given data row.
+  //! For optimization reasons the result can be anywhere between
+  //! grect_get_max_x(bitmap_bounds) - 1 and the physical data boundary.
+  int16_t max_x;
 } GBitmapDataRowInfo;
 
 typedef struct BitmapInfo {
   //! Is .addr heap allocated? Do we need to free .addr in gbitmap_deinit?
-  bool is_bitmap_heap_allocated:1;
+  bool is_bitmap_heap_allocated : 1;
 
-  GBitmapFormat format:3;
+  GBitmapFormat format : 3;
 
-  bool is_palette_heap_allocated:1;
+  bool is_palette_heap_allocated : 1;
 
-  uint16_t reserved:7;
+  uint16_t reserved : 7;
   //! Version of bitmap structure and image data.
-  uint8_t version:4;
+  uint8_t version : 4;
 } BitmapInfo;
 
-typedef struct __attribute__ ((__packed__)) GBitmap {
+typedef struct __attribute__((__packed__)) GBitmap {
   //! Pointer to the address where the image data lives
   void *addr;
   //! @note The number of bytes per row may have restrictions depending on the format:
@@ -911,7 +892,7 @@ GBitmapFormat gbitmap_get_format(const GBitmap *bitmap);
 //! @return pointer to the raw image data for the GBitmap
 //! @see \ref gbitmap_get_bytes_per_row
 //! @see \ref GBitmap
-uint8_t* gbitmap_get_data(const GBitmap *bitmap);
+uint8_t *gbitmap_get_data(const GBitmap *bitmap);
 
 //! Set the bitmap data for the given \ref GBitmap.
 //! @param bitmap A pointer to the GBitmap to set data to
@@ -922,14 +903,14 @@ uint8_t* gbitmap_get_data(const GBitmap *bitmap);
 //! \ref GBitmapFormat1Bit must have a row size as a multiple of 4 bytes.
 //! @param free_on_destroy Set whether the data should be freed when the GBitmap is destroyed.
 //! @see \ref gbitmap_destroy
-void gbitmap_set_data(GBitmap *bitmap, uint8_t *data, GBitmapFormat format,
-                     uint16_t row_size_bytes, bool free_on_destroy);
+void gbitmap_set_data(GBitmap *bitmap, uint8_t *data, GBitmapFormat format, uint16_t row_size_bytes,
+                      bool free_on_destroy);
 
 //! Get the palette for the given \ref GBitmap.
 //! @param bitmap A pointer to the GBitmap to get the palette from.
 //! @return Pointer to a \ref GColor array containing the palette colors.
 //! @see \ref gbitmap_set_palette
-GColor* gbitmap_get_palette(const GBitmap *bitmap);
+GColor *gbitmap_get_palette(const GBitmap *bitmap);
 
 //! Set the palette for the given \ref GBitmap.
 //! @param bitmap A pointer to the GBitmap to set the palette to
@@ -971,7 +952,7 @@ void gbitmap_init_with_data(GBitmap *bitmap, const uint8_t *data);
 //! lifetime of this GBitmap.
 //! @return A pointer to the \ref GBitmap. `NULL` if the \ref GBitmap could not
 //! be created
-GBitmap* gbitmap_create_with_data(const uint8_t *data);
+GBitmap *gbitmap_create_with_data(const uint8_t *data);
 
 //! @internal
 uint16_t gbitmap_format_get_row_size_bytes(int16_t width, GBitmapFormat format);
@@ -993,7 +974,7 @@ void gbitmap_init_as_sub_bitmap(GBitmap *sub_bitmap, const GBitmap *base_bitmap,
 //! bounds of the base bitmap will be used to clip `sub_rect`.
 //! @return A pointer to the \ref GBitmap. `NULL` if the GBitmap could not
 //! be created
-GBitmap* gbitmap_create_as_sub_bitmap(const GBitmap *base_bitmap, GRect sub_rect);
+GBitmap *gbitmap_create_as_sub_bitmap(const GBitmap *base_bitmap, GRect sub_rect);
 
 //! Creates a new blank GBitmap on the heap initialized to zeroes.
 //! In the case that the format indicates a palettized bitmap, a palette of appropriate size will
@@ -1003,8 +984,8 @@ GBitmap* gbitmap_create_as_sub_bitmap(const GBitmap *base_bitmap, GRect sub_rect
 //! @param format The \ref GBitmapFormat the created image should be in.
 //! @return A pointer to the \ref GBitmap. `NULL` if the \ref GBitmap could not
 //! be created
-GBitmap* gbitmap_create_blank(GSize size, GBitmapFormat format);
-GBitmapLegacy2* gbitmap_create_blank_2bit(GSize size);
+GBitmap *gbitmap_create_blank(GSize size, GBitmapFormat format);
+GBitmapLegacy2 *gbitmap_create_blank_2bit(GSize size);
 
 //! Creates a new blank GBitmap on the heap, initialized to zeroes, and assigns it the given
 //! palette.
@@ -1019,8 +1000,8 @@ GBitmapLegacy2* gbitmap_create_blank_2bit(GSize size);
 //! @param free_on_destroy Set whether the palette data should be freed along with the bitmap data
 //! when the GBitmap is destroyed.
 //! @return A Pointer to the \ref GBitmap. `NULL` if the \ref GBitmap could not be created.
-GBitmap* gbitmap_create_blank_with_palette(GSize size, GBitmapFormat format,
-                                           GColor *palette, bool free_on_destroy);
+GBitmap *gbitmap_create_blank_with_palette(GSize size, GBitmapFormat format, GColor *palette,
+                                           bool free_on_destroy);
 
 //! Given a 1-bit GBitmap, create a new bitmap of format GBitmapFormat1BitPalette.
 //! The new data buffer is allocated on the heap, and a 2-color palette is allocated as well.
@@ -1029,17 +1010,17 @@ GBitmap* gbitmap_create_blank_with_palette(GSize size, GBitmapFormat format,
 //! @returns The newly created 1-bit palettized GBitmap, or NULL if there is not sufficient space.
 //! @note The new bitmap does not depend on any data from src_bitmap, so src_bitmap can be freed
 //! without worry.
-GBitmap* gbitmap_create_palettized_from_1bit(const GBitmap *src_bitmap);
+GBitmap *gbitmap_create_palettized_from_1bit(const GBitmap *src_bitmap);
 
 //! @internal
-bool gbitmap_init_with_resource(GBitmap* bitmap, uint32_t resource_id);
+bool gbitmap_init_with_resource(GBitmap *bitmap, uint32_t resource_id);
 
 //! Creates a new \ref GBitmap on the heap using a Pebble image file stored as a resource.
 //! The resulting GBitmap must be destroyed using \ref gbitmap_destroy().
 //! @param resource_id The ID of the bitmap resource to load
 //! @return A pointer to the \ref GBitmap. `NULL` if the GBitmap could not
 //! be created
-GBitmap* gbitmap_create_with_resource(uint32_t resource_id);
+GBitmap *gbitmap_create_with_resource(uint32_t resource_id);
 
 //! @internal
 GBitmap *gbitmap_create_with_resource_system(ResAppNum app_num, uint32_t resource_id);
@@ -1048,21 +1029,22 @@ GBitmap *gbitmap_create_with_resource_system(ResAppNum app_num, uint32_t resourc
 //! @see gbitmap_init_with_resource
 //! @param app_num The app's resource bank number
 //! @return true if we were successful, false otherwise
-bool gbitmap_init_with_resource_system(GBitmap* bitmap, ResAppNum app_num, uint32_t resource_id);
+bool gbitmap_init_with_resource_system(GBitmap *bitmap, ResAppNum app_num, uint32_t resource_id);
 
 //! @internal
-//! Deinitialize a bitmap structure. This must be called for every bitmap that's been created with gbitmap_init_*
-void gbitmap_deinit(GBitmap* bitmap);
+//! Deinitialize a bitmap structure. This must be called for every bitmap that's been created with
+//! gbitmap_init_*
+void gbitmap_deinit(GBitmap *bitmap);
 
 //! Destroy a \ref GBitmap.
 //! This must be called for every bitmap that's been created with gbitmap_create_*
 //!
-//! This function will also free the memory of the bitmap data (bitmap->addr) if the bitmap was created with \ref gbitmap_create_blank()
-//! or \ref gbitmap_create_with_resource().
+//! This function will also free the memory of the bitmap data (bitmap->addr) if the bitmap was
+//! created with \ref gbitmap_create_blank() or \ref gbitmap_create_with_resource().
 //!
 //! If the GBitmap was created with \ref gbitmap_create_with_data(), you must release the memory
 //! after calling gbitmap_destroy().
-void gbitmap_destroy(GBitmap* bitmap);
+void gbitmap_destroy(GBitmap *bitmap);
 
 //! Values to specify how two things should be aligned relative to each other.
 //! ![](galign.png)
@@ -1267,15 +1249,14 @@ typedef void (*GDrawRawAssignHorizontalLineFunc)(GContext *ctx, int16_t y, Fixed
 typedef void (*GDrawRawAssignVerticalLineFunc)(GContext *ctx, int16_t x, Fixed_S16_3 y1,
                                                Fixed_S16_3 y2, GColor color);
 
-typedef void (*GDrawRawBlendHorizontalLineFunc)(GContext *ctx, int16_t y, int16_t x1,
-                                                int16_t x2, GColor color);
+typedef void (*GDrawRawBlendHorizontalLineFunc)(GContext *ctx, int16_t y, int16_t x1, int16_t x2,
+                                                GColor color);
 
-typedef void (*GDrawRawBlendVerticalLineFunc)(GContext *ctx, int16_t x, int16_t y1,
-                                              int16_t y2, GColor color);
+typedef void (*GDrawRawBlendVerticalLineFunc)(GContext *ctx, int16_t x, int16_t y1, int16_t y2,
+                                              GColor color);
 
-typedef void (*GDrawRawAssignHorizontalLineDeltaFunc)(GContext *ctx, int16_t y,
-                                                      Fixed_S16_3 x1, Fixed_S16_3 x2,
-                                                      uint8_t left_aa_offset,
+typedef void (*GDrawRawAssignHorizontalLineDeltaFunc)(GContext *ctx, int16_t y, Fixed_S16_3 x1,
+                                                      Fixed_S16_3 x2, uint8_t left_aa_offset,
                                                       uint8_t right_aa_offset,
                                                       int16_t clip_box_min_x,
                                                       int16_t clip_box_max_x, GColor color);
@@ -1296,7 +1277,8 @@ typedef struct GDrawMask GDrawMask;
 typedef struct PACKED {
   //! The box relative to bitmap's bounds, that graphics functions MUST use to clip what they draw
   GRect clip_box;
-  //! The box relative to bitmap's bounds, that graphics functions MUST use as their coordinate space
+  //! The box relative to bitmap's bounds, that graphics functions MUST use as their coordinate
+  //! space
   GRect drawing_box;
   //! Line drawing functions MUST use this as line color
   GColor stroke_color;
@@ -1309,14 +1291,14 @@ typedef struct PACKED {
   //! on Basalt with the compositing mode as GCompOpOr.
   GColor tint_color;
   //! Bitmap compositing functions MUST use this as the compositing mode
-  GCompOp compositing_mode:3;
+  GCompOp compositing_mode : 3;
 #if PBL_COLOR
   //! Antialiasing stroke enabled or not; default value is false
-  bool antialiased:1;
+  bool antialiased : 1;
 #endif
   //! When true, text rendering routines will try to avoid orphans
   //! This will be enabled for every non-external app in graphics_context_init()
-  bool avoid_text_orphans:1;
+  bool avoid_text_orphans : 1;
   //! Stroke width applied to drawing routines; default value is 1; accepted range 1..255
   uint8_t stroke_width;
   //! Struct of raw drawing function pointers; default value is g_default_draw_implementation
@@ -1336,7 +1318,7 @@ typedef Fixed_S32_16 GTransformNumber;
 //! However, internally we do not need to store the last row since we only support two
 //! dimensions (x,y). Thus the last row is omitted from the internal storage.
 //! Data values are in 16.16 fixed point representation
-typedef struct __attribute__ ((__packed__)) GTransform {
+typedef struct __attribute__((__packed__)) GTransform {
   GTransformNumber a;
   GTransformNumber b;
   GTransformNumber c;
@@ -1396,4 +1378,4 @@ typedef struct GRangeVertical {
 } GRangeVertical;
 
 //! @internal
-void grange_clip(GRange *range_to_clip, const GRange * const range_clipper);
+void grange_clip(GRange *range_to_clip, const GRange *const range_clipper);

@@ -5,10 +5,6 @@
 
 #include "syscall/syscall.h"
 
-AppExitReason app_exit_reason_get(void) {
-  return sys_process_get_exit_reason();
-}
+AppExitReason app_exit_reason_get(void) { return sys_process_get_exit_reason(); }
 
-void app_exit_reason_set(AppExitReason exit_reason) {
-  sys_process_set_exit_reason(exit_reason);
-}
+void app_exit_reason_set(AppExitReason exit_reason) { sys_process_set_exit_reason(exit_reason); }

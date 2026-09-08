@@ -83,11 +83,11 @@ void test_graphics_colors__inverted_readable_color(void) {
   // transparent colors result in transparen - who has a better idea?
   cl_assert_equal_i(GColorClearARGB8, fun(GColorClear).argb);
 
-//  // obvious cases
+  //  // obvious cases
   cl_assert_equal_i(GColorWhiteARGB8, fun(GColorBlack).argb);
   cl_assert_equal_i(GColorBlackARGB8, fun(GColorWhite).argb);
 
-//  // expectation as derived from Appfaces_all.psd
+  //  // expectation as derived from Appfaces_all.psd
   cl_assert_equal_i(GColorWhiteARGB8, fun(GColorFromHEX(0xff0000)).argb);
   cl_assert_equal_i(GColorBlackARGB8, fun(GColorFromHEX(0x00aaff)).argb);
   cl_assert_equal_i(GColorWhiteARGB8, fun(GColorFromHEX(0xaa0055)).argb);
@@ -97,14 +97,14 @@ void test_graphics_colors__inverted_readable_color(void) {
   cl_assert_equal_i(GColorBlackARGB8, fun(GColorFromHEX(0xff5500)).argb);
   cl_assert_equal_i(GColorBlackARGB8, fun(GColorFromHEX(0xaaaaaa)).argb);
 
-//  // expectation as derived from Appfaces_generic_colors.psd
+  //  // expectation as derived from Appfaces_generic_colors.psd
   cl_assert_equal_i(GColorWhiteARGB8, fun(GColorFromHEX(0x0000aa)).argb);
   cl_assert_equal_i(GColorWhiteARGB8, fun(GColorFromHEX(0x005500)).argb);
   cl_assert_equal_i(GColorWhiteARGB8, fun(GColorFromHEX(0x550055)).argb);
   cl_assert_equal_i(GColorWhiteARGB8, fun(GColorFromHEX(0xaa0000)).argb);
 
   // contradiction with previous case - oh dear...
-//  cl_assert_equal_i(GColorWhiteARGB8, fun(GColorFromHEX(0xff5500)).argb);
+  //  cl_assert_equal_i(GColorWhiteARGB8, fun(GColorFromHEX(0xff5500)).argb);
 
   cl_assert_equal_i(GColorWhiteARGB8, fun(GColorFromHEX(0xaa5500)).argb);
 }
@@ -197,31 +197,27 @@ static void prv_test_tint_using_luminance_and_perform_lookup_using_color_luminan
 
 void test_graphics_colors__tint_using_luminance_and_perform_lookup_using_color_luminance(void) {
   // Passing in NULL for lookup_table should assert
-  cl_assert_passert(gcolor_perform_lookup_using_color_luminance_and_multiply_alpha(GColorRed,
-                                                                                   NULL));
+  cl_assert_passert(
+      gcolor_perform_lookup_using_color_luminance_and_multiply_alpha(GColorRed, NULL));
 
   // A src_color of yellow should have a luminance that picks white from lookup_table
   // initialized with a tint_color of black
-  prv_test_tint_using_luminance_and_perform_lookup_using_color_luminance(GColorYellow,
-                                                                         GColorBlack,
+  prv_test_tint_using_luminance_and_perform_lookup_using_color_luminance(GColorYellow, GColorBlack,
                                                                          GColorWhite);
 
   // A src_color of red should have a luminance that picks light gray from lookup_table initialized
   // with a tint_color of black
-  prv_test_tint_using_luminance_and_perform_lookup_using_color_luminance(GColorRed,
-                                                                         GColorBlack,
+  prv_test_tint_using_luminance_and_perform_lookup_using_color_luminance(GColorRed, GColorBlack,
                                                                          GColorLightGray);
 
   // A src_color of blue should have a luminance that picks dark gray from lookup_table
   // initialized with a tint_color of black
-  prv_test_tint_using_luminance_and_perform_lookup_using_color_luminance(GColorBlue,
-                                                                         GColorBlack,
+  prv_test_tint_using_luminance_and_perform_lookup_using_color_luminance(GColorBlue, GColorBlack,
                                                                          GColorDarkGray);
 
   // A src_color of black should have a luminance that picks black from lookup_table initialized
   // with a tint_color of black
-  prv_test_tint_using_luminance_and_perform_lookup_using_color_luminance(GColorBlack,
-                                                                         GColorBlack,
+  prv_test_tint_using_luminance_and_perform_lookup_using_color_luminance(GColorBlack, GColorBlack,
                                                                          GColorBlack);
 }
 

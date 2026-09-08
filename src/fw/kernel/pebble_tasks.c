@@ -18,7 +18,7 @@
 #include "pbl/kernel/debug.h"
 
 static struct pbl_thread s_threads[NumPebbleTask];
-struct pbl_thread *g_task_threads[NumPebbleTask] KERNEL_READONLY_DATA = { 0 };
+struct pbl_thread *g_task_threads[NumPebbleTask] KERNEL_READONLY_DATA = {0};
 
 // Cycles consumed by tasks that have already been destroyed in each slot.
 // Captured at unregister time so the analytics heartbeat can keep accounting
@@ -53,7 +53,7 @@ void pebble_task_unregister(PebbleTask task) {
   s_dead_task_cycles[task] += cycles;
 }
 
-const char* pebble_task_get_name(PebbleTask task) {
+const char *pebble_task_get_name(PebbleTask task) {
   if (task >= NumPebbleTask) {
     if (task == PebbleTask_Unknown) {
       return "Unknown";
@@ -68,31 +68,31 @@ const char* pebble_task_get_name(PebbleTask task) {
   return pbl_thread_name(thread);
 }
 
-// NOTE: The logging support calls toupper() this character if the task is currently running privileged, so
-//  these identifiers should be all lower case and case-insensitive. 
+// NOTE: The logging support calls toupper() this character if the task is currently running
+// privileged, so
+//  these identifiers should be all lower case and case-insensitive.
 char pebble_task_get_char(PebbleTask task) {
   switch (task) {
-  case PebbleTask_KernelMain:
-    return 'm';
-  case PebbleTask_KernelBackground:
-    return 's';
-  case PebbleTask_Worker:
-    return 'w';
-  case PebbleTask_App:
-    return 'a';
-  case PebbleTask_BTHost:
-    return 'b';
-  case PebbleTask_BTController:
-    return 'c';
-  case PebbleTask_BTHCI:
-    return 'd';
-  case PebbleTask_NewTimers:
-    return 't';
-  case PebbleTask_PULSE:
-    return 'p';
-  case NumPebbleTask:
-  case PebbleTask_Unknown:
-    ;
+    case PebbleTask_KernelMain:
+      return 'm';
+    case PebbleTask_KernelBackground:
+      return 's';
+    case PebbleTask_Worker:
+      return 'w';
+    case PebbleTask_App:
+      return 'a';
+    case PebbleTask_BTHost:
+      return 'b';
+    case PebbleTask_BTController:
+      return 'c';
+    case PebbleTask_BTHCI:
+      return 'd';
+    case PebbleTask_NewTimers:
+      return 't';
+    case PebbleTask_PULSE:
+      return 'p';
+    case NumPebbleTask:
+    case PebbleTask_Unknown:;
   }
 
   return '?';
@@ -106,7 +106,7 @@ PebbleTask pebble_task_get_task_for_thread(const struct pbl_thread *thread) {
   if (thread == NULL) {
     return PebbleTask_Unknown;
   }
-  for (int i = 0; i < (int) ARRAY_LENGTH(g_task_threads); ++i) {
+  for (int i = 0; i < (int)ARRAY_LENGTH(g_task_threads); ++i) {
     if (g_task_threads[i] == thread) {
       return i;
     }
@@ -114,9 +114,7 @@ PebbleTask pebble_task_get_task_for_thread(const struct pbl_thread *thread) {
   return PebbleTask_Unknown;
 }
 
-struct pbl_thread *pebble_task_get_thread(PebbleTask task) {
-  return g_task_threads[task];
-}
+struct pbl_thread *pebble_task_get_thread(PebbleTask task) { return g_task_threads[task]; }
 
 static uint16_t prv_task_get_stack_free(PebbleTask task) {
   // If task doesn't exist, return a dummy with max value
@@ -134,9 +132,12 @@ void pebble_task_suspend(PebbleTask task) {
 }
 
 void pbl_analytics_external_collect_stack_free(void) {
-  PBL_ANALYTICS_SET_UNSIGNED(stack_free_kernel_main_bytes, prv_task_get_stack_free(PebbleTask_KernelMain));
-  PBL_ANALYTICS_SET_UNSIGNED(stack_free_kernel_background_bytes, prv_task_get_stack_free(PebbleTask_KernelBackground));
-  PBL_ANALYTICS_SET_UNSIGNED(stack_free_newtimers_bytes, prv_task_get_stack_free(PebbleTask_NewTimers));
+  PBL_ANALYTICS_SET_UNSIGNED(stack_free_kernel_main_bytes,
+                             prv_task_get_stack_free(PebbleTask_KernelMain));
+  PBL_ANALYTICS_SET_UNSIGNED(stack_free_kernel_background_bytes,
+                             prv_task_get_stack_free(PebbleTask_KernelBackground));
+  PBL_ANALYTICS_SET_UNSIGNED(stack_free_newtimers_bytes,
+                             prv_task_get_stack_free(PebbleTask_NewTimers));
   PBL_ANALYTICS_SET_UNSIGNED(stack_free_app_syscall_bytes, syscall_app_stack_free_bytes());
   PBL_ANALYTICS_SET_UNSIGNED(stack_free_worker_syscall_bytes, syscall_worker_stack_free_bytes());
 }
@@ -200,8 +201,7 @@ void pbl_analytics_external_collect_task_cpu_stats(void) {
 
   uint32_t idle_delta = curr_idle_run_time - s_prev_idle_run_time;
   s_prev_idle_run_time = curr_idle_run_time;
-  uint32_t idle_pct =
-      delta_total ? (uint32_t)(((uint64_t)idle_delta * 10000U) / delta_total) : 0;
+  uint32_t idle_pct = delta_total ? (uint32_t)(((uint64_t)idle_delta * 10000U) / delta_total) : 0;
   PBL_ANALYTICS_SET_UNSIGNED(task_cpu_idle_pct, idle_pct);
 }
 
@@ -316,12 +316,7 @@ void pebble_task_configure_idle_task(void) {
                               false /* allow_user_access */);
   mpu_init_region_from_region(&worker_region, memory_layout_get_worker_region(),
                               false /* allow_user_access */);
-  const MpuRegion *regions[PBL_THREAD_MAX_MEM_REGIONS] = {
-    &app_region,
-    &worker_region,
-    NULL,
-    NULL
-  };
+  const MpuRegion *regions[PBL_THREAD_MAX_MEM_REGIONS] = {&app_region, &worker_region, NULL, NULL};
   pbl_thread_regions_set(pbl_thread_idle(), regions);
 }
 
@@ -334,10 +329,7 @@ void pbl_thread_stack_overflow(struct pbl_thread *thread, const char *name) {
   // a reboot.
   if ((task != PebbleTask_App) && (task != PebbleTask_Worker)) {
     PBL_LOG_SYNC_ERR("Stack overflow [task: %s]", name);
-    RebootReason reason = {
-      .code = RebootReasonCode_StackOverflow,
-      .data8[0] = task
-    };
+    RebootReason reason = {.code = RebootReasonCode_StackOverflow, .data8[0] = task};
     reboot_reason_set(&reason);
 
     reset_due_to_software_failure();

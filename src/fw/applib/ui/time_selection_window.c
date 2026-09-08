@@ -25,36 +25,36 @@ typedef struct TimeSelectionSizeConfig {
 } TimeSelectionSizeConfig;
 
 static const TimeSelectionSizeConfig s_time_selection_config_medium = {
-  .subtitle_font_key = FONT_KEY_GOTHIC_14_BOLD,
+    .subtitle_font_key = FONT_KEY_GOTHIC_14_BOLD,
 
-  .cell_width = 40,
-  .ampm_cell_width = PBL_IF_RECT_ELSE(40, 50),
-  .cell_padding = 4,
+    .cell_width = 40,
+    .ampm_cell_width = PBL_IF_RECT_ELSE(40, 50),
+    .cell_padding = 4,
 
-  .top_offset_with_label = 75,
-  .top_offset_without_label = 67,
-  .label_origin_y = PBL_IF_RECT_ELSE(33, 38),
-  .range_origin_y = 119,
+    .top_offset_with_label = 75,
+    .top_offset_without_label = 67,
+    .label_origin_y = PBL_IF_RECT_ELSE(33, 38),
+    .range_origin_y = 119,
 };
 
 static const TimeSelectionSizeConfig s_time_selection_config_large = {
-  .subtitle_font_key = FONT_KEY_GOTHIC_18_BOLD,
+    .subtitle_font_key = FONT_KEY_GOTHIC_18_BOLD,
 
-  .cell_width = 56,
-  .ampm_cell_width = 56,
-  .cell_padding = 6,
+    .cell_width = 56,
+    .ampm_cell_width = 56,
+    .cell_padding = 6,
 
-  .top_offset_with_label = 87,
-  .top_offset_without_label = 67, // NOTE: this hasn't been designed, because we don't use it
-  .label_origin_y = 33,
-  .range_origin_y = 158,
+    .top_offset_with_label = 87,
+    .top_offset_without_label = 67,  // NOTE: this hasn't been designed, because we don't use it
+    .label_origin_y = 33,
+    .range_origin_y = 158,
 };
 
 static const TimeSelectionSizeConfig *s_time_selection_configs[NumPreferredContentSizes] = {
-  [PreferredContentSizeSmall] = &s_time_selection_config_medium,
-  [PreferredContentSizeMedium] = &s_time_selection_config_medium,
-  [PreferredContentSizeLarge] = &s_time_selection_config_large,
-  [PreferredContentSizeExtraLarge] = &s_time_selection_config_large,
+    [PreferredContentSizeSmall] = &s_time_selection_config_medium,
+    [PreferredContentSizeMedium] = &s_time_selection_config_medium,
+    [PreferredContentSizeLarge] = &s_time_selection_config_large,
+    [PreferredContentSizeExtraLarge] = &s_time_selection_config_large,
 };
 
 static const TimeSelectionSizeConfig *prv_selection_config(void) {
@@ -64,7 +64,7 @@ static const TimeSelectionSizeConfig *prv_selection_config(void) {
 }
 
 static int prv_cell_width(int i, int num_cells) {
-  const TimeSelectionSizeConfig * const config = prv_selection_config();
+  const TimeSelectionSizeConfig *const config = prv_selection_config();
   if (!clock_is_24h_style() && (i == (num_cells - 1))) {
     return config->ampm_cell_width;
   } else {
@@ -73,9 +73,10 @@ static int prv_cell_width(int i, int num_cells) {
 }
 
 static void prv_update_selection_layer(TimeSelectionWindowData *time_selection_window) {
-  const TimeSelectionSizeConfig * const config = prv_selection_config();
-  const int top_offset = time_selection_window->label_text_layer.text ?
-                             config->top_offset_with_label : config->top_offset_without_label;
+  const TimeSelectionSizeConfig *const config = prv_selection_config();
+  const int top_offset = time_selection_window->label_text_layer.text
+                             ? config->top_offset_with_label
+                             : config->top_offset_without_label;
   layer_set_frame(&time_selection_window->selection_layer.layer,
                   &GRect(0, top_offset, time_selection_window->window.layer.bounds.size.w,
                          selection_layer_default_cell_height()));
@@ -87,7 +88,7 @@ static void prv_vertical_align_text_layer(TimeSelectionWindowData *time_selectio
   // Supports `lines` or `lines + 1` line vertical centering for i18n
   const int line_height = fonts_get_font_height(text_layer->font);
   GRect frame = GRect(0, origin_y, time_selection_window->window.layer.bounds.size.w,
-                      (lines + 1) * line_height + line_height / 2); // 1/2 more for descenders
+                      (lines + 1) * line_height + line_height / 2);  // 1/2 more for descenders
   layer_set_frame(&text_layer->layer, &frame);
 #if PBL_ROUND
   const int inset = 4;
@@ -124,8 +125,7 @@ static void prv_update_range_text_layer(TimeSelectionWindowData *time_selection_
   const int minute_end = time_selection_window->time_data.minute;
   int hour_start = hour_end;
   int minute_start = minute_end;
-  clock_hour_and_minute_add(&hour_start, &minute_start,
-                            -time_selection_window->range_duration_m);
+  clock_hour_and_minute_add(&hour_start, &minute_start, -time_selection_window->range_duration_m);
 
   char start_buf[TIME_STRING_TIME_LENGTH];
   char end_buf[TIME_STRING_TIME_LENGTH];
@@ -139,8 +139,8 @@ static void prv_update_range_text_layer(TimeSelectionWindowData *time_selection_
 
   // update range_subtitle_text_layer
   buffer = time_selection_window->range_subtitle_buf;
-  snprintf(buffer, sizeof(time_selection_window->range_subtitle_buf),
-           "%s", time_selection_window->range_text);
+  snprintf(buffer, sizeof(time_selection_window->range_subtitle_buf), "%s",
+           time_selection_window->range_text);
 
   text_layer_set_text(range_subtitle_text_layer, buffer);
 
@@ -149,12 +149,12 @@ static void prv_update_range_text_layer(TimeSelectionWindowData *time_selection_
 
   const int range_origin_y = prv_selection_config()->range_origin_y;
   const int extra_line_offset_y = PBL_IF_RECT_ELSE(2, 4);
-  prv_vertical_align_text_layer(time_selection_window, top_layer, range_origin_y,
-                                1, extra_line_offset_y);
+  prv_vertical_align_text_layer(time_selection_window, top_layer, range_origin_y, 1,
+                                extra_line_offset_y);
   const GSize top_size = app_text_layer_get_content_size(top_layer);
   const int range_bottom_origin_y = range_origin_y + top_size.h;
-  prv_vertical_align_text_layer(time_selection_window, bottom_layer, range_bottom_origin_y,
-                                1, extra_line_offset_y);
+  prv_vertical_align_text_layer(time_selection_window, bottom_layer, range_bottom_origin_y, 1,
+                                extra_line_offset_y);
 }
 
 static void prv_update_layer_placement(TimeSelectionWindowData *time_selection_window) {
@@ -164,7 +164,7 @@ static void prv_update_layer_placement(TimeSelectionWindowData *time_selection_w
 }
 
 // FROM selection layer callbacks
-static char* prv_handle_from_get_text(unsigned index, void *context) {
+static char *prv_handle_from_get_text(unsigned index, void *context) {
   TimeSelectionWindowData *data = context;
   return date_time_selection_get_text(&data->time_data, index, data->cell_buf);
 }
@@ -224,7 +224,7 @@ static void prv_text_layer_init(Layer *window_layer, TextLayer *text_layer, cons
 
 void time_selection_window_init(TimeSelectionWindowData *time_selection_window,
                                 const TimeSelectionWindowConfig *config) {
-  *time_selection_window = (TimeSelectionWindowData) {};
+  *time_selection_window = (TimeSelectionWindowData){};
 
   // General window setup
   Window *window = &time_selection_window->window;
@@ -232,7 +232,7 @@ void time_selection_window_init(TimeSelectionWindowData *time_selection_window,
   window_set_user_data(window, time_selection_window);
 
   // Selection layer setup
-  const TimeSelectionSizeConfig * const size_config = prv_selection_config();
+  const TimeSelectionSizeConfig *const size_config = prv_selection_config();
   const int num_cells = clock_is_24h_style() ? 2 : 3;
   const int padding = size_config->cell_padding;
   SelectionLayer *selection_layer = &time_selection_window->selection_layer;
@@ -246,12 +246,12 @@ void time_selection_window_init(TimeSelectionWindowData *time_selection_window,
   selection_layer_set_inactive_bg_color(selection_layer, GColorDarkGray);
   selection_layer_set_click_config_onto_window(selection_layer, window);
   selection_layer_set_callbacks(&time_selection_window->selection_layer, time_selection_window,
-                                (SelectionLayerCallbacks) {
-    .get_cell_text = prv_handle_from_get_text,
-    .complete = prv_handle_complete,
-    .increment = prv_handle_inc,
-    .decrement = prv_handle_dec,
-  });
+                                (SelectionLayerCallbacks){
+                                    .get_cell_text = prv_handle_from_get_text,
+                                    .complete = prv_handle_complete,
+                                    .increment = prv_handle_inc,
+                                    .decrement = prv_handle_dec,
+                                });
   layer_add_child(&window->layer, &time_selection_window->selection_layer.layer);
 
   // Label setup
@@ -275,11 +275,10 @@ void time_selection_window_init(TimeSelectionWindowData *time_selection_window,
   status_bar_layer_set_colors(&time_selection_window->status_layer,
                               PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack),
                               PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
-  status_bar_layer_set_separator_mode(&time_selection_window->status_layer,
-                                      PBL_IF_COLOR_ELSE(OPTION_MENU_STATUS_SEPARATOR_MODE,
-                                                        StatusBarLayerSeparatorModeNone));
-  layer_add_child(&time_selection_window->window.layer,
-                  &time_selection_window->status_layer.layer);
+  status_bar_layer_set_separator_mode(
+      &time_selection_window->status_layer,
+      PBL_IF_COLOR_ELSE(OPTION_MENU_STATUS_SEPARATOR_MODE, StatusBarLayerSeparatorModeNone));
+  layer_add_child(&time_selection_window->window.layer, &time_selection_window->status_layer.layer);
 
   time_selection_window_configure(time_selection_window, config);
 }

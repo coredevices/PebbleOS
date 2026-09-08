@@ -38,10 +38,10 @@
 #include "stubs_worker_manager.h"
 #include "stubs_worker_state.h"
 
-char __APP_RAM__[1024*128];
-char *__APP_RAM_end__ = &__APP_RAM__[1024*128];
-char __WORKER_RAM__[1024*12];
-char *__WORKER_RAM_end__ = &__APP_RAM__[1024*12];
+char __APP_RAM__[1024 * 128];
+char *__APP_RAM_end__ = &__APP_RAM__[1024 * 128];
+char __WORKER_RAM__[1024 * 12];
+char *__WORKER_RAM_end__ = &__APP_RAM__[1024 * 12];
 
 typedef struct {
   AppInstallEntry entry;
@@ -49,111 +49,71 @@ typedef struct {
 } AppInstallEntryTestCase;
 
 static AppInstallEntryTestCase s_test_cases[] = {
-  {
-    .entry = (AppInstallEntry) {
-      .install_id = 1,
-      .sdk_version = (Version) {
-        .major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR,
-        .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR
-      }
-    },
-    .should_pass = true
-  }, {
-    .entry = (AppInstallEntry) {
-      .install_id = 2,
-      .sdk_version = (Version) {
-        .major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR - 1,
-        .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR
-      }
-    },
-    .should_pass = false
-  }, {
-    .entry = (AppInstallEntry) {
-      .install_id = 3,
-      .sdk_version = (Version) {
-        .major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR + 1,
-        .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR
-      }
-    },
-    .should_pass = false
-  }, {
-    .entry = (AppInstallEntry) {
-      .install_id = 4,
-      .sdk_version = (Version) {
-        .major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR,
-        .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR - 10
-      }
-    },
-    .should_pass = true
-  }, {
-    .entry = (AppInstallEntry) {
-      .install_id = 5,
-      .sdk_version = (Version) {
-        .major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR,
-        .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR + 10
-      }
-    },
-    .should_pass = false
-  }, {
-    .entry = (AppInstallEntry) {
-      .install_id = 6,
-      .sdk_version = (Version) {
-        .major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR + 1,
-        .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR + 10
-      }
-    },
-    .should_pass = false
-  }, {
-    .entry = (AppInstallEntry) {
-      .install_id = 7,
-      .sdk_version = (Version) {
-        .major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR - 1,
-        .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR - 10
-      }
-    },
-    .should_pass = false
-  }
-};
+    {.entry = (AppInstallEntry){.install_id = 1,
+                                .sdk_version =
+                                    (Version){.major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR,
+                                              .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR}},
+     .should_pass = true},
+    {.entry = (AppInstallEntry){.install_id = 2,
+                                .sdk_version =
+                                    (Version){.major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR - 1,
+                                              .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR}},
+     .should_pass = false},
+    {.entry = (AppInstallEntry){.install_id = 3,
+                                .sdk_version =
+                                    (Version){.major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR + 1,
+                                              .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR}},
+     .should_pass = false},
+    {.entry =
+         (AppInstallEntry){
+             .install_id = 4,
+             .sdk_version = (Version){.major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR,
+                                      .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR - 10}},
+     .should_pass = true},
+    {.entry =
+         (AppInstallEntry){
+             .install_id = 5,
+             .sdk_version = (Version){.major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR,
+                                      .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR + 10}},
+     .should_pass = false},
+    {.entry =
+         (AppInstallEntry){
+             .install_id = 6,
+             .sdk_version = (Version){.major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR + 1,
+                                      .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR + 10}},
+     .should_pass = false},
+    {.entry =
+         (AppInstallEntry){
+             .install_id = 7,
+             .sdk_version = (Version){.major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR - 1,
+                                      .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR - 10}},
+     .should_pass = false}};
 
 PlatformType process_metadata_get_app_sdk_platform(const PebbleProcessMd *md) {
   cl_fail("should not be called");
   return (PlatformType)-1;
 }
 
-uint32_t pbl_msgq_num_used(const struct pbl_msgq *q) {
-  return 0;
-}
+uint32_t pbl_msgq_num_used(const struct pbl_msgq *q) { return 0; }
 
-int pbl_msgq_get(struct pbl_msgq *q, void *msg, pbl_timeout_t timeout) {
-  return 0;
-}
+int pbl_msgq_get(struct pbl_msgq *q, void *msg, pbl_timeout_t timeout) { return 0; }
 
-int pbl_msgq_put(struct pbl_msgq *q, const void *msg, pbl_timeout_t timeout) {
-  return 0;
-}
+int pbl_msgq_put(struct pbl_msgq *q, const void *msg, pbl_timeout_t timeout) { return 0; }
 
-void event_queue_cleanup_and_reset(struct pbl_msgq *queue) {
-}
+void event_queue_cleanup_and_reset(struct pbl_msgq *queue) {}
 
-void event_service_clear_process_subscriptions(void) {
-}
+void event_service_clear_process_subscriptions(void) {}
 
-bool app_install_entry_is_watchface(const AppInstallEntry *entry) {
-  return false;
-}
+bool app_install_entry_is_watchface(const AppInstallEntry *entry) { return false; }
 
-AppInstallId app_install_get_id_for_uuid(const Uuid *uuid) {
-  return 1;
-}
+AppInstallId app_install_get_id_for_uuid(const Uuid *uuid) { return 1; }
 
 bool app_install_get_entry_for_install_id(AppInstallId install_id, AppInstallEntry *entry) {
   *entry = s_test_cases[install_id - 1].entry;
   return true;
 }
 
-bool app_install_id_from_app_db(AppInstallId id) {
-  return (id > INSTALL_ID_INVALID);
-}
+bool app_install_id_from_app_db(AppInstallId id) { return (id > INSTALL_ID_INVALID); }
 
 bool app_install_entry_is_SDK_compatible(const AppInstallEntry *entry) {
   return (entry->sdk_version.major == PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR &&
@@ -165,8 +125,7 @@ const PebbleProcessMd *app_install_get_md(AppInstallId id, bool worker) {
   return s_app_install_get_md__result;
 }
 
-void app_install_release_md(const PebbleProcessMd *md) {
-}
+void app_install_release_md(const PebbleProcessMd *md) {}
 
 static status_t s_app_db_get_app_entry_for_install_id__result;
 static AppDBEntry s_app_db_get_app_entry_for_install_id__entry;
@@ -180,16 +139,15 @@ int process_metadata_get_res_bank_num(const PebbleProcessMd *md) {
   return s_process_metadata_get_res_bank_num__result;
 }
 
-static PebbleEvent* s_event_put__event;
-void event_put(PebbleEvent* event) {
+static PebbleEvent *s_event_put__event;
+void event_put(PebbleEvent *event) {
   s_event_put__event = event;
   cl_assert(event != NULL);
 }
 
-void event_put_from_app(PebbleEvent* event) { cl_fail("unexpected"); }
-void event_put_from_process(PebbleTask task, PebbleEvent* event) { cl_fail("unexpected"); }
+void event_put_from_app(PebbleEvent *event) { cl_fail("unexpected"); }
+void event_put_from_process(PebbleTask task, PebbleEvent *event) { cl_fail("unexpected"); }
 void event_reset_from_process_queue(PebbleTask task) { cl_fail("unexpected"); }
-
 
 void test_process_manager__initialize(void) {
   s_app_install_get_md__result = NULL;
@@ -217,7 +175,7 @@ static const Uuid s_uuid_b = {0x49, 0x82, 0x77, 0x22, 0x00, 0x11, 0x22, 0x33,
 //! by a previous install leaves a stale binary at that ID. Launching must notice and refetch
 //! rather than silently running the wrong app.
 void test_process_manager__stale_cache_entry_is_refetched(void) {
-  static PebbleProcessMdFlash s_stale_md = { .common = { .uuid = {0} } };
+  static PebbleProcessMdFlash s_stale_md = {.common = {.uuid = {0}}};
   s_stale_md.common.uuid = s_uuid_b;
   s_app_install_get_md__result = (PebbleProcessMd *)&s_stale_md;
 
@@ -225,7 +183,7 @@ void test_process_manager__stale_cache_entry_is_refetched(void) {
   s_app_db_get_app_entry_for_install_id__entry.uuid = s_uuid_a;
   s_app_db_get_app_entry_for_install_id__result = S_SUCCESS;
 
-  process_manager_launch_process(&(ProcessLaunchConfig) { .id = 1 });
+  process_manager_launch_process(&(ProcessLaunchConfig){.id = 1});
 
   cl_assert(s_event_put__event != NULL);
   cl_assert_equal_i(s_event_put__event->type, PEBBLE_APP_FETCH_REQUEST_EVENT);
@@ -234,16 +192,15 @@ void test_process_manager__stale_cache_entry_is_refetched(void) {
 }
 
 void test_process_manager__matching_cache_entry_launches(void) {
-  static PebbleProcessMdFlash s_good_md = { .common = { .uuid = {0} } };
+  static PebbleProcessMdFlash s_good_md = {.common = {.uuid = {0}}};
   s_good_md.common.uuid = s_uuid_a;
   s_app_install_get_md__result = (PebbleProcessMd *)&s_good_md;
 
   s_app_db_get_app_entry_for_install_id__entry.uuid = s_uuid_a;
   s_app_db_get_app_entry_for_install_id__result = S_SUCCESS;
 
-  process_manager_launch_process(&(ProcessLaunchConfig) { .id = 1 });
+  process_manager_launch_process(&(ProcessLaunchConfig){.id = 1});
 
   cl_assert(s_event_put__event == NULL);
   cl_assert_equal_i(s_app_manager_launch_new_app__callcount, 1);
 }
-

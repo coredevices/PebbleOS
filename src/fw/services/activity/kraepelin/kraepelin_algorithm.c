@@ -44,8 +44,7 @@ Pebble App project.
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
-#define KALG_LOG_DEBUG(fmt, args...) \
-        PBL_LOG_D_DBG(LOG_DOMAIN_ACTIVITY, fmt, ## args)
+#define KALG_LOG_DEBUG(fmt, args...) PBL_LOG_D_DBG(LOG_DOMAIN_ACTIVITY, fmt, ##args)
 
 // Set this to 1 to get text graphs of the overall FFT magnitudes
 #define KALG_LOG_OVERALL_MAGNITUDES 0
@@ -57,11 +56,11 @@ PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 // Internal equates
 
 // 5*25 = 125 samples recorded, 5 seconds for step count
-#define KALG_N_SAMPLES_EPOCH  (5 * 25)
+#define KALG_N_SAMPLES_EPOCH (5 * 25)
 
 // We drop these LS bits from each accel sample
-#define KALG_ACCEL_SAMPLE_DIV    8
-#define KALG_ACCEL_SAMPLE_SHIFT  3
+#define KALG_ACCEL_SAMPLE_DIV 8
+#define KALG_ACCEL_SAMPLE_SHIFT 3
 
 // Axes
 #define KALG_N_AXES 3
@@ -70,11 +69,11 @@ PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 #define KALG_AXIS_Z 2
 
 // For each minute, take a weighted integral of the N minutes before and after it.
-#define KALG_SLEEP_HALF_WIDTH  4
-#define KALG_SLEEP_FILTER_WIDTH  (2 * KALG_SLEEP_HALF_WIDTH + 1)
+#define KALG_SLEEP_HALF_WIDTH 4
+#define KALG_SLEEP_FILTER_WIDTH (2 * KALG_SLEEP_HALF_WIDTH + 1)
 
 // 2^7 = 128 elements > 125 to allow fft
-#define KALG_FFT_WIDTH  128
+#define KALG_FFT_WIDTH 128
 
 // 2^7 = 128 elements > 125 to allow fft
 static const int16_t KALG_FFT_WIDTH_PWR_TWO = 7;
@@ -87,7 +86,7 @@ static const int16_t KALG_FFT_SCALE = 2;
 
 // convert the raw pim cpm to the actigraph vmcpm
 // used for both VMCPM and CPM (cause a linear relation)
-static const  uint32_t KALG_x100_RAW_1G_PIM_CPM_TO_REAL_CPM = 2408;
+static const uint32_t KALG_x100_RAW_1G_PIM_CPM_TO_REAL_CPM = 2408;
 
 // How much we quantize the angle when returning orientation
 static const uint32_t KALG_NUM_ANGLES = 16;
@@ -104,15 +103,15 @@ static const int KALG_MAX_STEP_FREQ = 20;
 
 // State information for the walk activity detection
 typedef struct {
-  time_t start_time;           // potential start time of the activity
-                               // default: KALG_START_TIME_NONE
-  int inactive_minute_count;   // how many inactive minutes in a row we have detected
-  uint16_t steps;              // summed steps
-  uint32_t resting_calories;   // summed resting calories
-  uint32_t active_calories;    // summed active calories
-  uint32_t distance_mm;        // summed distance
+  time_t start_time;          // potential start time of the activity
+                              // default: KALG_START_TIME_NONE
+  int inactive_minute_count;  // how many inactive minutes in a row we have detected
+  uint16_t steps;             // summed steps
+  uint32_t resting_calories;  // summed resting calories
+  uint32_t active_calories;   // summed active calories
+  uint32_t distance_mm;       // summed distance
 
-  HRMSessionRef hrm_session;   // current hrm session
+  HRMSessionRef hrm_session;  // current hrm session
 } KAlgStepActivityState;
 
 // Returned by prv_get_step_activity_attributes() and used for classifying activities
@@ -120,7 +119,6 @@ typedef struct {
   uint16_t min_steps_per_min;
   uint16_t max_steps_per_min;
 } KAlgActivityAttributes;
-
 
 // ----------------------------------------------------------------------------------------
 // Sleep detection structures
@@ -133,7 +131,7 @@ typedef struct {
 
 // State information for sleep detection
 typedef struct {
-  time_t start_time;                   // KALG_START_TIME_NONE if no start detected yet
+  time_t start_time;  // KALG_START_TIME_NONE if no start detected yet
   uint16_t num_non_zero_minutes;
   uint32_t vmc_sum;
   uint16_t consecutive_sleep_minutes;
@@ -143,7 +141,7 @@ typedef struct {
 typedef struct {
   // We do a convolution of encoded VMC values to get a score. This convolution requires
   // the KALG_SLEEP_HALF_WIDTH entries that come before and after the center point.
-  uint8_t num_history_entries;              // how many entries are in vmc_history and orientation
+  uint8_t num_history_entries;  // how many entries are in vmc_history and orientation
   KAlgSleepMinute minute_history[KALG_SLEEP_FILTER_WIDTH];
 
   KAlgSleepActivityStats current_stats;
@@ -192,72 +190,70 @@ typedef struct {
   uint16_t min_sleep_len_for_active_pct_check;
 } KAlgSleepParams;
 
-
 // Set the sleep parameters
 #if defined(CONFIG_BOARD_ASTERIX)
 static const KAlgSleepParams KALG_SLEEP_PARAMS = {
-  .max_sleep_minute_score = 500,  // Increased significantly for asterix - much stricter
-  .force_wake_minute_score = 8000,
-  .force_wake_minute_vmc = 10000,
-  .min_sleep_minutes = 5,
+    .max_sleep_minute_score = 500,  // Increased significantly for asterix - much stricter
+    .force_wake_minute_score = 8000,
+    .force_wake_minute_vmc = 10000,
+    .min_sleep_minutes = 5,
 
-  .max_wake_minute_early_offset = 60,
-  .max_wake_minutes_early = 14,
-  .max_wake_minutes_late = 11,
+    .max_wake_minute_early_offset = 60,
+    .max_wake_minutes_early = 14,
+    .max_wake_minutes_late = 11,
 
-  .min_sleep_cycle_len_minutes = 60,
-  .min_valid_vmc = 30,  // Increased significantly for asterix
-  .max_active_minutes_pct = 89,
-  .max_avg_vmc = 250,  // Increased significantly for asterix
-  .vmc_clip = 1000,
-  .min_sleep_len_for_active_pct_check = 39,
+    .min_sleep_cycle_len_minutes = 60,
+    .min_valid_vmc = 30,  // Increased significantly for asterix
+    .max_active_minutes_pct = 89,
+    .max_avg_vmc = 250,  // Increased significantly for asterix
+    .vmc_clip = 1000,
+    .min_sleep_len_for_active_pct_check = 39,
 };
 #else
 static const KAlgSleepParams KALG_SLEEP_PARAMS = {
-  .max_sleep_minute_score = 330,
-  .force_wake_minute_score = 8000,
-  .force_wake_minute_vmc = 10000,
-  .min_sleep_minutes = 5,
+    .max_sleep_minute_score = 330,
+    .force_wake_minute_score = 8000,
+    .force_wake_minute_vmc = 10000,
+    .min_sleep_minutes = 5,
 
-  .max_wake_minute_early_offset = 60,
-  .max_wake_minutes_early = 14,
-  .max_wake_minutes_late = 11,
+    .max_wake_minute_early_offset = 60,
+    .max_wake_minutes_early = 14,
+    .max_wake_minutes_late = 11,
 
-  .min_sleep_cycle_len_minutes = 60,
-  .min_valid_vmc = 20,
-  .max_active_minutes_pct = 89,
-  .max_avg_vmc = 180,
-  .vmc_clip = 1000,
-  .min_sleep_len_for_active_pct_check = 39,
+    .min_sleep_cycle_len_minutes = 60,
+    .min_valid_vmc = 20,
+    .max_active_minutes_pct = 89,
+    .max_avg_vmc = 180,
+    .vmc_clip = 1000,
+    .min_sleep_len_for_active_pct_check = 39,
 };
 #endif
-
 
 // ----------------------------------------------------------------------------------------
 // Deep Sleep detection structures
 // State information for deep sleep detection
-#define KALG_MAX_DEEP_SLEEP_SESSIONS 8    // Max number of deep sleep sessions per sleep session
+#define KALG_MAX_DEEP_SLEEP_SESSIONS 8  // Max number of deep sleep sessions per sleep session
 typedef struct {
-  time_t sleep_start_time;              // KALG_START_TIME_NONE if no KAlgDeepSleepAction_Start yet
-  time_t deep_start_time;               // start of current deep sleep session
-  uint16_t deep_score_count;            // how many deep sleep minutes in a row we've seen
-  uint16_t non_deep_score_count;        // how many non-deep sleep minutes in a row we've seen
-  bool ok_to_register;                  // if true, OK to register deep sleep session
+  time_t sleep_start_time;        // KALG_START_TIME_NONE if no KAlgDeepSleepAction_Start yet
+  time_t deep_start_time;         // start of current deep sleep session
+  uint16_t deep_score_count;      // how many deep sleep minutes in a row we've seen
+  uint16_t non_deep_score_count;  // how many non-deep sleep minutes in a row we've seen
+  bool ok_to_register;            // if true, OK to register deep sleep session
 
   // List of deep sleep sessions we have detected. We don't actually register them until
   // we get notified by the sleep state machine that the current sleep session has ended
   // and is valid;
-  uint8_t  num_sessions;                 // number of sessions we have detected
+  uint8_t num_sessions;                                    // number of sessions we have detected
   uint16_t start_delta_sec[KALG_MAX_DEEP_SLEEP_SESSIONS];  // delta from sleep_start_time
   uint16_t len_m[KALG_MAX_DEEP_SLEEP_SESSIONS];
 } KAlgDeepSleepActivityState;
 
 // Actions that can be sent to the deep sleep state machine (prv_deep_sleep_update)
 typedef enum {
-  KAlgDeepSleepAction_Start,         // started a new sleep session
-  KAlgDeepSleepAction_Continue,      // new sample for current sleep session
-  KAlgDeepSleepAction_End,           // ended the current sleep session
-  KAlgDeepSleepAction_Abort,         // aborted the current sleep session
+  KAlgDeepSleepAction_Start,     // started a new sleep session
+  KAlgDeepSleepAction_Continue,  // new sample for current sleep session
+  KAlgDeepSleepAction_End,       // ended the current sleep session
+  KAlgDeepSleepAction_Abort,     // aborted the current sleep session
 } KAlgDeepSleepAction;
 
 // Params used for deep sleep detection
@@ -271,21 +267,19 @@ typedef struct {
   uint16_t min_minutes_after_sleep_entry;
 } KAlgDeepSleepParams;
 
-
 // Set the deep sleep parameters
 static const KAlgDeepSleepParams KALG_DEEP_SLEEP_PARAMS = {
-  .max_deep_score = 160,
-  .min_deep_score_count = 20,
-  .min_minutes_after_sleep_entry = 10,
+    .max_deep_score = 160,
+    .min_deep_score_count = 20,
+    .min_minutes_after_sleep_entry = 10,
 };
-
 
 // ----------------------------------------------------------------------------------------
 // Not-worn detection structures
 // State information for not-worn detection
-#define KALG_NUM_NOT_WORN_SECTIONS  3
+#define KALG_NUM_NOT_WORN_SECTIONS 3
 typedef struct {
-  uint16_t maybe_not_worn_count;            // how many -"maybe" worn minutes in a row we've seen
+  uint16_t maybe_not_worn_count;  // how many -"maybe" worn minutes in a row we've seen
 
   uint8_t prev_orientation;
   uint16_t prev_vmc;
@@ -307,22 +301,21 @@ typedef struct {
   uint16_t max_low_vmc_run_m;
 } KAlgNotWornParams;
 
-
 // Set the not-worn parameters
 #if defined(CONFIG_BOARD_ASTERIX)
 static const KAlgNotWornParams KALG_NOT_WORN_PARAMS = {
-  .max_non_worn_vmc = 2500,
-  .min_worn_vmc = 15,  // Increased significantly for asterix - much higher baseline noise
-  .max_low_vmc_run_m = 120,  // Allow longer stillness during deep sleep while still catching desk time
+    .max_non_worn_vmc = 2500,
+    .min_worn_vmc = 15,  // Increased significantly for asterix - much higher baseline noise
+    .max_low_vmc_run_m =
+        120,  // Allow longer stillness during deep sleep while still catching desk time
 };
 #else
 static const KAlgNotWornParams KALG_NOT_WORN_PARAMS = {
-  .max_non_worn_vmc = 2500,
-  .min_worn_vmc = 4,
-  .max_low_vmc_run_m = 180,
+    .max_non_worn_vmc = 2500,
+    .min_worn_vmc = 4,
+    .max_low_vmc_run_m = 180,
 };
 #endif
-
 
 // ---------------------------------------------------------------------------------------------
 // State variables. Must be allocated by caller and initialized by kalg_init()
@@ -355,7 +348,7 @@ typedef struct KAlgState {
   // Butterworth filter state used in prv_pim_filter.
   Fixed_S64_32 yt[KALG_N_AXES][KALG_BUTTERWORTH_NUM_COEFFICIENTS - 1];
   Fixed_S64_32 xt[KALG_N_AXES][KALG_BUTTERWORTH_NUM_COEFFICIENTS];
-  bool pim_filter_primed;   // Right after init, we need to "prime" the filter
+  bool pim_filter_primed;  // Right after init, we need to "prime" the filter
 
   // State for the activity detectors
   KAlgStepActivityState walk_state;
@@ -367,14 +360,13 @@ typedef struct KAlgState {
   // Timestamp of the last minute of data passed to kalg_activities_update()
   time_t last_activity_update_utc;
 
-  bool disable_activity_session_tracking; // If true don't automatically track activities
+  bool disable_activity_session_tracking;  // If true don't automatically track activities
 } KAlgState;
-
 
 // ----------------------------------------------------------------------------------------
 // Print a timestamp in a format useful for log messages (for debugging). This only prints
 // the hour and minute: HH:MM
-static const char* prv_log_time(KAlgState *alg_state, time_t utc) {
+static const char *prv_log_time(KAlgState *alg_state, time_t utc) {
   int minutes = (utc / SECONDS_PER_MINUTE) % MINUTES_PER_HOUR;
   int hours = (utc / SECONDS_PER_HOUR) % HOURS_PER_DAY;
 
@@ -397,7 +389,7 @@ static void prv_release_step_activity_hrm(KAlgStepActivityState *state) {
 // ----------------------------------------------------------------------------------------
 static void prv_reset_step_activity_state(KAlgStepActivityState *state) {
   prv_release_step_activity_hrm(state);
-  *state = (KAlgStepActivityState) { };
+  *state = (KAlgStepActivityState){};
 }
 
 // ----------------------------------------------------------------------------------------
@@ -432,7 +424,6 @@ static int32_t prv_mean(int16_t *d, int16_t dlen, int16_t scale) {
   return mean * scale / dlen;
 }
 
-
 // -----------------------------------------------------------------------------------------
 static uint32_t prv_isqrt(uint32_t x) {
   uint32_t op, res, one;
@@ -454,7 +445,6 @@ static uint32_t prv_isqrt(uint32_t x) {
   }
   return res;
 }
-
 
 // -------------------------------------------------------------------------------------------
 // Integrate the abs(d) between given start and end index
@@ -494,12 +484,11 @@ static uint32_t prv_pim_filter(KAlgState *state, int16_t *d, int16_t dlen, int16
 
   // REMEMBER, the scoring is done on the 1 SECOND level, so we
   // ONLY do thresholding at the 1 second level.
-  const int32_t k_x1000_thres = 3750; // this is calibrated to pebble, 125 = 1G
-  return (uint32_t) (((pim - (k_x1000_thres * dlen) / 1000) > 0)
-                     ? (pim - (k_x1000_thres * dlen) / 1000)
-                     : 0);
+  const int32_t k_x1000_thres = 3750;  // this is calibrated to pebble, 125 = 1G
+  return (uint32_t)(((pim - (k_x1000_thres * dlen) / 1000) > 0)
+                        ? (pim - (k_x1000_thres * dlen) / 1000)
+                        : 0);
 }
-
 
 // -----------------------------------------------------------------------------------------
 // Prime the butterworth filter used in the pim filter. This helps reduce the high VMC
@@ -530,7 +519,6 @@ static void prv_pim_filter_prime(KAlgState *state, int16_t *d, int16_t dlen, int
   prv_pim_filter(state, prime_data, n - 1, axis);
 }
 
-
 // -----------------------------------------------------------------------------------------
 // Compute real counts from our internal raw counts
 static uint32_t prv_real_counts_from_raw(uint32_t raw) {
@@ -544,7 +532,6 @@ static uint32_t prv_real_counts_from_raw(uint32_t raw) {
   uint32_t real_counts = raw * KALG_x100_RAW_1G_PIM_CPM_TO_REAL_CPM / 12500;
   return real_counts;
 }
-
 
 // -----------------------------------------------------------------------------------------
 // Real-valued, in-place, 2-radix Fourier transform
@@ -570,16 +557,16 @@ static uint32_t prv_real_counts_from_raw(uint32_t raw) {
 static void prv_fft_2radix_real(int16_t *d, int16_t width, int16_t width_log_2) {
   int16_t n = width;
   int16_t j = 1;
-  int16_t n1 = n -1;
+  int16_t n1 = n - 1;
   int16_t k, dt;
 
   for (int16_t i = 1; i <= n1; i++) {
     if (i < j) {
-      dt = d[j-1];
-      d[j-1] = d[i-1];
-      d[i-1] = dt;
+      dt = d[j - 1];
+      d[j - 1] = d[i - 1];
+      d[i - 1] = dt;
     }
-    k = n/2;
+    k = n / 2;
     while (k < j) {
       j = j - k;
       k = k / 2;
@@ -588,8 +575,8 @@ static void prv_fft_2radix_real(int16_t *d, int16_t width, int16_t width_log_2) 
   }
 
   for (int16_t i = 1; i <= n; i += 2) {
-    dt = d[i-1];
-    d[i-1] = dt + d[i];
+    dt = d[i - 1];
+    d[i - 1] = dt + d[i];
     d[i] = dt - d[i];
   }
 
@@ -597,19 +584,19 @@ static void prv_fft_2radix_real(int16_t *d, int16_t width, int16_t width_log_2) 
   int16_t n4, i1, i2, i3, i4, t1, t2;
   int32_t E, A, ss, cc;
 
-  for (int16_t k = 2; k <= width_log_2 ; k++) {
+  for (int16_t k = 2; k <= width_log_2; k++) {
     n4 = n2;
     n2 = 2 * n4;
     n1 = 2 * n2;
     E = TRIG_MAX_ANGLE / n1;
 
-    for (int16_t i = 1; i<= n; i+=n1) {
-      dt = d[i-1];
-      d[i-1] = dt + d[i+n2-1];
-      d[i+n2-1] = dt - d[i+n2-1];
-      d[i+n4+n2-1] = -1 * d[i+n4+n2-1];
+    for (int16_t i = 1; i <= n; i += n1) {
+      dt = d[i - 1];
+      d[i - 1] = dt + d[i + n2 - 1];
+      d[i + n2 - 1] = dt - d[i + n2 - 1];
+      d[i + n4 + n2 - 1] = -1 * d[i + n4 + n2 - 1];
       A = E;
-      for (int16_t j = 1; j <= (n4-1); j++) {
+      for (int16_t j = 1; j <= (n4 - 1); j++) {
         i1 = i + j;
         i2 = i - j + n2;
         i3 = i + j + n2;
@@ -620,18 +607,17 @@ static void prv_fft_2radix_real(int16_t *d, int16_t width, int16_t width_log_2) 
 
         A = A + E;
 
-        t1 = (int16_t) ((d[i3-1] * cc + d[i4-1] * ss) / TRIG_MAX_ANGLE);
-        t2 = (int16_t) ((d[i3-1] * ss - d[i4-1] * cc) / TRIG_MAX_ANGLE);
+        t1 = (int16_t)((d[i3 - 1] * cc + d[i4 - 1] * ss) / TRIG_MAX_ANGLE);
+        t2 = (int16_t)((d[i3 - 1] * ss - d[i4 - 1] * cc) / TRIG_MAX_ANGLE);
 
-        d[i4-1] = d[i2-1] - t2;
-        d[i3-1] = -d[i2-1] - t2;
-        d[i2-1] = d[i1-1] - t1;
-        d[i1-1] = d[i1-1] + t1;
+        d[i4 - 1] = d[i2 - 1] - t2;
+        d[i3 - 1] = -d[i2 - 1] - t2;
+        d[i2 - 1] = d[i1 - 1] - t1;
+        d[i1 - 1] = d[i1 - 1] + t1;
       }
     }
   }
 }
-
 
 // -----------------------------------------------------------------------------------------
 // Evaluate the magnitude of the FFT coefficients and write back to the first width/2 elements
@@ -645,7 +631,6 @@ static void prv_fft_mag(int16_t *d, int16_t width) {
     d[i] = prv_isqrt(d[i] * d[i] + d[width - i] * d[width - i]);
   }
 }
-
 
 #if LOG_DOMAIN_ACTIVITY && KALG_LOG_AXIS_MAGNITUDES
 // -------------------------------------------------------------------------------------------
@@ -682,12 +667,11 @@ static void prv_text_graph(const char *type_str, int16_t *d, int16_t start, int1
     }
     num_stars = MIN(num_stars, k_max_stars);
     stars_str[num_stars] = 0;
-    KALG_LOG_DEBUG("%s: %3"PRIi16": mag: %+3"PRIi16": %s", type_str, i, d[i], stars_str);
+    KALG_LOG_DEBUG("%s: %3" PRIi16 ": mag: %+3" PRIi16 ": %s", type_str, i, d[i], stars_str);
     stars_str[num_stars] = '*';
   }
 }
 #endif
-
 
 // -------------------------------------------------------------------------------------------
 // Log all magnitudes of the overall FFT
@@ -698,7 +682,6 @@ static void prv_log_overall_magnitudes(const char *type_str, int16_t *d, int16_t
 #endif
 }
 
-
 // -------------------------------------------------------------------------------------------
 // Used to Log magnitudes of a specific axis
 static void prv_log_axis_magnitudes(const char *type_str, int16_t *d, int16_t start, int16_t end) {
@@ -706,7 +689,6 @@ static void prv_log_axis_magnitudes(const char *type_str, int16_t *d, int16_t st
   prv_text_graph(type_str, d, start, end);
 #endif
 }
-
 
 // -----------------------------------------------------------------------------------------
 static void prv_get_fftmag_0pad_mean0(int16_t *d, int16_t num_samples, int16_t fft_width,
@@ -718,10 +700,10 @@ static void prv_get_fftmag_0pad_mean0(int16_t *d, int16_t num_samples, int16_t f
 
   // set the last few elements to the mean of the first elements
   int16_t mean = prv_mean(d, num_samples, 1);
-  for (int16_t i = 0 ; i < num_samples; i++) {
+  for (int16_t i = 0; i < num_samples; i++) {
     d[i] = d[i] - mean;
   }
-  for (int16_t i = num_samples ; i < fft_width; i++) {
+  for (int16_t i = num_samples; i < fft_width; i++) {
     d[i] = 0;
   }
 
@@ -732,7 +714,6 @@ static void prv_get_fftmag_0pad_mean0(int16_t *d, int16_t num_samples, int16_t f
   // elements
   prv_fft_mag(d, fft_width);
 }
-
 
 // -----------------------------------------------------------------------------------------
 // Apply a cosine filter to the given data array. This is often used before taking an FFT.
@@ -745,11 +726,10 @@ static void prv_filt_cosine_win_mean0(int16_t *d, int16_t width, int32_t g_facto
   int32_t d_mean = prv_mean(d, width, 1);
 
   for (uint16_t i = 0; i < width; i++) {
-    d[i] = (int16_t) (((d[i] - d_mean) * g_factor *
-                      sin_lookup((TRIG_MAX_ANGLE * i) / (2 * width))) / (TRIG_MAX_RATIO));
+    d[i] = (int16_t)(((d[i] - d_mean) * g_factor * sin_lookup((TRIG_MAX_ANGLE * i) / (2 * width))) /
+                     (TRIG_MAX_RATIO));
   }
 }
-
 
 // -----------------------------------------------------------------------------------------
 // Find the frequency with the maximum magnitude between lhz and hhz. If favor_low is set, then
@@ -780,7 +760,7 @@ static int16_t prv_max_mag(int16_t *d, int16_t lhz, int16_t hhz, bool favor_low,
     int32_t test_energy = val0 + val1;
     int32_t test_val = test_energy;
     if (favor_low) {
-      const int k_dampening = 100; // lower values dampen the high frequencies.
+      const int k_dampening = 100;  // lower values dampen the high frequencies.
       // In this formula, the higher the frequency, the more it is dampened. A frequency of
       // 0 has no damping.
       test_val = test_val * (k_dampening - test_hz) / k_dampening;
@@ -797,7 +777,6 @@ static int16_t prv_max_mag(int16_t *d, int16_t lhz, int16_t hhz, bool favor_low,
   *energy = max_hz_energy;
   return max_hz_i;
 }
-
 
 // -----------------------------------------------------------------------------------------
 // Compute scaled Vector Magnitude Counts (vmc)
@@ -819,11 +798,10 @@ static uint32_t prv_calc_raw_vmc(uint32_t *pims) {
   }
 
   // calculate VMCPM, then take sqrt to compress
-  return KALG_VECTOR_MAG_COUNTS_SCALE * prv_isqrt(d[KALG_AXIS_X] * d[KALG_AXIS_X]
-                                                  + d[KALG_AXIS_Y] * d[KALG_AXIS_Y]
-                                                  + d[KALG_AXIS_Z] * d[KALG_AXIS_Z]);
+  return KALG_VECTOR_MAG_COUNTS_SCALE *
+         prv_isqrt(d[KALG_AXIS_X] * d[KALG_AXIS_X] + d[KALG_AXIS_Y] * d[KALG_AXIS_Y] +
+                   d[KALG_AXIS_Z] * d[KALG_AXIS_Z]);
 }
-
 
 // -----------------------------------------------------------------------------------------
 // Compute the magnitude of the signal based on the given walking frequency. This sums
@@ -853,8 +831,8 @@ static uint32_t prv_compute_signal_energy(int16_t *d, int16_t d_len, uint16_t wa
 
   // Include the 2nd harmonic of the walking frequency
   uint32_t walk_2_energy;
-  uint16_t walk_2_hz = prv_max_mag(d, (walk_hz * 2) - 1, (walk_hz * 2) + 1,
-                                   false /*favor_low*/, false /*inc_adjacent*/, &walk_2_energy);
+  uint16_t walk_2_hz = prv_max_mag(d, (walk_hz * 2) - 1, (walk_hz * 2) + 1, false /*favor_low*/,
+                                   false /*inc_adjacent*/, &walk_2_energy);
 
   // Include the 5th harmonic of the arm
   uint32_t arm_5_energy = 0;
@@ -883,22 +861,21 @@ static uint32_t prv_compute_signal_energy(int16_t *d, int16_t d_len, uint16_t wa
   }
 
   // Compute the total energy of this signal
-  uint32_t max_mag_energy = walk_energy + arm_energy + arm_3_energy + walk_2_energy + arm_5_energy
-                          + walk_3_energy + walk_4_energy + walk_5_energy;
+  uint32_t max_mag_energy = walk_energy + arm_energy + arm_3_energy + walk_2_energy + arm_5_energy +
+                            walk_3_energy + walk_4_energy + walk_5_energy;
   if (log) {
-    KALG_LOG_DEBUG(
-        "walk:%"PRIu16",%"PRIu32"  arm: %"PRIu16",%"PRIu32"  ",
-         walk_hz, walk_energy, arm_hz, arm_energy);
-    KALG_LOG_DEBUG("arm3:%"PRIu16",%"PRIu32"   walk2:%"PRIu16",%"PRIu32"  arm5:%"PRIu16",%"PRIu32
-                   "  ", arm_3_hz, arm_3_energy, walk_2_hz, walk_2_energy, arm_5_hz, arm_5_energy);
-    KALG_LOG_DEBUG(
-        "walk3:%"PRIu16",%"PRIu32"  walk4:%"PRIu16",%"PRIu32"  walk5:%"PRIu16",%"PRIu32"  ",
-         walk_3_hz, walk_3_energy, walk_4_hz, walk_4_energy, walk_5_hz, walk_5_energy);
+    KALG_LOG_DEBUG("walk:%" PRIu16 ",%" PRIu32 "  arm: %" PRIu16 ",%" PRIu32 "  ", walk_hz,
+                   walk_energy, arm_hz, arm_energy);
+    KALG_LOG_DEBUG("arm3:%" PRIu16 ",%" PRIu32 "   walk2:%" PRIu16 ",%" PRIu32 "  arm5:%" PRIu16
+                   ",%" PRIu32 "  ",
+                   arm_3_hz, arm_3_energy, walk_2_hz, walk_2_energy, arm_5_hz, arm_5_energy);
+    KALG_LOG_DEBUG("walk3:%" PRIu16 ",%" PRIu32 "  walk4:%" PRIu16 ",%" PRIu32 "  walk5:%" PRIu16
+                   ",%" PRIu32 "  ",
+                   walk_3_hz, walk_3_energy, walk_4_hz, walk_4_energy, walk_5_hz, walk_5_energy);
   }
 
   return max_mag_energy;
 }
-
 
 // -----------------------------------------------------------------------------------------
 // Compute the most likely walking frequency and its score for this epoch. This searches for the
@@ -955,8 +932,8 @@ static uint16_t prv_compute_scores(int16_t *d, uint32_t real_vmc_5s, int16_t d_l
     max_allowed_hz = KALG_MAX_STEP_FREQ;
   }
   uint32_t walk_energy;
-  uint16_t center_hz = prv_max_mag(d, min_allowed_hz, max_allowed_hz,
-                                   false /*favor_low*/, false /*inc_adjacent*/, &walk_energy);
+  uint16_t center_hz = prv_max_mag(d, min_allowed_hz, max_allowed_hz, false /*favor_low*/,
+                                   false /*inc_adjacent*/, &walk_energy);
 
   // Most runs will be in the high VMC range, but there is a chance that a run will show up in
   // the "medium" VMC range and we only latched onto the arm-swing signal. If we are in the
@@ -964,8 +941,8 @@ static uint16_t prv_compute_scores(int16_t *d, uint32_t real_vmc_5s, int16_t d_l
   // which would indicate a run.
   if ((real_vmc_5s >= k_min_run_vmc) && (max_allowed_hz < KALG_MAX_STEP_FREQ)) {
     uint32_t test_energy;
-    uint16_t higher_hz = prv_max_mag(d, max_allowed_hz, KALG_MAX_STEP_FREQ,
-                                     false /*favor_low*/, false /*inc_adjacent*/, &test_energy);
+    uint16_t higher_hz = prv_max_mag(d, max_allowed_hz, KALG_MAX_STEP_FREQ, false /*favor_low*/,
+                                     false /*inc_adjacent*/, &test_energy);
     if (test_energy > (walk_energy * 3 / 2)) {
       center_hz = higher_hz;
       max_allowed_hz = KALG_MAX_STEP_FREQ;
@@ -1001,7 +978,7 @@ static uint16_t prv_compute_scores(int16_t *d, uint32_t real_vmc_5s, int16_t d_l
   // driving in the car (which we want to ignore).
   int16_t score_high_freq = 0;
   if (max_mag_energy > 0) {
-    score_high_freq = 100 * prv_integral_abs(d, k_high_freq_min, d_len - 1)  / max_mag_energy;
+    score_high_freq = 100 * prv_integral_abs(d, k_high_freq_min, d_len - 1) / max_mag_energy;
   }
 
   // Get the percent energy at low frequencies. A high amount here is a good indication of
@@ -1011,9 +988,10 @@ static uint16_t prv_compute_scores(int16_t *d, uint32_t real_vmc_5s, int16_t d_l
     score_low_freq = 100 * prv_integral_abs(d, 0, k_low_freq_max) / max_mag_energy;
   }
 
-  KALG_LOG_DEBUG("max_mag_energy: %"PRIu32", total: %"PRIi32", score_0: %"PRIu16", "
-                 "score_hf: %"PRIu16", score_lf: %"PRIu16"", max_mag_energy, total_energy,
-                  score_0, score_high_freq, score_low_freq);
+  KALG_LOG_DEBUG("max_mag_energy: %" PRIu32 ", total: %" PRIi32 ", score_0: %" PRIu16
+                 ", "
+                 "score_hf: %" PRIu16 ", score_lf: %" PRIu16 "",
+                 max_mag_energy, total_energy, score_0, score_high_freq, score_low_freq);
 
   *score_0_ret = score_0;
   *score_hf_ret = score_high_freq;
@@ -1022,13 +1000,11 @@ static uint16_t prv_compute_scores(int16_t *d, uint32_t real_vmc_5s, int16_t d_l
   return walk_hz;
 }
 
-
-
 // -----------------------------------------------------------------------------------------
 // Return true if the score and vmc combination indicate that the user is stepping
 static bool prv_is_stepping(KAlgState *state, uint16_t max_mag_hz, uint16_t score_0,
-                            uint16_t score_high_freq, uint16_t score_low_freq,
-                            uint32_t real_vmc_5s, int32_t total_energy, bool *partial_steps) {
+                            uint16_t score_high_freq, uint16_t score_low_freq, uint32_t real_vmc_5s,
+                            int32_t total_energy, bool *partial_steps) {
   *partial_steps = false;
 
   // -------------------------------------------------------------------
@@ -1087,8 +1063,8 @@ static bool prv_is_stepping(KAlgState *state, uint16_t max_mag_hz, uint16_t scor
 
   // Treatment of epochs that include the start or stop of a walk
   // If step_count is 0, see if this epoch could counts as a start/stop of walking
-  if (!is_stepping && (max_mag_hz >= KALG_MIN_STEP_FREQ - 1)
-                   && (max_mag_hz <= KALG_MAX_STEP_FREQ)) {
+  if (!is_stepping && (max_mag_hz >= KALG_MIN_STEP_FREQ - 1) &&
+      (max_mag_hz <= KALG_MAX_STEP_FREQ)) {
     if ((score_0 >= k_partial_min_score) && (real_vmc_5s >= k_partial_min_vmc)) {
       *partial_steps = true;
     }
@@ -1097,11 +1073,11 @@ static bool prv_is_stepping(KAlgState *state, uint16_t max_mag_hz, uint16_t scor
   return is_stepping;
 }
 
-
 // -----------------------------------------------------------------------------------------
 // On entry the first fft_width/2 elements of state->work contain the FFT magnitudes
 static uint16_t prv_calc_steps_in_epoch(KAlgState *state, int16_t num_samples, int16_t fft_width,
-                                int16_t fft_width_log_2, uint32_t *pim_epoch, int16_t fft_scale) {
+                                        int16_t fft_width_log_2, uint32_t *pim_epoch,
+                                        int16_t fft_scale) {
   // The Pebble's raw accel readings have 1000 = 1G. We divide each reading by 8 though, so
   // 125 = 1G. We have empirically determined that scaling the VMC by
   // KALG_x100_RAW_1G_PIM_CPM_TO_REAL_CPM / 100 produces values equivalent to the Actigraph values.
@@ -1140,17 +1116,18 @@ static uint16_t prv_calc_steps_in_epoch(KAlgState *state, int16_t num_samples, i
   // ----------------------------------------
   // Logging output for algorithm debugging
   const char *type_str = stepping ? "STEP" : (partial_steps ? "HALF" : "----");
-  KALG_LOG_DEBUG("%s steps: %2"PRIu16", freq: %2"PRIu16", vmc: %4"PRIu32", score0: %"PRIu16", ",
+  KALG_LOG_DEBUG("%s steps: %2" PRIu16 ", freq: %2" PRIu16 ", vmc: %4" PRIu32 ", score0: %" PRIu16
+                 ", ",
                  type_str, return_steps, max_mag_hz, real_vmc_5s, score_0);
-  KALG_LOG_DEBUG("score_hf: %"PRIi16", score_lf: %"PRIi16", total_energy: %"PRIi32" ",
+  KALG_LOG_DEBUG("score_hf: %" PRIi16 ", score_lf: %" PRIi16 ", total_energy: %" PRIi32 " ",
                  score_hf, score_lf, total_energy);
   prv_log_overall_magnitudes("freq", state->work, 0, (fft_width / 2) - 1 /*index of last element*/);
 
   // Are we collecting statistics?
   if (state->stats_cb) {
     const char *names[] = {"steps", "freq", "vmc", "score_0", "score_hf", "score_lf", "total"};
-    int32_t values[] = {return_steps, max_mag_hz, real_vmc_5s, score_0, score_hf, score_lf,
-                        total_energy};
+    int32_t values[] = {return_steps, max_mag_hz, real_vmc_5s, score_0,
+                        score_hf,     score_lf,   total_energy};
     state->stats_cb(ARRAY_LENGTH(names), names, values);
   }
 
@@ -1161,7 +1138,6 @@ static uint16_t prv_calc_steps_in_epoch(KAlgState *state, int16_t num_samples, i
 
   return return_steps;
 }
-
 
 // -----------------------------------------------------------------------------------------
 // Return an encoding of an angle, quantized into num_angles possible values
@@ -1185,9 +1161,8 @@ static uint8_t prv_get_angle_encoding(int16_t x, int16_t y, uint8_t num_angles) 
   // We need to make sure that in all cases that the returned index is at MOST one less that
   // n_ang, because 0-15 shifted by (ang_res/2) so rounds int, not floor
   int32_t result = (atan + (ang_res / 2)) / ang_res;
-  return (uint8_t) result < num_angles ? result : 0;
+  return (uint8_t)result < num_angles ? result : 0;
 }
-
 
 // -----------------------------------------------------------------------------------------
 // Analyze and return the # of steps from this epoch.
@@ -1219,8 +1194,8 @@ static uint32_t prv_analyze_epoch(KAlgState *state) {
       // The proportional integral mode is roughly the sum of the absolute value of all elements
       // after subtracing the mean, then run through a filter
       uint32_t pim;
-      pim = prv_pim_filter(state, &state->accel_samples[axis][sec * KALG_SAMPLE_HZ],
-                           KALG_SAMPLE_HZ, axis);
+      pim = prv_pim_filter(state, &state->accel_samples[axis][sec * KALG_SAMPLE_HZ], KALG_SAMPLE_HZ,
+                           axis);
 
       // Thresholded integral for the VMCPM calculation, Actigraph equivalent
       state->summary_pim[axis] += pim;
@@ -1253,19 +1228,17 @@ static uint32_t prv_analyze_epoch(KAlgState *state) {
   // The first KALG_FFT_WIDTH/2 elements of the FFT output are the magnitudes. The latter half are
   // the phase
   for (int16_t i = 0; i < KALG_FFT_WIDTH / 2; i++) {
-    state->work[i] = (int16_t) prv_isqrt(state->accel_samples[0][i] * state->accel_samples[0][i]
-                                         + state->accel_samples[1][i] * state->accel_samples[1][i]
-                                         + state->accel_samples[2][i] * state->accel_samples[2][i]);
+    state->work[i] = (int16_t)prv_isqrt(state->accel_samples[0][i] * state->accel_samples[0][i] +
+                                        state->accel_samples[1][i] * state->accel_samples[1][i] +
+                                        state->accel_samples[2][i] * state->accel_samples[2][i]);
   }
 
   // Calculate the step count for this epoch
-  uint16_t steps = prv_calc_steps_in_epoch(
-      state, state->num_samples, KALG_FFT_WIDTH, KALG_FFT_WIDTH_PWR_TWO,
-      pim_epoch, KALG_FFT_SCALE);
+  uint16_t steps = prv_calc_steps_in_epoch(state, state->num_samples, KALG_FFT_WIDTH,
+                                           KALG_FFT_WIDTH_PWR_TWO, pim_epoch, KALG_FFT_SCALE);
 
   return steps;
 }
-
 
 // -----------------------------------------------------------------------------------
 // Compute the sleep score by convolving the VMCs around index i. The caller is responsible
@@ -1284,27 +1257,23 @@ static uint32_t prv_compute_sleep_score(KAlgSleepMinute *samples, int i) {
   return score;
 }
 
-
 // -----------------------------------------------------------------------------------------
 // Return the size required for the state variables
-uint32_t kalg_state_size(void) {
-  return sizeof(KAlgState);
-}
-
+uint32_t kalg_state_size(void) { return sizeof(KAlgState); }
 
 // -----------------------------------------------------------------------------------------
 // Init the state, return true on success
 bool kalg_init(KAlgState *state, KAlgStatsCallback stats_cb) {
   PBL_ASSERTN(state != NULL);
-  *state = (KAlgState) {
-    .stats_cb = stats_cb,
+  *state = (KAlgState){
+      .stats_cb = stats_cb,
   };
 
-  PBL_ASSERT((KALG_SLEEP_PARAMS.max_wake_minutes_early + KALG_SLEEP_HALF_WIDTH + 1)
-                  == KALG_MAX_UNCERTAIN_SLEEP_M, "Invalid value for KALG_MAX_UNCERTAIN_SLEEP_M");
+  PBL_ASSERT((KALG_SLEEP_PARAMS.max_wake_minutes_early + KALG_SLEEP_HALF_WIDTH + 1) ==
+                 KALG_MAX_UNCERTAIN_SLEEP_M,
+             "Invalid value for KALG_MAX_UNCERTAIN_SLEEP_M");
   return true;
 }
-
 
 // -----------------------------------------------------------------------------------------
 // Release resources held by the state. Must be called before the caller frees it, otherwise the
@@ -1314,7 +1283,6 @@ void kalg_deinit(KAlgState *state) {
   prv_release_step_activity_hrm(&state->walk_state);
   prv_release_step_activity_hrm(&state->run_state);
 }
-
 
 // ------------------------------------------------------------------------------------
 uint32_t kalg_analyze_samples(KAlgState *state, AccelRawData *data, uint32_t num_samples,
@@ -1328,12 +1296,12 @@ uint32_t kalg_analyze_samples(KAlgState *state, AccelRawData *data, uint32_t num
 
   // Format the accel data for the algorithm - it wants the x, y and z values in separate arrays
   for (uint32_t i = 0; i < num_samples; i++) {
-    state->accel_samples[KALG_AXIS_X][state->num_samples]
-                      = (data[i].x + KALG_ACCEL_SAMPLE_DIV / 2) >> KALG_ACCEL_SAMPLE_SHIFT;
-    state->accel_samples[KALG_AXIS_Y][state->num_samples]
-                      = (data[i].y + KALG_ACCEL_SAMPLE_DIV / 2) >> KALG_ACCEL_SAMPLE_SHIFT;
-    state->accel_samples[KALG_AXIS_Z][state->num_samples]
-                      = (data[i].z + KALG_ACCEL_SAMPLE_DIV / 2) >> KALG_ACCEL_SAMPLE_SHIFT;
+    state->accel_samples[KALG_AXIS_X][state->num_samples] =
+        (data[i].x + KALG_ACCEL_SAMPLE_DIV / 2) >> KALG_ACCEL_SAMPLE_SHIFT;
+    state->accel_samples[KALG_AXIS_Y][state->num_samples] =
+        (data[i].y + KALG_ACCEL_SAMPLE_DIV / 2) >> KALG_ACCEL_SAMPLE_SHIFT;
+    state->accel_samples[KALG_AXIS_Z][state->num_samples] =
+        (data[i].z + KALG_ACCEL_SAMPLE_DIV / 2) >> KALG_ACCEL_SAMPLE_SHIFT;
     state->num_samples++;
 
     if (state->num_samples >= KALG_N_SAMPLES_EPOCH) {
@@ -1346,7 +1314,6 @@ uint32_t kalg_analyze_samples(KAlgState *state, AccelRawData *data, uint32_t num
   return new_steps;
 }
 
-
 // ------------------------------------------------------------------------------------
 void kalg_minute_stats(KAlgState *state, uint16_t *vmc, uint8_t *orientation, bool *still) {
   PBL_ASSERTN(state != NULL);
@@ -1356,17 +1323,16 @@ void kalg_minute_stats(KAlgState *state, uint16_t *vmc, uint8_t *orientation, bo
   // MAX num_angles is 16, as 16*15 + 15 = 255
   // The range of the theta_i and phi_i is 0 to (n_ang-1)
   // get theta, in the x-y plane. theta relative to +x-axis
-  uint8_t theta = prv_get_angle_encoding(state->summary_mean[0], state->summary_mean[1],
-                                         KALG_NUM_ANGLES);
+  uint8_t theta =
+      prv_get_angle_encoding(state->summary_mean[0], state->summary_mean[1], KALG_NUM_ANGLES);
 
   // get phi, in the xy_vm-z plane
-  int16_t xy_vm = prv_isqrt(state->summary_mean[0] * state->summary_mean[0]
-                            + state->summary_mean[1] * state->summary_mean[1]);
+  int16_t xy_vm = prv_isqrt(state->summary_mean[0] * state->summary_mean[0] +
+                            state->summary_mean[1] * state->summary_mean[1]);
 
   // phi rel to  +z-axis, so z is on hoz-axis and xy_vm is vert-axis
   uint8_t phi_i = prv_get_angle_encoding(state->summary_mean[2], xy_vm, KALG_NUM_ANGLES);
   *orientation = KALG_NUM_ANGLES * phi_i + theta;
-
 
   uint32_t real_vmc = prv_real_counts_from_raw(prv_calc_raw_vmc(state->summary_pim));
   // Clip to a max of uint16_t
@@ -1384,7 +1350,6 @@ void kalg_minute_stats(KAlgState *state, uint16_t *vmc, uint8_t *orientation, bo
   memset(&state->summary_pim, 0, sizeof(state->summary_pim));
 }
 
-
 // ------------------------------------------------------------------------------------
 uint32_t kalg_analyze_finish_epoch(KAlgState *state) {
   PBL_ASSERTN(state != NULL);
@@ -1397,9 +1362,6 @@ uint32_t kalg_analyze_finish_epoch(KAlgState *state) {
   return new_steps;
 }
 
-
-
-
 // ------------------------------------------------------------------------------------------
 // Update the not-worn detection state machine. This state machine gets called on every minute
 // update. It returns true if it determines the watch was not worn
@@ -1410,8 +1372,9 @@ static bool prv_not_worn_update(KAlgState *alg_state, time_t utc_now, uint16_t v
   KAlgNotWornState *state = &alg_state->not_worn_state;
 
   // Determine if this is a "maybe-not-worn" sample
-  bool maybe_not_worn = ((orientation == state->prev_orientation)
-      || ((vmc < params->min_worn_vmc) && (state->prev_vmc < params->min_worn_vmc)));
+  bool maybe_not_worn =
+      ((orientation == state->prev_orientation) ||
+       ((vmc < params->min_worn_vmc) && (state->prev_vmc < params->min_worn_vmc)));
 
   // The upper 4 bits of orientation encode the angle to the Z axis. If this value is 0x0 or 0x8
   // the watch is sitting flat on a table, so it's more probable that it's not being worn
@@ -1437,8 +1400,8 @@ static bool prv_not_worn_update(KAlgState *alg_state, time_t utc_now, uint16_t v
       state->potential_not_worn_start[0] = utc_now;
     }
     state->maybe_not_worn_count++;
-    state->potential_not_worn_len_m[0]
-        = ((utc_now - state->potential_not_worn_start[0]) / SECONDS_PER_MINUTE) + 1;
+    state->potential_not_worn_len_m[0] =
+        ((utc_now - state->potential_not_worn_start[0]) / SECONDS_PER_MINUTE) + 1;
 
   } else {
     // We just encountered a "definitely worn" minute
@@ -1457,13 +1420,13 @@ static bool prv_not_worn_update(KAlgState *alg_state, time_t utc_now, uint16_t v
   state->prev_vmc = vmc;
 
   // Compute result
-  bool result =  definite_not_worn || (state->maybe_not_worn_count >= params->max_low_vmc_run_m);
-  KALG_LOG_DEBUG("       NW:          vmc: %"PRIu16", orient: 0x%"PRIx8", not_worn: %d, "
-                 "mnw_min:%d, mnw_count:%"PRIu16"", vmc, orientation, result, maybe_not_worn,
-                 state->maybe_not_worn_count);
+  bool result = definite_not_worn || (state->maybe_not_worn_count >= params->max_low_vmc_run_m);
+  KALG_LOG_DEBUG("       NW:          vmc: %" PRIu16 ", orient: 0x%" PRIx8
+                 ", not_worn: %d, "
+                 "mnw_min:%d, mnw_count:%" PRIu16 "",
+                 vmc, orientation, result, maybe_not_worn, state->maybe_not_worn_count);
   return result;
 }
-
 
 // ------------------------------------------------------------------------------------------
 // Decide if a potential sleep session should be rejected based on the not-worn state.
@@ -1486,16 +1449,16 @@ static bool prv_not_worn_during_session(KAlgState *alg_state, time_t session_sta
 
   // Compute the boundary locations
   time_t not_worn_start_boundary = session_start_utc + (k_max_start_margin_m * SECONDS_PER_MINUTE);
-  time_t not_worn_end_boundary = session_start_utc
-                               + ((session_len_m - k_min_end_margin_m) * SECONDS_PER_MINUTE);
+  time_t not_worn_end_boundary =
+      session_start_utc + ((session_len_m - k_min_end_margin_m) * SECONDS_PER_MINUTE);
   time_t session_end = session_start_utc + (session_len_m * SECONDS_PER_MINUTE);
 
   for (int i = 0; i < KALG_NUM_NOT_WORN_SECTIONS; i++) {
     if (state->potential_not_worn_len_m[i] == 0) {
       continue;
     }
-    time_t not_worn_end = state->potential_not_worn_start[i]
-                          + (state->potential_not_worn_len_m[i] * SECONDS_PER_MINUTE);
+    time_t not_worn_end = state->potential_not_worn_start[i] +
+                          (state->potential_not_worn_len_m[i] * SECONDS_PER_MINUTE);
 
     // If this sleep session overlaps a very long section of potential not worn, it is not-worn
     time_t overlap_start = MAX(state->potential_not_worn_start[i], session_start_utc);
@@ -1509,9 +1472,9 @@ static bool prv_not_worn_during_session(KAlgState *alg_state, time_t session_sta
       continue;
     }
 
-    if ((state->potential_not_worn_start[i] <= not_worn_start_boundary)
-        && (not_worn_end >= not_worn_end_boundary)) {
-      KALG_LOG_DEBUG("detected not worn from %s for %"PRIu16" minutes",
+    if ((state->potential_not_worn_start[i] <= not_worn_start_boundary) &&
+        (not_worn_end >= not_worn_end_boundary)) {
+      KALG_LOG_DEBUG("detected not worn from %s for %" PRIu16 " minutes",
                      prv_log_time(alg_state, state->potential_not_worn_start[i]),
                      state->potential_not_worn_len_m[i]);
       return true;
@@ -1520,12 +1483,10 @@ static bool prv_not_worn_during_session(KAlgState *alg_state, time_t session_sta
   return false;
 }
 
-
 // ------------------------------------------------------------------------------------------
 // Register the deep sleep sessions we've found
-static void prv_deep_sleep_register_sessions(KAlgState *alg_state, time_t sample_time,
-                                             bool abort, bool ongoing,
-                                             KAlgActivitySessionCallback sessions_cb,
+static void prv_deep_sleep_register_sessions(KAlgState *alg_state, time_t sample_time, bool abort,
+                                             bool ongoing, KAlgActivitySessionCallback sessions_cb,
                                              void *context) {
   // Handy access to some variables
   KAlgDeepSleepActivityState *state = &alg_state->deep_sleep_state;
@@ -1538,16 +1499,16 @@ static void prv_deep_sleep_register_sessions(KAlgState *alg_state, time_t sample
   for (uint8_t i = 0; i < state->num_sessions; i++) {
     time_t start_utc = state->sleep_start_time + state->start_delta_sec[i];
     sessions_cb(context, KAlgActivityType_RestfulSleep, start_utc,
-                state->len_m[i] * SECONDS_PER_MINUTE, ongoing, abort /*delete*/,
-                0 /*steps*/, 0 /*resting calories*/, 0 /*active_calories*/, 0 /*distance_mm*/);
+                state->len_m[i] * SECONDS_PER_MINUTE, ongoing, abort /*delete*/, 0 /*steps*/,
+                0 /*resting calories*/, 0 /*active_calories*/, 0 /*distance_mm*/);
   }
 
   // update/delete the session that might still be in progress
   if (state->deep_start_time != KALG_START_TIME_NONE) {
     int len_sec = sample_time - state->deep_start_time;
-    sessions_cb(context, KAlgActivityType_RestfulSleep, state->deep_start_time,
-                len_sec, ongoing, abort /*delete*/, 0 /*steps*/,
-                0 /*resting calories*/, 0 /*active_calories*/, 0 /*distance_mm*/);
+    sessions_cb(context, KAlgActivityType_RestfulSleep, state->deep_start_time, len_sec, ongoing,
+                abort /*delete*/, 0 /*steps*/, 0 /*resting calories*/, 0 /*active_calories*/,
+                0 /*distance_mm*/);
   }
 }
 
@@ -1584,9 +1545,9 @@ static void prv_deep_sleep_update(KAlgState *alg_state, time_t sample_time, uint
       KALG_LOG_DEBUG("DS: time: %s, rcv start of new sleep", prv_log_time(alg_state, sample_time));
       // Start of a new sleep session
       PBL_ASSERT(state->sleep_start_time == KALG_START_TIME_NONE, "Unexpected start");
-      *state = (KAlgDeepSleepActivityState) {
-        .sleep_start_time = sample_time,
-       };
+      *state = (KAlgDeepSleepActivityState){
+          .sleep_start_time = sample_time,
+      };
       return;
 
     case KAlgDeepSleepAction_Continue:
@@ -1608,22 +1569,23 @@ static void prv_deep_sleep_update(KAlgState *alg_state, time_t sample_time, uint
       prv_deep_sleep_register_sessions(alg_state, sample_time, true /*abort*/, false /*ongoing*/,
                                        sessions_cb, context);
       // No longer in sleep
-      *state = (KAlgDeepSleepActivityState) { };
+      *state = (KAlgDeepSleepActivityState){};
       return;
 
     case KAlgDeepSleepAction_End:
       prv_deep_sleep_register_sessions(alg_state, sample_time, false /*abort*/, false /*ongoing*/,
                                        sessions_cb, context);
       // No longer in sleep
-      *state = (KAlgDeepSleepActivityState) { };
+      *state = (KAlgDeepSleepActivityState){};
       return;
   }
 
   // Handle continuation of sleep
   bool is_deep_minute = (score <= params->max_deep_score);
-  KALG_LOG_DEBUG("       DS:          is_deep_min:%"PRIu8", consecutive_deep_min:%"PRIu16", "
-                 "consecutive_non_deep_min: %"PRIu16"", (uint8_t)is_deep_minute,
-                 state->deep_score_count, state->non_deep_score_count);
+  KALG_LOG_DEBUG("       DS:          is_deep_min:%" PRIu8 ", consecutive_deep_min:%" PRIu16
+                 ", "
+                 "consecutive_non_deep_min: %" PRIu16 "",
+                 (uint8_t)is_deep_minute, state->deep_score_count, state->non_deep_score_count);
 
   // Update counts
   uint16_t last_deep_run_size = state->deep_score_count;
@@ -1653,10 +1615,8 @@ static void prv_deep_sleep_update(KAlgState *alg_state, time_t sample_time, uint
       // We reached the end of it last_deep_run_size minutes ago
       end_time = sample_time - (last_deep_run_size * SECONDS_PER_MINUTE);
       uint16_t len_m = MAX((end_time - start_time) / SECONDS_PER_MINUTE, 0);
-      PBL_LOG_DBG("Detected deep sleep of %"
-        PRIu16
-        " minutes starting at %s ",
-              len_m, prv_log_time(alg_state, start_time));
+      PBL_LOG_DBG("Detected deep sleep of %" PRIu16 " minutes starting at %s ", len_m,
+                  prv_log_time(alg_state, start_time));
 
       // Store the session we just found as a complete one now that we have the end
       if (state->num_sessions < ARRAY_LENGTH(state->start_delta_sec)) {
@@ -1672,13 +1632,12 @@ static void prv_deep_sleep_update(KAlgState *alg_state, time_t sample_time, uint
     }
     // Register/update it as ongoing
     if (state->ok_to_register) {
-      sessions_cb(context, KAlgActivityType_RestfulSleep, start_time,
-                  end_time - start_time, true /*ongoing*/, false /*delete*/, 0 /*steps*/,
-                  0 /*resting calories*/, 0 /*active_calories*/, 0 /*distance_mm*/);
+      sessions_cb(context, KAlgActivityType_RestfulSleep, start_time, end_time - start_time,
+                  true /*ongoing*/, false /*delete*/, 0 /*steps*/, 0 /*resting calories*/,
+                  0 /*active_calories*/, 0 /*distance_mm*/);
     }
   }
 }
-
 
 // ------------------------------------------------------------------------------------------
 // Collect minute data and update the statistics we need for a sleep update. This gets
@@ -1699,10 +1658,10 @@ static bool prv_sleep_activity_update_stats(KAlgState *alg_state, time_t utc_now
             (history_capacity - 1) * sizeof(KAlgSleepMinute));
     state->num_history_entries--;
   }
-  state->minute_history[state->num_history_entries++] = (KAlgSleepMinute) {
-    .vmc = vmc,
-    .orientation = orientation,
-    .definitely_not_worn = definitely_not_worn,
+  state->minute_history[state->num_history_entries++] = (KAlgSleepMinute){
+      .vmc = vmc,
+      .orientation = orientation,
+      .definitely_not_worn = definitely_not_worn,
   };
 
   // Get the not-worn status
@@ -1745,14 +1704,13 @@ static bool prv_sleep_activity_update_stats(KAlgState *alg_state, time_t utc_now
   return true;
 }
 
-
 // ------------------------------------------------------------------------------------------
 // See if we should start a new sleep session or end the current one
 static void prv_sleep_activity_update_session_state(
     KAlgState *alg_state, time_t sample_utc, uint16_t vmc, uint32_t score, bool is_sleep_minute,
     unsigned minutes_since_sleep_started, bool shutting_down,
-    KAlgActivitySessionCallback sessions_cb, void *context,
-    time_t *sleep_end_time, bool *reject_session) {
+    KAlgActivitySessionCallback sessions_cb, void *context, time_t *sleep_end_time,
+    bool *reject_session) {
   // Handy access to some variables
   const KAlgSleepParams *params = &KALG_SLEEP_PARAMS;
   KAlgSleepActivityState *state = &alg_state->sleep_state;
@@ -1772,19 +1730,18 @@ static void prv_sleep_activity_update_session_state(
   // This gets set to non-zero if we detected the end of the current sleep session
   *sleep_end_time = KALG_START_TIME_NONE;
 
-
   // ----------------------------------------------------------------------------------
   // See if we should start a new session or end the current one
   if (state->current_stats.start_time == KALG_START_TIME_NONE) {
     // We haven't detected bedtime yet, see if we should start sleep
     if (state->current_stats.consecutive_sleep_minutes >= params->min_sleep_minutes) {
-      state->current_stats.start_time = sample_utc
-        - (state->current_stats.consecutive_sleep_minutes * SECONDS_PER_MINUTE);
+      state->current_stats.start_time =
+          sample_utc - (state->current_stats.consecutive_sleep_minutes * SECONDS_PER_MINUTE);
       state->current_stats.num_non_zero_minutes = 0;
       state->current_stats.vmc_sum = 0;
 
-      KALG_LOG_DEBUG("Detected bedtime at %s", prv_log_time(alg_state,
-                                                            state->current_stats.start_time));
+      KALG_LOG_DEBUG("Detected bedtime at %s",
+                     prv_log_time(alg_state, state->current_stats.start_time));
 
       // Inform the deep sleep detection logic that a new sleep session just started
       prv_deep_sleep_update(alg_state, state->current_stats.start_time, score,
@@ -1795,9 +1752,9 @@ static void prv_sleep_activity_update_session_state(
   } else {
     // We have detected a bedtime, see if we should wake yet.
     uint32_t wake_minutes_threshold =
-      (minutes_since_sleep_started < params->max_wake_minute_early_offset)
-      ? params->max_wake_minutes_early
-      : params->max_wake_minutes_late;
+        (minutes_since_sleep_started < params->max_wake_minute_early_offset)
+            ? params->max_wake_minutes_early
+            : params->max_wake_minutes_late;
 
     if (prv_not_worn_during_session(alg_state, state->current_stats.start_time,
                                     minutes_since_sleep_started, true /*ongoing*/)) {
@@ -1808,8 +1765,8 @@ static void prv_sleep_activity_update_session_state(
 
     } else if (state->current_stats.consecutive_awake_minutes >= wake_minutes_threshold) {
       // Too many awake minutes in a row
-      *sleep_end_time = sample_utc
-                         - (state->current_stats.consecutive_awake_minutes * SECONDS_PER_MINUTE);
+      *sleep_end_time =
+          sample_utc - (state->current_stats.consecutive_awake_minutes * SECONDS_PER_MINUTE);
 
     } else if (vmc > params->force_wake_minute_vmc) {
       // VMC for this minute is way too high
@@ -1821,22 +1778,21 @@ static void prv_sleep_activity_update_session_state(
       *sleep_end_time = sample_utc;
       KALG_LOG_DEBUG("Cycle ended because score was too high for this minute");
 
-    } else if ((minutes_since_sleep_started > params->min_sleep_len_for_active_pct_check)
-      && (pct_non_zero > params->max_active_minutes_pct)) {
+    } else if ((minutes_since_sleep_started > params->min_sleep_len_for_active_pct_check) &&
+               (pct_non_zero > params->max_active_minutes_pct)) {
       // Too high a percent of awake minutes
       // If the percentage of non-zero minutes is too high, reject this cycle.
       *sleep_end_time = sample_utc;
       *reject_session = true;
-      KALG_LOG_DEBUG("Cycle rejected because too many non-zero minutes (%d pct)",
-                     pct_non_zero);
+      KALG_LOG_DEBUG("Cycle rejected because too many non-zero minutes (%d pct)", pct_non_zero);
 
-    } else if ((minutes_since_sleep_started > params->min_sleep_len_for_active_pct_check)
-      && (avg_vmc > params->max_avg_vmc)) {
+    } else if ((minutes_since_sleep_started > params->min_sleep_len_for_active_pct_check) &&
+               (avg_vmc > params->max_avg_vmc)) {
       // Too high an average VMC, reject this cycle
       // If the percentage of non-zero minutes is too high, reject this cycle.
       *sleep_end_time = sample_utc;
       *reject_session = true;
-      KALG_LOG_DEBUG("Cycle rejected because avg vmc is too high (%"PRIu16")", avg_vmc);
+      KALG_LOG_DEBUG("Cycle rejected because avg vmc is too high (%" PRIu16 ")", avg_vmc);
     } else if (shutting_down) {
       KALG_LOG_DEBUG("Cycle ended because we are shutting down");
       *sleep_end_time = sample_utc;
@@ -1844,20 +1800,20 @@ static void prv_sleep_activity_update_session_state(
   }
 
   // Print state
-  KALG_LOG_DEBUG("%s: score:%5"PRIu32", is_sleep_min:%"PRIi8", cons_sleep_min:%"PRIi16", "
-    "cons_awake_min: %"PRIi16", pct_non_zero: %u, avg_vmc: %"PRIu16" ",
+  KALG_LOG_DEBUG("%s: score:%5" PRIu32 ", is_sleep_min:%" PRIi8 ", cons_sleep_min:%" PRIi16
+                 ", "
+                 "cons_awake_min: %" PRIi16 ", pct_non_zero: %u, avg_vmc: %" PRIu16 " ",
                  prv_log_time(alg_state, sample_utc), score, (int8_t)is_sleep_minute,
                  state->current_stats.consecutive_sleep_minutes,
                  state->current_stats.consecutive_awake_minutes, pct_non_zero, avg_vmc);
 }
 
-
 // ------------------------------------------------------------------------------------------
 // Process the minute data for sleep detection
 static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint16_t vmc,
                                       uint8_t orientation, bool definitely_not_worn,
-                                      bool shutting_down,
-                                      KAlgActivitySessionCallback sessions_cb, void *context) {
+                                      bool shutting_down, KAlgActivitySessionCallback sessions_cb,
+                                      void *context) {
   // Handy access to some variables
   const KAlgSleepParams *params = &KALG_SLEEP_PARAMS;
   KAlgSleepActivityState *state = &alg_state->sleep_state;
@@ -1881,8 +1837,8 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
   // How many minutes since sleep started?
   unsigned minutes_since_sleep_started = 0;
   if (state->current_stats.start_time != KALG_START_TIME_NONE) {
-    minutes_since_sleep_started = (sample_utc - state->current_stats.start_time)
-                                  / SECONDS_PER_MINUTE;
+    minutes_since_sleep_started =
+        (sample_utc - state->current_stats.start_time) / SECONDS_PER_MINUTE;
   }
 
   // Determine if the current session (if any) should end or if we should start a new one
@@ -1894,15 +1850,14 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
                                           minutes_since_sleep_started, shutting_down, sessions_cb,
                                           context, &sleep_end_time, &reject_session);
 
-
   // -------------------------------------------------------------------------------
   // If we've reached the end of a sleep cycle, validate the constraints of the session now
   // to see if we should accept it.
   if (sleep_end_time != KALG_START_TIME_NONE) {
-    uint16_t session_len_m = (sleep_end_time - state->current_stats.start_time)
-                             / SECONDS_PER_MINUTE;
+    uint16_t session_len_m =
+        (sleep_end_time - state->current_stats.start_time) / SECONDS_PER_MINUTE;
     // Detected waking up. Validate the other constraints of a sleep cycle
-    KALG_LOG_DEBUG("Detected wake at %s, cycle_len: %u",  prv_log_time(alg_state, sleep_end_time),
+    KALG_LOG_DEBUG("Detected wake at %s, cycle_len: %u", prv_log_time(alg_state, sleep_end_time),
                    session_len_m);
 
     // Reject if the session is too short
@@ -1920,8 +1875,8 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
 
     // If we got a valid sleep cycle, add it to the totals
     if (!reject_session) {
-      PBL_LOG_DBG("Detected valid sleep cycle of len %d, starting at %s",
-              session_len_m, prv_log_time(alg_state, state->current_stats.start_time));
+      PBL_LOG_DBG("Detected valid sleep cycle of len %d, starting at %s", session_len_m,
+                  prv_log_time(alg_state, state->current_stats.start_time));
 
       sessions_cb(context, KAlgActivityType_Sleep, state->current_stats.start_time,
                   session_len_m * SECONDS_PER_MINUTE, false /*ongoing*/, false /*delete*/,
@@ -1931,10 +1886,10 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
       prv_deep_sleep_update(alg_state, sample_utc, score, KAlgDeepSleepAction_End,
                             true /*ok_to_register*/, sessions_cb, context);
       // Update summary stats
-      state->summary_stats = (KAlgOngoingSleepStats) {
-        .sleep_start_utc = state->current_stats.start_time,
-        .uncertain_start_utc = 0,
-        .sleep_len_m = session_len_m,
+      state->summary_stats = (KAlgOngoingSleepStats){
+          .sleep_start_utc = state->current_stats.start_time,
+          .uncertain_start_utc = 0,
+          .sleep_len_m = session_len_m,
       };
 
     } else {
@@ -1950,11 +1905,11 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
 
       // Clear summary stats if they included this rejected session
       if (state->summary_stats.sleep_start_utc == state->current_stats.start_time) {
-        state->summary_stats = (KAlgOngoingSleepStats) {};
+        state->summary_stats = (KAlgOngoingSleepStats){};
       }
     }
     // No current session anymore
-    state->current_stats = (KAlgSleepActivityStats) { };
+    state->current_stats = (KAlgSleepActivityStats){};
 
   } else {
     // Sleep has not ended yet
@@ -1968,10 +1923,11 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
 
         // Update summary stats
         state->summary_stats.sleep_start_utc = state->current_stats.start_time;
-        state->summary_stats.uncertain_start_utc = utc_now
-                                              - (KALG_MAX_UNCERTAIN_SLEEP_M * SECONDS_PER_MINUTE);
-        state->summary_stats.sleep_len_m = (state->summary_stats.uncertain_start_utc
-                                     - state->summary_stats.sleep_start_utc) / SECONDS_PER_MINUTE;
+        state->summary_stats.uncertain_start_utc =
+            utc_now - (KALG_MAX_UNCERTAIN_SLEEP_M * SECONDS_PER_MINUTE);
+        state->summary_stats.sleep_len_m =
+            (state->summary_stats.uncertain_start_utc - state->summary_stats.sleep_start_utc) /
+            SECONDS_PER_MINUTE;
       }
 
       // Inform deep sleep state machine of the new sample
@@ -1982,16 +1938,15 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
   }
 }
 
-
 // ------------------------------------------------------------------------------------------
 // Return activity attributes for the given activity
 static const KAlgActivityAttributes *prv_get_step_activity_attributes(KAlgActivityType activity) {
   static const KAlgActivityAttributes k_attributes[KAlgActivityTypeCount] = {
-    // min_steps_per_min, max_steps_per_min
-    {0, 0},            // KAlgActivityType_Sleep
-    {0, 0},            // KAlgActivityType_RestfulSleep
-    {40,  130},        // KAlgActivityType_Walk
-    {130, 255},        // KAlgActivityType_Run
+      // min_steps_per_min, max_steps_per_min
+      {0, 0},      // KAlgActivityType_Sleep
+      {0, 0},      // KAlgActivityType_RestfulSleep
+      {40, 130},   // KAlgActivityType_Walk
+      {130, 255},  // KAlgActivityType_Run
   };
 
   PBL_ASSERTN(activity < KAlgActivityTypeCount);
@@ -2057,17 +2012,19 @@ static void prv_step_activity_update(KAlgState *alg_state, KAlgStepActivityState
                                           hrm_expire_s);
     } else if (duration_secs >= min_duration_for_hrm &&
                activity_prefs_hrm_activity_tracking_is_enabled()) {
-      state->hrm_session = hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID,
-          1 /* update interval */, hrm_expire_s, HRMFeature_BPM, prv_hrm_subscription_cb, NULL);
+      state->hrm_session = hrm_manager_subscribe_with_callback(
+          INSTALL_ID_INVALID, 1 /* update interval */, hrm_expire_s, HRMFeature_BPM,
+          prv_hrm_subscription_cb, NULL);
     }
 #endif
 
     // If we've reached the minimum activity length, register/update it
     if (duration_secs >= k_min_activity_secs) {
-      KALG_LOG_DEBUG("Updating activity %d: steps: %"PRIu16", rest_cal: %"PRIu32", "
-        "active_cal: %"PRIu32", distance: %"PRIu32" ", (int)activity_type,
-                     state->steps, state->resting_calories, state->active_calories,
-                     state->distance_mm);
+      KALG_LOG_DEBUG("Updating activity %d: steps: %" PRIu16 ", rest_cal: %" PRIu32
+                     ", "
+                     "active_cal: %" PRIu32 ", distance: %" PRIu32 " ",
+                     (int)activity_type, state->steps, state->resting_calories,
+                     state->active_calories, state->distance_mm);
 
       sessions_cb(context, activity_type, state->start_time, duration_secs, true /*ongoing*/,
                   false /*delete*/, state->steps, state->resting_calories, state->active_calories,
@@ -2083,20 +2040,21 @@ static void prv_step_activity_update(KAlgState *alg_state, KAlgStepActivityState
 
     // We can either end activity by reaching enough inactive minutes in a row or by forcefully
     // ending all activities by the `shutting_down` variable.
-    const bool activity_ended = (shutting_down)
-                                ? true
-                                : (state->inactive_minute_count++ > k_max_inactive_minutes);
+    const bool activity_ended =
+        (shutting_down) ? true : (state->inactive_minute_count++ > k_max_inactive_minutes);
 
     if (activity_ended) {
       // This activity has ended
-      int32_t duration_secs = utc_now - state->start_time
-                              - (state->inactive_minute_count * SECONDS_PER_MINUTE);
+      int32_t duration_secs =
+          utc_now - state->start_time - (state->inactive_minute_count * SECONDS_PER_MINUTE);
       duration_secs = MAX(0, duration_secs);
       if ((uint32_t)duration_secs >= k_min_activity_secs) {
-        KALG_LOG_DEBUG("Ending activity %d: steps: %"PRIu16", rest_cal: %"PRIu32", ""active_cal: "
-                       "%"PRIu32", distance: %"PRIu32" ", (int) activity_type,
-                       state->steps, state->resting_calories, state->active_calories,
-                       state->distance_mm);
+        KALG_LOG_DEBUG("Ending activity %d: steps: %" PRIu16 ", rest_cal: %" PRIu32
+                       ", "
+                       "active_cal: "
+                       "%" PRIu32 ", distance: %" PRIu32 " ",
+                       (int)activity_type, state->steps, state->resting_calories,
+                       state->active_calories, state->distance_mm);
         sessions_cb(context, activity_type, state->start_time, duration_secs, false /*ongoing*/,
                     false /*delete*/, state->steps, state->resting_calories, state->active_calories,
                     state->distance_mm);
@@ -2113,20 +2071,19 @@ static void prv_step_activity_update(KAlgState *alg_state, KAlgStepActivityState
   }
 }
 
-
 // ---------------------------------------------------------------------------------------
 // Feed new minute data into the activity detection state machine. This logic looks for non-sleep
 // activities, like walks, runs, etc.
 void kalg_activities_update(KAlgState *state, time_t utc_now, uint16_t steps, uint16_t vmc,
                             uint8_t orientation, bool definitely_not_worn,
-                            uint32_t resting_calories,
-                            uint32_t active_calories, uint32_t distance_mm, bool shutting_down,
+                            uint32_t resting_calories, uint32_t active_calories,
+                            uint32_t distance_mm, bool shutting_down,
                             KAlgActivitySessionCallback sessions_cb, void *context) {
   // If we've encountered a significant change in UTC time (connecting to a new phone, factory
   // reset, etc.) it could wreak havoc with our activity state machines, so we need to reset
   // state
-  if ((utc_now < state->last_activity_update_utc)
-      || (utc_now > (state->last_activity_update_utc + (5 * SECONDS_PER_MINUTE)))) {
+  if ((utc_now < state->last_activity_update_utc) ||
+      (utc_now > (state->last_activity_update_utc + (5 * SECONDS_PER_MINUTE)))) {
     PBL_LOG_WRN("Resetting state due to time travel");
     prv_reset_state(state);
   };
@@ -2144,11 +2101,10 @@ void kalg_activities_update(KAlgState *state, time_t utc_now, uint16_t steps, ui
                              KAlgActivityType_Run);
 
     // Pass onto the sleep detector
-    prv_sleep_activity_update(state, utc_now, vmc, orientation, definitely_not_worn,
-                              shutting_down, sessions_cb, context);
+    prv_sleep_activity_update(state, utc_now, vmc, orientation, definitely_not_worn, shutting_down,
+                              sessions_cb, context);
   }
 }
-
 
 // ---------------------------------------------------------------------------------------
 time_t kalg_activity_last_processed_time(KAlgState *state, KAlgActivityType activity) {
@@ -2166,7 +2122,6 @@ time_t kalg_activity_last_processed_time(KAlgState *state, KAlgActivityType acti
   PBL_ASSERTN(false);
   return 0;
 }
-
 
 // ---------------------------------------------------------------------------------------
 // Get sleep summary stats

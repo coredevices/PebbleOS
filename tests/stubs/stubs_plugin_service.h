@@ -5,5 +5,4 @@
 
 #include "applib/plugin_service_private.h"
 
-void plugin_service_state_init(PluginServiceState *state) {
-}
+void plugin_service_state_init(PluginServiceState *state) {}

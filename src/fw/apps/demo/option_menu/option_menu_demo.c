@@ -14,10 +14,10 @@
 #include "pbl/util/size.h"
 
 const char *s_strings[] = {
-  "One",
-  "Two",
-  "Three",
-  "Four",
+    "One",
+    "Two",
+    "Three",
+    "Four",
 };
 
 static void prv_menu_select(OptionMenu *option_menu, int selection, void *context) {
@@ -42,26 +42,26 @@ static void prv_init(void) {
   OptionMenu *option_menu = option_menu_create();
 
   const OptionMenuConfig config = {
-    .title = "Option Menu",
-    .choice = OPTION_MENU_CHOICE_NONE,
-    .status_colors = { GColorDarkGray, GColorWhite },
-    .highlight_colors = { PBL_IF_COLOR_ELSE(GColorCobaltBlue, GColorBlack), GColorWhite },
-    .icons_enabled = true
-  };
+      .title = "Option Menu",
+      .choice = OPTION_MENU_CHOICE_NONE,
+      .status_colors = {GColorDarkGray, GColorWhite},
+      .highlight_colors = {PBL_IF_COLOR_ELSE(GColorCobaltBlue, GColorBlack), GColorWhite},
+      .icons_enabled = true};
   option_menu_configure(option_menu, &config);
-  option_menu_set_callbacks(option_menu, &(OptionMenuCallbacks) {
-    .select = prv_menu_select,
-    .get_num_rows = prv_menu_get_num_rows,
-    .draw_row = prv_menu_draw_row,
-    .unload = prv_menu_unload,
-  }, option_menu);
+  option_menu_set_callbacks(option_menu,
+                            &(OptionMenuCallbacks){
+                                .select = prv_menu_select,
+                                .get_num_rows = prv_menu_get_num_rows,
+                                .draw_row = prv_menu_draw_row,
+                                .unload = prv_menu_unload,
+                            },
+                            option_menu);
 
   const bool animated = true;
   app_window_stack_push(&option_menu->window, animated);
 }
 
-static void prv_deinit(void) {
-}
+static void prv_deinit(void) {}
 
 ///////////////////////////
 // App boilerplate
@@ -75,14 +75,15 @@ static void s_main(void) {
 
 const PebbleProcessMd *option_menu_demo_get_app_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-    .common = {
-      .main_func = s_main,
-      // UUID: e8f5d3cc-76ad-4575-97da-6d2049a1b3a4
-      .uuid = {0xe8, 0xf5, 0xd3, 0xcc, 0x76, 0xad, 0x45, 0x75,
-               0x97, 0xda, 0x6d, 0x20, 0x49, 0xa1, 0xb3, 0xa4},
-    },
-    .name = "Option Menu Demo",
+      .common =
+          {
+              .main_func = s_main,
+              // UUID: e8f5d3cc-76ad-4575-97da-6d2049a1b3a4
+              .uuid = {0xe8, 0xf5, 0xd3, 0xcc, 0x76, 0xad, 0x45, 0x75, 0x97, 0xda, 0x6d, 0x20, 0x49,
+                       0xa1, 0xb3, 0xa4},
+          },
+      .name = "Option Menu Demo",
   };
 
-  return (const PebbleProcessMd*) &s_app_info;
+  return (const PebbleProcessMd *)&s_app_info;
 }

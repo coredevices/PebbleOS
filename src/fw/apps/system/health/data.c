@@ -11,16 +11,13 @@
 #include <pbl/logging/logging.h>
 #include "util/time/time.h"
 
-
-T_STATIC void prv_merge_adjacent_sessions(ActivitySession *current,
-                                          ActivitySession *previous) {
+T_STATIC void prv_merge_adjacent_sessions(ActivitySession *current, ActivitySession *previous) {
   if (previous == NULL || current == NULL) {
     return;
   }
 
-  if (current->type != previous->type ||
-      (current->type != ActivitySessionType_RestfulNap &&
-       current->type != ActivitySessionType_RestfulSleep)) {
+  if (current->type != previous->type || (current->type != ActivitySessionType_RestfulNap &&
+                                          current->type != ActivitySessionType_RestfulSleep)) {
     // We only merge sessions if they are "deep" sleep/nap
     return;
   }
@@ -32,8 +29,8 @@ T_STATIC void prv_merge_adjacent_sessions(ActivitySession *current,
   const uint16_t max_apart_merge_secs = 5 * SECONDS_PER_MINUTE;
   time_t end_time = previous->start_utc + previous->length_min * SECONDS_PER_MINUTE;
   if ((end_time + max_apart_merge_secs) > current->start_utc) {
-    current->length_min += previous->length_min +
-                           (current->start_utc - end_time) / SECONDS_PER_MINUTE;
+    current->length_min +=
+        previous->length_min + (current->start_utc - end_time) / SECONDS_PER_MINUTE;
     current->start_utc = previous->start_utc;
     previous->length_min = 0;
     previous->type = ActivitySessionType_None;
@@ -43,13 +40,9 @@ T_STATIC void prv_merge_adjacent_sessions(ActivitySession *current,
 // API Functions
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-HealthData *health_data_create(void) {
-  return (HealthData *)app_zalloc_check(sizeof(HealthData));
-}
+HealthData *health_data_create(void) { return (HealthData *)app_zalloc_check(sizeof(HealthData)); }
 
-void health_data_destroy(HealthData *health_data) {
-  app_free(health_data);
-}
+void health_data_destroy(HealthData *health_data) { app_free(health_data); }
 
 void health_data_update_quick(HealthData *health_data) {
   const time_t now = rtc_get_time();
@@ -73,7 +66,6 @@ void health_data_update(HealthData *health_data) {
   struct tm local_tm;
   localtime_r(&now, &local_tm);
 
-
   //! Step / activity related data
   // Get the step totals for today and the past 6 days
   health_service_private_get_metric_history(HealthMetricStepCount, DAYS_PER_WEEK,
@@ -87,7 +79,6 @@ void health_data_update(HealthData *health_data) {
   // Get the average steps for the past month
   activity_get_metric_monthly_avg(ActivityMetricStepCount, &health_data->monthly_step_average);
 
-
   //! Sleep related data
   health_service_private_get_metric_history(HealthMetricSleepSeconds, DAYS_PER_WEEK,
                                             health_data->sleep_data);
@@ -97,8 +88,7 @@ void health_data_update(HealthData *health_data) {
   int day_offset = use_yesterday ? 1 : 0;
   int wday = (local_tm.tm_wday - day_offset + 7) % 7;
 
-  activity_get_metric_typical(ActivityMetricSleepTotalSeconds, wday,
-                              &health_data->typical_sleep);
+  activity_get_metric_typical(ActivityMetricSleepTotalSeconds, wday, &health_data->typical_sleep);
 
   int32_t deep_sleep_history[2];
   activity_get_metric(ActivityMetricSleepRestfulSeconds, 2, deep_sleep_history);
@@ -119,11 +109,9 @@ void health_data_update(HealthData *health_data) {
   activity_get_metric_monthly_avg(ActivityMetricSleepTotalSeconds,
                                   &health_data->monthly_sleep_average);
 
-
   //! Activity sessions
   health_data->num_activity_sessions = ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT;
-  if (!activity_get_sessions(&health_data->num_activity_sessions,
-                             health_data->activity_sessions)) {
+  if (!activity_get_sessions(&health_data->num_activity_sessions, health_data->activity_sessions)) {
     PBL_LOG_ERR("Fetching activity sessions failed");
   } else {
     ActivitySession *previous_session = NULL;
@@ -144,8 +132,8 @@ void health_data_update_step_derived_metrics(HealthData *health_data) {
   health_data->current_distance_meters = health_service_sum_today(HealthMetricWalkedDistanceMeters);
 
   // get calories
-  health_data->current_calories = health_service_sum_today(HealthMetricActiveKCalories)
-                                + health_service_sum_today(HealthMetricRestingKCalories);
+  health_data->current_calories = health_service_sum_today(HealthMetricActiveKCalories) +
+                                  health_service_sum_today(HealthMetricRestingKCalories);
 }
 
 void health_data_update_steps(HealthData *health_data, uint32_t new_steps) {
@@ -184,13 +172,9 @@ void health_data_update_hr_zone_minutes(HealthData *health_data) {
   activity_get_metric(ActivityMetricHeartRateZone3Minutes, 1, &health_data->hr_zone3_minutes);
 }
 
-int32_t *health_data_steps_get(HealthData *health_data) {
-  return health_data->step_data;
-}
+int32_t *health_data_steps_get(HealthData *health_data) { return health_data->step_data; }
 
-int32_t health_data_current_steps_get(HealthData *health_data) {
-  return health_data->step_data[0];
-}
+int32_t health_data_current_steps_get(HealthData *health_data) { return health_data->step_data[0]; }
 
 int32_t health_data_current_distance_meters_get(HealthData *health_data) {
   return health_data->current_distance_meters;
@@ -220,10 +204,10 @@ int32_t health_data_steps_get_current_average(HealthData *health_data) {
 
   // each average chunk is 15 mins long
   if (health_data->step_average_last_updated_time !=
-         ((today_min / k_minutes_per_step_avg) * k_minutes_per_step_avg)) {
+      ((today_min / k_minutes_per_step_avg) * k_minutes_per_step_avg)) {
     // current_step_average is stale
     health_data->current_step_average =
-      prv_health_data_get_n_average_chunks(health_data, today_min / k_minutes_per_step_avg);
+        prv_health_data_get_n_average_chunks(health_data, today_min / k_minutes_per_step_avg);
     health_data->step_average_last_updated_time =
         (today_min / k_minutes_per_step_avg) * k_minutes_per_step_avg;
   }
@@ -242,10 +226,7 @@ int32_t health_data_steps_get_monthly_average(HealthData *health_data) {
   return health_data->monthly_step_average;
 }
 
-
-int32_t *health_data_sleep_get(HealthData *health_data) {
-  return health_data->sleep_data;
-}
+int32_t *health_data_sleep_get(HealthData *health_data) { return health_data->sleep_data; }
 
 int32_t health_data_current_sleep_get(HealthData *health_data) {
   if (health_data->sleep_data[0] == 0 && health_data->sleep_data[1] > 0) {
@@ -270,9 +251,7 @@ int32_t health_data_sleep_get_start_time(HealthData *health_data) {
   return health_data->sleep_start;
 }
 
-int32_t health_data_sleep_get_end_time(HealthData *health_data) {
-  return health_data->sleep_end;
-}
+int32_t health_data_sleep_get_end_time(HealthData *health_data) { return health_data->sleep_end; }
 
 int32_t health_data_sleep_get_typical_start_time(HealthData *health_data) {
   return health_data->typical_sleep_start;

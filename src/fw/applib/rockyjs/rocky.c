@@ -3,6 +3,4 @@
 
 #include "rocky.h"
 
-bool rocky_event_loop_with_resource(uint32_t resource_id) {
-  return false;
-}
+bool rocky_event_loop_with_resource(uint32_t resource_id) { return false; }
