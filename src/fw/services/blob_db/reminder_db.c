@@ -201,7 +201,9 @@ status_t reminder_db_delete_item(const TimelineItemId *id, bool send_event) {
                                                                            sizeof(TimelineItemId));
 }
 
-bool reminder_db_is_empty(void) { return timeline_item_storage_is_empty(&s_storage); }
+bool reminder_db_is_empty(void) {
+  return timeline_item_storage_is_empty(&s_storage);
+}
 
 status_t reminder_db_set_status_bits(const TimelineItemId *id, uint8_t status) {
   return timeline_item_storage_set_status_bits(&s_storage, (uint8_t *)id, sizeof(ReminderId),
@@ -218,9 +220,13 @@ void reminder_db_init(void) {
   reminders_init();
 }
 
-void reminder_db_deinit(void) { timeline_item_storage_deinit(&s_storage); }
+void reminder_db_deinit(void) {
+  timeline_item_storage_deinit(&s_storage);
+}
 
-status_t reminder_db_compact(void) { return timeline_item_storage_compact(&s_storage); }
+status_t reminder_db_compact(void) {
+  return timeline_item_storage_compact(&s_storage);
+}
 
 status_t reminder_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   // Records inserted from the phone are synced
@@ -243,7 +249,9 @@ status_t reminder_db_delete(const uint8_t *key, int key_len) {
   return rv;
 }
 
-status_t reminder_db_flush(void) { return timeline_item_storage_flush(&s_storage); }
+status_t reminder_db_flush(void) {
+  return timeline_item_storage_flush(&s_storage);
+}
 
 status_t reminder_db_is_dirty(bool *is_dirty_out) {
   *is_dirty_out = false;

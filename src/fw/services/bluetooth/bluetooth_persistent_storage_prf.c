@@ -180,9 +180,12 @@ bool bt_persistent_storage_get_ble_pairing_by_addr(const BTDeviceInternal *devic
   return (rv && bt_device_equal(&device->opaque, &device_out.opaque));
 }
 
-void bt_persistent_storage_set_active_ble_gateway(BTBondingID bonding) {}
+void bt_persistent_storage_set_active_ble_gateway(BTBondingID bonding) {
+}
 
-BTBondingID bt_persistent_storage_get_ble_ancs_bonding(void) { return BLE_BONDING_ID; }
+BTBondingID bt_persistent_storage_get_ble_ancs_bonding(void) {
+  return BLE_BONDING_ID;
+}
 
 bool bt_persistent_storage_is_ble_ancs_bonding(BTBondingID bonding) {
   return bt_persistent_storage_get_ble_pairing_by_id(BLE_BONDING_ID, NULL, NULL, NULL);
@@ -214,7 +217,9 @@ void bt_persistent_storage_register_existing_ble_bondings(void) {
 
 // PRF does not support persistent CCCD storage, these are just stubs
 
-BTCCCDID bt_persistent_storage_store_cccd(const BleCCCD *cccd) { return BT_CCCD_ID_MIN; }
+BTCCCDID bt_persistent_storage_store_cccd(const BleCCCD *cccd) {
+  return BT_CCCD_ID_MIN;
+}
 
 bool bt_persistent_storage_delete_cccd(const BTDeviceInternal *peer, uint16_t chr_val_handle) {
   return true;
@@ -223,16 +228,22 @@ bool bt_persistent_storage_delete_cccd(const BTDeviceInternal *peer, uint16_t ch
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Local Device Info
 
-void bt_persistent_storage_set_active_gateway(BTBondingID bonding) { return; }
+void bt_persistent_storage_set_active_gateway(BTBondingID bonding) {
+  return;
+}
 
 bool bt_persistent_storage_get_active_gateway(BTBondingID *bonding_out,
                                               BtPersistBondingType *type_out) {
   return false;
 }
 
-bool bt_persistent_storage_is_unfaithful(void) { return true; }
+bool bt_persistent_storage_is_unfaithful(void) {
+  return true;
+}
 
-void bt_persistent_storage_set_unfaithful(bool is_unfaithful) { return; }
+void bt_persistent_storage_set_unfaithful(bool is_unfaithful) {
+  return;
+}
 
 bool bt_persistent_storage_get_root_key(SMRootKeyType key_type, SM128BitKey *key_out) {
   return shared_prf_storage_get_root_key(key_type, key_out);
@@ -254,17 +265,21 @@ void bt_persistent_storage_set_local_device_name(char *local_device_name, size_t
 //! Remote Device Info
 
 void bt_persistent_storage_get_cached_system_capabilities(
-    PebbleProtocolCapabilities *capabilities_out) {}
+    PebbleProtocolCapabilities *capabilities_out) {
+}
 
 void bt_persistent_storage_set_cached_system_capabilities(
-    const PebbleProtocolCapabilities *capabilities) {}
+    const PebbleProtocolCapabilities *capabilities) {
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Common
 
-void bt_persistent_storage_init(void) {}
+void bt_persistent_storage_init(void) {
+}
 
-void bt_persistent_storage_delete_all(void) {}
+void bt_persistent_storage_delete_all(void) {
+}
 
 void bt_persistent_storage_delete_all_pairings(void) {
   bt_persistent_storage_delete_ble_pairing_by_id(BLE_BONDING_ID);

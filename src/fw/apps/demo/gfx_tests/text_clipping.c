@@ -39,4 +39,6 @@ static void prv_test(Layer *layer, GContext *ctx) {
                      GTextAlignmentLeft, NULL);
 }
 
-static void prv_teardown(Window *window) { layer_remove_from_parent(&s_canvas); }
+static void prv_teardown(Window *window) {
+  layer_remove_from_parent(&s_canvas);
+}

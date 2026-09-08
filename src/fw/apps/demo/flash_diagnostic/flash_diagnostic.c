@@ -207,7 +207,9 @@ static void stress_window_load(Window *data) {
   app_timer_register(500, app_timer_cb, NULL);
 };
 
-static void stress_window_unload(Window *data) { abort_stress_test = true; }
+static void stress_window_unload(Window *data) {
+  abort_stress_test = true;
+}
 
 static void file_system_stress_callback(int index, void *data) {
   stress_data.stress_iteration = 0;

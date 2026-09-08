@@ -55,7 +55,9 @@ static void prv_show_dialog(void *i18n_owner) {
   app_expandable_dialog_push(e_dialog);
 }
 
-static void prv_forget_ble_remote(int id) { bt_persistent_storage_delete_ble_pairing_by_id(id); }
+static void prv_forget_ble_remote(int id) {
+  bt_persistent_storage_delete_ble_pairing_by_id(id);
+}
 
 static void prv_remote_menu_cleanup(ActionMenu *action_menu, const ActionMenuItem *item,
                                     void *context) {

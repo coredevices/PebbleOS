@@ -242,7 +242,9 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
   vibe_score_destroy(score);
 }
 
-static uint16_t prv_num_rows_cb(SettingsCallbacks *context) { return VibeSettingsRow_Count; }
+static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
+  return VibeSettingsRow_Count;
+}
 
 static void prv_expand_cb(SettingsCallbacks *context) {
   SettingsVibePatternsData *data = (SettingsVibePatternsData *)context;
@@ -254,7 +256,9 @@ static void prv_expand_cb(SettingsCallbacks *context) {
   settings_menu_mark_dirty(SettingsMenuItemVibrations);
 }
 
-static void prv_hide_cb(SettingsCallbacks *context) { vibes_cancel(); }
+static void prv_hide_cb(SettingsCallbacks *context) {
+  vibes_cancel();
+}
 
 static Window *prv_init(void) {
   SettingsVibePatternsData *data = app_zalloc_check(sizeof(SettingsVibePatternsData));

@@ -56,7 +56,9 @@ static void prv_update_status_async(void) {
   system_task_add_callback(prv_update_status_system_task_callback, NULL);
 }
 
-static void prv_new_timer_callback(void *unused) { prv_update_status_async(); }
+static void prv_new_timer_callback(void *unused) {
+  prv_update_status_async();
+}
 
 static uint32_t prv_calc_timeout(const TimelineItem *item) {
   const time_t now = rtc_get_time();
@@ -180,7 +182,9 @@ static void prv_init(void *PBL_UNUSED data) {
   prv_update_status();
 }
 
-void timeline_event_init(void) { system_task_add_callback(prv_init, NULL); }
+void timeline_event_init(void) {
+  system_task_add_callback(prv_init, NULL);
+}
 
 void timeline_event_deinit(void) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
@@ -192,9 +196,13 @@ void timeline_event_deinit(void) {
   s_initialized = false;
 }
 
-void timeline_event_handle_blobdb_event(void) { prv_update_status_async(); }
+void timeline_event_handle_blobdb_event(void) {
+  prv_update_status_async();
+}
 
-void timeline_event_refresh(void) { prv_update_status_async(); }
+void timeline_event_refresh(void) {
+  prv_update_status_async();
+}
 
 bool timeline_event_is_all_day(CommonTimelineItemHeader *common) {
   return (common->all_day ||

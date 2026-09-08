@@ -7,13 +7,21 @@
 
 #include "util/time/time.h"
 
-void activity_insights_recalculate_stats(void) { return; }
+void activity_insights_recalculate_stats(void) {
+  return;
+}
 
-void activity_insights_init(time_t now_utc) { return; }
+void activity_insights_init(time_t now_utc) {
+  return;
+}
 
-void activity_insights_process_sleep_data(time_t now_utc) { return; }
+void activity_insights_process_sleep_data(time_t now_utc) {
+  return;
+}
 
-void activity_insights_process_minute_data(time_t now_utc) { return; }
+void activity_insights_process_minute_data(time_t now_utc) {
+  return;
+}
 
 void activity_insights_start_activity_session(time_t start_utc, uint32_t distance_mm,
                                               uint32_t calories) {

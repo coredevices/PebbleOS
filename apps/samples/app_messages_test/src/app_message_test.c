@@ -87,7 +87,8 @@ static void window_load(Window *window) {
   layer_add_child(window_layer, text_layer_get_layer(s_text_layer));
 }
 
-static void window_unload(Window *window) {}
+static void window_unload(Window *window) {
+}
 
 static void init(void) {
   s_window = window_create();

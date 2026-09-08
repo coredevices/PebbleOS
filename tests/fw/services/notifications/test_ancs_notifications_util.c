@@ -17,9 +17,11 @@
 
 // Tests
 ////////////////////////////////////////////////////////////////
-void test_ancs_notifications_util__initialize(void) {}
+void test_ancs_notifications_util__initialize(void) {
+}
 
-void test_ancs_notifications_util__cleanup(void) {}
+void test_ancs_notifications_util__cleanup(void) {
+}
 
 static ANCSAttribute *prv_create_ancs_attr(const char *str) {
   const size_t len = strlen(str);
@@ -29,7 +31,9 @@ static ANCSAttribute *prv_create_ancs_attr(const char *str) {
   return attr;
 }
 
-static void prv_destroy_ancs_attr(ANCSAttribute *attr) { free(attr); }
+static void prv_destroy_ancs_attr(ANCSAttribute *attr) {
+  free(attr);
+}
 
 void test_ancs_notifications_util__parse_timestamp(void) {
   struct tm apr_3_13_00 = {

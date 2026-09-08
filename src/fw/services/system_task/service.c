@@ -39,7 +39,9 @@ static SystemTaskEventCallback s_current_cb;
 static bool s_system_task_idle = true;
 static bool s_should_block_callbacks = false;
 
-static bool prv_is_accepting_callbacks() { return s_initialized && !s_should_block_callbacks; }
+static bool prv_is_accepting_callbacks() {
+  return s_initialized && !s_should_block_callbacks;
+}
 
 static void system_task_idle_timer_callback(void *data) {
   if (s_system_task_idle && pbl_poll_group_is_empty(&s_system_task_queue_set)) {
@@ -109,7 +111,9 @@ void system_task_timer_init(void) {
   regular_timer_add_seconds_callback(&idle_watchdog_timer);
 }
 
-void system_task_watchdog_feed(void) { task_watchdog_bit_set(PebbleTask_KernelBackground); }
+void system_task_watchdog_feed(void) {
+  task_watchdog_bit_set(PebbleTask_KernelBackground);
+}
 
 static void handle_system_task_send_failure(SystemTaskEventCallback cb, uintptr_t caller_lr) {
   PBL_LOG_ERR("System task queue full. Dropped cb: %p, current cb: %p", cb, s_current_cb);
@@ -191,14 +195,18 @@ bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
   return true;
 }
 
-void system_task_block_callbacks(bool block) { s_should_block_callbacks = block; }
+void system_task_block_callbacks(bool block) {
+  s_should_block_callbacks = block;
+}
 
 uint32_t system_task_get_available_space(void) {
   const bool is_app = pebble_task_get_current() == PebbleTask_App;
   return pbl_msgq_num_free(is_app ? &s_from_app_system_task_queue : &s_system_task_queue);
 }
 
-void *system_task_get_current_callback(void) { return s_current_cb; }
+void *system_task_get_current_callback(void) {
+  return s_current_cb;
+}
 
 void system_task_enable_raised_priority(bool is_raised) {
   const pbl_prio_t raised_priority_level = PBL_PRIO_IDLE + 3;  // Same as KernelMain / BT tasks

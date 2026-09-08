@@ -28,7 +28,9 @@ uint8_t *otp_get_lock(const uint8_t index) {
   return (uint8_t *const)(s_otp_locks + index);
 }
 
-bool otp_is_locked(const uint8_t index) { return (*otp_get_lock(index) == 0); }
+bool otp_is_locked(const uint8_t index) {
+  return (*otp_get_lock(index) == 0);
+}
 
 OtpWriteResult otp_write_slot(const uint8_t index, const char *value) {
   if (otp_is_locked(index)) {

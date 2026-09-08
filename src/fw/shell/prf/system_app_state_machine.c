@@ -40,7 +40,8 @@ const PebbleProcessMd *system_app_state_machine_get_default_app(void) {
   return recovery_first_use_app_get_app_info();
 }
 
-void system_app_state_machine_register_app_launch(AppInstallId app_id) {}
+void system_app_state_machine_register_app_launch(AppInstallId app_id) {
+}
 
 void system_app_state_machine_panic(void) {
   if (app_manager_is_first_app_launched()) {

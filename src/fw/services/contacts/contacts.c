@@ -59,4 +59,6 @@ Contact *contacts_get_contact_by_uuid(const Uuid *uuid) {
   return contact;
 }
 
-void contacts_free_contact(Contact *contact) { kernel_free(contact); }
+void contacts_free_contact(Contact *contact) {
+  kernel_free(contact);
+}

@@ -81,9 +81,13 @@ static void prv_handle_escape_character(TemplateStringState *state) {
   }
 }
 
-static bool prv_predicate_check(char ch) { return ((ch == '>') || (ch == '<')); }
+static bool prv_predicate_check(char ch) {
+  return ((ch == '>') || (ch == '<'));
+}
 
-static bool prv_format_string_ending(char ch) { return ((ch == ',') || (ch == ')')); }
+static bool prv_format_string_ending(char ch) {
+  return ((ch == ',') || (ch == ')'));
+}
 
 static bool prv_predicate_valid_splitter(char ch) {
   return ((ch == ':') || prv_format_string_ending(ch));
@@ -743,7 +747,9 @@ static void prv_filter_time_since(TemplateStringState *state) {
   state->time_was_until = false;
 }
 
-static void prv_filter_end(TemplateStringState *state) { state->filters_complete = true; }
+static void prv_filter_end(TemplateStringState *state) {
+  state->filters_complete = true;
+}
 
 T_STATIC void prv_template_evaluate_filter(TemplateStringState *state, const char *filter_name,
                                            const char *parameters_start) {

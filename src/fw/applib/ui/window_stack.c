@@ -422,9 +422,13 @@ uint32_t window_stack_count(WindowStack *window_stack) {
 // Stack status
 ////////////////////////////////////
 
-void window_stack_lock_push(WindowStack *window_stack) { window_stack->lock_push = true; }
+void window_stack_lock_push(WindowStack *window_stack) {
+  window_stack->lock_push = true;
+}
 
-void window_stack_unlock_push(WindowStack *window_stack) { window_stack->lock_push = false; }
+void window_stack_unlock_push(WindowStack *window_stack) {
+  window_stack->lock_push = false;
+}
 
 bool window_stack_is_animating(WindowStack *window_stack) {
   return window_stack && animation_is_scheduled(window_stack->transition_context.animation);

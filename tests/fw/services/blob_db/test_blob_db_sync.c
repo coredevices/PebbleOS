@@ -29,7 +29,9 @@
 static int s_num_writebacks;
 static int s_num_until_timeout;
 
-void blob_db_endpoint_send_sync_done(BlobDBId db_id) { return; }
+void blob_db_endpoint_send_sync_done(BlobDBId db_id) {
+  return;
+}
 
 static void prv_handle_response_from_phone(void *data) {
   s_num_writebacks++;

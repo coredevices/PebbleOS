@@ -38,7 +38,9 @@ int GATT_Initialize(unsigned int BluetoothStackID, unsigned long Flags,
   return 0;
 }
 
-int GATT_Cleanup(unsigned int BluetoothStackID) { return 0; }
+int GATT_Cleanup(unsigned int BluetoothStackID) {
+  return 0;
+}
 
 int GATT_Start_Service_Discovery_Handle_Range(
     unsigned int stack_id, unsigned int connection_id,
@@ -63,15 +65,25 @@ int GATT_Stop_Service_Discovery(unsigned int BluetoothStackID, unsigned int Conn
   return s_stop_ret_val;
 }
 
-bool fake_gatt_is_service_discovery_running(void) { return s_service_discovery_ctx.is_running; }
+bool fake_gatt_is_service_discovery_running(void) {
+  return s_service_discovery_ctx.is_running;
+}
 
-int fake_gatt_is_service_discovery_start_count(void) { return s_start_count; }
+int fake_gatt_is_service_discovery_start_count(void) {
+  return s_start_count;
+}
 
-int fake_gatt_is_service_discovery_stop_count(void) { return s_stop_count; }
+int fake_gatt_is_service_discovery_stop_count(void) {
+  return s_stop_count;
+}
 
-void fake_gatt_set_start_return_value(int ret_value) { s_start_ret_val = ret_value; }
+void fake_gatt_set_start_return_value(int ret_value) {
+  s_start_ret_val = ret_value;
+}
 
-void fake_gatt_set_stop_return_value(int ret_value) { s_stop_ret_val = ret_value; }
+void fake_gatt_set_stop_return_value(int ret_value) {
+  s_stop_ret_val = ret_value;
+}
 
 void fake_gatt_put_service_discovery_event(GATT_Service_Discovery_Event_Data_t *event) {
   cl_assert_equal_b(s_service_discovery_ctx.is_running, true);
@@ -134,7 +146,9 @@ int GATT_Write_Request(unsigned int BluetoothStackID, unsigned int ConnectionID,
   return 1;
 }
 
-uint16_t fake_gatt_write_last_written_handle(void) { return s_write_handle; }
+uint16_t fake_gatt_write_last_written_handle(void) {
+  return s_write_handle;
+}
 
 void fake_gatt_put_write_response_for_last_write(void) {
   cl_assert_(s_write_cb, "GATT_Write_Request need to be called first!");

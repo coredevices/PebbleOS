@@ -40,7 +40,9 @@ void test_settings_file__initialize(void) {
   pfs_init(false);
 }
 
-void test_settings_file__cleanup(void) { stub_pbl_malloc_set_kernel_malloc_should_fail(false); }
+void test_settings_file__cleanup(void) {
+  stub_pbl_malloc_set_kernel_malloc_should_fail(false);
+}
 
 #include <stdio.h>
 

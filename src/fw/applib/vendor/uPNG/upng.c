@@ -304,26 +304,34 @@ static void unfilter_scanline(upng_t *upng, uint8_t *recon, const uint8_t *scanl
   uint32_t i;
   switch (filterType) {
     case 0:
-      for (i = 0; i < length; i++) recon[i] = scanline[i];
+      for (i = 0; i < length; i++)
+        recon[i] = scanline[i];
       break;
     case 1:
-      for (i = 0; i < bytewidth; i++) recon[i] = scanline[i];
-      for (i = bytewidth; i < length; i++) recon[i] = scanline[i] + recon[i - bytewidth];
+      for (i = 0; i < bytewidth; i++)
+        recon[i] = scanline[i];
+      for (i = bytewidth; i < length; i++)
+        recon[i] = scanline[i] + recon[i - bytewidth];
       break;
     case 2:
       if (precon)
-        for (i = 0; i < length; i++) recon[i] = scanline[i] + precon[i];
+        for (i = 0; i < length; i++)
+          recon[i] = scanline[i] + precon[i];
       else
-        for (i = 0; i < length; i++) recon[i] = scanline[i];
+        for (i = 0; i < length; i++)
+          recon[i] = scanline[i];
       break;
     case 3:
       if (precon) {
-        for (i = 0; i < bytewidth; i++) recon[i] = scanline[i] + precon[i] / 2;
+        for (i = 0; i < bytewidth; i++)
+          recon[i] = scanline[i] + precon[i] / 2;
         for (i = bytewidth; i < length; i++)
           recon[i] = scanline[i] + ((recon[i - bytewidth] + precon[i]) / 2);
       } else {
-        for (i = 0; i < bytewidth; i++) recon[i] = scanline[i];
-        for (i = bytewidth; i < length; i++) recon[i] = scanline[i] + recon[i - bytewidth] / 2;
+        for (i = 0; i < bytewidth; i++)
+          recon[i] = scanline[i];
+        for (i = bytewidth; i < length; i++)
+          recon[i] = scanline[i] + recon[i - bytewidth] / 2;
       }
       break;
     case 4:
@@ -334,7 +342,8 @@ static void unfilter_scanline(upng_t *upng, uint8_t *recon, const uint8_t *scanl
           recon[i] = (uint8_t)(scanline[i] + paeth_predictor(recon[i - bytewidth], precon[i],
                                                              precon[i - bytewidth]));
       } else {
-        for (i = 0; i < bytewidth; i++) recon[i] = scanline[i];
+        for (i = 0; i < bytewidth; i++)
+          recon[i] = scanline[i];
         for (i = bytewidth; i < length; i++)
           recon[i] = (uint8_t)(scanline[i] + paeth_predictor(recon[i - bytewidth], 0, 0));
       }
@@ -891,13 +900,21 @@ void upng_destroy(upng_t *upng, bool free_image_buffer) {
   task_free(upng);
 }
 
-upng_error upng_get_error(const upng_t *upng) { return upng->error; }
+upng_error upng_get_error(const upng_t *upng) {
+  return upng->error;
+}
 
-uint32_t upng_get_error_line(const upng_t *upng) { return upng->error_line; }
+uint32_t upng_get_error_line(const upng_t *upng) {
+  return upng->error_line;
+}
 
-uint32_t upng_get_width(const upng_t *upng) { return upng->width; }
+uint32_t upng_get_width(const upng_t *upng) {
+  return upng->width;
+}
 
-uint32_t upng_get_height(const upng_t *upng) { return upng->height; }
+uint32_t upng_get_height(const upng_t *upng) {
+  return upng->height;
+}
 
 uint16_t upng_get_palette(const upng_t *upng, rgb **palette) {
   if (palette) {
@@ -934,20 +951,30 @@ uint32_t upng_get_components(const upng_t *upng) {
   }
 }
 
-uint32_t upng_get_bitdepth(const upng_t *upng) { return upng->color_depth; }
+uint32_t upng_get_bitdepth(const upng_t *upng) {
+  return upng->color_depth;
+}
 
 uint32_t upng_get_pixelsize(const upng_t *upng) {
   return (upng_get_bitdepth(upng) * upng_get_components(upng));
 }
 
-upng_format upng_get_format(const upng_t *upng) { return upng->format; }
+upng_format upng_get_format(const upng_t *upng) {
+  return upng->format;
+}
 
-const uint8_t *upng_get_buffer(const upng_t *upng) { return upng->buffer; }
+const uint8_t *upng_get_buffer(const upng_t *upng) {
+  return upng->buffer;
+}
 
-uint32_t upng_get_size(const upng_t *upng) { return upng->size; }
+uint32_t upng_get_size(const upng_t *upng) {
+  return upng->size;
+}
 
 // returns if the png is an apng after the upng_load() function
-bool upng_is_apng(const upng_t *upng) { return upng->is_apng; }
+bool upng_is_apng(const upng_t *upng) {
+  return upng->is_apng;
+}
 
 // retuns the apng num_frames
 uint32_t upng_apng_num_frames(const upng_t *upng) {

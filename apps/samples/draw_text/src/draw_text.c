@@ -47,7 +47,9 @@ static void init(void) {
   window_stack_push(window, true);
 }
 
-static void deinit(void) { window_destroy(window); }
+static void deinit(void) {
+  window_destroy(window);
+}
 
 int main(void) {
   init();

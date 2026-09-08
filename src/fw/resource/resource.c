@@ -204,7 +204,9 @@ ResourceVersion resource_get_version(ResAppNum app_num, uint32_t resource_id) {
   return v;
 }
 
-ResourceVersion resource_get_system_version(void) { return resource_get_version(0, 0); }
+ResourceVersion resource_get_system_version(void) {
+  return resource_get_version(0, 0);
+}
 
 bool resource_is_valid(ResAppNum app_num, uint32_t resource_id) {
   pbl_mutex_lock(&s_resource_mutex, PBL_FOREVER);

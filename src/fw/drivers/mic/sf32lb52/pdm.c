@@ -95,7 +95,8 @@ void mic_set_volume(const MicDevice *this, uint16_t volume) {
   }
   volume = volume * PDM_AUDIO_RECORD_GAIN_MAX / 100;
   // volume form 0~120 on HAL
-  if (volume > PDM_AUDIO_RECORD_GAIN_MAX) volume = PDM_AUDIO_RECORD_GAIN_MAX;
+  if (volume > PDM_AUDIO_RECORD_GAIN_MAX)
+    volume = PDM_AUDIO_RECORD_GAIN_MAX;
   state->volume = volume;
 }
 
@@ -273,9 +274,13 @@ void HAL_PDM_RxHalfCpltCallback(PDM_HandleTypeDef *hpdm) {
   prv_dma_data_processing(hpdm->pRxBuffPtr, hpdm->RxXferSize / 2);
 }
 
-void pdm1_data_handler(MicDevice *this) { HAL_PDM_IRQHandler(this->state->hpdm); }
+void pdm1_data_handler(MicDevice *this) {
+  HAL_PDM_IRQHandler(this->state->hpdm);
+}
 
-void pdm1_l_dma_handler(MicDevice *this) { HAL_DMA_IRQHandler(this->state->hpdm->hdmarx); }
+void pdm1_l_dma_handler(MicDevice *this) {
+  HAL_DMA_IRQHandler(this->state->hpdm->hdmarx);
+}
 
 static bool prv_start_pdm_capture(const MicDevice *this) {
   PDM_HandleTypeDef *hpdm = this->state->hpdm;

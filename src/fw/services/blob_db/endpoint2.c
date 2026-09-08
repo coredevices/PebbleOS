@@ -371,4 +371,6 @@ void blob_db2_protocol_msg_callback(CommSession *session, const uint8_t *data, s
   prv_blob_db_msg_decode_and_handle(session, cmd, data, data_length);
 }
 
-void blob_db2_set_accepting_messages(bool enabled) { s_b2db_accepting_messages = enabled; }
+void blob_db2_set_accepting_messages(bool enabled) {
+  s_b2db_accepting_messages = enabled;
+}

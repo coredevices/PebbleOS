@@ -43,7 +43,9 @@ static status_t memory_domain_open(uint8_t *packet_data, size_t length, void **r
   return S_SUCCESS;
 }
 
-static status_t memory_domain_close(void *context) { return S_SUCCESS; }
+static status_t memory_domain_close(void *context) {
+  return S_SUCCESS;
+}
 
 PulseBulkIODomainHandler pulse_bulkio_domain_memory = {.id = PulseBulkIODomainType_Memory,
                                                        .open_proc = memory_domain_open,

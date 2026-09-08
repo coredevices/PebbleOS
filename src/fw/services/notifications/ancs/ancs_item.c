@@ -461,8 +461,10 @@ TimelineItem *ancs_item_create_and_populate(ANCSAttribute *notif_attributes[],
       has_primary_color = true;
     }
   }
-  if (has_bg_color) num_attr++;
-  if (has_primary_color) num_attr++;
+  if (has_bg_color)
+    num_attr++;
+  if (has_primary_color)
+    num_attr++;
 #else
 #endif
 

@@ -6,6 +6,10 @@
 #include "pbl/services/timeline/health_layout.h"
 #include "pbl/util/attributes.h"
 
-LayoutLayer *WEAK health_layout_create(const LayoutLayerConfig *config) { return NULL; }
+LayoutLayer *WEAK health_layout_create(const LayoutLayerConfig *config) {
+  return NULL;
+}
 
-bool WEAK health_layout_verify(bool existing_attributes[]) { return false; }
+bool WEAK health_layout_verify(bool existing_attributes[]) {
+  return false;
+}

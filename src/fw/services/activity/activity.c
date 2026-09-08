@@ -1056,7 +1056,9 @@ bool activity_init(void) {
   return true;
 }
 
-bool activity_is_initialized(void) { return s_activity_initialized; }
+bool activity_is_initialized(void) {
+  return s_activity_initialized;
+}
 
 // ------------------------------------------------------------------------------------------------
 bool activity_start_tracking(bool test_mode) {
@@ -1159,7 +1161,9 @@ DEFINE_SYSCALL(bool, sys_activity_get_sessions, uint32_t *session_entries,
 }
 
 // Expose whether Activity has been initialized to user/applib code via a syscall.
-DEFINE_SYSCALL(bool, sys_activity_is_initialized, void) { return s_activity_initialized; }
+DEFINE_SYSCALL(bool, sys_activity_is_initialized, void) {
+  return s_activity_initialized;
+}
 
 // ------------------------------------------------------------------------------------------------
 DEFINE_SYSCALL(bool, sys_activity_prefs_heart_rate_is_enabled, void) {

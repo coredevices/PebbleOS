@@ -3,15 +3,21 @@
 
 #include <pbl/drivers/watchdog.h>
 
-void watchdog_init(void) {}
+void watchdog_init(void) {
+}
 
-void watchdog_start(void) {}
+void watchdog_start(void) {
+}
 
-void watchdog_stop(void) {}
+void watchdog_stop(void) {
+}
 
-void watchdog_feed(void) {}
+void watchdog_feed(void) {
+}
 
-bool watchdog_check_reset_flag(void) { return 0; }
+bool watchdog_check_reset_flag(void) {
+  return 0;
+}
 
 static McuRebootReason s_cached_reset_flag;
 
@@ -29,4 +35,6 @@ McuRebootReason watchdog_clear_reset_flag(void) {
   return s_cached_reset_flag;
 }
 
-McuRebootReason watchdog_get_reset_flag(void) { return s_cached_reset_flag; }
+McuRebootReason watchdog_get_reset_flag(void) {
+  return s_cached_reset_flag;
+}

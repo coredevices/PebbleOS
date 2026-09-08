@@ -291,7 +291,9 @@ static void prv_handle_time_update(struct tm *tick_time, TimeUnits units_changed
   watch_model_handle_change(&model);
 }
 
-void watch_model_cleanup() { tick_timer_service_unsubscribe(); }
+void watch_model_cleanup() {
+  tick_timer_service_unsubscribe();
+}
 
 static void prv_intro_animation_finished(Animation *animation) {
   const time_t t = rtc_get_time();
@@ -300,7 +302,9 @@ static void prv_intro_animation_finished(Animation *animation) {
   tick_timer_service_subscribe(MINUTE_UNIT, prv_handle_time_update);
 }
 
-void watch_model_start_intro() { prv_intro_animation_finished(NULL); }
+void watch_model_start_intro() {
+  prv_intro_animation_finished(NULL);
+}
 
 void watch_model_init(void) {
   const time_t t = rtc_get_time();

@@ -30,7 +30,8 @@
 #include "fake_spi_flash.h"
 
 void flash_region_erase_optimal_range_no_watchdog(uint32_t min_start, uint32_t max_start,
-                                                  uint32_t min_end, uint32_t max_end) {}
+                                                  uint32_t min_end, uint32_t max_end) {
+}
 
 static int prv_prebake_pfs(const char *filename) {
   struct stat st;

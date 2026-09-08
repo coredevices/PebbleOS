@@ -8,9 +8,11 @@
 #include "stubs_pbl_malloc.h"
 #include "stubs_logging.h"
 
-void test_pstring__initialize(void) {}
+void test_pstring__initialize(void) {
+}
 
-void test_pstring__cleanup(void) {}
+void test_pstring__cleanup(void) {
+}
 
 void test_pstring__equal(void) {
   const char *ps1_str = "Phil";

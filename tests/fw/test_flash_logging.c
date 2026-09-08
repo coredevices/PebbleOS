@@ -27,7 +27,9 @@
 #include <stdio.h>
 #include <string.h>
 
-void test_flash_logging__initialize(void) { fake_spi_flash_init(0, BOARD_NOR_FLASH_SIZE); }
+void test_flash_logging__initialize(void) {
+  fake_spi_flash_init(0, BOARD_NOR_FLASH_SIZE);
+}
 
 void test_flash_logging__cleanup(void) {
   uint32_t size = FLASH_REGION_DEBUG_DB_BEGIN - 0;

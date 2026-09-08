@@ -8,9 +8,13 @@
 #include "pbl/services/i18n/i18n.h"
 #include "shell/prefs.h"
 
-static bool prv_get_state(void *context) { return backlight_is_motion_enabled(); }
+static bool prv_get_state(void *context) {
+  return backlight_is_motion_enabled();
+}
 
-static void prv_set_state(bool enabled, void *context) { backlight_set_motion_enabled(enabled); }
+static void prv_set_state(bool enabled, void *context) {
+  backlight_set_motion_enabled(enabled);
+}
 
 static const ActionToggleImpl s_motion_backlight_action_toggle_impl = {
     .window_name = "Motion Backlight Toggle",

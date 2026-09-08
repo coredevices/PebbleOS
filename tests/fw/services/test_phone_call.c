@@ -25,19 +25,27 @@ extern T_STATIC void prv_handle_ancs_disconnected_event(PebbleEvent *e, void *co
 #include "stubs_session.h"
 #include "stubs_system_task.h"
 
-bool alerts_should_notify_for_type(AlertType type) { return true; }
+bool alerts_should_notify_for_type(AlertType type) {
+  return true;
+}
 
-void ancs_perform_action(uint32_t notification_uid, uint8_t action_id) {}
+void ancs_perform_action(uint32_t notification_uid, uint8_t action_id) {
+}
 
-void ancs_phone_call_temporarily_block_missed_calls(void) {}
+void ancs_phone_call_temporarily_block_missed_calls(void) {
+}
 
-void pp_answer_call(uint32_t cookie) {}
+void pp_answer_call(uint32_t cookie) {
+}
 
-void pp_decline_call(uint32_t cookie) {}
+void pp_decline_call(uint32_t cookie) {
+}
 
-void pp_get_phone_state(void) {}
+void pp_get_phone_state(void) {
+}
 
-void pp_get_phone_state_set_enabled(bool enabled) {}
+void pp_get_phone_state_set_enabled(bool enabled) {
+}
 
 // Phone UI stubs that allow us to track what phone_call.c is doing
 static PhoneEventType s_last_phone_ui_event;
@@ -50,15 +58,21 @@ void phone_ui_handle_outgoing_call(PebblePhoneCaller *caller) {
   s_last_phone_ui_event = PhoneEventType_Outgoing;
 }
 
-void phone_ui_handle_missed_call(void) { s_last_phone_ui_event = PhoneEventType_Missed; }
+void phone_ui_handle_missed_call(void) {
+  s_last_phone_ui_event = PhoneEventType_Missed;
+}
 
-void phone_ui_handle_call_start(bool can_decline) { s_last_phone_ui_event = PhoneEventType_Start; }
+void phone_ui_handle_call_start(bool can_decline) {
+  s_last_phone_ui_event = PhoneEventType_Start;
+}
 
 void phone_ui_handle_call_end(bool call_accepted, bool disconnected) {
   s_last_phone_ui_event = PhoneEventType_End;
 }
 
-void phone_ui_handle_call_hide(void) { s_last_phone_ui_event = PhoneEventType_Hide; }
+void phone_ui_handle_call_hide(void) {
+  s_last_phone_ui_event = PhoneEventType_Hide;
+}
 
 void phone_ui_handle_caller_id(PebblePhoneCaller *caller) {
   s_last_phone_ui_event = PhoneEventType_CallerID;

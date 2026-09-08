@@ -161,7 +161,9 @@ AppInstallId big_time_app_id;
 
 // Fakes
 ////////////////////////////////////
-uint32_t time_get_uptime_seconds(void) { return rtc_get_time(); }
+uint32_t time_get_uptime_seconds(void) {
+  return rtc_get_time();
+}
 
 // Tests
 ////////////////////////////////////

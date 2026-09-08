@@ -126,4 +126,6 @@ uint32_t pbl_msgq_num_used(const struct pbl_msgq *q) {
   return circular_buffer_get_read_space_remaining(&fake->ring) / q->msg_size;
 }
 
-uint32_t pbl_msgq_num_free(const struct pbl_msgq *q) { return q->max_msgs - pbl_msgq_num_used(q); }
+uint32_t pbl_msgq_num_free(const struct pbl_msgq *q) {
+  return q->max_msgs - pbl_msgq_num_used(q);
+}

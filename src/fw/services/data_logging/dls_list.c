@@ -21,7 +21,9 @@ static PBL_MUTEX_DEFINE(s_list_mutex);
 
 // ---------------------------------------------------------------------------------------
 // Assert that the current task owns the list mutex
-void dls_assert_own_list_mutex(void) { PBL_ASSERTN(pbl_mutex_is_owner(&s_list_mutex)); }
+void dls_assert_own_list_mutex(void) {
+  PBL_ASSERTN(pbl_mutex_is_owner(&s_list_mutex));
+}
 
 // ---------------------------------------------------------------------------------------
 // Lock a session (if active). If session was active, locks it and returns true.
@@ -299,9 +301,13 @@ DataLoggingSession *dls_list_get_next(DataLoggingSession *cur) {
   return logging_session;
 }
 
-void dls_list_lock(void) { pbl_mutex_lock(&s_list_mutex, PBL_FOREVER); }
+void dls_list_lock(void) {
+  pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
+}
 
-void dls_list_unlock(void) { pbl_mutex_unlock(&s_list_mutex); }
+void dls_list_unlock(void) {
+  pbl_mutex_unlock(&s_list_mutex);
+}
 
 bool dls_list_for_each_session(bool(callback(DataLoggingSession *, void *)), void *data) {
   pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
@@ -322,7 +328,9 @@ bool dls_list_for_each_session(bool(callback(DataLoggingSession *, void *)), voi
   return true;
 }
 
-void dls_list_init(void) { s_logging_sessions = NULL; }
+void dls_list_init(void) {
+  s_logging_sessions = NULL;
+}
 
 bool dls_list_is_session_valid(DataLoggingSession *logging_session) {
   pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);

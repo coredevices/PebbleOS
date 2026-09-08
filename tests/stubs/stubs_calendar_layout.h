@@ -6,6 +6,10 @@
 #include "pbl/services/timeline/calendar_layout.h"
 #include "pbl/util/attributes.h"
 
-LayoutLayer *WEAK calendar_layout_create(const LayoutLayerConfig *config) { return NULL; }
+LayoutLayer *WEAK calendar_layout_create(const LayoutLayerConfig *config) {
+  return NULL;
+}
 
-bool WEAK calendar_layout_verify(bool existing_attributes[]) { return false; }
+bool WEAK calendar_layout_verify(bool existing_attributes[]) {
+  return false;
+}

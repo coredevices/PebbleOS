@@ -38,7 +38,9 @@
 static GContext s_ctx;
 static FrameBuffer s_fb;
 
-size_t framebuffer_get_size_bytes(FrameBuffer *f) { return FRAMEBUFFER_SIZE_BYTES; }
+size_t framebuffer_get_size_bytes(FrameBuffer *f) {
+  return FRAMEBUFFER_SIZE_BYTES;
+}
 
 ///////////////////////////////////////////////////////////
 // Tests

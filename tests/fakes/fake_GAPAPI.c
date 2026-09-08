@@ -70,7 +70,9 @@ void gap_le_assert_advertising_interval(GAPLEAdvertisingInterval expected) {
   cl_assert_equal_i(s_max_advertising_interval_ms, expected_ms);
 }
 
-bool gap_le_is_advertising_enabled(void) { return s_is_le_advertising_enabled; }
+bool gap_le_is_advertising_enabled(void) {
+  return s_is_le_advertising_enabled;
+}
 
 static Advertising_Data_t s_ad_data;
 static unsigned int s_ad_data_length;
@@ -114,7 +116,9 @@ bool bt_driver_advert_set_advertising_data(const BLEAdData *ad_data) {
   return true;
 }
 
-bool bt_driver_advert_client_get_tx_power(int8_t *tx_power) { return false; }
+bool bt_driver_advert_client_get_tx_power(int8_t *tx_power) {
+  return false;
+}
 
 static GAP_LE_Event_Callback_t s_le_create_connection_event_callback;
 static unsigned long s_le_create_connection_callback_param;
@@ -200,7 +204,9 @@ void fake_GAPAPI_put_encryption_change_event(bool encrypted, uint8_t status, boo
   }
 }
 
-int GAP_LE_Cancel_Create_Connection(unsigned int BluetoothStackID) { return 0; }
+int GAP_LE_Cancel_Create_Connection(unsigned int BluetoothStackID) {
+  return 0;
+}
 
 // Puts the event that the BT Controller will emit after a successful
 // GAP_LE_Cancel_Create_Connection call.
@@ -208,7 +214,9 @@ void fake_gap_le_put_cancel_create_event(const BTDeviceInternal *device, bool is
   fake_gap_put_connection_event(HCI_ERROR_CODE_UNKNOWN_CONNECTION_IDENTIFIER, is_master, device);
 }
 
-int GAP_LE_Disconnect(unsigned int BluetoothStackID, BD_ADDR_t BD_ADDR) { return 0; }
+int GAP_LE_Disconnect(unsigned int BluetoothStackID, BD_ADDR_t BD_ADDR) {
+  return 0;
+}
 
 int GAP_LE_Pair_Remote_Device(unsigned int BluetoothStackID, BD_ADDR_t BD_ADDR,
                               GAP_LE_Pairing_Capabilities_t *Capabilities,
@@ -262,7 +270,9 @@ int GAP_LE_Register_Remote_Authentication(unsigned int BluetoothStackID,
   return 0;
 }
 
-int GAP_LE_Un_Register_Remote_Authentication(unsigned int BluetoothStackID) { return 0; }
+int GAP_LE_Un_Register_Remote_Authentication(unsigned int BluetoothStackID) {
+  return 0;
+}
 
 int GAP_LE_Request_Security(unsigned int BluetoothStackID, BD_ADDR_t BD_ADDR,
                             GAP_LE_Bonding_Type_t Bonding_Type, Boolean_t MITM,
@@ -281,9 +291,13 @@ int GAP_LE_Generate_Resolvable_Address(unsigned int BluetoothStackID, Encryption
   return 0;
 }
 
-int GAP_LE_Set_Random_Address(unsigned int BluetoothStackID, BD_ADDR_t RandomAddress) { return 0; }
+int GAP_LE_Set_Random_Address(unsigned int BluetoothStackID, BD_ADDR_t RandomAddress) {
+  return 0;
+}
 
-int GAP_Query_Local_BD_ADDR(unsigned int BluetoothStackID, BD_ADDR_t *BD_ADDR) { return 0; }
+int GAP_Query_Local_BD_ADDR(unsigned int BluetoothStackID, BD_ADDR_t *BD_ADDR) {
+  return 0;
+}
 
 static const Encryption_Key_t s_fake_irk = {
     0xaa,
@@ -299,7 +313,9 @@ static const BD_ADDR_t s_not_resolving_bd_addr = {
     0xff,
 };
 
-const Encryption_Key_t *fake_GAPAPI_get_fake_irk(void) { return &s_fake_irk; }
+const Encryption_Key_t *fake_GAPAPI_get_fake_irk(void) {
+  return &s_fake_irk;
+}
 
 const BD_ADDR_t *fake_GAPAPI_get_bd_addr_not_resolving_to_fake_irk(void) {
   return &s_not_resolving_bd_addr;

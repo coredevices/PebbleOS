@@ -263,9 +263,13 @@ void task_watchdog_feed(void) {
   prv_task_watchdog_feed();
 }
 
-static void task_watchdog_disable_interrupt() { pbl_irq_lock(); }
+static void task_watchdog_disable_interrupt() {
+  pbl_irq_lock();
+}
 
-static void task_watchdog_enable_interrupt() { pbl_irq_unlock(); }
+static void task_watchdog_enable_interrupt() {
+  pbl_irq_unlock();
+}
 
 void task_watchdog_bit_set_all(void) {
   task_watchdog_disable_interrupt();
@@ -310,7 +314,9 @@ void task_watchdog_resume(void) {
   task_watchdog_enable_interrupt();
 }
 
-void task_watchdog_step_elapsed_time_ms(uint32_t elapsed_ms) { prv_task_watchdog_feed(); }
+void task_watchdog_step_elapsed_time_ms(uint32_t elapsed_ms) {
+  prv_task_watchdog_feed();
+}
 
 #define WATCHDOG_WARN_TICK_CNT (5 * TIMER_INTERRUPT_HZ)             /* 5s */
 #define WATCHDOG_COREDUMP_TICK_CNT ((65 * TIMER_INTERRUPT_HZ) / 10) /* 6.5 s */

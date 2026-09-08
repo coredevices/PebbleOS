@@ -137,7 +137,9 @@ static Window *prv_create_color_menu(void) {
 #endif
 }
 
-static Window *prv_init(void) { return prv_create_color_menu(); }
+static Window *prv_init(void) {
+  return prv_create_color_menu();
+}
 
 const SettingsModuleMetadata *settings_themes_get_info(void) {
   static const SettingsModuleMetadata s_module_info = {

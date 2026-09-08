@@ -29,7 +29,9 @@ typedef enum QuickLaunchSetupVersion {
   QuickLaunchSetupVersionCurrent = QuickLaunchSetupVersionCount - 1,
 } QuickLaunchSetupVersion;
 
-static void prv_push_settings_menu(void) { settings_menu_push(SettingsMenuItemQuickLaunch); }
+static void prv_push_settings_menu(void) {
+  settings_menu_push(SettingsMenuItemQuickLaunch);
+}
 
 static void prv_handle_quick_launch_confirm(ClickRecognizerRef recognizer, void *context) {
   PBL_ASSERTN(context);

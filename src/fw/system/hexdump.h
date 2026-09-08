@@ -25,7 +25,8 @@ void hexdump_using_pbllog(int level, const char *src_filename, int src_line_numb
 #define PBL_HEXDUMP_D_PROMPT(level, data, length) \
   hexdump_log_src(__FILE_NAME__, __LINE__, level, data, length, hexdump_using_prompt)
 #define PBL_HEXDUMP_D(domain, level, data, length) \
-  if (domain) hexdump_log_src(__FILE_NAME__, __LINE__, level, data, length, hexdump_using_pbllog)
+  if (domain)                                      \
+  hexdump_log_src(__FILE_NAME__, __LINE__, level, data, length, hexdump_using_pbllog)
 #define PBL_HEXDUMP(level, data, length) \
   hexdump_log_src(__FILE_NAME__, __LINE__, level, data, length, hexdump_using_pbllog);
 #else

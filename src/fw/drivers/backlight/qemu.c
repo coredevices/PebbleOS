@@ -82,7 +82,8 @@ uint8_t backlight_get_level(uint8_t brightness) {
   return brightness;
 }
 
-void backlight_refresh(void) {}
+void backlight_refresh(void) {
+}
 
 #ifdef CONFIG_BACKLIGHT_QEMU_COLOR
 void backlight_set_color(uint32_t rgb_color) {
@@ -94,5 +95,7 @@ void backlight_set_color(uint32_t rgb_color) {
   s_rgb_current_color = rgb_color;
 }
 
-uint32_t backlight_get_color(void) { return s_rgb_current_color; }
+uint32_t backlight_get_color(void) {
+  return s_rgb_current_color;
+}
 #endif

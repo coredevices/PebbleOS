@@ -11,7 +11,9 @@ static FILE *resource_files[MAX_OPEN_FILES] = {NULL};
 static const uint32_t resource_start_index = 1;  // must start at 1 so font resources work
 static uint32_t resource_index = resource_start_index;
 
-ResAppNum sys_get_current_resource_num(void) { return 0; }
+ResAppNum sys_get_current_resource_num(void) {
+  return 0;
+}
 
 uint32_t sys_resource_load_file_as_resource(const char *filepath, const char *filename) {
   uint32_t resource_id = UINT32_MAX;
@@ -51,16 +53,22 @@ size_t sys_resource_load_range(ResAppNum app_num, uint32_t id, uint32_t start_by
   return 0;
 }
 
-bool sys_resource_bytes_are_readonly(void *bytes) { return false; }
+bool sys_resource_bytes_are_readonly(void *bytes) {
+  return false;
+}
 
 const uint8_t *sys_resource_read_only_bytes(ResAppNum app_num, uint32_t resource_id,
                                             size_t *num_bytes_out) {
   return NULL;
 }
 
-uint32_t sys_resource_get_and_cache(ResAppNum app_num, uint32_t resource_id) { return resource_id; }
+uint32_t sys_resource_get_and_cache(ResAppNum app_num, uint32_t resource_id) {
+  return resource_id;
+}
 
-bool sys_resource_is_valid(ResAppNum app_num, uint32_t resource_id) { return true; }
+bool sys_resource_is_valid(ResAppNum app_num, uint32_t resource_id) {
+  return true;
+}
 
 void fake_resource_syscalls_cleanup(void) {
   for (int i = resource_start_index; i <= resource_index; i++) {

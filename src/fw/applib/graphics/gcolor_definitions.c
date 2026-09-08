@@ -32,7 +32,9 @@ GColor2 get_closest_gcolor2(GColor8 color) {
   }
 }
 
-bool gcolor_equal__deprecated(GColor8 x, GColor8 y) { return (x.argb == y.argb); }
+bool gcolor_equal__deprecated(GColor8 x, GColor8 y) {
+  return (x.argb == y.argb);
+}
 
 bool gcolor_equal(GColor8 x, GColor8 y) {
   return ((x.argb == y.argb) || ((x.a == 0) && (y.a == 0)));

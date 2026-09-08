@@ -37,6 +37,10 @@ void test_ihex__data_record(void) {
   prv_assert_ihex(":07ABCD000102030405060765");
 }
 
-void test_ihex__empty_record_length(void) { cl_assert_equal_i(11, IHEX_RECORD_LENGTH(0)); }
+void test_ihex__empty_record_length(void) {
+  cl_assert_equal_i(11, IHEX_RECORD_LENGTH(0));
+}
 
-void test_ihex__record_length(void) { cl_assert_equal_i(15, IHEX_RECORD_LENGTH(2)); }
+void test_ihex__record_length(void) {
+  cl_assert_equal_i(15, IHEX_RECORD_LENGTH(2));
+}

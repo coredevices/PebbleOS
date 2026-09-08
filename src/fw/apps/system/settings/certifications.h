@@ -149,4 +149,6 @@ ID_GETTER(canada_ised_id)
 
 //! Get the model string from MFG storage
 //! @param buffer a character array that's at least MFG_INFO_MODEL_STRING_LENGTH in size
-static void prv_get_model(char *buffer) { mfg_info_get_model(buffer); }
+static void prv_get_model(char *buffer) {
+  mfg_info_get_model(buffer);
+}

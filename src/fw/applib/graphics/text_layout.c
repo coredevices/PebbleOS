@@ -570,7 +570,8 @@ bool word_trim_preceding_codepoint(GContext *ctx, Word *word, const Codepoint co
 // [INTL] whitespace is more than just the space character.
 void word_trim_preceding_whitespace(GContext *ctx, Word *word,
                                     const TextBoxParams *const text_box_params) {
-  while (word_trim_preceding_codepoint(ctx, word, SPACE_CODEPOINT, text_box_params));
+  while (word_trim_preceding_codepoint(ctx, word, SPACE_CODEPOINT, text_box_params))
+    ;
 }
 
 ////////////////////////////////////////////////////////////
@@ -715,7 +716,8 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
       utf8_t *segment_start = ptr;
       utf8_t *next = NULL;
       Codepoint first_cp = utf8_peek_codepoint(ptr, &next);
-      if (first_cp == 0 || next == NULL) break;
+      if (first_cp == 0 || next == NULL)
+        break;
 
       // Skip leading punctuation/spaces to determine segment type
       bool segment_is_rtl = false;
@@ -723,7 +725,8 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
       while (check_ptr < line_end && *check_ptr != '\0' && *check_ptr != '\n') {
         utf8_t *check_next = NULL;
         Codepoint check_cp = utf8_peek_codepoint(check_ptr, &check_next);
-        if (check_cp == 0 || check_next == NULL) break;
+        if (check_cp == 0 || check_next == NULL)
+          break;
         if (!prv_codepoint_is_punctuation(check_cp) && check_cp != SPACE_CODEPOINT &&
             !codepoint_is_zero_width(check_cp)) {
           segment_is_rtl = codepoint_is_rtl(check_cp);
@@ -748,7 +751,8 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
       while (segment_end < line_end && *segment_end != '\0' && *segment_end != '\n') {
         utf8_t *seg_next = NULL;
         Codepoint seg_cp = utf8_peek_codepoint(segment_end, &seg_next);
-        if (seg_cp == 0 || seg_next == NULL) break;
+        if (seg_cp == 0 || seg_next == NULL)
+          break;
 
         // Skip invisible codepoints (ZWJ, variation selectors, skin tone modifiers)
         if (prv_codepoint_is_invisible(seg_cp)) {
@@ -797,7 +801,8 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
         segment_end = seg_next;
       }
       size_t segment_len = segment_end - segment_start;
-      if (segment_len == 0) break;
+      if (segment_len == 0)
+        break;
 
       // Peel trailing spaces into their own neutral segment. A space between
       // two runs is direction-neutral: if it stays inside a run it is reversed
@@ -890,7 +895,8 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
           while (*rptr != '\0') {
             utf8_t *rnext = NULL;
             Codepoint rcp = utf8_peek_codepoint(rptr, &rnext);
-            if (rcp == 0 || rnext == NULL) break;
+            if (rcp == 0 || rnext == NULL)
+              break;
             if (prv_codepoint_is_invisible(rcp)) {
               rptr = rnext;
               continue;
@@ -922,7 +928,8 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
         while (sptr < seg->end) {
           utf8_t *snext = NULL;
           Codepoint scp = utf8_peek_codepoint(sptr, &snext);
-          if (scp == 0 || snext == NULL) break;
+          if (scp == 0 || snext == NULL)
+            break;
           if (prv_codepoint_is_invisible(scp)) {
             sptr = snext;
             continue;

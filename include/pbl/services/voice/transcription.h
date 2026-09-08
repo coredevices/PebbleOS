@@ -15,7 +15,9 @@
 
 //! Transcription types supported. Only the sentence list transcription is currently supported, but
 //! this allows for different formats in future
-typedef enum { TranscriptionTypeSentenceList = 0x01 } TranscriptionType;
+typedef enum {
+  TranscriptionTypeSentenceList = 0x01
+} TranscriptionType;
 
 //! A word string with associated confidence value and length. The string is not zero terminated
 typedef struct PACKED {

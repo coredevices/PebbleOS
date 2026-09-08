@@ -33,12 +33,16 @@ status_t blob_db_insert(BlobDBId db_id, const uint8_t *key, int key_len, const u
   return settings_file_set(NULL, key, key_len, val, val_len);
 }
 
-RtcTicks rtc_get_ticks(void) { return 0; }
+RtcTicks rtc_get_ticks(void) {
+  return 0;
+}
 
 // Fakes
 ////////////////////////////////////////////////////////////////
 static const time_t NOW = 1471269600;  // Mon, 15 Aug 2016 14:00:00 GMT
-time_t rtc_get_time(void) { return NOW; }
+time_t rtc_get_time(void) {
+  return NOW;
+}
 
 bool activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *history) {
   *history = 0;
@@ -60,7 +64,8 @@ void test_health_db__initialize(void) {
   s_metric_updated_count = 0;
 }
 
-void test_health_db__cleanup(void) {}
+void test_health_db__cleanup(void) {
+}
 
 // Dummy Data
 ////////////////////////////////////////////////////////////////

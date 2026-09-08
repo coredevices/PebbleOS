@@ -206,7 +206,8 @@ void rtc_init(void) {
   s_initialized = true;
 }
 
-void rtc_init_timers(void) {}
+void rtc_init_timers(void) {
+}
 
 static RtcTicks get_ticks(void) {
   static pbl_tick_t s_last_freertos_tick_count = 0;
@@ -320,15 +321,23 @@ time_t rtc_get_time(void) {
   return seconds;
 }
 
-RtcTicks rtc_get_ticks(void) { return get_ticks(); }
+RtcTicks rtc_get_ticks(void) {
+  return get_ticks();
+}
 
-void rtc_alarm_init(void) {}
+void rtc_alarm_init(void) {
+}
 
-void rtc_alarm_set(RtcTicks num_ticks) {}
+void rtc_alarm_set(RtcTicks num_ticks) {
+}
 
-RtcTicks rtc_alarm_get_elapsed_ticks(void) { return 0; }
+RtcTicks rtc_alarm_get_elapsed_ticks(void) {
+  return 0;
+}
 
-bool rtc_alarm_is_initialized(void) { return true; }
+bool rtc_alarm_is_initialized(void) {
+  return true;
+}
 
 bool rtc_sanitize_struct_tm(struct tm *t) {
   // These values come from time_t (which suffers from the 2038 problem) and our hardware which
@@ -361,7 +370,9 @@ void rtc_get_time_tm(struct tm *time_tm) {
   localtime_r(&t, time_tm);
 }
 
-const char *rtc_get_time_string(char *buffer) { return time_t_to_string(buffer, rtc_get_time()); }
+const char *rtc_get_time_string(char *buffer) {
+  return time_t_to_string(buffer, rtc_get_time());
+}
 
 const char *time_t_to_string(char *buffer, time_t t) {
   struct tm time;
@@ -428,7 +439,9 @@ void rtc_get_timezone(TimezoneInfo *tzinfo) {
   tzinfo->dst_end = storage.dst_end;
 }
 
-void rtc_timezone_clear(void) { flash_erase_subsector_blocking(FLASH_REGION_TZINFO_BEGIN); }
+void rtc_timezone_clear(void) {
+  flash_erase_subsector_blocking(FLASH_REGION_TZINFO_BEGIN);
+}
 
 uint16_t rtc_get_timezone_id(void) {
   TimezoneInfo tzinfo;
@@ -446,7 +459,8 @@ bool rtc_is_timezone_set(void) {
   return version == TZINFO_VERSION;
 }
 
-void rtc_enable_backup_regs(void) {}
+void rtc_enable_backup_regs(void) {
+}
 
 void rtc_calibrate_frequency(uint32_t frequency) {
 #ifndef SF32LB52_USE_LXT

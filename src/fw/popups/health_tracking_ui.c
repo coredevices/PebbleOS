@@ -79,4 +79,6 @@ void health_tracking_ui_feature_show_disabled(void) {
 }
 
 // ---------------------------------------------------------------------------
-void health_tracking_ui_register_app_launch(AppInstallId app_id) { s_last_app_id = 0; }
+void health_tracking_ui_register_app_launch(AppInstallId app_id) {
+  s_last_app_id = 0;
+}

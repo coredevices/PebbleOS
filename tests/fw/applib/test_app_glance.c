@@ -40,7 +40,9 @@ typedef struct AppGlanceTestState {
 
 static AppGlanceTestState s_test_state;
 
-ResAppNum sys_get_current_resource_num(void) { return 0; }
+ResAppNum sys_get_current_resource_num(void) {
+  return 0;
+}
 
 void sys_timeline_resources_get_id(const TimelineResourceInfo *timeline_res,
                                    TimelineResourceSize size, AppResourceInfo *res_info) {
@@ -84,7 +86,9 @@ void test_app_glance__initialize(void) {
 
 void app_glance_db_deinit(void);
 
-void test_app_glance__cleanup(void) { app_glance_db_deinit(); }
+void test_app_glance__cleanup(void) {
+  app_glance_db_deinit();
+}
 
 void prv_basic_reload_cb(AppGlanceReloadSession *session, size_t limit, void *context) {
   s_test_state.reload_callback_was_called = true;

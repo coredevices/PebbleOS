@@ -51,24 +51,32 @@ static void prv_semaphore_give(I2CBusState *bus) {
   pbl_sem_give(&bus->event_semaphore);
 }
 
-static void prv_semaphore_give_from_isr(I2CBusState *bus) { pbl_sem_give(&bus->event_semaphore); }
+static void prv_semaphore_give_from_isr(I2CBusState *bus) {
+  pbl_sem_give(&bus->event_semaphore);
+}
 
 /*-------------------BUS/PIN CONFIG FUNCTIONS--------------------------*/
 // FIXME: These rail control functions should be moved to board-specific implementations
 // https://pebbletechnology.atlassian.net/browse/PBL-32232
 
 #ifdef CONFIG_PMIC
-void i2c_rail_ctl_pmic(I2CBus *bus, bool enable) { set_ldo3_power_state(enable); }
+void i2c_rail_ctl_pmic(I2CBus *bus, bool enable) {
+  set_ldo3_power_state(enable);
+}
 #endif
 
 //! Configure the bus pins, enable the peripheral clock and initialize the I2C peripheral.
 //! Always lock the bus and peripheral config access before enabling it
-static void prv_bus_enable(I2CBus *bus) { i2c_hal_enable(bus); }
+static void prv_bus_enable(I2CBus *bus) {
+  i2c_hal_enable(bus);
+}
 
 //! De-initialize and gate the clock to the peripheral
 //! Power down rail if the bus supports that and no devices are using it
 //! Always lock the bus and peripheral config access before disabling it
-static void prv_bus_disable(I2CBus *bus) { i2c_hal_disable(bus); }
+static void prv_bus_disable(I2CBus *bus) {
+  i2c_hal_disable(bus);
+}
 
 //! Perform a soft reset of the bus
 //! Always lock the bus before reset

@@ -29,9 +29,11 @@ const uint8_t weather_diurnal_curve[24] = {
 static int prv_jelly_edge(AnimationProgress m, int delay_num, int from, int to) {
   const int32_t MAX = ANIMATION_NORMALIZED_MAX;
   int32_t local = (int32_t)m - MAX * delay_num / 6;
-  if (local < 0) local = 0;
+  if (local < 0)
+    local = 0;
   local = (int32_t)((int64_t)local * 6 / 5);
-  if (local > MAX) local = MAX;
+  if (local > MAX)
+    local = MAX;
   return (int)interpolate_moook_soft(local, from, to, 3);
 }
 
@@ -64,15 +66,19 @@ static void prv_squash_resample(GBitmap *fb, const uint8_t *scratch, AnimationPr
       // frame rightward (same reasoning as the UP_EXIT clamp).
       left_edge = prv_jelly_edge(m, 0, 0, -W);
       right_edge = (prv_jelly_edge(m, 0, W, 0) + prv_jelly_edge(m, 1, W, 0)) / 2;
-      if (left_edge > 0) left_edge = 0;
-      if (right_edge > W) right_edge = W;
+      if (left_edge > 0)
+        left_edge = 0;
+      if (right_edge > W)
+        right_edge = W;
     }
     int dst_w = right_edge - left_edge;
-    if (dst_w < 1) dst_w = 1;
+    if (dst_w < 1)
+      dst_w = 1;
     const int32_t sx_step = ((int32_t)W << 16) / dst_w;
     int vis0 = left_edge > 0 ? left_edge : 0;
     int vis1 = right_edge < W ? right_edge : W;
-    if (vis1 < vis0) vis1 = vis0;
+    if (vis1 < vis0)
+      vis1 = vis0;
     for (int y = 0; y < H; y++) {
       GBitmapDataRowInfo ri = gbitmap_get_data_row_info(fb, (uint16_t)y);
       uint8_t *dst = ri.data;  // absolute-x
@@ -97,7 +103,8 @@ static void prv_squash_resample(GBitmap *fb, const uint8_t *scratch, AnimationPr
     // Compress the exit into the first ~75% of the animation so the screen has fully
     // cleared before the card's glance text sweeps across (see prv_draw_flying_content).
     AnimationProgress me = m + m / 3;
-    if (me > ANIMATION_NORMALIZED_MAX) me = ANIMATION_NORMALIZED_MAX;
+    if (me > ANIMATION_NORMALIZED_MAX)
+      me = ANIMATION_NORMALIZED_MAX;
     top_edge = prv_jelly_edge(me, 1, 0, H);
     bot_edge = prv_jelly_edge(me, 0, H, 2 * H);
   } else if (mode == WEATHER_SQUASH_CLOCK_EXIT) {  // clock exit: same geometry, full timeline
@@ -113,14 +120,17 @@ static void prv_squash_resample(GBitmap *fb, const uint8_t *scratch, AnimationPr
     bot_edge = (prv_jelly_edge(m, 0, H, 0) + prv_jelly_edge(m, 1, H, 0)) / 2;
     // Never let the frame move DOWN past its rest: the moook anticipation dip would poke
     // the bottom content below the decoupled burst dot for a beat, which reads wrong.
-    if (top_edge > 0) top_edge = 0;
-    if (bot_edge > H) bot_edge = H;
+    if (top_edge > 0)
+      top_edge = 0;
+    if (bot_edge > H)
+      bot_edge = H;
   } else {  // drop-in: bottom leads down into place
     top_edge = prv_jelly_edge(m, 1, -H, 0);
     bot_edge = prv_jelly_edge(m, 0, 0, H);
   }
   int dst_h = bot_edge - top_edge;
-  if (dst_h < 1) dst_h = 1;
+  if (dst_h < 1)
+    dst_h = 1;
   const int32_t sy_step = ((int32_t)H << 16) / dst_h;
   for (int ay = 0; ay < H; ay++) {
     GBitmapDataRowInfo ri = gbitmap_get_data_row_info(fb, (uint16_t)ay);
@@ -140,14 +150,16 @@ static void prv_squash_resample(GBitmap *fb, const uint8_t *scratch, AnimationPr
                            (x >= (int)sri.min_x && x <= (int)sri.max_x) ? src[x] : white);
       }
     } else {
-      for (int x = lo; x <= hi; x++) weather_fb_row_set(ri.data, x, white);
+      for (int x = lo; x <= hi; x++)
+        weather_fb_row_set(ri.data, x, white);
     }
   }
 }
 
 void weather_render_squash(GContext *ctx, uint8_t *scratch, AnimationProgress m, int mode) {
   GBitmap *fb = graphics_capture_frame_buffer(ctx);
-  if (!fb) return;
+  if (!fb)
+    return;
   GRect b = gbitmap_get_bounds(fb);
   const int W = b.size.w, H = b.size.h;
   for (int y = 0; y < H; y++) {
@@ -171,14 +183,16 @@ void weather_render_squash(GContext *ctx, uint8_t *scratch, AnimationProgress m,
 void weather_render_squash_cached(GContext *ctx, const uint8_t *scratch, AnimationProgress m,
                                   int mode) {
   GBitmap *fb = graphics_capture_frame_buffer(ctx);
-  if (!fb) return;
+  if (!fb)
+    return;
   prv_squash_resample(fb, scratch, m, mode);
   graphics_release_frame_buffer(ctx, fb);
 }
 
 void weather_fill_weekday_abbrev(int day_offset, const char *fallback, char *buffer,
                                  size_t buffer_size) {
-  if (!buffer || buffer_size == 0) return;
+  if (!buffer || buffer_size == 0)
+    return;
   time_t target = time(NULL) + (time_t)day_offset * 86400;
   struct tm *lt = localtime(&target);
   if (!lt || strftime(buffer, buffer_size, "%a", lt) == 0) {
@@ -189,12 +203,14 @@ void weather_fill_weekday_abbrev(int day_offset, const char *fallback, char *buf
     }
   }
   for (char *c = buffer; *c; c++) {
-    if (*c >= 'a' && *c <= 'z') *c = (char)(*c - 'a' + 'A');
+    if (*c >= 'a' && *c <= 'z')
+      *c = (char)(*c - 'a' + 'A');
   }
 }
 
 uint32_t weather_scale_u32(uint32_t value, uint32_t numerator, uint32_t denominator) {
-  if (denominator == 0) return 0;
+  if (denominator == 0)
+    return 0;
 
   uint32_t whole = value / denominator;
   uint32_t remainder = value % denominator;
@@ -202,7 +218,8 @@ uint32_t weather_scale_u32(uint32_t value, uint32_t numerator, uint32_t denomina
 }
 
 int32_t weather_scale_i32(int32_t value, int32_t numerator, int32_t denominator) {
-  if (denominator == 0) return 0;
+  if (denominator == 0)
+    return 0;
 
   bool negative = false;
   if (value < 0) {
@@ -223,11 +240,13 @@ int32_t weather_scale_i32(int32_t value, int32_t numerator, int32_t denominator)
 }
 
 int32_t weather_isqrt(int32_t value) {
-  if (value <= 0) return 0;
+  if (value <= 0)
+    return 0;
   uint32_t x = (uint32_t)value;
   uint32_t result = 0;
   uint32_t bit = 1UL << 30;
-  while (bit > x) bit >>= 2;
+  while (bit > x)
+    bit >>= 2;
   while (bit != 0) {
     if (x >= result + bit) {
       x -= result + bit;
@@ -241,13 +260,16 @@ int32_t weather_isqrt(int32_t value) {
 }
 
 int32_t weather_norm_square(int32_t value) {
-  if (value <= 0) return 0;
-  if (value >= ANIMATION_NORMALIZED_MAX) return ANIMATION_NORMALIZED_MAX;
+  if (value <= 0)
+    return 0;
+  if (value >= ANIMATION_NORMALIZED_MAX)
+    return ANIMATION_NORMALIZED_MAX;
   return (int32_t)(((uint32_t)value * (uint32_t)value) / (uint32_t)ANIMATION_NORMALIZED_MAX);
 }
 
 int32_t weather_norm_bell(int32_t value) {
-  if (value <= 0 || value >= ANIMATION_NORMALIZED_MAX) return 0;
+  if (value <= 0 || value >= ANIMATION_NORMALIZED_MAX)
+    return 0;
   uint32_t v = (uint32_t)value;
   uint32_t max = (uint32_t)ANIMATION_NORMALIZED_MAX;
   return (int32_t)((4U * v * (max - v)) / max);
@@ -318,7 +340,8 @@ void weather_draw_lava_ring(GContext *ctx, GPoint center, int outer_r, GColor gl
 
   if (idle_progress > WEATHER_GLOW_WRAP_SPIN_TICKS) {
     uint8_t close = idle_progress - WEATHER_GLOW_WRAP_SPIN_TICKS;
-    if (close > WEATHER_GLOW_WRAP_CLOSE_TICKS) close = WEATHER_GLOW_WRAP_CLOSE_TICKS;
+    if (close > WEATHER_GLOW_WRAP_CLOSE_TICKS)
+      close = WEATHER_GLOW_WRAP_CLOSE_TICKS;
     span += (int32_t)close * (half / WEATHER_GLOW_WRAP_CLOSE_TICKS);
   }
 
@@ -330,7 +353,8 @@ void weather_draw_lava_ring(GContext *ctx, GPoint center, int outer_r, GColor gl
   prv_fill_wrapped_radial(ctx, ring_rect, 2, phase, span);
   prv_fill_wrapped_radial(ctx, ring_rect, 2, neg, span);
 
-  if (idle) return;
+  if (idle)
+    return;
 
   int sx1 = center.x + (int)((int32_t)sin_lookup(phase) * outer_r / TRIG_MAX_RATIO);
   int sy1 = center.y - (int)((int32_t)cos_lookup(phase) * outer_r / TRIG_MAX_RATIO);

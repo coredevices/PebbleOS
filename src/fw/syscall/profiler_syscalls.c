@@ -19,13 +19,21 @@ ProfilerNode *prv_find_node(ProfilerNode *find_node) {
   return (ProfilerNode *)node;
 }
 
-DEFINE_SYSCALL(void, sys_profiler_init, void) { profiler_init(); }
+DEFINE_SYSCALL(void, sys_profiler_init, void) {
+  profiler_init();
+}
 
-DEFINE_SYSCALL(void, sys_profiler_start, void) { profiler_start(); }
+DEFINE_SYSCALL(void, sys_profiler_start, void) {
+  profiler_start();
+}
 
-DEFINE_SYSCALL(void, sys_profiler_stop, void) { profiler_stop(); }
+DEFINE_SYSCALL(void, sys_profiler_stop, void) {
+  profiler_stop();
+}
 
-DEFINE_SYSCALL(void, sys_profiler_print_stats, void) { profiler_print_stats(); }
+DEFINE_SYSCALL(void, sys_profiler_print_stats, void) {
+  profiler_print_stats();
+}
 
 DEFINE_SYSCALL(void, sys_profiler_node_start, ProfilerNode *node) {
   if (PRIVILEGE_WAS_ELEVATED) {

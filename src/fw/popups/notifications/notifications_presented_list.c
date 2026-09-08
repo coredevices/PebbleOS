@@ -41,7 +41,9 @@ Uuid *notifications_presented_list_relative(Uuid *id, int offset) {
   return end_node ? &end_node->notif.id : NULL;
 }
 
-int notifications_presented_list_count(void) { return list_count((ListNode *)s_presented_notifs); }
+int notifications_presented_list_count(void) {
+  return list_count((ListNode *)s_presented_notifs);
+}
 
 void notifications_presented_list_remove(Uuid *id) {
   NotifList *node = prv_find_listnode_for_notif(id);

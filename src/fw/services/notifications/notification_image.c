@@ -27,7 +27,8 @@ static void prv_free(GBitmap *bitmap) {
   }
 }
 
-void notification_image_service_init(void) {}
+void notification_image_service_init(void) {
+}
 
 bool notification_image_claim(const Uuid *item_id, uint8_t *token_out) {
   if (!item_id || !token_out) {
@@ -57,7 +58,9 @@ const GBitmap *notification_image_lock(const Uuid *item_id) {
   return s_bitmap;
 }
 
-void notification_image_unlock(void) { pbl_mutex_unlock(&s_lock); }
+void notification_image_unlock(void) {
+  pbl_mutex_unlock(&s_lock);
+}
 
 bool notification_image_is_pending(const Uuid *item_id) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);

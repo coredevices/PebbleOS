@@ -25,15 +25,23 @@
 static time_t now = 0;
 static int num_events_put = 0;
 
-time_t rtc_get_time(void) { return now; }
+time_t rtc_get_time(void) {
+  return now;
+}
 
-RtcTicks rtc_get_ticks(void) { return 0; }
+RtcTicks rtc_get_ticks(void) {
+  return 0;
+}
 
 typedef void (*CallbackEventCallback)(void *data);
 
-void launcher_task_add_callback(CallbackEventCallback callback, void *data) { callback(data); }
+void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
+  callback(data);
+}
 
-void event_put(PebbleEvent *event) { num_events_put++; }
+void event_put(PebbleEvent *event) {
+  num_events_put++;
+}
 
 // Stubs
 ////////////////////////////////////////////////////////////////

@@ -264,8 +264,10 @@ int pbl_snprintf(char *str, size_t n, const char *format, ...) {
 
   while (true) {
     // Skip to next '%'
-    while (*fmt != 0 && *fmt != '%') fmt++;
-    if (*fmt == 0) break;
+    while (*fmt != 0 && *fmt != '%')
+      fmt++;
+    if (*fmt == 0)
+      break;
     fmt++;
 
     // Skip flags, width, and precision until we find the format
@@ -326,7 +328,8 @@ int pbl_snprintf(char *str, size_t n, const char *format, ...) {
 
     }  // while (!end_spec);
 
-    if (end_format || has_fp) break;
+    if (end_format || has_fp)
+      break;
   }  // while (true)
 
   // Return error message if we detected floating point

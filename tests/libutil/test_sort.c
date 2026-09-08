@@ -32,7 +32,9 @@ static int prv_int32_cmp(const void *a, const void *b) {
   return prv_cmp(t_a, t_b);
 }
 
-static int prv_int32_cmp_desc(const void *a, const void *b) { return -prv_int32_cmp(a, b); }
+static int prv_int32_cmp_desc(const void *a, const void *b) {
+  return -prv_int32_cmp(a, b);
+}
 
 void test_sort__uint8_array(void) {
   uint8_t array[] = {9, 1, 8, 2, 7, 3, 6, 4, 6, 5, 5};

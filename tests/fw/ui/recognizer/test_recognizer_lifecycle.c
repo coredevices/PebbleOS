@@ -34,9 +34,15 @@
 #include "stubs_unobstructed_area.h"
 #include "stubs_window_stack.h"
 
-bool modal_manager_is_window_visible(Window *window) { return false; }
-bool modal_manager_is_window_focused(Window *window) { return false; }
-bool layer_is_status_bar_layer(Layer *layer) { return false; }
+bool modal_manager_is_window_visible(Window *window) {
+  return false;
+}
+bool modal_manager_is_window_focused(Window *window) {
+  return false;
+}
+bool layer_is_status_bar_layer(Layer *layer) {
+  return false;
+}
 
 GDrawState graphics_context_get_drawing_state(GContext *ctx) {
   GDrawState state;
@@ -44,20 +50,28 @@ GDrawState graphics_context_get_drawing_state(GContext *ctx) {
   return state;
 }
 
-void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {}
+void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {
+}
 
 static RecognizerManager s_manager;
 static RecognizerManager s_modal_manager;
 
-RecognizerManager *app_state_get_recognizer_manager(void) { return &s_manager; }
+RecognizerManager *app_state_get_recognizer_manager(void) {
+  return &s_manager;
+}
 
 // The kernel (modal) recognizer manager twin. window_get_recognizer_manager routes non-app (modal)
 // windows here.
-RecognizerManager *modal_manager_get_recognizer_manager(void) { return &s_modal_manager; }
+RecognizerManager *modal_manager_get_recognizer_manager(void) {
+  return &s_modal_manager;
+}
 
-void test_recognizer_lifecycle__initialize(void) { recognizer_manager_init(&s_manager); }
+void test_recognizer_lifecycle__initialize(void) {
+  recognizer_manager_init(&s_manager);
+}
 
-void test_recognizer_lifecycle__cleanup(void) {}
+void test_recognizer_lifecycle__cleanup(void) {
+}
 
 // window_get_recognizer_manager routing
 ////////////////////////////////////////

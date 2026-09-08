@@ -167,7 +167,8 @@ static void *Page_Create(size_t size, int exitonfail, int printerror) {
 
   if (devZeroFd == -1) {
     devZeroFd = open("/dev/zero", O_RDWR);
-    if (devZeroFd < 0) DUMA_Abort("open() on /dev/zero failed: %s", stringErrorReport());
+    if (devZeroFd < 0)
+      DUMA_Abort("open() on /dev/zero failed: %s", stringErrorReport());
   }
 
   /*
@@ -217,7 +218,8 @@ void Page_AllowAccess(void *address, size_t size) {
 
   while (size > 0) {
     retQuery = VirtualQuery(address, &MemInfo, sizeof(MemInfo));
-    if (retQuery < sizeof(MemInfo)) DUMA_Abort("VirtualQuery() failed\n");
+    if (retQuery < sizeof(MemInfo))
+      DUMA_Abort("VirtualQuery() failed\n");
     tail_size = (size > MemInfo.RegionSize) ? MemInfo.RegionSize : size;
     ret = VirtualProtect((LPVOID)address /* address of region of committed pages */
                          ,
@@ -227,14 +229,16 @@ void Page_AllowAccess(void *address, size_t size) {
                          ,
                          (PDWORD)&OldProtect /* address of variable to get old protection */
     );
-    if (0 == ret) mprotectFailed();
+    if (0 == ret)
+      mprotectFailed();
 
     address = ((char *)address) + tail_size;
     size -= tail_size;
   }
 
 #else
-  if (mprotect((caddr_t)address, size, PROT_READ | PROT_WRITE) < 0) mprotectFailed();
+  if (mprotect((caddr_t)address, size, PROT_READ | PROT_WRITE) < 0)
+    mprotectFailed();
 #endif
 }
 
@@ -254,7 +258,8 @@ static void Page_DenyAccess(void *address, size_t size) {
 
   while (size > 0) {
     retQuery = VirtualQuery(address, &MemInfo, sizeof(MemInfo));
-    if (retQuery < sizeof(MemInfo)) DUMA_Abort("VirtualQuery() failed\n");
+    if (retQuery < sizeof(MemInfo))
+      DUMA_Abort("VirtualQuery() failed\n");
     tail_size = (size > MemInfo.RegionSize) ? MemInfo.RegionSize : size;
     ret = VirtualProtect((LPVOID)address /* address of region of committed pages */
                          ,
@@ -264,14 +269,16 @@ static void Page_DenyAccess(void *address, size_t size) {
                          ,
                          (PDWORD)&OldProtect /* address of variable to get old protection */
     );
-    if (0 == ret) mprotectFailed();
+    if (0 == ret)
+      mprotectFailed();
 
     address = ((char *)address) + tail_size;
     size -= tail_size;
   }
 
 #else
-  if (mprotect((caddr_t)address, size, PROT_NONE) < 0) mprotectFailed();
+  if (mprotect((caddr_t)address, size, PROT_NONE) < 0)
+    mprotectFailed();
 #endif
 }
 
@@ -295,7 +302,8 @@ static void Page_Delete(void *address, size_t size) {
   while (size > 0) {
     retQuery = VirtualQuery(address, &MemInfo, sizeof(MemInfo));
 
-    if (retQuery < sizeof(MemInfo)) DUMA_Abort("VirtualQuery() failed\n");
+    if (retQuery < sizeof(MemInfo))
+      DUMA_Abort("VirtualQuery() failed\n");
 
     if (MemInfo.State == MEM_COMMIT) {
       ret = VirtualFree((LPVOID)MemInfo.BaseAddress /* base of committed pages */
@@ -305,7 +313,8 @@ static void Page_Delete(void *address, size_t size) {
                         (DWORD)MEM_DECOMMIT /* type of free operation */
       );
 
-      if (0 == ret) DUMA_Abort("VirtualFree(,,MEM_DECOMMIT) failed: %s", stringErrorReport());
+      if (0 == ret)
+        DUMA_Abort("VirtualFree(,,MEM_DECOMMIT) failed: %s", stringErrorReport());
     }
 
     address = ((char *)address) + MemInfo.RegionSize;
@@ -315,11 +324,13 @@ static void Page_Delete(void *address, size_t size) {
   /* release virtual address space */
   ret = VirtualFree((LPVOID)alloc_address, (DWORD)0, (DWORD)MEM_RELEASE);
 
-  if (0 == ret) DUMA_Abort("VirtualFree(,,MEM_RELEASE) failed: %s", stringErrorReport());
+  if (0 == ret)
+    DUMA_Abort("VirtualFree(,,MEM_RELEASE) failed: %s", stringErrorReport());
 
 #else
 
-  if (munmap((caddr_t)address, size) < 0) Page_DenyAccess(address, size);
+  if (munmap((caddr_t)address, size) < 0)
+    Page_DenyAccess(address, size);
 
 #endif
 }

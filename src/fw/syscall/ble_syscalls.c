@@ -18,11 +18,17 @@
 // -----------------------------------------------------------------------------
 // ble_scan.h
 
-DEFINE_SYSCALL(bool, sys_ble_scan_start, void) { return gap_le_start_scan(); }
+DEFINE_SYSCALL(bool, sys_ble_scan_start, void) {
+  return gap_le_start_scan();
+}
 
-DEFINE_SYSCALL(bool, sys_ble_scan_stop, void) { return gap_le_stop_scan(); }
+DEFINE_SYSCALL(bool, sys_ble_scan_stop, void) {
+  return gap_le_stop_scan();
+}
 
-DEFINE_SYSCALL(bool, sys_ble_scan_is_scanning, void) { return gap_le_is_scanning(); }
+DEFINE_SYSCALL(bool, sys_ble_scan_is_scanning, void) {
+  return gap_le_is_scanning();
+}
 
 DEFINE_SYSCALL(bool, sys_ble_consume_scan_results, uint8_t *buffer, uint16_t *size_in_out) {
   if (PRIVILEGE_WAS_ELEVATED) {

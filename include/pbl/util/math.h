@@ -75,7 +75,9 @@ int32_t integer_sqrt(int64_t x);
                       true))))))
 
 // http://stackoverflow.com/questions/14997165/fastest-way-to-get-a-positive-modulo-in-c-c
-static inline int positive_modulo(int i, int n) { return (i % n + n) % n; }
+static inline int positive_modulo(int i, int n) {
+  return (i % n + n) % n;
+}
 
 // https://stackoverflow.com/questions/1878907/the-smallest-difference-between-2-angles
 static inline int distance_to_mod_boundary(int32_t i, uint16_t n) {

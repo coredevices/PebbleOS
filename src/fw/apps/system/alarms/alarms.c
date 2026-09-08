@@ -180,7 +180,9 @@ static void prv_create_new_alarm(AlarmsAppData *data) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Menu Layer Callbacks
 
-static bool prv_is_add_alarm_cell(MenuIndex *cell_index) { return cell_index->row == 0; }
+static bool prv_is_add_alarm_cell(MenuIndex *cell_index) {
+  return cell_index->row == 0;
+}
 
 static uint16_t prv_alarm_list_get_num_sections_callback(struct MenuLayer *menu_layer,
                                                          void *callback_context) {

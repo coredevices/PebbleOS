@@ -47,4 +47,5 @@ uint8_t backlight_get_level(uint8_t brightness) {
   return brightness;
 }
 
-void backlight_refresh(void) {}
+void backlight_refresh(void) {
+}

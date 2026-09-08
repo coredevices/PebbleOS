@@ -11,7 +11,9 @@
 
 static bool s_rotated_180 = false;
 
-void button_set_rotated(bool rotated_180) { s_rotated_180 = rotated_180; }
+void button_set_rotated(bool rotated_180) {
+  s_rotated_180 = rotated_180;
+}
 
 bool button_is_pressed(ButtonId id) {
   if (s_rotated_180 && (id == BUTTON_ID_UP)) {

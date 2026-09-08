@@ -4,4 +4,6 @@
 #pragma message( \
     "This will probably not compile. Used to generate syscfg.h file and other artifacts.")
 
-int mynewt_main(void) { return 0; }
+int mynewt_main(void) {
+  return 0;
+}

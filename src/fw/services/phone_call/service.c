@@ -50,7 +50,9 @@ static bool prv_call_is_ancs(void) {
   return (s_call_source == PhoneCallSource_ANCS_Legacy) || (s_call_source == PhoneCallSource_ANCS);
 }
 
-static void prv_poll_phone_for_status(void *context) { pp_get_phone_state(); }
+static void prv_poll_phone_for_status(void *context) {
+  pp_get_phone_state();
+}
 
 static void prv_timer_callback(void *context) {
   // Make sure we aren't overflowing / backing up the queue too much

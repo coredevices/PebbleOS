@@ -51,7 +51,9 @@ static void window_load(Window *window) {
   layer_add_child(window_layer, text_layer_get_layer(s_data.text_layer));
 }
 
-static void window_unload(Window *window) { text_layer_destroy(s_data.text_layer); }
+static void window_unload(Window *window) {
+  text_layer_destroy(s_data.text_layer);
+}
 
 static void init(void) {
   s_data.window = window_create();
@@ -64,7 +66,9 @@ static void init(void) {
   window_stack_push(s_data.window, animated);
 }
 
-static void deinit(void) { window_destroy(s_data.window); }
+static void deinit(void) {
+  window_destroy(s_data.window);
+}
 
 int main(void) {
   init();

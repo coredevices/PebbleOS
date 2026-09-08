@@ -99,7 +99,8 @@ static int sprintAddr(char *dest, DUMA_ADDR value, DUMA_ADDR base) {
   DUMA_ADDR digit;
 
   do {
-    if (--s == buffer) DUMA_Abort("Internal error printing number.");
+    if (--s == buffer)
+      DUMA_Abort("Internal error printing number.");
 
     digit = value % base;
     *s = (char)((digit < 10) ? ('0' + digit) : ('a' + digit - 10));
@@ -123,7 +124,8 @@ static int sprintLong(char *dest, long value, long base) {
   long digit;
 
   do {
-    if (--s == buffer) DUMA_Abort("Internal error printing number.");
+    if (--s == buffer)
+      DUMA_Abort("Internal error printing number.");
 
     digit = value % base;
     *s = (char)((digit < 10) ? ('0' + digit) : ('a' + digit - 10));
@@ -283,12 +285,15 @@ void DUMA_Print(const char *pattern, ...) {
   va_end(args);
 
 #ifdef WIN32
-  if (DUMA_OUTPUT_DEBUG) OutputDebugString(buffer);
+  if (DUMA_OUTPUT_DEBUG)
+    OutputDebugString(buffer);
 #endif
 
-  if (DUMA_OUTPUT_STDOUT) write(1, buffer, len);
+  if (DUMA_OUTPUT_STDOUT)
+    write(1, buffer, len);
 
-  if (DUMA_OUTPUT_STDERR) write(2, buffer, len);
+  if (DUMA_OUTPUT_STDERR)
+    write(2, buffer, len);
 
   if (DUMA_OUTPUT_FILE != NULL) {
 #if defined(WIN32) && !defined(__CYGWIN__)
@@ -325,7 +330,8 @@ void DUMA_Exit(const char *pattern, ...) {
   strcat(buffer, "\n");
   DUMA_Print("%s", buffer);
 #ifdef WIN32
-  if (DUMA_OUTPUT_DEBUG) OutputDebugString(buffer);
+  if (DUMA_OUTPUT_DEBUG)
+    OutputDebugString(buffer);
 #endif
   va_end(args);
 
@@ -344,7 +350,8 @@ void DUMA_sprintf(char *buffer, const char *pattern, ...) {
   va_start(args, pattern);
   len = DUMA_vsprintf(buffer, pattern, args);
   va_end(args);
-  if (len <= 0) buffer[0] = 0;
+  if (len <= 0)
+    buffer[0] = 0;
 }
 
 const char *DUMA_strerror(int duma_errno) {

@@ -61,7 +61,9 @@ void pbl_analytics_external_collect_kernel_heap_stats(void) {
   s_kernel_heap.high_water_mark = s_kernel_heap.current_size;
 }
 
-Heap *kernel_heap_get(void) { return &s_kernel_heap; }
+Heap *kernel_heap_get(void) {
+  return &s_kernel_heap;
+}
 
 // Serial Commands
 ///////////////////////////////////////////////////////////

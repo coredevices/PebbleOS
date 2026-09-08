@@ -13,14 +13,17 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 int g_pbl_log_level = 0;
-void pbl_log(int level, const char *src_filename, int src_line_number, const char *fmt, ...) {}
+void pbl_log(int level, const char *src_filename, int src_line_number, const char *fmt, ...) {
+}
 
 // Tests
 ///////////////////////////////////////////////////////////
 
-void test_slist__initialize(void) {}
+void test_slist__initialize(void) {
+}
 
-void test_slist__cleanup(void) {}
+void test_slist__cleanup(void) {
+}
 
 void test_slist__insert_after(void) {
   SingleListNode *tail = NULL;
@@ -101,7 +104,9 @@ void test_slist__pop_head_single(void) {
   cl_assert(new_head == NULL);
 }
 
-void test_slist__pop_head_null(void) { cl_assert(slist_pop_head(NULL) == NULL); }
+void test_slist__pop_head_null(void) {
+  cl_assert(slist_pop_head(NULL) == NULL);
+}
 
 void test_slist__remove_head(void) {
   SingleListNode a = SINGLE_LIST_NODE_NULL;
@@ -247,7 +252,9 @@ void test_slist__find(void) {
   cl_assert(slist_find(NULL, prv_filter_value, (void *)(intptr_t)10) == NULL);
 }
 
-static int prv_sort_comparator(SIntNode *a, SIntNode *b) { return b->value - a->value; }
+static int prv_sort_comparator(SIntNode *a, SIntNode *b) {
+  return b->value - a->value;
+}
 
 void test_slist__sort_ascending(void) {
   SIntNode bar1 = {.value = 1};

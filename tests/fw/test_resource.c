@@ -529,9 +529,11 @@ void test_resource__initialize(void) {
   pfs_format(false /* write erase headers */);
 }
 
-void test_resource__cleanup(void) {}
+void test_resource__cleanup(void) {
+}
 
-void test_resource__system_resource_init(void) {}
+void test_resource__system_resource_init(void) {
+}
 
 void test_resource__resource_update(void) {
   load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME,
@@ -607,7 +609,9 @@ void test_resource__read_past_last_byte_resource(void) {
 }
 
 static uint32_t s_watch_res_callback_called_count = 0;
-static void prv_res_changed_callback(void *data) { s_watch_res_callback_called_count++; }
+static void prv_res_changed_callback(void *data) {
+  s_watch_res_callback_called_count++;
+}
 
 void test_resource__watch(void) {
   load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, PUG_FIXTURE_NAME, "pug");

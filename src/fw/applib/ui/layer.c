@@ -285,9 +285,13 @@ void layer_set_frame(Layer *layer, const GRect *frame) {
   layer_mark_dirty(layer);
 }
 
-void layer_set_frame_by_value(Layer *layer, GRect frame) { layer_set_frame(layer, &frame); }
+void layer_set_frame_by_value(Layer *layer, GRect frame) {
+  layer_set_frame(layer, &frame);
+}
 
-void layer_get_frame(const Layer *layer, GRect *frame) { *frame = layer->frame; }
+void layer_get_frame(const Layer *layer, GRect *frame) {
+  *frame = layer->frame;
+}
 
 GRect layer_get_frame_by_value(const Layer *layer) {
   GRect frame;
@@ -303,9 +307,13 @@ void layer_set_bounds(Layer *layer, const GRect *bounds) {
   layer_mark_dirty(layer);
 }
 
-void layer_set_bounds_by_value(Layer *layer, GRect bounds) { layer_set_bounds(layer, &bounds); }
+void layer_set_bounds_by_value(Layer *layer, GRect bounds) {
+  layer_set_bounds(layer, &bounds);
+}
 
-void layer_get_bounds(const Layer *layer, GRect *bounds) { *bounds = layer->bounds; }
+void layer_get_bounds(const Layer *layer, GRect *bounds) {
+  *bounds = layer->bounds;
+}
 
 GRect layer_get_bounds_by_value(const Layer *layer) {
   GRect bounds;
@@ -489,7 +497,9 @@ void layer_set_hidden(Layer *layer, bool hidden) {
   }
 }
 
-bool layer_get_hidden(const Layer *layer) { return layer->hidden; }
+bool layer_get_hidden(const Layer *layer) {
+  return layer->hidden;
+}
 
 void layer_set_clips(Layer *layer, bool clips) {
   if (clips == layer->clips) {
@@ -499,7 +509,9 @@ void layer_set_clips(Layer *layer, bool clips) {
   layer_mark_dirty(layer);
 }
 
-bool layer_get_clips(const Layer *layer) { return layer->clips; }
+bool layer_get_clips(const Layer *layer) {
+  return layer->clips;
+}
 
 void *layer_get_data(const Layer *layer) {
   if (!layer->has_data) {

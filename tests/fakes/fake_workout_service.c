@@ -11,7 +11,9 @@ static int32_t s_distance_m;
 static int32_t s_current_bpm;
 static int32_t s_current_hr_zone;
 
-bool workout_service_is_workout_ongoing(void) { return s_is_ongoing; }
+bool workout_service_is_workout_ongoing(void) {
+  return s_is_ongoing;
+}
 
 bool workout_service_start_workout(ActivitySessionType type) {
   s_is_ongoing = true;
@@ -28,9 +30,13 @@ bool workout_service_stop_workout(void) {
   return true;
 }
 
-bool workout_service_is_paused(void) { return s_is_paused; }
+bool workout_service_is_paused(void) {
+  return s_is_paused;
+}
 
-bool workout_service_get_current_workout_type(ActivitySessionType *type_out) { return false; }
+bool workout_service_get_current_workout_type(ActivitySessionType *type_out) {
+  return false;
+}
 
 bool workout_service_get_current_workout_info(int32_t *steps_out, int32_t *duration_s_out,
                                               int32_t *distance_m_out, int32_t *current_bpm_out,

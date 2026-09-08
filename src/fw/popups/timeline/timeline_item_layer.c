@@ -57,7 +57,9 @@ static int16_t prv_get_first_scroll_offset(TimelineItemLayer *item_layer) {
   return MAX(prv_get_frame_size(item_layer).h, 0);
 }
 
-static int16_t prv_get_min_scroll_offset(TimelineItemLayer *item_layer) { return 0; }
+static int16_t prv_get_min_scroll_offset(TimelineItemLayer *item_layer) {
+  return 0;
+}
 
 static int16_t prv_get_max_scroll_offset(TimelineItemLayer *item_layer) {
   int16_t max_scroll = prv_get_height(item_layer) - prv_get_frame_size(item_layer).h;

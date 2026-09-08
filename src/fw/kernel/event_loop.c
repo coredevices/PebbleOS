@@ -117,7 +117,9 @@ void launcher_block_popups(bool block) {
   }
 }
 
-bool launcher_popups_are_blocked(void) { return s_block_popup_count > 0; }
+bool launcher_popups_are_blocked(void) {
+  return s_block_popup_count > 0;
+}
 
 // FIRM-425: sometimes, if the system goes out to lunch for a long time when
 // loading a watchface as a result of pressing 'back', the
@@ -510,7 +512,9 @@ static NOINLINE void prv_extended_event_handler(PebbleEvent *e) {
 }
 
 //! Tasks that have to be done in between each event.
-static void event_loop_upkeep(void) { modal_manager_event_loop_upkeep(); }
+static void event_loop_upkeep(void) {
+  modal_manager_event_loop_upkeep();
+}
 
 // NOTE: Marking this as NOINLINE saves us 150+ bytes on the KernelMain stack
 static void NOINLINE prv_handle_event(PebbleEvent *e) {

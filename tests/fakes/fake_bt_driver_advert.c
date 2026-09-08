@@ -75,7 +75,9 @@ bool bt_driver_advert_client_get_tx_power(int8_t *tx_power) {
 
 // -- test accessors ------------------------------------------------------------
 
-bool gap_le_is_advertising_enabled(void) { return s_is_advertising_enabled; }
+bool gap_le_is_advertising_enabled(void) {
+  return s_is_advertising_enabled;
+}
 
 // Expected ms values for each interval preset, matching s_interval_ms in
 // gap_le_advert.c.

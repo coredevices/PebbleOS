@@ -62,7 +62,9 @@ static bool prv_read_res_table_entry(ResTableEntry *res_entry, ResourceStoreEntr
   return prv_read(entry, addr, res_entry, sizeof(ResTableEntry)) == sizeof(ResTableEntry);
 }
 
-static uint32_t prv_get_length(ResourceStoreEntry *entry) { return entry->impl->get_length(entry); }
+static uint32_t prv_get_length(ResourceStoreEntry *entry) {
+  return entry->impl->get_length(entry);
+}
 
 // entry_offset is the offset of the resource of interest.
 // If we're doing the whole store, that ends up being 0.
@@ -277,9 +279,11 @@ void resource_storage_get_file_name(char *name, size_t buf_length, ResAppNum res
                      strlen(APP_RESOURCES_FILENAME_SUFFIX));
 }
 
-void resource_storage_generic_init(void) {}
+void resource_storage_generic_init(void) {
+}
 
-void resource_storage_generic_clear(ResourceStoreEntry *entry) {}
+void resource_storage_generic_clear(ResourceStoreEntry *entry) {
+}
 
 bool resource_storage_generic_check(ResAppNum app_num, uint32_t resource_id,
                                     ResourceStoreEntry *entry,
@@ -333,7 +337,9 @@ bool resource_storage_generic_get_resource(ResourceStoreEntry *entry) {
   return true;
 }
 
-uint32_t resource_storage_generic_get_length(ResourceStoreEntry *entry) { return entry->length; }
+uint32_t resource_storage_generic_get_length(ResourceStoreEntry *entry) {
+  return entry->length;
+}
 
 uint32_t resource_storage_generic_get_crc(ResourceStoreEntry *entry, uint32_t num_bytes,
                                           uint32_t entry_offset) {
@@ -352,4 +358,6 @@ ResourceCallbackHandle resource_storage_generic_watch(ResourceStoreEntry *entry,
   return NULL;
 }
 
-bool resource_storage_generic_unwatch(ResourceCallbackHandle cb_handle) { return false; }
+bool resource_storage_generic_unwatch(ResourceCallbackHandle cb_handle) {
+  return false;
+}

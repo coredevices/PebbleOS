@@ -25,12 +25,16 @@
 #include "stubs_logging.h"
 #include "stubs_passert.h"
 
-void gap_le_slave_reconnect_hrm_restart(void) {}
+void gap_le_slave_reconnect_hrm_restart(void) {
+}
 
-void gap_le_slave_reconnect_hrm_stop(void) {}
+void gap_le_slave_reconnect_hrm_stop(void) {
+}
 
 static bool s_activity_prefs_heart_rate_is_enabled;
-bool activity_prefs_heart_rate_is_enabled(void) { return s_activity_prefs_heart_rate_is_enabled; }
+bool activity_prefs_heart_rate_is_enabled(void) {
+  return s_activity_prefs_heart_rate_is_enabled;
+}
 
 static bool s_bt_driver_hrm_service_is_enabled;
 static int s_bt_driver_hrm_service_enable_call_count;
@@ -61,7 +65,9 @@ void ble_hrm_push_sharing_request_window(BLEHRMSharingRequest *sharing_request) 
   s_last_sharing_request = sharing_request;
 }
 
-bool bt_driver_is_hrm_service_supported(void) { return true; }
+bool bt_driver_is_hrm_service_supported(void) {
+  return true;
+}
 
 static BTDeviceInternal s_last_disconnected;
 int bt_driver_gap_le_disconnect(const BTDeviceInternal *peer_address) {
@@ -74,7 +80,9 @@ static void prv_assert_last_disconnected(const BTDeviceInternal *peer_address) {
 }
 
 static int s_ble_hrm_push_reminder_popup_call_count;
-void ble_hrm_push_reminder_popup(void) { s_ble_hrm_push_reminder_popup_call_count++; }
+void ble_hrm_push_reminder_popup(void) {
+  s_ble_hrm_push_reminder_popup_call_count++;
+}
 
 static int s_hrm_manager_subscribe_with_callback_call_count;
 static HRMSessionRef s_last_session_ref;
@@ -99,7 +107,9 @@ GAPLEConnection *gap_le_connection_by_device(const BTDeviceInternal *device) {
   }
   return NULL;
 }
-BTDeviceInternal *device_from_le_connection(GAPLEConnection *conn) { return &conn->device; }
+BTDeviceInternal *device_from_le_connection(GAPLEConnection *conn) {
+  return &conn->device;
+}
 
 bool gap_le_connection_is_valid(const GAPLEConnection *conn) {
   for (int i = 0; i < ARRAY_LENGTH(s_connections); ++i) {
@@ -116,9 +126,13 @@ void gap_le_connection_for_each(GAPLEConnectionForEachCallback cb, void *data) {
   }
 }
 
-void launcher_task_add_callback(CallbackEventCallback callback, void *data) { callback(data); }
+void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
+  callback(data);
+}
 
-bool sys_hrm_manager_is_hrm_present(void) { return true; }
+bool sys_hrm_manager_is_hrm_present(void) {
+  return true;
+}
 
 static int s_sys_hrm_manager_unsubscribe_call_count;
 bool sys_hrm_manager_unsubscribe(HRMSessionRef session) {

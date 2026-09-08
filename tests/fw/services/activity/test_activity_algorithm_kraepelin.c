@@ -72,7 +72,9 @@ static struct tm s_start_time_tm = {.tm_hour = 17, .tm_mday = 1, .tm_mon = 0, .t
 
 // ============================================================================================
 // Misc stubs
-uint32_t light_get_ambient_lux(void) { return s_alg_next_light << 4; }
+uint32_t light_get_ambient_lux(void) {
+  return s_alg_next_light << 4;
+}
 
 AmbientLightLevel ambient_light_level_to_enum(uint32_t light_level) {
   // Just return a predictable result to validate the unit tests
@@ -88,9 +90,12 @@ BatteryChargeState battery_get_charge_state(void) {
   return state;
 }
 
-void kalg_enable_activity_tracking(KAlgState *kalg_state, bool enable) {}
+void kalg_enable_activity_tracking(KAlgState *kalg_state, bool enable) {
+}
 
-bool activity_tracking_on(void) { return true; }
+bool activity_tracking_on(void) {
+  return true;
+}
 
 // ------------------------------------------------------------------------------------
 // Return true if the given activity type is a sleep activity
@@ -136,7 +141,8 @@ void activity_sessions_prv_add_activity_session(ActivitySession *session) {
 }
 
 // ------------------------------------------------------------------------------------
-void activity_sessions_prv_delete_activity_session(ActivitySession *session) {}
+void activity_sessions_prv_delete_activity_session(ActivitySession *session) {
+}
 
 // =============================================================================================
 // Data logging stubs
@@ -165,7 +171,8 @@ DataLoggingSession *dls_create(uint32_t tag, DataLoggingItemType item_type, uint
   return s_dls_session;
 }
 
-void dls_send_all_sessions(void) {}
+void dls_send_all_sessions(void) {
+}
 
 // ============================================================================================
 // Activity service stubs
@@ -178,9 +185,13 @@ static uint32_t s_activity_next_heart_rate_bpm;
 static uint32_t s_activity_next_heart_rate_zone;
 static uint32_t s_activity_next_heart_rate_heart_rate_total_weight_x100;
 
-uint32_t activity_metrics_prv_get_steps(void) { return 0; }
+uint32_t activity_metrics_prv_get_steps(void) {
+  return 0;
+}
 
-uint32_t activity_metrics_prv_get_distance_mm(void) { return s_activity_next_distance_mm; }
+uint32_t activity_metrics_prv_get_distance_mm(void) {
+  return s_activity_next_distance_mm;
+}
 
 // --------------------------------------------------------------------------------------------
 uint32_t activity_metrics_prv_get_resting_calories(void) {
@@ -188,9 +199,13 @@ uint32_t activity_metrics_prv_get_resting_calories(void) {
 }
 
 // --------------------------------------------------------------------------------------------
-uint32_t activity_metrics_prv_get_active_calories(void) { return s_activity_next_active_calories; }
+uint32_t activity_metrics_prv_get_active_calories(void) {
+  return s_activity_next_active_calories;
+}
 
-HRZone activity_metrics_prv_get_hr_zone(void) { return s_activity_next_heart_rate_zone; }
+HRZone activity_metrics_prv_get_hr_zone(void) {
+  return s_activity_next_heart_rate_zone;
+}
 
 void activity_metrics_prv_get_median_hr_bpm(int32_t *median, int32_t *total_weight) {
   if (median) {
@@ -206,17 +221,25 @@ void activity_metrics_prv_reset_hr_stats(void) {
   s_activity_next_heart_rate_zone = 0;
 }
 
-void activity_metrics_prv_set_hrm_worn_status(time_t now_utc, bool is_offwrist) {}
+void activity_metrics_prv_set_hrm_worn_status(time_t now_utc, bool is_offwrist) {
+}
 
-bool activity_metrics_prv_is_hrm_offwrist(time_t now_utc) { return false; }
+bool activity_metrics_prv_is_hrm_offwrist(time_t now_utc) {
+  return false;
+}
 
 // =============================================================================================
 // Algorithm stubs
-uint32_t kalg_state_size(void) { return 1; }
+uint32_t kalg_state_size(void) {
+  return 1;
+}
 
-bool kalg_init(KAlgState *state, KAlgStatsCallback stats_cb) { return true; }
+bool kalg_init(KAlgState *state, KAlgStatsCallback stats_cb) {
+  return true;
+}
 
-void kalg_deinit(KAlgState *state) {}
+void kalg_deinit(KAlgState *state) {
+}
 
 uint32_t kalg_analyze_samples(KAlgState *state, AccelRawData *data, uint32_t num_samples,
                               uint32_t *consumed_samples) {
@@ -230,13 +253,15 @@ void kalg_minute_stats(KAlgState *state, uint16_t *vmc, uint8_t *orientation, bo
   *still = false;
 }
 
-void kalg_set_weight(KAlgState *state, uint32_t grams) {}
+void kalg_set_weight(KAlgState *state, uint32_t grams) {
+}
 
 void kalg_activities_update(KAlgState *state, time_t utc_now, uint16_t steps, uint16_t vmc,
                             uint8_t orientation, bool definitely_not_worn,
                             uint32_t resting_calories, uint32_t active_calories,
                             uint32_t distance_mm, bool shutting_down,
-                            KAlgActivitySessionCallback sessions_cb, void *context) {}
+                            KAlgActivitySessionCallback sessions_cb, void *context) {
+}
 
 time_t kalg_activity_last_processed_time(KAlgState *state, KAlgActivityType activity) {
   return rtc_get_time();

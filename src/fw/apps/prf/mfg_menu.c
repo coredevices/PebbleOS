@@ -67,7 +67,9 @@ static void prv_select_ble_adv(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void *)mfg_adv_app_get_info());
 }
 
-static void prv_select_reset(int index, void *context) { system_reset(); }
+static void prv_select_reset(int index, void *context) {
+  system_reset();
+}
 
 static void prv_select_utilities(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void *)mfg_utilities_app_get_info());

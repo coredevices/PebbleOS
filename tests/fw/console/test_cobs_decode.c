@@ -13,9 +13,13 @@
 static CobsDecodeContext ctx;
 static unsigned char out[1024];
 
-static void decode_start(size_t length) { cobs_streaming_decode_start(&ctx, out, length); }
+static void decode_start(size_t length) {
+  cobs_streaming_decode_start(&ctx, out, length);
+}
 
-static void assert_decode_char_succeeds(char c) { cl_assert(cobs_streaming_decode(&ctx, c)); }
+static void assert_decode_char_succeeds(char c) {
+  cl_assert(cobs_streaming_decode(&ctx, c));
+}
 
 static void assert_decode_succeeds(const char *restrict buf, size_t length) {
   while (length--) {
@@ -31,7 +35,9 @@ static void assert_decode_fails(const char *restrict buf, size_t length) {
   cl_assert(result == false);
 }
 
-static void assert_buffer_not_touched(size_t index) { cl_assert_equal_i(out[index], 0xcc); }
+static void assert_buffer_not_touched(size_t index) {
+  cl_assert_equal_i(out[index], 0xcc);
+}
 
 static void assert_decode_completed(size_t expected_length) {
   size_t decoded_length = cobs_streaming_decode_finish(&ctx);

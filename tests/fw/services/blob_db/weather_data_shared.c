@@ -97,7 +97,8 @@ static const WeatherDBEntry s_entry_bases[] = {
     }};
 
 // Fake out watch_app_prefs calls
-void watch_app_prefs_destroy_weather(SerializedWeatherAppPrefs *prefs) {}
+void watch_app_prefs_destroy_weather(SerializedWeatherAppPrefs *prefs) {
+}
 
 SerializedWeatherAppPrefs *watch_app_prefs_get_weather(void) {
   SerializedWeatherAppPrefs *prefs = (SerializedWeatherAppPrefs *)s_weather_app_prefs;
@@ -173,15 +174,25 @@ void weather_shared_data_cleanup(void) {
   cl_assert_equal_i(S_SUCCESS, weather_db_flush());
 }
 
-const WeatherDBKey *weather_shared_data_get_key(int index) { return &s_keys[index]; }
+const WeatherDBKey *weather_shared_data_get_key(int index) {
+  return &s_keys[index];
+}
 
-WeatherDBEntry *weather_shared_data_get_entry(int index) { return s_entries[index]; }
+WeatherDBEntry *weather_shared_data_get_entry(int index) {
+  return s_entries[index];
+}
 
-size_t weather_shared_data_get_entry_size(int index) { return s_entry_sizes[index]; }
+size_t weather_shared_data_get_entry_size(int index) {
+  return s_entry_sizes[index];
+}
 
-char *weather_shared_data_get_entry_name(int index) { return s_entry_names[index]; }
+char *weather_shared_data_get_entry_name(int index) {
+  return s_entry_names[index];
+}
 
-char *weather_shared_data_get_entry_phrase(int index) { return s_entry_phrases[index]; }
+char *weather_shared_data_get_entry_phrase(int index) {
+  return s_entry_phrases[index];
+}
 
 int weather_shared_data_get_index_of_key(const WeatherDBKey *key) {
   for (int idx = 0; idx < WEATHER_DATA_SHARED_WEATHER_DB_NUM_DB_ENTRIES; idx++) {

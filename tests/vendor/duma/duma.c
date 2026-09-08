@@ -167,14 +167,14 @@ static const char unknown_file[] = "UNKNOWN (use #include \"duma.h\")";
  */
 enum _DUMA_SlotState {
   DUMAST_EMPTY /* slot not in use */
-  ,
+      ,
   DUMAST_FREE /* internal memory reserved, unused by user */
-  ,
+      ,
   DUMAST_IN_USE /* memory in use by allocator; see following enum AllocType */
-  ,
+      ,
   DUMAST_ALL_PROTECTED /* memory no more used by allocator; memory is not deallocated but protected
                         */
-  ,
+      ,
   DUMAST_BEGIN_PROTECTED /* most memory deallocated, but not page covering userAddress:
                           * slot holds userAddress, userSize and allocator.
                           */
@@ -182,21 +182,21 @@ enum _DUMA_SlotState {
 
 enum _DUMA_Slot_FileSource {
   DUMAFS_EMPTY /* no filename, lineno */
-  ,
+      ,
   DUMAFS_ALLOCATION /* filename, lineno from allocation */
-  ,
+      ,
   DUMAFS_DEALLOCATION /* filename, lineno from deallocation */
 };
 
 enum _DUMA_InitState {
   DUMAIS_UNINITIALIZED = 0x1611 /* not initialized */
-  ,
+      ,
   DUMAIS_IN_CONSTRUCTOR /* in constructor _duma_init() */
-  ,
+      ,
   DUMAIS_OUT_CONSTRUCTOR /* construction _duma_init() finished */
-  ,
+      ,
   DUMAIS_IN_INIT /* in initializer duma_init() */
-  ,
+      ,
   DUMAIS_OUT_INIT /* initialization duma_init() finished */
 };
 
@@ -257,7 +257,10 @@ enum _DUMA_AllocType {
   DUMAAT_MEMBER_NEW_ARRAY
 };
 
-enum _DUMA_AllocStd { DUMAAS_C, DUMAAS_CPP };
+enum _DUMA_AllocStd {
+  DUMAAS_C,
+  DUMAAS_CPP
+};
 
 static const struct _DUMA_AllocDesc {
   char *name;
@@ -713,17 +716,21 @@ static const char *duma_getenv(const char *varname) {
   const char *ret = NULL;
   int varno = 0;
 
-  if (!varname) return ret;
+  if (!varname)
+    return ret;
 
-  if (varname[0] == '\0') return ret;
+  if (varname[0] == '\0')
+    return ret;
 
   while (environ[varno]) {
     const char *v = environ[varno++];
     int idx = 0;
 
-    while (varname[idx] != '\0' && v[idx] == varname[idx]) ++idx;
+    while (varname[idx] != '\0' && v[idx] == varname[idx])
+      ++idx;
 
-    if (idx > 0 && varname[idx] == '\0' && v[idx] == '=') return v + (idx + 1);
+    if (idx > 0 && varname[idx] == '\0' && v[idx] == '=')
+      return v + (idx + 1);
   }
   return ret;
 }
@@ -755,7 +762,8 @@ static void duma_getenvvars(DUMA_TLSVARS_T *duma_tls) {
   if ((string = DUMA_GETENV("DUMA_ALIGNMENT")) != 0) {
     duma_tls->ALIGNMENT = (size_t)atoi(string);
     /* we could check for DUMA_MIN_ALIGNMENT. should we do so? */
-    if (!duma_tls->ALIGNMENT) duma_tls->ALIGNMENT = 1;
+    if (!duma_tls->ALIGNMENT)
+      duma_tls->ALIGNMENT = 1;
   }
 
   /*
@@ -776,7 +784,8 @@ static void duma_getenvvars(DUMA_TLSVARS_T *duma_tls) {
    * =0 do not protect free'd memory
    * =N protect memory up to N kB
    */
-  if ((string = DUMA_GETENV("DUMA_PROTECT_FREE")) != 0) _duma_s.PROTECT_FREE = atol(string);
+  if ((string = DUMA_GETENV("DUMA_PROTECT_FREE")) != 0)
+    _duma_s.PROTECT_FREE = atol(string);
 
   /*
    * See if the user has a memory usage limit. This controls the maximum
@@ -785,7 +794,8 @@ static void duma_getenvvars(DUMA_TLSVARS_T *duma_tls) {
    * =-1 use as much memory as possible
    * =N limit total memory usage to N kB
    */
-  if ((string = DUMA_GETENV("DUMA_MAX_ALLOC")) != 0) _duma_s.MAX_ALLOC = atol(string);
+  if ((string = DUMA_GETENV("DUMA_MAX_ALLOC")) != 0)
+    _duma_s.MAX_ALLOC = atol(string);
 
 #if 0
   /*
@@ -800,7 +810,8 @@ static void duma_getenvvars(DUMA_TLSVARS_T *duma_tls) {
    */
   if ((string = DUMA_GETENV("MALLOC_0_STRATEGY")) != 0) {
     int tmp = atoi(string);
-    if (tmp >= 0 && tmp <= 3) _duma_s.MALLOC_0_STRATEGY = tmp;
+    if (tmp >= 0 && tmp <= 3)
+      _duma_s.MALLOC_0_STRATEGY = tmp;
   }
 
   /*
@@ -808,7 +819,8 @@ static void duma_getenvvars(DUMA_TLSVARS_T *duma_tls) {
    */
   if ((string = DUMA_GETENV("NEW_0_STRATEGY")) != 0) {
     int tmp = atoi(string);
-    if (tmp >= 2 && tmp <= 3) _duma_s.NEW_0_STRATEGY = tmp;
+    if (tmp >= 2 && tmp <= 3)
+      _duma_s.NEW_0_STRATEGY = tmp;
   }
 
   /*
@@ -820,26 +832,30 @@ static void duma_getenvvars(DUMA_TLSVARS_T *duma_tls) {
   /*
    * See if the user wants to write access freed memory
    */
-  if ((string = DUMA_GETENV("DUMA_FREE_ACCESS")) != 0) _duma_s.FREE_ACCESS = (atoi(string) != 0);
+  if ((string = DUMA_GETENV("DUMA_FREE_ACCESS")) != 0)
+    _duma_s.FREE_ACCESS = (atoi(string) != 0);
 
   /*
    * Check if we should be filling new memory with a value.
    */
   if ((string = DUMA_GETENV("DUMA_FILL")) != 0) {
     duma_tls->FILL = atoi(string);
-    if (-1 != duma_tls->FILL) duma_tls->FILL &= 255;
+    if (-1 != duma_tls->FILL)
+      duma_tls->FILL &= 255;
   }
 
   /*
    * Check with which value the memories no mans land is filled
    */
-  if ((string = DUMA_GETENV("DUMA_SLACKFILL")) != 0) _duma_s.SLACKFILL = atoi(string);
+  if ((string = DUMA_GETENV("DUMA_SLACKFILL")) != 0)
+    _duma_s.SLACKFILL = atoi(string);
   _duma_s.SLACKFILL &= 255;
 
   /*
    * See if the user wants to see allocations / frees
    */
-  if ((string = DUMA_GETENV("DUMA_SHOW_ALLOC")) != 0) _duma_s.SHOW_ALLOC = (atoi(string) != 0);
+  if ((string = DUMA_GETENV("DUMA_SHOW_ALLOC")) != 0)
+    _duma_s.SHOW_ALLOC = (atoi(string) != 0);
 
   /*
    * See if the user wants to call atexit()
@@ -868,28 +884,32 @@ static void duma_getenvvars(DUMA_TLSVARS_T *duma_tls) {
    * output is printed to the win32 debugging console.  Default is 0,
    * meaning that output is not by default sent to the debugging console.
    */
-  if ((string = DUMA_GETENV("DUMA_OUTPUT_DEBUG")) != 0) DUMA_OUTPUT_DEBUG = (atoi(string) != 0);
+  if ((string = DUMA_GETENV("DUMA_OUTPUT_DEBUG")) != 0)
+    DUMA_OUTPUT_DEBUG = (atoi(string) != 0);
 
   /*
    * DUMA_OUTPUT_STDOUT is a global variable used to control if DUMA
    * output is printed to STDOUT.  Default is 0,
    * meaning that output is not by default sent to STDOUT.
    */
-  if ((string = DUMA_GETENV("DUMA_OUTPUT_STDOUT")) != 0) DUMA_OUTPUT_STDOUT = (atoi(string) != 0);
+  if ((string = DUMA_GETENV("DUMA_OUTPUT_STDOUT")) != 0)
+    DUMA_OUTPUT_STDOUT = (atoi(string) != 0);
 
   /*
    * DUMA_OUTPUT_STDERR is a global variable used to control if DUMA
    * output is printed to STDERR.  Default is 1,
    * meaning that output is by default sent to STDERR.
    */
-  if ((string = DUMA_GETENV("DUMA_OUTPUT_STDERR")) != 0) DUMA_OUTPUT_STDERR = (atoi(string) != 0);
+  if ((string = DUMA_GETENV("DUMA_OUTPUT_STDERR")) != 0)
+    DUMA_OUTPUT_STDERR = (atoi(string) != 0);
 
   /*
    * DUMA_OUTPUT_FILE is a global variable used to control if DUMA
    * output is printed to a specified file.  Default is NULL,
    * meaning that output is not by default sent to a file.
    */
-  if ((string = DUMA_GETENV("DUMA_OUTPUT_FILE")) != 0) DUMA_OUTPUT_FILE = strdup(string);
+  if ((string = DUMA_GETENV("DUMA_OUTPUT_FILE")) != 0)
+    DUMA_OUTPUT_FILE = strdup(string);
 
   /* Get Value for DUMA_SKIPCOUNT_INIT */
   if ((string = DUMA_GETENV("DUMA_SKIPCOUNT_INIT")) != 0)
@@ -898,14 +918,16 @@ static void duma_getenvvars(DUMA_TLSVARS_T *duma_tls) {
   /* Get Value for DUMA_CHECK_FREQ */
   if ((string = DUMA_GETENV("DUMA_CHECK_FREQ")) != 0) {
     int tmp = atoi(string);
-    if (tmp > 0) _duma_s.CHECK_FREQ = tmp;
+    if (tmp > 0)
+      _duma_s.CHECK_FREQ = tmp;
   }
 
   /* Should we send banner? */
   if ((string = DUMA_GETENV("DUMA_DISABLE_BANNER")) != 0)
     _duma_s.DISABLE_BANNER = (atoi(string) != 0);
 
-  if (!_duma_s.DISABLE_BANNER) DUMA_Print(version);
+  if (!_duma_s.DISABLE_BANNER)
+    DUMA_Print(version);
 }
 
 #include <signal.h>
@@ -978,7 +1000,8 @@ static
 #endif /* DUMA_NO_HANG_MSG */
 
   if (!_duma_s.SUPPRESS_ATEXIT) {
-    if (atexit(_duma_exit)) DUMA_Abort("Cannot register exit function.\n");
+    if (atexit(_duma_exit))
+      DUMA_Abort("Cannot register exit function.\n");
 
 #ifndef DUMA_NO_HANG_MSG
     DUMA_Print("DUMA: Registration was successful.\n");
@@ -1043,10 +1066,12 @@ void
   if (DUMA_PAGE_SIZE != Page_Size())
     DUMA_Abort("DUMA_PAGE_SIZE is not correct. Run createconf and save results as duma_config.h");
 
-  if (!inRecursion) DUMA_GET_SEMAPHORE();
+  if (!inRecursion)
+    DUMA_GET_SEMAPHORE();
 
   /* call of DUMA_GET_SEMAPHORE() may already have done the construction recursively! */
-  if (_duma_s.init_state >= DUMAIS_OUT_CONSTRUCTOR) goto duma_constructor_relsem;
+  if (_duma_s.init_state >= DUMAIS_OUT_CONSTRUCTOR)
+    goto duma_constructor_relsem;
 
   /*
    * Allocate special memory for malloc() or C++ operator new, when size is 0
@@ -1062,7 +1087,8 @@ void
   _duma_s.slotCount = _duma_s.slotsPerPage = DUMA_PAGE_SIZE / sizeof(struct _DUMA_Slot);
   _duma_s.allocListSize = DUMA_PAGE_SIZE;
 
-  if (size < _duma_s.allocListSize) size = _duma_s.allocListSize;
+  if (size < _duma_s.allocListSize)
+    size = _duma_s.allocListSize;
 
   size = (size + DUMA_PAGE_SIZE - 1) & ~(DUMA_PAGE_SIZE - 1);
 
@@ -1126,17 +1152,20 @@ void
   _duma_s.unUsedSlots = _duma_s.slotCount - 2;
 
   /* construction done */
-  if (_duma_s.init_state < DUMAIS_OUT_CONSTRUCTOR) _duma_s.init_state = DUMAIS_OUT_CONSTRUCTOR;
+  if (_duma_s.init_state < DUMAIS_OUT_CONSTRUCTOR)
+    _duma_s.init_state = DUMAIS_OUT_CONSTRUCTOR;
 
 duma_constructor_relsem:
   /***********************/
 
-  if (!inRecursion) DUMA_RELEASE_SEMAPHORE(0);
+  if (!inRecursion)
+    DUMA_RELEASE_SEMAPHORE(0);
 
 #ifndef DUMA_EXPLICIT_INIT
 duma_constructor_callinit:
   /*************************/
-  if (_duma_s.init_state < DUMAIS_OUT_INIT) duma_init();
+  if (_duma_s.init_state < DUMAIS_OUT_INIT)
+    duma_init();
 #elif 0
   /* this output produces other problems !!! */
   DUMA_Print("\nDUMA: This platform needs an explicit call of duma_init() (DUMA_EXPLICIT_INIT).");
@@ -1178,7 +1207,8 @@ static void allocateMoreSlots(void) {
                                  EFA_INT_ALLOC, DUMA_FAIL_NULL);
 #endif
 
-  if (!newAllocation) return;
+  if (!newAllocation)
+    return;
 
   memcpy(newAllocation, _duma_g.allocList, _duma_s.allocListSize);
   memset(&(((char *)newAllocation)[_duma_s.allocListSize]), 0, DUMA_PAGE_SIZE);
@@ -1199,7 +1229,9 @@ static void allocateMoreSlots(void) {
  *
  * set your conditional breakpoint here to catch a specific allocation
  */
-void *duma_alloc_return(void *address) { return address; }
+void *duma_alloc_return(void *address) {
+  return address;
+}
 
 /* Function: _duma_allocate
  *
@@ -1341,7 +1373,8 @@ void *_duma_allocate(size_t alignment, size_t userSize, int protectBelow, int fi
 
       if (s < a) {
         /* to next lower power of 2 */
-        for (a = s; a & (a - 1); a &= a - 1);
+        for (a = s; a & (a - 1); a &= a - 1)
+          ;
       }
 
       alignment = (size_t)a; /* this is new alignment */
@@ -1366,7 +1399,8 @@ void *_duma_allocate(size_t alignment, size_t userSize, int protectBelow, int fi
     /* a bit tricky but no modulo and no if () */
     internalSize = ((userSize + DUMA_PAGE_SIZE - 1) & ~(DUMA_PAGE_SIZE - 1)) + DUMA_PAGE_SIZE;
 
-    if (alignment > DUMA_PAGE_SIZE) internalSize += alignment - DUMA_PAGE_SIZE;
+    if (alignment > DUMA_PAGE_SIZE)
+      internalSize += alignment - DUMA_PAGE_SIZE;
   } /* end if ( userSize ) */
 
   /*
@@ -1454,7 +1488,8 @@ void *_duma_allocate(size_t alignment, size_t userSize, int protectBelow, int fi
 #else
     chunkSize = MEMORY_CREATION_SIZE;
 
-    if (chunkSize < internalSize) chunkSize = internalSize;
+    if (chunkSize < internalSize)
+      chunkSize = internalSize;
 
     chunkSize = (chunkSize + DUMA_PAGE_SIZE - 1) & ~(DUMA_PAGE_SIZE - 1);
 #endif
@@ -1462,10 +1497,12 @@ void *_duma_allocate(size_t alignment, size_t userSize, int protectBelow, int fi
     chunkSizekB = (long)((chunkSize + 1023) >> 10);
 
     /* Use up one of the empty slots to make the full slot. */
-    if (!emptySlots[0]) DUMA_Abort("Internal error in allocator: No empty slot 0.\n");
+    if (!emptySlots[0])
+      DUMA_Abort("Internal error in allocator: No empty slot 0.\n");
 
 #if !defined(WIN32)
-    if (!emptySlots[1]) DUMA_Abort("Internal error in allocator: No empty slot 1.\n");
+    if (!emptySlots[1])
+      DUMA_Abort("Internal error in allocator: No empty slot 1.\n");
 #endif
 
     fullSlot = emptySlots[0];
@@ -1612,7 +1649,8 @@ void *_duma_allocate(size_t alignment, size_t userSize, int protectBelow, int fi
       _duma_s.DUMA_IN_DUMA = 1;
 
       /* Get stacktrace */
-      if (fullSlot->stacktrace) LocalFree(fullSlot->stacktrace);
+      if (fullSlot->stacktrace)
+        LocalFree(fullSlot->stacktrace);
 
       fullSlot->stacktrace = ptrStacktrace;
 
@@ -1663,7 +1701,8 @@ void _duma_deallocate(void *address, int protectAllocList,
 #endif
   }
 
-  if (0 == address || _duma_g.null_addr == address) return;
+  if (0 == address || _duma_g.null_addr == address)
+    return;
 
   if (protectAllocList) {
     IF__DUMA_INIT_DONE
@@ -1829,7 +1868,8 @@ void _duma_deallocate(void *address, int protectAllocList,
 void duma_check(void *address) {
   struct _DUMA_Slot *slot;
 
-  if (0 == address) return;
+  if (0 == address)
+    return;
 
   IF__DUMA_INIT_DONE
   DUMA_GET_SEMAPHORE();
@@ -1966,7 +2006,8 @@ int _duma_posix_memalign(void **memptr, size_t alignment, size_t size DUMA_PARAM
   DUMA_TLSVARS_T *duma_tls;
   void *retptr;
 
-  if ((alignment & (alignment - 1)) || alignment < sizeof(void *)) return EINVAL;
+  if ((alignment & (alignment - 1)) || alignment < sizeof(void *))
+    return EINVAL;
 
   if (_duma_g.allocList == 0)
     _duma_init(); /* This sets DUMA_ALIGNMENT, DUMA_PROTECT_BELOW, DUMA_FILL, ... */
@@ -2064,7 +2105,8 @@ char *_duma_strdup(const char *str DUMA_PARAMLIST_FL) {
   duma_tls = GET_DUMA_TLSVARS();
 
   size = 0;
-  while (str[size]) ++size;
+  while (str[size])
+    ++size;
 
   dup = _duma_allocate(0, size + 1, duma_tls->PROTECT_BELOW, -1 /*=fillByte*/,
                        1 /*=protectAllocList*/, EFA_STRDUP, DUMA_FAIL_ENV DUMA_PARAMS_FL);
@@ -2100,7 +2142,8 @@ void *_duma_memcpy(void *dest, const void *src, size_t size DUMA_PARAMLIST_FL) {
 #endif
   }
 
-  for (i = 0; i < size; ++i) d[i] = s[i];
+  for (i = 0; i < size; ++i)
+    d[i] = s[i];
 
   return dest;
 }
@@ -2111,7 +2154,8 @@ void *_duma_memcpy(void *dest, const void *src, size_t size DUMA_PARAMLIST_FL) {
  */
 size_t _duma_strnlen(const char *src, size_t size) {
   size_t len;
-  for (len = 0; len < size && src[len]; ++len);
+  for (len = 0; len < size && src[len]; ++len)
+    ;
   return len;
 }
 
@@ -2137,7 +2181,8 @@ char *_duma_strcpy(char *dest, const char *src DUMA_PARAMLIST_FL) {
 #endif
   }
 
-  for (i = 0; i < size; ++i) dest[i] = src[i];
+  for (i = 0; i < size; ++i)
+    dest[i] = src[i];
 
   return dest;
 }
@@ -2169,10 +2214,12 @@ char *_duma_strncpy(char *dest, const char *src, size_t size DUMA_PARAMLIST_FL) 
   /* copy src to dest - up to size or zero terminator
    *   whatever happens first
    */
-  for (i = 0; i < size && src[i]; ++i) dest[i] = src[i];
+  for (i = 0; i < size && src[i]; ++i)
+    dest[i] = src[i];
 
   /* fill rest with '\0' character */
-  for (; i < size; ++i) dest[i] = 0;
+  for (; i < size; ++i)
+    dest[i] = 0;
 
   return dest;
 }
@@ -2200,7 +2247,8 @@ char *_duma_strcat(char *dest, const char *src DUMA_PARAMLIST_FL) {
 #endif
   }
 
-  for (i = 0; i < srcsize; ++i) dest[destlen + i] = src[i];
+  for (i = 0; i < srcsize; ++i)
+    dest[destlen + i] = src[i];
 
   return dest;
 }
@@ -2219,7 +2267,8 @@ char *_duma_strncat(char *dest, const char *src, size_t size DUMA_PARAMLIST_FL) 
   size_t destlen, srclen;
 
   /* do nothing, when size not > 0 */
-  if (size <= 0) return dest;
+  if (size <= 0)
+    return dest;
 
   /* calculate number of characters to copy from src to dest */
   destlen = strlen(dest);
@@ -2237,7 +2286,8 @@ char *_duma_strncat(char *dest, const char *src, size_t size DUMA_PARAMLIST_FL) 
   }
 
   /* copy up to size characters from src to dest */
-  for (i = 0; i < srclen; ++i) dest[destlen + i] = src[i];
+  for (i = 0; i < srclen; ++i)
+    dest[destlen + i] = src[i];
 
   /* append single '\0' character */
   dest[destlen + srclen] = 0;
@@ -2258,11 +2308,17 @@ char *_duma_strncat(char *dest, const char *src, size_t size DUMA_PARAMLIST_FL) 
 #pragma function(memcpy, strcpy, strcat)
 #endif
 
-void *malloc(size_t size) { return _duma_malloc(size DUMA_PARAMS_UK); }
+void *malloc(size_t size) {
+  return _duma_malloc(size DUMA_PARAMS_UK);
+}
 
-void *calloc(size_t nelem, size_t elsize) { return _duma_calloc(nelem, elsize DUMA_PARAMS_UK); }
+void *calloc(size_t nelem, size_t elsize) {
+  return _duma_calloc(nelem, elsize DUMA_PARAMS_UK);
+}
 
-void free(void *address) { _duma_free(address DUMA_PARAMS_UK); }
+void free(void *address) {
+  _duma_free(address DUMA_PARAMS_UK);
+}
 
 void *memalign(size_t alignment, size_t size) {
   return _duma_memalign(alignment, size DUMA_PARAMS_UK);
@@ -2276,21 +2332,29 @@ void *realloc(void *oldBuffer, size_t newSize) {
   return _duma_realloc(oldBuffer, newSize DUMA_PARAMS_UK);
 }
 
-void *valloc(size_t size) { return _duma_valloc(size DUMA_PARAMS_UK); }
+void *valloc(size_t size) {
+  return _duma_valloc(size DUMA_PARAMS_UK);
+}
 
-char *strdup(const char *str) { return _duma_strdup(str DUMA_PARAMS_UK); }
+char *strdup(const char *str) {
+  return _duma_strdup(str DUMA_PARAMS_UK);
+}
 
 void *memcpy(void *dest, const void *src, size_t size) {
   return _duma_memcpy(dest, src, size DUMA_PARAMS_UK);
 }
 
-char *strcpy(char *dest, const char *src) { return _duma_strcpy(dest, src DUMA_PARAMS_UK); }
+char *strcpy(char *dest, const char *src) {
+  return _duma_strcpy(dest, src DUMA_PARAMS_UK);
+}
 
 char *strncpy(char *dest, const char *src, size_t size) {
   return _duma_strncpy(dest, src, size DUMA_PARAMS_UK);
 }
 
-char *strcat(char *dest, const char *src) { return _duma_strcat(dest, src DUMA_PARAMS_UK); }
+char *strcat(char *dest, const char *src) {
+  return _duma_strcat(dest, src DUMA_PARAMS_UK);
+}
 
 char *strncat(char *dest, const char *src, size_t size) {
   return _duma_strncat(dest, src, size DUMA_PARAMS_UK);
@@ -2302,7 +2366,8 @@ char *strncat(char *dest, const char *src, size_t size) {
 
 /* Function DUMA_newFrame
  */
-void DUMA_newFrame(void) {}
+void DUMA_newFrame(void) {
+}
 
 /* Function DUMA_delFrame
  *
@@ -2339,7 +2404,8 @@ void DUMA_delFrame(void) {
                    _duma_allocDesc[slot->allocator].name, slot->filename, slot->lineno);
 #endif
 #if defined(WIN32) && !defined(__CYGWIN__) && !defined(__MINGW32__) && !defined(__MINGW64__)
-        if (DUMA_OUTPUT_STACKTRACE) DUMA_Print("Stacktrace of allocation:\n%s\n", slot->stacktrace);
+        if (DUMA_OUTPUT_STACKTRACE)
+          DUMA_Print("Stacktrace of allocation:\n%s\n", slot->stacktrace);
 #endif
 
         ++nonFreedReported;

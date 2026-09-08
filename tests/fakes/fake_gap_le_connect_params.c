@@ -11,9 +11,11 @@ void gap_le_connect_params_request(GAPLEConnection *connection, ResponseTimeStat
   s_last_requested_desired_state = desired_state;
 }
 
-void gap_le_connect_params_setup_connection(GAPLEConnection *connection, TimerID timer) {}
+void gap_le_connect_params_setup_connection(GAPLEConnection *connection, TimerID timer) {
+}
 
-void gap_le_connect_params_cleanup_by_connection(GAPLEConnection *connection) {}
+void gap_le_connect_params_cleanup_by_connection(GAPLEConnection *connection) {
+}
 
 static ResponseTimeState s_actual_state;
 ResponseTimeState gap_le_connect_params_get_actual_state(GAPLEConnection *connection) {

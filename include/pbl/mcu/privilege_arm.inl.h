@@ -17,4 +17,6 @@
 // See http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/CHDIGFCA.html
 // for a more detailed explanation of these various privilege states.
 
-static inline bool mcu_state_is_thread_privileged(void) { return (__get_CONTROL() & 0x1) == 0; }
+static inline bool mcu_state_is_thread_privileged(void) {
+  return (__get_CONTROL() & 0x1) == 0;
+}

@@ -82,6 +82,10 @@ void low_power_enter(void) {
   prv_low_power_transition(true);
 }
 
-void low_power_exit(void) { prv_low_power_transition(false); }
+void low_power_exit(void) {
+  prv_low_power_transition(false);
+}
 
-bool low_power_is_active(void) { return s_low_power_active; }
+bool low_power_is_active(void) {
+  return s_low_power_active;
+}

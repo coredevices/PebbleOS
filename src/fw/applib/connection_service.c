@@ -75,7 +75,9 @@ void bluetooth_connection_service_subscribe(ConnectionHandler handler) {
   connection_service_subscribe(conn_handlers);
 }
 
-void bluetooth_connection_service_unsubscribe(void) { connection_service_unsubscribe(); }
+void bluetooth_connection_service_unsubscribe(void) {
+  connection_service_unsubscribe();
+}
 
 bool bluetooth_connection_service_peek(void) {
   return connection_service_peek_pebble_app_connection();

@@ -24,7 +24,8 @@ void test_timeline_no_events__initialize(void) {
   s_data = (TimelineTestData){};
 }
 
-void test_timeline_no_events__cleanup(void) {}
+void test_timeline_no_events__cleanup(void) {
+}
 
 // Helpers
 //////////////////////

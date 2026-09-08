@@ -7,7 +7,9 @@
 #include <stddef.h>
 #include <stdio.h>
 
-void slist_init(SingleListNode *node) { node->next = NULL; }
+void slist_init(SingleListNode *node) {
+  node->next = NULL;
+}
 
 SingleListNode *slist_insert_after(SingleListNode *node, SingleListNode *new_node) {
   if (node == NULL) {

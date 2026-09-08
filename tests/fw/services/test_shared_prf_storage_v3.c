@@ -39,7 +39,8 @@ extern void shared_prf_storage_set_valid_page_number(uint32_t page_num);
 // Stubs
 //////////////////////////////////////////////////////////
 static bool s_mutex_locked;
-void pbl_mutex_init(struct pbl_mutex *m) {}
+void pbl_mutex_init(struct pbl_mutex *m) {
+}
 
 int pbl_mutex_lock_lr(struct pbl_mutex *m, pbl_timeout_t timeout, uintptr_t lr) {
   cl_assert_equal_b(s_mutex_locked, false);
@@ -180,7 +181,9 @@ static void prv_fill_flash_random_data(void) {
   kernel_free(buf);
 }
 
-static void prv_assert_mutexes_unlocked(void) { cl_assert_equal_b(s_mutex_locked, false); }
+static void prv_assert_mutexes_unlocked(void) {
+  cl_assert_equal_b(s_mutex_locked, false);
+}
 
 // Tests
 ///////////////////////////////////////////////////////////

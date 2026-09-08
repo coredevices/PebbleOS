@@ -58,11 +58,17 @@
 #include "fake_settings_file.h"
 #include "fake_events.h"
 
-bool calendar_layout_verify(bool existing_attributes[]) { return true; }
+bool calendar_layout_verify(bool existing_attributes[]) {
+  return true;
+}
 
-bool weather_layout_verify(bool existing_attributes[]) { return true; }
+bool weather_layout_verify(bool existing_attributes[]) {
+  return true;
+}
 
-const TimelineEventImpl *calendar_get_event_service(void) { return NULL; }
+const TimelineEventImpl *calendar_get_event_service(void) {
+  return NULL;
+}
 
 // Helpers
 ////////////////////////////////////////////////////////////////
@@ -73,7 +79,9 @@ typedef struct PeekTestData {
 
 static PeekTestData s_data;
 
-static PebbleTimelinePeekEvent prv_get_peek_event(void) { return s_data.last_peek_event; }
+static PebbleTimelinePeekEvent prv_get_peek_event(void) {
+  return s_data.last_peek_event;
+}
 
 static void prv_event_handler(PebbleEvent *event) {
   if (event->type == PEBBLE_TIMELINE_PEEK_EVENT) {

@@ -533,7 +533,9 @@ bool comm_session_is_system(CommSession *session) {
 // -------------------------------------------------------------------------------------------------
 
 //! Must (only) be called when going out of airplane mode (enabling Bluetooth).
-void comm_session_init(void) { PBL_ASSERTN(s_session_head == NULL); }
+void comm_session_init(void) {
+  PBL_ASSERTN(s_session_head == NULL);
+}
 
 //! Must (only) be called when going into airplane mode (disabling Bluetooth).
 void comm_session_deinit(void) {

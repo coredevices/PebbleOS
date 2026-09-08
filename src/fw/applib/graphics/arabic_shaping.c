@@ -170,7 +170,9 @@ static const ArabicShapingEntry *prv_find_shaping_entry(Codepoint cp) {
   return NULL;
 }
 
-bool arabic_is_shapeable(Codepoint cp) { return prv_find_shaping_entry(cp) != NULL; }
+bool arabic_is_shapeable(Codepoint cp) {
+  return prv_find_shaping_entry(cp) != NULL;
+}
 
 // Check if an Arabic letter connects to the left (has initial/medial forms)
 static bool prv_connects_left(const ArabicShapingEntry *entry) {

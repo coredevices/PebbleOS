@@ -151,9 +151,13 @@ static const uint8_t Rcon[255] = {
 /*****************************************************************************/
 /* Private functions:                                                        */
 /*****************************************************************************/
-static uint8_t getSBoxValue(uint8_t num) { return sbox[num]; }
+static uint8_t getSBoxValue(uint8_t num) {
+  return sbox[num];
+}
 
-static uint8_t getSBoxInvert(uint8_t num) { return rsbox[num]; }
+static uint8_t getSBoxInvert(uint8_t num) {
+  return rsbox[num];
+}
 
 // This function produces Nb(Nr+1) round keys. The round keys are used in each round to decrypt the
 // states.
@@ -267,7 +271,9 @@ static void ShiftRows(void) {
   (*state)[1][3] = temp;
 }
 
-static uint8_t xtime(uint8_t x) { return ((x << 1) ^ (((x >> 7) & 1) * 0x1b)); }
+static uint8_t xtime(uint8_t x) {
+  return ((x << 1) ^ (((x >> 7) & 1) * 0x1b));
+}
 
 // MixColumns function mixes the columns of the state matrix
 static void MixColumns(void) {

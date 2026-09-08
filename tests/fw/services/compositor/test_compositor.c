@@ -38,7 +38,9 @@ bool animation_schedule(Animation *animation) {
   return true;
 }
 
-bool animation_set_auto_destroy(Animation *animation, bool auto_destroy) { return true; }
+bool animation_set_auto_destroy(Animation *animation, bool auto_destroy) {
+  return true;
+}
 
 bool animation_is_scheduled(Animation *animation_h) {
   return animation_h && animation_h == s_scheduled_animation;
@@ -67,12 +69,16 @@ FrameBuffer *app_state_get_framebuffer(void) {
   return compositor_get_framebuffer();
 }
 
-void app_manager_get_framebuffer_size(GSize *size) { *size = (GSize){DISP_COLS, DISP_ROWS}; }
+void app_manager_get_framebuffer_size(GSize *size) {
+  *size = (GSize){DISP_COLS, DISP_ROWS};
+}
 
 void bitblt_bitmap_into_bitmap(GBitmap *dest_bitmap, const GBitmap *src_bitmap, GPoint dest_offset,
-                               GCompOp compositing_mode, GColor tint_color) {}
+                               GCompOp compositing_mode, GColor tint_color) {
+}
 
-void compositor_dot_transition_app_to_app_init(Animation *animation) {}
+void compositor_dot_transition_app_to_app_init(Animation *animation) {
+}
 
 bool compositor_dot_transition_app_to_app_update_func(GContext *ctx, Animation *animation,
                                                       uint32_t distance_normalized) {
@@ -80,10 +86,14 @@ bool compositor_dot_transition_app_to_app_update_func(GContext *ctx, Animation *
 }
 
 static bool s_modal_window_present = false;
-Window *modal_manager_get_top_window(void) { return (Window *)(uintptr_t)s_modal_window_present; }
+Window *modal_manager_get_top_window(void) {
+  return (Window *)(uintptr_t)s_modal_window_present;
+}
 
 static int s_modal_manager_render_count;
-void modal_manager_render(GContext *ctx) { ++s_modal_manager_render_count; }
+void modal_manager_render(GContext *ctx) {
+  ++s_modal_manager_render_count;
+}
 
 ModalProperty modal_manager_get_properties(void) {
   return s_modal_window_present ? ModalProperty_Exists : ModalPropertyDefault;
@@ -94,9 +104,11 @@ GContext *kernel_ui_get_graphics_context(void) {
   return &s_context;
 }
 
-void framebuffer_clear(FrameBuffer *f) {}
+void framebuffer_clear(FrameBuffer *f) {
+}
 
-void framebuffer_dirty_all(FrameBuffer *fb) {}
+void framebuffer_dirty_all(FrameBuffer *fb) {
+}
 
 // Back the framebuffer bitmap with a real buffer sized for the display. compositor_render_app()
 // memsets framebuffer_get_size_bytes() bytes through this bitmap's addr, so it must point at at
@@ -110,13 +122,19 @@ GBitmap framebuffer_get_as_bitmap(FrameBuffer *fb, const GSize *size) {
   };
 }
 
-void framebuffer_set_line(FrameBuffer *f, uint8_t y, const uint8_t *buffer) {}
+void framebuffer_set_line(FrameBuffer *f, uint8_t y, const uint8_t *buffer) {
+}
 
-GDrawState graphics_context_get_drawing_state(GContext *ctx) { return (GDrawState){}; }
+GDrawState graphics_context_get_drawing_state(GContext *ctx) {
+  return (GDrawState){};
+}
 
-void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {}
+void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {
+}
 
-AnimationPrivate *animation_private_animation_find(Animation *handle) { return NULL; }
+AnimationPrivate *animation_private_animation_find(Animation *handle) {
+  return NULL;
+}
 
 static int s_count_display_update = 0;
 void compositor_display_update(void (*handle_update_complete_cb)(void)) {
@@ -124,10 +142,14 @@ void compositor_display_update(void (*handle_update_complete_cb)(void)) {
 }
 
 static bool s_display_update_in_progress = false;
-bool compositor_display_update_in_progress(void) { return s_display_update_in_progress; }
+bool compositor_display_update_in_progress(void) {
+  return s_display_update_in_progress;
+}
 
 static PebbleEvent s_last_event;
-void event_put(PebbleEvent *event) { s_last_event = *event; }
+void event_put(PebbleEvent *event) {
+  s_last_event = *event;
+}
 
 static bool s_render_pending;
 bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent *event) {
@@ -146,16 +168,22 @@ bool animation_set_implementation(Animation *animation,
 }
 
 static int s_count_compositor_init_func_a = 0;
-static void prv_compositor_init_func_a(Animation *animation) { ++s_count_compositor_init_func_a; }
+static void prv_compositor_init_func_a(Animation *animation) {
+  ++s_count_compositor_init_func_a;
+}
 
 static void prv_compositor_update_func_a(GContext *ctx, Animation *animation,
-                                         uint32_t distance_normalized) {}
+                                         uint32_t distance_normalized) {
+}
 
 static int s_count_compositor_init_func_b = 0;
-static void prv_compositor_init_func_b(Animation *animation) { ++s_count_compositor_init_func_b; }
+static void prv_compositor_init_func_b(Animation *animation) {
+  ++s_count_compositor_init_func_b;
+}
 
 static void prv_compositor_update_func_b(GContext *ctx, Animation *animation,
-                                         uint32_t distance_normalized) {}
+                                         uint32_t distance_normalized) {
+}
 
 static const CompositorTransition s_transition_a = {.init = prv_compositor_init_func_a,
                                                     .update = prv_compositor_update_func_a};
@@ -163,7 +191,8 @@ static const CompositorTransition s_transition_a = {.init = prv_compositor_init_
 static const CompositorTransition s_transition_b = {.init = prv_compositor_init_func_b,
                                                     .update = prv_compositor_update_func_b};
 
-void launcher_task_add_callback(void (*callback)(void *data), void *data) {}
+void launcher_task_add_callback(void (*callback)(void *data), void *data) {
+}
 
 // Tests
 ///////////////////////////////////////////////////////////
@@ -194,7 +223,8 @@ void test_compositor__initialize(void) {
   compositor_init();
 }
 
-void test_compositor__cleanup(void) {}
+void test_compositor__cleanup(void) {
+}
 
 void test_compositor__simple(void) {
   compositor_transition(&s_transition_a);

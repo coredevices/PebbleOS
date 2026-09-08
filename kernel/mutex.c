@@ -5,9 +5,13 @@
 
 #include "kernel.h"
 
-void pbl_mutex_init(struct pbl_mutex *m) { *m = (struct pbl_mutex)PBL_MUTEX_INITIALIZER; }
+void pbl_mutex_init(struct pbl_mutex *m) {
+  *m = (struct pbl_mutex)PBL_MUTEX_INITIALIZER;
+}
 
-void pbl_mutex_deinit(struct pbl_mutex *m) { KERNEL_ASSERT(m->count == 0); }
+void pbl_mutex_deinit(struct pbl_mutex *m) {
+  KERNEL_ASSERT(m->count == 0);
+}
 
 int pbl_mutex_lock_lr(struct pbl_mutex *m, pbl_timeout_t timeout, uintptr_t lr) {
   KERNEL_ASSERT(!arch_in_isr());
@@ -61,7 +65,9 @@ void pbl_mutex_unlock(struct pbl_mutex *m) {
   pbl_irq_unlock();
 }
 
-bool pbl_mutex_is_owner(const struct pbl_mutex *m) { return m->count > 0 && m->owner == pbl_cur; }
+bool pbl_mutex_is_owner(const struct pbl_mutex *m) {
+  return m->count > 0 && m->owner == pbl_cur;
+}
 
 void pbl_mutex_assert_held(const struct pbl_mutex *m, bool held) {
   KERNEL_ASSERT(pbl_mutex_is_owner(m) == held);

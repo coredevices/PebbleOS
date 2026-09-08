@@ -5,10 +5,18 @@
 
 #include <pbl/kernel/sched.h>
 
-bool pbl_kernel_is_started(void) { return true; }
+bool pbl_kernel_is_started(void) {
+  return true;
+}
 
-bool pbl_kernel_is_running(void) { return true; }
+bool pbl_kernel_is_running(void) {
+  return true;
+}
 
-bool pbl_sched_is_locked(void) { return false; }
+bool pbl_sched_is_locked(void) {
+  return false;
+}
 
-pbl_tick_t pbl_uptime_ticks(void) { return 0; }
+pbl_tick_t pbl_uptime_ticks(void) {
+  return 0;
+}

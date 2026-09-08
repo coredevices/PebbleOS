@@ -65,11 +65,16 @@ static bool prv_compare_points(GPoint *a, GPoint *b, uint16_t num_points) {
 }
 
 // Stubs
-void graphics_context_set_stroke_color(GContext *ctx, GColor color) { s_stroke_color = color; }
+void graphics_context_set_stroke_color(GContext *ctx, GColor color) {
+  s_stroke_color = color;
+}
 
-void graphics_context_set_fill_color(GContext *ctx, GColor color) { s_fill_color = color; }
+void graphics_context_set_fill_color(GContext *ctx, GColor color) {
+  s_fill_color = color;
+}
 
-void graphics_context_set_antialiased(GContext *ctx, bool enable) {}
+void graphics_context_set_antialiased(GContext *ctx, bool enable) {
+}
 
 void graphics_context_set_stroke_width(GContext *ctx, uint8_t stroke_width) {
   s_stroke_width = stroke_width;
@@ -110,7 +115,9 @@ void graphics_fill_circle(GContext *ctx, GPoint p, uint16_t radius) {
   s_circle_fill_count++;
 }
 
-void graphics_context_move_draw_box(GContext *ctx, GPoint offset) { s_offset = offset; }
+void graphics_context_move_draw_box(GContext *ctx, GPoint offset) {
+  s_offset = offset;
+}
 
 void graphics_line_draw_precise_stroked(GContext *ctx, GPointPrecise p0, GPointPrecise p1) {
   s_precise_lines = realloc(s_precise_lines, (s_num_precise_lines + 1) * sizeof(*s_precise_lines));
@@ -152,7 +159,9 @@ void prv_reset(void) {
 }
 
 // setup and teardown
-void test_gdraw_command__initialize(void) { prv_reset(); }
+void test_gdraw_command__initialize(void) {
+  prv_reset();
+}
 
 void test_gdraw_command__cleanup(void) {
   if (s_stroke_points) {

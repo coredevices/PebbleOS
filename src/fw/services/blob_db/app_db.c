@@ -412,4 +412,6 @@ status_t app_db_compact(void) {
 //////////////////////
 
 // automated testing and app_install_manager prompt commands
-int32_t app_db_check_next_unique_id(void) { return s_next_unique_flash_app_id; }
+int32_t app_db_check_next_unique_id(void) {
+  return s_next_unique_flash_app_id;
+}

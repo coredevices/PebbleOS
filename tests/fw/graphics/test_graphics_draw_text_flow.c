@@ -80,7 +80,9 @@ void prv_prepare_fb_steps_xy(GSize size, int16_t steps_x, int16_t steps_y) {
   memset(s_dest_bitmap->addr, 0xff, s_dest_bitmap->row_size_bytes * s_dest_bitmap->bounds.size.h);
 }
 
-void prv_prepare_fb_steps(GSize size) { prv_prepare_fb_steps_xy(size, NUM_STEPS, NUM_STEPS); }
+void prv_prepare_fb_steps(GSize size) {
+  prv_prepare_fb_steps_xy(size, NUM_STEPS, NUM_STEPS);
+}
 
 void test_graphics_draw_text_flow__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));

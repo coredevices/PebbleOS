@@ -14,6 +14,9 @@ AppTimer *app_timer_register_repeatable(uint32_t timeout_ms, AppTimerCallback ca
   return NULL;
 }
 
-bool app_timer_reschedule(AppTimer *timer, uint32_t new_timeout_ms) { return true; }
+bool app_timer_reschedule(AppTimer *timer, uint32_t new_timeout_ms) {
+  return true;
+}
 
-void app_timer_cancel(AppTimer *timer) {}
+void app_timer_cancel(AppTimer *timer) {
+}

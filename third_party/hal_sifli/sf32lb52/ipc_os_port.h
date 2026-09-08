@@ -11,7 +11,9 @@ static inline int os_interrupt_disable(void) {
   return 0;
 }
 
-static inline void os_interrupt_enable(int mask) { pbl_irq_unlock(); }
+static inline void os_interrupt_enable(int mask) {
+  pbl_irq_unlock();
+}
 
 #define os_interrupt_enter()
 #define os_interrupt_exit()

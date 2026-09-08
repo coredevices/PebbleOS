@@ -30,14 +30,18 @@ void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *src_bitmap, cons
   s_graphics_draw_bitmap_in_rect__rect = *rect;
 }
 
-bool process_manager_compiled_with_legacy2_sdk(void) { return cl_mock_type(bool); }
+bool process_manager_compiled_with_legacy2_sdk(void) {
+  return cl_mock_type(bool);
+}
 
 // Test boilerplate
 /////////////////////
 
-void test_bitmap_layer__initialize(void) {}
+void test_bitmap_layer__initialize(void) {
+}
 
-void test_bitmap_layer__cleanup(void) {}
+void test_bitmap_layer__cleanup(void) {
+}
 
 // Tests
 //////////////////////

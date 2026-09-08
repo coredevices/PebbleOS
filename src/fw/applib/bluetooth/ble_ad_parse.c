@@ -536,7 +536,9 @@ BLEAdData *ble_ad_create(void) {
 }
 
 // -----------------------------------------------------------------------------
-void ble_ad_destroy(BLEAdData *ad) { applib_free(ad); }
+void ble_ad_destroy(BLEAdData *ad) {
+  applib_free(ad);
+}
 
 // -----------------------------------------------------------------------------
 //! The smallest UUID width, by reducing the width when a UUID is based on the

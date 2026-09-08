@@ -101,7 +101,9 @@ static time_t prv_get_midnight_of_local_time(time_t now) {
 
 // ----------------------------------------------------------------------------------------
 // Return true if the passed in day is a weekend
-static bool prv_is_weekend(DayInWeek day) { return (day == Sunday) || (day == Saturday); }
+static bool prv_is_weekend(DayInWeek day) {
+  return (day == Sunday) || (day == Saturday);
+}
 
 // ----------------------------------------------------------------------------------------------
 // Return the activity metric that maps to the given health metric. We separate the two because

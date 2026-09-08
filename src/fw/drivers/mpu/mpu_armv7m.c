@@ -113,7 +113,9 @@ static uint32_t get_size_field(uint32_t block_size) {
   return result;
 }
 
-void mpu_enable(void) { ARM_MPU_Enable(MPU_CTRL_PRIVDEFENA_Msk); }
+void mpu_enable(void) {
+  ARM_MPU_Enable(MPU_CTRL_PRIVDEFENA_Msk);
+}
 
 // Get the required region base address and region attribute register settings for the given region.
 // These are the values which should written to the RBAR and RASR registers to configure that

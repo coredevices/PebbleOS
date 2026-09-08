@@ -172,7 +172,8 @@ static void prv_display_seconds_history_alert(HealthAPITestAppData *data, const 
 }
 
 // -------------------------------------------------------------------------------
-static void sleep_select_click_handler(ClickRecognizerRef recognizer, void *context) {}
+static void sleep_select_click_handler(ClickRecognizerRef recognizer, void *context) {
+}
 
 // -------------------------------------------------------------------------------
 static void sleep_up_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -536,7 +537,8 @@ static void results_window_unload(Window *window) {
 }
 
 // -------------------------------------------------------------------------------
-static void prv_hr_select_click_handler(ClickRecognizerRef recognizer, void *context) {}
+static void prv_hr_select_click_handler(ClickRecognizerRef recognizer, void *context) {
+}
 
 // -------------------------------------------------------------------------------
 static void prv_hr_up_click_handler(ClickRecognizerRef recognizer, void *context) {

@@ -6,7 +6,11 @@
 #include "layout_layer.h"
 #include "timeline_layout.h"
 
-typedef enum { GameStatePreGame = 0, GameStateInGame, GameStatePostGame } GameState;
+typedef enum {
+  GameStatePreGame = 0,
+  GameStateInGame,
+  GameStatePostGame
+} GameState;
 
 typedef struct {
   TimelineLayout timeline_layout;

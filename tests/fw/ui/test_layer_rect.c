@@ -21,13 +21,19 @@
 #include "stubs_syscalls.h"
 #include "stubs_unobstructed_area.h"
 
-GDrawState graphics_context_get_drawing_state(GContext *ctx) { return (GDrawState){0}; }
+GDrawState graphics_context_get_drawing_state(GContext *ctx) {
+  return (GDrawState){0};
+}
 
-bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) { return false; }
+bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) {
+  return false;
+}
 
-void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {}
+void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {
+}
 
-void window_schedule_render(struct Window *window) {}
+void window_schedule_render(struct Window *window) {
+}
 
 static bool s_process_manager_compiled_with_legacy2_sdk;
 
@@ -38,9 +44,12 @@ bool process_manager_compiled_with_legacy2_sdk(void) {
 // Setup
 ////////////////////////////////////
 
-void test_layer_rect__initialize(void) { s_process_manager_compiled_with_legacy2_sdk = false; }
+void test_layer_rect__initialize(void) {
+  s_process_manager_compiled_with_legacy2_sdk = false;
+}
 
-void test_layer_rect__cleanup(void) {}
+void test_layer_rect__cleanup(void) {
+}
 
 // Tests
 ////////////////////////////////////

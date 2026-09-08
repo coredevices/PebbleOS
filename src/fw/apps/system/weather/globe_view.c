@@ -233,7 +233,8 @@ static uint32_t bw_frame_count_for_view(GlobeView *view) {
 
 static int bw_frame_index_for_view(GlobeView *view, int frame) {
   uint32_t frame_count = bw_frame_count_for_view(view);
-  if (frame_count == 0) return 0;
+  if (frame_count == 0)
+    return 0;
 
   int result = frame % (int)frame_count;
   return result < 0 ? result + (int)frame_count : result;
@@ -247,7 +248,8 @@ static uint32_t bw_sequence_duration_for_view(GlobeView *view) {
 }
 
 static void sync_bw_elapsed_to_current_frame(GlobeView *view) {
-  if (!view) return;
+  if (!view)
+    return;
 
   uint32_t duration = bw_sequence_duration_for_view(view);
   if (duration == 0) {
@@ -262,11 +264,14 @@ static void sync_bw_elapsed_to_current_frame(GlobeView *view) {
 // positive_modulo is provided by util/math.h (same semantics) — using that.
 
 #ifdef CONFIG_TOUCH
-static int32_t abs_i32(int32_t value) { return value < 0 ? -value : value; }
+static int32_t abs_i32(int32_t value) {
+  return value < 0 ? -value : value;
+}
 #endif
 
 static int rounded_divide(int value, int divisor) {
-  if (divisor == 0) return 0;
+  if (divisor == 0)
+    return 0;
   return value >= 0 ? (value + (divisor / 2)) / divisor : (value - (divisor / 2)) / divisor;
 }
 
@@ -286,12 +291,14 @@ static int32_t selected_city_latitude_e2(GlobeView *view);
 static int32_t selected_city_longitude_e2(GlobeView *view);
 
 static SavedLocationEntry *saved_entry_for_index(GlobeView *view, int index) {
-  if (!view || index < 0 || index >= view->saved_entry_count) return NULL;
+  if (!view || index < 0 || index >= view->saved_entry_count)
+    return NULL;
   return &view->saved_entries[index];
 }
 
 static SavedLocationEntry *selected_saved_entry(GlobeView *view) {
-  if (!view || view->saved_entry_count <= 0) return NULL;
+  if (!view || view->saved_entry_count <= 0)
+    return NULL;
   if (view->selected_city_index < 0) {
     view->selected_city_index = 0;
   } else if (view->selected_city_index >= view->saved_entry_count) {
@@ -301,7 +308,8 @@ static SavedLocationEntry *selected_saved_entry(GlobeView *view) {
 }
 
 static int find_current_saved_entry_index(GlobeView *view) {
-  if (!view) return -1;
+  if (!view)
+    return -1;
   for (int i = 0; i < view->saved_entry_count; i++) {
     if (view->saved_entries[i].is_current_location) {
       return i;
@@ -311,15 +319,18 @@ static int find_current_saved_entry_index(GlobeView *view) {
 }
 
 static bool saved_entry_matches(const SavedLocationEntry *a, const SavedLocationEntry *b) {
-  if (!a || !b) return false;
+  if (!a || !b)
+    return false;
   // A re-sync can renumber records, so fall back to the name when the index
   // no longer lines up.
-  if (a->ds_index == b->ds_index) return true;
+  if (a->ds_index == b->ds_index)
+    return true;
   return a->label[0] && b->label[0] && strcmp(a->label, b->label) == 0;
 }
 
 static int find_saved_entry_index(GlobeView *view, const SavedLocationEntry *needle) {
-  if (!view || !needle) return -1;
+  if (!view || !needle)
+    return -1;
   for (int i = 0; i < view->saved_entry_count; i++) {
     if (saved_entry_matches(&view->saved_entries[i], needle)) {
       return i;
@@ -329,7 +340,8 @@ static int find_saved_entry_index(GlobeView *view, const SavedLocationEntry *nee
 }
 
 static void update_selected_transition_target(GlobeView *view) {
-  if (!view) return;
+  if (!view)
+    return;
   view->transition_color_target_latitude_e2 = selected_city_latitude_e2(view);
   view->transition_color_target_longitude_e2 = selected_city_longitude_e2(view);
 }
@@ -358,7 +370,8 @@ static int32_t selected_city_longitude_e2(GlobeView *view) {
 
 static bool selected_city_is_valid(GlobeView *view, int city_index) {
   SavedLocationEntry *e = saved_entry_for_index(view, city_index);
-  if (!e) return false;
+  if (!e)
+    return false;
   // A location the phone sent WITHOUT coordinates cannot be placed on the
   // globe (the watch has no geocoder), so skip it while cycling rather than
   // rotating to (0,0). The caller already retries and falls back to a bounce.
@@ -366,8 +379,10 @@ static bool selected_city_is_valid(GlobeView *view, int city_index) {
 }
 
 static bool saved_entry_has_globe_coordinates(GlobeView *view, SavedLocationEntry *entry) {
-  if (!entry) return false;
-  if (entry->has_coordinates) return true;
+  if (!entry)
+    return false;
+  if (entry->has_coordinates)
+    return true;
   return entry->is_current_location && view && view->has_current_location;
 }
 
@@ -390,7 +405,8 @@ static int16_t saved_entry_longitude_e2(GlobeView *view, SavedLocationEntry *ent
 // three, false when the entry has no usable globe position.
 static bool saved_entry_globe_coords(GlobeView *view, SavedLocationEntry *entry,
                                      int32_t *latitude_e2_out, int32_t *longitude_e2_out) {
-  if (!saved_entry_has_globe_coordinates(view, entry)) return false;
+  if (!saved_entry_has_globe_coordinates(view, entry))
+    return false;
   if (entry->is_current_location && view && view->has_current_location) {
     *latitude_e2_out = (int16_t)view->current_location_latitude_e2;
     *longitude_e2_out = (int16_t)view->current_location_longitude_e2;
@@ -402,13 +418,15 @@ static bool saved_entry_globe_coords(GlobeView *view, SavedLocationEntry *entry,
 }
 
 static int nearest_city_index_for_orientation(GlobeView *view) {
-  if (!view) return 0;
+  if (!view)
+    return 0;
 
   int best_index = 0;
   int32_t best_score = INT32_MAX;
   int max_index = globe_max_selector_index(view);
   for (int i = 0; i <= max_index; i++) {
-    if (!selected_city_is_valid(view, i)) continue;
+    if (!selected_city_is_valid(view, i))
+      continue;
     SavedLocationEntry *entry = saved_entry_for_index(view, i);
     int32_t candidate_latitude_e2;
     int32_t candidate_longitude_e2;
@@ -479,10 +497,12 @@ static AnimationProgress segmented_crumple_progress(AnimationProgress amount, in
                  GLOBE_CRUMPLE_POINT_DURATION_DEN;
   int delay_per_item = (ANIMATION_NORMALIZED_MAX - duration) / GLOBE_CRUMPLE_DELAY_SEGMENTS;
   int offset = amount - (delay_index * delay_per_item);
-  if (offset <= 0) return 0;
+  if (offset <= 0)
+    return 0;
 
   int32_t relative = weather_scale_i32(offset, ANIMATION_NORMALIZED_MAX, duration);
-  if (relative >= ANIMATION_NORMALIZED_MAX) return ANIMATION_NORMALIZED_MAX;
+  if (relative >= ANIMATION_NORMALIZED_MAX)
+    return ANIMATION_NORMALIZED_MAX;
   return ease_in_out((AnimationProgress)relative);
 }
 
@@ -508,7 +528,8 @@ typedef struct {
 static bool draw_direct_crumple_command(GDrawCommand *command, uint32_t index, void *context) {
   (void)index;
   DirectCrumpleContext *crumple = context;
-  if (!command || gdraw_command_get_hidden(command)) return true;
+  if (!command || gdraw_command_get_hidden(command))
+    return true;
 
   GDrawCommandType type = gdraw_command_get_type(command);
   GColor fill_color = gdraw_command_get_fill_color(command);
@@ -517,7 +538,8 @@ static bool draw_direct_crumple_command(GDrawCommand *command, uint32_t index, v
   uint32_t stroke_scale = ANIMATION_NORMALIZED_MAX - ((uint32_t)crumple->amount * 55 / 100);
   uint8_t scaled_stroke =
       (uint8_t)((uint32_t)stroke_width * stroke_scale / ANIMATION_NORMALIZED_MAX);
-  if (scaled_stroke == 0) scaled_stroke = 1;
+  if (scaled_stroke == 0)
+    scaled_stroke = 1;
 
   if (type == GDrawCommandTypeCircle) {
     uint16_t radius = gdraw_command_get_radius(command);
@@ -549,7 +571,8 @@ static bool draw_direct_crumple_command(GDrawCommand *command, uint32_t index, v
   }
 
   uint16_t num_points = gdraw_command_get_num_points(command);
-  if (num_points < 3) return true;
+  if (num_points < 3)
+    return true;
   if (num_points > GLOBE_CRUMPLE_MAX_POINTS) {
     num_points = GLOBE_CRUMPLE_MAX_POINTS;
   }
@@ -565,10 +588,14 @@ static bool draw_direct_crumple_command(GDrawCommand *command, uint32_t index, v
     crumpled = GPoint(crumpled.x + crumple->origin.x, crumpled.y + crumple->origin.y);
     points[i] = crumpled;
 
-    if (crumpled.x < min_x) min_x = crumpled.x;
-    if (crumpled.y < min_y) min_y = crumpled.y;
-    if (crumpled.x > max_x) max_x = crumpled.x;
-    if (crumpled.y > max_y) max_y = crumpled.y;
+    if (crumpled.x < min_x)
+      min_x = crumpled.x;
+    if (crumpled.y < min_y)
+      min_y = crumpled.y;
+    if (crumpled.x > max_x)
+      max_x = crumpled.x;
+    if (crumpled.y > max_y)
+      max_y = crumpled.y;
   }
 
   if ((max_x - min_x) < 2 && (max_y - min_y) < 2) {
@@ -601,14 +628,17 @@ static bool draw_direct_crumple_command(GDrawCommand *command, uint32_t index, v
 
 static bool draw_bw_crumple_frame(GContext *ctx, GlobeView *view, GPoint origin, GSize frame_size,
                                   int amount) {
-  if (!view || !view->bw_sequence) return false;
+  if (!view || !view->bw_sequence)
+    return false;
 
   int bw_frame = bw_frame_index_for_view(view, view->transition_bw_frame);
   GDrawCommandFrame *frame = gdraw_command_sequence_get_frame_by_index(view->bw_sequence, bw_frame);
-  if (!frame) return false;
+  if (!frame)
+    return false;
 
   GDrawCommandList *list = gdraw_command_frame_get_command_list(frame);
-  if (!list) return false;
+  if (!list)
+    return false;
 
   DirectCrumpleContext context = {
       .ctx = ctx,
@@ -694,21 +724,27 @@ static void draw_cradle(GContext *ctx, GlobeView *view, GPoint origin, GSize fra
 }
 
 static int32_t normalize_longitude_e2(int32_t longitude_e2) {
-  while (longitude_e2 < -18000) longitude_e2 += 36000;
-  while (longitude_e2 >= 18000) longitude_e2 -= 36000;
+  while (longitude_e2 < -18000)
+    longitude_e2 += 36000;
+  while (longitude_e2 >= 18000)
+    longitude_e2 -= 36000;
   return longitude_e2;
 }
 
 __attribute__((noinline)) static int32_t clamp_latitude_e2(int32_t latitude_e2) {
-  if (latitude_e2 > 8900) return 8900;
-  if (latitude_e2 < -8900) return -8900;
+  if (latitude_e2 > 8900)
+    return 8900;
+  if (latitude_e2 < -8900)
+    return -8900;
   return latitude_e2;
 }
 
 static int32_t shortest_longitude_delta_e2(int32_t from_e2, int32_t to_e2) {
   int32_t delta = normalize_longitude_e2(to_e2 - from_e2);
-  if (delta >= 18000) delta -= 36000;
-  if (delta < -18000) delta += 36000;
+  if (delta >= 18000)
+    delta -= 36000;
+  if (delta < -18000)
+    delta += 36000;
   return delta;
 }
 
@@ -733,12 +769,15 @@ static int32_t trig_cos_q10(int angle) {
 // seed the iteration is strictly decreasing and lands exactly on the floor,
 // so results match weather_isqrt() bit-for-bit at a fraction of the cost.
 static inline int32_t floor_sqrt_seeded(int32_t value, int32_t seed) {
-  if (value <= 0) return 0;
-  if (seed <= 0) return weather_isqrt(value);
+  if (value <= 0)
+    return 0;
+  if (seed <= 0)
+    return weather_isqrt(value);
   int32_t s = seed;
   for (;;) {
     int32_t next = (s + (value / s)) >> 1;
-    if (next >= s) break;
+    if (next >= s)
+      break;
     s = next;
   }
   return s;
@@ -810,7 +849,8 @@ static void matrix_screen_rotation(int32_t matrix[9], int yaw_angle, int pitch_a
 
 static void normalize_axis(int32_t *x, int32_t *y, int32_t *z) {
   int32_t length = weather_isqrt((*x * *x) + (*y * *y) + (*z * *z));
-  if (length <= 0) return;
+  if (length <= 0)
+    return;
 
   *x = (*x * GLOBE_ROT_SCALE) / length;
   *y = (*y * GLOBE_ROT_SCALE) / length;
@@ -818,7 +858,8 @@ static void normalize_axis(int32_t *x, int32_t *y, int32_t *z) {
 }
 
 static void normalize_globe_rotation(GlobeView *view) {
-  if (!view) return;
+  if (!view)
+    return;
 
   int32_t rx = view->globe_rotation[0];
   int32_t ry = view->globe_rotation[3];
@@ -884,7 +925,8 @@ static void matrix_from_lat_lon(int32_t matrix[9], int32_t latitude_e2, int32_t 
 }
 
 static void set_color_orientation(GlobeView *view, int32_t latitude_e2, int32_t longitude_e2) {
-  if (!view) return;
+  if (!view)
+    return;
 
   latitude_e2 = clamp_latitude_e2(latitude_e2);
   longitude_e2 = normalize_longitude_e2(longitude_e2);
@@ -915,9 +957,11 @@ static void set_color_orientation(GlobeView *view, int32_t latitude_e2, int32_t 
 static void *prv_load_inflated(uint32_t res_id, uint32_t *out_size) {
   ResHandle handle = resource_get_handle(res_id);
   size_t csize = resource_size(handle);
-  if (csize <= sizeof(uint32_t)) return NULL;
+  if (csize <= sizeof(uint32_t))
+    return NULL;
   uint8_t *cbuf = malloc_try(csize);
-  if (!cbuf) return NULL;
+  if (!cbuf)
+    return NULL;
   void *out = NULL;
   uint32_t inflated_size = 0;
   if (resource_load(handle, cbuf, csize) == csize) {
@@ -934,19 +978,22 @@ static void *prv_load_inflated(uint32_t res_id, uint32_t *out_size) {
     }
   }
   free(cbuf);
-  if (out && out_size) *out_size = inflated_size;
+  if (out && out_size)
+    *out_size = inflated_size;
   return out;
 }
 
 static bool load_cubemap_resource(GlobeView *view) {
-  if (!view) return false;
+  if (!view)
+    return false;
   if (view->cubemap_data && view->cubemap_size >= GLOBE_CUBEMAP_DATA_SIZE) {
     return true;
   }
 
   uint32_t size = 0;
   uint8_t *data = prv_load_inflated(RESOURCE_ID_GLOBE_CUBEMAP, &size);
-  if (!data) return false;
+  if (!data)
+    return false;
   if (size < GLOBE_CUBEMAP_DATA_SIZE) {
     applib_free(data);
     return false;
@@ -961,7 +1008,8 @@ static bool load_cubemap_resource(GlobeView *view) {
 }
 
 static void unload_cubemap_resource(GlobeView *view) {
-  if (!view || !view->cubemap_data) return;
+  if (!view || !view->cubemap_data)
+    return;
 
   free(view->cubemap_data);
   view->cubemap_data = NULL;
@@ -969,25 +1017,30 @@ static void unload_cubemap_resource(GlobeView *view) {
 }
 
 static bool load_starfield_resource(GlobeView *view) {
-  if (!view) return false;
-  if (view->starfield_data && view->starfield_size > 2) return true;
+  if (!view)
+    return false;
+  if (view->starfield_data && view->starfield_size > 2)
+    return true;
 
   uint32_t size = 0;
   uint8_t *data = prv_load_inflated(RESOURCE_ID_GLOBE_STARFIELD, &size);
-  if (!data) return false;
+  if (!data)
+    return false;
   if (size <= 2) {
     applib_free(data);
     return false;
   }
 
-  if (view->starfield_data) free(view->starfield_data);
+  if (view->starfield_data)
+    free(view->starfield_data);
   view->starfield_data = data;
   view->starfield_size = size;
   return true;
 }
 
 static void unload_starfield_resource(GlobeView *view) {
-  if (!view || !view->starfield_data) return;
+  if (!view || !view->starfield_data)
+    return;
 
   free(view->starfield_data);
   view->starfield_data = NULL;
@@ -995,7 +1048,8 @@ static void unload_starfield_resource(GlobeView *view) {
 }
 
 static void ensure_visual_resources(GlobeView *view) {
-  if (!view) return;
+  if (!view)
+    return;
 
   if (!view->bw_sequence) {
     // Stored payload-deflated: inflate into an applib_malloc buffer and
@@ -1060,7 +1114,8 @@ static void ensure_visual_resources(GlobeView *view) {
 }
 
 static void release_visual_resources(GlobeView *view) {
-  if (!view) return;
+  if (!view)
+    return;
 
   unload_cubemap_resource(view);
   unload_starfield_resource(view);
@@ -1110,10 +1165,14 @@ static inline uint8_t cubemap_sample(const uint8_t *cubemap_data, int32_t x, int
 
   int sx = ((u + GLOBE_ROT_SCALE) * GLOBE_CUBEMAP_FACE_SIZE) / (GLOBE_ROT_SCALE * 2);
   int sy = ((v + GLOBE_ROT_SCALE) * GLOBE_CUBEMAP_FACE_SIZE) / (GLOBE_ROT_SCALE * 2);
-  if (sx < 0) sx = 0;
-  if (sy < 0) sy = 0;
-  if (sx >= GLOBE_CUBEMAP_FACE_SIZE) sx = GLOBE_CUBEMAP_FACE_SIZE - 1;
-  if (sy >= GLOBE_CUBEMAP_FACE_SIZE) sy = GLOBE_CUBEMAP_FACE_SIZE - 1;
+  if (sx < 0)
+    sx = 0;
+  if (sy < 0)
+    sy = 0;
+  if (sx >= GLOBE_CUBEMAP_FACE_SIZE)
+    sx = GLOBE_CUBEMAP_FACE_SIZE - 1;
+  if (sy >= GLOBE_CUBEMAP_FACE_SIZE)
+    sy = GLOBE_CUBEMAP_FACE_SIZE - 1;
 
   int face_area = GLOBE_CUBEMAP_FACE_SIZE * GLOBE_CUBEMAP_FACE_SIZE;
   int pixel_index = (face * face_area) + (sy * GLOBE_CUBEMAP_FACE_SIZE) + sx;
@@ -1137,7 +1196,8 @@ static uint8_t starfield_color_from_flags(uint8_t flags) {
 }
 
 static void draw_forward_space_fade(GContext *ctx, GRect bounds, int amount, GlobeView *view) {
-  if (amount <= 0) return;
+  if (amount <= 0)
+    return;
 
   const int full_at = (ANIMATION_NORMALIZED_MAX * GLOBE_SPACE_FADE_FULL_PERCENT) / 100;
   const int stars_at = (ANIMATION_NORMALIZED_MAX * GLOBE_SPACE_STAR_REVEAL_START_PERCENT) / 100;
@@ -1160,7 +1220,8 @@ static void draw_forward_space_fade(GContext *ctx, GRect bounds, int amount, Glo
   int inv = ANIMATION_NORMALIZED_MAX - relative;
   int eased = ANIMATION_NORMALIZED_MAX - weather_norm_square(inv);
   int coverage = (eased * 16 + (ANIMATION_NORMALIZED_MAX - 1)) / ANIMATION_NORMALIZED_MAX;
-  if (coverage <= 0) return;
+  if (coverage <= 0)
+    return;
   if (coverage >= 16) {
     graphics_context_set_fill_color(ctx, GColorBlack);
     graphics_fill_rect(ctx, bounds, 0, GCornerNone);
@@ -1168,7 +1229,8 @@ static void draw_forward_space_fade(GContext *ctx, GRect bounds, int amount, Glo
   }
 
   GBitmap *fb = graphics_capture_frame_buffer(ctx);
-  if (!fb) return;
+  if (!fb)
+    return;
 
   GRect fbb = gbitmap_get_bounds(fb);
   GRect clipped = clip_rect_to_bounds(bounds, fbb);
@@ -1211,11 +1273,16 @@ static GRect clip_rect_to_bounds(GRect rect, GRect bounds) {
   int bounds_right = bounds.origin.x + bounds.size.w;
   int bounds_bottom = bounds.origin.y + bounds.size.h;
 
-  if (left < bounds.origin.x) left = bounds.origin.x;
-  if (top < bounds.origin.y) top = bounds.origin.y;
-  if (right > bounds_right) right = bounds_right;
-  if (bottom > bounds_bottom) bottom = bounds_bottom;
-  if (right <= left || bottom <= top) return GRectZero;
+  if (left < bounds.origin.x)
+    left = bounds.origin.x;
+  if (top < bounds.origin.y)
+    top = bounds.origin.y;
+  if (right > bounds_right)
+    right = bounds_right;
+  if (bottom > bounds_bottom)
+    bottom = bounds_bottom;
+  if (right <= left || bottom <= top)
+    return GRectZero;
 
   return GRect(left, top, right - left, bottom - top);
 }
@@ -1229,7 +1296,8 @@ static GRect revealed_globe_layer_frame(GRect bounds) {
 }
 
 static void clear_framebuffer_rect(GBitmap *fb, GRect rect) {
-  if (!fb || rect.size.w <= 0 || rect.size.h <= 0) return;
+  if (!fb || rect.size.w <= 0 || rect.size.h <= 0)
+    return;
 
   GRect fbb = gbitmap_get_bounds(fb);
   GRect clipped = clip_rect_to_bounds(rect, fbb);
@@ -1262,7 +1330,8 @@ static void framebuffer_draw_starfield(GBitmap *fb, GlobeView *view, GRect bound
 
   uint16_t count = view->starfield_data[0] | ((uint16_t)view->starfield_data[1] << 8);
   size_t available = (view->starfield_size - 2) / 3;
-  if (count > available) count = (uint16_t)available;
+  if (count > available)
+    count = (uint16_t)available;
 
 #ifdef CONFIG_TOUCH
   int offset_x =
@@ -1302,7 +1371,8 @@ static void framebuffer_draw_starfield(GBitmap *fb, GlobeView *view, GRect bound
         }
 
         GBitmapDataRowInfo ri = gbitmap_get_data_row_info(fb, (uint16_t)ay);
-        if (ax < (int)ri.min_x || ax > (int)ri.max_x) continue;
+        if (ax < (int)ri.min_x || ax > (int)ri.max_x)
+          continue;
         weather_fb_row_set(ri.data, ax, starfield_color_from_flags(flags));
       }
     }
@@ -1313,10 +1383,12 @@ static void draw_space_background(GContext *ctx, GRect bounds, GlobeView *view) 
   graphics_context_set_fill_color(ctx, GColorBlack);
   graphics_fill_rect(ctx, bounds, 0, GCornerNone);
 
-  if (!view || !view->starfield_data) return;
+  if (!view || !view->starfield_data)
+    return;
 
   GBitmap *fb = graphics_capture_frame_buffer(ctx);
-  if (!fb) return;
+  if (!fb)
+    return;
   framebuffer_draw_starfield(fb, view, bounds, clip_rect_to_bounds(bounds, gbitmap_get_bounds(fb)));
   graphics_release_frame_buffer(ctx, fb);
 }
@@ -1336,8 +1408,10 @@ static void framebuffer_fill_circle(GBitmap *fb, GPoint center, int radius, uint
 // bbox scan with an inner-radius reject.
 static NOINLINE void framebuffer_draw_ring(GBitmap *fb, GPoint center, int outer_r, int inner_r,
                                            uint8_t color, GRect clip_rect) {
-  if (!fb || outer_r <= 0) return;
-  if (inner_r < 0) inner_r = 0;
+  if (!fb || outer_r <= 0)
+    return;
+  if (inner_r < 0)
+    inner_r = 0;
 
   GRect fbb = gbitmap_get_bounds(fb);
   GRect clipped = clip_rect_to_bounds(clip_rect, fbb);
@@ -1349,7 +1423,8 @@ static NOINLINE void framebuffer_draw_ring(GBitmap *fb, GPoint center, int outer
   int clip_bottom = clipped.origin.y + clipped.size.h - 1;
 
   for (int ay = center.y - outer_r; ay <= center.y + outer_r; ay++) {
-    if (ay < clip_top || ay > clip_bottom) continue;
+    if (ay < clip_top || ay > clip_bottom)
+      continue;
     int dy = ay - center.y;
     GBitmapDataRowInfo ri = gbitmap_get_data_row_info(fb, (uint16_t)ay);
     for (int ax = center.x - outer_r; ax <= center.x + outer_r; ax++) {
@@ -1403,7 +1478,8 @@ static bool project_lat_lon_to_globe_point_with_depth(GlobeView *view, int32_t l
                                                       int32_t longitude_e2, GPoint center,
                                                       int radius, int32_t min_front_scale,
                                                       GPoint *point_out, int *depth_q8_out) {
-  if (!view || !point_out || radius <= 0) return false;
+  if (!view || !point_out || radius <= 0)
+    return false;
 
   latitude_e2 = clamp_latitude_e2(latitude_e2);
   longitude_e2 = normalize_longitude_e2(longitude_e2);
@@ -1432,7 +1508,8 @@ static bool project_lat_lon_to_globe_point_with_depth(GlobeView *view, int32_t l
                  (int64_t)view->globe_rotation[8] * wz) >>
                 GLOBE_ROT_SHIFT);
 
-  if (sz <= min_front_scale) return false;
+  if (sz <= min_front_scale)
+    return false;
 
   point_out->x = center.x + (int)(sx * radius / GLOBE_ROT_SCALE);
   point_out->y = center.y - (int)(sy * radius / GLOBE_ROT_SCALE);
@@ -1458,15 +1535,18 @@ __attribute__((noinline)) static bool project_lat_lon_to_globe_point(GlobeView *
 }
 
 static int nearest_centered_city_index(GlobeView *view, int radius_px) {
-  if (!view || !view->window || radius_px <= 0) return -1;
+  if (!view || !view->window || radius_px <= 0)
+    return -1;
 
   Layer *root_layer = window_get_root_layer(view->window);
-  if (!root_layer) return -1;
+  if (!root_layer)
+    return -1;
 
   GRect bounds = layer_get_bounds(root_layer);
   GPoint center = revealed_globe_center_for_bounds(bounds, bounce_offset(view));
   int globe_radius = revealed_globe_radius() - GLOBE_OUTLINE_PX;
-  if (globe_radius <= 0) return -1;
+  if (globe_radius <= 0)
+    return -1;
   int best_index = -1;
   int best_distance_sq = (radius_px * radius_px) + 1;
 
@@ -1498,7 +1578,8 @@ static int nearest_centered_city_index(GlobeView *view, int radius_px) {
 }
 
 static bool city_pin_offset_from_center(GlobeView *view, int city_index, int *dx_out, int *dy_out) {
-  if (!view || !view->window || !dx_out || !dy_out) return false;
+  if (!view || !view->window || !dx_out || !dy_out)
+    return false;
 
   SavedLocationEntry *entry = saved_entry_for_index(view, city_index);
   int32_t entry_latitude_e2;
@@ -1508,12 +1589,14 @@ static bool city_pin_offset_from_center(GlobeView *view, int city_index, int *dx
   }
 
   Layer *root_layer = window_get_root_layer(view->window);
-  if (!root_layer) return false;
+  if (!root_layer)
+    return false;
 
   GRect bounds = layer_get_bounds(root_layer);
   GPoint center = revealed_globe_center_for_bounds(bounds, bounce_offset(view));
   int globe_radius = revealed_globe_radius() - GLOBE_OUTLINE_PX;
-  if (globe_radius <= 0) return false;
+  if (globe_radius <= 0)
+    return false;
   GPoint point;
   if (!project_lat_lon_to_globe_point(view, entry_latitude_e2, entry_longitude_e2, center,
                                       globe_radius, &point)) {
@@ -1531,15 +1614,18 @@ static void settle_city_pin_to_center(GlobeView *view, int city_index) {
   for (int i = 0; i < GLOBE_LOCK_SETTLE_STEPS; i++) {
     int dx;
     int dy;
-    if (!city_pin_offset_from_center(view, city_index, &dx, &dy)) return;
+    if (!city_pin_offset_from_center(view, city_index, &dx, &dy))
+      return;
     if ((dx * dx) + (dy * dy) <= deadzone_sq) {
       return;
     }
 
     int nudge_x = -dx / GLOBE_LOCK_SETTLE_DIVISOR;
     int nudge_y = -dy / GLOBE_LOCK_SETTLE_DIVISOR;
-    if (nudge_x == 0 && dx != 0) nudge_x = dx < 0 ? 1 : -1;
-    if (nudge_y == 0 && dy != 0) nudge_y = dy < 0 ? 1 : -1;
+    if (nudge_x == 0 && dx != 0)
+      nudge_x = dx < 0 ? 1 : -1;
+    if (nudge_y == 0 && dy != 0)
+      nudge_y = dy < 0 ? 1 : -1;
 
     apply_globe_screen_delta_q8(view, (int32_t)nudge_x * GLOBE_Q8_ONE,
                                 (int32_t)nudge_y * GLOBE_Q8_ONE);
@@ -1549,10 +1635,12 @@ static void settle_city_pin_to_center(GlobeView *view, int city_index) {
 
 static void draw_saved_location_pins(GBitmap *fb, GlobeView *view, GPoint center, int radius,
                                      GRect clip_rect) {
-  if (!fb || !view || !view->is_revealed || view->is_revealing) return;
+  if (!fb || !view || !view->is_revealed || view->is_revealing)
+    return;
 
   int pin_radius = radius - GLOBE_OUTLINE_PX;
-  if (pin_radius <= 0) return;
+  if (pin_radius <= 0)
+    return;
 
   // Two passes: project + cull into a list, depth-sort (back pins paint
   // first so near cities overlap far ones — the 3D read), then draw. The
@@ -1569,8 +1657,10 @@ static void draw_saved_location_pins(GBitmap *fb, GlobeView *view, GPoint center
   int max_index = globe_max_selector_index(view);
   for (int i = 0; i <= max_index && n < (int)(sizeof(pins) / sizeof(pins[0])); i++) {
     SavedLocationEntry *entry = saved_entry_for_index(view, i);
-    if (!saved_entry_has_globe_coordinates(view, entry)) continue;
-    if (entry->is_current_location) continue;
+    if (!saved_entry_has_globe_coordinates(view, entry))
+      continue;
+    if (entry->is_current_location)
+      continue;
 
     GPoint pin;
     int depth = 255;
@@ -1645,9 +1735,12 @@ static inline void prv_globe_px(uint8_t *row_data, int x, int y, uint8_t argb8) 
 }
 
 static void fill_row_span(uint8_t *row_data, int y, int x0, int x1, int lo, int hi, uint8_t color) {
-  if (x0 < lo) x0 = lo;
-  if (x1 > hi) x1 = hi;
-  if (x1 < x0) return;
+  if (x0 < lo)
+    x0 = lo;
+  if (x1 > hi)
+    x1 = hi;
+  if (x1 < x0)
+    return;
 #if PBL_BW
   // Packed 1-bit rows: a byte memset would overrun the 20-byte row (it
   // stomped the render context on flint) — write dithered bits instead.
@@ -1690,14 +1783,17 @@ static int fill_globe_ring_row(uint8_t *row_data, int y, int cx, int dy_sq, cons
 
 static void draw_cubemap_globe_at_center(GContext *ctx, GlobeView *view, GPoint center,
                                          int scale_percent, GRect clip_rect, bool clear_clip) {
-  if (!view || !view->cubemap_data || scale_percent <= 0) return;
+  if (!view || !view->cubemap_data || scale_percent <= 0)
+    return;
 
   int diameter = (GLOBE_RENDER_BASE_DIAMETER * scale_percent) / 100;
-  if (diameter < 4) return;
+  if (diameter < 4)
+    return;
 
   int radius = diameter / 2;
   int outline_inner_radius = radius - GLOBE_OUTLINE_PX;
-  if (outline_inner_radius < 0) outline_inner_radius = 0;
+  if (outline_inner_radius < 0)
+    outline_inner_radius = 0;
   int outline_inner_radius_sq = outline_inner_radius * outline_inner_radius;
   int glow_outer_radius = radius + GLOBE_ATMOSPHERE_GLOW_PX;
   const int32_t ring_radii_sq[GLOBE_RING_COUNT + 1] = {
@@ -1709,7 +1805,8 @@ static void draw_cubemap_globe_at_center(GContext *ctx, GlobeView *view, GPoint 
   };
 
   GBitmap *fb = graphics_capture_frame_buffer(ctx);
-  if (!fb) return;
+  if (!fb)
+    return;
 
   GRect fbb = gbitmap_get_bounds(fb);
   GRect clipped = clip_rect_to_bounds(clip_rect, fbb);
@@ -1733,19 +1830,23 @@ static void draw_cubemap_globe_at_center(GContext *ctx, GlobeView *view, GPoint 
   const int cx = center.x;
   for (int dy = -glow_outer_radius; dy <= glow_outer_radius; dy++) {
     int ay = center.y + dy;
-    if (ay < clip_top || ay > clip_bottom) continue;
+    if (ay < clip_top || ay > clip_bottom)
+      continue;
 
     GBitmapDataRowInfo ri = gbitmap_get_data_row_info(fb, (uint16_t)ay);
 
     int row_left = clip_left < (int)ri.min_x ? (int)ri.min_x : clip_left;
     int row_right = clip_right > (int)ri.max_x ? (int)ri.max_x : clip_right;
-    if (row_left > row_right) continue;
+    if (row_left > row_right)
+      continue;
 
     int t_span = fill_globe_ring_row(ri.data, ay, cx, dy * dy, ring_radii_sq, row_left, row_right);
-    if (t_span < 0) continue;
+    if (t_span < 0)
+      continue;
     int lo = cx - t_span < row_left ? row_left : cx - t_span;
     int hi = cx + t_span > row_right ? row_right : cx + t_span;
-    if (lo > hi) continue;
+    if (lo > hi)
+      continue;
 
     int32_t sy = ((int32_t)-dy * GLOBE_ROT_SCALE) / radius;
     int32_t plane_sq = (GLOBE_ROT_SCALE * GLOBE_ROT_SCALE) - (sy * sy);
@@ -1778,14 +1879,16 @@ static void draw_cubemap_globe_at_center(GContext *ctx, GlobeView *view, GPoint 
 
       for (int side = 0; side < 2; side++) {
         if (side) {
-          if (d == 0) break;
+          if (d == 0)
+            break;
           col_x = -col_x;
           col_y = -col_y;
           col_z = -col_z;
           light_col = -light_col;
         }
         int ax = side ? cx - d : cx + d;
-        if (ax < lo || ax > hi) continue;
+        if (ax < lo || ax > hi)
+          continue;
         if (sz < GLOBE_HAZE_RIM_SZ_Q10) {
           // Luminous rim: the atmosphere outshines the terrain at
           // the very edge of the disc (merges with the halo ring),
@@ -1849,10 +1952,12 @@ static void draw_cubemap_globe_at_center(GContext *ctx, GlobeView *view, GPoint 
 
 static void draw_cubemap_globe(GContext *ctx, GlobeView *view, GPoint origin, GSize frame_size,
                                int scale_percent, GRect clip_rect, bool clear_clip) {
-  if (!view || !view->cubemap_data || scale_percent <= 0) return;
+  if (!view || !view->cubemap_data || scale_percent <= 0)
+    return;
 
   int diameter = (GLOBE_RENDER_BASE_DIAMETER * scale_percent) / 100;
-  if (diameter < 4) return;
+  if (diameter < 4)
+    return;
 
   GPoint center = GPoint(origin.x + (frame_size.w / 2),
                          origin.y + (frame_size.h / 2) + GLOBE_COLOR_PLANET_CENTER_Y_OFFSET);
@@ -1861,7 +1966,8 @@ static void draw_cubemap_globe(GContext *ctx, GlobeView *view, GPoint origin, GS
 }
 
 static void reload_current_frame(GlobeView *view) {
-  if (!view) return;
+  if (!view)
+    return;
   if (view->is_revealed && !view->is_revealing) {
     update_city_label_layer(view);
   }
@@ -1872,7 +1978,8 @@ static void reload_current_frame(GlobeView *view) {
 #define reload_color_frame reload_current_frame
 
 static void mark_dynamic_globe_dirty(GlobeView *view) {
-  if (!view) return;
+  if (!view)
+    return;
 
   if (view->is_revealed && !view->is_revealing && view->globe_layer) {
     layer_mark_dirty(view->globe_layer);
@@ -1896,7 +2003,8 @@ static int32_t ease_out_quad(AnimationProgress progress) {
 // — never for open-loop lat/lon interpolation (10% of a long arc is huge).
 static int32_t ease_out_back(AnimationProgress progress) {
   int32_t inv = ANIMATION_NORMALIZED_MAX - (int32_t)progress;
-  if (inv <= 0) return ANIMATION_NORMALIZED_MAX;
+  if (inv <= 0)
+    return ANIMATION_NORMALIZED_MAX;
   int32_t inv2 = weather_norm_square(inv);                                // inv^2/N
   int32_t inv3 = weather_scale_i32(inv2, inv, ANIMATION_NORMALIZED_MAX);  // inv^3/N^2
   int32_t eased = ANIMATION_NORMALIZED_MAX + (7 * inv2 - 11 * inv3) / 4;
@@ -1942,13 +2050,15 @@ static int transition_bw_amount(GlobeView *view) {
 }
 
 static int intro_selection_offset(GlobeView *view) {
-  if (!view || view->intro_selection_ms == 0) return 0;
+  if (!view || view->intro_selection_ms == 0)
+    return 0;
   return (view->intro_selection_ms * GLOBE_INTRO_SELECTION_OFFSET_PX) /
          GLOBE_INTRO_SELECTION_DURATION_MS;
 }
 
 static int bounce_offset(GlobeView *view) {
-  if (!view || !view->bounce_anim) return 0;
+  if (!view || !view->bounce_anim)
+    return 0;
 
   int p = (int)view->bounce_progress;
   int peak = p <= ANIMATION_NORMALIZED_MAX / 2 ? p : ANIMATION_NORMALIZED_MAX - p;
@@ -1959,7 +2069,8 @@ static int bounce_offset(GlobeView *view) {
 // stopped handler checks ownership), then unschedules + destroys.
 static void cancel_animation_slot(Animation **slot) {
   Animation *anim = *slot;
-  if (!anim) return;
+  if (!anim)
+    return;
   *slot = NULL;
   animation_unschedule(anim);
   animation_destroy(anim);
@@ -1973,16 +2084,19 @@ static void cancel_timer_slot(AppTimer **slot) {
 }
 
 static void cancel_city_animation(GlobeView *view) {
-  if (view) cancel_animation_slot(&view->city_anim);
+  if (view)
+    cancel_animation_slot(&view->city_anim);
 }
 
 static void cancel_bounce_animation(GlobeView *view) {
-  if (view) cancel_animation_slot(&view->bounce_anim);
+  if (view)
+    cancel_animation_slot(&view->bounce_anim);
 }
 
 #ifdef CONFIG_TOUCH
 static void stop_globe_coast(GlobeView *view, bool mark_dirty) {
-  if (!view) return;
+  if (!view)
+    return;
 
   cancel_timer_slot(&view->coast_timer);
   view->coast_active = false;
@@ -1996,7 +2110,8 @@ static void stop_globe_coast(GlobeView *view, bool mark_dirty) {
 #endif
 
 static void notify_city_selected(GlobeView *view, bool force) {
-  if (!view) return;
+  if (!view)
+    return;
 
   SavedLocationEntry *entry = selected_saved_entry(view);
   if (entry && view->location_select_callback) {
@@ -2005,7 +2120,8 @@ static void notify_city_selected(GlobeView *view, bool force) {
 }
 
 static bool commit_hovered_location(GlobeView *view) {
-  if (!view || !view->is_revealed || view->is_revealing) return false;
+  if (!view || !view->is_revealed || view->is_revealing)
+    return false;
 
   if (view->city_anim) {
     set_color_orientation(view, view->city_anim_target_latitude_e2,
@@ -2035,7 +2151,8 @@ static bool commit_hovered_location(GlobeView *view) {
 }
 
 static void format_selected_label(GlobeView *view, char *buffer, size_t buffer_size) {
-  if (!buffer || buffer_size == 0) return;
+  if (!buffer || buffer_size == 0)
+    return;
 
   SavedLocationEntry *entry = selected_saved_entry(view);
   const char *label = i18n_get("Saved Location", view);
@@ -2050,14 +2167,18 @@ static void format_selected_label(GlobeView *view, char *buffer, size_t buffer_s
   if (first_comma) {
     const char *last_comma = strrchr(label, ',');
     const char *country_start = last_comma ? last_comma + 1 : first_comma + 1;
-    while (*country_start == ' ') country_start++;
+    while (*country_start == ' ')
+      country_start++;
 
     size_t city_len = (size_t)(first_comma - label);
-    while (city_len > 0 && label[city_len - 1] == ' ') city_len--;
+    while (city_len > 0 && label[city_len - 1] == ' ')
+      city_len--;
 
     size_t country_len = 0;
-    while (country_start[country_len]) country_len++;
-    while (country_len > 0 && country_start[country_len - 1] == ' ') country_len--;
+    while (country_start[country_len])
+      country_len++;
+    while (country_len > 0 && country_start[country_len - 1] == ' ')
+      country_len--;
 
     const char *abbr = NULL;
     if (country_len == 13 && strncmp(country_start, "United States", 13) == 0)
@@ -2089,7 +2210,8 @@ static void format_selected_label(GlobeView *view, char *buffer, size_t buffer_s
 }
 
 static void update_city_label_layer(GlobeView *view) {
-  if (!view || !view->city_label_layer) return;
+  if (!view || !view->city_label_layer)
+    return;
 
   format_selected_label(view, view->city_label_text, sizeof(view->city_label_text));
   text_layer_set_text(view->city_label_layer, view->city_label_text);
@@ -2103,7 +2225,8 @@ static void set_text_layer_hidden(TextLayer *text_layer, bool hidden) {
 
 #ifdef CONFIG_TOUCH
 static void set_free_roam_enabled(GlobeView *view, bool enabled) {
-  if (!view) return;
+  if (!view)
+    return;
 
   if (enabled) {
     cancel_city_animation(view);
@@ -2125,28 +2248,35 @@ static void set_free_roam_enabled(GlobeView *view, bool enabled) {
 #endif
 
 static void show_intro_canvas(GlobeView *view) {
-  if (!view) return;
+  if (!view)
+    return;
 
   if (view->window) {
     window_set_background_color(view->window, GColorWhite);
   }
-  if (view->canvas_layer) layer_set_hidden(view->canvas_layer, false);
-  if (view->space_layer) layer_set_hidden(view->space_layer, true);
-  if (view->globe_layer) layer_set_hidden(view->globe_layer, true);
+  if (view->canvas_layer)
+    layer_set_hidden(view->canvas_layer, false);
+  if (view->space_layer)
+    layer_set_hidden(view->space_layer, true);
+  if (view->globe_layer)
+    layer_set_hidden(view->globe_layer, true);
   set_text_layer_hidden(view->city_label_layer, true);
 
-  if (view->canvas_layer) layer_mark_dirty(view->canvas_layer);
+  if (view->canvas_layer)
+    layer_mark_dirty(view->canvas_layer);
 }
 
 static void show_revealed_space_layers(GlobeView *view) {
-  if (!view) return;
+  if (!view)
+    return;
 
   if (view->window) {
     window_set_background_color(view->window, GColorBlack);
   }
   update_city_label_layer(view);
 
-  if (view->canvas_layer) layer_set_hidden(view->canvas_layer, true);
+  if (view->canvas_layer)
+    layer_set_hidden(view->canvas_layer, true);
   if (view->space_layer) {
     layer_set_hidden(view->space_layer, false);
     layer_mark_dirty(view->space_layer);
@@ -2166,7 +2296,8 @@ static void show_revealed_space_layers(GlobeView *view) {
 
 static void city_anim_update(Animation *anim, AnimationProgress progress) {
   GlobeView *view = (GlobeView *)animation_get_context(anim);
-  if (!view) return;
+  if (!view)
+    return;
 
   view->city_anim_progress = progress;
 
@@ -2212,7 +2343,8 @@ static void city_anim_update(Animation *anim, AnimationProgress progress) {
 
 static void city_anim_stopped(Animation *anim, bool finished, void *context) {
   GlobeView *view = (GlobeView *)context;
-  if (!view) return;
+  if (!view)
+    return;
 
   bool owns_anim = view->city_anim == anim;
   if (owns_anim) {
@@ -2250,7 +2382,8 @@ static const AnimationImplementation s_city_anim_impl = {.update = city_anim_upd
 
 static void bounce_anim_update(Animation *anim, AnimationProgress progress) {
   GlobeView *view = (GlobeView *)animation_get_context(anim);
-  if (!view) return;
+  if (!view)
+    return;
 
   view->bounce_progress = progress;
   mark_dynamic_globe_dirty(view);
@@ -2259,7 +2392,8 @@ static void bounce_anim_update(Animation *anim, AnimationProgress progress) {
 static void bounce_anim_stopped(Animation *anim, bool finished, void *context) {
   (void)finished;
   GlobeView *view = (GlobeView *)context;
-  if (!view) return;
+  if (!view)
+    return;
 
   bool owns_anim = view->bounce_anim == anim;
   if (owns_anim) {
@@ -2278,7 +2412,8 @@ static const AnimationImplementation s_bounce_anim_impl = {.update = bounce_anim
 // ---- Lock pulse: an expanding Celeste ring from the locked pin's head ----
 static void lock_pulse_anim_update(Animation *anim, AnimationProgress progress) {
   GlobeView *view = (GlobeView *)animation_get_context(anim);
-  if (!view) return;
+  if (!view)
+    return;
 
   view->lock_pulse_progress = progress;
   mark_dynamic_globe_dirty(view);
@@ -2287,7 +2422,8 @@ static void lock_pulse_anim_update(Animation *anim, AnimationProgress progress) 
 static void lock_pulse_anim_stopped(Animation *anim, bool finished, void *context) {
   (void)finished;
   GlobeView *view = (GlobeView *)context;
-  if (!view) return;
+  if (!view)
+    return;
 
   bool owns_anim = view->lock_pulse_anim == anim;
   if (owns_anim) {
@@ -2304,7 +2440,8 @@ static void lock_pulse_anim_stopped(Animation *anim, bool finished, void *contex
 static const AnimationImplementation s_lock_pulse_anim_impl = {.update = lock_pulse_anim_update};
 
 static void cancel_lock_pulse_animation(GlobeView *view) {
-  if (view) cancel_animation_slot(&view->lock_pulse_anim);
+  if (view)
+    cancel_animation_slot(&view->lock_pulse_anim);
 }
 
 static Animation *start_view_animation(GlobeView *view, uint32_t duration_ms, AnimationCurve curve,
@@ -2312,7 +2449,8 @@ static Animation *start_view_animation(GlobeView *view, uint32_t duration_ms, An
                                        AnimationStoppedHandler stopped);
 
 static void start_lock_pulse(GlobeView *view) {
-  if (!view) return;
+  if (!view)
+    return;
   cancel_lock_pulse_animation(view);
   view->lock_pulse_progress = 0;
   view->lock_pulse_anim =
@@ -2349,7 +2487,8 @@ static Animation *start_view_animation(GlobeView *view, uint32_t duration_ms, An
 }
 
 static void start_city_bounce(GlobeView *view, bool is_down) {
-  if (!view) return;
+  if (!view)
+    return;
 
   cancel_bounce_animation(view);
   view->bounce_direction = is_down ? -1 : 1;
@@ -2360,9 +2499,11 @@ static void start_city_bounce(GlobeView *view, bool is_down) {
 }
 
 static void start_city_rotation(GlobeView *view, int city_index) {
-  if (!view || view->city_anim) return;
+  if (!view || view->city_anim)
+    return;
 
-  if (!selected_city_is_valid(view, city_index)) return;
+  if (!selected_city_is_valid(view, city_index))
+    return;
 
 #ifdef CONFIG_TOUCH
   stop_globe_coast(view, false);
@@ -2407,10 +2548,12 @@ static void start_city_rotation(GlobeView *view, int city_index) {
 // instead of being yanked mid-flight.
 static bool try_start_magnetic_city_lock_v(GlobeView *view, int radius_px, int32_t vx_q8,
                                            int32_t vy_q8) {
-  if (!view || view->city_anim) return false;
+  if (!view || view->city_anim)
+    return false;
 
   int city_index = nearest_centered_city_index(view, radius_px);
-  if (city_index < 0) return false;
+  if (city_index < 0)
+    return false;
 
   int start_dx = 0;
   int start_dy = 0;
@@ -2421,7 +2564,8 @@ static bool try_start_magnetic_city_lock_v(GlobeView *view, int radius_px, int32
     // Directional gate: coast deltas move the pin WITH the velocity, so a
     // positive dot product = the pin is receding from center — defer.
     int32_t dot = vx_q8 * start_dx + vy_q8 * start_dy;
-    if (dot > 0) return false;
+    if (dot > 0)
+      return false;
   }
 
   stop_globe_coast(view, false);
@@ -2449,7 +2593,8 @@ static bool try_start_magnetic_city_lock_v(GlobeView *view, int radius_px, int32
   // longer crawls and a 49px capture no longer whips.
   int dist_px = weather_isqrt(start_dx * start_dx + start_dy * start_dy);
   uint32_t swoop_ms = GLOBE_LOCK_SWOOP_BASE_MS + (uint32_t)dist_px * GLOBE_LOCK_SWOOP_MS_PER_PX;
-  if (swoop_ms < GLOBE_LOCK_SWOOP_MIN_MS) swoop_ms = GLOBE_LOCK_SWOOP_MIN_MS;
+  if (swoop_ms < GLOBE_LOCK_SWOOP_MIN_MS)
+    swoop_ms = GLOBE_LOCK_SWOOP_MIN_MS;
   if (swoop_ms > GLOBE_LOCK_SWOOP_DURATION_MS) {
     swoop_ms = GLOBE_LOCK_SWOOP_DURATION_MS;
   }
@@ -2471,7 +2616,8 @@ static bool try_start_magnetic_city_lock(GlobeView *view, int radius_px) {
 #endif
 
 static void navigate_city(GlobeView *view, bool is_down) {
-  if (!view || view->city_anim) return;
+  if (!view || view->city_anim)
+    return;
 
 #ifdef CONFIG_TOUCH
   stop_globe_coast(view, false);
@@ -2506,20 +2652,24 @@ static void navigate_city(GlobeView *view, bool is_down) {
 
 #ifdef CONFIG_TOUCH
 __attribute__((noinline)) static int32_t clamp_globe_velocity_q8(int32_t value) {
-  if (value > GLOBE_COAST_MAX_SPEED_Q8) return GLOBE_COAST_MAX_SPEED_Q8;
-  if (value < -GLOBE_COAST_MAX_SPEED_Q8) return -GLOBE_COAST_MAX_SPEED_Q8;
+  if (value > GLOBE_COAST_MAX_SPEED_Q8)
+    return GLOBE_COAST_MAX_SPEED_Q8;
+  if (value < -GLOBE_COAST_MAX_SPEED_Q8)
+    return -GLOBE_COAST_MAX_SPEED_Q8;
   return value;
 }
 
 static void apply_globe_screen_delta_q8(GlobeView *view, int32_t dx_q8, int32_t dy_q8) {
-  if (!view || !view->is_revealed || view->is_revealing) return;
+  if (!view || !view->is_revealed || view->is_revealing)
+    return;
   if (dx_q8 == 0 && dy_q8 == 0) {
     return;
   }
 
   int yaw_angle = -(dx_q8 * GLOBE_DRAG_TRIGANGLE_PER_PX) / GLOBE_Q8_ONE;
   int pitch_angle = -(dy_q8 * GLOBE_DRAG_TRIGANGLE_PER_PX) / GLOBE_Q8_ONE;
-  if (yaw_angle == 0 && pitch_angle == 0) return;
+  if (yaw_angle == 0 && pitch_angle == 0)
+    return;
 
   int32_t delta[9];
   int32_t next[9];
@@ -2541,11 +2691,13 @@ static void apply_globe_screen_delta_q8(GlobeView *view, int32_t dx_q8, int32_t 
 }
 
 static void begin_globe_drag_capture(GlobeView *view, int16_t x, int16_t y, bool whole_screen) {
-  if (!view || !view->is_revealed || view->is_revealing) return;
+  if (!view || !view->is_revealed || view->is_revealing)
+    return;
 
   view->touch_down_on_globe = point_is_on_revealed_globe(view, x, y);
   view->touch_controls_globe = whole_screen || view->touch_down_on_globe;
-  if (!view->touch_controls_globe) return;
+  if (!view->touch_controls_globe)
+    return;
 
   stop_globe_coast(view, false);
   cancel_city_animation(view);
@@ -2564,11 +2716,13 @@ static void begin_globe_drag_capture(GlobeView *view, int16_t x, int16_t y, bool
 }
 
 static void update_globe_drag(GlobeView *view, int16_t x, int16_t y) {
-  if (!view || !view->touch_controls_globe || !view->is_revealed || view->is_revealing) return;
+  if (!view || !view->touch_controls_globe || !view->is_revealed || view->is_revealing)
+    return;
 
   int16_t dx = x - view->touch_last_x;
   int16_t dy = y - view->touch_last_y;
-  if (dx == 0 && dy == 0) return;
+  if (dx == 0 && dy == 0)
+    return;
 
   apply_globe_screen_delta_q8(view, (int32_t)dx * GLOBE_Q8_ONE, (int32_t)dy * GLOBE_Q8_ONE);
 
@@ -2593,7 +2747,8 @@ static void update_globe_drag(GlobeView *view, int16_t x, int16_t y) {
 
 static void globe_coast_timer_handler(void *context) {
   GlobeView *view = (GlobeView *)context;
-  if (!view) return;
+  if (!view)
+    return;
 
   view->coast_timer = NULL;
   if (!view->coast_active || view->touch_active || !view->is_revealed || view->is_revealing) {
@@ -2636,7 +2791,8 @@ static void globe_coast_timer_handler(void *context) {
 }
 
 static bool start_globe_coast(GlobeView *view) {
-  if (!view || !view->is_revealed || view->is_revealing) return false;
+  if (!view || !view->is_revealed || view->is_revealing)
+    return false;
 
   int32_t vx = clamp_globe_velocity_q8(view->touch_velocity_x_q8 * 5 / 4);
   int32_t vy = clamp_globe_velocity_q8(view->touch_velocity_y_q8 * 5 / 4);
@@ -2659,7 +2815,8 @@ static bool start_globe_coast(GlobeView *view) {
 
 static void reveal_anim_update(Animation *anim, AnimationProgress progress) {
   GlobeView *view = (GlobeView *)animation_get_context(anim);
-  if (!view) return;
+  if (!view)
+    return;
 
   view->reveal_progress = progress;
   int32_t next_latitude_e2;
@@ -2695,7 +2852,8 @@ static void reveal_anim_update(Animation *anim, AnimationProgress progress) {
 
 static void reveal_anim_stopped(Animation *anim, bool finished, void *context) {
   GlobeView *view = (GlobeView *)context;
-  if (!view) return;
+  if (!view)
+    return;
 
   bool owns_anim = view->reveal_anim == anim;
   if (owns_anim) {
@@ -2736,7 +2894,8 @@ static void reveal_anim_stopped(Animation *anim, bool finished, void *context) {
 static const AnimationImplementation s_reveal_impl = {.update = reveal_anim_update};
 
 static void cancel_reveal_animation(GlobeView *view) {
-  if (view) cancel_animation_slot(&view->reveal_anim);
+  if (view)
+    cancel_animation_slot(&view->reveal_anim);
 }
 
 static void cancel_all_view_animations(GlobeView *view) {
@@ -2747,7 +2906,8 @@ static void cancel_all_view_animations(GlobeView *view) {
 }
 
 static void toggle_reveal(GlobeView *view) {
-  if (!view) return;
+  if (!view)
+    return;
 
   if (view->is_revealing) {
     return;
@@ -2786,7 +2946,8 @@ static void schedule_frame_timer(GlobeView *view) {
 }
 
 static void note_globe_interaction(GlobeView *view) {
-  if (!view) return;
+  if (!view)
+    return;
   cancel_timer_slot(&view->idle_timer);
   view->bw_idle = false;
   view->bw_idle_slowdown_step = 0;
@@ -2798,7 +2959,8 @@ static void note_globe_interaction(GlobeView *view) {
 
 static void globe_idle_timer_handler(void *context) {
   GlobeView *view = (GlobeView *)context;
-  if (!view) return;
+  if (!view)
+    return;
   view->idle_timer = NULL;
   if (!view->is_animating || view->is_revealed || view->is_revealing) {
     return;
@@ -2811,7 +2973,8 @@ static void globe_idle_timer_handler(void *context) {
 }
 
 static void start_globe_idle_timer(GlobeView *view) {
-  if (!view || view->idle_timer) return;
+  if (!view || view->idle_timer)
+    return;
   view->idle_timer = app_timer_register(GLOBE_IDLE_TIMEOUT_MS, globe_idle_timer_handler, view);
 }
 
@@ -2822,7 +2985,8 @@ static void animation_timer_handler(void *context) {
   GlobeView *view = (GlobeView *)context;
 
   if (!view || !view->is_animating || view->is_revealed) {
-    if (view) view->animation_timer = NULL;
+    if (view)
+      view->animation_timer = NULL;
     return;
   }
 
@@ -2861,8 +3025,10 @@ static void animation_timer_handler(void *context) {
 
 static void draw_transition_state(GContext *ctx, GlobeView *view, GPoint origin, GSize frame_size,
                                   GRect bounds) {
-  if (!view->bw_sequence) return;
-  if (!view->cradle_pdc) return;
+  if (!view->bw_sequence)
+    return;
+  if (!view->cradle_pdc)
+    return;
 
   const int color_amount = transition_color_amount(view);
   const int bw_amount = transition_bw_amount(view);
@@ -2935,7 +3101,8 @@ static void draw_intro_title(GContext *ctx, GlobeView *view, GRect bounds, int g
   int planet_center_y = globe_y + frame_size.h / 2 + GLOBE_PLANET_CENTER_Y_OFFSET;
   int planet_top = planet_center_y - GLOBE_RENDER_BASE_DIAMETER / 2;
   int title_y = (planet_top - GLOBE_INTRO_TITLE_HEIGHT) / 2;
-  if (title_y < 0) title_y = 0;
+  if (title_y < 0)
+    title_y = 0;
 
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, title, font,
@@ -2994,7 +3161,8 @@ static void draw_saved_locations_label(GContext *ctx, GlobeView *view, GRect bou
   const int side_inset = 10;
   const int bar_h = GLOBE_SMALL_RECT ? 24 : GLOBE_SAVED_LABEL_HEIGHT;
   int y = bounds.size.h - bar_h;
-  if (selected) y += intro_selection_offset(view);
+  if (selected)
+    y += intro_selection_offset(view);
 
   // BW: the dithered blue read as noise under white text — the selected bar
   // goes solid black instead.
@@ -3037,9 +3205,11 @@ static void draw_saved_locations_label(GContext *ctx, GlobeView *view, GRect bou
   int text_x = (bounds.size.w - text_size.w) / 2;
   // +4: pulled right off the chin's curve so the pin reads fully inside the glass.
   int pin_x = text_x - GLOBE_SAVED_LABEL_GAP - GLOBE_SAVED_COG_SIZE + 4;
-  if (pin_x < 2) pin_x = 2;
+  if (pin_x < 2)
+    pin_x = 2;
   int y = bounds.size.h - GLOBE_SAVED_LABEL_HEIGHT - GLOBE_SAVED_LABEL_ROUND_BOTTOM_INSET;
-  if (selected) y += intro_selection_offset(view);
+  if (selected)
+    y += intro_selection_offset(view);
   if (selected) {
     int fill_h = PBL_IF_ROUND_ELSE(bounds.size.h - y, GLOBE_SAVED_LABEL_HEIGHT);
     graphics_context_set_fill_color(ctx, GColorVividCerulean);
@@ -3069,7 +3239,8 @@ static void draw_saved_locations_label(GContext *ctx, GlobeView *view, GRect bou
 static void canvas_layer_draw(Layer *layer, GContext *ctx) {
   GlobeView *view = *(GlobeView **)layer_get_data(layer);
 
-  if (!view || view->current_frame >= (int)bw_frame_count_for_view(view)) return;
+  if (!view || view->current_frame >= (int)bw_frame_count_for_view(view))
+    return;
 
   // Draw frame centered in canvas.
   GRect bounds = layer_get_bounds(layer);
@@ -3105,7 +3276,8 @@ static void space_layer_draw(Layer *layer, GContext *ctx) {
 
 static void globe_layer_draw(Layer *layer, GContext *ctx) {
   GlobeView *view = *(GlobeView **)layer_get_data(layer);
-  if (!view || !view->is_revealed || view->is_revealing) return;
+  if (!view || !view->is_revealed || view->is_revealing)
+    return;
 
   Layer *root_layer = window_get_root_layer(view->window);
   GRect root_bounds = layer_get_bounds(root_layer);
@@ -3115,8 +3287,10 @@ static void globe_layer_draw(Layer *layer, GContext *ctx) {
 }
 
 static void set_intro_world_selected(GlobeView *view, bool selected) {
-  if (!view || view->is_revealed || view->is_revealing) return;
-  if (view->intro_world_selected == selected) return;
+  if (!view || view->is_revealed || view->is_revealing)
+    return;
+  if (view->intro_world_selected == selected)
+    return;
   view->intro_world_selected = selected;
   view->intro_selection_ms = GLOBE_INTRO_SELECTION_DURATION_MS;
   if (view->canvas_layer) {
@@ -3125,7 +3299,8 @@ static void set_intro_world_selected(GlobeView *view, bool selected) {
 }
 
 static void activate_intro_selection(GlobeView *view) {
-  if (!view || view->is_revealing) return;
+  if (!view || view->is_revealing)
+    return;
   if (view->intro_world_selected) {
     toggle_reveal(view);
   } else if (view->saved_locations_callback) {
@@ -3182,7 +3357,8 @@ static void window_click_handler(ClickRecognizerRef recognizer, void *context) {
 
 #ifdef CONFIG_TOUCH
 static bool point_is_on_intro_globe(GlobeView *view, int16_t x, int16_t y) {
-  if (!view || !view->window) return false;
+  if (!view || !view->window)
+    return false;
 
   Layer *root_layer = window_get_root_layer(view->window);
   GRect bounds = layer_get_bounds(root_layer);
@@ -3198,7 +3374,8 @@ static bool point_is_on_intro_globe(GlobeView *view, int16_t x, int16_t y) {
 }
 
 static bool point_is_on_saved_locations_label(GlobeView *view, int16_t y) {
-  if (!view || !view->window) return false;
+  if (!view || !view->window)
+    return false;
   GRect bounds = layer_get_bounds(window_get_root_layer(view->window));
   // Top of the label band — same expression as draw_saved_locations_label; everything
   // from the rule line down (incl. the round bottom inset) counts as the touch target.
@@ -3206,7 +3383,8 @@ static bool point_is_on_saved_locations_label(GlobeView *view, int16_t y) {
 }
 
 static bool point_is_on_revealed_globe(GlobeView *view, int16_t x, int16_t y) {
-  if (!view || !view->window) return false;
+  if (!view || !view->window)
+    return false;
 
   Layer *root_layer = window_get_root_layer(view->window);
   GRect bounds = layer_get_bounds(root_layer);
@@ -3219,12 +3397,14 @@ static bool point_is_on_revealed_globe(GlobeView *view, int16_t x, int16_t y) {
 
 static void touch_handler(const TouchEvent *event, void *context) {
   GlobeView *view = (GlobeView *)context;
-  if (!view) return;
+  if (!view)
+    return;
   // Pop-transition gap: globe_view_pop stops the animation state BEFORE the
   // async window pop finishes, but touch stays subscribed until disappear.
   // Ignore events in that window — a drag could re-arm timers the disappear
   // handler already skipped, and a tap could double-pop the stack.
-  if (!view->is_animating) return;
+  if (!view->is_animating)
+    return;
 
   if (event->type == TouchEvent_Touchdown) {
     note_globe_interaction(view);
@@ -3254,7 +3434,8 @@ static void touch_handler(const TouchEvent *event, void *context) {
       return;
     }
 
-    if (!view->touch_active) return;
+    if (!view->touch_active)
+      return;
 
     if (view->is_revealed && !view->is_revealing && view->touch_controls_globe) {
       update_globe_drag(view, event->x, event->y);
@@ -3335,7 +3516,8 @@ static void window_click_provider(void *context) {
 
 static void window_appear_handler(Window *window) {
   GlobeView *view = (GlobeView *)window_get_user_data(window);
-  if (!view || !view->is_animating) return;
+  if (!view || !view->is_animating)
+    return;
 
   ensure_visual_resources(view);
   if (!view->is_revealed && !view->animation_timer) {
@@ -3356,7 +3538,8 @@ static void window_disappear_handler(Window *window) {
   // BACK -> card), and a late unsubscribe would clobber that window's subscription.
   touch_service_unsubscribe();
 #endif
-  if (!view || !view->is_animating) return;
+  if (!view || !view->is_animating)
+    return;
 
 #ifdef CONFIG_TOUCH
   stop_globe_coast(view, false);
@@ -3373,7 +3556,8 @@ static void window_disappear_handler(Window *window) {
  */
 GlobeView *globe_view_create(void) {
   GlobeView *view = malloc(sizeof(GlobeView));
-  if (!view) return NULL;
+  if (!view)
+    return NULL;
   memset(view, 0, sizeof(*view));
 
   // Create window
@@ -3468,13 +3652,15 @@ GlobeView *globe_view_create(void) {
 
 void globe_view_set_location_select_callback(GlobeView *view, GlobeLocationSelectCallback callback,
                                              void *context) {
-  if (!view) return;
+  if (!view)
+    return;
   view->location_select_callback = callback;
   view->location_select_context = context;
 }
 
 static void globe_view_reload_saved_locations(GlobeView *view) {
-  if (!view) return;
+  if (!view)
+    return;
 
   SavedLocationEntry previous_entry;
   bool had_previous_entry = false;
@@ -3508,7 +3694,8 @@ static void globe_view_reload_saved_locations(GlobeView *view) {
   if (next_index < 0) {
     next_index = find_current_saved_entry_index(view);
   }
-  if (next_index < 0) next_index = 0;
+  if (next_index < 0)
+    next_index = 0;
 
   view->selected_city_index = next_index;
   update_selected_transition_target(view);
@@ -3525,7 +3712,8 @@ static void globe_view_reload_saved_locations(GlobeView *view) {
 
 void globe_view_set_saved_locations_callback(GlobeView *view, GlobeSavedLocationsCallback callback,
                                              void *context) {
-  if (!view) return;
+  if (!view)
+    return;
   view->saved_locations_callback = callback;
   view->saved_locations_context = context;
 }
@@ -3533,14 +3721,16 @@ void globe_view_set_saved_locations_callback(GlobeView *view, GlobeSavedLocation
 // (main_callback chain deleted — registered but never invoked; size pass)
 
 void globe_view_set_back_callback(GlobeView *view, GlobeMainCallback callback, void *context) {
-  if (!view) return;
+  if (!view)
+    return;
   view->back_callback = callback;
   view->back_context = context;
 }
 
 void globe_view_set_current_location(GlobeView *view, const char *label, int16_t latitude_e2,
                                      int16_t longitude_e2) {
-  if (!view) return;
+  if (!view)
+    return;
 
   bool should_select_current = !view->is_animating || selected_city_is_current_location(view);
 
@@ -3576,7 +3766,8 @@ void globe_view_set_current_location(GlobeView *view, const char *label, int16_t
  * Destroy the globe view
  */
 void globe_view_destroy(GlobeView *view) {
-  if (!view) return;
+  if (!view)
+    return;
 
   // Stop animation
   globe_view_stop_animation(view);
@@ -3618,7 +3809,8 @@ void globe_view_destroy(GlobeView *view) {
  * Start the globe animation
  */
 void globe_view_start_animation(GlobeView *view) {
-  if (!view || view->is_animating) return;
+  if (!view || view->is_animating)
+    return;
 
   globe_view_reload_saved_locations(view);
 
@@ -3659,7 +3851,8 @@ void globe_view_start_animation(GlobeView *view) {
  * Stop the globe animation
  */
 void globe_view_stop_animation(GlobeView *view) {
-  if (!view) return;
+  if (!view)
+    return;
   // BOTH shapes: round drives the card<->globe hslide pair now, so a mid-slide dismissal
   // must cancel this before the layer is torn down, exactly like rect's drop-in.
   if (view->entry_drop_anim) {
@@ -3668,7 +3861,8 @@ void globe_view_stop_animation(GlobeView *view) {
     animation_unschedule(a);
     animation_destroy(a);
   }
-  if (!view->is_animating) return;
+  if (!view->is_animating)
+    return;
 
   view->is_animating = false;
 
@@ -3714,7 +3908,8 @@ static void prv_drop_stopped(Animation *anim, bool finished, void *context) {
 static bool start_canvas_hslide(GlobeView *view, GRect *from, GRect *to,
                                 AnimationStoppedHandler stopped) {
   PropertyAnimation *pa = property_animation_create_layer_frame(view->canvas_layer, from, to);
-  if (!pa) return false;
+  if (!pa)
+    return false;
   Animation *a = (Animation *)pa;
   animation_set_duration(a, WEATHER_HSLIDE_MS);
   animation_set_custom_interpolation(a, weather_interpolate_moook_soft1);
@@ -3746,8 +3941,10 @@ void globe_view_push_slide_in_right(GlobeView *view) {
 // (weather.c dismisses the globe and slides the card back in from the left).
 static void prv_slide_out_right_stopped(Animation *anim, bool finished, void *context) {
   GlobeView *view = (GlobeView *)context;
-  if (!view) return;
-  if (view->entry_drop_anim == anim) view->entry_drop_anim = NULL;
+  if (!view)
+    return;
+  if (view->entry_drop_anim == anim)
+    view->entry_drop_anim = NULL;
   if (finished && view->back_callback) {
     view->back_callback(view->back_context);  // dismiss globe + slide card in from the left
   }
@@ -3759,14 +3956,16 @@ static void prv_slide_out_right_stopped(Animation *anim, bool finished, void *co
 
 void globe_view_slide_out_right(GlobeView *view) {
   if (!view || !view->canvas_layer) {
-    if (view && view->back_callback) view->back_callback(view->back_context);
+    if (view && view->back_callback)
+      view->back_callback(view->back_context);
     return;
   }
   GRect from = layer_get_frame(view->canvas_layer);  // current, on-screen
   GRect to = from;
   to.origin.x += from.size.w;  // right and off the edge
   if (!start_canvas_hslide(view, &from, &to, prv_slide_out_right_stopped)) {
-    if (view->back_callback) view->back_callback(view->back_context);
+    if (view->back_callback)
+      view->back_callback(view->back_context);
   }
 }
 
@@ -3774,14 +3973,17 @@ void globe_view_slide_out_right(GlobeView *view) {
 // saved_entry_globe_coords twin lives inside CONFIG_TOUCH).
 static bool prv_entry_coords_for_focus(GlobeView *view, SavedLocationEntry *e, int32_t *lat,
                                        int32_t *lon) {
-  if (!e) return false;
+  if (!e)
+    return false;
   if (e->is_current_location) {
-    if (!view->has_current_location) return false;
+    if (!view->has_current_location)
+      return false;
     *lat = view->current_location_latitude_e2;
     *lon = view->current_location_longitude_e2;
     return true;
   }
-  if (!e->has_coordinates) return false;
+  if (!e->has_coordinates)
+    return false;
   *lat = e->latitude_e2;
   *lon = e->longitude_e2;
   return true;
@@ -3792,14 +3994,17 @@ static bool prv_entry_coords_for_focus(GlobeView *view, SavedLocationEntry *e, i
 // BEFORE the push: the reveal intro targets selected_city_index, and the direct
 // orientation snap covers re-pushes that skip the intro. No-op without coords.
 void globe_view_focus_coords(GlobeView *view, int16_t lat_e2, int16_t lon_e2) {
-  if (!view || view->saved_entry_count <= 0) return;
-  if (lat_e2 == INT16_MIN || lon_e2 == INT16_MIN) return;
+  if (!view || view->saved_entry_count <= 0)
+    return;
+  if (lat_e2 == INT16_MIN || lon_e2 == INT16_MIN)
+    return;
   int best = -1;
   int32_t best_d = 0;
   for (int i = 0; i < view->saved_entry_count; i++) {
     SavedLocationEntry *e = saved_entry_for_index(view, i);
     int32_t elat, elon;
-    if (!prv_entry_coords_for_focus(view, e, &elat, &elon)) continue;
+    if (!prv_entry_coords_for_focus(view, e, &elat, &elon))
+      continue;
     const int32_t dlat = elat - lat_e2;
     const int32_t dlon = shortest_longitude_delta_e2(lon_e2, elon);
     const int32_t d = dlat * dlat + dlon * dlon;
@@ -3808,7 +4013,8 @@ void globe_view_focus_coords(GlobeView *view, int16_t lat_e2, int16_t lon_e2) {
       best_d = d;
     }
   }
-  if (best < 0) return;
+  if (best < 0)
+    return;
   cancel_city_animation(view);
   cancel_bounce_animation(view);
   view->selected_city_index = best;
@@ -3830,7 +4036,8 @@ void globe_view_focus_coords(GlobeView *view, int16_t lat_e2, int16_t lon_e2) {
 }
 
 void globe_view_push_animated(GlobeView *view, bool animated) {
-  if (!view) return;
+  if (!view)
+    return;
 
   window_stack_push(view->window, animated);
   globe_view_start_animation(view);
@@ -3840,14 +4047,16 @@ void globe_view_push_animated(GlobeView *view, bool animated) {
  * Pop the globe view from the window stack
  */
 void globe_view_pop(GlobeView *view) {
-  if (!view) return;
+  if (!view)
+    return;
 
   globe_view_stop_animation(view);
   window_stack_pop(true);
 }
 
 void globe_view_dismiss(GlobeView *view, bool animated) {
-  if (!view) return;
+  if (!view)
+    return;
 
   globe_view_stop_animation(view);
   window_stack_remove(view->window, animated);

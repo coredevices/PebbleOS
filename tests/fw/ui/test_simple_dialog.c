@@ -32,7 +32,9 @@ static GContext s_ctx;
 #include "fake_spi_flash.h"
 #include "fixtures/load_test_resources.h"
 
-GContext *graphics_context_get_current_context(void) { return &s_ctx; }
+GContext *graphics_context_get_current_context(void) {
+  return &s_ctx;
+}
 
 // Stubs
 /////////////////////
@@ -76,7 +78,8 @@ KinoReel *kino_reel_scale_segmented_create(KinoReel *from_reel, bool take_owners
   return NULL;
 }
 
-void kino_reel_scale_segmented_set_deflate_effect(KinoReel *reel, int16_t expand) {}
+void kino_reel_scale_segmented_set_deflate_effect(KinoReel *reel, int16_t expand) {
+}
 
 bool kino_reel_scale_segmented_set_delay_by_distance(KinoReel *reel, GPoint target) {
   return false;

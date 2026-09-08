@@ -142,7 +142,9 @@ static bool prv_flash_log_valid(const FlashLoggingHeader *hdr) {
   return (hdr->magic == LOG_MAGIC && hdr->version == LOG_VERSION);
 }
 
-static uint8_t prv_get_next_log_file_id(uint8_t file_id) { return (file_id + 1) % MAX_LOG_FILE_ID; }
+static uint8_t prv_get_next_log_file_id(uint8_t file_id) {
+  return (file_id + 1) % MAX_LOG_FILE_ID;
+}
 
 static uint32_t prv_get_unit_base_address(uint32_t addr) {
 #if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX) ||     \
@@ -280,7 +282,9 @@ static void prv_allocate_page_for_use(void) {
   s_curr_state.offset_in_log_page = sizeof(hdr);
 }
 
-void flash_logging_set_enabled(bool enabled) { s_flash_logging_enabled = enabled; }
+void flash_logging_set_enabled(bool enabled) {
+  s_flash_logging_enabled = enabled;
+}
 
 void flash_logging_init(void) {
   s_curr_state = (CurrentLoggingState){};

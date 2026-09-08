@@ -44,7 +44,9 @@ static void window_load(Window *window) {
   layer_add_child(window_layer, text_layer_get_layer(text_layer));
 }
 
-static void window_unload(Window *window) { text_layer_destroy(text_layer); }
+static void window_unload(Window *window) {
+  text_layer_destroy(text_layer);
+}
 
 static void init(void) {
   window = window_create();
@@ -58,7 +60,9 @@ static void init(void) {
   app_timer_register(1000, prv_timer_callback, 0);
 }
 
-static void deinit(void) { window_destroy(window); }
+static void deinit(void) {
+  window_destroy(window);
+}
 
 int main(void) {
   init();

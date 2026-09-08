@@ -53,7 +53,9 @@ static ALWAYS_INLINE void prv_lock(void) {
   pbl_mutex_lock_lr(&s_mutex, PBL_FOREVER, (uintptr_t)__builtin_return_address(0));
 }
 
-static inline void prv_unlock(void) { pbl_mutex_unlock(&s_mutex); }
+static inline void prv_unlock(void) {
+  pbl_mutex_unlock(&s_mutex);
+}
 
 // "ps" prefix + 32 hex chars (16-byte UUID) + NUL.
 #define PERSIST_FILE_NAME_MAX_LENGTH sizeof("ps000102030405060708090a0b0c0d0e0f")
@@ -85,7 +87,9 @@ static bool prv_bad_persist_file_filter(const char *filename) {
          strcmp(filename + APP_FILE_NAME_PREFIX_LENGTH, "persist") == 0;
 }
 
-size_t persist_service_get_max_size(void) { return PERSIST_STORAGE_MAX_SPACE; }
+size_t persist_service_get_max_size(void) {
+  return PERSIST_STORAGE_MAX_SPACE;
+}
 
 // Persist files used to be named "ps%06d", where the id was allocated by the
 // legacy persist_map (the "pmap" file), a UUID->id table. They are now named
@@ -222,7 +226,9 @@ SettingsFile *persist_service_lock_and_get_store(const Uuid *uuid) {
   return &store->file;
 }
 
-void persist_service_unlock_store(SettingsFile *store) { prv_unlock(); }
+void persist_service_unlock_store(SettingsFile *store) {
+  prv_unlock();
+}
 
 // Create a store for a client of the given UUID it doesn't already exist. If it
 // exists already (another client with the same UUID is running), then just

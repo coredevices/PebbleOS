@@ -33,7 +33,8 @@
 #include "stubs_ui_window.h"
 #include "stubs_unobstructed_area.h"
 
-void graphics_context_move_draw_box(GContext *ctx, GPoint offset) {}
+void graphics_context_move_draw_box(GContext *ctx, GPoint offset) {
+}
 typedef uint16_t ResourceId;
 const uint8_t *resource_get_builtin_bytes(ResAppNum app_num, uint32_t resource_id,
                                           uint32_t *num_bytes_out) {
@@ -93,7 +94,9 @@ void test_kino_player__initialize(void) {
 }
 
 // Teardown
-void test_kino_player__cleanup(void) { kino_reel_destroy(test_reel); }
+void test_kino_player__cleanup(void) {
+  kino_reel_destroy(test_reel);
+}
 
 // Tests
 ////////////////////////////////////

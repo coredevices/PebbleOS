@@ -353,7 +353,8 @@ static void prv_transition_animation_init(Animation *animation) {
 }
 
 static void prv_transition_animation_update_stub(GContext *ctx, Animation *animation,
-                                                 uint32_t progress) {}
+                                                 uint32_t progress) {
+}
 
 const CompositorTransition *compositor_shutter_transition_get(
     CompositorTransitionDirection direction, GColor color) {

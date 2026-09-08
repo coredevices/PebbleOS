@@ -171,7 +171,8 @@ static uint16_t prv_ntc_threshold_code(uint8_t celsius) {
   return (uint16_t)((1024.0f / (1.0f + exp(exponent))) + 0.5f);
 }
 
-void battery_init(void) {}
+void battery_init(void) {
+}
 
 static bool prv_read_register(uint16_t register_address, uint8_t *result) {
   i2c_use(I2C_NPM1300);
@@ -453,7 +454,9 @@ bool pmic_power_off(void) {
   return false;
 }
 
-bool pmic_full_power_off(void) { return pmic_power_off(); }
+bool pmic_full_power_off(void) {
+  return pmic_power_off();
+}
 
 uint16_t pmic_get_vsys(void) {
   if (!prv_write_register(PmicRegisters_MAIN_EVENTSADCCLR, 0x08 /* EVENTADCVSYSRDY */)) {
@@ -668,9 +671,12 @@ bool pmic_set_charger_state(bool enable) {
       enable ? PmicRegisters_BCHARGER_BCHGENABLESET : PmicRegisters_BCHARGER_BCHGENABLECLR, 1);
 }
 
-void battery_set_charge_enable(bool charging_enabled) { pmic_set_charger_state(charging_enabled); }
+void battery_set_charge_enable(bool charging_enabled) {
+  pmic_set_charger_state(charging_enabled);
+}
 
-void battery_set_fast_charge(bool fast_charge_enabled) { /* the PMIC handles this for us */ }
+void battery_set_fast_charge(bool fast_charge_enabled) { /* the PMIC handles this for us */
+}
 
 bool pmic_is_charging(void) {
   uint8_t status;
@@ -683,7 +689,9 @@ bool pmic_is_charging(void) {
                     PmicRegisters_BCHARGER_BCHGCHARGESTATUS__CONSTANTVOLTAGE)) != 0;
 }
 
-bool battery_charge_controller_thinks_we_are_charging_impl(void) { return pmic_is_charging(); }
+bool battery_charge_controller_thinks_we_are_charging_impl(void) {
+  return pmic_is_charging();
+}
 
 bool pmic_is_usb_connected(void) {
   uint8_t status;
@@ -694,19 +702,29 @@ bool pmic_is_usb_connected(void) {
   return (status & PmicRegisters_VBUSIN_VBUSINSTATUS__VBUSINPRESENT) != 0;
 }
 
-bool battery_is_usb_connected_impl(void) { return pmic_is_usb_connected(); }
+bool battery_is_usb_connected_impl(void) {
+  return pmic_is_usb_connected();
+}
 
-void pmic_read_chip_info(uint8_t *chip_id, uint8_t *chip_revision, uint8_t *buck1_vset) {}
+void pmic_read_chip_info(uint8_t *chip_id, uint8_t *chip_revision, uint8_t *buck1_vset) {
+}
 
-bool pmic_enable_battery_measure(void) { return true; }
+bool pmic_enable_battery_measure(void) {
+  return true;
+}
 
-bool pmic_disable_battery_measure(void) { return true; }
+bool pmic_disable_battery_measure(void) {
+  return true;
+}
 
-void set_ldo3_power_state(bool enabled) {}
+void set_ldo3_power_state(bool enabled) {
+}
 
-void set_4V5_power_state(bool enabled) {}
+void set_4V5_power_state(bool enabled) {
+}
 
-void set_6V6_power_state(bool enabled) {}
+void set_6V6_power_state(bool enabled) {
+}
 
 int battery_charge_status_get(BatteryChargeStatus *status) {
   uint8_t chg_status;
@@ -759,7 +777,8 @@ void command_pmic_read_registers(void) {
   prompt_send_response_fmt(buffer, sizeof(buffer), "PMIC: Vbat = %d mV", battery_get_millivolts());
 }
 
-void command_pmic_status(void) {}
+void command_pmic_status(void) {
+}
 
 void command_pmic_rails(void) {
   // TODO: Implement.

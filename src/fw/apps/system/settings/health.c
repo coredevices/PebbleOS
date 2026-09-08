@@ -161,9 +161,11 @@ static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
   return NumSettingsHealthItems;
 }
 
-static void prv_appear_cb(SettingsCallbacks *context) {}
+static void prv_appear_cb(SettingsCallbacks *context) {
+}
 
-static void prv_hide_cb(SettingsCallbacks *context) {}
+static void prv_hide_cb(SettingsCallbacks *context) {
+}
 
 static Window *prv_init(void) {
   SettingsHealthData *data = app_malloc_check(sizeof(*data));

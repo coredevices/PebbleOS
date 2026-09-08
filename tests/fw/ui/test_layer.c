@@ -25,36 +25,52 @@
 // Setup
 ////////////////////////////////////
 
-void test_layer__initialize(void) {}
+void test_layer__initialize(void) {
+}
 
-void test_layer__cleanup(void) {}
+void test_layer__cleanup(void) {
+}
 
-GDrawState graphics_context_get_drawing_state(GContext *ctx) { return (GDrawState){0}; }
+GDrawState graphics_context_get_drawing_state(GContext *ctx) {
+  return (GDrawState){0};
+}
 
-bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) { return false; }
+bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) {
+  return false;
+}
 
-void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {}
+void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {
+}
 
-void window_schedule_render(struct Window *window) {}
+void window_schedule_render(struct Window *window) {
+}
 
-void recognizer_destroy(Recognizer *recognizer) {}
+void recognizer_destroy(Recognizer *recognizer) {
+}
 
-void recognizer_add_to_list(Recognizer *recognizer, RecognizerList *list) {}
+void recognizer_add_to_list(Recognizer *recognizer, RecognizerList *list) {
+}
 
-void recognizer_remove_from_list(Recognizer *recognizer, RecognizerList *list) {}
+void recognizer_remove_from_list(Recognizer *recognizer, RecognizerList *list) {
+}
 
-RecognizerManager *window_get_recognizer_manager(Window *window) { return NULL; }
+RecognizerManager *window_get_recognizer_manager(Window *window) {
+  return NULL;
+}
 
-void recognizer_manager_cancel_and_reset(RecognizerManager *manager) {}
+void recognizer_manager_cancel_and_reset(RecognizerManager *manager) {
+}
 
 bool recognizer_list_iterate(RecognizerList *list, RecognizerListIteratorCb iter_cb,
                              void *context) {
   return false;
 }
 
-void recognizer_manager_register_recognizer(RecognizerManager *manager, Recognizer *recognizer) {}
+void recognizer_manager_register_recognizer(RecognizerManager *manager, Recognizer *recognizer) {
+}
 
-void recognizer_manager_deregister_recognizer(RecognizerManager *manager, Recognizer *recognizer) {}
+void recognizer_manager_deregister_recognizer(RecognizerManager *manager, Recognizer *recognizer) {
+}
 // Tests
 ////////////////////////////////////
 

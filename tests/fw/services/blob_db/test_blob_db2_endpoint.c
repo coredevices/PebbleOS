@@ -41,9 +41,12 @@
 #include "stubs_regular_timer.h"
 #include "stubs_settings_blob_db.h"
 
-CommSession *comm_session_get_system_session(void) { return (CommSession *)1; }
+CommSession *comm_session_get_system_session(void) {
+  return (CommSession *)1;
+}
 
-void blob_db_set_accepting_messages(bool ehh) {}
+void blob_db_set_accepting_messages(bool ehh) {
+}
 
 static const uint8_t *s_expected_msg;
 static bool did_sync_next = false;
@@ -90,11 +93,17 @@ extern void prv_send_response(CommSession *session, uint8_t *response, uint8_t r
 }
 
 static const BlobDBToken token = 0x22;
-extern BlobDBToken prv_new_token(void) { return token; }
+extern BlobDBToken prv_new_token(void) {
+  return token;
+}
 
-void blob_db_sync_next(BlobDBSyncSession *session) { did_sync_next = true; }
+void blob_db_sync_next(BlobDBSyncSession *session) {
+  did_sync_next = true;
+}
 
-void blob_db_sync_cancel(BlobDBSyncSession *session) { did_sync_cancel = true; }
+void blob_db_sync_cancel(BlobDBSyncSession *session) {
+  did_sync_cancel = true;
+}
 
 status_t blob_db_sync_db(BlobDBId db_id) {
   did_sync_db = true;
@@ -135,7 +144,8 @@ void test_blob_db2_endpoint__initialize(void) {
   memset(sendbuffer, 0, sizeof(sendbuffer));
 }
 
-void test_blob_db2_endpoint__cleanup(void) {}
+void test_blob_db2_endpoint__cleanup(void) {
+}
 
 static const uint8_t s_dirty_dbs_request[] = {
     BLOB_DB_COMMAND_DIRTY_DBS,  // cmd

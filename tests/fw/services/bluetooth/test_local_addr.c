@@ -56,7 +56,9 @@ bool bt_persistent_storage_set_ble_pinned_address(const BTDeviceAddress *addr) {
   return cl_mock_type(bool);
 }
 
-bool bt_persistent_storage_has_pinned_ble_pairings(void) { return cl_mock_type(bool); }
+bool bt_persistent_storage_has_pinned_ble_pairings(void) {
+  return cl_mock_type(bool);
+}
 
 #define TEST_PINNED_ADDR_1 ((BTDeviceAddress){.octets = {0x11, 0x22, 0x33, 0x33, 0x44, 0x55}})
 #define TEST_PINNED_ADDR_2 ((BTDeviceAddress){.octets = {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff}})
@@ -102,7 +104,8 @@ void test_local_addr__initialize(void) {
   s_last_driver_addr_is_null = false;
 }
 
-void test_local_addr__cleanup(void) {}
+void test_local_addr__cleanup(void) {
+}
 
 void test_local_addr__init_generates_pinned_address_if_needed(void) {
   prv_init_no_pinnings_no_pinned_address();

@@ -96,7 +96,9 @@ static void prv_vibe_history_clear(uint64_t cutoff) {
   }
 }
 
-DEFINE_SYSCALL(void, sys_vibe_history_start_collecting, void) { s_vibe_history_enabled = true; }
+DEFINE_SYSCALL(void, sys_vibe_history_start_collecting, void) {
+  s_vibe_history_enabled = true;
+}
 
 DEFINE_SYSCALL(void, sys_vibe_history_stop_collecting, void) {
   s_vibe_history_enabled = false;
@@ -324,15 +326,21 @@ static void prv_timer_callback(void *data) {
   pbl_mutex_unlock(&s_vibe_pattern_mutex);
 }
 
-int32_t vibes_get_vibe_strength(void) { return s_vibe_strength; }
+int32_t vibes_get_vibe_strength(void) {
+  return s_vibe_strength;
+}
 
-int32_t vibes_get_default_vibe_strength(void) { return s_vibe_strength_default; }
+int32_t vibes_get_default_vibe_strength(void) {
+  return s_vibe_strength_default;
+}
 
 void vibes_set_default_vibe_strength(int32_t vibe_strength_default) {
   s_vibe_strength_default = vibe_strength_default;
 }
 
-DEFINE_SYSCALL(int32_t, sys_vibe_get_vibe_strength, void) { return vibes_get_vibe_strength(); }
+DEFINE_SYSCALL(int32_t, sys_vibe_get_vibe_strength, void) {
+  return vibes_get_vibe_strength();
+}
 
 uint32_t vibes_get_time_since_last_vibe_ms(void) {
   if (s_last_vibe_active_tick == 0) {

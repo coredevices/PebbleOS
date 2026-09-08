@@ -77,7 +77,8 @@ void test_text_resources__initialize(void) {
   resource_init();
 }
 
-void test_text_resources__cleanup(void) {}
+void test_text_resources__cleanup(void) {
+}
 
 void test_text_resources__init_font(void) {
   uint32_t gothic_18_handle = RESOURCE_ID_GOTHIC_18;

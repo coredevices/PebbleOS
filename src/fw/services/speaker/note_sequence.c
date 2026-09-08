@@ -227,4 +227,6 @@ uint32_t note_seq_fill(NoteSequenceState *s, int16_t *out, uint32_t max_samples)
   return written;
 }
 
-void note_seq_deinit(NoteSequenceState *s) { memset(s, 0, sizeof(*s)); }
+void note_seq_deinit(NoteSequenceState *s) {
+  memset(s, 0, sizeof(*s));
+}

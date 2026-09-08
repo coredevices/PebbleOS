@@ -33,9 +33,11 @@ static Attribute attributes[] = {
                 "Look at it and behold the awesome."},
 };
 
-void test_attribute__initialize(void) {}
+void test_attribute__initialize(void) {
+}
 
-void test_attribute__cleanup(void) {}
+void test_attribute__cleanup(void) {
+}
 
 // Tests
 ////////////////////////////////////////////////////////////////

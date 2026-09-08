@@ -40,7 +40,8 @@ static void prv_fill_from_fw(WxDsForecast *out, const WeatherLocationForecast *f
   // them from the v4 WeatherDBEntry directly (no-op for v3 records).
   out->today_uv = -1;
   out->has_hourly_uv = false;
-  for (int i = 0; i < WX_DS_HOURLY; i++) out->hourly_uv[i] = -1;
+  for (int i = 0; i < WX_DS_HOURLY; i++)
+    out->hourly_uv[i] = -1;
   out->today_precip = -1;
   out->today_wind = -1;
   out->today_feels = WEATHER_SERVICE_LOCATION_FORECAST_UNKNOWN_TEMP;
@@ -131,9 +132,12 @@ static void prv_overlay_v4(WxDsForecast *out, int location_id) {
       out->utc_offset_min = entry->location_utc_offset_min;
       for (uint8_t i = 0; i < nd; i++) {
         const WeatherDBDailyMetrics *m = &entry->daily_metrics[i];
-        if (m->precip_probability != 255) out->daily[i].precip = m->precip_probability;
-        if (m->wind_speed != 255) out->daily[i].wind = m->wind_speed;
-        if (m->uv_index_x10 != 255) out->daily[i].uv = m->uv_index_x10 / 10;
+        if (m->precip_probability != 255)
+          out->daily[i].precip = m->precip_probability;
+        if (m->wind_speed != 255)
+          out->daily[i].wind = m->wind_speed;
+        if (m->uv_index_x10 != 255)
+          out->daily[i].uv = m->uv_index_x10 / 10;
       }
     }
     // v4.4 appended block (hourly UV) — the only source of a CURRENT UV reading;
@@ -155,9 +159,12 @@ static void prv_overlay_v4(WxDsForecast *out, int location_id) {
     }
     // v4.2 appended block (today's raw warning readings + per-day feels-like).
     if (entry->minor_version >= 2 && len >= (int)WEATHER_DB_V4_2_FIXED_SIZE) {
-      if (entry->today_wmo_code != 0xFF) out->today_wmo = entry->today_wmo_code;
-      if (entry->today_humidity_pct != 0xFF) out->today_humidity = entry->today_humidity_pct;
-      if (entry->today_visibility_m != 0xFFFF) out->today_visibility_m = entry->today_visibility_m;
+      if (entry->today_wmo_code != 0xFF)
+        out->today_wmo = entry->today_wmo_code;
+      if (entry->today_humidity_pct != 0xFF)
+        out->today_humidity = entry->today_humidity_pct;
+      if (entry->today_visibility_m != 0xFFFF)
+        out->today_visibility_m = entry->today_visibility_m;
       if (entry->today_precip_sum_mm != 0xFFFF)
         out->today_precip_sum_mm = entry->today_precip_sum_mm;
       for (uint8_t i = 0; i < nd; i++) {
@@ -182,25 +189,33 @@ static void prv_overlay_v4(WxDsForecast *out, int location_id) {
 }
 
 bool weather_ds_name_prefix(const char *name, const char *needle) {
-  if (!name || !needle || !needle[0]) return false;
+  if (!name || !needle || !needle[0])
+    return false;
   for (size_t i = 0; needle[i]; i++) {
     char a = name[i], b = needle[i];
-    if (a >= 'A' && a <= 'Z') a += 'a' - 'A';
-    if (b >= 'A' && b <= 'Z') b += 'a' - 'A';
-    if (a != b) return false;
+    if (a >= 'A' && a <= 'Z')
+      a += 'a' - 'A';
+    if (b >= 'A' && b <= 'Z')
+      b += 'a' - 'A';
+    if (a != b)
+      return false;
   }
   return true;
 }
 
 bool weather_ds_name_matches(const char *name, const char *needle) {
-  if (!name) return false;
+  if (!name)
+    return false;
   for (const char *p = name; *p; p++) {
-    if (weather_ds_name_prefix(p, needle)) return true;
+    if (weather_ds_name_prefix(p, needle))
+      return true;
   }
   return false;
 }
 
-bool weather_ds_supported(void) { return weather_service_supported_by_phone(); }
+bool weather_ds_supported(void) {
+  return weather_service_supported_by_phone();
+}
 
 int weather_ds_location_count(void) {
   if (!weather_service_supported_by_phone()) {

@@ -34,7 +34,9 @@
 
 static GContext s_ctx;
 
-void clock_get_time_tm(struct tm *time_tm) { rtc_get_time_tm(time_tm); }
+void clock_get_time_tm(struct tm *time_tm) {
+  rtc_get_time_tm(time_tm);
+}
 
 static FrameBuffer *fb = NULL;
 static GBitmap *s_dest_bitmap;
@@ -61,7 +63,9 @@ bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) {
   return true;
 }
 
-GContext *graphics_context_get_current_context(void) { return &s_ctx; }
+GContext *graphics_context_get_current_context(void) {
+  return &s_ctx;
+}
 
 // Stubs
 /////////////////////

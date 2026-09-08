@@ -38,17 +38,23 @@ bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent *e) {
   return true;
 }
 
-static void prv_process_events(void) { fake_system_task_callbacks_invoke_pending(); }
+static void prv_process_events(void) {
+  fake_system_task_callbacks_invoke_pending();
+}
 
 static AppInbox *s_app_message_inbox;
-AppInbox **app_state_get_app_message_inbox(void) { return &s_app_message_inbox; }
+AppInbox **app_state_get_app_message_inbox(void) {
+  return &s_app_message_inbox;
+}
 
 static bool s_communication_timestamp_updated;
 void app_install_mark_prioritized(AppInstallId install_id, bool can_expire) {
   s_communication_timestamp_updated = true;
 }
 
-AppInstallId app_manager_get_current_app_id(void) { return INSTALL_ID_INVALID; }
+AppInstallId app_manager_get_current_app_id(void) {
+  return INSTALL_ID_INVALID;
+}
 
 static uint8_t s_app_message_pp_buffer[BUFFER_SIZE];
 static size_t s_app_message_pp_received_length;
@@ -64,10 +70,12 @@ static void prv_protocol_msg_callback(CommSession *session, const uint8_t *data,
   app_message_app_protocol_msg_callback(session, data, length, NULL);
 }
 
-void app_message_inbox_handle_dropped_messages(uint32_t num_drops) {}
+void app_message_inbox_handle_dropped_messages(uint32_t num_drops) {
+}
 
 void comm_session_set_responsiveness(CommSession *session, BtConsumer consumer,
-                                     ResponseTimeState state, uint16_t max_period_secs) {}
+                                     ResponseTimeState state, uint16_t max_period_secs) {
+}
 
 static bool s_kernel_receiver_available;
 static Receiver *s_kernel_receiver;
@@ -117,13 +125,17 @@ const ReceiverImplementation g_default_kernel_receiver_implementation = {
 };
 
 void app_message_app_protocol_system_nack_callback(CommSession *session, const uint8_t *data,
-                                                   size_t length) {}
-void test_dropped_handler(uint32_t num_dropped_messages) {}
+                                                   size_t length) {
+}
+void test_dropped_handler(uint32_t num_dropped_messages) {
+}
 void test_message_handler(const uint8_t *data, size_t length, AppInboxConsumerInfo *consumer_info) {
 }
 void test_alt_message_handler(const uint8_t *data, size_t length,
-                              AppInboxConsumerInfo *consumer_info) {}
-void test_alt_dropped_handler(uint32_t num_dropped_messages) {}
+                              AppInboxConsumerInfo *consumer_info) {
+}
+void test_alt_dropped_handler(uint32_t num_dropped_messages) {
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Tests
@@ -225,7 +237,9 @@ static Receiver *prv_create_inbox_prepare_and_write(void) {
   return r;
 }
 
-static void prv_destroy_inbox(void) { app_message_receiver_close(); }
+static void prv_destroy_inbox(void) {
+  app_message_receiver_close();
+}
 
 void test_app_message_receiver__receive_push(void) {
   Receiver *r = prv_create_inbox_prepare_and_write();

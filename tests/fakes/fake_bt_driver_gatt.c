@@ -109,7 +109,9 @@ void bt_driver_gatt_send_changed_indication(const BTDeviceInternal *device,
   s_service_changed_last_range = *data;
 }
 
-TimerID bt_driver_gatt_get_watchdog_timer_id(void) { return s_watchdog_timer; }
+TimerID bt_driver_gatt_get_watchdog_timer_id(void) {
+  return s_watchdog_timer;
+}
 
 int fake_gatt_get_service_changed_indication_count(void) {
   return s_service_changed_indication_count;
@@ -125,15 +127,25 @@ ATTHandleRange fake_gatt_get_service_changed_last_range(void) {
 
 // -- test accessors -----------------------------------------------------------
 
-bool fake_gatt_is_service_discovery_running(void) { return s_is_discovery_running; }
+bool fake_gatt_is_service_discovery_running(void) {
+  return s_is_discovery_running;
+}
 
-int fake_gatt_is_service_discovery_start_count(void) { return s_start_count; }
+int fake_gatt_is_service_discovery_start_count(void) {
+  return s_start_count;
+}
 
-int fake_gatt_is_service_discovery_stop_count(void) { return s_stop_count; }
+int fake_gatt_is_service_discovery_stop_count(void) {
+  return s_stop_count;
+}
 
-void fake_gatt_set_start_return_value(int ret_value) { s_start_ret_code = ret_value; }
+void fake_gatt_set_start_return_value(int ret_value) {
+  s_start_ret_code = ret_value;
+}
 
-void fake_gatt_set_stop_return_value(int ret_value) { s_stop_ret_code = ret_value; }
+void fake_gatt_set_stop_return_value(int ret_value) {
+  s_stop_ret_code = ret_value;
+}
 
 void fake_gatt_init(void) {
   s_is_discovery_running = false;

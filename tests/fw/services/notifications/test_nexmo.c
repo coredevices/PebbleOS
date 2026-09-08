@@ -53,7 +53,8 @@ void test_nexmo__initialize(void) {
   s_performed_dismiss = false;
 }
 
-void test_nexmo__cleanup(void) {}
+void test_nexmo__cleanup(void) {
+}
 
 void test_nexmo__is_reuath_sms(void) {
   uint8_t expected_app_id_buf[128];

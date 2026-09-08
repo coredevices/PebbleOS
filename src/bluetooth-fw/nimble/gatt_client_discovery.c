@@ -530,7 +530,8 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
   return 0;
 }
 
-void nimble_discover_init(void) {}
+void nimble_discover_init(void) {
+}
 
 static BTErrno prv_start_discovery(const GAPLEConnection *connection, const ATTHandleRange *data) {
   uint16_t conn_handle;
@@ -612,4 +613,5 @@ BTErrno bt_driver_gatt_stop_discovery(GAPLEConnection *connection) {
   return BTErrnoOK;
 }
 
-void bt_driver_gatt_handle_discovery_abandoned(void) {}
+void bt_driver_gatt_handle_discovery_abandoned(void) {
+}

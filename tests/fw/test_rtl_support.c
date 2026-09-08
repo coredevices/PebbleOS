@@ -36,8 +36,10 @@ static size_t prv_reverse(const char *in, Codepoint *cps, size_t max) {
   return count;
 }
 
-void test_rtl_support__initialize(void) {}
-void test_rtl_support__cleanup(void) {}
+void test_rtl_support__initialize(void) {
+}
+void test_rtl_support__cleanup(void) {
+}
 
 ///////////////////////////////////////////////////////////
 // Tests

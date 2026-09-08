@@ -34,7 +34,9 @@ extern void gatt_service_changed_server_init(void);
 #include "stubs_rand_ptr.h"
 #include "stubs_regular_timer.h"
 
-uint16_t gaps_get_starting_att_handle(void) { return 4; }
+uint16_t gaps_get_starting_att_handle(void) {
+  return 4;
+}
 
 BLEService gatt_client_att_handle_get_service(GAPLEConnection *connection, uint16_t att_handle,
                                               const GATTServiceNode **service_node_out) {
@@ -50,9 +52,12 @@ uint8_t gatt_client_copy_service_refs_by_discovery_generation(const BTDeviceInte
 
 void gatt_client_service_get_all_characteristics_and_descriptors(
     GAPLEConnection *connection, GATTService *service, BLECharacteristic *characteristic_hdls_out,
-    BLEDescriptor *descriptor_hdls_out) {}
+    BLEDescriptor *descriptor_hdls_out) {
+}
 
-void launcher_task_add_callback(void (*callback)(void *data), void *data) { callback(data); }
+void launcher_task_add_callback(void (*callback)(void *data), void *data) {
+  callback(data);
+}
 
 // Helpers
 ///////////////////////////////////////////////////////////

@@ -202,7 +202,9 @@ WorkoutDialog *workout_dialog_create(const char *dialog_name) {
   return workout_dialog;
 }
 
-Dialog *workout_dialog_get_dialog(WorkoutDialog *workout_dialog) { return &workout_dialog->dialog; }
+Dialog *workout_dialog_get_dialog(WorkoutDialog *workout_dialog) {
+  return &workout_dialog->dialog;
+}
 
 ActionBarLayer *workout_dialog_get_action_bar(WorkoutDialog *workout_dialog) {
   return &workout_dialog->action_bar;
@@ -233,7 +235,9 @@ void app_workout_dialog_push(WorkoutDialog *workout_dialog) {
   app_dialog_push(&workout_dialog->dialog);
 }
 
-void workout_dialog_pop(WorkoutDialog *workout_dialog) { dialog_pop(&workout_dialog->dialog); }
+void workout_dialog_pop(WorkoutDialog *workout_dialog) {
+  dialog_pop(&workout_dialog->dialog);
+}
 
 void workout_dialog_set_text(WorkoutDialog *workout_dialog, const char *text) {
   dialog_set_text(&workout_dialog->dialog, text);

@@ -12,7 +12,9 @@
 
 #define HORIZ_ADVANCE_PX (2)
 
-bool text_resources_setup_font(FontCache *font_cache, FontInfo *fontinfo) { return true; }
+bool text_resources_setup_font(FontCache *font_cache, FontInfo *fontinfo) {
+  return true;
+}
 
 int8_t text_resources_get_glyph_horiz_advance(FontCache *font_cache, Codepoint codepoint,
                                               FontInfo *fontinfo) {

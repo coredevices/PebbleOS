@@ -172,9 +172,12 @@ status_t vibe_calibrate(void) {
   return bad ? E_ERROR : S_SUCCESS;
 }
 
-uint8_t vibe_get_calibration(void) { return 0xFF; }
+uint8_t vibe_get_calibration(void) {
+  return 0xFF;
+}
 
-void vibe_apply_calibration(uint8_t cali) {}
+void vibe_apply_calibration(uint8_t cali) {
+}
 
 void command_vibe_ctl(const char *arg) {
   if (!strcmp(arg, "cal")) {

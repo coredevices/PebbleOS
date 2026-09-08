@@ -58,7 +58,8 @@ time_t mktime(struct tm *tb) {
   /*
    * First, make sure tm_year is reasonably close to being in range.
    */
-  if (((tmptm1 = tb->tm_year) < _BASE_YEAR - 1) || (tmptm1 > _MAX_YEAR + 1)) goto err_mktime;
+  if (((tmptm1 = tb->tm_year) < _BASE_YEAR - 1) || (tmptm1 > _MAX_YEAR + 1))
+    goto err_mktime;
 
   /*
    * Adjust month value so it is in the range 0 - 11.  This is because
@@ -79,7 +80,8 @@ time_t mktime(struct tm *tb) {
     /*
      * Make sure year count is still in range.
      */
-    if ((tmptm1 < _BASE_YEAR - 1) || (tmptm1 > _MAX_YEAR + 1)) goto err_mktime;
+    if ((tmptm1 < _BASE_YEAR - 1) || (tmptm1 > _MAX_YEAR + 1))
+      goto err_mktime;
   }
 
   /***** HERE: tmptm1 holds number of elapsed years *****/
@@ -89,7 +91,8 @@ time_t mktime(struct tm *tb) {
    * month. Check for leap year and adjust if necessary.
    */
   tmptm2 = _days[tb->tm_mon];
-  if (!(tmptm1 & 3) && (tb->tm_mon > 1)) tmptm2++;
+  if (!(tmptm1 & 3) && (tb->tm_mon > 1))
+    tmptm2++;
 
   /*
    * Calculate elapsed days since base date (midnight, 1/1/70, UTC)
@@ -110,7 +113,8 @@ time_t mktime(struct tm *tb) {
    * elapsed days to current date. overflow is now possible.
    */
   tmptm1 = tmptm3 + (tmptm2 = (int32_t)(tb->tm_mday));
-  if (ChkAdd(tmptm1, tmptm3, tmptm2)) goto err_mktime;
+  if (ChkAdd(tmptm1, tmptm3, tmptm2))
+    goto err_mktime;
 
   /***** HERE: tmptm1 holds number of elapsed days *****/
 
@@ -118,10 +122,12 @@ time_t mktime(struct tm *tb) {
    * Calculate elapsed hours since base date
    */
   tmptm2 = tmptm1 * 24L;
-  if (ChkMul(tmptm2, tmptm1, 24L)) goto err_mktime;
+  if (ChkMul(tmptm2, tmptm1, 24L))
+    goto err_mktime;
 
   tmptm1 = tmptm2 + (tmptm3 = (int32_t)tb->tm_hour);
-  if (ChkAdd(tmptm1, tmptm2, tmptm3)) goto err_mktime;
+  if (ChkAdd(tmptm1, tmptm2, tmptm3))
+    goto err_mktime;
 
   /***** HERE: tmptm1 holds number of elapsed hours *****/
 
@@ -130,10 +136,12 @@ time_t mktime(struct tm *tb) {
    */
 
   tmptm2 = tmptm1 * 60L;
-  if (ChkMul(tmptm2, tmptm1, 60L)) goto err_mktime;
+  if (ChkMul(tmptm2, tmptm1, 60L))
+    goto err_mktime;
 
   tmptm1 = tmptm2 + (tmptm3 = (int32_t)tb->tm_min);
-  if (ChkAdd(tmptm1, tmptm2, tmptm3)) goto err_mktime;
+  if (ChkAdd(tmptm1, tmptm2, tmptm3))
+    goto err_mktime;
 
   /***** HERE: tmptm1 holds number of elapsed minutes *****/
 
@@ -142,10 +150,12 @@ time_t mktime(struct tm *tb) {
    */
 
   tmptm2 = tmptm1 * 60L;
-  if (ChkMul(tmptm2, tmptm1, 60L)) goto err_mktime;
+  if (ChkMul(tmptm2, tmptm1, 60L))
+    goto err_mktime;
 
   tmptm1 = tmptm2 + (tmptm3 = (int32_t)tb->tm_sec);
-  if (ChkAdd(tmptm1, tmptm2, tmptm3)) goto err_mktime;
+  if (ChkAdd(tmptm1, tmptm2, tmptm3))
+    goto err_mktime;
 
   /***** HERE: tmptm1 holds number of elapsed seconds *****/
 
@@ -161,7 +171,8 @@ time_t mktime(struct tm *tb) {
    * If localtime returns NULL, return an error.
    */
   struct tm tm;
-  if ((tbtemp = gmtime_r((time_t *)&tmptm1, &tm)) == NULL) goto err_mktime;
+  if ((tbtemp = gmtime_r((time_t *)&tmptm1, &tm)) == NULL)
+    goto err_mktime;
 
   /***** HERE: tmptm1 holds number of elapsed seconds, adjusted *****/
   /*****       for local time if requested                      *****/

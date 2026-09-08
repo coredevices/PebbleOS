@@ -21,23 +21,34 @@
 #include "stubs_rand_ptr.h"
 #include "stubs_rtc.h"
 
-void ams_create(void) {}
+void ams_create(void) {
+}
 
-void ams_destroy(void) {}
+void ams_destroy(void) {
+}
 
-void ancs_create(void) {}
+void ancs_create(void) {
+}
 
-void ancs_destroy(void) {}
+void ancs_destroy(void) {
+}
 
-void app_launch_handle_disconnection(void) {}
+void app_launch_handle_disconnection(void) {
+}
 
-BTBondingID bt_persistent_storage_get_ble_ancs_bonding(void) { return 1; }
+BTBondingID bt_persistent_storage_get_ble_ancs_bonding(void) {
+  return 1;
+}
 
-bool bt_persistent_storage_is_ble_ancs_bonding(BTBondingID bonding) { return true; }
+bool bt_persistent_storage_is_ble_ancs_bonding(BTBondingID bonding) {
+  return true;
+}
 
-void gap_le_advert_unschedule_job_types(GAPLEAdvertisingJobTag *tag_types, size_t num_types) {}
+void gap_le_advert_unschedule_job_types(GAPLEAdvertisingJobTag *tag_types, size_t num_types) {
+}
 
-void gap_le_connect_cancel_all(GAPLEClient client) {}
+void gap_le_connect_cancel_all(GAPLEClient client) {
+}
 
 BTErrno gap_le_connect_cancel_by_bonding(BTBondingID bonding_id, GAPLEClient client) {
   return BTErrnoOK;
@@ -48,11 +59,15 @@ BTErrno gap_le_connect_connect_by_bonding(BTBondingID bonding_id, bool auto_reco
   return BTErrnoOK;
 }
 
-void gap_le_slave_reconnect_start(void) {}
+void gap_le_slave_reconnect_start(void) {
+}
 
-void gap_le_slave_reconnect_stop(void) {}
+void gap_le_slave_reconnect_stop(void) {
+}
 
-BTErrno gatt_client_discovery_discover_all(const BTDeviceInternal *device) { return BTErrnoOK; }
+BTErrno gatt_client_discovery_discover_all(const BTDeviceInternal *device) {
+  return BTErrnoOK;
+}
 
 uint16_t gatt_client_subscriptions_consume_notification(BLECharacteristic *characteristic_ref_out,
                                                         uint8_t *value_out,
@@ -66,22 +81,28 @@ bool gatt_client_subscriptions_get_notification_header(GAPLEClient client,
   return false;
 }
 
-void gatt_client_subscriptions_reschedule(GAPLEClient c) {}
+void gatt_client_subscriptions_reschedule(GAPLEClient c) {
+}
 
 void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
   // Use fake_system_task as mock:
   system_task_add_callback(callback, data);
 }
 
-void ppogatt_create(void) {}
+void ppogatt_create(void) {
+}
 
-void ppogatt_destroy(void) {}
+void ppogatt_destroy(void) {
+}
 
-void ppogatt_handle_buffer_empty(void) {}
+void ppogatt_handle_buffer_empty(void) {
+}
 
-void gatt_client_op_cleanup(GAPLEClient client) {}
+void gatt_client_op_cleanup(GAPLEClient client) {
+}
 
-void ppogatt_reset_disconnect_counter(void) {}
+void ppogatt_reset_disconnect_counter(void) {
+}
 
 // Fakes & Helpers
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -155,23 +176,28 @@ void test_client_handle_service_discovered(BLECharacteristic *characteristics) {
   ++s_services_discovered_count;
 }
 
-void test_client_invalidate_all_references(void) {}
+void test_client_invalidate_all_references(void) {
+}
 
 void test_client_handle_service_removed(BLECharacteristic *characteristics,
-                                        uint8_t num_characteristics) {}
+                                        uint8_t num_characteristics) {
+}
 
 static bool s_can_handle_characteristic;
 bool test_client_can_handle_characteristic(BLECharacteristic characteristic) {
   return s_can_handle_characteristic;
 }
 
-void test_client_handle_write_response(BLECharacteristic characteristic, BLEGATTError error) {}
+void test_client_handle_write_response(BLECharacteristic characteristic, BLEGATTError error) {
+}
 
 void test_client_handle_subscribe(BLECharacteristic characteristic,
-                                  BLESubscription subscription_type, BLEGATTError error) {}
+                                  BLESubscription subscription_type, BLEGATTError error) {
+}
 
 void test_client_handle_read_or_notification(BLECharacteristic characteristic, const uint8_t *value,
-                                             size_t value_length, BLEGATTError error) {}
+                                             size_t value_length, BLEGATTError error) {
+}
 
 // Tests
 ////////////////////////////////////////////////////////////////////////////////////////////////////

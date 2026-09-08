@@ -102,11 +102,13 @@ void print_bitmap(const GBitmap *bmp) {
       int num = -1;
       switch (y) {
         case 0:  // hundreds
-          if (x < 100) break;
+          if (x < 100)
+            break;
           num = (x / 100) % 10;
           break;
         case 1:  // tens
-          if (x < 10) break;
+          if (x < 10)
+            break;
           num = (x / 10) % 10;
           break;
         case 2:  // ones

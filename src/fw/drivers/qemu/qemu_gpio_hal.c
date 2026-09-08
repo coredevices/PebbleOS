@@ -32,7 +32,9 @@ void gpio_output_set(const OutputConfig *pin_config, bool asserted) {
   REG32(QEMU_GPIO_BASE + GPIO_OUTPUT) = output;
 }
 
-void gpio_input_init(const InputConfig *input_cfg) { (void)input_cfg; }
+void gpio_input_init(const InputConfig *input_cfg) {
+  (void)input_cfg;
+}
 
 void gpio_input_init_pull_up_down(const InputConfig *input_cfg, GPIOPuPd_TypeDef pupd) {
   (void)input_cfg;

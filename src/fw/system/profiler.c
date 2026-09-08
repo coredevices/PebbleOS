@@ -102,7 +102,9 @@ void profiler_start(void) {
   g_profiler.start = DWT->CYCCNT;
 }
 
-void profiler_stop(void) { g_profiler.end = DWT->CYCCNT; }
+void profiler_stop(void) {
+  g_profiler.end = DWT->CYCCNT;
+}
 
 uint32_t profiler_node_get_last_cycles(ProfilerNode *node) {
   uint32_t duration = 0;
@@ -140,7 +142,9 @@ uint32_t profiler_node_get_total_us(ProfilerNode *node) {
   return profiler_cycles_to_us(node->total);
 }
 
-uint32_t profiler_node_get_count(ProfilerNode *node) { return node->count; }
+uint32_t profiler_node_get_count(ProfilerNode *node) {
+  return node->count;
+}
 
 uint32_t profiler_get_total_duration(bool in_us) {
   uint32_t total;
@@ -238,4 +242,6 @@ void command_profiler_start(void) {
   PROFILER_START;
 }
 
-void command_profiler_stats(void) { PROFILER_PRINT_STATS; }
+void command_profiler_stats(void) {
+  PROFILER_PRINT_STATS;
+}

@@ -366,8 +366,12 @@ EXTERNALLY_VISIBLE void NAKED_FUNC USED prv_drop_privilege(void) {
   );
 }
 #else
-uint16_t syscall_app_stack_free_bytes(void) { return 0xFFFF; }
-uint16_t syscall_worker_stack_free_bytes(void) { return 0xFFFF; }
+uint16_t syscall_app_stack_free_bytes(void) {
+  return 0xFFFF;
+}
+uint16_t syscall_worker_stack_free_bytes(void) {
+  return 0xFFFF;
+}
 
 // Drop privileges and return to the address stored in thread local storage
 // Has to preserve r0 and r1 so the syscall's return value is passed through

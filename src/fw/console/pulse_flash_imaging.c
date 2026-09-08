@@ -90,7 +90,8 @@ void pulse_flash_imaging_handler(void *packet, size_t length) {
   prv_respond_malformed_command(command, length, "Empty command");
 }
 
-void pulse_flash_imaging_link_state_handler(PulseLinkState link_state) {}
+void pulse_flash_imaging_link_state_handler(PulseLinkState link_state) {
+}
 
 static bool s_erase_in_progress = false;
 static uint32_t s_erase_start_address;

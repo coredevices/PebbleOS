@@ -118,4 +118,6 @@ DEFINE_SYSCALL(void, animation_service_timer_schedule, uint32_t ms) {
 
 // ---------------------------------------------------------------------------
 // Used for unit tests only
-TimerID animation_service_test_get_timer_id(void) { return s_kernel_main_timer_id; }
+TimerID animation_service_test_get_timer_id(void) {
+  return s_kernel_main_timer_id;
+}

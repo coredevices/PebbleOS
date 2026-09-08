@@ -12,7 +12,9 @@
 
 static bool s_syscall_did_fail;
 
-void stubs_syscall_init(void) { s_syscall_did_fail = false; }
+void stubs_syscall_init(void) {
+  s_syscall_did_fail = false;
+}
 
 NORETURN syscall_failed(void) {
   s_syscall_did_fail = true;
@@ -24,7 +26,9 @@ NORETURN syscall_failed(void) {
 
 #define assert_syscall_failed() cl_assert_equal_b(true, s_syscall_did_fail);
 
-bool syscall_made_from_userspace(void) { return true; }
+bool syscall_made_from_userspace(void) {
+  return true;
+}
 
 void syscall_assert_userspace_buffer(const void *buf, size_t num_bytes) {
   if (!buf) {
@@ -34,8 +38,11 @@ void syscall_assert_userspace_buffer(const void *buf, size_t num_bytes) {
   return;
 }
 
-void syscall_init_context() {}
+void syscall_init_context() {
+}
 
-void syscall_redirect_syscall_exit(PebbleTask task, void (*func)(void)) {}
+void syscall_redirect_syscall_exit(PebbleTask task, void (*func)(void)) {
+}
 
-void syscall_reset(PebbleTask task) {}
+void syscall_reset(PebbleTask task) {
+}

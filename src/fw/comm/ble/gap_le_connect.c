@@ -755,7 +755,9 @@ static bool prv_has_intents_for_disconnected_devices(void) {
   return list_find(&s_intents->node, prv_intent_filter_disconnected, NULL);
 }
 
-static uint32_t prv_intents_count(void) { return list_count(&s_intents->node); }
+static uint32_t prv_intents_count(void) {
+  return list_count(&s_intents->node);
+}
 
 static bool prv_is_intent_used(const GAPLEConnectionIntent *intent) {
   return (intent->client[GAPLEClientKernel].is_used | intent->client[GAPLEClientApp].is_used);

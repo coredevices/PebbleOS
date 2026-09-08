@@ -36,9 +36,13 @@ typedef struct EventedTimer {
 
 // Fakes
 ///////////////////////////////////////////////////////////
-PebbleTask pebble_task_get_current(void) { return PebbleTask_App; }
+PebbleTask pebble_task_get_current(void) {
+  return PebbleTask_App;
+}
 
-const char *pebble_task_get_name(PebbleTask task) { return "App <Stub>"; }
+const char *pebble_task_get_name(PebbleTask task) {
+  return "App <Stub>";
+}
 
 static PebbleEvent s_last_event;
 
@@ -62,7 +66,9 @@ void test_evented_timer__initialize(void) {
   s_last_event = (PebbleEvent){0};
 }
 
-void test_evented_timer__cleanup(void) { evented_timer_reset(); }
+void test_evented_timer__cleanup(void) {
+  evented_timer_reset();
+}
 
 void test_evented_timer__simple(void) {
   EventedTimerID e_timer = evented_timer_register(100, false, stub_evented_timer_callback, 0);

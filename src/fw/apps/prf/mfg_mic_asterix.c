@@ -186,7 +186,9 @@ static void prv_codec_setup(void) {
   da7212_register_write(DA7212_LINE_CTRL, 0x80);
 }
 
-static void prv_codec_standby(void) { da7212_register_write(DA7212_SYSTEM_ACTIVE, 0x00); }
+static void prv_codec_standby(void) {
+  da7212_register_write(DA7212_SYSTEM_ACTIVE, 0x00);
+}
 
 static void prv_data_handler(nrfx_i2s_buffers_t const *p_released, uint32_t status) {
 #if !PLAY_SINEWAVE

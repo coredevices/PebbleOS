@@ -24,7 +24,9 @@ extern void prv_set_data(KickstartData *data, int32_t current_steps, int32_t typ
 #include "fixtures/load_test_resources.h"
 
 static bool s_clock_is_24h_style = false;
-bool clock_is_24h_style(void) { return s_clock_is_24h_style; }
+bool clock_is_24h_style(void) {
+  return s_clock_is_24h_style;
+}
 
 // Stubs
 /////////////////////
@@ -58,9 +60,11 @@ bool clock_is_24h_style(void) { return s_clock_is_24h_style; }
 #include "stubs_window_manager.h"
 #include "stubs_window_stack.h"
 
-void tick_timer_service_subscribe(TimeUnits tick_units, TickHandler handler) {}
+void tick_timer_service_subscribe(TimeUnits tick_units, TickHandler handler) {
+}
 
-void tick_timer_service_unsubscribe(void) {}
+void tick_timer_service_unsubscribe(void) {
+}
 
 // Setup and Teardown
 ////////////////////////////////////
@@ -70,7 +74,9 @@ static FrameBuffer s_fb;
 
 static KickstartData s_data;
 
-GContext *graphics_context_get_current_context(void) { return &s_ctx; }
+GContext *graphics_context_get_current_context(void) {
+  return &s_ctx;
+}
 
 void test_kickstart__initialize(void) {
   // Setup graphics context
@@ -101,7 +107,9 @@ void test_kickstart__initialize(void) {
                                              });
 }
 
-void test_kickstart__cleanup(void) { window_deinit(&s_data.window); }
+void test_kickstart__cleanup(void) {
+  window_deinit(&s_data.window);
+}
 
 // Tests
 //////////////////////

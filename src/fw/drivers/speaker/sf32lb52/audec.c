@@ -94,7 +94,8 @@ static int prv_bf0_pll_calibration() {
       hwp_audcodec->PLL_CFG0 &= ~AUDCODEC_PLL_CFG0_FC_VCO;
       hwp_audcodec->PLL_CFG0 |= (fc_vco << AUDCODEC_PLL_CFG0_FC_VCO_Pos);
       hwp_audcodec->PLL_CAL_CFG |= AUDCODEC_PLL_CAL_CFG_EN;
-      while (!(hwp_audcodec->PLL_CAL_CFG & AUDCODEC_PLL_CAL_CFG_DONE_Msk));
+      while (!(hwp_audcodec->PLL_CAL_CFG & AUDCODEC_PLL_CAL_CFG_DONE_Msk))
+        ;
       pll_cnt = (hwp_audcodec->PLL_CAL_RESULT >> AUDCODEC_PLL_CAL_RESULT_PLL_CNT_Pos);
       hwp_audcodec->PLL_CAL_CFG &= ~AUDCODEC_PLL_CAL_CFG_EN;
       if (pll_cnt < target_cnt) {
@@ -122,7 +123,8 @@ static int prv_bf0_pll_calibration() {
     hwp_audcodec->PLL_CFG0 |= (fc_vco_min << AUDCODEC_PLL_CFG0_FC_VCO_Pos);
     hwp_audcodec->PLL_CAL_CFG |= AUDCODEC_PLL_CAL_CFG_EN;
 
-    while (!(hwp_audcodec->PLL_CAL_CFG & AUDCODEC_PLL_CAL_CFG_DONE_Msk));
+    while (!(hwp_audcodec->PLL_CAL_CFG & AUDCODEC_PLL_CAL_CFG_DONE_Msk))
+      ;
     pll_cnt = (hwp_audcodec->PLL_CAL_RESULT >> AUDCODEC_PLL_CAL_RESULT_PLL_CNT_Pos);
     hwp_audcodec->PLL_CAL_CFG &= ~AUDCODEC_PLL_CAL_CFG_EN;
     if (pll_cnt < target_cnt) {
@@ -134,7 +136,8 @@ static int prv_bf0_pll_calibration() {
     hwp_audcodec->PLL_CFG0 &= ~AUDCODEC_PLL_CFG0_FC_VCO;
     hwp_audcodec->PLL_CFG0 |= (fc_vco_max << AUDCODEC_PLL_CFG0_FC_VCO_Pos);
     hwp_audcodec->PLL_CAL_CFG |= AUDCODEC_PLL_CAL_CFG_EN;
-    while (!(hwp_audcodec->PLL_CAL_CFG & AUDCODEC_PLL_CAL_CFG_DONE_Msk));
+    while (!(hwp_audcodec->PLL_CAL_CFG & AUDCODEC_PLL_CAL_CFG_DONE_Msk))
+      ;
     pll_cnt = (hwp_audcodec->PLL_CAL_RESULT >> AUDCODEC_PLL_CAL_RESULT_PLL_CNT_Pos);
     hwp_audcodec->PLL_CAL_CFG &= ~AUDCODEC_PLL_CAL_CFG_EN;
     if (pll_cnt < target_cnt) {
@@ -375,8 +378,10 @@ uint32_t audec_write(AudioDevice *audio_device, void *writeBuf, uint32_t size) {
 }
 
 void audec_set_vol(AudioDevice *audio_device, int volume) {
-  if (volume > MAX_VOLUME) volume = MAX_VOLUME;
-  if (volume < MIN_VOLUME) volume = MIN_VOLUME;
+  if (volume > MAX_VOLUME)
+    volume = MAX_VOLUME;
+  if (volume < MIN_VOLUME)
+    volume = MIN_VOLUME;
 
   audio_device->state->volume = (uint8_t)volume;
   prv_apply_volume(audio_device);
@@ -416,7 +421,8 @@ static void prv_audio_trans_bg(void *data) {
 }
 
 static void prv_dma_request_processing(AudioDeviceState *state) {
-  if (!state->circ_buffer_storage) return;
+  if (!state->circ_buffer_storage)
+    return;
 
   uint32_t available_data = circular_buffer_get_read_space_remaining(&state->circ_buffer);
   uint32_t trans_size = CFG_AUDIO_PLAYBACK_PIPE_SIZE;

@@ -46,4 +46,6 @@ void worker_event_loop(void) {
 }
 
 // -------------------------------------------------------------------------------------------------
-void worker_launch_app(void) { sys_launch_app_for_worker(); }
+void worker_launch_app(void) {
+  sys_launch_app_for_worker();
+}

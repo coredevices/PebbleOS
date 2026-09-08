@@ -147,7 +147,9 @@ static void prv_modal_touch_nav_emit_button(void *ctx, ButtonId button) {
   click_recognizer_handle_button_up(&cm->recognizers[button]);
 }
 
-static void prv_modal_touch_nav_idle_refresh(void *ctx) { app_idle_timeout_refresh(); }
+static void prv_modal_touch_nav_idle_refresh(void *ctx) {
+  app_idle_timeout_refresh();
+}
 
 static const TouchNavOps s_modal_touch_nav_ops = {
     .is_animating = prv_modal_touch_nav_is_animating,
@@ -163,7 +165,9 @@ RecognizerManager *modal_manager_get_recognizer_manager(void) {
   return &s_modal_recognizer_manager;
 }
 
-TouchNavState *modal_manager_get_touch_nav_state(void) { return &s_modal_touch_nav_state; }
+TouchNavState *modal_manager_get_touch_nav_state(void) {
+  return &s_modal_touch_nav_state;
+}
 
 // The focused-modal predicate: enabled and at least one focusable modal on top. This is the same
 // predicate the button path uses in the kernel event loop to decide whether to route input to the
@@ -230,9 +234,13 @@ void modal_manager_set_min_priority(ModalPriority priority) {
   }
 }
 
-bool modal_manager_get_enabled(void) { return s_modal_min_priority < ModalPriorityMax; }
+bool modal_manager_get_enabled(void) {
+  return s_modal_min_priority < ModalPriorityMax;
+}
 
-ClickManager *modal_manager_get_click_manager(void) { return &s_modal_window_click_manager; }
+ClickManager *modal_manager_get_click_manager(void) {
+  return &s_modal_window_click_manager;
+}
 
 static WindowStack *prv_find_window_stack(ModalContextFilterCallback callback, void *data) {
   for (ModalPriority idx = NumModalPriorities - 1; idx >= ModalPriorityMin; idx--) {

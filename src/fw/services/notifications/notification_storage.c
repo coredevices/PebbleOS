@@ -49,9 +49,13 @@ void notification_storage_init(void) {
   s_write_offset = 0;
 }
 
-void notification_storage_lock(void) { pbl_mutex_lock(&s_notif_storage_mutex, PBL_FOREVER); }
+void notification_storage_lock(void) {
+  pbl_mutex_lock(&s_notif_storage_mutex, PBL_FOREVER);
+}
 
-void notification_storage_unlock(void) { pbl_mutex_unlock(&s_notif_storage_mutex); }
+void notification_storage_unlock(void) {
+  pbl_mutex_unlock(&s_notif_storage_mutex);
+}
 
 static int prv_file_open(uint8_t op_flags) {
   notification_storage_lock();
@@ -729,5 +733,7 @@ void notification_storage_reset_and_init(void) {
 
 // Added for use by unit tests. Do not call from firmware
 #if UNITTEST
-void notification_storage_reset(void) { notification_storage_init(); }
+void notification_storage_reset(void) {
+  notification_storage_init();
+}
 #endif

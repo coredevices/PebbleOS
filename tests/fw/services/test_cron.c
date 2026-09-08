@@ -16,7 +16,9 @@
 
 static uint32_t s_timer_timeout_ms;
 
-TimerID new_timer_create(void) { return 1; }
+TimerID new_timer_create(void) {
+  return 1;
+}
 
 bool new_timer_start(TimerID timer, uint32_t timeout_ms, NewTimerCallback cb, void *cb_data,
                      uint32_t flags) {
@@ -24,7 +26,9 @@ bool new_timer_start(TimerID timer, uint32_t timeout_ms, NewTimerCallback cb, vo
   return true;
 }
 
-bool new_timer_stop(TimerID timer) { return true; }
+bool new_timer_stop(TimerID timer) {
+  return true;
+}
 
 // Tests
 ///////////////////////////////////////////////////////////
@@ -52,7 +56,9 @@ void test_cron__initialize(void) {
   cron_service_init();
 }
 
-void test_cron__cleanup(void) { cron_service_deinit(); }
+void test_cron__cleanup(void) {
+  cron_service_deinit();
+}
 
 static TimezoneInfo g_timezone;
 static void prv_set_rtc(time_t t, const TimezoneInfo *tz_info) {

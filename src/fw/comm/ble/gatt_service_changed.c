@@ -86,7 +86,9 @@ bool gatt_service_changed_client_handle_indication(struct GAPLEConnection *conne
 static uint32_t s_service_changed_indications_left;
 
 // For unit testing
-void gatt_service_changed_server_init(void) { s_service_changed_indications_left = 0; }
+void gatt_service_changed_server_init(void) {
+  s_service_changed_indications_left = 0;
+}
 
 void gatt_service_changed_server_handle_fw_update(void) {
   // Once set, just keep it set until the next "normal" reboot.

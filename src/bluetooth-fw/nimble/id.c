@@ -23,7 +23,8 @@ void bt_driver_id_copy_local_identity_address(BTDeviceAddress *addr_out) {
   PBL_ASSERTN(rc == 0);
 }
 
-void bt_driver_set_local_address(bool allow_cycling, const BTDeviceAddress *pinned_address) {}
+void bt_driver_set_local_address(bool allow_cycling, const BTDeviceAddress *pinned_address) {
+}
 
 void bt_driver_id_copy_chip_info_string(char *dest, size_t dest_size) {
   strncpy(dest, "NimBLE", dest_size);

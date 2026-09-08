@@ -45,7 +45,9 @@ char *otp_get_slot(const uint8_t index) {
   return s_slot[index];
 }
 
-uint8_t *otp_get_lock(const uint8_t index) { return NULL; }
+uint8_t *otp_get_lock(const uint8_t index) {
+  return NULL;
+}
 
 bool otp_is_locked(const uint8_t index) {
   const FlashSecurityRegisters *info;

@@ -29,19 +29,32 @@ static bool s_error_window_shown;
 static bool s_warning_window_shown;
 static PebbleEvent s_last_event_put;
 
-bool battery_is_usb_connected_raw(void) { return false; }
+bool battery_is_usb_connected_raw(void) {
+  return false;
+}
 
-void low_power_standby(void) { s_entered_standby = true; }
+void low_power_standby(void) {
+  s_entered_standby = true;
+}
 
-void low_power_exit(void) { s_in_low_power = false; }
+void low_power_exit(void) {
+  s_in_low_power = false;
+}
 
-void low_power_enter(void) { s_in_low_power = true; }
+void low_power_enter(void) {
+  s_in_low_power = true;
+}
 
-bool low_power_is_active(void) { return s_in_low_power; }
+bool low_power_is_active(void) {
+  return s_in_low_power;
+}
 
-bool firmware_update_is_in_progress(void) { return false; }
+bool firmware_update_is_in_progress(void) {
+  return false;
+}
 
-void battery_force_charge_enable(bool is_charging) {}
+void battery_force_charge_enable(bool is_charging) {
+}
 
 static void periodic_timer_trigger(int count) {
   TimerID timer_id = battery_state_get_periodic_timer_id();
@@ -77,7 +90,9 @@ static uint32_t standby_timer_get_timeout() {
   return stub_new_timer_timeout(timer_id);
 }
 
-void enter_standby(RebootReasonCode reason) { s_entered_standby = true; }
+void enter_standby(RebootReasonCode reason) {
+  s_entered_standby = true;
+}
 
 void event_put(PebbleEvent *event) {
   s_last_event_put = *event;
@@ -109,7 +124,8 @@ void test_battery_monitor__initialize(void) {
   battery_curve_reset_for_tests();
 }
 
-void test_battery_monitor__cleanup(void) {}
+void test_battery_monitor__cleanup(void) {
+}
 
 // Tests
 ////////////////////////////////////

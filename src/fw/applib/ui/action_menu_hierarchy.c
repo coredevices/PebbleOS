@@ -29,7 +29,8 @@ ActionMenuLevel *action_menu_level_create(uint16_t max_items) {
   // TODO add applib-malloc padding
   ActionMenuLevel *level = applib_malloc(applib_type_size(ActionMenuLevel) +
                                          max_items * applib_type_size(ActionMenuItem));
-  if (!level) return NULL;
+  if (!level)
+    return NULL;
   *level = (ActionMenuLevel){
       .max_items = max_items,
       .display_mode = ActionMenuLevelDisplayModeWide,
@@ -40,7 +41,8 @@ ActionMenuLevel *action_menu_level_create(uint16_t max_items) {
 
 void action_menu_level_set_display_mode(ActionMenuLevel *level,
                                         ActionMenuLevelDisplayMode display_mode) {
-  if (!level) return;
+  if (!level)
+    return;
   level->display_mode = display_mode;
 }
 

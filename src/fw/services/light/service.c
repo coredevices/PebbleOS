@@ -218,7 +218,9 @@ static uint32_t prv_get_als_level(void) {
   return s_als_cached_level;
 }
 
-uint32_t light_get_ambient_lux(void) { return prv_get_als_level(); }
+uint32_t light_get_ambient_lux(void) {
+  return prv_get_als_level();
+}
 
 static bool prv_als_is_light(void) {
   return prv_get_als_level() > ambient_light_get_dark_threshold();
@@ -733,27 +735,43 @@ void light_allow(bool allowed) {
   s_backlight_allowed = allowed;
 }
 
-DEFINE_SYSCALL(bool, sys_light_is_on, void) { return light_is_on(); }
+DEFINE_SYSCALL(bool, sys_light_is_on, void) {
+  return light_is_on();
+}
 
-DEFINE_SYSCALL(void, sys_light_enable_interaction, void) { light_enable_interaction(); }
+DEFINE_SYSCALL(void, sys_light_enable_interaction, void) {
+  light_enable_interaction();
+}
 
-DEFINE_SYSCALL(void, sys_light_enable, bool enable) { light_enable(enable); }
+DEFINE_SYSCALL(void, sys_light_enable, bool enable) {
+  light_enable(enable);
+}
 
 DEFINE_SYSCALL(void, sys_light_enable_respect_settings, bool enable) {
   light_enable_respect_settings(enable);
 }
 
-DEFINE_SYSCALL(void, sys_light_reset_to_timed_mode, void) { prv_light_reset_to_timed_mode(); }
+DEFINE_SYSCALL(void, sys_light_reset_to_timed_mode, void) {
+  prv_light_reset_to_timed_mode();
+}
 
-DEFINE_SYSCALL(void, sys_light_set_color_rgb888, uint32_t rgb) { light_set_color_rgb888(rgb); }
+DEFINE_SYSCALL(void, sys_light_set_color_rgb888, uint32_t rgb) {
+  light_set_color_rgb888(rgb);
+}
 
-DEFINE_SYSCALL(void, sys_light_set_system_color, void) { light_set_system_color(); }
+DEFINE_SYSCALL(void, sys_light_set_system_color, void) {
+  light_set_system_color();
+}
 
 extern BacklightBehaviour backlight_get_behaviour(void);
 
-uint8_t light_get_current_brightness_percent(void) { return s_current_brightness; }
+uint8_t light_get_current_brightness_percent(void) {
+  return s_current_brightness;
+}
 
-bool light_is_on(void) { return s_light_state != LIGHT_STATE_OFF; }
+bool light_is_on(void) {
+  return s_light_state != LIGHT_STATE_OFF;
+}
 
 void pbl_analytics_external_collect_backlight_stats(void) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);

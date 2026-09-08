@@ -93,9 +93,13 @@ bool fake_mutex_all_unlocked(void) {
   return true;
 }
 
-void fake_mutex_set_should_assert(bool should_assert) { s_asserts_disabled = !should_assert; }
+void fake_mutex_set_should_assert(bool should_assert) {
+  s_asserts_disabled = !should_assert;
+}
 
-bool fake_mutex_get_assert_triggered(void) { return s_assert_triggered; }
+bool fake_mutex_get_assert_triggered(void) {
+  return s_assert_triggered;
+}
 
 //
 // Mutex API

@@ -117,7 +117,9 @@ uint32_t WEAK animation_get_duration(Animation *animation, bool include_delay,
   return ((AnimationPrivate *)animation)->duration_ms;
 }
 
-bool WEAK animation_set_curve(Animation *animation, AnimationCurve curve) { return true; }
+bool WEAK animation_set_curve(Animation *animation, AnimationCurve curve) {
+  return true;
+}
 
 bool WEAK animation_set_custom_curve(Animation *animation, AnimationCurveFunction curve_function) {
   return true;
@@ -160,7 +162,8 @@ bool WEAK animation_unschedule(Animation *animation) {
   return true;
 }
 
-void WEAK animation_unschedule_all(void) {}
+void WEAK animation_unschedule_all(void) {
+}
 
 bool WEAK animation_set_implementation(Animation *animation,
                                        const AnimationImplementation *implementation) {
@@ -190,7 +193,9 @@ Animation *WEAK animation_spawn_create_from_array(Animation **animation_array, u
   return animation_create();
 }
 
-bool WEAK animation_set_auto_destroy(Animation *animation, bool auto_destroy) { return false; }
+bool WEAK animation_set_auto_destroy(Animation *animation, bool auto_destroy) {
+  return false;
+}
 
 PropertyAnimation *WEAK property_animation_create_layer_frame(struct Layer *layer,
                                                               GRect *from_frame, GRect *to_frame) {
@@ -247,13 +252,17 @@ bool WEAK property_animation_to(PropertyAnimation *property_animation, void *to,
 }
 
 void WEAK property_animation_update_gpoint(PropertyAnimation *property_animation,
-                                           const uint32_t distance_normalized) {}
+                                           const uint32_t distance_normalized) {
+}
 
 Animation *WEAK property_animation_get_animation(PropertyAnimation *property_animation) {
   return (Animation *)property_animation;
 }
 
-InterpolateInt64Function WEAK animation_private_current_interpolate_override(void) { return NULL; }
+InterpolateInt64Function WEAK animation_private_current_interpolate_override(void) {
+  return NULL;
+}
 
 void WEAK property_animation_update_int16(PropertyAnimation *property_animation,
-                                          const uint32_t distance_normalized) {}
+                                          const uint32_t distance_normalized) {
+}

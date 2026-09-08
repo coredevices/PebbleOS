@@ -64,7 +64,9 @@ static TimelineAppData *s_app_data;
 static const uint32_t TIMELINE_SLIDE_ANIMATION_MS = 150;
 static const uint32_t PEEK_SHOW_TIME_MS = 660;
 
-static const TimelineAppStyle *prv_get_style(void) { return s_styles[PreferredContentSizeDefault]; }
+static const TimelineAppStyle *prv_get_style(void) {
+  return s_styles[PreferredContentSizeDefault];
+}
 
 /////////////////////////////////////
 // State Machine

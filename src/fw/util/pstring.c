@@ -30,7 +30,9 @@ PascalString16 *pstring_create_pstring16_from_string(char string[]) {
   return pstring;
 }
 
-void pstring_destroy_pstring16(PascalString16 *pstring) { task_free(pstring); }
+void pstring_destroy_pstring16(PascalString16 *pstring) {
+  task_free(pstring);
+}
 
 void pstring_pstring16_to_string(const PascalString16 *pstring, char *string_out) {
   strncpy(string_out, pstring->str_value, pstring->str_length);

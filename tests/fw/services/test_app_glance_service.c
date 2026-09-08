@@ -51,7 +51,9 @@ void test_app_glance_service__initialize(void) {
 
 void app_glance_db_deinit(void);
 
-void test_app_glance_service__cleanup(void) { app_glance_db_deinit(); }
+void test_app_glance_service__cleanup(void) {
+  app_glance_db_deinit();
+}
 
 static void prv_check_expected_slice_data(const AppGlanceSliceInternal *expected_slice_data,
                                           time_t time) {

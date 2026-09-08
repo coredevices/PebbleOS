@@ -64,7 +64,9 @@ static void prv_enable_button_timer(void) {
   __enable_irq();
 }
 
-static void prv_button_interrupt_handler(bool *should_context_switch) { prv_enable_button_timer(); }
+static void prv_button_interrupt_handler(bool *should_context_switch) {
+  prv_enable_button_timer();
+}
 
 static void clear_stuck_button(ButtonId button_id) {
   __disable_irq();

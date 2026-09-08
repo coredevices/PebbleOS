@@ -36,7 +36,9 @@
 #include "stubs_sleep.h"
 #include "stubs_task_watchdog.h"
 
-const char *timeline_get_private_data_source(Uuid *parent_id) { return NULL; }
+const char *timeline_get_private_data_source(Uuid *parent_id) {
+  return NULL;
+}
 
 static TimelineItem item1 = {.header = {
                                  .id = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31,
@@ -99,7 +101,9 @@ static TimelineItem reminder_app_item = {.header = {
 // Setup
 ////////////////////////////////////////////////////////////////
 
-void test_pin_db__initialize(void) { pin_db_init(); }
+void test_pin_db__initialize(void) {
+  pin_db_init();
+}
 
 void test_pin_db__cleanup(void) {
   pin_db_deinit();

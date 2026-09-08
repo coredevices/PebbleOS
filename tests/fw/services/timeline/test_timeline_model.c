@@ -55,35 +55,53 @@ static TimezoneInfo tz = {
 #include "stubs_task_watchdog.h"
 #include "stubs_window_stack.h"
 
-void ancs_notifications_enable_bulk_action_mode(bool enable) { return; }
+void ancs_notifications_enable_bulk_action_mode(bool enable) {
+  return;
+}
 
-bool ancs_notifications_is_bulk_action_mode_enabled(void) { return false; }
+bool ancs_notifications_is_bulk_action_mode_enabled(void) {
+  return false;
+}
 
-status_t reminder_db_delete_with_parent(const TimelineItemId *id) { return S_SUCCESS; }
+status_t reminder_db_delete_with_parent(const TimelineItemId *id) {
+  return S_SUCCESS;
+}
 
 void timeline_action_endpoint_invoke_action(const Uuid *id, uint8_t action_id,
-                                            AttributeList *attributes) {}
+                                            AttributeList *attributes) {
+}
 
-void launcher_task_add_callback(void (*callback)(void *data), void *data) {}
+void launcher_task_add_callback(void (*callback)(void *data), void *data) {
+}
 
-void timeline_pin_window_push_modal(TimelineItem *item) {}
+void timeline_pin_window_push_modal(TimelineItem *item) {
+}
 
-const PebbleProcessMd *timeline_get_app_info(void) { return NULL; }
+const PebbleProcessMd *timeline_get_app_info(void) {
+  return NULL;
+}
 
 PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char *name) {
   return NULL;
 }
 
-void ancs_perform_action(uint32_t notification_uid, uint8_t action_id) {}
+void ancs_perform_action(uint32_t notification_uid, uint8_t action_id) {
+}
 
 void notifications_handle_notification_action_result(
-    PebbleSysNotificationActionResult *action_result) {}
+    PebbleSysNotificationActionResult *action_result) {
+}
 
-void notification_storage_set_status(const Uuid *id, uint8_t status) {}
+void notification_storage_set_status(const Uuid *id, uint8_t status) {
+}
 
-void notifications_handle_notification_acted_upon(Uuid *notification_id) { return; }
+void notifications_handle_notification_acted_upon(Uuid *notification_id) {
+  return;
+}
 
-void notifications_handle_notification_removed(Uuid *notification_id) { return; }
+void notifications_handle_notification_removed(Uuid *notification_id) {
+  return;
+}
 
 // Data
 /////////////////////////
@@ -261,7 +279,8 @@ void test_timeline_model__initialize(void) {
   cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), 0);
 }
 
-void test_timeline_model__cleanup(void) {}
+void test_timeline_model__cleanup(void) {
+}
 
 // Tests
 ///////////////////////////

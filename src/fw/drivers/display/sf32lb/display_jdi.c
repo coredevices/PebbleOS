@@ -370,7 +370,9 @@ void display_set_enabled(bool enabled) {
   }
 }
 
-bool display_update_in_progress(void) { return s_updating; }
+bool display_update_in_progress(void) {
+  return s_updating;
+}
 
 void display_set_rotated(bool rotated) {
   DisplayJDIState *state = DISPLAY->state;
@@ -487,8 +489,11 @@ void display_update_boot_frame(uint8_t *framebuffer) {
   soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
 }
 
-void display_clear(void) {}
+void display_clear(void) {
+}
 
 #ifndef CONFIG_RELEASE
-void display_jdi_test_drop_next_complete(void) { s_test_drop_next_complete = true; }
+void display_jdi_test_drop_next_complete(void) {
+  s_test_drop_next_complete = true;
+}
 #endif

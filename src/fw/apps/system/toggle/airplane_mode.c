@@ -8,7 +8,9 @@
 #include "pbl/services/bluetooth/bluetooth_ctl.h"
 #include "pbl/services/i18n/i18n.h"
 
-static bool prv_get_state(void *context) { return bt_ctl_is_airplane_mode_on(); }
+static bool prv_get_state(void *context) {
+  return bt_ctl_is_airplane_mode_on();
+}
 
 static void prv_set_state(bool enabled, void *context) {
   bt_ctl_set_airplane_mode_async(!bt_ctl_is_airplane_mode_on());

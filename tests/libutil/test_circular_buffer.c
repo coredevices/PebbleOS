@@ -10,9 +10,11 @@
 #include "stubs_passert.h"
 #include "stubs_pbl_malloc.h"
 
-void test_circular_buffer__initialize(void) {}
+void test_circular_buffer__initialize(void) {
+}
 
-void test_circular_buffer__cleanup(void) {}
+void test_circular_buffer__cleanup(void) {
+}
 
 void test_circular_buffer__circular_buffer(void) {
   CircularBuffer buffer;
@@ -212,7 +214,9 @@ void test_circular_buffer__read_or_copy_doesnt_copy_when_already_contiguously_st
   cl_assert_equal_p(data_out, storage);
 }
 
-static void *prv_oom_malloc(size_t length) { return NULL; }
+static void *prv_oom_malloc(size_t length) {
+  return NULL;
+}
 
 void test_circular_buffer__read_or_copy_does_copy_when_not_contiguously_stored(void) {
   CircularBuffer buffer;

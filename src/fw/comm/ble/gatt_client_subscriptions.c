@@ -83,9 +83,13 @@ static void prv_remove_subscription(GAPLEConnection *connection,
 // -------------------------------------------------------------------------------------------------
 
 //! bt_lock() may only (optionally) be taken *before* prv_lock(), otherwise we'll deadlock.
-static void prv_lock(void) { pbl_mutex_lock(&s_gatt_client_subscriptions_mutex, PBL_FOREVER); }
+static void prv_lock(void) {
+  pbl_mutex_lock(&s_gatt_client_subscriptions_mutex, PBL_FOREVER);
+}
 
-static void prv_unlock(void) { pbl_mutex_unlock(&s_gatt_client_subscriptions_mutex); }
+static void prv_unlock(void) {
+  pbl_mutex_unlock(&s_gatt_client_subscriptions_mutex);
+}
 
 static void prv_send_notification_event(PebbleTaskBitset task_mask) {
   PebbleEvent e = {
@@ -772,7 +776,8 @@ void gatt_client_subscription_cleanup_by_att_handle_range(struct GAPLEConnection
   bt_unlock();
 }
 
-void gatt_client_subscription_boot(void) {}
+void gatt_client_subscription_boot(void) {
+}
 
 #if UNITTEST
 //! Only for unit tests
@@ -787,4 +792,6 @@ struct pbl_sem *gatt_client_subscription_get_semaphore(void) {
 }
 
 //! Only for unit tests
-void gatt_client_subscription_cleanup(void) { pbl_sem_reset(&s_gatt_client_subscriptions_semphr); }
+void gatt_client_subscription_cleanup(void) {
+  pbl_sem_reset(&s_gatt_client_subscriptions_semphr);
+}

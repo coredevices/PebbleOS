@@ -64,7 +64,9 @@ void notifications_migrate_timezone(const int tz_diff) {
 void notification_storage_init(void);
 void vibe_intensity_init(void);
 
-void notifications_init(void) { notification_storage_init(); }
+void notifications_init(void) {
+  notification_storage_init();
+}
 
 void notifications_add_notification(TimelineItem *notification) {
   notification_storage_store(notification);

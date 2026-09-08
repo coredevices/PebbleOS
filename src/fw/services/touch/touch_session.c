@@ -57,4 +57,6 @@ bool touch_session_is_active(void) {
 #endif
 }
 
-void touch_session_reset(void) { s_armed_until = 0; }
+void touch_session_reset(void) {
+  s_armed_until = 0;
+}

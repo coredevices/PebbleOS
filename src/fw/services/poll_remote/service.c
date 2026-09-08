@@ -118,7 +118,9 @@ static void context_interval_check(PollRemoteContext *ctx) {
   }
 }
 
-static void start(PollRemoteContext *ctx) { ctx->counted_minutes = 0; }
+static void start(PollRemoteContext *ctx) {
+  ctx->counted_minutes = 0;
+}
 
 static void set_intervals(PollRemoteContext *ctx, const uint8_t min_interval_minutes,
                           const uint8_t max_interval_minutes) {

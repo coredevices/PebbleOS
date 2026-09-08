@@ -723,7 +723,9 @@ static void prv_stall_check_work_cb(void) {
   prv_lsm6dso_recover();
 }
 
-static void prv_int1_wdt_cb(void *data) { accel_offload_work(prv_stall_check_work_cb); }
+static void prv_int1_wdt_cb(void *data) {
+  accel_offload_work(prv_stall_check_work_cb);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accelerometer interface
@@ -854,9 +856,13 @@ uint32_t accel_set_sampling_interval(uint32_t interval_us) {
   return LSM6DSO->state->sampling_interval_us;
 }
 
-uint32_t accel_get_sampling_interval(void) { return LSM6DSO->state->sampling_interval_us; }
+uint32_t accel_get_sampling_interval(void) {
+  return LSM6DSO->state->sampling_interval_us;
+}
 
-uint32_t accel_get_max_num_samples(void) { return LSM6DSO_FIFO_THRESHOLD; }
+uint32_t accel_get_max_num_samples(void) {
+  return LSM6DSO_FIFO_THRESHOLD;
+}
 
 void accel_set_num_samples(uint32_t num_samples) {
   bool ret;
@@ -1039,7 +1045,9 @@ void accel_enable_shake_detection(bool on) {
   PBL_LOG_DBG("%s shake detection", on ? "Enabled" : "Disabled");
 }
 
-bool accel_get_shake_detection_enabled(void) { return LSM6DSO->state->shake_detection_enabled; }
+bool accel_get_shake_detection_enabled(void) {
+  return LSM6DSO->state->shake_detection_enabled;
+}
 
 void accel_set_shake_sensitivity_high(bool sensitivity_high) {
   bool ret;

@@ -27,7 +27,9 @@
 //! Pulse count currently latched by the chip; 0 = shut down.
 static uint8_t s_pulse_count;
 
-void backlight_init(void) { gpio_output_init(&AW9364E.gpio, GPIO_OType_PP); }
+void backlight_init(void) {
+  gpio_output_init(&AW9364E.gpio, GPIO_OType_PP);
+}
 
 //! Emit dimming pulses. A low period stretched past 500us puts the chip in
 //! undefined territory (past 2.5ms it shuts down), so the train runs with

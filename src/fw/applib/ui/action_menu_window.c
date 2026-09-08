@@ -42,7 +42,9 @@ static void prv_action_window_insert_below(ActionMenu *action_menu, Window *wind
   window_stack_insert_next(action_menu->window.parent_window_stack, window);
 }
 
-static void prv_remove_window(Window *window) { window_stack_remove(window, false /* animated */); }
+static void prv_remove_window(Window *window) {
+  window_stack_remove(window, false /* animated */);
+}
 
 static void prv_action_callback(const ActionMenuItem *item, void *context);
 static void prv_action_menu_layer_selection_changed(const ActionMenuItem *item, void *context);
@@ -264,10 +266,12 @@ static void prv_action_window_unload(Window *window) {
   applib_free(data);
 }
 
-static void prv_dummy_click_config(void *data) {}
+static void prv_dummy_click_config(void *data) {
+}
 
 ActionMenuLevel *action_menu_get_root_level(ActionMenu *action_menu) {
-  if (!action_menu) return NULL;
+  if (!action_menu)
+    return NULL;
   ActionMenuData *data = window_get_user_data(&action_menu->window);
   return (ActionMenuLevel *)data->config.root_level;
 }
@@ -300,7 +304,8 @@ void action_menu_close(ActionMenu *action_menu, bool animated) {
 }
 
 void action_menu_set_result_window(ActionMenu *action_menu, Window *result_window) {
-  if (!action_menu) return;
+  if (!action_menu)
+    return;
 
   // remove existing result window
   ActionMenuData *data = window_get_user_data(&action_menu->window);

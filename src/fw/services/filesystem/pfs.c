@@ -226,7 +226,9 @@ static ListNode *s_head_callback_node_list = NULL;
 // In the interest of being able to leverage sector erases / minimize seek time
 // for large files, deploying a variable length page size may be beneficial.
 // Therefore, isolating the page offset related calculations to one location.
-static uint32_t prv_page_to_flash_offset(uint16_t page) { return ((uint32_t)page * PFS_PAGE_SIZE); }
+static uint32_t prv_page_to_flash_offset(uint16_t page) {
+  return ((uint32_t)page * PFS_PAGE_SIZE);
+}
 
 static void prv_flash_read(void *buffer, uint32_t size, uint32_t offset) {
   if ((offset + size) <= s_pfs_size) {
@@ -278,7 +280,9 @@ static void prv_flash_erase_sector(uint16_t start_page) {
   }
 }
 
-static uint32_t free_bytes_in_page(uint16_t page) { return (PFS_PAGE_SIZE - AVAIL_BYTES_OFFSET); }
+static uint32_t free_bytes_in_page(uint16_t page) {
+  return (PFS_PAGE_SIZE - AVAIL_BYTES_OFFSET);
+}
 
 static bool page_type_bits_set(uint8_t page_flags, uint8_t type_mask) {
   type_mask = ~type_mask;
@@ -967,7 +971,12 @@ static int mark_fd_free(int fd) {
   return (S_SUCCESS);
 }
 
-typedef enum { FDBusy = 2, FDAlreadyLoaded = 1, FDAvail = 0, NoFDAvail = -1 } AvailFdStatus;
+typedef enum {
+  FDBusy = 2,
+  FDAlreadyLoaded = 1,
+  FDAvail = 0,
+  NoFDAvail = -1
+} AvailFdStatus;
 
 //! @param name the name of the file to look for
 //! @param[out] fdp populated with the fd that was found or is available
@@ -1230,7 +1239,9 @@ bool pfs_active_in_region(uint32_t start_address, uint32_t ending_address) {
 
 // migration utility
 // Returns true if valid PFS file found, false otherwise
-bool pfs_active(void) { return pfs_active_in_region(0, s_pfs_size); }
+bool pfs_active(void) {
+  return pfs_active_in_region(0, s_pfs_size);
+}
 
 // Scans through the filesystem to see if we rebooted while a file was in the
 // middle of being created and cleans up these partial files.
@@ -2276,7 +2287,9 @@ void pfs_command_crc(const char *filename) {
  * Routines to facilitate unit testing
  */
 #if UNITTEST
-uint16_t test_get_file_start_page(int fd) { return (PFS_FD(fd).file.start_page); }
+uint16_t test_get_file_start_page(int fd) {
+  return (PFS_FD(fd).file.start_page);
+}
 
 void test_force_garbage_collection(uint16_t start_page) {
   start_page = (start_page / PFS_PAGES_PER_ERASE_SECTOR) * PFS_PAGES_PER_ERASE_SECTOR;

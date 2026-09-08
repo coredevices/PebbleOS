@@ -97,7 +97,9 @@ static void prv_window_push(Window *window) {
   window_stack_push(prv_get_window_stack(), window, true /* animated */);
 }
 
-static void prv_window_pop(Window *window) { window_stack_remove(window, true); }
+static void prv_window_pop(Window *window) {
+  window_stack_remove(window, true);
+}
 
 static void prv_teardown(VoiceUiData *data) {
   // The state is only set to StateExiting in this function, so check that teardown has not already

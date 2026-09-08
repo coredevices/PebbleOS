@@ -24,9 +24,13 @@ void dbgserial_init(void) {
   dbgserial_restore_baud_rate();
 }
 
-void dbgserial_change_baud_rate(uint32_t new_baud) { uart_set_baud_rate(DBG_UART, new_baud); }
+void dbgserial_change_baud_rate(uint32_t new_baud) {
+  uart_set_baud_rate(DBG_UART, new_baud);
+}
 
-void dbgserial_restore_baud_rate(void) { dbgserial_change_baud_rate(DEFAULT_SERIAL_BAUD_RATE); }
+void dbgserial_restore_baud_rate(void) {
+  dbgserial_change_baud_rate(DEFAULT_SERIAL_BAUD_RATE);
+}
 
 void dbgserial_putstr(const char *str) {
   while (*str) {
@@ -42,9 +46,13 @@ void dbgserial_putchar(uint8_t c) {
   dbgserial_flush();
 }
 
-void dbgserial_putchar_lazy(uint8_t c) { uart_write_byte(DBG_UART, c); }
+void dbgserial_putchar_lazy(uint8_t c) {
+  uart_write_byte(DBG_UART, c);
+}
 
-void dbgserial_flush(void) { uart_wait_for_tx_complete(DBG_UART); }
+void dbgserial_flush(void) {
+  uart_wait_for_tx_complete(DBG_UART);
+}
 
 void dbgserial_putstr_fmt(char *buffer, unsigned int buffer_size, const char *fmt, ...) {
   va_list ap;

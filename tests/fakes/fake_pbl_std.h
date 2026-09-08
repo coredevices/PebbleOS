@@ -16,4 +16,6 @@ struct tm *pbl_override_gmtime(const time_t *timep) {
   return &local_tm;
 }
 
-time_t pbl_override_mktime(struct tm *tb) { return mktime(tb); }
+time_t pbl_override_mktime(struct tm *tb) {
+  return mktime(tb);
+}

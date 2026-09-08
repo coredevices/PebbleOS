@@ -57,7 +57,12 @@ enum WorkerForeAppWakeupReason {
   NUM_WFAWR
 };
 
-enum TransmitReason { TR_PUSH_NULL, TR_PUSH_ALL_DATA_TO_SERVER, TR_PUSH_ALL_DATA_TO_PHONE, NUM_TR };
+enum TransmitReason {
+  TR_PUSH_NULL,
+  TR_PUSH_ALL_DATA_TO_SERVER,
+  TR_PUSH_ALL_DATA_TO_PHONE,
+  NUM_TR
+};
 
 enum AppMessageKeys {
   AMKEY_NULL,
@@ -69,11 +74,28 @@ enum AppMessageKeys {
   NUM_AMKEY
 };
 
-enum ReminderReason { RR_NULL, RR_MEMORY_LOW, RR_WEAR, NUM_RR };
+enum ReminderReason {
+  RR_NULL,
+  RR_MEMORY_LOW,
+  RR_WEAR,
+  NUM_RR
+};
 
-enum ActivityClass { NO_ACTICLASS, SLOW_WALK, WALK, FAST_WALK, RUN, FAST_RUN, NUM_ACTICLASS };
+enum ActivityClass {
+  NO_ACTICLASS,
+  SLOW_WALK,
+  WALK,
+  FAST_WALK,
+  RUN,
+  FAST_RUN,
+  NUM_ACTICLASS
+};
 
-enum ActivityClassLearnFeatures { ACLF_VMC, ACLF_FFT_SCORE, NUM_ACLF };
+enum ActivityClassLearnFeatures {
+  ACLF_VMC,
+  ACLF_FFT_SCORE,
+  NUM_ACLF
+};
 
 /* +++++++++++++++ STRUCTURES +++++++++++++++ */
 

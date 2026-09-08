@@ -170,7 +170,9 @@ static void prv_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_DOWN, prv_click_handler);
 }
 
-Dialog *simple_dialog_get_dialog(SimpleDialog *simple_dialog) { return &simple_dialog->dialog; }
+Dialog *simple_dialog_get_dialog(SimpleDialog *simple_dialog) {
+  return &simple_dialog->dialog;
+}
 
 void simple_dialog_push(SimpleDialog *simple_dialog, WindowStack *window_stack) {
   dialog_push(&simple_dialog->dialog, window_stack);

@@ -219,7 +219,9 @@ uint32_t cron_service_get_job_count(void) {
   return count;
 }
 
-void cron_service_wakeup(void) { prv_timer_callback(NULL); }
+void cron_service_wakeup(void) {
+  prv_timer_callback(NULL);
+}
 
 // ---------------------------------------------------------------------------------------
 // The brains.

@@ -43,7 +43,9 @@
 #include "stubs_codepoint.h"
 #include "stubs_utf8.h"
 
-void launcher_task_add_callback(void (*callback)(void *data), void *data) { callback(data); }
+void launcher_task_add_callback(void (*callback)(void *data), void *data) {
+  callback(data);
+}
 
 PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char *name) {
   return NULL;
@@ -60,7 +62,9 @@ PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char 
 #include "fake_pbl_malloc.h"
 #include "fake_spi_flash.h"
 
-bool shell_prefs_get_language_english(void) { return false; }
+bool shell_prefs_get_language_english(void) {
+  return false;
+}
 
 static bool s_block_event_callback = false;
 EventedTimerID evented_timer_register(uint32_t timeout_ms, bool repeating,

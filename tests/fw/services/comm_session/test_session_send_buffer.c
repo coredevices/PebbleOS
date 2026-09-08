@@ -53,7 +53,9 @@ bool comm_session_is_valid(const CommSession *session) {
 }
 
 static int s_send_next_count = 0;
-void comm_session_send_next(CommSession *session) { ++s_send_next_count; }
+void comm_session_send_next(CommSession *session) {
+  ++s_send_next_count;
+}
 
 void comm_session_send_next_immediately(CommSession *session) {
   // Pretend to send out all the data:

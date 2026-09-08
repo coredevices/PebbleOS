@@ -31,7 +31,9 @@ typedef struct ConfirmUIData {
 } ConfirmUIData;
 
 //! Wipe registry + Reboot
-static void start_factory_reset(void *data) { factory_reset(false /* should_shutdown */); }
+static void start_factory_reset(void *data) {
+  factory_reset(false /* should_shutdown */);
+}
 
 static void prv_lockout_back_button(Window *window) {
   window_set_overrides_back_button(window, true);

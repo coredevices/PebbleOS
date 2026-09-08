@@ -13,16 +13,24 @@
 
 // Fakes
 static uint8_t s_age_years;
-uint8_t activity_prefs_get_age_years(void) { return s_age_years; }
+uint8_t activity_prefs_get_age_years(void) {
+  return s_age_years;
+}
 
 static ActivityGender s_gender;
-ActivityGender activity_prefs_get_gender(void) { return s_gender; }
+ActivityGender activity_prefs_get_gender(void) {
+  return s_gender;
+}
 
 static uint16_t s_weight_dag;
-uint16_t activity_prefs_get_weight_dag(void) { return s_weight_dag; }
+uint16_t activity_prefs_get_weight_dag(void) {
+  return s_weight_dag;
+}
 
 static uint16_t s_height_mm;
-uint16_t activity_prefs_get_height_mm(void) { return s_height_mm; }
+uint16_t activity_prefs_get_height_mm(void) {
+  return s_height_mm;
+}
 
 typedef enum {
   Human_TallMale,
@@ -64,10 +72,12 @@ static void prv_set_user(Human type) {
 
 // =============================================================================================
 // Start of unit tests
-void test_activity_calculators__initialize(void) {}
+void test_activity_calculators__initialize(void) {
+}
 
 // ---------------------------------------------------------------------------------------
-void test_activity_calculators__cleanup(void) {}
+void test_activity_calculators__cleanup(void) {
+}
 
 // ---------------------------------------------------------------------------------------
 void test_activity_calculators__distance(void) {

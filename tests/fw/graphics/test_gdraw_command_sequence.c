@@ -23,18 +23,29 @@
 #include "stubs_syscalls.h"
 
 // Stubs
-void graphics_context_set_stroke_color(GContext *ctx, GColor color) {}
-void graphics_context_set_fill_color(GContext *ctx, GColor color) {}
-void graphics_context_set_stroke_width(GContext *ctx, uint8_t stroke_width) {}
-void gpath_draw_stroke(GContext *ctx, GPath *path, bool open) {}
-void gpath_draw_filled(GContext *ctx, GPath *path) {}
-void graphics_draw_circle(GContext *ctx, GPoint p, uint16_t radius) {}
-void graphics_fill_circle(GContext *ctx, GPoint p, uint16_t radius) {}
-void graphics_context_move_draw_box(GContext *ctx, GPoint offset) {}
-void graphics_line_draw_precise_stroked(GContext *ctx, GPointPrecise p0, GPointPrecise p1) {}
-void gpath_fill_precise_internal(GContext *ctx, GPointPrecise *points, size_t num_points) {}
+void graphics_context_set_stroke_color(GContext *ctx, GColor color) {
+}
+void graphics_context_set_fill_color(GContext *ctx, GColor color) {
+}
+void graphics_context_set_stroke_width(GContext *ctx, uint8_t stroke_width) {
+}
+void gpath_draw_stroke(GContext *ctx, GPath *path, bool open) {
+}
+void gpath_draw_filled(GContext *ctx, GPath *path) {
+}
+void graphics_draw_circle(GContext *ctx, GPoint p, uint16_t radius) {
+}
+void graphics_fill_circle(GContext *ctx, GPoint p, uint16_t radius) {
+}
+void graphics_context_move_draw_box(GContext *ctx, GPoint offset) {
+}
+void graphics_line_draw_precise_stroked(GContext *ctx, GPointPrecise p0, GPointPrecise p1) {
+}
+void gpath_fill_precise_internal(GContext *ctx, GPointPrecise *points, size_t num_points) {
+}
 void gpath_draw_outline_precise_internal(GContext *ctx, GPointPrecise *points, size_t num_points,
-                                         bool open) {}
+                                         bool open) {
+}
 typedef uint16_t ResourceId;
 const uint8_t *resource_get_builtin_bytes(ResAppNum app_num, uint32_t resource_id,
                                           uint32_t *num_bytes_out) {
@@ -42,9 +53,11 @@ const uint8_t *resource_get_builtin_bytes(ResAppNum app_num, uint32_t resource_i
 }
 
 // setup and teardown
-void test_gdraw_command_sequence__initialize(void) {}
+void test_gdraw_command_sequence__initialize(void) {
+}
 
-void test_gdraw_command_sequence__cleanup(void) {}
+void test_gdraw_command_sequence__cleanup(void) {
+}
 
 size_t prv_create_test_sequence(GDrawCommandSequence **sequence_ptr) {
   size_t size = sizeof(GDrawCommandSequence) + (sizeof(GDrawCommandFrame) * 2) +

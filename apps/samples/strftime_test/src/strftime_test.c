@@ -282,7 +282,9 @@ static void window_load(Window *window) {
   layer_add_child(window_layer, text_layer_get_layer(result_layer));
 }
 
-static void window_unload(Window *window) { text_layer_destroy(result_layer); }
+static void window_unload(Window *window) {
+  text_layer_destroy(result_layer);
+}
 
 static void init(void) {
   window = window_create();
@@ -294,7 +296,9 @@ static void init(void) {
   window_stack_push(window, animated);
 }
 
-static void deinit(void) { window_destroy(window); }
+static void deinit(void) {
+  window_destroy(window);
+}
 
 int main(void) {
   init();

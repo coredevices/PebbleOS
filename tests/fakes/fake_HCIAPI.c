@@ -107,9 +107,13 @@ bool fake_HCIAPI_whitelist_contains(const BTDeviceInternal *device) {
   return (prv_find_whitelist_entry(&model) != NULL);
 }
 
-uint32_t fake_HCIAPI_whitelist_count(void) { return list_count(&s_head->node); }
+uint32_t fake_HCIAPI_whitelist_count(void) {
+  return list_count(&s_head->node);
+}
 
-uint32_t fake_HCIAPI_whitelist_error_count(void) { return s_whitelist_error_count; }
+uint32_t fake_HCIAPI_whitelist_error_count(void) {
+  return s_whitelist_error_count;
+}
 
 void fake_HCIAPI_deinit(void) {
   WhitelistEntry *e = s_head;
@@ -123,4 +127,5 @@ void fake_HCIAPI_deinit(void) {
   s_whitelist_error_count = 0;
 }
 
-void cc2564A_advert_no_sleep_wa(void) {}
+void cc2564A_advert_no_sleep_wa(void) {
+}

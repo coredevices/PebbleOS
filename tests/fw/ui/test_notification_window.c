@@ -104,32 +104,50 @@ VibeScoreId alerts_preferences_get_vibe_score_for_client(VibeClient client) {
   return VibeScoreId_Invalid;
 }
 
-VibeIntensity alerts_preferences_get_vibe_intensity(void) { return VibeIntensityLow; }
+VibeIntensity alerts_preferences_get_vibe_intensity(void) {
+  return VibeIntensityLow;
+}
 
-bool alerts_preferences_get_notification_alternative_design(void) { return false; }
+bool alerts_preferences_get_notification_alternative_design(void) {
+  return false;
+}
 
 DndNotificationMode alerts_preferences_dnd_get_show_notifications(void) {
   return DndNotificationModeShow;
 }
 
-bool alerts_preferences_dnd_get_auto_dismiss(void) { return false; }
+bool alerts_preferences_dnd_get_auto_dismiss(void) {
+  return false;
+}
 
-bool alerts_preferences_get_notification_vibe_delay(void) { return false; }
+bool alerts_preferences_get_notification_vibe_delay(void) {
+  return false;
+}
 
-int16_t interpolate_int16(int32_t normalized, int16_t from, int16_t to) { return to; }
+int16_t interpolate_int16(int32_t normalized, int16_t from, int16_t to) {
+  return to;
+}
 
-uint32_t interpolate_uint32(int32_t normalized, uint32_t from, uint32_t to) { return to; }
+uint32_t interpolate_uint32(int32_t normalized, uint32_t from, uint32_t to) {
+  return to;
+}
 
-int64_t interpolate_moook(int32_t normalized, int64_t from, int64_t to) { return to; }
+int64_t interpolate_moook(int32_t normalized, int64_t from, int64_t to) {
+  return to;
+}
 
-uint32_t interpolate_moook_duration() { return 0; }
+uint32_t interpolate_moook_duration() {
+  return 0;
+}
 
 int64_t interpolate_moook_soft(int32_t normalized, int64_t from, int64_t to,
                                int32_t num_frames_mid) {
   return to;
 }
 
-uint32_t interpolate_moook_soft_duration(int32_t num_frames_mid) { return 0; }
+uint32_t interpolate_moook_soft_duration(int32_t num_frames_mid) {
+  return 0;
+}
 
 // Fakes
 /////////////////////
@@ -325,7 +343,8 @@ void test_notification_window__initialize(void) {
   s_in_use = false;
 }
 
-void test_notification_window__cleanup(void) {}
+void test_notification_window__cleanup(void) {
+}
 
 // Helpers
 //////////////////////

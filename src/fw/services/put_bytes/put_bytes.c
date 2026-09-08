@@ -99,7 +99,11 @@ static const uint32_t PUT_TIMEOUT_MS = 30000;
 //! object transfers (less time spent ACK'ing).
 static const size_t PUT_BYTES_PP_BUFFER_SIZE = (2044 + sizeof(PutRequest));
 
-typedef enum { ResponseAck = 0x01, ResponseNack = 0x02, NumResponseCodes } ResponseCode;
+typedef enum {
+  ResponseAck = 0x01,
+  ResponseNack = 0x02,
+  NumResponseCodes
+} ResponseCode;
 
 #define MAX_BATCHED_PB_PUT_OPS 3
 
@@ -176,9 +180,13 @@ static void prv_receiver_reset(void);
 
 static void prv_send_response(ResponseCode code, uint32_t token);
 
-static void prv_lock_pb_job_state(void) { pbl_irq_lock(); }
+static void prv_lock_pb_job_state(void) {
+  pbl_irq_lock();
+}
 
-static void prv_unlock_pb_job_state(void) { pbl_irq_unlock(); }
+static void prv_unlock_pb_job_state(void) {
+  pbl_irq_unlock();
+}
 
 //! Simply returns the next free buffer from the PB jobs array. Returns NULL if none are available
 static uint8_t *prv_get_next_pb_job_buffer(void) {
@@ -316,7 +324,9 @@ static void prv_add_nack_system_callback(uint32_t token) {
   system_task_add_callback(prv_send_nack_from_system_task, (void *)(uintptr_t)token);
 }
 
-static void prv_add_nack_no_token_system_callback(void) { prv_add_nack_system_callback(0); }
+static void prv_add_nack_no_token_system_callback(void) {
+  prv_add_nack_system_callback(0);
+}
 
 static void prv_cleanup(void) {
   PBL_LOG_DBG("Put bytes cleanup. Tok: %" PRIu32, s_pb_state.token);
@@ -989,7 +999,8 @@ finally:
   pbl_sem_give(&s_pb_semaphore);
 }
 
-void put_bytes_init(void) {}
+void put_bytes_init(void) {
+}
 
 void put_bytes_cancel(void) {
   PBL_ASSERT_TASK(PebbleTask_KernelBackground);
@@ -1081,7 +1092,9 @@ static bool prv_receiver_contains_put_request(void) {
   return (s_pb_state.receiver.buffer[0] == PutBytesPut);
 }
 
-static bool prv_is_message_pending_processing(void) { return (s_pb_state.receiver.length != 0); }
+static bool prv_is_message_pending_processing(void) {
+  return (s_pb_state.receiver.length != 0);
+}
 
 static void prv_receiver_reset(void) {
   s_pb_state.receiver.length = 0;
@@ -1234,12 +1247,20 @@ const ReceiverImplementation g_put_bytes_receiver_impl = {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // For Unit Testing
 
-struct pbl_sem *put_bytes_get_semaphore(void) { return &s_pb_semaphore; }
+struct pbl_sem *put_bytes_get_semaphore(void) {
+  return &s_pb_semaphore;
+}
 
-TimerID put_bytes_get_timer_id(void) { return s_pb_state.timer_id; }
+TimerID put_bytes_get_timer_id(void) {
+  return s_pb_state.timer_id;
+}
 
-uint32_t put_bytes_get_index(void) { return s_pb_state.index; }
+uint32_t put_bytes_get_index(void) {
+  return s_pb_state.index;
+}
 
 #ifdef UNITTEST
-T_STATIC uint8_t prv_put_bytes_get_max_batched_pb_ops(void) { return MAX_BATCHED_PB_PUT_OPS; }
+T_STATIC uint8_t prv_put_bytes_get_max_batched_pb_ops(void) {
+  return MAX_BATCHED_PB_PUT_OPS;
+}
 #endif

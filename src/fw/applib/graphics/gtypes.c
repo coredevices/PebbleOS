@@ -70,7 +70,9 @@ bool grect_equal(const GRect *const r0, const GRect *const r1) {
           (r0->size.w == r1->size.w) && (r0->size.h == r1->size.h));
 }
 
-bool grect_is_empty(const GRect *const rect) { return (rect->size.h == 0 || rect->size.w == 0); }
+bool grect_is_empty(const GRect *const rect) {
+  return (rect->size.h == 0 || rect->size.w == 0);
+}
 
 void grect_standardize(GRect *rect) {
   if (rect->size.w < 0) {
@@ -386,7 +388,9 @@ BitmapInfo gbitmap_get_info(const GBitmap *bitmap) {
   return bitmap->info;
 }
 
-bool gcolor_is_invisible(GColor8 color) { return (color.a == 0); }
+bool gcolor_is_invisible(GColor8 color) {
+  return (color.a == 0);
+}
 
 #define RGB_LOOKUP_TABLE_SIZE (64)
 

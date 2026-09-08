@@ -272,7 +272,9 @@ bool timeline_item_action_is_ancs(const TimelineItemAction *action) {
          action->type == TimelineItemActionTypeAncsPositive;
 }
 
-bool timeline_item_is_ancs_notif(const TimelineItem *item) { return item->header.ancs_notif; }
+bool timeline_item_is_ancs_notif(const TimelineItem *item) {
+  return item->header.ancs_notif;
+}
 
 // ------------------------------------------------------------------------------------------------
 // Action finding functions

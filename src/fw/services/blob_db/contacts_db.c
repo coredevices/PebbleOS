@@ -76,7 +76,9 @@ int contacts_db_get_serialized_contact(const Uuid *uuid, SerializedContact **con
   return (contact_len - sizeof(SerializedContact));
 }
 
-void contacts_db_free_serialized_contact(SerializedContact *contact) { task_free(contact); }
+void contacts_db_free_serialized_contact(SerializedContact *contact) {
+  task_free(contact);
+}
 
 /////////////////////////
 // Blob DB API

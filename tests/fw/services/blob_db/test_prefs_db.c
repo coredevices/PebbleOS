@@ -38,18 +38,22 @@
 #include "stubs_ambient_light.h"
 #include "stubs_activity.h"
 
-void prefs_sync_init(void) {}
+void prefs_sync_init(void) {
+}
 
-void event_put(PebbleEvent *event) {}
+void event_put(PebbleEvent *event) {
+}
 
-void i18n_enable(bool enable) {}
+void i18n_enable(bool enable) {
+}
 
 void test_prefs_db__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
   pfs_init(false);
 }
 
-void test_prefs_db__cleanup(void) {}
+void test_prefs_db__cleanup(void) {
+}
 
 void test_prefs_db__get_length(void) {
   Uuid uuid = {0, 1, 2, 3};

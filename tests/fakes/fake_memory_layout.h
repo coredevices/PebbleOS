@@ -13,7 +13,9 @@ const MpuRegion s_fake_app_region = {.region_num = 9,
                                      .user_read = true,
                                      .user_write = true};
 
-const MpuRegion *memory_layout_get_app_region(void) { return &s_fake_app_region; }
+const MpuRegion *memory_layout_get_app_region(void) {
+  return &s_fake_app_region;
+}
 
 bool memory_layout_is_pointer_in_region(const MpuRegion *region, const void *ptr) {
   uintptr_t p = (uintptr_t)ptr;

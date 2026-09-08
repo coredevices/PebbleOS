@@ -75,9 +75,13 @@ static const MenuCellDimensions *prv_get_cell_dimensions(void) {
   return &s_menu_cell_dimensions[size];
 }
 
-int16_t menu_cell_basic_cell_height(void) { return prv_get_cell_dimensions()->basic_cell_height; }
+int16_t menu_cell_basic_cell_height(void) {
+  return prv_get_cell_dimensions()->basic_cell_height;
+}
 
-int16_t menu_cell_small_cell_height(void) { return prv_get_cell_dimensions()->small_cell_height; }
+int16_t menu_cell_small_cell_height(void) {
+  return prv_get_cell_dimensions()->small_cell_height;
+}
 
 int16_t menu_cell_basic_horizontal_inset(void) {
   return prv_get_cell_dimensions()->horizontal_inset;

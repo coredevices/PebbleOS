@@ -87,7 +87,8 @@ void test_keyed_circular_cache__initialize(void) {
                             TEST_BUFFER_SIZE);
 }
 
-void test_keyed_circular_cache__cleanup(void) {}
+void test_keyed_circular_cache__cleanup(void) {
+}
 
 // tests
 static void prv_push(int index) {
@@ -108,7 +109,9 @@ static void prv_test_backing_data_empty(int cache_idx) {
   cl_assert_equal_m(&s_cache_buffer[cache_idx], &ZERO_ITEM, sizeof(TestCacheItem));
 }
 
-static void prv_test_get_miss(int data_idx) { cl_assert(!prv_get(s_test_data[data_idx].key)); }
+static void prv_test_get_miss(int data_idx) {
+  cl_assert(!prv_get(s_test_data[data_idx].key));
+}
 
 static void prv_test_get_hit(int data_idx, int cache_idx) {
   TestCacheItem *data = prv_get(s_test_data[data_idx].key);

@@ -75,7 +75,9 @@ static void prv_send_next(Transport *transport) {
   }
 }
 
-static void prv_reset(Transport *transport) { PBL_LOG_WRN("Unimplemented"); }
+static void prv_reset(Transport *transport) {
+  PBL_LOG_WRN("Unimplemented");
+}
 
 static void prv_granted_kernel_main_cb(void *ctx) {
   ResponsivenessGrantedHandler granted_handler = ctx;
@@ -112,7 +114,9 @@ static bool prv_is_current_task_schedule_task(struct Transport *transport) {
 extern void comm_session_set_capabilities(CommSession *session,
                                           CommSessionCapability capability_flags);
 
-bool pulse_transport_is_connected(void) { return (s_transport.session != NULL); }
+bool pulse_transport_is_connected(void) {
+  return (s_transport.session != NULL);
+}
 
 // -----------------------------------------------------------------------------------------
 void pulse_transport_set_connected(bool is_connected) {
@@ -201,9 +205,13 @@ static void prv_pulse_pp_send(uint8_t opcode, uint8_t *data, size_t data_length)
   launcher_task_add_callback(prv_pulse_pp_send_cb, cb_data);
 }
 
-void pulse_pp_transport_open_handler(void) { return; }
+void pulse_pp_transport_open_handler(void) {
+  return;
+}
 
-void pulse_pp_transport_closed_handler(void) { prv_pulse_pp_transport_set_connected(false); }
+void pulse_pp_transport_closed_handler(void) {
+  prv_pulse_pp_transport_set_connected(false);
+}
 
 void pulse_pp_transport_handle_received_data(void *data, size_t length) {
   PulsePPPacket *packet = data;

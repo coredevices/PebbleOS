@@ -196,7 +196,9 @@ bool regular_timer_is_scheduled(RegularTimerInfo *cb) {
   return (rv);
 }
 
-bool regular_timer_pending_deletion(RegularTimerInfo *cb) { return cb->pending_delete; }
+bool regular_timer_pending_deletion(RegularTimerInfo *cb) {
+  return cb->pending_delete;
+}
 
 // ------------------------------------------------------------------------------------------
 bool regular_timer_remove_callback(RegularTimerInfo *cb) {
@@ -244,9 +246,13 @@ static void prv_fire_callbacks(ListNode *list, uint16_t mod) {
   do_callbacks(list);
 }
 
-void regular_timer_fire_seconds(uint8_t secs) { prv_fire_callbacks(&s_seconds_callbacks, secs); }
+void regular_timer_fire_seconds(uint8_t secs) {
+  prv_fire_callbacks(&s_seconds_callbacks, secs);
+}
 
-void regular_timer_fire_minutes(uint8_t mins) { prv_fire_callbacks(&s_minutes_callbacks, mins); }
+void regular_timer_fire_minutes(uint8_t mins) {
+  prv_fire_callbacks(&s_minutes_callbacks, mins);
+}
 
 static uint32_t prv_count(ListNode *list) {
   uint32_t count = 0;
@@ -257,6 +263,10 @@ static uint32_t prv_count(ListNode *list) {
   return count;
 }
 
-uint32_t regular_timer_seconds_count(void) { return prv_count(&s_seconds_callbacks); }
+uint32_t regular_timer_seconds_count(void) {
+  return prv_count(&s_seconds_callbacks);
+}
 
-uint32_t regular_timer_minutes_count(void) { return prv_count(&s_minutes_callbacks); }
+uint32_t regular_timer_minutes_count(void) {
+  return prv_count(&s_minutes_callbacks);
+}

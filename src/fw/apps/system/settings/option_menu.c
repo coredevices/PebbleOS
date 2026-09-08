@@ -75,4 +75,6 @@ OptionMenu *settings_option_menu_push(const char *i18n_title_key,
   return option_menu;
 }
 
-void *settings_option_menu_get_context(SettingsOptionMenuData *data) { return data->context; }
+void *settings_option_menu_get_context(SettingsOptionMenuData *data) {
+  return data->context;
+}

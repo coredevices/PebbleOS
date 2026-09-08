@@ -15,7 +15,9 @@ void resource_storage_get_file_name(char *name, size_t buf_length, ResAppNum res
   concat_str_int("res_bank", resource_bank, name, buf_length);
 }
 
-void resource_storage_clear(ResAppNum app_num) { return; }
+void resource_storage_clear(ResAppNum app_num) {
+  return;
+}
 
 const SystemResourceBank *resource_storage_flash_get_unused_bank(void) {
   static const SystemResourceBank unused_bank = {

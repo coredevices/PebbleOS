@@ -13,9 +13,13 @@ typedef struct WorkoutSelectionWindow {
 // Fakes
 /////////////////////
 
-uint16_t time_ms(time_t *tloc, uint16_t *out_ms) { return 0; }
+uint16_t time_ms(time_t *tloc, uint16_t *out_ms) {
+  return 0;
+}
 
-bool workout_service_is_workout_type_supported(ActivitySessionType type) { return true; }
+bool workout_service_is_workout_type_supported(ActivitySessionType type) {
+  return true;
+}
 
 // Setup and Teardown
 ////////////////////////////////////
@@ -23,7 +27,9 @@ bool workout_service_is_workout_type_supported(ActivitySessionType type) { retur
 static GContext s_ctx;
 static FrameBuffer s_fb;
 
-GContext *graphics_context_get_current_context(void) { return &s_ctx; }
+GContext *graphics_context_get_current_context(void) {
+  return &s_ctx;
+}
 
 void test_workout_selection__initialize(void) {
   // Setup graphics context
@@ -45,12 +51,14 @@ void test_workout_selection__initialize(void) {
   content_indicator_init_buffer(buffer);
 }
 
-void test_workout_selection__cleanup(void) {}
+void test_workout_selection__cleanup(void) {
+}
 
 // Helpers
 //////////////////////
 
-static void prv_select_workout_cb(ActivitySessionType type) {}
+static void prv_select_workout_cb(ActivitySessionType type) {
+}
 
 static void prv_create_window_and_render(uint16_t row) {
   WorkoutSelectionWindow *selection_window = workout_selection_push(prv_select_workout_cb);

@@ -253,7 +253,9 @@ static void prv_down_click_handler(ClickRecognizerRef recognizer, void *data) {
 #endif
 }
 
-static void prv_close_timer_callback(void *cb_data) { app_window_stack_pop(false); }
+static void prv_close_timer_callback(void *cb_data) {
+  app_window_stack_pop(false);
+}
 
 static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) {
   AppData *app_data = app_state_get_user_data();

@@ -48,7 +48,9 @@ void test_ancs_app_storage__initialize(void) {
   ancs_app_storage_init();
 }
 
-void test_ancs_app_storage__cleanup(void) { ancs_app_storage_deinit(); }
+void test_ancs_app_storage__cleanup(void) {
+  ancs_app_storage_deinit();
+}
 
 void test_ancs_app_storage__one_app(void) {
   ANCSAppData app_data = {

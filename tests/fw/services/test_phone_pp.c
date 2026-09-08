@@ -58,7 +58,9 @@ void test_phone_pp__initialize(void) {
   pp_get_phone_state_set_enabled(false);
 }
 
-void test_phone_pp__cleanup(void) { fake_comm_session_cleanup(); }
+void test_phone_pp__cleanup(void) {
+  fake_comm_session_cleanup();
+}
 
 void test_phone_pp__incoming_no_caller_id(void) {
   uint8_t pp_msg[] = {0x04, 0x1a, 0xd4, 0x77, 0x08, 0x00, 0x00};

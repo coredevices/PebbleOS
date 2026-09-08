@@ -46,7 +46,9 @@ void test_graphics_draw_core__initialize(void) {
 }
 
 // Teardown
-void test_graphics_draw_core__cleanup(void) { free(fb); }
+void test_graphics_draw_core__cleanup(void) {
+  free(fb);
+}
 
 // Helpers
 ////////////////////////////////////

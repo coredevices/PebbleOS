@@ -29,7 +29,9 @@ void rtc_get_time_ms(time_t *out_seconds, uint16_t *out_ms) {
   *out_seconds = rtc_get_time();
 }
 
-RtcTicks rtc_get_ticks(void) { return 0; }
+RtcTicks rtc_get_ticks(void) {
+  return 0;
+}
 
 TimerID new_timer_create(void) {
   static TimerID s_next_timer_id = 0;
@@ -49,7 +51,9 @@ bool new_timer_stop(TimerID timer_id) {
   return true;
 }
 
-void new_timer_delete(TimerID timer_id) { s_snooze_timer_timeout_ms = 0; }
+void new_timer_delete(TimerID timer_id) {
+  s_snooze_timer_timeout_ms = 0;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Setup
@@ -82,7 +86,9 @@ void test_alarm__initialize(void) {
   alarm_service_enable_alarms(true);
 }
 
-void test_alarm__cleanup(void) { cron_service_deinit(); }
+void test_alarm__cleanup(void) {
+  cron_service_deinit();
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Basic Store / Get Tests

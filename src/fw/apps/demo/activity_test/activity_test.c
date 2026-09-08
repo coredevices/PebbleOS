@@ -728,13 +728,16 @@ static void prv_test_fill_sleep(void *context) {
 }
 
 // -------------------------------------------------------------------------------
-static void select_click_handler(ClickRecognizerRef recognizer, void *context) {}
+static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
+}
 
 // -------------------------------------------------------------------------------
-static void up_click_handler(ClickRecognizerRef recognizer, void *context) {}
+static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
+}
 
 // -------------------------------------------------------------------------------
-static void down_click_handler(ClickRecognizerRef recognizer, void *context) {}
+static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
+}
 
 // -------------------------------------------------------------------------------
 static void click_config_provider(void *context) {

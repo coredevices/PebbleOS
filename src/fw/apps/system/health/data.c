@@ -40,9 +40,13 @@ T_STATIC void prv_merge_adjacent_sessions(ActivitySession *current, ActivitySess
 // API Functions
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-HealthData *health_data_create(void) { return (HealthData *)app_zalloc_check(sizeof(HealthData)); }
+HealthData *health_data_create(void) {
+  return (HealthData *)app_zalloc_check(sizeof(HealthData));
+}
 
-void health_data_destroy(HealthData *health_data) { app_free(health_data); }
+void health_data_destroy(HealthData *health_data) {
+  app_free(health_data);
+}
 
 void health_data_update_quick(HealthData *health_data) {
   const time_t now = rtc_get_time();
@@ -172,9 +176,13 @@ void health_data_update_hr_zone_minutes(HealthData *health_data) {
   activity_get_metric(ActivityMetricHeartRateZone3Minutes, 1, &health_data->hr_zone3_minutes);
 }
 
-int32_t *health_data_steps_get(HealthData *health_data) { return health_data->step_data; }
+int32_t *health_data_steps_get(HealthData *health_data) {
+  return health_data->step_data;
+}
 
-int32_t health_data_current_steps_get(HealthData *health_data) { return health_data->step_data[0]; }
+int32_t health_data_current_steps_get(HealthData *health_data) {
+  return health_data->step_data[0];
+}
 
 int32_t health_data_current_distance_meters_get(HealthData *health_data) {
   return health_data->current_distance_meters;
@@ -226,7 +234,9 @@ int32_t health_data_steps_get_monthly_average(HealthData *health_data) {
   return health_data->monthly_step_average;
 }
 
-int32_t *health_data_sleep_get(HealthData *health_data) { return health_data->sleep_data; }
+int32_t *health_data_sleep_get(HealthData *health_data) {
+  return health_data->sleep_data;
+}
 
 int32_t health_data_current_sleep_get(HealthData *health_data) {
   if (health_data->sleep_data[0] == 0 && health_data->sleep_data[1] > 0) {
@@ -251,7 +261,9 @@ int32_t health_data_sleep_get_start_time(HealthData *health_data) {
   return health_data->sleep_start;
 }
 
-int32_t health_data_sleep_get_end_time(HealthData *health_data) { return health_data->sleep_end; }
+int32_t health_data_sleep_get_end_time(HealthData *health_data) {
+  return health_data->sleep_end;
+}
 
 int32_t health_data_sleep_get_typical_start_time(HealthData *health_data) {
   return health_data->typical_sleep_start;

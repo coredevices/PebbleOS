@@ -34,7 +34,9 @@ static void prv_set_default_device_name(void) {
   prv_populate_name(s_local_le_device_name, s_local_default_le_device_name_format);
 }
 
-static bool prv_has_device_name(void) { return (s_local_device_name[0] != '\0'); }
+static bool prv_has_device_name(void) {
+  return (s_local_device_name[0] != '\0');
+}
 
 static void prv_configure_device_name(void) {
   bt_driver_id_set_local_device_name(s_local_device_name);
@@ -64,7 +66,9 @@ void bt_local_id_copy_device_name(char name_out[BT_DEVICE_NAME_BUFFER_SIZE], boo
   strncpy(name_out, s_local_device_name, BT_DEVICE_NAME_BUFFER_SIZE);
 }
 
-void bt_local_id_copy_address(BTDeviceAddress *addr_out) { *addr_out = s_local_address; }
+void bt_local_id_copy_address(BTDeviceAddress *addr_out) {
+  *addr_out = s_local_address;
+}
 
 void bt_local_id_copy_address_hex_string(char addr_hex_str_out[BT_ADDR_FMT_BUFFER_SIZE_BYTES]) {
   static const BTDeviceAddress null_addr = {};

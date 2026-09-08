@@ -17,9 +17,12 @@
 
 static PBL_MUTEX_DEFINE(s_bt_lock);
 
-void bt_lock_init(void) {}
+void bt_lock_init(void) {
+}
 
-struct pbl_mutex *bt_lock_get(void) { return &s_bt_lock; }
+struct pbl_mutex *bt_lock_get(void) {
+  return &s_bt_lock;
+}
 
 void bt_lock(void) {
   register uint32_t LR __asm("lr");
@@ -27,8 +30,14 @@ void bt_lock(void) {
   pbl_mutex_lock_lr(&s_bt_lock, PBL_FOREVER, myLR);
 }
 
-void bt_unlock(void) { pbl_mutex_unlock(&s_bt_lock); }
+void bt_unlock(void) {
+  pbl_mutex_unlock(&s_bt_lock);
+}
 
-void bt_lock_assert_held(bool is_held) { pbl_mutex_assert_held(&s_bt_lock, is_held); }
+void bt_lock_assert_held(bool is_held) {
+  pbl_mutex_assert_held(&s_bt_lock, is_held);
+}
 
-bool bt_lock_is_held(void) { return pbl_mutex_is_owner(&s_bt_lock); }
+bool bt_lock_is_held(void) {
+  return pbl_mutex_is_owner(&s_bt_lock);
+}

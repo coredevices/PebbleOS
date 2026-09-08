@@ -27,7 +27,9 @@ void clock_get_until_time_without_fulltime(char *buffer, int buf_size, time_t ti
 static GContext s_ctx;
 static FrameBuffer s_fb;
 
-GContext *graphics_context_get_current_context(void) { return &s_ctx; }
+GContext *graphics_context_get_current_context(void) {
+  return &s_ctx;
+}
 
 void test_health_card_view__initialize(void) {
   // Setup graphics context
@@ -49,7 +51,8 @@ void test_health_card_view__initialize(void) {
   content_indicator_init_buffer(buffer);
 }
 
-void test_health_card_view__cleanup(void) {}
+void test_health_card_view__cleanup(void) {
+}
 
 // Helpers
 //////////////////////

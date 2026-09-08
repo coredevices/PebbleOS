@@ -64,16 +64,20 @@ extern void prv_watch_dst(void *user);
 static bool s_should_vibrate;
 static int s_vibe_create_count;
 
-bool alerts_should_vibrate_for_type(AlertType type) { return s_should_vibrate; }
+bool alerts_should_vibrate_for_type(AlertType type) {
+  return s_should_vibrate;
+}
 
 VibeScore *vibe_score_create_with_resource_system(ResAppNum app_num, uint32_t resource_id) {
   s_vibe_create_count++;
   return NULL;
 }
 
-void vibe_score_do_vibe(VibeScore *score) {}
+void vibe_score_do_vibe(VibeScore *score) {
+}
 
-void vibe_score_destroy(VibeScore *score) {}
+void vibe_score_destroy(VibeScore *score) {
+}
 
 static void prv_clock_reset(int32_t gmtoff) {
   TimezoneInfo tzinfo = {{0}};
@@ -92,21 +96,45 @@ static void prv_set_current_time(struct tm new_time) {
 
 // Fakes
 ///////////////////////////
-void notifications_migrate_timezone(int utc_diff) {}
-void wakeup_migrate_timezone(int utc_diff) {}
-bool shell_prefs_get_clock_24h_style(void) { return s_prefs_24h_style; }
-void shell_prefs_set_clock_24h_style(bool is_24h_style) { s_prefs_24h_style = is_24h_style; }
-bool shell_prefs_is_timezone_source_manual(void) { return false; }
-void shell_prefs_set_timezone_source_manual(bool manual) {}
-bool shell_prefs_is_time_source_manual(void) { return false; }
-void shell_prefs_set_time_source_manual(bool manual) {}
-int16_t shell_prefs_get_automatic_timezone_id(void) { return -1; }
-void shell_prefs_set_automatic_timezone_id(int16_t timezone_id) {}
-bool shell_prefs_get_language_english(void) { return false; }
-void shell_prefs_set_language_english(bool english) {}
-void sys_localtime_r(time_t const *t, struct tm *lcltime) { localtime_r(t, lcltime); }
-void sys_gmtime_r(time_t const *t, struct tm *lcltime) { gmtime_r(t, lcltime); }
-void launcher_task_add_callback(void (*callback)(void *data), void *data) { callback(data); }
+void notifications_migrate_timezone(int utc_diff) {
+}
+void wakeup_migrate_timezone(int utc_diff) {
+}
+bool shell_prefs_get_clock_24h_style(void) {
+  return s_prefs_24h_style;
+}
+void shell_prefs_set_clock_24h_style(bool is_24h_style) {
+  s_prefs_24h_style = is_24h_style;
+}
+bool shell_prefs_is_timezone_source_manual(void) {
+  return false;
+}
+void shell_prefs_set_timezone_source_manual(bool manual) {
+}
+bool shell_prefs_is_time_source_manual(void) {
+  return false;
+}
+void shell_prefs_set_time_source_manual(bool manual) {
+}
+int16_t shell_prefs_get_automatic_timezone_id(void) {
+  return -1;
+}
+void shell_prefs_set_automatic_timezone_id(int16_t timezone_id) {
+}
+bool shell_prefs_get_language_english(void) {
+  return false;
+}
+void shell_prefs_set_language_english(bool english) {
+}
+void sys_localtime_r(time_t const *t, struct tm *lcltime) {
+  localtime_r(t, lcltime);
+}
+void sys_gmtime_r(time_t const *t, struct tm *lcltime) {
+  gmtime_r(t, lcltime);
+}
+void launcher_task_add_callback(void (*callback)(void *data), void *data) {
+  callback(data);
+}
 
 // Tests
 ///////////////////////////

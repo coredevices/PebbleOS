@@ -60,7 +60,9 @@ void bt_driver_advert_advertising_disable(void) {
   PBL_ASSERT(rc == 0, "Failed to stop advertising (0x%04x)", (uint16_t)rc);
 }
 
-bool bt_driver_advert_client_get_tx_power(int8_t *tx_power) { return false; }
+bool bt_driver_advert_client_get_tx_power(int8_t *tx_power) {
+  return false;
+}
 
 bool bt_driver_advert_set_advertising_data(const BLEAdData *ad_data) {
   int rc;
@@ -83,7 +85,8 @@ bool bt_driver_advert_set_advertising_data(const BLEAdData *ad_data) {
 
 static void prv_handle_connection_event(struct ble_gap_event *event) {
   // we only want to notify on a successful connection
-  if (event->connect.status != 0) return;
+  if (event->connect.status != 0)
+    return;
 
   struct ble_gap_conn_desc desc;
   if (ble_gap_conn_find(event->connect.conn_handle, &desc) != 0) {

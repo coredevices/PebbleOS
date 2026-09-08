@@ -21,9 +21,13 @@ void command_bt_print_mac(void) {
 }
 
 //! @param bt_name A custom Bluetooth device name.
-void command_bt_set_name(const char *bt_name) { bt_local_id_set_device_name(bt_name); }
+void command_bt_set_name(const char *bt_name) {
+  bt_local_id_set_device_name(bt_name);
+}
 
-void command_bt_prefs_wipe(void) { bt_persistent_storage_delete_all_pairings(); }
+void command_bt_prefs_wipe(void) {
+  bt_persistent_storage_delete_all_pairings();
+}
 
 void command_bt_sprf_nuke(void) {
   shared_prf_storage_wipe_all();

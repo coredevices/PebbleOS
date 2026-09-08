@@ -51,7 +51,9 @@ void test_graphics_draw_implementation__initialize(void) {
 }
 
 // Teardown
-void test_graphics_draw_implementation__cleanup(void) { free(fb); }
+void test_graphics_draw_implementation__cleanup(void) {
+  free(fb);
+}
 
 // Fake raw drawing functions
 ////////////////////////////////////

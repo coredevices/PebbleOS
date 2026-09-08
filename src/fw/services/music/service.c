@@ -573,7 +573,9 @@ const GBitmap *music_album_art_lock(void) {
   return s_music_ctx.album_art;
 }
 
-void music_album_art_unlock(void) { pbl_mutex_unlock(&s_music_ctx.mutex); }
+void music_album_art_unlock(void) {
+  pbl_mutex_unlock(&s_music_ctx.mutex);
+}
 
 void command_print_now_playing(void) {
   char title[MUSIC_BUFFER_LENGTH];

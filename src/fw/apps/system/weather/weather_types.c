@@ -80,7 +80,8 @@ GColor weather_type_disc_color(WeatherType weather_type) {
 }
 
 void weather_icon_invert_ink(GBitmap *icon) {
-  if (!icon) return;
+  if (!icon)
+    return;
   GColor *palette = gbitmap_get_palette(icon);
   uint32_t entries = 0;
   switch (gbitmap_get_format(icon)) {
@@ -96,7 +97,8 @@ void weather_icon_invert_ink(GBitmap *icon) {
     default:
       break;  // non-palettized: leave as-is
   }
-  if (!palette) return;
+  if (!palette)
+    return;
   for (uint32_t i = 0; i < entries; i++) {
     if (palette[i].a) {  // leave transparency alone
       palette[i].r = (uint8_t)(0b11 - palette[i].r);
@@ -107,7 +109,8 @@ void weather_icon_invert_ink(GBitmap *icon) {
 }
 
 void weather_icon_draw(GContext *ctx, GBitmap *icon, GRect rect, bool invert_ink) {
-  if (!icon) return;
+  if (!icon)
+    return;
   graphics_context_set_compositing_mode(ctx, GCompOpSet);
   if (invert_ink) {
     weather_icon_invert_ink(icon);

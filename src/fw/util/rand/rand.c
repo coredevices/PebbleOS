@@ -65,9 +65,13 @@ static int prv_next(tinymt32_t *state) {
   return tinymt32_generate_uint32(state);
 }
 
-uint32_t rand32(void) { return prv_next(prv_get_seed_ptr()); }
+uint32_t rand32(void) {
+  return prv_next(prv_get_seed_ptr());
+}
 
-int rand(void) { return rand32() & 0x7FFFFFFF; }
+int rand(void) {
+  return rand32() & 0x7FFFFFFF;
+}
 
 int rand_r(unsigned int *seedp) {  // Please don't use this
   PBL_ASSERTN(seedp != NULL);
@@ -78,4 +82,6 @@ int rand_r(unsigned int *seedp) {  // Please don't use this
   return *seedp;
 }
 
-void srand(unsigned int seed) { prv_seed(prv_get_seed_ptr(), seed); }
+void srand(unsigned int seed) {
+  prv_seed(prv_get_seed_ptr(), seed);
+}

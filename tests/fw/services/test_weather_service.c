@@ -37,9 +37,12 @@
 #include "stubs_sleep.h"
 
 static EventServiceInfo *s_event_info;
-void event_service_client_subscribe(EventServiceInfo *service_info) { s_event_info = service_info; }
+void event_service_client_subscribe(EventServiceInfo *service_info) {
+  s_event_info = service_info;
+}
 
-void event_service_client_unsubscribe(EventServiceInfo *service_info) {}
+void event_service_client_unsubscribe(EventServiceInfo *service_info) {
+}
 
 void bt_persistent_storage_get_cached_system_capabilities(
     PebbleProtocolCapabilities *capabilities) {
@@ -54,7 +57,9 @@ void test_weather_service__initialize(void) {
   weather_shared_data_init();
 }
 
-void test_weather_service__cleanup(void) { weather_shared_data_cleanup(); }
+void test_weather_service__cleanup(void) {
+  weather_shared_data_cleanup();
+}
 
 static const WeatherLocationForecast s_forecasts[] = {
     {.location_name = TEST_WEATHER_DB_LOCATION_PALO_ALTO,

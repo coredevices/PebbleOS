@@ -3,4 +3,6 @@
 
 #pragma once
 
-unsigned int bt_stack_id(void) { return 1; }
+unsigned int bt_stack_id(void) {
+  return 1;
+}

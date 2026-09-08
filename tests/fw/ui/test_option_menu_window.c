@@ -66,7 +66,8 @@ void test_option_menu_window__initialize(void) {
   rtc_set_time(3 * SECONDS_PER_DAY);
 }
 
-void test_option_menu_window__cleanup(void) {}
+void test_option_menu_window__cleanup(void) {
+}
 
 // Helpers
 //////////////////////

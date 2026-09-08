@@ -363,7 +363,8 @@ static void prv_draw_text_node_custom(GTextNodeDrawContext *ctx) {
                         custom_node->user_data);
 }
 
-static void prv_draw_noop(GTextNodeDrawContext *ctx) {}
+static void prv_draw_noop(GTextNodeDrawContext *ctx) {
+}
 
 static const GTextNodeBaseImpl s_text_impl = {
     .destructor = prv_destroy_text_node_base,
@@ -420,7 +421,9 @@ static const GTextNodeBaseImpl *s_impl_table[GTextNodeTypeCount] = {
     [GTextNodeType_Custom] = &s_custom_impl,
 };
 
-static const GTextNodeBaseImpl *prv_base(GTextNode *node) { return s_impl_table[node->type]; }
+static const GTextNodeBaseImpl *prv_base(GTextNode *node) {
+  return s_impl_table[node->type];
+}
 
 static const GTextNodeContainerImpl *prv_container(GTextNode *node) {
   return (const GTextNodeContainerImpl *)s_impl_table[node->type];

@@ -71,9 +71,12 @@ GSize graphics_text_layout_get_max_used_size(GContext *ctx, const char *text, GF
 // Setup and Teardown
 ////////////////////////////////////
 
-void test_graphics_text_node__initialize(void) { s_data = (GTextNodeTestData){}; }
+void test_graphics_text_node__initialize(void) {
+  s_data = (GTextNodeTestData){};
+}
 
-void test_graphics_text_node__cleanup(void) {}
+void test_graphics_text_node__cleanup(void) {
+}
 
 // Tests
 ////////////////////////////////////

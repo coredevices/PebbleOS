@@ -166,7 +166,9 @@ static void prv_result_timer_callback(void *cb_data) {
   app_timer_register(100, prv_result_timer_callback, NULL);
 }
 
-static void prv_update_status(void *param) { layer_mark_dirty((Layer *)param); }
+static void prv_update_status(void *param) {
+  layer_mark_dirty((Layer *)param);
+}
 
 static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) {
   AppData *app_data = app_state_get_user_data();

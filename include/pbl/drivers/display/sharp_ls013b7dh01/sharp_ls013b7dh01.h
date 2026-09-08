@@ -13,7 +13,10 @@
 #define DISP_DMA_BUFFER_SIZE_BYTES (DISP_LINE_BYTES + 3)
 #define DISP_DMA_BUFFER_SIZE_WORDS (DISP_LINE_WORDS + 1)
 
-typedef enum { DISPLAY_STATE_IDLE, DISPLAY_STATE_WRITING } DisplayState;
+typedef enum {
+  DISPLAY_STATE_IDLE,
+  DISPLAY_STATE_WRITING
+} DisplayState;
 
 typedef struct {
   DisplayState state;

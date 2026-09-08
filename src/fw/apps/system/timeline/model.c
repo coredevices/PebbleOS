@@ -51,7 +51,9 @@ TimelineIterState *timeline_model_get_iter_state(int index) {
   return &s_model_data->states[prv_adj_to_raw_idx(index)];
 }
 
-bool timeline_model_is_empty(void) { return (timeline_model_get_num_items() == 0); }
+bool timeline_model_is_empty(void) {
+  return (timeline_model_get_num_items() == 0);
+}
 
 int timeline_model_get_num_items(void) {
   if (timeline_model_get_current_state() == NULL) {
@@ -76,7 +78,9 @@ static int prv_get_prev_item_idx(void) {
   return positive_modulo(s_model_data->first_index - 1, TIMELINE_NUM_ITEMS_IN_MODEL);
 }
 
-static Iterator *prv_get_iter(int index) { return &s_model_data->iters[prv_adj_to_raw_idx(index)]; }
+static Iterator *prv_get_iter(int index) {
+  return &s_model_data->iters[prv_adj_to_raw_idx(index)];
+}
 
 TimelineIterState *timeline_model_get_current_state(void) {
   if (timeline_model_get_iter_state(0)->node == NULL) {

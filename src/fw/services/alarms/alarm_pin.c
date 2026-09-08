@@ -71,4 +71,6 @@ void alarm_pin_add(time_t alarm_time, AlarmId id, AlarmType type, AlarmKind kind
 }
 
 // ----------------------------------------------------------------------------------------------
-void alarm_pin_remove(Uuid *alarm_id) { pin_db_delete((uint8_t *)alarm_id, sizeof(Uuid)); }
+void alarm_pin_remove(Uuid *alarm_id) {
+  pin_db_delete((uint8_t *)alarm_id, sizeof(Uuid));
+}

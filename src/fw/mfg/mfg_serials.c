@@ -101,11 +101,17 @@ static MfgSerialsResult prv_mfg_write_hw_version(const char *hwver, size_t hwver
                                     hwver, hwver_size, out_index);
 }
 
-void command_serial_read(void) { prompt_send_response(mfg_get_serial_number()); }
+void command_serial_read(void) {
+  prompt_send_response(mfg_get_serial_number());
+}
 
-void command_hwver_read(void) { prompt_send_response(mfg_get_hw_version()); }
+void command_hwver_read(void) {
+  prompt_send_response(mfg_get_hw_version());
+}
 
-void command_pcba_serial_read(void) { prompt_send_response(mfg_get_pcba_serial_number()); }
+void command_pcba_serial_read(void) {
+  prompt_send_response(mfg_get_pcba_serial_number());
+}
 
 void command_serial_write(const char *serial) {
   MfgSerialsResult result;

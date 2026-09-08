@@ -113,7 +113,8 @@ static void send_golf_cmd(uint8_t cmd) {
 
   DictionaryIterator *iter;
   app_message_outbox_begin(&iter);
-  if (iter == NULL) return;
+  if (iter == NULL)
+    return;
 
   dict_write_tuplet(iter, &value);
   dict_write_end(iter);

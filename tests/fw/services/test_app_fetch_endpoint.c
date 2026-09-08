@@ -30,13 +30,18 @@
 typedef struct {
 } EventServiceInfo;
 
-void app_event_service_subscribe(EventServiceInfo *service_info) { return; }
+void app_event_service_subscribe(EventServiceInfo *service_info) {
+  return;
+}
 
-void put_bytes_cancel(void) {}
+void put_bytes_cancel(void) {
+}
 
-void put_bytes_expect_init(uint32_t timeout_ms) {}
+void put_bytes_expect_init(uint32_t timeout_ms) {
+}
 
-void app_storage_delete_bank(uint32_t bank) {}
+void app_storage_delete_bank(uint32_t bank) {
+}
 
 typedef struct PACKED {
   uint16_t length;

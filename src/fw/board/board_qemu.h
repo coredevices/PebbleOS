@@ -20,8 +20,10 @@ enum {
 };
 
 //! Creates a trampoline to the interrupt handler defined within the driver
-#define IRQ_MAP(irq, handler, device)              \
-  void irq##_IRQHandler(void) { handler(device); } \
+#define IRQ_MAP(irq, handler, device) \
+  void irq##_IRQHandler(void) {       \
+    handler(device);                  \
+  }                                   \
   _Static_assert(IS_VALID_IRQ__##irq || true, "(See comment below)")
 /*
  * The above static assert checks that the requested IRQ is valid by checking that the enum

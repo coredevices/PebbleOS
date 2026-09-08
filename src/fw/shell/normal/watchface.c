@@ -219,7 +219,8 @@ static void prv_launch_up_down(ClickRecognizerRef recognizer, void *data) {
     return;
   }
 
-  if (!quick_launch_single_click_is_enabled(button)) return;
+  if (!quick_launch_single_click_is_enabled(button))
+    return;
   const AppInstallId app_id = quick_launch_single_click_get_app(button);
 
   prv_launch_quick_launch_app(app_id, button, APP_LAUNCH_SYSTEM, APP_QUICK_LAUNCH_ACTION_TAP);
@@ -296,13 +297,19 @@ void watchface_launch_default(const CompositorTransition *animation) {
   });
 }
 
-static void kernel_callback_watchface_launch(void *data) { watchface_launch_default(NULL); }
+static void kernel_callback_watchface_launch(void *data) {
+  watchface_launch_default(NULL);
+}
 
-void command_watch(void) { launcher_task_add_callback(kernel_callback_watchface_launch, NULL); }
+void command_watch(void) {
+  launcher_task_add_callback(kernel_callback_watchface_launch, NULL);
+}
 
 void watchface_start_low_power(void) {
   app_manager_set_minimum_run_level(ProcessAppRunLevelNormal);
   prv_watchface_launch_low_power();
 }
 
-void watchface_reset_click_manager(void) { click_manager_reset(&s_click_manager); }
+void watchface_reset_click_manager(void) {
+  click_manager_reset(&s_click_manager);
+}

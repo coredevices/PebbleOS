@@ -41,10 +41,14 @@ void test_framebuffer_duma__initialize(void) {
 }
 
 // Teardown
-void test_framebuffer_duma__cleanup(void) { free(fb); }
+void test_framebuffer_duma__cleanup(void) {
+  free(fb);
+}
 
 // Intentionally unchecked framebuffer drawing function
-static void draw_fb_raw(uint8_t *buffer, int offset, GColor8 color) { buffer[offset] = color.argb; }
+static void draw_fb_raw(uint8_t *buffer, int offset, GColor8 color) {
+  buffer[offset] = color.argb;
+}
 
 // Tests
 ////////////////////////////////////

@@ -84,7 +84,9 @@ int32_t sin_lookup(int32_t angle) {
   return mult * SIN_LOOKUP[lookup_angle];
 }
 
-int32_t cos_lookup(int32_t angle) { return sin_lookup(angle + TRIG_MAX_ANGLE / 4); }
+int32_t cos_lookup(int32_t angle) {
+  return sin_lookup(angle + TRIG_MAX_ANGLE / 4);
+}
 
 #define ATAN_LUT_STRIDE 0xff
 

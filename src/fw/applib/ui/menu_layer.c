@@ -1041,7 +1041,9 @@ typedef struct MenuPrimeCacheIterator {
   bool cache_set;
 } MenuPrimeCacheIterator;
 
-static void prv_menu_layer_iterator_noop_callback(MenuIterator *it) { (void)it; }
+static void prv_menu_layer_iterator_noop_callback(MenuIterator *it) {
+  (void)it;
+}
 
 static void prv_menu_layer_iterator_prime_cache_callback(MenuIterator *iterator) {
   MenuPrimeCacheIterator *it = (MenuPrimeCacheIterator *)iterator;
@@ -1661,7 +1663,9 @@ void menu_layer_reload_data(MenuLayer *menu_layer) {
   menu_layer_update_caches(menu_layer);
 }
 
-bool menu_cell_layer_is_highlighted(const Layer *cell_layer) { return cell_layer->is_highlighted; }
+bool menu_cell_layer_is_highlighted(const Layer *cell_layer) {
+  return cell_layer->is_highlighted;
+}
 
 void menu_layer_set_normal_colors(MenuLayer *menu_layer, GColor background, GColor foreground) {
   menu_layer->normal_colors[MenuLayerColorBackground] = background;
@@ -1673,7 +1677,9 @@ void menu_layer_set_highlight_colors(MenuLayer *menu_layer, GColor background, G
   menu_layer->highlight_colors[MenuLayerColorForeground] = foreground;
 }
 
-bool menu_layer_get_center_focused(MenuLayer *menu_layer) { return menu_layer->center_focused; }
+bool menu_layer_get_center_focused(MenuLayer *menu_layer) {
+  return menu_layer->center_focused;
+}
 
 void menu_layer_set_center_focused(MenuLayer *menu_layer, bool center_focused) {
   if (!menu_layer) {
@@ -1776,7 +1782,9 @@ void menu_layer_set_scroll_vibe_on_blocked(MenuLayer *menu_layer, bool scroll_vi
 _Static_assert(sizeof(((MenuLayer *)0)->touch_nav_node) == sizeof(TouchNavWidgetNode),
                "MenuLayer touch_nav_node must match TouchNavWidgetNode layout");
 
-static bool prv_is_app_task(void) { return pebble_task_get_current() == PebbleTask_App; }
+static bool prv_is_app_task(void) {
+  return pebble_task_get_current() == PebbleTask_App;
+}
 
 static TouchNavState *prv_task_touch_nav_state(void) {
   return prv_is_app_task() ? app_state_get_touch_nav_state() : modal_manager_get_touch_nav_state();
@@ -1785,7 +1793,8 @@ static TouchNavState *prv_task_touch_nav_state(void) {
 // Test seam (declared in menu_layer_private.h under CONFIG_TOUCH). The unified widget set holds no
 // per-task singleton to reset; the touch-nav state is owned by TouchNavState, so this is a no-op
 // kept for source compatibility with tests that call it in their setup.
-void menu_layer_touch_nav_reset_all(void) {}
+void menu_layer_touch_nav_reset_all(void) {
+}
 
 bool menu_layer_touch_is_gesture_target(const MenuLayer *menu_layer) {
   const TouchNavState *state = prv_task_touch_nav_state();
@@ -2340,7 +2349,9 @@ void menu_layer_touch_handle_swipe(MenuLayer *menu_layer, SwipeDirection directi
 // TouchNavState) drives the menu through these; direct assignment of the apply functions would not
 // compile because their first parameter is MenuLayer*, not void*.
 
-static void prv_menu_ops_touchdown(void *w) { menu_layer_touch_handle_touchdown((MenuLayer *)w); }
+static void prv_menu_ops_touchdown(void *w) {
+  menu_layer_touch_handle_touchdown((MenuLayer *)w);
+}
 
 static void prv_menu_ops_pan_started(void *w) {
   // Touchdown-equivalent for the pan: stop any in-flight selection animation so the finger takes
@@ -2370,7 +2381,9 @@ static void prv_menu_ops_pan_snap(void *w, GPoint base, GPoint final_delta, GPoi
   menu_layer_touch_handle_snap((MenuLayer *)w, base, final_delta, velocity);
 }
 
-static void prv_menu_ops_pan_cancel(void *w) { menu_layer_touch_handle_cancel((MenuLayer *)w); }
+static void prv_menu_ops_pan_cancel(void *w) {
+  menu_layer_touch_handle_cancel((MenuLayer *)w);
+}
 
 static void prv_menu_ops_tap(void *w, GPoint point_on_screen) {
   // Keeps the full selection_will_change veto/redirect/double-tap contract.

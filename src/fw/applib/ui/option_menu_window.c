@@ -44,7 +44,9 @@ static const OptionMenuStyle *const s_styles[NumPreferredContentSizes] = {
     [PreferredContentSizeExtraLarge] = &s_style_large,
 };
 
-static const OptionMenuStyle *prv_get_style(void) { return s_styles[PreferredContentSizeDefault]; }
+static const OptionMenuStyle *prv_get_style(void) {
+  return s_styles[PreferredContentSizeDefault];
+}
 
 static uint16_t prv_get_num_rows_callback(MenuLayer *menu_layer, uint16_t section_index,
                                           void *context) {

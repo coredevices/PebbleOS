@@ -44,15 +44,19 @@ uint16_t gatt_client_subscriptions_consume_notification(BLECharacteristic *chara
   return 0;
 }
 
-void gatt_client_subscriptions_cleanup_by_client(GAPLEClient client) {}
+void gatt_client_subscriptions_cleanup_by_client(GAPLEClient client) {
+}
 
 void gatt_client_subscriptions_cleanup_by_connection(struct GAPLEConnection *connection,
-                                                     bool should_unsubscribe) {}
+                                                     bool should_unsubscribe) {
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Fake Manipulation
 
-void fake_gatt_client_subscriptions_init(void) { s_subscribe_return_value = BTErrnoOK; }
+void fake_gatt_client_subscriptions_init(void) {
+  s_subscribe_return_value = BTErrnoOK;
+}
 
 void fake_gatt_client_subscriptions_deinit(void) {
   Subscribe *subscribe = s_subscribe_head;

@@ -19,12 +19,16 @@ static SettingsFile *prv_lock_and_get_store(void) {
   return persist_service_lock_and_get_store(&sys_process_manager_get_current_process_md()->uuid);
 }
 
-static void prv_unlock(SettingsFile **store) { persist_service_unlock_store(*store); }
+static void prv_unlock(SettingsFile **store) {
+  persist_service_unlock_store(*store);
+}
 
 #define LOCK_AND_GET_STORE(name) \
   SettingsFile *name __attribute__((cleanup(prv_unlock))) = prv_lock_and_get_store()
 
-DEFINE_SYSCALL(size_t, persist_get_max_size, void) { return persist_service_get_max_size(); }
+DEFINE_SYSCALL(size_t, persist_get_max_size, void) {
+  return persist_service_get_max_size();
+}
 
 DEFINE_SYSCALL(bool, persist_exists, const uint32_t key) {
   LOCK_AND_GET_STORE(store);

@@ -25,7 +25,8 @@ void test_timeline_list_view__initialize(void) {
   rtc_set_time(3 * SECONDS_PER_DAY);
 }
 
-void test_timeline_list_view__cleanup(void) {}
+void test_timeline_list_view__cleanup(void) {
+}
 
 // Helpers
 //////////////////////

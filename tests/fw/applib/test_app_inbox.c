@@ -79,9 +79,11 @@ static void prv_cleanup_callback_events(void) {
 // Inbox Service Stubs
 
 void app_message_receiver_message_handler(const uint8_t *data, size_t length,
-                                          AppInboxConsumerInfo *consumer_info) {}
+                                          AppInboxConsumerInfo *consumer_info) {
+}
 
-void app_message_receiver_dropped_handler(uint32_t num_dropped_messages) {}
+void app_message_receiver_dropped_handler(uint32_t num_dropped_messages) {
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Test Inbox Service Handlers
@@ -142,7 +144,9 @@ void test_alt_message_handler(const uint8_t *data, size_t length,
   cl_assert(false);
 }
 
-void test_alt_dropped_handler(uint32_t num_dropped_messages) { cl_assert(false); }
+void test_alt_dropped_handler(uint32_t num_dropped_messages) {
+  cl_assert(false);
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Tests

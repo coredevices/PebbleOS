@@ -199,7 +199,9 @@ static int prv_get_fresh_fd(PulseBulkIODomainHandler *domain_handler, PulseTrans
   return -1;
 }
 
-static void prv_free_fd(int fd) { s_transfer_fds[fd].impl = NULL; }
+static void prv_free_fd(int fd) {
+  s_transfer_fds[fd].impl = NULL;
+}
 
 PulseTransferFD *prv_get_fd(Command *cmd, size_t length) {
   int fd = cmd->fd;
@@ -487,7 +489,8 @@ void pulse2_bulkio_packet_handler(void *packet, size_t length) {
   system_task_add_callback(prv_handle_packet, data);
 }
 
-void pulse2_bulkio_link_open_handler(void) {}
+void pulse2_bulkio_link_open_handler(void) {
+}
 
 void pulse2_bulkio_link_closed_handler(void) {
   for (int i = 0; i < MAX_PULSE_FDS; i++) {

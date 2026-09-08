@@ -21,7 +21,9 @@ static ActivitySleepState s_sleep_state = ActivitySleepStateAwake;
 static uint16_t s_sleep_state_seconds = 0;
 static uint16_t s_last_vmc = 0;
 
-bool activity_tracking_on(void) { return true; }
+bool activity_tracking_on(void) {
+  return true;
+}
 
 bool activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *history) {
   cl_assert_equal_i(history_len, 1);
@@ -85,7 +87,9 @@ void test_alarm_smart__initialize(void) {
   alarm_service_enable_alarms(true);
 }
 
-void test_alarm_smart__cleanup(void) { cron_service_deinit(); }
+void test_alarm_smart__cleanup(void) {
+  cron_service_deinit();
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //! Smart alarms

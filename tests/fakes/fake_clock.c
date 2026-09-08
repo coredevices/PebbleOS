@@ -30,7 +30,9 @@ WEAK int time_util_get_num_hours(int hours, bool is24h) {
   return is24h ? hours : (hours + 12 - 1) % 12 + 1;
 }
 
-WEAK bool clock_is_24h_style() { return false; }
+WEAK bool clock_is_24h_style() {
+  return false;
+}
 
 static size_t prv_format_time(char *buffer, int buf_size, const char *format, time_t timestamp) {
   struct tm time_tm;

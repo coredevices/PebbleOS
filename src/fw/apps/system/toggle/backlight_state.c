@@ -9,7 +9,9 @@
 #include "pbl/services/light.h"
 #include "shell/prefs.h"
 
-static bool prv_get_state(void *context) { return backlight_is_enabled(); }
+static bool prv_get_state(void *context) {
+  return backlight_is_enabled();
+}
 
 static void prv_set_state(bool enabled, void *context) {
   if (enabled != backlight_is_enabled()) {

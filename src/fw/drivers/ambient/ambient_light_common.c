@@ -24,7 +24,9 @@ static void prv_apply_locked(void) {
   ambient_light_driver_set_state(active, sampling);
 }
 
-void ambient_light_common_init(void) { s_initialized = true; }
+void ambient_light_common_init(void) {
+  s_initialized = true;
+}
 
 void ambient_light_prime(void) {
   if (!s_initialized) {
@@ -68,7 +70,9 @@ void ambient_light_resume(void) {
   pbl_mutex_unlock(&s_mutex);
 }
 
-bool ambient_light_lux_available(void) { return BOARD_CONFIG.ambient_light_lux_den != 0U; }
+bool ambient_light_lux_available(void) {
+  return BOARD_CONFIG.ambient_light_lux_den != 0U;
+}
 
 uint32_t ambient_light_level_to_lux(uint32_t light_level) {
   const uint32_t den = BOARD_CONFIG.ambient_light_lux_den;

@@ -144,9 +144,13 @@ static void prv_cleanup_app_cache_if_needed(void *data) {
   }
 }
 
-static void prv_delete_cache_callback(void *data) { app_cache_flush(); }
+static void prv_delete_cache_callback(void *data) {
+  app_cache_flush();
+}
 
-static void prv_delete_cached_files(void) { pfs_remove_files(is_app_file_name); }
+static void prv_delete_cached_files(void) {
+  pfs_remove_files(is_app_file_name);
+}
 
 static bool prv_is_in_list(AppInstallId id, const AppInstallId list[], uint8_t len) {
   for (unsigned int i = 0; i < len; i++) {

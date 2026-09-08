@@ -118,7 +118,9 @@ static void scroll_layer_property_changed_proc(Layer *layer) {
 _Static_assert(sizeof(((ScrollLayer *)0)->touch_nav_node) == sizeof(TouchNavWidgetNode),
                "ScrollLayer touch_nav_node must match TouchNavWidgetNode layout");
 
-static bool prv_is_app_task(void) { return pebble_task_get_current() == PebbleTask_App; }
+static bool prv_is_app_task(void) {
+  return pebble_task_get_current() == PebbleTask_App;
+}
 
 static TouchNavState *prv_task_touch_nav_state(void) {
   return prv_is_app_task() ? app_state_get_touch_nav_state() : modal_manager_get_touch_nav_state();
@@ -127,7 +129,8 @@ static TouchNavState *prv_task_touch_nav_state(void) {
 // Test seam (declared in scroll_layer_private.h under CONFIG_TOUCH). The unified widget set holds
 // no per-task singleton to reset; the touch-nav state is owned by TouchNavState, so this is a no-op
 // kept for source compatibility with tests that call it in their setup.
-void scroll_layer_touch_nav_reset_all(void) {}
+void scroll_layer_touch_nav_reset_all(void) {
+}
 
 bool scroll_layer_touch_is_gesture_target(const ScrollLayer *scroll_layer) {
   const TouchNavState *state = prv_task_touch_nav_state();

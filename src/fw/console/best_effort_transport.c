@@ -128,7 +128,9 @@ void pulse_best_effort_send(void *buf, const size_t length) {
 
 // Shared events
 // =============
-void pulse2_best_effort_on_link_up(void) { ppp_control_protocol_lower_layer_is_up(PULSE2_BECP); }
+void pulse2_best_effort_on_link_up(void) {
+  ppp_control_protocol_lower_layer_is_up(PULSE2_BECP);
+}
 
 void pulse2_best_effort_on_link_down(void) {
   ppp_control_protocol_lower_layer_is_down(PULSE2_BECP);

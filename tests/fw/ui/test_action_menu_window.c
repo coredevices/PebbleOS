@@ -32,7 +32,9 @@ static GContext s_ctx;
 #include "fake_spi_flash.h"
 #include "../../fixtures/load_test_resources.h"
 
-GContext *graphics_context_get_current_context(void) { return &s_ctx; }
+GContext *graphics_context_get_current_context(void) {
+  return &s_ctx;
+}
 
 // Stubs
 /////////////////////
@@ -66,7 +68,9 @@ GContext *graphics_context_get_current_context(void) { return &s_ctx; }
 #include "stubs_window_manager.h"
 #include "stubs_window_stack.h"
 
-int16_t interpolate_int16(int32_t normalized, int16_t from, int16_t to) { return to; }
+int16_t interpolate_int16(int32_t normalized, int16_t from, int16_t to) {
+  return to;
+}
 
 AnimationProgress animation_timing_scaled(AnimationProgress time_normalized,
                                           AnimationProgress interval_start,
@@ -74,9 +78,13 @@ AnimationProgress animation_timing_scaled(AnimationProgress time_normalized,
   return interval_end;
 }
 
-int64_t interpolate_moook(int32_t normalized, int64_t from, int64_t to) { return to; }
+int64_t interpolate_moook(int32_t normalized, int64_t from, int64_t to) {
+  return to;
+}
 
-uint32_t interpolate_moook_duration() { return 0; }
+uint32_t interpolate_moook_duration() {
+  return 0;
+}
 
 // Helper Functions
 /////////////////////

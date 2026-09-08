@@ -11,7 +11,8 @@
 #if !defined(SW_POWER_TRACKING)
 
 // a few dummy empty functions that should end up being compiled out
-void power_tracking_init(void) {}
+void power_tracking_init(void) {
+}
 
 void power_tracking_start(PowerSystem system) {
   // sanitize all uses of this function when you implement it

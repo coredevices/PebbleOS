@@ -157,7 +157,8 @@ void DUMA_init_sem(void) {
   /* avoid recursive call to sem_init(),
    * when sem_init() calls malloc() or other allocation function
    */
-  if (semInited || semInInit) return;
+  if (semInited || semInInit)
+    return;
   semInInit = 1;
 
 #if HAVE_PTHREADS
@@ -165,7 +166,8 @@ void DUMA_init_sem(void) {
   pthread_mutex_init(&mutex, NULL);
   semInited = 1;
 #else
-  if (sem_init(&DUMA_sem, 0, 1) >= 0) semInited = 1;
+  if (sem_init(&DUMA_sem, 0, 1) >= 0)
+    semInited = 1;
 #endif
 #elif USE_WIN32_SEMAPHORES
   pid = GetCurrentProcessId();
@@ -202,26 +204,31 @@ void DUMA_init_sem(void) {
 
   semInInit = 0;
 
-  if (!semInited) DUMA_Abort("\nCouldn't initialise semaphore");
+  if (!semInited)
+    DUMA_Abort("\nCouldn't initialise semaphore");
 }
 
 void DUMA_get_sem(void) {
-  if (semInInit) return;           /* avoid recursion */
-  if (!semInited) DUMA_init_sem(); /* initialize if necessary */
+  if (semInInit)
+    return; /* avoid recursion */
+  if (!semInited)
+    DUMA_init_sem(); /* initialize if necessary */
 
 #if HAVE_PTHREADS
 #ifndef DUMA_SEMAPHORES
   lock();
 #else
   if (semThread != DUMA_thread_self()) {
-    while (sem_wait(&DUMA_sem) < 0); /* wait for the semaphore. */
-    semThread = DUMA_thread_self();  /* let everyone know who has the semaphore. */
+    while (sem_wait(&DUMA_sem) < 0)
+      ;                             /* wait for the semaphore. */
+    semThread = DUMA_thread_self(); /* let everyone know who has the semaphore. */
   }
 #endif
   ++semDepth; /* increment semDepth - push one stack level */
 #elif USE_WIN32_SEMAPHORES
   if (semThread != DUMA_thread_self()) {
-    while (WaitForSingleObject(semHandle, 1000) != WAIT_OBJECT_0); /* wait for the semaphore. */
+    while (WaitForSingleObject(semHandle, 1000) != WAIT_OBJECT_0)
+      ;                             /* wait for the semaphore. */
     semThread = DUMA_thread_self(); /* let everyone know who has the semaphore. */
   }
   ++semDepth; /* increment semDepth - push one stack level */
@@ -231,15 +238,19 @@ void DUMA_get_sem(void) {
 }
 
 int DUMA_rel_sem(int retval) {
-  if (semInInit) return retval; /* avoid recursion */
-  if (!semInited) DUMA_Abort("\nSemaphore isn't initialised");
+  if (semInInit)
+    return retval; /* avoid recursion */
+  if (!semInited)
+    DUMA_Abort("\nSemaphore isn't initialised");
 
 #ifdef DUMA_SEMAPHORES
-  if (!semThread) DUMA_Abort("\nSemaphore isn't owned by this thread");
+  if (!semThread)
+    DUMA_Abort("\nSemaphore isn't owned by this thread");
 #endif
 
 #if HAVE_PTHREADS || USE_WIN32_SEMAPHORES
-  if (semDepth <= 0) DUMA_Abort("\nSemaphore isn't locked");
+  if (semDepth <= 0)
+    DUMA_Abort("\nSemaphore isn't locked");
 #endif
 
   --semDepth; /* decrement semDepth - popping one stack level */
@@ -248,7 +259,8 @@ int DUMA_rel_sem(int retval) {
   unlock();
 #else
   semThread = (pthread_t)0; /* zero this before actually free'ing the semaphore. */
-  if (sem_post(&DUMA_sem) < 0) DUMA_Abort("Failed to post the semaphore.");
+  if (sem_post(&DUMA_sem) < 0)
+    DUMA_Abort("Failed to post the semaphore.");
 #endif
 #elif USE_WIN32_SEMAPHORES
   semThread = 0; /* zero this before actually free'ing the semaphore. */

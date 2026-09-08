@@ -53,7 +53,8 @@ void OTG_FS_WKUP_IRQHandler(void) {
     core_dump_reset(false /* don't force overwrite */);
   } else {
     dbgserial_putstr("Entering infinite loop in ISR");
-    while (true);
+    while (true)
+      ;
   }
 }
 
@@ -88,7 +89,8 @@ static void menu_select_callback(int index, void *ctx) {
   } else if (index == 3) {
     // stuck app
     PBL_LOG_INFO("Entering infinite loop in App Task");
-    while (true);
+    while (true)
+      ;
 
   } else if (index == 4) {
     PBL_LOG_INFO("Entering infinite loop in FreeRTOS ISR");
@@ -247,7 +249,9 @@ static void prv_window_load(Window *window) {
 
 // =================================================================================
 // Deinitialize resources on window unload that were initialized on window load
-static void prv_window_unload(Window *window) { simple_menu_layer_destroy(s_app_data->menu_layer); }
+static void prv_window_unload(Window *window) {
+  simple_menu_layer_destroy(s_app_data->menu_layer);
+}
 
 // =================================================================================
 static void handle_init(void) {

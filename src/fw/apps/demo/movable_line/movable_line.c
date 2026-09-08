@@ -20,9 +20,20 @@
 
 static Window *s_window;
 
-typedef enum PixelBit { PIXEL_BIT_BOTH, PIXEL_BIT_MSB, PIXEL_BIT_LSB, PIXEL_BIT_COUNT } PixelBit;
+typedef enum PixelBit {
+  PIXEL_BIT_BOTH,
+  PIXEL_BIT_MSB,
+  PIXEL_BIT_LSB,
+  PIXEL_BIT_COUNT
+} PixelBit;
 
-typedef enum LineHue { HUE_RED, HUE_GREEN, HUE_BLUE, HUE_WHITE, HUE_COUNT } LineHue;
+typedef enum LineHue {
+  HUE_RED,
+  HUE_GREEN,
+  HUE_BLUE,
+  HUE_WHITE,
+  HUE_COUNT
+} LineHue;
 
 typedef enum LineAttribute {
   ATTRIBUTE_HUE,

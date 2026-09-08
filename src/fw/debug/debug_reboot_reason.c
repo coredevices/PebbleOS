@@ -11,7 +11,9 @@
 #include "system/reboot_reason.h"
 
 static RebootReasonCode s_last_reboot_reason_code = RebootReasonCode_Unknown;
-RebootReasonCode reboot_reason_get_last_reboot_reason(void) { return s_last_reboot_reason_code; }
+RebootReasonCode reboot_reason_get_last_reboot_reason(void) {
+  return s_last_reboot_reason_code;
+}
 
 void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
   RebootReason reason;

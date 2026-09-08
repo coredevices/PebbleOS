@@ -35,7 +35,9 @@ static void set_ad_data(uint8_t *data, size_t length) {
   s_ad_data->ad_data_length = length;
 }
 
-void test_ble_ad_parse__initialize(void) { memset(s_ad_data, 0, sizeof(s_buffer_size)); }
+void test_ble_ad_parse__initialize(void) {
+  memset(s_ad_data, 0, sizeof(s_buffer_size));
+}
 
 // -----------------------------------------------------------------------------
 // Consuming BLEAdData:
@@ -113,7 +115,8 @@ void test_ble_ad_parse__128_bit_uuid(void) {
 // Creating BLEAdData:
 // -----------------------------------------------------------------------------
 
-void test_ble_ad_parse__ad_and_scan_resp_boundaries(void) {}
+void test_ble_ad_parse__ad_and_scan_resp_boundaries(void) {
+}
 
 void test_ble_ad_parse__start_scan_response(void) {
   BLEAdData *ad = ble_ad_create();

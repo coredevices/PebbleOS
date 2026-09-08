@@ -16,9 +16,11 @@ extern MBuf *s_free_list;
 
 // Setup
 
-void test_mbuf__initialize(void) {}
+void test_mbuf__initialize(void) {
+}
 
-void test_mbuf__cleanup(void) {}
+void test_mbuf__cleanup(void) {
+}
 
 // Tests
 

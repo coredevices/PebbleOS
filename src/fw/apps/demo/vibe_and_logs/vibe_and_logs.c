@@ -46,7 +46,8 @@ static void handle_init(void) {
   // new_timer_start(s_sys_timer, 10, sys_timer_callback, NULL, 0);
 }
 
-static void handle_deinit(void) {}
+static void handle_deinit(void) {
+}
 
 static void s_main(void) {
   handle_init();

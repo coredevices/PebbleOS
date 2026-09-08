@@ -125,7 +125,9 @@ static void prv_watch_is_motionless(void) {
 //! The orientation of the accelerometer is checked every minute. If the orientation has
 //! changed by a significant amount, we consider the watch as in motion, and restart the
 //! stationary counter
-static void prv_watch_is_in_motion(void) { prv_handle_action(StationaryActionWakeUp); }
+static void prv_watch_is_in_motion(void) {
+  prv_handle_action(StationaryActionWakeUp);
+}
 
 static void prv_stationary_check_launcher_task_cb(void *unused_data) {
   if (prv_update_and_check_accel_is_stationary()) {
@@ -142,7 +144,9 @@ static void prv_stationary_check_timer_cb(void *unused_data) {
   launcher_task_add_callback(prv_stationary_check_launcher_task_cb, NULL);
 }
 
-bool stationary_get_enabled(void) { return shell_prefs_get_stationary_enabled(); }
+bool stationary_get_enabled(void) {
+  return shell_prefs_get_stationary_enabled();
+}
 
 void stationary_set_enabled(bool enabled) {
   if (enabled == stationary_get_enabled()) {
@@ -341,4 +345,6 @@ static void prv_setup_callback_info(void) {
   };
 }
 
-void stationary_init(void) { prv_setup_callback_info(); }
+void stationary_init(void) {
+  prv_setup_callback_info();
+}

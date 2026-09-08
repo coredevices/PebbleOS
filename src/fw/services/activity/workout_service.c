@@ -74,9 +74,13 @@ typedef struct WorkoutServiceData {
 
 static WorkoutServiceData s_workout_data;
 
-static void prv_lock(void) { pbl_mutex_lock(&s_workout_data.s_workout_mutex, PBL_FOREVER); }
+static void prv_lock(void) {
+  pbl_mutex_lock(&s_workout_data.s_workout_mutex, PBL_FOREVER);
+}
 
-static void prv_unlock(void) { pbl_mutex_unlock(&s_workout_data.s_workout_mutex); }
+static void prv_unlock(void) {
+  pbl_mutex_unlock(&s_workout_data.s_workout_mutex);
+}
 
 static void prv_put_event(PebbleWorkoutEventType e_type) {
   PebbleEvent event = {.type = PEBBLE_WORKOUT_EVENT,
@@ -191,7 +195,9 @@ bool workout_service_is_workout_type_supported(ActivitySessionType type) {
 }
 
 // ---------------------------------------------------------------------------------------
-T_STATIC void prv_abandon_workout_timer_callback(void *unused) { workout_service_stop_workout(); }
+T_STATIC void prv_abandon_workout_timer_callback(void *unused) {
+  workout_service_stop_workout();
+}
 
 // ---------------------------------------------------------------------------------------
 T_STATIC void prv_abandoned_notification_timer_callback(void *unused) {
@@ -272,7 +278,9 @@ unlock:
 }
 
 // ---------------------------------------------------------------------------------------
-void workout_service_init(void) { pbl_mutex_init(&s_workout_data.s_workout_mutex); }
+void workout_service_init(void) {
+  pbl_mutex_init(&s_workout_data.s_workout_mutex);
+}
 
 // ---------------------------------------------------------------------------------------
 // FIXME: We should probably handle this on KernelBG and not use the official app subscription

@@ -29,7 +29,9 @@
 #include "stubs_stringlist.h"
 #include "stubs_system_task.h"
 
-bool activity_is_initialized(void) { return true; }
+bool activity_is_initialized(void) {
+  return true;
+}
 
 // Fakes
 #include "fake_kernel_services_notifications.h"
@@ -70,9 +72,13 @@ typedef struct StaticData {
 } StaticData;
 static StaticData s_data = {};
 
-bool activity_prefs_activity_insights_are_enabled(void) { return true; }
+bool activity_prefs_activity_insights_are_enabled(void) {
+  return true;
+}
 
-bool activity_prefs_sleep_insights_are_enabled(void) { return true; }
+bool activity_prefs_sleep_insights_are_enabled(void) {
+  return true;
+}
 
 bool activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *history) {
   memcpy(history, &s_data.metric_history[metric], history_len * sizeof(int32_t));
@@ -239,16 +245,22 @@ SettingsFile *activity_private_settings_open(void) {
   return &file;
 }
 
-void activity_private_settings_close(SettingsFile *file) { return; }
+void activity_private_settings_close(SettingsFile *file) {
+  return;
+}
 
 bool activity_get_step_averages(DayInWeek day_of_week, ActivityMetricAverages *averages) {
   return false;
 }
 
 static time_t s_activation_time = 0;
-time_t activity_prefs_get_activation_time(void) { return s_activation_time; }
+time_t activity_prefs_get_activation_time(void) {
+  return s_activation_time;
+}
 
-static void prv_set_activation_time(time_t activation_time) { s_activation_time = activation_time; }
+static void prv_set_activation_time(time_t activation_time) {
+  s_activation_time = activation_time;
+}
 
 static uint32_t s_activity_activation_delay_insight_bitmask = 0;
 bool activity_prefs_has_activation_delay_insight_fired(ActivationDelayInsightType type) {
@@ -261,9 +273,13 @@ void activity_prefs_set_activation_delay_insight_fired(ActivationDelayInsightTyp
 
 static int s_health_app_opened_version = 0;
 
-uint8_t activity_prefs_get_health_app_opened_version(void) { return s_health_app_opened_version; }
+uint8_t activity_prefs_get_health_app_opened_version(void) {
+  return s_health_app_opened_version;
+}
 
-ActivityScalarStore activity_metrics_prv_steps_per_minute(void) { return s_data.steps_per_minute; }
+ActivityScalarStore activity_metrics_prv_steps_per_minute(void) {
+  return s_data.steps_per_minute;
+}
 
 // =========================================================================================
 // PFS stubs
@@ -274,7 +290,9 @@ PFSCallbackHandle pfs_watch_file(const char *filename, PFSFileChangedCallback ca
   return NULL;
 }
 
-void pfs_unwatch_file(PFSCallbackHandle cb_handle) { pfs_watch_cb = NULL; }
+void pfs_unwatch_file(PFSCallbackHandle cb_handle) {
+  pfs_watch_cb = NULL;
+}
 
 // =========================================================================================
 // Timeline item stubs
@@ -287,7 +305,9 @@ TimelineItem *timeline_item_create_with_attributes(time_t timestamp, uint16_t du
   return &s_item;
 }
 
-void timeline_item_destroy(TimelineItem *item) { return; }
+void timeline_item_destroy(TimelineItem *item) {
+  return;
+}
 
 // =========================================================================================
 // Timeline stubs
@@ -303,11 +323,15 @@ bool timeline_remove(Uuid *id) {
   return true;
 }
 
-bool timeline_exists(Uuid *id) { return true; }
+bool timeline_exists(Uuid *id) {
+  return true;
+}
 
 // =========================================================================================
 // Notification stubs
-void notification_storage_store(TimelineItem *notification) { s_data.notifs_shown++; }
+void notification_storage_store(TimelineItem *notification) {
+  s_data.notifs_shown++;
+}
 
 // Helpers
 static void prv_set_time(const struct tm *input) {
@@ -333,7 +357,9 @@ void test_activity_insights__initialize(void) {
 }
 
 // ---------------------------------------------------------------------------------------
-void test_activity_insights__cleanup(void) { fake_settings_file_reset(); }
+void test_activity_insights__cleanup(void) {
+  fake_settings_file_reset();
+}
 
 // ---------------------------------------------------------------------------------------
 // Test that we correctly calculate the statistics (# days of history, median, etc)

@@ -204,7 +204,9 @@ void heap_init(Heap *const heap, void *start, void *end, bool fuzz_on_free) {
   *(heap->begin) = (HeapInfo_t){.PrevSize = heap_size, .is_allocated = false, .Size = heap_size};
 }
 
-void heap_set_lock_impl(Heap *heap, HeapLockImpl lock_impl) { heap->lock_impl = lock_impl; }
+void heap_set_lock_impl(Heap *heap, HeapLockImpl lock_impl) {
+  heap->lock_impl = lock_impl;
+}
 
 void heap_set_double_free_handler(Heap *heap, DoubleFreeHandler double_free_handler) {
   heap->double_free_handler = double_free_handler;
@@ -390,7 +392,9 @@ bool heap_contains_address(Heap *const heap, void *ptr) {
   return (ptr >= (void *)heap->begin && ptr < (void *)heap->end);
 }
 
-size_t heap_size(const Heap *heap) { return ((char *)heap->end) - ((char *)heap->begin); }
+size_t heap_size(const Heap *heap) {
+  return ((char *)heap->end) - ((char *)heap->begin);
+}
 
 static void prv_sanity_check_block(Heap *const heap, HeapInfo_t *block) {
   HeapInfo_t *prev_block = get_previous_block(heap, block);
@@ -537,7 +541,9 @@ void *heap_calloc(Heap *const heap, size_t count, size_t size, uintptr_t client_
   return heap_zalloc(heap, count * size, client_pc);
 }
 
-uint32_t heap_get_minimum_headroom(Heap *heap) { return (heap_size(heap) - heap->high_water_mark); }
+uint32_t heap_get_minimum_headroom(Heap *heap) {
+  return (heap_size(heap) - heap->high_water_mark);
+}
 
 // Serial Commands
 ///////////////////////////////////////////////////////////

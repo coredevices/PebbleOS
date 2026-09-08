@@ -14,7 +14,8 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 int g_pbl_log_level = 0;
-void pbl_log(const char *src_filename, int src_line_number, const char *fmt, ...) {}
+void pbl_log(const char *src_filename, int src_line_number, const char *fmt, ...) {
+}
 
 // Tests
 ///////////////////////////////////////////////////////////
@@ -37,9 +38,11 @@ static void prv_test_decode_encode(const char *test_name, char *buffer, unsigned
   cl_assert_equal_m(out, original_in, buffer_length);
 }
 
-void test_base64__initialize(void) {}
+void test_base64__initialize(void) {
+}
 
-void test_base64__cleanup(void) {}
+void test_base64__cleanup(void) {
+}
 
 void test_base64__decode(void) {
   {

@@ -48,7 +48,9 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Stubs
 
-status_t reminder_db_delete_with_parent(const TimelineItemId *id) { return S_SUCCESS; }
+status_t reminder_db_delete_with_parent(const TimelineItemId *id) {
+  return S_SUCCESS;
+}
 
 const PebbleProcessMd *alarms_app_get_info() {
   static const PebbleProcessMdSystem s_alarms_app_info = {
@@ -138,7 +140,9 @@ int prv_hours_and_minutes_to_seconds(int hour, int minute) {
   return (hour * SECONDS_PER_HOUR) + (minute * SECONDS_PER_MINUTE);
 }
 
-const char *timeline_get_private_data_source(Uuid *parent_id) { return NULL; }
+const char *timeline_get_private_data_source(Uuid *parent_id) {
+  return NULL;
+}
 
 status_t pin_db_insert_item_without_event(TimelineItem *item) {
   s_num_timeline_adds++;
@@ -153,7 +157,9 @@ status_t pin_db_delete(const uint8_t *key, int key_len) {
   return true;
 }
 
-void event_put(PebbleEvent *event) { s_num_alarm_events_put++; }
+void event_put(PebbleEvent *event) {
+  s_num_alarm_events_put++;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Helper Functions

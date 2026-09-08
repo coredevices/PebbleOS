@@ -45,7 +45,9 @@ bool prv_print_app_info(AppInstallEntry *entry, void *data) {
   return true;
 }
 
-void command_app_list(void) { app_install_enumerate_entries(prv_print_app_info, NULL); }
+void command_app_list(void) {
+  app_install_enumerate_entries(prv_print_app_info, NULL);
+}
 
 void command_app_launch(const char *id_str) {
   int32_t id = atoi(id_str);

@@ -37,7 +37,9 @@ static int prv_week_of_year(const struct tm *t, bool monday_is_first_day) {
   return (t->tm_yday + 7 - wday) / 7;
 }
 
-static int prv_full_year(int year) { return year + TM_YEAR_ORIGIN; }
+static int prv_full_year(int year) {
+  return year + TM_YEAR_ORIGIN;
+}
 
 static int prv_iso8601_base_week(const struct tm *t) {
   // Not quite the same as prv_week_of_year

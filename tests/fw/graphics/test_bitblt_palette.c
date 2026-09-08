@@ -82,7 +82,8 @@ void test_bitblt_palette__initialize(void) {
   test_graphics_context_init(&ctx, &framebuffer);
 }
 
-void test_bitblt_palette__cleanup(void) {}
+void test_bitblt_palette__cleanup(void) {
+}
 
 void test_bitblt_palette__1Bit_color(void) {
   const int BITS_PER_PIXEL = 1;
@@ -299,11 +300,17 @@ static void prv_4bit_simple(GCompOp compositing_mode, GColor color, bool transpa
   cl_assert(prv_check_source_stripe_blit(dest_bitmap_data, &s_bmp, GColorWhite));
 }
 
-void test_bitblt_palette__2Bit_assign_opaque(void) { prv_opaque_2bit_simple(GCompOpAssign); }
+void test_bitblt_palette__2Bit_assign_opaque(void) {
+  prv_opaque_2bit_simple(GCompOpAssign);
+}
 
-void test_bitblt_palette__2Bit_set_opaque(void) { prv_opaque_2bit_simple(GCompOpSet); }
+void test_bitblt_palette__2Bit_set_opaque(void) {
+  prv_opaque_2bit_simple(GCompOpSet);
+}
 
-void test_bitblt_palette__2Bit_comptint_opaque(void) { prv_opaque_2bit_simple(GCompOpTint); }
+void test_bitblt_palette__2Bit_comptint_opaque(void) {
+  prv_opaque_2bit_simple(GCompOpTint);
+}
 
 void test_bitblt_palette__4Bit_assign_opaque(void) {
   prv_4bit_simple(GCompOpAssign, GColorWhite, false /* opaque */);

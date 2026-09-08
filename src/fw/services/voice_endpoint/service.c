@@ -173,7 +173,8 @@ void voice_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *d
   }
 }
 #else
-void voice_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t size) {}
+void voice_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t size) {
+}
 #endif
 
 void voice_endpoint_setup_session(VoiceEndpointSessionType session_type,

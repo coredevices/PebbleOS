@@ -42,7 +42,9 @@ static TaskTimerManager s_task_timer_manager;
 
 // ---------------------------------------------------------------------------------------
 // Create a new timer
-TimerID new_timer_create(void) { return task_timer_create(&s_task_timer_manager); }
+TimerID new_timer_create(void) {
+  return task_timer_create(&s_task_timer_manager);
+}
 
 // --------------------------------------------------------------------------------
 // Schedule a timer to run.
@@ -59,11 +61,15 @@ bool new_timer_scheduled(TimerID timer_id, uint32_t *expire_ms_p) {
 
 // --------------------------------------------------------------------------------
 // Stop a timer. If the timer callback is currently executing, return false, else return true.
-bool new_timer_stop(TimerID timer_id) { return task_timer_stop(&s_task_timer_manager, timer_id); }
+bool new_timer_stop(TimerID timer_id) {
+  return task_timer_stop(&s_task_timer_manager, timer_id);
+}
 
 // --------------------------------------------------------------------------------
 // Delete a timer
-void new_timer_delete(TimerID timer_id) { task_timer_delete(&s_task_timer_manager, timer_id); }
+void new_timer_delete(TimerID timer_id) {
+  task_timer_delete(&s_task_timer_manager, timer_id);
+}
 
 // ========================================================================================
 // Service Implementation

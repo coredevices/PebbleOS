@@ -812,7 +812,9 @@ struct TouchNavState *modal_manager_get_touch_nav_state(void);
 _Static_assert(sizeof(((SwapLayer *)0)->touch_nav_node) == sizeof(TouchNavWidgetNode),
                "SwapLayer touch_nav_node must match TouchNavWidgetNode layout");
 
-static bool prv_is_app_task(void) { return pebble_task_get_current() == PebbleTask_App; }
+static bool prv_is_app_task(void) {
+  return pebble_task_get_current() == PebbleTask_App;
+}
 
 static TouchNavState *prv_task_touch_nav_state(void) {
   return prv_is_app_task() ? app_state_get_touch_nav_state() : modal_manager_get_touch_nav_state();
@@ -821,7 +823,8 @@ static TouchNavState *prv_task_touch_nav_state(void) {
 // Test seam (declared in swap_layer.h under CONFIG_TOUCH). The unified widget set holds no per-task
 // singleton to reset; the touch-nav state is owned by TouchNavState, so this is a no-op kept for
 // source compatibility with tests that call it in their setup.
-void swap_layer_touch_nav_reset_all(void) {}
+void swap_layer_touch_nav_reset_all(void) {
+}
 
 bool swap_layer_touch_is_gesture_target(const SwapLayer *swap_layer) {
   const TouchNavState *state = prv_task_touch_nav_state();
@@ -970,7 +973,9 @@ static void prv_swap_touch_emit(SwapLayer *swap_layer, ButtonId button) {
 // The notification body may not be loaded yet (registration can happen before the layout loads) and
 // prv_get_current_notification_offset dereferences current, so gate the whole gesture on a present
 // layout. A declined gesture never Starts the pan, so no base offset is latched or applied.
-static bool prv_swap_ops_can_start(void *w) { return ((SwapLayer *)w)->current != NULL; }
+static bool prv_swap_ops_can_start(void *w) {
+  return ((SwapLayer *)w)->current != NULL;
+}
 
 static void prv_swap_ops_pan_started(void *w) {
   SwapLayer *swap_layer = w;

@@ -22,15 +22,25 @@ bool health_service_private_weekend_filter(int index, int32_t value, void *tm_we
   return false;
 }
 
-HealthValue health_service_sum_today(HealthMetric metric) { return 0; }
+HealthValue health_service_sum_today(HealthMetric metric) {
+  return 0;
+}
 
-HealthValue health_service_peek_current_value(HealthMetric metric) { return 0; }
+HealthValue health_service_peek_current_value(HealthMetric metric) {
+  return 0;
+}
 
-bool health_service_set_heart_rate_sample_period(uint16_t interval_sec) { return false; }
+bool health_service_set_heart_rate_sample_period(uint16_t interval_sec) {
+  return false;
+}
 
-bool health_service_events_subscribe(HealthEventHandler handler, void *context) { return false; }
+bool health_service_events_subscribe(HealthEventHandler handler, void *context) {
+  return false;
+}
 
-bool health_service_events_unsubscribe(void) { return false; }
+bool health_service_events_unsubscribe(void) {
+  return false;
+}
 
 HealthValue health_service_sum_averaged(HealthMetric metric, time_t time_start, time_t time_end,
                                         HealthServiceTimeScope scope) {

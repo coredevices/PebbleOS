@@ -153,7 +153,9 @@ static void prv_select_tone_handler(ActionMenu *action_menu, const ActionMenuIte
   }
 }
 
-static void prv_stop_sound_preview(void) { speaker_service_stop_for_task(PebbleTask_App); }
+static void prv_stop_sound_preview(void) {
+  speaker_service_stop_for_task(PebbleTask_App);
+}
 
 static void prv_sound_highlight_handler(const ActionMenuItem *item, void *context) {
   (void)context;
@@ -180,7 +182,8 @@ static void prv_sound_highlight_handler(const ActionMenuItem *item, void *contex
 static ActionMenuLevel *prv_create_main_menu(void) {
   ActionMenuLevel *level =
       task_malloc(sizeof(ActionMenuLevel) + DetailMenuItemIndexNum * sizeof(ActionMenuItem));
-  if (!level) return NULL;
+  if (!level)
+    return NULL;
   *level = (ActionMenuLevel){
       .num_items = DetailMenuItemIndexNum,
       .parent_level = NULL,
@@ -192,7 +195,8 @@ static ActionMenuLevel *prv_create_main_menu(void) {
 static ActionMenuLevel *prv_create_snooze_menu(ActionMenuLevel *parent_level) {
   ActionMenuLevel *level =
       task_malloc(sizeof(ActionMenuLevel) + NUM_SNOOZE_MENU_ITEMS * sizeof(ActionMenuItem));
-  if (!level) return NULL;
+  if (!level)
+    return NULL;
   *level = (ActionMenuLevel){
       .num_items = NUM_SNOOZE_MENU_ITEMS,
       .parent_level = parent_level,
@@ -205,7 +209,8 @@ static ActionMenuLevel *prv_create_snooze_menu(ActionMenuLevel *parent_level) {
 static ActionMenuLevel *prv_create_sound_menu(ActionMenuLevel *parent_level) {
   ActionMenuLevel *level =
       task_malloc(sizeof(ActionMenuLevel) + NUM_SOUND_MENU_ITEMS * sizeof(ActionMenuItem));
-  if (!level) return NULL;
+  if (!level)
+    return NULL;
   *level = (ActionMenuLevel){
       .num_items = NUM_SOUND_MENU_ITEMS,
       .parent_level = parent_level,

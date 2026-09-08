@@ -117,7 +117,12 @@ typedef struct {
   bool large_caller_id;
 } PhoneStyle;
 
-typedef enum { ACCEPTED, DECLINED, DISCONNECTED, ENDED } CallStatus;
+typedef enum {
+  ACCEPTED,
+  DECLINED,
+  DISCONNECTED,
+  ENDED
+} CallStatus;
 
 typedef struct {
   Window window;
@@ -298,7 +303,9 @@ static void prv_update_color_boundary(void *subject, int16_t boundary) {
   layer_mark_dirty(&s_phone_ui_data->window.layer);
 }
 
-static int16_t prv_get_color_boundary(void *subject) { return s_phone_ui_data->bg_color.boundary; }
+static int16_t prv_get_color_boundary(void *subject) {
+  return s_phone_ui_data->bg_color.boundary;
+}
 
 static const PropertyAnimationImplementation s_color_slide_animation_impl = {
     .base =
@@ -870,7 +877,9 @@ static void prv_action_bar_setup(PhoneCallActions actions) {
 }
 
 //! Put the correct data in the 3 text fields
-static void prv_display_caller_info(PebblePhoneCaller *caller) { prv_set_caller_id_text(caller); }
+static void prv_display_caller_info(PebblePhoneCaller *caller) {
+  prv_set_caller_id_text(caller);
+}
 
 static void prv_phone_ui_deinit(void) {
   if (s_phone_ui_data == NULL) {
@@ -915,7 +924,9 @@ static void prv_phone_ui_deinit(void) {
   s_phone_ui_data = NULL;
 }
 
-static void prv_handle_window_unload(Window *window) { prv_phone_ui_deinit(); }
+static void prv_handle_window_unload(Window *window) {
+  prv_phone_ui_deinit();
+}
 
 //! Window destroy functions
 //! Currently only 1 call window can exist at a time
@@ -1170,7 +1181,9 @@ void phone_ui_handle_call_end(bool call_accepted, bool disconnected) {
   prv_window_pop_with_delay(CALL_END_DELAY_MS);
 }
 
-void phone_ui_handle_call_hide(void) { prv_window_pop(); }
+void phone_ui_handle_call_hide(void) {
+  prv_window_pop();
+}
 
 void phone_ui_handle_caller_id(PebblePhoneCaller *caller) {
   if (!s_phone_ui_data) {

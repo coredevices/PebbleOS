@@ -126,4 +126,6 @@ void command_enter_consumer_mode(void) {
   factory_reset(true /* should_shutdown */);
 }
 
-bool factory_reset_ongoing(void) { return s_in_factory_reset; }
+bool factory_reset_ongoing(void) {
+  return s_in_factory_reset;
+}

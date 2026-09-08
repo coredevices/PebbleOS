@@ -94,7 +94,9 @@ static void settings_bluetooth_toggle_airplane_mode(SettingsBluetoothData *data)
   settings_menu_mark_dirty(SettingsMenuItemBluetooth);
 }
 
-bool is_remote_connected(StoredRemote *remote) { return (remote->ble.connection != NULL); }
+bool is_remote_connected(StoredRemote *remote) {
+  return (remote->ble.connection != NULL);
+}
 
 static int remote_comparator(StoredRemote *remote, StoredRemote *other) {
   if (is_remote_connected(remote) != is_remote_connected(other)) {

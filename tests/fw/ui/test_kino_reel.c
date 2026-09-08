@@ -32,8 +32,10 @@
 #include "stubs_ui_window.h"
 #include "stubs_unobstructed_area.h"
 
-void framebuffer_clear(FrameBuffer *f) {}
-void graphics_context_move_draw_box(GContext *ctx, GPoint offset) {}
+void framebuffer_clear(FrameBuffer *f) {
+}
+void graphics_context_move_draw_box(GContext *ctx, GPoint offset) {
+}
 typedef uint16_t ResourceId;
 const uint8_t *resource_get_builtin_bytes(ResAppNum app_num, uint32_t resource_id,
                                           uint32_t *num_bytes_out) {
@@ -54,7 +56,9 @@ void test_kino_reel__initialize(void) {
 }
 
 // Teardown
-void test_kino_reel__cleanup(void) { free(fb); }
+void test_kino_reel__cleanup(void) {
+  free(fb);
+}
 
 // Tests
 ////////////////////////////////////

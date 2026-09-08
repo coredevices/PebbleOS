@@ -290,7 +290,9 @@ void health_sleep_summary_card_destroy(Layer *base_layer) {
   layer_destroy(base_layer);
 }
 
-GColor health_sleep_summary_card_get_bg_color(Layer *layer) { return CARD_BACKGROUND_COLOR; }
+GColor health_sleep_summary_card_get_bg_color(Layer *layer) {
+  return CARD_BACKGROUND_COLOR;
+}
 
 bool health_sleep_summary_show_select_indicator(Layer *layer) {
   HealthSleepSummaryCardData *health_sleep_summary_card_data = layer_get_data(layer);

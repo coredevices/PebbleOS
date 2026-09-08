@@ -159,4 +159,6 @@ void compositor_display_update(void (*handle_update_complete_cb)(void)) {
   display_update(&prv_flush_get_next_line_cb, &prv_flush_complete_cb);
 }
 
-bool compositor_display_update_in_progress(void) { return display_update_in_progress(); }
+bool compositor_display_update_in_progress(void) {
+  return display_update_in_progress();
+}

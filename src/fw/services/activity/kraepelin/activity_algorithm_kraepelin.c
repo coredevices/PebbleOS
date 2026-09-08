@@ -96,7 +96,9 @@ static bool prv_lock(void) {
   return true;
 }
 
-static void prv_unlock(void) { pbl_mutex_unlock(&s_alg_state->mutex); }
+static void prv_unlock(void) {
+  pbl_mutex_unlock(&s_alg_state->mutex);
+}
 
 // ----------------------------------------------------------------------------------------------
 // Open the minute data settings file and malloc space for the file struct

@@ -120,9 +120,13 @@ static const TimelineLayerStyle *prv_get_style(void) {
   return s_styles[PreferredContentSizeDefault];
 }
 
-uint16_t timeline_layer_get_fat_pin_height(void) { return prv_get_style()->fat_pin_height; }
+uint16_t timeline_layer_get_fat_pin_height(void) {
+  return prv_get_style()->fat_pin_height;
+}
 
-uint16_t timeline_layer_get_ideal_sidebar_width(void) { return prv_get_style()->sidebar_width; }
+uint16_t timeline_layer_get_ideal_sidebar_width(void) {
+  return prv_get_style()->sidebar_width;
+}
 
 ///////////////////////////////////////////////////////////
 // Drawing functions
@@ -812,7 +816,8 @@ Animation *timeline_layer_create_sidebar_animation(TimelineLayer *timeline_layer
   return animation;
 }
 
-static void prv_speed_lines_update(Animation *animation, AnimationProgress progress) {}
+static void prv_speed_lines_update(Animation *animation, AnimationProgress progress) {
+}
 
 Animation *timeline_layer_create_speed_lines_animation(TimelineLayer *timeline_layer) {
   static const AnimationImplementation s_speed_lines_impl = {

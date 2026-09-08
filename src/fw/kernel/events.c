@@ -91,7 +91,8 @@ static void prv_queue_dump(struct pbl_msgq *queue) {
   while (pbl_msgq_get(queue, &event, PBL_NO_WAIT) == 0) {
     PBL_LOG_DBG("Event type: %u", event.type);
   }
-  for (;;);
+  for (;;)
+    ;
 }
 #endif
 
@@ -162,7 +163,8 @@ static bool prv_event_put_isr(struct pbl_msgq *queue, const char *queue_type, ui
     prv_log_event_put_failure(queue_type, saved_lr, event);
 
 #ifdef CONFIG_NO_WATCHDOG
-    while (1);
+    while (1)
+      ;
 #endif
 
     reset_due_to_software_failure();
@@ -380,7 +382,9 @@ void event_reset_from_process_queue(PebbleTask task) {
   event_queue_cleanup_and_reset(reset_queue);
 }
 
-struct pbl_msgq *event_kernel_to_kernel_event_queue(void) { return &s_from_kernel_event_queue; }
+struct pbl_msgq *event_kernel_to_kernel_event_queue(void) {
+  return &s_from_kernel_event_queue;
+}
 
 void event_queue_cleanup_and_reset(struct pbl_msgq *queue) {
   int num_events_in_queue = pbl_msgq_num_used(queue);

@@ -95,9 +95,12 @@ void itoa_int(int n, char *str, int base) {
 }
 
 static int8_t ascii_hex_to_int(const uint8_t c) {
-  if (isdigit(c)) return c - '0';
-  if (isupper(c)) return (c - 'A') + 10;
-  if (islower(c)) return (c - 'a') + 10;
+  if (isdigit(c))
+    return c - '0';
+  if (isupper(c))
+    return (c - 'A') + 10;
+  if (islower(c))
+    return (c - 'a') + 10;
 
   return -1;
 }

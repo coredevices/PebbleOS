@@ -180,4 +180,6 @@ void gap_le_scan_deinit(void) {
 }
 
 // For UNIT Tests
-uint32_t gap_le_scan_get_dropped_reports_count(void) { return s_dropped_reports; }
+uint32_t gap_le_scan_get_dropped_reports_count(void) {
+  return s_dropped_reports;
+}

@@ -26,7 +26,9 @@ DEFINE_SYSCALL(int, sys_test, int arg) {
   return arg * 2;
 }
 
-DEFINE_SYSCALL(time_t, sys_get_time, void) { return rtc_get_time(); }
+DEFINE_SYSCALL(time_t, sys_get_time, void) {
+  return rtc_get_time();
+}
 
 DEFINE_SYSCALL(void, sys_get_time_ms, time_t *t, uint16_t *out_ms) {
   if (PRIVILEGE_WAS_ELEVATED) {
@@ -37,7 +39,9 @@ DEFINE_SYSCALL(void, sys_get_time_ms, time_t *t, uint16_t *out_ms) {
   rtc_get_time_ms(t, out_ms);
 }
 
-DEFINE_SYSCALL(RtcTicks, sys_get_ticks, void) { return rtc_get_ticks(); }
+DEFINE_SYSCALL(RtcTicks, sys_get_ticks, void) {
+  return rtc_get_ticks();
+}
 
 DEFINE_SYSCALL(void, sys_pbl_log, LogBinaryMessage *log_message, bool async) {
   // log_message points at a struct whose trailing message[] is sized by the
@@ -78,6 +82,10 @@ DEFINE_SYSCALL(struct tm *, sys_localtime_r, const time_t *timep, struct tm *res
 }
 
 //! System call to exit an application gracefully.
-DEFINE_SYSCALL(NORETURN, sys_exit, void) { process_manager_task_exit(); }
+DEFINE_SYSCALL(NORETURN, sys_exit, void) {
+  process_manager_task_exit();
+}
 
-DEFINE_SYSCALL(void, sys_psleep, int millis) { pbl_thread_sleep(PBL_MSEC(millis)); }
+DEFINE_SYSCALL(void, sys_psleep, int millis) {
+  pbl_thread_sleep(PBL_MSEC(millis));
+}

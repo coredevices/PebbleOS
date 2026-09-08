@@ -99,7 +99,8 @@ void test_contacts__initialize(void) {
   contacts_db_init();
 }
 
-void test_contacts__cleanup(void) {}
+void test_contacts__cleanup(void) {
+}
 
 static Attribute address1_attributes[] = {
     {.id = AttributeIdTitle, .cstring = "home"},

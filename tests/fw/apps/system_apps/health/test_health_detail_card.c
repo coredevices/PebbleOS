@@ -29,7 +29,9 @@ static HealthDetailZone s_zones[] = DEFAULT_ZONES;
 static GContext s_ctx;
 static FrameBuffer s_fb;
 
-GContext *graphics_context_get_current_context(void) { return &s_ctx; }
+GContext *graphics_context_get_current_context(void) {
+  return &s_ctx;
+}
 
 void test_health_detail_card__initialize(void) {
   // Setup graphics context
@@ -51,7 +53,8 @@ void test_health_detail_card__initialize(void) {
   content_indicator_init_buffer(buffer);
 }
 
-void test_health_detail_card__cleanup(void) {}
+void test_health_detail_card__cleanup(void) {
+}
 
 // Helpers
 //////////////////////

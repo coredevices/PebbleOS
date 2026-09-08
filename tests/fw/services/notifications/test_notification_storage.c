@@ -79,7 +79,9 @@ static Attribute attributes[] = {
     {.id = AttributeIdSubtitle, .cstring = "Subject"},
 };
 
-bool system_task_add_callback(SystemTaskEventCallback cb, void *data) { return true; }
+bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
+  return true;
+}
 
 PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char *name) {
   return NULL;
@@ -95,7 +97,8 @@ void test_notification_storage__initialize(void) {
   notification_storage_reset();
 }
 
-void test_notification_storage__cleanup(void) {}
+void test_notification_storage__cleanup(void) {
+}
 
 static void compare_attr_list(AttributeList a, AttributeList b) {
   cl_assert_equal_i(a.num_attributes, b.num_attributes);

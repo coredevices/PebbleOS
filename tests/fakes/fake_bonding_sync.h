@@ -65,7 +65,9 @@ void bt_driver_handle_host_removed_bonding(const BleBonding *bonding) {
   }
 }
 
-void bonding_sync_init(void) { PBL_ASSERTN(!s_ble_bonding_head); }
+void bonding_sync_init(void) {
+  PBL_ASSERTN(!s_ble_bonding_head);
+}
 
 void bonding_sync_deinit(void) {
   while (s_ble_bonding_head) {

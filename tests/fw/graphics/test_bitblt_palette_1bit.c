@@ -37,7 +37,8 @@ void test_bitblt_palette_1bit__initialize(void) {
   memset(s_dest_data, 0b11111111, sizeof(s_dest_data));
 }
 
-void test_bitblt_palette_1bit__cleanup(void) {}
+void test_bitblt_palette_1bit__cleanup(void) {
+}
 
 // Test images reside in "tests/fw/graphics/test_images/".
 // The wscript will convert them from PNGs in that directory to PBIs in the build directory.

@@ -159,7 +159,9 @@ static void prv_set_state(ANCSClientState new_state) {
 }
 
 #if UNITTEST
-T_STATIC ANCSClientState prv_get_state(void) { return s_ancs_client->state; }
+T_STATIC ANCSClientState prv_get_state(void) {
+  return s_ancs_client->state;
+}
 #endif
 
 // -----------------------------------------------------------------------------
@@ -289,7 +291,9 @@ static void prv_notif_queue_next(void) {
 }
 
 #if UNITTEST
-T_STATIC uint32_t prv_get_queue_depth(void) { return list_count((ListNode *)s_ancs_client->queue); }
+T_STATIC uint32_t prv_get_queue_depth(void) {
+  return list_count((ListNode *)s_ancs_client->queue);
+}
 
 T_STATIC bool prv_queue_contains_uid(uint32_t uid) {
   NotificationQueueNode key = {
@@ -331,9 +335,13 @@ static void prv_reset_and_flush(void) {
   prv_notif_queue_reset();
 }
 
-static void prv_reset_due_to_parse_error(void) { prv_reset_and_next(); }
+static void prv_reset_due_to_parse_error(void) {
+  prv_reset_and_next();
+}
 
-static void prv_reset_due_to_bt_error(void) { prv_reset_and_flush(); }
+static void prv_reset_due_to_bt_error(void) {
+  prv_reset_and_flush();
+}
 
 // -----------------------------------------------------------------------------
 // In-flight operation watchdog

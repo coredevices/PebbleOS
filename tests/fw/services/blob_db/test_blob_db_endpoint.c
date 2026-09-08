@@ -42,9 +42,12 @@
 #include "stubs_regular_timer.h"
 #include "stubs_settings_blob_db.h"
 
-void bt_persistent_storage_set_unfaithful(bool is_unfaithful) { return; }
+void bt_persistent_storage_set_unfaithful(bool is_unfaithful) {
+  return;
+}
 
-void blob_db2_set_accepting_messages(bool ehh) {}
+void blob_db2_set_accepting_messages(bool ehh) {
+}
 
 typedef struct PACKED {
   uint16_t length;
@@ -98,7 +101,9 @@ void test_blob_db_endpoint__initialize(void) {
   system_task_set_available_space(system_task_queue_size);
 }
 
-void test_blob_db_endpoint__cleanup(void) { fake_comm_session_cleanup(); }
+void test_blob_db_endpoint__cleanup(void) {
+  fake_comm_session_cleanup();
+}
 
 /*************************************
  * Checking for valid INSERT command *

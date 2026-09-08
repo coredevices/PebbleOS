@@ -37,7 +37,8 @@ void test_ams_util__initialize(void) {
   s_max_results_count = ~0;
 }
 
-void test_ams_util__cleanup(void) {}
+void test_ams_util__cleanup(void) {
+}
 
 // ams_util_float_string_parse() tests
 ///////////////////////////////////////////////////////////

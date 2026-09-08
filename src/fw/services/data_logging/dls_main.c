@@ -37,7 +37,9 @@ static bool s_sends_enabled_run_level = true;
 
 #define DATALOGGING_DO_FLUSH_CHECK_INTERVAL_MINUTES 5
 
-static bool prv_sends_enabled(void) { return (s_sends_enabled_run_level && s_sends_enabled_pp); }
+static bool prv_sends_enabled(void) {
+  return (s_sends_enabled_run_level && s_sends_enabled_pp);
+}
 
 // Snapshot the session list, then chain one send per system task callback.
 // Iterating + sending inline under s_list_mutex can stall KernelBG for
@@ -244,7 +246,9 @@ exit:
 }
 
 // ----------------------------------------------------------------------------------------
-void dls_pause(void) { regular_timer_remove_callback(&prv_check_all_sessions_timer_info); }
+void dls_pause(void) {
+  regular_timer_remove_callback(&prv_check_all_sessions_timer_info);
+}
 
 // ----------------------------------------------------------------------------------------
 void dls_resume(void) {
@@ -266,7 +270,9 @@ void dls_init(void) {
 }
 
 // ----------------------------------------------------------------------------------------
-bool dls_initialized(void) { return s_initialized; }
+bool dls_initialized(void) {
+  return s_initialized;
+}
 
 // ----------------------------------------------------------------------------------------
 void dls_clear(void) {
@@ -276,15 +282,21 @@ void dls_clear(void) {
 
 // ----------------------------------------------------------------------------------------
 // Get the send_enable setting
-bool dls_get_send_enable(void) { return prv_sends_enabled(); }
+bool dls_get_send_enable(void) {
+  return prv_sends_enabled();
+}
 
 // ----------------------------------------------------------------------------------------
 // Set the send_enable setting
-void dls_set_send_enable_pp(bool setting) { s_sends_enabled_pp = setting; }
+void dls_set_send_enable_pp(bool setting) {
+  s_sends_enabled_pp = setting;
+}
 
 // ----------------------------------------------------------------------------------------
 // Set the send_enable setting
-void dls_set_send_enable_run_level(bool setting) { s_sends_enabled_run_level = setting; }
+void dls_set_send_enable_run_level(bool setting) {
+  s_sends_enabled_run_level = setting;
+}
 
 // ----------------------------------------------------------------------------------------
 // Callback used by dls_inactivate_sessions.
@@ -562,7 +574,9 @@ int dls_test_get_num_bytes(DataLoggingSession *logging_session) {
   return (logging_session->storage.num_bytes);
 }
 
-int dls_test_get_tag(DataLoggingSession *logging_session) { return (logging_session->tag); }
+int dls_test_get_tag(DataLoggingSession *logging_session) {
+  return (logging_session->tag);
+}
 
 uint8_t dls_test_get_session_id(DataLoggingSession *logging_session) {
   return (logging_session->comm.session_id);

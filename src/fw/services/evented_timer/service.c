@@ -174,7 +174,8 @@ static void prv_sys_timer_callback(void *cb_data) {
 // ========================================================================================================
 // External API
 
-void evented_timer_init(void) {}
+void evented_timer_init(void) {
+}
 
 void evented_timer_clear_process_timers(PebbleTask task) {
   PBL_ASSERT_TASK(PebbleTask_KernelMain);
@@ -309,7 +310,9 @@ void evented_timer_cancel(EventedTimerID timer_id) {
   pbl_mutex_unlock(&s_mutex);
 }
 
-bool evented_timer_exists(EventedTimerID timer_id) { return prv_find_timer(timer_id) != NULL; }
+bool evented_timer_exists(EventedTimerID timer_id) {
+  return prv_find_timer(timer_id) != NULL;
+}
 
 bool evented_timer_is_current_task(EventedTimerID timer_id) {
   EventedTimer *timer = prv_find_timer(timer_id);
@@ -317,7 +320,9 @@ bool evented_timer_is_current_task(EventedTimerID timer_id) {
   return timer->target_task == pebble_task_get_current();
 }
 
-void evented_timer_reset(void) { s_timer_list_head = 0; }
+void evented_timer_reset(void) {
+  s_timer_list_head = 0;
+}
 
 void *evented_timer_get_data(EventedTimerID timer_id) {
   EventedTimer *timer = prv_find_timer(timer_id);

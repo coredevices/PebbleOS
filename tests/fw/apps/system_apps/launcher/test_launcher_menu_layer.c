@@ -237,7 +237,9 @@ bool timeline_resources_get_id_system(TimelineResourceId timeline_id, TimelineRe
   return true;
 }
 
-bool timeline_resources_is_system(TimelineResourceId timeline_id) { return false; }
+bool timeline_resources_is_system(TimelineResourceId timeline_id) {
+  return false;
+}
 
 // Stubs
 /////////////////////
@@ -288,21 +290,33 @@ bool timeline_resources_is_system(TimelineResourceId timeline_id) { return false
 #include "stubs_workout_service.h"
 #include "stubs_workout_utils.h"
 
-GColor shell_prefs_get_theme_highlight_color(void) { return GColorWhite; }
+GColor shell_prefs_get_theme_highlight_color(void) {
+  return GColorWhite;
+}
 
-bool alerts_preferences_get_notification_alternative_design(void) { return false; }
+bool alerts_preferences_get_notification_alternative_design(void) {
+  return false;
+}
 
-MenuScrollVibeBehavior shell_prefs_get_menu_scroll_vibe_behavior(void) { return MenuScrollNoVibe; }
+MenuScrollVibeBehavior shell_prefs_get_menu_scroll_vibe_behavior(void) {
+  return MenuScrollNoVibe;
+}
 
-bool shell_prefs_get_menu_scroll_wrap_around_enable(void) { return false; }
+bool shell_prefs_get_menu_scroll_wrap_around_enable(void) {
+  return false;
+}
 
-PreferredContentSize system_theme_get_content_size(void) { return PreferredContentSizeDefault; }
+PreferredContentSize system_theme_get_content_size(void) {
+  return PreferredContentSizeDefault;
+}
 
-void vibes_enqueue_custom_pattern(VibePattern pattern) {}
+void vibes_enqueue_custom_pattern(VibePattern pattern) {
+}
 
 // We can't include stubs_process_manager.h because it conflicts with the two helper includes below
 void process_manager_send_callback_event_to_process(PebbleTask task, void (*callback)(void *),
-                                                    void *data) {}
+                                                    void *data) {
+}
 
 // Helper Functions
 /////////////////////
@@ -315,7 +329,9 @@ void process_manager_send_callback_event_to_process(PebbleTask task, void (*call
 
 static FrameBuffer *fb = NULL;
 
-GContext *graphics_context_get_current_context(void) { return &s_ctx; }
+GContext *graphics_context_get_current_context(void) {
+  return &s_ctx;
+}
 
 void test_launcher_menu_layer__initialize(void) {
   // Setup framebuffer and graphics context

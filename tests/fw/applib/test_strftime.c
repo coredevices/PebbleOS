@@ -29,24 +29,33 @@
 
 // Overrides
 //////////////////////////////////////////////////////////
-void sys_get_time_ms(time_t *t, uint16_t *out_ms) {}
+void sys_get_time_ms(time_t *t, uint16_t *out_ms) {
+}
 
-time_t sys_time_utc_to_local(time_t t) { return t; }
+time_t sys_time_utc_to_local(time_t t) {
+  return t;
+}
 
 const char *get_timezone_abbr(void) {
   static const char s_timezone_abbr[] = "A";
   return s_timezone_abbr;
 }
 
-int32_t time_get_gmtoffset(void) { return 0; }
-int32_t time_get_dstoffset(void) { return 0; }
+int32_t time_get_gmtoffset(void) {
+  return 0;
+}
+int32_t time_get_dstoffset(void) {
+  return 0;
+}
 
 void sys_copy_timezone_abbr(char *timezone_abbr, time_t time) {
   const char *sys_tz = get_timezone_abbr();
   strncpy(timezone_abbr, sys_tz, TZ_LEN);
 }
 
-struct tm *sys_gmtime_r(const time_t *timep, struct tm *result) { return gmtime_r(timep, result); }
+struct tm *sys_gmtime_r(const time_t *timep, struct tm *result) {
+  return gmtime_r(timep, result);
+}
 
 struct tm *sys_localtime_r(const time_t *timep, struct tm *result) {
   return localtime_r(timep, result);
@@ -64,7 +73,9 @@ char *i18n_get_locale(void) {
     return "en_US";
   }
 }
-char *app_get_system_locale(void) { return "es_ES"; }
+char *app_get_system_locale(void) {
+  return "es_ES";
+}
 
 const char *i18n_get(const char *msgid, const void *owner) {
   if (s_i18n_translate) {
@@ -78,17 +89,23 @@ void i18n_get_with_buffer(const char *string, char *buffer, size_t length) {
   strncpy(buffer, i18n_get(string, NULL), length);
 }
 
-size_t i18n_get_length(const char *string) { return strlen(i18n_get(string, NULL)); }
+size_t i18n_get_length(const char *string) {
+  return strlen(i18n_get(string, NULL));
+}
 
-void i18n_free(const char *original, const void *owner) {}
+void i18n_free(const char *original, const void *owner) {
+}
 
-void i18n_free_all(const void *owner) {}
+void i18n_free_all(const void *owner) {
+}
 
 void sys_i18n_get_with_buffer(const char *string, char *buffer, size_t length) {
   i18n_get_with_buffer(string, buffer, length);
 }
 
-size_t sys_i18n_get_length(const char *string) { return i18n_get_length(string); }
+size_t sys_i18n_get_length(const char *string) {
+  return i18n_get_length(string);
+}
 
 // Tests
 ////////////////////////////////////

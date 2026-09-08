@@ -114,7 +114,9 @@ PebbleTask pebble_task_get_task_for_thread(const struct pbl_thread *thread) {
   return PebbleTask_Unknown;
 }
 
-struct pbl_thread *pebble_task_get_thread(PebbleTask task) { return g_task_threads[task]; }
+struct pbl_thread *pebble_task_get_thread(PebbleTask task) {
+  return g_task_threads[task];
+}
 
 static uint16_t prv_task_get_stack_free(PebbleTask task) {
   // If task doesn't exist, return a dummy with max value

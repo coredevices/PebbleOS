@@ -25,7 +25,9 @@ void getting_started_button_combo_deinit(GettingStartedButtonComboState *state) 
   new_timer_delete(state->combo_timer);
 }
 
-static void prv_factory_reset(void *not_used) { factory_reset(false /* should_shutdown */); }
+static void prv_factory_reset(void *not_used) {
+  factory_reset(false /* should_shutdown */);
+}
 
 static void prv_down_cb(void *data) {
   Window *spinner_window = spinner_ui_window_get(PBL_IF_COLOR_ELSE(GColorBlue, GColorDarkGray));
@@ -36,7 +38,9 @@ static void prv_down_cb(void *data) {
 }
 
 #ifdef CONFIG_RECOVERY_FW
-static void prv_mfg_mode_cb(void *data) { mfg_enter_mfg_mode_and_launch_app(); }
+static void prv_mfg_mode_cb(void *data) {
+  mfg_enter_mfg_mode_and_launch_app();
+}
 #endif
 
 static void prv_timeout_expired(void *data) {

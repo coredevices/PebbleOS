@@ -36,7 +36,9 @@
 
 static PebbleProcessMd __pbl_app_info;
 
-const PebbleProcessMd *sys_process_manager_get_current_process_md(void) { return &__pbl_app_info; }
+const PebbleProcessMd *sys_process_manager_get_current_process_md(void) {
+  return &__pbl_app_info;
+}
 
 // Tests
 ////////////////////////////////////
@@ -105,7 +107,9 @@ void test_persist__initialize(void) {
   persist_service_client_open(&test_uuid_a);
 }
 
-void test_persist__cleanup(void) { persist_service_client_close(&test_uuid_a); }
+void test_persist__cleanup(void) {
+  persist_service_client_close(&test_uuid_a);
+}
 
 void test_persist__int(void) {
   const uint32_t key = 0;

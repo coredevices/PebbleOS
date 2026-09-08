@@ -36,8 +36,10 @@ static size_t prv_shape(const char *in, Codepoint *cps, size_t max) {
   return count;
 }
 
-void test_arabic_shaping__initialize(void) {}
-void test_arabic_shaping__cleanup(void) {}
+void test_arabic_shaping__initialize(void) {
+}
+void test_arabic_shaping__cleanup(void) {
+}
 
 ///////////////////////////////////////////////////////////
 // Tests

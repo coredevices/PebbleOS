@@ -180,13 +180,21 @@ status_t reminders_snooze(Reminder *reminder) {
 }
 
 // only used for tests
-RegularTimerInfo *get_reminder_timer(void) { return &s_reminder_timer; }
+RegularTimerInfo *get_reminder_timer(void) {
+  return &s_reminder_timer;
+}
 
-bool get_reminder_armed(void) { return s_reminder_armed; }
+bool get_reminder_armed(void) {
+  return s_reminder_armed;
+}
 
-time_t get_reminder_timestamp(void) { return s_next_reminder_timestamp; }
+time_t get_reminder_timestamp(void) {
+  return s_next_reminder_timestamp;
+}
 
-ReminderId *get_reminder_id(void) { return &s_next_reminder_id; }
+ReminderId *get_reminder_id(void) {
+  return &s_next_reminder_id;
+}
 
 bool reminders_mark_has_reminded(ReminderId *reminder_id) {
   status_t rv = reminder_db_set_status_bits(reminder_id, TimelineItemStatusReminded);

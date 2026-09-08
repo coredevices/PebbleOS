@@ -41,13 +41,21 @@
 
 uint16_t s_mtu_size;
 
-int bt_driver_gap_le_disconnect(const BTDeviceInternal *peer_address) { return 0; }
+int bt_driver_gap_le_disconnect(const BTDeviceInternal *peer_address) {
+  return 0;
+}
 
-uint16_t gap_le_connection_get_gatt_mtu(const BTDeviceInternal *device) { return s_mtu_size; }
+uint16_t gap_le_connection_get_gatt_mtu(const BTDeviceInternal *device) {
+  return s_mtu_size;
+}
 
-GAPLEConnection *gap_le_connection_get_gateway(void) { return NULL; }
+GAPLEConnection *gap_le_connection_get_gateway(void) {
+  return NULL;
+}
 
-GAPLEConnection *gap_le_connection_by_device(const BTDeviceInternal *device) { return NULL; }
+GAPLEConnection *gap_le_connection_by_device(const BTDeviceInternal *device) {
+  return NULL;
+}
 
 GAPLEConnection *gatt_client_characteristic_get_connection(BLECharacteristic characteristic_ref) {
   return NULL;
@@ -88,7 +96,9 @@ BTDeviceInternal gatt_client_characteristic_get_device(BLECharacteristic charact
   return s_device;
 }
 
-void launcher_task_add_callback(void (*callback)(void *data), void *data) { callback(data); }
+void launcher_task_add_callback(void (*callback)(void *data), void *data) {
+  callback(data);
+}
 
 // Helpers
 ///////////////////////////////////////////////////////////

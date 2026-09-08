@@ -247,13 +247,17 @@ ble_npl_error_t npl_pebble_callout_reset(struct ble_npl_callout *co, ble_npl_tim
   return BLE_NPL_OK;
 }
 
-void npl_pebble_callout_stop(struct ble_npl_callout *co) { new_timer_stop(co->handle); }
+void npl_pebble_callout_stop(struct ble_npl_callout *co) {
+  new_timer_stop(co->handle);
+}
 
 bool npl_pebble_callout_is_active(struct ble_npl_callout *co) {
   return new_timer_scheduled(co->handle, NULL);
 }
 
-ble_npl_time_t npl_pebble_callout_get_ticks(struct ble_npl_callout *co) { return co->ticks; }
+ble_npl_time_t npl_pebble_callout_get_ticks(struct ble_npl_callout *co) {
+  return co->ticks;
+}
 
 ble_npl_time_t npl_pebble_callout_remaining_ticks(struct ble_npl_callout *co, ble_npl_time_t now) {
   uint32_t rt = 0;

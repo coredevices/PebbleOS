@@ -114,7 +114,9 @@ static void prv_window_appear(Window *window) {
   menu_layer_set_selected_index(&data->menu_layer, MenuIndex(0, row), MenuRowAlignCenter, animated);
 }
 
-static void prv_reload_menu_data(void *data) { menu_layer_reload_data(data); }
+static void prv_reload_menu_data(void *data) {
+  menu_layer_reload_data(data);
+}
 
 static void prv_window_load(Window *window) {
   SettingsWatchfacesData *data = window_get_user_data(window);

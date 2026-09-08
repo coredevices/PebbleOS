@@ -90,7 +90,9 @@ void pbl_sem_give(struct pbl_sem *s) {
   }
 }
 
-void pbl_sem_reset(struct pbl_sem *s) { prv_fake_sem_get(s)->count = s->initial; }
+void pbl_sem_reset(struct pbl_sem *s) {
+  prv_fake_sem_get(s)->count = s->initial;
+}
 
 uint32_t pbl_sem_count(const struct pbl_sem *s) {
   return prv_fake_sem_get((struct pbl_sem *)s)->count;

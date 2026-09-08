@@ -67,7 +67,8 @@ static void prv_handle_tick_timer(struct tm *tick_time, TimeUnits units_changed)
   prv_update_ui(app_state_get_user_data());
 }
 
-static void prv_config_provider(void *data) {}
+static void prv_config_provider(void *data) {
+}
 
 static void prv_init(void) {
   SdkAppData *data = app_malloc_check(sizeof(SdkAppData));

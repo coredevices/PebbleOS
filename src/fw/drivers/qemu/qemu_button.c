@@ -62,7 +62,9 @@ static void prv_gpio_irq_handler(void) {
 }
 
 // IRQ trampoline for GPIO IRQ (IRQ 6)
-void GPIO_IRQHandler(void) { prv_gpio_irq_handler(); }
+void GPIO_IRQHandler(void) {
+  prv_gpio_irq_handler();
+}
 
 void button_init(void) {
   uint32_t base = QEMU_GPIO_BASE;
@@ -93,7 +95,9 @@ uint8_t button_get_state_bits(void) {
   return (uint8_t)(REG32(QEMU_GPIO_BASE + GPIO_BTN_STATE) & 0xF);
 }
 
-void button_set_rotated(bool rotated) { (void)rotated; }
+void button_set_rotated(bool rotated) {
+  (void)rotated;
+}
 
 void command_button_read(const char *button_id_str) {
   int button = atoi(button_id_str);

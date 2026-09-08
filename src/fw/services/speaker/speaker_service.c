@@ -321,8 +321,10 @@ static inline int16_t prv_cubic_midpoint(int16_t s0, int16_t s1, int16_t s2, int
   int32_t v = -(int32_t)s0 + 9 * (int32_t)s1 + 9 * (int32_t)s2 - (int32_t)s3;
   // Clamp to int16_t range before dividing
   v = (v + 8) >> 4;  // divide by 16 with rounding
-  if (v > 32767) v = 32767;
-  if (v < -32768) v = -32768;
+  if (v > 32767)
+    v = 32767;
+  if (v < -32768)
+    v = -32768;
   return (int16_t)v;
 }
 
@@ -787,7 +789,9 @@ void speaker_service_set_volume(uint8_t vol) {
   pbl_mutex_unlock(&s_lock);
 }
 
-bool speaker_service_is_muted(void) { return prv_is_speaker_muted(); }
+bool speaker_service_is_muted(void) {
+  return prv_is_speaker_muted();
+}
 
 void speaker_service_handle_audio_prefs_changed(void) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
@@ -801,7 +805,9 @@ void speaker_service_handle_audio_prefs_changed(void) {
   pbl_mutex_unlock(&s_lock);
 }
 
-SpeakerState speaker_service_get_state(void) { return s_state.state; }
+SpeakerState speaker_service_get_state(void) {
+  return s_state.state;
+}
 
 void speaker_service_stop_for_task(PebbleTask task) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
@@ -817,7 +823,9 @@ void speaker_service_stop_for_task(PebbleTask task) {
   pbl_mutex_unlock(&s_lock);
 }
 
-void speaker_service_set_owner_task(PebbleTask task) { s_state.owner_task = task; }
+void speaker_service_set_owner_task(PebbleTask task) {
+  s_state.owner_task = task;
+}
 
 void speaker_service_register_finish(PebbleTask task) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
@@ -848,7 +856,8 @@ void pbl_analytics_external_collect_speaker_stats(void) {
 
 #else  // !CONFIG_SPEAKER
 
-void speaker_service_init(void) {}
+void speaker_service_init(void) {
+}
 
 bool speaker_service_play_note_seq(const SpeakerNote *notes, uint32_t num_notes,
                                    SpeakerPriority pri, uint8_t vol) {
@@ -860,7 +869,9 @@ bool speaker_service_play_tone(uint16_t freq_hz, uint16_t duration_ms, uint8_t w
   return false;
 }
 
-bool speaker_service_play_volume_preview(uint8_t vol) { return false; }
+bool speaker_service_play_volume_preview(uint8_t vol) {
+  return false;
+}
 
 bool speaker_service_play_tracks(const SpeakerTrack *tracks, uint32_t num_tracks,
                                  SpeakerPriority pri, uint8_t vol) {
@@ -871,20 +882,34 @@ bool speaker_service_stream_open(SpeakerPriority pri, uint8_t vol, SpeakerPcmFor
   return false;
 }
 
-uint32_t speaker_service_stream_write(const void *data, uint32_t num_bytes) { return 0; }
+uint32_t speaker_service_stream_write(const void *data, uint32_t num_bytes) {
+  return 0;
+}
 
-void speaker_service_stream_close(void) {}
-void speaker_service_stop(void) {}
-void speaker_service_set_volume(uint8_t vol) {}
+void speaker_service_stream_close(void) {
+}
+void speaker_service_stop(void) {
+}
+void speaker_service_set_volume(uint8_t vol) {
+}
 
-SpeakerState speaker_service_get_state(void) { return SpeakerStateIdle; }
+SpeakerState speaker_service_get_state(void) {
+  return SpeakerStateIdle;
+}
 
-void speaker_service_stop_for_task(PebbleTask task) {}
-void speaker_service_set_owner_task(PebbleTask task) {}
-void speaker_service_register_finish(PebbleTask task) {}
-void pbl_analytics_external_collect_speaker_stats(void) {}
+void speaker_service_stop_for_task(PebbleTask task) {
+}
+void speaker_service_set_owner_task(PebbleTask task) {
+}
+void speaker_service_register_finish(PebbleTask task) {
+}
+void pbl_analytics_external_collect_speaker_stats(void) {
+}
 
-bool speaker_service_is_muted(void) { return false; }
-void speaker_service_handle_audio_prefs_changed(void) {}
+bool speaker_service_is_muted(void) {
+  return false;
+}
+void speaker_service_handle_audio_prefs_changed(void) {
+}
 
 #endif  // CONFIG_SPEAKER

@@ -43,7 +43,9 @@ void battery_state_service_subscribe(BatteryStateHandler handler) {
   event_service_client_subscribe(&state->bss_info);
 }
 
-BatteryChargeState battery_state_service_peek(void) { return (sys_battery_get_charge_state()); }
+BatteryChargeState battery_state_service_peek(void) {
+  return (sys_battery_get_charge_state());
+}
 
 void battery_state_service_unsubscribe(void) {
   BatteryStateServiceState *state = prv_get_state(PebbleTask_Unknown);

@@ -32,9 +32,11 @@
 #include "stubs_sleep.h"
 #include "stubs_task_watchdog.h"
 
-void app_install_clear_app_db(void) {}
+void app_install_clear_app_db(void) {
+}
 
-void put_bytes_cancel(void) {}
+void put_bytes_cancel(void) {
+}
 
 typedef void (*InstallCallbackDoneCallback)(void *);
 bool app_install_do_callbacks(InstallEventType event_type, AppInstallId install_id, Uuid *uuid,
@@ -42,9 +44,12 @@ bool app_install_do_callbacks(InstallEventType event_type, AppInstallId install_
   return true;
 }
 
-bool app_fetch_in_progress(void) { return false; }
+bool app_fetch_in_progress(void) {
+  return false;
+}
 
-void app_fetch_cancel_from_system_task(void) {}
+void app_fetch_cancel_from_system_task(void) {
+}
 
 extern AppInstallId app_db_check_next_unique_id(void);
 

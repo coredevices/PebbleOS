@@ -11,16 +11,22 @@
 
 // Overrides
 ///////////////////////////////////////////////////////////
-int16_t clock_get_timezone_region_id(void) { return rtc_get_timezone_id(); }
+int16_t clock_get_timezone_region_id(void) {
+  return rtc_get_timezone_id();
+}
 
-void clock_set_timezone_by_region_id(uint16_t region_id) { return; }
+void clock_set_timezone_by_region_id(uint16_t region_id) {
+  return;
+}
 
 // Tests
 ///////////////////////////////////////////////////////////
 
-void test_time__initialize(void) {}
+void test_time__initialize(void) {
+}
 
-void test_time__cleanup(void) {}
+void test_time__cleanup(void) {
+}
 
 void test_time__serial_distance32(void) {
   uint32_t day, hour, minute, second;

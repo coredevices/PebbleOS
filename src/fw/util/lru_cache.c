@@ -18,7 +18,9 @@ static CacheEntry *entry_for_index(LRUCache *c, int index) {
   return ((CacheEntry *)(c->buffer + index * (sizeof(CacheEntry) + c->item_size)));
 }
 
-void lru_cache_flush(LRUCache *c) { c->least_recent = NULL; }
+void lru_cache_flush(LRUCache *c) {
+  c->least_recent = NULL;
+}
 
 void *lru_cache_get(LRUCache *c, uint32_t key) {
   // cur_ptr is a pointer-to-pointer to the more_recent

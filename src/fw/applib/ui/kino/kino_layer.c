@@ -134,7 +134,9 @@ KinoReel *kino_layer_get_reel(KinoLayer *kino_layer) {
   return kino_player_get_reel(&kino_layer->player);
 }
 
-KinoPlayer *kino_layer_get_player(KinoLayer *kino_layer) { return &kino_layer->player; }
+KinoPlayer *kino_layer_get_player(KinoLayer *kino_layer) {
+  return &kino_layer->player;
+}
 
 void kino_layer_set_alignment(KinoLayer *kino_layer, GAlign alignment) {
   kino_layer->alignment = alignment;
@@ -146,7 +148,9 @@ void kino_layer_set_background_color(KinoLayer *kino_layer, GColor color) {
   layer_mark_dirty(&kino_layer->layer);
 }
 
-void kino_layer_play(KinoLayer *kino_layer) { kino_player_play(&kino_layer->player); }
+void kino_layer_play(KinoLayer *kino_layer) {
+  kino_player_play(&kino_layer->player);
+}
 
 void kino_layer_play_section(KinoLayer *kino_layer, uint32_t from_position, uint32_t to_position) {
   kino_player_play_section(&kino_layer->player, from_position, to_position);
@@ -162,15 +166,21 @@ ImmutableAnimation *kino_layer_create_play_section_animation(KinoLayer *kino_lay
   return kino_player_create_play_section_animation(&kino_layer->player, from_position, to_position);
 }
 
-void kino_layer_pause(KinoLayer *kino_layer) { kino_player_pause(&kino_layer->player); }
+void kino_layer_pause(KinoLayer *kino_layer) {
+  kino_player_pause(&kino_layer->player);
+}
 
-void kino_layer_rewind(KinoLayer *kino_layer) { kino_player_rewind(&kino_layer->player); }
+void kino_layer_rewind(KinoLayer *kino_layer) {
+  kino_player_rewind(&kino_layer->player);
+}
 
 GColor kino_layer_get_background_color(KinoLayer *kino_layer) {
   return kino_layer->background_color;
 }
 
-GAlign kino_layer_get_alignment(KinoLayer *kino_layer) { return kino_layer->alignment; }
+GAlign kino_layer_get_alignment(KinoLayer *kino_layer) {
+  return kino_layer->alignment;
+}
 
 GRect kino_layer_get_reel_bounds(KinoLayer *kino_layer) {
   KinoPlayer *player = kino_layer_get_player(kino_layer);

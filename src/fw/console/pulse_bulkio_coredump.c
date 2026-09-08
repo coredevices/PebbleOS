@@ -17,7 +17,9 @@ typedef struct PACKED CoredumpStatResp {
   uint32_t size;
 } CoredumpStatResp;
 
-static uint32_t prv_get_coredump_index(void *packet_data) { return *(uint32_t *)packet_data; }
+static uint32_t prv_get_coredump_index(void *packet_data) {
+  return *(uint32_t *)packet_data;
+}
 
 static int coredump_domain_read(uint8_t *buf, uint32_t address, uint32_t length, void *context) {
   uint32_t index = (uintptr_t)context;
@@ -63,7 +65,9 @@ static status_t coredump_domain_open(uint8_t *packet_data, size_t length, void *
   return S_SUCCESS;
 }
 
-static status_t coredump_domain_close(void *context) { return S_SUCCESS; }
+static status_t coredump_domain_close(void *context) {
+  return S_SUCCESS;
+}
 
 PulseBulkIODomainHandler pulse_bulkio_domain_coredump = {.id = PulseBulkIODomainType_Coredump,
                                                          .open_proc = coredump_domain_open,

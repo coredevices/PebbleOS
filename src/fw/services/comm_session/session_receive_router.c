@@ -60,7 +60,9 @@ static MetaResponseCode prv_error_for_endpoint(const PebbleProtocolEndpoint *end
   return MetaResponseCodeNoError;
 }
 
-static void prv_cleanup_router(ReceiveRouter *rtr) { memset(rtr, 0, sizeof(*rtr)); }
+static void prv_cleanup_router(ReceiveRouter *rtr) {
+  memset(rtr, 0, sizeof(*rtr));
+}
 
 static bool prv_copy_header(ReceiveRouter *rtr, size_t *data_size_p, const uint8_t **data_p) {
   // New message or still gathering the header of the message

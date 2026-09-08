@@ -20,7 +20,8 @@ PBL_LOG_MODULE_DEFINE(driver_uart_nrf5, CONFIG_DRIVER_UART_LOG_LEVEL);
 
 static void _uart_event_handler(const nrfx_uarte_event_t *event, void *ctx);
 
-static void _timer_event_handler(nrf_timer_event_t event_type, void *ctx) {}
+static void _timer_event_handler(nrf_timer_event_t event_type, void *ctx) {
+}
 
 void uart_init(UARTDevice *dev) {
   nrfx_uarte_config_t config = {
@@ -96,7 +97,9 @@ void uart_init(UARTDevice *dev) {
   dev->state->initialized = true;
 }
 
-void uart_init_open_drain(UARTDevice *dev) { WTF; /* unimplemented, for now */ }
+void uart_init_open_drain(UARTDevice *dev) {
+  WTF; /* unimplemented, for now */
+}
 
 void uart_init_tx_only(UARTDevice *dev) {
   nrfx_uarte_config_t config = {
@@ -120,9 +123,13 @@ void uart_init_tx_only(UARTDevice *dev) {
   dev->state->initialized = true;
 }
 
-void uart_init_rx_only(UARTDevice *dev) { WTF; /* unimplemented, for now */ }
+void uart_init_rx_only(UARTDevice *dev) {
+  WTF; /* unimplemented, for now */
+}
 
-void uart_deinit(UARTDevice *dev) { nrfx_uarte_uninit(&dev->periph); }
+void uart_deinit(UARTDevice *dev) {
+  nrfx_uarte_uninit(&dev->periph);
+}
 
 void uart_set_baud_rate(UARTDevice *dev, uint32_t baud_rate) {
   nrf_uarte_baudrate_t baud_cfg =
@@ -131,7 +138,8 @@ void uart_set_baud_rate(UARTDevice *dev, uint32_t baud_rate) {
           MKBAUD(31250) MKBAUD(38400) MKBAUD(56000) MKBAUD(57600) MKBAUD(76800) MKBAUD(115200)
               MKBAUD(230400) MKBAUD(250000) MKBAUD(460800) MKBAUD(921600) MKBAUD(1000000) -
       1;
-  if (baud_cfg == (nrf_uarte_baudrate_t)-1) WTF;
+  if (baud_cfg == (nrf_uarte_baudrate_t)-1)
+    WTF;
   nrfx_uarte_config_t config = {
       .txd_pin = dev->tx_gpio,
       .rxd_pin = dev->rx_gpio,
@@ -150,7 +158,8 @@ void uart_set_baud_rate(UARTDevice *dev, uint32_t baud_rate) {
   };
 
   nrfx_err_t err = nrfx_uarte_reconfigure(&dev->periph, &config);
-  if (err != NRFX_SUCCESS) WTF;
+  if (err != NRFX_SUCCESS)
+    WTF;
 }
 
 // Read / Write APIs
@@ -216,7 +225,8 @@ bool uart_is_tx_complete(UARTDevice *dev) {
 }
 
 void uart_wait_for_tx_complete(UARTDevice *dev) {
-  while (!uart_is_tx_complete(dev)) continue;
+  while (!uart_is_tx_complete(dev))
+    continue;
 }
 
 void uart_set_rx_interrupt_handler(UARTDevice *dev, UARTRXInterruptHandler irq_handler) {
@@ -240,7 +250,9 @@ void uart_set_tx_interrupt_enabled(UARTDevice *dev, bool enabled) {
   WTF;
 }
 
-void uart_clear_all_interrupt_flags(UARTDevice *dev) { WTF; /* only used internally? */ }
+void uart_clear_all_interrupt_flags(UARTDevice *dev) {
+  WTF; /* only used internally? */
+}
 
 // DMA
 ////////////////////////////////////////////////////////////////////////////////
@@ -310,7 +322,8 @@ void uart_start_rx_dma(UARTDevice *dev, void *buffer, uint32_t length) {
   PBL_ASSERTN((((uint32_t)buffer) & 3) == 0);
   dev->state->rx_dma_buffer = buffer;
   dev->state->rx_dma_length = length / DMA_BUFFERS;
-  if (dev->state->rx_dma_length % 4) dev->state->rx_dma_length -= dev->state->rx_dma_length % 4;
+  if (dev->state->rx_dma_length % 4)
+    dev->state->rx_dma_length -= dev->state->rx_dma_length % 4;
   dev->state->rx_dma_index = 0;
   dev->state->rx_prod_index = 0;
   dev->state->rx_cons_index = 0;
@@ -330,4 +343,5 @@ void uart_stop_rx_dma(UARTDevice *dev) {
   nrfx_timer_disable(&dev->counter);
 }
 
-void uart_clear_rx_dma_buffer(UARTDevice *dev) {}
+void uart_clear_rx_dma_buffer(UARTDevice *dev) {
+}

@@ -99,8 +99,14 @@ void touch_service_unsubscribe(void) {
   prv_update_subscription(state);
 }
 
-bool touch_service_is_enabled(void) { return sys_touch_service_is_enabled(); }
+bool touch_service_is_enabled(void) {
+  return sys_touch_service_is_enabled();
+}
 
-void app_touch_navigation_enable(bool enable) { sys_app_touch_navigation_enable(enable); }
+void app_touch_navigation_enable(bool enable) {
+  sys_app_touch_navigation_enable(enable);
+}
 
-void touch_service_state_init(TouchServiceState *state) { *state = (TouchServiceState){0}; }
+void touch_service_state_init(TouchServiceState *state) {
+  *state = (TouchServiceState){0};
+}

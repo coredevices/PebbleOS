@@ -378,7 +378,9 @@ static void prv_window_load(Window *window) {
 
 // =================================================================================
 // Deinitialize resources on window unload that were initialized on window load
-static void prv_window_unload(Window *window) { simple_menu_layer_destroy(s_app_data->menu_layer); }
+static void prv_window_unload(Window *window) {
+  simple_menu_layer_destroy(s_app_data->menu_layer);
+}
 
 // =================================================================================
 static void handle_init(void) {

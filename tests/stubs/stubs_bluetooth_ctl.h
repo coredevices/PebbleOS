@@ -5,4 +5,6 @@
 
 #include "pbl/util/attributes.h"
 
-bool WEAK bt_ctl_is_airplane_mode_on(void) { return false; }
+bool WEAK bt_ctl_is_airplane_mode_on(void) {
+  return false;
+}

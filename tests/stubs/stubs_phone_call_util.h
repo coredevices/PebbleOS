@@ -9,4 +9,5 @@ PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char 
   return NULL;
 }
 
-void phone_call_util_destroy_caller(PebblePhoneCaller *caller) {}
+void phone_call_util_destroy_caller(PebblePhoneCaller *caller) {
+}

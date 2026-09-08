@@ -446,7 +446,9 @@ void compositor_transition(const CompositorTransition *compositor_animation) {
   }
 }
 
-FrameBuffer *compositor_get_framebuffer(void) { return &s_framebuffer; }
+FrameBuffer *compositor_get_framebuffer(void) {
+  return &s_framebuffer;
+}
 
 GBitmap compositor_get_framebuffer_as_bitmap(void) {
   return framebuffer_get_as_bitmap(&s_framebuffer, &s_framebuffer.size);
@@ -471,7 +473,9 @@ void compositor_transition_cancel(void) {
   }
 }
 
-void compositor_freeze(void) { s_framebuffer_frozen = true; }
+void compositor_freeze(void) {
+  s_framebuffer_frozen = true;
+}
 
 static void prv_compositor_unfreeze_cb(void *ignored) {
   // Run deferred draws
@@ -587,7 +591,8 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
 
     for (int16_t dst_y = 0; dst_y < update_rect.size.h; dst_y++) {
       const int16_t dst_y_offset = dst_y + update_rect.origin.y + offset_y;
-      if (dst_y_offset < 0 || dst_y_offset >= disp_height) continue;
+      if (dst_y_offset < 0 || dst_y_offset >= disp_height)
+        continue;
       if ((squish_watchface_for_peek && (dst_y_offset < scale_to.origin.y ||
                                          dst_y_offset >= scale_to.origin.y + scale_to.size.h)) ||
           (shift_scaled_watchface_for_peek && (dst_y_offset >= timeline_peek_get_origin_y()))) {
@@ -609,7 +614,8 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
       const uint32_t src_y_fixed = (uint32_t)dst_y_coord * scale_y;
       const int16_t src_y = src_y_fixed >> 16;
 
-      if (src_y < 0 || src_y >= app_height) continue;
+      if (src_y < 0 || src_y >= app_height)
+        continue;
 
       GBitmapDataRowInfo dst_row_info = gbitmap_get_data_row_info(&dst_bitmap, dst_y_offset);
       GBitmapDataRowInfo src_row_info = gbitmap_get_data_row_info(&src_bitmap, src_y);

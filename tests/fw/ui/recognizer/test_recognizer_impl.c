@@ -83,9 +83,13 @@ Recognizer *test_recognizer_create(TestImplData *test_impl_data, void *user_data
                                      prv_sub_event_handler, user_data);
 }
 
-void test_recognizer_enable_on_destroy(void) { s_test_impl.on_destroy = prv_on_destroy; }
+void test_recognizer_enable_on_destroy(void) {
+  s_test_impl.on_destroy = prv_on_destroy;
+}
 
-void test_recognizer_destroy(Recognizer **recognizer) { recognizer_destroy(*recognizer); }
+void test_recognizer_destroy(Recognizer **recognizer) {
+  recognizer_destroy(*recognizer);
+}
 
 void *test_recognizer_get_data(Recognizer *recognizer) {
   return recognizer_get_impl_data(recognizer, &s_test_impl);

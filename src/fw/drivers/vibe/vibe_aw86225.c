@@ -366,7 +366,9 @@ void vibe_force_off(void) {
   prv_stop();
 }
 
-int8_t vibe_get_braking_strength(void) { return VIBE_STRENGTH_OFF; }
+int8_t vibe_get_braking_strength(void) {
+  return VIBE_STRENGTH_OFF;
+}
 
 // Refer to DG_AW862XX_Software_Design_Guide_CN_V1.1
 status_t vibe_calibrate(void) {
@@ -437,7 +439,9 @@ status_t vibe_calibrate(void) {
   return S_SUCCESS;
 }
 
-uint8_t vibe_get_calibration(void) { return s_trim_lra; }
+uint8_t vibe_get_calibration(void) {
+  return s_trim_lra;
+}
 
 void vibe_apply_calibration(uint8_t cali) {
   if (!s_initialized) {

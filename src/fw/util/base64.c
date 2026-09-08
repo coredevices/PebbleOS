@@ -7,12 +7,18 @@
 #include <string.h>
 
 static int8_t decode_char(uint8_t c) {
-  if (isupper(c)) return c - 'A';
-  if (islower(c)) return c - 'a' + 26;
-  if (isdigit(c)) return c - '0' + 52;
-  if (c == '+') return 62;
-  if (c == '/') return 63;
-  if (c == '=') return 127;
+  if (isupper(c))
+    return c - 'A';
+  if (islower(c))
+    return c - 'a' + 26;
+  if (isdigit(c))
+    return c - '0' + 52;
+  if (c == '+')
+    return 62;
+  if (c == '/')
+    return 63;
+  if (c == '=')
+    return 127;
 
   return -1;
 }
@@ -25,15 +31,18 @@ unsigned int base64_decode_inplace(char *buffer, unsigned int length) {
     unsigned int v = 0;
     for (; quad_index < 4; ++quad_index) {
       int8_t c = decode_char(buffer[read_index + quad_index]);
-      if (c == -1) return 0;  // Error, invalid character
-      if (c == 127) break;    // Padding found
+      if (c == -1)
+        return 0;  // Error, invalid character
+      if (c == 127)
+        break;  // Padding found
 
       v = (v * 64) + c;
     }
 
     // Handle the padding if we broke out the loop early (0-2 '=' characters).
     const unsigned int padding_amount = 4 - quad_index;
-    if (padding_amount > 2) return 0;  // Mades no sense to pad an entire triplet.
+    if (padding_amount > 2)
+      return 0;  // Mades no sense to pad an entire triplet.
     if (memcmp(buffer + read_index + quad_index, "==", padding_amount) != 0)
       return 0;  // There are characters after our padding?
 

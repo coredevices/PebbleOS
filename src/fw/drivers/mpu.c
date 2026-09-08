@@ -19,7 +19,9 @@ extern const uint32_t __SRAM_size__[];
 #endif
 #define SRAM_END (SRAM_BASE + (uint32_t)__SRAM_size__)
 
-void mpu_disable(void) { ARM_MPU_Disable(); }
+void mpu_disable(void) {
+  ARM_MPU_Disable();
+}
 
 bool mpu_memory_is_cachable(const void *addr) {
   if (!dcache_is_enabled()) {

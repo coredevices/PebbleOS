@@ -179,7 +179,9 @@ ResAppNum app_install_get_app_icon_bank(const AppInstallEntry *entry) {
 // Setup
 /////////////////////////
 
-void test_timeline_resources__initialize(void) { s_is_app_published_resource_invalid = false; }
+void test_timeline_resources__initialize(void) {
+  s_is_app_published_resource_invalid = false;
+}
 
 // Tests
 /////////////////////////

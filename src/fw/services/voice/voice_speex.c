@@ -248,4 +248,6 @@ int voice_speex_encode_frame(int16_t *samples, uint8_t *encoded_data, size_t max
   return encoded_bytes;
 }
 
-bool voice_speex_is_initialized(void) { return s_encoder.initialized; }
+bool voice_speex_is_initialized(void) {
+  return s_encoder.initialized;
+}

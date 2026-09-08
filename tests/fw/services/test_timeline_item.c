@@ -65,9 +65,11 @@ static uint8_t s_payload_complete[] = {
     // Attribute text: "Test"
     0x01};
 
-void test_timeline_item__initialize(void) {}
+void test_timeline_item__initialize(void) {
+}
 
-void test_timeline_item__cleanup(void) {}
+void test_timeline_item__cleanup(void) {
+}
 
 static const uint8_t s_serialized_attribute_list[] = {
     0x01,  // Attribute 1 ID - Title

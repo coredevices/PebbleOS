@@ -51,7 +51,9 @@
 #define INFO_PADDING_BOTTOM 6
 
 //! Get the current day in the standard tm format. Sunday is 0
-static uint8_t prv_get_weekday(time_t timestamp) { return time_util_get_day_in_week(timestamp); }
+static uint8_t prv_get_weekday(time_t timestamp) {
+  return time_util_get_day_in_week(timestamp);
+}
 
 static void prv_draw_title(HealthGraphCard *graph_card, GContext *ctx) {
   const GRect *bounds = &graph_card->layer.bounds;

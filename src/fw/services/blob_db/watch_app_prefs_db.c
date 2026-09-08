@@ -107,7 +107,9 @@ void watch_app_prefs_destroy_weather(SerializedWeatherAppPrefs *prefs) {
 // BlobDB APIs
 ////////////////////////////////////////////////////////////////////////////////
 
-void watch_app_prefs_db_init(void) { pbl_mutex_init(&s_watch_app_prefs_db.mutex); }
+void watch_app_prefs_db_init(void) {
+  pbl_mutex_init(&s_watch_app_prefs_db.mutex);
+}
 
 // All entries in this db currently follow a structure of base data + arbitrary list of records.
 // All records in the list are the same size

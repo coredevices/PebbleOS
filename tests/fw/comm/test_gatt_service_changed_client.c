@@ -32,21 +32,34 @@
 #include "stubs_rand_ptr.h"
 #include "stubs_regular_timer.h"
 
-void core_dump_reset(bool is_forced) {}
+void core_dump_reset(bool is_forced) {
+}
 
 static GAPLEConnection s_connection;
 
-GAPLEConnection *gap_le_connection_by_device(const BTDeviceInternal *addr) { return &s_connection; }
+GAPLEConnection *gap_le_connection_by_device(const BTDeviceInternal *addr) {
+  return &s_connection;
+}
 
-GAPLEConnection *gap_le_connection_by_addr(const BTDeviceAddress *addr) { return &s_connection; }
+GAPLEConnection *gap_le_connection_by_addr(const BTDeviceAddress *addr) {
+  return &s_connection;
+}
 
-GAPLEConnection *gap_le_connection_by_gatt_id(unsigned int connection_id) { return &s_connection; }
+GAPLEConnection *gap_le_connection_by_gatt_id(unsigned int connection_id) {
+  return &s_connection;
+}
 
-bool gap_le_connection_is_valid(const GAPLEConnection *conn) { return true; }
+bool gap_le_connection_is_valid(const GAPLEConnection *conn) {
+  return true;
+}
 
-GAPLEConnection *gap_le_connection_any(void) { return NULL; }
+GAPLEConnection *gap_le_connection_any(void) {
+  return NULL;
+}
 
-uint16_t gaps_get_starting_att_handle(void) { return 4; }
+uint16_t gaps_get_starting_att_handle(void) {
+  return 4;
+}
 
 GAPLEConnection *gatt_client_characteristic_get_connection(BLECharacteristic characteristic_ref) {
   return NULL;
@@ -66,13 +79,18 @@ uint8_t gatt_client_copy_service_refs_by_discovery_generation(const BTDeviceInte
 
 void gatt_client_service_get_all_characteristics_and_descriptors(
     GAPLEConnection *connection, GATTService *service, BLECharacteristic *characteristic_hdls_out,
-    BLEDescriptor *descriptor_hdls_out) {}
+    BLEDescriptor *descriptor_hdls_out) {
+}
 
-void launcher_task_add_callback(void (*callback)(void *data), void *data) { callback(data); }
+void launcher_task_add_callback(void (*callback)(void *data), void *data) {
+  callback(data);
+}
 
 // FIXME: PBL-23945
-void fake_kernel_malloc_mark(void) {}
-void fake_kernel_malloc_mark_assert_equal(void) {}
+void fake_kernel_malloc_mark(void) {
+}
+void fake_kernel_malloc_mark_assert_equal(void) {
+}
 
 // Helpers
 ///////////////////////////////////////////////////////////
@@ -98,7 +116,8 @@ void test_gatt_service_changed_client__initialize(void) {
   cl_assert_equal_i(gatt_client_discovery_discover_all(&s_device), BTErrnoOK);
 }
 
-void test_gatt_service_changed_client__cleanup(void) {}
+void test_gatt_service_changed_client__cleanup(void) {
+}
 
 // Discovery
 ///////////////////////////////////////////////////////////

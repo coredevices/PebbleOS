@@ -87,4 +87,6 @@ BTErrno ble_scan_stop(void) {
   return BTErrnoOK;
 }
 
-bool ble_scan_is_scanning(void) { return sys_ble_scan_is_scanning(); }
+bool ble_scan_is_scanning(void) {
+  return sys_ble_scan_is_scanning();
+}

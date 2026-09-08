@@ -11,7 +11,11 @@
 #define ANIMATION_PLAY_COUNT_INFINITE_STORED ((uint16_t)~0)
 #define ANIMATION_MAX_CREATE_VARGS 20
 
-typedef enum { AnimationTypePrimitive, AnimationTypeSequence, AnimationTypeSpawn } AnimationType;
+typedef enum {
+  AnimationTypePrimitive,
+  AnimationTypeSequence,
+  AnimationTypeSpawn
+} AnimationType;
 
 //! The data structure of an animation.
 typedef struct AnimationPrivate {

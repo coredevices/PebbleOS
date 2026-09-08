@@ -218,21 +218,29 @@ void memory_layout_setup_mpu(void) {
   mpu_enable();
 }
 
-const MpuRegion *memory_layout_get_app_region(void) { return &s_app_region; }
+const MpuRegion *memory_layout_get_app_region(void) {
+  return &s_app_region;
+}
 
-const MpuRegion *memory_layout_get_readonly_bss_region(void) { return &s_readonly_bss_region; }
+const MpuRegion *memory_layout_get_readonly_bss_region(void) {
+  return &s_readonly_bss_region;
+}
 
 const MpuRegion *memory_layout_get_app_stack_guard_region(void) {
   return &s_app_stack_guard_region;
 }
 
-const MpuRegion *memory_layout_get_worker_region(void) { return &s_worker_region; }
+const MpuRegion *memory_layout_get_worker_region(void) {
+  return &s_worker_region;
+}
 
 const MpuRegion *memory_layout_get_worker_stack_guard_region(void) {
   return &s_worker_stack_guard_region;
 }
 
-const MpuRegion *memory_layout_get_microflash_region(void) { return &s_microflash_region; }
+const MpuRegion *memory_layout_get_microflash_region(void) {
+  return &s_microflash_region;
+}
 
 const MpuRegion *memory_layout_get_kernel_main_stack_guard_region(void) {
   return &s_kernel_main_stack_guard_region;

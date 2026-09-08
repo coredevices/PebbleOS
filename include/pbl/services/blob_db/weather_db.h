@@ -222,11 +222,16 @@ static inline size_t weather_db_entry_strings_offset(uint8_t version, uint8_t mi
   if (version < WEATHER_DB_CURRENT_VERSION) {
     return offsetof(WeatherDBEntryV3, pstring16s);
   }
-  if (minor_version >= 5) return offsetof(WeatherDBEntry, pstring16s);
-  if (minor_version >= 4) return WEATHER_DB_V4_4_FIXED_SIZE;
-  if (minor_version >= 3) return WEATHER_DB_V4_3_FIXED_SIZE;
-  if (minor_version >= 2) return WEATHER_DB_V4_2_FIXED_SIZE;
-  if (minor_version >= 1) return WEATHER_DB_V4_1_FIXED_SIZE;
+  if (minor_version >= 5)
+    return offsetof(WeatherDBEntry, pstring16s);
+  if (minor_version >= 4)
+    return WEATHER_DB_V4_4_FIXED_SIZE;
+  if (minor_version >= 3)
+    return WEATHER_DB_V4_3_FIXED_SIZE;
+  if (minor_version >= 2)
+    return WEATHER_DB_V4_2_FIXED_SIZE;
+  if (minor_version >= 1)
+    return WEATHER_DB_V4_1_FIXED_SIZE;
   return WEATHER_DB_V4_0_FIXED_SIZE;
 }
 

@@ -59,7 +59,8 @@ void pulse_llc_handler(void *packet, size_t length) {
   }
 }
 
-void pulse_llc_link_state_handler(PulseLinkState link_state) {}
+void pulse_llc_link_state_handler(PulseLinkState link_state) {
+}
 
 void pulse_llc_send_link_opened_msg(void) {
   typedef struct PACKED Response {

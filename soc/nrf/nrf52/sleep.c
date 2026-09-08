@@ -21,4 +21,6 @@ void soc_nrf_sleep_full_release(void) {
   pbl_irq_unlock();
 }
 
-bool soc_nrf_sleep_full_is_allowed(void) { return s_block_count == 0; }
+bool soc_nrf_sleep_full_is_allowed(void) {
+  return s_block_count == 0;
+}

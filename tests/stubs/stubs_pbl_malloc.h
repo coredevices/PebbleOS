@@ -10,13 +10,21 @@
 #include <pbl/util/heap.h>
 
 static Heap s_heap;
-Heap *task_heap_get_for_current_task(void) { return &s_heap; }
+Heap *task_heap_get_for_current_task(void) {
+  return &s_heap;
+}
 
-void *task_malloc(size_t bytes) { return malloc(bytes); }
+void *task_malloc(size_t bytes) {
+  return malloc(bytes);
+}
 
-void *task_realloc(void *ptr, size_t bytes) { return realloc(ptr, bytes); }
+void *task_realloc(void *ptr, size_t bytes) {
+  return realloc(ptr, bytes);
+}
 
-void *task_malloc_check(size_t bytes) { return malloc(bytes); }
+void *task_malloc_check(size_t bytes) {
+  return malloc(bytes);
+}
 
 void *task_zalloc(size_t bytes) {
   void *ptr = task_malloc(bytes);
@@ -24,17 +32,29 @@ void *task_zalloc(size_t bytes) {
   return ptr;
 }
 
-void *task_zalloc_check(size_t bytes) { return task_zalloc(bytes); }
+void *task_zalloc_check(size_t bytes) {
+  return task_zalloc(bytes);
+}
 
-void task_free(void *ptr) { free(ptr); }
+void task_free(void *ptr) {
+  free(ptr);
+}
 
-void *task_calloc(size_t count, size_t size) { return calloc(count, size); }
+void *task_calloc(size_t count, size_t size) {
+  return calloc(count, size);
+}
 
-void *task_calloc_check(size_t count, size_t size) { return task_calloc(count, size); }
+void *task_calloc_check(size_t count, size_t size) {
+  return task_calloc(count, size);
+}
 
-void *app_malloc(size_t bytes) { return malloc(bytes); }
+void *app_malloc(size_t bytes) {
+  return malloc(bytes);
+}
 
-void *app_malloc_check(size_t bytes) { return malloc(bytes); }
+void *app_malloc_check(size_t bytes) {
+  return malloc(bytes);
+}
 
 void *app_zalloc(size_t bytes) {
   void *ptr = app_malloc(bytes);
@@ -42,13 +62,21 @@ void *app_zalloc(size_t bytes) {
   return ptr;
 }
 
-void *app_zalloc_check(size_t bytes) { return app_zalloc(bytes); }
+void *app_zalloc_check(size_t bytes) {
+  return app_zalloc(bytes);
+}
 
-void *app_calloc(size_t count, size_t size) { return calloc(count, size); }
+void *app_calloc(size_t count, size_t size) {
+  return calloc(count, size);
+}
 
-void *app_calloc_check(size_t count, size_t size) { return app_calloc(count, size); }
+void *app_calloc_check(size_t count, size_t size) {
+  return app_calloc(count, size);
+}
 
-void app_free(void *ptr) { free(ptr); }
+void app_free(void *ptr) {
+  free(ptr);
+}
 
 // Set to make kernel_malloc/kernel_strdup return NULL, for OOM testing.
 static bool s_kernel_malloc_should_fail = false;
@@ -64,7 +92,9 @@ void *kernel_malloc(size_t bytes) {
   return malloc(bytes);
 }
 
-void *kernel_malloc_check(size_t bytes) { return malloc(bytes); }
+void *kernel_malloc_check(size_t bytes) {
+  return malloc(bytes);
+}
 
 void *kernel_zalloc(size_t bytes) {
   void *ptr = kernel_malloc(bytes);
@@ -72,15 +102,25 @@ void *kernel_zalloc(size_t bytes) {
   return ptr;
 }
 
-void *kernel_zalloc_check(size_t bytes) { return kernel_zalloc(bytes); }
+void *kernel_zalloc_check(size_t bytes) {
+  return kernel_zalloc(bytes);
+}
 
-void *kernel_realloc(void *ptr, size_t bytes) { return realloc(ptr, bytes); }
+void *kernel_realloc(void *ptr, size_t bytes) {
+  return realloc(ptr, bytes);
+}
 
-void kernel_free(void *ptr) { free(ptr); }
+void kernel_free(void *ptr) {
+  free(ptr);
+}
 
-void *kernel_calloc(size_t count, size_t size) { return calloc(count, size); }
+void *kernel_calloc(size_t count, size_t size) {
+  return calloc(count, size);
+}
 
-void *kernel_calloc_check(size_t count, size_t size) { return kernel_calloc(count, size); }
+void *kernel_calloc_check(size_t count, size_t size) {
+  return kernel_calloc(count, size);
+}
 
 char *kernel_strdup(const char *s) {
   if (s_kernel_malloc_should_fail) {
@@ -96,8 +136,14 @@ char *kernel_strdup(const char *s) {
   return r;
 }
 
-char *kernel_strdup_check(const char *s) { return kernel_strdup(s); }
+char *kernel_strdup_check(const char *s) {
+  return kernel_strdup(s);
+}
 
-char *task_strdup(const char *s) { return kernel_strdup(s); }
+char *task_strdup(const char *s) {
+  return kernel_strdup(s);
+}
 
-void smart_free(void *ptr) { free(ptr); }
+void smart_free(void *ptr) {
+  free(ptr);
+}

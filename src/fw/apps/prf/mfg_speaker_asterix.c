@@ -99,7 +99,9 @@ static void prv_da7212_play_tone(void) {
   da7212_register_write(DA7212_DAC_FILTERS5, 0x00);
 }
 
-static void prv_da7212_idle(void) { da7212_register_write(DA7212_SYSTEM_ACTIVE, 0x00); }
+static void prv_da7212_idle(void) {
+  da7212_register_write(DA7212_SYSTEM_ACTIVE, 0x00);
+}
 
 static void prv_result_confirmed(ClickRecognizerRef recognizer, void *context) {
   ConfirmationDialog *confirmation_dialog = (ConfirmationDialog *)context;

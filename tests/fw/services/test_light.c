@@ -42,27 +42,45 @@ static TimerID s_light_timer;
 static uint8_t s_backlight_brightness;
 static bool s_backlight_enabled = true;
 
-BacklightBehaviour backlight_get_behaviour(void) { return BacklightBehaviour_On; }
+BacklightBehaviour backlight_get_behaviour(void) {
+  return BacklightBehaviour_On;
+}
 
-bool backlight_is_enabled(void) { return s_backlight_enabled; }
+bool backlight_is_enabled(void) {
+  return s_backlight_enabled;
+}
 
-bool backlight_is_ambient_sensor_enabled(void) { return false; }
+bool backlight_is_ambient_sensor_enabled(void) {
+  return false;
+}
 
-void backlight_set_enabled(bool enabled) { s_backlight_enabled = enabled; }
+void backlight_set_enabled(bool enabled) {
+  s_backlight_enabled = enabled;
+}
 
-void backlight_set_ambient_sensor_enabled(bool enabled) {}
+void backlight_set_ambient_sensor_enabled(bool enabled) {
+}
 
-void backlight_set_brightness(uint8_t brightness) { s_backlight_brightness = brightness; }
+void backlight_set_brightness(uint8_t brightness) {
+  s_backlight_brightness = brightness;
+}
 
-uint8_t backlight_get_level(uint8_t brightness) { return brightness; }
+uint8_t backlight_get_level(uint8_t brightness) {
+  return brightness;
+}
 
-void backlight_refresh(void) {}
+void backlight_refresh(void) {
+}
 
-bool backlight_is_motion_enabled(void) { return false; }
+bool backlight_is_motion_enabled(void) {
+  return false;
+}
 
 // From pref.h
 uint32_t s_backlight_timeout_ms;
-uint32_t backlight_get_timeout_ms(void) { return s_backlight_timeout_ms; }
+uint32_t backlight_get_timeout_ms(void) {
+  return s_backlight_timeout_ms;
+}
 void backlight_set_timeout_ms(uint32_t timeout_ms) {
   PBL_ASSERTN(timeout_ms > 0);
   s_backlight_timeout_ms = timeout_ms;
@@ -70,7 +88,9 @@ void backlight_set_timeout_ms(uint32_t timeout_ms) {
 
 uint16_t s_backlight_intensity;
 
-uint8_t backlight_get_intensity(void) { return s_backlight_intensity; }
+uint8_t backlight_get_intensity(void) {
+  return s_backlight_intensity;
+}
 
 void backlight_set_intensity(uint8_t percent_intensity) {
   PBL_ASSERTN(percent_intensity > 0 && percent_intensity <= 100);

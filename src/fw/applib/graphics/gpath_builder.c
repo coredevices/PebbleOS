@@ -93,7 +93,9 @@ GPathBuilder *gpath_builder_create(uint32_t max_points) {
   return result;
 }
 
-void gpath_builder_destroy(GPathBuilder *builder) { applib_free(builder); }
+void gpath_builder_destroy(GPathBuilder *builder) {
+  applib_free(builder);
+}
 
 GPath *gpath_builder_create_path(GPathBuilder *builder) {
   if (builder->num_points <= 1) {

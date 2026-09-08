@@ -155,7 +155,8 @@ static void prv_day_label(int day_offset, char *buf, size_t bufsize) {
 static int prv_location_local_hour(const WxDsForecast *ds) {
   time_t now = rtc_get_time();
   struct tm *lt = localtime(&now);
-  if (!lt) return -1;
+  if (!lt)
+    return -1;
   int hour = lt->tm_hour;
   if (ds && ds->utc_offset_min != INT16_MIN) {
     // tm_gmtoff, not time_get_gmtoffset(): the latter excludes DST while lt does not, which
@@ -168,9 +169,11 @@ static int prv_location_local_hour(const WxDsForecast *ds) {
 }
 
 static int prv_uv_for_current_hour(const WxDsForecast *ds) {
-  if (!ds || !ds->has_hourly_uv) return ds ? ds->today_uv : -1;
+  if (!ds || !ds->has_hourly_uv)
+    return ds ? ds->today_uv : -1;
   const int hour = prv_location_local_hour(ds);
-  if (hour < 0) return ds->today_uv;
+  if (hour < 0)
+    return ds->today_uv;
   const int uv = ds->hourly_uv[hour];
   return (uv < 0) ? ds->today_uv : uv;
 }
@@ -347,7 +350,8 @@ static void prv_read_current_location(WeatherAppData *data, WxDsForecast *scratc
       break;
     }
   }
-  if (!weather_ds_read_index(idx, scratch)) return;
+  if (!weather_ds_read_index(idx, scratch))
+    return;
   strncpy(data->current_loc_buf, scratch->location_name, sizeof(data->current_loc_buf) - 1);
   data->current_loc_buf[sizeof(data->current_loc_buf) - 1] = '\0';
   data->current_lat_e2 = scratch->latitude_e2;
@@ -507,7 +511,8 @@ static void prv_on_list_up_to_expanded(void *ctx) {
   // UP at the top of the forecast: the mainscreen has squashed down off the bottom and the hero
   // icon-fly + glance text have already animated in (drawn by the forecast, synced to the icon
   // landing). Reveal the static card; don't replay the text slide.
-  if (expanded_view_is_showing()) return;
+  if (expanded_view_is_showing())
+    return;
   s_page = PAGE_EXPANDED;
   prv_push_expanded(data, ExpandedViewEntranceStatic);
 }
@@ -553,7 +558,8 @@ static void prv_on_report_requested(void *ctx) {
   WeatherAppData *data = (WeatherAppData *)ctx;
   // SELECT on the forecast main view -> slide the main screen off to the left, then hard-cut to
   // the weather report. Falls back to a plain push where the today-icon rect isn't available.
-  if (!data || weather_report_is_showing()) return;
+  if (!data || weather_report_is_showing())
+    return;
 #if PBL_ROUND
   // Round has no hero icon-fly, but it DOES play the ball -> unfold -> paper scene, so it
   // must not be gated on the icon rect (which is rect-only and always false here — that
@@ -600,7 +606,9 @@ static void prv_push_globe(WeatherAppData *data, bool animated) {
   globe_view_push_animated(data->globe_view, animated);
 }
 
-static void prv_on_city_select_requested(void *ctx) { prv_push_globe((WeatherAppData *)ctx, true); }
+static void prv_on_city_select_requested(void *ctx) {
+  prv_push_globe((WeatherAppData *)ctx, true);
+}
 
 // (globe DOWN-to-expanded path deleted with the dead main_callback chain)
 
@@ -622,7 +630,8 @@ static void prv_globe_back_to_expanded(void *ctx) {
 // Switch the ACTIVE location to a phone-synced record. `ds_index` comes straight
 // off the pin/row, so the selection can't fail to resolve.
 static void prv_select_ds_location(WeatherAppData *data, int ds_index) {
-  if (!data || ds_index < 0 || ds_index >= weather_ds_location_count()) return;
+  if (!data || ds_index < 0 || ds_index >= weather_ds_location_count())
+    return;
   // prv_refresh re-reads the record and pushes the chosen city into every view
   // (forecast base, card, report, glance).
   data->active_index = ds_index;
@@ -691,7 +700,9 @@ static void prv_on_clock_wrap_to_main(void *ctx) {
 // removed: screens are now reached only via buttons. s_page remains as a simple page-identity tag
 // the button handlers keep updated (ready for gesture nav to be re-added against the new layout).
 
-static void prv_handle_weather(PebbleEvent *event, void *context) { prv_refresh(s_data); }
+static void prv_handle_weather(PebbleEvent *event, void *context) {
+  prv_refresh(s_data);
+}
 
 static NOINLINE void prv_init(void) {
   // System-app statics survive across launches and a crashed run never reaches

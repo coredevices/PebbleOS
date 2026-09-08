@@ -217,17 +217,20 @@ enum _DUMA_Allocator {
   EFA_NEW_ARRAY,
   EFA_DEL_ARRAY
 
-  /* use following enums when calling _duma_allocate()/_duma_deallocate()
-   * from user defined member operators
-   */
-  ,
+      /* use following enums when calling _duma_allocate()/_duma_deallocate()
+       * from user defined member operators
+       */
+      ,
   EFA_MEMBER_NEW_ELEM,
   EFA_MEMBER_DEL_ELEM,
   EFA_MEMBER_NEW_ARRAY,
   EFA_MEMBER_DEL_ARRAY
 };
 
-enum _DUMA_FailReturn { DUMA_FAIL_NULL, DUMA_FAIL_ENV };
+enum _DUMA_FailReturn {
+  DUMA_FAIL_NULL,
+  DUMA_FAIL_ENV
+};
 
 #endif /* DUMA_ENUMS_DECLARED */
 

@@ -79,7 +79,9 @@ static status_t external_flash_domain_open(uint8_t *packet_data, size_t length, 
   return S_SUCCESS;
 }
 
-static status_t external_flash_domain_close(void *context) { return S_SUCCESS; }
+static status_t external_flash_domain_close(void *context) {
+  return S_SUCCESS;
+}
 
 PulseBulkIODomainHandler pulse_bulkio_domain_external_flash = {
     .id = PulseBulkIODomainType_ExternalFlash,

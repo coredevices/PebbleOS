@@ -58,8 +58,12 @@ bool hrm_enable(HRMDevice *dev, HRMFeature features) {
   s_hrm_state.enable_count++;
   return true;
 }
-void hrm_disable(HRMDevice *dev) { s_hrm_state.enabled = false; }
-bool hrm_is_enabled(HRMDevice *dev) { return s_hrm_state.enabled; }
+void hrm_disable(HRMDevice *dev) {
+  s_hrm_state.enabled = false;
+}
+bool hrm_is_enabled(HRMDevice *dev) {
+  return s_hrm_state.enabled;
+}
 
 // -----------------------------------------------------------------------------
 // Queue Fakes
@@ -98,9 +102,13 @@ struct pbl_msgq *pebble_task_get_to_queue(PebbleTask task) {
 // -----------------------------------------------------------------------------
 
 static bool s_activity_prefs_heart_rate_is_enabled = true;
-bool activity_prefs_heart_rate_is_enabled(void) { return s_activity_prefs_heart_rate_is_enabled; }
+bool activity_prefs_heart_rate_is_enabled(void) {
+  return s_activity_prefs_heart_rate_is_enabled;
+}
 
-bool battery_is_usb_connected(void) { return false; }
+bool battery_is_usb_connected(void) {
+  return false;
+}
 
 // -----------------------------------------------------------------------------
 // Test Helpers
@@ -113,7 +121,9 @@ static const HRMData s_hrm_event_data = {
     .hrm_quality = HRMQuality_Excellent,
 };
 
-static void prv_fake_send_new_data(void) { hrm_manager_new_data_cb(&s_hrm_event_data); }
+static void prv_fake_send_new_data(void) {
+  hrm_manager_new_data_cb(&s_hrm_event_data);
+}
 
 static PebbleHRMEvent s_cb_events_1[16];
 static int s_num_cb_events_1 = 0;

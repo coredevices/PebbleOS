@@ -18,9 +18,13 @@
 ////////////////////////////////////////////////////////////////
 
 static time_t s_now;
-time_t rtc_get_time(void) { return s_now; }
+time_t rtc_get_time(void) {
+  return s_now;
+}
 
-RtcTicks rtc_get_ticks(void) { return 0; }
+RtcTicks rtc_get_ticks(void) {
+  return 0;
+}
 
 bool s_performed_store = false;
 AttributeList *s_expected_attributes = NULL;
@@ -75,7 +79,9 @@ status_t ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, Attrib
   return S_SUCCESS;
 }
 
-void ios_notif_pref_db_free_prefs(iOSNotifPrefs *prefs) { return; }
+void ios_notif_pref_db_free_prefs(iOSNotifPrefs *prefs) {
+  return;
+}
 
 static void prv_compare_notif_prefs(iOSNotifPrefs *prefs1, iOSNotifPrefs *prefs2) {
   const int buf_size = 256;
@@ -95,7 +101,8 @@ void test_ancs_filtering__initialize(void) {
   s_expected_actions = NULL;
 }
 
-void test_ancs_filtering__cleanup(void) {}
+void test_ancs_filtering__cleanup(void) {
+}
 
 void test_ancs_filtering__record_app_no_action_needed(void) {
   // We have some existing prefs which includes all the defaults

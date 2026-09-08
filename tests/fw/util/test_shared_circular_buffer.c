@@ -12,11 +12,14 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 int g_pbl_log_level = 0;
-void pbl_log(int level, const char *src_filename, int src_line_number, const char *fmt, ...) {}
+void pbl_log(int level, const char *src_filename, int src_line_number, const char *fmt, ...) {
+}
 
-void test_shared_circular_buffer__initialize(void) {}
+void test_shared_circular_buffer__initialize(void) {
+}
 
-void test_shared_circular_buffer__cleanup(void) {}
+void test_shared_circular_buffer__cleanup(void) {
+}
 
 static void prv_read_and_consume(SharedCircularBuffer *buffer, SharedCircularBufferClient *client,
                                  uint8_t *data, uint32_t num_bytes) {

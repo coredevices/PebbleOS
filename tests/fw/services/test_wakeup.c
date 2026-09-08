@@ -49,12 +49,17 @@
 // int g_pbl_log_level = 0;
 // void pbl_log(uint8_t level, const char* src_filename, int src_line_number, const char* fmt, ...)
 // {}
-int time_util_get_num_hours(int hours, bool is24h) { return 0; }
+int time_util_get_num_hours(int hours, bool is24h) {
+  return 0;
+}
 
-bool sys_clock_is_24h_style(void) { return false; }
+bool sys_clock_is_24h_style(void) {
+  return false;
+}
 
 void event_service_init(PebbleEventType type, EventServiceAddSubscriberCallback start_cb,
-                        EventServiceRemoveSubscriberCallback stop_cb) {}
+                        EventServiceRemoveSubscriberCallback stop_cb) {
+}
 
 static bool s_popup_occurred;
 void wakeup_popup_window(uint8_t missed_apps_count, uint8_t *missed_apps_banks) {
@@ -63,7 +68,9 @@ void wakeup_popup_window(uint8_t missed_apps_count, uint8_t *missed_apps_banks) 
 
 static PebbleProcessMd s_test_app_md = {.uuid = TEST_UUID};
 
-bool clock_is_timezone_set(void) { return false; }
+bool clock_is_timezone_set(void) {
+  return false;
+}
 
 // Tests
 ///////////////////////////////////////////////////////////
@@ -85,7 +92,8 @@ void test_wakeup__initialize(void) {
   wakeup_enable(true);
 }
 
-void test_wakeup__cleanup(void) {}
+void test_wakeup__cleanup(void) {
+}
 
 void test_wakeup__basic_checks(void) {
   WakeupId wakeup_id = 0;

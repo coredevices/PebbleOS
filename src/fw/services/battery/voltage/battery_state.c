@@ -301,11 +301,17 @@ BatteryChargeState battery_get_charge_state(void) {
 }
 
 // For unit tests
-TimerID battery_state_get_periodic_timer_id(void) { return s_periodic_timer_id; }
+TimerID battery_state_get_periodic_timer_id(void) {
+  return s_periodic_timer_id;
+}
 
-uint16_t battery_state_get_voltage(void) { return s_last_battery_state.voltage; }
+uint16_t battery_state_get_voltage(void) {
+  return s_last_battery_state.voltage;
+}
 
-int32_t battery_state_get_temp(void) { return 0; }
+int32_t battery_state_get_temp(void) {
+  return 0;
+}
 
 #include "console/prompt.h"
 void command_print_battery_status(void) {

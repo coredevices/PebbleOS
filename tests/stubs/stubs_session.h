@@ -14,9 +14,13 @@ CommSession *comm_session_get_system_session(void) {
   return (CommSession *)1;
 }
 
-bool comm_session_is_system(CommSession *session) { return false; }
+bool comm_session_is_system(CommSession *session) {
+  return false;
+}
 
-CommSession *comm_session_get_by_type(CommSessionType type) { return NULL; }
+CommSession *comm_session_get_by_type(CommSessionType type) {
+  return NULL;
+}
 
 bool comm_session_send_data(CommSession *session, uint16_t endpoint_id, const uint8_t *data,
                             size_t length, uint32_t timeout_ms) {

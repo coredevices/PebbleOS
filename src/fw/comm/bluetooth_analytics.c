@@ -39,7 +39,8 @@ static void prv_update_conn_params(uint16_t slave_latency_events, uint16_t super
   bt_unlock();
 }
 
-void bluetooth_analytics_handle_param_update_failed(void) {}
+void bluetooth_analytics_handle_param_update_failed(void) {
+}
 
 //! only called when we are connected as a slave
 void bluetooth_analytics_handle_connection_params_update(const BleConnectionParams *params) {
@@ -107,13 +108,17 @@ void bluetooth_analytics_handle_disconnect(bool local_is_master) {
   }
 }
 
-void bluetooth_analytics_handle_encryption_change(void) {}
+void bluetooth_analytics_handle_encryption_change(void) {
+}
 
-void bluetooth_analytics_handle_no_intent_for_connection(void) {}
+void bluetooth_analytics_handle_no_intent_for_connection(void) {
+}
 
-void bluetooth_analytics_handle_ble_pairing_request(void) {}
+void bluetooth_analytics_handle_ble_pairing_request(void) {
+}
 
-void bluetooth_analytics_handle_ble_pairing_error(uint32_t error) {}
+void bluetooth_analytics_handle_ble_pairing_error(uint32_t error) {
+}
 
 static bool prv_calc_stats_and_print(const SlaveConnEventStats *orig_stats,
                                      SlaveConnEventStats *stats_buf, bool is_putbytes) {

@@ -49,15 +49,25 @@ static void prv_init(UARTDevice *dev, uint32_t mode) {
   }
 }
 
-void uart_init(UARTDevice *dev) { prv_init(dev, UART_MODE_TX_RX); }
+void uart_init(UARTDevice *dev) {
+  prv_init(dev, UART_MODE_TX_RX);
+}
 
-void uart_init_open_drain(UARTDevice *dev) { WTF; }
+void uart_init_open_drain(UARTDevice *dev) {
+  WTF;
+}
 
-void uart_init_tx_only(UARTDevice *dev) { prv_init(dev, UART_MODE_TX); }
+void uart_init_tx_only(UARTDevice *dev) {
+  prv_init(dev, UART_MODE_TX);
+}
 
-void uart_init_rx_only(UARTDevice *dev) { prv_init(dev, UART_MODE_RX); }
+void uart_init_rx_only(UARTDevice *dev) {
+  prv_init(dev, UART_MODE_RX);
+}
 
-void uart_deinit(UARTDevice *dev) { HAL_UART_DeInit(&dev->state->huart); }
+void uart_deinit(UARTDevice *dev) {
+  HAL_UART_DeInit(&dev->state->huart);
+}
 
 void uart_set_baud_rate(UARTDevice *dev, uint32_t baud_rate) {
   HAL_StatusTypeDef ret;
@@ -78,7 +88,9 @@ void uart_write_byte(UARTDevice *dev, uint8_t data) {
   HAL_UART_Transmit(&dev->state->huart, &data, 1, HAL_MAX_DELAY);
 }
 
-uint8_t uart_read_byte(UARTDevice *dev) { return __HAL_UART_GETC(&dev->state->huart); }
+uint8_t uart_read_byte(UARTDevice *dev) {
+  return __HAL_UART_GETC(&dev->state->huart);
+}
 
 bool uart_is_rx_ready(UARTDevice *dev) {
   return READ_REG(dev->state->huart.Instance->ISR) & USART_ISR_RXNE;
@@ -101,7 +113,8 @@ bool uart_is_tx_complete(UARTDevice *dev) {
 }
 
 void uart_wait_for_tx_complete(UARTDevice *dev) {
-  while (!uart_is_tx_complete(dev)) continue;
+  while (!uart_is_tx_complete(dev))
+    continue;
 }
 
 // Interrupts
@@ -255,12 +268,16 @@ void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart) {
   }
 }
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) { HAL_UART_RxHalfCpltCallback(huart); }
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+  HAL_UART_RxHalfCpltCallback(huart);
+}
 
 // DMA
 ////////////////////////////////////////////////////////////////////////////////
 
-void uart_dma_irq_handler(UARTDevice *dev) { HAL_DMA_IRQHandler(&dev->state->hdma); }
+void uart_dma_irq_handler(UARTDevice *dev) {
+  HAL_DMA_IRQHandler(&dev->state->hdma);
+}
 
 void uart_start_rx_dma(UARTDevice *dev, void *buffer, uint32_t length) {
   // The DMA buffer is invalidated whole from the IRQ paths, so it must not

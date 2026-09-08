@@ -113,4 +113,6 @@ void *layout_get_context(LayoutLayer *layout) {
   }
 }
 
-void layout_destroy(LayoutLayer *layout) { layout->impl->destructor(layout); }
+void layout_destroy(LayoutLayer *layout) {
+  layout->impl->destructor(layout);
+}

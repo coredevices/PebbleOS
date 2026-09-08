@@ -21,7 +21,9 @@ static bool prv_is_session_task(void) {
 
 // ------------------------------------------------------------------------------------------
 // Assert that the current task is allowed to create/delete a session
-static void prv_assert_session_task(void) { PBL_ASSERTN(prv_is_session_task()); }
+static void prv_assert_session_task(void) {
+  PBL_ASSERTN(prv_is_session_task());
+}
 
 // --------------------------------------------------------------------------------------------
 // Return the session ref for the given task. This should ONLY be used by 3rd party tasks

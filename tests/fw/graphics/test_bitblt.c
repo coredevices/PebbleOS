@@ -46,7 +46,8 @@ void test_bitblt__initialize(void) {
   test_graphics_context_init(&ctx, &framebuffer);
 }
 
-void test_bitblt__cleanup(void) {}
+void test_bitblt__cleanup(void) {
+}
 
 // Test images reside in "tests/fw/graphics/test_images/".
 // The wscript will convert them from PNGs in that directory to PBIs in the build directory.

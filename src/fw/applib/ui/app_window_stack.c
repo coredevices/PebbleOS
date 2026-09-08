@@ -44,7 +44,9 @@ bool app_window_stack_contains_window(Window *window) {
   return window_stack_contains_window(app_state_get_window_stack(), window);
 }
 
-uint32_t app_window_stack_count(void) { return window_stack_count(app_state_get_window_stack()); }
+uint32_t app_window_stack_count(void) {
+  return window_stack_count(app_state_get_window_stack());
+}
 
 // Commands
 ////////////////////////////////////

@@ -43,7 +43,8 @@ uint32_t isqrt(uint32_t x) {
 
   /* "one" starts at the highest power of four <= than the argument. */
   one = 1 << 30; /* second-to-top bit set */
-  while (one > op) one >>= 2;
+  while (one > op)
+    one >>= 2;
 
   while (one != 0) {
     if (op >= res + one) {

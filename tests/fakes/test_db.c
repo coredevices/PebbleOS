@@ -13,7 +13,9 @@ struct {
   RamStorage ram_storage;
 } s_test_db;
 
-void test_db_init(void) { s_test_db.ram_storage = ram_storage_create(); }
+void test_db_init(void) {
+  s_test_db.ram_storage = ram_storage_create();
+}
 
 status_t test_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   return ram_storage_insert(&s_test_db.ram_storage, key, key_len, val, val_len);
@@ -31,7 +33,9 @@ status_t test_db_delete(const uint8_t *key, int key_len) {
   return ram_storage_delete(&s_test_db.ram_storage, key, key_len);
 }
 
-status_t test_db_flush(void) { return ram_storage_flush(&s_test_db.ram_storage); }
+status_t test_db_flush(void) {
+  return ram_storage_flush(&s_test_db.ram_storage);
+}
 
 status_t test_db_is_dirty(bool *is_dirty_out) {
   return ram_storage_is_dirty(&s_test_db.ram_storage, is_dirty_out);

@@ -34,6 +34,10 @@ void mfg_enter_mfg_mode_and_launch_app(void) {
   }
 }
 
-bool mfg_is_mfg_mode(void) { return s_mfg_mode; }
+bool mfg_is_mfg_mode(void) {
+  return s_mfg_mode;
+}
 
-void command_enter_mfg(void) { mfg_enter_mfg_mode_and_launch_app(); }
+void command_enter_mfg(void) {
+  mfg_enter_mfg_mode_and_launch_app();
+}

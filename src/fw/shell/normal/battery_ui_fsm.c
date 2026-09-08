@@ -186,13 +186,21 @@ static void prv_display_plugged(void *data) {
   battery_ui_display_plugged();
 }
 
-static void prv_dismiss_plugged(void) { battery_ui_dismiss_modal(); }
+static void prv_dismiss_plugged(void) {
+  battery_ui_dismiss_modal();
+}
 
-static void prv_display_fully_charged(void *data) { battery_ui_display_fully_charged(); }
+static void prv_display_fully_charged(void *data) {
+  battery_ui_display_fully_charged();
+}
 
-static void prv_dismiss_fully_charged(void) { battery_ui_dismiss_modal(); }
+static void prv_dismiss_fully_charged(void) {
+  battery_ui_dismiss_modal();
+}
 
-static void prv_shutdown(void *ignored) { battery_ui_handle_shut_down(); }
+static void prv_shutdown(void *ignored) {
+  battery_ui_handle_shut_down();
+}
 
 // Internals
 

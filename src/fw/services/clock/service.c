@@ -437,10 +437,14 @@ void clock_init(void) {
 }
 
 #ifndef CONFIG_RECOVERY_FW
-void clock_hourly_chime_arm(void) { s_hourly_chime_armed = true; }
+void clock_hourly_chime_arm(void) {
+  s_hourly_chime_armed = true;
+}
 #endif
 
-void clock_get_time_tm(struct tm *time_tm) { rtc_get_time_tm(time_tm); }
+void clock_get_time_tm(struct tm *time_tm) {
+  rtc_get_time_tm(time_tm);
+}
 
 size_t clock_format_time(char *buffer, uint8_t size, int16_t hours, int16_t minutes,
                          bool add_space) {
@@ -579,23 +583,33 @@ void clock_get_event_relative_time_string(char *number_buffer, int number_buffer
   }
 }
 
-DEFINE_SYSCALL(bool, clock_is_24h_style, void) { return shell_prefs_get_clock_24h_style(); }
+DEFINE_SYSCALL(bool, clock_is_24h_style, void) {
+  return shell_prefs_get_clock_24h_style();
+}
 
-void clock_set_24h_style(bool is_24h_style) { shell_prefs_set_clock_24h_style(is_24h_style); }
+void clock_set_24h_style(bool is_24h_style) {
+  shell_prefs_set_clock_24h_style(is_24h_style);
+}
 
 DEFINE_SYSCALL(bool, clock_is_timezone_set, void) {
   return rtc_is_timezone_set();  // If timezone abbr isn't set
 }
 
-bool clock_timezone_source_is_manual(void) { return shell_prefs_is_timezone_source_manual(); }
+bool clock_timezone_source_is_manual(void) {
+  return shell_prefs_is_timezone_source_manual();
+}
 
 void clock_set_manual_timezone_source(bool manual) {
   shell_prefs_set_timezone_source_manual(manual);
 }
 
-bool clock_time_source_is_manual(void) { return shell_prefs_is_time_source_manual(); }
+bool clock_time_source_is_manual(void) {
+  return shell_prefs_is_time_source_manual();
+}
 
-void clock_set_manual_time_source(bool manual) { shell_prefs_set_time_source_manual(manual); }
+void clock_set_manual_time_source(bool manual) {
+  shell_prefs_set_time_source_manual(manual);
+}
 
 void clock_request_time_from_phone(void) {
   CommSession *session = comm_session_get_system_session();
@@ -644,7 +658,9 @@ DEFINE_SYSCALL(time_t, clock_to_timestamp, WeekDay day, int hour, int minute) {
   return t;
 }
 
-void command_timezone_clear(void) { rtc_timezone_clear(); }
+void command_timezone_clear(void) {
+  rtc_timezone_clear();
+}
 
 void command_get_time(void) {
   char buffer[80];
@@ -694,7 +710,9 @@ void clock_get_timezone_region(char *region_name, const size_t buffer_size) {
   }
 }
 
-int16_t clock_get_timezone_region_id(void) { return rtc_get_timezone_id(); }
+int16_t clock_get_timezone_region_id(void) {
+  return rtc_get_timezone_id();
+}
 
 void clock_set_timezone_by_region_id(uint16_t region_id) {
   TimezoneInfo tz_info;
@@ -702,7 +720,9 @@ void clock_set_timezone_by_region_id(uint16_t region_id) {
   prv_update_time_info_and_generate_event(NULL, &tz_info);
 }
 
-void clock_set_time(time_t utc_time) { prv_update_time_info_and_generate_event(&utc_time, NULL); }
+void clock_set_time(time_t utc_time) {
+  prv_update_time_info_and_generate_event(&utc_time, NULL);
+}
 
 void clock_get_friendly_date(char *buffer, int buf_size, time_t timestamp) {
   const time_t now = rtc_get_time();

@@ -9,7 +9,9 @@
 
 #include <string.h>
 
-size_t buffer_get_bytes_remaining(Buffer *b) { return (b->length - b->bytes_written); }
+size_t buffer_get_bytes_remaining(Buffer *b) {
+  return (b->length - b->bytes_written);
+}
 
 size_t buffer_add(Buffer *const b, const uint8_t *const data, const size_t length) {
   PBL_ASSERTN(b);
@@ -50,6 +52,10 @@ void buffer_init(Buffer *const buffer, const size_t length) {
   buffer->length = length;
 }
 
-void buffer_clear(Buffer *const buffer) { buffer->bytes_written = 0; }
+void buffer_clear(Buffer *const buffer) {
+  buffer->bytes_written = 0;
+}
 
-bool buffer_is_empty(Buffer *const buffer) { return buffer->bytes_written == 0; }
+bool buffer_is_empty(Buffer *const buffer) {
+  return buffer->bytes_written == 0;
+}

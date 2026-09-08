@@ -95,9 +95,13 @@ static const int s_monday_10_30 = 1427106600;
 static TimerID s_timer = TIMER_INVALID_ID;
 static bool s_event_ongoing = false;
 
-void calendar_init() { s_timer = new_timer_create(); }
+void calendar_init() {
+  s_timer = new_timer_create();
+}
 
-bool calendar_event_is_ongoing() { return s_event_ongoing; }
+bool calendar_event_is_ongoing() {
+  return s_event_ongoing;
+}
 
 void do_not_disturb_toggle_push(ActionTogglePrompt prompt, bool set_exit_reason) {
   do_not_disturb_set_manually_enabled(!do_not_disturb_is_active());

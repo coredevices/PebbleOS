@@ -79,7 +79,9 @@ static int sfs_seek(SettingsRawIter *iter, int amount, int whence) {
   fatal_logic_error(iter);
 }
 
-static int sfs_pos(SettingsRawIter *iter) { return sfs_seek(iter, 0, FSeekCur); }
+static int sfs_pos(SettingsRawIter *iter) {
+  return sfs_seek(iter, 0, FSeekCur);
+}
 
 static int sfs_read(SettingsRawIter *iter, uint8_t *data, int data_len) {
   status_t status = pfs_read(iter->fd, data, data_len);
@@ -135,7 +137,9 @@ void settings_raw_iter_begin(SettingsRawIter *iter) {
   sfs_read(iter, (uint8_t *)&iter->hdr, sizeof(iter->hdr));
 }
 
-void settings_raw_iter_resume(SettingsRawIter *iter) { iter->resumed_pos = iter->hdr_pos; }
+void settings_raw_iter_resume(SettingsRawIter *iter) {
+  iter->resumed_pos = iter->hdr_pos;
+}
 
 void settings_raw_iter_next(SettingsRawIter *iter) {
   // Seek to start of next record header.
@@ -157,9 +161,13 @@ bool settings_raw_iter_end(SettingsRawIter *iter) {
           (hdr->key_len == ((1 << KEY_LEN_BITS) - 1)) && (hdr->val_len == SETTINGS_EOF_MARKER));
 }
 
-int settings_raw_iter_get_current_record_pos(SettingsRawIter *iter) { return iter->hdr_pos; }
+int settings_raw_iter_get_current_record_pos(SettingsRawIter *iter) {
+  return iter->hdr_pos;
+}
 
-int settings_raw_iter_get_resumed_record_pos(SettingsRawIter *iter) { return iter->resumed_pos; }
+int settings_raw_iter_get_resumed_record_pos(SettingsRawIter *iter) {
+  return iter->resumed_pos;
+}
 
 void settings_raw_iter_set_current_record_pos(SettingsRawIter *iter, int pos) {
   sfs_seek(iter, pos, FSeekSet);
@@ -168,19 +176,22 @@ void settings_raw_iter_set_current_record_pos(SettingsRawIter *iter, int pos) {
 }
 
 void settings_raw_iter_read_key(SettingsRawIter *iter, uint8_t *key_out) {
-  if (iter->hdr.key_len == 0) return;
+  if (iter->hdr.key_len == 0)
+    return;
   sfs_seek(iter, iter->hdr_pos + sizeof(SettingsRecordHeader), FSeekSet);
   sfs_read(iter, key_out, iter->hdr.key_len);
 }
 void settings_raw_iter_read_val(SettingsRawIter *iter, uint8_t *val_out, int val_len) {
-  if (iter->hdr.val_len == 0) return;
+  if (iter->hdr.val_len == 0)
+    return;
   sfs_seek(iter, iter->hdr_pos + sizeof(SettingsRecordHeader) + iter->hdr.key_len, FSeekSet);
   sfs_read(iter, val_out, val_len);
 }
 
 void settings_raw_iter_read_key_val(SettingsRawIter *iter, uint8_t *key_val_out) {
   const int kv_len = iter->hdr.key_len + iter->hdr.val_len;
-  if (kv_len == 0) return;
+  if (kv_len == 0)
+    return;
   sfs_seek(iter, iter->hdr_pos + sizeof(SettingsRecordHeader), FSeekSet);
   sfs_read(iter, key_val_out, kv_len);
 }
@@ -193,19 +204,22 @@ void settings_raw_iter_write_header(SettingsRawIter *iter, SettingsRecordHeader 
   iter->hdr = *hdr;
 }
 void settings_raw_iter_write_key(SettingsRawIter *iter, const uint8_t *key) {
-  if (iter->hdr.key_len == 0) return;
+  if (iter->hdr.key_len == 0)
+    return;
   sfs_seek(iter, iter->hdr_pos + sizeof(SettingsRecordHeader), FSeekSet);
   sfs_write(iter, key, iter->hdr.key_len);
 }
 void settings_raw_iter_write_val(SettingsRawIter *iter, const uint8_t *val) {
-  if (iter->hdr.val_len == 0) return;
+  if (iter->hdr.val_len == 0)
+    return;
   sfs_seek(iter, iter->hdr_pos + sizeof(SettingsRecordHeader) + iter->hdr.key_len, FSeekSet);
   sfs_write(iter, val, iter->hdr.val_len);
 }
 
 void settings_raw_iter_write_key_val(SettingsRawIter *iter, const uint8_t *key_val) {
   const int kv_len = iter->hdr.key_len + iter->hdr.val_len;
-  if (kv_len == 0) return;
+  if (kv_len == 0)
+    return;
   sfs_seek(iter, iter->hdr_pos + sizeof(SettingsRecordHeader), FSeekSet);
   sfs_write(iter, key_val, kv_len);
 }
@@ -223,5 +237,7 @@ void settings_raw_iter_deinit(SettingsRawIter *iter) {
 }
 
 #if UNITTEST
-uint32_t settings_raw_iter_prv_get_num_record_searches(void) { return s_num_record_changes; }
+uint32_t settings_raw_iter_prv_get_num_record_searches(void) {
+  return s_num_record_changes;
+}
 #endif

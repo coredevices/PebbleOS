@@ -138,7 +138,10 @@ typedef enum apng_dispose_ops {
   APNG_DISPOSE_OP_PREVIOUS
 } apng_dispose_ops;
 
-typedef enum apng_blend_ops { APNG_BLEND_OP_SOURCE = 0, APNG_BLEND_OP_OVER } apng_blend_ops;
+typedef enum apng_blend_ops {
+  APNG_BLEND_OP_SOURCE = 0,
+  APNG_BLEND_OP_OVER
+} apng_blend_ops;
 
 typedef struct PACKED apng_fctl {
   uint32_t sequence_number;

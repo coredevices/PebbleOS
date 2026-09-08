@@ -114,7 +114,9 @@ static void prv_lock(void) {
   pbl_mutex_lock(&s_app_outbox_mutex, PBL_FOREVER);
 }
 
-static void prv_unlock(void) { pbl_mutex_unlock(&s_app_outbox_mutex); }
+static void prv_unlock(void) {
+  pbl_mutex_unlock(&s_app_outbox_mutex);
+}
 
 static AppOutboxConsumer *prv_consumer_for_tag(AppOutboxServiceTag tag) {
   if (tag == AppOutboxServiceTagInvalid) {
@@ -305,7 +307,8 @@ void app_outbox_service_cleanup_event(PebbleEvent *event) {
                                      AppOutboxStatusSuccess /* ignored */);
 }
 
-void app_outbox_service_init(void) {}
+void app_outbox_service_init(void) {
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Unit Test Interfaces

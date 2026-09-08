@@ -90,14 +90,20 @@ KinoReel *kino_reel_morph_square_create(KinoReel *from_reel, bool take_ownership
   return from_reel;
 }
 
-GContext *graphics_context_get_current_context(void) { return &s_ctx; }
+GContext *graphics_context_get_current_context(void) {
+  return &s_ctx;
+}
 
 static UnitsDistance s_units_distance;
 static UnitsWind s_units_wind;
 
-UnitsDistance shell_prefs_get_units_distance(void) { return s_units_distance; }
+UnitsDistance shell_prefs_get_units_distance(void) {
+  return s_units_distance;
+}
 
-UnitsWind shell_prefs_get_units_wind(void) { return s_units_wind; }
+UnitsWind shell_prefs_get_units_wind(void) {
+  return s_units_wind;
+}
 
 void test_weather_app_layout__initialize(void) {
   s_units_distance = UnitsDistance_Miles;
@@ -127,7 +133,9 @@ void test_weather_app_layout__initialize(void) {
   content_indicator_init_buffer(buffer);
 }
 
-void test_weather_app_layout__cleanup(void) { free(fb); }
+void test_weather_app_layout__cleanup(void) {
+  free(fb);
+}
 
 // Helpers
 //////////////////////

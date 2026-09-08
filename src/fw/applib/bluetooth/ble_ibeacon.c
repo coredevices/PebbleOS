@@ -41,13 +41,21 @@ typedef struct __attribute__((__packed__)) {
 // -----------------------------------------------------------------------------
 // Accessors
 
-Uuid ble_ibeacon_get_uuid(const BLEiBeacon *ibeacon) { return ibeacon->uuid; }
+Uuid ble_ibeacon_get_uuid(const BLEiBeacon *ibeacon) {
+  return ibeacon->uuid;
+}
 
-uint16_t ble_ibeacon_get_major(const BLEiBeacon *ibeacon) { return ibeacon->major; }
+uint16_t ble_ibeacon_get_major(const BLEiBeacon *ibeacon) {
+  return ibeacon->major;
+}
 
-uint16_t ble_ibeacon_get_minor(const BLEiBeacon *ibeacon) { return ibeacon->minor; }
+uint16_t ble_ibeacon_get_minor(const BLEiBeacon *ibeacon) {
+  return ibeacon->minor;
+}
 
-uint16_t ble_ibeacon_get_distance_cm(const BLEiBeacon *ibeacon) { return ibeacon->distance_cm; }
+uint16_t ble_ibeacon_get_distance_cm(const BLEiBeacon *ibeacon) {
+  return ibeacon->distance_cm;
+}
 
 BLEiBeacon *ble_ibeacon_create_from_ad_data(const BLEAdData *ad, int8_t rssi) {
   // Note, not yet exported to 3rd party apps so no padding necessary
@@ -60,7 +68,9 @@ BLEiBeacon *ble_ibeacon_create_from_ad_data(const BLEAdData *ad, int8_t rssi) {
   return ibeacon;
 }
 
-void ble_ibeacon_destroy(BLEiBeacon *ibeacon) { applib_free(ibeacon); }
+void ble_ibeacon_destroy(BLEiBeacon *ibeacon) {
+  applib_free(ibeacon);
+}
 
 // -----------------------------------------------------------------------------
 // Below is the iBeacon advertisement parsing code.

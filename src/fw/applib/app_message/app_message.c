@@ -75,7 +75,9 @@ void app_message_app_protocol_system_nack_callback(CommSession *session, const u
 
 // -------- Developer Interface ----------------------------------------------------------------- //
 
-void *app_message_get_context(void) { return app_state_get_app_message_ctx()->inbox.user_context; }
+void *app_message_get_context(void) {
+  return app_state_get_app_message_ctx()->inbox.user_context;
+}
 
 void *app_message_set_context(void *context) {
   AppMessageCtx *app_message_ctx = app_state_get_app_message_ctx();

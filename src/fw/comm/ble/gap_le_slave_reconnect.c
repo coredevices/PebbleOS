@@ -61,7 +61,9 @@ static void prv_advert_job_unscheduled_callback(GAPLEAdvertisingJobRef job, bool
   s_reconnect_advert_job = NULL;
 }
 
-static bool prv_is_advertising_for_reconnection(void) { return (s_reconnect_advert_job != NULL); }
+static bool prv_is_advertising_for_reconnection(void) {
+  return (s_reconnect_advert_job != NULL);
+}
 
 static ReconnectType prv_current_reconnect_type(void) {
   if (s_is_hrm_reconnection_enabled) {

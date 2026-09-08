@@ -8,4 +8,6 @@ bool bt_driver_start_le_scan(bool active_scan, bool use_white_list_filter, bool 
   return true;
 }
 
-bool bt_driver_stop_le_scan(void) { return true; }
+bool bt_driver_stop_le_scan(void) {
+  return true;
+}

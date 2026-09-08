@@ -62,7 +62,9 @@ typedef struct CrashInfo {
   bool pc_known;
 } CrashInfo;
 
-CrashInfo make_crash_info_pc(uintptr_t pc) { return (CrashInfo){.pc = pc, .pc_known = true}; }
+CrashInfo make_crash_info_pc(uintptr_t pc) {
+  return (CrashInfo){.pc = pc, .pc_known = true};
+}
 
 CrashInfo make_crash_info_pc_lr(uintptr_t pc, uintptr_t lr) {
   return (CrashInfo){.pc = pc, .pc_known = true, .lr = lr, .lr_known = true};

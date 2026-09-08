@@ -58,16 +58,22 @@
 #include <stdio.h>
 
 #include "pbl/kernel/sched.h"
-pbl_tick_t pbl_uptime_ticks(void) { return 1337; }
+pbl_tick_t pbl_uptime_ticks(void) {
+  return 1337;
+}
 
 #include "kernel/memory_layout.h"
-const MpuRegion *memory_layout_get_app_region(void) { return NULL; }
+const MpuRegion *memory_layout_get_app_region(void) {
+  return NULL;
+}
 bool memory_layout_is_buffer_in_region(const MpuRegion *region, const void *buf, size_t length) {
   return true;
 }
 
 // We can't include all of stubs_process_manager because it conflicts with fake_app_manager.h
-bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent *e) { return true; }
+bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent *e) {
+  return true;
+}
 
 // ------------------------------------------------------------------------------------
 // Comm session fake support
@@ -435,9 +441,13 @@ static void prv_do_recovery_test(int num_sessions) {
   cl_assert(logging_session == NULL);
 }
 
-void test_data_logging__recover_one(void) { prv_do_recovery_test(1); }
+void test_data_logging__recover_one(void) {
+  prv_do_recovery_test(1);
+}
 
-void test_data_logging__recover_five(void) { prv_do_recovery_test(5); }
+void test_data_logging__recover_five(void) {
+  prv_do_recovery_test(5);
+}
 
 // ----------------------------------------------------------------------------------------
 //! Try passing garbage pointers to sessions to data logging functions.
@@ -560,7 +570,9 @@ static void prv_endpoint_test(bool buffered, const int item_size, const int num_
 
 // ----------------------------------------------------------------------------------------
 // Test using the endpoint to empty the session
-void test_data_logging__send_session_1(void) { prv_endpoint_test(true /*buffered*/, 1, 1000); }
+void test_data_logging__send_session_1(void) {
+  prv_endpoint_test(true /*buffered*/, 1, 1000);
+}
 
 // ----------------------------------------------------------------------------------------
 // Test using the endpoint to empty a session using large item sizes
@@ -570,9 +582,13 @@ void test_data_logging__send_session_large(void) {
 
 // ----------------------------------------------------------------------------------------
 // Test using the endpoint to empty a session using medium item sizes
-void test_data_logging__send_session_medium(void) { prv_endpoint_test(true /*buffered*/, 90, 20); }
+void test_data_logging__send_session_medium(void) {
+  prv_endpoint_test(true /*buffered*/, 90, 20);
+}
 
 // ----------------------------------------------------------------------------------------
 // Test using the endpoint to empty a session using small item sizes. The item size of 19
 //  exposes issue PBL-21331
-void test_data_logging__send_session_small(void) { prv_endpoint_test(true /*buffered*/, 19, 45); }
+void test_data_logging__send_session_small(void) {
+  prv_endpoint_test(true /*buffered*/, 19, 45);
+}

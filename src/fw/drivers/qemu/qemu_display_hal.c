@@ -82,7 +82,9 @@ void display_set_rotated(bool rotated) {
   (void)rotated;
 }
 
-bool display_update_in_progress(void) { return s_updating; }
+bool display_update_in_progress(void) {
+  return s_updating;
+}
 
 void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   PBL_ASSERTN(nrcb != NULL);

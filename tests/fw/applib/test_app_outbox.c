@@ -26,7 +26,8 @@ EventServiceInfo *app_state_get_app_outbox_subscription_info(void) {
   return &s_app_state_app_outbox_subscription_info;
 }
 
-void event_service_client_subscribe(EventServiceInfo *service_info) {}
+void event_service_client_subscribe(EventServiceInfo *service_info) {
+}
 
 void sys_send_pebble_event_to_kernel(PebbleEvent *event) {
   cl_assert_equal_i(event->type, PEBBLE_APP_OUTBOX_MSG_EVENT);
@@ -42,7 +43,8 @@ bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent *e) {
   return true;
 }
 
-void app_message_outbox_handle_app_outbox_message_sent(AppOutboxStatus status, void *cb_ctx) {}
+void app_message_outbox_handle_app_outbox_message_sent(AppOutboxStatus status, void *cb_ctx) {
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Helpers
@@ -121,7 +123,8 @@ void test_app_outbox__send_not_user_space_buffer(void) {
 }
 
 // Disallowed, because it's not white-listed in app_outbox_service.c
-static void prv_disallowed_sent_handler(AppOutboxStatus status, void *cb_ctx) {}
+static void prv_disallowed_sent_handler(AppOutboxStatus status, void *cb_ctx) {
+}
 
 void test_app_outbox__send_disallowed_sent_handler(void) {
   prv_register();

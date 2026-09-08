@@ -37,7 +37,8 @@ void test_notif_db__initialize(void) {
   notification_storage_reset();
 }
 
-void test_notif_db__cleanup(void) {}
+void test_notif_db__cleanup(void) {
+}
 
 void test_notif_db__get_length(void) {
   SerializedTimelineItemHeader hdr = {

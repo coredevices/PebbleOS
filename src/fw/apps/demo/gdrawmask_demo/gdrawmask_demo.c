@@ -137,7 +137,9 @@ static void handle_init(void) {
   app_light_enable(true);
 }
 
-static void handle_deinit(void) { app_light_enable(false); }
+static void handle_deinit(void) {
+  app_light_enable(false);
+}
 
 static void s_main(void) {
   handle_init();

@@ -51,32 +51,45 @@ static int s_ble_bonding_change_update_count;
 static int s_ble_bonding_change_delete_count;
 
 typedef bool (*BondingSyncFilterCb)(const BleBonding *bonding, void *ctx);
-const BleBonding *bonding_sync_find(BondingSyncFilterCb cb, void *ctx) { return NULL; }
+const BleBonding *bonding_sync_find(BondingSyncFilterCb cb, void *ctx) {
+  return NULL;
+}
 
-void bt_driver_pebble_pairing_service_handle_status_change(const GAPLEConnection *connection) {}
+void bt_driver_pebble_pairing_service_handle_status_change(const GAPLEConnection *connection) {
+}
 
-bool bt_ctl_is_bluetooth_running(void) { return true; }
+bool bt_ctl_is_bluetooth_running(void) {
+  return true;
+}
 
-void bt_driver_handle_le_conn_params_update_event(const BleConnectionUpdateCompleteEvent *event) {}
+void bt_driver_handle_le_conn_params_update_event(const BleConnectionUpdateCompleteEvent *event) {
+}
 
 typedef struct PairingUserConfirmationCtx PairingUserConfirmationCtx;
 
 void bt_driver_cb_pairing_confirm_handle_request(const PairingUserConfirmationCtx *ctx,
                                                  const char *device_name,
-                                                 const char *confirmation_token) {}
+                                                 const char *confirmation_token) {
+}
 
 void bt_driver_cb_pairing_confirm_handle_completed(const PairingUserConfirmationCtx *ctx,
-                                                   bool success) {}
+                                                   bool success) {
+}
 
-void gap_le_connect_handle_bonding_change(BTBondingID bonding_id, BtPersistBondingOp op) {}
+void gap_le_connect_handle_bonding_change(BTBondingID bonding_id, BtPersistBondingOp op) {
+}
 
-void gap_le_connection_handle_bonding_change(BTBondingID bonding, BtPersistBondingOp op) {}
+void gap_le_connection_handle_bonding_change(BTBondingID bonding, BtPersistBondingOp op) {
+}
 
-void gap_le_device_name_request(uintptr_t stack_id, GAPLEConnection *connection) {}
+void gap_le_device_name_request(uintptr_t stack_id, GAPLEConnection *connection) {
+}
 
-void bt_pairability_update_due_to_bonding_change(void) {}
+void bt_pairability_update_due_to_bonding_change(void) {
+}
 
-void bt_local_addr_handle_bonding_change(BTBondingID bonding, BtPersistBondingOp op) {}
+void bt_local_addr_handle_bonding_change(BTBondingID bonding, BtPersistBondingOp op) {
+}
 
 void kernel_le_client_handle_bonding_change(BTBondingID bonding, BtPersistBondingOp op) {
   if (op == BtPersistBondingOpDidAdd) {
@@ -89,19 +102,29 @@ void kernel_le_client_handle_bonding_change(BTBondingID bonding, BtPersistBondin
   return;
 }
 
-uint16_t gaps_get_starting_att_handle(void) { return 4; }
+uint16_t gaps_get_starting_att_handle(void) {
+  return 4;
+}
 
-void gatt_service_changed_server_cleanup_by_connection(GAPLEConnection *connection) {}
+void gatt_service_changed_server_cleanup_by_connection(GAPLEConnection *connection) {
+}
 
-void launcher_task_add_callback(void (*callback)(void *data), void *data) { callback(data); }
+void launcher_task_add_callback(void (*callback)(void *data), void *data) {
+  callback(data);
+}
 
-bool launcher_task_is_current_task(void) { return true; }
+bool launcher_task_is_current_task(void) {
+  return true;
+}
 
-void bt_driver_handle_host_added_cccd(const BleCCCD *cccd) {}
+void bt_driver_handle_host_added_cccd(const BleCCCD *cccd) {
+}
 
-void bt_driver_handle_host_removed_cccd(const BleCCCD *cccd) {}
+void bt_driver_handle_host_removed_cccd(const BleCCCD *cccd) {
+}
 
-void sys_pbl_analytics_set_unsigned(enum pbl_analytics_key key, uint32_t unsigned_value) {}
+void sys_pbl_analytics_set_unsigned(enum pbl_analytics_key key, uint32_t unsigned_value) {
+}
 
 // Tests
 ///////////////////////////////////////////////////////////
@@ -120,7 +143,9 @@ void test_bluetooth_persistent_storage__initialize(void) {
   bt_persistent_storage_init();
 }
 
-void test_bluetooth_persistent_storage__cleanup(void) { bonding_sync_deinit(); }
+void test_bluetooth_persistent_storage__cleanup(void) {
+  bonding_sync_deinit();
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! BLE Pairing Info

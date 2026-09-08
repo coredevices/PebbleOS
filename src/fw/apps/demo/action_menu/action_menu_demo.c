@@ -42,7 +42,9 @@ static void prv_result_window_load(Window *window) {
   layer_add_child(root_layer, (Layer *)s_app_data->result_layer);
 }
 
-static void prv_result_window_unload(Window *window) { window_destroy(window); }
+static void prv_result_window_unload(Window *window) {
+  window_destroy(window);
+}
 
 ///////////////////////
 // Action Menu Window

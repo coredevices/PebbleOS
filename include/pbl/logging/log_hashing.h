@@ -126,7 +126,8 @@ void PBL_LOG_x_printf_arg_check(const char *fmt, ...) FORMAT_PRINTF(1, 2);
     _Pragma("GCC diagnostic ignored \"-Warray-bounds\"");                        \
     logfunc((uint32_t)&str[LOG_SECTION_OFFSET(level, fmt)], ##__VA_ARGS__);      \
     _Pragma("GCC diagnostic pop");                                               \
-    if (0) PBL_LOG_x_printf_arg_check(fmt, ##__VA_ARGS__);                       \
+    if (0)                                                                       \
+      PBL_LOG_x_printf_arg_check(fmt, ##__VA_ARGS__);                            \
   }
 
 ALWAYS_INLINE static uint32_t LOG_SECTION_OFFSET(const uint8_t level, const char *fmt) {
@@ -138,13 +139,20 @@ ALWAYS_INLINE static uint32_t LOG_SECTION_OFFSET(const uint8_t level, const char
   // Search for % characters in fmt. p1-p8 point to the character immediately succeeding the first
   // 8 % characters in fmt (or NULL, if there aren't 8 % characters in fmt).
   p1 = __builtin_strchr(fmt, '%') ? (__builtin_strchr(fmt, '%') + 1) : NULL;
-  if (p1) p2 = __builtin_strchr(p1, '%') ? (__builtin_strchr(p1, '%') + 1) : NULL;
-  if (p2) p3 = __builtin_strchr(p2, '%') ? (__builtin_strchr(p2, '%') + 1) : NULL;
-  if (p3) p4 = __builtin_strchr(p3, '%') ? (__builtin_strchr(p3, '%') + 1) : NULL;
-  if (p4) p5 = __builtin_strchr(p4, '%') ? (__builtin_strchr(p4, '%') + 1) : NULL;
-  if (p5) p6 = __builtin_strchr(p5, '%') ? (__builtin_strchr(p5, '%') + 1) : NULL;
-  if (p6) p7 = __builtin_strchr(p6, '%') ? (__builtin_strchr(p6, '%') + 1) : NULL;
-  if (p7) p8 = __builtin_strchr(p7, '%') ? (__builtin_strchr(p7, '%') + 1) : NULL;
+  if (p1)
+    p2 = __builtin_strchr(p1, '%') ? (__builtin_strchr(p1, '%') + 1) : NULL;
+  if (p2)
+    p3 = __builtin_strchr(p2, '%') ? (__builtin_strchr(p2, '%') + 1) : NULL;
+  if (p3)
+    p4 = __builtin_strchr(p3, '%') ? (__builtin_strchr(p3, '%') + 1) : NULL;
+  if (p4)
+    p5 = __builtin_strchr(p4, '%') ? (__builtin_strchr(p4, '%') + 1) : NULL;
+  if (p5)
+    p6 = __builtin_strchr(p5, '%') ? (__builtin_strchr(p5, '%') + 1) : NULL;
+  if (p6)
+    p7 = __builtin_strchr(p6, '%') ? (__builtin_strchr(p6, '%') + 1) : NULL;
+  if (p7)
+    p8 = __builtin_strchr(p7, '%') ? (__builtin_strchr(p7, '%') + 1) : NULL;
 
   // Check that fmt doesn't contain the escaped % symbol, '%%'. It's too hard to handle correctly
   // in every case.
@@ -164,13 +172,20 @@ ALWAYS_INLINE static uint32_t LOG_SECTION_OFFSET(const uint8_t level, const char
   // Search for an 's' character succeeding the % characters in fmt. s1-s7 point to the first 's'
   // charactres in fmt after the previously found % characters (or NULL if there aren't 7 's'
   // characters in fmt).
-  if (p1) s1 = __builtin_strchr(p1, 's');
-  if (p2) s2 = __builtin_strchr(p2, 's');
-  if (p3) s3 = __builtin_strchr(p3, 's');
-  if (p4) s4 = __builtin_strchr(p4, 's');
-  if (p5) s5 = __builtin_strchr(p5, 's');
-  if (p6) s6 = __builtin_strchr(p6, 's');
-  if (p7) s7 = __builtin_strchr(p7, 's');
+  if (p1)
+    s1 = __builtin_strchr(p1, 's');
+  if (p2)
+    s2 = __builtin_strchr(p2, 's');
+  if (p3)
+    s3 = __builtin_strchr(p3, 's');
+  if (p4)
+    s4 = __builtin_strchr(p4, 's');
+  if (p5)
+    s5 = __builtin_strchr(p5, 's');
+  if (p6)
+    s6 = __builtin_strchr(p6, 's');
+  if (p7)
+    s7 = __builtin_strchr(p7, 's');
 
   // See if the 's' characters immediately succeed the '%' characters. If so, set flag psX.
   const int ps1 = p1 ? (p1 == s1) : 0;

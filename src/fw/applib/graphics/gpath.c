@@ -45,7 +45,9 @@ GPath *gpath_create(const GPathInfo *init) {
   return path;
 }
 
-void gpath_destroy(GPath *gpath) { applib_free(gpath); }
+void gpath_destroy(GPath *gpath) {
+  applib_free(gpath);
+}
 
 static GPoint rotate_offset_point(const GPoint *orig, int32_t rotation, const GPoint *offset) {
   int32_t cosine = cos_lookup(rotation);
@@ -121,9 +123,13 @@ void gpath_draw_filled(GContext *ctx, GPath *path) {
   gpath_draw_filled_with_cb(ctx, path, prv_gpath_draw_filled_cb, NULL);
 }
 
-void gpath_draw_outline(GContext *ctx, GPath *path) { gpath_draw_stroke(ctx, path, false); }
+void gpath_draw_outline(GContext *ctx, GPath *path) {
+  gpath_draw_stroke(ctx, path, false);
+}
 
-void gpath_draw_outline_open(GContext *ctx, GPath *path) { gpath_draw_stroke(ctx, path, true); }
+void gpath_draw_outline_open(GContext *ctx, GPath *path) {
+  gpath_draw_stroke(ctx, path, true);
+}
 
 void gpath_draw_stroke(GContext *ctx, GPath *path, bool open) {
   if (!path || path->num_points < 2) {

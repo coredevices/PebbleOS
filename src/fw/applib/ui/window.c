@@ -146,7 +146,9 @@ void window_call_handler(Window *window, WindowHandlerOffset handler_offset) {
   }
 }
 
-void window_schedule_render(Window *window) { window->is_render_scheduled = true; }
+void window_schedule_render(Window *window) {
+  window->is_render_scheduled = true;
+}
 
 GRect window_calc_frame(bool fullscreen) {
   GContext *ctx = graphics_context_get_current_context();
@@ -252,7 +254,9 @@ static void prv_check_is_in_click_config_provider(Window *window, char *type) {
              "Click %s must be set from click config provider (Window %p)", type, window);
 }
 
-void window_setup_click_config_provider(Window *window) { prv_call_click_provider(window); }
+void window_setup_click_config_provider(Window *window) {
+  prv_call_click_provider(window);
+}
 
 void window_set_click_config_provider_with_context(Window *window,
                                                    ClickConfigProvider click_config_provider,
@@ -370,7 +374,9 @@ ClickConfigProvider window_get_click_config_provider(const Window *window) {
   return window->click_config_provider;
 }
 
-void *window_get_click_config_context(Window *window) { return window->click_config_context; }
+void *window_get_click_config_context(Window *window) {
+  return window->click_config_context;
+}
 
 void window_set_window_handlers(Window *window, const WindowHandlers *handlers) {
   if (handlers) {
@@ -382,11 +388,17 @@ void window_set_window_handlers_by_value(Window *window, WindowHandlers handlers
   window_set_window_handlers(window, &handlers);
 }
 
-void window_set_user_data(Window *window, void *data) { window->user_data = data; }
+void window_set_user_data(Window *window, void *data) {
+  window->user_data = data;
+}
 
-void *window_get_user_data(const Window *window) { return window->user_data; }
+void *window_get_user_data(const Window *window) {
+  return window->user_data;
+}
 
-struct Layer *window_get_root_layer(const Window *window) { return &((Window *)window)->layer; }
+struct Layer *window_get_root_layer(const Window *window) {
+  return &((Window *)window)->layer;
+}
 
 static void prv_window_load(Window *window) {
   if (window->is_loaded) {
@@ -476,23 +488,37 @@ void window_set_fullscreen(Window *window, bool enabled) {
   layer_mark_dirty(&window->layer);
 }
 
-bool window_get_fullscreen(const Window *window) { return window->is_fullscreen; }
+bool window_get_fullscreen(const Window *window) {
+  return window->is_fullscreen;
+}
 
-void window_set_status_bar_icon(Window *window, const GBitmap *icon) { return; }
+void window_set_status_bar_icon(Window *window, const GBitmap *icon) {
+  return;
+}
 
-bool window_is_on_screen(Window *window) { return (window->on_screen); }
+bool window_is_on_screen(Window *window) {
+  return (window->on_screen);
+}
 
-bool window_is_loaded(Window *window) { return (window->is_loaded); }
+bool window_is_loaded(Window *window) {
+  return (window->is_loaded);
+}
 
 void window_set_transparent(Window *window, bool transparent) {
   window->is_transparent = transparent;
 }
 
-bool window_is_transparent(Window *window) { return window->is_transparent; }
+bool window_is_transparent(Window *window) {
+  return window->is_transparent;
+}
 
-void window_set_focusable(Window *window, bool focusable) { window->is_unfocusable = !focusable; }
+void window_set_focusable(Window *window, bool focusable) {
+  window->is_unfocusable = !focusable;
+}
 
-bool window_is_focusable(Window *window) { return !window->is_unfocusable; }
+bool window_is_focusable(Window *window) {
+  return !window->is_unfocusable;
+}
 
 const char *window_get_debug_name(Window *window) {
 #ifndef CONFIG_RELEASE

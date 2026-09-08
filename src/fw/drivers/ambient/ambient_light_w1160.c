@@ -272,7 +272,9 @@ void command_als_read(void) {
   prompt_send_response_fmt(buffer, sizeof(buffer), "%" PRIu32 "", ambient_light_get_light_level());
 }
 
-uint32_t ambient_light_get_dark_threshold(void) { return s_sensor_light_dark_threshold; }
+uint32_t ambient_light_get_dark_threshold(void) {
+  return s_sensor_light_dark_threshold;
+}
 
 void ambient_light_set_dark_threshold(uint32_t new_threshold) {
   PBL_ASSERTN(new_threshold <= AMBIENT_LIGHT_LEVEL_MAX);

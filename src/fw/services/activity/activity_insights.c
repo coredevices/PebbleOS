@@ -645,7 +645,9 @@ static void prv_push_reward(time_t now_utc, const RewardNotifConfig *notif_confi
 
 // ------------------------------------------------------------------------------------------------
 // Filter for calculating metric history stats (values <= 0 are considered invalid)
-static bool prv_stats_filter(int index, int32_t value, void *context) { return (value > 0); }
+static bool prv_stats_filter(int index, int32_t value, void *context) {
+  return (value > 0);
+}
 
 // ------------------------------------------------------------------------------------------------
 // Calculates the mean and median of a metric over the entire history we have for it and counts the

@@ -35,7 +35,8 @@
 #include "stubs_serial.h"
 #include "stubs_tick.h"
 
-void ams_music_disconnect(void) {}
+void ams_music_disconnect(void) {
+}
 
 extern void music_protocol_msg_callback(CommSession *session, const uint8_t *msg, size_t length);
 

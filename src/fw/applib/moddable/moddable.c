@@ -21,9 +21,11 @@
 void moddable_cleanup(void) {
   ModdablePebbleAppState state = (ModdablePebbleAppState)app_state_get_js_memory_api_context();
 
-  if (state->the) xsDeleteMachine(state->the);
+  if (state->the)
+    xsDeleteMachine(state->the);
 
-  if (state->abortReason) c_free(state->abortReason);
+  if (state->abortReason)
+    c_free(state->abortReason);
 
   extern void modTimerExit(void);
   modTimerExit();
@@ -70,7 +72,8 @@ DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr) {
     }
 
     prv_assert_userspace_creation_record(cr, cr->recordSize);
-    if (record_size >= kModdableCreationRecordFlagsSize) flags = cr->flags;
+    if (record_size >= kModdableCreationRecordFlagsSize)
+      flags = cr->flags;
   }
 
   // Don't log instrumentation if nobody is listening to APP_LOG over BT
@@ -170,5 +173,6 @@ DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr) {
 // so stub the callback when building without moddable to satisfy the linker.
 struct CommSession;
 
-void xsbug_protocol_msg_callback(struct CommSession *session, const uint8_t *msg, size_t length) {}
+void xsbug_protocol_msg_callback(struct CommSession *session, const uint8_t *msg, size_t length) {
+}
 #endif

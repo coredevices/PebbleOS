@@ -88,14 +88,18 @@ void event_service_init(PebbleEventType type, EventServiceAddSubscriberCallback 
   return;
 }
 
-void wakeup_popup_window(uint8_t missed_apps_count, uint8_t *missed_apps_banks) { return; }
+void wakeup_popup_window(uint8_t missed_apps_count, uint8_t *missed_apps_banks) {
+  return;
+}
 
 bool app_install_get_entry_from_install_id(const AppInstallId id, AppInstallEntry *entry) {
   *entry = s_app_install_entry;
   return true;
 }
 
-bool clock_is_timezone_set(void) { return false; }
+bool clock_is_timezone_set(void) {
+  return false;
+}
 
 // Helpers
 ////////////////////////////////////
@@ -104,7 +108,9 @@ void open_settings_file(SettingsFile *file) {
   cl_must_pass(settings_file_open(file, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE));
 }
 
-void close_settings_file(SettingsFile *file) { settings_file_close(file); }
+void close_settings_file(SettingsFile *file) {
+  settings_file_close(file);
+}
 
 // Tests
 ////////////////////////////////////

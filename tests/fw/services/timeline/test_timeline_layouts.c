@@ -102,7 +102,9 @@ void clock_get_since_time(char *buffer, int buf_size, time_t timestamp) {
 static GContext s_ctx;
 static FrameBuffer *fb = NULL;
 
-GContext *graphics_context_get_current_context(void) { return &s_ctx; }
+GContext *graphics_context_get_current_context(void) {
+  return &s_ctx;
+}
 
 void test_timeline_layouts__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
@@ -126,7 +128,9 @@ void test_timeline_layouts__initialize(void) {
   content_indicator_init_buffer(buffer);
 }
 
-void test_timeline_layouts__cleanup(void) { free(fb); }
+void test_timeline_layouts__cleanup(void) {
+  free(fb);
+}
 
 // Helpers
 //////////////////////

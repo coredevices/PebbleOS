@@ -181,7 +181,9 @@ bool app_install_entry_is_watchface(const AppInstallEntry *entry) {
   return (entry->process_type == ProcessTypeWatchface);
 }
 
-bool app_install_entry_has_worker(const AppInstallEntry *entry) { return (entry->has_worker); }
+bool app_install_entry_has_worker(const AppInstallEntry *entry) {
+  return (entry->has_worker);
+}
 
 bool app_install_entry_is_hidden(const AppInstallEntry *entry) {
   switch (entry->visibility) {
@@ -569,9 +571,13 @@ void app_install_manager_init(void) {
 #endif
 }
 
-bool app_install_id_from_system(AppInstallId id) { return (id < INSTALL_ID_INVALID); }
+bool app_install_id_from_system(AppInstallId id) {
+  return (id < INSTALL_ID_INVALID);
+}
 
-bool app_install_id_from_app_db(AppInstallId id) { return (id > INSTALL_ID_INVALID); }
+bool app_install_id_from_app_db(AppInstallId id) {
+  return (id > INSTALL_ID_INVALID);
+}
 
 static GColor prv_hard_coded_color_for_3rd_party_apps(Uuid *uuid) {
   // Remove this from Recovery FW for code size savings.

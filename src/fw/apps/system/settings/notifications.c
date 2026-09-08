@@ -251,7 +251,9 @@ static void prv_status_bar_style_menu_push(SettingsNotificationsData *data) {
 // Menu Layer Callbacks
 ////////////////////////
 
-static uint16_t prv_num_rows_cb(SettingsCallbacks *context) { return NotificationsItem_Count; }
+static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
+  return NotificationsItem_Count;
+}
 
 static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Layer *cell_layer,
                             uint16_t row, bool selected) {

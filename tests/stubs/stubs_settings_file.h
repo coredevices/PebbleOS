@@ -28,12 +28,17 @@ status_t settings_file_each(SettingsFile *file, SettingsFileEachCallback cb, voi
   return S_SUCCESS;
 }
 
-int settings_file_get_len(SettingsFile *file, const void *key, size_t key_len) { return 0; }
+int settings_file_get_len(SettingsFile *file, const void *key, size_t key_len) {
+  return 0;
+}
 
 status_t settings_file_delete(SettingsFile *file, const void *key, size_t key_len) {
   return S_SUCCESS;
 }
 
-status_t settings_file_compact(SettingsFile *file) { return S_SUCCESS; }
+status_t settings_file_compact(SettingsFile *file) {
+  return S_SUCCESS;
+}
 
-void settings_file_close(SettingsFile *file) {}
+void settings_file_close(SettingsFile *file) {
+}

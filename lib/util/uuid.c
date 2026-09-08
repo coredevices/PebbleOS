@@ -34,9 +34,13 @@ bool uuid_equal(const Uuid *uu1, const Uuid *uu2) {
   return memcmp(uu1, uu2, sizeof(Uuid)) == 0;
 }
 
-bool uuid_is_system(const Uuid *uuid) { return uuid_equal(uuid, &system_uuid); }
+bool uuid_is_system(const Uuid *uuid) {
+  return uuid_equal(uuid, &system_uuid);
+}
 
-bool uuid_is_invalid(const Uuid *uuid) { return !uuid || uuid_equal(uuid, &invalid_uuid); }
+bool uuid_is_invalid(const Uuid *uuid) {
+  return !uuid || uuid_equal(uuid, &invalid_uuid);
+}
 
 void uuid_to_string(const Uuid *uuid, char *buffer) {
   if (!uuid) {

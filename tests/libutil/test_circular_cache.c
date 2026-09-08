@@ -47,7 +47,8 @@ void test_circular_cache__initialize(void) {
   }
 }
 
-void test_circular_cache__cleanup(void) {}
+void test_circular_cache__cleanup(void) {
+}
 
 // tests
 void test_circular_cache__push(void) {

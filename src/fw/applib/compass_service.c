@@ -66,7 +66,9 @@ static void prv_do_data_handle(PebbleEvent *e, void *context) {
 }
 
 // Callback for disabling compass service on timeout
-static void prv_peek_timeout_callback(void *data) { compass_service_unsubscribe(); }
+static void prv_peek_timeout_callback(void *data) {
+  compass_service_unsubscribe();
+}
 
 int compass_service_peek(CompassHeadingData *data) {
   CompassServiceConfig *config = *prv_get_config(PebbleTask_Unknown);

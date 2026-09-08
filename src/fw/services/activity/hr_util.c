@@ -22,4 +22,6 @@ HRZone hr_util_get_hr_zone(int bpm) {
   return zone;
 }
 
-bool hr_util_is_elevated(int bpm) { return bpm >= activity_prefs_heart_get_elevated_hr(); }
+bool hr_util_is_elevated(int bpm) {
+  return bpm >= activity_prefs_heart_get_elevated_hr();
+}

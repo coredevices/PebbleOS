@@ -5,11 +5,17 @@
 
 #include "syscall/syscall.h"
 
-bool app_light_is_on(void) { return sys_light_is_on(); }
+bool app_light_is_on(void) {
+  return sys_light_is_on();
+}
 
-void app_light_enable_interaction(void) { sys_light_enable_interaction(); }
+void app_light_enable_interaction(void) {
+  sys_light_enable_interaction();
+}
 
-void app_light_enable(bool enable) { sys_light_enable(enable); }
+void app_light_enable(bool enable) {
+  sys_light_enable(enable);
+}
 
 //! Expand a GColor8 argb byte (2 bits per channel) to a packed 0x00RRGGBB
 //! value by bit-replicating each 2-bit component into 8 bits.
@@ -27,6 +33,10 @@ void app_light_set_color(GColor color) {
   sys_light_set_color_rgb888(prv_argb_to_rgb888(color.argb));
 }
 
-void app_light_set_color_rgb888(uint32_t rgb) { sys_light_set_color_rgb888(rgb); }
+void app_light_set_color_rgb888(uint32_t rgb) {
+  sys_light_set_color_rgb888(rgb);
+}
 
-void app_light_set_system_color(void) { sys_light_set_system_color(); }
+void app_light_set_system_color(void) {
+  sys_light_set_system_color();
+}

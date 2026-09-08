@@ -15,7 +15,8 @@ PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 // -------------------------------------------------------------------------------------------------
 // Interface towards kernel_le_client.c
 
-void dis_invalidate_all_references(void) {}
+void dis_invalidate_all_references(void) {
+}
 
 void dis_handle_service_removed(BLECharacteristic *characteristics, uint8_t num_characteristics) {
   // dis_service_discovered doesn't get set to false here, since services can temporarily disappear

@@ -684,7 +684,9 @@ void ams_send_command(AMSRemoteCommandID command_id) {
                                   (void *)(uintptr_t)command_id);
 }
 
-const char *ams_music_server_debug_name(void) { return s_ams_music_implementation.debug_name; }
+const char *ams_music_server_debug_name(void) {
+  return s_ams_music_implementation.debug_name;
+}
 
 bool ams_is_registered_for_all_entity_updates(void) {
   if (!s_ams_client) {

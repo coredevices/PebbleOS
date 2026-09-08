@@ -23,9 +23,13 @@ typedef struct {
 static FakeBonding *s_head;
 static BTBondingID s_next_id = 1;
 
-bool bt_persistent_storage_is_gateway(const BTBondingID bonding) { return true; }
+bool bt_persistent_storage_is_gateway(const BTBondingID bonding) {
+  return true;
+}
 
-static BTBondingID prv_next_id(void) { return s_next_id++; }
+static BTBondingID prv_next_id(void) {
+  return s_next_id++;
+}
 
 static bool prv_find_by_id(ListNode *found_node, void *data) {
   BTBondingID bonding_id = (BTBondingID)data;
@@ -98,4 +102,6 @@ bool bt_persistent_storage_get_root_key(SMRootKeyType key_type, SM128BitKey *key
   return true;
 }
 
-void bt_persistent_storage_set_root_keys(SM128BitKey *keys_in) { return; }
+void bt_persistent_storage_set_root_keys(SM128BitKey *keys_in) {
+  return;
+}

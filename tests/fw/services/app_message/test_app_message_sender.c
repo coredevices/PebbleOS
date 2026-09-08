@@ -29,10 +29,14 @@ void app_install_mark_prioritized(AppInstallId install_id, bool can_expire) {
   ++s_app_install_timestamp_update_count;
 }
 
-AppInstallId app_manager_get_current_app_id(void) { return INSTALL_ID_INVALID; }
+AppInstallId app_manager_get_current_app_id(void) {
+  return INSTALL_ID_INVALID;
+}
 
 static PebbleProcessMd s_process_md;
-const PebbleProcessMd *app_manager_get_current_app_md(void) { return &s_process_md; }
+const PebbleProcessMd *app_manager_get_current_app_md(void) {
+  return &s_process_md;
+}
 
 static int s_consumed_count;
 static AppOutboxStatus s_last_status_code;
@@ -56,11 +60,15 @@ bool app_outbox_service_is_message_cancelled(AppOutboxMessage *message) {
   return s_is_message_cancelled;
 }
 
-void app_outbox_service_cleanup_all_pending_messages(void) { s_is_message_cancelled = true; }
+void app_outbox_service_cleanup_all_pending_messages(void) {
+  s_is_message_cancelled = true;
+}
 
 static CommSession s_system_session;
 static CommSession *s_system_session_ptr;
-CommSession *comm_session_get_system_session(void) { return s_system_session_ptr; }
+CommSession *comm_session_get_system_session(void) {
+  return s_system_session_ptr;
+}
 
 static CommSession s_app_session;
 static CommSession *s_app_session_ptr;
@@ -80,10 +88,13 @@ bool comm_session_is_valid(const CommSession *session) {
 }
 
 static int s_send_next_count = 0;
-void comm_session_send_next(CommSession *session) { ++s_send_next_count; }
+void comm_session_send_next(CommSession *session) {
+  ++s_send_next_count;
+}
 
 void comm_session_set_responsiveness(CommSession *session, BtConsumer consumer,
-                                     ResponseTimeState state, uint16_t max_period_secs) {}
+                                     ResponseTimeState state, uint16_t max_period_secs) {
+}
 
 void comm_session_sanitize_app_session(CommSession **session_in_out) {
   CommSession *permitted_session = comm_session_get_current_app_session();

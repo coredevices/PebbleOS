@@ -571,10 +571,12 @@ int vsnprintf(char *str, size_t size, const char *format, va_list args) {
             base = 16;
             /* FALLTHROUGH */
           case 'o':
-            if (base == 0) base = 8;
+            if (base == 0)
+              base = 8;
             /* FALLTHROUGH */
           case 'u':
-            if (base == 0) base = 10;
+            if (base == 0)
+              base = 10;
             flags |= PRINT_F_UNSIGNED;
             /* amarshall: Changed to machine-independent types
              * This will not affect native builds, useful for unit tests.

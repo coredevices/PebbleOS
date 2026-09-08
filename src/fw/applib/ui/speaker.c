@@ -40,15 +40,25 @@ uint32_t speaker_stream_write(const void *data, uint32_t num_bytes) {
   return sys_speaker_stream_write(data, num_bytes);
 }
 
-void speaker_stream_close(void) { sys_speaker_stream_close(); }
+void speaker_stream_close(void) {
+  sys_speaker_stream_close();
+}
 
-void speaker_stop(void) { sys_speaker_stop(); }
+void speaker_stop(void) {
+  sys_speaker_stop();
+}
 
-void speaker_set_volume(uint8_t volume) { sys_speaker_set_volume(volume); }
+void speaker_set_volume(uint8_t volume) {
+  sys_speaker_set_volume(volume);
+}
 
-SpeakerStatus speaker_get_status(void) { return (SpeakerStatus)sys_speaker_get_state(); }
+SpeakerStatus speaker_get_status(void) {
+  return (SpeakerStatus)sys_speaker_get_state();
+}
 
-bool speaker_is_muted(void) { return sys_speaker_is_muted(); }
+bool speaker_is_muted(void) {
+  return sys_speaker_is_muted();
+}
 
 bool speaker_play_tracks(const SpeakerTrack *tracks, uint32_t num_tracks, uint8_t volume) {
   if (!tracks || num_tracks == 0) {

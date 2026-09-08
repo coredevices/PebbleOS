@@ -114,7 +114,9 @@ EXTERNALLY_VISIBLE void process_manager_handle_syscall_exit(void) {
 }
 
 // ---------------------------------------------------------------------------------------------
-void process_manager_init(void) { s_deinit_timer_id = new_timer_create(); }
+void process_manager_init(void) {
+  s_deinit_timer_id = new_timer_create();
+}
 
 // -----------------------------------------------------------------------------------------------------------
 void process_manager_put_kill_process_event(PebbleTask task, bool gracefully) {
@@ -515,7 +517,9 @@ NORETURN process_manager_task_exit(void) {
 
 // ---------------------------------------------------------------------------------------------
 // Get the args for the current process
-const void *process_manager_get_current_process_args(void) { return prv_get_context()->args; }
+const void *process_manager_get_current_process_args(void) {
+  return prv_get_context()->args;
+}
 
 // ---------------------------------------------------------------------------------------------
 // Setup the system services required for this process. Called by app_manager and worker_manager

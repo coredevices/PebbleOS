@@ -36,7 +36,9 @@ void test_graphics_draw_line__initialize(void) {
 }
 
 // Teardown
-void test_graphics_draw_line__cleanup(void) { free(fb); }
+void test_graphics_draw_line__cleanup(void) {
+  free(fb);
+}
 
 // Tests
 ////////////////////////////////////

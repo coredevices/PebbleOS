@@ -133,7 +133,9 @@ void rtc_set_time(time_t time) {
   prv_save_rtc_time_state(s_time_tick_base - s_coarse_ticks);
 }
 
-time_t rtc_get_time(void) { return prv_ticks_to_time(rtc_get_ticks()); }
+time_t rtc_get_time(void) {
+  return prv_ticks_to_time(rtc_get_ticks());
+}
 
 void rtc_get_time_ms(time_t *out_seconds, uint16_t *out_ms) {
   RtcTicks ticks = rtc_get_ticks();
@@ -224,7 +226,9 @@ void rtc_get_time_tm(struct tm *time_tm) {
   localtime_r(&t, time_tm);
 }
 
-const char *rtc_get_time_string(char *buffer) { return time_t_to_string(buffer, rtc_get_time()); }
+const char *rtc_get_time_string(char *buffer) {
+  return time_t_to_string(buffer, rtc_get_time());
+}
 
 const char *time_t_to_string(char *buffer, time_t t) {
   struct tm time;
@@ -276,7 +280,8 @@ bool rtc_is_timezone_set(void) {
   return (retained_read(RTC_TIMEZONE_ABBR_START) != 0);
 }
 
-void rtc_enable_backup_regs(void) { /* we always use retained ram for this, so no problem */ }
+void rtc_enable_backup_regs(void) { /* we always use retained ram for this, so no problem */
+}
 
 void rtc_calibrate_frequency(uint32_t frequency) {
   /* On nRF5, there is no way to calibrate the RTC.  That crystal had better
@@ -321,10 +326,12 @@ void rtc_init(void) {
   board_early_init();
   for (int i = 0; i < 100; i++) {
     uint32_t ctr0 = nrf_rtc_counter_get(BOARD_RTC_INST);
-    while (nrf_rtc_counter_get(BOARD_RTC_INST) == ctr0);
+    while (nrf_rtc_counter_get(BOARD_RTC_INST) == ctr0)
+      ;
     ctr0 = nrf_rtc_counter_get(BOARD_RTC_INST) + 100;
     uint32_t iters = 0;
-    while (nrf_rtc_counter_get(BOARD_RTC_INST) != ctr0) iters++;
+    while (nrf_rtc_counter_get(BOARD_RTC_INST) != ctr0)
+      iters++;
     PBL_LOG_INFO("RTC: 100 RTC ticks took %" PRIu32 " iters", iters);
   }
 #endif
@@ -358,7 +365,9 @@ void rtc_systick_resume(void) {
 
 //! Our RTC tick counter can overflow if nobody asks about it.  This
 //! repeating callback allows us to make sure this doesn't happen.
-static void prv_rtc_resync_timer_callback() { rtc_get_ticks(); }
+static void prv_rtc_resync_timer_callback() {
+  rtc_get_ticks();
+}
 
 void rtc_init_timers(void) {
   static RegularTimerInfo rtc_sync_timer = {.list_node = {0, 0},
@@ -397,9 +406,13 @@ void rtc_alarm_set(RtcTicks num_ticks) {
   nrf_rtc_int_enable(BOARD_RTC_INST, NRF_RTC_INT_COMPARE0_MASK);
 }
 
-RtcTicks rtc_alarm_get_elapsed_ticks(void) { return rtc_get_ticks() - s_alarm_set_time; }
+RtcTicks rtc_alarm_get_elapsed_ticks(void) {
+  return rtc_get_ticks() - s_alarm_set_time;
+}
 
-bool rtc_alarm_is_initialized(void) { return s_tick_alarm_initialized; }
+bool rtc_alarm_is_initialized(void) {
+  return s_tick_alarm_initialized;
+}
 
 //! Handler for the RTC alarm interrupt.  We don't actually have to do
 //! anything in that handler, just the interrupt firing is enough to bring

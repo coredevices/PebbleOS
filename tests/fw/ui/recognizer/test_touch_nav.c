@@ -45,7 +45,9 @@ RecognizerList *window_get_recognizer_list(Window *window) {
   return NULL;
 }
 
-RecognizerManager *window_get_recognizer_manager(Window *window) { return s_manager; }
+RecognizerManager *window_get_recognizer_manager(Window *window) {
+  return s_manager;
+}
 
 struct Layer *window_get_root_layer(const Window *window) {
   if (!window) {
@@ -63,9 +65,13 @@ Layer *layer_find_layer_containing_point(const Layer *node, const GPoint *point)
 
 static bool s_nav_enabled;
 
-bool sys_touch_nav_enabled(void) { return s_nav_enabled; }
+bool sys_touch_nav_enabled(void) {
+  return s_nav_enabled;
+}
 
-bool sys_touch_app_nav_active(void) { return false; }
+bool sys_touch_app_nav_active(void) {
+  return false;
+}
 
 // ---------------------------------------------------------------------------------------------
 // Fake TouchNavOps, recording every effect.
@@ -84,8 +90,12 @@ typedef struct FakeOps {
 
 static FakeOps s_fake;
 
-static bool prv_is_animating(void *ctx) { return ((FakeOps *)ctx)->animating; }
-static bool prv_top_overrides_back(void *ctx) { return ((FakeOps *)ctx)->overrides_back; }
+static bool prv_is_animating(void *ctx) {
+  return ((FakeOps *)ctx)->animating;
+}
+static bool prv_top_overrides_back(void *ctx) {
+  return ((FakeOps *)ctx)->overrides_back;
+}
 static bool prv_top_bridge_disabled(void *ctx) {
   // Exercise the real app-task gate helper (window opt-out OR app raw subscriber), exactly as
   // app_state.c's top_bridge_disabled op does.
@@ -95,8 +105,12 @@ static bool prv_top_bridge_disabled(void *ctx) {
 static bool prv_top_tap_requires_action_bar(void *ctx) {
   return ((FakeOps *)ctx)->tap_requires_action_bar;
 }
-static void prv_pop_top(void *ctx) { ((FakeOps *)ctx)->pop_count++; }
-static void prv_idle_refresh(void *ctx) { ((FakeOps *)ctx)->idle_refresh_count++; }
+static void prv_pop_top(void *ctx) {
+  ((FakeOps *)ctx)->pop_count++;
+}
+static void prv_idle_refresh(void *ctx) {
+  ((FakeOps *)ctx)->idle_refresh_count++;
+}
 static void prv_emit_button(void *ctx, ButtonId button) {
   FakeOps *ops = ctx;
   ops->emit_count++;
@@ -119,10 +133,18 @@ typedef struct FakeTwin {
 static FakeTwin s_twin;
 static TouchNavTwinOps s_twin_ops;
 
-static bool prv_twin_pref(void *ctx) { return ((FakeTwin *)ctx)->pref; }
-static bool prv_twin_master(void *ctx) { return ((FakeTwin *)ctx)->master; }
-static void prv_twin_install(void *ctx) { ((FakeTwin *)ctx)->install_count++; }
-static void prv_twin_remove(void *ctx) { ((FakeTwin *)ctx)->remove_count++; }
+static bool prv_twin_pref(void *ctx) {
+  return ((FakeTwin *)ctx)->pref;
+}
+static bool prv_twin_master(void *ctx) {
+  return ((FakeTwin *)ctx)->master;
+}
+static void prv_twin_install(void *ctx) {
+  ((FakeTwin *)ctx)->install_count++;
+}
+static void prv_twin_remove(void *ctx) {
+  ((FakeTwin *)ctx)->remove_count++;
+}
 
 // ---------------------------------------------------------------------------------------------
 // Fixture
@@ -172,7 +194,9 @@ void test_touch_nav__initialize(void) {
   touch_nav_state_init(&s_state, &s_recognizer_manager, &s_ops);
 }
 
-void test_touch_nav__cleanup(void) { touch_nav_state_deinit(&s_state); }
+void test_touch_nav__cleanup(void) {
+  touch_nav_state_deinit(&s_state);
+}
 
 // ---------------------------------------------------------------------------------------------
 // Helpers
@@ -211,7 +235,9 @@ static void prv_tap(int16_t x, int16_t y) {
   prv_dispatch(TouchEvent_Liftoff, 0, 0, false);
 }
 
-static RecognizerState prv_state(Recognizer *r) { return recognizer_get_state(r); }
+static RecognizerState prv_state(Recognizer *r) {
+  return recognizer_get_state(r);
+}
 
 // ---------------------------------------------------------------------------------------------
 // Criterion 7: Tier-2 → pan Failed immediately; swipe up → Completed.
@@ -961,17 +987,31 @@ static TxnStep s_steps[16];
 static int s_step_count;
 static bool s_last_persist_enable;
 
-static void prv_step(TxnStep step) { s_steps[s_step_count++] = step; }
+static void prv_step(TxnStep step) {
+  s_steps[s_step_count++] = step;
+}
 static void prv_txn_persist(void *ctx, bool enable) {
   s_last_persist_enable = enable;
   prv_step(Step_Persist);
 }
-static void prv_txn_kernel_subscribe(void *ctx) { prv_step(Step_KernelSubscribe); }
-static void prv_txn_take_hold(void *ctx) { prv_step(Step_TakeHold); }
-static void prv_txn_synth_liftoff(void *ctx) { prv_step(Step_SynthLiftoff); }
-static void prv_txn_kernel_cancel(void *ctx) { prv_step(Step_KernelCancelResetUnsub); }
-static void prv_txn_app_unsub(void *ctx) { prv_step(Step_AppUnsubscribe); }
-static void prv_txn_release_hold(void *ctx) { prv_step(Step_ReleaseHold); }
+static void prv_txn_kernel_subscribe(void *ctx) {
+  prv_step(Step_KernelSubscribe);
+}
+static void prv_txn_take_hold(void *ctx) {
+  prv_step(Step_TakeHold);
+}
+static void prv_txn_synth_liftoff(void *ctx) {
+  prv_step(Step_SynthLiftoff);
+}
+static void prv_txn_kernel_cancel(void *ctx) {
+  prv_step(Step_KernelCancelResetUnsub);
+}
+static void prv_txn_app_unsub(void *ctx) {
+  prv_step(Step_AppUnsubscribe);
+}
+static void prv_txn_release_hold(void *ctx) {
+  prv_step(Step_ReleaseHold);
+}
 
 static const TouchNavTxnOps s_txn_ops = {
     .persist = prv_txn_persist,
@@ -1033,8 +1073,12 @@ static bool prv_w_can_start(void *w) {
   fw->can_start_calls++;
   return fw->can_start_result;
 }
-static void prv_w_touchdown(void *w) { ((FakeWidget *)w)->touchdown_calls++; }
-static void prv_w_pan_started(void *w) { ((FakeWidget *)w)->pan_started_calls++; }
+static void prv_w_touchdown(void *w) {
+  ((FakeWidget *)w)->touchdown_calls++;
+}
+static void prv_w_pan_started(void *w) {
+  ((FakeWidget *)w)->pan_started_calls++;
+}
 static GPointReturn prv_w_get_base_offset(void *w) {
   FakeWidget *fw = w;
   fw->get_base_offset_calls++;
@@ -1048,9 +1092,15 @@ static void prv_w_pan_snap(void *w, GPoint base, GPoint final_delta, GPoint velo
   fw->pan_snap_calls++;
   fw->snap_velocity = velocity;
 }
-static void prv_w_pan_cancel(void *w) { ((FakeWidget *)w)->pan_cancel_calls++; }
-static void prv_w_tap(void *w, GPoint pt) { ((FakeWidget *)w)->tap_calls++; }
-static void prv_w_swipe(void *w, SwipeDirection dir) { ((FakeWidget *)w)->swipe_calls++; }
+static void prv_w_pan_cancel(void *w) {
+  ((FakeWidget *)w)->pan_cancel_calls++;
+}
+static void prv_w_tap(void *w, GPoint pt) {
+  ((FakeWidget *)w)->tap_calls++;
+}
+static void prv_w_swipe(void *w, SwipeDirection dir) {
+  ((FakeWidget *)w)->swipe_calls++;
+}
 
 static const TouchNavWidgetOps s_fake_widget_ops = {
     .can_start = prv_w_can_start,

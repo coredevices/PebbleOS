@@ -19,7 +19,9 @@
 #include "fake_rtc.h"
 #include "fake_pbl_std.h"
 
-bool sys_activity_is_initialized(void) { return true; }
+bool sys_activity_is_initialized(void) {
+  return true;
+}
 
 static HealthServiceState s_health_service;
 
@@ -40,25 +42,34 @@ void prv_health_event_handler(PebbleEvent *e, void *context);
 
 // -----------------------------------
 // Stubs
-AppInstallId app_get_app_id(void) { return 1; }
+AppInstallId app_get_app_id(void) {
+  return 1;
+}
 
-HealthServiceState *app_state_get_health_service_state(void) { return &s_health_service; }
+HealthServiceState *app_state_get_health_service_state(void) {
+  return &s_health_service;
+}
 
-PebbleTask pebble_task_get_current(void) { return PebbleTask_App; }
+PebbleTask pebble_task_get_current(void) {
+  return PebbleTask_App;
+}
 
 HealthServiceState *worker_state_get_health_service_state(void) {
   cl_fail("should never be called");
   return NULL;
 }
 
-void sys_send_pebble_event_to_kernel(PebbleEvent *event) {}
+void sys_send_pebble_event_to_kernel(PebbleEvent *event) {
+}
 
 HRMSessionRef sys_hrm_manager_get_app_subscription(AppInstallId app_id) {
   return HRM_INVALID_SESSION_REF;
 }
 
 static bool s_activity_prefs_heart_rate_enabled;
-bool sys_activity_prefs_heart_rate_is_enabled(void) { return s_activity_prefs_heart_rate_enabled; }
+bool sys_activity_prefs_heart_rate_is_enabled(void) {
+  return s_activity_prefs_heart_rate_enabled;
+}
 
 bool sys_hrm_manager_get_subscription_info(HRMSessionRef session, AppInstallId *app_id,
                                            uint32_t *update_interval_s, uint16_t *expire_s,
@@ -123,12 +134,16 @@ bool sys_activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_
   return s_sys_activity_get_metric_values.out.result;
 }
 
-void event_service_client_subscribe(EventServiceInfo *service_info) {}
-void event_service_client_unsubscribe(EventServiceInfo *service_info) {}
+void event_service_client_subscribe(EventServiceInfo *service_info) {
+}
+void event_service_client_unsubscribe(EventServiceInfo *service_info) {
+}
 
 static UnitsDistance s_units_distance_result;
 
-UnitsDistance sys_shell_prefs_get_units_distance(void) { return s_units_distance_result; }
+UnitsDistance sys_shell_prefs_get_units_distance(void) {
+  return s_units_distance_result;
+}
 
 typedef struct {
   struct {

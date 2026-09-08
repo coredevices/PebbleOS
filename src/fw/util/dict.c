@@ -318,7 +318,8 @@ const Tuple *const NULL_TUPLE = (const Tuple *const)NULL_TUPLE_BUFFER;
 static uint8_t *dict_copy(DictionaryIterator *iter) {
   size_t size = dict_size(iter);
   uint8_t *buf = task_malloc(size);
-  if (buf == NULL) return NULL;
+  if (buf == NULL)
+    return NULL;
   memcpy(buf, iter->dictionary, size);
   return buf;
 }
@@ -344,7 +345,8 @@ static DictionaryResult dict_merge_to(DictionaryIterator *dest_iter, DictionaryI
     }
     Tuple *dest = dest_iter->cursor;
     result = dict_write_tuple(dest_iter, new);
-    if (result != DICT_OK) return result;
+    if (result != DICT_OK)
+      return result;
     update_key_callback(key, dest, orig, context);
   }
 
@@ -361,7 +363,8 @@ static DictionaryResult dict_merge_to(DictionaryIterator *dest_iter, DictionaryI
     }
     Tuple *dest = dest_iter->cursor;
     result = dict_write_tuple(dest_iter, orig);
-    if (result != DICT_OK) return result;
+    if (result != DICT_OK)
+      return result;
     update_key_callback(key, dest, orig, context);
   }
 
@@ -378,13 +381,15 @@ static size_t dict_merge_to_size(DictionaryIterator *orig_iter, DictionaryIterat
 
   // First, calculate the size of the new/updated keys.
   for (Tuple *new = dict_read_first(new_iter); new; new = dict_read_next(new_iter)) {
-    if (dict_find(orig_iter, new->key) == NULL && update_existing_keys_only) continue;
+    if (dict_find(orig_iter, new->key) == NULL && update_existing_keys_only)
+      continue;
     total_size_required += sizeof(*new) + new->length;
   }
 
   // Then, add in the size of the keys which have not changed.
   for (Tuple *orig = dict_read_first(orig_iter); orig; orig = dict_read_next(orig_iter)) {
-    if (dict_find(new_iter, orig->key) != NULL) continue;
+    if (dict_find(new_iter, orig->key) != NULL)
+      continue;
     total_size_required += sizeof(*orig) + orig->length;
   }
 
@@ -404,19 +409,23 @@ DictionaryResult dict_merge(DictionaryIterator *dest_iter, uint32_t *dest_buf_le
   }
 
   uint8_t *orig_buffer = dict_copy(dest_iter);
-  if (orig_buffer == NULL) return DICT_MALLOC_FAILED;
+  if (orig_buffer == NULL)
+    return DICT_MALLOC_FAILED;
 
   DictionaryIterator orig_iter;
   DictionaryResult result = dict_init(&orig_iter, orig_buffer, dict_size(dest_iter));
-  if (result != DICT_OK) goto cleanup;
+  if (result != DICT_OK)
+    goto cleanup;
 
   result = dict_write_begin(dest_iter, (uint8_t *)dest_iter->dictionary,
                             (uint16_t)*dest_buf_length_in_out);
-  if (result != DICT_OK) goto cleanup;
+  if (result != DICT_OK)
+    goto cleanup;
 
   result = dict_merge_to(dest_iter, &orig_iter, new_iter, update_existing_keys_only,
                          update_key_callback, context);
-  if (result != DICT_OK) goto cleanup;
+  if (result != DICT_OK)
+    goto cleanup;
 
   *dest_buf_length_in_out = dict_write_end(dest_iter);
 

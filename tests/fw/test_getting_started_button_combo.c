@@ -14,19 +14,31 @@
 
 static bool s_mfg_mode_entered;
 
-void mfg_enter_mfg_mode(void) { s_mfg_mode_entered = true; }
+void mfg_enter_mfg_mode(void) {
+  s_mfg_mode_entered = true;
+}
 
-void mfg_enter_mfg_mode_and_launch_app(void) { mfg_enter_mfg_mode(); }
+void mfg_enter_mfg_mode_and_launch_app(void) {
+  mfg_enter_mfg_mode();
+}
 
 static bool s_factory_reset_called;
 
-void factory_reset(bool shutdown) { s_factory_reset_called = true; }
+void factory_reset(bool shutdown) {
+  s_factory_reset_called = true;
+}
 
-Window *spinner_ui_window_get(void) { return NULL; }
+Window *spinner_ui_window_get(void) {
+  return NULL;
+}
 
-void app_window_stack_push(Window *window, bool animated) { return; }
+void app_window_stack_push(Window *window, bool animated) {
+  return;
+}
 
-void system_task_add_callback(void (*callback)(void *data), void *data) { callback(data); }
+void system_task_add_callback(void (*callback)(void *data), void *data) {
+  callback(data);
+}
 
 void process_manager_send_callback_event_to_process(PebbleTask task, void (*callback)(void *data),
                                                     void *data) {
@@ -40,7 +52,9 @@ static GettingStartedButtonComboState s_state;
 
 static bool s_select_cb_called;
 
-static void prv_select_callback(void *data) { s_select_cb_called = true; }
+static void prv_select_callback(void *data) {
+  s_select_cb_called = true;
+}
 
 void test_getting_started_button_combo__initialize(void) {
   s_mfg_mode_entered = false;
@@ -54,7 +68,9 @@ void test_getting_started_button_combo__cleanup(void) {
   getting_started_button_combo_deinit(&s_state);
 }
 
-static StubTimer *prv_find_combo_timer(void) { return (StubTimer *)s_running_timers; }
+static StubTimer *prv_find_combo_timer(void) {
+  return (StubTimer *)s_running_timers;
+}
 
 static void prv_press_button(ButtonId id) {
   getting_started_button_combo_button_pressed(&s_state, id);

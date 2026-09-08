@@ -14,9 +14,11 @@
 // Setup and Teardown
 //////////////////////
 
-void test_vibe_intensity__initialize(void) {}
+void test_vibe_intensity__initialize(void) {
+}
 
-void test_vibe_intensity__cleanup(void) {}
+void test_vibe_intensity__cleanup(void) {
+}
 
 // Tests
 /////////

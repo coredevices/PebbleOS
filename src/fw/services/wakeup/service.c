@@ -582,9 +582,13 @@ void wakeup_enable(bool enable) {
   }
 }
 
-TimerID wakeup_get_current(void) { return s_current_timer_id; }
+TimerID wakeup_get_current(void) {
+  return s_current_timer_id;
+}
 
-WakeupId wakeup_get_next_scheduled(void) { return s_wakeup_state.current_wakeup_id; }
+WakeupId wakeup_get_next_scheduled(void) {
+  return s_wakeup_state.current_wakeup_id;
+}
 
 void wakeup_migrate_timezone(int utc_diff) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);

@@ -118,11 +118,16 @@ static bool prv_legacy_completion_status_init(PebbleSystemMessageEvent *event) {
 
 // End Legacy completion handlers
 
-bool firmware_update_is_in_progress(void) { return s_update_status == FirmwareUpdateRunning; }
+bool firmware_update_is_in_progress(void) {
+  return s_update_status == FirmwareUpdateRunning;
+}
 
-FirmwareUpdateStatus firmware_update_current_status(void) { return s_update_status; }
+FirmwareUpdateStatus firmware_update_current_status(void) {
+  return s_update_status;
+}
 
-void firmware_update_init(void) {}
+void firmware_update_init(void) {
+}
 
 static void prv_initialize_completion_status(PebbleSystemMessageEvent *event) {
   if (prv_legacy_completion_status_init(event)) {

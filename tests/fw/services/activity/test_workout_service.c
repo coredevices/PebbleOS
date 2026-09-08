@@ -36,35 +36,55 @@ static ActivitySession s_saved_session;
 void activity_sessions_prv_add_activity_session(ActivitySession *session) {
   s_saved_session = *session;
 }
-void activity_sessions_prv_delete_activity_session(ActivitySession *session) {}
-void activity_algorithm_enable_activity_tracking(bool enable) {}
+void activity_sessions_prv_delete_activity_session(ActivitySession *session) {
+}
+void activity_algorithm_enable_activity_tracking(bool enable) {
+}
 
-bool activity_get_sessions(uint32_t *session_entries, ActivitySession *sessions) { return false; }
+bool activity_get_sessions(uint32_t *session_entries, ActivitySession *sessions) {
+  return false;
+}
 
 uint8_t activity_prefs_get_age_years(void) {
   return 30;  // This is our current default
 }
 
-ActivityGender activity_prefs_get_gender(void) { return ActivityGenderMale; }
+ActivityGender activity_prefs_get_gender(void) {
+  return ActivityGenderMale;
+}
 
-uint16_t activity_prefs_get_weight_dag(void) { return 7539; }
+uint16_t activity_prefs_get_weight_dag(void) {
+  return 7539;
+}
 
-uint16_t activity_prefs_get_height_mm(void) { return 1900; }
+uint16_t activity_prefs_get_height_mm(void) {
+  return 1900;
+}
 
-uint8_t activity_prefs_heart_get_elevated_hr(void) { return 100; }
+uint8_t activity_prefs_heart_get_elevated_hr(void) {
+  return 100;
+}
 
-uint8_t activity_prefs_heart_get_zone1_threshold(void) { return 130; }
+uint8_t activity_prefs_heart_get_zone1_threshold(void) {
+  return 130;
+}
 
-uint8_t activity_prefs_heart_get_zone2_threshold(void) { return 154; }
+uint8_t activity_prefs_heart_get_zone2_threshold(void) {
+  return 154;
+}
 
-uint8_t activity_prefs_heart_get_zone3_threshold(void) { return 172; }
+uint8_t activity_prefs_heart_get_zone3_threshold(void) {
+  return 172;
+}
 
 static HRMonitoringInterval s_hrm_measurement_interval;
 HRMonitoringInterval activity_prefs_get_hrm_measurement_interval(void) {
   return s_hrm_measurement_interval;
 }
 
-AppInstallId app_get_app_id(void) { return 0; }
+AppInstallId app_get_app_id(void) {
+  return 0;
+}
 
 // ---------------------------------------------------------------------------------------
 
@@ -89,7 +109,9 @@ bool sys_hrm_manager_set_update_interval(HRMSessionRef session, uint32_t update_
   return true;
 }
 
-uint32_t time_get_uptime_seconds(void) { return SECONDS_PER_DAY + rtc_get_time(); }
+uint32_t time_get_uptime_seconds(void) {
+  return SECONDS_PER_DAY + rtc_get_time();
+}
 
 static uint32_t s_total_step_count;
 bool activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *history) {

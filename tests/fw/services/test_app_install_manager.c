@@ -64,29 +64,48 @@
 const uint32_t g_num_file_resource_stores = 0;
 const FileResourceData g_file_resource_stores[] = {};
 
-bool build_id_contains_gnu_build_id(const ElfExternalNote *note) { return false; }
+bool build_id_contains_gnu_build_id(const ElfExternalNote *note) {
+  return false;
+}
 
-const char *app_custom_get_title(AppInstallId app_id) { return ""; }
+const char *app_custom_get_title(AppInstallId app_id) {
+  return "";
+}
 
-status_t pin_db_delete_with_parent(const TimelineItemId *parent_id) { return S_SUCCESS; }
+status_t pin_db_delete_with_parent(const TimelineItemId *parent_id) {
+  return S_SUCCESS;
+}
 
-bool pin_db_exists_with_parent(const TimelineItemId *parent_id) { return true; }
+bool pin_db_exists_with_parent(const TimelineItemId *parent_id) {
+  return true;
+}
 
-AppInstallId worker_preferences_get_default_worker(void) { return 0; }
+AppInstallId worker_preferences_get_default_worker(void) {
+  return 0;
+}
 
-bool app_fetch_in_progress(void) { return false; }
+bool app_fetch_in_progress(void) {
+  return false;
+}
 
-void app_fetch_cancel_from_system_task(void) {}
+void app_fetch_cancel_from_system_task(void) {
+}
 
-void comm_session_app_session_capabilities_evict(const Uuid *app_uuid) {}
+void comm_session_app_session_capabilities_evict(const Uuid *app_uuid) {
+}
 
-void put_bytes_cancel(void) {}
+void put_bytes_cancel(void) {
+}
 
 // Fakes
 ////////////////////////////////////
-uint32_t time_get_uptime_seconds(void) { return rtc_get_time(); }
+uint32_t time_get_uptime_seconds(void) {
+  return rtc_get_time();
+}
 
-void launcher_task_add_callback(void (*callback)(void *data), void *data) { callback(data); }
+void launcher_task_add_callback(void (*callback)(void *data), void *data) {
+  callback(data);
+}
 
 bool system_task_add_callback(void (*cb)(void *), void *data) {
   cb(data);
@@ -286,7 +305,8 @@ void test_app_install_manager__initialize(void) {
   load_fixture_on_pfs(APP2_RESOURCES_FIXTURE_NAME, filename_buf);
 }
 
-void test_app_install_manager__cleanup(void) {}
+void test_app_install_manager__cleanup(void) {
+}
 
 /*************************************
 

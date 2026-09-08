@@ -467,7 +467,9 @@ static void prv_motion_sensitivity_menu_push(SettingsSystemData *data) {
 // Compact growable settings DBs
 ////////////////////////////////
 
-static void prv_compact_settings_dbs_task_cb(void *data) { blob_db_compact_growable_dbs(); }
+static void prv_compact_settings_dbs_task_cb(void *data) {
+  blob_db_compact_growable_dbs();
+}
 
 static void prv_compact_settings_dbs(void) {
   system_task_add_callback(prv_compact_settings_dbs_task_cb, NULL);
@@ -1309,7 +1311,9 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
   settings_menu_reload_data(SettingsMenuItemSystem);
 }
 
-static uint16_t prv_num_rows_cb(SettingsCallbacks *context) { return SystemMenuItem_Count; }
+static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
+  return SystemMenuItem_Count;
+}
 
 static Window *prv_init(void) {
   SettingsSystemData *data = app_malloc_check(sizeof(SettingsSystemData));

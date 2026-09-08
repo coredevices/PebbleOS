@@ -56,11 +56,17 @@
 #include "fake_settings_file.h"
 #include "fake_events.h"
 
-bool calendar_layout_verify(bool existing_attributes[]) { return true; }
+bool calendar_layout_verify(bool existing_attributes[]) {
+  return true;
+}
 
-bool weather_layout_verify(bool existing_attributes[]) { return true; }
+bool weather_layout_verify(bool existing_attributes[]) {
+  return true;
+}
 
-const TimelineEventImpl *timeline_peek_get_event_service(void) { return NULL; }
+const TimelineEventImpl *timeline_peek_get_event_service(void) {
+  return NULL;
+}
 
 // Helpers
 ////////////////////////////////////////////////////////////////

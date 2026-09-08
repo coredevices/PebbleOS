@@ -20,10 +20,14 @@ typedef struct {
 
 static AppOrderData s_data;
 
-void app_order_storage_init(void) { pbl_mutex_init(&s_data.order_mutex); }
+void app_order_storage_init(void) {
+  pbl_mutex_init(&s_data.order_mutex);
+}
 
 #if UNITTEST
-void app_order_storage_reset_for_tests(void) { s_data.file_known_missing = false; }
+void app_order_storage_reset_for_tests(void) {
+  s_data.file_known_missing = false;
+}
 #endif
 
 //! Must be called from the App Task

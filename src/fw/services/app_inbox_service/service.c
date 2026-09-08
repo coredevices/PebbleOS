@@ -167,7 +167,9 @@ static void prv_lock(void) {
   pbl_mutex_lock(&s_app_inbox_mutex, PBL_FOREVER);
 }
 
-static void prv_unlock(void) { pbl_mutex_unlock(&s_app_inbox_mutex); }
+static void prv_unlock(void) {
+  pbl_mutex_unlock(&s_app_inbox_mutex);
+}
 
 static bool prv_list_filter_by_storage(ListNode *found_node, void *data) {
   return ((AppInboxNode *)found_node)->buffer.storage == (uint8_t *)data;
@@ -389,7 +391,9 @@ void app_inbox_service_unregister_all(void) {
   prv_unlock();
 }
 
-static bool prv_is_inbox_being_written(AppInboxNode *inbox) { return (inbox->writer != NULL); }
+static bool prv_is_inbox_being_written(AppInboxNode *inbox) {
+  return (inbox->writer != NULL);
+}
 
 static size_t prv_get_space_remaining(AppInboxNode *inbox) {
   return (inbox->buffer.size - inbox->buffer.write_index - inbox->buffer.current_offset);
@@ -500,7 +504,8 @@ static void prv_finish(AppInboxNode *inbox) {
   inbox->buffer.current_offset = 0;
 }
 
-void app_inbox_service_init(void) {}
+void app_inbox_service_init(void) {
+}
 
 bool app_inbox_service_end(AppInboxServiceTag tag) {
   bool success = false;

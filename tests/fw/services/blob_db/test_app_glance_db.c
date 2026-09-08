@@ -33,7 +33,9 @@ status_t pfs_remove(const char *name) {
 }
 
 static bool s_app_cache_entry_exists = true;
-bool app_cache_entry_exists(AppInstallId app_id) { return s_app_cache_entry_exists; }
+bool app_cache_entry_exists(AppInstallId app_id) {
+  return s_app_cache_entry_exists;
+}
 
 static int s_launch_count = 0;
 status_t app_cache_app_launched(AppInstallId app_id) {
@@ -49,9 +51,13 @@ AppInstallId app_install_get_id_for_uuid(const Uuid *uuid) {
   return s_app_install_id;
 }
 
-bool app_install_id_from_system(AppInstallId id) { return (id < INSTALL_ID_INVALID); }
+bool app_install_id_from_system(AppInstallId id) {
+  return (id < INSTALL_ID_INVALID);
+}
 
-bool app_install_id_from_app_db(AppInstallId id) { return (id > INSTALL_ID_INVALID); }
+bool app_install_id_from_app_db(AppInstallId id) {
+  return (id > INSTALL_ID_INVALID);
+}
 
 #define APP_GLANCE_TEST_UUID                                                                       \
   (UuidMake(0x3d, 0xc6, 0xb9, 0x4c, 0x4, 0x2, 0x48, 0xf4, 0xbe, 0x14, 0x81, 0x17, 0xf1, 0xa, 0xa9, \
@@ -218,7 +224,9 @@ void test_app_glance_db__initialize(void) {
 
 void app_glance_db_deinit(void);
 
-void test_app_glance_db__cleanup(void) { app_glance_db_deinit(); }
+void test_app_glance_db__cleanup(void) {
+  app_glance_db_deinit();
+}
 
 // Blob Tests
 ////////////////////////////////////////////////////////////////

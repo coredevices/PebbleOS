@@ -35,7 +35,9 @@
 
 // stubs
 
-InterpolateInt64Function animation_private_current_interpolate_override(void) { return NULL; }
+InterpolateInt64Function animation_private_current_interpolate_override(void) {
+  return NULL;
+}
 
 static FrameBuffer *fb = NULL;
 
@@ -46,7 +48,9 @@ void test_gdraw_command_transforms__initialize(void) {
 }
 
 // Teardown
-void test_gdraw_command_transforms__cleanup(void) { free(fb); }
+void test_gdraw_command_transforms__cleanup(void) {
+  free(fb);
+}
 
 void test_gdraw_command_transforms__to_square(void) {
   GContext ctx;

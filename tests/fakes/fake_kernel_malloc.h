@@ -66,9 +66,13 @@ void *kernel_zalloc(size_t bytes) {
   return ptr;
 }
 
-void *kernel_zalloc_check(size_t bytes) { return kernel_zalloc(bytes); }
+void *kernel_zalloc_check(size_t bytes) {
+  return kernel_zalloc(bytes);
+}
 
-void *kernel_malloc_check(size_t bytes) { return kernel_malloc(bytes); }
+void *kernel_malloc_check(size_t bytes) {
+  return kernel_malloc(bytes);
+}
 
 char *kernel_strdup(const char *s) {
   char *r = kernel_malloc_check(strlen(s) + 1);
@@ -79,7 +83,9 @@ char *kernel_strdup(const char *s) {
   return r;
 }
 
-char *kernel_strdup_check(const char *s) { return kernel_strdup(s); }
+char *kernel_strdup_check(const char *s) {
+  return kernel_strdup(s);
+}
 
 static bool prv_find_allocation_filter_cb(ListNode *found_node, void *data) {
   Allocation *a = (Allocation *)found_node;
@@ -122,7 +128,9 @@ void kernel_free(void *ptr) {
 }
 
 //! Enables or disables the tracking of allocations
-void fake_kernel_malloc_enable_stats(bool enable) { s_stats_enabled = enable; }
+void fake_kernel_malloc_enable_stats(bool enable) {
+  s_stats_enabled = enable;
+}
 
 //! Returns the number of bytes allocated on the kernel heap.
 //! @note Call fake_kernel_malloc_enable_stats(true) before using this.
@@ -143,7 +151,9 @@ void fake_kernel_malloc_set_largest_free_block(uint64_t bytes) {
 
 //! Marks the current, total bytes allocated.
 //! @see fake_kernel_malloc_mark_assert_equal
-void fake_kernel_malloc_mark(void) { s_heap_mark = fake_kernel_malloc_get_total_bytes_allocated(); }
+void fake_kernel_malloc_mark(void) {
+  s_heap_mark = fake_kernel_malloc_get_total_bytes_allocated();
+}
 
 //! Asserts that the total bytes allocated is the same as the last time fake_kernel_malloc_mark()
 //! was called.

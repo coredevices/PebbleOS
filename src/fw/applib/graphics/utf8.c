@@ -520,7 +520,9 @@ utf8_t *utf8_get_end(const char *text) {
   return (utf8_t *)stream;
 }
 
-bool utf8_is_valid_string(const char *char_stream) { return (utf8_get_end(char_stream) != NULL); }
+bool utf8_is_valid_string(const char *char_stream) {
+  return (utf8_get_end(char_stream) != NULL);
+}
 
 Utf8Bounds utf8_get_bounds(bool *const success, char const *text) {
   Utf8Bounds bounds;

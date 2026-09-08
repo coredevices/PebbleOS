@@ -356,7 +356,9 @@ static void prv_set_pos_update_timer(MusicAppData *data, MusicPlayState playstat
 static void prv_apply_art_appearance(MusicAppData *data);
 static void prv_maybe_request_album_art(void);
 
-static void prv_do_haptic_feedback_vibe(MusicAppData *data) { vibe_score_do_vibe(data->score); }
+static void prv_do_haptic_feedback_vibe(MusicAppData *data) {
+  vibe_score_do_vibe(data->score);
+}
 
 static void prv_handle_volume_icon_timer(void *context) {
   MusicAppData *data = context;
@@ -725,7 +727,9 @@ static void prv_ellipsis_click_handler(ClickRecognizerRef recognizer, void *cont
   prv_set_action_bar_state(data, ActionBarStateVolume);
 }
 
-static void prv_toggle_playing(void) { music_command_send(MusicCommandTogglePlayPause); }
+static void prv_toggle_playing(void) {
+  music_command_send(MusicCommandTogglePlayPause);
+}
 
 static void prv_play_pause_click_handler(ClickRecognizerRef recognizer, void *context) {
   reset_action_bar_revert_timer(context);

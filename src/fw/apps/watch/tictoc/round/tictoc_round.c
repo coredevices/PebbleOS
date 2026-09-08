@@ -23,10 +23,12 @@ typedef struct {
 
 static GPath *prv_pointed_hand_path(GContext *ctx, ClockHand *hand) {
   uint32_t num_points = 5;
-  if (hand->backwards_extension > 0) num_points = 9;
+  if (hand->backwards_extension > 0)
+    num_points = 9;
 
   GPoint *points = (GPoint *)malloc(num_points * sizeof(GPoint));
-  if (!points) return NULL;
+  if (!points)
+    return NULL;
 
   points[0] = GPoint(hand->thickness / -2, hand->thickness);                        // top left
   points[1] = GPoint(hand->thickness / -2, -(hand->length - hand->thickness / 2));  // bottom left
@@ -53,10 +55,12 @@ static GPath *prv_pointed_hand_path(GContext *ctx, ClockHand *hand) {
 
 static GPath *prv_square_hand_path(GContext *ctx, ClockHand *hand) {
   uint32_t num_points = 4;
-  if (hand->backwards_extension > 0) num_points = 8;
+  if (hand->backwards_extension > 0)
+    num_points = 8;
 
   GPoint *points = (GPoint *)malloc(num_points * sizeof(GPoint));
-  if (!points) return NULL;
+  if (!points)
+    return NULL;
 
   points[0] = GPoint(hand->thickness / -2, hand->thickness);  // top left
   points[1] = GPoint(hand->thickness / -2, -(hand->length));  // bottom left

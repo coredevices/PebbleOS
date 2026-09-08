@@ -3,4 +3,6 @@
 
 #include "syscall/syscall.h"
 
-void psleep(int millis) { sys_psleep(millis); }
+void psleep(int millis) {
+  sys_psleep(millis);
+}

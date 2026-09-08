@@ -79,7 +79,9 @@ bool touch_handle_injected_update(TouchInjectPhase phase, int16_t x, int16_t y) 
   return true;
 }
 
-bool touch_injection_is_available(void) { return s_injection_available; }
+bool touch_injection_is_available(void) {
+  return s_injection_available;
+}
 
 static uint8_t s_ack[8];
 static int s_ack_length;
@@ -113,9 +115,13 @@ static void prv_run_sequence(void) {
 
 //! Injected coordinates are the ones the UI observes; left-hand mode is the touch service's
 //! business (see test_touch), so these read the samples straight back.
-static int16_t prv_observed_y(int i) { return s_touches[i].y; }
+static int16_t prv_observed_y(int i) {
+  return s_touches[i].y;
+}
 
-static int16_t prv_observed_x(int i) { return s_touches[i].x; }
+static int16_t prv_observed_x(int i) {
+  return s_touches[i].x;
+}
 
 // Tests
 ///////////////////////////////////////////////////////////////////////////////

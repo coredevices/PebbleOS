@@ -18,7 +18,9 @@ static const CommSessionCapability s_live_capabilities = (CommSessionInfiniteLog
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static PebbleProcessMd s_app_md;
-const PebbleProcessMd *app_manager_get_current_app_md(void) { return &s_app_md; }
+const PebbleProcessMd *app_manager_get_current_app_md(void) {
+  return &s_app_md;
+}
 
 CommSessionCapability comm_session_get_capabilities(CommSession *session) {
   if (!session) {
@@ -28,10 +30,14 @@ CommSessionCapability comm_session_get_capabilities(CommSession *session) {
 }
 
 static CommSession *s_app_session_ptr;
-CommSession *comm_session_get_current_app_session(void) { return s_app_session_ptr; }
+CommSession *comm_session_get_current_app_session(void) {
+  return s_app_session_ptr;
+}
 
 static bool s_close_called;
-void settings_file_close(SettingsFile *file) { s_close_called = true; }
+void settings_file_close(SettingsFile *file) {
+  s_close_called = true;
+}
 
 static status_t s_open_status;
 status_t settings_file_open(SettingsFile *file, const char *name, int max_used_space) {
@@ -87,7 +93,8 @@ void test_app_session_capabilities__initialize(void) {
   s_app_md = (PebbleProcessMd){};
 }
 
-void test_app_session_capabilities__cleanup(void) {}
+void test_app_session_capabilities__cleanup(void) {
+}
 
 void test_app_session_capabilities__no_cache_file_and_not_connected(void) {
   s_open_status = E_ERROR;

@@ -203,9 +203,13 @@ void pin_db_init(void) {
   timeline_item_storage_init(&s_pin_db_storage, PIN_DB_FILE_NAME, PIN_DB_MAX_SIZE, PIN_DB_MAX_AGE);
 }
 
-void pin_db_deinit(void) { timeline_item_storage_deinit(&s_pin_db_storage); }
+void pin_db_deinit(void) {
+  timeline_item_storage_deinit(&s_pin_db_storage);
+}
 
-status_t pin_db_compact(void) { return timeline_item_storage_compact(&s_pin_db_storage); }
+status_t pin_db_compact(void) {
+  return timeline_item_storage_compact(&s_pin_db_storage);
+}
 
 bool pin_db_has_entry_expired(time_t pin_end_timestamp) {
   return (pin_end_timestamp < (rtc_get_time() - PIN_DB_MAX_AGE));
@@ -235,7 +239,9 @@ status_t pin_db_delete(const uint8_t *key, int key_len) {
   return rv;
 }
 
-status_t pin_db_flush(void) { return timeline_item_storage_flush(&s_pin_db_storage); }
+status_t pin_db_flush(void) {
+  return timeline_item_storage_flush(&s_pin_db_storage);
+}
 
 status_t pin_db_is_dirty(bool *is_dirty_out) {
   *is_dirty_out = false;

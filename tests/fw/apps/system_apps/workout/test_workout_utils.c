@@ -19,7 +19,9 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 
-bool workout_service_is_workout_type_supported(ActivitySessionType type) { return true; }
+bool workout_service_is_workout_type_supported(ActivitySessionType type) {
+  return true;
+}
 
 // Fakes
 ///////////////////////////////////////////////////////////
@@ -39,9 +41,12 @@ bool activity_get_sessions(uint32_t *session_entries, ActivitySession *sessions)
 }
 
 // ---------------------------------------------------------------------------------------
-void test_workout_utils__initialize(void) { s_num_sessions = 0; }
+void test_workout_utils__initialize(void) {
+  s_num_sessions = 0;
+}
 
-void test_workout_utils__cleanup(void) {}
+void test_workout_utils__cleanup(void) {
+}
 
 // ---------------------------------------------------------------------------------------
 // Tests

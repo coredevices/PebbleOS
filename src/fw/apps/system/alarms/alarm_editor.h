@@ -6,7 +6,12 @@
 #include "pbl/services/alarms/alarm.h"
 #include "applib/ui/window.h"
 
-typedef enum { CREATED, DELETED, EDITED, CANCELLED } AlarmEditorResult;
+typedef enum {
+  CREATED,
+  DELETED,
+  EDITED,
+  CANCELLED
+} AlarmEditorResult;
 
 typedef void (*AlarmEditorCompleteCallback)(AlarmEditorResult result, AlarmId id,
                                             void *callback_context);

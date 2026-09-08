@@ -14,7 +14,9 @@ void fake_battery_init(int millivolts, bool usb_connected, bool charging) {
   s_charging = charging;
 }
 
-void fake_battery_set_millivolts(int millivolts) { s_millivolts = millivolts; }
+void fake_battery_set_millivolts(int millivolts) {
+  s_millivolts = millivolts;
+}
 
 void fake_battery_set_connected(bool usb_connected) {
   s_usb_connected = usb_connected;
@@ -28,10 +30,18 @@ void fake_battery_set_connected(bool usb_connected) {
   event_put(&event);
 }
 
-void fake_battery_set_charging(bool charging) { s_charging = charging; }
+void fake_battery_set_charging(bool charging) {
+  s_charging = charging;
+}
 
-int battery_get_millivolts(void) { return s_millivolts; }
+int battery_get_millivolts(void) {
+  return s_millivolts;
+}
 
-bool battery_is_usb_connected(void) { return s_usb_connected; }
+bool battery_is_usb_connected(void) {
+  return s_usb_connected;
+}
 
-bool battery_charge_controller_thinks_we_are_charging(void) { return s_charging; }
+bool battery_charge_controller_thinks_we_are_charging(void) {
+  return s_charging;
+}

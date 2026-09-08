@@ -32,7 +32,9 @@
 #include "stubs_pebble_tasks.h"
 #include "stubs_sleep.h"
 
-bool weather_service_supported_by_phone(void) { return true; }
+bool weather_service_supported_by_phone(void) {
+  return true;
+}
 // Setup
 ////////////////////////////////////////////////////////////////
 
@@ -43,7 +45,9 @@ void test_weather_db__initialize(void) {
   weather_shared_data_init();
 }
 
-void test_weather_db__cleanup(void) { weather_shared_data_cleanup(); }
+void test_weather_db__cleanup(void) {
+  weather_shared_data_cleanup();
+}
 
 // Tests
 ////////////////////////////////////////////////////////////////

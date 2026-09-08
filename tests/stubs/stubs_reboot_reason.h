@@ -3,4 +3,5 @@
 
 #pragma once
 
-void reboot_reason_set(RebootReason *reason) {}
+void reboot_reason_set(RebootReason *reason) {
+}

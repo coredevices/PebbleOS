@@ -61,7 +61,8 @@ static void prv_init(void) {
   app_window_stack_push(&option_menu->window, animated);
 }
 
-static void prv_deinit(void) {}
+static void prv_deinit(void) {
+}
 
 ///////////////////////////
 // App boilerplate

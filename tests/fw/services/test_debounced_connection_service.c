@@ -33,7 +33,9 @@ static PebbleEvent s_cached_event;
 static Transport *s_transport;
 static CommSession *s_session;
 
-bool remote_is_connected(void) { return s_default_connection_state; }
+bool remote_is_connected(void) {
+  return s_default_connection_state;
+}
 
 void event_put(PebbleEvent *event) {
   s_event_count++;

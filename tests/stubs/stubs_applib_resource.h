@@ -3,15 +3,25 @@
 
 #pragma once
 
-bool applib_resource_track_mmapped(const void *bytes) { return false; }
+bool applib_resource_track_mmapped(const void *bytes) {
+  return false;
+}
 
-bool applib_resource_is_mmapped(const void *bytes) { return false; }
+bool applib_resource_is_mmapped(const void *bytes) {
+  return false;
+}
 
-bool applib_resource_munmap(const void *bytes) { return false; }
+bool applib_resource_munmap(const void *bytes) {
+  return false;
+}
 
-bool applib_resource_munmap_all() { return false; }
+bool applib_resource_munmap_all() {
+  return false;
+}
 
-void applib_resource_munmap_or_free(void *bytes) { free(bytes); }
+void applib_resource_munmap_or_free(void *bytes) {
+  free(bytes);
+}
 
 // this is just a stub, if you need proper resource handling
 // link against fake_applib_resource.c in your test

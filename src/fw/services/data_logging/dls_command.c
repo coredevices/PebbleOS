@@ -19,7 +19,9 @@ static bool command_dls_list_cb(DataLoggingSession *session, void *data) {
   return true;
 }
 
-void command_dls_list(void) { dls_list_for_each_session(command_dls_list_cb, 0); }
+void command_dls_list(void) {
+  dls_list_for_each_session(command_dls_list_cb, 0);
+}
 
 // Unused, comment out to avoid pulling in the string literals
 #if 0
@@ -55,7 +57,9 @@ void command_dls_show(const char *id) {
 }
 #endif
 
-void command_dls_erase_all(void) { dls_clear(); }
+void command_dls_erase_all(void) {
+  dls_clear();
+}
 
 void command_dls_send_all(void) {
   // Use this to trigger a send of all data logging data to the phone, helpful for testing

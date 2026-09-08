@@ -292,7 +292,9 @@ static void prv_timer_start(void) {
   regular_timer_add_seconds_callback(&s_cycle_regular_timer);
 }
 
-static void prv_timer_stop(void) { regular_timer_remove_callback(&s_cycle_regular_timer); }
+static void prv_timer_stop(void) {
+  regular_timer_remove_callback(&s_cycle_regular_timer);
+}
 
 // -----------------------------------------------------------------------------
 //! Airs the next advertisement job.

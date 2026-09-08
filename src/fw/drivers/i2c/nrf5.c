@@ -54,14 +54,17 @@ void i2c_hal_disable(I2CBus *bus) {
   nrfx_twim_uninit(&bus->hal->twim);
 }
 
-bool i2c_hal_is_busy(I2CBus *bus) { return nrfx_twim_is_busy(&bus->hal->twim); }
+bool i2c_hal_is_busy(I2CBus *bus) {
+  return nrfx_twim_is_busy(&bus->hal->twim);
+}
 
 void i2c_hal_abort_transfer(I2CBus *bus) {
   nrfx_twim_disable(&bus->hal->twim);
   nrfx_twim_enable(&bus->hal->twim);
 }
 
-void i2c_hal_init_transfer(I2CBus *bus) {}
+void i2c_hal_init_transfer(I2CBus *bus) {
+}
 
 void i2c_hal_start_transfer(I2CBus *bus) {
   nrfx_twim_xfer_desc_t desc;

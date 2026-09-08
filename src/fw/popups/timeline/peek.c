@@ -401,7 +401,9 @@ static void prv_transition_concurrent(TimelinePeek *peek, PeekLayout *layout) {
   animation_schedule(animation);
 }
 
-static void prv_push_timeline_peek(void *unused) { timeline_peek_push(); }
+static void prv_push_timeline_peek(void *unused) {
+  timeline_peek_push();
+}
 
 void timeline_peek_init(void) {
   TimelinePeek *peek = &s_peek;
@@ -433,7 +435,9 @@ static void prv_set_visible(bool visible, bool animated) {
   prv_transition_frame(peek, visible, animated);
 }
 
-static bool prv_can_animate(void) { return app_manager_is_watchface_running(); }
+static bool prv_can_animate(void) {
+  return app_manager_is_watchface_running();
+}
 
 void timeline_peek_set_visible(bool visible, bool animated) {
   TimelinePeek *peek = &s_peek;
@@ -580,5 +584,7 @@ void timeline_peek_handle_process_kill(void) {
 }
 
 #if UNITTEST
-TimelinePeek *timeline_peek_get_peek(void) { return &s_peek; }
+TimelinePeek *timeline_peek_get_peek(void) {
+  return &s_peek;
+}
 #endif

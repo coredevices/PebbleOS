@@ -30,7 +30,9 @@ static void prv_start_timer(PPPControlProtocol *this) {
   new_timer_start(this->state->restart_timer, RESTART_TIMEOUT_MS, prv_on_timeout, (void *)this, 0);
 }
 
-static void prv_stop_timer(PPPControlProtocol *this) { new_timer_stop(this->state->restart_timer); }
+static void prv_stop_timer(PPPControlProtocol *this) {
+  new_timer_stop(this->state->restart_timer);
+}
 
 static void prv_transition_to(PPPControlProtocol *this, enum LinkState nextstate) {
   if (nextstate == LinkState_Initial || nextstate == LinkState_Starting ||

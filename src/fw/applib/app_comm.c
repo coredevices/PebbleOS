@@ -9,4 +9,6 @@ void app_comm_set_sniff_interval(const SniffInterval interval) {
   sys_app_comm_set_responsiveness(interval);
 }
 
-SniffInterval app_comm_get_sniff_interval(void) { return sys_app_comm_get_sniff_interval(); }
+SniffInterval app_comm_get_sniff_interval(void) {
+  return sys_app_comm_get_sniff_interval();
+}

@@ -166,7 +166,9 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
   quick_launch_app_menu_window_push(button, is_tap);
 }
 
-static uint16_t prv_num_rows_cb(SettingsCallbacks *context) { return NUM_ROWS; }
+static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
+  return NUM_ROWS;
+}
 
 static void prv_appear(SettingsCallbacks *context) {
   QuickLaunchData *data = (QuickLaunchData *)context;

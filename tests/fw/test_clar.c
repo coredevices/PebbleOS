@@ -75,7 +75,9 @@ void test_clar__test_assert_near(void) {
 
 #define EX_GRECT GRect(5, 6, 7, 8)
 
-static GRect prv_get_grect(void) { return EX_GRECT; }
+static GRect prv_get_grect(void) {
+  return EX_GRECT;
+}
 
 void test_clar__equal_grect(void) {
   // test with local variable
@@ -92,7 +94,9 @@ void test_clar__equal_grect(void) {
 
 #define EX_GPOINT GPoint(5, 6)
 
-static GPoint prv_get_gpoint(void) { return EX_GPOINT; }
+static GPoint prv_get_gpoint(void) {
+  return EX_GPOINT;
+}
 
 void test_clar__equal_gpoint(void) {
   // test with local variable
@@ -109,7 +113,9 @@ void test_clar__equal_gpoint(void) {
 
 #define EX_GSIZE GSize(5, 6)
 
-static GSize prv_get_gsize(void) { return EX_GSIZE; }
+static GSize prv_get_gsize(void) {
+  return EX_GSIZE;
+}
 
 void test_clar__equal_gsize(void) {
   // test with local variable
@@ -128,7 +134,9 @@ void test_clar__equal_gsize(void) {
   ((Uuid){0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, \
           0xee, 0xff})
 
-static Uuid prv_get_uuid(void) { return EX_UUID; }
+static Uuid prv_get_uuid(void) {
+  return EX_UUID;
+}
 
 void test_clar__equal_uuid(void) {
   // test with local variable
@@ -151,7 +159,9 @@ void test_clar__equal_uuid(void) {
                             .quadrant = 2,                                \
                         }})
 
-static EllipsisDrawConfig prv_get_edc(void) { return EX_QDC; }
+static EllipsisDrawConfig prv_get_edc(void) {
+  return EX_QDC;
+}
 
 void test_clar__equal_qdc(void) {
   // test with local variable

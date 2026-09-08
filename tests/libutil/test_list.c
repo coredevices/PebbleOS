@@ -13,14 +13,17 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 int g_pbl_log_level = 0;
-void pbl_log(int level, const char *src_filename, int src_line_number, const char *fmt, ...) {}
+void pbl_log(int level, const char *src_filename, int src_line_number, const char *fmt, ...) {
+}
 
 // Tests
 ///////////////////////////////////////////////////////////
 
-void test_list__initialize(void) {}
+void test_list__initialize(void) {
+}
 
-void test_list__cleanup(void) {}
+void test_list__cleanup(void) {
+}
 
 void test_list__insert_after(void) {
   ListNode *tail = NULL;
@@ -108,7 +111,9 @@ typedef struct IntNode {
   int value;
 } IntNode;
 
-int sorting_comparator(IntNode *a, IntNode *b) { return b->value - a->value; }
+int sorting_comparator(IntNode *a, IntNode *b) {
+  return b->value - a->value;
+}
 
 void test_list__sort_ascending(void) {
   IntNode bar1 = {.value = 1};

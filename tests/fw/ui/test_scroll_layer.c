@@ -29,14 +29,20 @@ static GRect s_graphics_draw_bitmap_in_rect__rect = GRectZero;
 void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *src_bitmap, const GRect *rect) {
   s_graphics_draw_bitmap_in_rect__rect = *rect;
 }
-bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) { return false; }
-void window_schedule_render(struct Window *window) {}
+bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) {
+  return false;
+}
+void window_schedule_render(struct Window *window) {
+}
 void window_set_click_config_provider_with_context(struct Window *window,
                                                    ClickConfigProvider click_config_provider,
-                                                   void *context) {}
-void window_set_click_context(ButtonId button_id, void *context) {}
+                                                   void *context) {
+}
+void window_set_click_context(ButtonId button_id, void *context) {
+}
 void window_single_repeating_click_subscribe(ButtonId button_id, uint16_t repeat_interval_ms,
-                                             ClickHandler handler) {}
+                                             ClickHandler handler) {
+}
 
 // Internal definitions
 ////////////////////////////////////
@@ -47,8 +53,10 @@ extern uint16_t prv_scroll_layer_get_paging_height(ScrollLayer *scroll_layer);
 // Setup
 ////////////////////////////////////
 
-void test_scroll_layer__initialize(void) {}
-void test_scroll_layer__cleanup(void) {}
+void test_scroll_layer__initialize(void) {
+}
+void test_scroll_layer__cleanup(void) {
+}
 
 // Tests
 ////////////////////////////////////

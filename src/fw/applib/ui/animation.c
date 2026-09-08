@@ -864,7 +864,8 @@ static Animation *prv_call_using_vargs(CreateFromArrayFunc func, Animation *anim
 
 // -------------------------------------------------------------------------------------------
 // Complex animations don't perform any logic in their update callback
-static void prv_complex_animation_update(Animation *animation, uint32_t distance) {}
+static void prv_complex_animation_update(Animation *animation, uint32_t distance) {
+}
 static const AnimationImplementation s_complex_implementation = {
     .update = (AnimationUpdateImplementation)prv_complex_animation_update,
 };
@@ -1825,10 +1826,14 @@ static void prv_dump_scheduler(char *buffer, int buffer_size, AnimationState *st
 }
 
 // -------------------------------------------------------------------------------------------
-void animation_private_pause(void) { s_paused = true; }
+void animation_private_pause(void) {
+  s_paused = true;
+}
 
 // -------------------------------------------------------------------------------------------
-void animation_private_resume(void) { s_paused = false; }
+void animation_private_resume(void) {
+  s_paused = false;
+}
 
 // -------------------------------------------------------------------------------------------
 void command_animations_info(void) {
@@ -1843,7 +1848,11 @@ void command_animations_info(void) {
 }
 
 // -------------------------------------------------------------------------------------------
-void command_pause_animations(void) { animation_private_pause(); }
+void command_pause_animations(void) {
+  animation_private_pause();
+}
 
 // -------------------------------------------------------------------------------------------
-void command_resume_animations(void) { animation_private_resume(); }
+void command_resume_animations(void) {
+  animation_private_resume();
+}

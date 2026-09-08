@@ -67,26 +67,37 @@ static void prv_set_remote_active(void) {
   s_flags = 0;
 }
 
-static void prv_set_expected(AppState app_state) { s_app_state = app_state; }
+static void prv_set_expected(AppState app_state) {
+  s_app_state = app_state;
+}
 
-static void prv_set_remote_capability(CommSessionCapability c) { s_flags |= c; }
+static void prv_set_remote_capability(CommSessionCapability c) {
+  s_flags |= c;
+}
 
 bool comm_session_has_capability(CommSession *session, CommSessionCapability c) {
   return (s_flags & c) != 0;
 }
 
-void app_install_unmark_prioritized(const Uuid *uuid) { return; }
+void app_install_unmark_prioritized(const Uuid *uuid) {
+  return;
+}
 
-bool app_install_is_app_running(AppInstallId id) { return true; }
+bool app_install_is_app_running(AppInstallId id) {
+  return true;
+}
 
-void app_install_mark_prioritized(AppInstallId install_id, bool can_expire) {}
+void app_install_mark_prioritized(AppInstallId install_id, bool can_expire) {
+}
 
 bool system_task_add_callback(void (*cb)(void *data), void *data) {
   cb(data);
   return true;
 }
 
-status_t app_cache_app_launched(AppInstallId id) { return 0; }
+status_t app_cache_app_launched(AppInstallId id) {
+  return 0;
+}
 
 void app_manager_put_launch_app_event(const AppLaunchEventConfig *config) {
   app_run_state_send_update(&app_manager_get_current_app_md()->uuid, RUNNING);
@@ -96,7 +107,9 @@ void process_manager_put_kill_process_event(PebbleTask task, bool gracefully) {
   app_run_state_send_update(&app_manager_get_current_app_md()->uuid, NOT_RUNNING);
 }
 
-CommSession *comm_session_get_system_session(void) { return s_session; }
+CommSession *comm_session_get_system_session(void) {
+  return s_session;
+}
 
 void launcher_app_message_send_app_state_deprecated(const Uuid *uuid, bool running) {
   s_launcher_deprecated_messages++;
@@ -111,9 +124,13 @@ bool comm_session_send_data(CommSession *session, uint16_t endpoint_id, const ui
   return true;
 }
 
-void bt_lock(void) { return; }
+void bt_lock(void) {
+  return;
+}
 
-void bt_unlock(void) { return; }
+void bt_unlock(void) {
+  return;
+}
 
 // Tests
 ///////////////////////////////////////

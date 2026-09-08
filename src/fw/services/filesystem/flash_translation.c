@@ -16,7 +16,12 @@
 PBL_LOG_MODULE_DECLARE(service_filesystem, CONFIG_SERVICE_FILESYSTEM_LOG_LEVEL);
 
 //! Flash translation operation
-typedef enum { FTLRead, FTLWrite, FTLEraseSector, FTLEraseSubsector } FTLOperation;
+typedef enum {
+  FTLRead,
+  FTLWrite,
+  FTLEraseSector,
+  FTLEraseSubsector
+} FTLOperation;
 
 //! Total number of FSRegions listed in s_region_list
 static const unsigned int TOTAL_NUM_FLASH_REGIONS = ARRAY_LENGTH(s_region_list);
@@ -127,7 +132,9 @@ void ftl_populate_region_list(void) {
   PBL_LOG_DBG("Filesystem: New size - %" PRId32 " Kb", (s_ftl_size / 1024));
 }
 
-uint32_t ftl_get_size(void) { return s_ftl_size; }
+uint32_t ftl_get_size(void) {
+  return s_ftl_size;
+}
 
 static void prv_ftl_operation(uint8_t *buffer, uint32_t size, uint32_t offset,
                               FTLOperation operation) {
@@ -176,7 +183,8 @@ void ftl_erase_subsector(uint32_t size, uint32_t offset) {
   prv_ftl_operation(NULL /* not needed for erase */, size, offset, FTLEraseSubsector);
 }
 
-void ftl_format(void) {}
+void ftl_format(void) {
+}
 
 //! Only used for tests.
 void ftl_force_version(int version_idx) {

@@ -7,9 +7,11 @@
 
 #include "stubs_activity.h"
 
-void test_hr_util__initialize(void) {}
+void test_hr_util__initialize(void) {
+}
 
-void test_hr_util__cleanup(void) {}
+void test_hr_util__cleanup(void) {
+}
 
 // ---------------------------------------------------------------------------------------
 void test_hr_util__get_hr_zone(void) {

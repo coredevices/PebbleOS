@@ -22,7 +22,8 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 
-void MPU_xTaskResumeAll(void) {}
+void MPU_xTaskResumeAll(void) {
+}
 
 // Tests
 ///////////////////////////////////////////////////////////
@@ -170,7 +171,8 @@ void test_heap__realloc(void) {
   heap_free(&heap, ptr, 0);
 }
 
-void test_heap__should_handle_irregular_blocks(void) {}
+void test_heap__should_handle_irregular_blocks(void) {
+}
 
 void test_heap__unaligned_start_end(void) {
   // Make a little word aligned buffer to use as our heap.

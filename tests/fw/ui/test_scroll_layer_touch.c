@@ -37,20 +37,34 @@
 // through these accessors; the recognizer manager needs a few window/layer collaborators to link.
 
 static bool s_nav_enabled = true;
-bool sys_touch_nav_enabled(void) { return s_nav_enabled; }
-bool sys_touch_app_nav_active(void) { return false; }
+bool sys_touch_nav_enabled(void) {
+  return s_nav_enabled;
+}
+bool sys_touch_app_nav_active(void) {
+  return false;
+}
 
 static TouchNavState s_touch_nav_state;
-struct TouchNavState *app_state_get_touch_nav_state(void) { return &s_touch_nav_state; }
-struct TouchNavState *modal_manager_get_touch_nav_state(void) { return &s_touch_nav_state; }
+struct TouchNavState *app_state_get_touch_nav_state(void) {
+  return &s_touch_nav_state;
+}
+struct TouchNavState *modal_manager_get_touch_nav_state(void) {
+  return &s_touch_nav_state;
+}
 
 static Layer s_root_layer;  // window root, holds the scroll layer while driving pans
 static RecognizerManager s_recognizer_manager;
 static RecognizerList s_global_list;
 
-struct Layer *window_get_root_layer(const Window *window) { return &s_root_layer; }
-RecognizerList *window_get_recognizer_list(Window *window) { return NULL; }
-RecognizerManager *window_get_recognizer_manager(Window *window) { return &s_recognizer_manager; }
+struct Layer *window_get_root_layer(const Window *window) {
+  return &s_root_layer;
+}
+RecognizerList *window_get_recognizer_list(Window *window) {
+  return NULL;
+}
+RecognizerManager *window_get_recognizer_manager(Window *window) {
+  return &s_recognizer_manager;
+}
 
 // Fake bridge ops so swipe-right BACK / swipe-left SELECT are observable.
 typedef struct FakeBridgeOps {
@@ -61,11 +75,15 @@ typedef struct FakeBridgeOps {
   ButtonId last_emit;
 } FakeBridgeOps;
 static FakeBridgeOps s_bridge;
-static bool prv_bridge_is_animating(void *ctx) { return ((FakeBridgeOps *)ctx)->animating; }
+static bool prv_bridge_is_animating(void *ctx) {
+  return ((FakeBridgeOps *)ctx)->animating;
+}
 static bool prv_bridge_top_overrides_back(void *ctx) {
   return ((FakeBridgeOps *)ctx)->overrides_back;
 }
-static void prv_bridge_pop_top(void *ctx) { ((FakeBridgeOps *)ctx)->pop_count++; }
+static void prv_bridge_pop_top(void *ctx) {
+  ((FakeBridgeOps *)ctx)->pop_count++;
+}
 static void prv_bridge_emit_button(void *ctx, ButtonId b) {
   FakeBridgeOps *o = ctx;
   o->emit_count++;
@@ -93,19 +111,30 @@ static void prv_touch_nav_setup(void) {
 
 // Fakes
 ////////////////////
-void graphics_context_set_compositing_mode(GContext *ctx, GCompOp mode) {}
-void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *bitmap, const GRect *rect) {}
-GDrawState graphics_context_get_drawing_state(GContext *ctx) { return (GDrawState){}; }
-void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {}
+void graphics_context_set_compositing_mode(GContext *ctx, GCompOp mode) {
+}
+void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *bitmap, const GRect *rect) {
+}
+GDrawState graphics_context_get_drawing_state(GContext *ctx) {
+  return (GDrawState){};
+}
+void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {
+}
 
-bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) { return false; }
+bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) {
+  return false;
+}
 void window_set_click_config_provider_with_context(struct Window *window,
                                                    ClickConfigProvider click_config_provider,
-                                                   void *context) {}
-void window_set_click_context(ButtonId button_id, void *context) {}
-void window_schedule_render(struct Window *window) {}
+                                                   void *context) {
+}
+void window_set_click_context(ButtonId button_id, void *context) {
+}
+void window_schedule_render(struct Window *window) {
+}
 void window_single_repeating_click_subscribe(ButtonId button_id, uint16_t repeat_interval_ms,
-                                             ClickHandler handler) {}
+                                             ClickHandler handler) {
+}
 
 // ---------------------------------------------------------------------------------------------
 // Strong overrides of the WEAK animation stubs: capture the animation's to-target and stopped
@@ -156,7 +185,8 @@ void test_scroll_layer_touch__initialize(void) {
   scroll_layer_touch_nav_reset_all();
 }
 
-void test_scroll_layer_touch__cleanup(void) {}
+void test_scroll_layer_touch__cleanup(void) {
+}
 
 // Build a scroll layer with content taller than its frame so there is room to drag.
 static void prv_make_tall_scroll(ScrollLayer *sl, GRect frame, int16_t content_h) {

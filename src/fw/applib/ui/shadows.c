@@ -39,6 +39,10 @@ static const GBitmap s_shadow_bottom_bitmap = {
     .bounds = {{0, 0}, {32, 19}},
 };
 
-GBitmap *shadow_get_top(void) { return (GBitmap *)&s_shadow_top_bitmap; }
+GBitmap *shadow_get_top(void) {
+  return (GBitmap *)&s_shadow_top_bitmap;
+}
 
-GBitmap *shadow_get_bottom(void) { return (GBitmap *)&s_shadow_bottom_bitmap; }
+GBitmap *shadow_get_bottom(void) {
+  return (GBitmap *)&s_shadow_bottom_bitmap;
+}

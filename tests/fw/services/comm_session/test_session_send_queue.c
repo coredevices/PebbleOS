@@ -28,7 +28,8 @@ bool comm_session_is_valid(const CommSession *session) {
   return (s_valid_session == session);
 }
 
-void comm_session_send_next(CommSession *session) {}
+void comm_session_send_next(CommSession *session) {
+}
 
 // Helpers
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -40,7 +41,9 @@ typedef struct {
   uint8_t data[];
 } TestSendJob;
 
-static size_t prv_get_length(const TestSendJob *sb) { return (sb->length - sb->consumed_length); }
+static size_t prv_get_length(const TestSendJob *sb) {
+  return (sb->length - sb->consumed_length);
+}
 
 static const uint8_t *prv_get_read_pointer(const TestSendJob *sb) {
   return (sb->data + sb->consumed_length);

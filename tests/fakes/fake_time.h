@@ -24,9 +24,13 @@ uint16_t time_ms(time_t *tloc, uint16_t *out_ms) {
   return 0;
 }
 
-int32_t time_get_gmtoffset(void) { return s_gmt_off; }
+int32_t time_get_gmtoffset(void) {
+  return s_gmt_off;
+}
 
-int32_t time_get_dstoffset(void) { return s_dst_off; }
+int32_t time_get_dstoffset(void) {
+  return s_dst_off;
+}
 
 bool time_get_isdst(time_t utc_time) {
   if ((s_dst_start == 0) || (s_dst_stop == 0)) {
@@ -59,4 +63,6 @@ void fake_time_set_dst(int32_t offset, int32_t start, int32_t stop) {
   s_dst_stop = stop;
 }
 
-void fake_time_set_gmtoff(int32_t gmtoff) { s_gmt_off = gmtoff; }
+void fake_time_set_gmtoff(int32_t gmtoff) {
+  s_gmt_off = gmtoff;
+}

@@ -8,9 +8,11 @@
 // Setup
 ////////////////////////////////////////////////////////////////
 
-void test_stringlist__initialize(void) {}
+void test_stringlist__initialize(void) {
+}
 
-void test_stringlist__cleanup(void) {}
+void test_stringlist__cleanup(void) {
+}
 
 // Tests
 ////////////////////////////////////////////////////////////////

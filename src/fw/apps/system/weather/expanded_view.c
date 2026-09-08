@@ -73,7 +73,9 @@ static ExpandedViewData *s_ev;
 
 // System-app statics persist across launches (the fw image is not reloaded), and a
 // crashed run never reaches unload — clear them before the next run reads them.
-void expanded_view_reset(void) { s_ev = NULL; }
+void expanded_view_reset(void) {
+  s_ev = NULL;
+}
 
 // ---- Sunset computation (fixed-point) -------------------------------------
 // There is no sunset field in the synced weather data and no firmware sunset API,
@@ -83,7 +85,8 @@ void expanded_view_reset(void) { s_ev = NULL; }
 
 static int32_t prv_norm_angle(int32_t a) {
   a %= TRIG_MAX_ANGLE;
-  if (a < 0) a += TRIG_MAX_ANGLE;
+  if (a < 0)
+    a += TRIG_MAX_ANGLE;
   return a;
 }
 static int32_t prv_angle_from_cdeg(int32_t cdeg) {  // degrees*100 -> trig angle
@@ -114,10 +117,13 @@ static int prv_sunset_minutes(int16_t lat_e2, int16_t lon_e2, int16_t utc_off_mi
   const int32_t cosLat = cos_lookup(prv_angle_from_cdeg(lat_e2));
 
   const int64_t den = (int64_t)cosLat * cosDec;
-  if (den == 0) return -1;
+  if (den == 0)
+    return -1;
   int64_t cosH = -((int64_t)sinLat * sinDec) * 1000000 / den;  // ratio *1e6
-  if (cosH > 1000000) cosH = 1000000;
-  if (cosH < -1000000) cosH = -1000000;
+  if (cosH > 1000000)
+    cosH = 1000000;
+  if (cosH < -1000000)
+    cosH = -1000000;
 
   int32_t alo = 0, ahi = TRIG_MAX_ANGLE / 2;  // omega = acos(cosH), binary search
   for (int i = 0; i < 22; i++) {
@@ -135,7 +141,8 @@ static int prv_sunset_minutes(int16_t lat_e2, int16_t lon_e2, int16_t utc_off_mi
   const int tc_m1000 = 40 * (int)lon_e2 - tz_min * 1000 + eot_m1000;
   int sunset_min = (720000 + 40 * omega_cdeg - tc_m1000) / 1000;
   sunset_min %= 1440;
-  if (sunset_min < 0) sunset_min += 1440;
+  if (sunset_min < 0)
+    sunset_min += 1440;
   return sunset_min;
 }
 
@@ -144,7 +151,8 @@ static void prv_fmt_hhmm(char *out, size_t n, int h24, int mm) {
     snprintf(out, n, "%d:%02d", h24, mm);
   } else {
     int h12 = h24 % 12;
-    if (h12 == 0) h12 = 12;
+    if (h12 == 0)
+      h12 = 12;
     char ampm[8];
     i18n_get_with_buffer(h24 < 12 ? i18n_noop("AM") : i18n_noop("PM"), ampm, sizeof(ampm));
     snprintf(out, n, "%d:%02d %s", h12, mm, ampm);
@@ -220,7 +228,8 @@ void expanded_view_format_glance(const WeatherLocationForecast *f, int16_t lat_e
 
 static void prv_set_from_forecast(const WeatherLocationForecast *f, int16_t lat_e2, int16_t lon_e2,
                                   int16_t utc_off_min) {
-  if (!s_ev) return;
+  if (!s_ev)
+    return;
   s_ev->lat_e2 = lat_e2;
   s_ev->lon_e2 = lon_e2;
   s_ev->utc_off_min = utc_off_min;
@@ -258,7 +267,8 @@ static void prv_set_from_forecast(const WeatherLocationForecast *f, int16_t lat_
   if (raw) {
     s_ev->icon = gdraw_command_image_clone(raw);  // writable copy so we can scale it
     gdraw_command_image_destroy(raw);
-    if (s_ev->icon) gdraw_command_image_scale(s_ev->icon, GSize(EV_ICON_SIZE, EV_ICON_SIZE));
+    if (s_ev->icon)
+      gdraw_command_image_scale(s_ev->icon, GSize(EV_ICON_SIZE, EV_ICON_SIZE));
   }
 }
 
@@ -493,7 +503,8 @@ void expanded_view_draw_glance_content(GContext *ctx, int W, int tdx, const char
 }
 
 static void prv_canvas_draw(Layer *layer, GContext *ctx) {
-  if (!s_ev) return;
+  if (!s_ev)
+    return;
   GRect b = layer_get_bounds(layer);
   const int W = b.size.w;
 
@@ -573,7 +584,8 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
 
 // BOTH shapes.
 static void prv_slide_out_stopped(Animation *anim, bool finished, void *context) {
-  if (!s_ev) return;
+  if (!s_ev)
+    return;
   s_ev->slide_anim = NULL;  // property animation auto-destroys after a normal stop
   if (finished && s_ev->on_select) {
     s_ev->on_select(s_ev->on_select_ctx);  // push globe (slide-in-right) + dismiss this card
@@ -581,13 +593,15 @@ static void prv_slide_out_stopped(Animation *anim, bool finished, void *context)
 }
 
 static void prv_start_slide_out_left(void) {
-  if (!s_ev || !s_ev->canvas || s_ev->slide_anim) return;
+  if (!s_ev || !s_ev->canvas || s_ev->slide_anim)
+    return;
   GRect from = layer_get_frame(s_ev->canvas);
   GRect to = from;
   to.origin.x -= from.size.w;  // one screen-width to the left, off screen
   PropertyAnimation *pa = property_animation_create_layer_frame(s_ev->canvas, &from, &to);
   if (!pa) {
-    if (s_ev->on_select) s_ev->on_select(s_ev->on_select_ctx);
+    if (s_ev->on_select)
+      s_ev->on_select(s_ev->on_select_ctx);
     return;
   }
   Animation *a = (Animation *)pa;
@@ -601,11 +615,13 @@ static void prv_start_slide_out_left(void) {
 // Globe-BACK entrance: the whole card starts one screen-width to the left (set in prv_window_load)
 // and slides home with the same moook bounce — the mirror of the SELECT slide-out-left.
 static void prv_slide_in_stopped(Animation *anim, bool finished, void *context) {
-  if (s_ev) s_ev->slide_anim = NULL;  // property animation auto-destroys after a normal stop
+  if (s_ev)
+    s_ev->slide_anim = NULL;  // property animation auto-destroys after a normal stop
 }
 
 static void prv_start_slide_in_left(void) {
-  if (!s_ev || !s_ev->canvas || s_ev->slide_anim) return;
+  if (!s_ev || !s_ev->canvas || s_ev->slide_anim)
+    return;
   GRect from = layer_get_frame(s_ev->canvas);  // off-left (-W), set in prv_window_load
   GRect to = from;
   to.origin.x += from.size.w;  // bring it home to x = 0
@@ -625,10 +641,12 @@ static void prv_start_slide_in_left(void) {
 // ---- Navigation -----------------------------------------------------------
 
 static void prv_click_down(ClickRecognizerRef r, void *ctx) {
-  if (s_ev && s_ev->on_down) s_ev->on_down(s_ev->on_down_ctx);  // -> forecast
+  if (s_ev && s_ev->on_down)
+    s_ev->on_down(s_ev->on_down_ctx);  // -> forecast
 }
 static void prv_click_select(ClickRecognizerRef r, void *ctx) {
-  if (s_ev && s_ev->on_select && !s_ev->slide_anim) prv_start_slide_out_left();  // -> globe
+  if (s_ev && s_ev->on_select && !s_ev->slide_anim)
+    prv_start_slide_out_left();  // -> globe
 }
 
 // ---- Touch input (touch colour platforms) ----
@@ -637,19 +655,22 @@ static void prv_click_select(ClickRecognizerRef r, void *ctx) {
 
 static void prv_touch_handler(const TouchEvent *event, void *context) {
   (void)context;
-  if (!s_ev) return;
+  if (!s_ev)
+    return;
   if (event->type == TouchEvent_Touchdown) {
     s_ev->touch_start_x = event->x;
     s_ev->touch_start_y = event->y;
     s_ev->touch_active = true;
   } else if (event->type == TouchEvent_Liftoff && s_ev->touch_active) {
     s_ev->touch_active = false;
-    if (s_ev->slide_anim) return;  // card is mid-slide — same guard as SELECT
+    if (s_ev->slide_anim)
+      return;  // card is mid-slide — same guard as SELECT
     int16_t dx = event->x - s_ev->touch_start_x;
     int16_t dy = event->y - s_ev->touch_start_y;
     int16_t adx = dx < 0 ? -dx : dx;
     int16_t ady = dy < 0 ? -dy : dy;
-    if (adx <= SWIPE_THRESHOLD && ady <= SWIPE_THRESHOLD) return;  // tap — no action
+    if (adx <= SWIPE_THRESHOLD && ady <= SWIPE_THRESHOLD)
+      return;  // tap — no action
     if (adx > ady) {
       if (dx < 0 && s_ev->on_select) {
         // Swipe left -> globe (the card slides out left, mirroring SELECT).
@@ -671,22 +692,26 @@ static void prv_click_provider(void *ctx) {
 // ---- Content entrance: slide in from the left + bounce --------------------
 
 static void prv_text_in_update(Animation *anim, AnimationProgress progress) {
-  if (!s_ev) return;
+  if (!s_ev)
+    return;
   s_ev->text_p = progress;
-  if (s_ev->canvas) layer_mark_dirty(s_ev->canvas);
+  if (s_ev->canvas)
+    layer_mark_dirty(s_ev->canvas);
 }
 static void prv_text_in_stopped(Animation *anim, bool finished, void *context) {
   if (s_ev) {
     s_ev->text_active = false;
     s_ev->text_anim = NULL;
-    if (s_ev->canvas) layer_mark_dirty(s_ev->canvas);
+    if (s_ev->canvas)
+      layer_mark_dirty(s_ev->canvas);
   }
   animation_destroy(anim);
 }
 static const AnimationImplementation s_text_in_impl = {.update = prv_text_in_update};
 
 static void prv_start_text_in(void) {
-  if (!s_ev || s_ev->text_anim) return;
+  if (!s_ev || s_ev->text_anim)
+    return;
   s_ev->text_active = true;
   s_ev->text_p = 0;
   s_ev->text_anim = animation_create();
@@ -701,23 +726,27 @@ static void prv_start_text_in(void) {
 // ---- Status bar: "Last updated ..." -> time swap (2s after appear) --------
 
 static void prv_swap_update(Animation *anim, AnimationProgress progress) {
-  if (!s_ev) return;
+  if (!s_ev)
+    return;
   s_ev->swap_p = progress;
-  if (s_ev->canvas) layer_mark_dirty(s_ev->canvas);
+  if (s_ev->canvas)
+    layer_mark_dirty(s_ev->canvas);
 }
 static void prv_swap_stopped(Animation *anim, bool finished, void *context) {
   if (s_ev) {
     s_ev->swap_active = false;
     s_ev->show_updated = false;  // the status bar now rests on the time
     s_ev->swap_anim = NULL;
-    if (s_ev->canvas) layer_mark_dirty(s_ev->canvas);
+    if (s_ev->canvas)
+      layer_mark_dirty(s_ev->canvas);
   }
   animation_destroy(anim);
 }
 static const AnimationImplementation s_swap_impl = {.update = prv_swap_update};
 
 static void prv_start_swap(void) {
-  if (!s_ev || s_ev->swap_anim || !s_ev->show_updated) return;
+  if (!s_ev || s_ev->swap_anim || !s_ev->show_updated)
+    return;
   s_ev->swap_active = true;
   s_ev->swap_p = 0;
   s_ev->swap_anim = animation_create();
@@ -729,7 +758,8 @@ static void prv_start_swap(void) {
 }
 
 static void prv_updated_timer_cb(void *ctx) {
-  if (!s_ev) return;
+  if (!s_ev)
+    return;
   s_ev->updated_timer = NULL;
   prv_start_swap();
 }
@@ -737,7 +767,8 @@ static void prv_updated_timer_cb(void *ctx) {
 // ---- Window lifecycle -----------------------------------------------------
 
 static void prv_window_appear(Window *window) {
-  if (!s_ev) return;
+  if (!s_ev)
+    return;
 #ifdef CONFIG_TOUCH
   touch_service_subscribe(prv_touch_handler, s_ev);
 #endif
@@ -762,7 +793,8 @@ static void prv_window_appear(Window *window) {
 }
 
 static void prv_window_load(Window *window) {
-  if (!s_ev) return;
+  if (!s_ev)
+    return;
   window_set_background_color(window, GColorWhite);
   GRect bounds = layer_get_bounds(window_get_root_layer(window));
   GRect frame = bounds;
@@ -825,9 +857,11 @@ void expanded_view_push(const WeatherLocationForecast *today, int16_t lat_e2, in
                         int16_t utc_off_min, ExpandedViewEntrance entrance,
                         void (*on_down)(void *ctx), void *on_down_ctx, void (*on_select)(void *ctx),
                         void *on_select_ctx) {
-  if (s_ev) return;
+  if (s_ev)
+    return;
   s_ev = calloc(1, sizeof(ExpandedViewData));
-  if (!s_ev) return;
+  if (!s_ev)
+    return;
   s_ev->on_down = on_down;
   s_ev->on_down_ctx = on_down_ctx;
   s_ev->on_select = on_select;
@@ -865,11 +899,15 @@ void expanded_view_dismiss(bool animated) {
   }
 }
 
-bool expanded_view_is_showing(void) { return s_ev && s_ev->window; }
+bool expanded_view_is_showing(void) {
+  return s_ev && s_ev->window;
+}
 
 void expanded_view_update_data(const WeatherLocationForecast *today, int16_t lat_e2, int16_t lon_e2,
                                int16_t utc_off_min) {
-  if (!s_ev) return;
+  if (!s_ev)
+    return;
   prv_set_from_forecast(today, lat_e2, lon_e2, utc_off_min);
-  if (s_ev->canvas) layer_mark_dirty(s_ev->canvas);
+  if (s_ev->canvas)
+    layer_mark_dirty(s_ev->canvas);
 }

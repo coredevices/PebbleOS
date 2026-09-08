@@ -56,16 +56,26 @@ static const CrumbsLayerSizeConfig *prv_crumb_config(void) {
   return &s_crumb_configs[runtime_platform_default_size];
 }
 
-int crumbs_layer_width(void) { return prv_crumb_config()->layer_width; }
+int crumbs_layer_width(void) {
+  return prv_crumb_config()->layer_width;
+}
 
-static int prv_crumb_radius(void) { return prv_crumb_config()->crumb_radius; }
+static int prv_crumb_radius(void) {
+  return prv_crumb_config()->crumb_radius;
+}
 
 #if PBL_RECT
-static int prv_crumb_x_position(void) { return prv_crumb_config()->layer_width / 2; }
+static int prv_crumb_x_position(void) {
+  return prv_crumb_config()->layer_width / 2;
+}
 
-static int prv_crumb_spacing(void) { return prv_crumb_config()->crumb_spacing; }
+static int prv_crumb_spacing(void) {
+  return prv_crumb_config()->crumb_spacing;
+}
 
-static int prv_crumb_space_from_top(void) { return prv_crumb_config()->crumb_space_from_top; }
+static int prv_crumb_space_from_top(void) {
+  return prv_crumb_config()->crumb_space_from_top;
+}
 #endif
 
 static int prv_crumb_maximum_count(void) {

@@ -26,9 +26,12 @@ QemuSerialGlobals s_state;
 
 // Setup
 ////////////////////////////////////
-void test_qemu_serial__initialize(void) { qemu_serial_private_init_state(&s_state); }
+void test_qemu_serial__initialize(void) {
+  qemu_serial_private_init_state(&s_state);
+}
 
-void test_qemu_serial__cleanup(void) {}
+void test_qemu_serial__cleanup(void) {
+}
 
 // ------------------------------------------------------------------------------------
 static void prv_send_bytes(void *p, uint32_t size) {

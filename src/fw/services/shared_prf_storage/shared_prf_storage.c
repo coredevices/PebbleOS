@@ -52,9 +52,13 @@ static PBL_MUTEX_DEFINE(s_sprf_mutex);
 // Helper functions
 //
 
-static void prv_lock(void) { pbl_mutex_lock(&s_sprf_mutex, PBL_FOREVER); }
+static void prv_lock(void) {
+  pbl_mutex_lock(&s_sprf_mutex, PBL_FOREVER);
+}
 
-static void prv_unlock(void) { pbl_mutex_unlock(&s_sprf_mutex); }
+static void prv_unlock(void) {
+  pbl_mutex_unlock(&s_sprf_mutex);
+}
 
 static bool prv_buffer_empty(const uint8_t *buf, size_t num_bytes) {
   for (uint32_t i = 0; i < num_bytes; i++) {
@@ -65,7 +69,9 @@ static bool prv_buffer_empty(const uint8_t *buf, size_t num_bytes) {
   return true;
 }
 
-static uint32_t prv_current_page_flash_addr(void) { return SPRF_PAGE_FLASH_ADDR(s_valid_page_idx); }
+static uint32_t prv_current_page_flash_addr(void) {
+  return SPRF_PAGE_FLASH_ADDR(s_valid_page_idx);
+}
 
 static SprfMagic prv_get_magic_for_page(uint32_t page) {
   SprfMagic magic;
@@ -192,7 +198,9 @@ static SharedPRFData *prv_alloc_and_fetch_struct(void) {
   return data;
 }
 
-static void prv_dealloc_struct(SharedPRFData *data) { kernel_free(data); }
+static void prv_dealloc_struct(SharedPRFData *data) {
+  kernel_free(data);
+}
 
 static void prv_persist_field(uint8_t *field, size_t offset, size_t field_size, bool calc_crc) {
   SharedPRFData *data = prv_alloc_and_fetch_struct();
@@ -620,9 +628,13 @@ void shared_prf_storage_store_bt_classic_pairing_data(BTDeviceAddress *addr,
   WTF;
 }
 
-void shared_prf_storage_store_platform_bits(uint8_t platform_bits) { WTF; }
+void shared_prf_storage_store_platform_bits(uint8_t platform_bits) {
+  WTF;
+}
 
-void shared_prf_storage_erase_bt_classic_pairing_data(void) { WTF; }
+void shared_prf_storage_erase_bt_classic_pairing_data(void) {
+  WTF;
+}
 
 void shared_prf_store_pairing_data(SMPairingInfo *pairing_info, const char *device_name_ble,
                                    BTDeviceAddress *addr, const char *device_name_classic,
@@ -630,12 +642,17 @@ void shared_prf_store_pairing_data(SMPairingInfo *pairing_info, const char *devi
   WTF;
 }
 
-void command_force_shared_prf_flush(void) {}
+void command_force_shared_prf_flush(void) {
+}
 
 //!
 //! Unit test functions
 //!
 
-uint16_t shared_prf_storage_get_valid_page_number(void) { return s_valid_page_idx; }
+uint16_t shared_prf_storage_get_valid_page_number(void) {
+  return s_valid_page_idx;
+}
 
-void shared_prf_storage_set_valid_page_number(uint32_t page_num) { s_valid_page_idx = page_num; }
+void shared_prf_storage_set_valid_page_number(uint32_t page_num) {
+  s_valid_page_idx = page_num;
+}

@@ -141,7 +141,8 @@ void test_contacts_db__initialize(void) {
   contacts_db_init();
 }
 
-void test_contacts_db__cleanup(void) {}
+void test_contacts_db__cleanup(void) {
+}
 
 // Tests
 ////////////////////////////////////////////////////////////////

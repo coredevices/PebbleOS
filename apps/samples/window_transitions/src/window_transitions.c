@@ -5,11 +5,15 @@
 
 static bool s_next_window_fullscreen;
 
-static void unload_handler(Window *window) { window_destroy(window); }
+static void unload_handler(Window *window) {
+  window_destroy(window);
+}
 
 static void push_window(void);
 
-static void select_click_handler(ClickRecognizerRef recognizer, void *context) { push_window(); }
+static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
+  push_window();
+}
 
 static void click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);

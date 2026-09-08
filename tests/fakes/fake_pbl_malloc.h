@@ -54,7 +54,9 @@ static void prv_pointer_list_remove(void *ptr) {
 static size_t s_max_size_allowed = ~0;
 
 static Heap s_heap;
-Heap *task_heap_get_for_current_task(void) { return &s_heap; }
+Heap *task_heap_get_for_current_task(void) {
+  return &s_heap;
+}
 
 static void *malloc_and_track(size_t bytes, void *lr) {
   if (bytes >= s_max_size_allowed) {
@@ -75,7 +77,9 @@ static void *calloc_and_track(int n, size_t bytes, void *lr) {
   return rt;
 }
 
-void fake_malloc_set_largest_free_block(size_t bytes) { s_max_size_allowed = bytes; }
+void fake_malloc_set_largest_free_block(size_t bytes) {
+  s_max_size_allowed = bytes;
+}
 
 static void free_and_track(void *ptr) {
   prv_pointer_list_remove(ptr);
@@ -93,7 +97,9 @@ void *realloc_and_track(void *ptr, size_t bytes, void *lr) {
   return new_ptr;
 }
 
-int fake_pbl_malloc_num_net_allocs(void) { return list_count((ListNode *)s_pointer_list); }
+int fake_pbl_malloc_num_net_allocs(void) {
+  return list_count((ListNode *)s_pointer_list);
+}
 
 void fake_pbl_malloc_check_net_allocs(void) {
   if (fake_pbl_malloc_num_net_allocs() > 0) {
@@ -117,7 +123,9 @@ void fake_pbl_malloc_clear_tracking(void) {
   s_max_size_allowed = ~0;
 }
 
-void *task_malloc(size_t bytes) { return malloc_and_track(bytes, __builtin_return_address(0)); }
+void *task_malloc(size_t bytes) {
+  return malloc_and_track(bytes, __builtin_return_address(0));
+}
 
 void *task_malloc_check(size_t bytes) {
   return malloc_and_track(bytes, __builtin_return_address(0));
@@ -149,29 +157,41 @@ void *task_calloc_check(size_t count, size_t size) {
   return calloc_and_track(count, size, __builtin_return_address(0));
 }
 
-void task_free(void *ptr) { free_and_track(ptr); }
+void task_free(void *ptr) {
+  free_and_track(ptr);
+}
 
 void *applib_zalloc(size_t bytes) {
   return calloc_and_track(1, bytes, __builtin_return_address(0));
 }
 
-void applib_free(void *ptr) { free_and_track(ptr); }
+void applib_free(void *ptr) {
+  free_and_track(ptr);
+}
 
-void *app_malloc(size_t bytes) { return malloc_and_track(bytes, __builtin_return_address(0)); }
+void *app_malloc(size_t bytes) {
+  return malloc_and_track(bytes, __builtin_return_address(0));
+}
 
 void *app_malloc_check(size_t bytes) {
   return malloc_and_track(bytes, __builtin_return_address(0));
 }
 
-void app_free(void *ptr) { free_and_track(ptr); }
+void app_free(void *ptr) {
+  free_and_track(ptr);
+}
 
-void *kernel_malloc(size_t bytes) { return malloc_and_track(bytes, __builtin_return_address(0)); }
+void *kernel_malloc(size_t bytes) {
+  return malloc_and_track(bytes, __builtin_return_address(0));
+}
 
 void *kernel_zalloc(size_t bytes) {
   return calloc_and_track(1, bytes, __builtin_return_address(0));
 }
 
-void *kernel_zalloc_check(size_t bytes) { return kernel_zalloc(bytes); }
+void *kernel_zalloc_check(size_t bytes) {
+  return kernel_zalloc(bytes);
+}
 
 void *kernel_malloc_check(size_t bytes) {
   return malloc_and_track(bytes, __builtin_return_address(0));
@@ -181,7 +201,9 @@ void *kernel_realloc(void *ptr, size_t bytes) {
   return realloc_and_track(ptr, bytes, __builtin_return_address(0));
 }
 
-void kernel_free(void *ptr) { free_and_track(ptr); }
+void kernel_free(void *ptr) {
+  free_and_track(ptr);
+}
 
 void *kernel_calloc(size_t count, size_t size) {
   return calloc_and_track(count, size, __builtin_return_address(0));
@@ -197,8 +219,14 @@ char *kernel_strdup(const char *s) {
   return r;
 }
 
-char *kernel_strdup_check(const char *s) { return kernel_strdup(s); }
+char *kernel_strdup_check(const char *s) {
+  return kernel_strdup(s);
+}
 
-char *task_strdup(const char *s) { return kernel_strdup(s); }
+char *task_strdup(const char *s) {
+  return kernel_strdup(s);
+}
 
-void smart_free(void *ptr) { free_and_track(ptr); }
+void smart_free(void *ptr) {
+  free_and_track(ptr);
+}

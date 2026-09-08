@@ -35,14 +35,18 @@ bool comm_session_send_data(CommSession *comm_session_ref, uint16_t endpoint_id,
 
 static int s_watch_color = 0x1;
 
-WatchInfoColor mfg_info_get_watch_color(void) { return s_watch_color; }
+WatchInfoColor mfg_info_get_watch_color(void) {
+  return s_watch_color;
+}
 
 bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
   cb(data);
   return true;
 }
 
-CommSession *comm_session_get_system_session(void) { return NULL; }
+CommSession *comm_session_get_system_session(void) {
+  return NULL;
+}
 
 // Tests
 /////////////////////////////////////////////////////////////////////

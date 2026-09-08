@@ -67,15 +67,23 @@ bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent *e) {
   return true;
 }
 
-bool process_manager_compiled_with_legacy2_sdk(void) { return false; }
+bool process_manager_compiled_with_legacy2_sdk(void) {
+  return false;
+}
 
-GDrawState graphics_context_get_drawing_state(GContext *ctx) { return (GDrawState){}; }
+GDrawState graphics_context_get_drawing_state(GContext *ctx) {
+  return (GDrawState){};
+}
 
-bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) { return false; }
+bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) {
+  return false;
+}
 
-void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {}
+void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {
+}
 
-void window_schedule_render(struct Window *window) {}
+void window_schedule_render(struct Window *window) {
+}
 
 TimerID animation_service_test_get_timer_id(void);
 
@@ -392,34 +400,58 @@ static uint32_t prv_count_scheduled_animations(void) {
 }
 
 // --------------------------------------------------------------------------------------
-static void prv_int16_setter(int16_t *p, int16_t value) { *p = value; }
+static void prv_int16_setter(int16_t *p, int16_t value) {
+  *p = value;
+}
 
-static int16_t prv_int16_getter(int16_t *p) { return *p; }
-
-// --------------------------------------------------------------------------------------
-static void prv_gpoint_setter(GPoint *p, GPoint value) { *p = value; }
-
-static GPoint prv_gpoint_getter(GPoint *p) { return *p; }
-
-// --------------------------------------------------------------------------------------
-static void prv_gtransform_setter(GTransform *p, GTransform value) { *p = value; }
-
-static GTransform prv_gtransform_getter(GTransform *p) { return *p; }
+static int16_t prv_int16_getter(int16_t *p) {
+  return *p;
+}
 
 // --------------------------------------------------------------------------------------
-static void prv_gcolor8_setter(GColor8 *p, GColor8 value) { *p = value; }
+static void prv_gpoint_setter(GPoint *p, GPoint value) {
+  *p = value;
+}
 
-static GColor8 prv_gcolor8_getter(GColor8 *p) { return *p; }
+static GPoint prv_gpoint_getter(GPoint *p) {
+  return *p;
+}
 
 // --------------------------------------------------------------------------------------
-static void prv_fixed_s32_16_setter(Fixed_S32_16 *p, Fixed_S32_16 value) { *p = value; }
+static void prv_gtransform_setter(GTransform *p, GTransform value) {
+  *p = value;
+}
 
-static Fixed_S32_16 prv_fixed_s32_16_getter(Fixed_S32_16 *p) { return *p; }
+static GTransform prv_gtransform_getter(GTransform *p) {
+  return *p;
+}
 
 // --------------------------------------------------------------------------------------
-static void prv_uint32_setter(int32_t *p, uint32_t value) { *p = value; }
+static void prv_gcolor8_setter(GColor8 *p, GColor8 value) {
+  *p = value;
+}
 
-static uint32_t prv_uint32_getter(uint32_t *p) { return *p; }
+static GColor8 prv_gcolor8_getter(GColor8 *p) {
+  return *p;
+}
+
+// --------------------------------------------------------------------------------------
+static void prv_fixed_s32_16_setter(Fixed_S32_16 *p, Fixed_S32_16 value) {
+  *p = value;
+}
+
+static Fixed_S32_16 prv_fixed_s32_16_getter(Fixed_S32_16 *p) {
+  return *p;
+}
+
+// --------------------------------------------------------------------------------------
+static void prv_uint32_setter(int32_t *p, uint32_t value) {
+  *p = value;
+}
+
+static uint32_t prv_uint32_getter(uint32_t *p) {
+  return *p;
+}
 
 // --------------------------------------------------------------------------------------
 // Helper function for creating a int16 property animation

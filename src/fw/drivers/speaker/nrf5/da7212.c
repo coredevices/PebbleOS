@@ -195,7 +195,9 @@ static void prv_codec_start_dai(AudioDevice *dev) {
   prv_codec_write(dev, DA7212_DAI_CLK_MODE, 0x81);
 }
 
-static void prv_codec_mute(AudioDevice *dev) { prv_codec_write(dev, DA7212_DAC_FILTERS5, 0x80); }
+static void prv_codec_mute(AudioDevice *dev) {
+  prv_codec_write(dev, DA7212_DAC_FILTERS5, 0x80);
+}
 
 static void prv_codec_power_down(AudioDevice *dev) {
   prv_codec_write(dev, DA7212_SYSTEM_ACTIVE, 0x00);

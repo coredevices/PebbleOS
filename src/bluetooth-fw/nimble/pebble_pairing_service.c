@@ -69,7 +69,8 @@ int pebble_pairing_service_get_connectivity_send_notification(uint16_t conn_hand
 
 static int prv_access_connection_status(uint16_t conn_handle, uint16_t attr_handle,
                                         struct ble_gatt_access_ctxt *ctxt, void *arg) {
-  if (ctxt->op != BLE_GATT_ACCESS_OP_READ_CHR) return 0;
+  if (ctxt->op != BLE_GATT_ACCESS_OP_READ_CHR)
+    return 0;
 
   PebblePairingServiceConnectivityStatus status;
   int rc = pebble_pairing_service_get_connectivity_status(conn_handle, &status);

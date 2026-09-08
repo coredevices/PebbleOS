@@ -56,7 +56,8 @@
 #include "stubs_workout_service.h"
 #include "stubs_ambient_light.h"
 
-void prefs_sync_init(void) {}
+void prefs_sync_init(void) {
+}
 
 // Fakes
 #include "fake_accel_service.h"
@@ -84,13 +85,15 @@ const int s_exp_5pm_resting_kcalories = 1031;
 const int s_exp_full_day_resting_kcalories = 1455;
 
 // Stub for health tracking disabled UI
-void health_tracking_ui_feature_show_disabled(void) {}
+void health_tracking_ui_feature_show_disabled(void) {
+}
 
 // These are declared as T_STATIC in activity.c
 void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context);
 void prv_minute_system_task_cb(void *data);
 
-void hrm_manager_handle_prefs_changed(void) {}
+void hrm_manager_handle_prefs_changed(void) {
+}
 
 #define ASSERT_EQUAL_I(i1, i2, file, line) \
   clar__assert_equal_i((i1), (i2), file, line, #i1 " != " #i2, 1)
@@ -99,23 +102,32 @@ void hrm_manager_handle_prefs_changed(void) {}
 // Misc stubs
 static HealthServiceState s_health_service;
 
-HealthServiceState *app_state_get_health_service_state(void) { return &s_health_service; }
+HealthServiceState *app_state_get_health_service_state(void) {
+  return &s_health_service;
+}
 
 HealthServiceState *worker_state_get_health_service_state(void) {
   cl_fail("should never be called");
   return NULL;
 }
 
-void event_service_client_subscribe(EventServiceInfo *service_info) {}
-void event_service_client_unsubscribe(EventServiceInfo *service_info) {}
+void event_service_client_subscribe(EventServiceInfo *service_info) {
+}
+void event_service_client_unsubscribe(EventServiceInfo *service_info) {
+}
 
-void sys_send_pebble_event_to_kernel(PebbleEvent *event) {}
+void sys_send_pebble_event_to_kernel(PebbleEvent *event) {
+}
 
 static UnitsDistance s_units_distance_result;
 
-UnitsDistance sys_shell_prefs_get_units_distance(void) { return s_units_distance_result; }
+UnitsDistance sys_shell_prefs_get_units_distance(void) {
+  return s_units_distance_result;
+}
 
-int32_t vibes_get_vibe_strength(void) { return VIBE_STRENGTH_OFF; }
+int32_t vibes_get_vibe_strength(void) {
+  return VIBE_STRENGTH_OFF;
+}
 
 HRMSessionRef s_hrm_next_session_ref = 1;
 static uint32_t s_hrm_manager_update_interval;
@@ -158,13 +170,16 @@ bool sys_hrm_manager_get_subscription_info(HRMSessionRef session, AppInstallId *
   return false;
 }
 
-AppInstallId app_get_app_id(void) { return 1; }
+AppInstallId app_get_app_id(void) {
+  return 1;
+}
 
 // ======================================================================================
 // Queue stubs, to support the semaphore that activity.c uses to block on a kernel BG callback
 int s_queue_value = 0;
 
-void pbl_sem_init(struct pbl_sem *s, uint32_t initial, uint32_t limit) {}
+void pbl_sem_init(struct pbl_sem *s, uint32_t initial, uint32_t limit) {
+}
 
 int pbl_sem_take(struct pbl_sem *s, pbl_timeout_t timeout) {
   while (s_queue_value <= 0) {
@@ -174,7 +189,9 @@ int pbl_sem_take(struct pbl_sem *s, pbl_timeout_t timeout) {
   return 0;
 }
 
-void pbl_sem_give(struct pbl_sem *s) { s_queue_value++; }
+void pbl_sem_give(struct pbl_sem *s) {
+  s_queue_value++;
+}
 
 // =============================================================================================
 // Data logging stubs
@@ -256,9 +273,13 @@ void dls_finish(DataLoggingSession *logging_session) {
 
 // =================================================================================
 // Measurement logging stubs
-ProtobufLogRef protobuf_log_hr_create(void) { return (ProtobufLogRef)1; }
+ProtobufLogRef protobuf_log_hr_create(void) {
+  return (ProtobufLogRef)1;
+}
 
-bool protobuf_log_session_delete(ProtobufLogRef session) { return true; }
+bool protobuf_log_session_delete(ProtobufLogRef session) {
+  return true;
+}
 
 bool protobuf_log_hr_add_sample(ProtobufLogRef ref, time_t now_utc, uint8_t bpm,
                                 HRMQuality quality) {
@@ -437,9 +458,12 @@ static void prv_activity_algorithm_erase_minute_data(void) {
   s_test_alg_state.minute_data.sleep_state = ActivitySleepStateAwake;
 }
 
-void activity_algorithm_early_deinit(void) {}
+void activity_algorithm_early_deinit(void) {
+}
 
-bool activity_algorithm_deinit(void) { return true; }
+bool activity_algorithm_deinit(void) {
+  return true;
+}
 
 void activity_algorithm_handle_accel(AccelRawData *data, uint32_t num_samples, uint64_t timestamp) {
   // For testing purposes, we'll use the x movement as the steps and y as the sleep state
@@ -608,7 +632,8 @@ bool activity_algorithm_get_sleep_sessions(time_t sleep_earliest_end_utc,
 }
 
 void activity_algorithm_post_process_sleep_sessions(uint16_t num_input_sessions,
-                                                    ActivitySession *sessions) {}
+                                                    ActivitySession *sessions) {
+}
 
 void activity_algorithm_minute_handler(time_t utc_sec, AlgMinuteRecord *record_out) {
   s_test_alg_state.last_sleep_utc = utc_sec;
@@ -616,7 +641,9 @@ void activity_algorithm_minute_handler(time_t utc_sec, AlgMinuteRecord *record_o
   record_out->data.base.orientation = s_test_alg_state.orientation;
 }
 
-bool activity_algorithm_dump_minute_data_to_log(void) { return false; }
+bool activity_algorithm_dump_minute_data_to_log(void) {
+  return false;
+}
 
 bool activity_algorithm_minute_file_info(bool compact_first, uint32_t *num_records,
                                          uint32_t *data_bytes, uint32_t *minutes) {
@@ -626,7 +653,9 @@ bool activity_algorithm_minute_file_info(bool compact_first, uint32_t *num_recor
   return true;
 }
 
-bool activity_algorithm_test_fill_minute_file(void) { return true; }
+bool activity_algorithm_test_fill_minute_file(void) {
+  return true;
+}
 
 // We simulate the activity_algorithm_get_minute_history() call to return data that reflects
 // that we record chunks of ALG_MINUTES_PER_RECORD minutes at a time. If we don't ask on a
@@ -669,9 +698,13 @@ bool activity_algorithm_get_minute_history(HealthMinuteData *minute_data, uint32
   return true;
 }
 
-time_t activity_algorithm_get_last_sleep_utc(void) { return s_test_alg_state.last_sleep_utc; }
+time_t activity_algorithm_get_last_sleep_utc(void) {
+  return s_test_alg_state.last_sleep_utc;
+}
 
-bool activity_algorithm_test_send_fake_minute_data_dls_record(void) { return true; }
+bool activity_algorithm_test_send_fake_minute_data_dls_record(void) {
+  return true;
+}
 
 // =========================================================================================
 // Tests
@@ -2740,7 +2773,9 @@ static void prv_set_median_hr_for_minutes(int bpm, int num_minutes) {
   }
 }
 
-static bool prv_is_hr_elevated(void) { return activity_private_state()->hr.metrics.is_hr_elevated; }
+static bool prv_is_hr_elevated(void) {
+  return activity_private_state()->hr.metrics.is_hr_elevated;
+}
 
 void test_activity__update_time_in_hr_zones(void) {
   int32_t zone1_minutes, zone2_minutes, zone3_minutes;

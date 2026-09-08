@@ -9,7 +9,9 @@ void graphics_circle_quadrant_draw(GContext *ctx, GPoint p, uint16_t radius, GCo
 }
 
 void graphics_circle_quadrant_fill_non_aa(GContext *ctx, GPoint p, uint16_t radius,
-                                          GCornerMask quadrant) {}
+                                          GCornerMask quadrant) {
+}
 
 void graphics_internal_circle_quadrant_fill_aa(GContext *ctx, GPoint p, uint16_t radius,
-                                               GCornerMask quadrant) {}
+                                               GCornerMask quadrant) {
+}

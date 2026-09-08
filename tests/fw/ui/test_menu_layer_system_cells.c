@@ -27,19 +27,28 @@
 static bool s_cell_is_highlighted = false;
 
 // TODO PBL-23041: When round MenuLayer animations are enabled, we need a "is_selected" function
-bool menu_cell_layer_is_highlighted(const Layer *cell_layer) { return s_cell_is_highlighted; }
+bool menu_cell_layer_is_highlighted(const Layer *cell_layer) {
+  return s_cell_is_highlighted;
+}
 
 // Controllable replacement for stubs_pebble_tasks.h so tests can simulate an app task
 
 static PebbleTask s_current_task = PebbleTask_KernelMain;
 
-PebbleTask pebble_task_get_current(void) { return s_current_task; }
+PebbleTask pebble_task_get_current(void) {
+  return s_current_task;
+}
 
-struct pbl_thread *pebble_task_get_thread(PebbleTask task) { return NULL; }
+struct pbl_thread *pebble_task_get_thread(PebbleTask task) {
+  return NULL;
+}
 
-const char *pebble_task_get_name(PebbleTask task) { return NULL; }
+const char *pebble_task_get_name(PebbleTask task) {
+  return NULL;
+}
 
-void pebble_task_unregister(PebbleTask task) {}
+void pebble_task_unregister(PebbleTask task) {
+}
 
 struct pbl_thread *pebble_task_create(PebbleTask pebble_task, struct pbl_thread_attr *attr) {
   return NULL;
@@ -48,7 +57,9 @@ struct pbl_thread *pebble_task_create(PebbleTask pebble_task, struct pbl_thread_
 //! System install ids are negative, app-db (third-party) install ids are positive
 static AppInstallId s_current_process_id = (AppInstallId)(-1);
 
-AppInstallId sys_process_manager_get_current_process_id(void) { return s_current_process_id; }
+AppInstallId sys_process_manager_get_current_process_id(void) {
+  return s_current_process_id;
+}
 
 // Stubs
 /////////////////////
@@ -81,18 +92,23 @@ AppInstallId sys_process_manager_get_current_process_id(void) { return s_current
 #include "stubs_unobstructed_area.h"
 
 void window_long_click_subscribe(ButtonId button_id, uint16_t delay_ms, ClickHandler down_handler,
-                                 ClickHandler up_handler) {}
+                                 ClickHandler up_handler) {
+}
 
 void window_set_click_config_provider_with_context(Window *window,
                                                    ClickConfigProvider click_config_provider,
-                                                   void *context) {}
+                                                   void *context) {
+}
 
-void window_set_click_context(ButtonId button_id, void *context) {}
+void window_set_click_context(ButtonId button_id, void *context) {
+}
 
-void window_single_click_subscribe(ButtonId button_id, ClickHandler handler) {}
+void window_single_click_subscribe(ButtonId button_id, ClickHandler handler) {
+}
 
 void window_single_repeating_click_subscribe(ButtonId button_id, uint16_t repeat_interval_ms,
-                                             ClickHandler handler) {}
+                                             ClickHandler handler) {
+}
 
 // Helper Functions
 /////////////////////

@@ -14,13 +14,18 @@
 #include "stubs_sleep.h"
 #include "stubs_task_watchdog.h"
 
-void flash_read_bytes(uint8_t *buffer, uint32_t start_addr, uint32_t buffer_size) {}
-void flash_write_bytes(const uint8_t *buffer, uint32_t start_addr, uint32_t buffer_size) {}
+void flash_read_bytes(uint8_t *buffer, uint32_t start_addr, uint32_t buffer_size) {
+}
+void flash_write_bytes(const uint8_t *buffer, uint32_t start_addr, uint32_t buffer_size) {
+}
 
 // Fakes
 ///////////////////////////////////////////////////////////
 
-typedef enum EraseCommandType { SectorEraseCommand, SubsectorEraseCommand } EraseCommandType;
+typedef enum EraseCommandType {
+  SectorEraseCommand,
+  SubsectorEraseCommand
+} EraseCommandType;
 
 typedef struct EraseCommand {
   uint32_t addr;
@@ -43,9 +48,12 @@ void flash_erase_sector_blocking(uint32_t subsector_addr) {
 // Tests
 ///////////////////////////////////////////////////////////
 
-void test_flash_region__initialize(void) { s_command_list_index = 0; }
+void test_flash_region__initialize(void) {
+  s_command_list_index = 0;
+}
 
-void test_flash_region__cleanup(void) {}
+void test_flash_region__cleanup(void) {
+}
 
 void test_flash_region__erase_optimal_range_empty(void) {
   flash_region_erase_optimal_range(0, 0, 0, 0);

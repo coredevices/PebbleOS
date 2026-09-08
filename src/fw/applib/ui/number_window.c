@@ -20,7 +20,9 @@
 #endif
 
 // updates the textual output value of the numberwindow to match the actual value
-static void update_output_value(NumberWindow *nf) { layer_mark_dirty(&nf->window.layer); }
+static void update_output_value(NumberWindow *nf) {
+  layer_mark_dirty(&nf->window.layer);
+}
 
 static void up_click_handler(ClickRecognizerRef recognizer, NumberWindow *nf) {
   bool is_increased = false;
@@ -155,9 +157,13 @@ void number_window_set_value(NumberWindow *nf, int32_t value) {
   update_output_value(nf);
 }
 
-void number_window_set_step_size(NumberWindow *nf, int32_t step) { nf->step_size = step; }
+void number_window_set_step_size(NumberWindow *nf, int32_t step) {
+  nf->step_size = step;
+}
 
-int32_t number_window_get_value(const NumberWindow *nf) { return nf->value; }
+int32_t number_window_get_value(const NumberWindow *nf) {
+  return nf->value;
+}
 
 static void number_window_load(NumberWindow *nw) {
   ActionBarLayer *action_bar = &nw->action_bar;
@@ -212,4 +218,6 @@ void number_window_destroy(NumberWindow *number_window) {
   applib_free(number_window);
 }
 
-Window *number_window_get_window(NumberWindow *numberwindow) { return (&numberwindow->window); }
+Window *number_window_get_window(NumberWindow *numberwindow) {
+  return (&numberwindow->window);
+}

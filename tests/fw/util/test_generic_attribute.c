@@ -12,9 +12,11 @@
 #include "stubs_rand_ptr.h"
 
 // setup and teardown
-void test_generic_attribute__initialize(void) {}
+void test_generic_attribute__initialize(void) {
+}
 
-void test_generic_attribute__cleanup(void) {}
+void test_generic_attribute__cleanup(void) {
+}
 
 // tests
 

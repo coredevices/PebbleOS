@@ -37,7 +37,12 @@ extern const ReceiverImplementation g_default_kernel_receiver_implementation;
 extern const PebbleTask g_default_kernel_receiver_opt_bg;
 extern const PebbleTask g_default_kernel_receiver_opt_main;
 
-typedef enum { HandlerA = 0, HandlerB, HandlerC, NumHandlers } FakeProtocolHandlers;
+typedef enum {
+  HandlerA = 0,
+  HandlerB,
+  HandlerC,
+  NumHandlers
+} FakeProtocolHandlers;
 
 static int s_handler_call_count[NumHandlers] = {0};
 

@@ -20,13 +20,21 @@ typedef enum {
 } UserSpaceBufferValidity;
 static UserSpaceBufferValidity s_addr_result;
 
-uint32_t dcache_line_size(void) { return cl_mock_type(size_t); }
+uint32_t dcache_line_size(void) {
+  return cl_mock_type(size_t);
+}
 
-uint32_t icache_line_size(void) { return cl_mock_type(size_t); }
+uint32_t icache_line_size(void) {
+  return cl_mock_type(size_t);
+}
 
-bool dcache_is_enabled(void) { return cl_mock_type(bool); }
+bool dcache_is_enabled(void) {
+  return cl_mock_type(bool);
+}
 
-bool icache_is_enabled(void) { return cl_mock_type(bool); }
+bool icache_is_enabled(void) {
+  return cl_mock_type(bool);
+}
 
 void icache_invalidate(void *addr, size_t size) {
   s_invalidate_size = size;

@@ -14,9 +14,12 @@
 #define PNG_LOAD_ERROR "Failed to load PNG"
 
 static GBitmapFormat prv_get_format_for_bpp(uint8_t bits_per_pixel) {
-  if (bits_per_pixel == 1) return GBitmapFormat1BitPalette;
-  if (bits_per_pixel == 2) return GBitmapFormat2BitPalette;
-  if (bits_per_pixel == 4) return GBitmapFormat4BitPalette;
+  if (bits_per_pixel == 1)
+    return GBitmapFormat1BitPalette;
+  if (bits_per_pixel == 2)
+    return GBitmapFormat2BitPalette;
+  if (bits_per_pixel == 4)
+    return GBitmapFormat4BitPalette;
   return GBitmapFormat8Bit;
 }
 

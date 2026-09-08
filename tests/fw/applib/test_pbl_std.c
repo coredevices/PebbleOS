@@ -27,9 +27,12 @@
 
 // Overrides
 //////////////////////////////////////////////////////////
-void sys_get_time_ms(time_t *t, uint16_t *out_ms) {}
+void sys_get_time_ms(time_t *t, uint16_t *out_ms) {
+}
 
-time_t sys_time_utc_to_local(time_t t) { return t; }
+time_t sys_time_utc_to_local(time_t t) {
+  return t;
+}
 
 size_t localized_strftime(char *s, size_t maxsize, const char *format, const struct tm *tim_p,
                           char *locale) {
@@ -41,15 +44,21 @@ const char *get_timezone_abbr(void) {
   return s_timezone_abbr;
 }
 
-int32_t time_get_gmtoffset(void) { return 0; }
-int32_t time_get_dstoffset(void) { return 0; }
+int32_t time_get_gmtoffset(void) {
+  return 0;
+}
+int32_t time_get_dstoffset(void) {
+  return 0;
+}
 
 void sys_copy_timezone_abbr(char *timezone_abbr, time_t time) {
   const char *sys_tz = get_timezone_abbr();
   strncpy(timezone_abbr, sys_tz, TZ_LEN);
 }
 
-struct tm *sys_gmtime_r(const time_t *timep, struct tm *result) { return gmtime_r(timep, result); }
+struct tm *sys_gmtime_r(const time_t *timep, struct tm *result) {
+  return gmtime_r(timep, result);
+}
 
 struct tm *sys_localtime_r(const time_t *timep, struct tm *result) {
   return localtime_r(timep, result);

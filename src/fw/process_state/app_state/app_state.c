@@ -225,7 +225,9 @@ static const TouchNavOps s_app_touch_nav_ops = {
 
 // Twin subscription effects for the app task. The subscribe/reconcile state machine lives in
 // touch_nav.c; these ops bind it to the app task's touch service slot and nav state.
-static bool prv_app_twin_pref_enabled(void *ctx) { return touch_nav_enabled(); }
+static bool prv_app_twin_pref_enabled(void *ctx) {
+  return touch_nav_enabled();
+}
 
 static bool prv_app_twin_master_enabled(void *ctx) {
   // The master "Touch" switch IS the global touch kill: an opted-in app follows it alone.
@@ -336,42 +338,74 @@ NOINLINE void app_state_deinit(void) {
   unobstructed_area_service_deinit(app_state_get_unobstructed_area_state());
 }
 
-Heap *app_state_get_heap(void) { return &s_app_state_ptr->heap; }
+Heap *app_state_get_heap(void) {
+  return &s_app_state_ptr->heap;
+}
 
-struct tm *app_state_get_gmtime_tm(void) { return &s_app_state_ptr->gmtime_tm; }
-struct tm *app_state_get_localtime_tm(void) { return &s_app_state_ptr->localtime_tm; }
-char *app_state_get_localtime_zone(void) { return s_app_state_ptr->localtime_zone; }
-void *app_state_get_rand_ptr(void) { return &s_app_state_ptr->rand_seed; }
+struct tm *app_state_get_gmtime_tm(void) {
+  return &s_app_state_ptr->gmtime_tm;
+}
+struct tm *app_state_get_localtime_tm(void) {
+  return &s_app_state_ptr->localtime_tm;
+}
+char *app_state_get_localtime_zone(void) {
+  return s_app_state_ptr->localtime_zone;
+}
+void *app_state_get_rand_ptr(void) {
+  return &s_app_state_ptr->rand_seed;
+}
 
-AppInbox **app_state_get_app_message_inbox(void) { return &s_app_state_ptr->app_message_inbox; }
+AppInbox **app_state_get_app_message_inbox(void) {
+  return &s_app_state_ptr->app_message_inbox;
+}
 
 EventServiceInfo *app_state_get_app_outbox_subscription_info(void) {
   return &s_app_state_ptr->app_outbox_subscription_info;
 }
 
-AnimationState *app_state_get_animation_state() { return &s_app_state_ptr->animation_state; }
+AnimationState *app_state_get_animation_state() {
+  return &s_app_state_ptr->animation_state;
+}
 
-AppMessageCtx *app_state_get_app_message_ctx(void) { return &s_app_state_ptr->app_message_ctx; }
+AppMessageCtx *app_state_get_app_message_ctx(void) {
+  return &s_app_state_ptr->app_message_ctx;
+}
 
-BLEAppState *app_state_get_ble_app_state(void) { return &s_app_state_ptr->ble_app_state; }
+BLEAppState *app_state_get_ble_app_state(void) {
+  return &s_app_state_ptr->ble_app_state;
+}
 
-ClickManager *app_state_get_click_manager() { return &s_app_state_ptr->click_manager; }
+ClickManager *app_state_get_click_manager() {
+  return &s_app_state_ptr->click_manager;
+}
 
-WindowStack *app_state_get_window_stack() { return &s_app_state_ptr->window_stack; }
+WindowStack *app_state_get_window_stack() {
+  return &s_app_state_ptr->window_stack;
+}
 
-FrameBuffer *app_state_get_framebuffer() { return &s_app_state_ptr->framebuffer; }
+FrameBuffer *app_state_get_framebuffer() {
+  return &s_app_state_ptr->framebuffer;
+}
 
-GContext *app_state_get_graphics_context() { return &s_app_state_ptr->graphics_context; }
+GContext *app_state_get_graphics_context() {
+  return &s_app_state_ptr->graphics_context;
+}
 
 EventServiceInfo *app_state_get_event_service_state(void) {
   return &s_app_state_ptr->event_service_state;
 }
 
-void app_state_set_user_data(void *data) { s_app_state_ptr->user_data = data; }
+void app_state_set_user_data(void *data) {
+  s_app_state_ptr->user_data = data;
+}
 
-void *app_state_get_user_data(void) { return s_app_state_ptr->user_data; }
+void *app_state_get_user_data(void) {
+  return s_app_state_ptr->user_data;
+}
 
-AccelServiceState *app_state_get_accel_state(void) { return &s_app_state_ptr->accel_state; }
+AccelServiceState *app_state_get_accel_state(void) {
+  return &s_app_state_ptr->accel_state;
+}
 
 CompassServiceConfig **app_state_get_compass_config(void) {
   return &s_app_state_ptr->compass_config;
@@ -381,7 +415,9 @@ PluginServiceState *app_state_get_plugin_service(void) {
   return &s_app_state_ptr->plugin_service_state;
 }
 
-LogState *app_state_get_log_state(void) { return &s_app_state_ptr->log_state; }
+LogState *app_state_get_log_state(void) {
+  return &s_app_state_ptr->log_state;
+}
 
 BatteryStateServiceState *app_state_get_battery_state_service_state(void) {
   return &s_app_state_ptr->battery_state_service_state;
@@ -411,23 +447,33 @@ ContentIndicatorsBuffer *app_state_get_content_indicators_buffer(void) {
   return &s_app_state_ptr->content_indicators_buffer;
 }
 
-LocaleInfo *app_state_get_locale_info(void) { return &s_app_state_ptr->locale_info; }
+LocaleInfo *app_state_get_locale_info(void) {
+  return &s_app_state_ptr->locale_info;
+}
 
 bool *app_state_get_framebuffer_render_pending() {
   return &s_app_state_ptr->app_framebuffer_render_pending;
 }
 
-Layer **app_state_get_layer_tree_stack(void) { return s_app_state_ptr->layer_tree_stack; }
+Layer **app_state_get_layer_tree_stack(void) {
+  return s_app_state_ptr->layer_tree_stack;
+}
 
-AppFocusState *app_state_get_app_focus_state(void) { return &s_app_state_ptr->app_focus_state; }
+AppFocusState *app_state_get_app_focus_state(void) {
+  return &s_app_state_ptr->app_focus_state;
+}
 
 UnobstructedAreaState *app_state_get_unobstructed_area_state(void) {
   return &s_app_state_ptr->unobstructed_area_service_state;
 }
 
-AppGlance *app_state_get_glance(void) { return &s_app_state_ptr->glance; }
+AppGlance *app_state_get_glance(void) {
+  return &s_app_state_ptr->glance;
+}
 
-WakeupHandler app_state_get_wakeup_handler(void) { return s_app_state_ptr->wakeup_handler; }
+WakeupHandler app_state_get_wakeup_handler(void) {
+  return s_app_state_ptr->wakeup_handler;
+}
 
 void app_state_set_wakeup_handler(WakeupHandler handler) {
   s_app_state_ptr->wakeup_handler = handler;
@@ -445,9 +491,13 @@ void app_state_set_speaker_finish_handler(SpeakerFinishedCallback handler) {
   s_app_state_ptr->speaker_finish_handler = handler;
 }
 
-void *app_state_get_speaker_finish_ctx(void) { return s_app_state_ptr->speaker_finish_ctx; }
+void *app_state_get_speaker_finish_ctx(void) {
+  return s_app_state_ptr->speaker_finish_ctx;
+}
 
-void app_state_set_speaker_finish_ctx(void *ctx) { s_app_state_ptr->speaker_finish_ctx = ctx; }
+void app_state_set_speaker_finish_ctx(void *ctx) {
+  s_app_state_ptr->speaker_finish_ctx = ctx;
+}
 
 EventServiceInfo *app_state_get_speaker_finish_event_info(void) {
   return &s_app_state_ptr->speaker_finish_event_info;
@@ -459,13 +509,17 @@ GBitmap *app_state_legacy2_get_2bit_framebuffer(void) {
 }
 
 #ifdef CONFIG_TOUCH
-RecognizerList *app_state_get_recognizer_list(void) { return &s_app_state_ptr->recognizer_list; }
+RecognizerList *app_state_get_recognizer_list(void) {
+  return &s_app_state_ptr->recognizer_list;
+}
 
 RecognizerManager *app_state_get_recognizer_manager(void) {
   return &s_app_state_ptr->recognizer_manager;
 }
 
-TouchNavState *app_state_get_touch_nav_state(void) { return &s_app_state_ptr->touch_nav_state; }
+TouchNavState *app_state_get_touch_nav_state(void) {
+  return &s_app_state_ptr->touch_nav_state;
+}
 
 void app_touch_nav_subscribe(void) {
   // Install the nav dispatcher into the touch service system slot only when the twin gate passes:
@@ -475,7 +529,9 @@ void app_touch_nav_subscribe(void) {
                                s_app_state_ptr->touch_nav_opted_in);
 }
 
-void app_touch_nav_unsubscribe(void) { prv_app_twin_remove_handler(NULL); }
+void app_touch_nav_unsubscribe(void) {
+  prv_app_twin_remove_handler(NULL);
+}
 
 void app_touch_nav_resync(void) {
   // Re-evaluate the gate for the running app after a pref flip: keeps an opted-in app subscribed

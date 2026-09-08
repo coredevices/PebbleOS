@@ -196,7 +196,9 @@ extern uint16_t gatt_client_characteristic_get_handle_and_connection(
     BLECharacteristic characteristic_ref, GAPLEConnection **connection_out);
 
 // -------------------------------------------------------------------------------------------------
-void ppogatt_reset_disconnect_counter(void) { s_disconnect_counter = 0; }
+void ppogatt_reset_disconnect_counter(void) {
+  s_disconnect_counter = 0;
+}
 
 static bool prv_client_supports_enhanced_throughput_features(const PPoGATTClient *client) {
   // In PPoGATT V1, two features were added to allow for enhanced throughput:
@@ -266,7 +268,9 @@ static uint32_t prv_num_packets_in_flight(const PPoGATTClient *client) {
   return prv_sn_distance(client->out.next_expected_ack_sn, client->out.next_data_sn);
 }
 
-static uint32_t prv_next_sn(uint32_t current_sn) { return (current_sn + 1) % PPOGATT_SN_MOD_DIV; }
+static uint32_t prv_next_sn(uint32_t current_sn) {
+  return (current_sn + 1) % PPOGATT_SN_MOD_DIV;
+}
 
 static uint32_t prv_prev_sn(uint32_t sn) {
   return ((PPOGATT_SN_MOD_DIV + sn - 1) % PPOGATT_SN_MOD_DIV);
@@ -1807,7 +1811,9 @@ bool ppogatt_has_client_for_uuid(const Uuid *uuid) {
   return (prv_find_client_with_uuid(uuid) != NULL);
 }
 
-uint32_t ppogatt_client_count(void) { return list_count((ListNode *)s_ppogatt_head); }
+uint32_t ppogatt_client_count(void) {
+  return list_count((ListNode *)s_ppogatt_head);
+}
 
 void ppogatt_trigger_rx_ack_send_timeout(void) {
   PPoGATTClient *client = s_ppogatt_head;

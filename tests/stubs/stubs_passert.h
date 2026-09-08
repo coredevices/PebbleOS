@@ -25,7 +25,8 @@ void passert_failed(const char *filename, int line_number, const char *message, 
     // I'm lazy, don't bother formatting the message.
     cl_fail(message);
   }
-  while (1);
+  while (1)
+    ;
 }
 
 void passert_failed_no_message(const char *filename, int line_number) {
@@ -38,17 +39,20 @@ void passert_failed_no_message_with_lr(const char *filename, int line_number, ui
 
 void croak(const char *filename, int line_number, const char *fmt, ...) {
   cl_fail(fmt);
-  while (1);
+  while (1)
+    ;
 }
 
 typedef struct Heap Heap;
 
 void croak_oom(size_t bytes, int saved_lr, Heap *heap_ptr) {
   cl_fail("CROAK OOM");
-  while (1);
+  while (1)
+    ;
 }
 
 void wtf(void) {
   cl_fail("WTF");
-  while (1);
+  while (1)
+    ;
 }

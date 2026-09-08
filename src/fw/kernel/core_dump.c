@@ -322,7 +322,8 @@ static void prv_thread_info_cb(const struct pbl_thread_info *task_info, void *da
     kaboom();
   }
   if (s_test_force_inf_loop) {
-    while (true);
+    while (true)
+      ;
   }
   if (s_test_force_assert) {
     PBL_ASSERTN(false);
@@ -758,8 +759,14 @@ cleanup:
 // --------------------------------------------------------------------------------------------------
 // Used by unit tests in to cause fw/apps/demo/test_core_dump_app to encounter a bus fault during
 // the core dump
-void core_dump_test_force_bus_fault(void) { s_test_force_bus_fault = true; }
+void core_dump_test_force_bus_fault(void) {
+  s_test_force_bus_fault = true;
+}
 
-void core_dump_test_force_inf_loop(void) { s_test_force_inf_loop = true; }
+void core_dump_test_force_inf_loop(void) {
+  s_test_force_inf_loop = true;
+}
 
-void core_dump_test_force_assert(void) { s_test_force_assert = true; }
+void core_dump_test_force_assert(void) {
+  s_test_force_assert = true;
+}

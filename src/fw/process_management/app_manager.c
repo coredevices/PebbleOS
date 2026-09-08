@@ -95,12 +95,18 @@ void app_manager_init(void) {
 }
 
 // ---------------------------------------------------------------------------------------------
-bool app_manager_is_initialized(void) { return s_initialized; }
+bool app_manager_is_initialized(void) {
+  return s_initialized;
+}
 
 static bool s_first_app_launched = false;
-bool app_manager_is_first_app_launched(void) { return s_first_app_launched; }
+bool app_manager_is_first_app_launched(void) {
+  return s_first_app_launched;
+}
 
-WakeupInfo app_manager_get_app_wakeup_state(void) { return s_next_app.wakeup_info; }
+WakeupInfo app_manager_get_app_wakeup_state(void) {
+  return s_next_app.wakeup_info;
+}
 
 // ---------------------------------------------------------------------------------------------
 //! This is the wrapper function for all apps here. It's not allowed to return as it's
@@ -138,7 +144,9 @@ static void prv_app_task_main(void *entry_point) {
 //! have to be locked because they're the sole property of the process and no
 //! other tasks should be touching it. All this function does is verify that
 //! this condition is met before continuing without locking.
-static void prv_heap_lock(void *unused) { PBL_ASSERT_TASK(PebbleTask_App); }
+static void prv_heap_lock(void *unused) {
+  PBL_ASSERT_TASK(PebbleTask_App);
+}
 
 void prv_dump_start_app_info(const PebbleProcessMd *app_md) {
   char *app_type = "";
@@ -215,7 +223,9 @@ T_STATIC MemorySegment prv_get_app_ram_segment(void) {
   return (MemorySegment){__APP_RAM__, __APP_RAM_end__};
 }
 
-T_STATIC size_t prv_get_stack_guard_size(void) { return (uintptr_t)__stack_guard_size__; }
+T_STATIC size_t prv_get_stack_guard_size(void) {
+  return (uintptr_t)__stack_guard_size__;
+}
 
 // ---------------------------------------------------------------------------------------------
 //! @return True on success, False if:
@@ -757,11 +767,17 @@ void app_manager_force_quit_to_launcher(void) {
   prv_app_switch(true /*gracefully*/);
 }
 
-const PebbleProcessMd *app_manager_get_current_app_md(void) { return s_app_task_context.app_md; }
+const PebbleProcessMd *app_manager_get_current_app_md(void) {
+  return s_app_task_context.app_md;
+}
 
-AppInstallId app_manager_get_current_app_id(void) { return s_app_task_context.install_id; }
+AppInstallId app_manager_get_current_app_id(void) {
+  return s_app_task_context.install_id;
+}
 
-ProcessContext *app_manager_get_task_context(void) { return &s_app_task_context; }
+ProcessContext *app_manager_get_task_context(void) {
+  return &s_app_task_context;
+}
 
 bool app_manager_is_watchface_running(void) {
   return (app_manager_get_current_app_md()->process_type == ProcessTypeWatchface);
@@ -771,9 +787,13 @@ ResAppNum app_manager_get_current_resource_num(void) {
   return process_metadata_get_res_bank_num(s_app_task_context.app_md);
 }
 
-AppLaunchReason app_manager_get_launch_reason(void) { return s_next_app.common.reason; }
+AppLaunchReason app_manager_get_launch_reason(void) {
+  return s_next_app.common.reason;
+}
 
-ButtonId app_manager_get_launch_button(void) { return s_next_app.common.button; }
+ButtonId app_manager_get_launch_button(void) {
+  return s_next_app.common.button;
+}
 
 void app_manager_get_framebuffer_size(GSize *size) {
   if (size == NULL) {
@@ -869,7 +889,9 @@ DEFINE_SYSCALL(PlatformType, sys_get_current_app_sdk_platform, void) {
   return process_metadata_get_app_sdk_platform(app_manager_get_current_app_md());
 }
 
-DEFINE_SYSCALL(bool, sys_app_is_watchface, void) { return app_manager_is_watchface_running(); }
+DEFINE_SYSCALL(bool, sys_app_is_watchface, void) {
+  return app_manager_is_watchface_running();
+}
 
 DEFINE_SYSCALL(ResAppNum, sys_get_current_resource_num, void) {
   if (pebble_task_get_current() == PebbleTask_KernelMain) {

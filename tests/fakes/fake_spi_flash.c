@@ -27,7 +27,9 @@ typedef struct FakeFlashState {
 
 static FakeFlashState s_state = {0};
 
-void fake_spi_flash_erase(void) { memset(s_state.storage, 0xff, s_state.length); }
+void fake_spi_flash_erase(void) {
+  memset(s_state.storage, 0xff, s_state.length);
+}
 
 void fake_spi_flash_cleanup(void) {
   free(s_state.storage);
@@ -184,6 +186,10 @@ uint32_t flash_get_sector_base_address(uint32_t flash_addr) {
   return (flash_addr & ~(SECTOR_SIZE_BYTES - 1));
 }
 
-uint32_t fake_flash_write_count(void) { return s_state.write_count; }
+uint32_t fake_flash_write_count(void) {
+  return s_state.write_count;
+}
 
-uint32_t fake_flash_erase_count(void) { return s_state.erase_count; }
+uint32_t fake_flash_erase_count(void) {
+  return s_state.erase_count;
+}

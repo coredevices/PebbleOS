@@ -52,4 +52,6 @@ bool mbuf_iterator_write_byte(MBufIterator *iter, uint8_t data) {
   return true;
 }
 
-MBuf *mbuf_iterator_get_current_mbuf(MBufIterator *iter) { return iter->m; }
+MBuf *mbuf_iterator_get_current_mbuf(MBufIterator *iter) {
+  return iter->m;
+}

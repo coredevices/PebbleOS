@@ -31,7 +31,9 @@ static Layer *s_active_layer;
 static RecognizerManager *s_manager;
 static TestImplData s_test_impl_data;
 
-RecognizerList *app_state_get_recognizer_list(void) { return s_app_list; }
+RecognizerList *app_state_get_recognizer_list(void) {
+  return s_app_list;
+}
 
 RecognizerList *window_get_recognizer_list(Window *window) {
   if (!window) {
@@ -40,7 +42,9 @@ RecognizerList *window_get_recognizer_list(Window *window) {
   return layer_get_recognizer_list(&window->layer);
 }
 
-RecognizerManager *window_get_recognizer_manager(Window *window) { return s_manager; }
+RecognizerManager *window_get_recognizer_manager(Window *window) {
+  return s_manager;
+}
 
 struct Layer *window_get_root_layer(const Window *window) {
   if (!window) {
@@ -68,11 +72,15 @@ static bool prv_simultaneous_with_cb(const Recognizer *recognizer,
   return true;
 }
 
-static void prv_handle_touch_event(Recognizer *recognizer, const TouchEvent *touch_event) {}
+static void prv_handle_touch_event(Recognizer *recognizer, const TouchEvent *touch_event) {
+}
 
-static bool prv_cancel(Recognizer *recognizer) { return false; }
+static bool prv_cancel(Recognizer *recognizer) {
+  return false;
+}
 
-static void prv_reset(Recognizer *recognizer) {}
+static void prv_reset(Recognizer *recognizer) {
+}
 
 static RecognizerImpl s_dummy_impl;
 
@@ -123,7 +131,8 @@ static void prv_compare_recognizers_processed(int indices[], uint32_t count, Lis
   prv_clear_recognizers_processed(list);
 }
 
-static void prv_sub_event_handler(const Recognizer *recognizer, RecognizerEvent event) {}
+static void prv_sub_event_handler(const Recognizer *recognizer, RecognizerEvent event) {
+}
 
 // setup and teardown
 void test_recognizer_manager__initialize(void) {

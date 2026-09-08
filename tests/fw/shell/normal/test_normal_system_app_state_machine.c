@@ -13,22 +13,34 @@
 #include "stubs_app_manager.h"
 #include "stubs_watchface.h"
 
-bool battery_monitor_critical_lockout(void) { return false; }
+bool battery_monitor_critical_lockout(void) {
+  return false;
+}
 
-bool low_power_is_active(void) { return false; }
+bool low_power_is_active(void) {
+  return false;
+}
 
-uint32_t launcher_panic_get_current_error(void) { return 0; }
+uint32_t launcher_panic_get_current_error(void) {
+  return 0;
+}
 
-bool recovery_first_use_is_complete(void) { return true; }
+bool recovery_first_use_is_complete(void) {
+  return true;
+}
 
 #include "system/bootbits.h"
-bool boot_bit_test(BootBitValue bit) { return false; }
+bool boot_bit_test(BootBitValue bit) {
+  return false;
+}
 
 // Use this macro to define a PebbleProcessMd* getter function and an associated constant
 // that it will return.
 #define DEFINE_STUB_APP(FUNC_NAME, RESULT_VAL)                           \
   static const PebbleProcessMd *FUNC_NAME##_result = (void *)RESULT_VAL; \
-  const PebbleProcessMd *FUNC_NAME(void) { return FUNC_NAME##_result; }
+  const PebbleProcessMd *FUNC_NAME(void) {                               \
+    return FUNC_NAME##_result;                                           \
+  }
 
 DEFINE_STUB_APP(battery_critical_get_app_info, 1)
 DEFINE_STUB_APP(low_power_face_get_app_info, 2)

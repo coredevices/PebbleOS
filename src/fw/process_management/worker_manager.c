@@ -54,7 +54,8 @@ static time_t s_last_worker_crash_timestamp;
 static bool s_worker_crash_relaunches_disabled;
 
 // ---------------------------------------------------------------------------------------------
-void worker_manager_init(void) {}
+void worker_manager_init(void) {
+}
 
 // ---------------------------------------------------------------------------------------------
 // This is the wrapper function for the worker. It's not allowed to return as it's the top frame on
@@ -89,14 +90,18 @@ static void prv_worker_task_main(void *entry_point) {
 //! have to be locked because they're the sole property of the process and no
 //! other tasks should be touching it. All this function does is verify that
 //! this condition is met before continuing without locking.
-static void prv_heap_lock(void *unused) { PBL_ASSERT_TASK(PebbleTask_Worker); }
+static void prv_heap_lock(void *unused) {
+  PBL_ASSERT_TASK(PebbleTask_Worker);
+}
 
 static size_t prv_get_worker_segment_size(const PebbleProcessMd *app_md) {
   // 12 KiB - 640 bytes workerlib static = 11648 bytes
   return 11648;
 }
 
-static size_t prv_get_worker_stack_size(const PebbleProcessMd *app_md) { return 1400; }
+static size_t prv_get_worker_stack_size(const PebbleProcessMd *app_md) {
+  return 1400;
+}
 
 // ------------------------------------------------------------------------------------------------
 bool worker_manager_launch_new_worker_with_args(const PebbleProcessMd *app_md, const void *args) {
@@ -315,10 +320,14 @@ const PebbleProcessMd *worker_manager_get_current_worker_md(void) {
 }
 
 // ------------------------------------------------------------------------------------------------
-AppInstallId worker_manager_get_current_worker_id(void) { return s_worker_task_context.install_id; }
+AppInstallId worker_manager_get_current_worker_id(void) {
+  return s_worker_task_context.install_id;
+}
 
 // ------------------------------------------------------------------------------------------------
-ProcessContext *worker_manager_get_task_context(void) { return &s_worker_task_context; }
+ProcessContext *worker_manager_get_task_context(void) {
+  return &s_worker_task_context;
+}
 
 // ------------------------------------------------------------------------------------------------
 void worker_manager_put_launch_worker_event(AppInstallId id) {

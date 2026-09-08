@@ -102,7 +102,8 @@ static void prv_layout_removed_handler(SwapLayer *swap_layer, LayoutLayer *layou
 }
 
 static void prv_layout_will_appear_handler(SwapLayer *swap_layer, LayoutLayer *layout,
-                                           void *context) {}
+                                           void *context) {
+}
 
 static void prv_layout_did_appear_handler(SwapLayer *swap_layer, LayoutLayer *layout,
                                           int8_t rel_change, void *context) {

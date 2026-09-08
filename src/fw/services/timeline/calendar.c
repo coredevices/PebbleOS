@@ -45,4 +45,6 @@ const TimelineEventImpl *calendar_get_event_service(void) {
   return &s_event_impl;
 }
 
-bool calendar_event_is_ongoing(void) { return s_event_ongoing; }
+bool calendar_event_is_ongoing(void) {
+  return s_event_ongoing;
+}

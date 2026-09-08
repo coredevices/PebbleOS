@@ -152,7 +152,8 @@ void clock_face_reset(void) {
 // vanish or merge); the 50px art gives each destination pixel a 2-3px box to
 // vote from, which keeps the strokes one pixel and clean.
 static GBitmap *prv_shrink_dial_icon(GBitmap *src) {
-  if (!src) return NULL;
+  if (!src)
+    return NULL;
   const GBitmapFormat fmt = gbitmap_get_format(src);
   uint8_t bpp;
   uint32_t entries;
@@ -175,13 +176,15 @@ static GBitmap *prv_shrink_dial_icon(GBitmap *src) {
   const GRect sb = gbitmap_get_bounds(src);
   const int dw = CLOCK_ICON_SIZE;
   GColor *src_pal = gbitmap_get_palette(src);
-  if (!src_pal || sb.size.w <= dw) return src;
+  if (!src_pal || sb.size.w <= dw)
+    return src;
 
   // Rank each palette entry once: 0 transparent, 1 light, 2 ink. The 50px art
   // carries gray shading; anything that quantizes to the dark half is ink.
   uint8_t rank[16] = {0};
   for (uint32_t i = 0; i < entries; i++) {
-    if (!src_pal[i].a) continue;
+    if (!src_pal[i].a)
+      continue;
     const GColor8 gray = gcolor_get_grayscale(src_pal[i]);
     rank[i] = (gcolor_equal(gray, GColorBlack) || gcolor_equal(gray, GColorDarkGray)) ? 2 : 1;
   }
@@ -189,7 +192,8 @@ static GBitmap *prv_shrink_dial_icon(GBitmap *src) {
   // The destination palette is purified to pure black/white: mid-gray fills
   // would dither on 1-bit and turn the shrunken icons into mush.
   GColor *pal = malloc(entries * sizeof(GColor));
-  if (!pal) return src;
+  if (!pal)
+    return src;
   for (uint32_t i = 0; i < entries; i++) {
     if (rank[i] == 2)
       pal[i] = GColorBlack;
@@ -213,9 +217,12 @@ static GBitmap *prv_shrink_dial_icon(GBitmap *src) {
   // Canonical palette index per rank (first dark / light / transparent entry).
   int dark_i = -1, light_i = -1, trans_i = -1;
   for (uint32_t i = 0; i < entries; i++) {
-    if (rank[i] == 2 && dark_i < 0) dark_i = (int)i;
-    if (rank[i] == 1 && light_i < 0) light_i = (int)i;
-    if (rank[i] == 0 && trans_i < 0) trans_i = (int)i;
+    if (rank[i] == 2 && dark_i < 0)
+      dark_i = (int)i;
+    if (rank[i] == 1 && light_i < 0)
+      light_i = (int)i;
+    if (rank[i] == 0 && trans_i < 0)
+      trans_i = (int)i;
   }
   for (int y = 0; y < dw; y++) {
     const int sy0 = y * sh / dw;
@@ -241,7 +248,8 @@ static GBitmap *prv_shrink_dial_icon(GBitmap *src) {
       } else if (light_i >= 0 && n_light * 2 > n_total) {
         pick = light_i;
       }
-      if (pick < 0) pick = 0;
+      if (pick < 0)
+        pick = 0;
       raw_image_set_value_for_bitdepth(ddata, (uint32_t)x, (uint32_t)y, dstride, bpp,
                                        (uint8_t)pick);
     }
@@ -253,7 +261,8 @@ static GBitmap *prv_shrink_dial_icon(GBitmap *src) {
 
 // Load the tiny bitmap set once; the clock reuses these during animations.
 static void prv_load_bitmaps(void) {
-  if (!s_cf) return;
+  if (!s_cf)
+    return;
   for (int i = 0; i < NUM_TYPE_SLOTS; i++) {
     if (s_cf->type_bitmaps[i]) {
       gbitmap_destroy(s_cf->type_bitmaps[i]);
@@ -296,8 +305,10 @@ static void prv_load_bitmaps(void) {
 // One 50ms quantum of glow animation. Returns false when the driver should stop (covered,
 // or idle wrap complete).
 static bool prv_glow_step(void) {
-  if (!s_cf || !s_cf->window || window_stack_get_top_window() != s_cf->window) return false;
-  if (s_cf->glow_idle_ticks >= CLOCK_GLOW_IDLE_TICKS + WEATHER_GLOW_WRAP_TICKS) return false;
+  if (!s_cf || !s_cf->window || window_stack_get_top_window() != s_cf->window)
+    return false;
+  if (s_cf->glow_idle_ticks >= CLOCK_GLOW_IDLE_TICKS + WEATHER_GLOW_WRAP_TICKS)
+    return false;
 
   bool transition_busy = s_cf->anim_progress < ANIMATION_NORMALIZED_MAX;
   if (!transition_busy) {
@@ -313,21 +324,24 @@ static bool prv_glow_step(void) {
     }
     s_cf->glow_idle_ticks++;
   }
-  if (s_cf->canvas) layer_mark_dirty(s_cf->canvas);
+  if (s_cf->canvas)
+    layer_mark_dirty(s_cf->canvas);
   return true;
 }
 
 #if !PBL_ROUND
 static void prv_clock_glow_timer_callback(void *context) {
   (void)context;
-  if (s_cf) s_cf->glow_timer = NULL;
+  if (s_cf)
+    s_cf->glow_timer = NULL;
   if (prv_glow_step()) {
     s_cf->glow_timer = app_timer_register(CLOCK_GLOW_TIMER_MS, prv_clock_glow_timer_callback, NULL);
   }
 }
 
 static void prv_start_clock_glow(void) {
-  if (!s_cf || s_cf->glow_timer) return;
+  if (!s_cf || s_cf->glow_timer)
+    return;
   s_cf->glow_timer = app_timer_register(CLOCK_GLOW_TIMER_MS, prv_clock_glow_timer_callback, NULL);
 }
 #else
@@ -355,25 +369,30 @@ static void prv_glow_drv_stop_cb(void *context) {  // 0ms hop: never unschedule 
 static void prv_glow_drv_update(Animation *anim, AnimationProgress p) {
   (void)anim;
   (void)p;
-  if (!s_cf) return;
+  if (!s_cf)
+    return;
   const uint32_t now = prv_glow_now_ms();
   uint32_t dt = now - s_cf->glow_drv_last_ms;
   s_cf->glow_drv_last_ms = now;
-  if (dt > 500) dt = 500;
+  if (dt > 500)
+    dt = 500;
   s_cf->glow_drv_acc_ms += dt;
   bool alive = true;
   while (alive && s_cf->glow_drv_acc_ms >= CLOCK_GLOW_TIMER_MS) {
     s_cf->glow_drv_acc_ms -= CLOCK_GLOW_TIMER_MS;
     alive = prv_glow_step();
   }
-  if (!alive) app_timer_register(0, prv_glow_drv_stop_cb, NULL);
+  if (!alive)
+    app_timer_register(0, prv_glow_drv_stop_cb, NULL);
 }
 static const AnimationImplementation s_glow_drv_impl = {.update = prv_glow_drv_update};
 
 static void prv_start_clock_glow(void) {
-  if (!s_cf || s_cf->glow_drv) return;
+  if (!s_cf || s_cf->glow_drv)
+    return;
   Animation *a = animation_create();
-  if (!a) return;
+  if (!a)
+    return;
   animation_set_duration(a, ANIMATION_DURATION_INFINITE);
   animation_set_implementation(a, &s_glow_drv_impl);
   s_cf->glow_drv_last_ms = prv_glow_now_ms();
@@ -384,9 +403,11 @@ static void prv_start_clock_glow(void) {
 #endif
 
 static void prv_note_clock_interaction(void) {
-  if (!s_cf) return;
+  if (!s_cf)
+    return;
   s_cf->glow_idle_ticks = 0;
-  if (s_cf->canvas) layer_mark_dirty(s_cf->canvas);
+  if (s_cf->canvas)
+    layer_mark_dirty(s_cf->canvas);
   prv_start_clock_glow();
 }
 
@@ -425,7 +446,8 @@ static int prv_abs_hour_for_pos(int pos_1_to_12) {
   // tonight's forecast — lookups must bounds-check instead.
   for (int i = 0; i <= 11; i++) {
     int h = cur_h + i;
-    if (h % 12 == target_mod) return h;
+    if (h % 12 == target_mod)
+      return h;
   }
   return pos_1_to_12 % 12;  // unreachable
 }
@@ -433,7 +455,8 @@ static int prv_abs_hour_for_pos(int pos_1_to_12) {
 // Map a clock-face hour position (1-12) to the WeatherType for that hour.
 // Uses real hourly data if available, otherwise falls back to daily forecast.
 static WeatherType prv_type_for_pos(int pos_1_to_12) {
-  if (!s_cf) return WeatherType_Unknown;
+  if (!s_cf)
+    return WeatherType_Unknown;
   int abs_hour = prv_abs_hour_for_pos(pos_1_to_12);
   if (s_cf->hourly_valid && abs_hour >= 0 && abs_hour < 24) {
     return (WeatherType)s_cf->hourly_types[abs_hour];
@@ -442,10 +465,12 @@ static WeatherType prv_type_for_pos(int pos_1_to_12) {
   // carries it (v4 minor 5); the daily-type fallback below covers its absence.
   if (abs_hour >= 24 && abs_hour < 48 && s_cf->tomorrow_hourly_valid) {
     const uint8_t wt = s_cf->tomorrow_types[abs_hour - 24];
-    if (wt <= WeatherType_RainAndSnow) return (WeatherType)wt;
+    if (wt <= WeatherType_RainAndSnow)
+      return (WeatherType)wt;
   }
   // Fallback: daily
-  if (s_cf->num_days == 0) return WeatherType_Unknown;
+  if (s_cf->num_days == 0)
+    return WeatherType_Unknown;
   if (abs_hour >= 24 && s_cf->num_days > 1) {
     // Past midnight — the hourly series covers today only, so use tomorrow's
     // daily type for tonight's small hours.
@@ -457,13 +482,15 @@ static WeatherType prv_type_for_pos(int pos_1_to_12) {
 // Map a clock-face hour position (1-12) to the temperature for that hour.
 // Returns true and fills *out_temp if hourly temperature data is available.
 static bool prv_temp_for_pos(int pos_1_to_12, int *out_temp) {
-  if (!s_cf) return false;
+  if (!s_cf)
+    return false;
   int abs_hour = prv_abs_hour_for_pos(pos_1_to_12);
   if (abs_hour >= 24 && abs_hour < 48 && s_cf->tomorrow_hourly_valid) {
     *out_temp = (int)s_cf->tomorrow_temps[abs_hour - 24];  // v4 minor 5
     return true;
   }
-  if (!s_cf->hourly_temps_valid || abs_hour < 0 || abs_hour >= 24) return false;
+  if (!s_cf->hourly_temps_valid || abs_hour < 0 || abs_hour >= 24)
+    return false;
   *out_temp = (int)s_cf->hourly_temps[abs_hour];
   return true;
 }
@@ -475,9 +502,11 @@ static int prv_reveal_rp(AnimationProgress reveal_t, int pos) {
   int32_t item_dur = ANIMATION_NORMALIZED_MAX * 45 / 100;
   int32_t stagger = (ANIMATION_NORMALIZED_MAX - item_dur) / 11;
   int32_t local = (int32_t)reveal_t - rank * stagger;
-  if (local <= 0) return 0;
+  if (local <= 0)
+    return 0;
   int32_t rp = weather_scale_i32(local, ANIMATION_NORMALIZED_MAX, item_dur);
-  if (rp > ANIMATION_NORMALIZED_MAX) rp = ANIMATION_NORMALIZED_MAX;
+  if (rp > ANIMATION_NORMALIZED_MAX)
+    rp = ANIMATION_NORMALIZED_MAX;
   return (int)rp;
 }
 
@@ -489,7 +518,8 @@ static void prv_intro_update(Animation *anim, AnimationProgress progress) {
       progress = ANIMATION_NORMALIZED_MAX;
     }
     s_cf->anim_progress = progress;
-    if (s_cf->canvas) layer_mark_dirty(s_cf->canvas);
+    if (s_cf->canvas)
+      layer_mark_dirty(s_cf->canvas);
   }
 }
 static const AnimationImplementation s_intro_impl = {.update = prv_intro_update};
@@ -501,22 +531,27 @@ static const AnimationImplementation s_intro_impl = {.update = prv_intro_update}
 
 // ---- Temperature reveal animation (tap) ----
 static void prv_reveal_update(Animation *anim, AnimationProgress progress) {
-  if (!s_cf) return;
+  if (!s_cf)
+    return;
   s_cf->reveal_p = progress;
   if (progress >= ANIMATION_NORMALIZED_MAX) {
     s_cf->reveal_active = false;
     s_cf->temps_shown = s_cf->reveal_to;
   }
-  if (s_cf->canvas) layer_mark_dirty(s_cf->canvas);
+  if (s_cf->canvas)
+    layer_mark_dirty(s_cf->canvas);
 }
 static const AnimationImplementation s_reveal_impl = {.update = prv_reveal_update};
 
 // Toggle the per-hour temperature reveal. Each tap flips between showing the
 // weather bitmaps and showing the temperature bubbles.
 static void prv_toggle_temp_reveal(void) {
-  if (!s_cf || !s_cf->hourly_temps_valid) return;
-  if (s_cf->reveal_active) return;  // ignore taps until the current reveal/hide cycle finishes
-  if (s_cf->anim_progress < ANIMATION_NORMALIZED_MAX) return;  // wait for intro to finish
+  if (!s_cf || !s_cf->hourly_temps_valid)
+    return;
+  if (s_cf->reveal_active)
+    return;  // ignore taps until the current reveal/hide cycle finishes
+  if (s_cf->anim_progress < ANIMATION_NORMALIZED_MAX)
+    return;  // wait for intro to finish
   s_cf->reveal_to = !s_cf->temps_shown;
   s_cf->reveal_active = true;
   s_cf->reveal_p = 0;
@@ -532,7 +567,8 @@ static void prv_toggle_temp_reveal(void) {
 }
 
 static void prv_play_animation(void) {
-  if (!s_cf) return;
+  if (!s_cf)
+    return;
   if (s_cf->intro_anim) {
     animation_unschedule(s_cf->intro_anim);
     animation_destroy(s_cf->intro_anim);
@@ -554,7 +590,8 @@ static void prv_play_animation(void) {
 // ---- Draw proc ----
 static int32_t prv_clock_intro_motion_progress(AnimationProgress progress) {
   const int32_t max = ANIMATION_NORMALIZED_MAX;
-  if ((int32_t)progress >= max) return max;
+  if ((int32_t)progress >= max)
+    return max;
 
   const int32_t overshoot = max / 34;
   const int32_t rebound = max / 135;
@@ -575,7 +612,8 @@ static int32_t prv_clock_intro_motion_progress(AnimationProgress progress) {
 
 static int32_t prv_clock_center_scale_progress(AnimationProgress progress) {
   const int32_t max = ANIMATION_NORMALIZED_MAX;
-  if ((int32_t)progress >= max) return max;
+  if ((int32_t)progress >= max)
+    return max;
   const int32_t min_scale = max / 40;  // start from a point — blooms straight out of the dot
   // Clean ease-out from the point to full size. No overshoot/settle phase (that tail wobble was
   // dropping the centre temperature for a frame).
@@ -593,7 +631,8 @@ static int32_t prv_clock_center_scale_progress(AnimationProgress progress) {
 // the glass. The scratch is W*H (round 260x260 = 67,600B vs rect 200x228 = 45,600B); the
 // malloc_try fallback below degrades to an instant return if the app heap can't take it.
 static void prv_render_fwd_squash(GContext *ctx) {
-  if (!s_cf || !s_cf->fwd_scratch) return;
+  if (!s_cf || !s_cf->fwd_scratch)
+    return;
   weather_render_squash(ctx, s_cf->fwd_scratch, s_cf->fwd_exit_p, WEATHER_SQUASH_CLOCK_EXIT);
 #if PBL_ROUND
   // Capture-once (gabbro smoothness step 2): the snapshot now holds the fully-drawn
@@ -604,9 +643,11 @@ static void prv_render_fwd_squash(GContext *ctx) {
 
 static void prv_fwd_exit_push_callback(void *ctx);
 static void prv_fwd_exit_update(Animation *anim, AnimationProgress progress) {
-  if (!s_cf) return;
+  if (!s_cf)
+    return;
   s_cf->fwd_exit_p = progress;
-  if (s_cf->canvas) layer_mark_dirty(s_cf->canvas);
+  if (s_cf->canvas)
+    layer_mark_dirty(s_cf->canvas);
   if (progress >= ANIMATION_NORMALIZED_MAX && !s_cf->fwd_push_timer) {
     s_cf->fwd_push_timer = app_timer_register(0, prv_fwd_exit_push_callback, NULL);
   }
@@ -614,22 +655,26 @@ static void prv_fwd_exit_update(Animation *anim, AnimationProgress progress) {
 static const AnimationImplementation s_fwd_exit_impl = {.update = prv_fwd_exit_update};
 
 static void prv_fwd_exit_push_callback(void *ctx) {
-  if (!s_cf) return;
+  if (!s_cf)
+    return;
   s_cf->fwd_push_timer = NULL;
   if (s_cf->fwd_scratch) {
     free(s_cf->fwd_scratch);
     s_cf->fwd_scratch = NULL;
   }
   // Hand off to weather.c, which dismisses this clock and jelly-rises the forecast back in.
-  if (s_wrap_callback) s_wrap_callback(s_wrap_context);
+  if (s_wrap_callback)
+    s_wrap_callback(s_wrap_context);
 }
 
 static void prv_start_fwd_exit_animation(void) {
-  if (!s_cf || s_cf->fwd_exit_active || !s_cf->canvas) return;
+  if (!s_cf || s_cf->fwd_exit_active || !s_cf->canvas)
+    return;
   GRect bounds = layer_get_bounds(s_cf->canvas);
   s_cf->fwd_scratch = malloc_try((size_t)bounds.size.w * (size_t)bounds.size.h);
   if (!s_cf->fwd_scratch) {  // out of heap: fall back to an instant return
-    if (s_wrap_callback) s_wrap_callback(s_wrap_context);
+    if (s_wrap_callback)
+      s_wrap_callback(s_wrap_context);
     return;
   }
   s_cf->fwd_exit_active = true;
@@ -656,7 +701,8 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
     return;
   }
 #else
-  if (!s_cf) return;
+  if (!s_cf)
+    return;
 #endif
 #if PBL_ROUND
   // Capture-once (gabbro smoothness step 2): during the UP-to-forecast squash the clock
@@ -750,7 +796,8 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
       bool show_temp_text = (rp >= ANIMATION_NORMALIZED_MAX * 76 / 100);
       bool show_icon = (rp <= ANIMATION_NORMALIZED_MAX * 24 / 100);
 
-      if (rr < 1) continue;  // fully shrunk — nothing to draw
+      if (rr < 1)
+        continue;  // fully shrunk — nothing to draw
 
       graphics_context_set_compositing_mode(ctx, GCompOpAssign);
       if (show_temp_side) {
@@ -787,7 +834,8 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
           char nbuf[6];
           snprintf(nbuf, sizeof(nbuf), "%d", temp);
           static GFont tfont;  // stable system handle — don't re-look-up per icon per frame
-          if (!tfont) tfont = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
+          if (!tfont)
+            tfont = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
           GSize nsz = graphics_text_layout_get_content_size(
               nbuf, tfont, GRect(0, 0, 40, 18), GTextOverflowModeFill, GTextAlignmentCenter);
           graphics_context_set_text_color(ctx, GColorBlack);
@@ -800,10 +848,12 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
       continue;  // reveal path draws both circle and content; skip the bitmap pass
     }
 
-    if (circle_r < 1) continue;  // fully shrunk — skip background circle
+    if (circle_r < 1)
+      continue;  // fully shrunk — skip background circle
 
     const GColor disc = weather_type_disc_color(wt);
-    if (gcolor_equal(disc, GColorClear)) continue;
+    if (gcolor_equal(disc, GColorClear))
+      continue;
     graphics_context_set_compositing_mode(ctx, GCompOpAssign);
     graphics_context_set_fill_color(ctx, disc);
     graphics_fill_circle(ctx, GPoint(ix, iy), circle_r);
@@ -812,7 +862,8 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
   // Draw icon bitmaps — doing this in a separate pass minimizes framebuffer captures
   if (!reveal_engaged && (anim_done || p > ANIMATION_NORMALIZED_MAX / 2)) {
     for (int i = 0; i < 12; i++) {
-      if (!icon_bmps[i]) continue;
+      if (!icon_bmps[i])
+        continue;
       int bx = icon_xs[i] - CLOCK_ICON_SIZE / 2;
       int by = icon_ys[i] - CLOCK_ICON_SIZE / 2;
       weather_icon_draw(ctx, icon_bmps[i], GRect(bx, by, CLOCK_ICON_SIZE, CLOCK_ICON_SIZE),
@@ -899,21 +950,27 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
         dst_w = src_w * centre_scale_p / ANIMATION_NORMALIZED_MAX;
         dst_h = src_h * centre_scale_p / ANIMATION_NORMALIZED_MAX;
       }
-      if (dst_w < 1) dst_w = 1;
-      if (dst_h < 1) dst_h = 1;
+      if (dst_w < 1)
+        dst_w = 1;
+      if (dst_h < 1)
+        dst_h = 1;
       if (centre_is_temp) {
         dst_w = dst_w * 11 / 10;
         dst_h = dst_h * 11 / 10;
-        if (dst_w < 1) dst_w = 1;
-        if (dst_h < 1) dst_h = 1;
+        if (dst_w < 1)
+          dst_w = 1;
+        if (dst_h < 1)
+          dst_h = 1;
       }
       // Weekday label (non-today) renders a touch smaller than today's temperature.
       // Today's centre is left exactly as-is.
       if (!centre_is_temp) {
         dst_w = dst_w * 8 / 10;
         dst_h = dst_h * 8 / 10;
-        if (dst_w < 1) dst_w = 1;
-        if (dst_h < 1) dst_h = 1;
+        if (dst_w < 1)
+          dst_w = 1;
+        if (dst_h < 1)
+          dst_h = 1;
       }
 
       // Use the recorded visual centre of the text as the scale pivot,
@@ -951,25 +1008,31 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
         int32_t sy_fp = sy_step >> 1;
         for (int dy = 0; dy < dst_h; dy++, sy_fp += sy_step) {
           int sy = sy_fp >> 16;
-          if (sy >= src_h) sy = src_h - 1;
+          if (sy >= src_h)
+            sy = src_h - 1;
           int ay = abs_y + dy;
-          if (ay < 0 || ay >= fb_h) continue;
+          if (ay < 0 || ay >= fb_h)
+            continue;
           GBitmapDataRowInfo ri = gbitmap_get_data_row_info(fb, (uint16_t)ay);
           uint8_t *srow = sdata + (uint32_t)sy * sbpr;
           int32_t sx_fp2 = sx_step >> 1;
           for (int dx = 0; dx < dst_w; dx++, sx_fp2 += sx_step) {
             int sx = sx_fp2 >> 16;
-            if (sx >= src_w) sx = src_w - 1;
+            if (sx >= src_w)
+              sx = src_w - 1;
             int ax = abs_x + dx;
-            if (ax < (int)ri.min_x || ax > (int)ri.max_x) continue;
+            if (ax < (int)ri.min_x || ax > (int)ri.max_x)
+              continue;
             // Skip white pixels (background). The staging bitmap is 8-bit on
             // colour and 1-bit on BW — read accordingly.
 #if PBL_BW
-            if (bitset8_get(srow, (unsigned)sx)) continue;
+            if (bitset8_get(srow, (unsigned)sx))
+              continue;
             weather_fb_row_set(ri.data, ax, GColorBlackARGB8);
 #else
             uint8_t pixel = srow[sx];
-            if (pixel == 0xFF) continue;  // GColor8 white
+            if (pixel == 0xFF)
+              continue;  // GColor8 white
             weather_fb_row_set(ri.data, ax, pixel);
 #endif
           }
@@ -989,7 +1052,8 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
   AnimationProgress fade_start = CLOCK_SMALL_RECT
                                      ? ANIMATION_NORMALIZED_MAX
                                      : (AnimationProgress)(ANIMATION_NORMALIZED_MAX * 6 / 10);
-  if (!anim_done && p < fade_start) return;
+  if (!anim_done && p < fade_start)
+    return;
   GColor label_color;
   if (anim_done || p > (AnimationProgress)(ANIMATION_NORMALIZED_MAX * 85 / 100)) {
     label_color = GColorDarkGray;
@@ -1039,7 +1103,8 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
     // there, and nudging only some of them reads as misalignment (the 9
     // anchor closer to the centre than the 3-side pill).
     int label_nudge = PBL_IF_ROUND_ELSE(0, (pos == 3 || pos == 9) ? 5 : 0);
-    if (CLOCK_SMALL_RECT) label_nudge = 0;
+    if (CLOCK_SMALL_RECT)
+      label_nudge = 0;
     int lx =
         cx + (int)((int32_t)sin_lookup(angle) * (LABEL_ORBIT_RX - label_nudge) / TRIG_MAX_RATIO);
     int ly = cy - (int)((int32_t)cos_lookup(angle) * LABEL_ORBIT_RY / TRIG_MAX_RATIO);
@@ -1055,12 +1120,14 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
     // dots either — the icons already mark the positions.
     (void)ddx;
     (void)ddy;
-    if (!is_now && (pos % 3) != 0) continue;
+    if (!is_now && (pos % 3) != 0)
+      continue;
     // An anchor ring-adjacent to the pill shares its cramped corner (e.g. the
     // 17h pill at 5 o'clock against the 18 anchor at 6) — the pill wins.
     if (!is_now && now_pos > 0) {
       const int ring_d = (pos - now_pos + 12) % 12;
-      if (ring_d == 1 || ring_d == 11) continue;
+      if (ring_d == 1 || ring_d == 11)
+        continue;
     }
 #else
     if (!is_now) {
@@ -1071,7 +1138,8 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
     int disp_h = abs_h % 24;  // abs_h >= 24 = tomorrow's hour — label wraps
     if (!clock_is_24h_style()) {
       disp_h %= 12;
-      if (disp_h == 0) disp_h = 12;  // 12h dials write 12, never 0
+      if (disp_h == 0)
+        disp_h = 12;  // 12h dials write 12, never 0
     }
     char lbuf[4];
     snprintf(lbuf, sizeof(lbuf), "%d", disp_h);
@@ -1100,17 +1168,20 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
       int D = (pill_len - (r * 2)) / 2;
 
       int D_out = D - 5;  // Pull the pill inwards 5px from the outside (the number-facing end)
-      if (CLOCK_SMALL_RECT || D_out < 0) D_out = 0;
+      if (CLOCK_SMALL_RECT || D_out < 0)
+        D_out = 0;
       int D_in = D - 8;  // Pull the pill inwards from the center of the watch face (less padding on
                          // the inside)
-      if (CLOCK_SMALL_RECT || D_in < 0) D_in = 0;
+      if (CLOCK_SMALL_RECT || D_in < 0)
+        D_in = 0;
 
       if (!anim_done) {
         if (p < pill_settled) {
           // Grow the dot from a small radius up to full size while it fades in.
           int32_t grow_p =
               (p - pill_appear) * ANIMATION_NORMALIZED_MAX / (pill_settled - pill_appear);
-          if (grow_p < 0) grow_p = 0;
+          if (grow_p < 0)
+            grow_p = 0;
           r = 2 + (int)((int32_t)(r - 2) * grow_p / ANIMATION_NORMALIZED_MAX);
           D_out = 0;
           D_in = 0;
@@ -1160,19 +1231,22 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
   }
 
   // UP-to-forecast: wrap the fully-drawn clock in the whole-screen squash-stretch.
-  if (s_cf->fwd_exit_active) prv_render_fwd_squash(ctx);
+  if (s_cf->fwd_exit_active)
+    prv_render_fwd_squash(ctx);
 }
 
 // ---- Tick handler — redraws every minute to keep hands + time current ----
 static void prv_tick_handler(struct tm *tick_time, TimeUnits units_changed) {
-  if (s_cf && s_cf->canvas) layer_mark_dirty(s_cf->canvas);
+  if (s_cf && s_cf->canvas)
+    layer_mark_dirty(s_cf->canvas);
 }
 
 // ---- Touch input (touch colour platforms) ----
 #ifdef CONFIG_TOUCH
 static void prv_touch_handler(const TouchEvent *event, void *context) {
   (void)context;
-  if (!s_cf) return;
+  if (!s_cf)
+    return;
 
   if (event->type == TouchEvent_Touchdown) {
     s_cf->touch_start_x = event->x;
@@ -1262,7 +1336,8 @@ static void prv_window_load(Window *window) {
 
   if (s_cf->skip_intro_animation) {
     s_cf->anim_progress = ANIMATION_NORMALIZED_MAX;
-    if (s_cf->canvas) layer_mark_dirty(s_cf->canvas);
+    if (s_cf->canvas)
+      layer_mark_dirty(s_cf->canvas);
   } else {
     // Schedule intro animation: bloom + clockwise spin into position (no HUD bar)
     prv_play_animation();
@@ -1270,7 +1345,8 @@ static void prv_window_load(Window *window) {
 }
 
 static void prv_window_appear(Window *window) {
-  if (!s_cf) return;
+  if (!s_cf)
+    return;
   // Reset the temperature reveal so the clock shows weather icons on return.
   s_cf->reveal_active = false;
   s_cf->temps_shown = false;
@@ -1280,7 +1356,8 @@ static void prv_window_appear(Window *window) {
     animation_destroy(s_cf->reveal_anim);
     s_cf->reveal_anim = NULL;
   }
-  if (s_cf->canvas) layer_mark_dirty(s_cf->canvas);
+  if (s_cf->canvas)
+    layer_mark_dirty(s_cf->canvas);
 #ifdef CONFIG_TOUCH
   touch_service_subscribe(prv_touch_handler, s_cf);
 #endif
@@ -1353,26 +1430,32 @@ void clock_face_set_wrap_callback(ClockFaceWrapCallback callback, void *context)
   s_wrap_context = context;
 }
 
-bool clock_face_is_showing(void) { return s_cf != NULL; }
+bool clock_face_is_showing(void) {
+  return s_cf != NULL;
+}
 
 static void prv_clock_face_push(const WeatherLocationForecast *days, size_t num_days, int day_index,
                                 const uint8_t *hourly_types, size_t hourly_count, bool animated,
                                 bool play_intro) {
-  if (s_cf) return;
+  if (s_cf)
+    return;
 
   s_cf = calloc(1, sizeof(ClockFaceData));
-  if (!s_cf) return;
+  if (!s_cf)
+    return;
 
   size_t n = num_days < MAX_DAYS ? num_days : MAX_DAYS;
   s_cf->num_days = n;
-  for (size_t i = 0; i < n; i++) s_cf->days[i] = days[i];
+  for (size_t i = 0; i < n; i++)
+    s_cf->days[i] = days[i];
   s_cf->day_index = (day_index >= 0 && (size_t)day_index < n) ? day_index : 0;
   s_cf->skip_intro_animation = !play_intro;
 
   // Seed hourly data so it's available immediately on first draw.
   if (hourly_count > 0) {
     size_t hn = hourly_count < 24 ? hourly_count : 24;
-    for (size_t i = 0; i < hn; i++) s_cf->hourly_types[i] = hourly_types[i];
+    for (size_t i = 0; i < hn; i++)
+      s_cf->hourly_types[i] = hourly_types[i];
     s_cf->hourly_valid = (hn >= 24);
   }
 
@@ -1398,24 +1481,30 @@ void clock_face_push_static(const WeatherLocationForecast *days, size_t num_days
 }
 
 void clock_face_dismiss(bool animated) {
-  if (!s_cf || !s_cf->window) return;
+  if (!s_cf || !s_cf->window)
+    return;
   window_stack_remove(s_cf->window, animated);
 }
 
 void clock_face_update_hourly_temps_for_day(int day_index, const int8_t *temps, size_t count) {
-  if (!s_cf || day_index != s_cf->day_index) return;
+  if (!s_cf || day_index != s_cf->day_index)
+    return;
   size_t n = count < 24 ? count : 24;
-  for (size_t i = 0; i < n; i++) s_cf->hourly_temps[i] = temps[i];
+  for (size_t i = 0; i < n; i++)
+    s_cf->hourly_temps[i] = temps[i];
   s_cf->hourly_temps_valid = (n >= 24);
-  if (s_cf->canvas) layer_mark_dirty(s_cf->canvas);
+  if (s_cf->canvas)
+    layer_mark_dirty(s_cf->canvas);
 }
 
 void clock_face_set_tomorrow_hourly(const uint8_t *types, const int8_t *temps, size_t count) {
-  if (!s_cf || !types || !temps || count < 24) return;
+  if (!s_cf || !types || !temps || count < 24)
+    return;
   for (size_t i = 0; i < 24; i++) {
     s_cf->tomorrow_types[i] = types[i];
     s_cf->tomorrow_temps[i] = temps[i];
   }
   s_cf->tomorrow_hourly_valid = true;
-  if (s_cf->canvas) layer_mark_dirty(s_cf->canvas);
+  if (s_cf->canvas)
+    layer_mark_dirty(s_cf->canvas);
 }

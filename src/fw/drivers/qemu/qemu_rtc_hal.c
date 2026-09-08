@@ -60,9 +60,13 @@ void rtc_init_timers(void) {
   // No additional timers needed for QEMU RTC
 }
 
-void rtc_set_time(time_t time) { REG32(QEMU_RTC_BASE + RTC_TIME_LO) = (uint32_t)time; }
+void rtc_set_time(time_t time) {
+  REG32(QEMU_RTC_BASE + RTC_TIME_LO) = (uint32_t)time;
+}
 
-time_t rtc_get_time(void) { return (time_t)REG32(QEMU_RTC_BASE + RTC_TIME_LO); }
+time_t rtc_get_time(void) {
+  return (time_t)REG32(QEMU_RTC_BASE + RTC_TIME_LO);
+}
 
 void rtc_set_time_tm(struct tm *time_tm) {
   time_t t = mktime(time_tm);
@@ -118,9 +122,13 @@ void rtc_alarm_set(RtcTicks num_ticks) {
   REG32(QEMU_RTC_BASE + RTC_CTRL) |= CTRL_ALARM_IE;
 }
 
-RtcTicks rtc_alarm_get_elapsed_ticks(void) { return 0; }
+RtcTicks rtc_alarm_get_elapsed_ticks(void) {
+  return 0;
+}
 
-bool rtc_alarm_is_initialized(void) { return true; }
+bool rtc_alarm_is_initialized(void) {
+  return true;
+}
 
 // Timezone uses backup registers 11-15 to avoid conflicts with bootbits (0-10)
 #define TZ_BACKUP_BASE 11
@@ -157,7 +165,9 @@ bool rtc_is_timezone_set(void) {
   return (RTC_ReadBackupRegister(TZ_BACKUP_BASE + 0) != 0);
 }
 
-const char *rtc_get_time_string(char *buffer) { return time_t_to_string(buffer, rtc_get_time()); }
+const char *rtc_get_time_string(char *buffer) {
+  return time_t_to_string(buffer, rtc_get_time());
+}
 
 const char *time_t_to_string(char *buffer, time_t t) {
   struct tm time;

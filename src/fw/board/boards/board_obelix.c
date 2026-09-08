@@ -713,9 +713,12 @@ static const AudioDevice audio_device = {
 const AudioDevice *AUDIO = &audio_device;
 IRQ_MAP(DMAC1_CH4, audec_dac0_dma_irq_handler, AUDIO);
 
-uint32_t BSP_GetOtpBase(void) { return MPI2_MEM_BASE; }
+uint32_t BSP_GetOtpBase(void) {
+  return MPI2_MEM_BASE;
+}
 
-void board_early_init(void) {}
+void board_early_init(void) {
+}
 
 void board_init(void) {
   i2c_init(I2C1_BUS);

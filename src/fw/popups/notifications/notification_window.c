@@ -1387,7 +1387,9 @@ void notification_window_show() {
   app_window_stack_push(&s_notification_window_data.window, animated);
 }
 
-bool notification_window_is_modal(void) { return s_notification_window_data.is_modal; }
+bool notification_window_is_modal(void) {
+  return s_notification_window_data.is_modal;
+}
 
 void notification_window_add_notification_by_id(Uuid *id) {
   prv_notification_window_add_notification(id, NotificationMobile);

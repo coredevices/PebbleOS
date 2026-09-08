@@ -80,21 +80,33 @@ bool alerts_should_vibrate_for_type(AlertType type) {
   return alerts_preferences_get_vibrate();
 }
 
-bool alerts_get_vibrate(void) { return alerts_preferences_get_vibrate(); }
+bool alerts_get_vibrate(void) {
+  return alerts_preferences_get_vibrate();
+}
 
-AlertMask alerts_get_mask(void) { return alerts_preferences_get_alert_mask(); }
+AlertMask alerts_get_mask(void) {
+  return alerts_preferences_get_alert_mask();
+}
 
-AlertMask alerts_get_dnd_mask(void) { return alerts_preferences_dnd_get_mask(); }
+AlertMask alerts_get_dnd_mask(void) {
+  return alerts_preferences_dnd_get_mask();
+}
 
 uint32_t alerts_get_notification_window_timeout_ms(void) {
   return alerts_preferences_get_notification_window_timeout_ms();
 }
 
-void alerts_set_vibrate(bool enable) { alerts_preferences_set_vibrate(enable); }
+void alerts_set_vibrate(bool enable) {
+  alerts_preferences_set_vibrate(enable);
+}
 
-void alerts_set_mask(AlertMask mask) { alerts_preferences_set_alert_mask(mask); }
+void alerts_set_mask(AlertMask mask) {
+  alerts_preferences_set_alert_mask(mask);
+}
 
-void alerts_set_dnd_mask(AlertMask mask) { alerts_preferences_dnd_set_mask(mask); }
+void alerts_set_dnd_mask(AlertMask mask) {
+  alerts_preferences_dnd_set_mask(mask);
+}
 
 void alerts_set_notification_vibe_timestamp() {
   // if we do vibrate, update timestamp of last vibration

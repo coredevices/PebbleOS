@@ -38,11 +38,16 @@
 #include "stubs_rand_ptr.h"
 #include "stubs_regular_timer.h"
 
-void core_dump_reset(bool is_forced) {}
+void core_dump_reset(bool is_forced) {
+}
 
-void launcher_task_add_callback(void (*callback)(void *data), void *data) { callback(data); }
+void launcher_task_add_callback(void (*callback)(void *data), void *data) {
+  callback(data);
+}
 
-uint16_t gaps_get_starting_att_handle(void) { return 4; }
+uint16_t gaps_get_starting_att_handle(void) {
+  return 4;
+}
 
 // Helpers
 ///////////////////////////////////////////////////////////
@@ -91,7 +96,9 @@ void test_gatt_client_accessors__initialize(void) {
   gap_le_connection_init();
 }
 
-void test_gatt_client_accessors__cleanup(void) { gap_le_connection_deinit(); }
+void test_gatt_client_accessors__cleanup(void) {
+  gap_le_connection_deinit();
+}
 
 void test_gatt_client_accessors__copy_service_refs(void) {
   BTDeviceInternal device = prv_connected_dummy_device(1);

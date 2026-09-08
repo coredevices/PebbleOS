@@ -300,7 +300,9 @@ void graphics_draw_rect(GContext *ctx, const GRect *rect) {
   prv_draw_rect_stroked(ctx, rect, ctx->draw_state.stroke_width);
 }
 
-void graphics_draw_rect_by_value(GContext *ctx, GRect rect) { graphics_draw_rect(ctx, &rect); }
+void graphics_draw_rect_by_value(GContext *ctx, GRect rect) {
+  graphics_draw_rect(ctx, &rect);
+}
 
 void graphics_draw_rect_precise(GContext *ctx, const GRectPrecise *rect) {
   const Fixed_S16_3 right = grect_precise_get_max_x(rect);

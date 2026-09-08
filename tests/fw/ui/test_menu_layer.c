@@ -40,20 +40,34 @@
 // through these accessors; the recognizer manager needs a few window/layer collaborators to link.
 
 static bool s_nav_enabled = true;
-bool sys_touch_nav_enabled(void) { return s_nav_enabled; }
-bool sys_touch_app_nav_active(void) { return false; }
+bool sys_touch_nav_enabled(void) {
+  return s_nav_enabled;
+}
+bool sys_touch_app_nav_active(void) {
+  return false;
+}
 
 static TouchNavState s_touch_nav_state;
-struct TouchNavState *app_state_get_touch_nav_state(void) { return &s_touch_nav_state; }
-struct TouchNavState *modal_manager_get_touch_nav_state(void) { return &s_touch_nav_state; }
+struct TouchNavState *app_state_get_touch_nav_state(void) {
+  return &s_touch_nav_state;
+}
+struct TouchNavState *modal_manager_get_touch_nav_state(void) {
+  return &s_touch_nav_state;
+}
 
 static Layer s_root_layer;  // window root, holds the menu under test while driving pans
 static RecognizerManager s_recognizer_manager;
 static RecognizerList s_global_list;
 
-struct Layer *window_get_root_layer(const Window *window) { return &s_root_layer; }
-RecognizerList *window_get_recognizer_list(Window *window) { return NULL; }
-RecognizerManager *window_get_recognizer_manager(Window *window) { return &s_recognizer_manager; }
+struct Layer *window_get_root_layer(const Window *window) {
+  return &s_root_layer;
+}
+RecognizerList *window_get_recognizer_list(Window *window) {
+  return NULL;
+}
+RecognizerManager *window_get_recognizer_manager(Window *window) {
+  return &s_recognizer_manager;
+}
 
 // Fake bridge ops so swipe-left BACK is observable.
 typedef struct FakeBridgeOps {
@@ -66,7 +80,9 @@ static FakeBridgeOps s_bridge;
 static bool prv_bridge_top_overrides_back(void *ctx) {
   return ((FakeBridgeOps *)ctx)->overrides_back;
 }
-static void prv_bridge_pop_top(void *ctx) { ((FakeBridgeOps *)ctx)->pop_count++; }
+static void prv_bridge_pop_top(void *ctx) {
+  ((FakeBridgeOps *)ctx)->pop_count++;
+}
 static void prv_bridge_emit_button(void *ctx, ButtonId b) {
   FakeBridgeOps *o = ctx;
   o->emit_count++;
@@ -96,26 +112,39 @@ static void prv_touch_nav_setup(void) {
 
 // #include "fake_gbitmap_png.c"
 
-GDrawState graphics_context_get_drawing_state(GContext *ctx) { return (GDrawState){}; }
+GDrawState graphics_context_get_drawing_state(GContext *ctx) {
+  return (GDrawState){};
+}
 
-void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {}
-void graphics_context_set_fill_color(GContext *ctx, GColor color) {}
+void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {
+}
+void graphics_context_set_fill_color(GContext *ctx, GColor color) {
+}
 
-Layer *inverter_layer_get_layer(InverterLayer *inverter_layer) { return &inverter_layer->layer; }
+Layer *inverter_layer_get_layer(InverterLayer *inverter_layer) {
+  return &inverter_layer->layer;
+}
 
-void inverter_layer_init(InverterLayer *inverter, const GRect *frame) {}
+void inverter_layer_init(InverterLayer *inverter, const GRect *frame) {
+}
 
 void window_long_click_subscribe(ButtonId button_id, uint16_t delay_ms, ClickHandler down_handler,
-                                 ClickHandler up_handler) {}
-void window_single_click_subscribe(ButtonId button_id, ClickHandler handler) {}
+                                 ClickHandler up_handler) {
+}
+void window_single_click_subscribe(ButtonId button_id, ClickHandler handler) {
+}
 void window_single_repeating_click_subscribe(ButtonId button_id, uint16_t repeat_interval_ms,
-                                             ClickHandler handler) {}
+                                             ClickHandler handler) {
+}
 void window_set_click_config_provider_with_context(Window *window,
                                                    ClickConfigProvider click_config_provider,
-                                                   void *context) {}
-void window_set_click_context(ButtonId button_id, void *context) {}
+                                                   void *context) {
+}
+void window_set_click_context(ButtonId button_id, void *context) {
+}
 
-void content_indicator_destroy_for_scroll_layer(ScrollLayer *scroll_layer) {}
+void content_indicator_destroy_for_scroll_layer(ScrollLayer *scroll_layer) {
+}
 
 ContentIndicator s_content_indicator;
 ContentIndicator *content_indicator_get_for_scroll_layer(ScrollLayer *scroll_layer) {
@@ -131,10 +160,14 @@ void content_indicator_set_content_available(ContentIndicator *content_indicator
   s_content_available[direction] = available;
 }
 
-void graphics_context_set_compositing_mode(GContext *ctx, GCompOp mode) {}
-void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *bitmap, const GRect *rect) {}
+void graphics_context_set_compositing_mode(GContext *ctx, GCompOp mode) {
+}
+void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *bitmap, const GRect *rect) {
+}
 
-int16_t menu_cell_basic_cell_height(void) { return 44; }
+int16_t menu_cell_basic_cell_height(void) {
+  return 44;
+}
 
 // Tests
 //////////////////////
@@ -188,10 +221,13 @@ void test_menu_layer__initialize(void) {
   menu_layer_touch_nav_reset_all();
 }
 
-void test_menu_layer__cleanup(void) { fake_app_timer_deinit(); }
+void test_menu_layer__cleanup(void) {
+  fake_app_timer_deinit();
+}
 
 static void prv_draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index,
-                         void *callback_context) {}
+                         void *callback_context) {
+}
 
 static uint16_t prv_get_num_rows(struct MenuLayer *menu_layer, uint16_t section_index,
                                  void *callback_context) {
@@ -676,10 +712,18 @@ static void prv_set_touch_callbacks(MenuLayer *l) {
 
 // ---- Criterion 1: hit-test with section headers ----
 
-static uint16_t prv_two_sections(struct MenuLayer *m, void *ctx) { return 2; }
-static uint16_t prv_five_rows(struct MenuLayer *m, uint16_t s, void *ctx) { return 5; }
-static int16_t prv_header_20(struct MenuLayer *m, uint16_t s, void *ctx) { return 20; }
-static int16_t prv_sep_0(struct MenuLayer *m, MenuIndex *i, void *ctx) { return 0; }
+static uint16_t prv_two_sections(struct MenuLayer *m, void *ctx) {
+  return 2;
+}
+static uint16_t prv_five_rows(struct MenuLayer *m, uint16_t s, void *ctx) {
+  return 5;
+}
+static int16_t prv_header_20(struct MenuLayer *m, uint16_t s, void *ctx) {
+  return 20;
+}
+static int16_t prv_sep_0(struct MenuLayer *m, MenuIndex *i, void *ctx) {
+  return 0;
+}
 
 void test_menu_layer__touch_hit_test_with_headers(void) {
   MenuLayer l;

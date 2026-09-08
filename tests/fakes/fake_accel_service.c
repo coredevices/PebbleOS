@@ -33,7 +33,9 @@ void accel_data_service_unsubscribe(void) {
   s_raw_handler = NULL;
 }
 
-int accel_service_set_sampling_rate(AccelSamplingRate rate) { return 0; }
+int accel_service_set_sampling_rate(AccelSamplingRate rate) {
+  return 0;
+}
 
 void fake_accel_service_invoke_callbacks(AccelData *data, uint32_t num_samples) {
   if (s_handler) {
@@ -53,9 +55,12 @@ void fake_accel_service_invoke_callbacks(AccelData *data, uint32_t num_samples) 
   }
 }
 
-AccelServiceState *accel_session_create(void) { return ACCEL_SESSION_REF; }
+AccelServiceState *accel_session_create(void) {
+  return ACCEL_SESSION_REF;
+}
 
-void accel_session_delete(AccelServiceState *session) {}
+void accel_session_delete(AccelServiceState *session) {
+}
 
 void accel_session_data_subscribe(AccelServiceState *session, uint32_t samples_per_update,
                                   AccelDataHandler handler) {
@@ -84,4 +89,5 @@ int accel_session_set_samples_per_update(AccelServiceState *session, uint32_t sa
   return 0;
 }
 
-void accel_manager_set_motion_backlight_enabled(bool enabled) {}
+void accel_manager_set_motion_backlight_enabled(bool enabled) {
+}

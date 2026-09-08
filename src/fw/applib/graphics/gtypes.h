@@ -265,7 +265,9 @@ static inline GPoint gpoint_scalar_rshift(const GPoint point, int8_t s) {
 //! Returns the negation of a GPoint
 //! @note In some cases `gpoint_sub(GPointZero, ...)` uses less code space, please try both
 //! @see gpoint_sub
-static inline GPoint gpoint_neg(const GPoint a) { return GPoint(-a.x, -a.y); }
+static inline GPoint gpoint_neg(const GPoint a) {
+  return GPoint(-a.x, -a.y);
+}
 
 //! @internal
 //! Adds two GPoints together
@@ -448,7 +450,9 @@ typedef GSize GSizeReturn;
 //! Adds two GSizes together
 //! @note In some cases \ref gsize_add_eq uses less code space, please try both functions
 //! @see gsize_add_eq
-static inline GSize gsize_add(const GSize a, const GSize b) { return GSize(a.w + b.w, a.h + b.h); }
+static inline GSize gsize_add(const GSize a, const GSize b) {
+  return GSize(a.w + b.w, a.h + b.h);
+}
 
 //! @internal
 //! Mutably adds a GSize to the first
@@ -658,13 +662,17 @@ GRect grect_inset(GRect rect, GEdgeInsets insets);
 //! Convenience function to compute the max x-coordinate of a given rectangle.
 //! @param rect The rectangle for which to calculate the max x-coordinate.
 //! @return The max x-coordinate of the rect
-static inline int16_t grect_get_max_x(const GRect *rect) { return rect->origin.x + rect->size.w; }
+static inline int16_t grect_get_max_x(const GRect *rect) {
+  return rect->origin.x + rect->size.w;
+}
 
 //! Convenience function to compute the max y-coordinate of a given rectangle.
 //! @internal
 //! @param rect The rectangle for which to calculate the max y-coordinate.
 //! @return The max y-coordinate of the rect
-static inline int16_t grect_get_max_y(const GRect *rect) { return rect->origin.y + rect->size.h; }
+static inline int16_t grect_get_max_y(const GRect *rect) {
+  return rect->origin.y + rect->size.h;
+}
 
 //! @internal
 //! Convenience function to return the length of the longest side of a rect

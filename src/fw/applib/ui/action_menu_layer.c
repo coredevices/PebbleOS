@@ -31,7 +31,9 @@ static const int MAX_NUM_VISIBLE_LINES = 2;
 static const int SHORT_ITEM_MAX_ROWS_SPALDING = 3;
 #endif
 
-static GFont prv_get_item_font(void) { return system_theme_get_font(TextStyleFont_MenuCellTitle); }
+static GFont prv_get_item_font(void) {
+  return system_theme_get_font(TextStyleFont_MenuCellTitle);
+}
 
 #if PBL_ROUND
 //! Only used on round displays to achieve a fish-eye effect

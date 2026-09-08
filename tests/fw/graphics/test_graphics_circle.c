@@ -16,15 +16,25 @@
 #include "stubs_app_state.h"
 #include "stubs_heap.h"
 
-GBitmap *graphics_capture_frame_buffer(GContext *ctx) { return NULL; }
-bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) { return true; }
+GBitmap *graphics_capture_frame_buffer(GContext *ctx) {
+  return NULL;
+}
+bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) {
+  return true;
+}
 
-void graphics_draw_pixel(GContext *ctx, GPoint point) {}
-void graphics_fill_rect(GContext *ctx, const GRect *rect) {}
-void graphics_private_draw_horizontal_line() {}
-void graphics_private_draw_vertical_line() {}
-void graphics_private_plot_pixel() {}
-void graphics_private_set_pixel() {}
+void graphics_draw_pixel(GContext *ctx, GPoint point) {
+}
+void graphics_fill_rect(GContext *ctx, const GRect *rect) {
+}
+void graphics_private_draw_horizontal_line() {
+}
+void graphics_private_draw_vertical_line() {
+}
+void graphics_private_plot_pixel() {
+}
+void graphics_private_set_pixel() {
+}
 
 /////////////////////////////
 

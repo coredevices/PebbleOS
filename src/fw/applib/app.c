@@ -168,7 +168,9 @@ static void prv_legacy2_status_bar_timer_unsubscribe(void) {
   }
 }
 
-static void prv_app_callback_handler(PebbleEvent *e) { e->callback.callback(e->callback.data); }
+static void prv_app_callback_handler(PebbleEvent *e) {
+  e->callback.callback(e->callback.data);
+}
 
 static NOINLINE void prv_handle_deinit_event(void) {
   ApplibInternalEventsInfo *events_info = app_state_get_applib_internal_events_info();
@@ -252,4 +254,6 @@ void app_event_loop_common(void) {
   }
 }
 
-void app_event_loop(void) { app_event_loop_common(); }
+void app_event_loop(void) {
+  app_event_loop_common();
+}

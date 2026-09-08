@@ -37,11 +37,17 @@ void uart_init(UARTDevice *dev) {
   NVIC_EnableIRQ(dev->irqn);
 }
 
-void uart_init_open_drain(UARTDevice *dev) { uart_init(dev); }
+void uart_init_open_drain(UARTDevice *dev) {
+  uart_init(dev);
+}
 
-void uart_init_tx_only(UARTDevice *dev) { uart_init(dev); }
+void uart_init_tx_only(UARTDevice *dev) {
+  uart_init(dev);
+}
 
-void uart_init_rx_only(UARTDevice *dev) { uart_init(dev); }
+void uart_init_rx_only(UARTDevice *dev) {
+  uart_init(dev);
+}
 
 void uart_deinit(UARTDevice *dev) {
   REG32(dev->base_addr + UART_CTRL) = 0;
@@ -154,9 +160,13 @@ void uart_start_rx_dma(UARTDevice *dev, void *buffer, uint32_t length) {
   (void)length;
 }
 
-void uart_stop_rx_dma(UARTDevice *dev) { (void)dev; }
+void uart_stop_rx_dma(UARTDevice *dev) {
+  (void)dev;
+}
 
-void uart_clear_rx_dma_buffer(UARTDevice *dev) { (void)dev; }
+void uart_clear_rx_dma_buffer(UARTDevice *dev) {
+  (void)dev;
+}
 
 // Called from the IRQ handler trampoline defined via IRQ_MAP in the board file
 void uart_irq_handler(UARTDevice *dev) {

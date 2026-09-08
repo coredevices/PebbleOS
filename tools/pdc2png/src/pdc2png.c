@@ -34,11 +34,17 @@ void passert_failed(const char *filename, int line_number, const char *message, 
   exit(EXIT_FAILURE);
 }
 
-void passert_failed_no_message(const char *filename, int line_number) { exit(EXIT_FAILURE); }
+void passert_failed_no_message(const char *filename, int line_number) {
+  exit(EXIT_FAILURE);
+}
 
-void wtf(void) { exit(EXIT_FAILURE); }
+void wtf(void) {
+  exit(EXIT_FAILURE);
+}
 
-bool process_manager_compiled_with_legacy2_sdk(void) { return false; }
+bool process_manager_compiled_with_legacy2_sdk(void) {
+  return false;
+}
 
 const uint8_t *resource_get_builtin_bytes(ResAppNum app_num, uint32_t resource_id,
                                           uint32_t *num_bytes_out) {

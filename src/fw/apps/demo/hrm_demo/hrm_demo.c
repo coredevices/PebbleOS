@@ -225,7 +225,9 @@ static void prv_message_failed_cb(DictionaryIterator *iterator, AppMessageResult
   app_data->ready_to_send = true;
 }
 
-static void prv_remote_notify_timer_cb(void *data) { prv_send_status_and_version(); }
+static void prv_remote_notify_timer_cb(void *data) {
+  prv_send_status_and_version();
+}
 
 static void prv_init(void) {
   AppData *app_data = app_malloc_check(sizeof(*app_data));

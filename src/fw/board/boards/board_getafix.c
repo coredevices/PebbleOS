@@ -592,9 +592,12 @@ const MicDevice *MIC = &mic_device;
 IRQ_MAP(PDM1, pdm1_data_handler, MIC);
 IRQ_MAP(DMAC1_CH5, pdm1_l_dma_handler, MIC);
 
-uint32_t BSP_GetOtpBase(void) { return MPI2_MEM_BASE; }
+uint32_t BSP_GetOtpBase(void) {
+  return MPI2_MEM_BASE;
+}
 
-void board_early_init(void) {}
+void board_early_init(void) {
+}
 
 void board_init(void) {
   i2c_init(I2C1_BUS);

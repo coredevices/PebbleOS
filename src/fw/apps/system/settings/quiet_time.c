@@ -118,7 +118,11 @@ static void prv_get_dnd_time(DoNotDisturbScheduleType type, char *time_string, c
 // DND Action Menu Window
 ///////////////////////////////
 
-enum { DNDMenuItemDisable = 0, DNDMenuItemChangeSchedule, DNDMenuItem_Count };
+enum {
+  DNDMenuItemDisable = 0,
+  DNDMenuItemChangeSchedule,
+  DNDMenuItem_Count
+};
 
 static void prv_toggle_scheduled_dnd(ActionMenu *action_menu, const ActionMenuItem *item,
                                      void *context) {
@@ -493,7 +497,9 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
   settings_menu_reload_data(SettingsMenuItemQuietTime);
 }
 
-static uint16_t prv_num_rows_cb(SettingsCallbacks *context) { return QuietTimeItem_Count; }
+static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
+  return QuietTimeItem_Count;
+}
 
 static Window *prv_init(void) {
   SettingsQuietTimeData *data = app_zalloc_check(sizeof(*data));

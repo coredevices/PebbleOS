@@ -91,7 +91,9 @@ static int prv_get_serialized_prefs(SettingsFile *file, const uint8_t *app_id, i
   return (prefs_len - sizeof(SerializedNotifPrefs));
 }
 
-static void prv_free_serialized_prefs(SerializedNotifPrefs *prefs) { kernel_free(prefs); }
+static void prv_free_serialized_prefs(SerializedNotifPrefs *prefs) {
+  kernel_free(prefs);
+}
 
 iOSNotifPrefs *ios_notif_pref_db_get_prefs(const uint8_t *app_id, int key_len) {
   SettingsFile file;
@@ -161,7 +163,9 @@ iOSNotifPrefs *ios_notif_pref_db_get_prefs(const uint8_t *app_id, int key_len) {
   return notif_prefs;
 }
 
-void ios_notif_pref_db_free_prefs(iOSNotifPrefs *prefs) { kernel_free(prefs); }
+void ios_notif_pref_db_free_prefs(iOSNotifPrefs *prefs) {
+  kernel_free(prefs);
+}
 
 status_t ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, AttributeList *attr_list,
                                        TimelineItemActionGroup *action_group) {
@@ -196,7 +200,8 @@ status_t ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, Attrib
   return rv;
 }
 
-void ios_notif_pref_db_init(void) {}
+void ios_notif_pref_db_init(void) {
+}
 
 status_t ios_notif_pref_db_insert(const uint8_t *key, int key_len, const uint8_t *val,
                                   int val_len) {

@@ -60,12 +60,17 @@ static const PebbleProtocolEndpoint s_put_bytes_endpoint = (const PebbleProtocol
 //////////////////////////////////////////////////////////
 
 uint32_t s_boot_bits_orred;
-void boot_bit_set(BootBitValue bit) { s_boot_bits_orred |= bit; }
+void boot_bit_set(BootBitValue bit) {
+  s_boot_bits_orred |= bit;
+}
 
 static bool s_firmware_update_is_in_progress;
-bool firmware_update_is_in_progress(void) { return s_firmware_update_is_in_progress; }
+bool firmware_update_is_in_progress(void) {
+  return s_firmware_update_is_in_progress;
+}
 
-void psleep(int millis) {}
+void psleep(int millis) {
+}
 
 void app_storage_get_file_name(char *name, size_t buf_length, AppInstallId app_id,
                                PebbleTask task) {
@@ -74,9 +79,12 @@ void app_storage_get_file_name(char *name, size_t buf_length, AppInstallId app_i
 
 void bluetooth_analytics_handle_put_bytes_stats(bool successful, uint8_t type, uint32_t total_size,
                                                 uint32_t elapsed_time_ms,
-                                                const SlaveConnEventStats *orig_stats) {}
+                                                const SlaveConnEventStats *orig_stats) {
+}
 
-bool bt_driver_analytics_get_conn_event_stats(SlaveConnEventStats *stats) { return false; }
+bool bt_driver_analytics_get_conn_event_stats(SlaveConnEventStats *stats) {
+  return false;
+}
 
 typedef enum {
   CmdInit = 0x01,
@@ -402,7 +410,9 @@ void test_put_bytes__lock_contention_upon_write_message(void) {
   assert_nack_count(1);
 }
 
-static void prv_cancel_before_write_second_message(void) { put_bytes_cancel(); }
+static void prv_cancel_before_write_second_message(void) {
+  put_bytes_cancel();
+}
 
 void test_put_bytes__cancel_between_prepare_and_finish(void) {
   // When the put_bytes_cancel() is called while the PutBytes message is written (between "prepare"

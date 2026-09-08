@@ -334,7 +334,9 @@ void animation_legacy2_set_implementation(AnimationLegacy2 *animation,
   animation->implementation = implementation;
 }
 
-void *animation_legacy2_get_context(AnimationLegacy2 *animation) { return animation->context; }
+void *animation_legacy2_get_context(AnimationLegacy2 *animation) {
+  return animation->context;
+}
 
 void animation_legacy2_set_delay(AnimationLegacy2 *animation, uint32_t delay_ms) {
   PBL_ASSERTN(animation->abs_start_time_ms == 0);  // can't set after animation has been added

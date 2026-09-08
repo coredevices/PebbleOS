@@ -114,7 +114,9 @@ void kino_player_set_reel_with_resource_system(KinoPlayer *player, ResAppNum app
   kino_player_set_reel(player, new_reel, true);
 }
 
-KinoReel *kino_player_get_reel(KinoPlayer *player) { return player->reel; }
+KinoReel *kino_player_get_reel(KinoPlayer *player) {
+  return player->reel;
+}
 
 static void prv_create_play_animation(KinoPlayer *player, uint32_t from_value, uint32_t to_value) {
   // stop any ongoing animation

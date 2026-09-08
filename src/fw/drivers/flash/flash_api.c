@@ -62,7 +62,9 @@ void flash_api_reset_for_test(void) {
   s_flash_initialized = false;
 }
 
-TimerID flash_api_get_erase_poll_timer_for_test(void) { return s_erase_poll_timer; }
+TimerID flash_api_get_erase_poll_timer_for_test(void) {
+  return s_erase_poll_timer;
+}
 #endif
 
 //! Assumes that s_flash_lock is held.
@@ -114,7 +116,9 @@ void flash_read_bytes(uint8_t *buffer, uint32_t start_addr, uint32_t buffer_size
 
 #ifdef TEST_FLASH_LOCK_PROTECTION
 static bool s_assert_write_error = false;
-void flash_expect_program_failure(bool expect_failure) { s_assert_write_error = expect_failure; }
+void flash_expect_program_failure(bool expect_failure) {
+  s_assert_write_error = expect_failure;
+}
 #endif
 
 void flash_write_bytes(const uint8_t *buffer, uint32_t start_addr, uint32_t buffer_size) {
@@ -355,7 +359,9 @@ void flash_erase_subsector_blocking(uint32_t subsector_addr) {
   prv_flash_erase_blocking(subsector_addr, true /* is_subsector */);
 }
 
-void flash_enable_write_protection(void) { flash_impl_enable_write_protection(); }
+void flash_enable_write_protection(void) {
+  flash_impl_enable_write_protection();
+}
 
 void flash_prf_set_protection(bool do_protect) {
   status_t status;
@@ -385,9 +391,13 @@ void flash_sleep_when_idle(bool enable) {
   // the S29VS flash automatically enters and exits standby
 }
 
-bool flash_get_sleep_when_idle(void) { return false; }
+bool flash_get_sleep_when_idle(void) {
+  return false;
+}
 
-bool flash_is_initialized(void) { return s_flash_initialized; }
+bool flash_is_initialized(void) {
+  return s_flash_initialized;
+}
 
 void flash_stop(void) {
   if (!flash_is_initialized()) {
@@ -420,9 +430,13 @@ uint32_t flash_get_subsector_base_address(uint32_t flash_addr) {
   return flash_impl_get_subsector_base_address(flash_addr);
 }
 
-void flash_power_down_for_stop_mode(void) { flash_impl_enter_low_power_mode(); }
+void flash_power_down_for_stop_mode(void) {
+  flash_impl_enter_low_power_mode();
+}
 
-void flash_power_up_after_stop_mode(void) { flash_impl_exit_low_power_mode(); }
+void flash_power_up_after_stop_mode(void) {
+  flash_impl_exit_low_power_mode();
+}
 
 bool flash_sector_is_erased(uint32_t sector_addr) {
   return flash_impl_blank_check_sector(flash_impl_get_sector_base_address(sector_addr));

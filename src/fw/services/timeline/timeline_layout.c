@@ -288,7 +288,9 @@ static void prv_init_icon(TimelineLayout *timeline_layout, const GRect *icon_fra
   kino_layer_play(icon_layer);
 }
 
-static void prv_deinit_icon(TimelineLayout *layout) { kino_layer_deinit(&layout->icon_layer); }
+static void prv_deinit_icon(TimelineLayout *layout) {
+  kino_layer_deinit(&layout->icon_layer);
+}
 
 ////////////////////////
 // Layout Impl

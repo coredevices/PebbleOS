@@ -27,4 +27,6 @@ int32_t battery_curve_lookup_percent_with_scaling_factor(int battery_mv, bool is
   return 0U;
 }
 
-uint32_t battery_curve_lookup_voltage_by_percent(uint32_t percent, bool is_charging) { return 0U; }
+uint32_t battery_curve_lookup_voltage_by_percent(uint32_t percent, bool is_charging) {
+  return 0U;
+}

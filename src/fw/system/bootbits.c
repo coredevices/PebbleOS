@@ -36,7 +36,9 @@ void retained_write(uint8_t id, uint32_t value) {
   retained[NRF_RETAINED_REGISTER_CRC] = crc32_computed;
 }
 
-uint32_t retained_read(uint8_t id) { return retained[id]; }
+uint32_t retained_read(uint8_t id) {
+  return retained[id];
+}
 
 void boot_bit_init(void) {
   // Make sure that the bootbits have a valid CRC -- otherwise, their
@@ -71,16 +73,22 @@ bool boot_bit_test(BootBitValue bit) {
   return (current_value & bit);
 }
 
-void boot_bit_dump(void) { PBL_LOG_DBG("0x%" PRIx32, retained_read(RTC_BKP_BOOTBIT_DR)); }
+void boot_bit_dump(void) {
+  PBL_LOG_DBG("0x%" PRIx32, retained_read(RTC_BKP_BOOTBIT_DR));
+}
 
-uint32_t boot_bits_get(void) { return retained_read(RTC_BKP_BOOTBIT_DR); }
+uint32_t boot_bits_get(void) {
+  return retained_read(RTC_BKP_BOOTBIT_DR);
+}
 
 void command_boot_bits_get(void) {
   char buffer[32];
   dbgserial_putstr_fmt(buffer, sizeof(buffer), "bootbits: 0x%" PRIu32, boot_bits_get());
 }
 
-uint32_t boot_version_read(void) { return retained_read(BOOTLOADER_VERSION_REGISTER); }
+uint32_t boot_version_read(void) {
+  return retained_read(BOOTLOADER_VERSION_REGISTER);
+}
 
 #elif defined(CONFIG_SOC_SF32LB52)
 void boot_bit_init(void) {
@@ -106,9 +114,13 @@ bool boot_bit_test(BootBitValue bit) {
   return (current_value & bit);
 }
 
-void boot_bit_dump(void) { PBL_LOG_DBG("0x%" PRIx32, HAL_Get_backup(RTC_BKP_BOOTBIT_DR)); }
+void boot_bit_dump(void) {
+  PBL_LOG_DBG("0x%" PRIx32, HAL_Get_backup(RTC_BKP_BOOTBIT_DR));
+}
 
-uint32_t boot_bits_get(void) { return HAL_Get_backup(RTC_BKP_BOOTBIT_DR); }
+uint32_t boot_bits_get(void) {
+  return HAL_Get_backup(RTC_BKP_BOOTBIT_DR);
+}
 
 void command_boot_bits_get(void) {
   char buffer[32];
@@ -172,15 +184,21 @@ bool boot_bit_test(BootBitValue bit) {
   return (current_value & bit);
 }
 
-void boot_bit_dump(void) { PBL_LOG_DBG("0x%" PRIx32, RTC_ReadBackupRegister(RTC_BKP_BOOTBIT_DR)); }
+void boot_bit_dump(void) {
+  PBL_LOG_DBG("0x%" PRIx32, RTC_ReadBackupRegister(RTC_BKP_BOOTBIT_DR));
+}
 
-uint32_t boot_bits_get(void) { return RTC_ReadBackupRegister(RTC_BKP_BOOTBIT_DR); }
+uint32_t boot_bits_get(void) {
+  return RTC_ReadBackupRegister(RTC_BKP_BOOTBIT_DR);
+}
 
 void command_boot_bits_get(void) {
   char buffer[32];
   dbgserial_putstr_fmt(buffer, sizeof(buffer), "bootbits: 0x%" PRIu32, boot_bits_get());
 }
 
-uint32_t boot_version_read(void) { return RTC_ReadBackupRegister(BOOTLOADER_VERSION_REGISTER); }
+uint32_t boot_version_read(void) {
+  return RTC_ReadBackupRegister(BOOTLOADER_VERSION_REGISTER);
+}
 
 #endif

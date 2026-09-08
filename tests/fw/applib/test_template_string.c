@@ -75,9 +75,11 @@ static void prv_state_init(void) {
   s_cond.eval_time = INT_MAX;
 }
 
-void test_template_string__initialize(void) {}
+void test_template_string__initialize(void) {
+}
 
-void test_template_string__cleanup(void) {}
+void test_template_string__cleanup(void) {
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Test truncation

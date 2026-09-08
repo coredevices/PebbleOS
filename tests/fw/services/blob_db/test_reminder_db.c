@@ -30,7 +30,8 @@
 #include "stubs_sleep.h"
 #include "stubs_task_watchdog.h"
 
-void reminders_handle_reminder_removed(const Uuid *reminder_id) {}
+void reminders_handle_reminder_removed(const Uuid *reminder_id) {
+}
 
 static TimelineItem item1 = {.header = {
                                  .id = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31,
@@ -135,7 +136,9 @@ static void prv_insert_default_reminders(void) {
 // Setup
 ////////////////////////////////////////////////////////////////
 
-void test_reminder_db__initialize(void) { reminder_db_init(); }
+void test_reminder_db__initialize(void) {
+  reminder_db_init();
+}
 
 void test_reminder_db__cleanup(void) {
   reminder_db_deinit();

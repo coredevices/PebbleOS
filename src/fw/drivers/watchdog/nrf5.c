@@ -15,9 +15,13 @@ void watchdog_init(void) {
   nrf_wdt_reload_value_set(NRF_WDT, 32768 * 8);
 }
 
-void watchdog_start(void) { nrf_wdt_task_trigger(NRF_WDT, NRF_WDT_TASK_START); }
+void watchdog_start(void) {
+  nrf_wdt_task_trigger(NRF_WDT, NRF_WDT_TASK_START);
+}
 
-void watchdog_feed(void) { nrf_wdt_reload_request_set(NRF_WDT, NRF_WDT_RR0); }
+void watchdog_feed(void) {
+  nrf_wdt_reload_request_set(NRF_WDT, NRF_WDT_RR0);
+}
 
 bool watchdog_check_reset_flag(void) {
   return (nrfx_reset_reason_get() & NRFX_RESET_REASON_DOG_MASK) != 0;
@@ -42,4 +46,6 @@ McuRebootReason watchdog_clear_reset_flag(void) {
   return s_cached_reset_flag;
 }
 
-McuRebootReason watchdog_get_reset_flag(void) { return s_cached_reset_flag; }
+McuRebootReason watchdog_get_reset_flag(void) {
+  return s_cached_reset_flag;
+}

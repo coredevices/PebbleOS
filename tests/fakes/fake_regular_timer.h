@@ -39,7 +39,9 @@ bool regular_timer_is_scheduled(RegularTimerInfo *cb) {
           list_find(&s_minutes_callbacks, prv_callback_registered_filter, &cb->list_node));
 }
 
-bool regular_timer_pending_deletion(RegularTimerInfo *cb) { return cb->pending_delete; }
+bool regular_timer_pending_deletion(RegularTimerInfo *cb) {
+  return cb->pending_delete;
+}
 
 bool regular_timer_remove_callback(RegularTimerInfo *cb) {
   bool timer_removed = false;

@@ -8,7 +8,9 @@
 // watch rotation
 static bool s_rotated_180 = false;
 
-void button_set_rotated(bool rotated) { s_rotated_180 = rotated; }
+void button_set_rotated(bool rotated) {
+  s_rotated_180 = rotated;
+}
 
 bool button_is_pressed(ButtonId id) {
   if (s_rotated_180 && id == BUTTON_ID_UP) {
@@ -32,7 +34,8 @@ uint8_t button_get_state_bits(void) {
 }
 
 void button_init(void) {
-  if (BOARD_CONFIG_BUTTON.button_com.gpio_pin) WTF;  // NYI
+  if (BOARD_CONFIG_BUTTON.button_com.gpio_pin)
+    WTF;  // NYI
 
   for (int i = 0; i < NUM_BUTTONS; ++i) {
     nrf_gpio_cfg_input(BOARD_CONFIG_BUTTON.buttons[i].gpiote.gpio_pin,

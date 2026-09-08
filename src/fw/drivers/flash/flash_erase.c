@@ -28,11 +28,17 @@ static void prv_erase_next_async(void *ignored);
 T_STATIC void prv_lock_erase_mutex(void);
 T_STATIC void prv_unlock_erase_mutex(void);
 #if !UNITTEST
-void flash_erase_init(void) { pbl_sem_give(&s_erase_mutex); }
+void flash_erase_init(void) {
+  pbl_sem_give(&s_erase_mutex);
+}
 
-static void prv_lock_erase_mutex(void) { pbl_sem_take(&s_erase_mutex, PBL_FOREVER); }
+static void prv_lock_erase_mutex(void) {
+  pbl_sem_take(&s_erase_mutex, PBL_FOREVER);
+}
 
-static void prv_unlock_erase_mutex(void) { pbl_sem_give(&s_erase_mutex); }
+static void prv_unlock_erase_mutex(void) {
+  pbl_sem_give(&s_erase_mutex);
+}
 #endif
 
 static void prv_async_erase_done_cb(void *ignored, status_t result) {

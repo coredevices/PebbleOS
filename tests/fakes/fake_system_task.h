@@ -50,14 +50,20 @@ bool system_task_add_callback_from_isr_droppable(SystemTaskEventCallback cb, voi
   return system_task_add_callback(cb, data);
 }
 
-uint32_t system_task_get_available_space(void) { return system_task_available_space; }
+uint32_t system_task_get_available_space(void) {
+  return system_task_available_space;
+}
 
-void system_task_set_available_space(uint32_t space) { system_task_available_space = space; }
+void system_task_set_available_space(uint32_t space) {
+  system_task_available_space = space;
+}
 
 ////////////////////////////////////
 // Stub:
 //
-void stub_invoke_system_task_as_current(void) { s_invoke_as_current = !s_invoke_as_current; }
+void stub_invoke_system_task_as_current(void) {
+  s_invoke_as_current = !s_invoke_as_current;
+}
 
 ////////////////////////////////////
 // Fake manipulation:
@@ -111,12 +117,20 @@ void fake_system_task_callbacks_cleanup(void) {
   cl_assert(s_system_task_callback_head == NULL);
 }
 
-void system_task_watchdog_feed(void) {}
+void system_task_watchdog_feed(void) {
+}
 
-uint32_t fake_system_task_count_callbacks(void) { return list_count(s_system_task_callback_head); }
+uint32_t fake_system_task_count_callbacks(void) {
+  return list_count(s_system_task_callback_head);
+}
 
-void system_task_enable_raised_priority(bool is_raised) {}
+void system_task_enable_raised_priority(bool is_raised) {
+}
 
-bool system_task_is_ready_to_run(void) { return true; }
+bool system_task_is_ready_to_run(void) {
+  return true;
+}
 
-void *system_task_get_current_callback(void) { return s_fake_system_task_current_cb; }
+void *system_task_get_current_callback(void) {
+  return s_fake_system_task_current_cb;
+}

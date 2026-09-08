@@ -3,10 +3,17 @@
 
 #include "pbl/services/timeline/layout_layer.h"
 
-LayoutLayer *layout_create(LayoutId id, const LayoutLayerConfig *config) { return NULL; }
+LayoutLayer *layout_create(LayoutId id, const LayoutLayerConfig *config) {
+  return NULL;
+}
 
-bool layout_verify(bool existing_attributes[], LayoutId id) { return true; }
+bool layout_verify(bool existing_attributes[], LayoutId id) {
+  return true;
+}
 
-GSize layout_get_size(GContext *ctx, LayoutLayer *layout) { return GSize(0, 0); }
+GSize layout_get_size(GContext *ctx, LayoutLayer *layout) {
+  return GSize(0, 0);
+}
 
-void layout_destroy(LayoutLayer *layout) {}
+void layout_destroy(LayoutLayer *layout) {
+}

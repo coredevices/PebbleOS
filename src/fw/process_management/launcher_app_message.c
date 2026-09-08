@@ -32,7 +32,9 @@ enum {
 static uint8_t s_transaction_id;
 
 // For unit testing
-void launcher_app_message_reset(void) { s_transaction_id = 0; }
+void launcher_app_message_reset(void) {
+  s_transaction_id = 0;
+}
 
 void launcher_app_message_send_app_state_deprecated(const Uuid *uuid, bool running) {
   // Deprecated: 0x31 endpoint, only used by Android versions < 2.2 and iOS

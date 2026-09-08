@@ -411,14 +411,18 @@ void alerts_preferences_set_notification_alternative_design(bool alternative) {
   SET_PREF(PREF_KEY_NOTIF_DESIGN_STYLE, s_notification_alternative_design);
 }
 
-bool alerts_preferences_get_notification_vibe_delay(void) { return s_notification_vibe_delay; }
+bool alerts_preferences_get_notification_vibe_delay(void) {
+  return s_notification_vibe_delay;
+}
 
 void alerts_preferences_set_notification_vibe_delay(bool delay) {
   s_notification_vibe_delay = delay;
   SET_PREF(PREF_KEY_NOTIF_VIBE_DELAY, s_notification_vibe_delay);
 }
 
-bool alerts_preferences_get_notification_backlight(void) { return s_notification_backlight; }
+bool alerts_preferences_get_notification_backlight(void) {
+  return s_notification_backlight;
+}
 
 void alerts_preferences_set_notification_backlight(bool enable) {
   s_notification_backlight = enable;
@@ -434,14 +438,18 @@ void alerts_preferences_set_notification_status_bar_style(NotificationStatusBarS
   SET_PREF(PREF_KEY_NOTIF_STATUS_BAR_STYLE, s_notification_status_bar_style);
 }
 
-bool alerts_preferences_get_speaker_muted(void) { return s_speaker_muted; }
+bool alerts_preferences_get_speaker_muted(void) {
+  return s_speaker_muted;
+}
 
 void alerts_preferences_set_speaker_muted(bool muted) {
   s_speaker_muted = muted;
   SET_PREF(PREF_KEY_SPEAKER_MUTED, s_speaker_muted);
 }
 
-uint8_t alerts_preferences_get_speaker_volume(void) { return s_speaker_volume; }
+uint8_t alerts_preferences_get_speaker_volume(void) {
+  return s_speaker_volume;
+}
 
 void alerts_preferences_set_speaker_volume(uint8_t volume) {
   if (volume > 100) {
@@ -454,14 +462,18 @@ void alerts_preferences_set_speaker_volume(uint8_t volume) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Vibes
 
-bool alerts_preferences_get_vibrate(void) { return s_vibe_on_notification; }
+bool alerts_preferences_get_vibrate(void) {
+  return s_vibe_on_notification;
+}
 
 void alerts_preferences_set_vibrate(bool enable) {
   s_vibe_on_notification = enable;
   SET_PREF(PREF_KEY_VIBE, s_vibe_on_notification);
 }
 
-VibeIntensity alerts_preferences_get_vibe_intensity(void) { return s_vibe_intensity; }
+VibeIntensity alerts_preferences_get_vibe_intensity(void) {
+  return s_vibe_intensity;
+}
 
 void alerts_preferences_set_vibe_intensity(VibeIntensity intensity) {
   s_vibe_intensity = intensity;
@@ -528,7 +540,9 @@ void alerts_preferences_dnd_set_mask(AlertMask mask) {
   SET_PREF(PREF_KEY_DND_INTERRUPTIONS_MASK, s_dnd_interruptions_mask);
 }
 
-AlertMask alerts_preferences_dnd_get_mask(void) { return s_dnd_interruptions_mask; }
+AlertMask alerts_preferences_dnd_get_mask(void) {
+  return s_dnd_interruptions_mask;
+}
 
 void alerts_preferences_dnd_set_show_notifications(DndNotificationMode mode) {
   s_dnd_show_notifications = mode;
@@ -544,30 +558,40 @@ void alerts_preferences_dnd_set_motion_backlight(bool enable) {
   SET_PREF(PREF_KEY_DND_MOTION_BACKLIGHT, s_dnd_motion_backlight);
 }
 
-bool alerts_preferences_dnd_get_motion_backlight(void) { return s_dnd_motion_backlight; }
+bool alerts_preferences_dnd_get_motion_backlight(void) {
+  return s_dnd_motion_backlight;
+}
 
 void alerts_preferences_dnd_set_touch_backlight(bool enable) {
   s_dnd_touch_backlight = enable;
   SET_PREF(PREF_KEY_DND_TOUCH_BACKLIGHT, s_dnd_touch_backlight);
 }
 
-bool alerts_preferences_dnd_get_touch_backlight(void) { return s_dnd_touch_backlight; }
+bool alerts_preferences_dnd_get_touch_backlight(void) {
+  return s_dnd_touch_backlight;
+}
 
 void alerts_preferences_dnd_set_mute_speaker(bool enable) {
   s_dnd_mute_speaker = enable;
   SET_PREF(PREF_KEY_DND_MUTE_SPEAKER, s_dnd_mute_speaker);
 }
 
-bool alerts_preferences_dnd_get_mute_speaker(void) { return s_dnd_mute_speaker; }
+bool alerts_preferences_dnd_get_mute_speaker(void) {
+  return s_dnd_mute_speaker;
+}
 
 void alerts_preferences_dnd_set_auto_dismiss(bool enable) {
   s_dnd_auto_dismiss = enable;
   SET_PREF(PREF_KEY_DND_AUTO_DISMISS, s_dnd_auto_dismiss);
 }
 
-bool alerts_preferences_dnd_get_auto_dismiss(void) { return s_dnd_auto_dismiss; }
+bool alerts_preferences_dnd_get_auto_dismiss(void) {
+  return s_dnd_auto_dismiss;
+}
 
-bool alerts_preferences_dnd_is_manually_enabled(void) { return s_do_not_disturb_manually_enabled; }
+bool alerts_preferences_dnd_is_manually_enabled(void) {
+  return s_do_not_disturb_manually_enabled;
+}
 
 void alerts_preferences_dnd_set_manually_enabled(bool enable) {
   s_do_not_disturb_manually_enabled = enable;
@@ -604,16 +628,22 @@ bool alerts_preferences_check_and_set_first_use_complete(FirstUseSource source) 
   return false;
 }
 
-bool alerts_preferences_dnd_is_smart_enabled(void) { return s_do_not_disturb_smart_dnd_enabled; }
+bool alerts_preferences_dnd_is_smart_enabled(void) {
+  return s_do_not_disturb_smart_dnd_enabled;
+}
 
 void alerts_preferences_dnd_set_smart_enabled(bool enable) {
   s_do_not_disturb_smart_dnd_enabled = enable;
   SET_PREF(PREF_KEY_DND_SMART_ENABLED, s_do_not_disturb_smart_dnd_enabled);
 }
 
-void alerts_preferences_lock(void) { pbl_mutex_lock(&s_mutex, PBL_FOREVER); }
+void alerts_preferences_lock(void) {
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
+}
 
-void alerts_preferences_unlock(void) { pbl_mutex_unlock(&s_mutex); }
+void alerts_preferences_unlock(void) {
+  pbl_mutex_unlock(&s_mutex);
+}
 
 //! Keys that feed do_not_disturb_is_active() or the DND schedule timer
 static bool prv_is_dnd_state_key(const char *key) {

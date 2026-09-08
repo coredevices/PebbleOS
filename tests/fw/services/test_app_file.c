@@ -27,17 +27,25 @@ static void assert_app_file_name_make(AppInstallId app_id, const char *suffix) {
   assert_file_name(buf, app_id, suffix);
 }
 
-void test_app_file__name_make_simple_1(void) { assert_app_file_name_make(1, "app"); }
+void test_app_file__name_make_simple_1(void) {
+  assert_app_file_name_make(1, "app");
+}
 
-void test_app_file__name_make_simple_2(void) { assert_app_file_name_make(7, "app_app"); }
+void test_app_file__name_make_simple_2(void) {
+  assert_app_file_name_make(7, "app_app");
+}
 
-void test_app_file__name_make_hex_1(void) { assert_app_file_name_make(0x5abc, "woop"); }
+void test_app_file__name_make_hex_1(void) {
+  assert_app_file_name_make(0x5abc, "woop");
+}
 
 void test_app_file__name_make_hex_2(void) {
   assert_app_file_name_make(0x12345, "looks_like_decimal");
 }
 
-void test_app_file__name_make_negative(void) { assert_app_file_name_make(-42, "builtin_app"); }
+void test_app_file__name_make_negative(void) {
+  assert_app_file_name_make(-42, "builtin_app");
+}
 
 void test_app_file__name_make_pseudo_directory(void) {
   assert_app_file_name_make(76, "not/really/a/path");

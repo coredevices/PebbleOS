@@ -24,7 +24,9 @@
 
 #define CRC_POLY 0x04C11DB7
 
-static uint32_t crc_init(void) { return 0xffffffff; }
+static uint32_t crc_init(void) {
+  return 0xffffffff;
+}
 
 static uint32_t crc_update(uint32_t crc, const uint8_t *data, uint32_t length) {
   const uint8_t num_remainder_bytes = length % 4;

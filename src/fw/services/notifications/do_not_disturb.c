@@ -59,7 +59,9 @@ static void prv_put_dnd_event(bool is_active) {
   event_put(&e);
 }
 
-static char *prv_bool_to_string(bool active) { return active ? "Active" : "Inactive"; }
+static char *prv_bool_to_string(bool active) {
+  return active ? "Active" : "Inactive";
+}
 
 static void prv_do_update(void) {
   const bool is_active = do_not_disturb_is_active();
@@ -219,7 +221,9 @@ static bool prv_is_smart_dnd_active(void) {
 //! Public Functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-DEFINE_SYSCALL(bool, sys_do_not_disturb_is_active, void) { return do_not_disturb_is_active(); }
+DEFINE_SYSCALL(bool, sys_do_not_disturb_is_active, void) {
+  return do_not_disturb_is_active();
+}
 
 bool do_not_disturb_is_active(void) {
   if (do_not_disturb_is_manually_enabled() || prv_is_schedule_active() ||
@@ -259,7 +263,9 @@ void do_not_disturb_toggle_manually_enabled(ManualDNDFirstUseSource source) {
   }
 }
 
-bool do_not_disturb_is_smart_dnd_enabled(void) { return alerts_preferences_dnd_is_smart_enabled(); }
+bool do_not_disturb_is_smart_dnd_enabled(void) {
+  return alerts_preferences_dnd_is_smart_enabled();
+}
 
 void do_not_disturb_toggle_smart_dnd(void) {
   if (!alerts_preferences_check_and_set_first_use_complete(FirstUseSourceSmartDND)) {
@@ -302,18 +308,28 @@ void do_not_disturb_init(void) {
   prv_try_update_schedule_mode((void *)true);
 }
 
-void do_not_disturb_handle_clock_change(void) { prv_try_update_schedule_mode_callback(false); }
+void do_not_disturb_handle_clock_change(void) {
+  prv_try_update_schedule_mode_callback(false);
+}
 
-void do_not_disturb_handle_pref_synced(void) { prv_try_update_schedule_mode_callback(false); }
+void do_not_disturb_handle_pref_synced(void) {
+  prv_try_update_schedule_mode_callback(false);
+}
 
-void do_not_disturb_handle_calendar_event(PebbleCalendarEvent *e) { prv_do_update(); }
+void do_not_disturb_handle_calendar_event(PebbleCalendarEvent *e) {
+  prv_do_update();
+}
 
 void do_not_disturb_manual_toggle_with_dialog(void) {
   do_not_disturb_toggle_push(ActionTogglePrompt_Auto, false /* set_exit_reason */);
 }
 
 #ifdef UNITTEST
-TimerID get_dnd_timer_id(void) { return s_data.update_timer_id; }
+TimerID get_dnd_timer_id(void) {
+  return s_data.update_timer_id;
+}
 
-void set_dnd_timer_id(TimerID id) { s_data.update_timer_id = id; }
+void set_dnd_timer_id(TimerID id) {
+  s_data.update_timer_id = id;
+}
 #endif

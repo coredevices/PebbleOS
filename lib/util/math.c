@@ -18,7 +18,9 @@ int32_t sign_extend(uint32_t a, int bits) {
   return (a ^ m) - m;
 }
 
-int32_t serial_distance32(uint32_t a, uint32_t b) { return serial_distance(a, b, 32); }
+int32_t serial_distance32(uint32_t a, uint32_t b) {
+  return serial_distance(a, b, 32);
+}
 
 int32_t serial_distance(uint32_t a, uint32_t b, int bits) {
   // See https://en.wikipedia.org/wiki/Serial_Number_Arithmetic

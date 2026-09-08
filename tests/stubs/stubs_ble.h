@@ -10,8 +10,13 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-bool gaps_init(void) { return true; }
+bool gaps_init(void) {
+  return true;
+}
 
-bool gaps_deinit(uint32_t stack_id) { return true; }
+bool gaps_deinit(uint32_t stack_id) {
+  return true;
+}
 
-void comm_handle_paired_devices_changed(void) {}
+void comm_handle_paired_devices_changed(void) {
+}

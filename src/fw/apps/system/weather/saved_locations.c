@@ -51,7 +51,8 @@ static void prv_glance_destroy_icons(void) {
 }
 
 static GBitmap *prv_glance_icon(uint8_t type) {
-  if (type >= GLANCE_WEATHER_TYPES) return NULL;
+  if (type >= GLANCE_WEATHER_TYPES)
+    return NULL;
   if (!s_glance_icons[type]) {
     s_glance_icons[type] = gbitmap_create_with_resource(weather_type_icon_tiny_resource(type));
   }
@@ -64,22 +65,28 @@ static void prv_touch_handler(const TouchEvent *event, void *context);
 #endif
 
 int saved_locations_get_entries(SavedLocationEntry *entries, int max_entries) {
-  if (!entries || max_entries <= 0) return 0;
-  if (!weather_ds_supported()) return 0;
+  if (!entries || max_entries <= 0)
+    return 0;
+  if (!weather_ds_supported())
+    return 0;
   const int total = weather_ds_location_count();
-  if (total <= 0) return 0;
+  if (total <= 0)
+    return 0;
 
   WxDsForecast *ds = malloc_try(sizeof(*ds));  // ~400 B; keep off the task stack
-  if (!ds) return 0;
+  if (!ds)
+    return 0;
 
   int count = 0;
   // Two passes so the phone's current-location record always leads the list;
   // the rest follow in the phone's own order.
   for (int pass = 0; pass < 2 && count < max_entries; pass++) {
     for (int i = 0; i < total && count < max_entries; i++) {
-      if (!weather_ds_read_index(i, ds)) continue;
+      if (!weather_ds_read_index(i, ds))
+        continue;
       const bool is_current = ds->is_current_location;
-      if ((pass == 0) != is_current) continue;
+      if ((pass == 0) != is_current)
+        continue;
       SavedLocationEntry *e = &entries[count++];
       *e = (SavedLocationEntry){
           .ds_index = (int16_t)i,
@@ -110,11 +117,14 @@ static void prv_refresh_entries(void) {
 
 // One placeholder row when the phone has synced nothing, so the screen never
 // renders as a blank rectangle.
-static int prv_num_rows(void) { return s_entry_count > 0 ? s_entry_count : 1; }
+static int prv_num_rows(void) {
+  return s_entry_count > 0 ? s_entry_count : 1;
+}
 
 static int prv_row_for_ds_index(int ds_index) {
   for (int i = 0; i < s_entry_count; i++) {
-    if (s_entries[i].ds_index == ds_index) return i;
+    if (s_entries[i].ds_index == ds_index)
+      return i;
   }
   return -1;
 }
@@ -179,7 +189,8 @@ static void prv_draw_glance_row(GContext *ctx, const Layer *cell_layer,
     // fed graphics_draw_text a negative-width rect, which reset the watch the moment the
     // screen opened. Clamp so at least 60px of content width always survives.
     const int16_t max_inset = (int16_t)((bounds.size.w - 60) / 2);
-    if (horizontal_inset > max_inset) horizontal_inset = max_inset;
+    if (horizontal_inset > max_inset)
+      horizontal_inset = max_inset;
     bounds = grect_inset_internal(bounds, horizontal_inset, 0);
   }
 #endif
@@ -202,7 +213,8 @@ static void prv_draw_glance_row(GContext *ctx, const Layer *cell_layer,
   strncpy(city, title, sizeof(city) - 1);
   city[sizeof(city) - 1] = 0;
   char *comma = strchr(city, ',');
-  if (comma) *comma = 0;
+  if (comma)
+    *comma = 0;
   title = city;
 
   int title_x = 8;
@@ -215,7 +227,8 @@ static void prv_draw_glance_row(GContext *ctx, const Layer *cell_layer,
   }
 
   const int16_t title_w = (int16_t)(bounds.size.w - title_x - temp_w - 8);
-  if (title_w <= 0) return;
+  if (title_w <= 0)
+    return;
   graphics_draw_text(ctx, title, font, GRect(bounds.origin.x + title_x, text_y, title_w, 30),
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
 }
@@ -229,7 +242,8 @@ static void prv_draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell
                          i18n_get("Add them in the app", s_view), NULL);
     return;
   }
-  if (row < 0 || row >= s_entry_count) return;
+  if (row < 0 || row >= s_entry_count)
+    return;
   prv_draw_glance_row(ctx, cell_layer, &s_entries[row]);
 }
 
@@ -239,7 +253,8 @@ static void saved_locations_dismiss(bool animated);  // defined below
 // location and closes the screen — the same commit a globe pin selection makes.
 // Locations are added/removed in the phone app — the watch only picks.
 static void prv_activate_saved_row(SavedLocationsView *view, int row) {
-  if (!view || row < 0 || row >= s_entry_count) return;
+  if (!view || row < 0 || row >= s_entry_count)
+    return;
   if (view->select_callback) {
     view->select_callback(s_entries[row].ds_index, view->select_context);
   }
@@ -255,7 +270,8 @@ static uint32_t prv_now_ms(void) {
 }
 
 static int prv_touch_max_scroll(SavedLocationsView *view) {
-  if (!view || !view->menu_layer) return 0;
+  if (!view || !view->menu_layer)
+    return 0;
   int rows = prv_num_rows();
   GRect bounds = layer_get_bounds(menu_layer_get_layer(view->menu_layer));
   int max_scroll = rows * SAVED_LOCATIONS_ROW_HEIGHT - bounds.size.h;
@@ -263,32 +279,41 @@ static int prv_touch_max_scroll(SavedLocationsView *view) {
 }
 
 static int prv_touch_clamp_scroll(SavedLocationsView *view, int amount) {
-  if (amount < 0) return 0;
+  if (amount < 0)
+    return 0;
   int max_scroll = prv_touch_max_scroll(view);
   return amount > max_scroll ? max_scroll : amount;
 }
 
 static int prv_touch_scroll_amount(SavedLocationsView *view) {
-  if (!view || !view->menu_layer) return 0;
+  if (!view || !view->menu_layer)
+    return 0;
   ScrollLayer *scroll_layer = menu_layer_get_scroll_layer(view->menu_layer);
-  if (!scroll_layer) return 0;
+  if (!scroll_layer)
+    return 0;
   return -scroll_layer_get_content_offset(scroll_layer).y;
 }
 
 static void prv_touch_set_scroll(SavedLocationsView *view, int amount, bool animated) {
-  if (!view || !view->menu_layer) return;
+  if (!view || !view->menu_layer)
+    return;
   ScrollLayer *scroll_layer = menu_layer_get_scroll_layer(view->menu_layer);
-  if (!scroll_layer) return;
+  if (!scroll_layer)
+    return;
   amount = prv_touch_clamp_scroll(view, amount);
   scroll_layer_set_content_offset(scroll_layer, GPoint(0, -amount), animated);
 }
 
 static void prv_touch_select_row(SavedLocationsView *view, int row) {
-  if (!view || !view->menu_layer) return;
+  if (!view || !view->menu_layer)
+    return;
   int rows = prv_num_rows();
-  if (rows <= 0) return;
-  if (row < 0) row = 0;
-  if (row >= rows) row = rows - 1;
+  if (rows <= 0)
+    return;
+  if (row < 0)
+    row = 0;
+  if (row >= rows)
+    row = rows - 1;
   menu_layer_set_selected_index(view->menu_layer, MenuIndex(0, row), MenuRowAlignNone, false);
 }
 
@@ -297,7 +322,8 @@ static int prv_touch_row_at_y(SavedLocationsView *view, int16_t y) {
   const int fy = layer_get_frame(menu_layer_get_layer(view->menu_layer)).origin.y;
   int row = (prv_touch_scroll_amount(view) + y - fy) / SAVED_LOCATIONS_ROW_HEIGHT;
   int rows = prv_num_rows();
-  if (row < 0 || row >= rows) return -1;
+  if (row < 0 || row >= rows)
+    return -1;
   return row;
 }
 
@@ -415,7 +441,8 @@ static void prv_select_click(MenuLayer *menu_layer, MenuIndex *cell_index, void 
 
 static void prv_window_unload(Window *window) {
   SavedLocationsView *view = (SavedLocationsView *)window_get_user_data(window);
-  if (!view) return;
+  if (!view)
+    return;
 
   if (view->menu_layer) {
     menu_layer_destroy(view->menu_layer);
@@ -437,12 +464,14 @@ static void prv_window_unload(Window *window) {
 // would be clobbered by it. Appear runs after every disappear/unload in the transition.
 static void prv_window_appear(Window *window) {
   SavedLocationsView *view = (SavedLocationsView *)window_get_user_data(window);
-  if (view) touch_service_subscribe(prv_touch_handler, view);
+  if (view)
+    touch_service_subscribe(prv_touch_handler, view);
 }
 #endif
 
 static void saved_locations_dismiss(bool animated) {
-  if (!s_view || !s_view->window) return;
+  if (!s_view || !s_view->window)
+    return;
   window_stack_remove(s_view->window, animated);
 }
 
@@ -466,7 +495,8 @@ void saved_locations_push(const SavedLocationsConfig *config) {
   }
 
   SavedLocationsView *view = calloc(1, sizeof(SavedLocationsView));
-  if (!view) return;
+  if (!view)
+    return;
   s_view = view;
   prv_refresh_entries();
 
@@ -524,7 +554,8 @@ void saved_locations_push(const SavedLocationsConfig *config) {
 
   int selected_row =
       (view->active_ds_index >= 0) ? prv_row_for_ds_index(view->active_ds_index) : -1;
-  if (selected_row < 0 || selected_row >= prv_num_rows()) selected_row = 0;
+  if (selected_row < 0 || selected_row >= prv_num_rows())
+    selected_row = 0;
   menu_layer_set_selected_index(view->menu_layer, MenuIndex(0, selected_row), MenuRowAlignCenter,
                                 false);
 

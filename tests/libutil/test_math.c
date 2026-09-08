@@ -22,12 +22,15 @@ static void check_atan2(int16_t x, int16_t y) {
   int32_t ours = atan2_lookup(y, x) * 180 / TRIG_PI;
   double theirs = atan2(y, x) / 3.14159 * 180;
   // atan2 returns in range [-pi, +pi], but we have [0,2pi].
-  if (theirs < 0) theirs += 360;
+  if (theirs < 0)
+    theirs += 360;
 
   cl_assert(abs(ours - (int)theirs) < 3);  // Allow 3 degrees difference max
 }
 
-static double log_two(uint32_t n) { return (log(n) / log(2)); }
+static double log_two(uint32_t n) {
+  return (log(n) / log(2));
+}
 
 static void check_ceil_log_two(uint32_t n) {
   int ours = ceil_log_two(n);
@@ -35,9 +38,11 @@ static void check_ceil_log_two(uint32_t n) {
   cl_assert(ours == theirs);
 }
 
-void test_math__initialize(void) {}
+void test_math__initialize(void) {
+}
 
-void test_math__cleanup(void) {}
+void test_math__cleanup(void) {
+}
 
 void test_math__atan2(void) {
   check_atan2(10, 14);
@@ -243,12 +248,22 @@ void test_math__distance_to_boundary(void) {
   cl_assert_equal_i(10, distance_to_mod_boundary(-210, 100));
 }
 
-void test_math__gcd_zero(void) { cl_assert_equal_i(0, gcd(0, 0)); }
+void test_math__gcd_zero(void) {
+  cl_assert_equal_i(0, gcd(0, 0));
+}
 
-void test_math__gcd_coprime(void) { cl_assert_equal_i(1, gcd(8, 27)); }
+void test_math__gcd_coprime(void) {
+  cl_assert_equal_i(1, gcd(8, 27));
+}
 
-void test_math__gcd_basic(void) { cl_assert_equal_i(9, gcd(9, 18)); }
+void test_math__gcd_basic(void) {
+  cl_assert_equal_i(9, gcd(9, 18));
+}
 
-void test_math__gcd_basic_reversed(void) { cl_assert_equal_i(9, gcd(18, 9)); }
+void test_math__gcd_basic_reversed(void) {
+  cl_assert_equal_i(9, gcd(18, 9));
+}
 
-void test_math__gcd_of_number_and_itself(void) { cl_assert_equal_i(10, gcd(10, 10)); }
+void test_math__gcd_of_number_and_itself(void) {
+  cl_assert_equal_i(10, gcd(10, 10));
+}

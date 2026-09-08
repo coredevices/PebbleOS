@@ -27,7 +27,9 @@ WEAK NORETURN os_assertion_failed_lr(const char *filename, int line, uint32_t lr
   os_assertion_failed(filename, line);
 }
 
-WEAK void *os_malloc(size_t size) { return malloc(size); }
+WEAK void *os_malloc(size_t size) {
+  return malloc(size);
+}
 
 WEAK void *os_malloc_check(size_t size) {
   void *ptr = malloc(size);
@@ -35,4 +37,6 @@ WEAK void *os_malloc_check(size_t size) {
   return ptr;
 }
 
-WEAK void os_free(void *ptr) { free(ptr); }
+WEAK void os_free(void *ptr) {
+  free(ptr);
+}

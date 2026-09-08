@@ -9,7 +9,9 @@
 #include "mfg/mfg_info.h"
 #include "process_management/app_manager.h"
 
-void command_enter_standby(void) { enter_standby(RebootReasonCode_MfgShutdown); }
+void command_enter_standby(void) {
+  enter_standby(RebootReasonCode_MfgShutdown);
+}
 
 void command_color_read(void) {
   char buffer[10];

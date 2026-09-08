@@ -7,7 +7,10 @@
 
 typedef const struct PPPControlProtocol PPPControlProtocol;
 
-typedef enum PPPCPCloseWait { PPPCPCloseWait_NoWait, PPPCPCloseWait_WaitForClosed } PPPCPCloseWait;
+typedef enum PPPCPCloseWait {
+  PPPCPCloseWait_NoWait,
+  PPPCPCloseWait_WaitForClosed
+} PPPCPCloseWait;
 
 //! Notify the control protocol that the lower layer is ready to carry traffic.
 void ppp_control_protocol_lower_layer_is_up(PPPControlProtocol *protocol);

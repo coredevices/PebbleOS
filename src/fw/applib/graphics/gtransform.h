@@ -39,7 +39,9 @@
 //! @param tx Coefficient corresponding to X translation (type is GTransformNumber)
 //! @param ty Coefficient corresponding to Y translation (type is GTransformNumber)
 #define GTransform(a, b, c, d, tx, ty) \
-  (GTransform) { (a), (b), (c), (d), (tx), (ty) }
+  (GTransform) {                       \
+    (a), (b), (c), (d), (tx), (ty)     \
+  }
 //! @param a Coefficient corresponding to X scale (type is char, int, float, etc)
 //! @param b Coefficient corresponding to X shear (type is char, int, float, etc)
 //! @param c Coefficient corresponding to Y shear (type is char, int, float, etc)

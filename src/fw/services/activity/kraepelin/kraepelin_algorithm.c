@@ -433,7 +433,8 @@ static uint32_t prv_isqrt(uint32_t x) {
 
   // "one" starts at the highest power of four <= than the argument.
   one = 1 << 30;  // second-to-top bit set
-  while (one > op) one >>= 2;
+  while (one > op)
+    one >>= 2;
 
   while (one != 0) {
     if (op >= res + one) {
@@ -1259,7 +1260,9 @@ static uint32_t prv_compute_sleep_score(KAlgSleepMinute *samples, int i) {
 
 // -----------------------------------------------------------------------------------------
 // Return the size required for the state variables
-uint32_t kalg_state_size(void) { return sizeof(KAlgState); }
+uint32_t kalg_state_size(void) {
+  return sizeof(KAlgState);
+}
 
 // -----------------------------------------------------------------------------------------
 // Init the state, return true on success

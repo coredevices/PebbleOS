@@ -69,7 +69,8 @@ void test_content_indicator__initialize(void) {
   memset(&s_content_indicator_dummy_layer, 0, sizeof(Layer));
 }
 
-void test_content_indicator__cleanup(void) {}
+void test_content_indicator__cleanup(void) {
+}
 
 // Tests
 ////////////////////////////////////

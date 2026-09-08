@@ -56,4 +56,6 @@ bool framebuffer_is_dirty(FrameBuffer *fb) {
   return fb->is_dirty;
 }
 
-GSize framebuffer_get_size(FrameBuffer *fb) { return fb->size; }
+GSize framebuffer_get_size(FrameBuffer *fb) {
+  return fb->size;
+}

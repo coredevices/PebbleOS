@@ -57,7 +57,9 @@ static void prv_send_next(Transport *transport) {
 
 // -----------------------------------------------------------------------------------------
 // bt_lock() is held by caller
-static void prv_reset(Transport *transport) { PBL_LOG_WRN("Unimplemented"); }
+static void prv_reset(Transport *transport) {
+  PBL_LOG_WRN("Unimplemented");
+}
 
 static void prv_granted_kernel_main_cb(void *ctx) {
   ResponsivenessGrantedHandler granted_handler = ctx;
@@ -164,7 +166,8 @@ void qemu_transport_set_connected(bool is_connected) {
 }
 
 void qemu_transport_close_session() {
-  if (!s_transport.session) return;
+  if (!s_transport.session)
+    return;
 
   bt_lock();
 

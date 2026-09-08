@@ -38,7 +38,9 @@ static int prv_open_file(void *packet_data, size_t length) {
   return fd;
 }
 
-static int prv_fd_from_context(void *context) { return (uintptr_t)context; }
+static int prv_fd_from_context(void *context) {
+  return (uintptr_t)context;
+}
 
 static int pfs_domain_read(uint8_t *buf, uint32_t address, uint32_t length, void *context) {
   int fd = prv_fd_from_context(context);

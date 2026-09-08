@@ -161,7 +161,9 @@ uint32_t list_count_to_head_from(ListNode *node) {
   return count;
 }
 
-uint32_t list_count(ListNode *node) { return list_count_to_tail_from(list_get_head(node)); }
+uint32_t list_count(ListNode *node) {
+  return list_count_to_tail_from(list_get_head(node));
+}
 
 ListNode *list_get_at(ListNode *node, int32_t index) {
   while (node != NULL && index != 0) {

@@ -119,7 +119,9 @@ static inline bool prv_fp_active(uint32_t exc_return) {
 
 // ---- threads ----------------------------------------------------------------
 
-static void prv_thread_return(void) { pbl_thread_abort(NULL); }
+static void prv_thread_return(void) {
+  pbl_thread_abort(NULL);
+}
 
 void arch_thread_init(struct pbl_thread *t, void (*entry)(void *), void *arg) {
   uintptr_t top = ((uintptr_t)t->stack + t->stack_size) & ~7u;
@@ -164,7 +166,9 @@ void arch_thread_regions_set(struct pbl_thread *t, const MpuRegion *const *regio
 #endif
 }
 
-void arch_thread_aborted(struct pbl_thread *t) { (void)t; }
+void arch_thread_aborted(struct pbl_thread *t) {
+  (void)t;
+}
 
 void arch_thread_exit(void) {
   // The switch requested by the abort takes over as soon as we get here.
@@ -175,7 +179,9 @@ void arch_thread_exit(void) {
 
 // ---- interrupts -------------------------------------------------------------
 
-bool arch_in_isr(void) { return mcu_state_is_isr(); }
+bool arch_in_isr(void) {
+  return mcu_state_is_isr();
+}
 
 void arch_irq_disable(void) {
   __set_BASEPRI(PBL_IRQ_PRIO_MAX_SYSCALL);
@@ -183,7 +189,9 @@ void arch_irq_disable(void) {
   __ISB();
 }
 
-void arch_irq_enable(void) { __set_BASEPRI(0); }
+void arch_irq_enable(void) {
+  __set_BASEPRI(0);
+}
 
 void arch_switch_request(void) {
   SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
@@ -360,7 +368,8 @@ __attribute__((naked)) void SVC_Handler(void) {
 
 // ---- start and tick ---------------------------------------------------------
 
-void arch_init(void) {}
+void arch_init(void) {
+}
 
 void arch_start(void) {
   // PendSV and SysTick at the lowest priority; SVC follows once started.
@@ -385,7 +394,9 @@ void arch_start(void) {
 }
 
 #ifndef CONFIG_SOC_SF32LB52
-void SysTick_Handler(void) { pbl_kernel_tick_isr(); }
+void SysTick_Handler(void) {
+  pbl_kernel_tick_isr();
+}
 #endif
 
 void arch_idle(pbl_tick_t max_ticks) {

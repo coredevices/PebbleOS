@@ -47,7 +47,9 @@ static const char *const TEST_FILE_C_NAME = "c";
 static const size_t TEST_FILE_C_SIZE = 9001;  // it's over 9000!
 static char s_test_file_c[TEST_FILE_C_SIZE];
 
-static uint32_t num_pages(void) { return pfs_get_size() / PFS_SECTOR_SIZE; }
+static uint32_t num_pages(void) {
+  return pfs_get_size() / PFS_SECTOR_SIZE;
+}
 
 void test_pfs__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
@@ -75,7 +77,9 @@ void test_pfs__initialize(void) {
   pfs_close(fd);
 }
 
-void test_pfs__cleanup(void) { fake_spi_flash_cleanup(); }
+void test_pfs__cleanup(void) {
+  fake_spi_flash_cleanup();
+}
 
 void test_pfs__create(void) {
   char hello[] = {'h', 'e', 'l', 'l', 'o'};
@@ -629,9 +633,13 @@ void test_pfs__out_of_space(void) {
   }
 }
 
-void test_pfs__active_in_region(void) { cl_assert(pfs_active_in_region(0, pfs_get_size())); }
+void test_pfs__active_in_region(void) {
+  cl_assert(pfs_active_in_region(0, pfs_get_size()));
+}
 
-void test_pfs__get_size(void) { cl_assert(pfs_get_size() == (ftl_get_size() - SECTOR_SIZE_BYTES)); }
+void test_pfs__get_size(void) {
+  cl_assert(pfs_get_size() == (ftl_get_size() - SECTOR_SIZE_BYTES));
+}
 
 void test_pfs__migration(void) {
   // The filesystem migration path grows the filesystem by adding flash regions one at a time.
@@ -693,7 +701,9 @@ void test_pfs__migration(void) {
 }
 
 static uint32_t s_watch_file_callback_called_count = 0;
-static void prv_file_changed_callback(void *data) { s_watch_file_callback_called_count++; }
+static void prv_file_changed_callback(void *data) {
+  s_watch_file_callback_called_count++;
+}
 
 void test_pfs__watch_file_callbacks(void) {
   const char *file_name = "newfile";

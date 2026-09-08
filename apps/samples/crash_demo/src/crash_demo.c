@@ -51,7 +51,8 @@ static void trigger_loop_log_spam(int index, void *context) {
   }
 }
 
-static void accel_data_handler(AccelData *data, uint32_t num_samples) {}
+static void accel_data_handler(AccelData *data, uint32_t num_samples) {
+}
 
 static void trigger_to_app_event_flood(int index, void *context) {
   // Generate a crazy number of events and then busy wait.
@@ -118,7 +119,8 @@ static void init(void) {
   window_stack_push(window, animated);
 }
 
-static void deinit(void) {}
+static void deinit(void) {
+}
 
 int main(void) {
   init();

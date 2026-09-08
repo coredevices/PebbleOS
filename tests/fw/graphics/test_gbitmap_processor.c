@@ -43,7 +43,9 @@ static MockBitbltBitmapIntoBitmapTiledCallRecordings s_bitblt_bitmap_into_bitmap
 // Fakes
 ///////////////////////
 
-GContext *graphics_context_get_current_context(void) { return &s_ctx; }
+GContext *graphics_context_get_current_context(void) {
+  return &s_ctx;
+}
 
 void bitblt_bitmap_into_bitmap_tiled(GBitmap *dest_bitmap, const GBitmap *src_bitmap,
                                      GRect dest_rect, GPoint src_origin_offset,
@@ -80,7 +82,8 @@ void test_gbitmap_processor__initialize(void) {
   s_bitblt_bitmap_into_bitmap_tiled_calls = (MockBitbltBitmapIntoBitmapTiledCallRecordings){};
 }
 
-void test_gbitmap_processor__cleanup(void) {}
+void test_gbitmap_processor__cleanup(void) {
+}
 
 // Tests
 ///////////////////////

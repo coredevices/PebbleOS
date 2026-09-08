@@ -68,29 +68,52 @@ static bool s_app_idle = false;
 // Overrides
 ////////////////////////////////////
 
-void battery_state_service_state_init(BatteryStateServiceState *state) { return; }
+void battery_state_service_state_init(BatteryStateServiceState *state) {
+  return;
+}
 
-void connection_service_state_init(ConnectionServiceState *state) {}
+void connection_service_state_init(ConnectionServiceState *state) {
+}
 
-void tick_timer_service_state_init(TickTimerServiceState *state) { return; }
+void tick_timer_service_state_init(TickTimerServiceState *state) {
+  return;
+}
 
-void framebuffer_clear(FrameBuffer *f) { return; }
+void framebuffer_clear(FrameBuffer *f) {
+  return;
+}
 
-void launcher_task_add_callback(void (*callback)(void *data), void *data) { callback(data); }
+void launcher_task_add_callback(void (*callback)(void *data), void *data) {
+  callback(data);
+}
 
-void app_idle_timeout_pause(void) { s_app_idle = true; }
+void app_idle_timeout_pause(void) {
+  s_app_idle = true;
+}
 
-void app_idle_timeout_resume(void) { s_app_idle = false; }
+void app_idle_timeout_resume(void) {
+  s_app_idle = false;
+}
 
-bool app_install_id_from_app_db(AppInstallId id) { return false; }
+bool app_install_id_from_app_db(AppInstallId id) {
+  return false;
+}
 
-void framebuffer_dirty_all(FrameBuffer *f) { return; }
+void framebuffer_dirty_all(FrameBuffer *f) {
+  return;
+}
 
-void framebuffer_mark_dirty_rect(FrameBuffer *f, GRect rect) { return; }
+void framebuffer_mark_dirty_rect(FrameBuffer *f, GRect rect) {
+  return;
+}
 
-bool layer_is_status_bar_layer(Layer *layer) { return false; }
+bool layer_is_status_bar_layer(Layer *layer) {
+  return false;
+}
 
-void status_bar_layer_render(GContext *ctx, const GRect *bounds, void *config) { return; }
+void status_bar_layer_render(GContext *ctx, const GRect *bounds, void *config) {
+  return;
+}
 
 GDrawState graphics_context_get_drawing_state(GContext *ctx) {
   GDrawState state;
@@ -98,25 +121,43 @@ GDrawState graphics_context_get_drawing_state(GContext *ctx) {
   return state;
 }
 
-void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) { return; }
+void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {
+  return;
+}
 
-bool compositor_is_animating(void) { return false; }
+bool compositor_is_animating(void) {
+  return false;
+}
 
-void *compositor_modal_transition_to_modal_get(bool dest) { return NULL; }
+void *compositor_modal_transition_to_modal_get(bool dest) {
+  return NULL;
+}
 
-void compositor_modal_render_ready(void) {}
+void compositor_modal_render_ready(void) {
+}
 
-void compositor_transition_cancel(void) {}
+void compositor_transition_cancel(void) {
+}
 
-bool sys_app_is_watchface(void) { return false; }
+bool sys_app_is_watchface(void) {
+  return false;
+}
 
-void click_manager_init(ClickManager *click_manager) { return; }
+void click_manager_init(ClickManager *click_manager) {
+  return;
+}
 
-void click_manager_clear(ClickManager *click_manager) { return; }
+void click_manager_clear(ClickManager *click_manager) {
+  return;
+}
 
-void click_manager_reset(ClickManager *click_manager) { return; }
+void click_manager_reset(ClickManager *click_manager) {
+  return;
+}
 
-void watchface_reset_click_manager(void) { return; }
+void watchface_reset_click_manager(void) {
+  return;
+}
 
 Animation *window_transition_default_pop_create_animation(WindowTransitioningContext *context) {
   window_transition_context_disappear(context);
@@ -171,9 +212,13 @@ void app_click_config_setup_with_window(ClickManager *click_manager, struct Wind
 
 // Helpers
 ////////////////////////////////////
-static int16_t prv_get_load_unload_count(void) { return s_load_count - s_unload_count; }
+static int16_t prv_get_load_unload_count(void) {
+  return s_load_count - s_unload_count;
+}
 
-static int16_t prv_get_appear_disappear_count(void) { return s_appear_count - s_disappear_count; }
+static int16_t prv_get_appear_disappear_count(void) {
+  return s_appear_count - s_disappear_count;
+}
 
 static void prv_reset_counts(void) {
   s_load_count = 0;
@@ -182,7 +227,9 @@ static void prv_reset_counts(void) {
   s_disappear_count = 0;
 }
 
-static void prv_click_config_provider(void *context) { return; }
+static void prv_click_config_provider(void *context) {
+  return;
+}
 
 static void prv_window_appear(Window *window) {
   cl_check(window);

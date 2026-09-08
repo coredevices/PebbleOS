@@ -13,11 +13,17 @@ extern GContext *s_app_state_get_graphics_context;
 static GContext s_ctx;
 static FrameBuffer s_fb;
 
-GContext *graphics_context_get_current_context(void) { return &s_ctx; }
+GContext *graphics_context_get_current_context(void) {
+  return &s_ctx;
+}
 
-GContext *fake_graphics_context_get_context(void) { return &s_ctx; }
+GContext *fake_graphics_context_get_context(void) {
+  return &s_ctx;
+}
 
-FrameBuffer *fake_graphics_context_get_framebuffer(void) { return &s_fb; }
+FrameBuffer *fake_graphics_context_get_framebuffer(void) {
+  return &s_fb;
+}
 
 void fake_graphics_context_init(void) {
   framebuffer_init(&s_fb, &(GSize){DISP_COLS, DISP_ROWS});

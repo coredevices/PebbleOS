@@ -27,7 +27,9 @@ PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 // Storage converters. These convert metrics from their storage type (ActivityScalarStore,
 // which is only 16-bits) into the uint32_t value returned by activity_get_metric. For example,
 // we might convert minutes to seconds.
-static uint32_t prv_convert_none(ActivityScalarStore in) { return in; }
+static uint32_t prv_convert_none(ActivityScalarStore in) {
+  return in;
+}
 
 static uint32_t prv_convert_minutes_to_seconds(ActivityScalarStore in) {
   return (uint32_t)in * SECONDS_PER_MINUTE;

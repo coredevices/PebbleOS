@@ -233,4 +233,6 @@ bool battery_monitor_critical_lockout(void) {
   return s_power_state == PowerStateCritical;
 }
 
-TimerID battery_monitor_get_standby_timer_id(void) { return s_standby_timer_id; }
+TimerID battery_monitor_get_standby_timer_id(void) {
+  return s_standby_timer_id;
+}

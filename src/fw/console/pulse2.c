@@ -240,7 +240,9 @@ static pbl_tick_t prv_poll_timer(uint8_t *const sequence_number) {
   return timeout;
 }
 
-static void prv_pulse_task_feed_watchdog(void) { task_watchdog_bit_set(PebbleTask_PULSE); }
+static void prv_pulse_task_feed_watchdog(void) {
+  task_watchdog_bit_set(PebbleTask_PULSE);
+}
 
 static void prv_pulse_task_idle_timer_callback(void *data) {
   if (s_pulse_task_idle && pbl_msgq_num_used(&s_pulse_task_queue) == 0) {
@@ -318,7 +320,8 @@ void pulse_early_init(void) {
   prv_forge_terminate_ack();
 }
 
-void pulse_init(void) {}
+void pulse_init(void) {
+}
 
 void pulse_start(void) {
   struct pbl_thread_attr attr = {
@@ -350,7 +353,9 @@ void pulse_start(void) {
   ppp_control_protocol_open(PULSE2_LCP);
 }
 
-void pulse_end(void) { ppp_control_protocol_close(PULSE2_LCP, PPPCPCloseWait_WaitForClosed); }
+void pulse_end(void) {
+  ppp_control_protocol_close(PULSE2_LCP, PPPCPCloseWait_WaitForClosed);
+}
 
 static void prv_assert_tx_buffer(void *buf) {
   // Ensure the buffer is actually a PULSE transmit buffer
@@ -415,6 +420,8 @@ void pulse_link_send_cancel(void *buf) {
   pbl_mutex_unlock(&s_tx_buffer_mutex);
 }
 
-size_t pulse_link_max_send_size(void) { return FRAME_MAX_SEND_SIZE - LINK_HEADER_LEN; }
+size_t pulse_link_max_send_size(void) {
+  return FRAME_MAX_SEND_SIZE - LINK_HEADER_LEN;
+}
 
 #endif

@@ -1211,9 +1211,13 @@ bool prefs_private_read_backing(const uint8_t *key, size_t key_len, void *value,
   return success;
 }
 
-void prefs_private_lock(void) { pbl_mutex_lock(&s_mutex, PBL_FOREVER); }
+void prefs_private_lock(void) {
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
+}
 
-void prefs_private_unlock(void) { pbl_mutex_unlock(&s_mutex); }
+void prefs_private_unlock(void) {
+  pbl_mutex_unlock(&s_mutex);
+}
 
 // ------------------------------------------------------------------------------------
 // Called from KernelMain when we get a blob DB event. We take this opportunity to update the state
@@ -1260,9 +1264,13 @@ void prefs_private_handle_blob_db_event(PebbleBlobDBEvent *event) {
 //   1.) It validates that the stored global matches the type of the passed in argument
 //   2.) It insures that the flow will also work correctly for setting a pref from the
 //        mobile side using a blob_db insert operation.
-bool shell_prefs_get_clock_24h_style(void) { return s_clock_24h; }
+bool shell_prefs_get_clock_24h_style(void) {
+  return s_clock_24h;
+}
 
-UnitsDistance shell_prefs_get_units_distance(void) { return s_units_distance; }
+UnitsDistance shell_prefs_get_units_distance(void) {
+  return s_units_distance;
+}
 
 void shell_prefs_set_units_distance(UnitsDistance new_unit) {
   uint8_t uint_new_unit = new_unit;
@@ -1286,13 +1294,17 @@ void shell_prefs_set_clock_24h_style(bool is24h) {
   prv_pref_set(PREF_KEY_CLOCK_24H, &is24h, sizeof(is24h));
 }
 
-bool shell_prefs_is_timezone_source_manual(void) { return s_clock_timezone_source_is_manual; }
+bool shell_prefs_is_timezone_source_manual(void) {
+  return s_clock_timezone_source_is_manual;
+}
 
 void shell_prefs_set_timezone_source_manual(bool manual) {
   prv_pref_set(PREF_KEY_CLOCK_TIMEZONE_SOURCE_IS_MANUAL, &manual, sizeof(manual));
 }
 
-bool shell_prefs_is_time_source_manual(void) { return s_clock_time_source_is_manual; }
+bool shell_prefs_is_time_source_manual(void) {
+  return s_clock_time_source_is_manual;
+}
 
 void shell_prefs_set_time_source_manual(bool manual) {
   prv_pref_set(PREF_KEY_CLOCK_TIME_SOURCE_IS_MANUAL, &manual, sizeof(manual));
@@ -1302,7 +1314,9 @@ void shell_prefs_set_automatic_timezone_id(int16_t timezone_id) {
   prv_pref_set(PREF_KEY_CLOCK_PHONE_TIMEZONE_ID, &timezone_id, sizeof(timezone_id));
 }
 
-int16_t shell_prefs_get_automatic_timezone_id(void) { return s_clock_phone_timezone_id; }
+int16_t shell_prefs_get_automatic_timezone_id(void) {
+  return s_clock_phone_timezone_id;
+}
 
 // Emulate the old BacklightBehaviour type for analytics.
 // This is a deprecated method and should not be called by new code.
@@ -1318,25 +1332,33 @@ BacklightBehaviour backlight_get_behaviour(void) {
   }
 }
 
-bool backlight_is_enabled(void) { return s_backlight_enabled; }
+bool backlight_is_enabled(void) {
+  return s_backlight_enabled;
+}
 
 void backlight_set_enabled(bool enabled) {
   prv_pref_set(PREF_KEY_BACKLIGHT_ENABLED, &enabled, sizeof(enabled));
 }
 
-bool backlight_is_ambient_sensor_enabled(void) { return s_backlight_ambient_sensor_enabled; }
+bool backlight_is_ambient_sensor_enabled(void) {
+  return s_backlight_ambient_sensor_enabled;
+}
 
 void backlight_set_ambient_sensor_enabled(bool enabled) {
   prv_pref_set(PREF_KEY_BACKLIGHT_AMBIENT_SENSOR_ENABLED, &enabled, sizeof(enabled));
 }
 
-uint32_t backlight_get_timeout_ms(void) { return s_backlight_timeout_ms; }
+uint32_t backlight_get_timeout_ms(void) {
+  return s_backlight_timeout_ms;
+}
 
 void backlight_set_timeout_ms(uint32_t timeout_ms) {
   prv_pref_set(PREF_KEY_BACKLIGHT_TIMEOUT_MS, &timeout_ms, sizeof(timeout_ms));
 }
 
-uint8_t backlight_get_intensity(void) { return s_backlight_intensity; }
+uint8_t backlight_get_intensity(void) {
+  return s_backlight_intensity;
+}
 
 void backlight_set_intensity(uint8_t percent_intensity) {
   PBL_ASSERTN(percent_intensity > 0 && percent_intensity <= 100);
@@ -1344,7 +1366,9 @@ void backlight_set_intensity(uint8_t percent_intensity) {
 }
 
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
-uint32_t backlight_get_default_color(void) { return s_backlight_color; }
+uint32_t backlight_get_default_color(void) {
+  return s_backlight_color;
+}
 
 void backlight_set_default_color(uint32_t rgb_color) {
   // Clamp to 24-bit packed RGB; upper byte is unused.
@@ -1353,7 +1377,9 @@ void backlight_set_default_color(uint32_t rgb_color) {
 }
 #endif
 
-bool backlight_is_motion_enabled(void) { return s_backlight_motion_enabled; }
+bool backlight_is_motion_enabled(void) {
+  return s_backlight_motion_enabled;
+}
 
 void backlight_set_motion_enabled(bool enable) {
   prv_pref_set(PREF_KEY_BACKLIGHT_MOTION, &enable, sizeof(enable));
@@ -1368,13 +1394,17 @@ void backlight_set_touch_wake(BacklightTouchWake wake) {
   prv_pref_set(PREF_KEY_BACKLIGHT_TOUCH, &value, sizeof(value));
 }
 
-bool touch_is_globally_enabled(void) { return s_touch_enabled; }
+bool touch_is_globally_enabled(void) {
+  return s_touch_enabled;
+}
 
 void touch_set_globally_enabled(bool enable) {
   prv_pref_set(PREF_KEY_TOUCH_ENABLED, &enable, sizeof(enable));
 }
 
-bool touch_navigation_menu_is_enabled(void) { return s_touch_navigation_menu_enabled; }
+bool touch_navigation_menu_is_enabled(void) {
+  return s_touch_navigation_menu_enabled;
+}
 
 void touch_set_navigation_menu_enabled(bool enable) {
   prv_pref_set(PREF_KEY_TOUCH_NAVIGATION_MENU, &enable, sizeof(enable));
@@ -1446,7 +1476,9 @@ void backlight_set_preset(BacklightPreset preset) {
   backlight_set_touch_wake(settings->touch_wake);
 }
 
-uint8_t shell_prefs_get_motion_sensitivity(void) { return s_motion_sensitivity; }
+uint8_t shell_prefs_get_motion_sensitivity(void) {
+  return s_motion_sensitivity;
+}
 
 void shell_prefs_set_motion_sensitivity(uint8_t sensitivity) {
   // Clamp to valid range
@@ -1456,7 +1488,9 @@ void shell_prefs_set_motion_sensitivity(uint8_t sensitivity) {
   prv_pref_set(PREF_KEY_MOTION_SENSITIVITY, &sensitivity, sizeof(sensitivity));
 }
 
-uint32_t backlight_get_ambient_threshold(void) { return s_backlight_ambient_threshold; }
+uint32_t backlight_get_ambient_threshold(void) {
+  return s_backlight_ambient_threshold;
+}
 
 void backlight_set_ambient_threshold(uint32_t threshold) {
   // Validate threshold is within acceptable range
@@ -1472,14 +1506,18 @@ void backlight_set_ambient_threshold(uint32_t threshold) {
 }
 
 #ifdef CONFIG_ORIENTATION_MANAGER
-bool display_orientation_is_left(void) { return s_display_orientation_left; }
+bool display_orientation_is_left(void) {
+  return s_display_orientation_left;
+}
 
 void display_orientation_set_left(bool left) {
   prv_pref_set(PREF_KEY_DISPLAY_ORIENTATION_LEFT_HANDED, &left, sizeof(left));
 }
 #endif
 
-bool shell_prefs_get_stationary_enabled(void) { return s_stationary_mode_enabled; }
+bool shell_prefs_get_stationary_enabled(void) {
+  return s_stationary_mode_enabled;
+}
 
 void shell_prefs_set_stationary_enabled(bool enabled) {
   prv_pref_set(PREF_KEY_STATIONARY, &enabled, sizeof(enabled));
@@ -1597,7 +1635,9 @@ void quick_launch_set_quick_launch_setup_opened(uint8_t version) {
   }
 }
 
-uint8_t quick_launch_get_quick_launch_setup_opened(void) { return s_quick_launch_setup_opened; }
+uint8_t quick_launch_get_quick_launch_setup_opened(void) {
+  return s_quick_launch_setup_opened;
+}
 
 bool quick_launch_single_click_is_enabled(ButtonId button) {
   switch (button) {
@@ -1671,7 +1711,9 @@ void quick_launch_single_click_set_enabled(ButtonId button, bool enabled) {
   prv_pref_set(key, &pref, sizeof(pref));
 }
 
-bool quick_launch_combo_back_up_is_enabled(void) { return s_quick_launch_combo_back_up.enabled; }
+bool quick_launch_combo_back_up_is_enabled(void) {
+  return s_quick_launch_combo_back_up.enabled;
+}
 
 AppInstallId quick_launch_combo_back_up_get_app(void) {
   return app_install_get_id_for_uuid(&s_quick_launch_combo_back_up.uuid);
@@ -1691,7 +1733,9 @@ void quick_launch_combo_back_up_set_enabled(bool enabled) {
   prv_pref_set(PREF_KEY_QUICK_LAUNCH_COMBO_BACK_UP, &pref, sizeof(pref));
 }
 
-bool quick_launch_combo_up_down_is_enabled(void) { return s_quick_launch_combo_up_down.enabled; }
+bool quick_launch_combo_up_down_is_enabled(void) {
+  return s_quick_launch_combo_up_down.enabled;
+}
 
 AppInstallId quick_launch_combo_up_down_get_app(void) {
   return app_install_get_id_for_uuid(&s_quick_launch_combo_up_down.uuid);
@@ -1724,7 +1768,9 @@ void welcome_set_welcome_version(uint8_t version) {
   }
 }
 
-uint8_t welcome_get_welcome_version(void) { return s_welcome_version; }
+uint8_t welcome_get_welcome_version(void) {
+  return s_welcome_version;
+}
 
 static bool prv_set_default_any_watchface_enumerate_callback(AppInstallEntry *entry, void *data) {
   if (!app_install_entry_is_watchface(entry) || app_install_entry_is_hidden(entry)) {
@@ -1771,7 +1817,9 @@ PreferredContentSize system_theme_get_content_size(void) {
       (PreferredContentSize)s_text_style);
 }
 
-bool shell_prefs_get_language_english(void) { return s_language_english; }
+bool shell_prefs_get_language_english(void) {
+  return s_language_english;
+}
 
 void shell_prefs_set_language_english(bool english) {
   prv_pref_set(PREF_KEY_LANG_ENGLISH, &english, sizeof(english));
@@ -1835,7 +1883,9 @@ static void prv_activity_pref_set(void) {
                sizeof(s_activity_preferences));
 }
 
-time_t activity_prefs_get_activation_time(void) { return s_activity_activation_timestamp; }
+time_t activity_prefs_get_activation_time(void) {
+  return s_activity_activation_timestamp;
+}
 
 void activity_prefs_set_activated(void) {
   if (s_activity_activation_timestamp == 0) {
@@ -1897,7 +1947,9 @@ void activity_prefs_sleep_insights_set_enabled(bool enable) {
   prv_activity_pref_set();
 }
 
-bool activity_prefs_tracking_is_enabled(void) { return s_activity_preferences.tracking_enabled; }
+bool activity_prefs_tracking_is_enabled(void) {
+  return s_activity_preferences.tracking_enabled;
+}
 
 void activity_prefs_tracking_set_enabled(bool enable) {
   s_activity_preferences.tracking_enabled = enable;
@@ -1909,34 +1961,48 @@ void activity_prefs_set_height_mm(uint16_t height_mm) {
   prv_activity_pref_set();
 }
 
-uint16_t activity_prefs_get_height_mm(void) { return s_activity_preferences.height_mm; }
+uint16_t activity_prefs_get_height_mm(void) {
+  return s_activity_preferences.height_mm;
+}
 
 void activity_prefs_set_weight_dag(uint16_t weight_dag) {
   s_activity_preferences.weight_dag = weight_dag;
   prv_activity_pref_set();
 }
 
-uint16_t activity_prefs_get_weight_dag(void) { return s_activity_preferences.weight_dag; }
+uint16_t activity_prefs_get_weight_dag(void) {
+  return s_activity_preferences.weight_dag;
+}
 
 void activity_prefs_set_gender(ActivityGender gender) {
   s_activity_preferences.gender = gender;
   prv_activity_pref_set();
 }
 
-ActivityGender activity_prefs_get_gender(void) { return s_activity_preferences.gender; }
+ActivityGender activity_prefs_get_gender(void) {
+  return s_activity_preferences.gender;
+}
 
 void activity_prefs_set_age_years(uint8_t age_years) {
   s_activity_preferences.age_years = age_years;
   prv_activity_pref_set();
 }
 
-uint8_t activity_prefs_get_age_years(void) { return s_activity_preferences.age_years; }
+uint8_t activity_prefs_get_age_years(void) {
+  return s_activity_preferences.age_years;
+}
 
-uint8_t activity_prefs_heart_get_resting_hr(void) { return s_activity_hr_preferences.resting_hr; }
+uint8_t activity_prefs_heart_get_resting_hr(void) {
+  return s_activity_hr_preferences.resting_hr;
+}
 
-uint8_t activity_prefs_heart_get_elevated_hr(void) { return s_activity_hr_preferences.elevated_hr; }
+uint8_t activity_prefs_heart_get_elevated_hr(void) {
+  return s_activity_hr_preferences.elevated_hr;
+}
 
-uint8_t activity_prefs_heart_get_max_hr(void) { return s_activity_hr_preferences.max_hr; }
+uint8_t activity_prefs_heart_get_max_hr(void) {
+  return s_activity_hr_preferences.max_hr;
+}
 
 uint8_t activity_prefs_heart_get_zone1_threshold(void) {
   return s_activity_hr_preferences.zone1_threshold;
@@ -1950,7 +2016,9 @@ uint8_t activity_prefs_heart_get_zone3_threshold(void) {
   return s_activity_hr_preferences.zone3_threshold;
 }
 
-bool activity_prefs_heart_rate_is_enabled(void) { return s_activity_hrm_preferences.enabled; }
+bool activity_prefs_heart_rate_is_enabled(void) {
+  return s_activity_hrm_preferences.enabled;
+}
 
 #ifdef CONFIG_HRM
 HRMonitoringInterval activity_prefs_get_hrm_measurement_interval(void) {
@@ -1991,25 +2059,33 @@ void alarm_prefs_set_alarms_app_opened(uint8_t version) {
   }
 }
 
-uint8_t alarm_prefs_get_alarms_app_opened(void) { return s_alarms_app_opened; }
+uint8_t alarm_prefs_get_alarms_app_opened(void) {
+  return s_alarms_app_opened;
+}
 
 void timeline_prefs_set_settings_opened(uint8_t version) {
   prv_pref_set(PREF_KEY_TIMELINE_SETTINGS_OPENED, &version, sizeof(version));
 }
 
-uint8_t timeline_prefs_get_settings_opened(void) { return s_timeline_settings_opened; }
+uint8_t timeline_prefs_get_settings_opened(void) {
+  return s_timeline_settings_opened;
+}
 
 void timeline_peek_prefs_set_enabled(bool enabled) {
   prv_pref_set(PREF_KEY_TIMELINE_PEEK_ENABLED, &enabled, sizeof(enabled));
 }
 
-bool timeline_peek_prefs_get_enabled(void) { return s_timeline_peek_enabled; }
+bool timeline_peek_prefs_get_enabled(void) {
+  return s_timeline_peek_enabled;
+}
 
 void timeline_peek_prefs_set_before_time(uint16_t before_time_m) {
   prv_pref_set(PREF_KEY_TIMELINE_PEEK_BEFORE_TIME_M, &before_time_m, sizeof(before_time_m));
 }
 
-uint16_t timeline_peek_prefs_get_before_time(void) { return s_timeline_peek_before_time_m; }
+uint16_t timeline_peek_prefs_get_before_time(void) {
+  return s_timeline_peek_before_time_m;
+}
 
 #if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
 void timeline_peek_prefs_set_unsupported_face_mode(TimelinePeekUnsupportedFaceMode mode) {
@@ -2022,25 +2098,33 @@ TimelinePeekUnsupportedFaceMode timeline_peek_prefs_get_unsupported_face_mode(vo
 }
 #endif
 
-bool shell_prefs_can_coredump_on_request(void) { return s_coredump_on_request_enabled; }
+bool shell_prefs_can_coredump_on_request(void) {
+  return s_coredump_on_request_enabled;
+}
 
 void shell_prefs_set_coredump_on_request(bool enabled) {
   prv_pref_set(PREF_KEY_COREDUMP_ON_REQUEST, &enabled, sizeof(enabled));
 }
 
-bool shell_prefs_get_accel_shake_log_info_enabled(void) { return s_accel_shake_log_info_enabled; }
+bool shell_prefs_get_accel_shake_log_info_enabled(void) {
+  return s_accel_shake_log_info_enabled;
+}
 
 void shell_prefs_set_accel_shake_log_info_enabled(bool enabled) {
   prv_pref_set(PREF_KEY_ACCEL_SHAKE_LOG_INFO, &enabled, sizeof(enabled));
 }
 
-bool shell_prefs_get_vibe_log_info_enabled(void) { return s_vibe_log_info_enabled; }
+bool shell_prefs_get_vibe_log_info_enabled(void) {
+  return s_vibe_log_info_enabled;
+}
 
 void shell_prefs_set_vibe_log_info_enabled(bool enabled) {
   prv_pref_set(PREF_KEY_VIBE_LOG_INFO, &enabled, sizeof(enabled));
 }
 
-bool shell_prefs_get_settings_dbs_compacted_v1(void) { return s_settings_dbs_compacted_v1; }
+bool shell_prefs_get_settings_dbs_compacted_v1(void) {
+  return s_settings_dbs_compacted_v1;
+}
 
 void shell_prefs_set_settings_dbs_compacted_v1(bool done) {
   prv_pref_set(PREF_KEY_SETTINGS_DBS_COMPACTED_V1, &done, sizeof(done));
@@ -2071,7 +2155,9 @@ void shell_prefs_set_theme_highlight_color(GColor color) {
 #endif
 }
 
-bool shell_prefs_get_menu_scroll_wrap_around_enable(void) { return s_menu_scroll_wrap_around; }
+bool shell_prefs_get_menu_scroll_wrap_around_enable(void) {
+  return s_menu_scroll_wrap_around;
+}
 
 void shell_prefs_set_menu_scroll_wrap_around_enable(bool enable) {
   prv_pref_set(PREF_KEY_MENU_SCROLL_WRAP_AROUND, &enable, sizeof(bool));
@@ -2101,19 +2187,25 @@ void pbl_analytics_external_collect_settings(void) {
   PBL_ANALYTICS_SET_UNSIGNED(settings_touch_enabled, touch_is_globally_enabled());
 }
 
-bool shell_prefs_get_music_show_volume_controls(void) { return s_music_show_volume_controls; }
+bool shell_prefs_get_music_show_volume_controls(void) {
+  return s_music_show_volume_controls;
+}
 
 void shell_prefs_set_music_show_volume_controls(bool enable) {
   prv_pref_set(PREF_KEY_MUSIC_SHOW_VOLUME_CONTROLS, &enable, sizeof(enable));
 }
 
-bool shell_prefs_get_music_show_progress_bar(void) { return s_music_show_progress_bar; }
+bool shell_prefs_get_music_show_progress_bar(void) {
+  return s_music_show_progress_bar;
+}
 
 void shell_prefs_set_music_show_progress_bar(bool enable) {
   prv_pref_set(PREF_KEY_MUSIC_SHOW_PROGRESS_BAR, &enable, sizeof(enable));
 }
 
-bool shell_prefs_get_music_show_album_art(void) { return s_music_show_album_art; }
+bool shell_prefs_get_music_show_album_art(void) {
+  return s_music_show_album_art;
+}
 
 void shell_prefs_set_music_show_album_art(bool enable) {
   prv_pref_set(PREF_KEY_MUSIC_SHOW_ALBUM_ART, &enable, sizeof(enable));

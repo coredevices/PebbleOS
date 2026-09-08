@@ -4,7 +4,9 @@
 #include "text_layer_flow.h"
 #include "scroll_layer.h"
 
-static bool prv_is_container_layer(const Layer *layer) { return scroll_layer_is_instance(layer); }
+static bool prv_is_container_layer(const Layer *layer) {
+  return scroll_layer_is_instance(layer);
+}
 
 Layer *text_layer_find_first_paging_container(const TextLayer *text_layer) {
   Layer *layer = text_layer->layer.parent;

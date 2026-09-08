@@ -202,20 +202,27 @@ static void prv_add_prf_layers(GRect pair_text_area, BTPairingUIData *data) {
   animation_set_handlers(animation, handlers, NULL);
 }
 
-static void prv_initialize_info_text(BTPairingUIData *data) { prv_animate_info_text(data); }
+static void prv_initialize_info_text(BTPairingUIData *data) {
+  prv_animate_info_text(data);
+}
 
-static void prv_deinitialize_info_text(BTPairingUIData *data) {}
+static void prv_deinitialize_info_text(BTPairingUIData *data) {
+}
 
 #else  // Normal FW -- use i18n text for "Pair?"
 
-static void prv_cleanup_prf_animations(BTPairingUIData *data) {}
+static void prv_cleanup_prf_animations(BTPairingUIData *data) {
+}
 
-static void prv_add_prf_layers(GRect pair_text_area, BTPairingUIData *data) {}
+static void prv_add_prf_layers(GRect pair_text_area, BTPairingUIData *data) {
+}
 
 static void prv_initialize_info_text(BTPairingUIData *data) {
   strncpy(data->info_text_layer_buffer, (char *)i18n_get("Pair?", data), MAX_PAIR_STR_LEN);
 }
-static void prv_deinitialize_info_text(BTPairingUIData *data) { i18n_free_all(data); }
+static void prv_deinitialize_info_text(BTPairingUIData *data) {
+  i18n_free_all(data);
+}
 
 #endif
 
@@ -481,7 +488,9 @@ static void prv_pop_window(void) {
   }
 }
 
-static void prv_pop_window_kernel_main_cb(void *unused) { prv_pop_window(); }
+static void prv_pop_window_kernel_main_cb(void *unused) {
+  prv_pop_window();
+}
 
 static void prv_pop_window_timer_callback(void *unused) {
   launcher_task_add_callback(prv_pop_window_kernel_main_cb, NULL);
@@ -512,7 +521,9 @@ static void prv_push_pairing_window(void) {
   PBL_ASSERTN(success);
 }
 
-static void prv_pop_click_handler(ClickRecognizerRef recognizer, void *ctx) { prv_pop_window(); }
+static void prv_pop_click_handler(ClickRecognizerRef recognizer, void *ctx) {
+  prv_pop_window();
+}
 
 static void prv_success_or_failure_click_config_provider(void *unused) {
   window_single_click_subscribe(BUTTON_ID_BACK, prv_pop_click_handler);

@@ -21,9 +21,11 @@
 // Tests
 ///////////////////////////////////////////////////////////
 
-void test_dict__initialize(void) {}
+void test_dict__initialize(void) {
+}
 
-void test_dict__cleanup(void) {}
+void test_dict__cleanup(void) {
+}
 
 static const uint32_t SOME_DATA_KEY = 0xb00bf00b;
 static const uint8_t SOME_DATA[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};

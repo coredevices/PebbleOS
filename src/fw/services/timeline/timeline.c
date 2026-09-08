@@ -360,7 +360,9 @@ static void prv_debug_print_pins(TimelineNode *node0) {
 // dummy iterator that always returns false
 // Useful for when there aren't any items in pindb
 // but we don't want an invalid iterator.
-static bool prv_iter_dummy(IteratorState state) { return false; }
+static bool prv_iter_dummy(IteratorState state) {
+  return false;
+}
 
 static bool prv_iter_next(IteratorState state) {
   TimelineIterState *timeline_iter_state = (TimelineIterState *)state;
@@ -471,9 +473,13 @@ status_t timeline_init(TimelineNode **timeline) {
   return rv;
 }
 
-bool timeline_add(TimelineItem *item) { return (S_SUCCESS == pin_db_insert_item(item)); }
+bool timeline_add(TimelineItem *item) {
+  return (S_SUCCESS == pin_db_insert_item(item));
+}
 
-bool timeline_exists(Uuid *id) { return (pin_db_get_len((uint8_t *)id, UUID_SIZE) > 0); }
+bool timeline_exists(Uuid *id) {
+  return (pin_db_get_len((uint8_t *)id, UUID_SIZE) > 0);
+}
 
 bool timeline_remove(const Uuid *id) {
   // Use BlobDB directly in order to emit the BlobDB delete event
@@ -774,9 +780,13 @@ static void prv_perform_health_response_action(const TimelineItem *item,
                                      ActionResultTypeSuccess);
 }
 
-void timeline_enable_ancs_bulk_action_mode(bool enable) { s_bulk_action_mode = enable; }
+void timeline_enable_ancs_bulk_action_mode(bool enable) {
+  s_bulk_action_mode = enable;
+}
 
-bool timeline_is_bulk_ancs_action_mode_enabled(void) { return s_bulk_action_mode; }
+bool timeline_is_bulk_ancs_action_mode_enabled(void) {
+  return s_bulk_action_mode;
+}
 
 typedef struct OpenAppContext {
   EventServiceInfo event_info;

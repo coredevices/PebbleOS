@@ -117,7 +117,9 @@ static void prv_remove_and_free_subscription(HRMSubscriberState *state) {
 
 #if UNITTEST
 // Used by unit tests
-T_STATIC TimerID prv_get_timer_id(void) { return s_manager_state.update_enable_timer_id; }
+T_STATIC TimerID prv_get_timer_id(void) {
+  return s_manager_state.update_enable_timer_id;
+}
 
 // Used by unit tests
 T_STATIC uint32_t prv_num_system_task_events_queued(void) {
@@ -127,7 +129,9 @@ T_STATIC uint32_t prv_num_system_task_events_queued(void) {
 }
 
 // Used by unit tests
-T_STATIC uint32_t prv_get_dropped_events_count(void) { return s_manager_state.dropped_events; }
+T_STATIC uint32_t prv_get_dropped_events_count(void) {
+  return s_manager_state.dropped_events;
+}
 #endif
 
 static void prv_handle_accel_data(void *data) {

@@ -365,7 +365,9 @@ void pulse2_reliable_control_on_packet(void *packet, size_t length) {
 
 // Shared events
 // =============
-void pulse2_reliable_on_link_up(void) { ppp_control_protocol_lower_layer_is_up(PULSE2_TRAINCP); }
+void pulse2_reliable_on_link_up(void) {
+  ppp_control_protocol_lower_layer_is_up(PULSE2_TRAINCP);
+}
 
 void pulse2_reliable_on_link_down(void) {
   ppp_control_protocol_lower_layer_is_down(PULSE2_TRAINCP);

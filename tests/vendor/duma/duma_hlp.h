@@ -101,7 +101,8 @@ static struct _DUMA_Slot *slotForUserAddress(void *address) {
   size_t count = _duma_s.slotCount;
 
   for (; count > 0; --count, ++slot)
-    if (slot->userAddress == address) return slot;
+    if (slot->userAddress == address)
+      return slot;
   return 0;
 }
 
@@ -173,7 +174,8 @@ static void _duma_init_slack(struct _DUMA_Slot *slot) {
 #endif
 
   /* nothing to do for zero userSize */
-  if (!slot->userSize) return;
+  if (!slot->userSize)
+    return;
 
   /* calculate accessible non-protectable address area */
   if ((char *)slot->protAddress < (char *)slot->userAddress) {
@@ -188,11 +190,13 @@ static void _duma_init_slack(struct _DUMA_Slot *slot) {
 
   tmpBegAddr = accBegAddr;
   tmpEndAddr = (char *)slot->userAddress;
-  while (tmpBegAddr < tmpEndAddr) *tmpBegAddr++ = (char)_duma_s.SLACKFILL;
+  while (tmpBegAddr < tmpEndAddr)
+    *tmpBegAddr++ = (char)_duma_s.SLACKFILL;
 
   tmpBegAddr = (char *)slot->userAddress + slot->userSize;
   tmpEndAddr = accEndAddr;
-  while (tmpBegAddr < tmpEndAddr) *tmpBegAddr++ = (char)_duma_s.SLACKFILL;
+  while (tmpBegAddr < tmpEndAddr)
+    *tmpBegAddr++ = (char)_duma_s.SLACKFILL;
 }
 
 /* Function: _duma_check_slack
@@ -210,7 +214,8 @@ static void _duma_check_slack(struct _DUMA_Slot *slot) {
 #endif
 
   /* nothing to do for zero userSize */
-  if (!slot->userSize) return;
+  if (!slot->userSize)
+    return;
 
   /* calculate accessible non-protectable address area */
   if ((char *)slot->protAddress < (char *)slot->userAddress) {
@@ -266,7 +271,8 @@ static void _duma_check_all_slacks(void) {
 
   for (; count > 0; --count, ++slot) {
     /* CHECK INTEGRITY OF NO MANS LAND */
-    if (DUMAST_IN_USE == slot->state && slot->userSize) _duma_check_slack(slot);
+    if (DUMAST_IN_USE == slot->state && slot->userSize)
+      _duma_check_slack(slot);
   }
 }
 

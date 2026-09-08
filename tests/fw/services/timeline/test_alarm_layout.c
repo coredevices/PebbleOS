@@ -41,9 +41,11 @@ void prv_get_subtitle_from_attributes(AttributeList *attributes, char *buffer, s
 // Setup
 /////////////////////////
 
-void test_alarm_layout__initialize(void) {}
+void test_alarm_layout__initialize(void) {
+}
 
-void test_alarm_layout__cleanup(void) {}
+void test_alarm_layout__cleanup(void) {
+}
 
 // Tests
 ///////////////////////////

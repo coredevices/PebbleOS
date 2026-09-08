@@ -10,9 +10,11 @@
 
 #include "stubs_pbl_malloc.h"
 
-void test_stats__initialize(void) {}
+void test_stats__initialize(void) {
+}
 
-void test_stats__cleanup(void) {}
+void test_stats__cleanup(void) {
+}
 
 void test_stats__min(void) {
   const int32_t data[] = {10, 40, 6, 32, 73, 80, 34, 25, 62};

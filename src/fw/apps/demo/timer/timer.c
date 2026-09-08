@@ -12,7 +12,9 @@
 
 static AppTimer *s_timer = NULL;
 
-static void shouldnt_happen(void *context) { WTF; }
+static void shouldnt_happen(void *context) {
+  WTF;
+}
 
 static void stupid_cancel(void *context) {
   app_timer_cancel(s_timer);

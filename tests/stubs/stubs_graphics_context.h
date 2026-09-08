@@ -16,7 +16,9 @@ void graphics_context_init(GContext *ctx, FrameBuffer *framebuffer,
   }
 }
 
-GContext *graphics_context_get_current_context(void) { return NULL; }
+GContext *graphics_context_get_current_context(void) {
+  return NULL;
+}
 
 void graphics_context_set_antialiased(GContext *ctx, bool enable) {
 #if PBL_COLOR
@@ -28,13 +30,17 @@ bool graphics_context_get_antialiased(GContext *ctx) {
   return PBL_IF_COLOR_ELSE(ctx->draw_state.antialiased, false);
 }
 
-void graphics_context_set_stroke_color(GContext *ctx, GColor color) {}
+void graphics_context_set_stroke_color(GContext *ctx, GColor color) {
+}
 
-void graphics_context_set_fill_color(GContext *ctx, GColor color) {}
+void graphics_context_set_fill_color(GContext *ctx, GColor color) {
+}
 
-void graphics_context_set_text_color(GContext *ctx, GColor color) {}
+void graphics_context_set_text_color(GContext *ctx, GColor color) {
+}
 
-void graphics_context_set_stroke_width(GContext *ctx, uint8_t stroke_width) {}
+void graphics_context_set_stroke_width(GContext *ctx, uint8_t stroke_width) {
+}
 
 void graphics_context_set_compositing_mode(GContext *ctx, GCompOp mode) {
   if (ctx) {
@@ -42,8 +48,13 @@ void graphics_context_set_compositing_mode(GContext *ctx, GCompOp mode) {
   }
 }
 
-GBitmap *graphics_context_get_bitmap(GContext *ctx) { return NULL; }
+GBitmap *graphics_context_get_bitmap(GContext *ctx) {
+  return NULL;
+}
 
-void graphics_context_mark_dirty_rect(GContext *ctx, GRect rect) {}
+void graphics_context_mark_dirty_rect(GContext *ctx, GRect rect) {
+}
 
-GSize graphics_context_get_framebuffer_size(GContext *ctx) { return GSize(DISP_COLS, DISP_ROWS); }
+GSize graphics_context_get_framebuffer_size(GContext *ctx) {
+  return GSize(DISP_COLS, DISP_ROWS);
+}

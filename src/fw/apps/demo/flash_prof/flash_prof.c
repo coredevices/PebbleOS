@@ -51,7 +51,8 @@ static void handle_init(void) {
   app_window_stack_push((Window *)&number_window, true);
 }
 
-static void handle_deinit(void) {}
+static void handle_deinit(void) {
+}
 
 static void s_main(void) {
   handle_init();

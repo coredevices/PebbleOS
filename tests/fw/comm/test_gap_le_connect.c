@@ -48,34 +48,47 @@
 // and the FW is currently "hard-wired" to be slave as a precautionary measure to prevent it from
 // trying to connect as master. See PBL-20368.
 
-void bt_driver_cb_handle_create_bonding(const BleBonding *bonding, const BTDeviceAddress *addr) {}
+void bt_driver_cb_handle_create_bonding(const BleBonding *bonding, const BTDeviceAddress *addr) {
+}
 
 void cc2564A_bad_le_connection_complete_handle(
-    unsigned int stack_id, const GAP_LE_Current_Connection_Parameters_t *params) {}
+    unsigned int stack_id, const GAP_LE_Current_Connection_Parameters_t *params) {
+}
 
-const GAP_LE_Pairing_Capabilities_t *gap_le_pairing_capabilities(void) { return NULL; }
+const GAP_LE_Pairing_Capabilities_t *gap_le_pairing_capabilities(void) {
+  return NULL;
+}
 
-void gap_le_device_name_request(uintptr_t stack_id, GAPLEConnection *connection) {}
+void gap_le_device_name_request(uintptr_t stack_id, GAPLEConnection *connection) {
+}
 
-void gatt_service_changed_server_cleanup_by_connection(GAPLEConnection *connection) {}
+void gatt_service_changed_server_cleanup_by_connection(GAPLEConnection *connection) {
+}
 
-void bt_driver_handle_le_conn_params_update_event(const BleConnectionUpdateCompleteEvent *event) {}
+void bt_driver_handle_le_conn_params_update_event(const BleConnectionUpdateCompleteEvent *event) {
+}
 
 typedef struct PairingUserConfirmationCtx PairingUserConfirmationCtx;
 
-void bt_driver_pebble_pairing_service_handle_status_change(const GAPLEConnection *connection) {}
+void bt_driver_pebble_pairing_service_handle_status_change(const GAPLEConnection *connection) {
+}
 
 void bt_driver_cb_pairing_confirm_handle_request(const PairingUserConfirmationCtx *ctx,
                                                  const char *device_name,
-                                                 const char *confirmation_token) {}
+                                                 const char *confirmation_token) {
+}
 
 void bt_driver_cb_pairing_confirm_handle_completed(const PairingUserConfirmationCtx *ctx,
-                                                   bool success) {}
+                                                   bool success) {
+}
 
-void launcher_task_add_callback(void (*callback)(void *data), void *data) { callback(data); }
+void launcher_task_add_callback(void (*callback)(void *data), void *data) {
+  callback(data);
+}
 
 void bluetooth_analytics_handle_connection_disconnection_event(
-    AnalyticsEvent type, uint8_t reason, const BleRemoteVersionInfo *vers_info) {}
+    AnalyticsEvent type, uint8_t reason, const BleRemoteVersionInfo *vers_info) {
+}
 
 // Helpers
 ///////////////////////////////////////////////////////////

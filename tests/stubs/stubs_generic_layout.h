@@ -6,6 +6,10 @@
 #include "pbl/services/timeline/generic_layout.h"
 #include "pbl/util/attributes.h"
 
-LayoutLayer *WEAK generic_layout_create(const LayoutLayerConfig *config) { return NULL; }
+LayoutLayer *WEAK generic_layout_create(const LayoutLayerConfig *config) {
+  return NULL;
+}
 
-bool WEAK generic_layout_verify(bool existing_attributes[]) { return false; }
+bool WEAK generic_layout_verify(bool existing_attributes[]) {
+  return false;
+}

@@ -152,8 +152,12 @@ static int record_size(SettingsRecordHeader *hdr) {
 // zero denotes that the flag is set, a 1 means it is not. This is because our
 // flash chip is NOR flash, and thus is all 1's by default.
 // Once setting a flag, we cannot unset it.
-static void set_flag(SettingsRecordHeader *hdr, uint8_t flags) { hdr->flags &= ~flags; }
-static void clear_flag(SettingsRecordHeader *hdr, uint8_t flags) { hdr->flags |= flags; }
+static void set_flag(SettingsRecordHeader *hdr, uint8_t flags) {
+  hdr->flags &= ~flags;
+}
+static void clear_flag(SettingsRecordHeader *hdr, uint8_t flags) {
+  hdr->flags |= flags;
+}
 static bool flag_is_set(SettingsRecordHeader *hdr, uint8_t flags) {
   return (hdr->flags & flags) == 0;
 }
@@ -182,7 +186,9 @@ static bool overwritten(SettingsRecordHeader *hdr) {
          flag_is_set(hdr, SETTINGS_FLAG_OVERWRITE_COMPLETE);
 }
 
-static uint32_t utc_time() { return rtc_get_time(); }
+static uint32_t utc_time() {
+  return rtc_get_time();
+}
 
 static bool deleted_and_expired(SettingsRecordHeader *hdr) {
   return (hdr->val_len == 0) && (hdr->last_modified <= (utc_time() - DELETED_LIFETIME));
@@ -410,7 +416,9 @@ static status_t cleanup_partial_transactions(SettingsFile *file) {
   return S_SUCCESS;
 }
 
-static status_t bootup_check(SettingsFile *file) { return cleanup_partial_transactions(file); }
+static status_t bootup_check(SettingsFile *file) {
+  return cleanup_partial_transactions(file);
+}
 
 int settings_file_get_len(SettingsFile *file, const void *key, size_t key_len) {
   settings_raw_iter_resume(&file->iter);

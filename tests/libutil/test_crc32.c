@@ -23,11 +23,17 @@
 
 static uint32_t crc;
 
-void test_crc32__initialize(void) { crc = crc32(0, NULL, 0); }
+void test_crc32__initialize(void) {
+  crc = crc32(0, NULL, 0);
+}
 
-void test_crc32__initial_value_matches_header(void) { cl_assert_equal_i(crc, CRC32_INIT); }
+void test_crc32__initial_value_matches_header(void) {
+  cl_assert_equal_i(crc, CRC32_INIT);
+}
 
-void test_crc32__null(void) { cl_assert_equal_i(crc, 0); }
+void test_crc32__null(void) {
+  cl_assert_equal_i(crc, 0);
+}
 
 void test_crc32__empty_buffer(void) {
   crc = crc32(crc, "arbitrary pointer", 0);

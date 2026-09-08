@@ -47,9 +47,12 @@ void pbl_log_sync(uint8_t log_level, const char *src_filename, int src_line_numb
   va_end(args);
 }
 
-void command_dump_malloc() {}
+void command_dump_malloc() {
+}
 
-void reset_due_to_software_failure() { assert(0); }
+void reset_due_to_software_failure() {
+  assert(0);
+}
 
 void app_log_vargs(uint8_t log_level, const char *src_filename, int src_line_number,
                    const char *fmt, va_list args) {

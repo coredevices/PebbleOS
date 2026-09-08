@@ -41,6 +41,10 @@ static void prv_stop_ble_bas_kernel_main(void *unused) {
   event_service_client_unsubscribe(&s_bas_evt);
 }
 
-void ble_bas_init(void) { prv_execute_on_kernel_main(prv_start_ble_bas_kernel_main); }
+void ble_bas_init(void) {
+  prv_execute_on_kernel_main(prv_start_ble_bas_kernel_main);
+}
 
-void ble_bas_deinit(void) { prv_execute_on_kernel_main(prv_stop_ble_bas_kernel_main); }
+void ble_bas_deinit(void) {
+  prv_execute_on_kernel_main(prv_stop_ble_bas_kernel_main);
+}

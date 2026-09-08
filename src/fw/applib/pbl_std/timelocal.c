@@ -64,4 +64,6 @@ static const struct lc_time_T _C_time_locale = {
         },
 };
 
-const struct lc_time_T *time_locale_get(void) { return &_C_time_locale; }
+const struct lc_time_T *time_locale_get(void) {
+  return &_C_time_locale;
+}

@@ -134,7 +134,8 @@ void test_ancs_pebble_actions__initialize(void) {
   pfs_format(false);
 }
 
-void test_ancs_pebble_actions__cleanup(void) {}
+void test_ancs_pebble_actions__cleanup(void) {
+}
 
 void test_ancs_pebble_actions__test_sms_reply(void) {
   prv_support_sms_replies();

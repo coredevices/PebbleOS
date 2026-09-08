@@ -78,6 +78,8 @@ MicDevice *const MIC = &MIC_DEVICE;
 IRQ_MAP(UART2, uart_irq_handler, DBG_UART);
 IRQ_MAP(UART1, uart_irq_handler, QEMU_UART);
 
-void board_early_init(void) {}
+void board_early_init(void) {
+}
 
-void board_init(void) {}
+void board_init(void) {
+}

@@ -70,7 +70,9 @@ cleanup:
   return (rv == S_SUCCESS);
 }
 
-bool shell_prefs_get_clock_24h_style(void) { return s_is_24h_style; }
+bool shell_prefs_get_clock_24h_style(void) {
+  return s_is_24h_style;
+}
 
 void shell_prefs_set_clock_24h_style(bool is_24h_style) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
@@ -85,25 +87,32 @@ bool shell_prefs_is_timezone_source_manual(void) {
   return false;
 }
 
-void shell_prefs_set_timezone_source_manual(bool manual) {}
+void shell_prefs_set_timezone_source_manual(bool manual) {
+}
 
 bool shell_prefs_is_time_source_manual(void) {
   // Force things to automatic
   return false;
 }
 
-void shell_prefs_set_time_source_manual(bool manual) {}
+void shell_prefs_set_time_source_manual(bool manual) {
+}
 
 int16_t shell_prefs_get_automatic_timezone_id(void) {
   // Invalid
   return -1;
 }
 
-void shell_prefs_set_automatic_timezone_id(int16_t timezone_id) {}
+void shell_prefs_set_automatic_timezone_id(int16_t timezone_id) {
+}
 
-void prefs_private_lock(void) { pbl_mutex_lock(&s_mutex, PBL_FOREVER); }
+void prefs_private_lock(void) {
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
+}
 
-void prefs_private_unlock(void) { pbl_mutex_unlock(&s_mutex); }
+void prefs_private_unlock(void) {
+  pbl_mutex_unlock(&s_mutex);
+}
 
 // Exported function used by blob_db API to set the backing store for a specific key.
 // Not used by the SDK shell
@@ -114,7 +123,9 @@ bool prefs_private_write_backing(const uint8_t *key, size_t key_len, const void 
 
 // Exported function used by blob_db API to get the length of a value in our backing store
 // Not used by the SDK shell
-int prefs_private_get_backing_len(const uint8_t *key, size_t key_len) { return 0; }
+int prefs_private_get_backing_len(const uint8_t *key, size_t key_len) {
+  return 0;
+}
 
 // Exported function used by blob_db API to read our backing store
 // Not used by the SDK shell
@@ -168,48 +179,77 @@ PreferredContentSize system_theme_get_content_size(void) {
       (PreferredContentSize)s_content_size);
 }
 
-bool activity_prefs_tracking_is_enabled(void) { return true; }
+bool activity_prefs_tracking_is_enabled(void) {
+  return true;
+}
 
-void activity_prefs_tracking_set_enabled(bool enable) {}
+void activity_prefs_tracking_set_enabled(bool enable) {
+}
 
-bool activity_prefs_activity_insights_are_enabled(void) { return false; }
+bool activity_prefs_activity_insights_are_enabled(void) {
+  return false;
+}
 
-void activity_prefs_activity_insights_set_enabled(bool enable) {}
+void activity_prefs_activity_insights_set_enabled(bool enable) {
+}
 
-bool activity_prefs_sleep_insights_are_enabled(void) { return false; }
+bool activity_prefs_sleep_insights_are_enabled(void) {
+  return false;
+}
 
-void activity_prefs_sleep_insights_set_enabled(bool enable) {}
+void activity_prefs_sleep_insights_set_enabled(bool enable) {
+}
 
-uint8_t activity_prefs_get_health_app_opened_version(void) { return 0; }
+uint8_t activity_prefs_get_health_app_opened_version(void) {
+  return 0;
+}
 
-void activity_prefs_set_height_mm(uint16_t height_mm) {}
+void activity_prefs_set_height_mm(uint16_t height_mm) {
+}
 
-uint16_t activity_prefs_get_height_mm(void) { return 0; }
+uint16_t activity_prefs_get_height_mm(void) {
+  return 0;
+}
 
-void activity_prefs_set_weight_dag(uint16_t weight_dag) {}
+void activity_prefs_set_weight_dag(uint16_t weight_dag) {
+}
 
-uint16_t activity_prefs_get_weight_dag(void) { return 0; }
+uint16_t activity_prefs_get_weight_dag(void) {
+  return 0;
+}
 
-void activity_prefs_set_gender(ActivityGender gender) {}
+void activity_prefs_set_gender(ActivityGender gender) {
+}
 
-ActivityGender activity_prefs_get_gender(void) { return ActivityGenderOther; }
+ActivityGender activity_prefs_get_gender(void) {
+  return ActivityGenderOther;
+}
 
-void activity_prefs_set_age_years(uint8_t age_years) {}
+void activity_prefs_set_age_years(uint8_t age_years) {
+}
 
-uint8_t activity_prefs_get_age_years(void) { return 0; }
+uint8_t activity_prefs_get_age_years(void) {
+  return 0;
+}
 
-bool activity_prefs_heart_rate_is_enabled(void) { return true; }
+bool activity_prefs_heart_rate_is_enabled(void) {
+  return true;
+}
 
 #ifdef CONFIG_HRM
 HRMonitoringInterval activity_prefs_get_hrm_measurement_interval(void) {
   return HRMonitoringInterval_10Min;
 }
 
-void activity_prefs_set_hrm_measurement_interval(HRMonitoringInterval interval) {}
+void activity_prefs_set_hrm_measurement_interval(HRMonitoringInterval interval) {
+}
 
-bool activity_prefs_hrm_activity_tracking_is_enabled(void) { return true; }
+bool activity_prefs_hrm_activity_tracking_is_enabled(void) {
+  return true;
+}
 
-void activity_prefs_set_hrm_activity_tracking_enabled(bool enabled) {}
+void activity_prefs_set_hrm_activity_tracking_enabled(bool enabled) {
+}
 #endif
 
 ActivityInsightSettings *activity_prefs_get_sleep_reward_settings(void) {
@@ -217,21 +257,31 @@ ActivityInsightSettings *activity_prefs_get_sleep_reward_settings(void) {
   return &s_settings;
 }
 
-void activity_prefs_set_activation_delay_insight_fired(ActivationDelayInsightType type) {}
+void activity_prefs_set_activation_delay_insight_fired(ActivationDelayInsightType type) {
+}
 
 bool activity_prefs_has_activation_delay_insight_fired(ActivationDelayInsightType type) {
   return false;
 }
 
-bool activity_prefs_get_health_app_opened(void) { return false; }
+bool activity_prefs_get_health_app_opened(void) {
+  return false;
+}
 
-void activity_prefs_set_activated(void) {}
+void activity_prefs_set_activated(void) {
+}
 
-time_t activity_prefs_get_activation_time(void) { return 0; }
+time_t activity_prefs_get_activation_time(void) {
+  return 0;
+}
 
-UnitsDistance shell_prefs_get_units_distance(void) { return UnitsDistance_Miles; }
+UnitsDistance shell_prefs_get_units_distance(void) {
+  return UnitsDistance_Miles;
+}
 
-UnitsWind shell_prefs_get_units_wind(void) { return UnitsWind_Mph; }
+UnitsWind shell_prefs_get_units_wind(void) {
+  return UnitsWind_Mph;
+}
 
 GColor shell_prefs_get_theme_highlight_color(void) {
   return PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack);
@@ -254,27 +304,36 @@ void shell_prefs_set_legacy_app_render_mode(LegacyAppRenderMode mode) {
 
 // Exported function used by blob_db API to handle settings events
 // Not used by the SDK shell
-void prefs_private_handle_blob_db_event(PebbleBlobDBEvent *event) {}
+void prefs_private_handle_blob_db_event(PebbleBlobDBEvent *event) {
+}
 
-bool shell_prefs_get_menu_scroll_wrap_around_enable(void) { return false; }
+bool shell_prefs_get_menu_scroll_wrap_around_enable(void) {
+  return false;
+}
 
 void shell_prefs_set_menu_scroll_wrap_around_enable(bool enable) {
   // Not used in SDK shell
 }
 
-MenuScrollVibeBehavior shell_prefs_get_menu_scroll_vibe_behavior(void) { return MenuScrollNoVibe; }
+MenuScrollVibeBehavior shell_prefs_get_menu_scroll_vibe_behavior(void) {
+  return MenuScrollNoVibe;
+}
 
 void shell_prefs_set_menu_scroll_vibe_behavior(MenuScrollVibeBehavior behavior) {
   // Not used in SDK shell
 }
 
-bool shell_prefs_get_vibe_log_info_enabled(void) { return false; }
+bool shell_prefs_get_vibe_log_info_enabled(void) {
+  return false;
+}
 
 void shell_prefs_set_vibe_log_info_enabled(bool enabled) {
   // Not used in SDK shell
 }
 
-bool shell_prefs_get_settings_dbs_compacted_v1(void) { return true; }
+bool shell_prefs_get_settings_dbs_compacted_v1(void) {
+  return true;
+}
 
 void shell_prefs_set_settings_dbs_compacted_v1(bool done) {
   // Not used in SDK shell

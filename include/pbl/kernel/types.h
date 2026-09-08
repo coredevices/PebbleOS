@@ -28,8 +28,12 @@ typedef struct {
 pbl_tick_t pbl_ms_to_ticks(uint32_t ms);
 uint32_t pbl_ticks_to_ms(pbl_tick_t ticks);
 
-static inline bool pbl_timeout_is_forever(pbl_timeout_t t) { return t.ticks == PBL_TICK_FOREVER; }
-static inline bool pbl_timeout_is_no_wait(pbl_timeout_t t) { return t.ticks == 0; }
+static inline bool pbl_timeout_is_forever(pbl_timeout_t t) {
+  return t.ticks == PBL_TICK_FOREVER;
+}
+static inline bool pbl_timeout_is_no_wait(pbl_timeout_t t) {
+  return t.ticks == 0;
+}
 
 //! Higher value = more urgent.
 typedef uint8_t pbl_prio_t;

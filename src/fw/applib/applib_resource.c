@@ -74,8 +74,14 @@ static bool prv_resource_is_mmapped(const void *bytes) {
          resource_storage_flash_bytes_are_readonly(bytes);
 }
 
-bool applib_resource_track_mmapped(const void *bytes) { return prv_resource_is_mmapped(bytes); }
+bool applib_resource_track_mmapped(const void *bytes) {
+  return prv_resource_is_mmapped(bytes);
+}
 
-bool applib_resource_is_mmapped(const void *bytes) { return prv_resource_is_mmapped(bytes); }
+bool applib_resource_is_mmapped(const void *bytes) {
+  return prv_resource_is_mmapped(bytes);
+}
 
-bool applib_resource_munmap(const void *bytes) { return prv_resource_is_mmapped(bytes); }
+bool applib_resource_munmap(const void *bytes) {
+  return prv_resource_is_mmapped(bytes);
+}

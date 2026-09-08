@@ -56,7 +56,9 @@ static bool s_dls_session_created;
 static int s_num_dls_records;
 static TestPLDLSRecord s_dls_records[10];
 
-static void prv_reset_captured_dls_data(void) { s_num_dls_records = 0; }
+static void prv_reset_captured_dls_data(void) {
+  s_num_dls_records = 0;
+}
 
 //
 // Data Logging Fakes
@@ -99,7 +101,9 @@ void dls_finish(DataLoggingSession *logging_session) {
 //
 
 #define TEST_PL_SERIAL_NUM "ABC01234567"
-const char *mfg_get_serial_number(void) { return TEST_PL_SERIAL_NUM; }
+const char *mfg_get_serial_number(void) {
+  return TEST_PL_SERIAL_NUM;
+}
 
 #define GIT_TAG_V_MAJOR 4
 #define GIT_TAG_V_MINOR 17
@@ -456,7 +460,8 @@ void test_protobuf_log__initialize(void) {
 }
 
 // ---------------------------------------------------------------------------------------------
-void test_protobuf_log__cleanup(void) {}
+void test_protobuf_log__cleanup(void) {
+}
 
 // ---------------------------------------------------------------------------------------------
 // Test some simple message variants

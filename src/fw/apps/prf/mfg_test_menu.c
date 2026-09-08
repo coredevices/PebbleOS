@@ -233,9 +233,13 @@ static void prv_run_menu(uint8_t mode) {
   app_event_loop();
 }
 
-static void s_main_semi_finished(void) { prv_run_menu(MFG_TEST_MODE_SEMI_FINISHED); }
+static void s_main_semi_finished(void) {
+  prv_run_menu(MFG_TEST_MODE_SEMI_FINISHED);
+}
 
-static void s_main_finished(void) { prv_run_menu(MFG_TEST_MODE_FINISHED); }
+static void s_main_finished(void) {
+  prv_run_menu(MFG_TEST_MODE_FINISHED);
+}
 
 const PebbleProcessMd *mfg_test_menu_semi_finished_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {

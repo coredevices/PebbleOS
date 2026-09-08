@@ -231,7 +231,9 @@ bool animation_unschedule(Animation *animation_h) {
 // Interface for unit tests to query the fake animation state
 /////////////////////////////////////////////////////////////
 
-Animation *fake_animation_get_first_animation(void) { return (Animation *)s_animations; }
+Animation *fake_animation_get_first_animation(void) {
+  return (Animation *)s_animations;
+}
 
 Animation *fake_animation_get_next_animation(Animation *animation) {
   return (Animation *)((AnimationPrivate *)animation)->list_node.next;

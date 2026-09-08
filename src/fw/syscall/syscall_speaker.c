@@ -137,11 +137,17 @@ DEFINE_SYSCALL(uint32_t, sys_speaker_stream_write, const void *data, uint32_t nu
   return speaker_service_stream_write(data, num_bytes);
 }
 
-DEFINE_SYSCALL(void, sys_speaker_stream_close, void) { speaker_service_stream_close(); }
+DEFINE_SYSCALL(void, sys_speaker_stream_close, void) {
+  speaker_service_stream_close();
+}
 
-DEFINE_SYSCALL(void, sys_speaker_stop, void) { speaker_service_stop(); }
+DEFINE_SYSCALL(void, sys_speaker_stop, void) {
+  speaker_service_stop();
+}
 
-DEFINE_SYSCALL(void, sys_speaker_set_volume, uint8_t volume) { speaker_service_set_volume(volume); }
+DEFINE_SYSCALL(void, sys_speaker_set_volume, uint8_t volume) {
+  speaker_service_set_volume(volume);
+}
 
 DEFINE_SYSCALL(uint8_t, sys_speaker_get_state, void) {
   return (uint8_t)speaker_service_get_state();
@@ -151,4 +157,6 @@ DEFINE_SYSCALL(void, sys_speaker_register_finish, void) {
   speaker_service_register_finish(pebble_task_get_current());
 }
 
-DEFINE_SYSCALL(bool, sys_speaker_is_muted, void) { return speaker_service_is_muted(); }
+DEFINE_SYSCALL(bool, sys_speaker_is_muted, void) {
+  return speaker_service_is_muted();
+}

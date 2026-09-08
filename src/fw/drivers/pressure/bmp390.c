@@ -15,7 +15,8 @@ PBL_LOG_MODULE_DEFINE(driver_pressure_bmp390, CONFIG_DRIVER_PRESSURE_LOG_LEVEL);
 static bool prv_read_register(I2CSlavePort *i2c, uint8_t register_address, uint8_t *result) {
   i2c_use(i2c);
   bool rv = i2c_write_block(i2c, 1, &register_address);
-  if (rv) rv = i2c_read_block(i2c, 1, result);
+  if (rv)
+    rv = i2c_read_block(i2c, 1, result);
   i2c_release(i2c);
   return rv;
 }

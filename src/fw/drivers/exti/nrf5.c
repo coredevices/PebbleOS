@@ -48,4 +48,6 @@ void exti_enable(ExtiConfig cfg) {
   nrfx_gpiote_trigger_enable(&cfg.peripheral, cfg.gpio_pin, true /* int_enable */);
 }
 
-void exti_disable(ExtiConfig cfg) { nrfx_gpiote_trigger_disable(&cfg.peripheral, cfg.gpio_pin); }
+void exti_disable(ExtiConfig cfg) {
+  nrfx_gpiote_trigger_disable(&cfg.peripheral, cfg.gpio_pin);
+}

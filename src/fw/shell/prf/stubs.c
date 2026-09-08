@@ -23,84 +23,122 @@
 #include "shell/prefs.h"
 #include "shell/system_theme.h"
 
-void app_fetch_binaries(const Uuid *uuid, AppInstallId app_id, bool has_worker) {}
+void app_fetch_binaries(const Uuid *uuid, AppInstallId app_id, bool has_worker) {
+}
 
-const char *app_custom_get_title(AppInstallId app_id) { return NULL; }
+const char *app_custom_get_title(AppInstallId app_id) {
+  return NULL;
+}
 
-void crashed_ui_show_worker_crash(AppInstallId install_id) {}
+void crashed_ui_show_worker_crash(AppInstallId install_id) {
+}
 
-void crashed_ui_show_forced_core_dump(void) {}
+void crashed_ui_show_forced_core_dump(void) {
+}
 
-void app_idle_timeout_stop(void) {}
+void app_idle_timeout_stop(void) {
+}
 
-void wakeup_popup_window(uint8_t missed_apps_count, uint8_t *missed_apps_banks) {}
+void wakeup_popup_window(uint8_t missed_apps_count, uint8_t *missed_apps_banks) {
+}
 
-void watchface_set_default_install_id(AppInstallId id) {}
+void watchface_set_default_install_id(AppInstallId id) {
+}
 
-void watchface_handle_button_event(PebbleEvent *e) {}
+void watchface_handle_button_event(PebbleEvent *e) {
+}
 
-void app_idle_timeout_refresh(void) {}
+void app_idle_timeout_refresh(void) {
+}
 
-void app_idle_timeout_touch_down(void) {}
+void app_idle_timeout_touch_down(void) {
+}
 
-void app_idle_timeout_touch_up(void) {}
+void app_idle_timeout_touch_up(void) {
+}
 
 PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char *name) {
   return NULL;
 }
 
-void alarm_set_snooze_delay(int delay_ms) {}
+void alarm_set_snooze_delay(int delay_ms) {
+}
 
 const void *const g_pbl_system_tbl[] = {};
 
 const FileResourceData g_file_resource_stores[] = {};
 const uint32_t g_num_file_resource_stores = 0;
 
-void persist_service_client_open(const Uuid *uuid) {}
+void persist_service_client_open(const Uuid *uuid) {
+}
 
-void persist_service_client_close(const Uuid *uuid) {}
+void persist_service_client_close(const Uuid *uuid) {
+}
 
-SettingsFile *persist_service_lock_and_get_store(const Uuid *uuid) { return NULL; }
+SettingsFile *persist_service_lock_and_get_store(const Uuid *uuid) {
+  return NULL;
+}
 
-status_t persist_service_delete_file(const Uuid *uuid) { return E_INVALID_OPERATION; }
+status_t persist_service_delete_file(const Uuid *uuid) {
+  return E_INVALID_OPERATION;
+}
 
-void wakeup_enable(bool enable) {}
+void wakeup_enable(bool enable) {
+}
 
-bool phone_call_is_using_ANCS(void) { return true; }
+bool phone_call_is_using_ANCS(void) {
+  return true;
+}
 
 #include "pbl/services/blob_db/app_db.h"
 #include "pbl/services/app_cache.h"
 #include "pbl/services/blob_db/pin_db.h"
 
-status_t pin_db_delete_with_parent(const TimelineItemId *parent_id) { return E_INVALID_OPERATION; }
+status_t pin_db_delete_with_parent(const TimelineItemId *parent_id) {
+  return E_INVALID_OPERATION;
+}
 
 status_t app_cache_add_entry(AppInstallId app_id, uint32_t total_size) {
   return E_INVALID_OPERATION;
 }
 
-status_t app_cache_remove_entry(AppInstallId id) { return E_INVALID_OPERATION; }
+status_t app_cache_remove_entry(AppInstallId id) {
+  return E_INVALID_OPERATION;
+}
 
 status_t app_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   return E_INVALID_OPERATION;
 }
 
-status_t app_db_delete(const uint8_t *key, int key_len) { return E_INVALID_OPERATION; }
+status_t app_db_delete(const uint8_t *key, int key_len) {
+  return E_INVALID_OPERATION;
+}
 
-AppInstallId app_db_check_next_unique_id(void) { return 0; }
+AppInstallId app_db_check_next_unique_id(void) {
+  return 0;
+}
 
-void app_db_enumerate_entries(AppDBEnumerateCb cb, void *data) {}
+void app_db_enumerate_entries(AppDBEnumerateCb cb, void *data) {
+}
 
-AppInstallId app_db_get_install_id_for_uuid(const Uuid *uuid) { return 0; }
+AppInstallId app_db_get_install_id_for_uuid(const Uuid *uuid) {
+  return 0;
+}
 
 status_t app_db_get_app_entry_for_install_id(AppInstallId app_id, AppDBEntry *entry) {
   return E_INVALID_OPERATION;
 }
 
-bool app_db_exists_install_id(AppInstallId app_id) { return false; }
+bool app_db_exists_install_id(AppInstallId app_id) {
+  return false;
+}
 
-void timeline_item_destroy(TimelineItem *item) {}
+void timeline_item_destroy(TimelineItem *item) {
+}
 
-AppInstallId worker_preferences_get_default_worker(void) { return INSTALL_ID_INVALID; }
+AppInstallId worker_preferences_get_default_worker(void) {
+  return INSTALL_ID_INVALID;
+}
 
 #include "process_management/process_loader.h"
 void *process_loader_load(const PebbleProcessMd *app_md, PebbleTask task,
@@ -121,17 +159,26 @@ void app_storage_get_file_name(char *name, size_t buf_length, AppInstallId app_i
   *name = 0;
 }
 
-bool shell_prefs_get_clock_24h_style(void) { return true; }
+bool shell_prefs_get_clock_24h_style(void) {
+  return true;
+}
 
-void shell_prefs_set_clock_24h_style(bool is_24h_style) {}
+void shell_prefs_set_clock_24h_style(bool is_24h_style) {
+}
 
-bool shell_prefs_is_timezone_source_manual(void) { return false; }
+bool shell_prefs_is_timezone_source_manual(void) {
+  return false;
+}
 
-void shell_prefs_set_timezone_source_manual(bool manual) {}
+void shell_prefs_set_timezone_source_manual(bool manual) {
+}
 
-void shell_prefs_set_automatic_timezone_id(int16_t timezone_id) {}
+void shell_prefs_set_automatic_timezone_id(int16_t timezone_id) {
+}
 
-int16_t shell_prefs_get_automatic_timezone_id(void) { return -1; }
+int16_t shell_prefs_get_automatic_timezone_id(void) {
+  return -1;
+}
 
 bool shell_prefs_can_coredump_on_request() {
   // it would be good to have a core dump escape hatch in PRF
@@ -139,67 +186,118 @@ bool shell_prefs_can_coredump_on_request() {
 }
 
 // PRF has no preference storage, so the content size is fixed at the runtime platform default.
-void system_theme_set_content_size(PreferredContentSize content_size) {}
+void system_theme_set_content_size(PreferredContentSize content_size) {
+}
 
 PreferredContentSize system_theme_get_content_size(void) {
   return system_theme_get_default_content_size_for_runtime_platform();
 }
 
-AlertMask alerts_get_mask(void) { return AlertMaskAllOff; }
+AlertMask alerts_get_mask(void) {
+  return AlertMaskAllOff;
+}
 
-bool do_not_disturb_is_active(void) { return true; }
+bool do_not_disturb_is_active(void) {
+  return true;
+}
 
-BacklightBehaviour backlight_get_behaviour(void) { return BacklightBehaviour_On; }
+BacklightBehaviour backlight_get_behaviour(void) {
+  return BacklightBehaviour_On;
+}
 
-bool backlight_is_enabled(void) { return true; }
+bool backlight_is_enabled(void) {
+  return true;
+}
 
-bool backlight_is_ambient_sensor_enabled(void) { return false; }
+bool backlight_is_ambient_sensor_enabled(void) {
+  return false;
+}
 
-bool backlight_is_motion_enabled(void) { return false; }
+bool backlight_is_motion_enabled(void) {
+  return false;
+}
 
-BacklightTouchWake backlight_get_touch_wake(void) { return BacklightTouchWake_Off; }
+BacklightTouchWake backlight_get_touch_wake(void) {
+  return BacklightTouchWake_Off;
+}
 
-void backlight_set_touch_wake(BacklightTouchWake wake) {}
+void backlight_set_touch_wake(BacklightTouchWake wake) {
+}
 
-bool touch_is_globally_enabled(void) { return true; }
+bool touch_is_globally_enabled(void) {
+  return true;
+}
 
-void touch_set_globally_enabled(bool enable) {}
+void touch_set_globally_enabled(bool enable) {
+}
 
-bool touch_navigation_menu_is_enabled(void) { return false; }
+bool touch_navigation_menu_is_enabled(void) {
+  return false;
+}
 
-void touch_set_navigation_menu_enabled(bool enable) {}
+void touch_set_navigation_menu_enabled(bool enable) {
+}
 
-bool bt_persistent_storage_get_airplane_mode_enabled(void) { return false; }
+bool bt_persistent_storage_get_airplane_mode_enabled(void) {
+  return false;
+}
 
-void bt_persistent_storage_set_airplane_mode_enabled(bool *state) {}
+void bt_persistent_storage_set_airplane_mode_enabled(bool *state) {
+}
 
-uint32_t backlight_get_timeout_ms(void) { return DEFAULT_BACKLIGHT_TIMEOUT_MS; }
+uint32_t backlight_get_timeout_ms(void) {
+  return DEFAULT_BACKLIGHT_TIMEOUT_MS;
+}
 
-uint8_t backlight_get_intensity(void) { return 100U; }
+uint8_t backlight_get_intensity(void) {
+  return 100U;
+}
 
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
-uint32_t backlight_get_default_color(void) { return BOARD_CONFIG.backlight_default_color; }
+uint32_t backlight_get_default_color(void) {
+  return BOARD_CONFIG.backlight_default_color;
+}
 
-void backlight_set_default_color(uint32_t rgb_color) {}
+void backlight_set_default_color(uint32_t rgb_color) {
+}
 #endif
 
-bool shell_prefs_get_language_english(void) { return true; }
-void shell_prefs_set_language_english(bool english) {}
-void shell_prefs_toggle_language_english(void) {}
-ShellLanguage shell_prefs_get_language(void) { return ShellLanguageEnglish; }
-uint32_t shell_prefs_get_language_resource_id(void) { return RESOURCE_ID_INVALID; }
-void shell_prefs_set_language(ShellLanguage language) {}
+bool shell_prefs_get_language_english(void) {
+  return true;
+}
+void shell_prefs_set_language_english(bool english) {
+}
+void shell_prefs_toggle_language_english(void) {
+}
+ShellLanguage shell_prefs_get_language(void) {
+  return ShellLanguageEnglish;
+}
+uint32_t shell_prefs_get_language_resource_id(void) {
+  return RESOURCE_ID_INVALID;
+}
+void shell_prefs_set_language(ShellLanguage language) {
+}
 
-FontInfo *fonts_get_system_emoji_font_for_size(unsigned int font_height) { return NULL; }
+FontInfo *fonts_get_system_emoji_font_for_size(unsigned int font_height) {
+  return NULL;
+}
 
-int16_t timeline_peek_get_origin_y(void) { return DISP_ROWS; }
+int16_t timeline_peek_get_origin_y(void) {
+  return DISP_ROWS;
+}
 
-int16_t timeline_peek_get_obstruction_origin_y(void) { return DISP_ROWS; }
+int16_t timeline_peek_get_obstruction_origin_y(void) {
+  return DISP_ROWS;
+}
 
-void timeline_peek_handle_process_start(void) {}
+void timeline_peek_handle_process_start(void) {
+}
 
-void timeline_peek_handle_process_kill(void) {}
+void timeline_peek_handle_process_kill(void) {
+}
 
-void pbl_analytics_external_collect_pfs_stats(void) {}
+void pbl_analytics_external_collect_pfs_stats(void) {
+}
 
-void pbl_analytics_external_collect_settings(void) {}
+void pbl_analytics_external_collect_settings(void) {
+}

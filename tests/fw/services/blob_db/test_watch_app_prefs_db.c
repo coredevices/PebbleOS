@@ -76,7 +76,8 @@ void test_watch_app_prefs_db__initialize(void) {
   }
 }
 
-void test_watch_app_prefs_db__cleanup(void) {}
+void test_watch_app_prefs_db__cleanup(void) {
+}
 
 // Tests
 ////////////////////////////////////////////////////////////////

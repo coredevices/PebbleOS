@@ -33,7 +33,9 @@ static bool s_comm_state_change_eval_is_scheduled;
 static BtCtlModeOverride s_comm_override = BtCtlModeOverrideNone;
 static PBL_MUTEX_DEFINE(s_comm_state_change_mutex);
 
-bool bt_ctl_is_airplane_mode_on(void) { return s_comm_airplane_mode_on; }
+bool bt_ctl_is_airplane_mode_on(void) {
+  return s_comm_airplane_mode_on;
+}
 
 bool bt_ctl_is_bluetooth_active(void) {
   if (s_comm_enabled) {
@@ -46,7 +48,9 @@ bool bt_ctl_is_bluetooth_active(void) {
   return false;
 }
 
-bool bt_ctl_is_bluetooth_running(void) { return s_comm_is_running; }
+bool bt_ctl_is_bluetooth_running(void) {
+  return s_comm_is_running;
+}
 
 static void prv_put_disconnection_event(void) {
   PebbleEvent event = (PebbleEvent){.type = PEBBLE_BT_CONNECTION_EVENT,

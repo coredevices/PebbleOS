@@ -5,9 +5,13 @@
 
 #include <stdint.h>
 
-inline static uint32_t bswap32(uint32_t v) { return __builtin_bswap32(v); }
+inline static uint32_t bswap32(uint32_t v) {
+  return __builtin_bswap32(v);
+}
 
-inline static uint16_t bswap16(uint16_t v) { return __builtin_bswap16(v); }
+inline static uint16_t bswap16(uint16_t v) {
+  return __builtin_bswap16(v);
+}
 
 #ifdef __arm__
 inline static char reverse_byte(uint8_t input) {
@@ -38,5 +42,7 @@ static unsigned char BitReverseTable256[] = {
     0x07, 0x87, 0x47, 0xC7, 0x27, 0xA7, 0x67, 0xE7, 0x17, 0x97, 0x57, 0xD7, 0x37, 0xB7, 0x77, 0xF7,
     0x0F, 0x8F, 0x4F, 0xCF, 0x2F, 0xAF, 0x6F, 0xEF, 0x1F, 0x9F, 0x5F, 0xDF, 0x3F, 0xBF, 0x7F, 0xFF};
 
-inline static char reverse_byte(uint8_t byte) { return BitReverseTable256[byte]; }
+inline static char reverse_byte(uint8_t byte) {
+  return BitReverseTable256[byte];
+}
 #endif

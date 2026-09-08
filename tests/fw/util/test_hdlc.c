@@ -11,9 +11,11 @@
 
 // Setup
 
-void test_hdlc__initialize(void) {}
+void test_hdlc__initialize(void) {
+}
 
-void test_hdlc__cleanup(void) {}
+void test_hdlc__cleanup(void) {
+}
 
 // Tests
 

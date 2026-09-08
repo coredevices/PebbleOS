@@ -7,9 +7,13 @@
 
 static uint32_t s_sample_rate;
 
-static uint32_t prv_sample_input_rate(SpeakerPcmFormat fmt) { return (fmt & 1) ? 16000 : 8000; }
+static uint32_t prv_sample_input_rate(SpeakerPcmFormat fmt) {
+  return (fmt & 1) ? 16000 : 8000;
+}
 
-static uint32_t prv_sample_bytes_per(SpeakerPcmFormat fmt) { return (fmt & 2) ? 2 : 1; }
+static uint32_t prv_sample_bytes_per(SpeakerPcmFormat fmt) {
+  return (fmt & 2) ? 2 : 1;
+}
 
 static int16_t prv_decode_sample_at(const uint8_t *raw, uint32_t idx, bool is_16bit) {
   if (is_16bit) {
@@ -149,4 +153,6 @@ uint32_t track_fill(TrackState *s, int16_t *out, uint32_t max_samples) {
   return written;
 }
 
-void track_deinit(TrackState *s) { memset(s, 0, sizeof(*s)); }
+void track_deinit(TrackState *s) {
+  memset(s, 0, sizeof(*s));
+}

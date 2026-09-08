@@ -56,7 +56,8 @@ void test_timeline_actions__initialize(void) {
   s_sent_action = false;
 }
 
-void test_timeline_actions__cleanup(void) {}
+void test_timeline_actions__cleanup(void) {
+}
 
 // Tests
 ///////////////////////////

@@ -571,11 +571,17 @@ void i18n_set_resource(uint32_t resource_id) {
   prv_mapit(resource_id, &s_system_domain);
 }
 
-char *i18n_get_locale(void) { return (s_system_domain.iso_locale); }
+char *i18n_get_locale(void) {
+  return (s_system_domain.iso_locale);
+}
 
-uint16_t i18n_get_version(void) { return (s_system_domain.lang_version); }
+uint16_t i18n_get_version(void) {
+  return (s_system_domain.lang_version);
+}
 
-char *i18n_get_lang_name(void) { return (s_system_domain.lang_name); }
+char *i18n_get_lang_name(void) {
+  return (s_system_domain.lang_name);
+}
 
 void i18n_enable(bool enable) {
   if (enable) {

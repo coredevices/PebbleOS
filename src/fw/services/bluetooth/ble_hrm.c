@@ -133,7 +133,9 @@ bool ble_hrm_is_sharing_to_connection(const GAPLEConnection *const connection) {
   return prv_is_sharing(connection);
 }
 
-bool ble_hrm_is_sharing(void) { return (s_ble_hrm_subscription_count > 0); }
+bool ble_hrm_is_sharing(void) {
+  return (s_ble_hrm_subscription_count > 0);
+}
 
 typedef struct {
   BTDeviceInternal *next_permitted_device;
@@ -446,6 +448,8 @@ void ble_hrm_deinit(void) {
 }
 
 // For unit testing
-RegularTimerInfo *ble_hrm_timer(void) { return &s_ble_hrm_timer; }
+RegularTimerInfo *ble_hrm_timer(void) {
+  return &s_ble_hrm_timer;
+}
 
 #endif

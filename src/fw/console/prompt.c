@@ -279,9 +279,13 @@ OPTIMIZE_FUNC(2) void prompt_handle_character(char c, bool *should_context_switc
   }
 }
 
-bool prompt_command_is_executing(void) { return s_executing_command != ExecutingCommandNone; }
+bool prompt_command_is_executing(void) {
+  return s_executing_command != ExecutingCommandNone;
+}
 
-void prompt_watchdog_feed(void) { system_task_watchdog_feed(); }
+void prompt_watchdog_feed(void) {
+  system_task_watchdog_feed();
+}
 
 void prompt_send_response(const char *response) {
   PBL_ASSERTN(s_current_context && s_current_context->response_callback);
@@ -297,7 +301,9 @@ void prompt_send_response_fmt(char *buffer, size_t buffer_size, const char *fmt,
   prompt_send_response(buffer);
 }
 
-void prompt_command_continues_after_returning(void) { s_command_continues_after_return = true; }
+void prompt_command_continues_after_returning(void) {
+  s_command_continues_after_return = true;
+}
 
 void prompt_command_finish(void) {
   PBL_ASSERTN(s_current_context);

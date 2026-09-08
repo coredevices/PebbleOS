@@ -25,6 +25,8 @@ BTErrno bt_driver_gatt_stop_discovery(GAPLEConnection *connection) {
   return 0;
 }
 
-void bt_driver_gatt_handle_finalize_discovery(GAPLEConnection *connection) {}
+void bt_driver_gatt_handle_finalize_discovery(GAPLEConnection *connection) {
+}
 
-void bt_driver_gatt_handle_discovery_abandoned(void) {}
+void bt_driver_gatt_handle_discovery_abandoned(void) {
+}

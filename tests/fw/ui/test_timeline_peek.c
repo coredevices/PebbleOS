@@ -83,11 +83,15 @@ void clock_get_until_time(char *buffer, int buf_size, time_t timestamp, int max_
 
 static GContext s_ctx;
 
-GContext *graphics_context_get_current_context(void) { return &s_ctx; }
+GContext *graphics_context_get_current_context(void) {
+  return &s_ctx;
+}
 
 static bool s_is_watchface_running;
 
-bool app_manager_is_watchface_running(void) { return s_is_watchface_running; }
+bool app_manager_is_watchface_running(void) {
+  return s_is_watchface_running;
+}
 
 // Setup and Teardown
 ////////////////////////////////////
@@ -133,7 +137,8 @@ void test_timeline_peek__initialize(void) {
   timeline_peek_init();
 }
 
-void test_timeline_peek__cleanup(void) {}
+void test_timeline_peek__cleanup(void) {
+}
 
 // Helpers
 //////////////////////

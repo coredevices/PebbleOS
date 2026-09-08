@@ -40,8 +40,10 @@ BTErrno gatt_client_op_write_descriptor_cccd(BLEDescriptor cccd, const uint16_t 
 }
 
 // FIXME: PBL-23945
-void fake_kernel_malloc_mark(void) {}
-void fake_kernel_malloc_mark_assert_equal(void) {}
+void fake_kernel_malloc_mark(void) {
+}
+void fake_kernel_malloc_mark_assert_equal(void) {
+}
 
 // Stubs
 ///////////////////////////////////////////////////////////
@@ -54,11 +56,16 @@ void fake_kernel_malloc_mark_assert_equal(void) {}
 #include "stubs_rand_ptr.h"
 #include "stubs_tick.h"
 
-void core_dump_reset(bool is_forced) {}
+void core_dump_reset(bool is_forced) {
+}
 
-void launcher_task_add_callback(void (*callback)(void *data), void *data) { callback(data); }
+void launcher_task_add_callback(void (*callback)(void *data), void *data) {
+  callback(data);
+}
 
-uint16_t gaps_get_starting_att_handle(void) { return 4; }
+uint16_t gaps_get_starting_att_handle(void) {
+  return 4;
+}
 
 // Helpers
 ///////////////////////////////////////////////////////////

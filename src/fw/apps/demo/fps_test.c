@@ -146,7 +146,8 @@ static void prv_window_update_proc(struct Layer *layer, GContext *ctx) {
   data->rendered_frames++;
 }
 
-static void prv_window_disappear(Window *window) {}
+static void prv_window_disappear(Window *window) {
+}
 
 void prv_syncing_content_offset_changed(struct ScrollLayer *scroll_layer, void *context) {
   AppData *data = app_state_get_user_data();

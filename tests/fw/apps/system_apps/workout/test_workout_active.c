@@ -18,11 +18,17 @@ bool s_hrm_is_present;
 /////////////////////
 extern void prv_cycle_scrollable_metrics(WorkoutActiveWindow *active_window);
 
-bool activity_is_hrm_present(void) { return s_hrm_is_present; }
+bool activity_is_hrm_present(void) {
+  return s_hrm_is_present;
+}
 
-uint16_t time_ms(time_t *tloc, uint16_t *out_ms) { return 0; }
+uint16_t time_ms(time_t *tloc, uint16_t *out_ms) {
+  return 0;
+}
 
-void workout_push_summary_window(void) { return; }
+void workout_push_summary_window(void) {
+  return;
+}
 
 static WorkoutData s_workout_data;
 
@@ -47,8 +53,12 @@ typedef struct SportsData {
 
 static SportsData s_sports_data;
 
-static bool prv_is_sports_paused(void) { return false; }
-static bool prv_sports_pause(bool should_be_paused) { return false; }
+static bool prv_is_sports_paused(void) {
+  return false;
+}
+static bool prv_sports_pause(bool should_be_paused) {
+  return false;
+}
 static void prv_metric_to_string(WorkoutMetricType type, char *buffer, size_t buffer_size,
                                  void *i18n_owner, void *sports_data) {
   SportsData *data = sports_data;
@@ -94,7 +104,9 @@ static int32_t prv_sports_get_value(WorkoutMetricType type, void *sports_data) {
   }
 }
 
-static char *prv_get_custom_metric_label_string(void) { return s_sports_data.custom_label_string; }
+static char *prv_get_custom_metric_label_string(void) {
+  return s_sports_data.custom_label_string;
+}
 
 static WorkoutController s_sports_controller = {
     .is_paused = prv_is_sports_paused,
@@ -113,7 +125,9 @@ static WorkoutController s_sports_controller = {
 static GContext s_ctx;
 static FrameBuffer s_fb;
 
-GContext *graphics_context_get_current_context(void) { return &s_ctx; }
+GContext *graphics_context_get_current_context(void) {
+  return &s_ctx;
+}
 
 void test_workout_active__initialize(void) {
   s_hrm_is_present = true;
@@ -140,7 +154,8 @@ void test_workout_active__initialize(void) {
   content_indicator_init_buffer(buffer);
 }
 
-void test_workout_active__cleanup(void) {}
+void test_workout_active__cleanup(void) {
+}
 
 // Helpers
 //////////////////////

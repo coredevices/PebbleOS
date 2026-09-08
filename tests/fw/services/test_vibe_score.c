@@ -10,15 +10,20 @@
 #include "stubs_logging.h"
 #include "stubs_passert.h"
 
-void sys_vibe_pattern_trigger_start(void) {}
-ResAppNum sys_get_current_resource_num(void) { return 0; }
+void sys_vibe_pattern_trigger_start(void) {
+}
+ResAppNum sys_get_current_resource_num(void) {
+  return 0;
+}
 
 const uint8_t *sys_resource_read_only_bytes(ResAppNum app_num, uint32_t resource_id,
                                             size_t *num_bytes_out) {
   return NULL;
 }
 
-int8_t vibe_get_braking_strength(void) { return -100; }
+int8_t vibe_get_braking_strength(void) {
+  return -100;
+}
 
 // fake
 typedef struct VibeStep {
@@ -41,14 +46,19 @@ size_t sys_resource_load_range(ResAppNum app_num, uint32_t id, uint32_t start_by
   memcpy(buffer, s_resource_buffer + start_bytes, num_bytes);
   return num_bytes;
 }
-size_t sys_resource_size(ResAppNum app_num, uint32_t id) { return s_resource_buffer_size; }
+size_t sys_resource_size(ResAppNum app_num, uint32_t id) {
+  return s_resource_buffer_size;
+}
 
 // helpers
 
 // unit test code
-void test_vibe_score__initialize(void) { s_vibe_queue_index = 0; }
+void test_vibe_score__initialize(void) {
+  s_vibe_queue_index = 0;
+}
 
-void test_vibe_score__cleanup(void) {}
+void test_vibe_score__cleanup(void) {
+}
 
 void test_vibe_score__double_pulse(void) {
   uint8_t buffer[] = {'V',

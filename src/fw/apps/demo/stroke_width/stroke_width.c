@@ -71,10 +71,12 @@ static void up_handler(ClickRecognizerRef recognizer, void *context) {
     case OP_TEST4:
     case OP_ROTATE2:
     case OP_ROTATE3:
-      if (data->stroke_width < MAX_STROKE) data->stroke_width++;
+      if (data->stroke_width < MAX_STROKE)
+        data->stroke_width++;
       break;
     case OP_TEST5:
-      if (data->size < 100) data->size++;
+      if (data->size < 100)
+        data->size++;
       break;
     case OP_MOVE_P1_X:
       data->p1.x++;
@@ -114,10 +116,12 @@ static void down_handler(ClickRecognizerRef recognizer, void *context) {
     case OP_TEST4:
     case OP_ROTATE2:
     case OP_ROTATE3:
-      if (data->stroke_width > MIN_STROKE) data->stroke_width--;
+      if (data->stroke_width > MIN_STROKE)
+        data->stroke_width--;
       break;
     case OP_TEST5:
-      if (data->size > 1) data->size--;
+      if (data->size > 1)
+        data->size--;
       break;
     case OP_MOVE_P1_X:
       data->p1.x--;
@@ -148,7 +152,8 @@ static void select_handler(ClickRecognizerRef recognizer, void *context) {
 
   data->operation = (data->operation + 1) % MAX_OPS;
 
-  if (data->operation < MIN_OPS) data->operation = MIN_OPS;
+  if (data->operation < MIN_OPS)
+    data->operation = MIN_OPS;
 
   layer_mark_dirty(data->canvas_layer);
 

@@ -27,7 +27,9 @@ void launcher_panic(uint32_t error_code) {
   system_app_state_machine_panic();
 }
 
-uint32_t launcher_panic_get_current_error(void) { return s_current_error; }
+uint32_t launcher_panic_get_current_error(void) {
+  return s_current_error;
+}
 
 void command_sim_panic_cb(void *data) {
   PebbleEvent event = {

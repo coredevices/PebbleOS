@@ -47,10 +47,14 @@ bool sys_process_manager_get_current_process_uuid(Uuid *uuid_out) {
   return true;
 }
 
-ResAppNum app_manager_get_current_resource_num(void) { return 1; }
+ResAppNum app_manager_get_current_resource_num(void) {
+  return 1;
+}
 
 static ProcessContext s_app_task_context;
-ProcessContext *app_manager_get_task_context(void) { return &s_app_task_context; }
+ProcessContext *app_manager_get_task_context(void) {
+  return &s_app_task_context;
+}
 
 typedef struct {
   ListNode node;
@@ -68,18 +72,27 @@ void app_task_add_callback(void (*callback)(void *data), void *data) {
   s_app_task_callback_head = list_prepend(s_app_task_callback_head, &node->node);
 }
 
-AppInstallId app_install_get_id_for_uuid(const Uuid *uuid) { return s_app_install_id; }
+AppInstallId app_install_get_id_for_uuid(const Uuid *uuid) {
+  return s_app_install_id;
+}
 
-void app_install_set_is_communicating(const AppInstallId install_id, const bool is_communicating) {}
+void app_install_set_is_communicating(const AppInstallId install_id, const bool is_communicating) {
+}
 
 ////////////////////////////////////
 // Stub manipulation:
 //
-void stub_app_set_js(bool is_js) { ((PebbleProcessMd *)&s_app_md)->allow_js = is_js; }
+void stub_app_set_js(bool is_js) {
+  ((PebbleProcessMd *)&s_app_md)->allow_js = is_js;
+}
 
-void stub_app_set_uuid(Uuid uuid) { s_app_md.common.uuid = uuid; }
+void stub_app_set_uuid(Uuid uuid) {
+  s_app_md.common.uuid = uuid;
+}
 
-void stub_app_set_install_id(AppInstallId install_id) { s_app_install_id = install_id; }
+void stub_app_set_install_id(AppInstallId install_id) {
+  s_app_install_id = install_id;
+}
 
 void stub_app_task_callbacks_invoke_pending(void) {
   // Start at tail ("oldest" callback):
@@ -108,7 +121,9 @@ void stub_app_task_callbacks_cleanup(void) {
   PBL_ASSERTN(s_app_task_callback_head == NULL);
 }
 
-void stub_app_set_is_running(const bool is_running) { s_is_app_running = is_running; }
+void stub_app_set_is_running(const bool is_running) {
+  s_is_app_running = is_running;
+}
 
 void stub_app_init(void) {
   stub_app_set_uuid(TEST_UUID);

@@ -110,9 +110,13 @@ void fake_pb_storage_mem_reset(void) {
   s_storage_data = (FakePutBytesStorageData){};
 }
 
-void fake_pb_storage_mem_set_crc(uint32_t crc) { s_storage_data.crc = crc; }
+void fake_pb_storage_mem_set_crc(uint32_t crc) {
+  s_storage_data.crc = crc;
+}
 
-bool fake_pb_storage_mem_get_last_success(void) { return s_storage_data.last_is_success; }
+bool fake_pb_storage_mem_get_last_success(void) {
+  return s_storage_data.last_is_success;
+}
 
 void fake_pb_storage_mem_assert_contents_written(const uint8_t contents[], size_t size) {
   cl_assert_equal_m(contents, s_storage_data.buffer + sizeof(FirmwareDescription), size);

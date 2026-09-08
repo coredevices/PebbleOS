@@ -59,7 +59,9 @@ static MfgData prv_fetch_struct(void) {
   return result;
 }
 
-WatchInfoColor mfg_info_get_watch_color(void) { return prv_fetch_struct().color; }
+WatchInfoColor mfg_info_get_watch_color(void) {
+  return prv_fetch_struct().color;
+}
 
 void mfg_info_set_watch_color(WatchInfoColor color) {
   MfgData data = prv_fetch_struct();
@@ -79,7 +81,9 @@ void mfg_info_set_model(const char *model) {
   prv_update_struct(&data);
 }
 
-uint8_t mfg_info_get_vibe_cali(void) { return prv_fetch_struct().vibe_cali; }
+uint8_t mfg_info_get_vibe_cali(void) {
+  return prv_fetch_struct().vibe_cali;
+}
 
 void mfg_info_set_vibe_cali(uint8_t cali) {
   MfgData data = prv_fetch_struct();
@@ -87,8 +91,13 @@ void mfg_info_set_vibe_cali(uint8_t cali) {
   prv_update_struct(&data);
 }
 
-uint32_t mfg_info_get_rtc_freq(void) { return 0U; }
+uint32_t mfg_info_get_rtc_freq(void) {
+  return 0U;
+}
 
-void mfg_info_set_rtc_freq(uint32_t rtc_freq) { (void)rtc_freq; }
+void mfg_info_set_rtc_freq(uint32_t rtc_freq) {
+  (void)rtc_freq;
+}
 
-void mfg_info_update_constant_data(void) {}
+void mfg_info_update_constant_data(void) {
+}

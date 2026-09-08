@@ -23,7 +23,9 @@
 // next push renders the full page on frame one (only the rect arm ever arms this).
 static bool s_pending_static_in;
 
-void weather_report_arm_static_in(void) { s_pending_static_in = true; }
+void weather_report_arm_static_in(void) {
+  s_pending_static_in = true;
+}
 
 #if PBL_ROUND
 // ============================================================================
@@ -65,13 +67,16 @@ static void prv_seed_day(int i) {
 // hold-scroll timer) are fine: weather_app_layout_animate cancels the in-flight arc and restarts,
 // so an accelerating hold fast-forwards through the days.
 static void prv_navigate(bool is_down) {
-  if (!s_report) return;
+  if (!s_report)
+    return;
   int i = s_report->current_day_index;
   if (is_down) {
-    if (i + 1 >= (int)s_report->num_days) return;  // already at the last day
+    if (i + 1 >= (int)s_report->num_days)
+      return;  // already at the last day
     i++;
   } else {
-    if (i <= 0) return;  // already at today
+    if (i <= 0)
+      return;  // already at today
     i--;
   }
   s_report->current_day_index = i;
@@ -84,7 +89,8 @@ static void prv_navigate(bool is_down) {
 }
 
 static void prv_click_up_down(ClickRecognizerRef r, void *ctx) {
-  if (!s_report) return;
+  if (!s_report)
+    return;
   prv_navigate(click_recognizer_get_button_id(r) == BUTTON_ID_DOWN);
 }
 
@@ -112,7 +118,8 @@ static void prv_back_slide_stopped(Animation *anim, bool finished, void *context
   }
 }
 static void prv_start_back_slide(void) {
-  if (!s_report || s_back_slide_anim || s_slide_in_anim) return;  // entrance/exit exclusive
+  if (!s_report || s_back_slide_anim || s_slide_in_anim)
+    return;  // entrance/exit exclusive
   Layer *root = s_report->layout.root_layer;
   GRect from = layer_get_frame_by_value(root);
   GRect to = from;
@@ -139,7 +146,8 @@ static void prv_click_back(ClickRecognizerRef r, void *ctx) {
 
 static void prv_touch_handler(const TouchEvent *event, void *context) {
   (void)context;
-  if (!s_report) return;
+  if (!s_report)
+    return;
   if (event->type == TouchEvent_Touchdown) {
     s_report->touch_start_x = event->x;
     s_report->touch_start_y = event->y;
@@ -150,7 +158,8 @@ static void prv_touch_handler(const TouchEvent *event, void *context) {
     int16_t dy = event->y - s_report->touch_start_y;
     int16_t adx = dx < 0 ? -dx : dx;
     int16_t ady = dy < 0 ? -dy : dy;
-    if (adx <= SWIPE_THRESHOLD && ady <= SWIPE_THRESHOLD) return;  // tap — no action
+    if (adx <= SWIPE_THRESHOLD && ady <= SWIPE_THRESHOLD)
+      return;  // tap — no action
     if (ady >= adx) {
       prv_navigate(dy < 0);  // swipe up = next day (like DOWN), swipe down = previous
     } else if (dx > 0) {
@@ -174,16 +183,19 @@ static int s_hold_repeat = 0;
 
 static void prv_hold_timer_cb(void *ctx) {
   s_hold_timer = NULL;
-  if (!s_report) return;
+  if (!s_report)
+    return;
   prv_navigate(s_hold_is_down);
   s_hold_repeat++;
   int interval = HOLD_INITIAL_MS - s_hold_repeat * 50;
-  if (interval < HOLD_MIN_MS) interval = HOLD_MIN_MS;
+  if (interval < HOLD_MIN_MS)
+    interval = HOLD_MIN_MS;
   s_hold_timer = app_timer_register(interval, prv_hold_timer_cb, NULL);
 }
 
 static void prv_raw_up_down(ButtonId btn, bool pressed) {
-  if (!s_report) return;
+  if (!s_report)
+    return;
   if (pressed) {
     s_hold_is_down = (btn == BUTTON_ID_DOWN);
     s_hold_repeat = 0;
@@ -227,11 +239,13 @@ static void prv_click_provider(void *ctx) {
 static void prv_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
   (void)tick_time;
   (void)units_changed;
-  if (s_report) layer_mark_dirty(s_report->layout.root_layer);
+  if (s_report)
+    layer_mark_dirty(s_report->layout.root_layer);
 }
 
 static void prv_window_load(Window *window) {
-  if (!s_report) return;
+  if (!s_report)
+    return;
   GRect bounds = layer_get_bounds(window_get_root_layer(window));
   weather_app_layout_init(&s_report->layout, &bounds);
   layer_add_child(window_get_root_layer(window), s_report->layout.root_layer);
@@ -251,7 +265,8 @@ static void prv_window_load(Window *window) {
 
 static void prv_slide_in_update(Animation *anim, AnimationProgress progress) {
   (void)anim;
-  if (!s_report) return;
+  if (!s_report)
+    return;
   Layer *root = s_report->layout.root_layer;
   const int w = layer_get_bounds(root).size.w;
   GRect f = layer_get_frame_by_value(root);
@@ -277,7 +292,8 @@ static void prv_slide_in_stopped(Animation *anim, bool finished, void *context) 
 static const AnimationImplementation s_slide_in_impl = {.update = prv_slide_in_update};
 
 static void prv_start_slide_in(void) {
-  if (!s_report || s_slide_in_anim) return;
+  if (!s_report || s_slide_in_anim)
+    return;
   Layer *root = s_report->layout.root_layer;
   const int w = layer_get_bounds(root).size.w;
   GRect f = layer_get_frame_by_value(root);
@@ -297,7 +313,8 @@ static void prv_start_slide_in(void) {
 
 static void prv_window_appear(Window *window) {
 #ifdef CONFIG_TOUCH
-  if (s_report) touch_service_subscribe(prv_touch_handler, s_report);
+  if (s_report)
+    touch_service_subscribe(prv_touch_handler, s_report);
 #endif
   if (s_report && s_pending_static_in) {
     s_pending_static_in = false;
@@ -346,9 +363,11 @@ void weather_report_push(const WeatherLocationForecast *days, size_t num_days,
   // the ONLY motion (two competing slides read as a stutter).
   const bool static_in = s_pending_static_in;
   s_pending_static_in = false;
-  if (s_report || !days || num_days == 0) return;
+  if (s_report || !days || num_days == 0)
+    return;
   s_report = calloc(1, sizeof(WeatherReportData));
-  if (!s_report) return;
+  if (!s_report)
+    return;
   s_report->days = days;
   s_report->num_days = num_days;
   s_report->current_day_index =
@@ -370,13 +389,16 @@ void weather_report_push(const WeatherLocationForecast *days, size_t num_days,
   window_stack_push(s_report->window, !static_in);
 }
 
-bool weather_report_is_showing(void) { return s_report && s_report->window; }
+bool weather_report_is_showing(void) {
+  return s_report && s_report->window;
+}
 
 // Re-point the borrowed days array after a weather-event refresh (the array is rewritten in
 // place and can SHRINK, e.g. a location change to a v3-only record) — without this the view
 // keeps navigating over the previous city's stale day slots. No-op when not showing.
 void weather_report_update_data(const WeatherLocationForecast *days, size_t num_days) {
-  if (!s_report || !days || num_days == 0) return;
+  if (!s_report || !days || num_days == 0)
+    return;
   s_report->days = days;
   s_report->num_days = num_days;
   if (s_report->current_day_index >= (int)num_days) {
@@ -444,13 +466,16 @@ static void prv_seed_day(int i) {
 // hold-scroll timer) are fine: weather_app_layout_animate cancels the in-flight arc and restarts,
 // so an accelerating hold fast-forwards through the days.
 static void prv_navigate(bool is_down) {
-  if (!s_report || s_slide_in_anim) return;  // entrance gate
+  if (!s_report || s_slide_in_anim)
+    return;  // entrance gate
   int i = s_report->current_day_index;
   if (is_down) {
-    if (i + 1 >= (int)s_report->num_days) return;  // already at the last day
+    if (i + 1 >= (int)s_report->num_days)
+      return;  // already at the last day
     i++;
   } else {
-    if (i <= 0) return;  // already at today
+    if (i <= 0)
+      return;  // already at today
     i--;
   }
   s_report->current_day_index = i;
@@ -463,7 +488,8 @@ static void prv_navigate(bool is_down) {
 }
 
 static void prv_click_up_down(ClickRecognizerRef r, void *ctx) {
-  if (!s_report) return;
+  if (!s_report)
+    return;
   prv_navigate(click_recognizer_get_button_id(r) == BUTTON_ID_DOWN);
 }
 
@@ -477,7 +503,8 @@ static void prv_click_back(ClickRecognizerRef r, void *ctx) {
 
 static void prv_touch_handler(const TouchEvent *event, void *context) {
   (void)context;
-  if (!s_report) return;
+  if (!s_report)
+    return;
   if (event->type == TouchEvent_Touchdown) {
     s_report->touch_start_x = event->x;
     s_report->touch_start_y = event->y;
@@ -488,7 +515,8 @@ static void prv_touch_handler(const TouchEvent *event, void *context) {
     int16_t dy = event->y - s_report->touch_start_y;
     int16_t adx = dx < 0 ? -dx : dx;
     int16_t ady = dy < 0 ? -dy : dy;
-    if (adx <= SWIPE_THRESHOLD && ady <= SWIPE_THRESHOLD) return;  // tap — no action
+    if (adx <= SWIPE_THRESHOLD && ady <= SWIPE_THRESHOLD)
+      return;  // tap — no action
     if (ady >= adx) {
       prv_navigate(dy < 0);  // swipe up = next day (like DOWN), swipe down = previous
     } else if (dx > 0) {
@@ -511,16 +539,19 @@ static int s_hold_repeat = 0;
 
 static void prv_hold_timer_cb(void *ctx) {
   s_hold_timer = NULL;
-  if (!s_report) return;
+  if (!s_report)
+    return;
   prv_navigate(s_hold_is_down);
   s_hold_repeat++;
   int interval = HOLD_INITIAL_MS - s_hold_repeat * 50;
-  if (interval < HOLD_MIN_MS) interval = HOLD_MIN_MS;
+  if (interval < HOLD_MIN_MS)
+    interval = HOLD_MIN_MS;
   s_hold_timer = app_timer_register(interval, prv_hold_timer_cb, NULL);
 }
 
 static void prv_raw_up_down(ButtonId btn, bool pressed) {
-  if (!s_report) return;
+  if (!s_report)
+    return;
   if (pressed) {
     s_hold_is_down = (btn == BUTTON_ID_DOWN);
     s_hold_repeat = 0;
@@ -566,7 +597,8 @@ static void prv_click_provider(void *ctx) {
 
 static void prv_slide_in_update(Animation *anim, AnimationProgress progress) {
   (void)anim;
-  if (!s_report) return;
+  if (!s_report)
+    return;
   Layer *root = s_report->layout.root_layer;
   const int w = layer_get_bounds(root).size.w;
   GRect f = layer_get_frame_by_value(root);
@@ -592,7 +624,8 @@ static void prv_slide_in_stopped(Animation *anim, bool finished, void *context) 
 static const AnimationImplementation s_slide_in_impl = {.update = prv_slide_in_update};
 
 static void prv_start_slide_in(void) {
-  if (!s_report || s_slide_in_anim) return;
+  if (!s_report || s_slide_in_anim)
+    return;
   Layer *root = s_report->layout.root_layer;
   const int w = layer_get_bounds(root).size.w;
   GRect f = layer_get_frame_by_value(root);
@@ -613,7 +646,8 @@ static void prv_start_slide_in(void) {
 // ---- Window lifecycle ----
 
 static void prv_window_load(Window *window) {
-  if (!s_report) return;
+  if (!s_report)
+    return;
   GRect bounds = layer_get_bounds(window_get_root_layer(window));
   weather_app_layout_init(&s_report->layout, &bounds);
   layer_add_child(window_get_root_layer(window), s_report->layout.root_layer);
@@ -622,7 +656,8 @@ static void prv_window_load(Window *window) {
 
 static void prv_window_appear(Window *window) {
 #ifdef CONFIG_TOUCH
-  if (s_report) touch_service_subscribe(prv_touch_handler, s_report);
+  if (s_report)
+    touch_service_subscribe(prv_touch_handler, s_report);
 #endif
   if (s_report && s_pending_static_in) {
     s_pending_static_in = false;
@@ -662,9 +697,11 @@ void weather_report_push(const WeatherLocationForecast *days, size_t num_days,
   // can leave it armed for an unrelated future push; re-armed below just before the push.
   const bool static_in = s_pending_static_in;
   s_pending_static_in = false;
-  if (s_report || !days || num_days == 0) return;
+  if (s_report || !days || num_days == 0)
+    return;
   s_report = calloc(1, sizeof(WeatherReportData));
-  if (!s_report) return;
+  if (!s_report)
+    return;
   s_report->days = days;
   s_report->num_days = num_days;
   s_report->current_day_index =
@@ -686,13 +723,16 @@ void weather_report_push(const WeatherLocationForecast *days, size_t num_days,
   window_stack_push(s_report->window, !static_in);
 }
 
-bool weather_report_is_showing(void) { return s_report && s_report->window; }
+bool weather_report_is_showing(void) {
+  return s_report && s_report->window;
+}
 
 // Re-point the borrowed days array after a weather-event refresh (the array is rewritten in
 // place and can SHRINK, e.g. a location change to a v3-only record) — without this the view
 // keeps navigating over the previous city's stale day slots. No-op when not showing.
 void weather_report_update_data(const WeatherLocationForecast *days, size_t num_days) {
-  if (!s_report || !days || num_days == 0) return;
+  if (!s_report || !days || num_days == 0)
+    return;
   s_report->days = days;
   s_report->num_days = num_days;
   if (s_report->current_day_index >= (int)num_days) {

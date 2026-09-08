@@ -174,15 +174,23 @@ void command_analytics_heartbeat(void) {
 
 #else  // No analytics backend: provide no-op stubs.
 
-void pbl_analytics_init(void) {}
+void pbl_analytics_init(void) {
+}
 DEFINE_SYSCALL(void, sys_pbl_analytics_set_signed, enum pbl_analytics_key key,
-               int32_t signed_value) {}
+               int32_t signed_value) {
+}
 DEFINE_SYSCALL(void, sys_pbl_analytics_set_unsigned, enum pbl_analytics_key key,
-               uint32_t unsigned_value) {}
-DEFINE_SYSCALL(void, sys_pbl_analytics_set_string, enum pbl_analytics_key key, const char *value) {}
-DEFINE_SYSCALL(void, sys_pbl_analytics_timer_start, enum pbl_analytics_key key) {}
-DEFINE_SYSCALL(void, sys_pbl_analytics_timer_stop, enum pbl_analytics_key key) {}
-DEFINE_SYSCALL(void, sys_pbl_analytics_add, enum pbl_analytics_key key, int32_t amount) {}
-void command_analytics_heartbeat(void) {}
+               uint32_t unsigned_value) {
+}
+DEFINE_SYSCALL(void, sys_pbl_analytics_set_string, enum pbl_analytics_key key, const char *value) {
+}
+DEFINE_SYSCALL(void, sys_pbl_analytics_timer_start, enum pbl_analytics_key key) {
+}
+DEFINE_SYSCALL(void, sys_pbl_analytics_timer_stop, enum pbl_analytics_key key) {
+}
+DEFINE_SYSCALL(void, sys_pbl_analytics_add, enum pbl_analytics_key key, int32_t amount) {
+}
+void command_analytics_heartbeat(void) {
+}
 
 #endif

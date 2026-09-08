@@ -44,8 +44,10 @@ static GBitmap prv_make_bitmap(uint8_t *pixels, int16_t w, int16_t h) {
   return b;
 }
 
-void test_als_screen_compensation__initialize(void) {}
-void test_als_screen_compensation__cleanup(void) {}
+void test_als_screen_compensation__initialize(void) {
+}
+void test_als_screen_compensation__cleanup(void) {
+}
 
 // --- als_compensation_apply() ----------------------------------------------
 

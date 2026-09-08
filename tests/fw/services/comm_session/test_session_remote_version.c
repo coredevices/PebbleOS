@@ -28,7 +28,9 @@ extern void session_remote_version_protocol_msg_callback(CommSession *session, c
 #include "stubs_rtc.h"
 
 static bool s_session_is_system;
-bool comm_session_is_system(CommSession *session) { return s_session_is_system; }
+bool comm_session_is_system(CommSession *session) {
+  return s_session_is_system;
+}
 
 static bool s_session_is_valid;
 bool comm_session_is_valid(const CommSession *session) {

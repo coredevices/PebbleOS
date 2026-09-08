@@ -81,7 +81,8 @@ extern void comm_session_send_next_immediately(CommSession *session);
 
 // -------------------------------------------------------------------------------------------------
 //! To be called once at boot
-void comm_default_kernel_sender_init(void) {}
+void comm_default_kernel_sender_init(void) {
+}
 
 // -------------------------------------------------------------------------------------------------
 // Helpers

@@ -674,7 +674,8 @@ void accel_manager_enable(bool on) {
   pbl_mutex_unlock(&s_accel_manager_mutex);
 }
 
-void accel_manager_exit_low_power_mode(void) {}
+void accel_manager_exit_low_power_mode(void) {
+}
 
 // Return true if we are "idle", defined as seeing no movement in the last hour.
 bool accel_is_idle(void) {

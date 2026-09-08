@@ -12,7 +12,8 @@ bool WEAK property_animation_from(PropertyAnimation *property_animation, void *f
 }
 
 void WEAK property_animation_update_grect(PropertyAnimation *property_animation,
-                                          const uint32_t distance_normalized) {}
+                                          const uint32_t distance_normalized) {
+}
 
 PropertyAnimation *WEAK property_animation_create_layer_bounds(struct Layer *layer,
                                                                GRect *from_bounds,

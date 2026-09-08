@@ -23,26 +23,39 @@
 #include "stubs_rand_ptr.h"
 #include "stubs_syscall_internal.h"
 
-void app_launch_trigger(void) {}
+void app_launch_trigger(void) {
+}
 
-bool bt_driver_comm_schedule_send_next_job(CommSession *data) { return true; }
+bool bt_driver_comm_schedule_send_next_job(CommSession *data) {
+  return true;
+}
 
-bool bt_driver_comm_is_current_task_send_next_task(void) { return false; }
+bool bt_driver_comm_is_current_task_send_next_task(void) {
+  return false;
+}
 
-void comm_session_analytics_open_session(CommSession *session) {}
+void comm_session_analytics_open_session(CommSession *session) {
+}
 
-void comm_session_analytics_close_session(CommSession *session, CommSessionCloseReason reason) {}
+void comm_session_analytics_close_session(CommSession *session, CommSessionCloseReason reason) {
+}
 
-void comm_session_send_queue_cleanup(CommSession *session) {}
+void comm_session_send_queue_cleanup(CommSession *session) {
+}
 
-size_t comm_session_send_queue_get_length(const CommSession *session) { return 0; }
+size_t comm_session_send_queue_get_length(const CommSession *session) {
+  return 0;
+}
 
-void dls_private_handle_disconnect(void *data) {}
+void dls_private_handle_disconnect(void *data) {
+}
 
-void session_remote_version_start_requests(CommSession *session) {}
+void session_remote_version_start_requests(CommSession *session) {
+}
 
 void bt_persistent_storage_set_cached_system_capabilities(
-    const PebbleProtocolCapabilities *capabilities) {}
+    const PebbleProtocolCapabilities *capabilities) {
+}
 
 // Fakes
 ///////////////////////////////////////////////////////////
@@ -89,13 +102,16 @@ const TransportImplementation s_transport_implementation = {
     .set_connection_responsiveness = prv_set_connection_responsiveness,
 };
 
-static void prv_send_next(Transport *transport) {}
+static void prv_send_next(Transport *transport) {
+}
 
-static void prv_reset(Transport *transport) {}
+static void prv_reset(Transport *transport) {
+}
 
 static void prv_set_connection_responsiveness(Transport *transport, BtConsumer consumer,
                                               ResponseTimeState state, uint16_t max_period_secs,
-                                              ResponsivenessGrantedHandler granted_handler) {}
+                                              ResponsivenessGrantedHandler granted_handler) {
+}
 
 // Referenced from protocol_endpoints_table.auto.h override header:
 ///////////////////////////////////////////////////////////
@@ -152,9 +168,13 @@ static void prv_system_test_receiver_write(Receiver *receiver, const uint8_t *da
   PBL_LOG_DBG("Wrote %zu bytes", length);
 }
 
-static void prv_system_test_receiver_finish(Receiver *receiver) { ++s_finish_count; }
+static void prv_system_test_receiver_finish(Receiver *receiver) {
+  ++s_finish_count;
+}
 
-static void prv_system_test_receiver_cleanup(Receiver *receiver) { ++s_cleanup_count; }
+static void prv_system_test_receiver_cleanup(Receiver *receiver) {
+  ++s_cleanup_count;
+}
 
 const ReceiverImplementation g_system_test_receiver_imp = {
     .prepare = prv_system_test_receiver_prepare,

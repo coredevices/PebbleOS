@@ -12,9 +12,11 @@
 #include <string.h>
 
 // unit test code
-void test_vibe_score_info__initialize(void) {}
+void test_vibe_score_info__initialize(void) {
+}
 
-void test_vibe_score_info__cleanup(void) {}
+void test_vibe_score_info__cleanup(void) {
+}
 
 void test_vibe_score_info__get_resource_id_returns_correct_resource(void) {
   cl_assert_equal_i(vibe_score_info_get_resource_id(VibeScoreId_Pulse),

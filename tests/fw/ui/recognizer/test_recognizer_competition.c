@@ -43,7 +43,9 @@ static RecognizerList *s_app_list;
 static Layer *s_active_layer;
 static RecognizerManager *s_manager;
 
-RecognizerList *app_state_get_recognizer_list(void) { return s_app_list; }
+RecognizerList *app_state_get_recognizer_list(void) {
+  return s_app_list;
+}
 
 RecognizerList *window_get_recognizer_list(Window *window) {
   if (!window) {
@@ -52,7 +54,9 @@ RecognizerList *window_get_recognizer_list(Window *window) {
   return layer_get_recognizer_list(&window->layer);
 }
 
-RecognizerManager *window_get_recognizer_manager(Window *window) { return s_manager; }
+RecognizerManager *window_get_recognizer_manager(Window *window) {
+  return s_manager;
+}
 
 struct Layer *window_get_root_layer(const Window *window) {
   if (!window) {
@@ -101,7 +105,8 @@ void test_recognizer_competition__initialize(void) {
   fake_rtc_init(0, 0);
 }
 
-void test_recognizer_competition__cleanup(void) {}
+void test_recognizer_competition__cleanup(void) {
+}
 
 // Helpers
 static void prv_dispatch(RecognizerManager *manager, TouchEventType type, int16_t x, int16_t y) {

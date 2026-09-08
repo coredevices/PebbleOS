@@ -53,7 +53,8 @@ static void *prv_thread_main(void *arg) {
   return NULL;
 }
 
-void arch_init(void) {}
+void arch_init(void) {
+}
 
 void arch_thread_init(struct pbl_thread *t, void (*entry)(void *), void *arg) {
   pthread_cond_init(&t->backend.arch.wake, NULL);
@@ -97,7 +98,9 @@ static void prv_switch(void) {
   }
 }
 
-void arch_switch_request(void) { s_switch_pending = true; }
+void arch_switch_request(void) {
+  s_switch_pending = true;
+}
 
 void arch_thread_exit(void) {
   // pbl_thread_abort() already switched away and ended this pthread.
@@ -111,9 +114,12 @@ void arch_thread_aborted(struct pbl_thread *t) {
   }
 }
 
-bool arch_in_isr(void) { return s_in_isr; }
+bool arch_in_isr(void) {
+  return s_in_isr;
+}
 
-void arch_irq_disable(void) {}
+void arch_irq_disable(void) {
+}
 
 void arch_irq_enable(void) {
   if (!s_in_isr && s_switch_pending && pbl_kernel_is_started()) {
@@ -207,7 +213,9 @@ void pbl_test_kernel_stop(void) {
   }
 }
 
-void pbl_test_isr_enter(void) { s_in_isr = true; }
+void pbl_test_isr_enter(void) {
+  s_in_isr = true;
+}
 
 void pbl_test_isr_exit(void) {
   s_in_isr = false;

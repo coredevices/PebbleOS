@@ -27,7 +27,10 @@ typedef enum {
   MagReadNoMag = -4,
 } MagReadStatus;
 
-typedef enum { MagSampleRate20Hz, MagSampleRate5Hz } MagSampleRate;
+typedef enum {
+  MagSampleRate20Hz,
+  MagSampleRate5Hz
+} MagSampleRate;
 
 //! Initialize magnetometer
 void mag_init(void);

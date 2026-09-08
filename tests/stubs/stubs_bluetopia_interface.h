@@ -5,6 +5,10 @@
 
 typedef struct BTContext BTContext;
 
-unsigned int bt_stack_id(void) { return 1; }
+unsigned int bt_stack_id(void) {
+  return 1;
+}
 
-BTContext *bluetopia_get_context(void) { return NULL; }
+BTContext *bluetopia_get_context(void) {
+  return NULL;
+}

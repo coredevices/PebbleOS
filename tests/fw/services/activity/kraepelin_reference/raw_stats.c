@@ -205,7 +205,9 @@ uint32_t calc_scaled_vmc(uint32_t *pim_ary) {
   return (isqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]) * VMCPM_SCL);
 }
 
-uint8_t compressed_vmc(uint32_t *pim_ary) { return (uint8_t)isqrt(calc_real_vmc(pim_ary)); }
+uint8_t compressed_vmc(uint32_t *pim_ary) {
+  return (uint8_t)isqrt(calc_real_vmc(pim_ary));
+}
 
 uint32_t calc_real_vmc(uint32_t *pim_ary) {
   uint32_t scl_vmcpm = calc_scaled_vmc(pim_ary);

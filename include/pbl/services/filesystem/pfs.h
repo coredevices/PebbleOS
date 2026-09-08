@@ -36,7 +36,10 @@
 #define FILE_TYPE_STATIC (0xfe)
 #define FILE_MAX_NAME_LEN (255)
 
-typedef enum { FSeekSet, FSeekCur } FSeekType;
+typedef enum {
+  FSeekSet,
+  FSeekCur
+} FSeekType;
 
 //! Used by pfs_watch_file to know which events to trigger callbacks on
 #define FILE_CHANGED_EVENT_CLOSED (1 << 0)

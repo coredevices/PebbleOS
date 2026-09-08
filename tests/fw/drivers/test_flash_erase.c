@@ -18,7 +18,10 @@
 // Fakes
 ///////////////////////////////////////////////////////////
 
-typedef enum EraseCommandType { SectorEraseCommand = 1, SubsectorEraseCommand } EraseCommandType;
+typedef enum EraseCommandType {
+  SectorEraseCommand = 1,
+  SubsectorEraseCommand
+} EraseCommandType;
 
 typedef struct EraseCommand {
   uint32_t addr;
@@ -33,14 +36,17 @@ static int s_simulate_flash_driver_error_countdown;
 static int s_simulate_work_queue_full_countdown;
 static bool s_erase_mutex_locked;
 
-void prv_init_erase_mutex(void) {}
+void prv_init_erase_mutex(void) {
+}
 
 void prv_lock_erase_mutex(void) {
   cl_assert_equal_i(s_erase_mutex_locked, false);
   s_erase_mutex_locked = true;
 }
 
-void prv_unlock_erase_mutex(void) { s_erase_mutex_locked = false; }
+void prv_unlock_erase_mutex(void) {
+  s_erase_mutex_locked = false;
+}
 
 void flash_erase_subsector_blocking(uint32_t subsector_addr) {
   s_command_list[s_command_list_index++] =
@@ -121,7 +127,8 @@ void test_flash_erase__initialize(void) {
   s_erase_mutex_locked = false;
 }
 
-void test_flash_erase__cleanup(void) {}
+void test_flash_erase__cleanup(void) {
+}
 
 void test_flash_erase__empty(void) {
   prv_test_erase_optimal_range(0, 0, 0, 0, (EraseCommand[]){{}});

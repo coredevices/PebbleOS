@@ -6,9 +6,12 @@
 #include <pbl/drivers/temperature.h>
 #include "console/prompt.h"
 
-void temperature_init(void) {}
+void temperature_init(void) {
+}
 
-int32_t temperature_read(void) { return 0; }
+int32_t temperature_read(void) {
+  return 0;
+}
 
 void command_temperature_read(void) {
   char buffer[32];

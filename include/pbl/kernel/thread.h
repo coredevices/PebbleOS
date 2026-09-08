@@ -62,10 +62,14 @@ void pbl_thread_prio_set(struct pbl_thread *t, pbl_prio_t prio);
 pbl_prio_t pbl_thread_prio_get(const struct pbl_thread *t);
 enum pbl_thread_state pbl_thread_state(const struct pbl_thread *t);
 
-static inline const char *pbl_thread_name(const struct pbl_thread *t) { return t->name; }
+static inline const char *pbl_thread_name(const struct pbl_thread *t) {
+  return t->name;
+}
 
 //! Distinguishes successive threads created in the same struct.
-static inline uint32_t pbl_thread_id(const struct pbl_thread *t) { return t->id; }
+static inline uint32_t pbl_thread_id(const struct pbl_thread *t) {
+  return t->id;
+}
 
 //! Replaces the MPU regions of a thread; used for the idle thread, whose
 //! regions cannot be passed at creation.

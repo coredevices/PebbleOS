@@ -94,7 +94,9 @@ SimpleMenuLayer *simple_menu_layer_create(GRect frame, Window *window,
   return layer;
 }
 
-void simple_menu_layer_deinit(SimpleMenuLayer *menu_layer) { menu_layer_deinit(&menu_layer->menu); }
+void simple_menu_layer_deinit(SimpleMenuLayer *menu_layer) {
+  menu_layer_deinit(&menu_layer->menu);
+}
 
 void simple_menu_layer_destroy(SimpleMenuLayer *menu_layer) {
   if (menu_layer == NULL) {

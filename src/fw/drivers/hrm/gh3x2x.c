@@ -42,9 +42,11 @@ static volatile uint32_t s_hrm_timer_flag = false;
 
 // GH3X2X library glue code
 
-void gh3026_reset_pin_init(void) {}
+void gh3026_reset_pin_init(void) {
+}
 
-void gh3026_i2c_init(void) {}
+void gh3026_i2c_init(void) {
+}
 
 void gh3026_i2c_write(uint8_t device_id, const uint8_t write_buffer[], uint16_t length) {
   i2c_use(HRM->i2c);
@@ -70,7 +72,8 @@ static void prv_conv_fs4g_mg_to_lsb512(AccelRawData *data) {
 void gh3026_gsensor_data_get(STGsensorRawdata gsensor_buffer[], GU16 *gsensor_buffer_index) {
   HRMAccelData *acc = hrm_manager_get_accel_data();
   GU16 count = *gsensor_buffer_index = acc->num_samples;
-  if (count > __GSENSOR_DATA_BUFFER_SIZE__) count = __GSENSOR_DATA_BUFFER_SIZE__;
+  if (count > __GSENSOR_DATA_BUFFER_SIZE__)
+    count = __GSENSOR_DATA_BUFFER_SIZE__;
   for (uint16_t i = 0; i < count; ++i) {
     prv_conv_fs4g_mg_to_lsb512(&acc->data[i]);
     memcpy(&gsensor_buffer[i], &acc->data[i], sizeof(STGsensorRawdata));
@@ -355,7 +358,8 @@ void gh3x2x_rawdata_notify(uint32_t *p_rawdata, uint32_t data_count) {
 
   // let keep the factory test data report 2hz
   static int cnt = 0;
-  if (cnt++ % 25) return;
+  if (cnt++ % 25)
+    return;
   if (mode == GH3X2X_FUNCTION_TEST1) {
     hrm_data.features = HRMFeature_CTR;
     // calcu CTR:  result = ((ppg_avg-2^23))*1800*1000/(20*10*2*(2^23));
@@ -422,7 +426,9 @@ static void gh3x2x_ft_ctr_start_handle(void *data) {
   gh3x2x_factory_test_enable(HRM, HRM_FACTORY_TEST_CTR);
 }
 
-void gh3x2x_start_ft_ctr(void) { system_task_add_callback(gh3x2x_ft_ctr_start_handle, NULL); }
+void gh3x2x_start_ft_ctr(void) {
+  system_task_add_callback(gh3x2x_ft_ctr_start_handle, NULL);
+}
 
 // shoud be called in system task
 static void gh3x2x_ft_leakage_start_handle(void *data) {
@@ -547,4 +553,6 @@ void hrm_disable(HRMDevice *dev) {
   dev->state->enabled = false;
 }
 
-bool hrm_is_enabled(HRMDevice *dev) { return dev->state->enabled; }
+bool hrm_is_enabled(HRMDevice *dev) {
+  return dev->state->enabled;
+}

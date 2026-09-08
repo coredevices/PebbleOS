@@ -37,16 +37,31 @@ extern void test_accel_manager_reset(void);
 
 // stub
 void event_service_init(PebbleEventType type, EventServiceAddSubscriberCallback start_cb,
-                        EventServiceRemoveSubscriberCallback stop_cb) {}
-void sys_vibe_history_start_collecting(void) {}
-void sys_vibe_history_stop_collecting(void) {}
-int32_t sys_vibe_get_vibe_strength(void) { return 0; }
-int32_t vibes_get_vibe_strength(void) { return 0; }
-uint32_t vibes_get_time_since_last_vibe_ms(void) { return UINT32_MAX; }
-void accel_set_shake_sensitivity_high(bool sensitivity_high) {}
-void accel_set_shake_sensitivity_percent(uint8_t percent) {}
-bool shell_prefs_get_accel_shake_log_info_enabled(void) { return false; }
-struct pbl_msgq *pebble_task_get_to_queue(PebbleTask task) { return NULL; }
+                        EventServiceRemoveSubscriberCallback stop_cb) {
+}
+void sys_vibe_history_start_collecting(void) {
+}
+void sys_vibe_history_stop_collecting(void) {
+}
+int32_t sys_vibe_get_vibe_strength(void) {
+  return 0;
+}
+int32_t vibes_get_vibe_strength(void) {
+  return 0;
+}
+uint32_t vibes_get_time_since_last_vibe_ms(void) {
+  return UINT32_MAX;
+}
+void accel_set_shake_sensitivity_high(bool sensitivity_high) {
+}
+void accel_set_shake_sensitivity_percent(uint8_t percent) {
+}
+bool shell_prefs_get_accel_shake_log_info_enabled(void) {
+  return false;
+}
+struct pbl_msgq *pebble_task_get_to_queue(PebbleTask task) {
+  return NULL;
+}
 
 // fake accel.h impl
 static int s_sampling_interval_us = 1000000 / ACCEL_SAMPLING_25HZ;
@@ -62,19 +77,37 @@ uint32_t accel_set_sampling_interval(uint32_t interval_us) {
   return accel_get_sampling_interval();
 }
 
-uint32_t accel_get_sampling_interval(void) { return s_sampling_interval_us; }
+uint32_t accel_get_sampling_interval(void) {
+  return s_sampling_interval_us;
+}
 
-void accel_set_num_samples(uint32_t num_samples) { s_num_samples = num_samples; }
+void accel_set_num_samples(uint32_t num_samples) {
+  s_num_samples = num_samples;
+}
 
-uint32_t accel_get_max_num_samples(void) { return 32; }
-int accel_peek(AccelDriverSample *data) { return 0; }
-void accel_enable_shake_detection(bool on) {}
-bool accel_get_shake_detection_enabled(void) { return false; }
-void accel_enable_double_tap_detection(bool on) {}
-bool accel_get_double_tap_detection_enabled(void) { return false; }
+uint32_t accel_get_max_num_samples(void) {
+  return 32;
+}
+int accel_peek(AccelDriverSample *data) {
+  return 0;
+}
+void accel_enable_shake_detection(bool on) {
+}
+bool accel_get_shake_detection_enabled(void) {
+  return false;
+}
+void accel_enable_double_tap_detection(bool on) {
+}
+bool accel_get_double_tap_detection_enabled(void) {
+  return false;
+}
 
-bool new_timer_add_work_callback_from_isr(NewTimerWorkCallback cb, void *data) { return false; }
-bool new_timer_add_work_callback(NewTimerWorkCallback cb, void *data) { return true; }
+bool new_timer_add_work_callback_from_isr(NewTimerWorkCallback cb, void *data) {
+  return false;
+}
+bool new_timer_add_work_callback(NewTimerWorkCallback cb, void *data) {
+  return true;
+}
 
 // Unit Test Code
 
@@ -86,9 +119,12 @@ void test_accel_manager__initialize(void) {
   s_force_sampling_interval = false;
 }
 
-void test_accel_manager__cleanup(void) { test_accel_manager_reset(); }
+void test_accel_manager__cleanup(void) {
+  test_accel_manager_reset();
+}
 
-static void prv_noop_sample_handler(void *context) {}
+static void prv_noop_sample_handler(void *context) {
+}
 
 static void prv_validate_sample_rates(int *arr, int num_samples) {
   for (int i = 0; i < num_samples; i++) {

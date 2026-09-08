@@ -1177,10 +1177,12 @@ static const char *prv_log_time(time_t utc) {
 
 // =============================================================================================
 // Start of unit tests
-void test_kraepelin_algorithm__initialize(void) {}
+void test_kraepelin_algorithm__initialize(void) {
+}
 
 // ---------------------------------------------------------------------------------------
-void test_kraepelin_algorithm__cleanup(void) {}
+void test_kraepelin_algorithm__cleanup(void) {
+}
 
 // ---------------------------------------------------------------------------------------
 void test_kraepelin_algorithm__step_tests(void) {

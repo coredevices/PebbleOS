@@ -15,7 +15,10 @@
 //!
 //!   @{
 
-typedef enum { ActionMenuAlignTop = 0, ActionMenuAlignCenter } ActionMenuAlign;
+typedef enum {
+  ActionMenuAlignTop = 0,
+  ActionMenuAlignCenter
+} ActionMenuAlign;
 
 struct ActionMenuItem;
 //! An ActionMenuItem is an entry in the ActionMenu

@@ -15,11 +15,15 @@
 static GContext s_ctx;
 static FrameBuffer s_fb;
 
-GContext *graphics_context_get_current_context(void) { return &s_ctx; }
+GContext *graphics_context_get_current_context(void) {
+  return &s_ctx;
+}
 
 // Override fake_clock's WEAK default so the split layout's bin time renders
 // in a stable 24h format.
-bool clock_is_24h_style(void) { return true; }
+bool clock_is_24h_style(void) {
+  return true;
+}
 
 void test_health_activity_summary_card__initialize(void) {
   // Pin RTC to 2024-01-06 16:19:35 UTC (Saturday 16:19 -> bin minute 975 = 16:15).
@@ -44,7 +48,8 @@ void test_health_activity_summary_card__initialize(void) {
   content_indicator_init_buffer(buffer);
 }
 
-void test_health_activity_summary_card__cleanup(void) {}
+void test_health_activity_summary_card__cleanup(void) {
+}
 
 // Helpers
 //////////////////////

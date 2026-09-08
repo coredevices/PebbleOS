@@ -178,11 +178,17 @@ bool qspi_flash_check_whoami(QSPIFlash *dev) {
   }
 }
 
-status_t qspi_flash_write_protection_enable(QSPIFlash *dev) { return S_NO_ACTION_REQUIRED; }
+status_t qspi_flash_write_protection_enable(QSPIFlash *dev) {
+  return S_NO_ACTION_REQUIRED;
+}
 
-status_t qspi_flash_lock_sector(QSPIFlash *dev, uint32_t addr) { return S_SUCCESS; }
+status_t qspi_flash_lock_sector(QSPIFlash *dev, uint32_t addr) {
+  return S_SUCCESS;
+}
 
-status_t qspi_flash_unlock_all(QSPIFlash *dev) { return S_SUCCESS; }
+status_t qspi_flash_unlock_all(QSPIFlash *dev) {
+  return S_SUCCESS;
+}
 
 void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   HAL_StatusTypeDef res;

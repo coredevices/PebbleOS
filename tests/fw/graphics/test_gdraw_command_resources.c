@@ -30,11 +30,16 @@
 #include "stubs_passert.h"
 
 // Stubs
-void graphics_draw_circle(GContext *ctx, GPoint p, uint16_t radius) {}
-void graphics_fill_circle(GContext *ctx, GPoint p, uint16_t radius) {}
-void framebuffer_clear(FrameBuffer *f) {}
-void graphics_context_move_draw_box(GContext *ctx, GPoint offset) {}
-void graphics_line_draw_precise_stroked(GContext *ctx, GPointPrecise p0, GPointPrecise p1) {}
+void graphics_draw_circle(GContext *ctx, GPoint p, uint16_t radius) {
+}
+void graphics_fill_circle(GContext *ctx, GPoint p, uint16_t radius) {
+}
+void framebuffer_clear(FrameBuffer *f) {
+}
+void graphics_context_move_draw_box(GContext *ctx, GPoint offset) {
+}
+void graphics_line_draw_precise_stroked(GContext *ctx, GPointPrecise p0, GPointPrecise p1) {
+}
 const uint8_t *resource_get_builtin_bytes(ResAppNum app_num, uint32_t resource_id,
                                           uint32_t *num_bytes_out) {
   return NULL;

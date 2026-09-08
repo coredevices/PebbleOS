@@ -27,7 +27,9 @@ void cd_flash_init(void) {
   s_active = true;
 }
 
-bool cd_flash_active(void) { return s_active; }
+bool cd_flash_active(void) {
+  return s_active;
+}
 
 void cd_flash_erase_region(uint32_t start_addr, uint32_t total_bytes) {
   CD_ASSERTN(((start_addr & SUBSECTOR_ADDR_MASK) == start_addr) &&
@@ -50,7 +52,8 @@ void cd_flash_erase_region(uint32_t start_addr, uint32_t total_bytes) {
     }
 
     status_t status;
-    while ((status = flash_impl_get_erase_status()) == E_BUSY) delay_us(100);
+    while ((status = flash_impl_get_erase_status()) == E_BUSY)
+      delay_us(100);
     CD_ASSERTN(status == S_SUCCESS);
 
     total_bytes -= erase_size;

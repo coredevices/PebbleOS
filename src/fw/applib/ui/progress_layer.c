@@ -51,7 +51,9 @@ void progress_layer_init(ProgressLayer *progress_layer, const GRect *frame) {
   progress_layer->corner_radius = 1;
 }
 
-void progress_layer_deinit(ProgressLayer *progress_layer) { layer_deinit(&progress_layer->layer); }
+void progress_layer_deinit(ProgressLayer *progress_layer) {
+  layer_deinit(&progress_layer->layer);
+}
 
 void progress_layer_set_foreground_color(ProgressLayer *progress_layer, GColor color) {
   progress_layer->foreground_color = color;

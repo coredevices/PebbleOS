@@ -95,23 +95,30 @@ static void tinf_build_fixed_trees(TINF_TREE *lt, TINF_TREE *dt) {
   int i;
 
   /* build fixed length tree */
-  for (i = 0; i < 7; ++i) lt->table[i] = 0;
+  for (i = 0; i < 7; ++i)
+    lt->table[i] = 0;
 
   lt->table[7] = 24;
   lt->table[8] = 152;
   lt->table[9] = 112;
 
-  for (i = 0; i < 24; ++i) lt->trans[i] = 256 + i;
-  for (i = 0; i < 144; ++i) lt->trans[24 + i] = i;
-  for (i = 0; i < 8; ++i) lt->trans[24 + 144 + i] = 280 + i;
-  for (i = 0; i < 112; ++i) lt->trans[24 + 144 + 8 + i] = 144 + i;
+  for (i = 0; i < 24; ++i)
+    lt->trans[i] = 256 + i;
+  for (i = 0; i < 144; ++i)
+    lt->trans[24 + i] = i;
+  for (i = 0; i < 8; ++i)
+    lt->trans[24 + 144 + i] = 280 + i;
+  for (i = 0; i < 112; ++i)
+    lt->trans[24 + 144 + 8 + i] = 144 + i;
 
   /* build fixed distance tree */
-  for (i = 0; i < 5; ++i) dt->table[i] = 0;
+  for (i = 0; i < 5; ++i)
+    dt->table[i] = 0;
 
   dt->table[5] = 32;
 
-  for (i = 0; i < 32; ++i) dt->trans[i] = i;
+  for (i = 0; i < 32; ++i)
+    dt->trans[i] = i;
 }
 
 /* given an array of code lengths, build a tree */
@@ -120,10 +127,12 @@ static void tinf_build_tree(TINF_TREE *t, const unsigned char *lengths, unsigned
   unsigned int i, sum;
 
   /* clear code length count table */
-  for (i = 0; i < 16; ++i) t->table[i] = 0;
+  for (i = 0; i < 16; ++i)
+    t->table[i] = 0;
 
   /* scan symbol lengths, and sum code length counts */
-  for (i = 0; i < num; ++i) t->table[lengths[i]]++;
+  for (i = 0; i < num; ++i)
+    t->table[lengths[i]]++;
 
   t->table[0] = 0;
 
@@ -135,7 +144,8 @@ static void tinf_build_tree(TINF_TREE *t, const unsigned char *lengths, unsigned
 
   /* create code->symbol translation table (symbols sorted by code) */
   for (i = 0; i < num; ++i) {
-    if (lengths[i]) t->trans[offs[lengths[i]]++] = i;
+    if (lengths[i])
+      t->trans[offs[lengths[i]]++] = i;
   }
 }
 
@@ -171,7 +181,8 @@ static unsigned int tinf_read_bits(TINF_DATA *d, int num, int base) {
     unsigned int mask;
 
     for (mask = 1; mask < limit; mask *= 2)
-      if (tinf_getbit(d)) val += mask;
+      if (tinf_getbit(d))
+        val += mask;
   }
 
   return val + base;
@@ -210,7 +221,8 @@ static void tinf_decode_trees(TINF_DATA *d, TINF_TREE *lt, TINF_TREE *dt) {
   /* get 4 bits HCLEN (4-19) */
   hclen = tinf_read_bits(d, 4, 4);
 
-  for (i = 0; i < 19; ++i) lengths[i] = 0;
+  for (i = 0; i < 19; ++i)
+    lengths[i] = 0;
 
   /* read code lengths for code length alphabet */
   for (i = 0; i < hclen; ++i) {
@@ -319,12 +331,14 @@ static int tinf_inflate_uncompressed_block(TINF_DATA *d) {
   invlength = 256 * invlength + d->source[2];
 
   /* check length */
-  if (length != (~invlength & 0x0000ffff)) return TINF_DATA_ERROR;
+  if (length != (~invlength & 0x0000ffff))
+    return TINF_DATA_ERROR;
 
   d->source += 4;
 
   /* copy block */
-  for (i = length; i; --i) *d->dest++ = *d->source++;
+  for (i = length; i; --i)
+    *d->dest++ = *d->source++;
   d->destRemaining -= length;
 
   /* make sure we start next block on a byte boundary */
@@ -389,7 +403,8 @@ static inline int tinf_uncompress_dyn(TINF_DATA *d) {
         return TINF_DATA_ERROR;
     }
 
-    if (res != TINF_OK) return TINF_DATA_ERROR;
+    if (res != TINF_OK)
+      return TINF_DATA_ERROR;
 
   } while (!bfinal);
 

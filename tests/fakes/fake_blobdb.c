@@ -11,9 +11,13 @@
 
 static BlobDBId s_blobdb_id = BlobDBIdTest;
 
-void fake_blob_db_set_id(BlobDBId id) { s_blobdb_id = id; }
+void fake_blob_db_set_id(BlobDBId id) {
+  s_blobdb_id = id;
+}
 
-void blob_db_init_dbs(void) { test_db_init(); }
+void blob_db_init_dbs(void) {
+  test_db_init();
+}
 
 void blob_db_get_dirty_dbs(uint8_t *ids, uint8_t *num_ids) {
   bool is_dirty = false;

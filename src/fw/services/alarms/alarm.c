@@ -461,7 +461,9 @@ static void prv_process_most_recent_alarm(void) {
 }
 
 // ----------------------------------------------------------------------------------------------
-static void prv_snooze_kernel_bg_callback(void *unused) { prv_process_most_recent_alarm(); }
+static void prv_snooze_kernel_bg_callback(void *unused) {
+  prv_process_most_recent_alarm();
+}
 
 // ----------------------------------------------------------------------------------------------
 static void prv_snooze_timer_callback(void *unused) {
@@ -1025,7 +1027,9 @@ cleanup:
 }
 
 // ----------------------------------------------------------------------------------------------
-AlarmId alarm_get_most_recent_id(void) { return s_most_recent_alarm_id; }
+AlarmId alarm_get_most_recent_id(void) {
+  return s_most_recent_alarm_id;
+}
 
 // ----------------------------------------------------------------------------------------------
 bool alarm_get_info(AlarmId id, AlarmInfo *info_out) {
@@ -1078,7 +1082,9 @@ void alarm_set_snooze_alarm(void) {
 }
 
 // ----------------------------------------------------------------------------------------------
-uint16_t alarm_get_snooze_delay(void) { return s_snooze_delay_m; }
+uint16_t alarm_get_snooze_delay(void) {
+  return s_snooze_delay_m;
+}
 
 // ----------------------------------------------------------------------------------------------
 void alarm_set_snooze_delay(uint16_t delay_m) {
@@ -1095,7 +1101,9 @@ void alarm_set_snooze_delay(uint16_t delay_m) {
   prv_file_close_and_unlock(&file);
 }
 
-void alarm_dismiss_alarm(void) { prv_clear_snooze_timer(); }
+void alarm_dismiss_alarm(void) {
+  prv_clear_snooze_timer();
+}
 
 // ----------------------------------------------------------------------------------------------
 typedef struct {
@@ -1411,4 +1419,6 @@ void alarm_get_string_for_custom(bool scheduled_days[DAYS_PER_WEEK], char *alarm
 }
 
 // ----------------------------------------------------------------------------------------------
-void command_alarm(void) { prv_put_alarm_event(); }
+void command_alarm(void) {
+  prv_put_alarm_event();
+}

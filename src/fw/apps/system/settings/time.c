@@ -212,7 +212,9 @@ static void prv_continent_menu_push(SettingsTimeData *data) {
 // 24h Switch
 /////////////////////////
 
-static void prv_cycle_clock_style(void) { clock_set_24h_style(!clock_is_24h_style()); }
+static void prv_cycle_clock_style(void) {
+  clock_set_24h_style(!clock_is_24h_style());
+}
 
 static void prv_cycle_clock_time_source(void) {
   const bool was_manual = clock_time_source_is_manual();
@@ -410,7 +412,9 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
   menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), NULL);
 }
 
-static uint16_t prv_num_rows_cb(SettingsCallbacks *context) { return prv_visible_row_count(); }
+static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
+  return prv_visible_row_count();
+}
 
 static void prv_deinit_cb(SettingsCallbacks *context) {
   SettingsTimeData *data = (SettingsTimeData *)context;

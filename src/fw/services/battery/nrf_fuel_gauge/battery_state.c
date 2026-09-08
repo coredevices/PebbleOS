@@ -453,7 +453,9 @@ static void prv_schedule_update(uint32_t delay, bool force_update) {
   PBL_ASSERTN(success);
 }
 
-void battery_state_force_update(void) { prv_schedule_update(0, true); }
+void battery_state_force_update(void) {
+  prv_schedule_update(0, true);
+}
 
 void battery_state_init(void) {
   int ret;
@@ -558,11 +560,17 @@ BatteryChargeState battery_get_charge_state(void) {
 }
 
 // For unit tests
-TimerID battery_state_get_periodic_timer_id(void) { return s_periodic_timer_id; }
+TimerID battery_state_get_periodic_timer_id(void) {
+  return s_periodic_timer_id;
+}
 
-uint16_t battery_state_get_voltage(void) { return (uint16_t)s_last_voltage_mv; }
+uint16_t battery_state_get_voltage(void) {
+  return (uint16_t)s_last_voltage_mv;
+}
 
-int32_t battery_state_get_temperature(void) { return s_last_temp_mc; }
+int32_t battery_state_get_temperature(void) {
+  return s_last_temp_mc;
+}
 
 #include "console/prompt.h"
 void command_print_battery_status(void) {

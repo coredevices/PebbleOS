@@ -32,17 +32,25 @@
 
 bool static s_is_connected_as_slave = false;
 
-bool gap_le_connect_is_connected_as_slave(void) { return s_is_connected_as_slave; }
+bool gap_le_connect_is_connected_as_slave(void) {
+  return s_is_connected_as_slave;
+}
 
-void ble_legacy_discovery_enable(uint32_t timeout_secs) {}
+void ble_legacy_discovery_enable(uint32_t timeout_secs) {
+}
 
-void gap_le_slave_reconnect_stop(void) {}
+void gap_le_slave_reconnect_stop(void) {
+}
 
-void gap_le_slave_reconnect_start(void) {}
+void gap_le_slave_reconnect_start(void) {
+}
 
-void gatt_service_changed_server_cleanup_by_connection(GAPLEConnection *connection) {}
+void gatt_service_changed_server_cleanup_by_connection(GAPLEConnection *connection) {
+}
 
-void launcher_task_add_callback(void (*callback)(void *data), void *data) { callback(data); }
+void launcher_task_add_callback(void (*callback)(void *data), void *data) {
+  callback(data);
+}
 
 static uint32_t s_unscheduled_cb_count;
 static void *s_unscheduled_cb_data = "Callback Data";

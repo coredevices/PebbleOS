@@ -72,7 +72,9 @@ extern void command_read_word(const char *address_str) {
   prompt_send_response_fmt(buffer, sizeof(buffer), "0x%" PRIx32 " = 0x%" PRIx32, address, word);
 }
 
-void command_format_flash(void) { flash_erase_bulk(); }
+void command_format_flash(void) {
+  flash_erase_bulk();
+}
 
 void command_erase_flash(const char *address_str, const char *length_str) {
   int32_t address = str_to_address(address_str);
@@ -491,7 +493,8 @@ static void prv_flash_stress_callback(void *data) {
   }
 
   uint32_t lfsr_seed = rand32();
-  if (lfsr_seed == 0) lfsr_seed = 1;
+  if (lfsr_seed == 0)
+    lfsr_seed = 1;
 
   uint32_t flash_addr = s_flash_stress_addr;
   s_flash_stress_addr += bufsz;
@@ -540,7 +543,8 @@ static void prv_flash_stress_callback(void *data) {
       }
       lfsr_cur = prv_xorshift32(lfsr_cur);
     }
-    if (miscompare) break;
+    if (miscompare)
+      break;
   }
 
 bailout:
@@ -654,9 +658,15 @@ void command_boot_prf(void) {
   system_reset();
 }
 
-void command_infinite_loop(void) { while (1); }
+void command_infinite_loop(void) {
+  while (1)
+    ;
+}
 
-void stuck_timer_cb(void *data) { while (1); }
+void stuck_timer_cb(void *data) {
+  while (1)
+    ;
+}
 
 #include "pbl/services/new_timer/new_timer.h"
 void command_stuck_timer(void) {
@@ -848,7 +858,9 @@ static bool prv_serial_dump_chunk_callback(uint8_t *msg, uint32_t total_length) 
   return true;
 }
 
-static void prv_serial_dump_completed_callback(bool success) { prompt_command_finish(); }
+static void prv_serial_dump_completed_callback(bool success) {
+  prompt_command_finish();
+}
 
 void command_log_dump_current(void) {
   flash_dump_log_file(0, prv_serial_dump_chunk_callback, prv_serial_dump_completed_callback);
@@ -947,7 +959,8 @@ static void prv_waste_time_cb(void *context) {
   struct WasteTimerData data;
   memcpy(&data, &context, sizeof data);
 
-  for (int i = 0; i < data.delay; ++i) delay_us(1000);
+  for (int i = 0; i < data.delay; ++i)
+    delay_us(1000);
   if (--data.count > 0) {
     memcpy(&context, &data, sizeof context);
     new_timer_start(s_abusive_timer, 1, prv_waste_time_cb, context, 0);
@@ -1461,7 +1474,9 @@ void command_perftest_text_all(void) {
 
 static TimerID s_console_disable_rx_timer = TIMER_INVALID_ID;
 
-static void prv_console_disable_rx_timer_cb(void *data) { serial_console_set_rx_enabled(true); }
+static void prv_console_disable_rx_timer_cb(void *data) {
+  serial_console_set_rx_enabled(true);
+}
 
 void command_console_disable_rx(const char *seconds_str) {
   int seconds = atoi(seconds_str);

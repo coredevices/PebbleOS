@@ -50,7 +50,9 @@ BitmapLayer *bitmap_layer_create(GRect frame) {
   return layer;
 }
 
-void bitmap_layer_deinit(BitmapLayer *bitmap_layer) { layer_deinit(&bitmap_layer->layer); }
+void bitmap_layer_deinit(BitmapLayer *bitmap_layer) {
+  layer_deinit(&bitmap_layer->layer);
+}
 
 void bitmap_layer_destroy(BitmapLayer *bitmap_layer) {
   if (bitmap_layer == NULL) {
@@ -64,7 +66,9 @@ Layer *bitmap_layer_get_layer(const BitmapLayer *bitmap_layer) {
   return &((BitmapLayer *)bitmap_layer)->layer;
 }
 
-const GBitmap *bitmap_layer_get_bitmap(BitmapLayer *bitmap_layer) { return bitmap_layer->bitmap; }
+const GBitmap *bitmap_layer_get_bitmap(BitmapLayer *bitmap_layer) {
+  return bitmap_layer->bitmap;
+}
 
 void bitmap_layer_set_bitmap(BitmapLayer *image, const GBitmap *bitmap) {
   if (image == NULL) {

@@ -19,10 +19,14 @@
 #include "stubs_ui_window.h"
 #include "stubs_unobstructed_area.h"
 
-GFont fonts_get_system_font(const char *font_key) { return NULL; }
+GFont fonts_get_system_font(const char *font_key) {
+  return NULL;
+}
 
-void graphics_context_set_fill_color(GContext *ctx, GColor color) {}
-void graphics_context_set_text_color(GContext *ctx, GColor color) {}
+void graphics_context_set_fill_color(GContext *ctx, GColor color) {
+}
+void graphics_context_set_text_color(GContext *ctx, GColor color) {
+}
 
 // Fakes
 ////////////////////////
@@ -32,10 +36,14 @@ void graphics_text_layout_cache_init(GTextLayoutCacheRef *layout_cache) {
   *layout_cache = MOCKED_CREATED_LAYOUT;
 }
 
-void graphics_text_layout_cache_deinit(GTextLayoutCacheRef *layout_cache) {}
-void graphics_text_layout_set_line_spacing_delta(GTextLayoutCacheRef layout, int16_t delta) {}
+void graphics_text_layout_cache_deinit(GTextLayoutCacheRef *layout_cache) {
+}
+void graphics_text_layout_set_line_spacing_delta(GTextLayoutCacheRef layout, int16_t delta) {
+}
 
-int16_t graphics_text_layout_get_line_spacing_delta(const GTextLayoutCacheRef layout) { return 0; }
+int16_t graphics_text_layout_get_line_spacing_delta(const GTextLayoutCacheRef layout) {
+  return 0;
+}
 
 GSize graphics_text_layout_get_max_used_size(GContext *ctx, const char *text, GFont const font,
                                              const GRect box, const GTextOverflowMode overflow_mode,
@@ -128,7 +136,8 @@ void test_text_layer__initialize(void) {
   s_text_layer_calc_text_flow_paging_values_result = true;
 }
 
-void test_text_layer__cleanup(void) {}
+void test_text_layer__cleanup(void) {
+}
 
 void test_text_layer__enable_text_flow_does_nothing_outside_view_hierarchy(void) {
   text_layer_enable_screen_text_flow_and_paging(&text_layer, 8);

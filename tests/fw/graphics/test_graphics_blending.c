@@ -22,27 +22,43 @@ const int FrameBuffer_MaxY = 85;
 bool gbitmap_init_with_png_data(GBitmap *bitmap, const uint8_t *data, size_t data_size) {
   return false;
 }
-bool gbitmap_png_data_is_png(const uint8_t *data, size_t data_size) { return false; }
+bool gbitmap_png_data_is_png(const uint8_t *data, size_t data_size) {
+  return false;
+}
 
-void cos_lookup() {}
-void sin_lookup() {}
-void framebuffer_dirty_all() {}
-void framebuffer_mark_dirty_rect() {}
+void cos_lookup() {
+}
+void sin_lookup() {
+}
+void framebuffer_dirty_all() {
+}
+void framebuffer_mark_dirty_rect() {
+}
 void graphics_circle_draw_quadrant(GContext *ctx, int x0, int y0, uint16_t radius,
-                                   GCornerMask quadrant) {}
+                                   GCornerMask quadrant) {
+}
 void graphics_circle_quadrant_draw_1px_non_aa(GContext *ctx, GPoint p, uint16_t radius,
-                                              GCornerMask quadrant) {}
+                                              GCornerMask quadrant) {
+}
 void graphics_internal_circle_quadrant_fill_aa(GContext *ctx, GPoint p, uint16_t radius,
-                                               GCornerMask quadrant) {}
+                                               GCornerMask quadrant) {
+}
 void graphics_circle_quadrant_draw(GContext *ctx, GPoint p, uint16_t radius, GCornerMask quadrant) {
 }
 void graphics_circle_quadrant_fill_non_aa(GContext *ctx, GPoint p, uint16_t radius,
-                                          GCornerMask quadrant) {}
-void sys_get_current_resource_num() {}
-void sys_resource_read_only_bytes() {}
-void sys_resource_load_range() {}
-void sys_resource_size() {}
-int32_t integer_sqrt(int64_t x) { return 0; }
+                                          GCornerMask quadrant) {
+}
+void sys_get_current_resource_num() {
+}
+void sys_resource_read_only_bytes() {
+}
+void sys_resource_load_range() {
+}
+void sys_resource_size() {
+}
+int32_t integer_sqrt(int64_t x) {
+  return 0;
+}
 
 GBitmap framebuffer_get_as_bitmap(FrameBuffer *fb, const GSize *size) {
   return (GBitmap){

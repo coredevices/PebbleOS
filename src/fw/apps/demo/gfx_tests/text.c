@@ -16,7 +16,9 @@ GfxTest g_gfx_test_text = {
 
 static GFont s_font;
 
-static void prv_setup(Window *window) { s_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD); }
+static void prv_setup(Window *window) {
+  s_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
+}
 
 static void prv_test(Layer *layer, GContext *ctx) {
   const char *text_test_str =

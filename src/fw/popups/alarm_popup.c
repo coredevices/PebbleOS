@@ -234,7 +234,9 @@ static void prv_vibe_kernel_main_cb(void *callback_context) {
   }
 }
 
-static void prv_vibe(void *unused) { launcher_task_add_callback(prv_vibe_kernel_main_cb, NULL); }
+static void prv_vibe(void *unused) {
+  launcher_task_add_callback(prv_vibe_kernel_main_cb, NULL);
+}
 
 static void prv_start_vibes(void) {
   s_alarm_popup_data->vibe_count = 0;

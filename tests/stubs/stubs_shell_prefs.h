@@ -8,31 +8,51 @@
 
 static bool s_clock_24h;
 
-bool WEAK shell_prefs_get_clock_24h_style(void) { return s_clock_24h; }
+bool WEAK shell_prefs_get_clock_24h_style(void) {
+  return s_clock_24h;
+}
 
-void WEAK shell_prefs_set_clock_24h_style(bool is_24h) { s_clock_24h = is_24h; }
+void WEAK shell_prefs_set_clock_24h_style(bool is_24h) {
+  s_clock_24h = is_24h;
+}
 
 static bool s_clock_timezone_manual;
 
-bool WEAK shell_prefs_is_timezone_source_manual(void) { return s_clock_timezone_manual; }
+bool WEAK shell_prefs_is_timezone_source_manual(void) {
+  return s_clock_timezone_manual;
+}
 
-void WEAK shell_prefs_set_timezone_source_manual(bool manual) { s_clock_timezone_manual = manual; }
+void WEAK shell_prefs_set_timezone_source_manual(bool manual) {
+  s_clock_timezone_manual = manual;
+}
 
 static bool s_clock_time_source_manual;
 
-bool WEAK shell_prefs_is_time_source_manual(void) { return s_clock_time_source_manual; }
+bool WEAK shell_prefs_is_time_source_manual(void) {
+  return s_clock_time_source_manual;
+}
 
-void WEAK shell_prefs_set_time_source_manual(bool manual) { s_clock_time_source_manual = manual; }
+void WEAK shell_prefs_set_time_source_manual(bool manual) {
+  s_clock_time_source_manual = manual;
+}
 
 static int16_t s_timezone_id;
 
-int16_t shell_prefs_get_automatic_timezone_id(void) { return s_timezone_id; }
+int16_t shell_prefs_get_automatic_timezone_id(void) {
+  return s_timezone_id;
+}
 
-void shell_prefs_set_automatic_timezone_id(int16_t timezone_id) { s_timezone_id = timezone_id; }
+void shell_prefs_set_automatic_timezone_id(int16_t timezone_id) {
+  s_timezone_id = timezone_id;
+}
 
-UnitsDistance WEAK shell_prefs_get_units_distance(void) { return UnitsDistance_Miles; }
+UnitsDistance WEAK shell_prefs_get_units_distance(void) {
+  return UnitsDistance_Miles;
+}
 
-AppInstallId WEAK worker_preferences_get_default_worker(void) { return 0; }
+AppInstallId WEAK worker_preferences_get_default_worker(void) {
+  return 0;
+}
 
 PreferredContentSize s_content_size = PreferredContentSizeDefault;
 
@@ -46,7 +66,9 @@ PreferredContentSize WEAK system_theme_get_content_size(void) {
 
 static bool s_menu_scroll_enable = false;
 
-bool WEAK shell_prefs_get_menu_scroll_wrap_around_enable(void) { return s_menu_scroll_enable; }
+bool WEAK shell_prefs_get_menu_scroll_wrap_around_enable(void) {
+  return s_menu_scroll_enable;
+}
 
 void WEAK shell_prefs_set_menu_scroll_wrap_around_enable(bool enable) {
   s_menu_scroll_enable = enable;

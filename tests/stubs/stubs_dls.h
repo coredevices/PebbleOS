@@ -3,4 +3,5 @@
 
 #include "pbl/services/data_logging/data_logging_service.h"
 
-void dls_inactivate_sessions(PebbleTask task) {}
+void dls_inactivate_sessions(PebbleTask task) {
+}

@@ -124,7 +124,9 @@ void pp_get_phone_state(void) {
   prv_send_phone_command_to_handset(PhoneCmdGetStateRequest, NULL, 0);
 }
 
-void pp_get_phone_state_set_enabled(bool enabled) { s_get_phone_state_enabled = enabled; }
+void pp_get_phone_state_set_enabled(bool enabled) {
+  s_get_phone_state_enabled = enabled;
+}
 
 static bool prv_parse_msg_to_event(const uint8_t *iter, size_t length, PebbleEvent *event_out,
                                    bool is_state_response) {

@@ -313,9 +313,13 @@ static void prv_set_outgoing_weather_icon_frame(WeatherAppLayout *layout, GRect 
 }
 
 #if WEATHER_APP_LAYOUT_USE_PDC_WEATHER_ICONS
-static void prv_move_day_icons_to_root(WeatherAppLayout *layout) { (void)layout; }
+static void prv_move_day_icons_to_root(WeatherAppLayout *layout) {
+  (void)layout;
+}
 
-static void prv_move_day_icons_to_content(WeatherAppLayout *layout) { (void)layout; }
+static void prv_move_day_icons_to_content(WeatherAppLayout *layout) {
+  (void)layout;
+}
 #endif
 
 // One hi/lo formatter for both styles — spaced " / " (classic) and tight "/"
@@ -346,7 +350,8 @@ static void prv_fill_high_low_buffer(int high, int low, bool tight, char *buffer
 
 static void prv_fill_uv_value_buffer(const WeatherLocationForecast *forecast, char *buffer,
                                      const size_t buffer_size) {
-  if (!buffer || buffer_size == 0) return;
+  if (!buffer || buffer_size == 0)
+    return;
   if (forecast && forecast->today_uv >= 0) {
     snprintf(buffer, buffer_size, "%d", forecast->today_uv);
   } else {
@@ -431,7 +436,9 @@ static bool prv_is_imperial(void) {
   return shell_prefs_get_units_distance() == UnitsDistance_Miles;
 }
 
-static int prv_temp(int celsius) { return prv_is_imperial() ? (celsius * 9 / 5) + 32 : celsius; }
+static int prv_temp(int celsius) {
+  return prv_is_imperial() ? (celsius * 9 / 5) + 32 : celsius;
+}
 
 // The day's weather WARNING, one short call, picked by severity — dangerous
 // conditions first, then exposure, then the rain question, then a calm sign-off
@@ -517,7 +524,8 @@ static const char *prv_compass8(int deg) {
       i18n_noop("S"), i18n_noop("SW"), i18n_noop("W"), i18n_noop("NW"),
   };
   deg %= 360;
-  if (deg < 0) deg += 360;
+  if (deg < 0)
+    deg += 360;
   return kDirs[((deg + 22) / 45) & 7];
 }
 
@@ -530,7 +538,8 @@ static void prv_build_forecast_desc(const WeatherLocationForecast *f, const void
   bool wind_alert;
   prv_build_alert(f, alert, sizeof(alert), &wind_alert);
   int n = snprintf(buf, buf_size, "%s.", alert);
-  if (n < 0) return;
+  if (n < 0)
+    return;
   // A wind-flavored warning already said "winds" -- the wind sentence then
   // drops its prefix ("Light winds. SW at 12mph.", not "...Winds SW at...").
   if (f->today_wind_mph >= 0 && (size_t)n < buf_size) {
@@ -547,7 +556,8 @@ static void prv_build_forecast_desc(const WeatherLocationForecast *f, const void
       n += snprintf(buf + n, buf_size - n, " ");
       n += snprintf(buf + n, buf_size - n, i18n_get(fmt, owner), speed, unit);
     }
-    if (n < 0) return;
+    if (n < 0)
+      return;
   }
   if (f->today_precip_mm >= 0 && (size_t)n < buf_size) {
     n += snprintf(buf + n, buf_size - n, " ");
@@ -692,12 +702,15 @@ static int prv_interpolate_text_moook(AnimationProgress progress, int from, int 
   const int32_t num_out = sizeof(frames_out) / sizeof(frames_out[0]);
   const int32_t num_total = num_in + num_mid + num_out;
   const int32_t dir = (from == to) ? 0 : ((from < to) ? 1 : -1);
-  if (dir == 0 || progress >= ANIMATION_NORMALIZED_MAX) return to;
+  if (dir == 0 || progress >= ANIMATION_NORMALIZED_MAX)
+    return to;
 
   int32_t frame_idx = (progress * num_total + (ANIMATION_NORMALIZED_MAX / (2 * num_total))) /
                       ANIMATION_NORMALIZED_MAX;
-  if (frame_idx < 0) frame_idx = 0;
-  if (frame_idx >= num_total) frame_idx = num_total - 1;
+  if (frame_idx < 0)
+    frame_idx = 0;
+  if (frame_idx >= num_total)
+    frame_idx = num_total - 1;
 
   if (frame_idx < num_in) {
     return from + (int)(dir * frames_in[frame_idx]);
@@ -706,7 +719,8 @@ static int prv_interpolate_text_moook(AnimationProgress progress, int from, int 
   if (frame_idx < num_in + num_mid) {
     int32_t shifted = progress - (num_in * ANIMATION_NORMALIZED_MAX / num_total);
     int32_t mid_normalized = num_total * shifted / num_mid;
-    if (mid_normalized < 0) mid_normalized = 0;
+    if (mid_normalized < 0)
+      mid_normalized = 0;
     if (mid_normalized > ANIMATION_NORMALIZED_MAX) {
       mid_normalized = ANIMATION_NORMALIZED_MAX;
     }
@@ -721,7 +735,8 @@ static int prv_interpolate_text_moook(AnimationProgress progress, int from, int 
 
 static int32_t prv_interpolate_icon_landing_progress(AnimationProgress progress) {
   const int32_t max = ANIMATION_NORMALIZED_MAX;
-  if (progress >= max) return max;
+  if (progress >= max)
+    return max;
 
   const int32_t overshoot = max / 36;
   const int32_t rebound = max / 120;
@@ -741,7 +756,8 @@ static int32_t prv_interpolate_icon_landing_progress(AnimationProgress progress)
 
 static int32_t prv_interpolate_icon_landing_progress_down(AnimationProgress progress) {
   const int32_t max = ANIMATION_NORMALIZED_MAX;
-  if (progress >= max) return max;
+  if (progress >= max)
+    return max;
 
   const int32_t rebound = max / 140;
   const int32_t hit = max * 88 / 100;
@@ -760,7 +776,8 @@ static int32_t prv_interpolate_icon_landing_progress_down(AnimationProgress prog
 
 static void prv_draw_fin_layer(Layer *layer, GContext *context) {
   WeatherAppLayout *layout = *(WeatherAppLayout **)layer_get_data(layer);
-  if (!layout || !layout->fin_pdc) return;
+  if (!layout || !layout->fin_pdc)
+    return;
 
   graphics_context_set_compositing_mode(context, GCompOpSet);
   gdraw_command_image_draw(context, layout->fin_pdc, GPointZero);
@@ -1003,7 +1020,8 @@ static void prv_draw_top_rows(const WeatherAppLayout *layout, GPoint *off, int c
     const int band_top = line.y;
     const int band_bot = off->y + band_bot_anchor;  // the box's nominal top (keeps desc placement)
     int desc_y = band_top + (band_bot - band_top - dsz.h) / 2;
-    if (desc_y < band_top) desc_y = band_top;
+    if (desc_y < band_top)
+      desc_y = band_top;
     graphics_context_set_text_color(ctx, GColorBlack);
     graphics_draw_text(ctx, t->desc, layout->metrics_font, GRect(off->x, desc_y, cw, dsz.h + 2),
                        GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
@@ -1013,7 +1031,8 @@ static void prv_draw_top_rows(const WeatherAppLayout *layout, GPoint *off, int c
     const int desc_bot = desc_y + dsz.h + 2;  // +2: G14's descent runs past the metric
     const int divider_y = off->y + 195;
     box_top = desc_bot + (divider_y - desc_bot - 40) / 2;
-    if (box_top < desc_bot) box_top = desc_bot;
+    if (box_top < desc_bot)
+      box_top = desc_bot;
   }
 
   // The BIG UV BAR (brought back from the newspaper version, verbatim grid):
@@ -1177,7 +1196,8 @@ static void prv_draw_bottom_rows(const WeatherAppLayout *layout, GPoint *off, in
 // Draw bottom-half text from the snapshot (outgoing frame).
 static void prv_draw_snapshot_bot(const WeatherAppLayout *layout, GPoint *off, int cw,
                                   GContext *ctx) {
-  if (!layout->text_anim.bot_valid) return;
+  if (!layout->text_anim.bot_valid)
+    return;
   prv_draw_bottom_rows(layout, off, cw, ctx, layout->text_anim.bot_label,
                        layout->text_anim.bot_highlow, NULL, 6);
 }
@@ -1185,7 +1205,8 @@ static void prv_draw_snapshot_bot(const WeatherAppLayout *layout, GPoint *off, i
 static void prv_draw_bottom_half_text(const WeatherAppLayout *layout, GPoint *current_offset,
                                       int content_width, GContext *context) {
   const WeatherLocationForecast *next = layout->next_forecast;
-  if (!next) return;
+  if (!next)
+    return;
   char text_buffer[15] = {0};
   prv_fill_high_low_buffer(next->today_high, next->today_low, true /* tight on both shapes now */,
                            text_buffer, sizeof(text_buffer));
@@ -1205,8 +1226,10 @@ static int prv_round_scaler_disc(int w) {
   const int hi = s_today_icon_size.w * WEATHER_APP_LAYOUT_DISC_RATIO_NUM / 100;
   const int w0 = s_tomorrow_icon_size.w;
   const int w1 = s_today_icon_size.w;
-  if (w <= w0 || w1 <= w0) return lo;
-  if (w >= w1) return hi;
+  if (w <= w0 || w1 <= w0)
+    return lo;
+  if (w >= w1)
+    return hi;
   return lo + (hi - lo) * (w - w0) / (w1 - w0);
 }
 #endif
@@ -1250,7 +1273,8 @@ static GRect prv_icon_background_frame_for_icon(GRect icon_frame) {
 }
 
 static void prv_set_current_escape_icon_frame(WeatherAppLayout *layout, GRect content_icon_frame) {
-  if (!layout->current_weather_escape_layer) return;
+  if (!layout->current_weather_escape_layer)
+    return;
   GRect root_icon = content_icon_frame;
   root_icon.origin.x += layout->content_layer_origin.x;
   root_icon.origin.y += layout->content_layer_origin.y;
@@ -1285,7 +1309,8 @@ static bool prv_weather_pdc_paused(const WeatherAppLayout *layout) {
 }
 
 static void prv_draw_current_weather_pdc(const WeatherAppLayout *layout, GContext *ctx) {
-  if (prv_weather_pdc_paused(layout)) return;
+  if (prv_weather_pdc_paused(layout))
+    return;
   prv_draw_weather_pdc_frame(layout, ctx, layout->forecast->current_weather_type,
                              layout->today_icon_rest_frame);
 }
@@ -1477,7 +1502,8 @@ static void prv_render_layout(Layer *layer, GContext *context) {
       GRect below = context->draw_state.clip_box;
       if (below.origin.y < sep_abs_y) {
         below.size.h = (int16_t)(below.size.h - (sep_abs_y - below.origin.y));
-        if (below.size.h < 0) below.size.h = 0;
+        if (below.size.h < 0)
+          below.size.h = 0;
         below.origin.y = sep_abs_y;
       }
       context->draw_state.clip_box = below;
@@ -1551,7 +1577,8 @@ static void prv_render_layout(Layer *layer, GContext *context) {
     const int cx = PBL_DISPLAY_WIDTH / 2 + chin_x;
     for (int i = 0; i < WEATHER_APP_LAYOUT_ROUND_CHEV_H; i++) {
       const int half = WEATHER_APP_LAYOUT_ROUND_CHEV_W / 2 - i;
-      if (half < 0) break;
+      if (half < 0)
+        break;
       graphics_fill_rect(context,
                          GRect(cx - half, WEATHER_APP_LAYOUT_ROUND_CHEV_Y + i, 2 * half + 1, 1), 0,
                          GCornerNone);
@@ -1687,7 +1714,8 @@ static void prv_apply_day_transition_progress(WeatherAppLayout *layout,
 
       // Faster exit: accelerate so it's off-screen well before animation ends.
       int32_t fast_p = motion_p * 5 / 3;
-      if (fast_p > ANIMATION_NORMALIZED_MAX) fast_p = ANIMATION_NORMALIZED_MAX;
+      if (fast_p > ANIMATION_NORMALIZED_MAX)
+        fast_p = ANIMATION_NORMALIZED_MAX;
 
       layer_set_frame(
           bitmap_layer_get_layer(layout->tomorrow_weather_icon_layer),
@@ -1810,7 +1838,8 @@ static Animation *prv_start_anim(uint32_t dur_ms, const AnimationImplementation 
 // Move the Timeline Fin marker from the next scroll slot into its resting spot,
 // matching Timeline's single frame animation rather than a delayed two-phase slide.
 static void prv_animate_fin_in(WeatherAppLayout *layout, uint32_t total_ms) {
-  if (!layout->fin_layer || !layout->fin_pdc) return;
+  if (!layout->fin_layer || !layout->fin_pdc)
+    return;
   if (layout->fin_animation) {
     animation_unschedule(layout->fin_animation);
     layout->fin_animation = NULL;
@@ -1840,19 +1869,22 @@ static void prv_animate_fin_in(WeatherAppLayout *layout, uint32_t total_ms) {
 // Walks the parent-layer chain to find screen-absolute coords, then captures the framebuffer
 // and writes scaled pixels directly — the only way to truly scale a bitmap on Pebble.
 static void prv_draw_bitmap_scaled_to_root(GContext *ctx, GBitmap *src, GRect root_frame) {
-  if (!src) return;
+  if (!src)
+    return;
 
   // Use layer_get_frame for BOTH position and animated size.
   // layer_get_bounds does not auto-update when layer_set_frame shrinks the layer,
   // so layer_get_frame is the only reliable source of the current animated size.
   int dst_w = root_frame.size.w;
   int dst_h = root_frame.size.h;
-  if (dst_w <= 0 || dst_h <= 0) return;
+  if (dst_w <= 0 || dst_h <= 0)
+    return;
 
   GRect src_bounds = gbitmap_get_bounds(src);
   int src_w = src_bounds.size.w;
   int src_h = src_bounds.size.h;
-  if (src_w <= 0 || src_h <= 0) return;
+  if (src_w <= 0 || src_h <= 0)
+    return;
 
   uint8_t *sdata = gbitmap_get_data(src);
   uint16_t sbpr = gbitmap_get_bytes_per_row(src);
@@ -1865,7 +1897,8 @@ static void prv_draw_bitmap_scaled_to_root(GContext *ctx, GBitmap *src, GRect ro
   GColor *palette = gbitmap_get_palette(src);  // NULL for non-palette formats
 
   GBitmap *fb = graphics_capture_frame_buffer(ctx);
-  if (!fb) return;
+  if (!fb)
+    return;
   GRect fbb = gbitmap_get_bounds(fb);
   int fb_w = fbb.size.w;
   int fb_h = fbb.size.h;
@@ -1876,9 +1909,11 @@ static void prv_draw_bitmap_scaled_to_root(GContext *ctx, GBitmap *src, GRect ro
   int32_t sy_fp = sy_step >> 1;
   for (int dy = 0; dy < dst_h; dy++, sy_fp += sy_step) {
     int sy = sy_fp >> 16;
-    if (sy >= src_h) sy = src_h - 1;
+    if (sy >= src_h)
+      sy = src_h - 1;
     int ay = root_frame.origin.y + dy;
-    if (ay < 0 || ay >= fb_h) continue;
+    if (ay < 0 || ay >= fb_h)
+      continue;
 
     uint8_t *srow = sdata + (uint32_t)sy * sbpr;
     GBitmapDataRowInfo row = gbitmap_get_data_row_info(fb, ay);
@@ -1886,10 +1921,13 @@ static void prv_draw_bitmap_scaled_to_root(GContext *ctx, GBitmap *src, GRect ro
     int32_t sx_fp2 = sx_step >> 1;
     for (int dx = 0; dx < dst_w; dx++, sx_fp2 += sx_step) {
       int sx = sx_fp2 >> 16;
-      if (sx >= src_w) sx = src_w - 1;
+      if (sx >= src_w)
+        sx = src_w - 1;
       int ax = root_frame.origin.x + dx;
-      if (ax < 0 || ax >= fb_w) continue;
-      if (ax < row.min_x || ax > row.max_x) continue;
+      if (ax < 0 || ax >= fb_w)
+        continue;
+      if (ax < row.min_x || ax > row.max_x)
+        continue;
 
       uint8_t pixel;
       if (fmt == GBitmapFormat8Bit || fmt == GBitmapFormat8BitCircular) {
@@ -1917,7 +1955,8 @@ static void prv_draw_bitmap_scaled_to_root(GContext *ctx, GBitmap *src, GRect ro
       }
 
       // Top 2 bits are the alpha channel; 0b00 = transparent, skip it
-      if (pixel >> 6) weather_fb_row_set(row.data, ax, pixel);
+      if (pixel >> 6)
+        weather_fb_row_set(row.data, ax, pixel);
     }
   }
 
@@ -1977,7 +2016,8 @@ static GRect prv_fin_rest_frame(WeatherAppLayout *layout) {
 }
 
 static void prv_restore_fin_rest(WeatherAppLayout *layout) {
-  if (!layout->fin_layer || !layout->fin_pdc) return;
+  if (!layout->fin_layer || !layout->fin_pdc)
+    return;
   if (layout->fin_animation) {
     animation_unschedule(layout->fin_animation);
     layout->fin_animation = NULL;
@@ -2160,7 +2200,8 @@ void weather_app_layout_init(WeatherAppLayout *layout, const GRect *frame) {
     for (int i = 0; i < nframes; i++) {
       GDrawCommandFrame *f =
           gdraw_command_sequence_get_frame_by_index(layout->weather_icon_pdc_sequence, i);
-      if (!f) continue;
+      if (!f)
+        continue;
       gdraw_command_list_scale(
           gdraw_command_frame_get_command_list(f),
           GSize(WEATHER_APP_LAYOUT_ROUND_PDC_NATIVE, WEATHER_APP_LAYOUT_ROUND_PDC_NATIVE),
@@ -2237,7 +2278,8 @@ void weather_app_layout_set_data(WeatherAppLayout *layout,
 }
 
 void weather_app_layout_set_fin_allowed(WeatherAppLayout *layout, bool fin_allowed) {
-  if (!layout) return;
+  if (!layout)
+    return;
   layout->fin_allowed = fin_allowed;
   prv_restore_fin_rest(layout);
 }
@@ -2270,23 +2312,29 @@ void weather_app_layout_deinit(WeatherAppLayout *layout) {
     layer_destroy(layout->current_weather_escape_layer);
   }
 #endif
-  if (layout->fin_pdc) gdraw_command_image_destroy(layout->fin_pdc);
-  if (layout->fin_layer) layer_destroy(layout->fin_layer);
-  if (layout->city_layer) layer_destroy(layout->city_layer);
+  if (layout->fin_pdc)
+    gdraw_command_image_destroy(layout->fin_pdc);
+  if (layout->fin_layer)
+    layer_destroy(layout->fin_layer);
+  if (layout->city_layer)
+    layer_destroy(layout->city_layer);
   bitmap_layer_destroy(layout->current_weather_icon_layer);
   layer_destroy(layout->outgoing_weather_icon_layer);
   bitmap_layer_destroy(layout->tomorrow_weather_icon_layer);
-  if (layout->location_bar_layer) layer_destroy(layout->location_bar_layer);
+  if (layout->location_bar_layer)
+    layer_destroy(layout->location_bar_layer);
   layer_destroy(layout->content_layer);
   layer_destroy(layout->root_layer);
 }
 
 void weather_app_layout_set_location(WeatherAppLayout *layout, const char *name) {
-  if (!name) return;
+  if (!name)
+    return;
   strncpy(layout->location_name, name, sizeof(layout->location_name) - 1);
   layout->location_name[sizeof(layout->location_name) - 1] = '\0';
 #if PBL_ROUND
-  if (layout->city_layer) layer_mark_dirty(layout->city_layer);
+  if (layout->city_layer)
+    layer_mark_dirty(layout->city_layer);
 #endif
 }
 
@@ -2358,7 +2406,8 @@ static bool prv_prepare_day_transition(WeatherAppLayout *layout,
     // DOWN: scaler layer (outgoing_weather_icon_layer) = INCOMING tiny icon that scales up.
     //       BitmapLayer (current_weather_icon_layer)   = OUTGOING old today at full size.
     // Load the tiny resource of new_today into the scaler; start it at the tomorrow slot.
-    if (layout->outgoing_weather_icon) gbitmap_destroy(layout->outgoing_weather_icon);
+    if (layout->outgoing_weather_icon)
+      gbitmap_destroy(layout->outgoing_weather_icon);
 #if WEATHER_APP_LAYOUT_USE_PDC_WEATHER_ICONS
     bitmap_layer_set_bitmap(layout->current_weather_icon_layer, NULL);
 #endif
@@ -2372,7 +2421,8 @@ static bool prv_prepare_day_transition(WeatherAppLayout *layout,
   } else {
     // UP: scaler layer = OUTGOING old today (shrinks + slides to tomorrow slot).
     //     BitmapLayer  = INCOMING new today (previous day, full size, sweeps along arc).
-    if (layout->outgoing_weather_icon) gbitmap_destroy(layout->outgoing_weather_icon);
+    if (layout->outgoing_weather_icon)
+      gbitmap_destroy(layout->outgoing_weather_icon);
 #if WEATHER_APP_LAYOUT_USE_PDC_WEATHER_ICONS
     layout->outgoing_weather_icon =
         layout->forecast ? gbitmap_create_with_resource(weather_type_get_icon_res_today(
@@ -2531,7 +2581,8 @@ static bool prv_prepare_day_transition(WeatherAppLayout *layout,
 
 void weather_app_layout_animate(WeatherAppLayout *layout, const WeatherLocationForecast *new_today,
                                 const WeatherLocationForecast *new_next, bool animate_down) {
-  if (!prv_prepare_day_transition(layout, new_today, new_next, animate_down)) return;
+  if (!prv_prepare_day_transition(layout, new_today, new_next, animate_down))
+    return;
 
   // Linear time: the moook frame tables ARE the easing. Stacking EaseOut on
   // top crushed the 3-frame anticipation (~25ms, invisible) and smeared the

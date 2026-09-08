@@ -20,9 +20,12 @@ extern void command_pcba_serial_write(const char *);
 // Tests
 /////////////////////////////////////////////
 
-void test_mfg_serials__initialize(void) { fake_otp_reset(); }
+void test_mfg_serials__initialize(void) {
+  fake_otp_reset();
+}
 
-void test_mfg_serials__cleanup(void) {}
+void test_mfg_serials__cleanup(void) {
+}
 
 void test_mfg_serials__hw_version(void) {
   const char *hw_version;

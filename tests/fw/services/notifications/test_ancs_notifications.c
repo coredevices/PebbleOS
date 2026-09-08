@@ -23,14 +23,21 @@
 #include "stubs_uuid.h"
 #include "stubs_nexmo.h"
 
-iOSNotifPrefs *ios_notif_pref_db_get_prefs(const uint8_t *app_id, int length) { return NULL; }
+iOSNotifPrefs *ios_notif_pref_db_get_prefs(const uint8_t *app_id, int length) {
+  return NULL;
+}
 
-void ios_notif_pref_db_free_prefs(iOSNotifPrefs *prefs) { return; }
+void ios_notif_pref_db_free_prefs(iOSNotifPrefs *prefs) {
+  return;
+}
 
 void ancs_filtering_record_app(iOSNotifPrefs **app_notif_prefs, const ANCSAttribute *app_id,
-                               const ANCSAttribute *display_name, const ANCSAttribute *title) {}
+                               const ANCSAttribute *display_name, const ANCSAttribute *title) {
+}
 
-bool ancs_filtering_is_muted(const iOSNotifPrefs *app_notif_prefs) { return false; }
+bool ancs_filtering_is_muted(const iOSNotifPrefs *app_notif_prefs) {
+  return false;
+}
 
 bool ancs_filtering_matches_rules(const iOSNotifPrefs *app_notif_prefs, const ANCSAttribute *title,
                                   const ANCSAttribute *subtitle, const ANCSAttribute *body) {
@@ -43,9 +50,13 @@ bool ancs_filtering_matches_rules(const iOSNotifPrefs *app_notif_prefs, const AN
 #include "fake_notification_storage.h"
 
 static time_t s_now;
-time_t rtc_get_time(void) { return s_now; }
+time_t rtc_get_time(void) {
+  return s_now;
+}
 
-RtcTicks rtc_get_ticks(void) { return 0; }
+RtcTicks rtc_get_ticks(void) {
+  return 0;
+}
 
 void test_ancs_notifications__initialize(void) {
   s_now = 1;
@@ -53,7 +64,8 @@ void test_ancs_notifications__initialize(void) {
   fake_event_init();
 }
 
-void test_ancs_notifications__cleanup(void) {}
+void test_ancs_notifications__cleanup(void) {
+}
 
 void test_ancs_notifications__handle_phone_call_message(void) {
   const uint8_t app_id[] = {

@@ -67,11 +67,17 @@ FlashAddress flash_impl_get_subsector_base_address(FlashAddress addr) {
   return addr & ~(QEMU_SUBSECTOR_SIZE - 1);
 }
 
-size_t flash_impl_get_capacity(void) { return REG32(QEMU_EXTFLASH_BASE + FLASH_SIZE); }
+size_t flash_impl_get_capacity(void) {
+  return REG32(QEMU_EXTFLASH_BASE + FLASH_SIZE);
+}
 
-status_t flash_impl_enter_low_power_mode(void) { return S_SUCCESS; }
+status_t flash_impl_enter_low_power_mode(void) {
+  return S_SUCCESS;
+}
 
-status_t flash_impl_exit_low_power_mode(void) { return S_SUCCESS; }
+status_t flash_impl_exit_low_power_mode(void) {
+  return S_SUCCESS;
+}
 
 status_t flash_impl_read_sync(void *buffer, FlashAddress addr, size_t len) {
   // Flash addresses already include the XIP base (0x10000000), read directly
@@ -97,7 +103,9 @@ status_t flash_impl_write_protect(FlashAddress start_sector, FlashAddress end_se
   return S_SUCCESS;
 }
 
-status_t flash_impl_unprotect(void) { return S_SUCCESS; }
+status_t flash_impl_unprotect(void) {
+  return S_SUCCESS;
+}
 
 static size_t s_last_write_len;
 
@@ -216,9 +224,12 @@ void flash_impl_use(void) {
   // No power management needed for QEMU flash
 }
 
-void flash_impl_release(void) {}
+void flash_impl_release(void) {
+}
 
-void flash_impl_release_many(uint32_t num_locks) { (void)num_locks; }
+void flash_impl_release_many(uint32_t num_locks) {
+  (void)num_locks;
+}
 
 status_t flash_impl_read_security_register(uint32_t addr, uint8_t *val) {
   (void)addr;
@@ -249,4 +260,6 @@ static const FlashSecurityRegisters s_security_regs = {
     .sec_reg_size = 0,
 };
 
-const FlashSecurityRegisters *flash_impl_security_registers_info(void) { return &s_security_regs; }
+const FlashSecurityRegisters *flash_impl_security_registers_info(void) {
+  return &s_security_regs;
+}

@@ -63,9 +63,13 @@ int32_t animation_timing_segmented(int32_t time_normalized, int32_t index, uint3
 
 typedef int64_t (*ArrayAccessorInt64)(const void *array, size_t index);
 
-static int64_t prv_uint16_getter(const void *array, size_t idx) { return ((uint16_t *)array)[idx]; }
+static int64_t prv_uint16_getter(const void *array, size_t idx) {
+  return ((uint16_t *)array)[idx];
+}
 
-static int64_t prv_int32_getter(const void *array, size_t idx) { return ((int32_t *)array)[idx]; }
+static int64_t prv_int32_getter(const void *array, size_t idx) {
+  return ((int32_t *)array)[idx];
+}
 
 AnimationProgress prv_animation_timing_interpolate(AnimationProgress progress, const void *array,
                                                    ArrayAccessorInt64 getter, size_t num_entries) {

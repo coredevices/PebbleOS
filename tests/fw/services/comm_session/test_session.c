@@ -27,16 +27,21 @@ extern void comm_session_send_next_immediately(CommSession *session);
 #include "stubs_rand_ptr.h"
 #include "stubs_syscall_internal.h"
 
-void comm_session_analytics_open_session(CommSession *session) {}
+void comm_session_analytics_open_session(CommSession *session) {
+}
 
-void comm_session_analytics_close_session(CommSession *session, CommSessionCloseReason reason) {}
+void comm_session_analytics_close_session(CommSession *session, CommSessionCloseReason reason) {
+}
 
-void comm_session_receive_router_cleanup(CommSession *session) {}
+void comm_session_receive_router_cleanup(CommSession *session) {
+}
 
-void comm_session_send_queue_cleanup(CommSession *session) {}
+void comm_session_send_queue_cleanup(CommSession *session) {
+}
 
 void bt_persistent_storage_set_cached_system_capabilities(
-    const PebbleProtocolCapabilities *capabilities) {}
+    const PebbleProtocolCapabilities *capabilities) {
+}
 
 static uint16_t s_send_queue_length;
 
@@ -44,10 +49,14 @@ size_t comm_session_send_queue_get_length(const CommSession *session) {
   return s_send_queue_length;
 }
 
-void fake_session_send_queue_set_length(uint32_t length) { s_send_queue_length = length; }
+void fake_session_send_queue_set_length(uint32_t length) {
+  s_send_queue_length = length;
+}
 
 static bool s_dls_private_handle_disconnect_called;
-void dls_private_handle_disconnect(void *data) { s_dls_private_handle_disconnect_called = true; }
+void dls_private_handle_disconnect(void *data) {
+  s_dls_private_handle_disconnect_called = true;
+}
 
 static bool s_comm_session_event_put;
 void event_put(PebbleEvent *event) {
@@ -56,13 +65,17 @@ void event_put(PebbleEvent *event) {
   };
 }
 
-void app_launch_trigger(void) {}
+void app_launch_trigger(void) {
+}
 
-void session_remote_version_start_requests(CommSession *session) {}
+void session_remote_version_start_requests(CommSession *session) {
+}
 
 static int s_send_next_count;
 
-static void prv_send_next(Transport *transport) { ++s_send_next_count; }
+static void prv_send_next(Transport *transport) {
+  ++s_send_next_count;
+}
 
 static int s_close_count;
 Transport *s_last_closed_transport;
@@ -74,7 +87,9 @@ static void prv_close(Transport *transport) {
 
 static int s_reset_count;
 
-static void prv_reset(Transport *transport) { ++s_reset_count; }
+static void prv_reset(Transport *transport) {
+  ++s_reset_count;
+}
 
 typedef enum {
   TransportIDNull,
@@ -320,7 +335,9 @@ void test_session__send_next_not_called_when_session_closed_in_mean_time(void) {
   cl_assert_equal_i(s_send_next_count, 0);
 }
 
-static bool prv_schedule_send_next(CommSession *session) { return true; }
+static bool prv_schedule_send_next(CommSession *session) {
+  return true;
+}
 
 static bool s_is_current_task_schedule_task = false;
 static bool prv_is_current_task_schedule_task(Transport *transport) {

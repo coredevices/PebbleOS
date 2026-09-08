@@ -43,7 +43,9 @@ void app_storage_delete_app(AppInstallId id) {
   pfs_remove(buffer);
 }
 
-bool app_storage_app_exists(AppInstallId id) { return true; }
+bool app_storage_app_exists(AppInstallId id) {
+  return true;
+}
 
 AppInstallId s_test_id_ql_up;
 AppInstallId s_test_id_ql_down;
@@ -66,13 +68,21 @@ AppInstallId quick_launch_single_click_get_app(ButtonId button) {
   }
 }
 
-AppInstallId quick_launch_combo_back_up_get_app(void) { return s_test_id_ql_up; }
+AppInstallId quick_launch_combo_back_up_get_app(void) {
+  return s_test_id_ql_up;
+}
 
-AppInstallId quick_launch_combo_up_down_get_app(void) { return s_test_id_ql_down; }
+AppInstallId quick_launch_combo_up_down_get_app(void) {
+  return s_test_id_ql_down;
+}
 
-AppInstallId watchface_get_default_install_id(void) { return s_test_id_watchface; }
+AppInstallId watchface_get_default_install_id(void) {
+  return s_test_id_watchface;
+}
 
-AppInstallId worker_preferences_get_default_worker(void) { return s_test_id_worker; }
+AppInstallId worker_preferences_get_default_worker(void) {
+  return s_test_id_worker;
+}
 
 extern AppInstallId app_cache_get_next_eviction(void);
 

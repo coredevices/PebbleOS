@@ -54,9 +54,12 @@ static const uint8_t s_ios_pref_db_insert_dict[] = {
 
 const uint8_t key[] = {0x01, 0x02, 0x03};
 
-void test_ios_notif_pref_db__initialize(void) {}
+void test_ios_notif_pref_db__initialize(void) {
+}
 
-void test_ios_notif_pref_db__cleanup(void) { fake_settings_file_reset(); }
+void test_ios_notif_pref_db__cleanup(void) {
+  fake_settings_file_reset();
+}
 
 void test_ios_notif_pref_db__insert_inverts_flags(void) {
   // Make a local copy of dict since ios_notif_pref_db_insert() modifies val

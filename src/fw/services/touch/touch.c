@@ -152,9 +152,13 @@ DEFINE_SYSCALL(bool, sys_touch_service_is_enabled, void) {
   return touch_service_is_globally_enabled();
 }
 
-DEFINE_SYSCALL(bool, sys_touch_nav_enabled, void) { return touch_nav_enabled(); }
+DEFINE_SYSCALL(bool, sys_touch_nav_enabled, void) {
+  return touch_nav_enabled();
+}
 
-DEFINE_SYSCALL(bool, sys_touch_app_nav_active, void) { return touch_app_nav_active(); }
+DEFINE_SYSCALL(bool, sys_touch_app_nav_active, void) {
+  return touch_app_nav_active();
+}
 
 DEFINE_SYSCALL(void, sys_touch_set_raw_subscribed, bool subscribed) {
   const PebbleTask task = pebble_task_get_current();
@@ -167,7 +171,9 @@ DEFINE_SYSCALL(void, sys_touch_set_raw_subscribed, bool subscribed) {
   pbl_mutex_unlock(&s_touch_mutex);
 }
 
-DEFINE_SYSCALL(void, sys_touch_reset, void) { touch_reset(); }
+DEFINE_SYSCALL(void, sys_touch_reset, void) {
+  touch_reset();
+}
 
 void touch_set_backlight_enabled(bool enabled) {
   pbl_mutex_lock(&s_touch_mutex, PBL_FOREVER);

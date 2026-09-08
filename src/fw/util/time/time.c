@@ -21,7 +21,9 @@ static const uint8_t s_mon_lengths[2][MONTHS_PER_YEAR] = {
 
 static const uint16_t s_year_lengths[2] = {365, 366};
 
-int32_t time_get_gmtoffset(void) { return s_timezone_gmtoffset; }
+int32_t time_get_gmtoffset(void) {
+  return s_timezone_gmtoffset;
+}
 
 bool time_get_isdst(time_t utc_time) {
   // do we have any DST set for the timezone we are in
@@ -42,13 +44,21 @@ int time_will_transition_dst(time_t prev, time_t next) {
   }
 }
 
-int32_t time_get_dstoffset(void) { return s_dst_adjust; }
+int32_t time_get_dstoffset(void) {
+  return s_dst_adjust;
+}
 
-time_t time_get_dst_start(void) { return s_dst_start; }
+time_t time_get_dst_start(void) {
+  return s_dst_start;
+}
 
-time_t time_get_dst_end(void) { return s_dst_end; }
+time_t time_get_dst_end(void) {
+  return s_dst_end;
+}
 
-DEFINE_SYSCALL(time_t, sys_time_utc_to_local, time_t t) { return time_utc_to_local(t); }
+DEFINE_SYSCALL(time_t, sys_time_utc_to_local, time_t t) {
+  return time_utc_to_local(t);
+}
 
 time_t time_utc_to_local(time_t utc_time) {
   utc_time += time_get_isdst(utc_time) ? s_dst_adjust : 0;
@@ -284,7 +294,9 @@ time_t time_start_of_today(void) {
   return time_util_get_midnight_of(now);
 }
 
-DEFINE_SYSCALL(time_t, sys_time_start_of_today, void) { return time_start_of_today(); }
+DEFINE_SYSCALL(time_t, sys_time_start_of_today, void) {
+  return time_start_of_today();
+}
 
 // ---------------------------------------------------------------------------------------
 uint32_t time_get_uptime_seconds(void) {

@@ -288,7 +288,8 @@ static void prv_record_metrics(struct native_heartbeat_record *record, bool rese
   }
 }
 
-void pbl_analytics__native_init(void) {}
+void pbl_analytics__native_init(void) {
+}
 
 void pbl_analytics__native_heartbeat(void) {
   struct native_heartbeat_record record;

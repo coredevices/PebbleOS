@@ -392,15 +392,21 @@ void test_graphics_draw_bitmap__composite_assign_inverted(void) {
   prv_composite_test(__func__, GCompOpAssignInverted);
 }
 
-void test_graphics_draw_bitmap__composite_or(void) { prv_composite_test(__func__, GCompOpOr); }
+void test_graphics_draw_bitmap__composite_or(void) {
+  prv_composite_test(__func__, GCompOpOr);
+}
 
-void test_graphics_draw_bitmap__composite_and(void) { prv_composite_test(__func__, GCompOpAnd); }
+void test_graphics_draw_bitmap__composite_and(void) {
+  prv_composite_test(__func__, GCompOpAnd);
+}
 
 void test_graphics_draw_bitmap__composite_clear(void) {
   prv_composite_test(__func__, GCompOpClear);
 }
 
-void test_graphics_draw_bitmap__composite_set(void) { prv_composite_test(__func__, GCompOpSet); }
+void test_graphics_draw_bitmap__composite_set(void) {
+  prv_composite_test(__func__, GCompOpSet);
+}
 
 void test_graphics_draw_bitmap__composite_tint(void) {
   graphics_context_set_tint_color(&s_ctx, GColorOrange);

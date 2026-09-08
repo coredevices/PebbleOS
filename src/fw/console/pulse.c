@@ -82,9 +82,13 @@ static IncomingPulseFrame *prv_take_receive_buffer(void) {
   return NULL;
 }
 
-static void prv_return_receive_buffer(IncomingPulseFrame *buf) { buf->taken = false; }
+static void prv_return_receive_buffer(IncomingPulseFrame *buf) {
+  buf->taken = false;
+}
 
-static void prv_keepalive_timeout_expired(void *data) { pulse_end(); }
+static void prv_keepalive_timeout_expired(void *data) {
+  pulse_end();
+}
 
 static void prv_reset_keepalive_timer(void) {
   if (s_keepalive_timer) {
@@ -99,9 +103,11 @@ static void prv_handlers_notify_state_changed(PulseLinkState link_state) {
   }
 }
 
-void pulse_early_init(void) {}
+void pulse_early_init(void) {
+}
 
-void pulse_init(void) {}
+void pulse_init(void) {
+}
 
 void pulse_start(void) {
   for (unsigned int i = 0; i < ARRAY_LENGTH(s_receive_buffers); ++i) {
@@ -251,5 +257,7 @@ void pulse_best_effort_send_cancel(void *buf) {
   pbl_mutex_unlock(&s_tx_buffer_mutex);
 }
 
-void pulse_change_baud_rate(uint32_t new_baud) { dbgserial_change_baud_rate(new_baud); }
+void pulse_change_baud_rate(uint32_t new_baud) {
+  dbgserial_change_baud_rate(new_baud);
+}
 #endif

@@ -23,9 +23,12 @@ void recognizer_manager_handle_state_change(RecognizerManager *manager, Recogniz
 static TestImplData s_test_impl_data;
 
 // setup and teardown
-void test_recognizer__initialize(void) { s_test_impl_data = (TestImplData){}; }
+void test_recognizer__initialize(void) {
+  s_test_impl_data = (TestImplData){};
+}
 
-void test_recognizer__cleanup(void) {}
+void test_recognizer__cleanup(void) {
+}
 
 // tests
 void test_recognizer__create_with_data(void) {
@@ -302,21 +305,28 @@ void test_recognizer__reset_owned_not_freed_on_destroy(void) {
   cl_assert_equal_b(impl_destroyed, true);
 }
 
-static void prv_static_event(const Recognizer *recognizer, RecognizerEvent event) {}
+static void prv_static_event(const Recognizer *recognizer, RecognizerEvent event) {
+}
 
 static bool s_static_impl_destroyed;
-static void prv_static_impl_on_destroy(Recognizer *recognizer) { s_static_impl_destroyed = true; }
+static void prv_static_impl_on_destroy(Recognizer *recognizer) {
+  s_static_impl_destroyed = true;
+}
 
 static void prv_static_sub_on_destroy(const Recognizer *recognizer) {
   bool *destroyed = recognizer_get_user_data(recognizer);
   *destroyed = true;
 }
 
-static void prv_static_handle(Recognizer *recognizer, const TouchEvent *touch_event) {}
+static void prv_static_handle(Recognizer *recognizer, const TouchEvent *touch_event) {
+}
 
-static bool prv_static_cancel(Recognizer *recognizer) { return false; }
+static bool prv_static_cancel(Recognizer *recognizer) {
+  return false;
+}
 
-static void prv_static_reset(Recognizer *recognizer) {}
+static void prv_static_reset(Recognizer *recognizer) {
+}
 
 void test_recognizer__init_static(void) {
   RecognizerImpl impl = {

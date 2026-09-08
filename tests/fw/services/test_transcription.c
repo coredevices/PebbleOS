@@ -10,13 +10,19 @@
 static int s_count;
 
 // setup and teardown
-void test_transcription__initialize(void) {}
+void test_transcription__initialize(void) {
+}
 
-void test_transcription__cleanup(void) {}
+void test_transcription__cleanup(void) {
+}
 
-static bool prv_cb_return_true(void *w, void *data) { return true; }
+static bool prv_cb_return_true(void *w, void *data) {
+  return true;
+}
 
-static bool prv_cb_return_false(void *w, void *data) { return (s_count++ != (int)data); }
+static bool prv_cb_return_false(void *w, void *data) {
+  return (s_count++ != (int)data);
+}
 
 void test_transcription__validate(void) {
   bool result;

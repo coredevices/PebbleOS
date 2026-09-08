@@ -304,7 +304,8 @@ bool health_db_set_typical_values(ActivityMetric metric, DayInWeek day, uint16_t
 // Blob DB API
 /////////////////////////
 
-void health_db_init(void) {}
+void health_db_init(void) {
+}
 
 status_t health_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   if (!prv_key_is_valid(key, key_len)) {

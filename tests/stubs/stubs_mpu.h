@@ -25,8 +25,12 @@ const uint32_t __WORKER_RAM_size__;
 const uint32_t __FLASH_start__;
 const uint32_t __FLASH_size__;
 
-void mpu_enable(void) {}
+void mpu_enable(void) {
+}
 
-MpuRegion mpu_get_region(int region_num) { return (MpuRegion){0}; }
+MpuRegion mpu_get_region(int region_num) {
+  return (MpuRegion){0};
+}
 
-void mpu_set_region(const MpuRegion *region) {}
+void mpu_set_region(const MpuRegion *region) {
+}

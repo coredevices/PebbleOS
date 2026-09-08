@@ -204,7 +204,9 @@ uint16_t gap_le_connection_get_gatt_mtu(const BTDeviceInternal *device) {
 
 // -------------------------------------------------------------------------------------------------
 
-void gap_le_connection_init(void) { s_le_connection_module_initialized = true; }
+void gap_le_connection_init(void) {
+  s_le_connection_module_initialized = true;
+}
 
 // -------------------------------------------------------------------------------------------------
 
@@ -229,7 +231,9 @@ void gap_le_connection_deinit(void) {
 
 // -------------------------------------------------------------------------------------------------
 
-GAPLEConnection *gap_le_connection_any(void) { return s_connections; }
+GAPLEConnection *gap_le_connection_any(void) {
+  return s_connections;
+}
 
 static bool prv_valid_conn_filter(ListNode *found_node, void *data) {
   GAPLEConnection *searching_for = (GAPLEConnection *)data;

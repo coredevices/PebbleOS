@@ -65,7 +65,9 @@ static void prv_kernel_subscribe_cb(void *unused) {
   touch_set_system_hold(true);
 }
 
-static void prv_kernel_unsubscribe_cb(void *unused) { modal_touch_nav_unsubscribe(); }
+static void prv_kernel_unsubscribe_cb(void *unused) {
+  modal_touch_nav_unsubscribe();
+}
 
 static void prv_kernel_release_hold_cb(void *unused) {
   // Release the permanent sensor hold on KernelMain. Queued AFTER prv_kernel_unsubscribe_cb so the
@@ -75,7 +77,9 @@ static void prv_kernel_release_hold_cb(void *unused) {
 
 // --- App-task-bound effects -------------------------------------------------------------------
 
-static void prv_app_subscribe_cb(void *unused) { app_touch_nav_subscribe(); }
+static void prv_app_subscribe_cb(void *unused) {
+  app_touch_nav_subscribe();
+}
 
 static void prv_app_resync_cb(void *unused) {
   // Re-evaluate rather than blindly unsubscribe: an app that explicitly opted in follows the

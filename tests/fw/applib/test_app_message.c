@@ -99,9 +99,13 @@ static bool s_app_receiver_oom;
 // Utils
 ////////////////////////////////////
 
-static void prv_set_app_uuid(Uuid uuid) { s_app_uuid = uuid; }
+static void prv_set_app_uuid(Uuid uuid) {
+  s_app_uuid = uuid;
+}
 
-static void prv_set_remote_app_uuid(Uuid uuid) { s_remote_app_uuid = uuid; }
+static void prv_set_remote_app_uuid(Uuid uuid) {
+  s_remote_app_uuid = uuid;
+}
 
 //! @note Assumes same order of tuples in both dictionaries!
 static void prv_assert_dict_equal(DictionaryIterator *a, DictionaryIterator *b) {
@@ -224,18 +228,25 @@ static void prv_receive_ack_nack_callback(uint16_t endpoint_id, const uint8_t *d
   }
 }
 
-static void prv_no_reply_callback(uint16_t endpoint_id, const uint8_t *data, unsigned int length) {}
+static void prv_no_reply_callback(uint16_t endpoint_id, const uint8_t *data, unsigned int length) {
+}
 
 // Overrides
 ///////////////////////////////////
 
-bool sys_app_pp_has_capability(CommSessionCapability capability) { return true; }
+bool sys_app_pp_has_capability(CommSessionCapability capability) {
+  return true;
+}
 
 static int s_sys_psleep_last_millis;
 
-void sys_psleep(int millis) { s_sys_psleep_last_millis = millis; }
+void sys_psleep(int millis) {
+  s_sys_psleep_last_millis = millis;
+}
 
-AppMessageCtx *app_state_get_app_message_ctx(void) { return &s_app_message_ctx; }
+AppMessageCtx *app_state_get_app_message_ctx(void) {
+  return &s_app_message_ctx;
+}
 
 bool app_message_receiver_open(size_t buffer_size) {
   if (s_app_receiver_oom) {
@@ -245,13 +256,21 @@ bool app_message_receiver_open(size_t buffer_size) {
   return true;
 }
 
-void app_message_receiver_close(void) { s_is_app_message_receiver_open = false; }
+void app_message_receiver_close(void) {
+  s_is_app_message_receiver_open = false;
+}
 
-size_t sys_app_pp_app_message_inbox_size_maximum(void) { return 600; }
+size_t sys_app_pp_app_message_inbox_size_maximum(void) {
+  return 600;
+}
 
-bool sys_get_current_app_is_js_allowed(void) { return false; }
+bool sys_get_current_app_is_js_allowed(void) {
+  return false;
+}
 
-Version sys_get_current_app_sdk_version(void) { return (Version){}; }
+Version sys_get_current_app_sdk_version(void) {
+  return (Version){};
+}
 
 static uint16_t s_sent_endpoint_id;
 static uint8_t *s_sent_data;
@@ -338,7 +357,9 @@ void sys_current_process_schedule_callback(CallbackEventCallback async_cb, void 
 }
 
 static int s_app_inbox_consume_call_count;
-void app_inbox_consume(AppInboxConsumerInfo *consumer_info) { ++s_app_inbox_consume_call_count; }
+void app_inbox_consume(AppInboxConsumerInfo *consumer_info) {
+  ++s_app_inbox_consume_call_count;
+}
 
 // Setup
 ////////////////////////////////////
@@ -405,7 +426,9 @@ static void prv_send_test_data_expecting_result(AppMessageResult result) {
   cl_assert_equal_i(app_message_outbox_send(), result);
 }
 
-static void prv_send_test_data(void) { prv_send_test_data_expecting_result(APP_MSG_OK); }
+static void prv_send_test_data(void) {
+  prv_send_test_data_expecting_result(APP_MSG_OK);
+}
 
 static void prv_set_remote_receive_handler(RemoteReceiveHandler handler) {
   s_remote_receive_handler = handler;

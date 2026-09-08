@@ -94,26 +94,40 @@ PlatformType process_metadata_get_app_sdk_platform(const PebbleProcessMd *md) {
   return (PlatformType)-1;
 }
 
-uint32_t pbl_msgq_num_used(const struct pbl_msgq *q) { return 0; }
+uint32_t pbl_msgq_num_used(const struct pbl_msgq *q) {
+  return 0;
+}
 
-int pbl_msgq_get(struct pbl_msgq *q, void *msg, pbl_timeout_t timeout) { return 0; }
+int pbl_msgq_get(struct pbl_msgq *q, void *msg, pbl_timeout_t timeout) {
+  return 0;
+}
 
-int pbl_msgq_put(struct pbl_msgq *q, const void *msg, pbl_timeout_t timeout) { return 0; }
+int pbl_msgq_put(struct pbl_msgq *q, const void *msg, pbl_timeout_t timeout) {
+  return 0;
+}
 
-void event_queue_cleanup_and_reset(struct pbl_msgq *queue) {}
+void event_queue_cleanup_and_reset(struct pbl_msgq *queue) {
+}
 
-void event_service_clear_process_subscriptions(void) {}
+void event_service_clear_process_subscriptions(void) {
+}
 
-bool app_install_entry_is_watchface(const AppInstallEntry *entry) { return false; }
+bool app_install_entry_is_watchface(const AppInstallEntry *entry) {
+  return false;
+}
 
-AppInstallId app_install_get_id_for_uuid(const Uuid *uuid) { return 1; }
+AppInstallId app_install_get_id_for_uuid(const Uuid *uuid) {
+  return 1;
+}
 
 bool app_install_get_entry_for_install_id(AppInstallId install_id, AppInstallEntry *entry) {
   *entry = s_test_cases[install_id - 1].entry;
   return true;
 }
 
-bool app_install_id_from_app_db(AppInstallId id) { return (id > INSTALL_ID_INVALID); }
+bool app_install_id_from_app_db(AppInstallId id) {
+  return (id > INSTALL_ID_INVALID);
+}
 
 bool app_install_entry_is_SDK_compatible(const AppInstallEntry *entry) {
   return (entry->sdk_version.major == PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR &&
@@ -125,7 +139,8 @@ const PebbleProcessMd *app_install_get_md(AppInstallId id, bool worker) {
   return s_app_install_get_md__result;
 }
 
-void app_install_release_md(const PebbleProcessMd *md) {}
+void app_install_release_md(const PebbleProcessMd *md) {
+}
 
 static status_t s_app_db_get_app_entry_for_install_id__result;
 static AppDBEntry s_app_db_get_app_entry_for_install_id__entry;
@@ -145,9 +160,15 @@ void event_put(PebbleEvent *event) {
   cl_assert(event != NULL);
 }
 
-void event_put_from_app(PebbleEvent *event) { cl_fail("unexpected"); }
-void event_put_from_process(PebbleTask task, PebbleEvent *event) { cl_fail("unexpected"); }
-void event_reset_from_process_queue(PebbleTask task) { cl_fail("unexpected"); }
+void event_put_from_app(PebbleEvent *event) {
+  cl_fail("unexpected");
+}
+void event_put_from_process(PebbleTask task, PebbleEvent *event) {
+  cl_fail("unexpected");
+}
+void event_reset_from_process_queue(PebbleTask task) {
+  cl_fail("unexpected");
+}
 
 void test_process_manager__initialize(void) {
   s_app_install_get_md__result = NULL;

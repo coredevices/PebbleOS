@@ -7,6 +7,10 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-void boot_bit_clear(BootBitValue bit) { return; }
+void boot_bit_clear(BootBitValue bit) {
+  return;
+}
 
-bool boot_bit_test(BootBitValue bit) { return (false); }
+bool boot_bit_test(BootBitValue bit) {
+  return (false);
+}

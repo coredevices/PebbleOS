@@ -141,7 +141,9 @@ int main(void) {
   pbl_kernel_start();
 }
 
-static void watchdog_timer_callback(void *data) { task_watchdog_bit_set(PebbleTask_NewTimers); }
+static void watchdog_timer_callback(void *data) {
+  task_watchdog_bit_set(PebbleTask_NewTimers);
+}
 
 static void register_system_timers(void) {
   static RegularTimerInfo watchdog_timer = {.list_node = {0, 0}, .cb = watchdog_timer_callback};
@@ -219,7 +221,9 @@ static void uptime_callback(void *data) {
 }
 #endif
 
-static void prv_low_power_debug_config_callback(void *data) { new_timer_delete(s_lowpower_timer); }
+static void prv_low_power_debug_config_callback(void *data) {
+  new_timer_delete(s_lowpower_timer);
+}
 
 static NOINLINE void prv_main_task_init(void) {
   // The Snowy bootloader does not clear the watchdog flag itself. Clear the

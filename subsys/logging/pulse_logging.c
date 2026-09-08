@@ -211,7 +211,9 @@ void pulse_logging_log(uint8_t log_level, const char *src_filename, uint16_t src
   }
 }
 
-void pulse_logging_log_buffer_flush(void) { prv_event_cb(NULL); }
+void pulse_logging_log_buffer_flush(void) {
+  prv_event_cb(NULL);
+}
 
 void pulse_logging_log_sync(uint8_t log_level, const char *src_filename, uint16_t src_line_number,
                             const char *message) {

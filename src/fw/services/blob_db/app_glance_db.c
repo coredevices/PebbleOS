@@ -160,7 +160,9 @@ static bool prv_slice_for_each(SerializedAppGlanceHeader *serialized_glance,
 // Serialized Slice Validation Helpers
 /////////////////////////////////////////
 
-static bool prv_is_slice_type_valid(uint8_t type) { return (type < AppGlanceSliceTypeCount); }
+static bool prv_is_slice_type_valid(uint8_t type) {
+  return (type < AppGlanceSliceTypeCount);
+}
 
 //! Returns true if the provided AttributeList is valid for the specified AppGlanceSliceType,
 //! false otherwise.
@@ -618,7 +620,9 @@ static void prv_close_file_and_unlock_mutex(void) {
 // Blob DB API
 /////////////////////////
 
-void app_glance_db_init(void) { pbl_mutex_init(&s_app_glance_db.mutex); }
+void app_glance_db_init(void) {
+  pbl_mutex_init(&s_app_glance_db.mutex);
+}
 
 status_t app_glance_db_flush(void) {
   pbl_mutex_lock(&s_app_glance_db.mutex, PBL_FOREVER);

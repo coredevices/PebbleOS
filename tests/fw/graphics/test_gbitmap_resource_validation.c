@@ -18,9 +18,13 @@ bool gbitmap_init_with_png_data(GBitmap *bitmap, const uint8_t *data, size_t dat
   return false;
 }
 
-bool gbitmap_png_data_is_png(const uint8_t *data, size_t data_size) { return false; }
+bool gbitmap_png_data_is_png(const uint8_t *data, size_t data_size) {
+  return false;
+}
 
-ResAppNum sys_get_current_resource_num(void) { return 0; }
+ResAppNum sys_get_current_resource_num(void) {
+  return 0;
+}
 
 const uint8_t *sys_resource_read_only_bytes(ResAppNum app_num, uint32_t resource_id,
                                             size_t *num_bytes_out) {
@@ -30,7 +34,9 @@ const uint8_t *sys_resource_read_only_bytes(ResAppNum app_num, uint32_t resource
 // Fakes
 ///////////////////////
 size_t s_resource_size;
-size_t sys_resource_size(ResAppNum app_num, uint32_t resource_id) { return s_resource_size; }
+size_t sys_resource_size(ResAppNum app_num, uint32_t resource_id) {
+  return s_resource_size;
+}
 
 typedef struct {
   uint16_t row_size_bytes;

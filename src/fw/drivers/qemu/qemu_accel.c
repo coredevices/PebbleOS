@@ -196,9 +196,13 @@ uint32_t accel_set_sampling_interval(uint32_t interval_us) {
   return accel_get_sampling_interval();
 }
 
-uint32_t accel_get_sampling_interval(void) { return s_sampling_interval_ms * 1000; }
+uint32_t accel_get_sampling_interval(void) {
+  return s_sampling_interval_ms * 1000;
+}
 
-uint32_t accel_get_max_num_samples(void) { return QEMU_ACCEL_RCV_BUFFER_SAMPLES; }
+uint32_t accel_get_max_num_samples(void) {
+  return QEMU_ACCEL_RCV_BUFFER_SAMPLES;
+}
 
 void accel_set_num_samples(uint32_t num_samples) {
   pbl_mutex_lock(&s_accel_mutex, PBL_FOREVER);
@@ -222,14 +226,23 @@ int accel_peek(AccelDriverSample *data) {
   return 0;
 }
 
-void accel_enable_shake_detection(bool on) {}
+void accel_enable_shake_detection(bool on) {
+}
 
-bool accel_get_shake_detection_enabled(void) { return false; }
+bool accel_get_shake_detection_enabled(void) {
+  return false;
+}
 
-void accel_enable_double_tap_detection(bool on) {}
+void accel_enable_double_tap_detection(bool on) {
+}
 
-bool accel_get_double_tap_detection_enabled(void) { return false; }
+bool accel_get_double_tap_detection_enabled(void) {
+  return false;
+}
 
-void accel_set_shake_sensitivity_high(bool sensitivity_high) {}
+void accel_set_shake_sensitivity_high(bool sensitivity_high) {
+}
 
-void accel_set_shake_sensitivity_percent(uint8_t percent) { (void)percent; }
+void accel_set_shake_sensitivity_percent(uint8_t percent) {
+  (void)percent;
+}

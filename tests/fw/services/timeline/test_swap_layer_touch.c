@@ -33,20 +33,38 @@
 // (no notification is ever loaded, so the layout callbacks are not driven and the animated settle
 // produces no real animation). The animation_* primitives come from tests/fakes/fake_animation.c.
 
-GContext *graphics_context_get_current_context(void) { return NULL; }
+GContext *graphics_context_get_current_context(void) {
+  return NULL;
+}
 
-GSize layout_get_size(GContext *ctx, LayoutLayer *layout) { return GSizeZero; }
-const LayoutColors *layout_get_colors(const LayoutLayer *layout) { return NULL; }
-void *layout_get_context(LayoutLayer *layout) { return NULL; }
+GSize layout_get_size(GContext *ctx, LayoutLayer *layout) {
+  return GSizeZero;
+}
+const LayoutColors *layout_get_colors(const LayoutLayer *layout) {
+  return NULL;
+}
+void *layout_get_context(LayoutLayer *layout) {
+  return NULL;
+}
 
-bool gbitmap_init_with_resource(GBitmap *bitmap, uint32_t resource_id) { return true; }
-void gbitmap_deinit(GBitmap *bitmap) {}
+bool gbitmap_init_with_resource(GBitmap *bitmap, uint32_t resource_id) {
+  return true;
+}
+void gbitmap_deinit(GBitmap *bitmap) {
+}
 
-void *applib_malloc(size_t bytes) { return NULL; }
-void applib_free(void *ptr) {}
+void *applib_malloc(size_t bytes) {
+  return NULL;
+}
+void applib_free(void *ptr) {
+}
 
-int64_t interpolate_moook(int32_t normalized, int64_t from, int64_t to) { return to; }
-uint32_t interpolate_moook_duration(void) { return 0; }
+int64_t interpolate_moook(int32_t normalized, int64_t from, int64_t to) {
+  return to;
+}
+uint32_t interpolate_moook_duration(void) {
+  return 0;
+}
 
 // The animated settle/scroll path records how many times it ran, but produces no real animation.
 static int s_scroll_animations;
@@ -58,8 +76,12 @@ PropertyAnimation *property_animation_create_layer_frame(struct Layer *layer, GR
 bool property_animation_to(PropertyAnimation *property_animation, void *to, size_t size, bool set) {
   return false;
 }
-bool animation_set_duration(Animation *animation, uint32_t duration) { return true; }
-bool animation_set_curve(Animation *animation, AnimationCurve curve) { return true; }
+bool animation_set_duration(Animation *animation, uint32_t duration) {
+  return true;
+}
+bool animation_set_curve(Animation *animation, AnimationCurve curve) {
+  return true;
+}
 bool animation_set_custom_interpolation(Animation *animation,
                                         InterpolateInt64Function interpolate) {
   return true;
@@ -67,38 +89,59 @@ bool animation_set_custom_interpolation(Animation *animation,
 
 // Graphics and click/window-subscribe collaborators pulled in by swap_layer.c's render/click paths,
 // none of which these tests drive.
-void graphics_context_set_fill_color(GContext *ctx, GColor color) {}
-void graphics_context_set_compositing_mode(GContext *ctx, GCompOp mode) {}
-void graphics_fill_rect(GContext *ctx, const GRect *rect) {}
-void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *bitmap, const GRect *rect) {}
-bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) { return true; }
+void graphics_context_set_fill_color(GContext *ctx, GColor color) {
+}
+void graphics_context_set_compositing_mode(GContext *ctx, GCompOp mode) {
+}
+void graphics_fill_rect(GContext *ctx, const GRect *rect) {
+}
+void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *bitmap, const GRect *rect) {
+}
+bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) {
+  return true;
+}
 
-void window_schedule_render(Window *window) {}
+void window_schedule_render(Window *window) {
+}
 void window_set_click_config_provider_with_context(Window *window, ClickConfigProvider provider,
-                                                   void *context) {}
+                                                   void *context) {
+}
 void window_raw_click_subscribe(ButtonId button_id, ClickHandler down_handler,
-                                ClickHandler up_handler, void *context) {}
+                                ClickHandler up_handler, void *context) {
+}
 void window_single_repeating_click_subscribe(ButtonId button_id, uint16_t repeat_interval_ms,
-                                             ClickHandler handler) {}
+                                             ClickHandler handler) {
+}
 void window_multi_click_subscribe(ButtonId button_id, uint8_t min_clicks, uint8_t max_clicks,
-                                  uint16_t timeout, bool last_click_only, ClickHandler handler) {}
+                                  uint16_t timeout, bool last_click_only, ClickHandler handler) {
+}
 
 // ---------------------------------------------------------------------------------------------
 // Touch-nav harness. swap_layer.c resolves the per-task touch-nav state through these accessors and
 // the master gate; the recognizer manager needs a couple of window/layer collaborators to link.
 
 static bool s_nav_enabled = true;
-bool sys_touch_nav_enabled(void) { return s_nav_enabled; }
-bool sys_touch_app_nav_active(void) { return false; }
+bool sys_touch_nav_enabled(void) {
+  return s_nav_enabled;
+}
+bool sys_touch_app_nav_active(void) {
+  return false;
+}
 
 static TouchNavState s_touch_nav_state;
-struct TouchNavState *app_state_get_touch_nav_state(void) { return &s_touch_nav_state; }
-struct TouchNavState *modal_manager_get_touch_nav_state(void) { return &s_touch_nav_state; }
+struct TouchNavState *app_state_get_touch_nav_state(void) {
+  return &s_touch_nav_state;
+}
+struct TouchNavState *modal_manager_get_touch_nav_state(void) {
+  return &s_touch_nav_state;
+}
 
 // Counts interaction_handler firings: this is the #1266 auto-close-timer extension. Every touch
 // scroll must refresh the timer so a long notification cannot close under the finger mid-read.
 static int s_interaction_count;
-static void prv_count_interaction(SwapLayer *swap_layer, void *context) { s_interaction_count++; }
+static void prv_count_interaction(SwapLayer *swap_layer, void *context) {
+  s_interaction_count++;
+}
 
 static Layer *s_active_layer;
 Layer *layer_find_layer_containing_point(const Layer *node, const GPoint *point) {
@@ -110,18 +153,30 @@ static Layer s_root_layer;
 static RecognizerManager s_manager;
 static RecognizerList s_global_list;
 
-struct Layer *window_get_root_layer(const Window *window) { return &s_root_layer; }
-RecognizerList *window_get_recognizer_list(Window *window) { return NULL; }
-RecognizerManager *window_get_recognizer_manager(Window *window) { return &s_manager; }
+struct Layer *window_get_root_layer(const Window *window) {
+  return &s_root_layer;
+}
+RecognizerList *window_get_recognizer_list(Window *window) {
+  return NULL;
+}
+RecognizerManager *window_get_recognizer_manager(Window *window) {
+  return &s_manager;
+}
 
 static int s_emit_count;
 static ButtonId s_last_emit;
 static int s_pop_count;
 static bool s_ops_animating;
 static bool s_overrides_back;
-static bool prv_ops_is_animating(void *ctx) { return s_ops_animating; }
-static bool prv_ops_overrides_back(void *ctx) { return s_overrides_back; }
-static void prv_ops_pop_top(void *ctx) { s_pop_count++; }
+static bool prv_ops_is_animating(void *ctx) {
+  return s_ops_animating;
+}
+static bool prv_ops_overrides_back(void *ctx) {
+  return s_overrides_back;
+}
+static void prv_ops_pop_top(void *ctx) {
+  s_pop_count++;
+}
 static void prv_ops_emit_button(void *ctx, ButtonId button) {
   s_emit_count++;
   s_last_emit = button;
@@ -177,7 +232,9 @@ void test_swap_layer_touch__initialize(void) {
   swap_layer_touch_nav_reset_all();
 }
 
-void test_swap_layer_touch__cleanup(void) { swap_layer_touch_nav_reset_all(); }
+void test_swap_layer_touch__cleanup(void) {
+  swap_layer_touch_nav_reset_all();
+}
 
 // ---------------------------------------------------------------------------------------------
 // A hand-built SwapLayer: a viewport frame plus current/next layouts, without loading a real
@@ -206,7 +263,9 @@ static void prv_build_swap(FakeSwap *fs, int16_t viewport_h, int16_t content_h, 
   }
 }
 
-static int16_t prv_offset(const FakeSwap *fs) { return -fs->current.layer.frame.origin.y; }
+static int16_t prv_offset(const FakeSwap *fs) {
+  return -fs->current.layer.frame.origin.y;
+}
 
 // =============================================================================================
 // The scroll point: 1:1 offset with clamp, and the next-layout peek tracking.

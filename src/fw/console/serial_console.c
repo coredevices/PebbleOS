@@ -62,7 +62,9 @@ bool serial_console_is_logging_enabled(void) {
          s_serial_console_state == SERIAL_CONSOLE_STATE_PULSE;
 }
 
-void serial_console_enable_prompt(void) { s_prompt_enabled = true; }
+void serial_console_enable_prompt(void) {
+  s_prompt_enabled = true;
+}
 
 void serial_console_write_log_message(const char *msg) {
   while (*msg) {

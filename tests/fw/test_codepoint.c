@@ -14,9 +14,11 @@
 ///////////////////////////////////////////////////////////
 // Tests
 
-void test_codepoint__initialize(void) {}
+void test_codepoint__initialize(void) {
+}
 
-void test_codepoint__cleanup(void) {}
+void test_codepoint__cleanup(void) {
+}
 
 void test_codepoint__is_unicode_space(void) {
   // All Unicode space variants should be recognized

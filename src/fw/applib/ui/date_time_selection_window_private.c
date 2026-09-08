@@ -20,9 +20,13 @@ static int prv_wrap(int x, int max, int delta) {
   return x < 0 ? x + max : x;
 }
 
-int date_time_selection_step_hour(int hour, int delta) { return prv_wrap(hour, 24, delta); }
+int date_time_selection_step_hour(int hour, int delta) {
+  return prv_wrap(hour, 24, delta);
+}
 
-int date_time_selection_step_minute(int minute, int delta) { return prv_wrap(minute, 60, delta); }
+int date_time_selection_step_minute(int minute, int delta) {
+  return prv_wrap(minute, 60, delta);
+}
 
 int date_time_selection_step_day(int year, int month, int day, int delta) {
   bool is_leap_year = date_util_is_leap_year(year);
@@ -33,7 +37,9 @@ int date_time_selection_step_day(int year, int month, int day, int delta) {
   return prv_wrap(day - 1, max_days, delta) + 1;
 }
 
-int date_time_selection_step_month(int month, int delta) { return prv_wrap(month, 12, delta); }
+int date_time_selection_step_month(int month, int delta) {
+  return prv_wrap(month, 12, delta);
+}
 
 int date_time_selection_truncate_date(int year, int month, int day) {
   bool is_leap_year = date_util_is_leap_year(year);

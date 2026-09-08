@@ -60,7 +60,8 @@ void test_kernel__initialize(void) {
   memset(s_threads, 0, sizeof(s_threads));
 }
 
-void test_kernel__cleanup(void) {}
+void test_kernel__cleanup(void) {
+}
 
 // ---- scheduling -------------------------------------------------------------
 

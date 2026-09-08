@@ -137,7 +137,8 @@ void event_service_clear_process_subscriptions(PebbleTask task) {
   }
 }
 
-void event_service_system_init(void) {}
+void event_service_system_init(void) {
+}
 
 void event_service_init(PebbleEventType type,
                         EventServiceAddSubscriberCallback add_subscriber_callback,

@@ -372,7 +372,9 @@ void app_fetch_cancel(AppInstallId app_id) {
   system_task_add_callback(prv_cancel_fetch_from_system_task, (void *)(uintptr_t)app_id);
 }
 
-bool app_fetch_in_progress(void) { return s_fetch_state.in_progress; }
+bool app_fetch_in_progress(void) {
+  return s_fetch_state.in_progress;
+}
 
 ////////////////////////////
 // Exported Callbacks

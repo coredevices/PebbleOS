@@ -32,7 +32,9 @@ static uint32_t s_dcache_cssidr;
 #endif
 
 #if __ICACHE_PRESENT || __DCACHE_PRESENT
-static uint32_t prv_get_line_size(uint32_t ccsidr) { return ((CCSIDR_LINESIZE(ccsidr)) + 1) << 4; }
+static uint32_t prv_get_line_size(uint32_t ccsidr) {
+  return ((CCSIDR_LINESIZE(ccsidr)) + 1) << 4;
+}
 
 static void prv_cache_operation_range(volatile uint32_t *reg, uint32_t line_size, uintptr_t addr,
                                       size_t size) {
@@ -232,6 +234,10 @@ static void prv_align(uintptr_t *addr, size_t *size, uint32_t line_size) {
   }
 }
 
-void icache_align(uintptr_t *addr, size_t *size) { prv_align(addr, size, icache_line_size()); }
+void icache_align(uintptr_t *addr, size_t *size) {
+  prv_align(addr, size, icache_line_size());
+}
 
-void dcache_align(uintptr_t *addr, size_t *size) { prv_align(addr, size, dcache_line_size()); }
+void dcache_align(uintptr_t *addr, size_t *size) {
+  prv_align(addr, size, dcache_line_size());
+}

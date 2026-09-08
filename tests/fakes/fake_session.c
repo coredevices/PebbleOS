@@ -274,9 +274,13 @@ ResponsivenessGrantedHandler fake_comm_session_get_last_responsiveness_granted_h
   return s_last_responsiveness_granted_handler;
 }
 
-int fake_comm_session_open_call_count(void) { return s_session_open_call_count; }
+int fake_comm_session_open_call_count(void) {
+  return s_session_open_call_count;
+}
 
-int fake_comm_session_close_call_count(void) { return s_session_close_call_count; }
+int fake_comm_session_close_call_count(void) {
+  return s_session_close_call_count;
+}
 
 void fake_comm_session_process_send_next(void) {
   CommSession *session = s_session_head;
@@ -292,7 +296,9 @@ uint32_t fake_comm_session_get_responsiveness_max_period(void) {
   return s_responsiveness_max_period_s;
 }
 
-uint32_t fake_comm_session_is_latency_reduced(void) { return s_responsiveness_latency_is_reduced; }
+uint32_t fake_comm_session_is_latency_reduced(void) {
+  return s_responsiveness_latency_is_reduced;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Transport mock

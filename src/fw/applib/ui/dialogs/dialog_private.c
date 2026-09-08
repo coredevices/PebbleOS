@@ -14,7 +14,9 @@
 #include "resource/resource_ids.auto.h"
 #include "system/passert.h"
 
-static void prv_app_timer_callback(void *context) { dialog_pop(context); }
+static void prv_app_timer_callback(void *context) {
+  dialog_pop(context);
+}
 
 void dialog_init(Dialog *dialog, const char *dialog_name) {
   PBL_ASSERTN(dialog);
@@ -29,13 +31,17 @@ void dialog_init(Dialog *dialog, const char *dialog_name) {
   dialog->text_color = GColorBlack;
 }
 
-void dialog_pop(Dialog *dialog) { window_stack_remove(&dialog->window, DIALOG_IS_ANIMATED); }
+void dialog_pop(Dialog *dialog) {
+  window_stack_remove(&dialog->window, DIALOG_IS_ANIMATED);
+}
 
 void dialog_push(Dialog *dialog, WindowStack *window_stack) {
   window_stack_push(window_stack, &dialog->window, DIALOG_IS_ANIMATED);
 }
 
-void app_dialog_push(Dialog *dialog) { dialog_push(dialog, app_state_get_window_stack()); }
+void app_dialog_push(Dialog *dialog) {
+  dialog_push(dialog, app_state_get_window_stack());
+}
 
 // Loads the core dialog. Should be called from each dialog window's load callback.
 void dialog_load(Dialog *dialog) {

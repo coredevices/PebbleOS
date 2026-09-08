@@ -27,9 +27,13 @@ extern void conn_mgr_handle_desired_state_granted(GAPLEConnection *hdl,
 
 // Stubs
 /////
-bool gap_le_connection_is_valid(const GAPLEConnection *conn) { return (conn != NULL); }
+bool gap_le_connection_is_valid(const GAPLEConnection *conn) {
+  return (conn != NULL);
+}
 
-GAPLEConnection *gap_le_connection_any(void) { return NULL; }
+GAPLEConnection *gap_le_connection_any(void) {
+  return NULL;
+}
 
 void prv_regular_timer_spend_seconds(uint32_t seconds) {
   for (uint32_t i = 0; i < seconds; ++i) {
@@ -41,7 +45,9 @@ void prv_regular_timer_spend_seconds(uint32_t seconds) {
   }
 }
 
-void launcher_task_add_callback(void (*callback)(void *data), void *data) { callback(data); }
+void launcher_task_add_callback(void (*callback)(void *data), void *data) {
+  callback(data);
+}
 
 // Tests
 ///////////////////////////////////////////////////////////
@@ -57,7 +63,9 @@ void test_bt_conn_mgr__initialize(void) {
   s_hdl.conn_mgr_info = bt_conn_mgr_info_init();
 }
 
-void test_bt_conn_mgr__cleanup(void) { regular_timer_deinit(); }
+void test_bt_conn_mgr__cleanup(void) {
+  regular_timer_deinit();
+}
 
 void test_bt_conn_mgr__ble_latency_mgr(void) {
   // 1 consumer at fastest rate should result in fastest rate getting scheduled
@@ -130,7 +138,9 @@ void test_bt_conn_mgr__ble_latency_mgr(void) {
   bt_conn_mgr_info_deinit(&s_hdl.conn_mgr_info);
 }
 
-static void prv_granted_handler(void) { ++s_granted_count; }
+static void prv_granted_handler(void) {
+  ++s_granted_count;
+}
 
 void test_bt_conn_mgr__granted_handler_request_max_no_existing_node(void) {
   fake_gap_le_connect_params_set_actual_state(ResponseTimeMax);

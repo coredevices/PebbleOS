@@ -15,9 +15,12 @@
 #include "stubs_resources.h"
 #include "stubs_syscalls.h"
 
-GBitmap *graphics_context_get_bitmap(GContext *ctx) { return NULL; }
+GBitmap *graphics_context_get_bitmap(GContext *ctx) {
+  return NULL;
+}
 
-void graphics_context_mark_dirty_rect(GContext *ctx, GRect rect) {}
+void graphics_context_mark_dirty_rect(GContext *ctx, GRect rect) {
+}
 
 const GlyphData *text_resources_get_glyph(FontCache *font_cache, const Codepoint codepoint,
                                           FontInfo *fontinfo, int16_t *baseline_adjust_out) {

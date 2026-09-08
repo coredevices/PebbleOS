@@ -42,7 +42,9 @@ void conn_mgr_set_ble_conn_response_time(GAPLEConnection *hdl, BtConsumer consum
   s_conn_mgr_states[consumer].max_period_secs = max_period_secs;
 }
 
-GAPLEConnection *gap_le_connection_by_device(const BTDeviceInternal *device) { return NULL; }
+GAPLEConnection *gap_le_connection_by_device(const BTDeviceInternal *device) {
+  return NULL;
+}
 
 BTDeviceInternal gatt_client_characteristic_get_device(BLECharacteristic characteristic_ref) {
   return (BTDeviceInternal){
@@ -680,7 +682,9 @@ void test_ams__supported_capabilities(void) {
 // Tests: Create & Destroy
 ///////////////////////////////////////////////////////////
 
-void test_ams__create_again_trips_assert(void) { cl_assert_passert(ams_create()); }
+void test_ams__create_again_trips_assert(void) {
+  cl_assert_passert(ams_create());
+}
 
 void test_ams__create_works_again_after_destroy(void) {
   ams_destroy();

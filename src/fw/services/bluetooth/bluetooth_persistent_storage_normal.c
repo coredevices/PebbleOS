@@ -113,9 +113,13 @@ static PBL_MUTEX_DEFINE(s_db_mutex);
 //! @note prv_lock() must be held when accessing this variable.
 static PebbleProtocolCapabilities s_cached_system_capabilities;
 
-static void prv_lock(void) { pbl_mutex_lock(&s_db_mutex, PBL_FOREVER); }
+static void prv_lock(void) {
+  pbl_mutex_lock(&s_db_mutex, PBL_FOREVER);
+}
 
-static void prv_unlock(void) { pbl_mutex_unlock(&s_db_mutex); }
+static void prv_unlock(void) {
+  pbl_mutex_unlock(&s_db_mutex);
+}
 
 static bool prv_bt_persistent_storage_get_ble_smpairinginfo_by_id(BTBondingID bonding,
                                                                   SMPairingInfo *info_out,

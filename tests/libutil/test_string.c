@@ -10,9 +10,11 @@
 
 #include <string.h>
 
-void test_string__initialize(void) {}
+void test_string__initialize(void) {
+}
 
-void test_string__cleanup(void) {}
+void test_string__cleanup(void) {
+}
 
 void test_string__strip_leading_whitespace(void) {
   const char *with_whitespace = "   hello, world";

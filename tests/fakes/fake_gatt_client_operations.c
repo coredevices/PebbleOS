@@ -39,7 +39,8 @@ BTErrno gatt_client_op_read(BLECharacteristic characteristic, GAPLEClient client
 }
 
 void gatt_client_consume_read_response(uintptr_t object_ref, uint8_t value_out[],
-                                       uint16_t value_length, GAPLEClient client) {}
+                                       uint16_t value_length, GAPLEClient client) {
+}
 
 typedef struct {
   ListNode node;
@@ -111,7 +112,8 @@ BTErrno gatt_client_op_write_descriptor_cccd(BLEDescriptor cccd, const uint16_t 
   return BTErrnoOK;
 }
 
-void gatt_client_op_cleanup(GAPLEClient client) {}
+void gatt_client_op_cleanup(GAPLEClient client) {
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Fake Manipulation
@@ -133,7 +135,9 @@ void fake_gatt_client_op_deinit(void) {
   fake_gatt_client_op_clear_write_list();
 }
 
-void fake_gatt_client_op_set_read_return_value(BTErrno e) { s_read_return_value = e; }
+void fake_gatt_client_op_set_read_return_value(BTErrno e) {
+  s_read_return_value = e;
+}
 
 void fake_gatt_client_op_assert_read(BLECharacteristic characteristic, GAPLEClient client) {
   if (s_read_head) {
@@ -147,7 +151,9 @@ void fake_gatt_client_op_assert_read(BLECharacteristic characteristic, GAPLEClie
   free(old_head);
 }
 
-void fake_gatt_client_op_set_write_return_value(BTErrno e) { s_write_return_value = e; }
+void fake_gatt_client_op_set_write_return_value(BTErrno e) {
+  s_write_return_value = e;
+}
 
 void fake_gatt_client_op_clear_write_list(void) {
   Write *write = s_write_head;
@@ -160,7 +166,9 @@ void fake_gatt_client_op_clear_write_list(void) {
   s_write_head = NULL;
 }
 
-void fake_gatt_client_op_assert_no_write(void) { cl_assert_equal_p(s_write_head, NULL); }
+void fake_gatt_client_op_assert_no_write(void) {
+  cl_assert_equal_p(s_write_head, NULL);
+}
 
 static void fake_gatt_client_op_assert_write_failed(void) {
   cl_assert_(false,

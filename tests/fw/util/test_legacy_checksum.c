@@ -30,7 +30,9 @@ static void update(const void *restrict data, size_t length) {
     }                                                                               \
   } while (0)
 
-void test_legacy_checksum__no_data(void) { assert_checksum(0xffffffff); }
+void test_legacy_checksum__no_data(void) {
+  assert_checksum(0xffffffff);
+}
 
 void test_legacy_checksum__one_byte(void) {
   update("A", 1);
