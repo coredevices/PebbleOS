@@ -96,6 +96,33 @@ things from the workspace root and honor `--dry-run`; raising
 `CommandError` is how a command fails. `group` picks the section of the
 top-level help the command is listed under.
 
+### Feeds
+
+`pbl feed <feed>` writes simulated phone data into the emulator. Each feed
+is a module in `pbl/feeds/` with a `Feed` subclass, discovered the same
+way commands are: it names its subcommand, adds its own options in
+`add_arguments()` and writes its data in `run()` through the `Watch` it is
+given, which wraps the blob DB client, sends and receives raw protocol
+packets, and turns into a printer under `--dry-run`. A feed that has to
+answer the watch registers handlers with `watch.on()` and keeps `run()`
+going until interrupted.
+
+```python
+from pbl.feeds import BlobDb, Feed
+
+
+class Steps(Feed):
+    name = "steps"
+    help = "A day of step counts"
+
+    def add_arguments(self, parser):
+        parser.add_argument("--steps", type=int, default=8000)
+
+    def run(self, args, watch, inf):
+        watch.blobdb_insert(BlobDb.HEALTH, key, value)
+        inf(f"pushed {args.steps} steps")
+```
+
 ### Extension commands
 
 A command that should not live in the package is declared in `pbl.yml`

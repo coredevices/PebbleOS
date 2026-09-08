@@ -298,6 +298,9 @@ void weather_service_locations_list_destroy(WeatherDataListNode *head) {
 }
 
 bool weather_service_supported_by_phone(void) {
+#ifdef CONFIG_QEMU
+  return true;
+#endif
   PebbleProtocolCapabilities capabilities;
   bt_persistent_storage_get_cached_system_capabilities(&capabilities);
   if (!capabilities.weather_app_support) {

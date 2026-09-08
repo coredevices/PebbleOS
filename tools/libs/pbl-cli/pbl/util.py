@@ -26,7 +26,7 @@ def _emit(stream, color, args):
     msg = " ".join(str(a) for a in args)
     if color and _use_color(stream):
         msg = _colorize(color, msg)
-    print(msg, file=stream)
+    print(msg, file=stream, flush=True)
 
 
 def inf(*args, color="cyan"):

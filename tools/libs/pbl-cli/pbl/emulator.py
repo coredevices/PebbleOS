@@ -4,7 +4,9 @@
 """Talking to a running QEMU.
 
 ``pbl qemu`` exposes two unix sockets in the build directory: the human
-monitor, used for screendumps, and QMP, used to inject input events.
+monitor, used for screendumps, and QMP, used to inject input events. The
+firmware's Pebble protocol is served over a TCP serial port, reached with
+:func:`connect_watch`.
 """
 
 import json
@@ -124,3 +126,64 @@ class Qmp:
     @staticmethod
     def button(down):
         return [{"type": "btn", "data": {"button": "left", "down": down}}]
+
+
+def connect_watch(host="127.0.0.1", port=PEBBLE_TOOL_PORT):
+    """A libpebble2 connection to the firmware, as the phone app would have."""
+    try:
+        from libpebble2.communication import PebbleConnection
+        from libpebble2.communication.transports.qemu import QemuTransport
+        from libpebble2.exceptions import ConnectionError as PebbleConnectionError
+        from libpebble2.exceptions import TimeoutError as PebbleTimeoutError
+    except ImportError as e:
+        raise CommandContextError(f"libpebble2 is not installed ({e})") from e
+
+    pebble = PebbleConnection(QemuTransport(host, port))
+    try:
+        pebble.connect()
+    except PebbleConnectionError as e:
+        raise CommandContextError(
+            f"cannot reach the emulator's Pebble protocol port at {host}:{port} "
+            f"-- is 'pbl qemu' running? ({e})"
+        ) from e
+    try:
+        pebble.run_async()
+    except PebbleTimeoutError:
+        raise CommandContextError(
+            f"the firmware is not answering on {host}:{port} -- the port serves "
+            "one client at a time; is another feed or pebble tool connected?"
+        ) from None
+    identify_as_phone(pebble)
+    return pebble
+
+
+# What the version response tells the firmware: an Android phone app, with
+# every protocol capability. The OS is in the low three bits.
+PHONE_OS_ANDROID = 2
+PHONE_CAPABILITIES = 0xFFFFFFFFFFFFFFFF
+
+
+def identify_as_phone(pebble):
+    """Answer the firmware's version request without waiting for one.
+
+    The firmware only asks once, when the emulated session first opens, and
+    the session outlives host connections; what depends on the answer (the
+    phone's OS gates the music endpoint, for one) would otherwise never be
+    re-established after the first connection goes away.
+    """
+    from libpebble2.protocol.system import AppVersionResponse, PhoneAppVersion
+
+    pebble.send_packet(
+        PhoneAppVersion(
+            message=AppVersionResponse(
+                protocol_version=0xFFFFFFFF,
+                session_caps=0x80000000,
+                platform_flags=PHONE_OS_ANDROID,
+                response_version=2,
+                major_version=3,
+                minor_version=0,
+                bugfix_version=0,
+                protocol_caps=PHONE_CAPABILITIES,
+            )
+        )
+    )

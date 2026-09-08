@@ -15,6 +15,8 @@ Agent notes:
 - Use `./pbl screenshot` to validate UI changes; read the resulting PNG.
 - Drive the UI over the socket monitor (`build/qemu-mon.sock`) with
   `sendkey` rather than the interactive QEMU window.
+- Phone-dependent features get their data from `./pbl feed <feed>` (e.g.
+  `./pbl feed weather`); feeds live in `tools/libs/pbl-cli/pbl/feeds/`.
 
 ## Touch
 
