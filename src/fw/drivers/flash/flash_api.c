@@ -115,6 +115,12 @@ void flash_read_bytes(uint8_t* buffer, uint32_t start_addr,
   pbl_mutex_unlock(&s_flash_lock);
 }
 
+#ifdef FLASH_REGION_BASE_ADDRESS
+const void *flash_memory_mapped_address(uint32_t flash_addr) {
+  return (const void *)(uintptr_t)flash_addr;
+}
+#endif
+
 #ifdef TEST_FLASH_LOCK_PROTECTION
 static bool s_assert_write_error = false;
 void flash_expect_program_failure(bool expect_failure) {
