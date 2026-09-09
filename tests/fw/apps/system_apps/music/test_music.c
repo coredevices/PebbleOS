@@ -501,11 +501,10 @@ void test_music__album_art_pref_toggled_off(void) {
   s_prefs_music_show_album_art = false;
   PebbleEvent event = {
       .type = PEBBLE_PREF_CHANGE_EVENT,
-      .pref_change =
-          {
-              .key = MUSIC_SHOW_ALBUM_ART_PREF_KEY,
-              .key_len = sizeof(MUSIC_SHOW_ALBUM_ART_PREF_KEY),
-          },
+      .pref_change = {
+          .key = MUSIC_SHOW_ALBUM_ART_PREF_KEY,
+          .key_len = sizeof(MUSIC_SHOW_ALBUM_ART_PREF_KEY),
+      },
   };
   prv_pref_change_handler(&event, NULL);
 

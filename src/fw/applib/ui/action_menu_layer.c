@@ -166,8 +166,10 @@ static void prv_cell_animation_stopped_handler(Animation *animation, bool finish
 
 static const PropertyAnimationImplementation s_item_animation_implementation = {
     .base = {.update = (AnimationUpdateImplementation)property_animation_update_int16},
-    .accessors = {.setter = {.int16 = prv_set_cell_offset},
-                  .getter = {.int16 = prv_get_cell_offset}}};
+    .accessors = {
+        .setter = {.int16 = prv_set_cell_offset}, .getter = {.int16 = prv_get_cell_offset}
+    }
+};
 
 static void prv_unschedule_item_animation(ActionMenuLayer *aml) {
   animation_unschedule(aml->item_animation.animation);
@@ -580,10 +582,9 @@ static const ActionMenuSeparatorConfig s_separator_configs[NumPreferredContentSi
         {
             .separator = {162, 2},
         },
-    [PreferredContentSizeExtraLarge] =
-        {
-            .separator = {162, 2},
-        },
+    [PreferredContentSizeExtraLarge] = {
+        .separator = {162, 2},
+    },
 };
 
 static void prv_draw_separator_cb(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index,

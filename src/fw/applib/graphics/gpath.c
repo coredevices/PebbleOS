@@ -107,8 +107,10 @@ static void prv_gpath_draw_filled_cb(GContext *ctx, int16_t y, Fixed_S16_3 x_ran
     return;
   }
 #endif
-  graphics_fill_rect(ctx, &(GRect){{x_range_begin.integer + 1, y},
-                                   {x_range_end.integer - x_range_begin.integer - 1, 1}});
+  graphics_fill_rect(
+      ctx, &(GRect){
+               {x_range_begin.integer + 1, y}, {x_range_end.integer - x_range_begin.integer - 1, 1}
+           });
 }
 
 void gpath_draw_filled(GContext *ctx, GPath *path) {
@@ -340,7 +342,8 @@ void prv_fill_path_with_cb_aa(GContext *ctx, GPath *path, GPathDrawFilledCallbac
           Fixed_S16_3 x = (Fixed_S16_3){
               .raw_value =
                   rot_start.x.raw_value +
-                  delta_x * (i * FIXED_S16_3_ONE.raw_value - rot_start.y.raw_value) / delta_y};
+                  delta_x * (i * FIXED_S16_3_ONE.raw_value - rot_start.y.raw_value) / delta_y
+          };
 
           Fixed_S16_3 delta =
               (Fixed_S16_3){.raw_value = ABS(delta_x / delta_y) * FIXED_S16_3_ONE.raw_value};

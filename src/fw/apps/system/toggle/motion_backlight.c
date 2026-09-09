@@ -24,11 +24,10 @@ static const ActionToggleImpl s_motion_backlight_action_toggle_impl = {
     .prompt_disable_message = i18n_noop("Turn Off Motion Backlight?"),
     .result_enable_message = i18n_noop("Motion\nBacklight On"),
     .result_disable_message = i18n_noop("Motion\nBacklight Off"),
-    .callbacks =
-        {
-            .get_state = prv_get_state,
-            .set_state = prv_set_state,
-        },
+    .callbacks = {
+        .get_state = prv_get_state,
+        .set_state = prv_set_state,
+    },
 };
 
 static void prv_main(void) {

@@ -1977,11 +1977,13 @@ static int prv_copy_sector_to_gc_file(uint16_t *free_page, uint16_t sector_start
   PBL_ASSERTN(num_entries < PFS_PAGES_PER_ERASE_SECTOR);
 
   int fd = pfs_open_gc_file(space_needed, true);
-  GCData gcdata = {.version = 0,  // Version 0 for now, bump if we change
-                   .flags = 0xff,
-                   .gc_start_page = sector_start_page,
-                   .num_entries = num_entries,
-                   .page_mask = sectors_active};
+  GCData gcdata = {
+      .version = 0,  // Version 0 for now, bump if we change
+      .flags = 0xff,
+      .gc_start_page = sector_start_page,
+      .num_entries = num_entries,
+      .page_mask = sectors_active
+  };
 
   // write out the GCData to the file
   pfs_write(fd, &gcdata, sizeof(gcdata));

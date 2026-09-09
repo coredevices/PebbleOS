@@ -94,9 +94,11 @@ static void window_load(Window *window) {
       {.title = "To App Event Flood", .callback = trigger_to_app_event_flood},
       {.title = "Double Free", .callback = trigger_double_free},
       {.title = "Stack Overflow", .callback = trigger_stack_overflow},
-      {.title = "Persist loop", .callback = trigger_persist_loop}};
+      {.title = "Persist loop", .callback = trigger_persist_loop}
+  };
   static const SimpleMenuSection sections[] = {
-      {.items = menu_items, .num_items = ARRAY_LENGTH(menu_items)}};
+      {.items = menu_items, .num_items = ARRAY_LENGTH(menu_items)}
+  };
 
   s_main_window_data.menu_layer =
       simple_menu_layer_create(bounds, window, sections, ARRAY_LENGTH(sections), NULL);

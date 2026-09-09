@@ -22,10 +22,12 @@ void fake_battery_set_connected(bool usb_connected) {
   s_usb_connected = usb_connected;
 
   // Trigger a connection event!
-  PebbleEvent event = {.type = PEBBLE_BATTERY_CONNECTION_EVENT,
-                       .battery_connection = {
-                           .is_connected = usb_connected,
-                       }};
+  PebbleEvent event = {
+      .type = PEBBLE_BATTERY_CONNECTION_EVENT,
+      .battery_connection = {
+          .is_connected = usb_connected,
+      }
+  };
 
   event_put(&event);
 }

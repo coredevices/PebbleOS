@@ -166,11 +166,10 @@ void test_app_message_receiver__cleanup(void) {
 // Forwarding to default system receiver to nack the message
 
 static const AppMessagePush s_push = {
-    .header =
-        {
-            .command = CMD_PUSH,
-            .transaction_id = 0xa5,
-        },
+    .header = {
+        .command = CMD_PUSH,
+        .transaction_id = 0xa5,
+    },
 };
 
 static const PebbleProtocolEndpoint s_app_message_endpoint = (const PebbleProtocolEndpoint){

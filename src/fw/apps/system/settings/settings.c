@@ -144,13 +144,14 @@ static void prv_window_load(Window *window) {
 #endif
   MenuLayer *menu_layer = &data->menu_layer;
   menu_layer_init(menu_layer, &bounds);
-  menu_layer_set_callbacks(
-      menu_layer, data,
-      &(MenuLayerCallbacks){.get_num_rows = prv_get_num_rows_callback,
-                            .get_cell_height = prv_get_cell_height_callback,
-                            .draw_row = prv_draw_row_callback,
-                            .select_click = prv_select_callback,
-                            .get_separator_height = prv_get_separator_height_callback});
+  menu_layer_set_callbacks(menu_layer, data,
+                           &(MenuLayerCallbacks){
+                               .get_num_rows = prv_get_num_rows_callback,
+                               .get_cell_height = prv_get_cell_height_callback,
+                               .draw_row = prv_draw_row_callback,
+                               .select_click = prv_select_callback,
+                               .get_separator_height = prv_get_separator_height_callback
+                           });
   GColor highlight_bg = shell_prefs_get_theme_highlight_color();
   menu_layer_set_normal_colors(menu_layer, PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite),
                                PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack));
@@ -220,8 +221,9 @@ const PebbleProcessMd *settings_get_app_info() {
           {
               .main_func = s_main,
               // UUID: 07e0d9cb-8957-4bf7-9d42-35bf47caadfe
-              .uuid = {0x07, 0xe0, 0xd9, 0xcb, 0x89, 0x57, 0x4b, 0xf7, 0x9d, 0x42, 0x35, 0xbf, 0x47,
-                       0xca, 0xad, 0xfe},
+              .uuid =
+                  {0x07, 0xe0, 0xd9, 0xcb, 0x89, 0x57, 0x4b, 0xf7, 0x9d, 0x42, 0x35, 0xbf, 0x47,
+                   0xca, 0xad, 0xfe},
           },
       .name = i18n_noop("Settings"),
       .icon_resource_id = RESOURCE_ID_SETTINGS_TINY,

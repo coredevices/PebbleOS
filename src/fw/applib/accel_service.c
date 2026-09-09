@@ -102,11 +102,13 @@ static uint32_t prv_do_data_handle_chunk(AccelServiceState *state, uint16_t time
   } else {
     AccelData data[num_samples];
     for (uint32_t i = 0; i < num_samples; i++) {
-      data[i] = (AccelData){.x = state->raw_data[i].x,
-                            .y = state->raw_data[i].y,
-                            .z = state->raw_data[i].z,
-                            .timestamp = timestamp_ms,
-                            .did_vibrate = sys_vibe_history_was_vibrating(timestamp_ms)};
+      data[i] = (AccelData){
+          .x = state->raw_data[i].x,
+          .y = state->raw_data[i].y,
+          .z = state->raw_data[i].z,
+          .timestamp = timestamp_ms,
+          .did_vibrate = sys_vibe_history_was_vibrating(timestamp_ms)
+      };
       timestamp_ms += time_interval_ms;
     }
     state->data_handler(data, num_samples);
@@ -238,16 +240,18 @@ int accel_service_peek(AccelData *accel_data) {
 
 // ----------------------------------------------------------------------------------------------
 void accel_service_state_init(AccelServiceState *state) {
-  *state = (AccelServiceState){.sampling_rate = ACCEL_DEFAULT_SAMPLING_RATE,
-                               .accel_shake_info =
-                                   {
-                                       .type = PEBBLE_ACCEL_SHAKE_EVENT,
-                                       .handler = &prv_do_shake_handle,
-                                   },
-                               .accel_double_tap_info = {
-                                   .type = PEBBLE_ACCEL_DOUBLE_TAP_EVENT,
-                                   .handler = &prv_do_double_tap_handle,
-                               }};
+  *state = (AccelServiceState){
+      .sampling_rate = ACCEL_DEFAULT_SAMPLING_RATE,
+      .accel_shake_info =
+          {
+              .type = PEBBLE_ACCEL_SHAKE_EVENT,
+              .handler = &prv_do_shake_handle,
+          },
+      .accel_double_tap_info = {
+          .type = PEBBLE_ACCEL_DOUBLE_TAP_EVENT,
+          .handler = &prv_do_double_tap_handle,
+      }
+  };
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -281,12 +285,11 @@ AccelServiceState *accel_session_create(void) {
               .handler = &prv_session_do_shake_handle,
               .context = state,
           },
-      .accel_double_tap_info =
-          {
-              .type = PEBBLE_ACCEL_DOUBLE_TAP_EVENT,
-              .handler = &prv_session_do_double_tap_handle,
-              .context = state,
-          },
+      .accel_double_tap_info = {
+          .type = PEBBLE_ACCEL_DOUBLE_TAP_EVENT,
+          .handler = &prv_session_do_double_tap_handle,
+          .context = state,
+      },
   };
   return state;
 }

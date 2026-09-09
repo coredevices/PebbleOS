@@ -31,10 +31,9 @@ GDrawCommandImage *weather_app_resource_create_cloud() {
   *image = (GDrawCommandImage){
       .version = 1,
       .size = GSize(48, 48),
-      .command_list =
-          (GDrawCommandList){
-              .num_commands = num_commands,
-          },
+      .command_list = (GDrawCommandList){
+          .num_commands = num_commands,
+      },
   };
 
   GDrawCommandList *list = &image->command_list;
@@ -118,10 +117,9 @@ GDrawCommandImage *weather_app_resource_create_sun(void) {
   *image = (GDrawCommandImage){
       .version = 1,
       .size = GSize(48, 48),
-      .command_list =
-          (GDrawCommandList){
-              .num_commands = num_commands,
-          },
+      .command_list = (GDrawCommandList){
+          .num_commands = num_commands,
+      },
   };
 
   GDrawCommandList *list = &image->command_list;

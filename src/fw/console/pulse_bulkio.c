@@ -350,10 +350,12 @@ static void prv_handle_write(Command *cmd, size_t length) {
   }
 
   WriteResponse *resp = pulse_reliable_send_begin(PULSE2_BULKIO_PROTOCOL);
-  *resp = (WriteResponse){.opcode = BULKIO_RESP_DOMAIN_WRITE,
-                          .fd = cmd->write.fd,
-                          .address = cmd->write.address,
-                          .length = payload_length};
+  *resp = (WriteResponse){
+      .opcode = BULKIO_RESP_DOMAIN_WRITE,
+      .fd = cmd->write.fd,
+      .address = cmd->write.address,
+      .length = payload_length
+  };
   pulse_reliable_send(resp, sizeof(*resp));
 }
 
@@ -384,11 +386,13 @@ static void prv_handle_crc(Command *cmd, size_t length) {
   }
 
   CRCResponse *resp = pulse_reliable_send_begin(PULSE2_BULKIO_PROTOCOL);
-  *resp = (CRCResponse){.opcode = BULKIO_RESP_DOMAIN_CRC,
-                        .fd = cmd->crc.fd,
-                        .address = cmd->crc.address,
-                        .length = bytes_read,
-                        .crc = crc};
+  *resp = (CRCResponse){
+      .opcode = BULKIO_RESP_DOMAIN_CRC,
+      .fd = cmd->crc.fd,
+      .address = cmd->crc.address,
+      .length = bytes_read,
+      .crc = crc
+  };
   pulse_reliable_send(resp, sizeof(*resp));
 }
 

@@ -308,10 +308,9 @@ void HAL_LCDC_SendLayerDataCpltCbk(LCDC_HandleTypeDef *lcdc) {
   if (s_updating) {
     PebbleEvent e = {
         .type = PEBBLE_CALLBACK_EVENT,
-        .callback =
-            {
-                .callback = prv_display_update_terminate,
-            },
+        .callback = {
+            .callback = prv_display_update_terminate,
+        },
     };
 
     event_put_isr(&e);

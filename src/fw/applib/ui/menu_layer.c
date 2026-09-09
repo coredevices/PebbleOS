@@ -894,23 +894,20 @@ void menu_layer_update_proc(Layer *scroll_content_layer, GContext *ctx) {
       .content_bottom_y = content_bottom_y,
       .cache_set = false,
       .cursor_in_frame = false,
-      .cell_layer =
-          {
-              .bounds =
-                  {
-                      .size =
-                          {
-                              .w = frame_size.w,
-                          },
-                  },
-              .frame =
-                  {
-                      .size =
-                          {
-                              .w = frame_size.w,
-                          },
-                  },
+      .cell_layer = {
+          .bounds =
+              {
+                  .size =
+                      {
+                          .w = frame_size.w,
+                      },
+              },
+          .frame = {
+              .size = {
+                  .w = frame_size.w,
+              },
           },
+      },
   };
   layer_add_child(&menu_layer->scroll_layer.content_sublayer, &render_iter->cell_layer);
 
@@ -1073,7 +1070,8 @@ void menu_layer_update_caches(MenuLayer *menu_layer) {
                   {// Section header of current section (0) is not part of the walk down, set it
                    // "manually"
                    .y = prv_menu_layer_get_header_height(menu_layer, 0),
-                   .sep = prv_menu_layer_get_separator_height(menu_layer, 0)},
+                   .sep = prv_menu_layer_get_separator_height(menu_layer, 0)
+                  },
           },
       .cache_set = false,
   };
@@ -1173,15 +1171,17 @@ static void prv_setup_selection_animation(MenuLayer *menu_layer, bool up) {
   } else {
     from = menu_layer->inverter.layer.frame;
   }
-  GRect target = (GRect){.origin =
-                             {
-                                 .x = 0,
-                                 .y = from.origin.y + ((up) ? 0 : TOP_DOWN_PX),
-                             },
-                         .size = {
-                             .w = size.w,
-                             .h = size.h - TOP_DOWN_PX,
-                         }};
+  GRect target = (GRect){
+      .origin =
+          {
+              .x = 0,
+              .y = from.origin.y + ((up) ? 0 : TOP_DOWN_PX),
+          },
+      .size = {
+          .w = size.w,
+          .h = size.h - TOP_DOWN_PX,
+      }
+  };
 
   Animation *a1 = (Animation *)property_animation_create_layer_frame(&menu_layer->inverter.layer,
                                                                      &from, &target);
@@ -1452,13 +1452,15 @@ static void prv_schedule_center_focus_animation(MenuLayer *menu_layer, bool up,
           .setup = prv_center_focus_animation_setup,
           .update = prv_center_focus_animation_update_in_and_out,
           .teardown = prv_center_focus_animation_teardown,
-      }};
+      }
+  };
   static const PropertyAnimationImplementation s_center_focus_selection_animation_out_only_impl = {
       .base = {
           .setup = prv_center_focus_animation_setup,
           .update = prv_center_focus_animation_update_out_only,
           .teardown = prv_center_focus_animation_teardown,
-      }};
+      }
+  };
   // when we were animating already, use the implementation that's only showing the bounce back
   const PropertyAnimationImplementation *impl =
       was_animating ? &s_center_focus_selection_animation_out_only_impl

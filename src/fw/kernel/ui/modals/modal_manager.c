@@ -96,10 +96,12 @@ static void prv_send_will_focus_event(bool in_focus) {
 
   s_focus_lost = in_focus;
 
-  PebbleEvent event = {.type = PEBBLE_APP_WILL_CHANGE_FOCUS_EVENT,
-                       .app_focus = {
-                           .in_focus = in_focus,
-                       }};
+  PebbleEvent event = {
+      .type = PEBBLE_APP_WILL_CHANGE_FOCUS_EVENT,
+      .app_focus = {
+          .in_focus = in_focus,
+      }
+  };
   event_put(&event);
 }
 

@@ -94,12 +94,14 @@ static void prv_send_subscriber_event(Recognizer *recognizer) {
 static void prv_init_recognizer(Recognizer *recognizer, const RecognizerImpl *impl,
                                 const void *data, size_t data_size, RecognizerEventCb event_cb,
                                 void *user_data) {
-  *recognizer = (Recognizer){.state = RecognizerState_Possible,
-                             .impl = impl,
-                             .subscriber = {
-                                 .event = event_cb,
-                                 .data = user_data,
-                             }};
+  *recognizer = (Recognizer){
+      .state = RecognizerState_Possible,
+      .impl = impl,
+      .subscriber = {
+          .event = event_cb,
+          .data = user_data,
+      }
+  };
   memcpy(recognizer->impl_data, data, data_size);
 }
 

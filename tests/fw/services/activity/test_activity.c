@@ -75,7 +75,8 @@ static const struct tm s_init_time_tm = {
     .tm_hour = 17,
     .tm_mday = 1,
     .tm_mon = 0,
-    .tm_year = 115};
+    .tm_year = 115
+};
 
 #define ACTIVITY_FIXTURE_PATH "activity"
 
@@ -780,11 +781,13 @@ static void prv_feed_raw_accel_data(AccelRawData *samples, uint32_t num_samples)
 
     int j;
     for (j = 0; j < ALGORITHM_SAMPLING_RATE && i < num_samples; j++, i++) {
-      accel_data[j] = (AccelData){.x = samples[i].x,
-                                  .y = samples[i].y,
-                                  .z = samples[i].z,
-                                  .did_vibrate = false,
-                                  .timestamp = start_ms};
+      accel_data[j] = (AccelData){
+          .x = samples[i].x,
+          .y = samples[i].y,
+          .z = samples[i].z,
+          .did_vibrate = false,
+          .timestamp = start_ms
+      };
     }
 
     fake_accel_service_invoke_callbacks(accel_data, j);
@@ -1031,13 +1034,12 @@ void test_activity__init_history(void) {
       .start_utc = day_start + 12 * SECONDS_PER_HOUR,
       .length_min = 120,
       .type = ActivitySessionType_Walk,
-      .step_data =
-          {
-              .steps = 100,
-              .active_kcalories = 200,
-              .resting_kcalories = 300,
-              .distance_meters = 400,
-          },
+      .step_data = {
+          .steps = 100,
+          .active_kcalories = 200,
+          .resting_kcalories = 300,
+          .distance_meters = 400,
+      },
   };
   activity_sessions_prv_add_activity_session(&walk_activity);
 
@@ -1247,25 +1249,23 @@ void test_activity__day_rollover(void) {
       .start_utc = day_start + 12 * SECONDS_PER_HOUR,
       .length_min = 120,
       .type = ActivitySessionType_Walk,
-      .step_data =
-          {
-              .steps = 100,
-              .active_kcalories = 200,
-              .resting_kcalories = 300,
-              .distance_meters = 400,
-          },
+      .step_data = {
+          .steps = 100,
+          .active_kcalories = 200,
+          .resting_kcalories = 300,
+          .distance_meters = 400,
+      },
   };
   ActivitySession new_activity = {
       .start_utc = day_start + 23 * SECONDS_PER_HOUR,
       .length_min = 120,
       .type = ActivitySessionType_Run,
-      .step_data =
-          {
-              .steps = 1000,
-              .active_kcalories = 300,
-              .resting_kcalories = 400,
-              .distance_meters = 500,
-          },
+      .step_data = {
+          .steps = 1000,
+          .active_kcalories = 300,
+          .resting_kcalories = 400,
+          .distance_meters = 500,
+      },
   };
   activity_sessions_prv_add_activity_session(&old_activity);
   activity_sessions_prv_add_activity_session(&new_activity);
@@ -1533,8 +1533,9 @@ void test_activity__sleep_history(void) {
 
   // Now if we get sleep history, we should have 2.5 hours yesterday, and 2 hours today
   ASSERT_EQUAL_METRIC_HISTORY(ActivityMetricSleepTotalSeconds,
-                              ((const uint32_t[ACTIVITY_HISTORY_DAYS]){120 * SECONDS_PER_MINUTE,
-                                                                       150 * SECONDS_PER_MINUTE}));
+                              ((const uint32_t[ACTIVITY_HISTORY_DAYS]){
+                                  120 * SECONDS_PER_MINUTE, 150 * SECONDS_PER_MINUTE
+                              }));
 
   // Another 2 hour sleep session starting at 1am. This will leave us at 3am.
   prv_feed_canned_accel_data(120 * SECONDS_PER_MINUTE, 0, ActivitySleepStateLightSleep);
@@ -1543,8 +1544,9 @@ void test_activity__sleep_history(void) {
   prv_feed_canned_accel_data(60 * SECONDS_PER_MINUTE, 20, ActivitySleepStateAwake);
 
   ASSERT_EQUAL_METRIC_HISTORY(ActivityMetricSleepTotalSeconds,
-                              ((const uint32_t[ACTIVITY_HISTORY_DAYS]){240 * SECONDS_PER_MINUTE,
-                                                                       150 * SECONDS_PER_MINUTE}));
+                              ((const uint32_t[ACTIVITY_HISTORY_DAYS]){
+                                  240 * SECONDS_PER_MINUTE, 150 * SECONDS_PER_MINUTE
+                              }));
 }
 
 // ---------------------------------------------------------------------------------------
@@ -1694,11 +1696,13 @@ void test_activity__get_minute_history(void) {
 
   // Start on a ALG_MINUTES_PER_RECORD minute boundary so that we know we have
   // ALG_MINUTES_PER_RECORD records available up to the current time
-  struct tm start_tm = {// Jan 1, 2015, 5am
-                        .tm_hour = 5,
-                        .tm_mday = 1,
-                        .tm_mon = 0,
-                        .tm_year = 115};
+  struct tm start_tm = {
+      // Jan 1, 2015, 5am
+      .tm_hour = 5,
+      .tm_mday = 1,
+      .tm_mon = 0,
+      .tm_year = 115
+  };
   time_t utc_sec = mktime(&start_tm);
   rtc_set_time(utc_sec);
 
@@ -1764,12 +1768,14 @@ void prv_assert_known_settings(void) {
                               ((const uint32_t[ACTIVITY_HISTORY_DAYS]){300, 200, 100, 0, 0, 0, 0}));
   ASSERT_EQUAL_METRIC_HISTORY(
       ActivityMetricSleepTotalSeconds,
-      ((const uint32_t[ACTIVITY_HISTORY_DAYS]){6 * SECONDS_PER_MINUTE, 4 * SECONDS_PER_MINUTE,
-                                               2 * SECONDS_PER_MINUTE, 0, 0, 0, 0}));
+      ((const uint32_t[ACTIVITY_HISTORY_DAYS]){
+          6 * SECONDS_PER_MINUTE, 4 * SECONDS_PER_MINUTE, 2 * SECONDS_PER_MINUTE, 0, 0, 0, 0
+      }));
   ASSERT_EQUAL_METRIC_HISTORY(
       ActivityMetricSleepRestfulSeconds,
-      ((const uint32_t[ACTIVITY_HISTORY_DAYS]){3 * SECONDS_PER_MINUTE, 2 * SECONDS_PER_MINUTE,
-                                               1 * SECONDS_PER_MINUTE, 0, 0, 0, 0}));
+      ((const uint32_t[ACTIVITY_HISTORY_DAYS]){
+          3 * SECONDS_PER_MINUTE, 2 * SECONDS_PER_MINUTE, 1 * SECONDS_PER_MINUTE, 0, 0, 0, 0
+      }));
 }
 
 // --------------------------------------------------------------------------------------
@@ -1928,13 +1934,12 @@ void test_activity__migrate_settings_v2(void) {
       .start_utc = rtc_get_time() - SECONDS_PER_HOUR,
       .length_min = 42,
       .type = ActivitySessionType_Walk,
-      .step_data =
-          {
-              .steps = 4200,
-              .active_kcalories = 120,
-              .resting_kcalories = 80,
-              .distance_meters = 3000,
-          },
+      .step_data = {
+          .steps = 4200,
+          .active_kcalories = 120,
+          .resting_kcalories = 80,
+          .distance_meters = 3000,
+      },
   };
   key = ActivitySettingsKeyStoredActivities;
   cl_assert_equal_i(settings_file_set(&file, &key, sizeof(key), sessions, sizeof(sessions)),
@@ -1946,8 +1951,9 @@ void test_activity__migrate_settings_v2(void) {
   prv_activity_init_and_set_enabled(true);
 
   // History values must survive the migration, widened to uint32_t
-  ASSERT_EQUAL_METRIC_HISTORY(ActivityMetricStepCount, ((const uint32_t[ACTIVITY_HISTORY_DAYS]){
-                                                           60000, 65535, 300, 200, 100}));
+  ASSERT_EQUAL_METRIC_HISTORY(
+      ActivityMetricStepCount,
+      ((const uint32_t[ACTIVITY_HISTORY_DAYS]){60000, 65535, 300, 200, 100}));
 
   // Scalar metric records must survive too
   int32_t vmc;
@@ -2615,11 +2621,13 @@ void test_activity__activity_sessions_run_ongoing_then_end(void) {
   cl_assert_equal_i(0, health_service_peek_current_activities());
 
   // Start on known boundary
-  struct tm start_tm = {// Jan 1, 2015, 5am
-                        .tm_hour = 5,
-                        .tm_mday = 1,
-                        .tm_mon = 0,
-                        .tm_year = 115};
+  struct tm start_tm = {
+      // Jan 1, 2015, 5am
+      .tm_hour = 5,
+      .tm_mday = 1,
+      .tm_mon = 0,
+      .tm_year = 115
+  };
   time_t utc_sec = mktime(&start_tm);
   rtc_set_time(utc_sec);
 
@@ -2663,11 +2671,13 @@ void test_activity__activity_sessions_sleep_ongoing_then_delete(void) {
   cl_assert_equal_i(0, health_service_peek_current_activities());
 
   // Start on known boundary
-  struct tm start_tm = {// Jan 1, 2015, 5am
-                        .tm_hour = 5,
-                        .tm_mday = 1,
-                        .tm_mon = 0,
-                        .tm_year = 115};
+  struct tm start_tm = {
+      // Jan 1, 2015, 5am
+      .tm_hour = 5,
+      .tm_mday = 1,
+      .tm_mon = 0,
+      .tm_year = 115
+  };
   time_t utc_sec = mktime(&start_tm);
   rtc_set_time(utc_sec);
 
@@ -2714,11 +2724,13 @@ void test_activity__activity_sessions_ongoing_multiple(void) {
   cl_assert_equal_i(0, health_service_peek_current_activities());
 
   // Start on known boundary
-  struct tm start_tm = {// Jan 1, 2015, 5am
-                        .tm_hour = 5,
-                        .tm_mday = 1,
-                        .tm_mon = 0,
-                        .tm_year = 115};
+  struct tm start_tm = {
+      // Jan 1, 2015, 5am
+      .tm_hour = 5,
+      .tm_mday = 1,
+      .tm_mon = 0,
+      .tm_year = 115
+  };
   time_t utc_sec = mktime(&start_tm);
   rtc_set_time(utc_sec);
 

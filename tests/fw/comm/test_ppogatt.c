@@ -116,11 +116,10 @@ static BLECharacteristic s_characteristics[s_num_service_instances][PPoGATTChara
             [PPoGATTCharacteristicData] = 01,
             [PPoGATTCharacteristicMeta] = 02,
         },
-    [1] =
-        {
-            [PPoGATTCharacteristicData] = 11,
-            [PPoGATTCharacteristicMeta] = 12,
-        },
+    [1] = {
+        [PPoGATTCharacteristicData] = 11,
+        [PPoGATTCharacteristicMeta] = 12,
+    },
 };
 
 static const BLECharacteristic s_unknown_characteristics = 0x55;
@@ -129,7 +128,8 @@ static const PPoGATTMetaV0 s_meta_v0_app = {
     .ppogatt_min_version = PPOGATT_MIN_VERSION,
     .ppogatt_max_version = USE_PPOGATT_VERSION,
     .app_uuid = UuidMake(0xA4, 0x83, 0x2A, 0x0E, 0x74, 0x54, 0x45, 0x32, 0xB2, 0xA2, 0x4E, 0x6F,
-                         0x8F, 0x7B, 0x68, 0x6F)};
+                         0x8F, 0x7B, 0x68, 0x6F)
+};
 
 static const PPoGATTMetaV0 s_meta_v0_system = {
     .ppogatt_min_version = PPOGATT_MIN_VERSION,

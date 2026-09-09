@@ -34,10 +34,9 @@ uint32_t launcher_panic_get_current_error(void) {
 void command_sim_panic_cb(void *data) {
   PebbleEvent event = {
       .type = PEBBLE_PANIC_EVENT,
-      .panic =
-          {
-              .error_code = (uint32_t)data,
-          },
+      .panic = {
+          .error_code = (uint32_t)data,
+      },
   };
   event_put(&event);
 }

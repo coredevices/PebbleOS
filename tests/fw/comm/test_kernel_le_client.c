@@ -108,10 +108,9 @@ void ppogatt_reset_disconnect_counter(void) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static const BTDeviceInternal s_test_device = {
-    .address =
-        (const BTDeviceAddress){
-            .octets = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66},
-        },
+    .address = (const BTDeviceAddress){
+        .octets = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66},
+    },
 };
 
 typedef enum {
@@ -220,13 +219,12 @@ void test_kernel_le_client__read_response_consumed_even_if_client_is_gone(void) 
 
   PebbleEvent e = (PebbleEvent){
       .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
-      .bluetooth.le.gatt_client =
-          {
-              .object_ref = TestCharacteristicInstanceCompleteOne,
-              .value_length = 1,
-              .gatt_error = BLEGATTErrorSuccess,
-              .subtype = PebbleBLEGATTClientEventTypeCharacteristicRead,
-          },
+      .bluetooth.le.gatt_client = {
+          .object_ref = TestCharacteristicInstanceCompleteOne,
+          .value_length = 1,
+          .gatt_error = BLEGATTErrorSuccess,
+          .subtype = PebbleBLEGATTClientEventTypeCharacteristicRead,
+      },
   };
 
   kernel_le_client_handle_event(&e);
@@ -256,11 +254,10 @@ void test_kernel_le_client__service_added(void) {
 
   PebbleEvent e = (PebbleEvent){
       .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
-      .bluetooth.le.gatt_client_service =
-          {
-              .info = info,
-              .subtype = PebbleBLEGATTClientEventTypeServiceChange,
-          },
+      .bluetooth.le.gatt_client_service = {
+          .info = info,
+          .subtype = PebbleBLEGATTClientEventTypeServiceChange,
+      },
   };
 
   kernel_le_client_handle_event(&e);

@@ -95,17 +95,14 @@ static void prv_send_notification_event(PebbleTaskBitset task_mask) {
   PebbleEvent e = {
       .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
       .task_mask = task_mask,
-      .bluetooth =
-          {
-              .le =
-                  {
-                      .gatt_client =
-                          {
-                              .subtype = PebbleBLEGATTClientEventTypeNotification,
-                              .gatt_error = BLEGATTErrorSuccess,
-                          },
-                  },
+      .bluetooth = {
+          .le = {
+              .gatt_client = {
+                  .subtype = PebbleBLEGATTClientEventTypeNotification,
+                  .gatt_error = BLEGATTErrorSuccess,
+              },
           },
+      },
   };
   event_put(&e);
 }
@@ -116,19 +113,16 @@ static void prv_send_subscription_event(BLECharacteristic characteristic_ref,
   PebbleEvent e = {
       .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
       .task_mask = task_mask,
-      .bluetooth =
-          {
-              .le =
-                  {
-                      .gatt_client =
-                          {
-                              .subtype = PebbleBLEGATTClientEventTypeCharacteristicSubscribe,
-                              .object_ref = characteristic_ref,
-                              .subscription_type = type,
-                              .gatt_error = gatt_error,
-                          },
-                  },
+      .bluetooth = {
+          .le = {
+              .gatt_client = {
+                  .subtype = PebbleBLEGATTClientEventTypeCharacteristicSubscribe,
+                  .object_ref = characteristic_ref,
+                  .subscription_type = type,
+                  .gatt_error = gatt_error,
+              },
           },
+      },
   };
   event_put(&e);
 }

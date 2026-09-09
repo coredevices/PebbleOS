@@ -46,7 +46,8 @@ static void prv_init(void) {
       .choice = OPTION_MENU_CHOICE_NONE,
       .status_colors = {GColorDarkGray, GColorWhite},
       .highlight_colors = {PBL_IF_COLOR_ELSE(GColorCobaltBlue, GColorBlack), GColorWhite},
-      .icons_enabled = true};
+      .icons_enabled = true
+  };
   option_menu_configure(option_menu, &config);
   option_menu_set_callbacks(option_menu,
                             &(OptionMenuCallbacks){
@@ -80,8 +81,9 @@ const PebbleProcessMd *option_menu_demo_get_app_info(void) {
           {
               .main_func = s_main,
               // UUID: e8f5d3cc-76ad-4575-97da-6d2049a1b3a4
-              .uuid = {0xe8, 0xf5, 0xd3, 0xcc, 0x76, 0xad, 0x45, 0x75, 0x97, 0xda, 0x6d, 0x20, 0x49,
-                       0xa1, 0xb3, 0xa4},
+              .uuid =
+                  {0xe8, 0xf5, 0xd3, 0xcc, 0x76, 0xad, 0x45, 0x75, 0x97, 0xda, 0x6d, 0x20, 0x49,
+                   0xa1, 0xb3, 0xa4},
           },
       .name = "Option Menu Demo",
   };

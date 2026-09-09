@@ -46,7 +46,8 @@ static void s_main(void) {
 }
 
 const PebbleProcessMd *vibe_strength_demo_get_info() {
-  static const PebbleProcessMdSystem s_vibe_strength_info = {.common.main_func = s_main,
-                                                             .name = "Vibe Strength"};
+  static const PebbleProcessMdSystem s_vibe_strength_info = {
+      .common.main_func = s_main, .name = "Vibe Strength"
+  };
   return (const PebbleProcessMd *)&s_vibe_strength_info;
 }

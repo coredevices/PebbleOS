@@ -56,13 +56,12 @@ typedef struct ScreenshotErrorResponseData {
 static void prv_send_error_response(CommSession *session, uint8_t response) {
   ScreenshotErrorResponseData error_response = (ScreenshotErrorResponseData){
       .session = session,
-      .header =
-          {
-              .response_code = response,
-              .version = htonl(1),
-              .width = htonl(0),
-              .height = htonl(0),
-          },
+      .header = {
+          .response_code = response,
+          .version = htonl(1),
+          .width = htonl(0),
+          .height = htonl(0),
+      },
   };
 
   comm_session_send_data(error_response.session, SCREENSHOT_ENDPOINT_ID,

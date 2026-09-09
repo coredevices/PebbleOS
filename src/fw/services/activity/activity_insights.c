@@ -247,7 +247,8 @@ static const SummaryPinConfig ACTIVITY_SUMMARY_PIN_CONFIG = {
             .body = i18n_noop("Resting is fine, but try to recover and step it up tomorrow!"),
             .detail_text = i18n_noop("NOT VERY ACTIVE"),
         },
-    }};
+    }
+};
 
 static char s_sleep_period_buffer[SUBTITLE_BUFFER_LENGTH] = "";
 static const SummaryPinConfig SLEEP_SUMMARY_PIN_CONFIG = {
@@ -277,7 +278,8 @@ static const SummaryPinConfig SLEEP_SUMMARY_PIN_CONFIG = {
             .body =
                 i18n_noop("A good night's sleep goes a long way! Try to get more hours tonight."),
         },
-    }};
+    }
+};
 
 static void prv_create_and_push_notification(const NotificationConfig *config);
 static void prv_push_sleep_summary_notification(time_t notif_time, int32_t sleep_total_seconds,
@@ -364,21 +366,23 @@ static NOINLINE TimelineItem *prv_create_reward_notification(
   const int num_actions = 3;
   TimelineItemActionGroup action_group = {
       .num_actions = num_actions,
-      .actions = (TimelineItemAction[]){{
-                                            .id = ActivityInsightResponseTypePositive,
-                                            .type = TimelineItemActionTypeInsightResponse,
-                                            .attr_list = positive_attr_list,
-                                        },
-                                        {
-                                            .id = ActivityInsightResponseTypeNeutral,
-                                            .type = TimelineItemActionTypeInsightResponse,
-                                            .attr_list = neutral_attr_list,
-                                        },
-                                        {
-                                            .id = ActivityInsightResponseTypeNegative,
-                                            .type = TimelineItemActionTypeInsightResponse,
-                                            .attr_list = negative_attr_list,
-                                        }},
+      .actions = (TimelineItemAction[]){
+          {
+              .id = ActivityInsightResponseTypePositive,
+              .type = TimelineItemActionTypeInsightResponse,
+              .attr_list = positive_attr_list,
+          },
+          {
+              .id = ActivityInsightResponseTypeNeutral,
+              .type = TimelineItemActionTypeInsightResponse,
+              .attr_list = neutral_attr_list,
+          },
+          {
+              .id = ActivityInsightResponseTypeNegative,
+              .type = TimelineItemActionTypeInsightResponse,
+              .attr_list = negative_attr_list,
+          }
+      },
   };
 
   // Note: it's fine if this returns null, since the parent functions will check for a null pointer
@@ -542,12 +546,11 @@ static NOINLINE TimelineItem *prv_create_summary_pin(time_t pin_time_utc, time_t
               .bg_color = GColorVividCeruleanARGB8,
               .card_icon = TIMELINE_RESOURCE_THUMBS_UP,
           },
-      [PercentTier_AboveAverage] =
-          {
-              .avg_relation = PBL_IF_RECT_ELSE(i18n_noop("ABOVE AVG"), i18n_noop("Above avg")),
-              .bg_color = GColorIslamicGreenARGB8,
-              .card_icon = TIMELINE_RESOURCE_ARROW_UP,
-          },
+      [PercentTier_AboveAverage] = {
+          .avg_relation = PBL_IF_RECT_ELSE(i18n_noop("ABOVE AVG"), i18n_noop("Above avg")),
+          .bg_color = GColorIslamicGreenARGB8,
+          .card_icon = TIMELINE_RESOURCE_ARROW_UP,
+      },
   };
 
   // Determine percentage of target
@@ -820,8 +823,10 @@ static void prv_do_sleep_reward(time_t now_utc) {
 // Format a time given in seconds after midnight
 static void prv_strcat_formatted_time(int32_t time_seconds, char *out_buf, size_t buf_length,
                                       const void *i18n_owner) {
-  struct tm time = (struct tm){.tm_hour = time_seconds / SECONDS_PER_HOUR,
-                               .tm_min = (time_seconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE};
+  struct tm time = (struct tm){
+      .tm_hour = time_seconds / SECONDS_PER_HOUR,
+      .tm_min = (time_seconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE
+  };
 
   const char *format =
       clock_is_24h_style() ? i18n_get("%H:%M", i18n_owner) : i18n_get("%l:%M%p", i18n_owner);
@@ -961,12 +966,11 @@ static void prv_push_nap_session_notification(time_t notif_time, ActivitySession
               .enabled = true,
               .uuid = pin_uuid,
           },
-      .response =
-          {
-              .enabled = true,
-              .type = ActivityInsightResponseTypeMisclassified,
-              .title = i18n_noop("I didn't nap!?"),
-          },
+      .response = {
+          .enabled = true,
+          .type = ActivityInsightResponseTypeMisclassified,
+          .title = i18n_noop("I didn't nap!?"),
+      },
   };
   prv_create_and_push_notification(&config);
   kernel_free(body);
@@ -1331,19 +1335,16 @@ static void prv_push_activity_summary_notification(time_t notif_time, int32_t st
                                 "but don't stress. You'll crush it tomorrow 😉"),
                   },
           },
-      [PercentTier_Fail] =
-          {
-              .num_variants = 3,
-              .variants =
-                  {
-                      i18n_noop("You walked %d steps today. "
-                                "Don't fret, you can get back on track in no time 😉"),
-                      i18n_noop("You walked %d steps today. Good news is the sky's the limit!"),
-                      i18n_noop(
-                          "You walked %d steps today. "
-                          "Try to take even more steps tomorrow–show us what you're made of!"),
-                  },
+      [PercentTier_Fail] = {
+          .num_variants = 3,
+          .variants = {
+              i18n_noop("You walked %d steps today. "
+                        "Don't fret, you can get back on track in no time 😉"),
+              i18n_noop("You walked %d steps today. Good news is the sky's the limit!"),
+              i18n_noop("You walked %d steps today. "
+                        "Try to take even more steps tomorrow–show us what you're made of!"),
           },
+      },
   };
 
   int percentage;
@@ -1372,11 +1373,10 @@ static void prv_push_activity_summary_notification(time_t notif_time, int32_t st
       .insight_type = ActivityInsightType_ActivitySummary,
       .icon_id = TIMELINE_RESOURCE_ACTIVITY,
       .body = body,
-      .open_app =
-          {
-              .enabled = true,
-              .health_card_type = HealthCardType_Activity,
-          },
+      .open_app = {
+          .enabled = true,
+          .health_card_type = HealthCardType_Activity,
+      },
   };
   prv_create_and_push_notification(&config);
   kernel_free(body);
@@ -1447,21 +1447,19 @@ static void prv_push_sleep_summary_notification(time_t notif_time, int32_t sleep
                                 "Go crush your day and then get back in bed 😉"),
                   },
           },
-      [PercentTier_Fail] =
-          {
-              .num_variants = 3,
-              .variants =
-                  {
-                      i18n_noop("You slept for %dH %dM which is %d%% below your typical. "
-                                "Sleep is vital for all your great ideas–how 'bout getting more "
-                                "tonight?"),
-                      i18n_noop("You only slept for %dH %dM which is %d%% below your typical. "
-                                "We know you're busy, but try getting more tonight. We believe in "
-                                "you 😉"),
-                      i18n_noop("You slept for %dH %dM which is %d%% below your typical. "
-                                "We know stuff happens; take another crack at it tonight."),
-                  },
+      [PercentTier_Fail] = {
+          .num_variants = 3,
+          .variants = {
+              i18n_noop("You slept for %dH %dM which is %d%% below your typical. "
+                        "Sleep is vital for all your great ideas–how 'bout getting more "
+                        "tonight?"),
+              i18n_noop("You only slept for %dH %dM which is %d%% below your typical. "
+                        "We know you're busy, but try getting more tonight. We believe in "
+                        "you 😉"),
+              i18n_noop("You slept for %dH %dM which is %d%% below your typical. "
+                        "We know stuff happens; take another crack at it tonight."),
           },
+      },
   };
 
   const int hours = sleep_total_seconds / SECONDS_PER_HOUR;
@@ -1494,11 +1492,10 @@ static void prv_push_sleep_summary_notification(time_t notif_time, int32_t sleep
       .insight_type = ActivityInsightType_SleepSummary,
       .icon_id = TIMELINE_RESOURCE_SLEEP,
       .body = body,
-      .open_app =
-          {
-              .enabled = true,
-              .health_card_type = HealthCardType_Sleep,
-          },
+      .open_app = {
+          .enabled = true,
+          .health_card_type = HealthCardType_Sleep,
+      },
   };
 
   prv_create_and_push_notification(&config);
@@ -1591,13 +1588,12 @@ static const char *prv_get_intro_str_for_activity(ActivitySession *session) {
     case ActivitySessionType_Walk: {
       static const InsightCopyVariants s_walking_intros = {
           .num_variants = 4,
-          .variants =
-              {
-                  i18n_noop("Didn’t that walk feel good?"),
-                  i18n_noop("Way to keep it active!"),
-                  i18n_noop("You got the moves!"),
-                  i18n_noop("Gettin' your step on?"),
-              },
+          .variants = {
+              i18n_noop("Didn’t that walk feel good?"),
+              i18n_noop("Way to keep it active!"),
+              i18n_noop("You got the moves!"),
+              i18n_noop("Gettin' your step on?"),
+          },
       };
       return prv_get_variant(&s_walking_intros, VARIANT_RANDOM);
     }
@@ -1605,14 +1601,13 @@ static const char *prv_get_intro_str_for_activity(ActivitySession *session) {
     case ActivitySessionType_Run: {
       static const InsightCopyVariants s_running_intros = {
           .num_variants = 5,
-          .variants =
-              {
-                  i18n_noop("Feelin' hot? Cause you're on 🔥"),
-                  i18n_noop("Hey lightning bolt, way to go!"),
-                  i18n_noop("You're a machine!"),
-                  i18n_noop("Hey speedster, we can barely keep up!"),
-                  i18n_noop("Way to show us what you're made of 👊"),
-              },
+          .variants = {
+              i18n_noop("Feelin' hot? Cause you're on 🔥"),
+              i18n_noop("Hey lightning bolt, way to go!"),
+              i18n_noop("You're a machine!"),
+              i18n_noop("Hey speedster, we can barely keep up!"),
+              i18n_noop("Way to show us what you're made of 👊"),
+          },
       };
       return prv_get_variant(&s_running_intros, VARIANT_RANDOM);
     }
@@ -1620,14 +1615,13 @@ static const char *prv_get_intro_str_for_activity(ActivitySession *session) {
     case ActivitySessionType_Open: {
       static const InsightCopyVariants s_open_intros = {
           .num_variants = 5,
-          .variants =
-              {
-                  i18n_noop("Workin' up a sweat?"),
-                  i18n_noop("Well done 💪"),
-                  i18n_noop("Endorphin rush?"),
-                  i18n_noop("Can't stop, won't stop 👊"),
-                  i18n_noop("Keepin' that heart healthy! ❤"),
-              },
+          .variants = {
+              i18n_noop("Workin' up a sweat?"),
+              i18n_noop("Well done 💪"),
+              i18n_noop("Endorphin rush?"),
+              i18n_noop("Can't stop, won't stop 👊"),
+              i18n_noop("Keepin' that heart healthy! ❤"),
+          },
       };
       return prv_get_variant(&s_open_intros, VARIANT_RANDOM);
     }
@@ -1831,11 +1825,10 @@ void activity_insights_push_activity_session_notification(time_t notif_time,
       .body = body,
       .headings = headings,
       .values = values,
-      .open_app =
-          {
-              .enabled = true,
-              .health_card_type = HealthCardType_Activity,
-          },
+      .open_app = {
+          .enabled = true,
+          .health_card_type = HealthCardType_Activity,
+      },
   };
 
   prv_create_and_push_notification(&config);
@@ -2156,16 +2149,17 @@ static void prv_test_push_walk_run_session(void *unused) {
       .type = ActivitySessionType_Walk,
       .start_utc = now_utc - 30 * SECONDS_PER_MINUTE - 15 * SECONDS_PER_MINUTE,
       .length_min = 30,
-      .step_data =
-          {
-              .steps = 2400,
-              .active_kcalories = 150,
-              .distance_meters = 2000,
-          },
+      .step_data = {
+          .steps = 2400,
+          .active_kcalories = 150,
+          .distance_meters = 2000,
+      },
   };
   int32_t avg_walk_hr = 120;
-  int32_t walk_hr_zone_time_s[HRZoneCount] = {10 * SECONDS_PER_MINUTE, 15 * SECONDS_PER_MINUTE,
-                                              10 * SECONDS_PER_MINUTE, 0 * SECONDS_PER_MINUTE};
+  int32_t walk_hr_zone_time_s[HRZoneCount] = {
+      10 * SECONDS_PER_MINUTE, 15 * SECONDS_PER_MINUTE, 10 * SECONDS_PER_MINUTE,
+      0 * SECONDS_PER_MINUTE
+  };
   activity_insights_push_activity_session_notification(now_utc, &walk_session, avg_walk_hr,
                                                        walk_hr_zone_time_s);
 
@@ -2173,16 +2167,17 @@ static void prv_test_push_walk_run_session(void *unused) {
       .type = ActivitySessionType_Run,
       .start_utc = now_utc - 30 * SECONDS_PER_MINUTE - 12 * SECONDS_PER_MINUTE,
       .length_min = 30,
-      .step_data =
-          {
-              .steps = 4200,
-              .active_kcalories = 300,
-              .distance_meters = 4828,
-          },
+      .step_data = {
+          .steps = 4200,
+          .active_kcalories = 300,
+          .distance_meters = 4828,
+      },
   };
   int32_t avg_run_hr = 150;
-  int32_t run_hr_zone_time_s[HRZoneCount] = {5 * SECONDS_PER_MINUTE, 10 * SECONDS_PER_MINUTE,
-                                             10 * SECONDS_PER_MINUTE, 15 * SECONDS_PER_MINUTE};
+  int32_t run_hr_zone_time_s[HRZoneCount] = {
+      5 * SECONDS_PER_MINUTE, 10 * SECONDS_PER_MINUTE, 10 * SECONDS_PER_MINUTE,
+      15 * SECONDS_PER_MINUTE
+  };
   activity_insights_push_activity_session_notification(now_utc, &run_session, avg_run_hr,
                                                        run_hr_zone_time_s);
 
@@ -2190,16 +2185,17 @@ static void prv_test_push_walk_run_session(void *unused) {
       .type = ActivitySessionType_Open,
       .start_utc = now_utc - 30 * SECONDS_PER_MINUTE - 12 * SECONDS_PER_MINUTE,
       .length_min = 30,
-      .step_data =
-          {
-              .steps = 0,
-              .active_kcalories = 200,
-              .distance_meters = 0,
-          },
+      .step_data = {
+          .steps = 0,
+          .active_kcalories = 200,
+          .distance_meters = 0,
+      },
   };
   int32_t avg_open_hr = 130;
-  int32_t open_hr_zone_time_s[HRZoneCount] = {2 * SECONDS_PER_MINUTE, 0 * SECONDS_PER_MINUTE,
-                                              18 * SECONDS_PER_MINUTE, 10 * SECONDS_PER_MINUTE};
+  int32_t open_hr_zone_time_s[HRZoneCount] = {
+      2 * SECONDS_PER_MINUTE, 0 * SECONDS_PER_MINUTE, 18 * SECONDS_PER_MINUTE,
+      10 * SECONDS_PER_MINUTE
+  };
   activity_insights_push_activity_session_notification(now_utc, &open_session, avg_open_hr,
                                                        open_hr_zone_time_s);
 }

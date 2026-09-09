@@ -53,9 +53,11 @@ void bt_conn_dialog_push(BtConnDialog *bt_dialog, BtConnDialogResultHandler hand
   bt_dialog->connected_handler = handler;
   bt_dialog->context = context;
 
-  bt_dialog->pebble_app_event_sub = (EventServiceInfo){.type = PEBBLE_COMM_SESSION_EVENT,
-                                                       .handler = prv_handle_comm_session_event,
-                                                       .context = bt_dialog};
+  bt_dialog->pebble_app_event_sub = (EventServiceInfo){
+      .type = PEBBLE_COMM_SESSION_EVENT,
+      .handler = prv_handle_comm_session_event,
+      .context = bt_dialog
+  };
   event_service_client_subscribe(&bt_dialog->pebble_app_event_sub);
 
   WindowStack *window_stack = NULL;

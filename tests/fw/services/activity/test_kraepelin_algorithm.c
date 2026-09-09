@@ -761,14 +761,13 @@ static bool prv_parse_sleep_samples_file(SleepSampleDiscoveryState *state) {
 
       PBL_ASSERTN(state->test_entry.num_samples < SLEEP_SAMPLES_DISCOVERY_MAX_SAMPLES);
       state->samples[state->test_entry.num_samples++] = (AlgMinuteFileSample){
-          .v5_fields =
-              {
-                  .steps = steps,
-                  .orientation = orientation,
-                  .vmc = vmc,
-                  .light = light,
-                  .plugged_in = plugged_in,
-              },
+          .v5_fields = {
+              .steps = steps,
+              .orientation = orientation,
+              .vmc = vmc,
+              .light = light,
+              .plugged_in = plugged_in,
+          },
       };
       continue;
     }
@@ -900,14 +899,13 @@ static bool prv_parse_activity_samples_file(ActivitySampleDiscoveryState *state)
 
       PBL_ASSERTN(state->test_entry.num_samples < SLEEP_SAMPLES_DISCOVERY_MAX_SAMPLES);
       state->samples[state->test_entry.num_samples++] = (AlgMinuteFileSample){
-          .v5_fields =
-              {
-                  .steps = steps,
-                  .orientation = orientation,
-                  .vmc = vmc,
-                  .light = light,
-                  .plugged_in = plugged_in,
-              },
+          .v5_fields = {
+              .steps = steps,
+              .orientation = orientation,
+              .vmc = vmc,
+              .light = light,
+              .plugged_in = plugged_in,
+          },
       };
       continue;
     }

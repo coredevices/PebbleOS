@@ -228,7 +228,8 @@ static void s_main(void) {
 
 // -------------------------------------------------------------------------------
 const PebbleProcessMd *temperature_demo_get_app_info(void) {
-  static const PebbleProcessMdSystem s_temperature_demo_app_info = {.common.main_func = &s_main,
-                                                                    .name = "Temperature"};
+  static const PebbleProcessMdSystem s_temperature_demo_app_info = {
+      .common.main_func = &s_main, .name = "Temperature"
+  };
   return (const PebbleProcessMd *)&s_temperature_demo_app_info;
 }

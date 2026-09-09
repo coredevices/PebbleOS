@@ -94,14 +94,19 @@ DictationSession *dictation_session_create(uint32_t buffer_size,
       .callback = callback,
       .context = context,
       .voice_window = voice_window,
-      .dictation_result_sub = (EventServiceInfo){.type = PEBBLE_DICTATION_EVENT,
-                                                 .handler = prv_handle_transcription_result,
-                                                 .context = session}};
+      .dictation_result_sub = (EventServiceInfo){
+          .type = PEBBLE_DICTATION_EVENT,
+          .handler = prv_handle_transcription_result,
+          .context = session
+      }
+  };
 
   if (pebble_task_get_current() == PebbleTask_App) {
-    session->app_focus_sub = (EventServiceInfo){.type = PEBBLE_APP_DID_CHANGE_FOCUS_EVENT,
-                                                .handler = prv_app_focus_handler,
-                                                .context = session};
+    session->app_focus_sub = (EventServiceInfo){
+        .type = PEBBLE_APP_DID_CHANGE_FOCUS_EVENT,
+        .handler = prv_app_focus_handler,
+        .context = session
+    };
   }
 #else
   DictationSession *session = NULL;

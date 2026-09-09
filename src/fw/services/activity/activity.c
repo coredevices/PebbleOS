@@ -190,19 +190,16 @@ T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) 
         // Post a health service heart rate changed event
         PebbleEvent event = {
             .type = PEBBLE_HEALTH_SERVICE_EVENT,
-            .health_event =
-                {
-                    .type = HealthEventHeartRateUpdate,
-                    .data.heart_rate_update =
-                        {
-                            .current_bpm = (hrm_event->bpm.quality == HRMQuality_OffWrist)
-                                               ? 0
-                                               : hrm_event->bpm.bpm,
-                            .resting_bpm = s_activity_state.hr.metrics.resting_bpm,
-                            .quality = hrm_event->bpm.quality,
-                            .is_filtered = false,
-                        },
+            .health_event = {
+                .type = HealthEventHeartRateUpdate,
+                .data.heart_rate_update = {
+                    .current_bpm =
+                        (hrm_event->bpm.quality == HRMQuality_OffWrist) ? 0 : hrm_event->bpm.bpm,
+                    .resting_bpm = s_activity_state.hr.metrics.resting_bpm,
+                    .quality = hrm_event->bpm.quality,
+                    .is_filtered = false,
                 },
+            },
         };
         event_put(&event);
       }
@@ -509,14 +506,12 @@ static void NOINLINE prv_process_minute_data_tail(time_t utc_sec) {
     PBL_LOG_DBG("Sending history update event");
     PebbleEvent e = {
         .type = PEBBLE_HEALTH_SERVICE_EVENT,
-        .health_event =
-            {
-                .type = HealthEventSignificantUpdate,
-                .data.significant_update =
-                    {
-                        .day_id = cur_day_index,
-                    },
+        .health_event = {
+            .type = HealthEventSignificantUpdate,
+            .data.significant_update = {
+                .day_id = cur_day_index,
             },
+        },
     };
     event_put(&e);
   }
@@ -750,14 +745,12 @@ static void prv_accel_cb(AccelRawData *data, uint32_t num_samples, uint64_t time
     // Post a steps changed event
     PebbleEvent e = {
         .type = PEBBLE_HEALTH_SERVICE_EVENT,
-        .health_event =
-            {
-                .type = HealthEventMovementUpdate,
-                .data.movement_update =
-                    {
-                        .steps = s_activity_state.step_data.steps,
-                    },
+        .health_event = {
+            .type = HealthEventMovementUpdate,
+            .data.movement_update = {
+                .steps = s_activity_state.step_data.steps,
             },
+        },
     };
     event_put(&e);
   }
@@ -843,10 +836,9 @@ static void prv_start_tracking_cb(void *context) {
 
     PebbleEvent event = {
         .type = PEBBLE_ACTIVITY_EVENT,
-        .activity_event =
-            {
-                .type = PebbleActivityEvent_TrackingStarted,
-            },
+        .activity_event = {
+            .type = PebbleActivityEvent_TrackingStarted,
+        },
     };
     event_put(&event);
   }
@@ -876,10 +868,9 @@ static void prv_stop_tracking_cb(void *context) {
 
   PebbleEvent event = {
       .type = PEBBLE_ACTIVITY_EVENT,
-      .activity_event =
-          {
-              .type = PebbleActivityEvent_TrackingStopped,
-          },
+      .activity_event = {
+          .type = PebbleActivityEvent_TrackingStopped,
+      },
   };
   event_put(&event);
 }
@@ -1616,8 +1607,11 @@ void activity_test_set_steps_history() {
   }
   ActivitySettingsValueHistory step_history = {
       .utc_sec = rtc_get_time(),
-      .values = {0,  // This ends up overwritten anyway by the current sleep value
-                 1000, 750, 1250, 500, 2000, 3000}};
+      .values = {
+          0,  // This ends up overwritten anyway by the current sleep value
+          1000, 750, 1250, 500, 2000, 3000
+      }
+  };
 
   prv_write_metric_history(ActivitySettingsKeyStepCountHistory, &step_history);
 }
@@ -1637,7 +1631,8 @@ void activity_test_set_sleep_history() {
           500,
           400,
           500,
-      }};
+      }
+  };
 
   prv_write_metric_history(ActivitySettingsKeySleepTotalMinutesHistory, &sleep_history);
 }

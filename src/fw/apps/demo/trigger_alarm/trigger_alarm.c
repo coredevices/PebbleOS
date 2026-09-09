@@ -23,9 +23,10 @@ static void handle_init(void) {
   const bool animated = true;
   app_window_stack_push(&data->window, animated);
 
-  PebbleEvent e =
-      (PebbleEvent){.type = PEBBLE_ALARM_CLOCK_EVENT,
-                    .alarm_clock = {.alarm_time = rtc_get_time(), .alarm_label = "Wake Up"}};
+  PebbleEvent e = (PebbleEvent){
+      .type = PEBBLE_ALARM_CLOCK_EVENT,
+      .alarm_clock = {.alarm_time = rtc_get_time(), .alarm_label = "Wake Up"}
+  };
 
   event_put(&e);
 }
@@ -44,8 +45,9 @@ static void s_main(void) {
 }
 
 const PebbleProcessMd *trigger_alarm_get_app_info() {
-  static const PebbleProcessMdSystem s_trigger_alarm = {.common.main_func = s_main,
-                                                        .name = "Trigger Alarm"};
+  static const PebbleProcessMdSystem s_trigger_alarm = {
+      .common.main_func = s_main, .name = "Trigger Alarm"
+  };
 
   return (const PebbleProcessMd *)&s_trigger_alarm;
 }

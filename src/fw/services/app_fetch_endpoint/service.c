@@ -75,33 +75,39 @@ static const uint16_t APP_FETCH_ENDPOINT_ID = 6001;
 //! Puts an error event with the given error code
 static void prv_put_event_error(uint8_t error_code) {
   s_fetch_state.prev_error = error_code;
-  PebbleEvent event = {.type = PEBBLE_APP_FETCH_EVENT,
-                       .app_fetch = {
-                           .type = AppFetchEventTypeError,
-                           .id = s_fetch_state.app_id,
-                           .error_code = error_code,
-                       }};
+  PebbleEvent event = {
+      .type = PEBBLE_APP_FETCH_EVENT,
+      .app_fetch = {
+          .type = AppFetchEventTypeError,
+          .id = s_fetch_state.app_id,
+          .error_code = error_code,
+      }
+  };
   event_put(&event);
 }
 
 //! Puts an event with the given progress
 static void prv_put_event_progress(uint8_t percent) {
-  PebbleEvent event = {.type = PEBBLE_APP_FETCH_EVENT,
-                       .app_fetch = {
-                           .type = AppFetchEventTypeProgress,
-                           .id = s_fetch_state.app_id,
-                           .progress_percent = percent,
-                       }};
+  PebbleEvent event = {
+      .type = PEBBLE_APP_FETCH_EVENT,
+      .app_fetch = {
+          .type = AppFetchEventTypeProgress,
+          .id = s_fetch_state.app_id,
+          .progress_percent = percent,
+      }
+  };
   event_put(&event);
 }
 
 //! Simply posts the type of event given.
 static void prv_put_event_simple(AppFetchEventType type) {
-  PebbleEvent event = {.type = PEBBLE_APP_FETCH_EVENT,
-                       .app_fetch = {
-                           .type = type,
-                           .id = s_fetch_state.app_id,
-                       }};
+  PebbleEvent event = {
+      .type = PEBBLE_APP_FETCH_EVENT,
+      .app_fetch = {
+          .type = type,
+          .id = s_fetch_state.app_id,
+      }
+  };
   event_put(&event);
 }
 

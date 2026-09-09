@@ -1259,7 +1259,8 @@ bool bt_persistent_storage_delete_cccd(const BTDeviceInternal *peer, uint16_t ch
   BTCCCDID cccd_id;
 
   FindCCCDItrData itr_data = {
-      .peer = peer, .chr_val_handle = chr_val_handle, .id = BT_CCCD_ID_INVALID};
+      .peer = peer, .chr_val_handle = chr_val_handle, .id = BT_CCCD_ID_INVALID
+  };
   prv_file_each(prv_find_cccd_itr, &itr_data);
 
   if (itr_data.id == BT_CCCD_ID_INVALID) {

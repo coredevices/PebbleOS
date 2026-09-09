@@ -70,13 +70,12 @@ static void prv_rtc_set_time_no_cal_reset(time_t time);
 
 static RTC_HandleTypeDef RTC_Handler = {
     .Instance = (RTC_TypeDef *)RTC_BASE,
-    .Init =
-        {
-            .HourFormat = RTC_HOURFORMAT_24,
-            .DivAInt = DIV_A_INT,
-            .DivAFrac = DIV_A_FRAC,
-            .DivB = DIV_B,
-        },
+    .Init = {
+        .HourFormat = RTC_HOURFORMAT_24,
+        .DivAInt = DIV_A_INT,
+        .DivAFrac = DIV_A_FRAC,
+        .DivB = DIV_B,
+    },
 };
 
 static bool s_initialized = false;
@@ -260,12 +259,14 @@ static void prv_rtc_set_time_no_cal_reset(time_t time) {
   // This ensures long-duration timers are properly rescheduled after calibration adjustments
   int32_t time_delta = (int32_t)(time - old_time);
   if (time_delta != 0) {
-    PebbleEvent e = {.type = PEBBLE_SET_TIME_EVENT,
-                     .set_time_info = {
-                         .utc_time_delta = time_delta,
-                         .gmt_offset_delta = 0,
-                         .dst_changed = false,
-                     }};
+    PebbleEvent e = {
+        .type = PEBBLE_SET_TIME_EVENT,
+        .set_time_info = {
+            .utc_time_delta = time_delta,
+            .gmt_offset_delta = 0,
+            .dst_changed = false,
+        }
+    };
     event_put(&e);
   }
 }

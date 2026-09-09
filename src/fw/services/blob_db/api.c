@@ -171,19 +171,18 @@ static const BlobDB s_blob_dbs[NumBlobDBs] = {
             .compact = app_glance_db_compact,
             .name = "app_glance_db",
         },
-    [BlobDBIdSettings] =
-        {
-            .init = settings_blob_db_init,
-            .insert = settings_blob_db_insert,
-            .get_len = settings_blob_db_get_len,
-            .read = settings_blob_db_read,
-            .del = settings_blob_db_delete,
-            .flush = settings_blob_db_flush,
-            .is_dirty = settings_blob_db_is_dirty,
-            .get_dirty_list = settings_blob_db_get_dirty_list,
-            .mark_synced = settings_blob_db_mark_synced,
-            .name = "settings_blob_db",
-        },
+    [BlobDBIdSettings] = {
+        .init = settings_blob_db_init,
+        .insert = settings_blob_db_insert,
+        .get_len = settings_blob_db_get_len,
+        .read = settings_blob_db_read,
+        .del = settings_blob_db_delete,
+        .flush = settings_blob_db_flush,
+        .is_dirty = settings_blob_db_is_dirty,
+        .get_dirty_list = settings_blob_db_get_dirty_list,
+        .mark_synced = settings_blob_db_mark_synced,
+        .name = "settings_blob_db",
+    },
 };
 
 static bool prv_db_valid(BlobDBId db_id) {
@@ -198,13 +197,15 @@ void blob_db_event_put(BlobDBEventType type, BlobDBId db_id, const uint8_t *key,
     memcpy(key_bytes, key, key_len);
   }
 
-  PebbleEvent e = {.type = PEBBLE_BLOBDB_EVENT,
-                   .blob_db = {
-                       .db_id = db_id,
-                       .type = type,
-                       .key = key_bytes,
-                       .key_len = (uint8_t)key_len,
-                   }};
+  PebbleEvent e = {
+      .type = PEBBLE_BLOBDB_EVENT,
+      .blob_db = {
+          .db_id = db_id,
+          .type = type,
+          .key = key_bytes,
+          .key_len = (uint8_t)key_len,
+      }
+  };
   event_put(&e);
 }
 

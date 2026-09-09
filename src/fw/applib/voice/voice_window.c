@@ -125,7 +125,8 @@ static void prv_exit_and_send_result_event(VoiceUiData *data, DictationSessionSt
           .result = result,
           .text = (result == DictationSessionStatusSuccess) ? data->message : NULL,
           .timestamp = (result == DictationSessionStatusSuccess) ? data->timestamp : 0,
-      }};
+      }
+  };
   sys_send_pebble_event_to_kernel(&event);
 
   sys_light_reset_to_timed_mode();
@@ -584,13 +585,11 @@ static const PropertyAnimationImplementation s_animated_dot_impl = {
         {
             .update = (AnimationUpdateImplementation)property_animation_update_int16,
         },
-    .accessors =
-        {
-            .setter =
-                {
-                    .int16 = prv_set_dot_width,
-                },
+    .accessors = {
+        .setter = {
+            .int16 = prv_set_dot_width,
         },
+    },
 };
 
 static Animation *prv_create_pulse_dot_anim(VoiceUiData *data, int16_t min, int16_t max,
@@ -810,13 +809,11 @@ static const PropertyAnimationImplementation s_progress_bar_impl = {
         {
             .update = (AnimationUpdateImplementation)property_animation_update_int16,
         },
-    .accessors =
-        {
-            .setter =
-                {
-                    .int16 = prv_set_percent,
-                },
+    .accessors = {
+        .setter = {
+            .int16 = prv_set_percent,
         },
+    },
 };
 
 // animate the progress bar in by growing it from the left (or just show it if animated == false)
@@ -1256,7 +1253,8 @@ static void prv_mic_window_load(Window *window) {
   }
 
   data->voice_event_sub = (EventServiceInfo){
-      .type = PEBBLE_VOICE_SERVICE_EVENT, .handler = prv_voice_event_handler, .context = data};
+      .type = PEBBLE_VOICE_SERVICE_EVENT, .handler = prv_voice_event_handler, .context = data
+  };
   event_service_client_subscribe(&data->voice_event_sub);
 
   prv_disable_select_click(data);
@@ -1299,10 +1297,12 @@ static void prv_mic_window_appear(Window *window) {
 static void prv_voice_window_push(VoiceUiData *data) {
   Window *window = &data->mic_window.window;
   window_init(window, WINDOW_NAME("Voice Window"));
-  window_set_window_handlers(window, &(WindowHandlers){.load = prv_mic_window_load,
-                                                       .unload = prv_mic_window_unload,
-                                                       .appear = prv_mic_window_appear,
-                                                       .disappear = prv_mic_window_disappear});
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_mic_window_load,
+                                         .unload = prv_mic_window_unload,
+                                         .appear = prv_mic_window_appear,
+                                         .disappear = prv_mic_window_disappear
+                                     });
   window_set_user_data(window, data);
 
   prv_window_push(window);

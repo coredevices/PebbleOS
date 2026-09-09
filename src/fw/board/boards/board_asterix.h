@@ -13,31 +13,35 @@
 #define BOARD_RTC_INST NRF_RTC1
 #define BOARD_RTC_IRQN RTC1_IRQn
 
-static const BoardConfig BOARD_CONFIG = {.ambient_light_dark_threshold = 100,
-                                         .ambient_k_delta_threshold = 30,
-                                         .als_always_on = true,
+static const BoardConfig BOARD_CONFIG = {
+    .ambient_light_dark_threshold = 100,
+    .ambient_k_delta_threshold = 30,
+    .als_always_on = true,
 
-                                         .backlight_on_percent = 25,
+    .backlight_on_percent = 25,
 
-                                         .mic_config = {
-                                             .gain = 40,
-                                         }};
+    .mic_config = {
+        .gain = 40,
+    }
+};
 
 static const BoardConfigButton BOARD_CONFIG_BUTTON = {
     .buttons =
         {
-            [BUTTON_ID_BACK] = {"Back",
-                                {NRFX_GPIOTE_INSTANCE(0), 2, NRF_GPIO_PIN_MAP(0, 28)},
-                                NRF_GPIO_PIN_PULLUP},
-            [BUTTON_ID_UP] = {"Up",
-                              {NRFX_GPIOTE_INSTANCE(0), 3, NRF_GPIO_PIN_MAP(0, 29)},
-                              NRF_GPIO_PIN_PULLUP},
-            [BUTTON_ID_SELECT] = {"Select",
-                                  {NRFX_GPIOTE_INSTANCE(0), 4, NRF_GPIO_PIN_MAP(0, 30)},
-                                  NRF_GPIO_PIN_PULLUP},
-            [BUTTON_ID_DOWN] = {"Down",
-                                {NRFX_GPIOTE_INSTANCE(0), 5, NRF_GPIO_PIN_MAP(0, 31)},
-                                NRF_GPIO_PIN_PULLUP},
+            [BUTTON_ID_BACK] =
+                {"Back",
+                 {NRFX_GPIOTE_INSTANCE(0), 2, NRF_GPIO_PIN_MAP(0, 28)},
+                 NRF_GPIO_PIN_PULLUP},
+            [BUTTON_ID_UP] =
+                {"Up", {NRFX_GPIOTE_INSTANCE(0), 3, NRF_GPIO_PIN_MAP(0, 29)}, NRF_GPIO_PIN_PULLUP},
+            [BUTTON_ID_SELECT] =
+                {"Select",
+                 {NRFX_GPIOTE_INSTANCE(0), 4, NRF_GPIO_PIN_MAP(0, 30)},
+                 NRF_GPIO_PIN_PULLUP},
+            [BUTTON_ID_DOWN] =
+                {"Down",
+                 {NRFX_GPIOTE_INSTANCE(0), 5, NRF_GPIO_PIN_MAP(0, 31)},
+                 NRF_GPIO_PIN_PULLUP},
         },
     .active_high = false,
     .timer = NRFX_TIMER_INSTANCE(1),
@@ -59,15 +63,14 @@ static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
 };
 
 static const BoardConfigMag BOARD_CONFIG_MAG = {
-    .mag_config =
-        {
-            .axes_offsets[AXIS_X] = 1,
-            .axes_offsets[AXIS_Y] = 0,
-            .axes_offsets[AXIS_Z] = 2,
-            .axes_inverts[AXIS_X] = false,
-            .axes_inverts[AXIS_Y] = true,
-            .axes_inverts[AXIS_Z] = false,
-        },
+    .mag_config = {
+        .axes_offsets[AXIS_X] = 1,
+        .axes_offsets[AXIS_Y] = 0,
+        .axes_offsets[AXIS_Z] = 2,
+        .axes_inverts[AXIS_X] = false,
+        .axes_inverts[AXIS_Y] = true,
+        .axes_inverts[AXIS_Z] = false,
+    },
 };
 
 extern UARTDevice *const DBG_UART;
@@ -75,9 +78,10 @@ extern UARTDevice *const DBG_UART;
 extern PwmState BACKLIGHT_PWM_STATE;
 static const BacklightPwmConfig BACKLIGHT_PWM = {
     .ctl = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 8), true},
-    .pwm = {.state = &BACKLIGHT_PWM_STATE,
-            .output = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 26), true},
-            .peripheral = NRFX_PWM_INSTANCE(0)},
+    .pwm =
+        {.state = &BACKLIGHT_PWM_STATE,
+         .output = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 26), true},
+         .peripheral = NRFX_PWM_INSTANCE(0)},
     .max_duty_cycle_percent = 67,
 };
 
@@ -90,16 +94,15 @@ static const BoardConfigSharpDisplay BOARD_CONFIG_DISPLAY = {
 
     .on_ctrl = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 4), true},
 
-    .extcomin =
-        {
-            .rtc = NRF_RTC2,
-            .gpiote = NRF_GPIOTE,
-            .gpiote_ch = 6,
-            .psel = NRF_GPIO_PIN_MAP(1, 15),
-            // 120Hz/5% (feeds flip-flop, generating 60Hz/50% signal to EXTCOMIN)
-            .period_us = 1000000 / 120,
-            .pulse_us = (1000000 / 120) / 20,
-        },
+    .extcomin = {
+        .rtc = NRF_RTC2,
+        .gpiote = NRF_GPIOTE,
+        .gpiote_ch = 6,
+        .psel = NRF_GPIO_PIN_MAP(1, 15),
+        // 120Hz/5% (feeds flip-flop, generating 60Hz/50% signal to EXTCOMIN)
+        .period_us = 1000000 / 120,
+        .pulse_us = (1000000 / 120) / 20,
+    },
 };
 
 extern QSPIPort *const QSPI;

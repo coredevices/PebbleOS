@@ -79,10 +79,12 @@ void test_kino_player__initialize(void) {
   s_num_destructor_calls = 0;
 
   test_reel_impl = malloc(sizeof(KinoReelImpl));
-  *test_reel_impl = (KinoReelImpl){.destructor = prv_destructor,
-                                   .set_elapsed = prv_elapsed_setter,
-                                   .get_elapsed = prv_elapsed_getter,
-                                   .get_duration = prv_duration_getter};
+  *test_reel_impl = (KinoReelImpl){
+      .destructor = prv_destructor,
+      .set_elapsed = prv_elapsed_setter,
+      .get_elapsed = prv_elapsed_getter,
+      .get_duration = prv_duration_getter
+  };
 
   test_reel = kino_reel_custom_create(test_reel_impl, test_reel_data);
   cl_assert(test_reel != NULL);

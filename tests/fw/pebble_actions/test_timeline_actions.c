@@ -14,7 +14,9 @@ static TimelineItemAction s_reply_action = {
     .type = TimelineItemActionTypeResponse,
     .attr_list = (AttributeList){
         .num_attributes = 1,
-        .attributes = (Attribute[1]){{.id = AttributeIdTitle, .cstring = "Reply"}}}};
+        .attributes = (Attribute[1]){{.id = AttributeIdTitle, .cstring = "Reply"}}
+    }
+};
 
 // Stubs
 ///////////////////////////////////////////////////////////
@@ -73,8 +75,11 @@ void test_timeline_actions__response(void) {
                       {.id = AttributeIdTitle, .cstring = "Ian Graham"},
                       {.id = AttributeIdBody, .cstring = "this is a test notification"},
                       {.id = AttributeIdIconTiny, .uint32 = TIMELINE_RESOURCE_GENERIC_SMS},
-                      {.id = AttributeIdBgColor, .uint8 = GColorIslamicGreenARGB8}}},
-      .action_group = (TimelineItemActionGroup){.num_actions = 1, .actions = &s_reply_action}};
+                      {.id = AttributeIdBgColor, .uint8 = GColorIslamicGreenARGB8}
+                  }
+          },
+      .action_group = (TimelineItemActionGroup){.num_actions = 1, .actions = &s_reply_action}
+  };
 
   s_expected_send_data = s_sms_reply_action_data;
   prv_invoke_action(NULL, &item.action_group.actions[0], &item, "Yo, what's up?");
@@ -88,10 +93,14 @@ void test_timeline_actions__send_text(void) {
       .attr_list =
           (AttributeList){
               .num_attributes = 2,
-              .attributes = (Attribute[2]){{.id = AttributeIdSender, .cstring = "555-123-4567"},
-                                           {.id = AttributeIdiOSAppIdentifier,
-                                            .cstring = "com.pebble.android.phone"}}},
-      .action_group = (TimelineItemActionGroup){.num_actions = 1, .actions = &s_reply_action}};
+              .attributes =
+                  (Attribute[2]){
+                      {.id = AttributeIdSender, .cstring = "555-123-4567"},
+                      {.id = AttributeIdiOSAppIdentifier, .cstring = "com.pebble.android.phone"}
+                  }
+          },
+      .action_group = (TimelineItemActionGroup){.num_actions = 1, .actions = &s_reply_action}
+  };
 
   s_expected_send_data = s_send_text_data;
   prv_invoke_action(NULL, &item.action_group.actions[0], &item, "Yo, what's up?");

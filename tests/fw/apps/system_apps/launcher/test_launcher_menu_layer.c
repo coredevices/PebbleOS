@@ -424,18 +424,16 @@ void test_launcher_menu_layer__no_icon_app_with_glance(void) {
   // Insert a glance with a slice for the app that doesn't have a default icon
   const AppGlance glance = (AppGlance){
       .num_slices = 1,
-      .slices =
+      .slices = {
           {
-              {
-                  .expiration_time = 1464734484,  // (Tue, 31 May 2016 22:41:24 GMT)
-                  .type = AppGlanceSliceType_IconAndSubtitle,
-                  .icon_and_subtitle =
-                      {
-                          .icon_resource_id = TIMELINE_RESOURCE_SCHEDULED_FLIGHT,
-                          .template_string = "Glances baby!",
-                      },
+              .expiration_time = 1464734484,  // (Tue, 31 May 2016 22:41:24 GMT)
+              .type = AppGlanceSliceType_IconAndSubtitle,
+              .icon_and_subtitle = {
+                  .icon_resource_id = TIMELINE_RESOURCE_SCHEDULED_FLIGHT,
+                  .template_string = "Glances baby!",
               },
           },
+      },
   };
   cl_assert_equal_i(app_glance_db_insert_glance(
                         &s_fake_app_nodes[LauncherMenuLayerTestApp_NoIcon].node.uuid, &glance),
@@ -456,19 +454,17 @@ static void prv_insert_glances_for_app_selected_and_apps_above_and_below_with_gl
                                                       : test_node->bitmap_slice_icon_resource_id;
     AppGlance glance = (AppGlance){
         .num_slices = 1,
-        .slices =
+        .slices = {
             {
-                {
-                    .expiration_time = 1464734484,  // (Tue, 31 May 2016 22:41:24 GMT)
-                    .type = AppGlanceSliceType_IconAndSubtitle,
-                    .icon_and_subtitle =
-                        {
-                            // Just continue using their default icon, we care more about the
-                            // subtitle in this test
-                            .icon_resource_id = icon_resource_id,
-                        },
+                .expiration_time = 1464734484,  // (Tue, 31 May 2016 22:41:24 GMT)
+                .type = AppGlanceSliceType_IconAndSubtitle,
+                .icon_and_subtitle = {
+                    // Just continue using their default icon, we care more about the
+                    // subtitle in this test
+                    .icon_resource_id = icon_resource_id,
                 },
             },
+        },
     };
     snprintf(glance.slices[0].icon_and_subtitle.template_string,
              sizeof(glance.slices[0].icon_and_subtitle.template_string), "%s glance",
@@ -507,18 +503,16 @@ void test_launcher_menu_layer__no_icon_app_with_glance_pdc(void) {
   // Insert a glance with a slice for the app that doesn't have a default icon
   const AppGlance glance = (AppGlance){
       .num_slices = 1,
-      .slices =
+      .slices = {
           {
-              {
-                  .expiration_time = 1464734484,  // (Tue, 31 May 2016 22:41:24 GMT)
-                  .type = AppGlanceSliceType_IconAndSubtitle,
-                  .icon_and_subtitle =
-                      {
-                          .icon_resource_id = TIMELINE_RESOURCE_SCHEDULED_FLIGHT,
-                          .template_string = "Glances baby!",
-                      },
+              .expiration_time = 1464734484,  // (Tue, 31 May 2016 22:41:24 GMT)
+              .type = AppGlanceSliceType_IconAndSubtitle,
+              .icon_and_subtitle = {
+                  .icon_resource_id = TIMELINE_RESOURCE_SCHEDULED_FLIGHT,
+                  .template_string = "Glances baby!",
               },
           },
+      },
   };
   cl_assert_equal_i(app_glance_db_insert_glance(
                         &s_fake_app_nodes[LauncherMenuLayerTestApp_NoIcon].node.uuid, &glance),

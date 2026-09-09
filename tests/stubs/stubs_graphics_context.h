@@ -8,11 +8,13 @@
 void graphics_context_init(GContext *ctx, FrameBuffer *framebuffer,
                            GContextInitializationMode init_mode) {
   if (ctx) {
-    ctx->draw_state = (GDrawState){.stroke_color = GColorBlack,
-                                   .fill_color = GColorBlack,
-                                   .text_color = GColorWhite,
-                                   .compositing_mode = GCompOpAssign,
-                                   .stroke_width = 1};
+    ctx->draw_state = (GDrawState){
+        .stroke_color = GColorBlack,
+        .fill_color = GColorBlack,
+        .text_color = GColorWhite,
+        .compositing_mode = GCompOpAssign,
+        .stroke_width = 1
+    };
   }
 }
 

@@ -255,13 +255,12 @@ void alarm_detail_window_push(AlarmId alarm_id, AlarmInfo *alarm_info,
       .alarm_info = *alarm_info,
       .alarm_editor_callback = alarm_editor_callback,
       .callback_context = callback_context,
-      .menu_config =
-          {
-              .context = data,
-              .colors.background = ALARMS_APP_HIGHLIGHT_COLOR,
-              .will_close = prv_alarm_detail_menu_will_close,
-              .did_close = prv_cleanup_alarm_detail_menu,
-          },
+      .menu_config = {
+          .context = data,
+          .colors.background = ALARMS_APP_HIGHLIGHT_COLOR,
+          .will_close = prv_alarm_detail_menu_will_close,
+          .did_close = prv_cleanup_alarm_detail_menu,
+      },
   };
 
   // Setup main menu items
@@ -319,7 +318,8 @@ void alarm_detail_window_push(AlarmId alarm_id, AlarmInfo *alarm_info,
   static const unsigned snooze_delays[NUM_SNOOZE_MENU_ITEMS] = {5, 10, 15, 30, 60};
   static const char *snooze_delay_strs[NUM_SNOOZE_MENU_ITEMS] = {
       i18n_noop("5 minutes"), i18n_noop("10 minutes"), i18n_noop("15 minutes"),
-      i18n_noop("30 minutes"), i18n_noop("1 hour")};
+      i18n_noop("30 minutes"), i18n_noop("1 hour")
+  };
 
   unsigned current_snooze_delay = alarm_get_snooze_delay();
   for (int i = 0; i < NUM_SNOOZE_MENU_ITEMS; i++) {

@@ -92,23 +92,27 @@ void phone_ui_handle_caller_id(PebblePhoneCaller *caller) {
   s_last_phone_ui_event = PhoneEventType_Invalid;
 
 static void prv_put_comm_session_event(bool app_connected) {
-  PebbleEvent comm_session_event = {.type = PEBBLE_COMM_SESSION_EVENT,
-                                    .bluetooth.comm_session_event = (PebbleCommSessionEvent){
-                                        .is_system = true,
-                                        .is_open = app_connected,
-                                    }};
+  PebbleEvent comm_session_event = {
+      .type = PEBBLE_COMM_SESSION_EVENT,
+      .bluetooth.comm_session_event = (PebbleCommSessionEvent){
+          .is_system = true,
+          .is_open = app_connected,
+      }
+  };
   prv_handle_mobile_app_event(&comm_session_event, NULL);
 }
 
 static void prv_put_phone_event(PhoneEventType type, PhoneCallSource source,
                                 uint32_t call_identifier) {
-  PebbleEvent phone_event = {.type = PEBBLE_PHONE_EVENT,
-                             .phone = {
-                                 .type = type,
-                                 .source = source,
-                                 .call_identifier = call_identifier,
-                                 .caller = NULL,
-                             }};
+  PebbleEvent phone_event = {
+      .type = PEBBLE_PHONE_EVENT,
+      .phone = {
+          .type = type,
+          .source = source,
+          .call_identifier = call_identifier,
+          .caller = NULL,
+      }
+  };
   prv_handle_phone_event(&phone_event, NULL);
 }
 

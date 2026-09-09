@@ -60,20 +60,26 @@ static void prv_layout_text(PeekLayer *peek_layer) {
   const GSize title_size = text_layer_get_content_size(ctx, &peek_layer->title.text_layer);
   const GSize subtitle_size = text_layer_get_content_size(ctx, &peek_layer->subtitle.text_layer);
 
-  GPoint cursor = {(layer_bounds.size.w - subtitle_size.w) / 2,
-                   -(subtitle_size.h + MAX(number_size.h, title_size.h)) / 2};
+  GPoint cursor = {
+      (layer_bounds.size.w - subtitle_size.w) / 2,
+      -(subtitle_size.h + MAX(number_size.h, title_size.h)) / 2
+  };
   const int font_height_fuzz = 5;  // Replace with font descenders
   layer_set_frame((Layer *)&peek_layer->subtitle.text_layer,
-                  &(GRect){{cursor.x, cursor.y + TEXT_OFFSET_Y},
-                           {subtitle_size.w, subtitle_size.h + font_height_fuzz}});
+                  &(GRect){
+                      {cursor.x, cursor.y + TEXT_OFFSET_Y},
+                      {subtitle_size.w, subtitle_size.h + font_height_fuzz}
+                  });
   cursor.x = (layer_bounds.size.w - (title_size.w + number_size.w)) / 2;
   cursor.y += subtitle_size.h ? (subtitle_size.h + peek_layer->subtitle_margin) : 0;
   layer_set_frame((Layer *)&peek_layer->number.text_layer,
                   &(GRect){{cursor.x, cursor.y + NUMBER_OFFSET_Y}, number_size});
   cursor.x += number_size.w;
-  layer_set_frame((Layer *)&peek_layer->title.text_layer,
-                  &(GRect){{cursor.x, cursor.y + TEXT_OFFSET_Y},
-                           {title_size.w, title_size.h + font_height_fuzz}});
+  layer_set_frame(
+      (Layer *)&peek_layer->title.text_layer,
+      &(GRect){
+          {cursor.x, cursor.y + TEXT_OFFSET_Y}, {title_size.w, title_size.h + font_height_fuzz}
+      });
 }
 
 //////////////////////

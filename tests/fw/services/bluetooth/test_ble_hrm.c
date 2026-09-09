@@ -201,23 +201,19 @@ void test_ble_hrm__initialize(void) {
   // Set up fake devices/connections:
   s_conn_a = (GAPLEConnection){
       .device_name = TEST_DEVICE_NAME,
-      .device =
-          {
-              .address =
-                  {
-                      .octets = {1, 2, 3, 4, 5, 6},
-                  },
+      .device = {
+          .address = {
+              .octets = {1, 2, 3, 4, 5, 6},
           },
+      },
   };
   s_conn_b = (GAPLEConnection){
       .device_name = TEST_DEVICE_NAME,
-      .device =
-          {
-              .address =
-                  {
-                      .octets = {6, 5, 4, 3, 2, 1},
-                  },
+      .device = {
+          .address = {
+              .octets = {6, 5, 4, 3, 2, 1},
           },
+      },
   };
   s_connections[0] = &s_conn_a;
   s_connections[1] = &s_conn_b;
@@ -433,15 +429,13 @@ static void prv_put_and_assert_hrm_event(HRMEventType subtype, uint8_t bpm, HRMQ
 
   PebbleEvent hrm_event = {
       .type = PEBBLE_HRM_EVENT,
-      .hrm =
-          {
-              .event_type = subtype,
-              .bpm =
-                  {
-                      .bpm = bpm,
-                      .quality = quality,
-                  },
+      .hrm = {
+          .event_type = subtype,
+          .bpm = {
+              .bpm = bpm,
+              .quality = quality,
           },
+      },
   };
   event_put(&hrm_event);
   fake_event_service_handle_last();

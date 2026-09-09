@@ -143,8 +143,10 @@ static void prv_timer_handler(nrf_timer_event_t evt, void *ctx) {
         clear_stuck_button(i);
       }
 
-      PebbleEvent e = {.type = (is_pressed) ? PEBBLE_BUTTON_DOWN_EVENT : PEBBLE_BUTTON_UP_EVENT,
-                       .button.button_id = i};
+      PebbleEvent e = {
+          .type = (is_pressed) ? PEBBLE_BUTTON_DOWN_EVENT : PEBBLE_BUTTON_UP_EVENT,
+          .button.button_id = i
+      };
       event_put_isr(&e);
     }
   }
@@ -166,8 +168,10 @@ static void prv_timer_handler(nrf_timer_event_t evt, void *ctx) {
         boot_bit_set(BOOT_BIT_FORCE_PRF);
       }
 
-      RebootReason reason = {.code = force_prf ? RebootReasonCode_PrfResetButtonsHeld
-                                               : RebootReasonCode_ResetButtonsHeld};
+      RebootReason reason = {
+          .code =
+              force_prf ? RebootReasonCode_PrfResetButtonsHeld : RebootReasonCode_ResetButtonsHeld
+      };
       reboot_reason_set(&reason);
 
       // Don't use system_reset here. This back door absolutely must work. Just hard reset.

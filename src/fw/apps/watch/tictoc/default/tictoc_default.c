@@ -84,12 +84,14 @@ static void prv_canvas_layer_update_proc(Layer *layer, GContext *ctx) {
       .x = (int16_t)(sin_lookup(minute_angle) * (int32_t)minute_hand_length / TRIG_MAX_RATIO) +
            center.x,
       .y = (int16_t)(-cos_lookup(minute_angle) * (int32_t)minute_hand_length / TRIG_MAX_RATIO) +
-           center.y};
+           center.y
+  };
   GPoint hour_hand = (GPoint){
       .x =
           (int16_t)(sin_lookup(hour_angle) * (int32_t)hour_hand_length / TRIG_MAX_RATIO) + center.x,
-      .y = (int16_t)(-cos_lookup(hour_angle) * (int32_t)hour_hand_length / TRIG_MAX_RATIO) +
-           center.y};
+      .y =
+          (int16_t)(-cos_lookup(hour_angle) * (int32_t)hour_hand_length / TRIG_MAX_RATIO) + center.y
+  };
 
   // Draw hands with positive length only
   if (clock_radius > MINUTE_HAND_MARGIN) {

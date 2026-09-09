@@ -112,11 +112,10 @@ static bool prv_receive_push_cmd(CommSession *session, AppMessagePush *push_mess
 
 static void prv_send_ack_nack_reply(CommSession *session, const uint8_t transaction_id, bool ack) {
   const AppMessageAck nack_message = {
-      .header =
-          {
-              .command = ack ? CMD_ACK : CMD_NACK,
-              .transaction_id = transaction_id,
-          },
+      .header = {
+          .command = ack ? CMD_ACK : CMD_NACK,
+          .transaction_id = transaction_id,
+      },
   };
   comm_session_send_data(session, LAUNCHER_MESSAGE_ENDPOINT_ID, (const uint8_t *)&nack_message,
                          sizeof(nack_message), COMM_SESSION_DEFAULT_TIMEOUT);

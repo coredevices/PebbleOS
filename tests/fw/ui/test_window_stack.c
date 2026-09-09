@@ -287,9 +287,11 @@ static void prv_push_window_unload(Window *window) {
   prv_window_unload(window);
 
   Window *new_window = window_create();
-  window_set_window_handlers(new_window, &(WindowHandlers){.load = prv_window_load,
-                                                           .unload = prv_window_unload,
-                                                           .appear = prv_window_appear});
+  window_set_window_handlers(
+      new_window,
+      &(WindowHandlers){
+          .load = prv_window_load, .unload = prv_window_unload, .appear = prv_window_appear
+      });
 
   cl_check(stack);
   cl_check(new_window);
@@ -519,10 +521,12 @@ void test_window_stack__insert_next(void) {
 // the screen (before it even appeared) and become subverted by the new window.
 void test_window_stack__push_during_window_load(void) {
   Window *window = window_create();
-  window_set_window_handlers(window, &(WindowHandlers){.load = prv_push_window_load,
-                                                       .unload = prv_window_unload,
-                                                       .appear = prv_window_appear,
-                                                       .disappear = prv_window_disappear});
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_push_window_load,
+                                         .unload = prv_window_unload,
+                                         .appear = prv_window_appear,
+                                         .disappear = prv_window_disappear
+                                     });
 
   WindowStack *stack = app_state_get_window_stack();
 
@@ -1147,10 +1151,12 @@ void test_window_stack__unfocusable_modal_and_app(void) {
 void test_window_stack__window_flow(void) {
   Window *window = window_create();
 
-  window_set_window_handlers(window, &(WindowHandlers){.load = prv_window_load,
-                                                       .unload = prv_window_unload,
-                                                       .appear = prv_window_appear,
-                                                       .disappear = prv_window_disappear});
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_window_load,
+                                         .unload = prv_window_unload,
+                                         .appear = prv_window_appear,
+                                         .disappear = prv_window_disappear
+                                     });
 
   window_set_click_config_provider(window, prv_click_config_provider);
 
@@ -1311,15 +1317,19 @@ void test_window_stack__push_during_window_unload_multiple(void) {
   Window *window1 = window_create();
   Window *window2 = window_create();
 
-  window_set_window_handlers(window1, &(WindowHandlers){.load = prv_window_load,
-                                                        .unload = prv_push_window_unload,
-                                                        .appear = prv_window_appear,
-                                                        .disappear = prv_window_disappear});
+  window_set_window_handlers(window1, &(WindowHandlers){
+                                          .load = prv_window_load,
+                                          .unload = prv_push_window_unload,
+                                          .appear = prv_window_appear,
+                                          .disappear = prv_window_disappear
+                                      });
 
-  window_set_window_handlers(window2, &(WindowHandlers){.load = prv_window_load,
-                                                        .unload = prv_push_window_unload,
-                                                        .appear = prv_window_appear,
-                                                        .disappear = prv_window_disappear});
+  window_set_window_handlers(window2, &(WindowHandlers){
+                                          .load = prv_window_load,
+                                          .unload = prv_push_window_unload,
+                                          .appear = prv_window_appear,
+                                          .disappear = prv_window_disappear
+                                      });
 
   WindowStack *stack = app_state_get_window_stack();
 
@@ -1356,10 +1366,12 @@ void test_window_stack__push_during_window_unload_multiple(void) {
 void test_window_stack__pop_during_window_unload(void) {
   Window *window = window_create();
 
-  window_set_window_handlers(window, &(WindowHandlers){.load = prv_window_load,
-                                                       .unload = prv_pop_window_unload,
-                                                       .appear = prv_window_appear,
-                                                       .disappear = prv_window_disappear});
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_window_load,
+                                         .unload = prv_pop_window_unload,
+                                         .appear = prv_window_appear,
+                                         .disappear = prv_window_disappear
+                                     });
 
   WindowStack *stack = app_state_get_window_stack();
 

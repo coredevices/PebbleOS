@@ -337,10 +337,13 @@ void ecompass_service_handle(void) {
   int32_t roll = 0, pitch = 0;
   prv_get_roll_and_pitch(&accel_data, &roll, &pitch);
 
-  PebbleEvent e = {.type = PEBBLE_COMPASS_DATA_EVENT,
-                   .compass_data = {.magnetic_heading = prv_correct_for_roll_and_pitch(
-                                        &accel_data, &mag_data, roll, pitch),
-                                    .calib_status = s_current_cal_status}};
+  PebbleEvent e = {
+      .type = PEBBLE_COMPASS_DATA_EVENT,
+      .compass_data = {
+          .magnetic_heading = prv_correct_for_roll_and_pitch(&accel_data, &mag_data, roll, pitch),
+          .calib_status = s_current_cal_status
+      }
+  };
 
   s_last_heading = e.compass_data.magnetic_heading;
   event_put(&e);
@@ -359,10 +362,12 @@ DEFINE_SYSCALL(void, sys_ecompass_get_last_heading, CompassHeadingData *data) {
     syscall_assert_userspace_buffer(data, sizeof(*data));
   }
 
-  *data = (CompassHeadingData){.magnetic_heading = s_last_heading,
-                               .true_heading = s_last_heading,
-                               .compass_status = s_current_cal_status,
-                               .is_declination_valid = false};
+  *data = (CompassHeadingData){
+      .magnetic_heading = s_last_heading,
+      .true_heading = s_last_heading,
+      .compass_status = s_current_cal_status,
+      .is_declination_valid = false
+  };
 }
 
 //////////////////////////////////////////////////////////////////////////////////

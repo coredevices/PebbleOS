@@ -66,16 +66,14 @@ static const TestCacheDefinition s_test_data[] = {
     },
     {
         .key = 0x45679BDF,
-        .item =
-            {
-                .data =
-                    {
-                        0xFEDC7654,
-                        0xBA983210,
-                        0xFEBA7632,
-                        0xDC985410,
-                    },
+        .item = {
+            .data = {
+                0xFEDC7654,
+                0xBA983210,
+                0xFEBA7632,
+                0xDC985410,
             },
+        },
     },
 };
 

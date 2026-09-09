@@ -23,11 +23,13 @@
 extern void prv_apply_tint_color(GColor *color, GColor tint_color);
 
 static uint8_t s_dest_data[100 * 100];
-static GBitmap s_dest_bitmap = {.addr = s_dest_data,
-                                .row_size_bytes = 16,
-                                .info.format = GBitmapFormat1Bit,
-                                .info.version = GBITMAP_VERSION_CURRENT,
-                                .bounds = GRect(0, 0, 100, 100)};
+static GBitmap s_dest_bitmap = {
+    .addr = s_dest_data,
+    .row_size_bytes = 16,
+    .info.format = GBitmapFormat1Bit,
+    .info.version = GBITMAP_VERSION_CURRENT,
+    .bounds = GRect(0, 0, 100, 100)
+};
 // Tests
 ////////////////////////////////////
 

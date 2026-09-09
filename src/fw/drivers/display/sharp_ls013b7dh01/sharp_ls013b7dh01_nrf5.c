@@ -116,10 +116,9 @@ static void prv_spim_evt_handler(nrfx_spim_evt_t const *evt, void *ctx) {
   if (s_updating) {
     PebbleEvent e = {
         .type = PEBBLE_CALLBACK_EVENT,
-        .callback =
-            {
-                .callback = prv_terminate_transfer,
-            },
+        .callback = {
+            .callback = prv_terminate_transfer,
+        },
     };
 
     event_put_isr(&e);

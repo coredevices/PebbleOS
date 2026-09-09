@@ -113,15 +113,13 @@ static void prv_deliver_touch(TouchEventType type, int16_t x, int16_t y) {
   cl_assert(s_subscribed_info != NULL);
   PebbleEvent e = {
       .type = PEBBLE_TOUCH_EVENT,
-      .touch =
-          {
-              .event =
-                  {
-                      .type = type,
-                      .x = x,
-                      .y = y,
-                  },
+      .touch = {
+          .event = {
+              .type = type,
+              .x = x,
+              .y = y,
           },
+      },
   };
   s_subscribed_info->handler(&e, s_subscribed_info->context);
 }

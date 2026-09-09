@@ -97,8 +97,9 @@ static void prv_text_size_menu_push(SettingsDisplayData *data) {
 
 static const uint32_t s_intensity_values[] = {10, 25, 50, 100};
 
-static const char *s_intensity_labels[] = {i18n_noop("Low"), i18n_noop("Medium"), i18n_noop("High"),
-                                           i18n_noop("Blinding")};
+static const char *s_intensity_labels[] = {
+    i18n_noop("Low"), i18n_noop("Medium"), i18n_noop("High"), i18n_noop("Blinding")
+};
 
 #define BACKLIGHT_SCALE_GRANULARITY 5
 // Normalize the result from light get brightness as it sometimes
@@ -180,8 +181,9 @@ static void prv_display_orientation_menu_push(SettingsDisplayData *data) {
 
 static const uint32_t s_timeout_values[] = {3000, 5000, 8000};
 
-static const char *s_timeout_labels[] = {i18n_noop("3 Seconds"), i18n_noop("5 Seconds"),
-                                         i18n_noop("8 Seconds")};
+static const char *s_timeout_labels[] = {
+    i18n_noop("3 Seconds"), i18n_noop("5 Seconds"), i18n_noop("8 Seconds")
+};
 
 static int prv_timeout_get_selection_index() {
   uint32_t timeout_ms = backlight_get_timeout_ms();
@@ -299,7 +301,8 @@ static void prv_preset_menu_push(SettingsDisplayData *data) {
 /////////////////////////////
 #ifdef CONFIG_APP_SCALING
 static const char *s_legacy_app_mode_labels[] = {
-    i18n_noop("Centered"), i18n_noop("Scaled (Nearest)"), i18n_noop("Scaled (Bilinear)")};
+    i18n_noop("Centered"), i18n_noop("Scaled (Nearest)"), i18n_noop("Scaled (Bilinear)")
+};
 
 static void prv_legacy_app_mode_menu_select(OptionMenu *option_menu, int selection, void *context) {
   shell_prefs_set_legacy_app_render_mode((LegacyAppRenderMode)selection);

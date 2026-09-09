@@ -357,11 +357,13 @@ void test_alarm_smart__across_midnight_boundary(void) {
 
   AlarmId id;
   bool monday_only[7] = {false, true, false, false, false, false, false};
-  id = alarm_create(&(AlarmInfo){.hour = 0,
-                                 .minute = 15,
-                                 .kind = ALARM_KIND_CUSTOM,
-                                 .is_smart = true,
-                                 .scheduled_days = &monday_only});
+  id = alarm_create(&(AlarmInfo){
+      .hour = 0,
+      .minute = 15,
+      .kind = ALARM_KIND_CUSTOM,
+      .is_smart = true,
+      .scheduled_days = &monday_only
+  });
   prv_assert_alarm_config(id, 0, 15, false, ALARM_KIND_CUSTOM, monday_only);
   cl_assert_equal_i(s_num_timeline_adds, 1);
   cl_assert_equal_i(s_num_timeline_removes, 0);

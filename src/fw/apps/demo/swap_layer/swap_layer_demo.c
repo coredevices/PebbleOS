@@ -72,7 +72,8 @@ static const TestNotification notifications[] = {
         .location = "High (Room 12)\nPebble PA Office",
         .body = "with Liron Damir and 10 other people",
         .time_offset = MINUTES(10),
-    }};
+    }
+};
 
 #define NUM_NOTIFS ((int)ARRAY_LENGTH(notifications))
 
@@ -239,11 +240,10 @@ static void handle_init(void) {
         .attributes = &notification->attr_list,
         .mode = LayoutLayerModeCard,
         .app_id = &notification->header.parent_id,
-        .context =
-            &(NotificationLayoutInfo){
-                .item = notification,
-                .show_notification_timestamp = true,
-            },
+        .context = &(NotificationLayoutInfo){
+            .item = notification,
+            .show_notification_timestamp = true,
+        },
     };
     LayoutLayer *layout = layout_create(notification->header.layout, &config);
 
@@ -269,8 +269,9 @@ const PebbleProcessMd *swap_layer_demo_get_app_info() {
           {
               .main_func = s_main,
               // UUID: 12a32d95-ef69-46d4-a0b9-854cc62f97f9
-              .uuid = {0x12, 0xa3, 0x2d, 0x95, 0xef, 0x69, 0x46, 0xd4, 0xa0, 0xb9, 0x85, 0x4c, 0xc6,
-                       0x2f, 0x97, 0xf9},
+              .uuid =
+                  {0x12, 0xa3, 0x2d, 0x95, 0xef, 0x69, 0x46, 0xd4, 0xa0, 0xb9, 0x85, 0x4c, 0xc6,
+                   0x2f, 0x97, 0xf9},
           },
       .name = "SwapLayer Demo",
   };

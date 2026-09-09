@@ -245,10 +245,9 @@ static void prv_blobdb_event_handler(PebbleEvent *event, void *context) {
 
   PebbleEvent e = (PebbleEvent){
       .type = PEBBLE_WEATHER_EVENT,
-      .weather =
-          (PebbleWeatherEvent){
-              .type = type,
-          },
+      .weather = (PebbleWeatherEvent){
+          .type = type,
+      },
   };
 
   event_put(&e);

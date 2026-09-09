@@ -422,7 +422,8 @@ static Animation *prv_create_swap_down_animation(SwapLayer *swap_layer) {
 
   int16_t dy = -(prev_frame->origin.y + prev_frame->size.h);
   ScrollAnimationCurve swap_down_scroll_curve = (ScrollAnimationCurve){
-      .swap_curve_kind = ScrollAnimationCurveKind_Curve, .curve = AnimationCurveEaseOut};
+      .swap_curve_kind = ScrollAnimationCurveKind_Curve, .curve = AnimationCurveEaseOut
+  };
   Animation *prev_up = prv_create_anim_frame_scroll((Layer *)swap_layer->previous, SWAP_MS, dy,
                                                     &swap_down_scroll_curve);
   Animation *current_up = prv_create_anim_frame_scroll((Layer *)swap_layer->current, SWAP_MS, dy,
@@ -454,7 +455,8 @@ static void prv_scroll(SwapLayer *swap_layer, int16_t dy, AnimationCurve curve) 
     return;
   }
   ScrollAnimationCurve moook_scroll_curve = (ScrollAnimationCurve){
-      .swap_curve_kind = ScrollAnimationCurveKind_Interpolator, .interpolator = interpolate_moook};
+      .swap_curve_kind = ScrollAnimationCurveKind_Interpolator, .interpolator = interpolate_moook
+  };
   Animation *current = prv_create_anim_frame_scroll((Layer *)swap_layer->current, SCROLL_MS, dy,
                                                     &moook_scroll_curve);
 #if PBL_RECT

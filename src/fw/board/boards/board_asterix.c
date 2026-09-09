@@ -31,13 +31,12 @@ static QSPIPort QSPI_PORT = {
     .clk_freq_hz = 8000000UL,
     .cs_gpio = NRF_GPIO_PIN_MAP(0, 17),
     .clk_gpio = NRF_GPIO_PIN_MAP(0, 19),
-    .data_gpio =
-        {
-            NRF_GPIO_PIN_MAP(0, 20),
-            NRF_GPIO_PIN_MAP(0, 21),
-            NRF_GPIO_PIN_MAP(0, 22),
-            NRF_GPIO_PIN_MAP(0, 23),
-        },
+    .data_gpio = {
+        NRF_GPIO_PIN_MAP(0, 20),
+        NRF_GPIO_PIN_MAP(0, 21),
+        NRF_GPIO_PIN_MAP(0, 22),
+        NRF_GPIO_PIN_MAP(0, 23),
+    },
 };
 QSPIPort *const QSPI = &QSPI_PORT;
 
@@ -197,12 +196,11 @@ static const LSM6DSOConfig s_lsm6dso_config = {
             [AXIS_Y] = 0,
             [AXIS_Z] = 2,
         },
-    .axis_dir =
-        {
-            [AXIS_X] = 1,
-            [AXIS_Y] = 1,
-            [AXIS_Z] = 1,
-        },
+    .axis_dir = {
+        [AXIS_X] = 1,
+        [AXIS_Y] = 1,
+        [AXIS_Z] = 1,
+    },
 };
 
 const LSM6DSOConfig *const LSM6DSO = &s_lsm6dso_config;

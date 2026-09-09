@@ -457,18 +457,15 @@ static const PropertyAnimationImplementation s_content_offset_animation_impl = {
         {
             .update = (AnimationUpdateImplementation)property_animation_update_gpoint,
         },
-    .accessors =
-        {
-            .setter =
-                {
-                    .grect =
-                        (const GRectSetter)(void *)prv_scroll_layer_set_content_offset_internal,
-                },
-            .getter =
-                {
-                    .grect = (const GRectGetter)(void *)scroll_layer_get_content_offset,
-                },
+    .accessors = {
+        .setter =
+            {
+                .grect = (const GRectSetter)(void *)prv_scroll_layer_set_content_offset_internal,
+            },
+        .getter = {
+            .grect = (const GRectGetter)(void *)scroll_layer_get_content_offset,
         },
+    },
 };
 
 void scroll_layer_set_content_offset(ScrollLayer *scroll_layer, GPoint offset, bool animated) {
@@ -533,18 +530,15 @@ static const PropertyAnimationImplementation s_overscroll_offset_animation_impl 
         {
             .update = (AnimationUpdateImplementation)property_animation_update_gpoint,
         },
-    .accessors =
-        {
-            .setter =
-                {
-                    .grect =
-                        (const GRectSetter)(void *)prv_set_content_offset_overscrolled_internal,
-                },
-            .getter =
-                {
-                    .grect = (const GRectGetter)(void *)scroll_layer_get_content_offset,
-                },
+    .accessors = {
+        .setter =
+            {
+                .grect = (const GRectSetter)(void *)prv_set_content_offset_overscrolled_internal,
+            },
+        .getter = {
+            .grect = (const GRectGetter)(void *)scroll_layer_get_content_offset,
         },
+    },
 };
 
 int16_t scroll_layer_touch_overscroll_damp(int32_t raw_y, int16_t min_y, int16_t max_y,

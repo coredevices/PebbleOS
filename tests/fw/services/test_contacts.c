@@ -110,8 +110,9 @@ static Attribute address1_attributes[] = {
 static Address addresses[] = {
     {.id = {ADDRESS_1_UUID},
      .type = AddressTypePhoneNumber,
-     .attr_list = {.num_attributes = ARRAY_LENGTH(address1_attributes),
-                   .attributes = address1_attributes}},
+     .attr_list = {
+         .num_attributes = ARRAY_LENGTH(address1_attributes), .attributes = address1_attributes
+     }},
 };
 
 static Attribute attributes[] = {

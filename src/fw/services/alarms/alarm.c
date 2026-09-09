@@ -407,8 +407,11 @@ static void prv_put_alarm_event(void) {
   const bool is_smart = (config && config->is_smart && activity_tracking_on());
   PebbleEvent e = (PebbleEvent){
       .type = PEBBLE_ALARM_CLOCK_EVENT,
-      .alarm_clock = {.alarm_time = rtc_get_time(),
-                      .alarm_label = is_smart ? i18n_noop("Smart Alarm") : i18n_noop("Alarm")}};
+      .alarm_clock = {
+          .alarm_time = rtc_get_time(),
+          .alarm_label = is_smart ? i18n_noop("Smart Alarm") : i18n_noop("Alarm")
+      }
+  };
 
   event_put(&e);
 }
@@ -1390,9 +1393,10 @@ void alarm_get_string_for_custom(bool scheduled_days[DAYS_PER_WEEK], char *alarm
   static const char *day_strings[7] = {i18n_noop("Sun"), i18n_noop("Mon"), i18n_noop("Tue"),
                                        i18n_noop("Wed"), i18n_noop("Thu"), i18n_noop("Fri"),
                                        i18n_noop("Sat")};
-  static const char *full_day_strings[7] = {
-      i18n_noop("Sundays"),   i18n_noop("Mondays"), i18n_noop("Tuesdays"), i18n_noop("Wednesdays"),
-      i18n_noop("Thursdays"), i18n_noop("Fridays"), i18n_noop("Saturdays")};
+  static const char *full_day_strings[7] = {i18n_noop("Sundays"),   i18n_noop("Mondays"),
+                                            i18n_noop("Tuesdays"),  i18n_noop("Wednesdays"),
+                                            i18n_noop("Thursdays"), i18n_noop("Fridays"),
+                                            i18n_noop("Saturdays")};
 
   uint8_t num_days_scheduled = 0, latest_day_scheduled = 0;
   // Monday should come first in the list

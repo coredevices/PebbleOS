@@ -179,8 +179,9 @@ static void prv_enqueue_log_message(uint8_t log_level, const char *message) {
   } else {
     circular_buffer_write(&s_isr_log_buffer, &required_space, sizeof(required_space));
 
-    const BufferedLogInfo log_info = {.timestamp_ms = prv_get_timestamp_ms(),
-                                      .log_level = log_level};
+    const BufferedLogInfo log_info = {
+        .timestamp_ms = prv_get_timestamp_ms(), .log_level = log_level
+    };
     circular_buffer_write(&s_isr_log_buffer, &log_info, sizeof(log_info));
 
     circular_buffer_write(&s_isr_log_buffer, message, message_length);

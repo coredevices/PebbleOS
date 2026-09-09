@@ -59,19 +59,19 @@ void connection_service_subscribe(ConnectionHandlers conn_handlers) {
 
 void connection_service_state_init(ConnectionServiceState *state) {
   *state = (ConnectionServiceState){
-      .bcs_info =
-          {
-              .type = PEBBLE_BT_CONNECTION_DEBOUNCED_EVENT,
-              .handler = prv_do_handle,
-          },
+      .bcs_info = {
+          .type = PEBBLE_BT_CONNECTION_DEBOUNCED_EVENT,
+          .handler = prv_do_handle,
+      },
   };
 }
 
 // Deprecated routines kept around for backward compile compatibility
 
 void bluetooth_connection_service_subscribe(ConnectionHandler handler) {
-  ConnectionHandlers conn_handlers = {.pebble_app_connection_handler = handler,
-                                      .pebblekit_connection_handler = NULL};
+  ConnectionHandlers conn_handlers = {
+      .pebble_app_connection_handler = handler, .pebblekit_connection_handler = NULL
+  };
   connection_service_subscribe(conn_handlers);
 }
 

@@ -379,14 +379,15 @@ static void prv_handle_init(void) {
       data->window.layer.bounds,
       GEdgeInsets(STATUS_BAR_LAYER_HEIGHT, 0, PBL_IF_ROUND_ELSE(STATUS_BAR_LAYER_HEIGHT, 0), 0));
   menu_layer_init(&data->menu_layer, &bounds);
-  menu_layer_set_callbacks(
-      &data->menu_layer, data,
-      &(MenuLayerCallbacks){.get_num_sections = prv_alarm_list_get_num_sections_callback,
-                            .get_num_rows = prv_alarm_list_get_num_rows_callback,
-                            .get_cell_height = prv_alarm_list_get_cell_height_callback,
-                            .draw_row = prv_alarm_list_draw_row_callback,
-                            .select_click = prv_alarm_list_select_callback,
-                            .selection_changed = prv_alarm_list_selection_changed_callback});
+  menu_layer_set_callbacks(&data->menu_layer, data,
+                           &(MenuLayerCallbacks){
+                               .get_num_sections = prv_alarm_list_get_num_sections_callback,
+                               .get_num_rows = prv_alarm_list_get_num_rows_callback,
+                               .get_cell_height = prv_alarm_list_get_cell_height_callback,
+                               .draw_row = prv_alarm_list_draw_row_callback,
+                               .select_click = prv_alarm_list_select_callback,
+                               .selection_changed = prv_alarm_list_selection_changed_callback
+                           });
 
   menu_layer_set_highlight_colors(&data->menu_layer, ALARMS_APP_HIGHLIGHT_COLOR, GColorWhite);
   menu_layer_set_click_config_onto_window(&data->menu_layer, &data->window);

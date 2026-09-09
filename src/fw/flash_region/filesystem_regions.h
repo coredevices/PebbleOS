@@ -57,8 +57,8 @@ typedef struct FSRegion {
 FILE_SYSTEM_REGIONS(FILE_SYSTEM_LAYOUT_CHECK)
 
 // Build the flash region list
-static const FSRegion s_region_list[] = {
-    FILE_SYSTEM_REGIONS(FILE_SYSTEM_FS_REGION_ENTRY_CONSTRUCTOR)};
+static const FSRegion s_region_list[] = {FILE_SYSTEM_REGIONS(
+    FILE_SYSTEM_FS_REGION_ENTRY_CONSTRUCTOR)};
 
 //! Erase all the regions that belong to our filesystem. Note that this is just a flash erase,
 //! if you want to leave behind a fully erased and initialized filesystem you should be using

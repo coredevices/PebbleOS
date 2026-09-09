@@ -255,24 +255,20 @@ const Service *fake_gatt_get_health_thermometer_service(void) {
       .uuid = bt_uuid_expand_16bit(0x1809),
       .handle = 0x11,
       .num_characteristics = 1,
-      .characteristics =
-          {
-              [0] =
-                  {
-                      .uuid = bt_uuid_expand_16bit(0x2a1c),
-                      .properties = 0x02,
-                      .handle = 0x13,
-                      .num_descriptors = 1,
-                      .descriptors =
-                          {
-                              [0] =
-                                  {
-                                      .uuid = bt_uuid_expand_16bit(0x2902),
-                                      .handle = 0x15,
-                                  },
-                          },
+      .characteristics = {
+          [0] = {
+              .uuid = bt_uuid_expand_16bit(0x2a1c),
+              .properties = 0x02,
+              .handle = 0x13,
+              .num_descriptors = 1,
+              .descriptors = {
+                  [0] = {
+                      .uuid = bt_uuid_expand_16bit(0x2902),
+                      .handle = 0x15,
                   },
+              },
           },
+      },
   };
   return &s_health_thermometer_service;
 }
@@ -327,10 +323,9 @@ const Service *fake_gatt_get_blood_pressure_service(void) {
                   },
           },
       .num_included_services = 1,
-      .included_services =
-          {
-              [0] = &s_health_thermometer_service,
-          },
+      .included_services = {
+          [0] = &s_health_thermometer_service,
+      },
   };
   return &s_blood_pressure_service;
 }
@@ -408,24 +403,20 @@ void fake_gatt_put_discovery_indication_gatt_profile_service(
       .uuid = bt_uuid_expand_16bit(0x1801),
       .handle = 0x1,
       .num_characteristics = has_service_changed_characteristic ? 1 : 0,
-      .characteristics =
-          {
-              [0] =
-                  {
-                      .uuid = bt_uuid_expand_16bit(0x2a05),
-                      .properties = 0x20,
-                      .handle = 0x3,
-                      .num_descriptors = 1,
-                      .descriptors =
-                          {
-                              [0] =
-                                  {
-                                      .uuid = bt_uuid_expand_16bit(0x2902),
-                                      .handle = 0x05,
-                                  },
-                          },
+      .characteristics = {
+          [0] = {
+              .uuid = bt_uuid_expand_16bit(0x2a05),
+              .properties = 0x20,
+              .handle = 0x3,
+              .num_descriptors = 1,
+              .descriptors = {
+                  [0] = {
+                      .uuid = bt_uuid_expand_16bit(0x2902),
+                      .handle = 0x05,
                   },
+              },
           },
+      },
   };
   fake_gatt_put_discovery_indication_service(connection_id, &s_gatt_profile_service);
 }

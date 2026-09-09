@@ -53,10 +53,12 @@ FakeBitmapData s_fake_bitmap_data;
 size_t sys_resource_load_range(ResAppNum app_num, uint32_t id, uint32_t start_offset, uint8_t *data,
                                size_t num_bytes) {
   BitmapData *bitmap = (BitmapData *)data;
-  *bitmap = (BitmapData){.row_size_bytes = s_fake_bitmap_data.row_size_bytes,
-                         .info_flags = s_fake_bitmap_data.info_flags,
-                         .width = s_fake_bitmap_data.width,
-                         .height = s_fake_bitmap_data.height};
+  *bitmap = (BitmapData){
+      .row_size_bytes = s_fake_bitmap_data.row_size_bytes,
+      .info_flags = s_fake_bitmap_data.info_flags,
+      .width = s_fake_bitmap_data.width,
+      .height = s_fake_bitmap_data.height
+  };
 
   return num_bytes;
 }
@@ -78,11 +80,13 @@ static uint32_t prv_calculate_size(FakeBitmapData *bitmap) {
 }
 
 void test_gbitmap_resource_validation__total_size(void) {
-  s_fake_bitmap_data = (FakeBitmapData){.row_size_bytes = 8,
-                                        .info.format = GBitmapFormat8Bit,
-                                        .info.version = GBITMAP_VERSION_1,
-                                        .width = 8,
-                                        .height = 1};
+  s_fake_bitmap_data = (FakeBitmapData){
+      .row_size_bytes = 8,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_1,
+      .width = 8,
+      .height = 1
+  };
 
   // Set the resource size to be valid.
   s_resource_size = prv_calculate_size(&s_fake_bitmap_data);
@@ -113,11 +117,13 @@ void test_gbitmap_resource_validation__total_size(void) {
 }
 
 void test_gbitmap_resource_validation__row_size(void) {
-  s_fake_bitmap_data = (FakeBitmapData){.row_size_bytes = 8,
-                                        .info.format = GBitmapFormat8Bit,
-                                        .info.version = GBITMAP_VERSION_1,
-                                        .width = 8,
-                                        .height = 1};
+  s_fake_bitmap_data = (FakeBitmapData){
+      .row_size_bytes = 8,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_1,
+      .width = 8,
+      .height = 1
+  };
 
   // Set the resource size to be valid.
   s_resource_size = prv_calculate_size(&s_fake_bitmap_data);

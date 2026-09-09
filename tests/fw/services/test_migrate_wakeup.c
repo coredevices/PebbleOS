@@ -72,8 +72,9 @@ typedef struct PACKED {
 
 static const Uuid app_uuid = (Uuid){0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5};
 
-static PebbleProcessMd s_test_app_md = {.uuid =
-                                            (Uuid){0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5}};
+static PebbleProcessMd s_test_app_md = {
+    .uuid = (Uuid){0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5}
+};
 
 static AppInstallEntry s_app_install_entry = {
     .install_id = 1,
@@ -125,11 +126,13 @@ void test_migrate_wakeup__initialize(void) {
   const int32_t timestamp = TIMESTAMP;
 
   // Create the Migration Entry
-  w_entry = (WakeupEntryV1){.uuid = app_uuid,
-                            .reason = WAKEUP_REASON,
-                            .repeating = false,
-                            .repeat_hours_missed = 0,
-                            .notify_if_missed = true};
+  w_entry = (WakeupEntryV1){
+      .uuid = app_uuid,
+      .reason = WAKEUP_REASON,
+      .repeating = false,
+      .repeat_hours_missed = 0,
+      .notify_if_missed = true
+  };
 
   open_settings_file(&file);
 

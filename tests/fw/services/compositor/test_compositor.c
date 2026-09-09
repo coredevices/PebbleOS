@@ -185,11 +185,13 @@ static void prv_compositor_update_func_b(GContext *ctx, Animation *animation,
                                          uint32_t distance_normalized) {
 }
 
-static const CompositorTransition s_transition_a = {.init = prv_compositor_init_func_a,
-                                                    .update = prv_compositor_update_func_a};
+static const CompositorTransition s_transition_a = {
+    .init = prv_compositor_init_func_a, .update = prv_compositor_update_func_a
+};
 
-static const CompositorTransition s_transition_b = {.init = prv_compositor_init_func_b,
-                                                    .update = prv_compositor_update_func_b};
+static const CompositorTransition s_transition_b = {
+    .init = prv_compositor_init_func_b, .update = prv_compositor_update_func_b
+};
 
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
 }

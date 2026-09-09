@@ -30,20 +30,23 @@ static const GetBytesStorageImplementation s_get_bytes_impls[] = {
      .setup = gb_storage_coredump_setup,
      .get_size = gb_storage_coredump_get_size,
      .read_next_chunk = gb_storage_coredump_read_next_chunk,
-     .cleanup = gb_storage_coredump_cleanup},
+     .cleanup = gb_storage_coredump_cleanup
+    },
 #if !defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_RELEASE)
     {// Filesystem File Storage
      .type = GetBytesStorageTypeFile,
      .setup = gb_storage_file_setup,
      .get_size = gb_storage_file_get_size,
      .read_next_chunk = gb_storage_file_read_next_chunk,
-     .cleanup = gb_storage_file_cleanup},
+     .cleanup = gb_storage_file_cleanup
+    },
     {// Flash Storage
      .type = GetBytesStorageTypeFlash,
      .setup = gb_storage_flash_setup,
      .get_size = gb_storage_flash_get_size,
      .read_next_chunk = gb_storage_flash_read_next_chunk,
-     .cleanup = gb_storage_flash_cleanup},
+     .cleanup = gb_storage_flash_cleanup
+    },
 #endif /* !defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_RELEASE) */
 };
 

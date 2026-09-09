@@ -100,8 +100,9 @@ void wakeup_dispatcher_system_task(void *data) {
       };
       data->common.args = &data->wakeup;
 
-      PebbleEvent event = {.type = PEBBLE_APP_LAUNCH_EVENT,
-                           .launch_app = {.id = app_id, .data = data}};
+      PebbleEvent event = {
+          .type = PEBBLE_APP_LAUNCH_EVENT, .launch_app = {.id = app_id, .data = data}
+      };
 
       event_put(&event);
     }
@@ -109,7 +110,8 @@ void wakeup_dispatcher_system_task(void *data) {
     // If app running, send event
     PebbleEvent event = {
         .type = PEBBLE_WAKEUP_EVENT,
-        .wakeup = {.wakeup_info = {.wakeup_id = wakeup_id, .wakeup_reason = entry.reason}}};
+        .wakeup = {.wakeup_info = {.wakeup_id = wakeup_id, .wakeup_reason = entry.reason}}
+    };
     event_put(&event);
   }
 
@@ -335,7 +337,8 @@ static bool prv_compiled_without_utc_support(void) {
   static const Version first_utc_version = {
       // See list of changes in pebble_process_info.h. Apps compiled prior to this version will
       // get local time returned from the time() call.
-      0x5, 0x2f};
+      0x5, 0x2f
+  };
   Version app_sdk_version =
       process_metadata_get_sdk_version(sys_process_manager_get_current_process_md());
 
@@ -363,11 +366,13 @@ DEFINE_SYSCALL(WakeupId, sys_wakeup_schedule, time_t timestamp, int32_t reason,
 
   Uuid uuid = app_manager_get_current_app_md()->uuid;
 
-  WakeupEntry entry = {.uuid = uuid,
-                       .reason = reason,
-                       .notify_if_missed = notify_if_missed,
-                       .timestamp = timestamp,
-                       .utc = clock_is_timezone_set()};
+  WakeupEntry entry = {
+      .uuid = uuid,
+      .reason = reason,
+      .notify_if_missed = notify_if_missed,
+      .timestamp = timestamp,
+      .utc = clock_is_timezone_set()
+  };
 
   // Add to settings file
   StatusCode retval = prv_wakeup_settings_add_entry(wakeup_id, entry);
@@ -467,8 +472,9 @@ static StatusCode prv_wakeup_settings_add_entry(WakeupId wakeup_id, WakeupEntry 
     if (settings_file_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
       // Check if current app already has MAX_WAKEUP_EVENTS_PER_APP scheduled
       // or if the minute event window is already occupied
-      struct prv_check_app_and_wakeup_event_s check = {.wakeup_count = 0,
-                                                       .wakeup_timestamp = entry.timestamp};
+      struct prv_check_app_and_wakeup_event_s check = {
+          .wakeup_count = 0, .wakeup_timestamp = entry.timestamp
+      };
       settings_file_each(&wakeup_settings, prv_check_count_and_availability_callback, &check);
 
       if (check.wakeup_count < S_SUCCESS) {

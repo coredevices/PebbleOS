@@ -221,7 +221,8 @@ static void prv_notif_queue_push_action(uint32_t uid, ActionId action_id) {
     return;
   }
   *node = (NotificationQueueNode){
-      .op = NotificationQueueOpPerformAction, .uid = uid, .action_id = action_id};
+      .op = NotificationQueueOpPerformAction, .uid = uid, .action_id = action_id
+  };
 
   prv_notif_queue_push_common(node);
 }

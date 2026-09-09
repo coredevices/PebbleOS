@@ -101,243 +101,243 @@ static Attribute title_attr = {
 static TimelineItem s_item1 = {
     .header =
         {
-            .id = {0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00},
+            .id =
+                {0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                 0x00, 0x00},
             .timestamp = 1 * SECONDS_PER_MINUTE,
             .duration = 15,
             .type = TimelineItemTypePin,
             .all_day = false,
             .layout = LayoutIdCalendar,
         },
-    .attr_list =
-        {
-            .num_attributes = 1,
-            .attributes = &title_attr,
-        },
+    .attr_list = {
+        .num_attributes = 1,
+        .attributes = &title_attr,
+    },
 };
 
 static TimelineItem s_item2 = {
     .header =
         {
-            .id = {0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00},
+            .id =
+                {0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                 0x00, 0x00},
             .timestamp = 5 * SECONDS_PER_MINUTE,
             .duration = 20,
             .type = TimelineItemTypePin,
             .all_day = false,
             .layout = LayoutIdCalendar,
         },
-    .attr_list =
-        {
-            .num_attributes = 1,
-            .attributes = &title_attr,
-        },
+    .attr_list = {
+        .num_attributes = 1,
+        .attributes = &title_attr,
+    },
 };
 
 static TimelineItem s_item3 = {
     .header =
         {
-            .id = {0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00},
+            .id =
+                {0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                 0x00, 0x00},
             .timestamp = 9 * SECONDS_PER_MINUTE,
             .duration = 5,
             .type = TimelineItemTypePin,
             .all_day = false,
             .layout = LayoutIdCalendar,
         },
-    .attr_list =
-        {
-            .num_attributes = 1,
-            .attributes = &title_attr,
-        },
+    .attr_list = {
+        .num_attributes = 1,
+        .attributes = &title_attr,
+    },
 };
 
 static TimelineItem s_future_item = {
     .header =
         {
-            .id = {0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00},
+            .id =
+                {0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                 0x00, 0x00},
             .timestamp = 100 * SECONDS_PER_MINUTE,
             .duration = 10,
             .type = TimelineItemTypePin,
             .all_day = false,
             .layout = LayoutIdCalendar,
         },
-    .attr_list =
-        {
-            .num_attributes = 1,
-            .attributes = &title_attr,
-        },
+    .attr_list = {
+        .num_attributes = 1,
+        .attributes = &title_attr,
+    },
 };
 
 static TimelineItem s_short_future_item = {
     .header =
         {
-            .id = {0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00},
+            .id =
+                {0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                 0x00, 0x00},
             .timestamp = 100 * SECONDS_PER_MINUTE,
             .duration = 5,
             .type = TimelineItemTypePin,
             .all_day = false,
             .layout = LayoutIdCalendar,
         },
-    .attr_list =
-        {
-            .num_attributes = 1,
-            .attributes = &title_attr,
-        },
+    .attr_list = {
+        .num_attributes = 1,
+        .attributes = &title_attr,
+    },
 };
 
 // not a calendar pin
 static TimelineItem s_weather_item = {
     .header =
         {
-            .id = {0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00},
+            .id =
+                {0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                 0x00, 0x00},
             .timestamp = 10 * SECONDS_PER_MINUTE,
             .duration = 10,
             .type = TimelineItemTypePin,
             .all_day = false,
             .layout = LayoutIdWeather,
         },
-    .attr_list =
-        {
-            .num_attributes = 1,
-            .attributes = &title_attr,
-        },
+    .attr_list = {
+        .num_attributes = 1,
+        .attributes = &title_attr,
+    },
 };
 
 // add day pin
 static TimelineItem s_all_day_item = {
     .header =
         {
-            .id = {0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00},
+            .id =
+                {0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                 0x00, 0x00},
             .timestamp = 100 * SECONDS_PER_MINUTE,
             .duration = 10,
             .type = TimelineItemTypePin,
             .all_day = true,
             .layout = LayoutIdCalendar,
         },
-    .attr_list =
-        {
-            .num_attributes = 1,
-            .attributes = &title_attr,
-        },
+    .attr_list = {
+        .num_attributes = 1,
+        .attributes = &title_attr,
+    },
 };
 
 // 0-duration event
 static TimelineItem s_point_item = {
     .header =
         {
-            .id = {0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00},
+            .id =
+                {0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                 0x00, 0x00},
             .timestamp = 20 * SECONDS_PER_MINUTE,
             .duration = 0,
             .type = TimelineItemTypePin,
             .all_day = false,
             .layout = LayoutIdWeather,
         },
-    .attr_list =
-        {
-            .num_attributes = 1,
-            .attributes = &title_attr,
-        },
+    .attr_list = {
+        .num_attributes = 1,
+        .attributes = &title_attr,
+    },
 };
 
 // recurring calendar event 1
 static TimelineItem s_recurring_calendar_item1 = {
     .header =
         {
-            .id = {0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00},
+            .id =
+                {0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                 0x00, 0x00},
             .timestamp = 50 * SECONDS_PER_MINUTE - SECONDS_PER_DAY,
             .duration = 30,
             .type = TimelineItemTypePin,
             .all_day = false,
             .layout = LayoutIdCalendar,
         },
-    .attr_list =
-        {
-            .num_attributes = 1,
-            .attributes = &title_attr,
-        },
+    .attr_list = {
+        .num_attributes = 1,
+        .attributes = &title_attr,
+    },
 };
 
 // recurring calendar event 2
 static TimelineItem s_recurring_calendar_item2 = {
     .header =
         {
-            .id = {0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00},
+            .id =
+                {0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                 0x00, 0x00},
             .timestamp = 50 * SECONDS_PER_MINUTE,
             .duration = 30,
             .type = TimelineItemTypePin,
             .all_day = false,
             .layout = LayoutIdCalendar,
         },
-    .attr_list =
-        {
-            .num_attributes = 1,
-            .attributes = &title_attr,
-        },
+    .attr_list = {
+        .num_attributes = 1,
+        .attributes = &title_attr,
+    },
 };
 
 // recurring calendar event 3
 static TimelineItem s_recurring_calendar_item3 = {
     .header =
         {
-            .id = {0x0b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00},
+            .id =
+                {0x0b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                 0x00, 0x00},
             .timestamp = 50 * SECONDS_PER_MINUTE + SECONDS_PER_DAY,
             .duration = 30,
             .type = TimelineItemTypePin,
             .all_day = false,
             .layout = LayoutIdCalendar,
         },
-    .attr_list =
-        {
-            .num_attributes = 1,
-            .attributes = &title_attr,
-        },
+    .attr_list = {
+        .num_attributes = 1,
+        .attributes = &title_attr,
+    },
 };
 
 // back-to-back calendar event 1
 static TimelineItem s_back_to_back_calendar_item1 = {
     .header =
         {
-            .id = {0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00},
+            .id =
+                {0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                 0x00, 0x00},
             .timestamp = 60 * SECONDS_PER_MINUTE,
             .duration = 30,
             .type = TimelineItemTypePin,
             .all_day = false,
             .layout = LayoutIdCalendar,
         },
-    .attr_list =
-        {
-            .num_attributes = 1,
-            .attributes = &title_attr,
-        },
+    .attr_list = {
+        .num_attributes = 1,
+        .attributes = &title_attr,
+    },
 };
 
 // back-to-back calendar event 2
 static TimelineItem s_back_to_back_calendar_item2 = {
     .header =
         {
-            .id = {0x0d, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00},
+            .id =
+                {0x0d, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                 0x00, 0x00},
             .timestamp = 90 * SECONDS_PER_MINUTE,
             .duration = 30,
             .type = TimelineItemTypePin,
             .all_day = false,
             .layout = LayoutIdCalendar,
         },
-    .attr_list =
-        {
-            .num_attributes = 1,
-            .attributes = &title_attr,
-        },
+    .attr_list = {
+        .num_attributes = 1,
+        .attributes = &title_attr,
+    },
 };
 
 // Setup
@@ -383,29 +383,29 @@ typedef struct CreateEventParams {
   bool persistent;
 } CreateEventParams;
 
-#define DEFINE_EVENT(...)                                                                     \
-  ({                                                                                          \
-    CreateEventParams params = {__VA_ARGS__};                                                 \
-    TimelineItem item = {                                                                     \
-        .header =                                                                             \
-            {                                                                                 \
-                .type = TimelineItemTypePin,                                                  \
-                .id = {params.id, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, \
-                       0x00, 0x00, 0x00, 0x00, 0x00},                                         \
-                .layout = params.layout ?: LayoutIdCalendar,                                  \
-                .persistent = params.persistent ? 1 : 0,                                      \
-                .timestamp = params.timestamp,                                                \
-                .all_day = params.all_day,                                                    \
-                .duration = params.duration,                                                  \
-            },                                                                                \
-        .attr_list =                                                                          \
-            {                                                                                 \
-                .num_attributes = 1,                                                          \
-                .attributes = &title_attr,                                                    \
-            },                                                                                \
-    };                                                                                        \
-    ADD_EVENT(.item = &item);                                                                 \
-    item;                                                                                     \
+#define DEFINE_EVENT(...)                                                                         \
+  ({                                                                                              \
+    CreateEventParams params = {__VA_ARGS__};                                                     \
+    TimelineItem item = {                                                                         \
+        .header =                                                                                 \
+            {                                                                                     \
+                .type = TimelineItemTypePin,                                                      \
+                .id =                                                                             \
+                    {params.id, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, \
+                     0x00, 0x00, 0x00, 0x00},                                                     \
+                .layout = params.layout ?: LayoutIdCalendar,                                      \
+                .persistent = params.persistent ? 1 : 0,                                          \
+                .timestamp = params.timestamp,                                                    \
+                .all_day = params.all_day,                                                        \
+                .duration = params.duration,                                                      \
+            },                                                                                    \
+        .attr_list = {                                                                            \
+            .num_attributes = 1,                                                                  \
+            .attributes = &title_attr,                                                            \
+        },                                                                                        \
+    };                                                                                            \
+    ADD_EVENT(.item = &item);                                                                     \
+    item;                                                                                         \
   })
 
 typedef struct CheckNoEventsParams {

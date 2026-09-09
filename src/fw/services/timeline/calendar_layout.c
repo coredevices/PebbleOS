@@ -102,7 +102,8 @@ static void prv_day_node_callback(GContext *ctx, const GRect *box,
   const GPoint date_offset = {
       1, PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,
                                        /* small */ 16, /* medium */ 16, /* large */ 16,
-                                       /* extralarge */ 16)};
+                                       /* extralarge */ 16)
+  };
   layer_set_frame((Layer *)&layout->date_layer,
                   &(GRect){gpoint_add(icon_frame->origin, date_offset), icon_frame->size});
   clock_get_day_date(layout->day_date_buffer, sizeof(layout->day_date_buffer),
@@ -249,9 +250,11 @@ static void prv_not_recurring_spacer_callback(GContext *ctx, const GRect *box,
                                               const GTextNodeDrawConfig *config, bool render,
                                               GSize *size_out, void *user_data) {
   if (size_out) {
-    *size_out = (GSize){0, PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,
-                                                         /* small */ 0, /* medium */ 0,
-                                                         /* large */ 3, /* extralarge */ 3)};
+    *size_out = (GSize){
+        0, PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,
+                                         /* small */ 0, /* medium */ 0,
+                                         /* large */ 3, /* extralarge */ 3)
+    };
   }
 }
 
@@ -517,9 +520,10 @@ LayoutLayer *calendar_layout_create(const LayoutLayerConfig *config) {
 
   static const TimelineLayoutImpl s_timeline_layout_impl = {
       .attributes = {AttributeIdTitle, AttributeIdLocationName},
-      .default_colors = {{.argb = GColorBlackARGB8},
-                         {.argb = GColorWhiteARGB8},
-                         {.argb = GColorSunsetOrangeARGB8}},
+      .default_colors =
+          {{.argb = GColorBlackARGB8},
+           {.argb = GColorWhiteARGB8},
+           {.argb = GColorSunsetOrangeARGB8}},
       .default_icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
       .card_icon_align = PBL_IF_RECT_ELSE(GAlignLeft, GAlignCenter),
       .card_icon_size = PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,

@@ -139,7 +139,8 @@ static const DoNotDisturbScheduleConfigKeys s_dnd_schedule_keys[NumDNDSchedules]
     [WeekendSchedule] = {
         .schedule_pref_key = "dndWeekendSchedule",
         .enabled_pref_key = "dndWeekendScheduleEnabled",
-    }};
+    }
+};
 
 static void prv_migrate_legacy_dnd_schedule(SettingsFile *file) {
   // If Weekday schedule does not exist, assume that the other 3 settings files are missing as well
@@ -738,11 +739,10 @@ done:
     }
     PebbleEvent pref_event = {
         .type = PEBBLE_PREF_CHANGE_EVENT,
-        .pref_change =
-            {
-                .key = matched_key,
-                .key_len = strlen(matched_key) + 1,
-            },
+        .pref_change = {
+            .key = matched_key,
+            .key_len = strlen(matched_key) + 1,
+        },
     };
     event_put(&pref_event);
   }

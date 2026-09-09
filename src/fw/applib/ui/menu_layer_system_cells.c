@@ -52,13 +52,12 @@ static const MenuCellDimensions s_menu_cell_dimensions[NumPreferredContentSizes]
             .horizontal_inset = 10,
             .title_subtitle_left_margin = 34,
         },
-    [PreferredContentSizeExtraLarge] =
-        {
-            .basic_cell_height = 85,
-            .small_cell_height = 52,
-            .horizontal_inset = 10,
-            .title_subtitle_left_margin = 34,
-        },
+    [PreferredContentSizeExtraLarge] = {
+        .basic_cell_height = 85,
+        .small_cell_height = 52,
+        .horizontal_inset = 10,
+        .title_subtitle_left_margin = 34,
+    },
 };
 
 //! Third-party apps keep the runtime platform's default size so their layouts are unaffected by
@@ -421,8 +420,10 @@ static ALWAYS_INLINE GRect prv_menu_cell_basic_draw_custom_one_column_round(
       subtitle_text_frame_origin_y += icon_on_left_title_subtitle_vertical_spacing_offset;
     }
     // Reuse rect as the subtitle text frame
-    rect = (GRect){.origin = GPoint(cell_layer_bounds_origin_x, subtitle_text_frame_origin_y),
-                   .size = GSize(cell_layer_bounds_size.w, subtitle_text_frame_height)};
+    rect = (GRect){
+        .origin = GPoint(cell_layer_bounds_origin_x, subtitle_text_frame_origin_y),
+        .size = GSize(cell_layer_bounds_size.w, subtitle_text_frame_height)
+    };
     graphics_draw_text(ctx, config->subtitle, subtitle_font, rect, config->overflow_mode,
                        text_alignment, NULL);
   }
@@ -430,8 +431,10 @@ static ALWAYS_INLINE GRect prv_menu_cell_basic_draw_custom_one_column_round(
   // Draw the title, which we're guaranteed to have room for because otherwise we would have bailed
   // out at the beginning of this function
   // Reuse rect as the title text frame
-  rect = (GRect){.origin = GPoint(cell_layer_bounds_origin_x, title_text_frame_origin_y),
-                 .size = GSize(cell_layer_bounds_size.w, title_text_frame_height)};
+  rect = (GRect){
+      .origin = GPoint(cell_layer_bounds_origin_x, title_text_frame_origin_y),
+      .size = GSize(cell_layer_bounds_size.w, title_text_frame_height)
+  };
   // Accumulate the cap offsets we need to position the title properly
   int cap_offsets_to_apply = title_text_cap_offset;
   if ((icon_align == GAlignLeft) && subtitle_text_frame_height) {

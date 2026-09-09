@@ -586,10 +586,13 @@ static void prv_test_sleep_reward(void *context) {
   // History with low median but good sleep over the past few days
   ActivitySettingsValueHistory sleep_history = {
       .utc_sec = rtc_get_time(),
-      .values = {0,  // This ends up overwritten anyway by the current sleep value
-                 GOOD_SLEEP, GOOD_SLEEP, GOOD_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP,
-                 AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP,
-                 AVERAGE_SLEEP, AVERAGE_SLEEP}};
+      .values = {
+          0,  // This ends up overwritten anyway by the current sleep value
+          GOOD_SLEEP, GOOD_SLEEP, GOOD_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP,
+          AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP,
+          AVERAGE_SLEEP
+      }
+  };
 
   // Reset all stored data
   activity_test_reset(true /*reset_settings*/, true /*tracking_on*/, &sleep_history, NULL);
@@ -629,9 +632,12 @@ static void prv_test_activity_reward(void *context) {
   // History with low median
   ActivitySettingsValueHistory step_history = {
       .utc_sec = rtc_get_time(),
-      .values = {0,  // This ends up overwritten anyway by the current sleep value
-                 AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS,
-                 AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS}};
+      .values = {
+          0,  // This ends up overwritten anyway by the current sleep value
+          AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS,
+          AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS
+      }
+  };
 
   // Reset all stored data
   activity_test_reset(true /*reset_settings*/, true /*tracking_on*/, NULL, &step_history);
@@ -673,8 +679,11 @@ static void prv_test_sleep_summary(void *context) {
   // History with low median but good sleep over the past few days
   ActivitySettingsValueHistory sleep_history = {
       .utc_sec = rtc_get_time(),
-      .values = {0,  // This ends up overwritten anyway by the current sleep value
-                 AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP}};
+      .values = {
+          0,  // This ends up overwritten anyway by the current sleep value
+          AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP
+      }
+  };
 
   // Reset all stored data
   activity_test_reset(false /*reset_settings*/, true /*tracking_on*/, &sleep_history, NULL);
@@ -789,7 +798,8 @@ static TestEntry s_test_entries[] = {
     {.title = "activity reward", .callback = prv_test_activity_reward},
     {.title = "sleep summary", .callback = prv_test_sleep_summary},
     {.title = "activity summary", .callback = prv_test_activity_summary},
-    {.title = "sleep, w/time chg", .callback = prv_test_sleep_time_change}};
+    {.title = "sleep, w/time chg", .callback = prv_test_sleep_time_change}
+};
 
 // -------------------------------------------------------------------------------
 static void prv_test_begin(int index, void *context) {
@@ -890,7 +900,8 @@ static void s_main(void) {
 
 // -------------------------------------------------------------------------------
 const PebbleProcessMd *activity_test_get_app_info(void) {
-  static const PebbleProcessMdSystem s_activity_test_app_info = {.common.main_func = &s_main,
-                                                                 .name = "ActivityTest"};
+  static const PebbleProcessMdSystem s_activity_test_app_info = {
+      .common.main_func = &s_main, .name = "ActivityTest"
+  };
   return (const PebbleProcessMd *)&s_activity_test_app_info;
 }

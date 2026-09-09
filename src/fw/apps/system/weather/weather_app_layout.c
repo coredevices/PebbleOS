@@ -1299,8 +1299,9 @@ static void prv_draw_current_escape_icon(Layer *layer, GContext *ctx) {
                               weather_type_disc_color(layout->anim_params.incoming_weather_type));
 
   GSize icon_size = layout->today_icon_rest_frame.size;
-  GRect icon_rect = {GPoint((bounds.size.w - icon_size.w) / 2, (bounds.size.h - icon_size.h) / 2),
-                     icon_size};
+  GRect icon_rect = {
+      GPoint((bounds.size.w - icon_size.w) / 2, (bounds.size.h - icon_size.h) / 2), icon_size
+  };
   prv_draw_weather_pdc_frame(layout, ctx, layout->anim_params.incoming_weather_type, icon_rect);
 }
 
@@ -1627,9 +1628,11 @@ static GRect prv_lerp_rect_origin(GRect from, GRect to, int32_t p, GSize sz) {
 
 // The tomorrow rest frame translated into root-layer coordinates.
 static GRect prv_tomorrow_rest_root(const WeatherAppLayout *layout) {
-  return (GRect){GPoint(layout->content_layer_origin.x + layout->tomorrow_icon_rest_frame.origin.x,
-                        layout->content_layer_origin.y + layout->tomorrow_icon_rest_frame.origin.y),
-                 layout->tomorrow_icon_rest_frame.size};
+  return (GRect){
+      GPoint(layout->content_layer_origin.x + layout->tomorrow_icon_rest_frame.origin.x,
+             layout->content_layer_origin.y + layout->tomorrow_icon_rest_frame.origin.y),
+      layout->tomorrow_icon_rest_frame.size
+  };
 }
 
 static void prv_apply_day_transition_progress(WeatherAppLayout *layout,
@@ -1848,12 +1851,14 @@ static void prv_animate_fin_in(WeatherAppLayout *layout, uint32_t total_ms) {
   Layer *fin = layout->fin_layer;
   GRect cl = layer_get_frame(layout->content_layer);
   GSize fin_size = gdraw_command_image_get_bounds_size(layout->fin_pdc);
-  GRect to = (GRect){GPoint(cl.origin.x + (cl.size.w - fin_size.w) / 2,
-                            // Rect: rest in the footer zone — the PDC's ink (rows 12..32 of its
-                            // 50px box) vertically centred between the y195 divider and the
-                            // screen bottom; round keeps the classic centred rest.
-                            cl.origin.y + cl.size.h - fin_size.h + PBL_IF_RECT_ELSE(11, -16)),
-                     fin_size};
+  GRect to = (GRect){
+      GPoint(cl.origin.x + (cl.size.w - fin_size.w) / 2,
+             // Rect: rest in the footer zone — the PDC's ink (rows 12..32 of its
+             // 50px box) vertically centred between the y195 divider and the
+             // screen bottom; round keeps the classic centred rest.
+             cl.origin.y + cl.size.h - fin_size.h + PBL_IF_RECT_ELSE(11, -16)),
+      fin_size
+  };
   GRect from = to;
   from.origin.y += cl.size.h / 3;
 
@@ -2007,12 +2012,14 @@ static GRect prv_fin_rest_frame(WeatherAppLayout *layout) {
   GRect cl = layer_get_frame(layout->content_layer);
   GSize fin_size =
       layout->fin_pdc ? gdraw_command_image_get_bounds_size(layout->fin_pdc) : GSize(0, 0);
-  return (GRect){GPoint(cl.origin.x + (cl.size.w - fin_size.w) / 2,
-                        // Rect: rest in the footer zone — the PDC's ink (rows 12..32 of its
-                        // 50px box) vertically centred between the y195 divider and the
-                        // screen bottom; round keeps the classic centred rest.
-                        cl.origin.y + cl.size.h - fin_size.h + PBL_IF_RECT_ELSE(11, -16)),
-                 fin_size};
+  return (GRect){
+      GPoint(cl.origin.x + (cl.size.w - fin_size.w) / 2,
+             // Rect: rest in the footer zone — the PDC's ink (rows 12..32 of its
+             // 50px box) vertically centred between the y195 divider and the
+             // screen bottom; round keeps the classic centred rest.
+             cl.origin.y + cl.size.h - fin_size.h + PBL_IF_RECT_ELSE(11, -16)),
+      fin_size
+  };
 }
 
 static void prv_restore_fin_rest(WeatherAppLayout *layout) {
@@ -2454,10 +2461,11 @@ static bool prv_prepare_day_transition(WeatherAppLayout *layout,
   // Small rect: the footer is text-only — the icon never joins the arc.
   if (!WEATHER_APP_LAYOUT_RECT_SMALL && !animate_down && layout->next_forecast) {
     Layer *tmr = bitmap_layer_get_layer(layout->tomorrow_weather_icon_layer);
-    GRect tmr_root =
-        (GRect){GPoint(layout->content_layer_origin.x + layout->tomorrow_icon_rest_frame.origin.x,
-                       layout->content_layer_origin.y + layout->tomorrow_icon_rest_frame.origin.y),
-                layout->tomorrow_icon_rest_frame.size};
+    GRect tmr_root = (GRect){
+        GPoint(layout->content_layer_origin.x + layout->tomorrow_icon_rest_frame.origin.x,
+               layout->content_layer_origin.y + layout->tomorrow_icon_rest_frame.origin.y),
+        layout->tomorrow_icon_rest_frame.size
+    };
     layer_set_frame(tmr, tmr_root);
     layer_remove_from_parent(tmr);
     layer_add_child(layout->root_layer, tmr);

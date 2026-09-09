@@ -119,9 +119,9 @@ void test_vibe__check_vibe_history(void) {
 
   // test custom vibe
   const uint32_t custom_pattern_durations[] = {10, 12, 100, 123, 25, 5};
-  const VibePattern custom_pattern =
-      (VibePattern){.durations = custom_pattern_durations,
-                    .num_segments = ARRAY_LENGTH(custom_pattern_durations)};
+  const VibePattern custom_pattern = (VibePattern){
+      .durations = custom_pattern_durations, .num_segments = ARRAY_LENGTH(custom_pattern_durations)
+  };
   uint64_t time_start = prv_get_current_time();
   sys_vibe_history_start_collecting();
   vibes_enqueue_custom_pattern(custom_pattern);
@@ -133,12 +133,14 @@ void test_vibe__check_vibe_history(void) {
 void test_vibe__check_vibe_history_multiple(void) {
   const uint32_t custom_pattern_durations_1[] = {10, 12, 100, 123, 25, 5};
   const uint32_t custom_pattern_durations_2[] = {24, 50, 130, 112, 52, 9};
-  const VibePattern custom_pattern_1 =
-      (VibePattern){.durations = custom_pattern_durations_1,
-                    .num_segments = ARRAY_LENGTH(custom_pattern_durations_1)};
-  const VibePattern custom_pattern_2 =
-      (VibePattern){.durations = custom_pattern_durations_2,
-                    .num_segments = ARRAY_LENGTH(custom_pattern_durations_2)};
+  const VibePattern custom_pattern_1 = (VibePattern){
+      .durations = custom_pattern_durations_1,
+      .num_segments = ARRAY_LENGTH(custom_pattern_durations_1)
+  };
+  const VibePattern custom_pattern_2 = (VibePattern){
+      .durations = custom_pattern_durations_2,
+      .num_segments = ARRAY_LENGTH(custom_pattern_durations_2)
+  };
 
   sys_vibe_history_start_collecting();
   uint64_t time_start_1 = prv_get_current_time();

@@ -53,11 +53,13 @@ bool bt_ctl_is_bluetooth_running(void) {
 }
 
 static void prv_put_disconnection_event(void) {
-  PebbleEvent event = (PebbleEvent){.type = PEBBLE_BT_CONNECTION_EVENT,
-                                    .bluetooth.connection = {
-                                        .is_ble = true,
-                                        .state = PebbleBluetoothConnectionEventStateDisconnected,
-                                    }};
+  PebbleEvent event = (PebbleEvent){
+      .type = PEBBLE_BT_CONNECTION_EVENT,
+      .bluetooth.connection = {
+          .is_ble = true,
+          .state = PebbleBluetoothConnectionEventStateDisconnected,
+      }
+  };
   PBL_LOG_DBG("New BT Conn change event, We are now disconnected");
   event_put(&event);
 }
@@ -118,15 +120,13 @@ static void prv_send_state_change_event(void) {
   PBL_LOG_DBG("----> Sending a BT state event");
   PebbleEvent event = {
       .type = PEBBLE_BT_STATE_EVENT,
-      .bluetooth =
-          {
-              .state =
-                  {
-                      .airplane = s_comm_airplane_mode_on,
-                      .enabled = s_comm_enabled,
-                      .override = s_comm_override,
-                  },
+      .bluetooth = {
+          .state = {
+              .airplane = s_comm_airplane_mode_on,
+              .enabled = s_comm_enabled,
+              .override = s_comm_override,
           },
+      },
   };
   event_put(&event);
   if (s_comm_airplane_mode_on) {

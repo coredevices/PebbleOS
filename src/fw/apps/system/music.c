@@ -131,11 +131,10 @@ static const MusicAppSizeConfig s_music_size_config_medium = {
     .track_corner_radius = 1,
 
     .no_music_img_pos = {PBL_IF_RECT_ELSE(29, 53), PBL_IF_RECT_ELSE(25, 26)},
-    .no_music_text_field =
-        {
-            .origin_y = PBL_IF_RECT_ELSE(107, 104),
-            .size_h = 58,
-        },
+    .no_music_text_field = {
+        .origin_y = PBL_IF_RECT_ELSE(107, 104),
+        .size_h = 58,
+    },
 };
 
 static const MusicAppSizeConfig s_music_size_config_large = {
@@ -171,11 +170,10 @@ static const MusicAppSizeConfig s_music_size_config_large = {
     .track_corner_radius = 4,
 
     .no_music_img_pos = {PBL_IF_RECT_ELSE(57, 72), PBL_IF_RECT_ELSE(46, 58)},
-    .no_music_text_field =
-        {
-            .origin_y = PBL_IF_RECT_ELSE(131, 143),
-            .size_h = 58,
-        },
+    .no_music_text_field = {
+        .origin_y = PBL_IF_RECT_ELSE(131, 143),
+        .size_h = 58,
+    },
 };
 
 static const MusicAppSizeConfig *const s_music_size_configs[NumPreferredContentSizes] = {
@@ -411,17 +409,15 @@ static const PropertyAnimationImplementation s_frame_layer_implementation = {
         {
             .update = (AnimationUpdateImplementation)property_animation_update_grect,
         },
-    .accessors =
-        {
-            .setter =
-                {
-                    .grect = (const GRectSetter)layer_set_frame_by_value,
-                },
-            .getter =
-                {
-                    .grect = (const GRectGetter)layer_get_frame_by_value,
-                },
+    .accessors = {
+        .setter =
+            {
+                .grect = (const GRectSetter)layer_set_frame_by_value,
+            },
+        .getter = {
+            .grect = (const GRectGetter)layer_get_frame_by_value,
         },
+    },
 };
 
 static Animation *prv_create_layer_bounceback_animation(Layer *layer, GRect origin) {
@@ -1684,8 +1680,9 @@ const PebbleProcessMd *music_app_get_info(void) {
           {
               .main_func = &prv_main,
               // UUID: 1f03293d-47af-4f28-b960-f2b02a6dd757
-              .uuid = {0x1f, 0x03, 0x29, 0x3d, 0x47, 0xaf, 0x4f, 0x28, 0xb9, 0x60, 0xf2, 0xb0, 0x2a,
-                       0x6d, 0xd7, 0x57},
+              .uuid =
+                  {0x1f, 0x03, 0x29, 0x3d, 0x47, 0xaf, 0x4f, 0x28, 0xb9, 0x60, 0xf2, 0xb0, 0x2a,
+                   0x6d, 0xd7, 0x57},
           },
       .name = i18n_noop("Music"),
       .icon_resource_id = RESOURCE_ID_AUDIO_CASSETTE_TINY,

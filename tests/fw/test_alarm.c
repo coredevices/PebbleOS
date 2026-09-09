@@ -147,23 +147,27 @@ void test_alarm__alarm_create_recurring_custom(void) {
   AlarmId id;
   bool custom_schedule1[7] = {true, false, true, false, false, true, true};
   id = alarm_create(&(AlarmInfo){
-      .hour = 3, .minute = 14, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &custom_schedule1});
+      .hour = 3, .minute = 14, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &custom_schedule1
+  });
   prv_assert_alarm_config(id, 3, 14, false, ALARM_KIND_CUSTOM, custom_schedule1);
 
   bool custom_schedule2[7] = {false, false, false, false, false, true, false};
   id = alarm_create(&(AlarmInfo){
-      .hour = 4, .minute = 14, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &custom_schedule2});
+      .hour = 4, .minute = 14, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &custom_schedule2
+  });
   prv_assert_alarm_config(id, 4, 14, false, ALARM_KIND_CUSTOM, custom_schedule2);
 
   bool custom_schedule3[7] = {true, true, true, true, true, true, true};
   id = alarm_create(&(AlarmInfo){
-      .hour = 5, .minute = 14, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &custom_schedule3});
+      .hour = 5, .minute = 14, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &custom_schedule3
+  });
   prv_assert_alarm_config(id, 5, 14, false, ALARM_KIND_CUSTOM, custom_schedule3);
 
   // FIXME:
   bool custom_schedule4[7] = {false, false, false, false, false, false, false};
   id = alarm_create(&(AlarmInfo){
-      .hour = 6, .minute = 14, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &custom_schedule4});
+      .hour = 6, .minute = 14, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &custom_schedule4
+  });
   prv_assert_alarm_config(id, 6, 14, false, ALARM_KIND_CUSTOM, custom_schedule4);
 }
 
@@ -195,7 +199,8 @@ void test_alarm__alarm_set_recurring_daily(void) {
 
   bool custom_schedule1[7] = {true, false, true, false, false, true, true};
   id = alarm_create(&(AlarmInfo){
-      .hour = 4, .minute = 14, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &custom_schedule1});
+      .hour = 4, .minute = 14, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &custom_schedule1
+  });
   prv_assert_alarm_config(id, 4, 14, false, ALARM_KIND_CUSTOM, custom_schedule1);
   alarm_set_kind(id, ALARM_KIND_EVERYDAY);
   prv_assert_alarm_config(id, 4, 14, false, ALARM_KIND_EVERYDAY, s_every_day_schedule);
@@ -210,7 +215,8 @@ void test_alarm__alarm_set_recurring_weekends(void) {
 
   bool custom_schedule1[7] = {true, false, true, false, false, true, true};
   id = alarm_create(&(AlarmInfo){
-      .hour = 4, .minute = 14, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &custom_schedule1});
+      .hour = 4, .minute = 14, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &custom_schedule1
+  });
   prv_assert_alarm_config(id, 4, 14, false, ALARM_KIND_CUSTOM, custom_schedule1);
   alarm_set_kind(id, ALARM_KIND_WEEKENDS);
   prv_assert_alarm_config(id, 4, 14, false, ALARM_KIND_WEEKENDS, s_weekend_schedule);
@@ -225,7 +231,8 @@ void test_alarm__alarm_set_recurring_weekdays(void) {
 
   bool custom_schedule1[7] = {true, false, true, false, false, true, true};
   id = alarm_create(&(AlarmInfo){
-      .hour = 4, .minute = 14, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &custom_schedule1});
+      .hour = 4, .minute = 14, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &custom_schedule1
+  });
   prv_assert_alarm_config(id, 4, 14, false, ALARM_KIND_CUSTOM, custom_schedule1);
   alarm_set_kind(id, ALARM_KIND_WEEKDAYS);
   prv_assert_alarm_config(id, 4, 14, false, ALARM_KIND_WEEKDAYS, s_weekday_schedule);
@@ -252,7 +259,8 @@ void test_alarm__alarm_get_custom_days(void) {
   bool schedule_1[7] = {true, false, false, false, false, false, true};
   bool verify_schedule_1[7] = {false, false, false, false, false, false, false};
   id1 = alarm_create(&(AlarmInfo){
-      .hour = 3, .minute = 14, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &schedule_1});
+      .hour = 3, .minute = 14, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &schedule_1
+  });
   prv_assert_alarm_config(id1, 3, 14, false, ALARM_KIND_CUSTOM, schedule_1);
   alarm_get_custom_days(id1, verify_schedule_1);
   prv_assert_alarm_config(id1, 3, 14, false, ALARM_KIND_CUSTOM, verify_schedule_1);
@@ -813,7 +821,8 @@ void test_alarm__custom_alarm_everyday(void) {
 
   bool schedule_1[7] = {true, true, true, true, true, true, true};
   id1 = alarm_create(&(AlarmInfo){
-      .hour = 10, .minute = 30, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &schedule_1});
+      .hour = 10, .minute = 30, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &schedule_1
+  });
   prv_assert_alarm_config(id1, 10, 30, false, ALARM_KIND_CUSTOM, schedule_1);
 
   // It's currently Thursday @ 00:00.
@@ -848,7 +857,8 @@ void test_alarm__custom_alarm_weekends_and_weekday(void) {
 
   bool schedule_1[7] = {true, false, false, true, false, false, true};
   id1 = alarm_create(&(AlarmInfo){
-      .hour = 10, .minute = 30, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &schedule_1});
+      .hour = 10, .minute = 30, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &schedule_1
+  });
   prv_assert_alarm_config(id1, 10, 30, false, ALARM_KIND_CUSTOM, schedule_1);
 
   // It's currently Thursday @ 00:00.
@@ -883,7 +893,8 @@ void test_alarm__custom_alarm_partial_weekdays(void) {
 
   bool schedule_1[7] = {false, true, true, true, true, false, false};
   id1 = alarm_create(&(AlarmInfo){
-      .hour = 10, .minute = 30, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &schedule_1});
+      .hour = 10, .minute = 30, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &schedule_1
+  });
   prv_assert_alarm_config(id1, 10, 30, false, ALARM_KIND_CUSTOM, schedule_1);
 
   // It's currently Thursday @ 00:00.
@@ -918,14 +929,16 @@ void test_alarm__custom_alarm_weekends(void) {
 
   bool schedule_1[7] = {true, false, false, false, false, false, true};
   id1 = alarm_create(&(AlarmInfo){
-      .hour = 10, .minute = 30, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &schedule_1});
+      .hour = 10, .minute = 30, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &schedule_1
+  });
   prv_assert_alarm_config(id1, 10, 30, false, ALARM_KIND_CUSTOM, schedule_1);
 
   // Only 1 pin should be added (for Saturday)
   cl_assert_equal_i(s_num_timeline_adds, 1);
 
   id2 = alarm_create(&(AlarmInfo){
-      .hour = 11, .minute = 30, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &schedule_1});
+      .hour = 11, .minute = 30, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &schedule_1
+  });
   prv_assert_alarm_config(id2, 11, 30, false, ALARM_KIND_CUSTOM, schedule_1);
   cl_assert_equal_i(s_num_timeline_adds, 2);
 
@@ -977,7 +990,8 @@ void test_alarm__custom_alarm_no_alarm(void) {
 
   bool schedule_1[7] = {false, false, false, false, false, false, false};
   id1 = alarm_create(&(AlarmInfo){
-      .hour = 10, .minute = 30, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &schedule_1});
+      .hour = 10, .minute = 30, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &schedule_1
+  });
   prv_assert_alarm_config(id1, 10, 30, false, ALARM_KIND_CUSTOM, schedule_1);
 
   cl_assert_equal_i(s_alarm_timer_timeout_ms, 0);
@@ -989,7 +1003,8 @@ void test_alarm__custom_alarm_multiple(void) {
   // Alarm set for Tuesday and Saturday
   bool schedule_1[7] = {false, false, true, false, false, false, true};
   id1 = alarm_create(&(AlarmInfo){
-      .hour = 1, .minute = 30, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &schedule_1});
+      .hour = 1, .minute = 30, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &schedule_1
+  });
   prv_assert_alarm_config(id1, 1, 30, false, ALARM_KIND_CUSTOM, schedule_1);
   // It's currently Thursday @ 00:00, 2 days + 1:30 till next alarm
   /* cl_assert_equal_i(s_alarm_timer_timeout_ms, */
@@ -1001,7 +1016,8 @@ void test_alarm__custom_alarm_multiple(void) {
   cron_service_wakeup();
   bool schedule_2[7] = {false, true, false, false, false, false, false};
   id2 = alarm_create(&(AlarmInfo){
-      .hour = 13, .minute = 15, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &schedule_2});
+      .hour = 13, .minute = 15, .kind = ALARM_KIND_CUSTOM, .scheduled_days = &schedule_2
+  });
   prv_assert_alarm_config(id2, 13, 15, false, ALARM_KIND_CUSTOM, schedule_2);
   cl_assert_equal_i(s_num_alarms_fired, 1);
 

@@ -206,7 +206,8 @@ static const char *s_information_titles[SystemInformationItem_Count] = {
     [SystemInformationItemHardware] = i18n_noop("Hardware"),
     [SystemInformationItemSerial] = i18n_noop("Serial"),
     [SystemInformationItemUptime] = i18n_noop("Uptime"),
-    [SystemInformationItemLegal] = i18n_noop("Legal")};
+    [SystemInformationItemLegal] = i18n_noop("Legal")
+};
 
 static void prv_populate_uptime_string(SystemInformationData *data) {
   uint32_t seconds_since_reboot = time_get_uptime_seconds();
@@ -252,7 +253,8 @@ static void prv_information_window_load(Window *window) {
   MenuLayer *menu_layer = &data->menu_layer;
   GRect bounds = data->window.layer.bounds;
   const GEdgeInsets menu_layer_insets = (GEdgeInsets){
-      .top = STATUS_BAR_LAYER_HEIGHT, .bottom = PBL_IF_RECT_ELSE(0, STATUS_BAR_LAYER_HEIGHT)};
+      .top = STATUS_BAR_LAYER_HEIGHT, .bottom = PBL_IF_RECT_ELSE(0, STATUS_BAR_LAYER_HEIGHT)
+  };
   bounds = grect_inset(bounds, menu_layer_insets);
   menu_layer_init(menu_layer, &bounds);
   menu_layer_set_callbacks(menu_layer, data,
@@ -430,9 +432,10 @@ static void prv_als_threshold_menu_push(SettingsSystemData *data) {
 #ifdef CONFIG_ACCEL_SENSITIVITY
 static const uint8_t s_motion_sensitivity_values[] = {10, 25, 40, 55, 70, 85, 100};
 
-static const char *s_motion_sensitivity_labels[] = {
-    i18n_noop("Very Low"),    i18n_noop("Low"),  i18n_noop("Medium-Low"), i18n_noop("Medium"),
-    i18n_noop("Medium-High"), i18n_noop("High"), i18n_noop("Very High")};
+static const char *s_motion_sensitivity_labels[] = {i18n_noop("Very Low"),    i18n_noop("Low"),
+                                                    i18n_noop("Medium-Low"),  i18n_noop("Medium"),
+                                                    i18n_noop("Medium-High"), i18n_noop("High"),
+                                                    i18n_noop("Very High")};
 
 static int prv_motion_sensitivity_get_selection_index() {
   const uint8_t sensitivity = shell_prefs_get_motion_sensitivity();
@@ -587,7 +590,8 @@ static void prv_debugging_window_load(Window *window) {
   MenuLayer *menu_layer = &data->menu_layer;
   GRect bounds = data->window.layer.bounds;
   const GEdgeInsets menu_layer_insets = (GEdgeInsets){
-      .top = STATUS_BAR_LAYER_HEIGHT, .bottom = PBL_IF_RECT_ELSE(0, STATUS_BAR_LAYER_HEIGHT)};
+      .top = STATUS_BAR_LAYER_HEIGHT, .bottom = PBL_IF_RECT_ELSE(0, STATUS_BAR_LAYER_HEIGHT)
+  };
   bounds = grect_inset(bounds, menu_layer_insets);
   menu_layer_init(menu_layer, &bounds);
   menu_layer_set_callbacks(menu_layer, data,
@@ -1084,23 +1088,26 @@ static void prv_certification_window_load(Window *window) {
   prv_finished_appending_regulatory_compliance_marks(cd);
 
   if (flags->has_japan_telec_r) {
-    prv_append_certification_menu(
-        cd, &(SystemCertificationMenuItem){.draw_cell_fn = prv_draw_rt_cell,
-                                           .arg1 = &cd->r_mark,
-                                           .arg2 = prv_get_japan_telec_r_id()});
+    prv_append_certification_menu(cd, &(SystemCertificationMenuItem){
+                                          .draw_cell_fn = prv_draw_rt_cell,
+                                          .arg1 = &cd->r_mark,
+                                          .arg2 = prv_get_japan_telec_r_id()
+                                      });
   }
   if (flags->has_japan_telec_t) {
-    prv_append_certification_menu(
-        cd, &(SystemCertificationMenuItem){.draw_cell_fn = prv_draw_rt_cell,
-                                           .arg1 = &cd->t_mark,
-                                           .arg2 = prv_get_japan_telec_t_id()});
+    prv_append_certification_menu(cd, &(SystemCertificationMenuItem){
+                                          .draw_cell_fn = prv_draw_rt_cell,
+                                          .arg1 = &cd->t_mark,
+                                          .arg2 = prv_get_japan_telec_t_id()
+                                      });
   }
 
   // Create the menu
   MenuLayer *menu_layer = &data->menu_layer;
   GRect bounds = data->window.layer.bounds;
   const GEdgeInsets menu_layer_insets = (GEdgeInsets){
-      .top = STATUS_BAR_LAYER_HEIGHT, .bottom = PBL_IF_RECT_ELSE(0, STATUS_BAR_LAYER_HEIGHT)};
+      .top = STATUS_BAR_LAYER_HEIGHT, .bottom = PBL_IF_RECT_ELSE(0, STATUS_BAR_LAYER_HEIGHT)
+  };
   bounds = grect_inset(bounds, menu_layer_insets);
   menu_layer_init(menu_layer, &bounds);
   menu_layer_set_callbacks(menu_layer, data,
@@ -1170,9 +1177,10 @@ static void prv_kcc_window_load(Window *window) {
   const GFont info_text_font = fonts_get_system_font(FONT_KEY_GOTHIC_14);
   const GSize info_text_size = GSize(window_bounds.size.w, fonts_get_font_height(info_text_font));
   const int16_t vertical_spacing = 3;
-  GRect certification_rect =
-      (GRect){.size = GSize(window_bounds.size.w,
-                            bmp_size.h + title_text_size.h + info_text_size.h + vertical_spacing)};
+  GRect certification_rect = (GRect){
+      .size = GSize(window_bounds.size.w,
+                    bmp_size.h + title_text_size.h + info_text_size.h + vertical_spacing)
+  };
   grect_align(&certification_rect, &window_bounds, GAlignCenter, true /* clip */);
 
   GRect bmp_frame = (GRect){.size = bmp_size};

@@ -157,13 +157,14 @@ static void prv_selection_will_change_callback(MenuLayer *menu_layer, MenuIndex 
 static void prv_window_load(Window *window) {
   OptionMenu *option_menu = window_get_user_data(window);
 
-  menu_layer_set_callbacks(
-      &option_menu->menu_layer, option_menu,
-      &(MenuLayerCallbacks){.get_cell_height = prv_get_cell_height_callback,
-                            .get_num_rows = prv_get_num_rows_callback,
-                            .draw_row = prv_draw_row_callback,
-                            .selection_will_change = prv_selection_will_change_callback,
-                            .select_click = prv_select_callback});
+  menu_layer_set_callbacks(&option_menu->menu_layer, option_menu,
+                           &(MenuLayerCallbacks){
+                               .get_cell_height = prv_get_cell_height_callback,
+                               .get_num_rows = prv_get_num_rows_callback,
+                               .draw_row = prv_draw_row_callback,
+                               .selection_will_change = prv_selection_will_change_callback,
+                               .select_click = prv_select_callback
+                           });
   menu_layer_set_click_config_onto_window(&option_menu->menu_layer, window);
   if (option_menu->choice != OPTION_MENU_CHOICE_NONE) {
     menu_layer_set_selected_index(&option_menu->menu_layer, MenuIndex(0, option_menu->choice),

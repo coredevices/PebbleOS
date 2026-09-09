@@ -115,7 +115,8 @@ static void prv_log_stuck_task(RebootReason *reboot_reason, PebbleTask task) {
 // so it's safe from above PBL_IRQ_PRIO_MAX_SYSCALL.
 static void prv_capture_stuck_task_info(RebootReason *reboot_reason) {
   const PebbleTask tasks_in_reverse_priority[] = {
-      PebbleTask_KernelBackground, PebbleTask_KernelMain, PebbleTask_PULSE, PebbleTask_NewTimers};
+      PebbleTask_KernelBackground, PebbleTask_KernelMain, PebbleTask_PULSE, PebbleTask_NewTimers
+  };
 
   for (unsigned int i = 0; i < ARRAY_LENGTH(tasks_in_reverse_priority); ++i) {
     const uint8_t task_index = tasks_in_reverse_priority[i];
@@ -146,7 +147,8 @@ static void prv_log_failed_message(RebootReason *reboot_reason) {
   // we add additional tasks to the mask. For now this is all the ones that the task_watchdog
   // service watches over.
   const PebbleTask tasks_in_reverse_priority[] = {
-      PebbleTask_KernelBackground, PebbleTask_KernelMain, PebbleTask_PULSE, PebbleTask_NewTimers};
+      PebbleTask_KernelBackground, PebbleTask_KernelMain, PebbleTask_PULSE, PebbleTask_NewTimers
+  };
 
   for (unsigned int i = 0; i < ARRAY_LENGTH(tasks_in_reverse_priority); ++i) {
     const uint8_t task_index = tasks_in_reverse_priority[i];
@@ -213,11 +215,10 @@ void WATCHDOG_FREERTOS_IRQHandler(void) {
       // Put system task callback using from ISR variant
       PebbleEvent event = {
           .type = PEBBLE_CALLBACK_EVENT,
-          .callback =
-              {
-                  .callback = prv_system_task_starved_callback,
-                  .data = NULL,
-              },
+          .callback = {
+              .callback = prv_system_task_starved_callback,
+              .data = NULL,
+          },
       };
       event_put_isr(&event);
     }
@@ -372,8 +373,10 @@ static void prv_task_watchdog_feed(void) {
       ((s_ticks_since_successful_feed - s_last_warning_message_tick_time) > 0)) {
     // FIXME PBL-39328: Truncate s_watchdog_bits and s_watchdog mask
     // to eight bits each.
-    RebootReason reboot_reason = {.code = RebootReasonCode_Watchdog,
-                                  .data8 = {(uint8_t)s_watchdog_bits, (uint8_t)s_watchdog_mask}};
+    RebootReason reboot_reason = {
+        .code = RebootReasonCode_Watchdog,
+        .data8 = {(uint8_t)s_watchdog_bits, (uint8_t)s_watchdog_mask}
+    };
     reboot_reason_set(&reboot_reason);
 
     // Trigger our lower priority interrupt to fire. When it sees

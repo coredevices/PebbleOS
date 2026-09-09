@@ -35,8 +35,9 @@ static const GColor s_warning_color[] = {
     {.argb = GColorRedARGB8},
 };
 
-static const ResourceId s_warning_icon[] = {RESOURCE_ID_BATTERY_ICON_LOW_LARGE,
-                                            RESOURCE_ID_BATTERY_ICON_VERY_LOW_LARGE};
+static const ResourceId s_warning_icon[] = {
+    RESOURCE_ID_BATTERY_ICON_LOW_LARGE, RESOURCE_ID_BATTERY_ICON_VERY_LOW_LARGE
+};
 
 static void prv_update_ui_fully_charged(Dialog *dialog, void *ignored) {
   dialog_set_text(dialog, i18n_get("Fully Charged", dialog));

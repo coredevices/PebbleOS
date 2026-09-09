@@ -192,8 +192,10 @@ static void free_logs(char **msg_arr, int num_logs) {
 void test_flash_logging__basic(void) {
   flash_logging_init();
 
-  const char *test_messages[] = {"A simple test log message! Woohoo!", "Another message",
-                                 "ABCDEFG 0123456789", "Last simple test message"};
+  const char *test_messages[] = {
+      "A simple test log message! Woohoo!", "Another message", "ABCDEFG 0123456789",
+      "Last simple test message"
+  };
 
   int num_messages = ARRAY_LENGTH(test_messages);
 

@@ -524,8 +524,9 @@ static void prv_endpoint_test(bool buffered, const int item_size, const int num_
 
   // Generate the received ack from the phone endpoint
   CommSession *session = comm_session_get_system_session();
-  uint8_t ack_data[] = {~DLS_ENDPOINT_CMD_MASK | DataLoggingEndpointCmdAck,
-                        dls_test_get_session_id(logging_session)};
+  uint8_t ack_data[] = {
+      ~DLS_ENDPOINT_CMD_MASK | DataLoggingEndpointCmdAck, dls_test_get_session_id(logging_session)
+  };
   data_logging_protocol_msg_callback(session, ack_data, 2);
   fake_system_task_callbacks_invoke_pending();
 

@@ -319,10 +319,12 @@ void test_music_endpoint__ignore_malformatted_messages(void) {
   struct {
     const uint8_t *data;
     uint16_t length;
-  } test_vectors[] = {{malformatted_artist, sizeof(malformatted_artist)},
-                      {malformatted_album, sizeof(malformatted_album)},
-                      {malformatted_title, sizeof(malformatted_title)},
-                      {malformatted_player, sizeof(malformatted_player)}};
+  } test_vectors[] = {
+      {malformatted_artist, sizeof(malformatted_artist)},
+      {malformatted_album, sizeof(malformatted_album)},
+      {malformatted_title, sizeof(malformatted_title)},
+      {malformatted_player, sizeof(malformatted_player)}
+  };
   for (int i = 0; i < ARRAY_LENGTH(test_vectors); ++i) {
     prv_receive_pp_data(test_vectors[i].data, test_vectors[i].length);
     PebbleEvent e = fake_event_get_last();
@@ -359,19 +361,21 @@ void test_music_endpoint__skip_seeks_within_track(void) {
   prv_receive_pp_data(no_flags, sizeof(no_flags));
   cl_assert_equal_b(music_skip_seeks_within_track(), false);
 
-  uint8_t seeks[] = {0x11,
-                     0x01,
-                     0xAA,
-                     0x00,
-                     0x00,
-                     0x00,
-                     0xAA,
-                     0x00,
-                     0x00,
-                     0x00,
-                     0x01,
-                     0x01,
-                     MusicEndpointSkipSeeksWithinTrack};
+  uint8_t seeks[] = {
+      0x11,
+      0x01,
+      0xAA,
+      0x00,
+      0x00,
+      0x00,
+      0xAA,
+      0x00,
+      0x00,
+      0x00,
+      0x01,
+      0x01,
+      MusicEndpointSkipSeeksWithinTrack
+  };
   prv_receive_pp_data(seeks, sizeof(seeks));
   cl_assert_equal_b(music_skip_seeks_within_track(), true);
 

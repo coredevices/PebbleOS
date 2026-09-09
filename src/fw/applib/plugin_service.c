@@ -128,10 +128,9 @@ void plugin_service_send_event(Uuid *uuid, uint8_t type, PluginEventData *data) 
 // Init our state variables.
 void plugin_service_state_init(PluginServiceState *state) {
   *state = (PluginServiceState){
-      .event_service_info =
-          {
-              .type = PEBBLE_PLUGIN_SERVICE_EVENT,
-              .handler = &prv_handle_event_service_event,
-          },
+      .event_service_info = {
+          .type = PEBBLE_PLUGIN_SERVICE_EVENT,
+          .handler = &prv_handle_event_service_event,
+      },
   };
 }

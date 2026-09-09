@@ -157,10 +157,9 @@ GPointIndexLookup *gdraw_command_list_create_index_lookup(GDrawCommandList *list
               .points = points,
               .num_points = num_points,
           },
-      .iter =
-          {
-              .lookup = lookup,
-          },
+      .iter = {
+          .lookup = lookup,
+      },
   };
   gdraw_command_list_iterate(list, prv_gdraw_command_create_point_index_lookup, &ctx);
 
@@ -340,28 +339,27 @@ void gdraw_command_list_scale_segmented_to(GDrawCommandList *list, GSize size, G
   }
 
   ScaleToCBContext ctx = {
-      .values =
-          {
-              .integer =
-                  {
-                      .from = from,
-                      .to = to,
-                      .size = size,
-                      .offset = offset,
-                  },
-              .precise =
-                  {
-                      .from = grect_scalar_lshift(from, GPOINT_PRECISE_PRECISION),
-                      .to = grect_scalar_lshift(to, GPOINT_PRECISE_PRECISION),
-                      .size = gsize_scalar_lshift(size, GPOINT_PRECISE_PRECISION),
-                      .offset = gpoint_scalar_lshift(offset, GPOINT_PRECISE_PRECISION),
-                  },
-              .duration_fraction = duration_fraction,
-              .lookup = lookup,
-              .normalized = normalized,
-              .interpolate = interpolate,
-              .is_offset = is_offset,
-          },
+      .values = {
+          .integer =
+              {
+                  .from = from,
+                  .to = to,
+                  .size = size,
+                  .offset = offset,
+              },
+          .precise =
+              {
+                  .from = grect_scalar_lshift(from, GPOINT_PRECISE_PRECISION),
+                  .to = grect_scalar_lshift(to, GPOINT_PRECISE_PRECISION),
+                  .size = gsize_scalar_lshift(size, GPOINT_PRECISE_PRECISION),
+                  .offset = gpoint_scalar_lshift(offset, GPOINT_PRECISE_PRECISION),
+              },
+          .duration_fraction = duration_fraction,
+          .lookup = lookup,
+          .normalized = normalized,
+          .interpolate = interpolate,
+          .is_offset = is_offset,
+      },
   };
   gdraw_command_list_iterate(list, prv_gdraw_command_scale_segmented, &ctx);
 }

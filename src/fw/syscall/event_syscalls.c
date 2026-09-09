@@ -59,11 +59,10 @@ DEFINE_SYSCALL(void, sys_current_process_schedule_callback, CallbackEventCallbac
 
   PebbleEvent event = {
       .type = PEBBLE_CALLBACK_EVENT,
-      .callback =
-          {
-              .callback = async_cb,
-              .data = ctx,
-          },
+      .callback = {
+          .callback = async_cb,
+          .data = ctx,
+      },
   };
   const PebbleTask task = pebble_task_get_current();
   PBL_ASSERTN(task == PebbleTask_App || task == PebbleTask_Worker);
@@ -123,13 +122,12 @@ DEFINE_SYSCALL(void, sys_event_service_client_subscribe, EventServiceInfo *handl
   // Subscribe to the service!
   PebbleEvent event = {
       .type = PEBBLE_SUBSCRIPTION_EVENT,
-      .subscription =
-          {
-              .subscribe = true,
-              .task = task,
-              .event_queue = event_queue,
-              .event_type = handler->type,
-          },
+      .subscription = {
+          .subscribe = true,
+          .task = task,
+          .event_queue = event_queue,
+          .event_type = handler->type,
+      },
   };
   if (task == PebbleTask_KernelMain) {
     // The client is also KernelMain, just subscribe immediately without putting an event
@@ -168,12 +166,11 @@ DEFINE_SYSCALL(void, sys_event_service_client_unsubscribe, EventServiceInfo *sta
   // Unsubscribe from the service!
   PebbleEvent event = {
       .type = PEBBLE_SUBSCRIPTION_EVENT,
-      .subscription =
-          {
-              .subscribe = false,
-              .task = task,
-              .event_type = handler->type,
-          },
+      .subscription = {
+          .subscribe = false,
+          .task = task,
+          .event_type = handler->type,
+      },
   };
   prv_put_event_from_process(task, &event);
 }

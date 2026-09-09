@@ -905,9 +905,11 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
             int glyph_width =
                 prv_codepoint_get_horizontal_advance(&ctx->font_cache, text_box_params->font, rcp);
 
-            GRect cursor = {.origin = line->origin,
-                            .size.w = glyph_width,
-                            .size.h = fonts_get_font_height(text_box_params->font)};
+            GRect cursor = {
+                .origin = line->origin,
+                .size.w = glyph_width,
+                .size.h = fonts_get_font_height(text_box_params->font)
+            };
             cursor.origin.x += walked_width_px;
 
             if (!codepoint_is_zero_width(rcp)) {
@@ -953,9 +955,11 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
             int glyph_width = prv_codepoint_get_horizontal_advance(&ctx->font_cache,
                                                                    text_box_params->font, draw_cp);
 
-            GRect cursor = {.origin = line->origin,
-                            .size.w = glyph_width,
-                            .size.h = fonts_get_font_height(text_box_params->font)};
+            GRect cursor = {
+                .origin = line->origin,
+                .size.w = glyph_width,
+                .size.h = fonts_get_font_height(text_box_params->font)
+            };
             cursor.origin.x += walked_width_px;
 
             if (!codepoint_is_zero_width(draw_cp)) {
@@ -981,9 +985,11 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
 
     // Handle suffix if present
     if (line->suffix_codepoint) {
-      GRect cursor = {.origin = line->origin,
-                      .size.w = suffix_width_px,
-                      .size.h = fonts_get_font_height(text_box_params->font)};
+      GRect cursor = {
+          .origin = line->origin,
+          .size.w = suffix_width_px,
+          .size.h = fonts_get_font_height(text_box_params->font)
+      };
       cursor.origin.x += walked_width_px;
       text_resources_get_glyph(&ctx->font_cache, line->suffix_codepoint, text_box_params->font,
                                NULL);
@@ -1026,9 +1032,11 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
   utf8_t *last_visited_char = NULL;
 
   while (walked_width_px + next_glyph_width_px + suffix_width_px <= available_horiz_px) {
-    GRect cursor = {.origin = line->origin,
-                    .size.w = next_glyph_width_px,
-                    .size.h = fonts_get_font_height(text_box_params->font)};
+    GRect cursor = {
+        .origin = line->origin,
+        .size.w = next_glyph_width_px,
+        .size.h = fonts_get_font_height(text_box_params->font)
+    };
     cursor.origin.x += walked_width_px;
 
     // A codepoint folded into the preceding pair has zero width and must not
@@ -1115,9 +1123,11 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
   }
 
   if (line->suffix_codepoint) {
-    GRect cursor = {.origin = line->origin,
-                    .size.w = suffix_width_px,
-                    .size.h = fonts_get_font_height(text_box_params->font)};
+    GRect cursor = {
+        .origin = line->origin,
+        .size.w = suffix_width_px,
+        .size.h = fonts_get_font_height(text_box_params->font)
+    };
     cursor.origin.x += walked_width_px;
     if (char_visitor_cb) {
       if (is_render) {
@@ -1285,11 +1295,13 @@ static inline void prv_walk_lines_down(Iterator *const line_iter, TextLayout *co
 
     // If we are restricting the perimeter of the draw box, restrict per line region here
     if (uses_perimeter) {
-      GRangeHorizontal text_horizontal_range = {.origin_x = line_in_perimeter_space.x,
-                                                .size_w = line->max_width_px};
+      GRangeHorizontal text_horizontal_range = {
+          .origin_x = line_in_perimeter_space.x, .size_w = line->max_width_px
+      };
       const GRangeVertical vertical_range = {
           .origin_y = line_in_perimeter_space.y + TEXT_LINE_CAP_LINE(line),
-          .size_h = TEXT_LINE_BASE_LINE(line) - TEXT_LINE_CAP_LINE(line)};
+          .size_h = TEXT_LINE_BASE_LINE(line) - TEXT_LINE_CAP_LINE(line)
+      };
       GRangeHorizontal perimeter_horizontal_range = flow_data->perimeter.impl->callback(
           flow_data->perimeter.impl, &ctx_size, vertical_range, flow_data->perimeter.inset);
 
@@ -1572,12 +1584,13 @@ static inline void prv_text_walk_lines(GContext *ctx, TextLayout *const layout,
     callbacks->last_line_cb = NULL;
   }
 
-  ctx->text_draw_state.line =
-      (Line){.start = utf8_bounds->start,
-             // set initial bounding values for line
-             .origin = text_box->box.origin,  //<! Needs to be in global co-ords!
-             .max_width_px = text_box->box.size.w,
-             .height_px = fonts_get_font_height(text_box->font)};
+  ctx->text_draw_state.line = (Line){
+      .start = utf8_bounds->start,
+      // set initial bounding values for line
+      .origin = text_box->box.origin,  //<! Needs to be in global co-ords!
+      .max_width_px = text_box->box.size.w,
+      .height_px = fonts_get_font_height(text_box->font)
+  };
 
   Iterator line_iter;
   line_iter_init(&line_iter, &ctx->text_draw_state.line_iter_state, ctx);
@@ -1655,8 +1668,10 @@ uint16_t graphics_text_layout_get_text_height(GContext *ctx, const char *text, G
                                               const GTextOverflowMode overflow_mode,
                                               const GTextAlignment alignment) {
   const int16_t LAYOUT_HEIGHT_IGNORE = SHRT_MAX;
-  GRect box = {.origin = (GPoint){.x = 0, .y = 0},
-               .size = (GSize){.w = bounds_width, .h = LAYOUT_HEIGHT_IGNORE}};
+  GRect box = {
+      .origin = (GPoint){.x = 0, .y = 0},
+      .size = (GSize){.w = bounds_width, .h = LAYOUT_HEIGHT_IGNORE}
+  };
   GSize size =
       graphics_text_layout_get_max_used_size(ctx, text, font, box, overflow_mode, alignment, NULL);
   return size.h;
@@ -1702,7 +1717,8 @@ void graphics_draw_text(GContext *ctx, const char *text, GFont const font, GRect
   WalkLinesCallbacks callbacks = {
       .render_line_cb = render_all_render_line_cb,
       .layout_update_cb = update_all_layout_update_cb,
-      .stop_condition_cb = is_clip_box_overflow_bottom_stop_condition_cb};
+      .stop_condition_cb = is_clip_box_overflow_bottom_stop_condition_cb
+  };
 
   int16_t line_spacing_delta = prv_layout_get_line_spacing_delta(layout);
   ctx->text_draw_state.text_box = (TextBoxParams){

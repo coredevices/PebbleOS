@@ -34,18 +34,21 @@
 #define LCTIME_SIZE (sizeof(struct lc_time_T) / sizeof(char *))
 
 static const struct lc_time_T _C_time_locale = {
-    .mon = {i18n_noop("Jan"), i18n_noop("Feb"), i18n_noop("Mar"), i18n_noop("Apr"),
-            i18n_noop("May"), i18n_noop("Jun"), i18n_noop("Jul"), i18n_noop("Aug"),
-            i18n_noop("Sep"), i18n_noop("Oct"), i18n_noop("Nov"), i18n_noop("Dec")},
-    .month = {i18n_noop("January"), i18n_noop("February"), i18n_noop("March"), i18n_noop("April"),
-              i18n_noop("May"), i18n_noop("June"), i18n_noop("July"), i18n_noop("August"),
-              i18n_noop("September"), i18n_noop("October"), i18n_noop("November"),
-              i18n_noop("December")},
-    .wday = {i18n_noop("Sun"), i18n_noop("Mon"), i18n_noop("Tue"), i18n_noop("Wed"),
-             i18n_noop("Thu"), i18n_noop("Fri"), i18n_noop("Sat")},
-    .weekday = {i18n_noop("Sunday"), i18n_noop("Monday"), i18n_noop("Tuesday"),
-                i18n_noop("Wednesday"), i18n_noop("Thursday"), i18n_noop("Friday"),
-                i18n_noop("Saturday")},
+    .mon =
+        {i18n_noop("Jan"), i18n_noop("Feb"), i18n_noop("Mar"), i18n_noop("Apr"), i18n_noop("May"),
+         i18n_noop("Jun"), i18n_noop("Jul"), i18n_noop("Aug"), i18n_noop("Sep"), i18n_noop("Oct"),
+         i18n_noop("Nov"), i18n_noop("Dec")},
+    .month =
+        {i18n_noop("January"), i18n_noop("February"), i18n_noop("March"), i18n_noop("April"),
+         i18n_noop("May"), i18n_noop("June"), i18n_noop("July"), i18n_noop("August"),
+         i18n_noop("September"), i18n_noop("October"), i18n_noop("November"),
+         i18n_noop("December")},
+    .wday =
+        {i18n_noop("Sun"), i18n_noop("Mon"), i18n_noop("Tue"), i18n_noop("Wed"), i18n_noop("Thu"),
+         i18n_noop("Fri"), i18n_noop("Sat")},
+    .weekday =
+        {i18n_noop("Sunday"), i18n_noop("Monday"), i18n_noop("Tuesday"), i18n_noop("Wednesday"),
+         i18n_noop("Thursday"), i18n_noop("Friday"), i18n_noop("Saturday")},
 
     .X_fmt = i18n_noop("%H:%M:%S"),
     .x_fmt = i18n_noop("%m/%d/%y"),
@@ -57,11 +60,10 @@ static const struct lc_time_T _C_time_locale = {
             i18n_noop("AM"),
             i18n_noop("PM"),
         },
-    .am_pm_downcase =
-        {
-            i18n_noop("am"),
-            i18n_noop("pm"),
-        },
+    .am_pm_downcase = {
+        i18n_noop("am"),
+        i18n_noop("pm"),
+    },
 };
 
 const struct lc_time_T *time_locale_get(void) {

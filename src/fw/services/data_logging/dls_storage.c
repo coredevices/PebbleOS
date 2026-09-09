@@ -242,13 +242,15 @@ static bool prv_open_file(DataLoggingSessionStorage *storage, uint8_t op_flags, 
     return true;
   }
 
-  DLSFileHeader hdr = (DLSFileHeader){.version = DLS_CURRENT_VERSION,
-                                      .comm_session_id = session->comm.session_id,
-                                      .timestamp = session->session_created_timestamp,
-                                      .tag = session->tag,
-                                      .app_uuid = session->app_uuid,
-                                      .item_type = session->item_type,
-                                      .item_size = session->item_size};
+  DLSFileHeader hdr = (DLSFileHeader){
+      .version = DLS_CURRENT_VERSION,
+      .comm_session_id = session->comm.session_id,
+      .timestamp = session->session_created_timestamp,
+      .tag = session->tag,
+      .app_uuid = session->app_uuid,
+      .item_type = session->item_type,
+      .item_size = session->item_size
+  };
 
   // Write the header
   if (!prv_pfs_write(fd, &hdr, sizeof(hdr))) {
@@ -258,7 +260,8 @@ static bool prv_open_file(DataLoggingSessionStorage *storage, uint8_t op_flags, 
 
   // Init the storage struct
   *storage = (DataLoggingSessionStorage){
-      .fd = fd, .write_offset = sizeof(hdr), .read_offset = sizeof(hdr)};
+      .fd = fd, .write_offset = sizeof(hdr), .read_offset = sizeof(hdr)
+  };
 
   PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING,
                 "Created session-storage: "
@@ -864,7 +867,8 @@ void dls_storage_rebuild(void) {
     }
     session->comm.session_id = hdr.comm_session_id;
     session->storage = (DataLoggingSessionStorage){
-        .fd = DLS_INVALID_FILE, .write_offset = sizeof(hdr), .read_offset = sizeof(hdr)};
+        .fd = DLS_INVALID_FILE, .write_offset = sizeof(hdr), .read_offset = sizeof(hdr)
+    };
 
     // Make sure the filename is what we expect
     prv_get_filename(name, session);

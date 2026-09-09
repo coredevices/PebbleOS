@@ -505,7 +505,8 @@ static void s_main(void) {
 }
 
 const PebbleProcessMd *pebble_shapes_get_app_info(void) {
-  static const PebbleProcessMdSystem s_app_info = {.common.main_func = s_main,
-                                                   .name = "Pebble Shapes"};
+  static const PebbleProcessMdSystem s_app_info = {
+      .common.main_func = s_main, .name = "Pebble Shapes"
+  };
   return (const PebbleProcessMd *)&s_app_info;
 }

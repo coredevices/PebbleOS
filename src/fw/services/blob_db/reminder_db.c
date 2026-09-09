@@ -130,11 +130,13 @@ bool reminder_db_find_by_timestamp_title(time_t timestamp, const char *title,
                                          TimelineItem *reminder_out) {
   PBL_ASSERTN(reminder_out);
 
-  ReminderInfo reminder_info = {.filter_cb = filter_cb,
-                                .timestamp = timestamp,
-                                .title = title,
-                                .reminder_out = reminder_out,
-                                .match = false};
+  ReminderInfo reminder_info = {
+      .filter_cb = filter_cb,
+      .timestamp = timestamp,
+      .title = title,
+      .reminder_out = reminder_out,
+      .match = false
+  };
 
   timeline_item_storage_each(&s_storage, prv_timestamp_title_compare_func, &reminder_info);
 

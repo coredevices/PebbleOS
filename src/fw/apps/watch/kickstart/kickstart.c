@@ -101,8 +101,10 @@ static GPoint prv_steps_to_point(int32_t cur, int32_t total, GRect frame) {
 #if PBL_RECT
 static GPoint prv_inset_point(GRect *frame, GPoint outer_point, int32_t inset_amount) {
   // Insets the given point by the specified amount
-  return (GPoint){.x = MAX(inset_amount - 1, MIN(outer_point.x, frame->size.w - inset_amount)),
-                  .y = MAX(inset_amount - 1, MIN(outer_point.y, frame->size.h - inset_amount))};
+  return (GPoint){
+      .x = MAX(inset_amount - 1, MIN(outer_point.x, frame->size.w - inset_amount)),
+      .y = MAX(inset_amount - 1, MIN(outer_point.y, frame->size.h - inset_amount))
+  };
 }
 #endif
 
@@ -143,12 +145,14 @@ static void prv_draw_outer_ring(GContext *ctx, int32_t current, int32_t total,
   const int32_t top_left = frame.size.h + bot_left;
   const int32_t rect_perimeter = top_left + top_right;
 
-  const int32_t corners[] = {0,
-                             total * top_right / rect_perimeter,
-                             total * bot_right / rect_perimeter,
-                             total * bot_left / rect_perimeter,
-                             total * top_left / rect_perimeter,
-                             total};
+  const int32_t corners[] = {
+      0,
+      total * top_right / rect_perimeter,
+      total * bot_right / rect_perimeter,
+      total * bot_left / rect_perimeter,
+      total * top_left / rect_perimeter,
+      total
+  };
 
   // start the path with start_outer_point
   path.points[path.num_points++] = start_outer_point;
@@ -641,12 +645,14 @@ const PebbleProcessMd *kickstart_get_app_info() {
       .common =
           {
               // UUID: 3af858c3-16cb-4561-91e7-f1ad2df8725f
-              .uuid = {0x3a, 0xf8, 0x58, 0xc3, 0x16, 0xcb, 0x45, 0x61, 0x91, 0xe7, 0xf1, 0xad, 0x2d,
-                       0xf8, 0x72, 0x5f},
+              .uuid =
+                  {0x3a, 0xf8, 0x58, 0xc3, 0x16, 0xcb, 0x45, 0x61, 0x91, 0xe7, 0xf1, 0xad, 0x2d,
+                   0xf8, 0x72, 0x5f},
               .main_func = prv_main,
               .process_type = ProcessTypeWatchface,
           },
       .icon_resource_id = RESOURCE_ID_MENU_ICON_KICKSTART_WATCH,
-      .name = "Kickstart"};
+      .name = "Kickstart"
+  };
   return (const PebbleProcessMd *)&s_app_md;
 }

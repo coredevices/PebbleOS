@@ -44,7 +44,8 @@ static const PowerState power_states[] = {
     [PowerStateLowPower] = {.enter = prv_enter_lpm, .exit = prv_exit_lpm},
     [PowerStateCritical] = {.enter = prv_begin_standby_timer, .exit = prv_exit_critical},
     [PowerStatePluggedIn] = {0},
-    [PowerStateStandby] = {.enter = prv_enter_standby}};
+    [PowerStateStandby] = {.enter = prv_enter_standby}
+};
 
 ////////////////////////
 // Business logic

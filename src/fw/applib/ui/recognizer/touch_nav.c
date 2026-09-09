@@ -117,8 +117,9 @@ void touch_nav_registry_remove(TouchNavState *state, TouchNavWidgetType type,
 // Whether \a node is still threaded onto any registry list (weak-ref re-validation for the latched
 // widget target). A node zeroed/removed by a widget deinit mid-gesture will not be found.
 static bool prv_registry_contains_node(TouchNavState *state, const TouchNavWidgetNode *node) {
-  const TouchNavWidgetNode *const heads[] = {state->menu_head, state->swap_head,
-                                             state->scroll_head};
+  const TouchNavWidgetNode *const heads[] = {
+      state->menu_head, state->swap_head, state->scroll_head
+  };
   for (unsigned i = 0; i < ARRAY_LENGTH(heads); i++) {
     for (const TouchNavWidgetNode *n = heads[i]; n; n = n->next) {
       if (n == node) {
@@ -130,8 +131,9 @@ static bool prv_registry_contains_node(TouchNavState *state, const TouchNavWidge
 }
 
 static bool prv_registry_contains_layer(TouchNavState *state, const struct Layer *layer) {
-  const TouchNavWidgetNode *const heads[] = {state->menu_head, state->scroll_head,
-                                             state->swap_head};
+  const TouchNavWidgetNode *const heads[] = {
+      state->menu_head, state->scroll_head, state->swap_head
+  };
   for (unsigned i = 0; i < ARRAY_LENGTH(heads); i++) {
     for (const TouchNavWidgetNode *n = heads[i]; n; n = n->next) {
       if (n->layer == layer) {

@@ -16,9 +16,11 @@
 
 void getting_started_button_combo_init(GettingStartedButtonComboState *state,
                                        GettingStartedButtonComboCallback select_callback) {
-  *state = (GettingStartedButtonComboState){.buttons_held_bitset = 0,
-                                            .combo_timer = new_timer_create(),
-                                            .select_callback = select_callback};
+  *state = (GettingStartedButtonComboState){
+      .buttons_held_bitset = 0,
+      .combo_timer = new_timer_create(),
+      .select_callback = select_callback
+  };
 }
 
 void getting_started_button_combo_deinit(GettingStartedButtonComboState *state) {

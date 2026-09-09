@@ -49,45 +49,77 @@ typedef struct {
 } AppInstallEntryTestCase;
 
 static AppInstallEntryTestCase s_test_cases[] = {
-    {.entry = (AppInstallEntry){.install_id = 1,
-                                .sdk_version =
-                                    (Version){.major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR,
-                                              .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR}},
+    {.entry =
+         (AppInstallEntry){
+             .install_id = 1,
+             .sdk_version =
+                 (Version){
+                     .major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR,
+                     .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR
+                 }
+         },
      .should_pass = true},
-    {.entry = (AppInstallEntry){.install_id = 2,
-                                .sdk_version =
-                                    (Version){.major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR - 1,
-                                              .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR}},
+    {.entry =
+         (AppInstallEntry){
+             .install_id = 2,
+             .sdk_version =
+                 (Version){
+                     .major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR - 1,
+                     .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR
+                 }
+         },
      .should_pass = false},
-    {.entry = (AppInstallEntry){.install_id = 3,
-                                .sdk_version =
-                                    (Version){.major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR + 1,
-                                              .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR}},
+    {.entry =
+         (AppInstallEntry){
+             .install_id = 3,
+             .sdk_version =
+                 (Version){
+                     .major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR + 1,
+                     .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR
+                 }
+         },
      .should_pass = false},
     {.entry =
          (AppInstallEntry){
              .install_id = 4,
-             .sdk_version = (Version){.major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR,
-                                      .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR - 10}},
+             .sdk_version =
+                 (Version){
+                     .major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR,
+                     .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR - 10
+                 }
+         },
      .should_pass = true},
     {.entry =
          (AppInstallEntry){
              .install_id = 5,
-             .sdk_version = (Version){.major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR,
-                                      .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR + 10}},
+             .sdk_version =
+                 (Version){
+                     .major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR,
+                     .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR + 10
+                 }
+         },
      .should_pass = false},
     {.entry =
          (AppInstallEntry){
              .install_id = 6,
-             .sdk_version = (Version){.major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR + 1,
-                                      .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR + 10}},
+             .sdk_version =
+                 (Version){
+                     .major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR + 1,
+                     .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR + 10
+                 }
+         },
      .should_pass = false},
     {.entry =
          (AppInstallEntry){
              .install_id = 7,
-             .sdk_version = (Version){.major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR - 1,
-                                      .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR - 10}},
-     .should_pass = false}};
+             .sdk_version =
+                 (Version){
+                     .major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR - 1,
+                     .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR - 10
+                 }
+         },
+     .should_pass = false}
+};
 
 PlatformType process_metadata_get_app_sdk_platform(const PebbleProcessMd *md) {
   cl_fail("should not be called");

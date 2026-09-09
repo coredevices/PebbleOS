@@ -34,11 +34,13 @@ static void prv_put_reminder_event(ReminderId *reminder_id, ReminderEventType ty
   }
 
   *removed_id = *reminder_id;
-  PebbleEvent event = {.type = PEBBLE_REMINDER_EVENT,
-                       .reminder = {
-                           .type = type,
-                           .reminder_id = removed_id,
-                       }};
+  PebbleEvent event = {
+      .type = PEBBLE_REMINDER_EVENT,
+      .reminder = {
+          .type = type,
+          .reminder_id = removed_id,
+      }
+  };
   event_put(&event);
 }
 

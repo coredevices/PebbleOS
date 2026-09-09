@@ -16,13 +16,15 @@ static RegularTimerInfo s_missed_call_timer_id;
 
 static void prv_put_call_event(PhoneEventType type, uint32_t call_identifier,
                                PebblePhoneCaller *caller, bool ios_9) {
-  PebbleEvent event = {.type = PEBBLE_PHONE_EVENT,
-                       .phone = {
-                           .type = type,
-                           .source = ios_9 ? PhoneCallSource_ANCS : PhoneCallSource_ANCS_Legacy,
-                           .call_identifier = call_identifier,
-                           .caller = caller,
-                       }};
+  PebbleEvent event = {
+      .type = PEBBLE_PHONE_EVENT,
+      .phone = {
+          .type = type,
+          .source = ios_9 ? PhoneCallSource_ANCS : PhoneCallSource_ANCS_Legacy,
+          .call_identifier = call_identifier,
+          .caller = caller,
+      }
+  };
 
   event_put(&event);
 }

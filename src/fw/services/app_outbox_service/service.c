@@ -52,12 +52,11 @@ static const AppOutboxSenderDef s_app_outbox_sender_defs[] = {
             .max_pending_messages = 1,
         },
 #ifdef UNITTEST
-    [AppOutboxServiceTagUnitTest] =
-        {
-            .sent_handler = test_app_outbox_sent_handler,
-            .max_length = 1,
-            .max_pending_messages = 2,
-        },
+    [AppOutboxServiceTagUnitTest] = {
+        .sent_handler = test_app_outbox_sent_handler,
+        .max_length = 1,
+        .max_pending_messages = 2,
+    },
 #endif
 };
 
@@ -136,12 +135,11 @@ static void prv_schedule_sent_handler(AppOutboxSentHandler sent_handler, void *c
   }
   PebbleEvent event = {
       .type = PEBBLE_APP_OUTBOX_SENT_EVENT,
-      .app_outbox_sent =
-          {
-              .sent_handler = sent_handler,
-              .cb_ctx = cb_ctx,
-              .status = status,
-          },
+      .app_outbox_sent = {
+          .sent_handler = sent_handler,
+          .cb_ctx = cb_ctx,
+          .status = status,
+      },
   };
   process_manager_send_event_to_process(PebbleTask_App, &event);
 }
@@ -152,11 +150,10 @@ static void prv_schedule_consumer_message_handler(AppOutboxConsumer *consumer,
   void (*callback)(void *) = (__typeof__(callback))consumer->message_handler;
   PebbleEvent event = {
       .type = PEBBLE_APP_OUTBOX_MSG_EVENT,
-      .app_outbox_msg =
-          {
-              .callback = callback,
-              .data = message,
-          },
+      .app_outbox_msg = {
+          .callback = callback,
+          .data = message,
+      },
   };
   sys_send_pebble_event_to_kernel(&event);
 }

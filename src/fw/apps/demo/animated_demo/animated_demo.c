@@ -153,7 +153,8 @@ static void s_main(void) {
 }
 
 const PebbleProcessMd *animated_demo_get_app_info() {
-  static const PebbleProcessMdSystem animated_demo_app_info = {.common.main_func = s_main,
-                                                               .name = "Animation Demo"};
+  static const PebbleProcessMdSystem animated_demo_app_info = {
+      .common.main_func = s_main, .name = "Animation Demo"
+  };
   return (const PebbleProcessMd *)&animated_demo_app_info;
 }

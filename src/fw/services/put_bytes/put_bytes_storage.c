@@ -21,7 +21,8 @@ static const PutBytesStorageImplementation s_raw_implementation = {
     .get_max_size = pb_storage_raw_get_max_size,
     .write = pb_storage_raw_write,
     .calculate_crc = pb_storage_raw_calculate_crc,
-    .deinit = pb_storage_raw_deinit};
+    .deinit = pb_storage_raw_deinit
+};
 
 #ifndef CONFIG_RECOVERY_FW
 #include "pbl/services/put_bytes/put_bytes_storage_file.h"
@@ -31,7 +32,8 @@ static const PutBytesStorageImplementation s_file_implementation = {
     .get_max_size = pb_storage_file_get_max_size,
     .write = pb_storage_file_write,
     .calculate_crc = pb_storage_file_calculate_crc,
-    .deinit = pb_storage_file_deinit};
+    .deinit = pb_storage_file_deinit
+};
 #endif  // #ifndef CONFIG_RECOVERY_FW
 #endif  // #ifdef UNITTEST
 

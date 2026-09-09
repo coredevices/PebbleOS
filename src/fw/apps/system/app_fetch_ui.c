@@ -70,16 +70,18 @@ static void prv_app_fetch_launch_app(AppFetchUIData *data) {
   // Allocate and initialize the data that would have been sent to the app originally before the
   // fetch request.
   PebbleLaunchAppEventExtended *ext = kernel_malloc_check(sizeof(PebbleLaunchAppEventExtended));
-  *ext = (PebbleLaunchAppEventExtended){.common = data->next_app_args.common,
-                                        .wakeup = data->next_app_args.wakeup_info};
+  *ext = (PebbleLaunchAppEventExtended){
+      .common = data->next_app_args.common, .wakeup = data->next_app_args.wakeup_info
+  };
   ext->common.transition = compositor_dot_transition_app_fetch_get();
   if ((data->next_app_args.common.reason == APP_LAUNCH_WAKEUP) &&
       (data->next_app_args.common.args != NULL)) {
     ext->common.args = &data->next_app_args.wakeup_info;
   }
 
-  PebbleEvent launch_event = {.type = PEBBLE_APP_LAUNCH_EVENT,
-                              .launch_app = {.id = data->next_app_args.app_id, .data = ext}};
+  PebbleEvent launch_event = {
+      .type = PEBBLE_APP_LAUNCH_EVENT, .launch_app = {.id = data->next_app_args.app_id, .data = ext}
+  };
 
   event_put(&launch_event);
 }
@@ -105,7 +107,8 @@ static void prv_set_progress_failure(AppFetchUIData *data) {
       message = i18n_get("Not connected", data);
       // Subscribe to the BT remote app connect event
       data->connect_event_info = (EventServiceInfo){
-          .type = PEBBLE_COMM_SESSION_EVENT, .handler = prv_remote_comm_session_event_handler};
+          .type = PEBBLE_COMM_SESSION_EVENT, .handler = prv_remote_comm_session_event_handler
+      };
       event_service_client_subscribe(&data->connect_event_info);
       break;
     case AppFetchResultNoData:
@@ -290,8 +293,9 @@ const PebbleProcessMd *app_fetch_ui_get_app_info() {
               .main_func = s_main,
               .visibility = ProcessVisibilityHidden,
               // UUID: 674271bc-f4fa-4536-97f3-8849a5ba75a4
-              .uuid = {0x67, 0x42, 0x71, 0xbc, 0xf4, 0xfa, 0x45, 0x36, 0x97, 0xf3, 0x88, 0x49, 0xa5,
-                       0xba, 0x75, 0xa4},
+              .uuid =
+                  {0x67, 0x42, 0x71, 0xbc, 0xf4, 0xfa, 0x45, 0x36, 0x97, 0xf3, 0x88, 0x49, 0xa5,
+                   0xba, 0x75, 0xa4},
           },
       .name = "App Fetch",
   };

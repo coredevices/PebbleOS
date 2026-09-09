@@ -88,8 +88,9 @@ static void s_main(void) {
 }
 
 const PebbleProcessMd *flash_demo_get_app_info(void) {
-  static const PebbleProcessMdSystem s_app_info = {.common.main_func = &s_main,
-                                                   .name = "Flash Demo"};
+  static const PebbleProcessMdSystem s_app_info = {
+      .common.main_func = &s_main, .name = "Flash Demo"
+  };
 
   return (const PebbleProcessMd *)&s_app_info;
 }

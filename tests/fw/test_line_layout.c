@@ -73,9 +73,9 @@ void test_line_layout__lam_alef_width_counts_ligature_once(void) {
   const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, "\xD8\xA8\xD9\x84\xD8\xA7");  // بلا
   cl_assert(success);
 
-  const TextBoxParams text_box_params =
-      (TextBoxParams){.utf8_bounds = &utf8_bounds,
-                      .box = (GRect){GPointZero, (GSize){5 * HORIZ_ADVANCE_PX + 1, 11}}};
+  const TextBoxParams text_box_params = (TextBoxParams){
+      .utf8_bounds = &utf8_bounds, .box = (GRect){GPointZero, (GSize){5 * HORIZ_ADVANCE_PX + 1, 11}}
+  };
   line.max_width_px = text_box_params.box.size.w;
   line.height_px = text_box_params.box.size.h;
 
@@ -100,9 +100,9 @@ void test_line_layout__lam_alef_width_transparent_to_harakat(void) {
       utf8_get_bounds(&success, "\xD8\xA8\xD9\x84\xD9\x8E\xD8\xA7");  // بلَا
   cl_assert(success);
 
-  const TextBoxParams text_box_params =
-      (TextBoxParams){.utf8_bounds = &utf8_bounds,
-                      .box = (GRect){GPointZero, (GSize){6 * HORIZ_ADVANCE_PX + 1, 11}}};
+  const TextBoxParams text_box_params = (TextBoxParams){
+      .utf8_bounds = &utf8_bounds, .box = (GRect){GPointZero, (GSize){6 * HORIZ_ADVANCE_PX + 1, 11}}
+  };
   line.max_width_px = text_box_params.box.size.w;
   line.height_px = text_box_params.box.size.h;
 
@@ -123,9 +123,9 @@ void test_line_layout__test_line_add_word_no_overflow(void) {
   const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, "Foo bar");
   cl_assert(success);
 
-  const TextBoxParams text_box_params =
-      (TextBoxParams){.utf8_bounds = &utf8_bounds,
-                      .box = (GRect){GPointZero, (GSize){7 * HORIZ_ADVANCE_PX + 1, 11}}};
+  const TextBoxParams text_box_params = (TextBoxParams){
+      .utf8_bounds = &utf8_bounds, .box = (GRect){GPointZero, (GSize){7 * HORIZ_ADVANCE_PX + 1, 11}}
+  };
   line.max_width_px = text_box_params.box.size.w;
   line.height_px = text_box_params.box.size.h;
 
@@ -159,7 +159,8 @@ void test_line_layout__test_line_add_word_exact_bounds(void) {
   cl_assert(success);
 
   const TextBoxParams text_box_params = (TextBoxParams){
-      .utf8_bounds = &utf8_bounds, .box = (GRect){GPointZero, (GSize){7 * HORIZ_ADVANCE_PX, 10}}};
+      .utf8_bounds = &utf8_bounds, .box = (GRect){GPointZero, (GSize){7 * HORIZ_ADVANCE_PX, 10}}
+  };
   line.max_width_px = text_box_params.box.size.w;
   line.height_px = text_box_params.box.size.h;
 
@@ -193,10 +194,11 @@ void test_line_layout__test_line_add_word_horizontal_overflow(void) {
   const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, sentence);
   cl_assert(success);
 
-  const TextBoxParams text_box_params =
-      (TextBoxParams){.utf8_bounds = &utf8_bounds,
-                      // Width for first word only:
-                      .box = (GRect){(GPoint){0, 0}, (GSize){3 * HORIZ_ADVANCE_PX, 10}}};
+  const TextBoxParams text_box_params = (TextBoxParams){
+      .utf8_bounds = &utf8_bounds,
+      // Width for first word only:
+      .box = (GRect){(GPoint){0, 0}, (GSize){3 * HORIZ_ADVANCE_PX, 10}}
+  };
   line.max_width_px = text_box_params.box.size.w;
   line.height_px = text_box_params.box.size.h;
 
@@ -231,10 +233,11 @@ void test_line_layout__test_line_add_word_ideographs(void) {
   const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, sentence);
   cl_assert(success);
 
-  const TextBoxParams text_box_params =
-      (TextBoxParams){.utf8_bounds = &utf8_bounds,
-                      // Width for first word only:
-                      .box = (GRect){(GPoint){0, 0}, (GSize){3 * HORIZ_ADVANCE_PX, 10}}};
+  const TextBoxParams text_box_params = (TextBoxParams){
+      .utf8_bounds = &utf8_bounds,
+      // Width for first word only:
+      .box = (GRect){(GPoint){0, 0}, (GSize){3 * HORIZ_ADVANCE_PX, 10}}
+  };
   line.max_width_px = text_box_params.box.size.w;
   line.height_px = text_box_params.box.size.h;
 
@@ -320,7 +323,8 @@ void test_line_layout__test_line_add_words_multi_line(void) {
   cl_assert(success);
 
   const TextBoxParams text_box_params = (TextBoxParams){
-      .utf8_bounds = &utf8_bounds, .box = (GRect){GPointZero, (GSize){4 * HORIZ_ADVANCE_PX, 90}}};
+      .utf8_bounds = &utf8_bounds, .box = (GRect){GPointZero, (GSize){4 * HORIZ_ADVANCE_PX, 90}}
+  };
   line.max_width_px = text_box_params.box.size.w;
   line.height_px = text_box_params.box.size.h;
 
@@ -458,10 +462,13 @@ void test_line_layout__test_walk_lines_down(void) {
   cl_assert(success);
 
   s_ctx.text_draw_state.text_box = (TextBoxParams){
-      .utf8_bounds = &utf8_bounds, .box = (GRect){GPointZero, (GSize){7 * HORIZ_ADVANCE_PX, 80}}};
-  s_ctx.text_draw_state.line = (Line){.max_width_px = s_ctx.text_draw_state.text_box.box.size.w,
-                                      .height_px = s_ctx.text_draw_state.text_box.box.size.h,
-                                      .start = utf8_bounds.start};
+      .utf8_bounds = &utf8_bounds, .box = (GRect){GPointZero, (GSize){7 * HORIZ_ADVANCE_PX, 80}}
+  };
+  s_ctx.text_draw_state.line = (Line){
+      .max_width_px = s_ctx.text_draw_state.text_box.box.size.w,
+      .height_px = s_ctx.text_draw_state.text_box.box.size.h,
+      .start = utf8_bounds.start
+  };
 
   // Init mutable types
   line_iter_init(&line_iter, &line_iter_state, &s_ctx);

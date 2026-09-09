@@ -41,13 +41,12 @@ static const CrumbsLayerSizeConfig s_crumb_configs[NumPreferredContentSizes] = {
             .crumb_space_from_top = 10,
         },
     //! @note this is the same as Large until ExtraLarge is designed
-    [PreferredContentSizeExtraLarge] =
-        {
-            .layer_width = 16,
-            .crumb_radius = 2,
-            .crumb_spacing = 10,
-            .crumb_space_from_top = 10,
-        },
+    [PreferredContentSizeExtraLarge] = {
+        .layer_width = 16,
+        .crumb_radius = 2,
+        .crumb_spacing = 10,
+        .crumb_space_from_top = 10,
+    },
 };
 
 static const CrumbsLayerSizeConfig *prv_crumb_config(void) {
@@ -182,11 +181,10 @@ static const PropertyAnimationImplementation s_prop_impl = {
         {
             .update = (AnimationUpdateImplementation)property_animation_update_int16,
         },
-    .accessors =
-        {
-            .getter.int16 = prv_x_getter,
-            .setter.int16 = prv_x_setter,
-        },
+    .accessors = {
+        .getter.int16 = prv_x_getter,
+        .setter.int16 = prv_x_setter,
+    },
 };
 
 Animation *crumbs_layer_get_animation(CrumbsLayer *crumbs_layer) {

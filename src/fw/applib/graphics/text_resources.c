@@ -25,7 +25,8 @@
 
 static const size_t s_font_md_size[] = {
     0,  // There currently is no font version 0. This makes decoding much easier & consistent
-    sizeof(FontMetaDataV1), sizeof(FontMetaData), sizeof(FontMetaDataV3)};
+    sizeof(FontMetaDataV1), sizeof(FontMetaData), sizeof(FontMetaDataV3)
+};
 
 static uint8_t prv_font_hash(Codepoint codepoint, uint8_t table_size) {
   return (codepoint % table_size);

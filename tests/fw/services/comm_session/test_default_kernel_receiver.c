@@ -110,11 +110,10 @@ static const PebbleProtocolEndpoint s_endpoints[NumHandlers] = {
             .handler = prv_endpoint_handler_b,
             .receiver_opt = &g_default_kernel_receiver_opt_bg,
         },
-    [2] =
-        {
-            .handler = prv_endpoint_handler_c,
-            .receiver_opt = &g_default_kernel_receiver_opt_main,
-        },
+    [2] = {
+        .handler = prv_endpoint_handler_c,
+        .receiver_opt = &g_default_kernel_receiver_opt_main,
+    },
 };
 
 // Tests

@@ -229,7 +229,8 @@ static void prv_main(void) {
 }
 
 const PebbleProcessMd *mfg_als_app_get_info(void) {
-  static const PebbleProcessMdSystem s_ambient_light_info = {.common.main_func = prv_main,
-                                                             .name = "MfgALS"};
+  static const PebbleProcessMdSystem s_ambient_light_info = {
+      .common.main_func = prv_main, .name = "MfgALS"
+  };
   return (const PebbleProcessMd *)&s_ambient_light_info;
 }

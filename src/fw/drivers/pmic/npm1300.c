@@ -238,10 +238,9 @@ static void prv_handle_charge_state_change(void *null) {
 
   PebbleEvent event = {
       .type = PEBBLE_BATTERY_CONNECTION_EVENT,
-      .battery_connection =
-          {
-              .is_connected = battery_is_usb_connected(),
-          },
+      .battery_connection = {
+          .is_connected = battery_is_usb_connected(),
+      },
   };
   event_put(&event);
 }

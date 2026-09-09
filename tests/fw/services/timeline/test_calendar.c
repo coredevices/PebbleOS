@@ -91,111 +91,111 @@ static Attribute title_attr = {
 static TimelineItem item1 = {
     .header =
         {
-            .id = {0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00},
+            .id =
+                {0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                 0x00, 0x00},
             .timestamp = 10 * 60,
             .duration = 10,
             .type = TimelineItemTypePin,
             .all_day = false,
             .layout = LayoutIdCalendar,
         },
-    .attr_list =
-        {
-            .num_attributes = 1,
-            .attributes = &title_attr,
-        },
+    .attr_list = {
+        .num_attributes = 1,
+        .attributes = &title_attr,
+    },
 };
 
 static TimelineItem item2 = {
     .header =
         {
-            .id = {0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00},
+            .id =
+                {0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                 0x00, 0x00},
             .timestamp = 15 * 60,
             .duration = 20,
             .type = TimelineItemTypePin,
             .all_day = false,
             .layout = LayoutIdCalendar,
         },
-    .attr_list =
-        {
-            .num_attributes = 1,
-            .attributes = &title_attr,
-        },
+    .attr_list = {
+        .num_attributes = 1,
+        .attributes = &title_attr,
+    },
 };
 
 static TimelineItem item3 = {
     .header =
         {
-            .id = {0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00},
+            .id =
+                {0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                 0x00, 0x00},
             .timestamp = 25 * 60,
             .duration = 5,
             .type = TimelineItemTypePin,
             .all_day = false,
             .layout = LayoutIdCalendar,
         },
-    .attr_list =
-        {
-            .num_attributes = 1,
-            .attributes = &title_attr,
-        },
+    .attr_list = {
+        .num_attributes = 1,
+        .attributes = &title_attr,
+    },
 };
 
 static TimelineItem item4 = {
     .header =
         {
-            .id = {0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00},
+            .id =
+                {0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                 0x00, 0x00},
             .timestamp = 100 * 60,
             .duration = 10,
             .type = TimelineItemTypePin,
             .all_day = false,
             .layout = LayoutIdCalendar,
         },
-    .attr_list =
-        {
-            .num_attributes = 1,
-            .attributes = &title_attr,
-        },
+    .attr_list = {
+        .num_attributes = 1,
+        .attributes = &title_attr,
+    },
 };
 
 // NOT A CALENDAR PIN
 static TimelineItem item5 = {
     .header =
         {
-            .id = {0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00},
+            .id =
+                {0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                 0x00, 0x00},
             .timestamp = 10 * 60,
             .duration = 10,
             .type = TimelineItemTypePin,
             .all_day = false,
             .layout = LayoutIdWeather,
         },
-    .attr_list =
-        {
-            .num_attributes = 1,
-            .attributes = &title_attr,
-        },
+    .attr_list = {
+        .num_attributes = 1,
+        .attributes = &title_attr,
+    },
 };
 
 // ALL DAY PIN
 static TimelineItem item6 = {
     .header =
         {
-            .id = {0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00},
+            .id =
+                {0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                 0x00, 0x00},
             .timestamp = 100 * 60,
             .duration = 10,
             .type = TimelineItemTypePin,
             .all_day = true,
             .layout = LayoutIdCalendar,
         },
-    .attr_list =
-        {
-            .num_attributes = 1,
-            .attributes = &title_attr,
-        },
+    .attr_list = {
+        .num_attributes = 1,
+        .attributes = &title_attr,
+    },
 };
 
 // Setup

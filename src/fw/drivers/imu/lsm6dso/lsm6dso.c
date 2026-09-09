@@ -254,12 +254,14 @@ static void prv_lsm6dso_process_samples(uint16_t num_samples, uint64_t timestamp
       .stride = LSM6DSO_FIFO_WORD_SIZE_BYTES,
       .axis =
           {
-              [AXIS_X] = {.offset = LSM6DSO->axis_map[AXIS_X] * 2U,
-                          .sign = (int8_t)(LSM6DSO->axis_dir[AXIS_X] * rotate)},
-              [AXIS_Y] = {.offset = LSM6DSO->axis_map[AXIS_Y] * 2U,
-                          .sign = (int8_t)(LSM6DSO->axis_dir[AXIS_Y] * rotate)},
-              [AXIS_Z] = {.offset = LSM6DSO->axis_map[AXIS_Z] * 2U,
-                          .sign = LSM6DSO->axis_dir[AXIS_Z]},
+              [AXIS_X] =
+                  {.offset = LSM6DSO->axis_map[AXIS_X] * 2U,
+                   .sign = (int8_t)(LSM6DSO->axis_dir[AXIS_X] * rotate)},
+              [AXIS_Y] =
+                  {.offset = LSM6DSO->axis_map[AXIS_Y] * 2U,
+                   .sign = (int8_t)(LSM6DSO->axis_dir[AXIS_Y] * rotate)},
+              [AXIS_Z] =
+                  {.offset = LSM6DSO->axis_map[AXIS_Z] * 2U, .sign = LSM6DSO->axis_dir[AXIS_Z]},
           },
       .scale_num = CONFIG_ACCEL_LSM6DSO_SCALE_MG,
       .scale_den = LSM6DSO_S16_SCALE_RANGE,

@@ -177,9 +177,10 @@ LayoutLayer *generic_layout_create(const LayoutLayerConfig *config) {
 
   static const TimelineLayoutImpl s_timeline_layout_impl = {
       .attributes = {AttributeIdTitle, AttributeIdSubtitle},
-      .default_colors = {{.argb = GColorBlackARGB8},
-                         {.argb = GColorWhiteARGB8},
-                         {.argb = GColorSunsetOrangeARGB8}},
+      .default_colors =
+          {{.argb = GColorBlackARGB8},
+           {.argb = GColorWhiteARGB8},
+           {.argb = GColorSunsetOrangeARGB8}},
       .default_icon = TIMELINE_RESOURCE_NOTIFICATION_FLAG,
       .card_icon_align = PBL_IF_RECT_ELSE(GAlignLeft, GAlignCenter),
       .card_icon_size = PREFERRED_CONTENT_SIZE_SWITCH(

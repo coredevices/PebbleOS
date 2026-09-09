@@ -37,11 +37,10 @@ void ble_init_app_state(void) {
           },
 
       // ble_client_...:
-      .gatt_client_service_info =
-          (const EventServiceInfo){
-              .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
-              .handler = ble_client_handle_event,
-          },
+      .gatt_client_service_info = (const EventServiceInfo){
+          .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
+          .handler = ble_client_handle_event,
+      },
   };
 }
 

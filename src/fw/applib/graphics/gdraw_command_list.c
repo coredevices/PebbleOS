@@ -158,7 +158,8 @@ void gdraw_command_list_draw_processed(GContext *ctx, GDrawCommandList *command_
         .list = command_list,
         .processor = processor,
         // malloc because we clear the memory within each iteration of `prv_draw_command_processed`
-        .processed_draw_command = applib_malloc(max_size)};
+        .processed_draw_command = applib_malloc(max_size)
+    };
 
     if (data.processed_draw_command) {
       gdraw_command_list_iterate(command_list, prv_draw_command_processed, &data);

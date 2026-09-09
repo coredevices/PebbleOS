@@ -77,12 +77,11 @@ static status_t prv_insert_serialized_item(const uint8_t *key, int key_len, cons
     // The app isn't cached. Fetch it!
     PebbleEvent e = {
         .type = PEBBLE_APP_FETCH_REQUEST_EVENT,
-        .app_fetch_request =
-            {
-                .id = install_id,
-                .with_ui = false,
-                .fetch_args = NULL,
-            },
+        .app_fetch_request = {
+            .id = install_id,
+            .with_ui = false,
+            .fetch_args = NULL,
+        },
     };
     event_put(&e);
   }

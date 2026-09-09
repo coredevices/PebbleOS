@@ -7,7 +7,8 @@ static TimelineItem s_last_stored_notification = {};
 static int s_notification_store_count = 0;
 static int s_notification_remove_count = 0;
 static TimelineItem s_existing_ancs_notification = {
-    .header = (CommonTimelineItemHeader){.id = UUID_INVALID, .ancs_uid = 0}};
+    .header = (CommonTimelineItemHeader){.id = UUID_INVALID, .ancs_uid = 0}
+};
 
 extern T_STATIC bool prv_deep_copy_attributes_actions(AttributeList *attr_list,
                                                       TimelineItemActionGroup *action_group,

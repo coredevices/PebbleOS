@@ -89,20 +89,19 @@ typedef struct {
 
 static const KernelLEClient s_clients[KernelLEClientNum] = {
 #if UNITTEST
-    [KernelLEClientUnitTest] =
-        {
-            .debug_name = "TEST",
-            .service_uuid = &s_test_service_uuid,
-            .characteristic_uuids = s_test_characteristic_uuids,
-            .num_characteristics = TestCharacteristicCount,
-            .handle_service_discovered = test_client_handle_service_discovered,
-            .handle_service_removed = test_client_handle_service_removed,
-            .invalidate_all_references = test_client_invalidate_all_references,
-            .can_handle_characteristic = test_client_can_handle_characteristic,
-            .handle_write_response = test_client_handle_write_response,
-            .handle_subscribe = test_client_handle_subscribe,
-            .handle_read_or_notification = test_client_handle_read_or_notification,
-        },
+    [KernelLEClientUnitTest] = {
+        .debug_name = "TEST",
+        .service_uuid = &s_test_service_uuid,
+        .characteristic_uuids = s_test_characteristic_uuids,
+        .num_characteristics = TestCharacteristicCount,
+        .handle_service_discovered = test_client_handle_service_discovered,
+        .handle_service_removed = test_client_handle_service_removed,
+        .invalidate_all_references = test_client_invalidate_all_references,
+        .can_handle_characteristic = test_client_can_handle_characteristic,
+        .handle_write_response = test_client_handle_write_response,
+        .handle_subscribe = test_client_handle_subscribe,
+        .handle_read_or_notification = test_client_handle_read_or_notification,
+    },
 #else
     [KernelLEClientPPoGATT] =
         {
@@ -162,18 +161,17 @@ static const KernelLEClient s_clients[KernelLEClientNum] = {
             .can_handle_characteristic = app_launch_can_handle_characteristic,
             .handle_read_or_notification = NULL,
         },
-    [KernelLEClientDIS] =
-        {
-            .debug_name = "DIS",
-            .service_uuid = &s_dis_service_uuid,
-            .characteristic_uuids = s_dis_characteristic_uuids,
-            .num_characteristics = NumDISCharacteristic,
-            .handle_service_discovered = dis_handle_service_discovered,
-            .handle_service_removed = dis_handle_service_removed,
-            .invalidate_all_references = dis_invalidate_all_references,
-            .can_handle_characteristic = NULL,
-            .handle_read_or_notification = NULL,
-        },
+    [KernelLEClientDIS] = {
+        .debug_name = "DIS",
+        .service_uuid = &s_dis_service_uuid,
+        .characteristic_uuids = s_dis_characteristic_uuids,
+        .num_characteristics = NumDISCharacteristic,
+        .handle_service_discovered = dis_handle_service_discovered,
+        .handle_service_removed = dis_handle_service_removed,
+        .invalidate_all_references = dis_invalidate_all_references,
+        .can_handle_characteristic = NULL,
+        .handle_read_or_notification = NULL,
+    },
 #endif  // UNITTEST
 };
 

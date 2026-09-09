@@ -40,24 +40,23 @@ static TimelineItem *prv_create_abandoned_workout_notification(void) {
   const int num_actions = 3;
   TimelineItemActionGroup action_group = {
       .num_actions = num_actions,
-      .actions =
-          (TimelineItemAction[]){
-              {
-                  .id = 0,
-                  .type = TimelineItemActionTypeDismiss,
-                  .attr_list = dismiss_attr_list,
-              },
-              {
-                  .id = 1,
-                  .type = TimelineItemActionTypeOpenWatchApp,
-                  .attr_list = end_workout_attr_list,
-              },
-              {
-                  .id = 2,
-                  .type = TimelineItemActionTypeOpenWatchApp,
-                  .attr_list = open_workout_attr_list,
-              },
+      .actions = (TimelineItemAction[]){
+          {
+              .id = 0,
+              .type = TimelineItemActionTypeDismiss,
+              .attr_list = dismiss_attr_list,
           },
+          {
+              .id = 1,
+              .type = TimelineItemActionTypeOpenWatchApp,
+              .attr_list = end_workout_attr_list,
+          },
+          {
+              .id = 2,
+              .type = TimelineItemActionTypeOpenWatchApp,
+              .attr_list = open_workout_attr_list,
+          },
+      },
   };
 
   const time_t now_utc = rtc_get_time();

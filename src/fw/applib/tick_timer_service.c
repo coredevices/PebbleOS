@@ -107,10 +107,9 @@ void tick_timer_service_unsubscribe(void) {
 
 void tick_timer_service_state_init(TickTimerServiceState *state) {
   *state = (TickTimerServiceState){
-      .tick_service_info =
-          {
-              .type = PEBBLE_TICK_EVENT,
-              .handler = &do_handle,
-          },
+      .tick_service_info = {
+          .type = PEBBLE_TICK_EVENT,
+          .handler = &do_handle,
+      },
   };
 }

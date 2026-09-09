@@ -94,8 +94,9 @@ static void init_arrow_layer_for_button(AppData *data, ButtonId id) {
   static GPoint ARROW_PATH_POINTS[] = {{0, 7},   {14, 7},  {14, 0}, {26, 12},
                                        {14, 24}, {14, 17}, {0, 17}};
 
-  static const GPathInfo ARROW_PATH_INFO = {.num_points = ARRAY_LENGTH(ARROW_PATH_POINTS),
-                                            .points = ARROW_PATH_POINTS};
+  static const GPathInfo ARROW_PATH_INFO = {
+      .num_points = ARRAY_LENGTH(ARROW_PATH_POINTS), .points = ARROW_PATH_POINTS
+  };
 
 // Original arrow dimensions
 #define ARROW_W 26
@@ -232,8 +233,9 @@ const PebbleProcessMd *mfg_button_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
       .common.main_func = &s_main,
       // UUID: eed03647-fa9e-4bae-9254-608aa297e4e4
-      .common.uuid = {0xee, 0xd0, 0x36, 0x47, 0xfa, 0x9e, 0x4b, 0xae, 0x92, 0x54, 0x60, 0x8a, 0xa2,
-                      0x97, 0xe4, 0xe4},
+      .common.uuid =
+          {0xee, 0xd0, 0x36, 0x47, 0xfa, 0x9e, 0x4b, 0xae, 0x92, 0x54, 0x60, 0x8a, 0xa2, 0x97, 0xe4,
+           0xe4},
       .name = "MfgButton",
   };
   return (const PebbleProcessMd *)&s_app_info;

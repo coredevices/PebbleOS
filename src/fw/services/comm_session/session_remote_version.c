@@ -136,10 +136,9 @@ static void prv_handle_phone_versions_response(CommSession *session, const uint8
   if (is_system) {
     PebbleEvent event = {
         .type = PEBBLE_REMOTE_APP_INFO_EVENT,
-        .bluetooth.app_info_event =
-            {
-                .os = (platform_bits & RemoteBitmaskOS),
-            },
+        .bluetooth.app_info_event = {
+            .os = (platform_bits & RemoteBitmaskOS),
+        },
     };
     event_put(&event);
   }

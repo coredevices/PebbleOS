@@ -284,12 +284,14 @@ T_STATIC void prv_update_time_info_and_generate_event(time_t *t, TimezoneInfo *t
 
   PBL_ANALYTICS_SET_SIGNED(utc_offset_s, new_gmt_offset);
 
-  PebbleEvent e = {.type = PEBBLE_SET_TIME_EVENT,
-                   .set_time_info = {
-                       .utc_time_delta = new_utc_time - orig_utc_time,
-                       .gmt_offset_delta = new_gmt_offset - orig_gmt_offset,
-                       .dst_changed = false,
-                   }};
+  PebbleEvent e = {
+      .type = PEBBLE_SET_TIME_EVENT,
+      .set_time_info = {
+          .utc_time_delta = new_utc_time - orig_utc_time,
+          .gmt_offset_delta = new_gmt_offset - orig_gmt_offset,
+          .dst_changed = false,
+      }
+  };
   event_put(&e);
 }
 
@@ -399,12 +401,14 @@ T_STATIC void prv_watch_dst(void *user) {
 #endif
 
   if (is_dst != was_dst) {
-    PebbleEvent e = {.type = PEBBLE_SET_TIME_EVENT,
-                     .set_time_info = {
-                         .utc_time_delta = 0,
-                         .gmt_offset_delta = 0,
-                         .dst_changed = true,
-                     }};
+    PebbleEvent e = {
+        .type = PEBBLE_SET_TIME_EVENT,
+        .set_time_info = {
+            .utc_time_delta = 0,
+            .gmt_offset_delta = 0,
+            .dst_changed = true,
+        }
+    };
     event_put(&e);
     s_dst_checker.cb_data = (void *)is_dst;
   }

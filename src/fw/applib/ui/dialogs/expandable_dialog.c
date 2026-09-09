@@ -205,8 +205,9 @@ static void prv_expandable_dialog_load(Window *window) {
 
   scroll_layer_set_content_size(scroll_layer, GSize(frame.size.w, scroll_height));
   scroll_layer_set_shadow_hidden(scroll_layer, true);
-  scroll_layer_set_callbacks(scroll_layer, (ScrollLayerCallbacks){.content_offset_changed_handler =
-                                                                      prv_offset_changed_handler});
+  scroll_layer_set_callbacks(
+      scroll_layer,
+      (ScrollLayerCallbacks){.content_offset_changed_handler = prv_offset_changed_handler});
   scroll_layer_set_context(scroll_layer, expandable_dialog);
 
 #if PBL_ROUND

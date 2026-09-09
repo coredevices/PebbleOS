@@ -305,8 +305,9 @@ static void prv_handle_init(void) {
 
   // Create up arrow (pointing up)
   static GPoint UP_ARROW_POINTS[] = {{0, 10}, {7, 0}, {14, 10}};
-  static const GPathInfo UP_ARROW_PATH_INFO = {.num_points = ARRAY_LENGTH(UP_ARROW_POINTS),
-                                               .points = UP_ARROW_POINTS};
+  static const GPathInfo UP_ARROW_PATH_INFO = {
+      .num_points = ARRAY_LENGTH(UP_ARROW_POINTS), .points = UP_ARROW_POINTS
+  };
   PathLayer *up_arrow = &data->up_arrow;
   path_layer_init(up_arrow, &UP_ARROW_PATH_INFO);
   path_layer_set_fill_color(up_arrow, GColorBlack);
@@ -340,8 +341,9 @@ static void prv_handle_init(void) {
 
   // Create down arrow (pointing down)
   static GPoint DOWN_ARROW_POINTS[] = {{0, 0}, {7, 10}, {14, 0}};
-  static const GPathInfo DOWN_ARROW_PATH_INFO = {.num_points = ARRAY_LENGTH(DOWN_ARROW_POINTS),
-                                                 .points = DOWN_ARROW_POINTS};
+  static const GPathInfo DOWN_ARROW_PATH_INFO = {
+      .num_points = ARRAY_LENGTH(DOWN_ARROW_POINTS), .points = DOWN_ARROW_POINTS
+  };
   PathLayer *down_arrow = &data->down_arrow;
   path_layer_init(down_arrow, &DOWN_ARROW_PATH_INFO);
   path_layer_set_fill_color(down_arrow, GColorBlack);
@@ -369,8 +371,9 @@ const PebbleProcessMd *mfg_program_color_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
       .common.main_func = &s_main,
       // UUID: d5f0a47d-e570-499d-bcaa-fc6d56230038
-      .common.uuid = {0xd5, 0xf0, 0xa4, 0x7d, 0xe5, 0x70, 0x49, 0x9d, 0xbc, 0xaa, 0xfc, 0x6d, 0x56,
-                      0x23, 0x00, 0x38},
+      .common.uuid =
+          {0xd5, 0xf0, 0xa4, 0x7d, 0xe5, 0x70, 0x49, 0x9d, 0xbc, 0xaa, 0xfc, 0x6d, 0x56, 0x23, 0x00,
+           0x38},
       .name = "MfgProgramColor",
   };
   return (const PebbleProcessMd *)&s_app_info;

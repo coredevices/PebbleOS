@@ -351,15 +351,14 @@ static void prv_cleanup(void) {
 
   PebbleEvent event = {
       .type = PEBBLE_PUT_BYTES_EVENT,
-      .put_bytes =
-          {
-              .type = PebblePutBytesEventTypeCleanup,
-              .object_type = s_pb_state.type,
-              .has_cookie = s_pb_state.has_cookie,
-              .progress_percent = 0,
-              .total_size = s_pb_state.total_size,
-              .failed = !s_pb_state.is_success,
-          },
+      .put_bytes = {
+          .type = PebblePutBytesEventTypeCleanup,
+          .object_type = s_pb_state.type,
+          .has_cookie = s_pb_state.has_cookie,
+          .progress_percent = 0,
+          .total_size = s_pb_state.total_size,
+          .failed = !s_pb_state.is_success,
+      },
   };
 
   event_put(&event);
@@ -447,7 +446,8 @@ static void prv_commit_object(uint32_t crc) {
     FirmwareDescription fw_descr = {
         .description_length = sizeof(FirmwareDescription),
         .firmware_length = s_pb_state.total_size + s_pb_state.append_offset,
-        .checksum = crc};
+        .checksum = crc
+    };
 
     fw_descr.checksum = pb_storage_calculate_crc(&s_pb_state.storage, PutBytesCrcType_CRC32);
     pb_storage_write(&s_pb_state.storage, 0, (uint8_t *)&fw_descr, sizeof(FirmwareDescription));
@@ -731,12 +731,14 @@ static void prv_do_init(void) {
 
   PebbleEvent event = {
       .type = PEBBLE_PUT_BYTES_EVENT,
-      .put_bytes = {.type = PebblePutBytesEventTypeStart,
-                    .object_type = s_pb_state.type,
-                    .has_cookie = s_pb_state.has_cookie,
-                    .progress_percent = 0,
-                    .total_size = s_pb_state.total_size,
-                    .failed = false},
+      .put_bytes = {
+          .type = PebblePutBytesEventTypeStart,
+          .object_type = s_pb_state.type,
+          .has_cookie = s_pb_state.has_cookie,
+          .progress_percent = 0,
+          .total_size = s_pb_state.total_size,
+          .failed = false
+      },
   };
   event_put(&event);
 
@@ -915,15 +917,14 @@ static void prv_process_put_requests_system_task_cb(void *unused) {
 
     PebbleEvent event = {
         .type = PEBBLE_PUT_BYTES_EVENT,
-        .put_bytes =
-            {
-                .type = PebblePutBytesEventTypeProgress,
-                .object_type = s_pb_state.type,
-                .has_cookie = s_pb_state.has_cookie,
-                .progress_percent = prv_get_progress_percent(),
-                .bytes_transferred = bytes_transferred,
-                .failed = false,
-            },
+        .put_bytes = {
+            .type = PebblePutBytesEventTypeProgress,
+            .object_type = s_pb_state.type,
+            .has_cookie = s_pb_state.has_cookie,
+            .progress_percent = prv_get_progress_percent(),
+            .bytes_transferred = bytes_transferred,
+            .failed = false,
+        },
     };
     event_put(&event);
   }
@@ -1047,15 +1048,14 @@ static void prv_expect_init_timeout_cb(void *data) {
 
   PebbleEvent event = {
       .type = PEBBLE_PUT_BYTES_EVENT,
-      .put_bytes =
-          {
-              .type = PebblePutBytesEventTypeInitTimeout,
-              .object_type = ObjectUnknown,
-              .has_cookie = false,
-              .progress_percent = 0,
-              .total_size = 0,
-              .failed = true,
-          },
+      .put_bytes = {
+          .type = PebblePutBytesEventTypeInitTimeout,
+          .object_type = ObjectUnknown,
+          .has_cookie = false,
+          .progress_percent = 0,
+          .total_size = 0,
+          .failed = true,
+      },
   };
   event_put(&event);
 

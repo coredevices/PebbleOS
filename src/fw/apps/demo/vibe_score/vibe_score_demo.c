@@ -66,7 +66,8 @@ static void s_main(void) {
 }
 
 const PebbleProcessMd *vibe_score_demo_get_info() {
-  static const PebbleProcessMdSystem s_vibe_score_info = {.common.main_func = s_main,
-                                                          .name = "Vibe Patterns"};
+  static const PebbleProcessMdSystem s_vibe_score_info = {
+      .common.main_func = s_main, .name = "Vibe Patterns"
+  };
   return (const PebbleProcessMd *)&s_vibe_score_info;
 }

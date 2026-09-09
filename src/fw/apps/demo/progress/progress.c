@@ -96,7 +96,8 @@ static void s_main(void) {
 }
 
 const PebbleProcessMd *progress_app_get_info() {
-  static const PebbleProcessMdSystem progress_app_info = {.common.main_func = &s_main,
-                                                          .name = "Progress Bar Test"};
+  static const PebbleProcessMdSystem progress_app_info = {
+      .common.main_func = &s_main, .name = "Progress Bar Test"
+  };
   return (const PebbleProcessMd *)&progress_app_info;
 }

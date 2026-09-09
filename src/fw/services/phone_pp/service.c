@@ -74,22 +74,26 @@ static bool get_call_info_from_msg(const uint8_t *msg, unsigned int length, Pebb
 }
 
 static void prv_put_call_disconnect_event(void) {
-  PebbleEvent e = {.type = PEBBLE_PHONE_EVENT,
-                   .phone = {
-                       .type = PhoneEventType_Disconnect,
-                       .source = PhoneCallSource_PP,
-                       .call_identifier = 0,  // Cookie is not yet implemented / used
-                   }};
+  PebbleEvent e = {
+      .type = PEBBLE_PHONE_EVENT,
+      .phone = {
+          .type = PhoneEventType_Disconnect,
+          .source = PhoneCallSource_PP,
+          .call_identifier = 0,  // Cookie is not yet implemented / used
+      }
+  };
   event_put(&e);
 }
 
 static void prv_put_call_end_event(void) {
-  PebbleEvent e = {.type = PEBBLE_PHONE_EVENT,
-                   .phone = {
-                       .type = PhoneEventType_End,
-                       .source = PhoneCallSource_PP,
-                       .call_identifier = 0,  // Cookie is not yet implemented / used
-                   }};
+  PebbleEvent e = {
+      .type = PEBBLE_PHONE_EVENT,
+      .phone = {
+          .type = PhoneEventType_End,
+          .source = PhoneCallSource_PP,
+          .call_identifier = 0,  // Cookie is not yet implemented / used
+      }
+  };
   event_put(&e);
 }
 
@@ -190,13 +194,15 @@ static bool prv_parse_msg_to_event(const uint8_t *iter, size_t length, PebbleEve
   }
 
   if (did_parse) {
-    *event_out = (const PebbleEvent){.type = PEBBLE_PHONE_EVENT,
-                                     .phone = {
-                                         .type = type,
-                                         .source = PhoneCallSource_PP,
-                                         .call_identifier = call_info.cookie,
-                                         .caller = caller,
-                                     }};
+    *event_out = (const PebbleEvent){
+        .type = PEBBLE_PHONE_EVENT,
+        .phone = {
+            .type = type,
+            .source = PhoneCallSource_PP,
+            .call_identifier = call_info.cookie,
+            .caller = caller,
+        }
+    };
   } else {
     // Try to catch potentially malformed messages.
     PBL_LOG_ERR("Error parsing phone msg");

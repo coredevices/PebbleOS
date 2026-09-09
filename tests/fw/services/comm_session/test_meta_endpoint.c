@@ -57,10 +57,9 @@ void test_meta_endpoint__cleanup(void) {
 void test_meta_endpoint__send_meta_corrupted_message(void) {
   const MetaResponseInfo meta_response_info = {
       .session = s_session,
-      .payload =
-          {
-              .error_code = MetaResponseCodeCorruptedMessage,
-          },
+      .payload = {
+          .error_code = MetaResponseCodeCorruptedMessage,
+      },
   };
   meta_endpoint_send_response_async(&meta_response_info);
 
@@ -71,11 +70,10 @@ void test_meta_endpoint__send_meta_corrupted_message(void) {
 void test_meta_endpoint__send_meta_disallowed_message(void) {
   const MetaResponseInfo meta_response_info = {
       .session = s_session,
-      .payload =
-          {
-              .error_code = MetaResponseCodeDisallowed,
-              .endpoint_id = 0xabcd,
-          },
+      .payload = {
+          .error_code = MetaResponseCodeDisallowed,
+          .endpoint_id = 0xabcd,
+      },
   };
   meta_endpoint_send_response_async(&meta_response_info);
 
@@ -86,11 +84,10 @@ void test_meta_endpoint__send_meta_disallowed_message(void) {
 void test_meta_endpoint__send_meta_unhandled_message(void) {
   const MetaResponseInfo meta_response_info = {
       .session = s_session,
-      .payload =
-          {
-              .error_code = MetaResponseCodeUnhandled,
-              .endpoint_id = 0x1234,
-          },
+      .payload = {
+          .error_code = MetaResponseCodeUnhandled,
+          .endpoint_id = 0x1234,
+      },
   };
   meta_endpoint_send_response_async(&meta_response_info);
 

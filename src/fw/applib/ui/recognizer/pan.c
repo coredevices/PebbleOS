@@ -62,7 +62,8 @@ static void prv_reset(Recognizer *recognizer);
 static bool prv_cancel(Recognizer *recognizer);
 
 static const RecognizerImpl s_pan_recognizer_impl = {
-    .handle_touch_event = prv_handle_touch_event, .reset = prv_reset, .cancel = prv_cancel};
+    .handle_touch_event = prv_handle_touch_event, .reset = prv_reset, .cancel = prv_cancel
+};
 
 static uint32_t prv_ticks_to_ms(RtcTicks ticks) {
   return (uint32_t)((ticks * MS_PER_SECOND) / RTC_TICKS_HZ);
@@ -216,12 +217,11 @@ static bool prv_cancel(Recognizer *recognizer) {
 
 Recognizer *pan_recognizer_create(RecognizerEventCb event_cb, void *user_data, PanAxis axis) {
   PanRecognizerData data = {
-      .config =
-          {
-              .axis_lock = axis,
-              .start_threshold_px = PAN_START_THRESHOLD_PX,
-              .axis_dominance = PAN_AXIS_DOMINANCE,
-          },
+      .config = {
+          .axis_lock = axis,
+          .start_threshold_px = PAN_START_THRESHOLD_PX,
+          .axis_dominance = PAN_AXIS_DOMINANCE,
+      },
   };
 
   return recognizer_create_with_data(&s_pan_recognizer_impl, &data, sizeof(data), event_cb,
@@ -233,12 +233,11 @@ Recognizer *pan_recognizer_init_static(void *storage, RecognizerEventCb event_cb
   _Static_assert(RECOGNIZER_INSTANCE_SIZE + sizeof(PanRecognizerData) <= PAN_RECOGNIZER_STATIC_SIZE,
                  "PAN_RECOGNIZER_STATIC_SIZE too small for a static pan recognizer");
   PanRecognizerData data = {
-      .config =
-          {
-              .axis_lock = axis,
-              .start_threshold_px = PAN_START_THRESHOLD_PX,
-              .axis_dominance = PAN_AXIS_DOMINANCE,
-          },
+      .config = {
+          .axis_lock = axis,
+          .start_threshold_px = PAN_START_THRESHOLD_PX,
+          .axis_dominance = PAN_AXIS_DOMINANCE,
+      },
   };
 
   return recognizer_init_static_with_data(storage, &s_pan_recognizer_impl, &data, sizeof(data),

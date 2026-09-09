@@ -89,10 +89,9 @@ static void prv_glance_event_put(const Uuid *app_uuid) {
 
   PebbleEvent e = (PebbleEvent){
       .type = PEBBLE_APP_GLANCE_EVENT,
-      .app_glance =
-          (PebbleAppGlanceEvent){
-              .app_uuid = app_uuid_copy,
-          },
+      .app_glance = (PebbleAppGlanceEvent){
+          .app_uuid = app_uuid_copy,
+      },
   };
 
   event_put(&e);

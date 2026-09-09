@@ -619,8 +619,9 @@ static void prv_update_proc(struct Layer *layer, GContext *ctx) {
   AnimationProgress progress;
   if (timeline_layer->animating_intro_or_exit &&
       animation_get_progress(timeline_layer->animation, &progress)) {
-    const GPoint offset = {PEEK_ANIMATIONS_SPEED_LINES_OFFSET_X,
-                           interpolate_int64_linear(progress, 0, -DISP_ROWS)};
+    const GPoint offset = {
+        PEEK_ANIMATIONS_SPEED_LINES_OFFSET_X, interpolate_int64_linear(progress, 0, -DISP_ROWS)
+    };
     graphics_context_set_fill_color(ctx, GColorBlack);
     peek_animations_draw_timeline_speed_lines(ctx, offset);
   }
@@ -651,9 +652,12 @@ static void prv_update_proc(struct Layer *layer, GContext *ctx) {
   const int16_t arrow_point_x_offset = PBL_IF_RECT_ELSE(-arrow_size.w, arrow_size.w);
   GPath arrow_path = {
       .num_points = 3,
-      .points = (GPoint[]){{arrow_base_x, arrow_base_center_y - (arrow_size.h / 2)},
-                           {arrow_base_x + arrow_point_x_offset, arrow_base_center_y},
-                           {arrow_base_x, arrow_base_center_y + (arrow_size.h / 2)}}};
+      .points = (GPoint[]){
+          {arrow_base_x, arrow_base_center_y - (arrow_size.h / 2)},
+          {arrow_base_x + arrow_point_x_offset, arrow_base_center_y},
+          {arrow_base_x, arrow_base_center_y + (arrow_size.h / 2)}
+      }
+  };
 
   if (timeline_layer->scroll_direction == TimelineScrollDirectionUp) {
     // arrow is in a different position for past & future, but only on rectangular displays

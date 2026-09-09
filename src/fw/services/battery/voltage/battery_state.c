@@ -48,7 +48,8 @@ static void prv_update_done_charging(void);
 static const ConnectionState s_transitions[] = {
     [ConnectionStateChargingPlugged] = {.enter = prv_update_plugged_change},
     [ConnectionStateDischargingPlugged] = {.enter = prv_update_done_charging},
-    [ConnectionStateDischargingUnplugged] = {.enter = prv_update_plugged_change}};
+    [ConnectionStateDischargingUnplugged] = {.enter = prv_update_plugged_change}
+};
 
 typedef struct BatteryState {
   uint64_t init_time;
@@ -105,10 +106,9 @@ static void prv_update_done_charging(void) {
 static void battery_state_put_change_event(PreciseBatteryChargeState state) {
   PebbleEvent e = {
       .type = PEBBLE_BATTERY_STATE_CHANGE_EVENT,
-      .battery_state =
-          {
-              .new_state = state,
-          },
+      .battery_state = {
+          .new_state = state,
+      },
   };
   event_put(&e);
 }
@@ -261,7 +261,8 @@ PreciseBatteryChargeState prv_get_precise_charge_state(const BatteryState *state
       .charge_percent = state->percent,
       .pct = ratio32_to_percent(state->percent),
       .is_charging = (s_last_battery_state.connection == ConnectionStateChargingPlugged),
-      .is_plugged = (s_last_battery_state.connection != ConnectionStateDischargingUnplugged)};
+      .is_plugged = (s_last_battery_state.connection != ConnectionStateDischargingUnplugged)
+  };
   return event_state;
 }
 

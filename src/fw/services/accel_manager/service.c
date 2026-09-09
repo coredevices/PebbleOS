@@ -252,11 +252,10 @@ static bool prv_call_data_callback(AccelManagerState *state) {
     case PebbleTask_KernelMain: {
       PebbleEvent event = {
           .type = PEBBLE_CALLBACK_EVENT,
-          .callback =
-              {
-                  .callback = state->data_cb_handler,
-                  .data = state->data_cb_context,
-              },
+          .callback = {
+              .callback = state->data_cb_handler,
+              .data = state->data_cb_context,
+          },
       };
 
       struct pbl_msgq *queue = pebble_task_get_to_queue(state->task);
@@ -403,11 +402,13 @@ void accel_manager_init(void) {
 
 static void prv_copy_accel_sample_to_accel_data(AccelDriverSample const *accel_sample,
                                                 AccelData *accel_data) {
-  *accel_data = (AccelData){.x = accel_sample->x,
-                            .y = accel_sample->y,
-                            .z = accel_sample->z,
-                            .timestamp /* ms */ = (accel_sample->timestamp_us / 1000),
-                            .did_vibrate = (sys_vibe_get_vibe_strength() != VIBE_STRENGTH_OFF)};
+  *accel_data = (AccelData){
+      .x = accel_sample->x,
+      .y = accel_sample->y,
+      .z = accel_sample->z,
+      .timestamp /* ms */ = (accel_sample->timestamp_us / 1000),
+      .did_vibrate = (sys_vibe_get_vibe_strength() != VIBE_STRENGTH_OFF)
+  };
 }
 
 static void prv_update_last_accel_data(AccelDriverSample const *data) {
@@ -868,11 +869,10 @@ void accel_cb_shake_detected(IMUCoordinateAxis axis, int32_t direction) {
 
   PebbleEvent e = {
       .type = PEBBLE_ACCEL_SHAKE_EVENT,
-      .accel_tap =
-          {
-              .axis = axis,
-              .direction = direction,
-          },
+      .accel_tap = {
+          .axis = axis,
+          .direction = direction,
+      },
   };
 
   event_put(&e);
@@ -892,11 +892,10 @@ void accel_cb_double_tap_detected(IMUCoordinateAxis axis, int32_t direction) {
 
   PebbleEvent e = {
       .type = PEBBLE_ACCEL_DOUBLE_TAP_EVENT,
-      .accel_tap =
-          {
-              .axis = axis,
-              .direction = direction,
-          },
+      .accel_tap = {
+          .axis = axis,
+          .direction = direction,
+      },
   };
 
   event_put(&e);

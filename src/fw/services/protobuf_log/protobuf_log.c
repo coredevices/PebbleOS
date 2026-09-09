@@ -225,11 +225,10 @@ static bool prv_session_measurement_encode_start(PLogSession *session) {
           },
       .time_utc = session->start_utc,
       .utc_to_local = time_util_utc_to_local_offset(),
-      .types =
-          {
-              .funcs.encode = protobuf_log_util_encode_measurement_types,
-              .arg = &types_encoder_arg,
-          },
+      .types = {
+          .funcs.encode = protobuf_log_util_encode_measurement_types,
+          .arg = &types_encoder_arg,
+      },
   };
 
   return pb_encode(&session->data_stream, &pebble_pipeline_MeasurementSet_msg, &msg);
@@ -394,11 +393,10 @@ bool protobuf_log_session_add_measurements(ProtobufLogRef session_ref, time_t sa
   };
   pebble_pipeline_Measurement msg = {
       .offset_sec = offset_sec,
-      .data =
-          {
-              .funcs.encode = protobuf_log_util_encode_packed_varints,
-              .arg = &packed_varint_encoder_arg,
-          },
+      .data = {
+          .funcs.encode = protobuf_log_util_encode_packed_varints,
+          .arg = &packed_varint_encoder_arg,
+      },
   };
 
   bool success = prv_log_struct(session, pebble_pipeline_MeasurementSet_measurements_tag,

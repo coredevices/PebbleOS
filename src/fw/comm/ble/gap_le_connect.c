@@ -165,14 +165,12 @@ static void prv_mutate_whitelist_safely(const BTDeviceInternal *device, bool is_
 static void prv_put_legacy_connection_event(const BTDeviceInternal *device, bool is_connected) {
   PebbleEvent event = {
       .type = PEBBLE_BT_CONNECTION_EVENT,
-      .bluetooth =
-          {
-              .connection =
-                  {
-                      .is_ble = true,
-                      .device = *device,
-                  },
+      .bluetooth = {
+          .connection = {
+              .is_ble = true,
+              .device = *device,
           },
+      },
   };
 
   if (is_connected) {
@@ -190,19 +188,16 @@ static void prv_put_connection_event(PebbleTaskBitset task_mask, const BTDeviceI
   PebbleEvent pebble_event = {
       .type = PEBBLE_BLE_CONNECTION_EVENT,
       .task_mask = task_mask,
-      .bluetooth =
-          {
-              .le =
-                  {
-                      .connection =
-                          {
-                              .bt_device_bits = device->opaque.opaque_64,
-                              .hci_reason = hci_reason,
-                              .connected = connected,
-                              .bonding_id = bonding_id,
-                          },
-                  },
+      .bluetooth = {
+          .le = {
+              .connection = {
+                  .bt_device_bits = device->opaque.opaque_64,
+                  .hci_reason = hci_reason,
+                  .connected = connected,
+                  .bonding_id = bonding_id,
+              },
           },
+      },
   };
   event_put(&pebble_event);
 }
@@ -1074,10 +1069,9 @@ BTErrno gap_le_connect_connect_by_bonding(BTBondingID bonding_id, bool auto_reco
   }
   struct RegisterIntentRequest request = {
       .is_bonding_based = true,
-      .bonding =
-          {
-              .id = bonding_id,
-          },
+      .bonding = {
+          .id = bonding_id,
+      },
   };
   // Get the IRK and device from the bonding storage,
   // outside of bt_lock(), because it uses flash.

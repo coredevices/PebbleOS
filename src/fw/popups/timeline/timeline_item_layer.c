@@ -87,14 +87,13 @@ static void prv_update_scroll_offset(TimelineItemLayer *item_layer, int16_t new_
           {
               .update = (AnimationUpdateImplementation)property_animation_update_int16,
           },
-      .accessors =
-          {
-              .setter =
-                  {
-                      .int16 = (const Int16Setter)prv_scroll_offset_setter,
-                  },
-              .getter = {.int16 = (const Int16Getter)prv_scroll_offset_getter},
-          },
+      .accessors = {
+          .setter =
+              {
+                  .int16 = (const Int16Setter)prv_scroll_offset_setter,
+              },
+          .getter = {.int16 = (const Int16Getter)prv_scroll_offset_getter},
+      },
   };
 
   // If we're already at that position, don't bother scheduling an animation

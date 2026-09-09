@@ -55,19 +55,16 @@ static void prv_send_event(PebbleBLEGATTClientEventType subtype, GAPLEClient cli
   PebbleEvent e = {
       .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
       .task_mask = ~(gap_le_pebble_task_bit_for_client(client)),
-      .bluetooth =
-          {
-              .le =
-                  {
-                      .gatt_client =
-                          {
-                              .subtype = subtype,
-                              .object_ref = object_ref,
-                              .gatt_error = gatt_error,
-                              .value_length = value_length,
-                          },
-                  },
+      .bluetooth = {
+          .le = {
+              .gatt_client = {
+                  .subtype = subtype,
+                  .object_ref = object_ref,
+                  .gatt_error = gatt_error,
+                  .value_length = value_length,
+              },
           },
+      },
   };
   event_put(&e);
 }

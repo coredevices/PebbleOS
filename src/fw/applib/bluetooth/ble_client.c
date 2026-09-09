@@ -60,7 +60,8 @@ DEFINE_SYSCALL(void, sys_get_service_discovery_info, const PebbleBLEGATTClientSe
   }
 
   *info = (PebbleBLEGATTClientServiceEventInfo){
-      .type = e->info->type, .device = e->info->device, .status = e->info->status};
+      .type = e->info->type, .device = e->info->device, .status = e->info->status
+  };
 }
 
 static void prv_handle_service_change(const PebbleBLEGATTClientEvent *e) {

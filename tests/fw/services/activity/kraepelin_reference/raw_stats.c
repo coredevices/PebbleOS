@@ -139,10 +139,13 @@ uint32_t pim_filt(int16_t *d, int16_t dlen, int16_t axis) {
   sfxp ytmp = 0;
 
   // 25hz @ 0.25 to 2hz
-  sfxp ca[4] = {0xfffffffc92b0910cLL, 0x0000000473f9a693LL, 0xfffffffd633c7d23LL,
-                0x0000000096405b5cLL};
-  sfxp cb[5] = {0x000000000721d150LL, 0x0000000000000000LL, 0xfffffffff1bc5d60LL,
-                0x0000000000000000LL, 0x000000000721d150LL};
+  sfxp ca[4] = {
+      0xfffffffc92b0910cLL, 0x0000000473f9a693LL, 0xfffffffd633c7d23LL, 0x0000000096405b5cLL
+  };
+  sfxp cb[5] = {
+      0x000000000721d150LL, 0x0000000000000000LL, 0xfffffffff1bc5d60LL, 0x0000000000000000LL,
+      0x000000000721d150LL
+  };
   // 25hz @ 0.25 to 2.5hz
   //   sll ca[4] = {0xfffffffcd72d69bdLL, 0x00000003caed5dc8LL, 0xfffffffdeadc79a0LL,
   //   0x0000000073506446LL}; sll cb[5] = {0x000000000e73680bLL, 0x0000000000000000LL,

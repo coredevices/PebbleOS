@@ -174,9 +174,9 @@ static NOINLINE LoadedNotificationNode *prv_loaded_notification_list_load_item(
     pin.header.parent_id = (Uuid)UUID_INVALID;
   }
 
-  TimelineResourceInfo timeline_res = {.res_id = timeline_res_id,
-                                       .app_id = &pin.header.parent_id,
-                                       .fallback_id = NOTIF_FALLBACK_ICON};
+  TimelineResourceInfo timeline_res = {
+      .res_id = timeline_res_id, .app_id = &pin.header.parent_id, .fallback_id = NOTIF_FALLBACK_ICON
+  };
   AppResourceInfo icon_res_info;
   timeline_resources_get_id(&timeline_res, TimelineResourceSizeTiny, &icon_res_info);
   loaded_node->icon = gdraw_command_image_create_with_resource_system(icon_res_info.res_app_num,
@@ -825,8 +825,9 @@ const PebbleProcessMd *notifications_app_get_info() {
           {
               .main_func = prv_s_main,
               // UUID: b2cae818-10f8-46df-ad2b-98ad2254a3c1
-              .uuid = {0xb2, 0xca, 0xe8, 0x18, 0x10, 0xf8, 0x46, 0xdf, 0xad, 0x2b, 0x98, 0xad, 0x22,
-                       0x54, 0xa3, 0xc1},
+              .uuid =
+                  {0xb2, 0xca, 0xe8, 0x18, 0x10, 0xf8, 0x46, 0xdf, 0xad, 0x2b, 0x98, 0xad, 0x22,
+                   0x54, 0xa3, 0xc1},
           },
       .name = i18n_noop("Notifications"),
       .icon_resource_id = RESOURCE_ID_NOTIFICATIONS_APP_GLANCE,

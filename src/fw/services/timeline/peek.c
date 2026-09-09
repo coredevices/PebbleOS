@@ -42,14 +42,13 @@ static void prv_put_peek_event(PeekUpdateContext *update, TimelineItemId *item_i
 
   PebbleEvent event = {
       .type = PEBBLE_TIMELINE_PEEK_EVENT,
-      .timeline_peek =
-          {
-              .time_type = time_type,
-              .item_id = item_id_copy,
-              .num_concurrent = MAX((int)update->num_peeking - 1, 0),
-              .is_first_event = (!is_all_day_event_visible && is_first_event),
-              .is_future_empty = (!is_all_day_event_visible && !update->future_has_event),
-          },
+      .timeline_peek = {
+          .time_type = time_type,
+          .item_id = item_id_copy,
+          .num_concurrent = MAX((int)update->num_peeking - 1, 0),
+          .is_first_event = (!is_all_day_event_visible && is_first_event),
+          .is_future_empty = (!is_all_day_event_visible && !update->future_has_event),
+      },
   };
   event_put(&event);
 }

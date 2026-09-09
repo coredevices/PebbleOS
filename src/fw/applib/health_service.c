@@ -1119,14 +1119,12 @@ bool health_service_events_subscribe(HealthEventHandler handler, void *context) 
   // Post a "significant update" event
   PebbleEvent event = {
       .type = PEBBLE_HEALTH_SERVICE_EVENT,
-      .health_event =
-          {
-              .type = HealthEventSignificantUpdate,
-              .data.significant_update =
-                  {
-                      .day_id = 0,
-                  },
+      .health_event = {
+          .type = HealthEventSignificantUpdate,
+          .data.significant_update = {
+              .day_id = 0,
           },
+      },
   };
   sys_send_pebble_event_to_kernel(&event);
 
@@ -1475,11 +1473,10 @@ MeasurementSystem health_service_get_measurement_system_for_display(HealthMetric
 // ----------------------------------------------------------------------------------------------
 void health_service_state_init(HealthServiceState *state) {
   *state = (HealthServiceState){
-      .health_event_service_info =
-          {
-              .type = PEBBLE_HEALTH_SERVICE_EVENT,
-              .handler = &prv_health_event_handler,
-          },
+      .health_event_service_info = {
+          .type = PEBBLE_HEALTH_SERVICE_EVENT,
+          .handler = &prv_health_event_handler,
+      },
   };
 }
 

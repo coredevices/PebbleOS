@@ -5,11 +5,10 @@
 #include "applib/ui/layer.h"
 
 static const PropertyAnimationImplementation s_frame_layer_implementation = {
-    .accessors =
-        {
-            .setter.grect = (const GRectSetter)layer_set_frame_by_value,
-            .getter.grect = (const GRectGetter)layer_get_frame_by_value,
-        },
+    .accessors = {
+        .setter.grect = (const GRectSetter)layer_set_frame_by_value,
+        .getter.grect = (const GRectGetter)layer_get_frame_by_value,
+    },
 };
 
 PropertyAnimation *WEAK property_animation_create_layer_frame(struct Layer *layer,

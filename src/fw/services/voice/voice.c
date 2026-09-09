@@ -211,12 +211,14 @@ static bool prv_start_recording(void) {
 
 static void prv_send_event(VoiceEventType event_type, VoiceStatus status,
                            PebbleVoiceServiceEventData *data) {
-  PebbleEvent event = {.type = PEBBLE_VOICE_SERVICE_EVENT,
-                       .voice_service = {
-                           .type = event_type,
-                           .status = status,
-                           .data = data,
-                       }};
+  PebbleEvent event = {
+      .type = PEBBLE_VOICE_SERVICE_EVENT,
+      .voice_service = {
+          .type = event_type,
+          .status = status,
+          .data = data,
+      }
+  };
   event_put(&event);
 }
 

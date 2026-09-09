@@ -50,11 +50,10 @@ void test_bitmap_layer__cleanup(void) {
 // on recent SDKs but that a previous bug is kept for 2.x SDK
 void test_bitmap_layer__nonzero_bounds(void) {
   GContext ctx = {
-      .draw_state =
-          (GDrawState){
-              .clip_box = GRect(0, 0, 144, 168),
-              .drawing_box = GRect(0, 0, 144, 168),
-          },
+      .draw_state = (GDrawState){
+          .clip_box = GRect(0, 0, 144, 168),
+          .drawing_box = GRect(0, 0, 144, 168),
+      },
   };
 
   static const GRect BITMAP_LAYER_FRAME = GRect(0, 0, 640, 64);

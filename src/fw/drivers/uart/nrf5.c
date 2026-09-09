@@ -30,14 +30,17 @@ void uart_init(UARTDevice *dev) {
       .rts_pin = dev->rts_gpio,
       .cts_pin = dev->cts_gpio,
       .p_context = (void *)dev,
-      .tx_cache = {.p_buffer = (uint8_t *)dev->state->tx_cache_buffer,
-                   .length = sizeof(dev->state->tx_cache_buffer)},
-      .rx_cache = {.p_buffer = (uint8_t *)dev->state->rx_cache_buffer,
-                   .length = sizeof(dev->state->rx_cache_buffer)},
+      .tx_cache =
+          {.p_buffer = (uint8_t *)dev->state->tx_cache_buffer,
+           .length = sizeof(dev->state->tx_cache_buffer)},
+      .rx_cache =
+          {.p_buffer = (uint8_t *)dev->state->rx_cache_buffer,
+           .length = sizeof(dev->state->rx_cache_buffer)},
       .baudrate = NRF_UARTE_BAUDRATE_1000000,
-      .config = {.hwfc = NRF_UARTE_HWFC_DISABLED,
-                 .parity = NRF_UARTE_PARITY_EXCLUDED,
-                 .stop = NRF_UARTE_STOP_ONE},
+      .config =
+          {.hwfc = NRF_UARTE_HWFC_DISABLED,
+           .parity = NRF_UARTE_PARITY_EXCLUDED,
+           .stop = NRF_UARTE_STOP_ONE},
       .interrupt_priority = NRFX_UARTE_DEFAULT_CONFIG_IRQ_PRIORITY,
   };
 
@@ -108,12 +111,14 @@ void uart_init_tx_only(UARTDevice *dev) {
       .rts_pin = NRF_UARTE_PSEL_DISCONNECTED,
       .cts_pin = NRF_UARTE_PSEL_DISCONNECTED,
       .p_context = (void *)dev,
-      .tx_cache = {.p_buffer = (uint8_t *)dev->state->tx_cache_buffer,
-                   .length = sizeof(dev->state->tx_cache_buffer)},
+      .tx_cache =
+          {.p_buffer = (uint8_t *)dev->state->tx_cache_buffer,
+           .length = sizeof(dev->state->tx_cache_buffer)},
       .baudrate = NRF_UARTE_BAUDRATE_1000000,
-      .config = {.hwfc = NRF_UARTE_HWFC_DISABLED,
-                 .parity = NRF_UARTE_PARITY_EXCLUDED,
-                 .stop = NRF_UARTE_STOP_ONE},
+      .config =
+          {.hwfc = NRF_UARTE_HWFC_DISABLED,
+           .parity = NRF_UARTE_PARITY_EXCLUDED,
+           .stop = NRF_UARTE_STOP_ONE},
       .interrupt_priority = NRFX_UARTE_DEFAULT_CONFIG_IRQ_PRIORITY,
   };
 
@@ -146,14 +151,16 @@ void uart_set_baud_rate(UARTDevice *dev, uint32_t baud_rate) {
       .rts_pin = dev->rts_gpio,
       .cts_pin = dev->cts_gpio,
       .p_context = (void *)dev,
-      .tx_cache = {.p_buffer = (uint8_t *)dev->state->tx_cache_buffer,
-                   .length = sizeof(dev->state->tx_cache_buffer)},
+      .tx_cache =
+          {.p_buffer = (uint8_t *)dev->state->tx_cache_buffer,
+           .length = sizeof(dev->state->tx_cache_buffer)},
       //.rx_cache = { .p_buffer = (uint8_t *) dev->state->rx_cache_buffer, .length =
       // sizeof(dev->state->rx_cache_buffer) },
       .baudrate = baud_cfg,
-      .config = {.hwfc = NRF_UARTE_HWFC_DISABLED,
-                 .parity = NRF_UARTE_PARITY_EXCLUDED,
-                 .stop = NRF_UARTE_STOP_ONE},
+      .config =
+          {.hwfc = NRF_UARTE_HWFC_DISABLED,
+           .parity = NRF_UARTE_PARITY_EXCLUDED,
+           .stop = NRF_UARTE_STOP_ONE},
       .interrupt_priority = NRFX_UARTE_DEFAULT_CONFIG_IRQ_PRIORITY,
   };
 

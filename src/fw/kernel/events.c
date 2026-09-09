@@ -148,10 +148,14 @@ static void prv_log_event_put_failure(const char *queue_name, uintptr_t saved_lr
   PBL_LOG_ERR("Error, %s queue full. Type %u", queue_name, event->type);
   prv_log_kernel_queue_contents();
 
-  RebootReason reason = {.code = RebootReasonCode_EventQueueFull,
-                         .event_queue = {.push_lr = saved_lr,
-                                         .current_event = s_current_event,
-                                         .dropped_event = prv_get_fancy_type_from_event(event)}};
+  RebootReason reason = {
+      .code = RebootReasonCode_EventQueueFull,
+      .event_queue = {
+          .push_lr = saved_lr,
+          .current_event = s_current_event,
+          .dropped_event = prv_get_fancy_type_from_event(event)
+      }
+  };
   reboot_reason_set(&reason);
 }
 

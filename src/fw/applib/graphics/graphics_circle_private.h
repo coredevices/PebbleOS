@@ -8,8 +8,9 @@
 #define QUADRANTS_NUM 4  // Just in case of fluctuation
 #define QUADRANT_ANGLE (TRIG_MAX_ANGLE / QUADRANTS_NUM)
 
-static GCornerMask radius_quadrants[QUADRANTS_NUM] = {GCornerTopRight, GCornerBottomRight,
-                                                      GCornerBottomLeft, GCornerTopLeft};
+static GCornerMask radius_quadrants[QUADRANTS_NUM] = {
+    GCornerTopRight, GCornerBottomRight, GCornerBottomLeft, GCornerTopLeft
+};
 
 typedef struct {
   int32_t angle;
@@ -29,10 +30,12 @@ typedef struct {
 } GCornerMultiplier;
 
 #if PBL_COLOR
-static GCornerMultiplier quadrant_mask_mul[] = {{GCornerTopRight, 1, -1},
-                                                {GCornerBottomRight, 1, 1},
-                                                {GCornerBottomLeft, -1, 1},
-                                                {GCornerTopLeft, -1, -1}};
+static GCornerMultiplier quadrant_mask_mul[] = {
+    {GCornerTopRight, 1, -1},
+    {GCornerBottomRight, 1, 1},
+    {GCornerBottomLeft, -1, 1},
+    {GCornerTopLeft, -1, -1}
+};
 #endif
 
 T_STATIC EllipsisDrawConfig prv_calc_draw_config_ellipsis(int32_t angle_start, int32_t angle_end);

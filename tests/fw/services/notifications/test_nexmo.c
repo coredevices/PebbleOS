@@ -113,28 +113,25 @@ void test_nexmo__handle_reuath_sms(void) {
 
   // Existing prefs
   iOSNotifPrefs existing_prefs = {
-      .attr_list =
-          {
-              .num_attributes = 3,
-              .attributes =
-                  (Attribute[]){
-                      {.id = AttributeIdTitle, .cstring = "Title"},
-                      {.id = AttributeIdBody, .cstring = "Body"},
-                      {.id = AttributeIdAppName, .cstring = "Awesome"},
-                  },
+      .attr_list = {
+          .num_attributes = 3,
+          .attributes = (Attribute[]){
+              {.id = AttributeIdTitle, .cstring = "Title"},
+              {.id = AttributeIdBody, .cstring = "Body"},
+              {.id = AttributeIdAppName, .cstring = "Awesome"},
           },
+      },
   };
 
   // Make sure that the prefs we store are the existing ones + the reauth msg
   AttributeList expected_attr_list = {
       .num_attributes = 4,
-      .attributes =
-          (Attribute[]){
-              {.id = AttributeIdTitle, .cstring = "Title"},
-              {.id = AttributeIdBody, .cstring = "Body"},
-              {.id = AttributeIdAppName, .cstring = "Awesome"},
-              {.id = AttributeIdAuthCode, .cstring = valid_message},
-          },
+      .attributes = (Attribute[]){
+          {.id = AttributeIdTitle, .cstring = "Title"},
+          {.id = AttributeIdBody, .cstring = "Body"},
+          {.id = AttributeIdAppName, .cstring = "Awesome"},
+          {.id = AttributeIdAuthCode, .cstring = valid_message},
+      },
   };
   s_expected_attributes = &expected_attr_list;
 

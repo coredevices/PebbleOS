@@ -266,24 +266,26 @@ static const struct _DUMA_AllocDesc {
   char *name;
   enum _DUMA_AllocType type;
   enum _DUMA_AllocStd std;
-} _duma_allocDesc[] = {{"duma allocate()", DUMAAT_INTERNAL, DUMAAS_C},
-                       {"duma deallocate()", DUMAAT_INTERNAL, DUMAAS_C},
-                       {"malloc()", DUMAAT_MALLOC, DUMAAS_C},
-                       {"calloc()", DUMAAT_MALLOC, DUMAAS_C},
-                       {"free()", DUMAAT_MALLOC, DUMAAS_C},
-                       {"memalign()", DUMAAT_MALLOC, DUMAAS_C},
-                       {"posix_memalign()", DUMAAT_MALLOC, DUMAAS_C},
-                       {"realloc()", DUMAAT_MALLOC, DUMAAS_C},
-                       {"valloc()", DUMAAT_MALLOC, DUMAAS_C},
-                       {"strdup()", DUMAAT_MALLOC, DUMAAS_C},
-                       {"scalar new", DUMAAT_NEW_ELEM, DUMAAS_CPP},
-                       {"scalar delete", DUMAAT_NEW_ELEM, DUMAAS_CPP},
-                       {"vector new[]", DUMAAT_NEW_ARRAY, DUMAAS_CPP},
-                       {"vector delete[]", DUMAAT_NEW_ARRAY, DUMAAS_CPP},
-                       {"member scalar new", DUMAAT_MEMBER_NEW_ELEM, DUMAAS_CPP},
-                       {"member scalar delete", DUMAAT_MEMBER_NEW_ELEM, DUMAAS_CPP},
-                       {"member vector new[]", DUMAAT_MEMBER_NEW_ARRAY, DUMAAS_CPP},
-                       {"member vector delete[]", DUMAAT_MEMBER_NEW_ARRAY, DUMAAS_CPP}};
+} _duma_allocDesc[] = {
+    {"duma allocate()", DUMAAT_INTERNAL, DUMAAS_C},
+    {"duma deallocate()", DUMAAT_INTERNAL, DUMAAS_C},
+    {"malloc()", DUMAAT_MALLOC, DUMAAS_C},
+    {"calloc()", DUMAAT_MALLOC, DUMAAS_C},
+    {"free()", DUMAAT_MALLOC, DUMAAS_C},
+    {"memalign()", DUMAAT_MALLOC, DUMAAS_C},
+    {"posix_memalign()", DUMAAT_MALLOC, DUMAAS_C},
+    {"realloc()", DUMAAT_MALLOC, DUMAAS_C},
+    {"valloc()", DUMAAT_MALLOC, DUMAAS_C},
+    {"strdup()", DUMAAT_MALLOC, DUMAAS_C},
+    {"scalar new", DUMAAT_NEW_ELEM, DUMAAS_CPP},
+    {"scalar delete", DUMAAT_NEW_ELEM, DUMAAS_CPP},
+    {"vector new[]", DUMAAT_NEW_ARRAY, DUMAAS_CPP},
+    {"vector delete[]", DUMAAT_NEW_ARRAY, DUMAAS_CPP},
+    {"member scalar new", DUMAAT_MEMBER_NEW_ELEM, DUMAAS_CPP},
+    {"member scalar delete", DUMAAT_MEMBER_NEW_ELEM, DUMAAS_CPP},
+    {"member vector new[]", DUMAAT_MEMBER_NEW_ARRAY, DUMAAS_CPP},
+    {"member vector delete[]", DUMAAT_MEMBER_NEW_ARRAY, DUMAAS_CPP}
+};
 
 #ifdef DUMA_EXPLICIT_INIT
 #define IF__DUMA_INIT_DONE if (DUMAIS_OUT_INIT == _duma_s.init_state)

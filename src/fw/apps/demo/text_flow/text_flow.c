@@ -126,7 +126,8 @@ static void s_main(void) {
 }
 
 const PebbleProcessMd *text_flow_app_get_info() {
-  static const PebbleProcessMdSystem text_flow_info = {.common.main_func = &s_main,
-                                                       .name = "Text Flow"};
+  static const PebbleProcessMdSystem text_flow_info = {
+      .common.main_func = &s_main, .name = "Text Flow"
+  };
   return (const PebbleProcessMd *)&text_flow_info;
 }

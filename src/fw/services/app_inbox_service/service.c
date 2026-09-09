@@ -88,22 +88,22 @@ static AppInboxServiceTag prv_tag_for_event_handlers(const AppInboxMessageHandle
   static const struct {
     AppInboxMessageHandler message_handler;
     AppInboxDroppedHandler dropped_handler;
-  } s_event_handler_map[] = {[AppInboxServiceTagAppMessageReceiver] =
-                                 {
-                                     .message_handler = app_message_receiver_message_handler,
-                                     .dropped_handler = app_message_receiver_dropped_handler,
-                                 },
+  } s_event_handler_map[] = {
+      [AppInboxServiceTagAppMessageReceiver] =
+          {
+              .message_handler = app_message_receiver_message_handler,
+              .dropped_handler = app_message_receiver_dropped_handler,
+          },
 #ifdef UNITTEST
-                             [AppInboxServiceTagUnitTest] =
-                                 {
-                                     .message_handler = test_message_handler,
-                                     .dropped_handler = test_dropped_handler,
-                                 },
-                             [AppInboxServiceTagUnitTestAlt] =
-                                 {
-                                     .message_handler = test_alt_message_handler,
-                                     .dropped_handler = test_alt_dropped_handler,
-                                 }
+      [AppInboxServiceTagUnitTest] =
+          {
+              .message_handler = test_message_handler,
+              .dropped_handler = test_dropped_handler,
+          },
+      [AppInboxServiceTagUnitTestAlt] = {
+          .message_handler = test_alt_message_handler,
+          .dropped_handler = test_alt_dropped_handler,
+      }
 #endif
   };
   for (AppInboxServiceTag tag = 0; tag < NumAppInboxServiceTag; ++tag) {
@@ -415,11 +415,10 @@ static void prv_send_event_if_needed(AppInboxNode *inbox) {
   }
   PebbleEvent event = {
       .type = PEBBLE_CALLBACK_EVENT,
-      .callback =
-          {
-              .callback = prv_callback_event_handler,
-              .data = (void *)(uintptr_t)inbox->tag,
-          },
+      .callback = {
+          .callback = prv_callback_event_handler,
+          .data = (void *)(uintptr_t)inbox->tag,
+      },
   };
   const bool is_event_enqueued =
       process_manager_send_event_to_process(inbox->event_handler_task, &event);

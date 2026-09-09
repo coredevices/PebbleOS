@@ -113,11 +113,10 @@ static SendBuffer *prv_create_send_buffer(CommSession *session, uint16_t endpoin
       .payload_buffer_length = payload_buffer_length,
       .consumed_length = 0,
       .session = session,
-      .header =
-          {
-              .endpoint_id = htons(endpoint_id),
-              .length = 0,
-          },
+      .header = {
+          .endpoint_id = htons(endpoint_id),
+          .length = 0,
+      },
   };
   return sb;
 }

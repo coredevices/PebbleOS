@@ -107,12 +107,14 @@ bool timezone_database_load_region_info(uint16_t region_id, TimezoneInfo *tz_inf
     return false;
   }
 
-  *tz_info = (TimezoneInfo){.dst_id = tz_data.dst_id,
-                            .timezone_id = region_id,
-                            .tm_gmtoff = tz_data.gmt_offset_minutes * SECONDS_PER_MINUTE,
-                            // Leave the dst_start and dst_end timestamps uninitialized
-                            .dst_start = 0,
-                            .dst_end = 0};
+  *tz_info = (TimezoneInfo){
+      .dst_id = tz_data.dst_id,
+      .timezone_id = region_id,
+      .tm_gmtoff = tz_data.gmt_offset_minutes * SECONDS_PER_MINUTE,
+      // Leave the dst_start and dst_end timestamps uninitialized
+      .dst_start = 0,
+      .dst_end = 0
+  };
   memcpy(tz_info->tm_zone, tz_data.tz_abbr, sizeof(tz_data.tz_abbr));
 
   return true;

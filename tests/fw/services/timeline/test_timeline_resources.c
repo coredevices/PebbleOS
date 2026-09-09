@@ -32,12 +32,12 @@ typedef enum TimelineResourceTestAppTimelineId {
 
 static const uint32_t s_app_lut[TimelineResourceTestTimelineIdCount][TimelineResourceSizeCount] = {
     [TIMELINE_RESOURCE_INVALID] = {RESOURCE_ID_INVALID, RESOURCE_ID_INVALID, RESOURCE_ID_INVALID},
-    [TimelineResourceTestTimelineId_AlarmClock] = {RESOURCE_ID_ALARM_CLOCK_TINY,
-                                                   RESOURCE_ID_ALARM_CLOCK_SMALL,
-                                                   RESOURCE_ID_ALARM_CLOCK_LARGE},
-    [TimelineResourceTestTimelineId_Basketball] = {RESOURCE_ID_BASKETBALL_TINY,
-                                                   RESOURCE_ID_BASKETBALL_SMALL,
-                                                   RESOURCE_ID_BASKETBALL_LARGE},
+    [TimelineResourceTestTimelineId_AlarmClock] =
+        {RESOURCE_ID_ALARM_CLOCK_TINY, RESOURCE_ID_ALARM_CLOCK_SMALL,
+         RESOURCE_ID_ALARM_CLOCK_LARGE},
+    [TimelineResourceTestTimelineId_Basketball] = {
+        RESOURCE_ID_BASKETBALL_TINY, RESOURCE_ID_BASKETBALL_SMALL, RESOURCE_ID_BASKETBALL_LARGE
+    },
 };
 
 typedef struct TimelineResourceTestAppData {
@@ -60,10 +60,12 @@ static const TimelineResourceTestAppData s_test_apps[TimelineResourceTestAppIdCo
         .install_entry =
             {
                 .install_id = TimelineResourceTestAppId_AppWithInvalidLUT,
-                .uuid = {0x3c, 0x6e, 0x2e, 0x1d, 0x61, 0x7d, 0x4d, 0x17, 0x97, 0xa1, 0xbc, 0x43,
-                         0x2d, 0x87, 0x4c, 0xed},
-                .sdk_version = {TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MAJOR,
-                                TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MINOR},
+                .uuid =
+                    {0x3c, 0x6e, 0x2e, 0x1d, 0x61, 0x7d, 0x4d, 0x17, 0x97, 0xa1, 0xbc, 0x43, 0x2d,
+                     0x87, 0x4c, 0xed},
+                .sdk_version =
+                    {TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MAJOR,
+                     TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MINOR},
             },
         // No resource_lut specified because this app has an "invalid" lut
     },
@@ -71,12 +73,14 @@ static const TimelineResourceTestAppData s_test_apps[TimelineResourceTestAppIdCo
         .install_entry =
             {
                 .install_id = TimelineResourceTestAppId_AppWithInvalidSDKVersion,
-                .uuid = {0x37, 0xe7, 0x64, 0x5e, 0xd, 0x6a, 0x41, 0xfe, 0xb8, 0x80, 0xea, 0x47,
-                         0x5a, 0x5f, 0x34, 0x34},
+                .uuid =
+                    {0x37, 0xe7, 0x64, 0x5e, 0xd, 0x6a, 0x41, 0xfe, 0xb8, 0x80, 0xea, 0x47, 0x5a,
+                     0x5f, 0x34, 0x34},
                 // We set the SDK version to one earlier than the first version supporting timeline
                 // resources
-                .sdk_version = {TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MAJOR,
-                                TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MINOR - 1},
+                .sdk_version =
+                    {TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MAJOR,
+                     TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MINOR - 1},
             },
         .resource_lut = s_app_lut,
     },
@@ -84,10 +88,12 @@ static const TimelineResourceTestAppData s_test_apps[TimelineResourceTestAppIdCo
         .install_entry =
             {
                 .install_id = TimelineResourceTestAppId_ValidApp,
-                .uuid = {0x9e, 0x95, 0x8b, 0xfe, 0xd, 0xbd, 0x4d, 0xf2, 0xbe, 0xbc, 0xf3, 0x77,
-                         0x5d, 0x8d, 0x9f, 0x95},
-                .sdk_version = {TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MAJOR,
-                                TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MINOR},
+                .uuid =
+                    {0x9e, 0x95, 0x8b, 0xfe, 0xd, 0xbd, 0x4d, 0xf2, 0xbe, 0xbc, 0xf3, 0x77, 0x5d,
+                     0x8d, 0x9f, 0x95},
+                .sdk_version =
+                    {TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MAJOR,
+                     TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MINOR},
             },
         .resource_lut = s_app_lut,
     },

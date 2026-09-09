@@ -118,10 +118,14 @@ void system_task_watchdog_feed(void) {
 static void handle_system_task_send_failure(SystemTaskEventCallback cb, uintptr_t caller_lr) {
   PBL_LOG_ERR("System task queue full. Dropped cb: %p, current cb: %p", cb, s_current_cb);
 
-  RebootReason reason = {.code = RebootReasonCode_EventQueueFull,
-                         .event_queue = {.push_lr = (uint32_t)caller_lr,
-                                         .current_event = (uint32_t)s_current_cb,
-                                         .dropped_event = (uint32_t)cb}};
+  RebootReason reason = {
+      .code = RebootReasonCode_EventQueueFull,
+      .event_queue = {
+          .push_lr = (uint32_t)caller_lr,
+          .current_event = (uint32_t)s_current_cb,
+          .dropped_event = (uint32_t)cb
+      }
+  };
   reboot_reason_set(&reason);
 
   reset_due_to_software_failure();

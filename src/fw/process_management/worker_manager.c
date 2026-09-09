@@ -335,10 +335,9 @@ void worker_manager_put_launch_worker_event(AppInstallId id) {
 
   PebbleEvent e = {
       .type = PEBBLE_WORKER_LAUNCH_EVENT,
-      .launch_app =
-          {
-              .id = id,
-          },
+      .launch_app = {
+          .id = id,
+      },
   };
 
   event_put(&e);

@@ -295,7 +295,8 @@ static void s_main(void) {
 }
 
 const PebbleProcessMd *flash_diagnostic_app_get_info() {
-  static const PebbleProcessMdSystem s_flash_diagnostic_app_info = {.common.main_func = s_main,
-                                                                    .name = "Flash Diagnostic"};
+  static const PebbleProcessMdSystem s_flash_diagnostic_app_info = {
+      .common.main_func = s_main, .name = "Flash Diagnostic"
+  };
   return (const PebbleProcessMd *)&s_flash_diagnostic_app_info;
 }

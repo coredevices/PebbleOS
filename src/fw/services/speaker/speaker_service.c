@@ -237,11 +237,10 @@ static void prv_post_finish_event(SpeakerFinishReason reason) {
   }
   PebbleEvent e = {
       .type = PEBBLE_SPEAKER_EVENT,
-      .speaker =
-          {
-              .type = SpeakerEventFinished,
-              .finish_reason = (uint8_t)reason,
-          },
+      .speaker = {
+          .type = SpeakerEventFinished,
+          .finish_reason = (uint8_t)reason,
+      },
   };
   event_put(&e);
 }

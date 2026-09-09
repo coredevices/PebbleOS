@@ -95,7 +95,8 @@ static void s_main(void) {
 }
 
 const PebbleProcessMd *double_tap_test_get_info() {
-  static const PebbleProcessMdSystem s_accel_config_info = {.common.main_func = s_main,
-                                                            .name = "Double Tap Test"};
+  static const PebbleProcessMdSystem s_accel_config_info = {
+      .common.main_func = s_main, .name = "Double Tap Test"
+  };
   return (const PebbleProcessMd *)&s_accel_config_info;
 }

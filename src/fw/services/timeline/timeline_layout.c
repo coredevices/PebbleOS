@@ -83,7 +83,8 @@ static const TimelineLayoutStyle *const s_styles[NumPreferredContentSizes] = {
 
 static GPath s_page_break_arrow_path = {
     .num_points = 3,
-    .points = (GPoint[]){{-ARROW_SIZE_PX, 0}, {ARROW_SIZE_PX, 0}, {0, ARROW_SIZE_PX}}};
+    .points = (GPoint[]){{-ARROW_SIZE_PX, 0}, {ARROW_SIZE_PX, 0}, {0, ARROW_SIZE_PX}}
+};
 
 static void prv_init_icon(TimelineLayout *layout, const GRect *icon_frame,
                           TimelineResourceSize icon_res_size, TimelineResourceId resource,
@@ -237,7 +238,8 @@ static KinoReel *prv_create_kino_reel_with_timeline_resource(TimelineLayout *tim
                                                              TimelineResourceId fallback_resource,
                                                              const Uuid *app_id) {
   timeline_layout->icon_info = (TimelineResourceInfo){
-      .res_id = resource, .app_id = app_id, .fallback_id = fallback_resource};
+      .res_id = resource, .app_id = app_id, .fallback_id = fallback_resource
+  };
   AppResourceInfo *res_info = &timeline_layout->icon_res_info;
   timeline_resources_get_id(&timeline_layout->icon_info, icon_res_size, res_info);
   return kino_reel_create_with_resource_system(res_info->res_app_num, res_info->res_id);
@@ -649,8 +651,9 @@ static void prv_render_view(TimelineLayout *layout, GContext *ctx, bool render, 
   (is_card ? prv_get_card_view_bounds : prv_get_pin_view_bounds)(layout, &box);
   graphics_context_set_text_color(
       ctx, (is_card ? layout_get_colors((LayoutLayer *)layout)->primary_color : GColorBlack));
-  static const GRect page_frame_on_screen = {{0, STATUS_BAR_LAYER_HEIGHT},
-                                             {DISP_COLS, DISP_ROWS - STATUS_BAR_LAYER_HEIGHT}};
+  static const GRect page_frame_on_screen = {
+      {0, STATUS_BAR_LAYER_HEIGHT}, {DISP_COLS, DISP_ROWS - STATUS_BAR_LAYER_HEIGHT}
+  };
   const GTextNodeDrawConfig config = {
       .page_frame = is_peek ? &GRectZero : &page_frame_on_screen,
       .origin_on_screen = is_peek ? &GPointZero : &page_frame_on_screen.origin,

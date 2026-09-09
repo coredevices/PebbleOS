@@ -19,8 +19,9 @@ GDrawCommandProcessor prv_gdraw_inv_processor = {
     .command = prv_invert_pdc_colors,
 };
 
-KinoReelProcessor PRV_INVERT_COLORS_PROCESSOR = {.draw_command_processor =
-                                                     &prv_gdraw_inv_processor};
+KinoReelProcessor PRV_INVERT_COLORS_PROCESSOR = {
+    .draw_command_processor = &prv_gdraw_inv_processor
+};
 
 static void prv_update_proc(Layer *layer, GContext *ctx) {
   KinoLayer *kino_layer = (KinoLayer *)layer;

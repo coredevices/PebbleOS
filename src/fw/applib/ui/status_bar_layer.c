@@ -126,7 +126,8 @@ void status_bar_layer_init(StatusBarLayer *status_bar_layer) {
 
   // tick event to callback which checks every second if the time is correct
   status_bar_layer->tick_event = (EventServiceInfo){
-      .type = PEBBLE_TICK_EVENT, .handler = prv_tick_timer_handler_cb, .context = status_bar_layer};
+      .type = PEBBLE_TICK_EVENT, .handler = prv_tick_timer_handler_cb, .context = status_bar_layer
+  };
   event_service_client_subscribe(&(status_bar_layer->tick_event));
 
   status_bar_layer->config = (StatusBarLayerConfig){

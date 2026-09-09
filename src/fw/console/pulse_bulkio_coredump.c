@@ -37,10 +37,12 @@ static int coredump_domain_stat(uint8_t *resp, size_t resp_max_len, void *contex
   uint32_t addr = core_dump_get_slot_address(index);
 
   CoredumpStatResp *stat_resp = (CoredumpStatResp *)resp;
-  *stat_resp = (CoredumpStatResp){.flags = 0,
-                                  .unread = core_dump_is_unread_available(addr),
-                                  // Size of 0 indicates no core dump available
-                                  .size = 0};
+  *stat_resp = (CoredumpStatResp){
+      .flags = 0,
+      .unread = core_dump_is_unread_available(addr),
+      // Size of 0 indicates no core dump available
+      .size = 0
+  };
 
   if (stat_resp->unread == 1) {
     status_t ret = core_dump_size(addr, &stat_resp->size);
@@ -69,10 +71,12 @@ static status_t coredump_domain_close(void *context) {
   return S_SUCCESS;
 }
 
-PulseBulkIODomainHandler pulse_bulkio_domain_coredump = {.id = PulseBulkIODomainType_Coredump,
-                                                         .open_proc = coredump_domain_open,
-                                                         .close_proc = coredump_domain_close,
-                                                         .read_proc = coredump_domain_read,
-                                                         .write_proc = coredump_domain_write,
-                                                         .stat_proc = coredump_domain_stat,
-                                                         .erase_proc = coredump_domain_erase};
+PulseBulkIODomainHandler pulse_bulkio_domain_coredump = {
+    .id = PulseBulkIODomainType_Coredump,
+    .open_proc = coredump_domain_open,
+    .close_proc = coredump_domain_close,
+    .read_proc = coredump_domain_read,
+    .write_proc = coredump_domain_write,
+    .stat_proc = coredump_domain_stat,
+    .erase_proc = coredump_domain_erase
+};

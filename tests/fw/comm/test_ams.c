@@ -48,15 +48,14 @@ GAPLEConnection *gap_le_connection_by_device(const BTDeviceInternal *device) {
 
 BTDeviceInternal gatt_client_characteristic_get_device(BLECharacteristic characteristic_ref) {
   return (BTDeviceInternal){
-      .address.octets =
-          {
-              0x11,
-              0x22,
-              0x33,
-              0x44,
-              0x55,
-              0x66,
-          },
+      .address.octets = {
+          0x11,
+          0x22,
+          0x33,
+          0x44,
+          0x55,
+          0x66,
+      },
   };
 }
 
@@ -83,12 +82,11 @@ static BLECharacteristic s_characteristics[NUM_AMS_INSTANCES][NumAMSCharacterist
             [AMSCharacteristicEntityAttribute] = 3,
         },
     // AMS instance two:
-    [1] =
-        {
-            [AMSCharacteristicRemoteCommand] = 4,
-            [AMSCharacteristicEntityUpdate] = 5,
-            [AMSCharacteristicEntityAttribute] = 6,
-        },
+    [1] = {
+        [AMSCharacteristicRemoteCommand] = 4,
+        [AMSCharacteristicEntityUpdate] = 5,
+        [AMSCharacteristicEntityAttribute] = 6,
+    },
 };
 
 static const BLECharacteristic s_unknown_characteristic = 999;
@@ -179,11 +177,13 @@ void test_ams__update_characteristics_ams_not_found(void) {
 // Tests: Register for Entity Updates
 ///////////////////////////////////////////////////////////
 
-static const uint8_t s_register_player_entity[] = {0x00,
-                                                   // Apple bug #21283910
-                                                   // See ams.c, prv_get_registration_cmd_for_entity
-                                                   // 0x00,
-                                                   0x01, 0x02};
+static const uint8_t s_register_player_entity[] = {
+    0x00,
+    // Apple bug #21283910
+    // See ams.c, prv_get_registration_cmd_for_entity
+    // 0x00,
+    0x01, 0x02
+};
 
 static const uint8_t s_register_queue_entity[] = {0x01, 0x00, 0x01, 0x02, 0x03};
 

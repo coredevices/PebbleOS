@@ -312,14 +312,12 @@ static const PropertyAnimationImplementation s_color_slide_animation_impl = {
         {
             .update = (AnimationUpdateImplementation)property_animation_update_int16,
         },
-    .accessors =
-        {
-            .getter = {.int16 = (const Int16Getter)prv_get_color_boundary},
-            .setter =
-                {
-                    .int16 = (const Int16Setter)prv_update_color_boundary,
-                },
+    .accessors = {
+        .getter = {.int16 = (const Int16Getter)prv_get_color_boundary},
+        .setter = {
+            .int16 = (const Int16Setter)prv_update_color_boundary,
         },
+    },
 };
 
 static void prv_set_window_color(GColor color, bool left_to_right) {

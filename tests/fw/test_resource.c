@@ -644,15 +644,19 @@ static uint32_t prv_mock_resource_storage_app_read(ResourceStoreEntry *entry, ui
 void test_resource__overflow_data_section_length(void) {
   ResourceManifest manifest = {.num_resources = 1, .version = SYSTEM_RESOURCE_VERSION};
 
-  ResourceStoreImplementation impl = {.type = ResourceStoreTypeAppFile,
-                                      .get_crc = NULL,
-                                      .write = NULL,
-                                      .read = &prv_mock_resource_storage_app_read,
-                                      .clear = NULL};
+  ResourceStoreImplementation impl = {
+      .type = ResourceStoreTypeAppFile,
+      .get_crc = NULL,
+      .write = NULL,
+      .read = &prv_mock_resource_storage_app_read,
+      .clear = NULL
+  };
 
-  ResourceStoreEntry entry = {// app_num
-                              .store_data = (void *)(uintptr_t)10,
-                              .impl = &impl};
+  ResourceStoreEntry entry = {
+      // app_num
+      .store_data = (void *)(uintptr_t)10,
+      .impl = &impl
+  };
 
   cl_assert_equal_i(prv_get_store_length(&entry, &manifest), 0);
 }

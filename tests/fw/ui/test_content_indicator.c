@@ -38,10 +38,12 @@ static Layer s_content_indicator_dummy_layer;
 static LayerUpdateProc s_content_indicator_dummy_layer_update_proc;
 
 ContentIndicatorConfig helper_get_dummy_config(void) {
-  return (ContentIndicatorConfig){.layer = &s_content_indicator_dummy_layer,
-                                  .times_out = false,
-                                  .alignment = GAlignLeft,
-                                  .colors = {.foreground = GColorGreen, .background = GColorRed}};
+  return (ContentIndicatorConfig){
+      .layer = &s_content_indicator_dummy_layer,
+      .times_out = false,
+      .alignment = GAlignLeft,
+      .colors = {.foreground = GColorGreen, .background = GColorRed}
+  };
 }
 
 void helper_check_buffer_for_content_indicator(size_t index, ContentIndicator *content_indicator) {

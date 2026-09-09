@@ -1282,22 +1282,20 @@ static const PerftestTextString s_perftest_text_strings[TestStringCount] = {
 #endif
                 },
         },
-    [TestString_Typical] =
-        {
-            .string = "Brian Gomberg\n"
-                      "Re: Robert stand-up 06/06 • "
-                      "y: - DDAD (enabling system apps to take advantage of memory mapped "
-                      "FLASH access on Robe"
-                      "\xe2\x80\xa6",
-            .lengths =
-                {
+    [TestString_Typical] = {
+        .string = "Brian Gomberg\n"
+                  "Re: Robert stand-up 06/06 • "
+                  "y: - DDAD (enabling system apps to take advantage of memory mapped "
+                  "FLASH access on Robe"
+                  "\xe2\x80\xa6",
+        .lengths = {
 #if defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX)
-                    [TestStringFont_Gothic18] = 134,
-                    [TestStringFont_Gothic24B] = 134,
-                    [TestStringFont_Other] = STRING_LENGTH_MAX,
+            [TestStringFont_Gothic18] = 134,
+            [TestStringFont_Gothic24B] = 134,
+            [TestStringFont_Other] = STRING_LENGTH_MAX,
 #endif
-                },
         },
+    },
 };
 
 #define TEXT_ALIGNMENT (GTextAlignmentCenter)
@@ -1523,10 +1521,9 @@ void command_notif_test(void) {
   attribute_list_add_cstring(&dismiss_attr, AttributeIdTitle, "Dismiss");
   TimelineItemActionGroup action_group = {
       .num_actions = 1,
-      .actions =
-          (TimelineItemAction[]){
-              {.id = 0, .type = TimelineItemActionTypeDismiss, .attr_list = dismiss_attr},
-          },
+      .actions = (TimelineItemAction[]){
+          {.id = 0, .type = TimelineItemActionTypeDismiss, .attr_list = dismiss_attr},
+      },
   };
 
   TimelineItem *item =

@@ -43,11 +43,10 @@ static bool s_get_bytes_in_progress = false;
 static void prv_put_status_event(DebugInfoEventState state) {
   PebbleEvent event = {
       .type = PEBBLE_GATHER_DEBUG_INFO_EVENT,
-      .debug_info =
-          {
-              .source = DebugInfoSourceGetBytes,
-              .state = state,
-          },
+      .debug_info = {
+          .source = DebugInfoSourceGetBytes,
+          .state = state,
+      },
   };
   event_put(&event);
 }

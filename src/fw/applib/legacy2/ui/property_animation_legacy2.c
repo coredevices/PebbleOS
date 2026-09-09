@@ -122,17 +122,15 @@ void property_animation_legacy2_init_layer_frame(PropertyAnimationLegacy2 *prope
               .update =
                   (AnimationLegacy2UpdateImplementation)property_animation_legacy2_update_grect,
           },
-      .accessors =
-          {
-              .setter =
-                  {
-                      .grect = (const GRectSetter)layer_set_frame_by_value,
-                  },
-              .getter =
-                  {
-                      .grect = (const GRectGetter)layer_get_frame_by_value,
-                  },
+      .accessors = {
+          .setter =
+              {
+                  .grect = (const GRectSetter)layer_set_frame_by_value,
+              },
+          .getter = {
+              .grect = (const GRectGetter)layer_get_frame_by_value,
           },
+      },
   };
   property_animation_legacy2_init(property_animation, &implementation, layer, from_frame, to_frame);
 }

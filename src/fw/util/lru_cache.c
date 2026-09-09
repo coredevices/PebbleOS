@@ -8,10 +8,12 @@
 #include <string.h>
 
 void lru_cache_init(LRUCache *c, size_t item_size, uint8_t *buffer, size_t buffer_size) {
-  *c = (LRUCache){.buffer = buffer,
-                  .item_size = item_size,
-                  .max_items = buffer_size / (item_size + sizeof(CacheEntry)),
-                  .least_recent = NULL};
+  *c = (LRUCache){
+      .buffer = buffer,
+      .item_size = item_size,
+      .max_items = buffer_size / (item_size + sizeof(CacheEntry)),
+      .least_recent = NULL
+  };
 }
 
 static CacheEntry *entry_for_index(LRUCache *c, int index) {

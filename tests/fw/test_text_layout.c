@@ -51,13 +51,14 @@ void test_text_layout__ellipsis_overflow(void) {
 
   GFont font = (GFont){0};
   GRect box = (GRect){(GPoint){0, 0}, (GSize){20 * HORIZ_ADVANCE_PX + 1, 13}};
-  TextLayoutExtended layout =
-      (TextLayoutExtended){.hash = 0,
-                           .box = (GRect){(GPoint){0, 0}, (GSize){20 * HORIZ_ADVANCE_PX + 1, 13}},
-                           .font = (GFont){0},
-                           .overflow_mode = GTextOverflowModeWordWrap,
-                           .alignment = GTextAlignmentLeft,
-                           .max_used_size = (GSize){0, 0}};
+  TextLayoutExtended layout = (TextLayoutExtended){
+      .hash = 0,
+      .box = (GRect){(GPoint){0, 0}, (GSize){20 * HORIZ_ADVANCE_PX + 1, 13}},
+      .font = (GFont){0},
+      .overflow_mode = GTextOverflowModeWordWrap,
+      .alignment = GTextAlignmentLeft,
+      .max_used_size = (GSize){0, 0}
+  };
   layout.box = box;
 
   graphics_draw_text(
@@ -87,7 +88,8 @@ void test_text_layout__cache_vert_overflow(void) {
       .font = (GFont){0},
       .overflow_mode = GTextOverflowModeWordWrap,
       .alignment = GTextAlignmentLeft,
-      .max_used_size = (GSize){0, 0}};
+      .max_used_size = (GSize){0, 0}
+  };
 
   graphics_text_layout_get_max_used_size(&gcontext, "JR Whopper", font, box, GTextOverflowModeFill,
                                          GTextAlignmentLeft, (void *)&layout);
@@ -131,7 +133,8 @@ void test_text_layout__cache_vert_overflow_first_line(void) {
       .font = (GFont){0},
       .overflow_mode = GTextOverflowModeWordWrap,
       .alignment = GTextAlignmentLeft,
-      .max_used_size = (GSize){0, 0}};
+      .max_used_size = (GSize){0, 0}
+  };
   // In all cases, the first line should be laid out (not truncated)
 
   graphics_text_layout_get_max_used_size(&gcontext, "JR Whopper", font, box, GTextOverflowModeFill,
@@ -170,7 +173,8 @@ void test_text_layout__cache_vert_overflow_with_newline(void) {
       .font = (GFont){0},
       .overflow_mode = GTextOverflowModeWordWrap,
       .alignment = GTextAlignmentLeft,
-      .max_used_size = (GSize){0, 0}};
+      .max_used_size = (GSize){0, 0}
+  };
 
   graphics_text_layout_get_max_used_size(&gcontext, "JR\n\nWhop", font, box,
                                          GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft,
@@ -352,15 +356,17 @@ void test_text_layout__get_default_flow_data(void) {
 void test_text_layout__delta(void) {
   GContext gcontext = (GContext){};
   GFont font = (GFont){0};
-  GRect box = (GRect){(GPoint){0, 0},
-                      (GSize){4 * HORIZ_ADVANCE_PX + 1, 2 * (FONT_HEIGHT + FONT_LINE_DELTA) + 1}};
+  GRect box = (GRect){
+      (GPoint){0, 0}, (GSize){4 * HORIZ_ADVANCE_PX + 1, 2 * (FONT_HEIGHT + FONT_LINE_DELTA) + 1}
+  };
   TextLayoutExtended layout = (TextLayoutExtended){
       .hash = 0,
       .box = (GRect){(GPoint){0, 0}, (GSize){7 * HORIZ_ADVANCE_PX + 1, FONT_HEIGHT - 1}},
       .font = (GFont){0},
       .overflow_mode = GTextOverflowModeWordWrap,
       .alignment = GTextAlignmentLeft,
-      .max_used_size = (GSize){0, 0}};
+      .max_used_size = (GSize){0, 0}
+  };
 
   if (!process_manager_compiled_with_legacy2_sdk()) {
     graphics_text_layout_set_line_spacing_delta((void *)&layout, FONT_LINE_DELTA);
@@ -445,13 +451,14 @@ void test_text_layout__special_codepoints(void) {
 
   GFont font = (GFont){0};
   GRect box = (GRect){(GPoint){0, 0}, (GSize){20 * HORIZ_ADVANCE_PX + 1, 13}};
-  TextLayoutExtended layout =
-      (TextLayoutExtended){.hash = 0,
-                           .box = (GRect){(GPoint){0, 0}, (GSize){20 * HORIZ_ADVANCE_PX + 1, 13}},
-                           .font = (GFont){0},
-                           .overflow_mode = GTextOverflowModeWordWrap,
-                           .alignment = GTextAlignmentLeft,
-                           .max_used_size = (GSize){0, 0}};
+  TextLayoutExtended layout = (TextLayoutExtended){
+      .hash = 0,
+      .box = (GRect){(GPoint){0, 0}, (GSize){20 * HORIZ_ADVANCE_PX + 1, 13}},
+      .font = (GFont){0},
+      .overflow_mode = GTextOverflowModeWordWrap,
+      .alignment = GTextAlignmentLeft,
+      .max_used_size = (GSize){0, 0}
+  };
   layout.box = box;
 
   graphics_draw_text(&gcontext,

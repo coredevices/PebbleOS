@@ -47,14 +47,15 @@ int GATT_Start_Service_Discovery_Handle_Range(
     GATT_Attribute_Handle_Group_t *DiscoveryHandleRange, unsigned int NumberOfUUID,
     GATT_UUID_t *UUIDList, GATT_Service_Discovery_Event_Callback_t ServiceDiscoveryCallback,
     unsigned long CallbackParameter) {
-  s_service_discovery_ctx =
-      (struct FakeGATTServiceDiscoveryContext){.is_running = true,
-                                               .stack_id = stack_id,
-                                               .connection_id = connection_id,
-                                               .num_of_uuids = NumberOfUUID,
-                                               .uuids = UUIDList,
-                                               .callback = ServiceDiscoveryCallback,
-                                               .callback_param = CallbackParameter};
+  s_service_discovery_ctx = (struct FakeGATTServiceDiscoveryContext){
+      .is_running = true,
+      .stack_id = stack_id,
+      .connection_id = connection_id,
+      .num_of_uuids = NumberOfUUID,
+      .uuids = UUIDList,
+      .callback = ServiceDiscoveryCallback,
+      .callback_param = CallbackParameter
+  };
   ++s_start_count;
   return s_start_ret_val;
 }

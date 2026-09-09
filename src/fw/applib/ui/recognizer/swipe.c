@@ -57,7 +57,8 @@ static void prv_reset(Recognizer *recognizer);
 static bool prv_cancel(Recognizer *recognizer);
 
 static const RecognizerImpl s_swipe_recognizer_impl = {
-    .handle_touch_event = prv_handle_touch_event, .reset = prv_reset, .cancel = prv_cancel};
+    .handle_touch_event = prv_handle_touch_event, .reset = prv_reset, .cancel = prv_cancel
+};
 
 static uint32_t prv_ticks_to_ms(RtcTicks ticks) {
   return (uint32_t)((ticks * MS_PER_SECOND) / RTC_TICKS_HZ);
@@ -207,10 +208,9 @@ static bool prv_cancel(Recognizer *recognizer) {
 Recognizer *swipe_recognizer_create(RecognizerEventCb event_cb, void *user_data,
                                     uint8_t direction_mask) {
   SwipeRecognizerData data = {
-      .config =
-          {
-              .direction_mask = direction_mask,
-          },
+      .config = {
+          .direction_mask = direction_mask,
+      },
   };
 
   return recognizer_create_with_data(&s_swipe_recognizer_impl, &data, sizeof(data), event_cb,
@@ -223,10 +223,9 @@ Recognizer *swipe_recognizer_init_static(void *storage, RecognizerEventCb event_
       RECOGNIZER_INSTANCE_SIZE + sizeof(SwipeRecognizerData) <= SWIPE_RECOGNIZER_STATIC_SIZE,
       "SWIPE_RECOGNIZER_STATIC_SIZE too small for a static swipe recognizer");
   SwipeRecognizerData data = {
-      .config =
-          {
-              .direction_mask = direction_mask,
-          },
+      .config = {
+          .direction_mask = direction_mask,
+      },
   };
 
   return recognizer_init_static_with_data(storage, &s_swipe_recognizer_impl, &data, sizeof(data),

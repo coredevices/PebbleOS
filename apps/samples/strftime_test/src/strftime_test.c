@@ -6,25 +6,29 @@
 static Window *window;
 static TextLayer *result_layer;
 
-static struct tm good_data = {.tm_sec = 49,
-                              .tm_min = 4,
-                              .tm_hour = 11,
-                              .tm_mday = 5,
-                              .tm_mon = 4,
-                              .tm_year = 115,
-                              .tm_wday = 2,
-                              .tm_yday = 124,
-                              .tm_isdst = 1};
+static struct tm good_data = {
+    .tm_sec = 49,
+    .tm_min = 4,
+    .tm_hour = 11,
+    .tm_mday = 5,
+    .tm_mon = 4,
+    .tm_year = 115,
+    .tm_wday = 2,
+    .tm_yday = 124,
+    .tm_isdst = 1
+};
 
-static struct tm bad_data = {.tm_sec = 49756567,
-                             .tm_min = 49756567,
-                             .tm_hour = 49756567,
-                             .tm_mday = 49756567,
-                             .tm_mon = 49756567,
-                             .tm_year = 49756567,
-                             .tm_wday = 49756567,
-                             .tm_yday = 49756567,
-                             .tm_isdst = 49756567};
+static struct tm bad_data = {
+    .tm_sec = 49756567,
+    .tm_min = 49756567,
+    .tm_hour = 49756567,
+    .tm_mday = 49756567,
+    .tm_mon = 49756567,
+    .tm_year = 49756567,
+    .tm_wday = 49756567,
+    .tm_yday = 49756567,
+    .tm_isdst = 49756567
+};
 
 static void prv_test_valid_data(void) {
   const int buf_size = 64;

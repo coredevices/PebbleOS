@@ -18,8 +18,9 @@ PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 #define MAX_LENGTH_ANCS_ACTION (1)
 #define MAX_LENGTH_CANNED_RESPONSES (512)
 
-static const uint16_t MAX_ATTRIBUTE_LENGTHS[] = {MAX_LENGTH_TITLE, MAX_LENGTH_SUBTITLE,
-                                                 MAX_LENGTH_BODY};
+static const uint16_t MAX_ATTRIBUTE_LENGTHS[] = {
+    MAX_LENGTH_TITLE, MAX_LENGTH_SUBTITLE, MAX_LENGTH_BODY
+};
 
 typedef enum {
   AttributeTypeUnknown,
@@ -466,9 +467,10 @@ void attribute_list_add_attribute(AttributeList *list, const Attribute *new_attr
 }
 
 void attribute_list_init_list(uint8_t num_attributes, AttributeList *list_out) {
-  *list_out =
-      (AttributeList){.num_attributes = num_attributes,
-                      .attributes = kernel_zalloc_check(num_attributes * sizeof(Attribute))};
+  *list_out = (AttributeList){
+      .num_attributes = num_attributes,
+      .attributes = kernel_zalloc_check(num_attributes * sizeof(Attribute))
+  };
 }
 
 void attribute_list_destroy_list(AttributeList *list) {

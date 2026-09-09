@@ -51,10 +51,12 @@ static CompassServiceConfig **prv_get_config(PebbleTask task) {
 static void prv_do_data_handle(PebbleEvent *e, void *context) {
   PebbleCompassDataEvent *m = &e->compass_data;
 
-  CompassHeadingData data = {.is_declination_valid = false,
-                             .compass_status = m->calib_status,
-                             .magnetic_heading = m->magnetic_heading,
-                             .true_heading = m->magnetic_heading};
+  CompassHeadingData data = {
+      .is_declination_valid = false,
+      .compass_status = m->calib_status,
+      .magnetic_heading = m->magnetic_heading,
+      .true_heading = m->magnetic_heading
+  };
 
   CompassServiceConfig *config = *prv_get_config(PebbleTask_Unknown);
   if (config->compass_cb != NULL) {

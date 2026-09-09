@@ -660,7 +660,8 @@ void test_cron__scheduled_after(void) {
                   CRON_JOB(10, CRON_HOUR_ANY, 1, CRON_MONTH_ANY, prv_cron_callback) CRON_JOB(
                       25, CRON_HOUR_ANY, CRON_MDAY_ANY, CRON_MONTH_ANY, prv_cron_callback)
                       CRON_JOB(55, 1, CRON_MDAY_ANY, CRON_MONTH_ANY, prv_cron_callback) CRON_JOB(
-                          CRON_MINUTE_ANY, CRON_HOUR_ANY, 1, CRON_MONTH_ANY, prv_cron_callback)};
+                          CRON_MINUTE_ANY, CRON_HOUR_ANY, 1, CRON_MONTH_ANY, prv_cron_callback)
+  };
 
   CronJob new_job = {
       .cb = prv_counting_cb,

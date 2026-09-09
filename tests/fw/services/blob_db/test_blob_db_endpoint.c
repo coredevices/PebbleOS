@@ -732,7 +732,8 @@ static const uint8_t s_insert_cmd_smallest_length[] = {
     0x01, 0x00,  // Size value is 1 more than it should be
 
     // value (made up for now)
-    0x00};
+    0x00
+};
 
 void test_blob_db_endpoint__handle_insert_command_smallest_length(void) {
   // Process Command

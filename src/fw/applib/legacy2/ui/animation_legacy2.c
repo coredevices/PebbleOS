@@ -228,10 +228,11 @@ void animation_legacy2_private_unschedule_all(AppTaskCtxIdx idx) {
 
 void animation_legacy2_private_init_scheduler(
     AnimationLegacy2Scheduler *animation_legacy2_scheduler) {
-  *animation_legacy2_scheduler =
-      (AnimationLegacy2Scheduler){.timer_handle = NULL,
-                                  .last_delay_ms = ANIMATION_TARGET_FRAME_INTERVAL_MS_LEGACY2,
-                                  .last_frame_time = animation_legacy2_get_ms_since_system_start()};
+  *animation_legacy2_scheduler = (AnimationLegacy2Scheduler){
+      .timer_handle = NULL,
+      .last_delay_ms = ANIMATION_TARGET_FRAME_INTERVAL_MS_LEGACY2,
+      .last_frame_time = animation_legacy2_get_ms_since_system_start()
+  };
 }
 
 void animation_legacy2_schedule(AnimationLegacy2 *animation) {

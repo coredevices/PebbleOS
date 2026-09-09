@@ -527,12 +527,15 @@ T_STATIC LayoutLayer *prv_get_layout_handler(SwapLayer *swap_layer, int8_t rel_p
 
   const LayoutId layout_id = (type == NotificationMobile) ? LayoutIdNotification : LayoutIdReminder;
   NotificationLayoutInfo layout_info = (NotificationLayoutInfo){
-      .item = item, .show_notification_timestamp = !prv_should_pop_due_to_inactivity()};
-  const LayoutLayerConfig config = {.frame = &data->window.layer.bounds,
-                                    .attributes = &item->attr_list,
-                                    .mode = LayoutLayerModeCard,
-                                    .app_id = &data->notification_app_id,
-                                    .context = &layout_info};
+      .item = item, .show_notification_timestamp = !prv_should_pop_due_to_inactivity()
+  };
+  const LayoutLayerConfig config = {
+      .frame = &data->window.layer.bounds,
+      .attributes = &item->attr_list,
+      .mode = LayoutLayerModeCard,
+      .app_id = &data->notification_app_id,
+      .context = &layout_info
+  };
   NotificationLayout *notification_layout = (NotificationLayout *)layout_create(layout_id, &config);
   return &notification_layout->layout;
 
@@ -1277,9 +1280,9 @@ static void prv_init_notification_window(bool is_modal) {
   data->peek_layer_timer = EVENTED_TIMER_INVALID_ID;
   data->peek_animation = NULL;
   data->peek_layer = NULL;
-  data->peek_icon_info = (TimelineResourceInfo){.res_id = TIMELINE_RESOURCE_INVALID,
-                                                .app_id = NULL,
-                                                .fallback_id = TIMELINE_RESOURCE_INVALID};
+  data->peek_icon_info = (TimelineResourceInfo){
+      .res_id = TIMELINE_RESOURCE_INVALID, .app_id = NULL, .fallback_id = TIMELINE_RESOURCE_INVALID
+  };
   data->action_menu = NULL;
   data->dnd_icon_visible = false;
   data->pending_vibe = false;

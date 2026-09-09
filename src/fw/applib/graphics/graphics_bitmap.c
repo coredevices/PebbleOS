@@ -239,17 +239,19 @@ void graphics_draw_rotated_bitmap(GContext *ctx, GBitmap *src, GPoint src_ic, in
 
 #if PBL_BW
       // dividing by 8 to avoid overflows of <thresh> in the next loop
-      const int32_t horiz_contrib[3] = {src_vector_x.rem < 0 ? (-src_vector_x.rem) >> 3 : 0,
-                                        src_vector_x.rem < 0
-                                            ? (TRIG_MAX_RATIO + src_vector_x.rem) >> 3
-                                            : (TRIG_MAX_RATIO - src_vector_x.rem) >> 3,
-                                        src_vector_x.rem < 0 ? 0 : (src_vector_x.rem) >> 3};
+      const int32_t horiz_contrib[3] = {
+          src_vector_x.rem < 0 ? (-src_vector_x.rem) >> 3 : 0,
+          src_vector_x.rem < 0 ? (TRIG_MAX_RATIO + src_vector_x.rem) >> 3
+                               : (TRIG_MAX_RATIO - src_vector_x.rem) >> 3,
+          src_vector_x.rem < 0 ? 0 : (src_vector_x.rem) >> 3
+      };
 
-      const int32_t vert_contrib[3] = {src_vector_y.rem < 0 ? (-src_vector_y.rem) >> 3 : 0,
-                                       src_vector_y.rem < 0
-                                           ? (TRIG_MAX_RATIO + src_vector_y.rem) >> 3
-                                           : (TRIG_MAX_RATIO - src_vector_y.rem) >> 3,
-                                       src_vector_y.rem < 0 ? 0 : (src_vector_y.rem) >> 3};
+      const int32_t vert_contrib[3] = {
+          src_vector_y.rem < 0 ? (-src_vector_y.rem) >> 3 : 0,
+          src_vector_y.rem < 0 ? (TRIG_MAX_RATIO + src_vector_y.rem) >> 3
+                               : (TRIG_MAX_RATIO - src_vector_y.rem) >> 3,
+          src_vector_y.rem < 0 ? 0 : (src_vector_y.rem) >> 3
+      };
 
       int32_t thresh = 0;
 

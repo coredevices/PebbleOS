@@ -133,11 +133,10 @@ static void prv_inc_steps_and_put_event(int steps) {
 
   PebbleEvent event = {
       .type = PEBBLE_HEALTH_SERVICE_EVENT,
-      .health_event =
-          {
-              .type = HealthEventMovementUpdate,
-              .data.movement_update.steps = s_total_step_count,
-          },
+      .health_event = {
+          .type = HealthEventMovementUpdate,
+          .data.movement_update.steps = s_total_step_count,
+      },
   };
   event_put(&event);
 
@@ -148,12 +147,11 @@ static void prv_inc_steps_and_put_event(int steps) {
 static void prv_put_bpm_event(int bpm, HRMQuality quality) {
   PebbleEvent event = {
       .type = PEBBLE_HEALTH_SERVICE_EVENT,
-      .health_event =
-          {
-              .type = HealthEventHeartRateUpdate,
-              .data.heart_rate_update.current_bpm = bpm,
-              .data.heart_rate_update.quality = quality,
-          },
+      .health_event = {
+          .type = HealthEventHeartRateUpdate,
+          .data.heart_rate_update.current_bpm = bpm,
+          .data.heart_rate_update.quality = quality,
+      },
   };
   event_put(&event);
 
@@ -264,13 +262,12 @@ void test_workout_service__takeover_activity_session(void) {
       .type = ActivitySessionType_Run,
       .ongoing = true,
       .manual = false,
-      .step_data =
-          {
-              .steps = 2000,
-              .active_kcalories = 200,
-              .resting_kcalories = 100,
-              .distance_meters = 1600,
-          },
+      .step_data = {
+          .steps = 2000,
+          .active_kcalories = 200,
+          .resting_kcalories = 100,
+          .distance_meters = 1600,
+      },
   };
 
   cl_assert(workout_service_takeover_activity_session(&session));

@@ -125,20 +125,21 @@ static void prv_create_list_view_and_render(ListViewConfig *config) {
 
 static void prv_create_and_render_title_and_subtitle(bool past, uint16_t first_duration_m) {
   prv_create_list_view_and_render(&(ListViewConfig){
-      .pins = {&(TimelineItemConfig){
-                   .relative_timestamp = (11 * SECONDS_PER_HOUR) + (30 * SECONDS_PER_MINUTE),
-                   .duration = first_duration_m,
-                   .title = "Jon Byrd birthday party",
-                   .subtitle = "Kaboom, Redwood City",
-                   .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
-               },
-               &(TimelineItemConfig){
-                   .relative_timestamp = 12 * SECONDS_PER_HOUR,
-                   .duration = MINUTES_PER_HOUR,
-                   .title = "Design Review Meeting",
-                   .subtitle = "Batavia, Palo Alto",
-                   .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
-               }},
+      .pins =
+          {&(TimelineItemConfig){
+               .relative_timestamp = (11 * SECONDS_PER_HOUR) + (30 * SECONDS_PER_MINUTE),
+               .duration = first_duration_m,
+               .title = "Jon Byrd birthday party",
+               .subtitle = "Kaboom, Redwood City",
+               .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
+           },
+           &(TimelineItemConfig){
+               .relative_timestamp = 12 * SECONDS_PER_HOUR,
+               .duration = MINUTES_PER_HOUR,
+               .title = "Design Review Meeting",
+               .subtitle = "Batavia, Palo Alto",
+               .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
+           }},
       .past = past,
   });
 }
@@ -165,20 +166,21 @@ void test_timeline_list_view__title_and_subtitle_free_time_past(void) {
 
 void prv_create_and_render_pin_and_dot(bool past) {
   prv_create_list_view_and_render(&(ListViewConfig){
-      .pins = {&(TimelineItemConfig){
-                   .relative_timestamp = (11 * SECONDS_PER_HOUR) + (30 * SECONDS_PER_MINUTE),
-                   .duration = MINUTES_PER_HOUR,
-                   .title = "Jon Byrd birthday party",
-                   .subtitle = "Kaboom, Redwood City",
-                   .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
-               },
-               &(TimelineItemConfig){
-                   .relative_timestamp = SECONDS_PER_DAY + SECONDS_PER_HOUR,
-                   .duration = MINUTES_PER_HOUR,
-                   .title = "Design Review Meeting",
-                   .subtitle = "Batavia, Palo Alto",
-                   .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
-               }},
+      .pins =
+          {&(TimelineItemConfig){
+               .relative_timestamp = (11 * SECONDS_PER_HOUR) + (30 * SECONDS_PER_MINUTE),
+               .duration = MINUTES_PER_HOUR,
+               .title = "Jon Byrd birthday party",
+               .subtitle = "Kaboom, Redwood City",
+               .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
+           },
+           &(TimelineItemConfig){
+               .relative_timestamp = SECONDS_PER_DAY + SECONDS_PER_HOUR,
+               .duration = MINUTES_PER_HOUR,
+               .title = "Design Review Meeting",
+               .subtitle = "Batavia, Palo Alto",
+               .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
+           }},
       .past = past,
   });
 }
@@ -195,21 +197,22 @@ void test_timeline_list_view__pin_and_dot_past(void) {
 
 void prv_create_and_render_day_sep_tomorrow(bool past) {
   prv_create_list_view_and_render(&(ListViewConfig){
-      .pins = {&(TimelineItemConfig){
-                   .relative_timestamp = (11 * SECONDS_PER_HOUR) + (30 * SECONDS_PER_MINUTE),
-                   .duration = MINUTES_PER_HOUR,
-                   .title = "Jon Byrd birthday party",
-                   .subtitle = "Kaboom, Redwood City",
-                   .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
-               },
-               &(TimelineItemConfig){
-                   .relative_timestamp =
-                       ((11 * SECONDS_PER_HOUR) + (30 * SECONDS_PER_MINUTE) + SECONDS_PER_DAY),
-                   .duration = MINUTES_PER_HOUR,
-                   .title = "Design Review Meeting",
-                   .subtitle = "Batavia, Palo Alto",
-                   .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
-               }},
+      .pins =
+          {&(TimelineItemConfig){
+               .relative_timestamp = (11 * SECONDS_PER_HOUR) + (30 * SECONDS_PER_MINUTE),
+               .duration = MINUTES_PER_HOUR,
+               .title = "Jon Byrd birthday party",
+               .subtitle = "Kaboom, Redwood City",
+               .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
+           },
+           &(TimelineItemConfig){
+               .relative_timestamp =
+                   ((11 * SECONDS_PER_HOUR) + (30 * SECONDS_PER_MINUTE) + SECONDS_PER_DAY),
+               .duration = MINUTES_PER_HOUR,
+               .title = "Design Review Meeting",
+               .subtitle = "Batavia, Palo Alto",
+               .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
+           }},
       .past = past,
       .day_separator = true,
   });

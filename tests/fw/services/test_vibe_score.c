@@ -61,36 +61,38 @@ void test_vibe_score__cleanup(void) {
 }
 
 void test_vibe_score__double_pulse(void) {
-  uint8_t buffer[] = {'V',
-                      'I',
-                      'B',
-                      'E',  // FourCC
-                      1,
-                      0,  // version
-                      0,
-                      0,
-                      0,
-                      0,  // reserved bytes
-                      18,
-                      0,  // attr_list_size
-                      2,  // GenericAttributeList.num_attributes
-                      VibeAttributeId_Notes,
-                      8,
-                      0,  // GenericAttribute.length
-                      15,
-                      0,    // VibeNote.vibe_duration_ms
-                      9,    // VibeNote.brake_duration_ms
-                      100,  // VibeNote.strength
-                      100,
-                      0,  // VibeNote.vibe_duration_ms
-                      0,  // VibeNote.brake_duration_ms
-                      0,  // VibeNote.strength
-                      VibeAttributeId_Pattern,
-                      3,
-                      0,  // GenericAttribute.length
-                      0,
-                      1,
-                      0};
+  uint8_t buffer[] = {
+      'V',
+      'I',
+      'B',
+      'E',  // FourCC
+      1,
+      0,  // version
+      0,
+      0,
+      0,
+      0,  // reserved bytes
+      18,
+      0,  // attr_list_size
+      2,  // GenericAttributeList.num_attributes
+      VibeAttributeId_Notes,
+      8,
+      0,  // GenericAttribute.length
+      15,
+      0,    // VibeNote.vibe_duration_ms
+      9,    // VibeNote.brake_duration_ms
+      100,  // VibeNote.strength
+      100,
+      0,  // VibeNote.vibe_duration_ms
+      0,  // VibeNote.brake_duration_ms
+      0,  // VibeNote.strength
+      VibeAttributeId_Pattern,
+      3,
+      0,  // GenericAttribute.length
+      0,
+      1,
+      0
+  };
   s_resource_buffer = buffer;
   s_resource_buffer_size = sizeof(buffer);
   VibeScore *score = vibe_score_create_with_resource_system(0, 0);
@@ -247,36 +249,38 @@ void test_vibe_score__repeat_delay_too_long_is_invalid(void) {
 }
 
 void test_vibe_score__test_get_duration_ms(void) {
-  uint8_t buffer[] = {'V',
-                      'I',
-                      'B',
-                      'E',  // FourCC
-                      1,
-                      0,  // version
-                      0,
-                      0,
-                      0,
-                      0,  // reserved bytes
-                      18,
-                      0,  // attr_list_size
-                      2,  // GenericAttributeList.num_attributes
-                      VibeAttributeId_Notes,
-                      8,
-                      0,  // GenericAttribute.length
-                      200,
-                      0,    // VibeNote.vibe_duration_ms
-                      1,    // VibeNote.brake_duration_ms
-                      100,  // VibeNote.strength
-                      150,
-                      0,  // VibeNote.vibe_duration_ms
-                      0,  // VibeNote.brake_duration_ms
-                      0,  // VibeNote.strength
-                      VibeAttributeId_Pattern,
-                      3,
-                      0,  // GenericAttribute.length
-                      0,
-                      1,
-                      0};
+  uint8_t buffer[] = {
+      'V',
+      'I',
+      'B',
+      'E',  // FourCC
+      1,
+      0,  // version
+      0,
+      0,
+      0,
+      0,  // reserved bytes
+      18,
+      0,  // attr_list_size
+      2,  // GenericAttributeList.num_attributes
+      VibeAttributeId_Notes,
+      8,
+      0,  // GenericAttribute.length
+      200,
+      0,    // VibeNote.vibe_duration_ms
+      1,    // VibeNote.brake_duration_ms
+      100,  // VibeNote.strength
+      150,
+      0,  // VibeNote.vibe_duration_ms
+      0,  // VibeNote.brake_duration_ms
+      0,  // VibeNote.strength
+      VibeAttributeId_Pattern,
+      3,
+      0,  // GenericAttribute.length
+      0,
+      1,
+      0
+  };
   s_resource_buffer = buffer;
   s_resource_buffer_size = sizeof(buffer);
   VibeScore *score = vibe_score_create_with_resource_system(0, 0);
@@ -332,36 +336,38 @@ void test_vibe_score__test_get_repeat_delay_ms_custom_delay(void) {
 }
 
 void test_vibe_score__test_get_repeat_delay_ms_default_delay(void) {
-  uint8_t buffer[] = {'V',
-                      'I',
-                      'B',
-                      'E',  // FourCC
-                      1,
-                      0,  // version
-                      0,
-                      0,
-                      0,
-                      0,  // reserved bytes
-                      18,
-                      0,  // attr_list_size
-                      2,  // GenericAttributeList.num_attributes
-                      VibeAttributeId_Notes,
-                      8,
-                      0,  // GenericAttribute.length
-                      200,
-                      0,    // VibeNote.vibe_duration_ms
-                      1,    // VibeNote.brake_duration_ms
-                      100,  // VibeNote.strength
-                      150,
-                      0,  // VibeNote.vibe_duration_ms
-                      0,  // VibeNote.brake_duration_ms
-                      0,  // VibeNote.strength
-                      VibeAttributeId_Pattern,
-                      3,
-                      0,  // GenericAttribute.length
-                      0,
-                      1,
-                      0};
+  uint8_t buffer[] = {
+      'V',
+      'I',
+      'B',
+      'E',  // FourCC
+      1,
+      0,  // version
+      0,
+      0,
+      0,
+      0,  // reserved bytes
+      18,
+      0,  // attr_list_size
+      2,  // GenericAttributeList.num_attributes
+      VibeAttributeId_Notes,
+      8,
+      0,  // GenericAttribute.length
+      200,
+      0,    // VibeNote.vibe_duration_ms
+      1,    // VibeNote.brake_duration_ms
+      100,  // VibeNote.strength
+      150,
+      0,  // VibeNote.vibe_duration_ms
+      0,  // VibeNote.brake_duration_ms
+      0,  // VibeNote.strength
+      VibeAttributeId_Pattern,
+      3,
+      0,  // GenericAttribute.length
+      0,
+      1,
+      0
+  };
   s_resource_buffer = buffer;
   s_resource_buffer_size = sizeof(buffer);
   VibeScore *score = vibe_score_create_with_resource_system(0, 0);
@@ -371,30 +377,32 @@ void test_vibe_score__test_get_repeat_delay_ms_default_delay(void) {
 }
 
 void test_vibe_score__test_bad_attr_size(void) {
-  uint8_t buffer[] = {'V',
-                      'I',
-                      'B',
-                      'E',  // FourCC
-                      1,
-                      0,  // version
-                      0,
-                      0,
-                      0,
-                      0,  // reserved bytes
-                      11,
-                      0,  // attr_list_size (right value is 12)
-                      2,  // GenericAttributeList.num_attributes
-                      VibeAttributeId_Notes,
-                      4,
-                      0,  // GenericAttribute.length
-                      1,
-                      0,    // VibeNote.vibe_duration_ms
-                      1,    // VibeNote.brake_duration_ms
-                      100,  // VibeNote.strength
-                      VibeAttributeId_Pattern,
-                      1,
-                      0,  // GenericAttribute.length
-                      0};
+  uint8_t buffer[] = {
+      'V',
+      'I',
+      'B',
+      'E',  // FourCC
+      1,
+      0,  // version
+      0,
+      0,
+      0,
+      0,  // reserved bytes
+      11,
+      0,  // attr_list_size (right value is 12)
+      2,  // GenericAttributeList.num_attributes
+      VibeAttributeId_Notes,
+      4,
+      0,  // GenericAttribute.length
+      1,
+      0,    // VibeNote.vibe_duration_ms
+      1,    // VibeNote.brake_duration_ms
+      100,  // VibeNote.strength
+      VibeAttributeId_Pattern,
+      1,
+      0,  // GenericAttribute.length
+      0
+  };
   s_resource_buffer = buffer;
   s_resource_buffer_size = sizeof(buffer);
   VibeScore *score = vibe_score_create_with_resource_system(0, 0);

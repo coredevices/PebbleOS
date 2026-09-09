@@ -100,12 +100,11 @@ static void prv_init_attribute_list_from_icon_and_subtitle_slice(
 
 //! Add new entries to this array as we introduce new slice types
 static const SliceTypeImplementation s_slice_type_impls[AppGlanceSliceTypeCount] = {
-    [AppGlanceSliceType_IconAndSubtitle] =
-        {
-            .is_attr_list_valid = prv_is_icon_and_subtitle_slice_attribute_list_valid,
-            .init_slice_from_attr_list = prv_init_icon_and_subtitle_slice_from_attr_list,
-            .init_attr_list_from_slice = prv_init_attribute_list_from_icon_and_subtitle_slice,
-        },
+    [AppGlanceSliceType_IconAndSubtitle] = {
+        .is_attr_list_valid = prv_is_icon_and_subtitle_slice_attribute_list_valid,
+        .init_slice_from_attr_list = prv_init_icon_and_subtitle_slice_from_attr_list,
+        .init_attr_list_from_slice = prv_init_attribute_list_from_icon_and_subtitle_slice,
+    },
 };
 
 //////////////////////////////////
@@ -723,12 +722,11 @@ status_t app_glance_db_insert(const uint8_t *key, int key_len, const uint8_t *va
       // The app isn't cached. Fetch it!
       PebbleEvent e = {
           .type = PEBBLE_APP_FETCH_REQUEST_EVENT,
-          .app_fetch_request =
-              {
-                  .id = app_id,
-                  .with_ui = false,
-                  .fetch_args = NULL,
-              },
+          .app_fetch_request = {
+              .id = app_id,
+              .with_ui = false,
+              .fetch_args = NULL,
+          },
       };
       event_put(&e);
     }

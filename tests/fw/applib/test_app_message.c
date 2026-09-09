@@ -772,11 +772,10 @@ void test_app_message__kernel_nack_handler(void) {
   prv_set_remote_receive_handler(prv_receive_ack_nack_callback);
 
   const AppMessagePush push = {
-      .header =
-          {
-              .command = CMD_PUSH,
-              .transaction_id = TEST_TRANSACTION_ID_2,
-          },
+      .header = {
+          .command = CMD_PUSH,
+          .transaction_id = TEST_TRANSACTION_ID_2,
+      },
   };
   app_message_app_protocol_system_nack_callback(s_fake_app_comm_session, (const uint8_t *)&push,
                                                 sizeof(push));

@@ -78,7 +78,8 @@ static void prv_draw_hline_test_pattern(GContext *ctx, HLinePatternDrawFunction 
   const GSize bottom_rect_size = GSize(bitmap_bounds_size->w * 4 / 5, bitmap_bounds_size->h / 2);
   const GRect bottom_rect = (GRect){
       .origin = GPoint((bitmap_bounds_size->w - bottom_rect_size.w) / 2, bitmap_bounds_size->h / 2),
-      .size = bottom_rect_size};
+      .size = bottom_rect_size
+  };
   GColor bottom_rect_color = GColorBlue;
   bottom_rect_color.a = 2;
   prv_draw_hlines_in_rect(ctx, draw_func, &bottom_rect, bottom_rect_color);
@@ -92,9 +93,9 @@ static void prv_draw_hline_test_pattern(GContext *ctx, HLinePatternDrawFunction 
   const GRect top_left_rect =
       (GRect){.origin = GPoint(top_rects_x_offset, 0), .size = top_rects_size};
   prv_draw_hlines_in_rect(ctx, draw_func, &top_left_rect, top_rects_color);
-  const GRect top_right_rect =
-      (GRect){.origin = GPoint((bitmap_bounds_size->w / 2) + top_rects_x_offset, 0),
-              .size = top_rects_size};
+  const GRect top_right_rect = (GRect){
+      .origin = GPoint((bitmap_bounds_size->w / 2) + top_rects_x_offset, 0), .size = top_rects_size
+  };
   prv_draw_hlines_in_rect(ctx, draw_func, &top_right_rect, top_rects_color);
 }
 
@@ -137,9 +138,10 @@ static void prv_draw_vline_test_pattern(GContext *ctx, HLinePatternDrawFunction 
   prv_draw_vlines_in_rect(ctx, draw_func, &top_left_rect, top_right_rect_color);
   GColor bottom_right_rect_color = GColorYellow;
   bottom_right_rect_color.a = 2;
-  const GRect top_right_rect =
-      (GRect){.origin = GPoint(right_rects_x, (bitmap_bounds_size->h / 2) + right_rects_y_offset),
-              .size = right_rects_size};
+  const GRect top_right_rect = (GRect){
+      .origin = GPoint(right_rects_x, (bitmap_bounds_size->h / 2) + right_rects_y_offset),
+      .size = right_rects_size
+  };
   prv_draw_vlines_in_rect(ctx, draw_func, &top_right_rect, bottom_right_rect_color);
 }
 

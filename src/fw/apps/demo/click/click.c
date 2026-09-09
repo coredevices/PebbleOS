@@ -182,8 +182,9 @@ static void s_main(void) {
 }
 
 const PebbleProcessMd *click_app_get_info() {
-  static const PebbleProcessMdSystem s_click_app_info = {.common.main_func = s_main,
-                                                         .name = "Clicks"};
+  static const PebbleProcessMdSystem s_click_app_info = {
+      .common.main_func = s_main, .name = "Clicks"
+  };
   return (const PebbleProcessMd *)&s_click_app_info;
 }
 

@@ -459,12 +459,14 @@ void setup_test_aa_sw(GContext *ctx, FrameBuffer *fb, GRect clip_box, GRect draw
                       bool antialiased, uint8_t stroke_width) {
   test_graphics_context_reset(ctx, fb);
 
-  GDrawState draw_state = {.clip_box = clip_box,
-                           .drawing_box = drawing_box,
+  GDrawState draw_state = {
+      .clip_box = clip_box,
+      .drawing_box = drawing_box,
 #if PBL_COLOR
-                           .antialiased = antialiased,
+      .antialiased = antialiased,
 #endif
-                           .stroke_width = stroke_width};
+      .stroke_width = stroke_width
+  };
   setup_test_context(ctx,
                      (CTX_FLAG_DS_CLIP_BOX | CTX_FLAG_DS_DRAWING_BOX | CTX_FLAG_DS_ANTIALIASED |
                       CTX_FLAG_DS_STROKE_WIDTH),

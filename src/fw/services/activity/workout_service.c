@@ -83,10 +83,12 @@ static void prv_unlock(void) {
 }
 
 static void prv_put_event(PebbleWorkoutEventType e_type) {
-  PebbleEvent event = {.type = PEBBLE_WORKOUT_EVENT,
-                       .workout = {
-                           .type = e_type,
-                       }};
+  PebbleEvent event = {
+      .type = PEBBLE_WORKOUT_EVENT,
+      .workout = {
+          .type = e_type,
+      }
+  };
   event_put(&event);
 }
 

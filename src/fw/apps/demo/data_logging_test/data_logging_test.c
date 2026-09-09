@@ -120,8 +120,9 @@ static void close_sessions(void) {
 
 static void start_logging(void) {
   const uint8_t item_size[] = {4, 2, 16};
-  const DataLoggingItemType types[] = {DATA_LOGGING_INT, DATA_LOGGING_UINT,
-                                       DATA_LOGGING_BYTE_ARRAY};
+  const DataLoggingItemType types[] = {
+      DATA_LOGGING_INT, DATA_LOGGING_UINT, DATA_LOGGING_BYTE_ARRAY
+  };
 
   for (int i = 0; i < 3; ++i) {
     text_layer_set_text(&s_data.info[i].text_layer, "Empty");
@@ -196,9 +197,10 @@ static void s_main(void) {
 const PebbleProcessMd *data_logging_test_get_info() {
   static const PebbleProcessMdSystem s_app_info = {
       // UUID: 01020304-0506-0708-0910-111213141516
-      .common.uuid = {0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0x10, 0x11, 0x12, 0x13, 0x14,
-                      0x15, 0x16},
+      .common.uuid =
+          {0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16},
       .common.main_func = &s_main,
-      .name = "Data Logging Test"};
+      .name = "Data Logging Test"
+  };
   return (const PebbleProcessMd *)&s_app_info;
 }

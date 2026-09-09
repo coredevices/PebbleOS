@@ -495,27 +495,25 @@ void test_app_glance_db__glance_blob_with_slice_missing_expiration_time_gets_def
 void test_app_glance_db__basic_glance_insert_and_read(void) {
   const AppGlance glance = (AppGlance){
       .num_slices = 2,
-      .slices =
+      .slices = {
           {
-              {
-                  .expiration_time = 1464734484,  // (Tue, 31 May 2016 22:41:24 GMT)
-                  .type = AppGlanceSliceType_IconAndSubtitle,
-                  .icon_and_subtitle =
-                      {
-                          .icon_resource_id = RESOURCE_ID_SETTINGS_ICON_AIRPLANE,
-                          .template_string = "Test subtitle",
-                      },
-              },
-              {
-                  .expiration_time = 1465579430,  // (Fri, 10 Jun 2016 17:23:50 GMT)
-                  .type = AppGlanceSliceType_IconAndSubtitle,
-                  .icon_and_subtitle =
-                      {
-                          .icon_resource_id = RESOURCE_ID_SETTINGS_ICON_BLUETOOTH,
-                          .template_string = "Test subtitle 2",
-                      },
+              .expiration_time = 1464734484,  // (Tue, 31 May 2016 22:41:24 GMT)
+              .type = AppGlanceSliceType_IconAndSubtitle,
+              .icon_and_subtitle =
+                  {
+                      .icon_resource_id = RESOURCE_ID_SETTINGS_ICON_AIRPLANE,
+                      .template_string = "Test subtitle",
+                  },
+          },
+          {
+              .expiration_time = 1465579430,  // (Fri, 10 Jun 2016 17:23:50 GMT)
+              .type = AppGlanceSliceType_IconAndSubtitle,
+              .icon_and_subtitle = {
+                  .icon_resource_id = RESOURCE_ID_SETTINGS_ICON_BLUETOOTH,
+                  .template_string = "Test subtitle 2",
               },
           },
+      },
   };
   cl_assert_equal_i(app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID, &glance), S_SUCCESS);
 
@@ -558,13 +556,12 @@ void test_app_glance_db__inserting_glance_with_invalid_arguments_fails(void) {
   // Glance containing a slice with an invalid type fails
   const AppGlance glance_containing_slice_with_invalid_type = (AppGlance){
       .num_slices = 1,
-      .slices =
+      .slices = {
           {
-              {
-                  .expiration_time = 1464734484,  // (Tue, 31 May 2016 22:41:24 GMT)
-                  .type = (AppGlanceSliceType)200,
-              },
+              .expiration_time = 1464734484,  // (Tue, 31 May 2016 22:41:24 GMT)
+              .type = (AppGlanceSliceType)200,
           },
+      },
   };
   cl_assert(glance_containing_slice_with_invalid_type.slices[0].type >= AppGlanceSliceTypeCount);
   cl_assert_equal_i(app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID,

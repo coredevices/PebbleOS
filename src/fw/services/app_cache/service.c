@@ -268,21 +268,20 @@ status_t app_cache_free_up_space(uint32_t bytes_needed) {
     // we don't want to remove any default apps or quick launch apps, so keep them in a list.
     EachEvictData evict_data = (EachEvictData){
         .bytes_needed = bytes_needed,
-        .do_not_evict =
-            {
+        .do_not_evict = {
 #ifndef CONFIG_SHELL_SDK
-                quick_launch_get_app(BUTTON_ID_UP),
-                quick_launch_get_app(BUTTON_ID_SELECT),
-                quick_launch_get_app(BUTTON_ID_DOWN),
-                quick_launch_get_app(BUTTON_ID_BACK),
-                quick_launch_single_click_get_app(BUTTON_ID_UP),
-                quick_launch_single_click_get_app(BUTTON_ID_DOWN),
-                quick_launch_combo_back_up_get_app(),
-                quick_launch_combo_up_down_get_app(),
+            quick_launch_get_app(BUTTON_ID_UP),
+            quick_launch_get_app(BUTTON_ID_SELECT),
+            quick_launch_get_app(BUTTON_ID_DOWN),
+            quick_launch_get_app(BUTTON_ID_BACK),
+            quick_launch_single_click_get_app(BUTTON_ID_UP),
+            quick_launch_single_click_get_app(BUTTON_ID_DOWN),
+            quick_launch_combo_back_up_get_app(),
+            quick_launch_combo_up_down_get_app(),
 #endif
-                watchface_get_default_install_id(),
-                worker_preferences_get_default_worker(),
-            },
+            watchface_get_default_install_id(),
+            worker_preferences_get_default_worker(),
+        },
     };
 
     settings_file_each(&file, prv_each_free_up_space, &evict_data);
@@ -478,11 +477,10 @@ status_t app_cache_remove_entry(AppInstallId app_id) {
   if (rv == S_SUCCESS) {
     PebbleEvent e = {
         .type = PEBBLE_APP_CACHE_EVENT,
-        .app_cache_event =
-            {
-                .cache_event_type = PebbleAppCacheEvent_Removed,
-                .install_id = app_id,
-            },
+        .app_cache_event = {
+            .cache_event_type = PebbleAppCacheEvent_Removed,
+            .install_id = app_id,
+        },
     };
     event_put(&e);
   }

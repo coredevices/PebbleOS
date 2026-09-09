@@ -160,13 +160,12 @@ static void prv_create_activity_session_cb(void *context, KAlgActivityType kalg_
       .start_utc = start_utc,
       .length_min = len_sec / SECONDS_PER_MINUTE,
       .ongoing = ongoing,
-      .step_data =
-          {
-              .steps = steps,
-              .active_kcalories = ROUND(active_calories, ACTIVITY_CALORIES_PER_KCAL),
-              .resting_kcalories = ROUND(resting_calories, ACTIVITY_CALORIES_PER_KCAL),
-              .distance_meters = ROUND(distance_mm, MM_PER_METER),
-          },
+      .step_data = {
+          .steps = steps,
+          .active_kcalories = ROUND(active_calories, ACTIVITY_CALORIES_PER_KCAL),
+          .resting_kcalories = ROUND(resting_calories, ACTIVITY_CALORIES_PER_KCAL),
+          .distance_meters = ROUND(distance_mm, MM_PER_METER),
+      },
   };
   if (delete) {
     activity_sessions_prv_delete_activity_session(&session);

@@ -122,19 +122,21 @@ void test_ble_ad_parse__start_scan_response(void) {
   BLEAdData *ad = ble_ad_create();
   ble_ad_start_scan_response(ad);
 
-  uint8_t expected_scan_resp_data[] = {1 /* +1 for Type byte */ + strlen("Pebble 1234"),
-                                       0x09,  // Local Name, Complete
-                                       'P',
-                                       'e',
-                                       'b',
-                                       'b',
-                                       'l',
-                                       'e',
-                                       ' ',
-                                       '1',
-                                       '2',
-                                       '3',
-                                       '4'};
+  uint8_t expected_scan_resp_data[] = {
+      1 /* +1 for Type byte */ + strlen("Pebble 1234"),
+      0x09,  // Local Name, Complete
+      'P',
+      'e',
+      'b',
+      'b',
+      'l',
+      'e',
+      ' ',
+      '1',
+      '2',
+      '3',
+      '4'
+  };
 
   // Should fit fine, expect true:
   cl_assert_equal_b(ble_ad_set_local_name(ad, "Pebble 1234"), true);
@@ -261,19 +263,21 @@ void test_ble_ad_parse__set_local_name(void) {
   BLEAdData *ad;
   ad = ble_ad_create();
 
-  uint8_t expected_ad_data[] = {1 /* +1 for Type byte */ + strlen("Pebble 1234"),
-                                0x09,  // Local Name, Complete
-                                'P',
-                                'e',
-                                'b',
-                                'b',
-                                'l',
-                                'e',
-                                ' ',
-                                '1',
-                                '2',
-                                '3',
-                                '4'};
+  uint8_t expected_ad_data[] = {
+      1 /* +1 for Type byte */ + strlen("Pebble 1234"),
+      0x09,  // Local Name, Complete
+      'P',
+      'e',
+      'b',
+      'b',
+      'l',
+      'e',
+      ' ',
+      '1',
+      '2',
+      '3',
+      '4'
+  };
 
   // Should fit fine, expect true:
   cl_assert_equal_b(ble_ad_set_local_name(ad, "Pebble 1234"), true);

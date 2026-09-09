@@ -181,8 +181,10 @@ static GPointPrecise prv_get_clock_center_point(ClockLocation location, const GR
       break;
     default:
       // aiming for width / 2 - 0.5 to get the true center
-      return (GPointPrecise){.x = {.integer = bounds->size.w / 2 - 1, .fraction = 3},
-                             .y = {.integer = bounds->size.h / 2 - 1, .fraction = 3}};
+      return (GPointPrecise){
+          .x = {.integer = bounds->size.w / 2 - 1, .fraction = 3},
+          .y = {.integer = bounds->size.h / 2 - 1, .fraction = 3}
+      };
   }
   return GPointPreciseFromGPoint(imprecise_center_point);
 }
@@ -192,9 +194,11 @@ static void prv_draw_clock_text(GContext *ctx, ClockText text, GPoint center) {
   const GRect *bounds = &window_get_root_layer(&data->window)->bounds;
   switch (text.location) {
     case CLOCK_TEXT_LOCATION_LEFT:
-      const GRect box = (GRect){.origin = GPoint(center.x - text.offset - bounds->size.w,
-                                                 center.y - text.font_size * 2 / 3),
-                                .size = bounds->size};
+      const GRect box = (GRect){
+          .origin =
+              GPoint(center.x - text.offset - bounds->size.w, center.y - text.font_size * 2 / 3),
+          .size = bounds->size
+      };
       graphics_draw_text(ctx, text.buffer, text.font, box, GTextOverflowModeFill,
                          GTextAlignmentRight, NULL);
       break;
@@ -220,13 +224,16 @@ static void prv_draw_clock_face(GContext *ctx, ClockFace *face) {
   prv_draw_watch_hand(ctx, &face->minute_hand, center);
 
   // Draw bob.
-  GRect bob_rect = (GRect){.origin = GPoint(GPointFromGPointPrecise(center).x - face->bob_radius,
-                                            GPointFromGPointPrecise(center).y - face->bob_radius),
-                           .size = GSize(face->bob_radius * 2, face->bob_radius * 2)};
-  GRect bob_center_rect =
-      (GRect){.origin = GPoint(GPointFromGPointPrecise(center).x - face->bob_center_radius,
-                               GPointFromGPointPrecise(center).y - face->bob_center_radius),
-              .size = GSize(face->bob_center_radius * 2, face->bob_center_radius * 2)};
+  GRect bob_rect = (GRect){
+      .origin = GPoint(GPointFromGPointPrecise(center).x - face->bob_radius,
+                       GPointFromGPointPrecise(center).y - face->bob_radius),
+      .size = GSize(face->bob_radius * 2, face->bob_radius * 2)
+  };
+  GRect bob_center_rect = (GRect){
+      .origin = GPoint(GPointFromGPointPrecise(center).x - face->bob_center_radius,
+                       GPointFromGPointPrecise(center).y - face->bob_center_radius),
+      .size = GSize(face->bob_center_radius * 2, face->bob_center_radius * 2)
+  };
   graphics_context_set_fill_color(ctx, face->bob_color);
   graphics_fill_oval(ctx, bob_rect, GOvalScaleModeFitCircle);
   graphics_context_set_fill_color(ctx, face->bob_center_color);

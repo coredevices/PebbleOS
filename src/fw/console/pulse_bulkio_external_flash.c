@@ -67,7 +67,8 @@ static status_t external_flash_domain_erase(uint8_t *packet_data, size_t length,
 
   ExternalFlashEraseState *state = kernel_malloc(sizeof(ExternalFlashEraseState));
   *state = (ExternalFlashEraseState){
-      .address = options->address, .length = options->length, .next_sector = 0, .cookie = cookie};
+      .address = options->address, .length = options->length, .next_sector = 0, .cookie = cookie
+  };
 
   prv_erase_sector(state, 0);
 
@@ -90,4 +91,5 @@ PulseBulkIODomainHandler pulse_bulkio_domain_external_flash = {
     .read_proc = external_flash_domain_read,
     .write_proc = external_flash_domain_write,
     .stat_proc = external_flash_domain_stat,
-    .erase_proc = external_flash_domain_erase};
+    .erase_proc = external_flash_domain_erase
+};

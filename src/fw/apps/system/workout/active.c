@@ -981,14 +981,16 @@ WorkoutActiveWindow *workout_active_create_for_activity_type(
         WorkoutMetricType top_metric = WorkoutMetricType_Hr;
         WorkoutMetricType scrollable_metrics[] = {
             WorkoutMetricType_Duration, WorkoutMetricType_Distance, WorkoutMetricType_AvgPace,
-            WorkoutMetricType_Steps};
+            WorkoutMetricType_Steps
+        };
         return workout_active_create_double_layout(top_metric, ARRAY_LENGTH(scrollable_metrics),
                                                    scrollable_metrics, workout_data,
                                                    workout_controller);
       } else {
         WorkoutMetricType top_metric = WorkoutMetricType_Duration;
         WorkoutMetricType scrollable_metrics[] = {
-            WorkoutMetricType_Distance, WorkoutMetricType_AvgPace, WorkoutMetricType_Steps};
+            WorkoutMetricType_Distance, WorkoutMetricType_AvgPace, WorkoutMetricType_Steps
+        };
         return workout_active_create_double_layout(top_metric, ARRAY_LENGTH(scrollable_metrics),
                                                    scrollable_metrics, workout_data,
                                                    workout_controller);
@@ -998,14 +1000,16 @@ WorkoutActiveWindow *workout_active_create_for_activity_type(
       if (hrm_is_available) {
         WorkoutMetricType top_metric = WorkoutMetricType_Hr;
         WorkoutMetricType scrollable_metrics[] = {
-            WorkoutMetricType_Duration, WorkoutMetricType_AvgPace, WorkoutMetricType_Distance};
+            WorkoutMetricType_Duration, WorkoutMetricType_AvgPace, WorkoutMetricType_Distance
+        };
         return workout_active_create_double_layout(top_metric, ARRAY_LENGTH(scrollable_metrics),
                                                    scrollable_metrics, workout_data,
                                                    workout_controller);
       } else {
         WorkoutMetricType top_metric = WorkoutMetricType_Duration;
-        WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_AvgPace,
-                                                  WorkoutMetricType_Distance};
+        WorkoutMetricType scrollable_metrics[] = {
+            WorkoutMetricType_AvgPace, WorkoutMetricType_Distance
+        };
         return workout_active_create_double_layout(top_metric, ARRAY_LENGTH(scrollable_metrics),
                                                    scrollable_metrics, workout_data,
                                                    workout_controller);

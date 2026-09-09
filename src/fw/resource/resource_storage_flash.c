@@ -37,9 +37,11 @@ const ResourceStoreImplementation g_system_bank_impl;
 static void resource_storage_system_bank_init(void) {
   boot_bit_clear(BOOT_BIT_NEW_SYSTEM_RESOURCES_AVAILABLE);
 
-  ResourceStoreEntry entry = {.id = 0,  // resource id 0 means the store itself
-                              .impl = &g_system_bank_impl,
-                              .length = ENTRY_LENGTH_UNSET};
+  ResourceStoreEntry entry = {
+      .id = 0,  // resource id 0 means the store itself
+      .impl = &g_system_bank_impl,
+      .length = ENTRY_LENGTH_UNSET
+  };
 
   // Increment s_active_bank and call resource_storage_generic_check for each value to find
   // a bank that's valid.

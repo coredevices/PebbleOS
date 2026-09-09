@@ -20,15 +20,13 @@ static UARTDeviceState s_dbg_uart_state = {
                     .OverSampling = UART_OVERSAMPLING_16,
                 },
         },
-    .hdma =
-        {
-            .Instance = DMA1_Channel1,
-            .Init =
-                {
-                    .Request = DMA_REQUEST_5,
-                    .IrqPrio = 5,
-                },
+    .hdma = {
+        .Instance = DMA1_Channel1,
+        .Init = {
+            .Request = DMA_REQUEST_5,
+            .IrqPrio = 5,
         },
+    },
 };
 
 static UARTDevice DBG_UART_DEVICE = {
@@ -58,28 +56,25 @@ IRQ_MAP(DMAC1_CH1, uart_dma_irq_handler, DBG_UART);
 
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
 static UARTDeviceState s_hci_trace_uart_state = {
-    .huart =
-        {
-            .Instance = USART3,
-            .Init =
-                {
-                    .WordLength = UART_WORDLENGTH_8B,
-                    .StopBits = UART_STOPBITS_1,
-                    .Parity = UART_PARITY_NONE,
-                    .HwFlowCtl = UART_HWCONTROL_NONE,
-                    .OverSampling = UART_OVERSAMPLING_16,
-                },
+    .huart = {
+        .Instance = USART3,
+        .Init = {
+            .WordLength = UART_WORDLENGTH_8B,
+            .StopBits = UART_STOPBITS_1,
+            .Parity = UART_PARITY_NONE,
+            .HwFlowCtl = UART_HWCONTROL_NONE,
+            .OverSampling = UART_OVERSAMPLING_16,
         },
+    },
 };
 
 static UARTDevice HCI_TRACE_UART_DEVICE = {
     .state = &s_hci_trace_uart_state,
-    .tx =
-        {
-            .pad = PAD_PA27,
-            .func = USART3_TXD,
-            .flags = PIN_NOPULL,
-        },
+    .tx = {
+        .pad = PAD_PA27,
+        .func = USART3_TXD,
+        .flags = PIN_NOPULL,
+    },
 };
 UARTDevice *const HCI_TRACE_UART = &HCI_TRACE_UART_DEVICE;
 #endif  // NIMBLE_HCI_SF32LB52_TRACE_BINARY
@@ -117,30 +112,26 @@ static QSPIFlash QSPI_FLASH_DEVICE = {
 QSPIFlash *const QSPI_FLASH = &QSPI_FLASH_DEVICE;
 
 static DisplayJDIState s_display_state = {
-    .hlcdc =
-        {
-            .Instance = LCDC1,
-            .Init =
-                {
-                    .lcd_itf = LCDC_INTF_JDI_PARALLEL,
-                    .color_mode = LCDC_PIXEL_FORMAT_RGB332,
-                    .freq = 746268,  // HCK frequency
-                    .cfg =
-                        {
-                            .jdi =
-                                {
-                                    .bank_col_head = 0,
-                                    .valid_columns = PBL_DISPLAY_WIDTH,
-                                    .bank_col_tail = 8,
-                                    .bank_row_head = 0,
-                                    .valid_rows = PBL_DISPLAY_HEIGHT,
-                                    .bank_row_tail = 4,
-                                    .enb_start_col = 6,
-                                    .enb_end_col = 128,
-                                },
-                        },
+    .hlcdc = {
+        .Instance = LCDC1,
+        .Init = {
+            .lcd_itf = LCDC_INTF_JDI_PARALLEL,
+            .color_mode = LCDC_PIXEL_FORMAT_RGB332,
+            .freq = 746268,  // HCK frequency
+            .cfg = {
+                .jdi = {
+                    .bank_col_head = 0,
+                    .valid_columns = PBL_DISPLAY_WIDTH,
+                    .bank_col_tail = 8,
+                    .bank_row_head = 0,
+                    .valid_rows = PBL_DISPLAY_HEIGHT,
+                    .bank_row_tail = 4,
+                    .enb_start_col = 6,
+                    .enb_end_col = 128,
                 },
+            },
         },
+    },
 };
 
 static DisplayJDIDevice s_display = {
@@ -241,39 +232,36 @@ static DisplayJDIDevice s_display = {
         },
     .vddp = {hwp_gpio1, 0, true},
     .vlcd = {hwp_gpio1, 9, true},
-    .splash =
-        {
-            .data = splash_bits,
-            .width = splash_width,
-            .height = splash_height,
-        },
+    .splash = {
+        .data = splash_bits,
+        .width = splash_width,
+        .height = splash_height,
+    },
 };
 
 DisplayJDIDevice *const DISPLAY = &s_display;
 IRQ_MAP(LCDC1, display_jdi_irq_handler, DISPLAY);
 
 const LedControllerAW9364E AW9364E = {
-    .gpio =
-        {
-            .gpio = hwp_gpio1,
-            .gpio_pin = 1,
-            .active_high = true,
-        },
+    .gpio = {
+        .gpio = hwp_gpio1,
+        .gpio_pin = 1,
+        .active_high = true,
+    },
 };
 
 static I2CBusHalState s_i2c_bus_hal_state_1 = {
-    .hdl =
-        {
-            .Instance = I2C1,
-            .Init =
-                {
-                    .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
-                    .ClockSpeed = 400000,
-                    .GeneralCallMode = I2C_GENERALCALL_DISABLE,
-                },
-            .Mode = HAL_I2C_MODE_MASTER,
-            .core = CORE_ID_HCPU,
-        },
+    .hdl = {
+        .Instance = I2C1,
+        .Init =
+            {
+                .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
+                .ClockSpeed = 400000,
+                .GeneralCallMode = I2C_GENERALCALL_DISABLE,
+            },
+        .Mode = HAL_I2C_MODE_MASTER,
+        .core = CORE_ID_HCPU,
+    },
 };
 
 static struct I2CBusHal s_i2c_bus_hal_1 = {
@@ -332,12 +320,11 @@ static const LIS2DW12Config s_lis2dw12_config = {
             [AXIS_Y] = 1,
             [AXIS_Z] = 2,
         },
-    .axis_dir =
-        {
-            [AXIS_X] = -1,
-            [AXIS_Y] = 1,
-            [AXIS_Z] = 1,
-        },
+    .axis_dir = {
+        [AXIS_X] = -1,
+        [AXIS_Y] = 1,
+        [AXIS_Z] = 1,
+    },
 };
 
 const LIS2DW12Config *const LIS2DW12 = &s_lis2dw12_config;
@@ -350,18 +337,17 @@ static const I2CSlavePort s_i2c_mmc5603nj = {
 I2CSlavePort *const I2C_MMC5603NJ = &s_i2c_mmc5603nj;
 
 static I2CBusHalState s_i2c_bus_hal_state_2 = {
-    .hdl =
-        {
-            .Instance = I2C2,
-            .Init =
-                {
-                    .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
-                    .ClockSpeed = 400000,
-                    .GeneralCallMode = I2C_GENERALCALL_DISABLE,
-                },
-            .Mode = HAL_I2C_MODE_MASTER,
-            .core = CORE_ID_HCPU,
-        },
+    .hdl = {
+        .Instance = I2C2,
+        .Init =
+            {
+                .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
+                .ClockSpeed = 400000,
+                .GeneralCallMode = I2C_GENERALCALL_DISABLE,
+            },
+        .Mode = HAL_I2C_MODE_MASTER,
+        .core = CORE_ID_HCPU,
+    },
 };
 
 static struct I2CBusHal s_i2c_bus_hal_2 = {
@@ -413,29 +399,27 @@ static const TouchSensor s_touch_cst816 = {
             .gpio_pin = 38,
             .pull = GPIO_PuPd_UP,
         },
-    .reset =
-        {
-            .gpio = hwp_gpio1,
-            .gpio_pin = 28,
-            .active_high = false,
-        },
+    .reset = {
+        .gpio = hwp_gpio1,
+        .gpio_pin = 28,
+        .active_high = false,
+    },
 };
 
 const TouchSensor *CST816 = &s_touch_cst816;
 
 static I2CBusHalState s_i2c_bus_hal_state_3 = {
-    .hdl =
-        {
-            .Instance = I2C3,
-            .Init =
-                {
-                    .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
-                    .ClockSpeed = 400000,
-                    .GeneralCallMode = I2C_GENERALCALL_DISABLE,
-                },
-            .Mode = HAL_I2C_MODE_MASTER,
-            .core = CORE_ID_HCPU,
-        },
+    .hdl = {
+        .Instance = I2C3,
+        .Init =
+            {
+                .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
+                .ClockSpeed = 400000,
+                .GeneralCallMode = I2C_GENERALCALL_DISABLE,
+            },
+        .Mode = HAL_I2C_MODE_MASTER,
+        .core = CORE_ID_HCPU,
+    },
 };
 
 static struct I2CBusHal s_i2c_bus_hal_3 = {
@@ -551,15 +535,13 @@ const BoardConfigButton BOARD_CONFIG_BUTTON = {
 IRQ_MAP(GPTIM2, debounced_button_irq_handler, GPTIM2);
 
 static MicDeviceState mic_state = {
-    .hdma =
-        {
-            .Instance = DMA1_Channel5,
-            .Init =
-                {
-                    .Request = DMA_REQUEST_36,
-                    .IrqPrio = 5,
-                },
+    .hdma = {
+        .Instance = DMA1_Channel5,
+        .Init = {
+            .Request = DMA_REQUEST_36,
+            .IrqPrio = 5,
         },
+    },
 };
 static const MicDevice mic_device = {
     .state = &mic_state,

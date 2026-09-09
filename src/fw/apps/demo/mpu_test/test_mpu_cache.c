@@ -79,7 +79,8 @@ static void prv_main(void) {
 }
 
 const PebbleProcessMd *test_mpu_cache_get_info() {
-  static const PebbleProcessMdSystem s_test_mpu_info = {.common.main_func = prv_main,
-                                                        .name = "Test MPU cache"};
+  static const PebbleProcessMdSystem s_test_mpu_info = {
+      .common.main_func = prv_main, .name = "Test MPU cache"
+  };
   return (const PebbleProcessMd *)&s_test_mpu_info;
 }

@@ -145,13 +145,12 @@ KinoReel *kino_reel_scale_segmented_create(KinoReel *from_reel, bool take_owners
   *data = (ScaleSegmentedData){
       .point_duration = SCALE_SEGMENTED_DEFAULT_POINT_DURATION,
       .effect_duration = SCALE_SEGMENTED_DEFAULT_EFFECT_DURATION,
-      .stroke_width =
-          {
-              .from = FIXED_S16_3_ONE,
-              .to = FIXED_S16_3_ONE,
-              .from_op = GStrokeWidthOpMultiply,
-              .to_op = GStrokeWidthOpMultiply,
-          },
+      .stroke_width = {
+          .from = FIXED_S16_3_ONE,
+          .to = FIXED_S16_3_ONE,
+          .from_op = GStrokeWidthOpMultiply,
+          .to_op = GStrokeWidthOpMultiply,
+      },
   };
 
   KinoReel *reel = kino_reel_transform_create(&SCALE_SEGMENTED_TRANSFORM_IMPL, data);

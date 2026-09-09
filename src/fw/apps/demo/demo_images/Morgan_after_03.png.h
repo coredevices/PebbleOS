@@ -3860,9 +3860,8 @@ static const GBitmap s_Morgan_after_03_bitmap = {
     .addr = (void *)&s_Morgan_after_03_pixels,
     .row_size_bytes = 208,
     .info_flags = 0x1000,
-    .bounds =
-        {
-            .origin = {.x = 0, .y = 0},
-            .size = {.w = 205, .h = 148},
-        },
+    .bounds = {
+        .origin = {.x = 0, .y = 0},
+        .size = {.w = 205, .h = 148},
+    },
 };

@@ -89,18 +89,16 @@ void test_app_glance_service__get_current_slice_basic(void) {
   // Insert a glance
   const AppGlance glance = (AppGlance){
       .num_slices = 1,
-      .slices =
+      .slices = {
           {
-              {
-                  .expiration_time = 1464734484,  // (Tue, 31 May 2016 22:41:24 GMT)
-                  .type = AppGlanceSliceType_IconAndSubtitle,
-                  .icon_and_subtitle =
-                      {
-                          .icon_resource_id = RESOURCE_ID_SETTINGS_ICON_AIRPLANE,
-                          .template_string = "Test subtitle",
-                      },
+              .expiration_time = 1464734484,  // (Tue, 31 May 2016 22:41:24 GMT)
+              .type = AppGlanceSliceType_IconAndSubtitle,
+              .icon_and_subtitle = {
+                  .icon_resource_id = RESOURCE_ID_SETTINGS_ICON_AIRPLANE,
+                  .template_string = "Test subtitle",
               },
           },
+      },
   };
   cl_assert_equal_i(app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID, &glance), S_SUCCESS);
 
@@ -122,27 +120,25 @@ void test_app_glance_service__get_current_slice_from_glance_with_multiple_unsort
   // Note that the expiration time for each of these are a minimum of 10 seconds apart
   const AppGlance glance = (AppGlance){
       .num_slices = 2,
-      .slices =
+      .slices = {
           {
-              {
-                  .expiration_time = 1464734504,  // (Tue, 31 May 2016 22:41:44 GMT)
-                  .type = AppGlanceSliceType_IconAndSubtitle,
-                  .icon_and_subtitle =
-                      {
-                          .icon_resource_id = RESOURCE_ID_SETTINGS_ICON_BLUETOOTH_ALT,
-                          .template_string = "Test subtitle 2",
-                      },
-              },
-              {
-                  .expiration_time = 1464734484,  // (Tue, 31 May 2016 22:41:24 GMT)
-                  .type = AppGlanceSliceType_IconAndSubtitle,
-                  .icon_and_subtitle =
-                      {
-                          .icon_resource_id = RESOURCE_ID_SETTINGS_ICON_AIRPLANE,
-                          .template_string = "Test subtitle 1",
-                      },
+              .expiration_time = 1464734504,  // (Tue, 31 May 2016 22:41:44 GMT)
+              .type = AppGlanceSliceType_IconAndSubtitle,
+              .icon_and_subtitle =
+                  {
+                      .icon_resource_id = RESOURCE_ID_SETTINGS_ICON_BLUETOOTH_ALT,
+                      .template_string = "Test subtitle 2",
+                  },
+          },
+          {
+              .expiration_time = 1464734484,  // (Tue, 31 May 2016 22:41:24 GMT)
+              .type = AppGlanceSliceType_IconAndSubtitle,
+              .icon_and_subtitle = {
+                  .icon_resource_id = RESOURCE_ID_SETTINGS_ICON_AIRPLANE,
+                  .template_string = "Test subtitle 1",
               },
           },
+      },
   };
   cl_assert_equal_i(app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID, &glance), S_SUCCESS);
 
@@ -167,27 +163,25 @@ void test_app_glance_service__slice_with_no_expiration(void) {
   // Note that the expiration time for each of these are a minimum of 10 seconds apart
   const AppGlance glance = (AppGlance){
       .num_slices = 2,
-      .slices =
+      .slices = {
           {
-              {
-                  .expiration_time = APP_GLANCE_SLICE_NO_EXPIRATION,
-                  .type = AppGlanceSliceType_IconAndSubtitle,
-                  .icon_and_subtitle =
-                      {
-                          .icon_resource_id = RESOURCE_ID_SETTINGS_ICON_AIRPLANE,
-                          .template_string = "Test subtitle 2",
-                      },
-              },
-              {
-                  .expiration_time = 1464734504,  // (Tue, 31 May 2016 22:41:44 GMT)
-                  .type = AppGlanceSliceType_IconAndSubtitle,
-                  .icon_and_subtitle =
-                      {
-                          .icon_resource_id = RESOURCE_ID_SETTINGS_ICON_BLUETOOTH_ALT,
-                          .template_string = "Test subtitle 1",
-                      },
+              .expiration_time = APP_GLANCE_SLICE_NO_EXPIRATION,
+              .type = AppGlanceSliceType_IconAndSubtitle,
+              .icon_and_subtitle =
+                  {
+                      .icon_resource_id = RESOURCE_ID_SETTINGS_ICON_AIRPLANE,
+                      .template_string = "Test subtitle 2",
+                  },
+          },
+          {
+              .expiration_time = 1464734504,  // (Tue, 31 May 2016 22:41:44 GMT)
+              .type = AppGlanceSliceType_IconAndSubtitle,
+              .icon_and_subtitle = {
+                  .icon_resource_id = RESOURCE_ID_SETTINGS_ICON_BLUETOOTH_ALT,
+                  .template_string = "Test subtitle 1",
               },
           },
+      },
   };
   cl_assert_equal_i(app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID, &glance), S_SUCCESS);
 

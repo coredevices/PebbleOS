@@ -22,8 +22,9 @@ static Attribute action1_attributes[] = {
     {.id = AttributeIdTitle, .cstring = "Dismiss"},
 };
 
-static Attribute action2_attributes[] = {{.id = AttributeIdTitle, .cstring = "Like"},
-                                         {.id = AttributeIdAncsAction, .int8 = 1}};
+static Attribute action2_attributes[] = {
+    {.id = AttributeIdTitle, .cstring = "Like"}, {.id = AttributeIdAncsAction, .int8 = 1}
+};
 
 static Attribute attributes[] = {
     {.id = AttributeIdTitle, .cstring = "Test Notification"},
@@ -88,10 +89,12 @@ static void prv_check_attribute_list_serialize(AttributeList *attr_list_to_seria
 }
 
 void test_attribute__serialize_attr_list(void) {
-  AttributeList attr_list1 = {.num_attributes = ARRAY_LENGTH(action1_attributes),
-                              .attributes = action1_attributes};
-  AttributeList attr_list2 = {.num_attributes = ARRAY_LENGTH(action2_attributes),
-                              .attributes = action2_attributes};
+  AttributeList attr_list1 = {
+      .num_attributes = ARRAY_LENGTH(action1_attributes), .attributes = action1_attributes
+  };
+  AttributeList attr_list2 = {
+      .num_attributes = ARRAY_LENGTH(action2_attributes), .attributes = action2_attributes
+  };
   AttributeList attr_list3 = {.num_attributes = ARRAY_LENGTH(attributes), .attributes = attributes};
 
   static uint8_t attr_list1_serialized[] = {
@@ -109,14 +112,16 @@ void test_attribute__serialize_attr_list(void) {
       's',
   };
 
-  static uint8_t attr_list2_serialized[] = {0x01,        // Attribute 1 ID - Title
-                                            0x04, 0x00,  // Attribute 1 Length
-                                            // Attribute text:
-                                            'L', 'i', 'k', 'e',
-                                            0x07,        // Attribute 2 ID - ANCS UID
-                                            0x01, 0x00,  // Attribute 2 Length
-                                            // Attribute text: "Test"
-                                            0x01};
+  static uint8_t attr_list2_serialized[] = {
+      0x01,        // Attribute 1 ID - Title
+      0x04, 0x00,  // Attribute 1 Length
+      // Attribute text:
+      'L', 'i', 'k', 'e',
+      0x07,        // Attribute 2 ID - ANCS UID
+      0x01, 0x00,  // Attribute 2 Length
+      // Attribute text: "Test"
+      0x01
+  };
 
   static uint8_t attr_list3_serialized[] = {
       // Attribute 1

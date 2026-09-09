@@ -45,7 +45,8 @@ static struct tm s_init_time_tm = {
     .tm_hour = 10,
     .tm_mday = 1,
     .tm_mon = 0,
-    .tm_year = 115};
+    .tm_year = 115
+};
 
 #define ACTIVE_MINUTES 2
 #define AVERAGE_STEPS 1000
@@ -207,13 +208,12 @@ void prv_add_walk_session(double offset_hours, double length_hours) {
       .type = ActivitySessionType_Walk,
       .length_min = length_min,
       .start_utc = rtc_get_time(),
-      .step_data =
-          {
-              .steps = length_min * 60,
-              .active_kcalories = length_min * 2,
-              .resting_kcalories = length_min / 10,
-              .distance_meters = (length_min * 1000) / 30,
-          },
+      .step_data = {
+          .steps = length_min * 60,
+          .active_kcalories = length_min * 2,
+          .resting_kcalories = length_min / 10,
+          .distance_meters = (length_min * 1000) / 30,
+      },
   };
 }
 
@@ -368,7 +368,8 @@ void test_activity_insights__calculate_metric_history_stats(void) {
   static const int32_t complete_history[ACTIVITY_HISTORY_DAYS] = {
       1234,  // This value is ignored since it's loaded in as the current value
       6233, 4277, 9857, 4737, 6540, 719, 9917, 7019, 6347, 4704, 5050, 8370, 4200, 8284, 6664,
-      9177, 9734, 2330, 3951, 1568, 871, 776,  8751, 987,  7813, 772,  5079, 7438, 428};
+      9177, 9734, 2330, 3951, 1568, 871, 776,  8751, 987,  7813, 772,  5079, 7438, 428
+  };
   memcpy(&s_data.metric_history[ActivityMetricStepCount], complete_history,
          sizeof(complete_history));
 
@@ -382,7 +383,8 @@ void test_activity_insights__calculate_metric_history_stats(void) {
   static const int32_t sparse_history[ACTIVITY_HISTORY_DAYS] = {
       1234,  // This value is ignored since it's loaded in as the current day
       6233, 4277, 9857, 0,    6540, 719, 0, 0,    0, 0,    0,   0, 0,    0,  6664,
-      9177, 0,    2330, 3951, 1568, 871, 0, 8751, 0, 7813, 772, 0, 7438, 428};
+      9177, 0,    2330, 3951, 1568, 871, 0, 8751, 0, 7813, 772, 0, 7438, 428
+  };
   memcpy(&s_data.metric_history[ActivityMetricStepCount], sparse_history, sizeof(sparse_history));
   prv_calculate_metric_history_stats(ActivityMetricStepCount, &stats);
   cl_assert_equal_i(stats.median, 4277);
@@ -403,7 +405,8 @@ void test_activity_insights__sleep_reward(void) {
       GOOD_SLEEP,    GOOD_SLEEP,
       AVERAGE_SLEEP,  // Average sleep to make sure our median is fairly low
       AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP,
-      AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP};
+      AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP
+  };
   memcpy(&s_data.metric_history[ActivityMetricSleepTotalSeconds], sleep_history,
          sizeof(sleep_history));
 
@@ -490,7 +493,8 @@ void prv_set_step_history_avg() {
   static const int32_t step_history[ACTIVITY_HISTORY_DAYS] = {
       AVERAGE_STEPS,  // This is 'today'
       AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS,
-      AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS};
+      AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS
+  };
   memcpy(&s_data.metric_history[ActivityMetricStepCount], &step_history, sizeof(step_history));
 }
 
@@ -501,7 +505,8 @@ void prv_set_sleep_history_avg() {
       AVERAGE_SLEEP,  // This is 'today'
       AVERAGE_SLEEP,  // Average sleep to make sure our median is fairly low
       AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP,
-      AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP};
+      AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP
+  };
   memcpy(&s_data.metric_history[ActivityMetricSleepTotalSeconds], sleep_history,
          sizeof(sleep_history));
 }
@@ -604,12 +609,14 @@ void test_activity_insights__sleep_summary(void) {
   prv_set_sleep_history_avg();
 
   // Let's start at 11:30pm
-  struct tm start_tm = {// Thursday, Jan 1, 2015, 11:30pm
-                        .tm_hour = 23,
-                        .tm_min = 30,
-                        .tm_mday = 1,
-                        .tm_mon = 0,
-                        .tm_year = 115};
+  struct tm start_tm = {
+      // Thursday, Jan 1, 2015, 11:30pm
+      .tm_hour = 23,
+      .tm_min = 30,
+      .tm_mday = 1,
+      .tm_mon = 0,
+      .tm_year = 115
+  };
   prv_set_time(&start_tm);
   activity_insights_init(rtc_get_time());
 

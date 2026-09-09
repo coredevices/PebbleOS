@@ -25,8 +25,10 @@ static Fixed_S16_3 prv_get_ellipsis_border(Fixed_S16_3 offset, uint32_t offset_r
                                            uint32_t opposite_radius_sq) {
   if (offset_radius_sq == opposite_radius_sq) {
     // We're dealing with a circle
-    return (Fixed_S16_3){.raw_value = integer_sqrt((offset_radius_sq << FIXED_S16_3_PRECISION) -
-                                                   offset.raw_value * offset.raw_value)};
+    return (Fixed_S16_3){
+        .raw_value = integer_sqrt((offset_radius_sq << FIXED_S16_3_PRECISION) -
+                                  offset.raw_value * offset.raw_value)
+    };
   }
 
   return (Fixed_S16_3){
@@ -34,7 +36,8 @@ static Fixed_S16_3 prv_get_ellipsis_border(Fixed_S16_3 offset, uint32_t offset_r
           (opposite_radius_sq -
            opposite_radius_sq * ((offset.raw_value * offset.raw_value) >> FIXED_S16_3_PRECISION) /
                offset_radius_sq)
-          << FIXED_S16_3_PRECISION))};
+          << FIXED_S16_3_PRECISION))
+  };
 }
 
 static GPointPrecise prv_get_rotated_precise_point(GPointPrecise center, uint16_t radius,
@@ -272,7 +275,8 @@ T_STATIC void graphics_circle_quadrant_draw_1px_aa(GContext *ctx, GPoint p, uint
   // Step 1
   for (progress = 0; progress < stop_progress; progress++) {
     Fixed_S16_3 edge = (Fixed_S16_3){
-        .raw_value = radius_fixed - prv_get_circle_border(progress, radius).raw_value};
+        .raw_value = radius_fixed - prv_get_circle_border(progress, radius).raw_value
+    };
 
     if (edge.integer != 0) {
       weighting = (edge.fraction >> 1);
@@ -302,7 +306,8 @@ T_STATIC void graphics_circle_quadrant_draw_1px_aa(GContext *ctx, GPoint p, uint
   // Special code for filling gap between mirrored parts in a manner that wont overdraw pixels
   for (; progress < stop_progress + special_case_pixels; progress++) {
     Fixed_S16_3 edge = (Fixed_S16_3){
-        .raw_value = radius_fixed - prv_get_circle_border(progress, radius).raw_value};
+        .raw_value = radius_fixed - prv_get_circle_border(progress, radius).raw_value
+    };
 
     if (edge.integer != 0) {
       weighting = (edge.fraction >> 1);
@@ -743,9 +748,10 @@ static void prv_get_angles_mask_edge(Fixed_S16_3 y, GPointPrecise center, GCorne
 T_STATIC EllipsisDrawConfig prv_calc_draw_config_ellipsis(int32_t angle_start, int32_t angle_end) {
   PBL_ASSERTN(angle_start <= angle_end);
 
-  EllipsisDrawConfig config =
-      (EllipsisDrawConfig){(EllipsisPartDrawConfig){0, GCornerNone}, GCornerNone,
-                           (EllipsisPartDrawConfig){0, GCornerNone}};
+  EllipsisDrawConfig config = (EllipsisDrawConfig){
+      (EllipsisPartDrawConfig){0, GCornerNone}, GCornerNone,
+      (EllipsisPartDrawConfig){0, GCornerNone}
+  };
   // Nothing to draw case:
   if (angle_end == angle_start) {
     return config;

@@ -284,10 +284,11 @@ void task_timer_delete(TaskTimerManager *manager, TaskTimerID timer_id) {
 
 void task_timer_manager_init(TaskTimerManager *manager, struct pbl_sem *semaphore) {
   prv_pool_init();
-  *manager =
-      (TaskTimerManager){// Initialize next id to be a number that's theoretically unique per-task
-                         .next_id = (pebble_task_get_current() << 28) + 1,
-                         .semaphore = semaphore};
+  *manager = (TaskTimerManager){
+      // Initialize next id to be a number that's theoretically unique per-task
+      .next_id = (pebble_task_get_current() << 28) + 1,
+      .semaphore = semaphore
+  };
   pbl_mutex_init(&manager->mutex);
 
   // The above shift assumes next_id is a 32-bit int and there are fewer than 16 tasks.

@@ -67,10 +67,9 @@ static Animation *prv_window_transition_move(WindowTransitioningContext *ctx,
               .update = prv_update_rect_compatible,
               .teardown = prv_transition_teardown_destroy_animation,
           },
-      .accessors =
-          {
-              .setter.grect = prv_window_frame_setter,
-          },
+      .accessors = {
+          .setter.grect = prv_window_frame_setter,
+      },
   };
 
   Window *window = ctx->window_to;

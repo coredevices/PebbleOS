@@ -79,11 +79,10 @@ static int s_back_quickpress_count = 0;
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   PebbleEvent event = {
       .type = PEBBLE_CALLBACK_EVENT,
-      .callback =
-          {
-              .callback = callback,
-              .data = data,
-          },
+      .callback = {
+          .callback = callback,
+          .data = data,
+      },
   };
   event_put(&event);
 }

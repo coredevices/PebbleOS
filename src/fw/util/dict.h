@@ -359,25 +359,30 @@ typedef struct Tuplet {
 //! @param _key The key
 //! @param _data Pointer to the bytes
 //! @param _length Length of the buffer
-#define TupletBytes(_key, _data, _length) \
-  ((const Tuplet){                        \
-      .type = TUPLE_BYTE_ARRAY, .key = _key, .bytes = {.data = _data, .length = _length}})
+#define TupletBytes(_key, _data, _length)                                                \
+  ((const Tuplet){                                                                       \
+      .type = TUPLE_BYTE_ARRAY, .key = _key, .bytes = {.data = _data, .length = _length} \
+  })
 
 //! Macro to create a Tuplet with a c-string value
 //! @param _key The key
 //! @param _cstring The c-string value
-#define TupletCString(_key, _cstring)    \
-  ((const Tuplet){.type = TUPLE_CSTRING, \
-                  .key = _key,           \
-                  .cstring = {.data = _cstring, .length = _cstring ? strlen(_cstring) + 1 : 0}})
+#define TupletCString(_key, _cstring)                                              \
+  ((const Tuplet){                                                                 \
+      .type = TUPLE_CSTRING,                                                       \
+      .key = _key,                                                                 \
+      .cstring = {.data = _cstring, .length = _cstring ? strlen(_cstring) + 1 : 0} \
+  })
 
 //! Macro to create a Tuplet with an integer value
 //! @param _key The key
 //! @param _integer The integer value
-#define TupletInteger(_key, _integer)                                   \
-  ((const Tuplet){.type = IS_SIGNED(_integer) ? TUPLE_INT : TUPLE_UINT, \
-                  .key = _key,                                          \
-                  .integer = {.storage = _integer, .width = sizeof(_integer)}})
+#define TupletInteger(_key, _integer)                             \
+  ((const Tuplet){                                                \
+      .type = IS_SIGNED(_integer) ? TUPLE_INT : TUPLE_UINT,       \
+      .key = _key,                                                \
+      .integer = {.storage = _integer, .width = sizeof(_integer)} \
+  })
 
 //! Callback for \ref dict_serialize_tuplets() utility.
 //! @param data The data of the serialized dictionary

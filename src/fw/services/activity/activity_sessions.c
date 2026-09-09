@@ -416,15 +416,13 @@ static void prv_update_sleep_metrics(time_t now_utc, time_t max_end_utc,
       // Post a sleep changed event
       PebbleEvent e = {
           .type = PEBBLE_HEALTH_SERVICE_EVENT,
-          .health_event =
-              {
-                  .type = HealthEventSleepUpdate,
-                  .data.sleep_update =
-                      {
-                          .total_seconds = sleep_data->total_minutes * SECONDS_PER_MINUTE,
-                          .total_restful_seconds = sleep_data->restful_minutes * SECONDS_PER_MINUTE,
-                      },
+          .health_event = {
+              .type = HealthEventSleepUpdate,
+              .data.sleep_update = {
+                  .total_seconds = sleep_data->total_minutes * SECONDS_PER_MINUTE,
+                  .total_restful_seconds = sleep_data->restful_minutes * SECONDS_PER_MINUTE,
               },
+          },
       };
       event_put(&e);
     }

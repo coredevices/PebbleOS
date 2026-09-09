@@ -34,13 +34,12 @@ static void prv_put_area_event(UnobstructedAreaEventType type, int16_t current_y
                                AnimationProgress progress) {
   PebbleEvent event = {
       .type = PEBBLE_UNOBSTRUCTED_AREA_EVENT,
-      .unobstructed_area =
-          {
-              .type = type,
-              .current_y = current_y,
-              .final_y = final_y,
-              .progress = progress,
-          },
+      .unobstructed_area = {
+          .type = type,
+          .current_y = current_y,
+          .final_y = final_y,
+          .progress = progress,
+      },
   };
   event_put(&event);
 }

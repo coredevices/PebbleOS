@@ -214,11 +214,10 @@ static const uint8_t *prv_get_registration_cmd_for_entity(AMSEntityID entity_id,
               .length = sizeof(register_for_queue_entity_updates_cmd),
               .value = register_for_queue_entity_updates_cmd,
           },
-      [AMSEntityIDTrack] =
-          {
-              .length = sizeof(register_for_track_entity_updates_cmd),
-              .value = register_for_track_entity_updates_cmd,
-          },
+      [AMSEntityIDTrack] = {
+          .length = sizeof(register_for_track_entity_updates_cmd),
+          .value = register_for_track_entity_updates_cmd,
+      },
   };
   if (cmd_length_out) {
     *cmd_length_out = packet_length_and_data[entity_id].length;

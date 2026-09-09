@@ -42,11 +42,10 @@ BluetoothDumpLineCallbackData s_bt_dump_chunk_callback_data;
 static void prv_put_status_event(DebugInfoEventState state) {
   PebbleEvent event = {
       .type = PEBBLE_GATHER_DEBUG_INFO_EVENT,
-      .debug_info =
-          {
-              .source = DebugInfoSourceFWLogs,
-              .state = state,
-          },
+      .debug_info = {
+          .source = DebugInfoSourceFWLogs,
+          .state = state,
+      },
   };
   event_put(&event);
 }

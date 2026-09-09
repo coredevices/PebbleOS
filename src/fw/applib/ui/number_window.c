@@ -178,13 +178,15 @@ static void number_window_load(NumberWindow *nw) {
 
 void number_window_init(NumberWindow *nw, const char *label, NumberWindowCallbacks callbacks,
                         void *callback_context) {
-  *nw = (NumberWindow){.label = label,
-                       .value = 0,
-                       .max_val = INT_MAX,
-                       .min_val = INT_MIN,
-                       .step_size = 1,
-                       .callbacks = callbacks,
-                       .callback_context = callback_context};
+  *nw = (NumberWindow){
+      .label = label,
+      .value = 0,
+      .max_val = INT_MAX,
+      .min_val = INT_MIN,
+      .step_size = 1,
+      .callbacks = callbacks,
+      .callback_context = callback_context
+  };
 
   window_init(&nw->window, WINDOW_NAME(label));
   window_set_window_handlers(&nw->window, &(WindowHandlers){

@@ -453,7 +453,8 @@ void prv_draw_stroked_line_precise(GContext *ctx, GPointPrecise p0, GPointPrecis
       // Find edges for upper cap
       GPointPrecise top_point_tmp = (p0.y.raw_value < p1.y.raw_value) ? p0 : p1;
       Fixed_S16_3 progress_line = (Fixed_S16_3){
-          .raw_value = (y * FIXED_S16_3_ONE.raw_value + FIXED_S16_3_ONE.raw_value / 2)};
+          .raw_value = (y * FIXED_S16_3_ONE.raw_value + FIXED_S16_3_ONE.raw_value / 2)
+      };
       prv_calc_cap_prepared(top_point_tmp.y, top_point_tmp.x, radius, progress_line, &left_margin,
                             &right_margin);
 
@@ -528,7 +529,8 @@ void prv_draw_stroked_line_precise(GContext *ctx, GPointPrecise p0, GPointPrecis
       // Find edges for bottom cap
       GPointPrecise bottom_point_tmp = (p0.y.raw_value > p1.y.raw_value) ? p0 : p1;
       Fixed_S16_3 progress_line = (Fixed_S16_3){
-          .raw_value = (y * FIXED_S16_3_ONE.raw_value - FIXED_S16_3_ONE.raw_value / 2)};
+          .raw_value = (y * FIXED_S16_3_ONE.raw_value - FIXED_S16_3_ONE.raw_value / 2)
+      };
       prv_calc_cap_prepared(bottom_point_tmp.y, bottom_point_tmp.x, radius, progress_line,
                             &left_margin, &right_margin);
 
@@ -587,7 +589,8 @@ void prv_draw_stroked_line_precise(GContext *ctx, GPointPrecise p0, GPointPrecis
       // Find edges for left cap
       GPointPrecise left_point_tmp = (p0.y.raw_value < p1.y.raw_value) ? p0 : p1;
       Fixed_S16_3 progress_line = (Fixed_S16_3){
-          .raw_value = (x * FIXED_S16_3_ONE.raw_value + FIXED_S16_3_ONE.raw_value / 2)};
+          .raw_value = (x * FIXED_S16_3_ONE.raw_value + FIXED_S16_3_ONE.raw_value / 2)
+      };
       prv_calc_cap_prepared(left_point_tmp.x, left_point_tmp.y, radius, progress_line, &top_margin,
                             &bottom_margin);
 
@@ -660,7 +663,8 @@ void prv_draw_stroked_line_precise(GContext *ctx, GPointPrecise p0, GPointPrecis
       // Find edges for right cap
       GPointPrecise right_point_tmp = (p0.x.raw_value > p1.x.raw_value) ? p0 : p1;
       Fixed_S16_3 progress_line = (Fixed_S16_3){
-          .raw_value = (x * FIXED_S16_3_ONE.raw_value - FIXED_S16_3_ONE.raw_value / 2)};
+          .raw_value = (x * FIXED_S16_3_ONE.raw_value - FIXED_S16_3_ONE.raw_value / 2)
+      };
       prv_calc_cap_prepared(right_point_tmp.x, right_point_tmp.y, radius, progress_line,
                             &top_margin, &bottom_margin);
 

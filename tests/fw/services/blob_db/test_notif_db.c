@@ -42,13 +42,12 @@ void test_notif_db__cleanup(void) {
 
 void test_notif_db__get_length(void) {
   SerializedTimelineItemHeader hdr = {
-      .common =
-          {
-              .ancs_uid = 1,
-              .layout = 0,
-              .flags = 0,
-              .timestamp = 0,
-          },
+      .common = {
+          .ancs_uid = 1,
+          .layout = 0,
+          .flags = 0,
+          .timestamp = 0,
+      },
   };
   uuid_generate(&hdr.common.id);
   cl_assert_equal_i(notif_db_insert((uint8_t *)&hdr, UUID_SIZE, (uint8_t *)&hdr, sizeof(hdr)), 0);
@@ -57,13 +56,12 @@ void test_notif_db__get_length(void) {
 
 void test_notif_db__insert_remove(void) {
   SerializedTimelineItemHeader hdr = {
-      .common =
-          {
-              .ancs_uid = 1,
-              .layout = 0,
-              .flags = 0,
-              .timestamp = 0,
-          },
+      .common = {
+          .ancs_uid = 1,
+          .layout = 0,
+          .flags = 0,
+          .timestamp = 0,
+      },
   };
   uuid_generate(&hdr.common.id);
   cl_assert_equal_i(notif_db_insert((uint8_t *)&hdr, UUID_SIZE, (uint8_t *)&hdr, sizeof(hdr)), 0);
@@ -73,33 +71,30 @@ void test_notif_db__insert_remove(void) {
 
 void test_notif_db__flush(void) {
   SerializedTimelineItemHeader hdr1 = {
-      .common =
-          {
-              .ancs_uid = 1,
-              .layout = 0,
-              .flags = 0,
-              .timestamp = 0,
-          },
+      .common = {
+          .ancs_uid = 1,
+          .layout = 0,
+          .flags = 0,
+          .timestamp = 0,
+      },
   };
   uuid_generate(&hdr1.common.id);
   SerializedTimelineItemHeader hdr2 = {
-      .common =
-          {
-              .ancs_uid = 1,
-              .layout = 0,
-              .flags = 0,
-              .timestamp = 0,
-          },
+      .common = {
+          .ancs_uid = 1,
+          .layout = 0,
+          .flags = 0,
+          .timestamp = 0,
+      },
   };
   uuid_generate(&hdr2.common.id);
   SerializedTimelineItemHeader hdr3 = {
-      .common =
-          {
-              .ancs_uid = 1,
-              .layout = 0,
-              .flags = 0,
-              .timestamp = 0,
-          },
+      .common = {
+          .ancs_uid = 1,
+          .layout = 0,
+          .flags = 0,
+          .timestamp = 0,
+      },
   };
   uuid_generate(&hdr3.common.id);
 

@@ -42,10 +42,12 @@ static PBL_MUTEX_DEFINE(s_insight_settings_mutex);
       .above_avg_threshold = 10,                                                                \
       .below_avg_threshold = -10,                                                               \
       .fail_threshold = -50,                                                                    \
-      .sleep = {.max_fail_minutes = 7 * MINUTES_PER_HOUR,                                       \
-                .trigger_notif_seconds = 30 * SECONDS_PER_MINUTE,                               \
-                .trigger_notif_activity = 10,                                                   \
-                .trigger_notif_active_minutes = 2}                                              \
+      .sleep = {                                                                                \
+          .max_fail_minutes = 7 * MINUTES_PER_HOUR,                                             \
+          .trigger_notif_seconds = 30 * SECONDS_PER_MINUTE,                                     \
+          .trigger_notif_activity = 10,                                                         \
+          .trigger_notif_active_minutes = 2                                                     \
+      }                                                                                         \
     }                                                                                           \
   }
 
@@ -61,31 +63,30 @@ static PBL_MUTEX_DEFINE(s_insight_settings_mutex);
     }                                                                                           \
   }
 
-#define ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_SUMMARY_DEFAULT                        \
-  {                                                                                \
-    .version = ACTIVITY_INSIGHTS_SETTINGS_CURRENT_STRUCT_VERSION, .enabled = true, \
-    .summary =                                                                     \
-    {.above_avg_threshold = 10,                                                    \
-     .below_avg_threshold = -10,                                                   \
-     .fail_threshold = -50,                                                        \
-     .activity = {                                                                 \
-         .trigger_minute = (20 * MINUTES_PER_HOUR) + 30,                           \
-         .update_threshold_steps = 1000,                                           \
-         .update_max_interval_seconds = 30 * SECONDS_PER_MINUTE,                   \
-         .show_notification = true,                                                \
-         .max_fail_steps = 10000,                                                  \
-     } }                                                                           \
+#define ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_SUMMARY_DEFAULT                                     \
+  {                                                                                             \
+    .version = ACTIVITY_INSIGHTS_SETTINGS_CURRENT_STRUCT_VERSION, .enabled = true, .summary = { \
+      .above_avg_threshold = 10,                                                                \
+      .below_avg_threshold = -10,                                                               \
+      .fail_threshold = -50,                                                                    \
+      .activity = {                                                                             \
+          .trigger_minute = (20 * MINUTES_PER_HOUR) + 30,                                       \
+          .update_threshold_steps = 1000,                                                       \
+          .update_max_interval_seconds = 30 * SECONDS_PER_MINUTE,                               \
+          .show_notification = true,                                                            \
+          .max_fail_steps = 10000,                                                              \
+      }                                                                                         \
+    }                                                                                           \
   }
 
 #define ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_SESSION_DEFAULT                                     \
   {                                                                                             \
     .version = ACTIVITY_INSIGHTS_SETTINGS_CURRENT_STRUCT_VERSION, .enabled = true, .session = { \
       .show_notification = true,                                                                \
-      .activity =                                                                               \
-          {                                                                                     \
-              .trigger_elapsed_minutes = 20,                                                    \
-              .trigger_cooldown_minutes = 10,                                                   \
-          },                                                                                    \
+      .activity = {                                                                             \
+          .trigger_elapsed_minutes = 20,                                                        \
+          .trigger_cooldown_minutes = 10,                                                       \
+      },                                                                                        \
     }                                                                                           \
   }
 

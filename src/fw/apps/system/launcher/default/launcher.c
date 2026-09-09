@@ -167,11 +167,13 @@ static void prv_main(void) {
 
 const PebbleProcessMd *launcher_menu_app_get_app_info(void) {
   static const PebbleProcessMdSystem s_launcher_menu_app_info = {
-      .common = {.main_func = prv_main,
-                 // UUID: dec0424c-0625-4878-b1f2-147e57e83688
-                 .uuid = {0xde, 0xc0, 0x42, 0x4c, 0x06, 0x25, 0x48, 0x78, 0xb1, 0xf2, 0x14, 0x7e,
-                          0x57, 0xe8, 0x36, 0x88},
-                 .visibility = ProcessVisibilityHidden},
+      .common =
+          {.main_func = prv_main,
+           // UUID: dec0424c-0625-4878-b1f2-147e57e83688
+           .uuid =
+               {0xde, 0xc0, 0x42, 0x4c, 0x06, 0x25, 0x48, 0x78, 0xb1, 0xf2, 0x14, 0x7e, 0x57, 0xe8,
+                0x36, 0x88},
+           .visibility = ProcessVisibilityHidden},
       .name = "Launcher",
   };
   return (const PebbleProcessMd *)&s_launcher_menu_app_info;

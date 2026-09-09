@@ -75,11 +75,13 @@ static Receiver *prv_default_kernel_receiver_prepare(CommSession *session,
 
   const bool should_use_kernel_main =
       (endpoint->receiver_opt == &g_default_kernel_receiver_opt_main);
-  *receiver = (DefaultReceiverImpl){.session = session,
-                                    .endpoint = endpoint,
-                                    .total_payload_size = total_payload_size,
-                                    .should_use_kernel_main = should_use_kernel_main,
-                                    .curr_pos = 0};
+  *receiver = (DefaultReceiverImpl){
+      .session = session,
+      .endpoint = endpoint,
+      .total_payload_size = total_payload_size,
+      .should_use_kernel_main = should_use_kernel_main,
+      .curr_pos = 0
+  };
 
   return (Receiver *)receiver;
 }

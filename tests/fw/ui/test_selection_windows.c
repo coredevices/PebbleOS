@@ -167,13 +167,12 @@ void time_selection_window_init(TimeSelectionWindowData *time_selection_window,
 static const TimeSelectionWindowConfig s_time_config = {
     .label = "Time Config",
     .color = SELECTION_COLOR,
-    .range =
-        {
-            .update = true,
-            .text = "Range text yo!",
-            .duration_m = 30,
-            .enabled = true,
-        },
+    .range = {
+        .update = true,
+        .text = "Range text yo!",
+        .duration_m = 30,
+        .enabled = true,
+    },
 };
 
 static void prv_render_time_selection_window(GContext *ctx, SettingsContentSize content_size) {

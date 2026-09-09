@@ -21,11 +21,10 @@ static const GBitmap s_status_icon_launcher_bitmap = {
     .addr = (void *)&s_status_icon_launcher_pixels,
     .row_size_bytes = 4,
     .info_flags = 0x1000,
-    .bounds =
-        {
-            .origin = {.x = 0, .y = 0},
-            .size = {.w = 11, .h = 10},
-        },
+    .bounds = {
+        .origin = {.x = 0, .y = 0},
+        .size = {.w = 11, .h = 10},
+    },
 };
 
 static const uint8_t s_status_icon_sms_pixels[] = {
@@ -40,11 +39,10 @@ static const GBitmap s_status_icon_sms_bitmap = {
     .addr = (void *)&s_status_icon_sms_pixels,
     .row_size_bytes = 4,
     .info_flags = 0x1000,
-    .bounds =
-        {
-            .origin = {.x = 0, .y = 0},
-            .size = {.w = 10, .h = 9},
-        },
+    .bounds = {
+        .origin = {.x = 0, .y = 0},
+        .size = {.w = 10, .h = 9},
+    },
 };
 
 static const uint8_t s_status_icon_bluetooth_pixels[] = {
@@ -59,11 +57,10 @@ static const GBitmap s_status_icon_bluetooth_bitmap = {
     .addr = (void *)&s_status_icon_bluetooth_pixels,
     .row_size_bytes = 4,
     .info_flags = 0x1000,
-    .bounds =
-        {
-            .origin = {.x = 0, .y = 0},
-            .size = {.w = 7, .h = 11},
-        },
+    .bounds = {
+        .origin = {.x = 0, .y = 0},
+        .size = {.w = 7, .h = 11},
+    },
 };
 
 static const uint8_t s_status_icon_settings_pixels[] = {
@@ -78,11 +75,10 @@ static const GBitmap s_status_icon_settings_bitmap = {
     .addr = (void *)&s_status_icon_settings_pixels,
     .row_size_bytes = 4,
     .info_flags = 0x1000,
-    .bounds =
-        {
-            .origin = {.x = 0, .y = 0},
-            .size = {.w = 10, .h = 10},
-        },
+    .bounds = {
+        .origin = {.x = 0, .y = 0},
+        .size = {.w = 10, .h = 10},
+    },
 };
 
 static const uint8_t s_status_icon_phone_pixels[] = {
@@ -97,11 +93,10 @@ static const GBitmap s_status_icon_phone_bitmap = {
     .addr = (void *)&s_status_icon_phone_pixels,
     .row_size_bytes = 4,
     .info_flags = 0x1000,
-    .bounds =
-        {
-            .origin = {.x = 0, .y = 0},
-            .size = {.w = 11, .h = 11},
-        },
+    .bounds = {
+        .origin = {.x = 0, .y = 0},
+        .size = {.w = 11, .h = 11},
+    },
 };
 
 static const uint8_t s_status_icon_music_pixels[] = {
@@ -116,11 +111,10 @@ static const GBitmap s_status_icon_music_bitmap = {
     .addr = (void *)&s_status_icon_music_pixels,
     .row_size_bytes = 4,
     .info_flags = 0x1000,
-    .bounds =
-        {
-            .origin = {.x = 0, .y = 0},
-            .size = {.w = 9, .h = 10},
-        },
+    .bounds = {
+        .origin = {.x = 0, .y = 0},
+        .size = {.w = 9, .h = 10},
+    },
 };
 
 static const uint8_t s_status_icon_silent_pixels[] = {
@@ -135,11 +129,10 @@ static const GBitmap s_status_icon_silent_bitmap = {
     .addr = (void *)&s_status_icon_silent_pixels,
     .row_size_bytes = 4,
     .info_flags = 0x1000,
-    .bounds =
-        {
-            .origin = {.x = 0, .y = 0},
-            .size = {.w = 11, .h = 11},
-        },
+    .bounds = {
+        .origin = {.x = 0, .y = 0},
+        .size = {.w = 11, .h = 11},
+    },
 };
 
 static const uint8_t s_quiet_time_status_icon_pixels[] = {
@@ -154,11 +147,10 @@ static const GBitmap s_quiet_time_status_icon_bitmap = {
     .addr = (void *)&s_quiet_time_status_icon_pixels,
     .row_size_bytes = 4,
     .info_flags = 0x1000,
-    .bounds =
-        {
-            .origin = {.x = 0, .y = 0},
-            .size = {.w = 10, .h = 10},
-        },
+    .bounds = {
+        .origin = {.x = 0, .y = 0},
+        .size = {.w = 10, .h = 10},
+    },
 };
 
 /** Action Bar Icons */
@@ -176,11 +168,10 @@ static const GBitmap s_bar_icon_actions_bitmap = {
     .addr = (void *)&s_bar_icon_actions_pixels,
     .row_size_bytes = 4,
     .info_flags = 0x1000,
-    .bounds =
-        {
-            .origin = {.x = 0, .y = 0},
-            .size = {.w = 16, .h = 12},
-        },
+    .bounds = {
+        .origin = {.x = 0, .y = 0},
+        .size = {.w = 16, .h = 12},
+    },
 };
 
 static const uint8_t s_bar_icon_phone_pixels[] = {
@@ -197,11 +188,10 @@ static const GBitmap s_bar_icon_phone_bitmap = {
     .addr = (void *)&s_bar_icon_phone_pixels,
     .row_size_bytes = 4,
     .info_flags = 0x1000,
-    .bounds =
-        {
-            .origin = {.x = 0, .y = 0},
-            .size = {.w = 15, .h = 14},
-        },
+    .bounds = {
+        .origin = {.x = 0, .y = 0},
+        .size = {.w = 15, .h = 14},
+    },
 };
 
 static const uint8_t s_bar_icon_x_pixels[] = {
@@ -217,11 +207,10 @@ static const GBitmap s_bar_icon_x_bitmap = {
     .addr = (void *)&s_bar_icon_x_pixels,
     .row_size_bytes = 4,
     .info_flags = 0x1000,
-    .bounds =
-        {
-            .origin = {.x = 0, .y = 0},
-            .size = {.w = 12, .h = 12},
-        },
+    .bounds = {
+        .origin = {.x = 0, .y = 0},
+        .size = {.w = 12, .h = 12},
+    },
 };
 
 static const uint8_t s_bar_icon_check_pixels[] = {
@@ -238,11 +227,10 @@ static const GBitmap s_bar_icon_check_bitmap = {
     .addr = (void *)&s_bar_icon_check_pixels,
     .row_size_bytes = 4,
     .info_flags = 0x1000,
-    .bounds =
-        {
-            .origin = {.x = 0, .y = 0},
-            .size = {.w = 18, .h = 14},
-        },
+    .bounds = {
+        .origin = {.x = 0, .y = 0},
+        .size = {.w = 18, .h = 14},
+    },
 };
 
 static const uint8_t s_bar_icon_up_pixels[] = {
@@ -255,11 +243,10 @@ static const GBitmap s_bar_icon_up_bitmap = {
     .addr = (void *)&s_bar_icon_up_pixels,
     .row_size_bytes = 4,
     .info_flags = 0x1000,
-    .bounds =
-        {
-            .origin = {.x = 0, .y = 0},
-            .size = {.w = 12, .h = 7},
-        },
+    .bounds = {
+        .origin = {.x = 0, .y = 0},
+        .size = {.w = 12, .h = 7},
+    },
 };
 
 static const uint8_t s_bar_icon_down_pixels[] = {
@@ -272,11 +259,10 @@ static const GBitmap s_bar_icon_down_bitmap = {
     .addr = (void *)&s_bar_icon_down_pixels,
     .row_size_bytes = 4,
     .info_flags = 0x1000,
-    .bounds =
-        {
-            .origin = {.x = 0, .y = 0},
-            .size = {.w = 12, .h = 7},
-        },
+    .bounds = {
+        .origin = {.x = 0, .y = 0},
+        .size = {.w = 12, .h = 7},
+    },
 };
 
 static const uint8_t s_bar_icon_yes_pixels[] = {
@@ -295,11 +281,10 @@ static const GBitmap s_bar_icon_yes_bitmap = {
     .addr = (void *)&s_bar_icon_yes_pixels,
     .row_size_bytes = 4,
     .info_flags = 0x1000,
-    .bounds =
-        {
-            .origin = {.x = 0, .y = 0},
-            .size = {.w = 11, .h = 18},
-        },
+    .bounds = {
+        .origin = {.x = 0, .y = 0},
+        .size = {.w = 11, .h = 18},
+    },
 };
 
 static const uint8_t s_bar_icon_no_pixels[] = {
@@ -318,11 +303,10 @@ static const GBitmap s_bar_icon_no_bitmap = {
     .addr = (void *)&s_bar_icon_no_pixels,
     .row_size_bytes = 4,
     .info_flags = 0x1000,
-    .bounds =
-        {
-            .origin = {.x = 0, .y = 0},
-            .size = {.w = 10, .h = 18},
-        },
+    .bounds = {
+        .origin = {.x = 0, .y = 0},
+        .size = {.w = 10, .h = 18},
+    },
 };
 
 static const uint8_t s_bar_icon_snooze_pixels[] = {
@@ -338,11 +322,10 @@ static const GBitmap s_bar_icon_snooze_bitmap = {
     .addr = (void *)&s_bar_icon_snooze_pixels,
     .row_size_bytes = 4,
     .info_flags = 0x1000,
-    .bounds =
-        {
-            .origin = {.x = 0, .y = 0},
-            .size = {.w = 12, .h = 12},
-        },
+    .bounds = {
+        .origin = {.x = 0, .y = 0},
+        .size = {.w = 12, .h = 12},
+    },
 };
 
 // Battery Icons
@@ -358,11 +341,10 @@ static const GBitmap s_status_battery_empty_bitmap = {
     .addr = (void *)&s_status_battery_empty_pixels,
     .row_size_bytes = 4,
     .info_flags = 0x1000,
-    .bounds =
-        {
-            .origin = {.x = 0, .y = 0},
-            .size = {.w = 15, .h = 8},
-        },
+    .bounds = {
+        .origin = {.x = 0, .y = 0},
+        .size = {.w = 15, .h = 8},
+    },
 };
 
 static const uint8_t s_status_battery_charging_pixels[] = {
@@ -376,11 +358,10 @@ static const GBitmap s_status_battery_charging_bitmap = {
     .addr = (void *)&s_status_battery_charging_pixels,
     .row_size_bytes = 4,
     .info_flags = 0x1000,
-    .bounds =
-        {
-            .origin = {.x = 0, .y = 0},
-            .size = {.w = 22, .h = 8},
-        },
+    .bounds = {
+        .origin = {.x = 0, .y = 0},
+        .size = {.w = 22, .h = 8},
+    },
 };
 
 static const uint8_t s_status_battery_charged_pixels[] = {
@@ -394,11 +375,10 @@ static const GBitmap s_status_battery_charged_bitmap = {
     .addr = (void *)&s_status_battery_charged_pixels,
     .row_size_bytes = 4,
     .info_flags = 0x1000,
-    .bounds =
-        {
-            .origin = {.x = 0, .y = 0},
-            .size = {.w = 15, .h = 8},
-        },
+    .bounds = {
+        .origin = {.x = 0, .y = 0},
+        .size = {.w = 15, .h = 8},
+    },
 };
 
 static const uint8_t s_status_icon_phone_only_pixels[] = {
@@ -413,11 +393,10 @@ static const GBitmap s_status_icon_phone_only_bitmap = {
     .addr = (void *)&s_status_icon_phone_only_pixels,
     .row_size_bytes = 4,
     .info_flags = 0x1000,
-    .bounds =
-        {
-            .origin = {.x = 0, .y = 0},
-            .size = {.w = 10, .h = 9},
-        },
+    .bounds = {
+        .origin = {.x = 0, .y = 0},
+        .size = {.w = 10, .h = 9},
+    },
 };
 
 static const uint8_t s_status_icon_airplane_mode_pixels[] = {
@@ -432,9 +411,8 @@ static const GBitmap s_status_icon_airplane_mode_bitmap = {
     .addr = (void *)&s_status_icon_airplane_mode_pixels,
     .row_size_bytes = 4,
     .info_flags = 0x1000,
-    .bounds =
-        {
-            .origin = {.x = 0, .y = 0},
-            .size = {.w = 12, .h = 11},
-        },
+    .bounds = {
+        .origin = {.x = 0, .y = 0},
+        .size = {.w = 12, .h = 11},
+    },
 };

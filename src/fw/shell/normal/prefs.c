@@ -149,17 +149,16 @@ static const BacklightPresetSettings s_backlight_preset_settings[] = {
             .motion_enabled = true,
             .touch_wake = BacklightTouchWake_DoubleTap,
         },
-    [BacklightPreset_BatterySaver] =
-        {
-            .ambient_sensor_enabled = true,
+    [BacklightPreset_BatterySaver] = {
+        .ambient_sensor_enabled = true,
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
-            .dynamic_mode = BacklightDynamicMode_Dim,
+        .dynamic_mode = BacklightDynamicMode_Dim,
 #endif
-            .intensity = BACKLIGHT_INTENSITY_MEDIUM,
-            .timeout_ms = DEFAULT_BACKLIGHT_TIMEOUT_MS,
-            .motion_enabled = true,
-            .touch_wake = BacklightTouchWake_DoubleTap,
-        },
+        .intensity = BACKLIGHT_INTENSITY_MEDIUM,
+        .timeout_ms = DEFAULT_BACKLIGHT_TIMEOUT_MS,
+        .motion_enabled = true,
+        .touch_wake = BacklightTouchWake_DoubleTap,
+    },
 };
 
 #ifdef CONFIG_ORIENTATION_MANAGER
@@ -1247,11 +1246,10 @@ void prefs_private_handle_blob_db_event(PebbleBlobDBEvent *event) {
     // Notify UI that a preference changed so it can refresh
     PebbleEvent pref_event = {
         .type = PEBBLE_PREF_CHANGE_EVENT,
-        .pref_change =
-            {
-                .key = entry->key,
-                .key_len = strlen(entry->key) + 1,
-            },
+        .pref_change = {
+            .key = entry->key,
+            .key_len = strlen(entry->key) + 1,
+        },
     };
     event_put(&pref_event);
   }
@@ -1803,11 +1801,10 @@ void system_theme_set_content_size(PreferredContentSize content_size) {
   // Watch-side sets bypass the blob-db path, so notify subscribed UI here too.
   PebbleEvent pref_event = {
       .type = PEBBLE_PREF_CHANGE_EVENT,
-      .pref_change =
-          {
-              .key = PREF_KEY_TEXT_STYLE,
-              .key_len = sizeof(PREF_KEY_TEXT_STYLE),
-          },
+      .pref_change = {
+          .key = PREF_KEY_TEXT_STYLE,
+          .key_len = sizeof(PREF_KEY_TEXT_STYLE),
+      },
   };
   event_put(&pref_event);
 }

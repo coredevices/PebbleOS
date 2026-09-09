@@ -30,11 +30,10 @@ static const ActionToggleImpl s_dnd_action_toggle_impl = {
     .prompt_disable_message = i18n_noop("End Quiet Time?"),
     .result_enable_message = i18n_noop("Quiet Time\nStarted"),
     .result_disable_message = i18n_noop("Quiet Time\nEnded"),
-    .callbacks =
-        {
-            .get_state = prv_get_state,
-            .set_state = prv_set_state,
-        },
+    .callbacks = {
+        .get_state = prv_get_state,
+        .set_state = prv_set_state,
+    },
 };
 
 void do_not_disturb_toggle_push(ActionTogglePrompt prompt, bool set_exit_reason) {

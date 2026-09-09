@@ -4,14 +4,16 @@
 #include <pbl/drivers/mpu.h>
 
 // Everything but NULL + 256
-const MpuRegion s_fake_app_region = {.region_num = 9,
-                                     .enabled = true,
-                                     .base_address = 256,
-                                     .size = 0xFFFFFFFF - (1 << 8),
-                                     .priv_read = true,
-                                     .priv_write = true,
-                                     .user_read = true,
-                                     .user_write = true};
+const MpuRegion s_fake_app_region = {
+    .region_num = 9,
+    .enabled = true,
+    .base_address = 256,
+    .size = 0xFFFFFFFF - (1 << 8),
+    .priv_read = true,
+    .priv_write = true,
+    .user_read = true,
+    .user_write = true
+};
 
 const MpuRegion *memory_layout_get_app_region(void) {
   return &s_fake_app_region;

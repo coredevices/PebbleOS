@@ -334,7 +334,8 @@ static const DialogNode nodes[] = {
     {
         .label = "D10 - Transcription",
         .show = prv_show_transcription_dialog,
-    }};
+    }
+};
 
 static const uint16_t NUM_ITEMS = ARRAY_LENGTH(nodes);
 
@@ -424,8 +425,9 @@ const PebbleProcessMd *dialogs_demo_get_app_info() {
           {
               .main_func = s_main,
               // UUID: ab470e5f-5ffd-46f2-9aa9-f48352ea5499
-              .uuid = {0xab, 0x47, 0x0e, 0x5f, 0x5f, 0xfd, 0x46, 0xf2, 0x9a, 0xa9, 0xf4, 0x83, 0x52,
-                       0xea, 0x54, 0x99},
+              .uuid =
+                  {0xab, 0x47, 0x0e, 0x5f, 0x5f, 0xfd, 0x46, 0xf2, 0x9a, 0xa9, 0xf4, 0x83, 0x52,
+                   0xea, 0x54, 0x99},
           },
       .name = "Dialogs",
   };

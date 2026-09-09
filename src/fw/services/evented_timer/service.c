@@ -152,11 +152,13 @@ static void prv_sys_timer_callback(void *cb_data) {
 
   pbl_mutex_unlock(&s_mutex);
 
-  PebbleEvent e = {.type = PEBBLE_CALLBACK_EVENT,
-                   .callback = {
-                       .callback = prv_evented_timer_event_callback,
-                       .data = (void *)(intptr_t)id,
-                   }};
+  PebbleEvent e = {
+      .type = PEBBLE_CALLBACK_EVENT,
+      .callback = {
+          .callback = prv_evented_timer_event_callback,
+          .data = (void *)(intptr_t)id,
+      }
+  };
 
   switch (timer->target_task) {
     case PebbleTask_KernelMain:
@@ -224,13 +226,15 @@ EventedTimerID evented_timer_register(uint32_t timeout_ms, bool repeating,
 
   EventedTimer *new_timer = kernel_malloc_check(sizeof(EventedTimer));
 
-  *new_timer = (EventedTimer){.list_node = {0},
-                              .sys_timer_id = TIMER_INVALID_ID,  // We set this below
-                              .callback = callback,
-                              .callback_data = data,
-                              .target_task = current_task,
-                              .repeating = repeating,
-                              .expired = false};
+  *new_timer = (EventedTimer){
+      .list_node = {0},
+      .sys_timer_id = TIMER_INVALID_ID,  // We set this below
+      .callback = callback,
+      .callback_data = data,
+      .target_task = current_task,
+      .repeating = repeating,
+      .expired = false
+  };
 
   new_timer->sys_timer_id = new_timer_create();
   PBL_ASSERTN(new_timer->sys_timer_id != TIMER_INVALID_ID);

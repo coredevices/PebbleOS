@@ -18,9 +18,11 @@ void interval_timer_init(IntervalTimer *timer, uint32_t min_expected_ms, uint32_
                          uint32_t weighting_factor_inverted) {
   PBL_ASSERTN(weighting_factor_inverted != 0);  // Divide by zero is not awesome
 
-  *timer = (IntervalTimer){.min_expected_ms = min_expected_ms,
-                           .max_expected_ms = max_expected_ms,
-                           .weighting_factor_inverted = weighting_factor_inverted};
+  *timer = (IntervalTimer){
+      .min_expected_ms = min_expected_ms,
+      .max_expected_ms = max_expected_ms,
+      .weighting_factor_inverted = weighting_factor_inverted
+  };
 }
 
 //! Record a sample that marks the start/end of an interval.

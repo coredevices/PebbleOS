@@ -91,7 +91,8 @@ static void prv_start_text_animation(TranscriptionDialog *transcription_dialog) 
           {
               .update = (AnimationUpdateImplementation)property_animation_update_int16,
           },
-      .accessors = {.setter = {.int16 = prv_set_char_index}}};
+      .accessors = {.setter = {.int16 = prv_set_char_index}}
+  };
 
   Dialog *dialog = expandable_dialog_get_dialog((ExpandableDialog *)transcription_dialog);
 
@@ -249,10 +250,12 @@ void transcription_dialog_init(TranscriptionDialog *transcription_dialog) {
                                       prv_transcription_dialog_select_handler);
 
   Dialog *dialog = expandable_dialog_get_dialog((ExpandableDialog *)transcription_dialog);
-  dialog_set_callbacks(dialog,
-                       &(DialogCallbacks){.unload = prv_transcription_dialog_unload,
-                                          .load = prv_transcription_dialog_load},
-                       transcription_dialog);
+  dialog_set_callbacks(
+      dialog,
+      &(DialogCallbacks){
+          .unload = prv_transcription_dialog_unload, .load = prv_transcription_dialog_load
+      },
+      transcription_dialog);
   dialog_show_status_bar_layer(dialog, true /* show status bar */);
   dialog_set_timeout(dialog, DIALOG_TIMEOUT_INFINITE);
 

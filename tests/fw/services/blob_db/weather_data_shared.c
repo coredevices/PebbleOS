@@ -94,7 +94,8 @@ static const WeatherDBEntry s_entry_bases[] = {
         .tomorrow_weather_type = WeatherType_PartlyCloudy,
         .tomorrow_high_temp = 70,
         .tomorrow_low_temp = 60,
-    }};
+    }
+};
 
 // Fake out watch_app_prefs calls
 void watch_app_prefs_destroy_weather(SerializedWeatherAppPrefs *prefs) {

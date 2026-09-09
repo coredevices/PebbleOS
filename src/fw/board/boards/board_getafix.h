@@ -49,13 +49,12 @@ static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
 
 static const BoardConfigMag BOARD_CONFIG_MAG = {
     // TODO(GETAFIX): Review if correct
-    .mag_config =
-        {
-            .axes_offsets[AXIS_X] = 1,
-            .axes_offsets[AXIS_Y] = 0,
-            .axes_offsets[AXIS_Z] = 2,
-            .axes_inverts[AXIS_X] = false,
-            .axes_inverts[AXIS_Y] = true,
-            .axes_inverts[AXIS_Z] = false,
-        },
+    .mag_config = {
+        .axes_offsets[AXIS_X] = 1,
+        .axes_offsets[AXIS_Y] = 0,
+        .axes_offsets[AXIS_Z] = 2,
+        .axes_inverts[AXIS_X] = false,
+        .axes_inverts[AXIS_Y] = true,
+        .axes_inverts[AXIS_Z] = false,
+    },
 };

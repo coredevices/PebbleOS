@@ -329,7 +329,8 @@ static void prv_handle_action(StationaryAction action) {
       [StationaryStateAwake] = prv_handle_awake_action,
       [StationaryStateStationary] = prv_handle_stationary_action,
       [StationaryStatePeeking] = prv_handle_peeking_action,
-      [StationaryStateDisabled] = prv_handle_disabled_action};
+      [StationaryStateDisabled] = prv_handle_disabled_action
+  };
   PBL_ASSERTN(s_current_state < ARRAY_LENGTH(prv_action_jump_table));
   prv_action_jump_table[s_current_state](action);
 }

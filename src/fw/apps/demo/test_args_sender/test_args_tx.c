@@ -29,9 +29,11 @@ static void s_main(void) {
 
 const PebbleProcessMd *test_args_sender_get_app_info() {
   static const PebbleProcessMdSystem test_args_sender_demo_app_info = {
-      .common.uuid = {0xD1, 0x7E, 0x41, 0xAF, 0x40, 0x5E, 0x40, 0x76, 0x82, 0xB5, 0x97, 0x71, 0x70,
-                      0x52, 0x66, 0xBA},
+      .common.uuid =
+          {0xD1, 0x7E, 0x41, 0xAF, 0x40, 0x5E, 0x40, 0x76, 0x82, 0xB5, 0x97, 0x71, 0x70, 0x52, 0x66,
+           0xBA},
       .common.main_func = s_main,
-      .name = "Args Sender Demo"};
+      .name = "Args Sender Demo"
+  };
   return (const PebbleProcessMd *)&test_args_sender_demo_app_info;
 }

@@ -28,11 +28,10 @@ static GBitmap dest_bitmap = {
     .info.is_bitmap_heap_allocated = false,
     .info.format = GBitmapFormat8Bit,
     .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds =
-        {
-            .size = {.w = DISP_COLS, .h = DISP_ROWS},
-            .origin = {0, 0},
-        },
+    .bounds = {
+        .size = {.w = DISP_COLS, .h = DISP_ROWS},
+        .origin = {0, 0},
+    },
 };
 
 // Utilities
@@ -132,11 +131,12 @@ void test_bitblt_palette__4Bit_assign(void) {
   const int ROW_STRIDE = (WIDTH + (PIXELS_PER_BYTE - 1)) / PIXELS_PER_BYTE;
 
   uint8_t s_data[ROW_STRIDE * HEIGHT];
-  GColor s_palette[1 << 4] = {
-      GColorMelon,         GColorIcterine,   GColorYellow, GColorSunsetOrange,
-      GColorScreaminGreen, GColorMagenta,    GColorOrange, GColorFolly,
-      GColorLimerick,      GColorPictonBlue, GColorPurple, GColorCadetBlue,
-      GColorMalachite,     GColorGreen,      GColorIndigo, GColorVividCerulean};
+  GColor s_palette[1 << 4] = {GColorMelon,        GColorIcterine,      GColorYellow,
+                              GColorSunsetOrange, GColorScreaminGreen, GColorMagenta,
+                              GColorOrange,       GColorFolly,         GColorLimerick,
+                              GColorPictonBlue,   GColorPurple,        GColorCadetBlue,
+                              GColorMalachite,    GColorGreen,         GColorIndigo,
+                              GColorVividCerulean};
   cl_assert(sizeof(s_palette) == (1 << BITS_PER_PIXEL));
   GBitmap s_bmp = (GBitmap){
       .addr = s_data,

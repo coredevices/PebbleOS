@@ -325,9 +325,11 @@ void test_gdraw_command__draw_precise_path(void) {
       .path_open = false,
       .num_points = 3,
   };
-  GPointPrecise points[] = {{.x.raw_value = 8, .y.raw_value = 17},
-                            {.x.raw_value = 4, .y.raw_value = 16},
-                            {.x.raw_value = 2, .y.raw_value = 7}};
+  GPointPrecise points[] = {
+      {.x.raw_value = 8, .y.raw_value = 17},
+      {.x.raw_value = 4, .y.raw_value = 16},
+      {.x.raw_value = 2, .y.raw_value = 7}
+  };
   memcpy(command->precise_points, points, sizeof(points));
   gdraw_command_draw(NULL, command);
 

@@ -154,35 +154,31 @@ typedef enum {
 #define APP_DISPLAY_NAME_MAX_LENGTH (200)
 
 static const FetchedAttribute s_fetched_notif_attributes[] = {
-    [FetchedNotifAttributeIndexAppID] = {.id = NotificationAttributeIDAppIdentifier,
-                                         .flags = 0,
-                                         .max_length = 0},
-    [FetchedNotifAttributeIndexTitle] = {.id = NotificationAttributeIDTitle,
-                                         .flags = 0,
-                                         .max_length = TITLE_MAX_LENGTH},
-    [FetchedNotifAttributeIndexSubtitle] = {.id = NotificationAttributeIDSubtitle,
-                                            .flags = 0,
-                                            .max_length = SUBTITLE_MAX_LENGTH},
-    [FetchedNotifAttributeIndexMessage] = {.id = NotificationAttributeIDMessage,
-                                           .flags = 0,
-                                           .max_length = MESSAGE_MAX_LENGTH},
+    [FetchedNotifAttributeIndexAppID] =
+        {.id = NotificationAttributeIDAppIdentifier, .flags = 0, .max_length = 0},
+    [FetchedNotifAttributeIndexTitle] =
+        {.id = NotificationAttributeIDTitle, .flags = 0, .max_length = TITLE_MAX_LENGTH},
+    [FetchedNotifAttributeIndexSubtitle] =
+        {.id = NotificationAttributeIDSubtitle, .flags = 0, .max_length = SUBTITLE_MAX_LENGTH},
+    [FetchedNotifAttributeIndexMessage] =
+        {.id = NotificationAttributeIDMessage, .flags = 0, .max_length = MESSAGE_MAX_LENGTH},
     [FetchedNotifAttributeIndexMessageSize] =
         {
             .id = NotificationAttributeIDMessageSize,
             .flags = FetchedAttributeFlagOptional,
             .max_length = 0,
         },
-    [FetchedNotifAttributeIndexDate] = {.id = NotificationAttributeIDDate,
-                                        .flags = 0,
-                                        .max_length = DATE_LENGTH},
+    [FetchedNotifAttributeIndexDate] =
+        {.id = NotificationAttributeIDDate, .flags = 0, .max_length = DATE_LENGTH},
     [FetchedNotifAttributeIndexPositiveActionLabel] =
         {.id = NotificationAttributeIDPositiveActionLabel,
          .flags = FetchedAttributeFlagOptional,
          .max_length = 0},
-    [FetchedNotifAttributeIndexNegativeActionLabel] =
-        {.id = NotificationAttributeIDNegativeActionLabel,
-         .flags = FetchedAttributeFlagOptional,
-         .max_length = 0},
+    [FetchedNotifAttributeIndexNegativeActionLabel] = {
+        .id = NotificationAttributeIDNegativeActionLabel,
+        .flags = FetchedAttributeFlagOptional,
+        .max_length = 0
+    },
 };
 
 #define NUM_FETCHED_NOTIF_ATTRIBUTES (ARRAY_LENGTH(s_fetched_notif_attributes))
@@ -192,10 +188,9 @@ typedef enum {
 } FetchedAppAttributeIndex;
 
 static const FetchedAttribute s_fetched_app_attributes[] = {
-    [FetchedAppAttributeIndexDisplayName] =
-        {
-            .id = AppAttributeIDDisplayName,
-        },
+    [FetchedAppAttributeIndexDisplayName] = {
+        .id = AppAttributeIDDisplayName,
+    },
 };
 
 #define NUM_FETCHED_APP_ATTRIBUTES (ARRAY_LENGTH(s_fetched_app_attributes))

@@ -206,14 +206,12 @@ static void prv_set_metric(ActivityMetric metric, DayInWeek wday, int32_t value,
     if (metric == ActivityMetricStepCount) {
       PebbleEvent e = {
           .type = PEBBLE_HEALTH_SERVICE_EVENT,
-          .health_event =
-              {
-                  .type = HealthEventMovementUpdate,
-                  .data.movement_update =
-                      {
-                          .steps = value,
-                      },
+          .health_event = {
+              .type = HealthEventMovementUpdate,
+              .data.movement_update = {
+                  .steps = value,
               },
+          },
       };
       event_put(&e);
     } else if (metric == ActivityMetricDistanceMeters) {
@@ -347,12 +345,16 @@ static void NOINLINE prv_update_step_derived_metrics(time_t utc_sec) {
 // Pushes an HR Median/Filtered/LastStable event.
 static void prv_push_median_hr_event(uint8_t median_hr) {
   if (median_hr > 0) {
-    PebbleEvent event = {.type = PEBBLE_HEALTH_SERVICE_EVENT,
-                         .health_event = {.type = HealthEventHeartRateUpdate,
-                                          .data.heart_rate_update = {
-                                              .current_bpm = median_hr,
-                                              .is_filtered = true,
-                                          }}};
+    PebbleEvent event = {
+        .type = PEBBLE_HEALTH_SERVICE_EVENT,
+        .health_event = {
+            .type = HealthEventHeartRateUpdate,
+            .data.heart_rate_update = {
+                .current_bpm = median_hr,
+                .is_filtered = true,
+            }
+        }
+    };
     event_put(&event);
   }
 }

@@ -129,12 +129,15 @@ static void s_main(void) {
 
 const PebbleProcessMd *sdk_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_md = {
-      .common = {.main_func = s_main,
-                 // UUID: 1197fc39-47e7-439b-82be-f56d9ba1dbd8
-                 .uuid = {0x11, 0x97, 0xfc, 0x39, 0x47, 0xe7, 0x43, 0x9b, 0x82, 0xbe, 0xf5, 0x6d,
-                          0x9b, 0xa1, 0xdb, 0xd8},
-                 .process_type = ProcessTypeWatchface},
+      .common =
+          {.main_func = s_main,
+           // UUID: 1197fc39-47e7-439b-82be-f56d9ba1dbd8
+           .uuid =
+               {0x11, 0x97, 0xfc, 0x39, 0x47, 0xe7, 0x43, 0x9b, 0x82, 0xbe, 0xf5, 0x6d, 0x9b, 0xa1,
+                0xdb, 0xd8},
+           .process_type = ProcessTypeWatchface},
       .icon_resource_id = RESOURCE_ID_MENU_ICON_TICTOC_WATCH,
-      .name = "TicToc"};
+      .name = "TicToc"
+  };
   return (const PebbleProcessMd *)&s_app_md;
 }

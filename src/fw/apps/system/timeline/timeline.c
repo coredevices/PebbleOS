@@ -1223,10 +1223,12 @@ static bool NOINLINE prv_setup_timeline_app(void) {
   Window *window = &data->timeline_window;
   window_init(window, WINDOW_NAME("Timeline"));
   window_set_user_data(window, data);
-  window_set_window_handlers(window, &(WindowHandlers){.load = prv_timeline_window_load,
-                                                       .appear = prv_timeline_window_appear,
-                                                       .disappear = prv_timeline_window_disappear,
-                                                       .unload = prv_timeline_window_unload});
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_timeline_window_load,
+                                         .appear = prv_timeline_window_appear,
+                                         .disappear = prv_timeline_window_disappear,
+                                         .unload = prv_timeline_window_unload
+                                     });
 
   return (launch_into_pin && !(args && args->stay_in_list_view));
 }

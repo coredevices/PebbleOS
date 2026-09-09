@@ -63,18 +63,16 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
 ///////////////////////////////////////////////////////////
 
 static const BTDeviceInternal s_device = {
-    .address =
-        {
-            .octets =
-                {
-                    1,
-                    2,
-                    3,
-                    4,
-                    5,
-                    6,
-                },
+    .address = {
+        .octets = {
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
         },
+    },
 };
 
 static uint32_t s_connection_id = 1;

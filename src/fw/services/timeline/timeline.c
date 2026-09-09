@@ -446,13 +446,15 @@ static void prv_prune_ordered_timeline_list(TimelineNode **head) {
 }
 
 static void prv_put_outgoing_call_event(uint32_t call_identifier, const char *caller_id) {
-  PebbleEvent event = {.type = PEBBLE_PHONE_EVENT,
-                       .phone = {
-                           .type = PhoneEventType_Outgoing,
-                           .source = PhoneCallSource_ANCS_Legacy,
-                           .call_identifier = call_identifier,
-                           .caller = phone_call_util_create_caller(caller_id, NULL),
-                       }};
+  PebbleEvent event = {
+      .type = PEBBLE_PHONE_EVENT,
+      .phone = {
+          .type = PhoneEventType_Outgoing,
+          .source = PhoneCallSource_ANCS_Legacy,
+          .call_identifier = call_identifier,
+          .caller = phone_call_util_create_caller(caller_id, NULL),
+      }
+  };
 
   event_put(&event);
 }

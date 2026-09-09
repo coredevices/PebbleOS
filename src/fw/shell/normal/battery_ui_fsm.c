@@ -58,28 +58,36 @@ static void prv_dismiss_fully_charged(void);
 static void prv_shutdown(void *ignored);
 
 static const BatteryUIState ui_states[] = {
-    [BatteryGood] = {.next_state = {BatteryWarning, BatteryLowPower, BatteryCritical,
-                                    BatteryCharging, BatteryFullyCharged}},
-    [BatteryWarning] = {.enter = prv_display_warning,
-                        .exit = prv_dismiss_warning,
-                        .next_state = {BatteryGood, BatteryWarning, BatteryLowPower,
-                                       BatteryCharging}},
-    [BatteryLowPower] = {.enter = prv_enter_low_power,
-                         .exit = prv_exit_low_power,
-                         .next_state = {BatteryWarning, BatteryCritical, BatteryCharging}},
-    [BatteryCritical] = {.enter = prv_enter_critical,
-                         .exit = prv_exit_critical,
-                         .next_state = {BatteryLowPower, BatteryCharging}},
-    [BatteryCharging] = {.enter = prv_display_plugged,
-                         .exit = prv_dismiss_plugged,
-                         .next_state = {BatteryGood, BatteryWarning, BatteryLowPower,
-                                        BatteryCritical, BatteryFullyCharged,
-                                        BatteryShutdownCharging}},
-    [BatteryFullyCharged] = {.enter = prv_display_fully_charged,
-                             .exit = prv_dismiss_fully_charged,
-                             .next_state = {BatteryGood, BatteryWarning, BatteryLowPower,
-                                            BatteryCritical, BatteryShutdownCharging}},
-    [BatteryShutdownCharging] = {.enter = prv_shutdown}};
+    [BatteryGood] =
+        {.next_state =
+             {BatteryWarning, BatteryLowPower, BatteryCritical, BatteryCharging,
+              BatteryFullyCharged}},
+    [BatteryWarning] =
+        {.enter = prv_display_warning,
+         .exit = prv_dismiss_warning,
+         .next_state = {BatteryGood, BatteryWarning, BatteryLowPower, BatteryCharging}},
+    [BatteryLowPower] =
+        {.enter = prv_enter_low_power,
+         .exit = prv_exit_low_power,
+         .next_state = {BatteryWarning, BatteryCritical, BatteryCharging}},
+    [BatteryCritical] =
+        {.enter = prv_enter_critical,
+         .exit = prv_exit_critical,
+         .next_state = {BatteryLowPower, BatteryCharging}},
+    [BatteryCharging] =
+        {.enter = prv_display_plugged,
+         .exit = prv_dismiss_plugged,
+         .next_state =
+             {BatteryGood, BatteryWarning, BatteryLowPower, BatteryCritical, BatteryFullyCharged,
+              BatteryShutdownCharging}},
+    [BatteryFullyCharged] =
+        {.enter = prv_display_fully_charged,
+         .exit = prv_dismiss_fully_charged,
+         .next_state =
+             {BatteryGood, BatteryWarning, BatteryLowPower, BatteryCritical,
+              BatteryShutdownCharging}},
+    [BatteryShutdownCharging] = {.enter = prv_shutdown}
+};
 
 static BatteryUIStateID s_state = BatteryGood;
 static BatteryUIWarningLevel s_warning_points_index = -1;

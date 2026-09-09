@@ -53,11 +53,10 @@ CommSession *s_session;
 #define assert_ack(ack)                                                    \
   fake_comm_session_process_send_next();                                   \
   const AppMessageAck ack_message = {                                      \
-      .header =                                                            \
-          {                                                                \
-              .command = ack ? CMD_ACK : CMD_NACK,                         \
-              .transaction_id = TRANSACTION_ID,                            \
-          },                                                               \
+      .header = {                                                          \
+          .command = ack ? CMD_ACK : CMD_NACK,                             \
+          .transaction_id = TRANSACTION_ID,                                \
+      },                                                                   \
   };                                                                       \
   fake_transport_assert_sent(s_transport, 0, LAUNCHER_MESSAGE_ENDPOINT_ID, \
                              (const uint8_t *)&ack_message, sizeof(ack_message));
@@ -155,11 +154,10 @@ void test_launcher_app_message__receive_push_fetch_request(void) {
 
 void test_launcher_app_message__ignore_acks(void) {
   const AppMessageAck ack_message = {
-      .header =
-          {
-              .command = CMD_ACK,
-              .transaction_id = TRANSACTION_ID,
-          },
+      .header = {
+          .command = CMD_ACK,
+          .transaction_id = TRANSACTION_ID,
+      },
   };
   launcher_app_message_protocol_msg_callback_deprecated(s_session, (const uint8_t *)&ack_message,
                                                         sizeof(ack_message));

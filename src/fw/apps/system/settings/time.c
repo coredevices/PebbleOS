@@ -263,12 +263,11 @@ static void prv_time_picker_push(SettingsTimeData *data) {
       .label = i18n_noop("Set Time"),
       .color = PBL_IF_COLOR_ELSE(GColorJaegerGreen, GColorBlack),
       .range = {.update = true, .enabled = false},
-      .callback =
-          {
-              .update = true,
-              .complete = prv_time_picker_complete,
-              .context = data,
-          },
+      .callback = {
+          .update = true,
+          .complete = prv_time_picker_complete,
+          .context = data,
+      },
   };
   time_selection_window_init(picker, &config);
   time_selection_window_set_to_current_time(picker);

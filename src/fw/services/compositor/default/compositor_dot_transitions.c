@@ -281,7 +281,8 @@ static void prv_configure_dot_transition_animation(Animation *animation, GColor 
       .collapse_dot_color = collapse_dot_color,
       .final_dot_color = final_dot_color,
       .background_color = background_color,
-      .direction = direction};
+      .direction = direction
+  };
 
   animation_set_curve(animation, AnimationCurveLinear);
   animation_set_duration(animation, duration);

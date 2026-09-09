@@ -43,9 +43,9 @@ static void prv_send_bytes(void *p, uint32_t size) {
 
 // ------------------------------------------------------------------------------------
 static void prv_send_hdr(uint16_t protocol, uint16_t data_len) {
-  QemuCommChannelHdr hdr = (QemuCommChannelHdr){.signature = htons(QEMU_HEADER_SIGNATURE),
-                                                .protocol = htons(protocol),
-                                                .len = htons(data_len)};
+  QemuCommChannelHdr hdr = (QemuCommChannelHdr){
+      .signature = htons(QEMU_HEADER_SIGNATURE), .protocol = htons(protocol), .len = htons(data_len)
+  };
   prv_send_bytes(&hdr, sizeof(hdr));
 }
 

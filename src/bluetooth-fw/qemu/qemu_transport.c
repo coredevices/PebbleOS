@@ -140,9 +140,12 @@ void qemu_transport_set_connected(bool is_connected) {
       PebbleEvent e = {
           .type = PEBBLE_BT_CONNECTION_EVENT,
           .bluetooth = {
-              .connection = {.state = (s_transport.session)
-                                          ? PebbleBluetoothConnectionEventStateConnected
-                                          : PebbleBluetoothConnectionEventStateDisconnected}}};
+              .connection = {
+                  .state = (s_transport.session) ? PebbleBluetoothConnectionEventStateConnected
+                                                 : PebbleBluetoothConnectionEventStateDisconnected
+              }
+          }
+      };
       event_put(&e);
     }
 
@@ -176,7 +179,8 @@ void qemu_transport_close_session() {
 
   PebbleEvent e = {
       .type = PEBBLE_BT_CONNECTION_EVENT,
-      .bluetooth = {.connection = {.state = PebbleBluetoothConnectionEventStateDisconnected}}};
+      .bluetooth = {.connection = {.state = PebbleBluetoothConnectionEventStateDisconnected}}
+  };
   event_put(&e);
 
   bt_unlock();

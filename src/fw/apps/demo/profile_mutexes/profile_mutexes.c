@@ -47,7 +47,8 @@ static void s_main(void) {
 }
 
 const PebbleProcessMd *profile_mutexes_get_app_info(void) {
-  static const PebbleProcessMdSystem s_app_info = {.common.main_func = &s_main,
-                                                   .name = "Profile Mutexes"};
+  static const PebbleProcessMdSystem s_app_info = {
+      .common.main_func = &s_main, .name = "Profile Mutexes"
+  };
   return (const PebbleProcessMd *)&s_app_info;
 }

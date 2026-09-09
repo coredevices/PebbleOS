@@ -47,10 +47,12 @@ static status_t memory_domain_close(void *context) {
   return S_SUCCESS;
 }
 
-PulseBulkIODomainHandler pulse_bulkio_domain_memory = {.id = PulseBulkIODomainType_Memory,
-                                                       .open_proc = memory_domain_open,
-                                                       .close_proc = memory_domain_close,
-                                                       .read_proc = memory_domain_read,
-                                                       .write_proc = memory_domain_write,
-                                                       .stat_proc = memory_domain_stat,
-                                                       .erase_proc = memory_domain_erase};
+PulseBulkIODomainHandler pulse_bulkio_domain_memory = {
+    .id = PulseBulkIODomainType_Memory,
+    .open_proc = memory_domain_open,
+    .close_proc = memory_domain_close,
+    .read_proc = memory_domain_read,
+    .write_proc = memory_domain_write,
+    .stat_proc = memory_domain_stat,
+    .erase_proc = memory_domain_erase
+};

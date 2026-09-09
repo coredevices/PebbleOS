@@ -74,10 +74,12 @@ static void prv_sub_event_handler(const Recognizer *recognizer, RecognizerEvent 
 }
 
 Recognizer *test_recognizer_create(TestImplData *test_impl_data, void *user_data) {
-  s_test_impl = (RecognizerImpl){.handle_touch_event = prv_handle_touch_event,
-                                 .cancel = prv_cancel,
-                                 .reset = prv_reset,
-                                 .on_fail = prv_on_fail};
+  s_test_impl = (RecognizerImpl){
+      .handle_touch_event = prv_handle_touch_event,
+      .cancel = prv_cancel,
+      .reset = prv_reset,
+      .on_fail = prv_on_fail
+  };
   test_impl_data->test = TEST_PATTERN;
   return recognizer_create_with_data(&s_test_impl, test_impl_data, sizeof(*test_impl_data),
                                      prv_sub_event_handler, user_data);

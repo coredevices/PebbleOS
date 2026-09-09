@@ -224,7 +224,8 @@ static void prv_bg_animation_stopped_handler(Animation *animation, bool finished
 }
 
 static const AnimationImplementation prv_bg_animation_implementation = {
-    .update = &prv_bg_animation_update};
+    .update = &prv_bg_animation_update
+};
 
 static int64_t prv_interpolate_moook_soft(int32_t normalized, int64_t from, int64_t to) {
   return interpolate_moook_soft(normalized, from, to, NUM_MID_FRAMES);

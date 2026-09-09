@@ -53,7 +53,8 @@ static const struct ble_gatt_svc_def gatt_svr_svcs[] = {
                 },
                 {
                     0, /* No more characteristics in this service */
-                }},
+                }
+            },
     },
     {
         0, /* No more services */

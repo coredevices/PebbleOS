@@ -61,21 +61,23 @@ static void prv_create_reminder(ReminderAppData *data) {
   const int num_actions = 3;
   TimelineItemActionGroup action_group = {
       .num_actions = num_actions,
-      .actions = (TimelineItemAction[]){{
-                                            .id = 0,
-                                            .type = TimelineItemActionTypeComplete,
-                                            .attr_list = completed_attr_list,
-                                        },
-                                        {
-                                            .id = 1,
-                                            .type = TimelineItemActionTypePostpone,
-                                            .attr_list = postpone_attr_list,
-                                        },
-                                        {
-                                            .id = 2,
-                                            .type = TimelineItemActionTypeRemoteRemove,
-                                            .attr_list = remove_attr_list,
-                                        }},
+      .actions = (TimelineItemAction[]){
+          {
+              .id = 0,
+              .type = TimelineItemActionTypeComplete,
+              .attr_list = completed_attr_list,
+          },
+          {
+              .id = 1,
+              .type = TimelineItemActionTypePostpone,
+              .attr_list = postpone_attr_list,
+          },
+          {
+              .id = 2,
+              .type = TimelineItemActionTypeRemoteRemove,
+              .attr_list = remove_attr_list,
+          }
+      },
   };
 
   TimelineItem *item = timeline_item_create_with_attributes(data->timestamp,

@@ -349,7 +349,8 @@ static bool prv_list_owner_filter_callback(ListNode *found_node, void *owner) {
 // Not static because we call this from unit test code
 I18nString *prv_list_find_string(const char *string, const void *owner) {
   StringLookupInfo lookup_info = {
-      .string = string, .hash = prv_gettext_hash(string), .owner = owner};
+      .string = string, .hash = prv_gettext_hash(string), .owner = owner
+  };
   return (I18nString *)list_find((ListNode *)s_system_domain.strings_list,
                                  prv_list_string_filter_callback, (void *)&lookup_info);
 }

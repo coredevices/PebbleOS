@@ -364,9 +364,11 @@ static void prv_window_load(Window *window) {
       {.title = "RT: sch 1 min from cb", .callback = reg_timer_schedule_1min_from_cb_menu_cb},
       {.title = "RT: delete from cb", .callback = reg_timer_delete_from_cb_menu_cb},
       {.title = "RT: delete+add from cb", .callback = reg_timer_delete_then_add_from_cb_menu_cb},
-      {.title = "croak", .callback = croak_menu_cb}};
+      {.title = "croak", .callback = croak_menu_cb}
+  };
   static const SimpleMenuSection sections[] = {
-      {.items = menu_items, .num_items = ARRAY_LENGTH(menu_items)}};
+      {.items = menu_items, .num_items = ARRAY_LENGTH(menu_items)}
+  };
 
   Layer *window_layer = window_get_root_layer(data->window);
   GRect bounds = window_layer->bounds;
@@ -413,7 +415,8 @@ static void s_main(void) {
 
 // =================================================================================
 const PebbleProcessMd *test_sys_timer_app_get_info() {
-  static const PebbleProcessMdSystem s_app_info = {.common.main_func = &s_main,
-                                                   .name = "System Timer Test"};
+  static const PebbleProcessMdSystem s_app_info = {
+      .common.main_func = &s_main, .name = "System Timer Test"
+  };
   return (const PebbleProcessMd *)&s_app_info;
 }

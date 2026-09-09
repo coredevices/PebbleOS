@@ -37,11 +37,13 @@ static int framebuffer_domain_write(uint8_t *buf, uint32_t address, uint32_t len
 
 static int framebuffer_domain_stat(uint8_t *resp, size_t resp_max_len, void *context) {
   FramebufferStatResp *stat_resp = (FramebufferStatResp *)resp;
-  *stat_resp = (FramebufferStatResp){.flags = 0,
-                                     .length = FRAMEBUFFER_SIZE_BYTES,
-                                     .width = DISP_COLS,
-                                     .height = DISP_ROWS,
-                                     .bpp = CONFIG_SCREEN_COLOR_DEPTH_BITS};
+  *stat_resp = (FramebufferStatResp){
+      .flags = 0,
+      .length = FRAMEBUFFER_SIZE_BYTES,
+      .width = DISP_COLS,
+      .height = DISP_ROWS,
+      .bpp = CONFIG_SCREEN_COLOR_DEPTH_BITS
+  };
 
   return sizeof(FramebufferStatResp);
 }
@@ -70,10 +72,12 @@ static status_t framebuffer_domain_close(void *data) {
   return S_SUCCESS;
 }
 
-PulseBulkIODomainHandler pulse_bulkio_domain_framebuffer = {.id = PulseBulkIODomainType_Framebuffer,
-                                                            .open_proc = framebuffer_domain_open,
-                                                            .close_proc = framebuffer_domain_close,
-                                                            .read_proc = framebuffer_domain_read,
-                                                            .write_proc = framebuffer_domain_write,
-                                                            .stat_proc = framebuffer_domain_stat,
-                                                            .erase_proc = framebuffer_domain_erase};
+PulseBulkIODomainHandler pulse_bulkio_domain_framebuffer = {
+    .id = PulseBulkIODomainType_Framebuffer,
+    .open_proc = framebuffer_domain_open,
+    .close_proc = framebuffer_domain_close,
+    .read_proc = framebuffer_domain_read,
+    .write_proc = framebuffer_domain_write,
+    .stat_proc = framebuffer_domain_stat,
+    .erase_proc = framebuffer_domain_erase
+};

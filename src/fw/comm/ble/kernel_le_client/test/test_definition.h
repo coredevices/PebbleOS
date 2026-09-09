@@ -39,25 +39,24 @@ static const Uuid s_test_characteristic_uuids[TestCharacteristicCount] = {
             0x01,
         },
 
-    [TestCharacteristic_Two] =
-        {
-            0x02,
-            0x02,
-            0x02,
-            0x02,
-            0x02,
-            0x02,
-            0x02,
-            0x02,
-            0x02,
-            0x02,
-            0x02,
-            0x02,
-            0x02,
-            0x02,
-            0x02,
-            0x02,
-        },
+    [TestCharacteristic_Two] = {
+        0x02,
+        0x02,
+        0x02,
+        0x02,
+        0x02,
+        0x02,
+        0x02,
+        0x02,
+        0x02,
+        0x02,
+        0x02,
+        0x02,
+        0x02,
+        0x02,
+        0x02,
+        0x02,
+    },
 };
 
 void test_client_handle_service_discovered(BLECharacteristic *characteristics);

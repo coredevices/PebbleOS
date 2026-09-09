@@ -356,8 +356,10 @@ GBitmap *gbitmap_create_palettized_from_1bit(const GBitmap *src_bitmap) {
     // This eliminates edge cases where the bounds may start within a byte,
     // and not enough space would be allocated. This allows us to do all copying
     // from { 0, 0 } and simplifies copy.
-    GSize size = (GSize){.w = src_bitmap->bounds.size.w + src_bitmap->bounds.origin.x,
-                         .h = src_bitmap->bounds.size.h + src_bitmap->bounds.origin.y};
+    GSize size = (GSize){
+        .w = src_bitmap->bounds.size.w + src_bitmap->bounds.origin.x,
+        .h = src_bitmap->bounds.size.h + src_bitmap->bounds.origin.y
+    };
     bitmap = gbitmap_create_blank(size, GBitmapFormat1BitPalette);
     if (bitmap) {
       // Perform conversion

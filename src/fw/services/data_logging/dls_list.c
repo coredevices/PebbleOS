@@ -77,9 +77,10 @@ static void prv_free_storage_buffer(DataLoggingSession *session) {
     // is unsafe to free it from here in privileged mode because a corrupted heap could crash the
     // watch. We will post a callback event to the process's event handler which is executed
     // in unprivileged mode.
-    PebbleEvent e = {.type = PEBBLE_CALLBACK_EVENT,
-                     .callback = {.callback = prv_free_storage_buffer_cb,
-                                  .data = session->data->buffer_storage}};
+    PebbleEvent e = {
+        .type = PEBBLE_CALLBACK_EVENT,
+        .callback = {.callback = prv_free_storage_buffer_cb, .data = session->data->buffer_storage}
+    };
     PebbleTask task = pebble_task_get_current();
     process_manager_send_event_to_process(task, &e);
   }
@@ -269,14 +270,16 @@ DataLoggingSession *dls_list_create_session(uint32_t tag, DataLoggingItemType ty
 
   DataLoggingSession *logging_session = kernel_malloc_check(sizeof(DataLoggingSession));
 
-  *logging_session = (DataLoggingSession){.status = status,
-                                          .app_uuid = *app_uuid,
-                                          .tag = tag,
-                                          .task = pebble_task_get_current(),
-                                          .item_type = type,
-                                          .item_size = size,
-                                          .session_created_timestamp = timestamp,
-                                          .storage.fd = DLS_INVALID_FILE};
+  *logging_session = (DataLoggingSession){
+      .status = status,
+      .app_uuid = *app_uuid,
+      .tag = tag,
+      .task = pebble_task_get_current(),
+      .item_type = type,
+      .item_size = size,
+      .session_created_timestamp = timestamp,
+      .storage.fd = DLS_INVALID_FILE
+  };
 
   if (status == DataLoggingStatusActive) {
     DataLoggingActiveState *active_state = kernel_malloc_check(sizeof(DataLoggingActiveState));

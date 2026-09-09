@@ -252,12 +252,13 @@ static void prv_clear_handler_histories(void) {
 static void prv_add_handler_entry(AnimTestHandlerHistory *history, Animation *animation,
                                   bool finished, void *context) {
   cl_assert(history->num_calls < MAX_HANDLER_CALLS);
-  history->entries[history->num_calls++] =
-      (AnimTestHandlerEntry){.fired_time_ms = prv_now_ms(),
-                             .fire_order = s_fire_order_index++,
-                             .finished = finished,
-                             .context = context,
-                             .animation = animation};
+  history->entries[history->num_calls++] = (AnimTestHandlerEntry){
+      .fired_time_ms = prv_now_ms(),
+      .fire_order = s_fire_order_index++,
+      .finished = finished,
+      .context = context,
+      .animation = animation
+  };
 }
 
 // -------------------------------------------------------------------------
@@ -458,11 +459,13 @@ static uint32_t prv_uint32_getter(uint32_t *p) {
 static Animation *prv_create_test_animation(void) {
   Animation *h;
 
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler
+  };
 
   static const AnimationImplementation implementation = {
-      .setup = prv_setup_handler, .update = prv_update_handler, .teardown = prv_teardown_handler};
+      .setup = prv_setup_handler, .update = prv_update_handler, .teardown = prv_teardown_handler
+  };
 
   h = animation_create();
   cl_assert(h != NULL);
@@ -509,8 +512,9 @@ void test_animation__property_layer_frame(void) {
   GRect r;
   void *subject;
 
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler
+  };
 
   memset(&layer, 0, sizeof(layer));
   from_r = GRect(0, 0, 100, 200);      // x, y, width, height
@@ -612,21 +616,22 @@ void test_animation__property_int16(void) {
   const int duration = 200;
   const int delay = 25;
 
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler
+  };
 
   static const PropertyAnimationImplementation implementation = {
-      .base = {.setup = prv_setup_handler,
-               .update = (AnimationUpdateImplementation)property_animation_update_int16,
-               .teardown = prv_teardown_handler},
-      .accessors =
-          {
-              .setter =
-                  {
-                      .int16 = (const Int16Setter)prv_int16_setter,
-                  },
-              .getter = {.int16 = (const Int16Getter)prv_int16_getter},
-          },
+      .base =
+          {.setup = prv_setup_handler,
+           .update = (AnimationUpdateImplementation)property_animation_update_int16,
+           .teardown = prv_teardown_handler},
+      .accessors = {
+          .setter =
+              {
+                  .int16 = (const Int16Setter)prv_int16_setter,
+              },
+          .getter = {.int16 = (const Int16Getter)prv_int16_getter},
+      },
   };
 
   prop_h = property_animation_create(&implementation, &value, &start_value, &end_value);
@@ -717,22 +722,22 @@ void test_animation__property_gpoint(void) {
   const int duration = 200;
   const int delay = 25;
 
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler
+  };
 
   static const PropertyAnimationImplementation implementation = {
       .base =
           {
               .update = (AnimationUpdateImplementation)property_animation_update_gpoint,
           },
-      .accessors =
-          {
-              .setter =
-                  {
-                      .gpoint = (const GPointSetter)prv_gpoint_setter,
-                  },
-              .getter = {.gpoint = (const GPointGetter)prv_gpoint_getter},
-          },
+      .accessors = {
+          .setter =
+              {
+                  .gpoint = (const GPointSetter)prv_gpoint_setter,
+              },
+          .getter = {.gpoint = (const GPointGetter)prv_gpoint_getter},
+      },
   };
 
   start_value = GPoint(0, 0);
@@ -800,8 +805,9 @@ void test_animation__property_gtransform(void) {
   GTransform start_value, end_value, mid_value;
   const int duration = 1000;
 
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler
+  };
 
   // NOTE: We are not exposing the GTransform in the public SDK, so the setter and getter
   // must be typecast
@@ -810,14 +816,13 @@ void test_animation__property_gtransform(void) {
           {
               .update = (AnimationUpdateImplementation)property_animation_update_gtransform,
           },
-      .accessors =
-          {
-              .setter =
-                  {
-                      .int16 = (const Int16Setter)prv_gtransform_setter,
-                  },
-              .getter = {.int16 = (const Int16Getter)prv_gtransform_getter},
-          },
+      .accessors = {
+          .setter =
+              {
+                  .int16 = (const Int16Setter)prv_gtransform_setter,
+              },
+          .getter = {.int16 = (const Int16Getter)prv_gtransform_getter},
+      },
   };
 
   start_value = GTransformFromNumbers(1, 2, 3, 4, 5, 6);
@@ -873,8 +878,9 @@ void test_animation__property_fixed_s32_16(void) {
   Fixed_S32_16 start_value, end_value, mid_value;
   const int duration = 1000;
 
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler
+  };
 
   // NOTE: We are not exposing the GTransform in the public SDK, so the setter and getter
   // must be typecast
@@ -883,11 +889,10 @@ void test_animation__property_fixed_s32_16(void) {
           {
               .update = (AnimationUpdateImplementation)property_animation_update_fixed_s32_16,
           },
-      .accessors =
-          {
-              .setter = {.int16 = (const Int16Setter)prv_fixed_s32_16_setter},
-              .getter = {.int16 = (const Int16Getter)prv_fixed_s32_16_getter},
-          },
+      .accessors = {
+          .setter = {.int16 = (const Int16Setter)prv_fixed_s32_16_setter},
+          .getter = {.int16 = (const Int16Getter)prv_fixed_s32_16_getter},
+      },
   };
 
   start_value = ((Fixed_S32_16){.integer = 1, .fraction = 0});
@@ -943,8 +948,9 @@ void test_animation__property_uint32(void) {
   uint32_t start_value, end_value, mid_value;
   const int duration = 1000;
 
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler
+  };
 
   // NOTE: We are not exposing the GTransform in the public SDK, so the setter and getter
   // must be typecast
@@ -953,11 +959,10 @@ void test_animation__property_uint32(void) {
           {
               .update = (AnimationUpdateImplementation)property_animation_update_uint32,
           },
-      .accessors =
-          {
-              .setter = {.uint32 = (const UInt32Setter)prv_uint32_setter},
-              .getter = {.uint32 = (const UInt32Getter)prv_uint32_getter},
-          },
+      .accessors = {
+          .setter = {.uint32 = (const UInt32Setter)prv_uint32_setter},
+          .getter = {.uint32 = (const UInt32Getter)prv_uint32_getter},
+      },
   };
 
   start_value = 1;
@@ -1012,22 +1017,22 @@ void test_animation__property_gcolor8(void) {
   GColor8 start_value, end_value, mid_value;
   const int duration = 1000;
 
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler
+  };
 
   static const PropertyAnimationImplementation implementation = {
       .base =
           {
               .update = (AnimationUpdateImplementation)property_animation_update_gcolor8,
           },
-      .accessors =
-          {
-              .setter =
-                  {
-                      .gcolor8 = (const GColor8Setter)prv_gcolor8_setter,
-                  },
-              .getter = {.gcolor8 = (const GColor8Getter)prv_gcolor8_getter},
-          },
+      .accessors = {
+          .setter =
+              {
+                  .gcolor8 = (const GColor8Setter)prv_gcolor8_setter,
+              },
+          .getter = {.gcolor8 = (const GColor8Getter)prv_gcolor8_getter},
+      },
   };
 
   start_value = (GColor8){.a = 0, .r = 0, .g = 0, .b = 0};
@@ -1085,8 +1090,9 @@ void test_animation__unschedule(void) {
   GRect stopped_at_r;
   const int duration = 500;
 
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler
+  };
 
   memset(&layer, 0, sizeof(layer));
   from_r = GRect(0, 0, 100, 200);      // x, y, width, height
@@ -1149,8 +1155,9 @@ void test_animation__reschedule(void) {
   GRect to_r;
   const int duration = 100;
 
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler
+  };
 
   memset(&layer, 0, sizeof(layer));
   from_r = GRect(0, 0, 100, 200);      // x, y, width, height
@@ -1224,8 +1231,9 @@ void test_animation__reschedule_from_stopped_handler(void) {
   GRect to_r;
   const int duration = 100;
 
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler_reschedule};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler_reschedule
+  };
 
   memset(&layer, 0, sizeof(layer));
   from_r = GRect(0, 0, 100, 200);      // x, y, width, height
@@ -1283,8 +1291,9 @@ void test_animation__auto_destroy(void) {
   GRect to_r;
   const int duration = 100;
 
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler
+  };
 
   memset(&layer, 0, sizeof(layer));
   from_r = GRect(0, 0, 100, 200);      // x, y, width, height
@@ -1332,8 +1341,9 @@ void test_animation__auto_destroy_reschedule(void) {
   GRect to_r;
   const int duration = 100;
 
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler_reschedule};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler_reschedule
+  };
 
   memset(&layer, 0, sizeof(layer));
   from_r = GRect(0, 0, 100, 200);      // x, y, width, height
@@ -1399,11 +1409,13 @@ static void prv_test_destroy_from_stopped_handler(bool auto_destroy) {
   Animation *h;
   const int duration = 100;
 
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler_destroy};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler_destroy
+  };
 
   static const AnimationImplementation implementation = {
-      .setup = prv_setup_handler, .update = prv_update_handler, .teardown = prv_teardown_handler};
+      .setup = prv_setup_handler, .update = prv_update_handler, .teardown = prv_teardown_handler
+  };
 
   h = animation_create();
   cl_assert(h != NULL);
@@ -1464,8 +1476,9 @@ void test_animation__unschedule_from_stopped_handler(void) {
   Animation *h;
   const int duration = 100;
 
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler_unschedule};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler_unschedule
+  };
 
   Animation *a = prv_create_test_animation();
   animation_set_duration(a, duration);
@@ -1567,8 +1580,9 @@ void test_animation__simple_sequence(void) {
   cl_assert(seq != NULL);
 
   // Setup started/stopped handlers for the sequence
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler
+  };
   animation_set_handlers(seq, handlers, seq);
 
   prv_clear_handler_histories();
@@ -1675,8 +1689,9 @@ void test_animation__sequence_unschedule_from_child(void) {
 
   // Create a sequence
   Animation *seq = animation_sequence_create(a, b, NULL);
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler
+  };
   animation_set_handlers(seq, handlers, seq);
   s_parent_for_sequence_unschedule_from_child = seq;
 
@@ -1708,8 +1723,9 @@ void test_animation__simple_sequence_set_elapsed(void) {
   const int play_count_b = 2;
   int duration_total = duration_a + play_count_b * duration_b;
 
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler
+  };
 
   // Create 2 property animations
   Animation *a = prv_create_test_animation();
@@ -2095,8 +2111,9 @@ static void prv_test_sequence_of_spawns(int create_order[4]) {
   const int duration_a = 150;
   const int duration_total = 2 * duration_a;
 
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler
+  };
 
   // Simulate some delay incurred on every call to rtc_get_ticks()
   fake_rtc_auto_increment_ticks(3);
@@ -2585,8 +2602,9 @@ void test_animation__nested_sequence_with_0_play_count(void) {
   const int duration_d = 400;
   const int total_duration = duration_c + duration_d;
 
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler
+  };
 
   // Create the inner sequence with a play count of 0
   Animation *a = prv_create_test_animation();
@@ -2910,21 +2928,22 @@ void test_animation__accessors(void) {
   const int duration = 200;
   const int delay = 25;
 
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler
+  };
 
   static const PropertyAnimationImplementation implementation = {
-      .base = {.setup = prv_setup_handler,
-               .update = (AnimationUpdateImplementation)property_animation_update_int16,
-               .teardown = prv_teardown_handler},
-      .accessors =
-          {
-              .setter =
-                  {
-                      .int16 = (const Int16Setter)prv_int16_setter,
-                  },
-              .getter = {.int16 = (const Int16Getter)prv_int16_getter},
-          },
+      .base =
+          {.setup = prv_setup_handler,
+           .update = (AnimationUpdateImplementation)property_animation_update_int16,
+           .teardown = prv_teardown_handler},
+      .accessors = {
+          .setter =
+              {
+                  .int16 = (const Int16Setter)prv_int16_setter,
+              },
+          .getter = {.int16 = (const Int16Getter)prv_int16_getter},
+      },
   };
 
   prop_h = property_animation_create(&implementation, &value, &start_value, &end_value);
@@ -2964,17 +2983,17 @@ void test_animation__accessors(void) {
   cl_assert(animation_get_curve(h) == AnimationCurveEaseOut);
 
   static const PropertyAnimationImplementation implementation2 = {
-      .base = {.setup = prv_setup_handler,
-               .update = (AnimationUpdateImplementation)property_animation_update_gpoint,
-               .teardown = prv_teardown_handler},
-      .accessors =
-          {
-              .setter =
-                  {
-                      .int16 = (const Int16Setter)prv_gpoint_setter,
-                  },
-              .getter = {.int16 = (const Int16Getter)prv_gpoint_getter},
-          },
+      .base =
+          {.setup = prv_setup_handler,
+           .update = (AnimationUpdateImplementation)property_animation_update_gpoint,
+           .teardown = prv_teardown_handler},
+      .accessors = {
+          .setter =
+              {
+                  .int16 = (const Int16Setter)prv_gpoint_setter,
+              },
+          .getter = {.int16 = (const Int16Getter)prv_gpoint_getter},
+      },
   };
 
   // Implementation
@@ -3023,8 +3042,9 @@ void test_animation__completed(void) {
   // Create 1 property animations
   Animation *a = prv_create_test_animation();
 
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler_check_finished};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler_check_finished
+  };
   animation_set_handlers(a, handlers, animation_get_context(a));
   animation_set_duration(a, duration_a);
 
@@ -3061,8 +3081,9 @@ void test_animation__sequence_of_already_scheduled_started(void) {
   const int leftover_seq = 40;
   const int delay_seq = 30;
 
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler
+  };
 
   prv_clear_handler_histories();
   uint64_t start_ms = prv_now_ms();
@@ -3158,8 +3179,9 @@ void test_animation__sequence_of_already_scheduled_not_started(void) {
   const int delay_b = 20;
   const int leftover_seq = 50;
 
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler
+  };
 
   prv_clear_handler_histories();
 
@@ -3239,8 +3261,9 @@ void test_animation__sequence_of_already_completed(void) {
 
   const int delay_seq = 30;
 
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler
+  };
 
   prv_clear_handler_histories();
   uint64_t start_ms = prv_now_ms();
@@ -3320,8 +3343,9 @@ void test_animation__spawn_of_already_scheduled(void) {
 
   const int delay_spawn = 170;
 
-  const AnimationHandlers handlers = {.started = prv_started_handler,
-                                      .stopped = prv_stopped_handler};
+  const AnimationHandlers handlers = {
+      .started = prv_started_handler, .stopped = prv_stopped_handler
+  };
 
   prv_clear_handler_histories();
   uint64_t start_ms = prv_now_ms();
@@ -3416,7 +3440,8 @@ static void prv_unschedule_all_in_update_handler(bool auto_destroy) {
   static const AnimationImplementation implementation = {
       .setup = prv_setup_handler,
       .update = prv_update_unschedule_all_handler,
-      .teardown = prv_teardown_handler};
+      .teardown = prv_teardown_handler
+  };
 
   Animation *a = prv_create_test_animation();
   animation_set_duration(a, duration_a);

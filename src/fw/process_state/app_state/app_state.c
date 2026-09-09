@@ -164,13 +164,14 @@ bool app_state_configure(MemorySegment *app_state_ram, ProcessAppSDKType sdk_typ
       return false;
     }
 
-    *s_app_state_ptr->legacy2_framebuffer =
-        (GBitmap){.addr = fb_data,
-                  .row_size_bytes = row_size,
-                  .info.is_bitmap_heap_allocated = false,
-                  .info.format = GBitmapFormat1Bit,
-                  .info.version = GBITMAP_VERSION_0,
-                  .bounds = {{0, 0}, {LEGACY_2X_DISP_COLS, LEGACY_2X_DISP_ROWS}}};
+    *s_app_state_ptr->legacy2_framebuffer = (GBitmap){
+        .addr = fb_data,
+        .row_size_bytes = row_size,
+        .info.is_bitmap_heap_allocated = false,
+        .info.format = GBitmapFormat1Bit,
+        .info.version = GBITMAP_VERSION_0,
+        .bounds = {{0, 0}, {LEGACY_2X_DISP_COLS, LEGACY_2X_DISP_ROWS}}
+    };
   }
   return true;
 }

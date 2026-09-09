@@ -408,11 +408,10 @@ GAPLEAdvertisingJobRef gap_le_advert_schedule(const BLEAdData *payload,
       .term_time_elapsed_secs = 0,
       .num_terms = num_terms,
       .tag = tag,
-      .payload =
-          {
-              .ad_data_length = payload->ad_data_length,
-              .scan_resp_data_length = payload->scan_resp_data_length,
-          },
+      .payload = {
+          .ad_data_length = payload->ad_data_length,
+          .scan_resp_data_length = payload->scan_resp_data_length,
+      },
   };
 
   job->terms = kernel_malloc_check(sizeof(GAPLEAdvertisingJobTerm) * num_terms);

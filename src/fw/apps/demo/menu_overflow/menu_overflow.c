@@ -10,11 +10,13 @@
 static Window *window;
 static MenuLayer *menu_layer;
 static char *section_names[] = {"Movies", "Books", "Video Games", "Television", "Alcohol"};
-static char *row_names[5][2] = {{"Avengers", "Eden of the East"},
-                                {"A Song of Ice and Fire", "Lord of the Rings"},
-                                {"Team Fortress 2", "Super Meat Boy"},
-                                {"Sunny in Philadelphia", "Gotham"},
-                                {"Beer", "Vodka"}};
+static char *row_names[5][2] = {
+    {"Avengers", "Eden of the East"},
+    {"A Song of Ice and Fire", "Lord of the Rings"},
+    {"Team Fortress 2", "Super Meat Boy"},
+    {"Sunny in Philadelphia", "Gotham"},
+    {"Beer", "Vodka"}
+};
 
 ////////////////////
 // MenuLayer construction and callback
@@ -96,7 +98,8 @@ static void s_main(void) {
 }
 
 const PebbleProcessMd *menu_overflow_app_get_info() {
-  static const PebbleProcessMdSystem s_app_info = {.common.main_func = &s_main,
-                                                   .name = "Menu Overflow"};
+  static const PebbleProcessMdSystem s_app_info = {
+      .common.main_func = &s_main, .name = "Menu Overflow"
+  };
   return (const PebbleProcessMd *)&s_app_info;
 }

@@ -588,120 +588,123 @@ static void debug_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   const GRect *root_bounds = &window_layer->bounds;
 
-  static SimpleMenuItem menu_items[] = {{
-                                            .title = "Tracking",
-                                            .callback = prv_debug_cmd_tracking,
-                                        },
-                                        {
-                                            .title = "Activity Insights",
-                                            .callback = prv_debug_cmd_activity_insights,
-                                        },
-                                        {
-                                            .title = "Sleep Insights",
-                                            .callback = prv_debug_cmd_sleep_insights,
-                                        },
-                                        {
-                                            .title = "DLS sends",
-                                            .callback = prv_debug_cmd_dls_sends,
-                                        },
-                                        {
-                                            .title = "Step History",
-                                            .callback = prv_debug_cmd_step_history,
-                                        },
-                                        {
-                                            .title = "Distance(m) History",
-                                            .callback = prv_debug_cmd_distance_history,
-                                        },
-                                        {
-                                            .title = "Resting Calorie History",
-                                            .callback = prv_debug_cmd_resting_calorie_history,
-                                        },
-                                        {
-                                            .title = "Active Calorie History",
-                                            .callback = prv_debug_cmd_active_calorie_history,
-                                        },
-                                        {
-                                            .title = "Active Minutes History",
-                                            .callback = prv_debug_cmd_active_time_history,
-                                        },
-                                        {
-                                            .title = "Sleep History",
-                                            .callback = prv_debug_cmd_sleep_history,
-                                        },
-                                        {
-                                            .title = "Sleep Sessions",
-                                            .callback = prv_debug_cmd_sleep_sessions,
-                                        },
-                                        {
-                                            .title = "Step activities",
-                                            .callback = prv_debug_cmd_step_sessions,
-                                        },
-                                        {
-                                            .title = "Weekday averages",
-                                            .callback = prv_debug_cmd_weekday_averages,
-                                        },
-                                        {
-                                            .title = "Weekend averages",
-                                            .callback = prv_debug_cmd_weekend_averages,
-                                        },
-                                        {
-                                            .title = "Activity Prefs",
-                                            .callback = prv_debug_cmd_activity_prefs,
-                                        },
-                                        {
-                                            .title = "Steps below avg",
-                                            .callback = prv_debug_cmd_set_steps_below_avg,
-                                        },
-                                        {
-                                            .title = "Steps at avg",
-                                            .callback = prv_debug_cmd_set_steps_at_avg,
-                                        },
-                                        {
-                                            .title = "Steps above avg",
-                                            .callback = prv_debug_cmd_set_steps_above_avg,
-                                        },
-                                        {
-                                            .title = "Set step history",
-                                            .callback = prv_debug_cmd_set_steps_history,
-                                        },
-                                        {
-                                            .title = "Set sleep history",
-                                            .callback = prv_debug_cmd_set_sleep_history,
-                                        },
-                                        {
-                                            .title = "Sleep File Info",
-                                            .callback = prv_debug_cmd_sleep_file_info,
-                                        },
-                                        {
-                                            .title = "Sleep File Compact",
-                                            .callback = prv_debug_cmd_sleep_file_compact,
-                                        },
-                                        {
-                                            .title = "Read Minute data",
-                                            .callback = prv_debug_cmd_minute_data,
-                                        },
-                                        {
-                                            .title = "Send fake DL record",
-                                            .callback = prv_debug_cmd_send_fake_logging_record,
-                                        },
-                                        {
-                                            .title = "Push Summary Pins",
-                                            .callback = prv_debug_cmd_push_summary_pins,
-                                        },
-                                        {
-                                            .title = "Push Rewards",
-                                            .callback = prv_debug_cmd_push_rewards,
-                                        },
-                                        {
-                                            .title = "Walk/Run Notif",
-                                            .callback = prv_debug_cmd_push_walk_run,
-                                        },
-                                        {
-                                            .title = "Push Nap Session",
-                                            .callback = prv_debug_cmd_push_nap_session,
-                                        }};
+  static SimpleMenuItem menu_items[] = {
+      {
+          .title = "Tracking",
+          .callback = prv_debug_cmd_tracking,
+      },
+      {
+          .title = "Activity Insights",
+          .callback = prv_debug_cmd_activity_insights,
+      },
+      {
+          .title = "Sleep Insights",
+          .callback = prv_debug_cmd_sleep_insights,
+      },
+      {
+          .title = "DLS sends",
+          .callback = prv_debug_cmd_dls_sends,
+      },
+      {
+          .title = "Step History",
+          .callback = prv_debug_cmd_step_history,
+      },
+      {
+          .title = "Distance(m) History",
+          .callback = prv_debug_cmd_distance_history,
+      },
+      {
+          .title = "Resting Calorie History",
+          .callback = prv_debug_cmd_resting_calorie_history,
+      },
+      {
+          .title = "Active Calorie History",
+          .callback = prv_debug_cmd_active_calorie_history,
+      },
+      {
+          .title = "Active Minutes History",
+          .callback = prv_debug_cmd_active_time_history,
+      },
+      {
+          .title = "Sleep History",
+          .callback = prv_debug_cmd_sleep_history,
+      },
+      {
+          .title = "Sleep Sessions",
+          .callback = prv_debug_cmd_sleep_sessions,
+      },
+      {
+          .title = "Step activities",
+          .callback = prv_debug_cmd_step_sessions,
+      },
+      {
+          .title = "Weekday averages",
+          .callback = prv_debug_cmd_weekday_averages,
+      },
+      {
+          .title = "Weekend averages",
+          .callback = prv_debug_cmd_weekend_averages,
+      },
+      {
+          .title = "Activity Prefs",
+          .callback = prv_debug_cmd_activity_prefs,
+      },
+      {
+          .title = "Steps below avg",
+          .callback = prv_debug_cmd_set_steps_below_avg,
+      },
+      {
+          .title = "Steps at avg",
+          .callback = prv_debug_cmd_set_steps_at_avg,
+      },
+      {
+          .title = "Steps above avg",
+          .callback = prv_debug_cmd_set_steps_above_avg,
+      },
+      {
+          .title = "Set step history",
+          .callback = prv_debug_cmd_set_steps_history,
+      },
+      {
+          .title = "Set sleep history",
+          .callback = prv_debug_cmd_set_sleep_history,
+      },
+      {
+          .title = "Sleep File Info",
+          .callback = prv_debug_cmd_sleep_file_info,
+      },
+      {
+          .title = "Sleep File Compact",
+          .callback = prv_debug_cmd_sleep_file_compact,
+      },
+      {
+          .title = "Read Minute data",
+          .callback = prv_debug_cmd_minute_data,
+      },
+      {
+          .title = "Send fake DL record",
+          .callback = prv_debug_cmd_send_fake_logging_record,
+      },
+      {
+          .title = "Push Summary Pins",
+          .callback = prv_debug_cmd_push_summary_pins,
+      },
+      {
+          .title = "Push Rewards",
+          .callback = prv_debug_cmd_push_rewards,
+      },
+      {
+          .title = "Walk/Run Notif",
+          .callback = prv_debug_cmd_push_walk_run,
+      },
+      {
+          .title = "Push Nap Session",
+          .callback = prv_debug_cmd_push_nap_session,
+      }
+  };
   static const SimpleMenuSection sections[] = {
-      {.items = menu_items, .num_items = ARRAY_LENGTH(menu_items)}};
+      {.items = menu_items, .num_items = ARRAY_LENGTH(menu_items)}
+  };
 
   data->debug_card.menu_items = menu_items;
   data->debug_card.menu_layer =
@@ -760,8 +763,10 @@ const PebbleProcessMd *activity_demo_get_app_info(void) {
   static const PebbleProcessMdSystem s_activity_demo_app_info = {
       .common.main_func = &s_main,
       // UUID: 60206d97-818b-4f42-87ae-48fde623608d
-      .common.uuid = {0x60, 0x20, 0x6d, 0x97, 0x81, 0x8b, 0x4f, 0x42, 0x87, 0xae, 0x48, 0xfd, 0xe6,
-                      0x23, 0x60, 0x8d},
-      .name = "ActivityDemo"};
+      .common.uuid =
+          {0x60, 0x20, 0x6d, 0x97, 0x81, 0x8b, 0x4f, 0x42, 0x87, 0xae, 0x48, 0xfd, 0xe6, 0x23, 0x60,
+           0x8d},
+      .name = "ActivityDemo"
+  };
   return (const PebbleProcessMd *)&s_activity_demo_app_info;
 }

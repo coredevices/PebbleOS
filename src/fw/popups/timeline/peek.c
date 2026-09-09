@@ -250,11 +250,10 @@ static const PropertyAnimationImplementation s_peek_prop_impl = {
             .update = prv_peek_frame_update,
             .teardown = prv_peek_frame_teardown,
         },
-    .accessors =
-        {
-            .getter.grect = prv_peek_frame_getter,
-            .setter.grect = prv_peek_frame_setter,
-        },
+    .accessors = {
+        .getter.grect = prv_peek_frame_getter,
+        .setter.grect = prv_peek_frame_setter,
+    },
 };
 
 static void prv_peek_anim_stopped(Animation *animation, bool finished, void *context) {
@@ -306,8 +305,9 @@ static void prv_transition_frame(TimelinePeek *peek, bool visible, bool animated
 
 #define EXTENDED_BOUNCE_BACK (2 * INTERPOLATE_MOOOK_BOUNCE_BACK)
 
-static const int32_t s_extended_moook_out[] = {EXTENDED_BOUNCE_BACK, INTERPOLATE_MOOOK_BOUNCE_BACK,
-                                               2, 1, 0};
+static const int32_t s_extended_moook_out[] = {
+    EXTENDED_BOUNCE_BACK, INTERPOLATE_MOOOK_BOUNCE_BACK, 2, 1, 0
+};
 static const MoookConfig s_extended_moook_out_config = {
     .frames_out = s_extended_moook_out,
     .num_frames_out = ARRAY_LENGTH(s_extended_moook_out),

@@ -44,11 +44,10 @@ ProtobufLogRef protobuf_log_hr_create(ProtobufLogTransportCB transport) {
 
   ProtobufLogConfig log_config = {
       .type = ProtobufLogType_Measurements,
-      .measurements =
-          {
-              .types = measure_types,
-              .num_types = ARRAY_LENGTH(measure_types),
-          },
+      .measurements = {
+          .types = measure_types,
+          .num_types = ARRAY_LENGTH(measure_types),
+      },
   };
 
   return protobuf_log_create(&log_config, transport, 0 /*max_encoded_msg_size*/);

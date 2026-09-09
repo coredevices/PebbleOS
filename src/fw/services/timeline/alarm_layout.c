@@ -194,9 +194,10 @@ LayoutLayer *alarm_layout_create(const LayoutLayerConfig *config) {
 
   static const TimelineLayoutImpl s_timeline_layout_impl = {
       .attributes = {AttributeIdTitle, AttributeIdSubtitle},
-      .default_colors = {{.argb = GColorBlackARGB8},
-                         {.argb = GColorClearARGB8},
-                         {.argb = GColorJaegerGreenARGB8}},
+      .default_colors =
+          {{.argb = GColorBlackARGB8},
+           {.argb = GColorClearARGB8},
+           {.argb = GColorJaegerGreenARGB8}},
       .default_icon = TIMELINE_RESOURCE_ALARM_CLOCK,
       .card_icon_align = GAlignCenter,
       .card_icon_size = PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,

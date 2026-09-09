@@ -428,7 +428,8 @@ static void s_main(void) {
 }
 
 const PebbleProcessMd *stroke_width_get_app_info(void) {
-  static const PebbleProcessMdSystem s_app_info = {.common.main_func = s_main,
-                                                   .name = "Stroke Width"};
+  static const PebbleProcessMdSystem s_app_info = {
+      .common.main_func = s_main, .name = "Stroke Width"
+  };
   return (const PebbleProcessMd *)&s_app_info;
 }

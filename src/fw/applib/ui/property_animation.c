@@ -22,17 +22,15 @@ static const PropertyAnimationImplementation s_frame_layer_implementation = {
         {
             .update = (AnimationUpdateImplementation)property_animation_update_grect,
         },
-    .accessors =
-        {
-            .setter =
-                {
-                    .grect = (const GRectSetter)layer_set_frame_by_value,
-                },
-            .getter =
-                {
-                    .grect = (const GRectGetter)layer_get_frame_by_value,
-                },
+    .accessors = {
+        .setter =
+            {
+                .grect = (const GRectSetter)layer_set_frame_by_value,
+            },
+        .getter = {
+            .grect = (const GRectGetter)layer_get_frame_by_value,
         },
+    },
 };
 
 static const PropertyAnimationImplementation s_bounds_layer_implementation = {
@@ -40,17 +38,15 @@ static const PropertyAnimationImplementation s_bounds_layer_implementation = {
         {
             .update = (AnimationUpdateImplementation)property_animation_update_grect,
         },
-    .accessors =
-        {
-            .setter =
-                {
-                    .grect = (const GRectSetter)layer_set_bounds_by_value,
-                },
-            .getter =
-                {
-                    .grect = (const GRectGetter)layer_get_bounds_by_value,
-                },
+    .accessors = {
+        .setter =
+            {
+                .grect = (const GRectSetter)layer_set_bounds_by_value,
+            },
+        .getter = {
+            .grect = (const GRectGetter)layer_get_bounds_by_value,
         },
+    },
 };
 
 // -----------------------------------------------------------------------------------------
@@ -442,10 +438,9 @@ static void property_animation_update_mark_dirty(Animation *animation,
 }
 
 static const PropertyAnimationImplementation s_dirty_layer_implementation = {
-    .base =
-        {
-            .update = property_animation_update_mark_dirty,
-        },
+    .base = {
+        .update = property_animation_update_mark_dirty,
+    },
 };
 
 PropertyAnimation *property_animation_create_mark_dirty(struct Layer *layer) {

@@ -33,59 +33,73 @@
 void reminders_handle_reminder_removed(const Uuid *reminder_id) {
 }
 
-static TimelineItem item1 = {.header = {
-                                 .id = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31,
-                                        0x4f, 0x55, 0x65, 0x72, 0x22, 0xb4},
-                                 .parent_id = {0xff, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c,
-                                               0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0x01},
-                                 .timestamp = 1,
-                                 .duration = 0,
-                                 .type = TimelineItemTypeReminder,
-                                 .layout = LayoutIdTest,
-                                 // don't care about the rest
-                             }};
-
-static TimelineItem item2 = {
-    .header =
-        {
-            .id = {0x55, 0xcb, 0x7c, 0x75, 0x8a, 0x35, 0x44, 0x87, 0x90, 0xa4, 0x91, 0x3f, 0x1f,
-                   0xa6, 0x76, 0x01},
-            .parent_id = {0xff, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55,
-                          0x65, 0x72, 0x22, 0x01},
-            .timestamp = 3,
-            .duration = 0,
-            .type = TimelineItemTypeReminder,
-            .layout = LayoutIdTest,
-        },
+static TimelineItem item1 = {
+    .header = {
+        .id =
+            {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72,
+             0x22, 0xb4},
+        .parent_id =
+            {0xff, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72,
+             0x22, 0x01},
+        .timestamp = 1,
+        .duration = 0,
+        .type = TimelineItemTypeReminder,
+        .layout = LayoutIdTest,
+        // don't care about the rest
+    }
 };
 
-static TimelineItem item3 = {.header = {
-                                 .id = {0x7c, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x44, 0x2c, 0x98, 0x68,
-                                        0xa4, 0x36, 0x79, 0x7d, 0xe2, 0x05},
-                                 .parent_id = {0xff, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c,
-                                               0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0x02},
-                                 .timestamp = 4,
-                                 .duration = 0,
-                                 .type = TimelineItemTypeReminder,
-                                 .layout = LayoutIdTest,
-                             }};
+static TimelineItem item2 = {
+    .header = {
+        .id =
+            {0x55, 0xcb, 0x7c, 0x75, 0x8a, 0x35, 0x44, 0x87, 0x90, 0xa4, 0x91, 0x3f, 0x1f, 0xa6,
+             0x76, 0x01},
+        .parent_id =
+            {0xff, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72,
+             0x22, 0x01},
+        .timestamp = 3,
+        .duration = 0,
+        .type = TimelineItemTypeReminder,
+        .layout = LayoutIdTest,
+    },
+};
 
-static TimelineItem item4 = {.header = {
-                                 .id = {0x8c, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x44, 0x2c, 0x98, 0x68,
-                                        0xa4, 0x36, 0x79, 0x7d, 0xe2, 0x05},
-                                 .parent_id = {0xff, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c,
-                                               0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0x03},
-                                 .timestamp = 4,
-                                 .duration = 0,
-                                 .type = TimelineItemTypeReminder,
-                                 .layout = LayoutIdTest,
-                             }};
+static TimelineItem item3 = {
+    .header = {
+        .id =
+            {0x7c, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x44, 0x2c, 0x98, 0x68, 0xa4, 0x36, 0x79, 0x7d,
+             0xe2, 0x05},
+        .parent_id =
+            {0xff, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72,
+             0x22, 0x02},
+        .timestamp = 4,
+        .duration = 0,
+        .type = TimelineItemTypeReminder,
+        .layout = LayoutIdTest,
+    }
+};
+
+static TimelineItem item4 = {
+    .header = {
+        .id =
+            {0x8c, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x44, 0x2c, 0x98, 0x68, 0xa4, 0x36, 0x79, 0x7d,
+             0xe2, 0x05},
+        .parent_id =
+            {0xff, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72,
+             0x22, 0x03},
+        .timestamp = 4,
+        .duration = 0,
+        .type = TimelineItemTypeReminder,
+        .layout = LayoutIdTest,
+    }
+};
 
 static SerializedTimelineItemHeader bad_item = {
     .common =
         {
-            .id = {0x8c, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x42, 0x2c, 0x98, 0x68, 0xa4, 0x36, 0x79,
-                   0x7d, 0xe2, 0x05},
+            .id =
+                {0x8c, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x42, 0x2c, 0x98, 0x68, 0xa4, 0x36, 0x79, 0x7d,
+                 0xe2, 0x05},
             .timestamp = 3,
             .duration = 0,
             .type = TimelineItemTypeReminder,
@@ -97,8 +111,9 @@ static SerializedTimelineItemHeader bad_item = {
 static TimelineItem title_item1 = {
     .header =
         {
-            .id = {0x9c, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x44, 0x2c, 0x98, 0x68, 0xa4, 0x36, 0x79,
-                   0x7d, 0xe2, 0x05},
+            .id =
+                {0x9c, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x44, 0x2c, 0x98, 0x68, 0xa4, 0x36, 0x79, 0x7d,
+                 0xe2, 0x05},
             .timestamp = 1,
             .duration = 0,
             .type = TimelineItemTypeReminder,
@@ -106,13 +121,16 @@ static TimelineItem title_item1 = {
         },
     .attr_list = (AttributeList){
         .num_attributes = 1,
-        .attributes = (Attribute[1]){{.id = AttributeIdTitle, .cstring = "test 1"}}}};
+        .attributes = (Attribute[1]){{.id = AttributeIdTitle, .cstring = "test 1"}}
+    }
+};
 
 static TimelineItem title_item2 = {
     .header =
         {
-            .id = {0xac, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x44, 0x2c, 0x98, 0x68, 0xa4, 0x36, 0x79,
-                   0x7d, 0xe2, 0x05},
+            .id =
+                {0xac, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x44, 0x2c, 0x98, 0x68, 0xa4, 0x36, 0x79, 0x7d,
+                 0xe2, 0x05},
             .timestamp = 1,
             .duration = 0,
             .type = TimelineItemTypeReminder,
@@ -120,7 +138,9 @@ static TimelineItem title_item2 = {
         },
     .attr_list = (AttributeList){
         .num_attributes = 1,
-        .attributes = (Attribute[1]){{.id = AttributeIdTitle, .cstring = "test 2"}}}};
+        .attributes = (Attribute[1]){{.id = AttributeIdTitle, .cstring = "test 2"}}
+    }
+};
 
 static void prv_insert_default_reminders(void) {
   // add all four explicitly out of order
@@ -233,11 +253,16 @@ void test_reminder_db__size_test(void) {
 }
 
 void test_reminder_db__wrong_type_test(void) {
-  TimelineItem not_a_reminder = {.header = {.id = {0x99, 0xcb, 0x7c, 0x75, 0x8a, 0x35, 0x44, 0x87,
-                                                   0x90, 0xa4, 0x91, 0x3f, 0x1f, 0xa6, 0x76, 0x01},
-                                            .timestamp = 0,
-                                            .duration = 0,
-                                            .type = TimelineItemTypeNotification}};
+  TimelineItem not_a_reminder = {
+      .header = {
+          .id =
+              {0x99, 0xcb, 0x7c, 0x75, 0x8a, 0x35, 0x44, 0x87, 0x90, 0xa4, 0x91, 0x3f, 0x1f, 0xa6,
+               0x76, 0x01},
+          .timestamp = 0,
+          .duration = 0,
+          .type = TimelineItemTypeNotification
+      }
+  };
 
   cl_assert(E_INVALID_ARGUMENT == reminder_db_insert_item(&not_a_reminder));
 }

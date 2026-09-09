@@ -109,9 +109,11 @@ static bool prv_legacy_completion_status_init(PebbleSystemMessageEvent *event) {
   s_current_completion_status.use_legacy_mode = true;
   LegacyFwUpdateCompletionStatus *status = &s_current_completion_status.legacy_status;
 
-  *status = (LegacyFwUpdateCompletionStatus){.recovery_percent_completion = 0,
-                                             .resource_percent_completion = 0,
-                                             .firmware_percent_completion = 0};
+  *status = (LegacyFwUpdateCompletionStatus){
+      .recovery_percent_completion = 0,
+      .resource_percent_completion = 0,
+      .firmware_percent_completion = 0
+  };
 
   return true;
 }
@@ -136,8 +138,9 @@ static void prv_initialize_completion_status(PebbleSystemMessageEvent *event) {
 
   s_current_completion_status.use_legacy_mode = false;
   FwUpdateCompletionStatus *status = &s_current_completion_status.status;
-  *status = (FwUpdateCompletionStatus){.bytes_transferred = event->bytes_transferred,
-                                       .total_size = event->total_transfer_size};
+  *status = (FwUpdateCompletionStatus){
+      .bytes_transferred = event->bytes_transferred, .total_size = event->total_transfer_size
+  };
 }
 
 // Initialization for a firmware update could involve an erase of 8 flash

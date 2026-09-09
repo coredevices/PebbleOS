@@ -434,10 +434,9 @@ static void prv_change_state(BacklightState new_state) {
   if (was_on != is_on) {
     PebbleEvent event = {
         .type = PEBBLE_BACKLIGHT_EVENT,
-        .backlight =
-            {
-                .is_on = is_on,
-            },
+        .backlight = {
+            .is_on = is_on,
+        },
     };
     event_put(&event);
   }

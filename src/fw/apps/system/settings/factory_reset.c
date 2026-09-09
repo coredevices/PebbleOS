@@ -100,8 +100,10 @@ static void prv_window_load(Window *window) {
   const GColor text_color = PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack);
 
   TextLayer *msg_text_layer = &data->msg_text_layer;
-  GRect msg_text_frame = (GRect){.origin = GPoint(x_margin_px, msg_text_y_offset_px),
-                                 .size = GSize(width - (2 * x_margin_px), msg_text_max_height_px)};
+  GRect msg_text_frame = (GRect){
+      .origin = GPoint(x_margin_px, msg_text_y_offset_px),
+      .size = GSize(width - (2 * x_margin_px), msg_text_max_height_px)
+  };
   text_layer_init_with_parameters(msg_text_layer, &msg_text_frame,
                                   i18n_get("Perform factory reset?", data),
                                   fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), text_color,
@@ -119,10 +121,10 @@ static void prv_window_load(Window *window) {
   const uint16_t forget_text_y_offset_px = msg_text_y_offset_px + msg_text_height_px + text_spacing;
 
   TextLayer *forget_text_layer = &data->forget_text_layer;
-  const GRect forget_text_frame =
-      (GRect){.origin = GPoint(x_margin_px, forget_text_y_offset_px),
-              .size = GSize(width - (2 * x_margin_px),
-                            root_layer_bounds->size.h - forget_text_y_offset_px)};
+  const GRect forget_text_frame = (GRect){
+      .origin = GPoint(x_margin_px, forget_text_y_offset_px),
+      .size = GSize(width - (2 * x_margin_px), root_layer_bounds->size.h - forget_text_y_offset_px)
+  };
   text_layer_init_with_parameters(
       forget_text_layer, &forget_text_frame, i18n_get(BT_FORGET_PAIRING_STR, data),
       fonts_get_system_font(FONT_KEY_GOTHIC_18), text_color, GColorClear, alignment, overflow_mode);

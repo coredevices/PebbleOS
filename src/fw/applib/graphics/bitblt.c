@@ -136,9 +136,10 @@ void bitblt_bitmap_into_bitmap(GBitmap *dest_bitmap, const GBitmap *src_bitmap, 
   grect_clip(&dest_rect, &dest_bitmap->bounds);
 
   GBitmap src_clipped_bitmap = *src_bitmap;
-  src_clipped_bitmap.bounds.origin =
-      (GPoint){src_bitmap->bounds.origin.x + (dest_rect.origin.x - dest_offset.x),
-               src_bitmap->bounds.origin.y + (dest_rect.origin.y - dest_offset.y)};
+  src_clipped_bitmap.bounds.origin = (GPoint){
+      src_bitmap->bounds.origin.x + (dest_rect.origin.x - dest_offset.x),
+      src_bitmap->bounds.origin.y + (dest_rect.origin.y - dest_offset.y)
+  };
 
   bitblt_bitmap_into_bitmap_tiled(dest_bitmap, &src_clipped_bitmap, dest_rect, GPointZero,
                                   compositing_mode, tint_color);

@@ -188,11 +188,10 @@ bool music_set_connected_server(const MusicServerImplementation *implementation,
 
     PebbleEvent event = {
         .type = PEBBLE_MEDIA_EVENT,
-        .media =
-            {
-                .type = (change_type == Connected) ? PebbleMediaEventTypeServerConnected
-                                                   : PebbleMediaEventTypeServerDisconnected,
-            },
+        .media = {
+            .type = (change_type == Connected) ? PebbleMediaEventTypeServerConnected
+                                               : PebbleMediaEventTypeServerDisconnected,
+        },
     };
     event_put(&event);
   }
@@ -379,11 +378,10 @@ uint8_t music_get_volume_percent(void) {
 static void prv_put_state_changed_event(MusicPlayState playback_state) {
   PebbleEvent event = {
       .type = PEBBLE_MEDIA_EVENT,
-      .media =
-          {
-              .type = PebbleMediaEventTypePlaybackStateChanged,
-              .playback_state = playback_state,
-          },
+      .media = {
+          .type = PebbleMediaEventTypePlaybackStateChanged,
+          .playback_state = playback_state,
+      },
   };
   event_put(&event);
 }
@@ -408,11 +406,10 @@ void music_update_player_volume_percent(uint8_t volume_percent) {
 
   PebbleEvent event = {
       .type = PEBBLE_MEDIA_EVENT,
-      .media =
-          {
-              .type = PebbleMediaEventTypeVolumeChanged,
-              .volume_percent = volume_percent,
-          },
+      .media = {
+          .type = PebbleMediaEventTypeVolumeChanged,
+          .volume_percent = volume_percent,
+      },
   };
   event_put(&event);
 }

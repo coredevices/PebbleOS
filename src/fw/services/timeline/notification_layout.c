@@ -116,18 +116,17 @@ static const NotificationStyle s_notification_styles[NumPreferredContentSizes] =
             .timestamp_upper_padding = 3,
 #endif
         },
-    [PreferredContentSizeExtraLarge] =
-        {
-            .subtitle_upper_padding = 2,
-            .subtitle_lower_padding = 4,
-            .subtitle_line_delta = -2,
-            .location_offset = 6,
-            .location_margin = 10,
-            .body_icon_offset = 6,
-            .body_icon_margin = -10,
-            .body_line_delta = -2,
-            .timestamp_upper_padding = 6,
-        },
+    [PreferredContentSizeExtraLarge] = {
+        .subtitle_upper_padding = 2,
+        .subtitle_lower_padding = 4,
+        .subtitle_line_delta = -2,
+        .location_offset = 6,
+        .location_margin = 10,
+        .body_icon_offset = 6,
+        .body_icon_margin = -10,
+        .body_line_delta = -2,
+        .timestamp_upper_padding = 6,
+    },
 };
 
 static bool prv_is_reminder(const NotificationLayout *layout) {
@@ -463,7 +462,8 @@ static void prv_card_init(NotificationLayout *layout, AttributeList *attributes,
   const uint32_t timeline_res_id =
       attribute_get_uint32(attributes, AttributeIdIconTiny, fallback_icon_id);
   const TimelineResourceInfo timeline_res = {
-      .res_id = timeline_res_id, .app_id = app_id, .fallback_id = fallback_icon_id};
+      .res_id = timeline_res_id, .app_id = app_id, .fallback_id = fallback_icon_id
+  };
   timeline_resources_get_id(&timeline_res, TimelineResourceSizeTiny, &layout->icon_res_info);
 
   const GRect *frame = &layout->layout.layer.frame;
@@ -597,7 +597,8 @@ static NOINLINE void prv_card_render_internal(NotificationLayout *layout, GConte
   };
   static const GRect page_frame_on_screen = {
       .origin = {0, STATUS_BAR_LAYER_HEIGHT},
-      .size = {DISP_COLS, DISP_ROWS - STATUS_BAR_LAYER_HEIGHT - LAYOUT_ARROW_HEIGHT}};
+      .size = {DISP_COLS, DISP_ROWS - STATUS_BAR_LAYER_HEIGHT - LAYOUT_ARROW_HEIGHT}
+  };
   static const GTextNodeDrawConfig config = {
       .page_frame = &page_frame_on_screen,
       .origin_on_screen = &page_frame_on_screen.origin,

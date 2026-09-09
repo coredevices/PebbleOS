@@ -120,17 +120,19 @@ void test_app_glance__basic_reload(void) {
   // Compare the glance read back with the expected glance below
   AppGlance expected_glance = (AppGlance){
       .num_slices = 2,
-      .slices = {{
-                     .expiration_time = rtc_get_time() + 10,
-                     .type = AppGlanceSliceType_IconAndSubtitle,
-                     .icon_and_subtitle.icon_resource_id = TIMELINE_RESOURCE_HOTEL_RESERVATION,
-                     .icon_and_subtitle.template_string = "Test subtitle",
-                 },
-                 {
-                     .expiration_time = rtc_get_time() + 20,
-                     .type = AppGlanceSliceType_IconAndSubtitle,
-                     .icon_and_subtitle.icon_resource_id = APP_GLANCE_SLICE_DEFAULT_ICON,
-                 }},
+      .slices = {
+          {
+              .expiration_time = rtc_get_time() + 10,
+              .type = AppGlanceSliceType_IconAndSubtitle,
+              .icon_and_subtitle.icon_resource_id = TIMELINE_RESOURCE_HOTEL_RESERVATION,
+              .icon_and_subtitle.template_string = "Test subtitle",
+          },
+          {
+              .expiration_time = rtc_get_time() + 20,
+              .type = AppGlanceSliceType_IconAndSubtitle,
+              .icon_and_subtitle.icon_resource_id = APP_GLANCE_SLICE_DEFAULT_ICON,
+          }
+      },
   };
   cl_assert_equal_m(&glance, &expected_glance, sizeof(AppGlance));
 }
@@ -244,25 +246,23 @@ static void prv_glance_clear_test(AppGlanceReloadCallback reload_cb) {
   // Insert some slices for the glance
   const AppGlance glance = (AppGlance){
       .num_slices = 2,
-      .slices =
+      .slices = {
           {
-              {
-                  .expiration_time = 1464734504,  // (Tue, 31 May 2016 22:41:44 GMT)
-                  .type = AppGlanceSliceType_IconAndSubtitle,
-                  .icon_and_subtitle =
-                      {
-                          .template_string = "Test subtitle 2",
-                      },
-              },
-              {
-                  .expiration_time = 1464734484,  // (Tue, 31 May 2016 22:41:24 GMT)
-                  .type = AppGlanceSliceType_IconAndSubtitle,
-                  .icon_and_subtitle =
-                      {
-                          .template_string = "Test subtitle 1",
-                      },
+              .expiration_time = 1464734504,  // (Tue, 31 May 2016 22:41:44 GMT)
+              .type = AppGlanceSliceType_IconAndSubtitle,
+              .icon_and_subtitle =
+                  {
+                      .template_string = "Test subtitle 2",
+                  },
+          },
+          {
+              .expiration_time = 1464734484,  // (Tue, 31 May 2016 22:41:24 GMT)
+              .type = AppGlanceSliceType_IconAndSubtitle,
+              .icon_and_subtitle = {
+                  .template_string = "Test subtitle 1",
               },
           },
+      },
   };
   cl_assert_equal_i(app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID, &glance), S_SUCCESS);
 

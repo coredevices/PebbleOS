@@ -63,7 +63,8 @@ static uint8_t s_payload_complete[] = {
     0x07,        // Attribute 2 ID - ANCS UID
     0x01, 0x00,  // Attribute 2 Length
     // Attribute text: "Test"
-    0x01};
+    0x01
+};
 
 void test_timeline_item__initialize(void) {
 }
@@ -246,8 +247,9 @@ static Attribute action1_attributes[] = {
     {.id = AttributeIdTitle, .cstring = "Dismiss"},
 };
 
-static Attribute action2_attributes[] = {{.id = AttributeIdTitle, .cstring = "Like"},
-                                         {.id = AttributeIdAncsAction, .int8 = 1}};
+static Attribute action2_attributes[] = {
+    {.id = AttributeIdTitle, .cstring = "Like"}, {.id = AttributeIdAncsAction, .int8 = 1}
+};
 
 static Attribute attributes[] = {
     {.id = AttributeIdTitle, .cstring = "Test Notification"},
@@ -260,12 +262,13 @@ static Attribute attributes[] = {
 static TimelineItemAction actions[] = {
     {.id = 0,
      .type = TimelineItemActionTypeGeneric,
-     .attr_list = {.num_attributes = ARRAY_LENGTH(action1_attributes),
-                   .attributes = action1_attributes}},
+     .attr_list =
+         {.num_attributes = ARRAY_LENGTH(action1_attributes), .attributes = action1_attributes}},
     {.id = 1,
      .type = TimelineItemActionTypeGeneric,
-     .attr_list = {.num_attributes = ARRAY_LENGTH(action2_attributes),
-                   .attributes = action2_attributes}},
+     .attr_list = {
+         .num_attributes = ARRAY_LENGTH(action2_attributes), .attributes = action2_attributes
+     }},
 };
 
 void test_timeline_item__serialize_payload(void) {

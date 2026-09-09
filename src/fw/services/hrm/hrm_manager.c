@@ -424,31 +424,28 @@ static void prv_populate_hrm_event(PebbleHRMEvent *event, HRMFeature feature, co
     case HRMFeature_BPM:
       *event = (PebbleHRMEvent){
           .event_type = HRMEvent_BPM,
-          .bpm =
-              {
-                  .bpm = data->hrm_bpm,
-                  .quality = data->hrm_quality,
-              },
+          .bpm = {
+              .bpm = data->hrm_bpm,
+              .quality = data->hrm_quality,
+          },
       };
       break;
     case HRMFeature_HRV:
       *event = (PebbleHRMEvent){
           .event_type = HRMEvent_HRV,
-          .hrv =
-              {
-                  .ppi_ms = data->hrv_ppi_ms,
-                  .quality = data->hrv_quality,
-              },
+          .hrv = {
+              .ppi_ms = data->hrv_ppi_ms,
+              .quality = data->hrv_quality,
+          },
       };
       break;
     case HRMFeature_SpO2:
       *event = (PebbleHRMEvent){
           .event_type = HRMEvent_SpO2,
-          .spo2 =
-              {
-                  .percent = data->spo2_percent,
-                  .quality = data->spo2_quality,
-              },
+          .spo2 = {
+              .percent = data->spo2_percent,
+              .quality = data->spo2_quality,
+          },
       };
       break;
 #ifdef CONFIG_MFG
@@ -527,15 +524,13 @@ void hrm_manager_new_data_cb(const HRMData *data) {
     // receive them without needing to consume raw HRM events.
     PebbleEvent health_event = {
         .type = PEBBLE_HEALTH_SERVICE_EVENT,
-        .health_event =
-            {
-                .type = HealthEventHRVUpdate,
-                .data.hrv_update =
-                    {
-                        .ppi_ms = data->hrv_ppi_ms,
-                        .quality = data->hrv_quality,
-                    },
+        .health_event = {
+            .type = HealthEventHRVUpdate,
+            .data.hrv_update = {
+                .ppi_ms = data->hrv_ppi_ms,
+                .quality = data->hrv_quality,
             },
+        },
     };
     event_put(&health_event);
   }
@@ -624,11 +619,10 @@ void hrm_manager_init(void) {
   s_manager_state = (struct HRMManagerState){
       .update_enable_timer_id = new_timer_create(),
       .enabled_charging_state = !battery_is_usb_connected(),
-      .charger_subscription =
-          (EventServiceInfo){
-              .type = PEBBLE_BATTERY_STATE_CHANGE_EVENT,
-              .handler = prv_charger_event_cb,
-          },
+      .charger_subscription = (EventServiceInfo){
+          .type = PEBBLE_BATTERY_STATE_CHANGE_EVENT,
+          .handler = prv_charger_event_cb,
+      },
   };
   pbl_mutex_init(&s_manager_state.lock);
   pbl_mutex_init(&s_manager_state.accel_data_lock);

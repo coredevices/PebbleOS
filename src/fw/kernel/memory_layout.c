@@ -20,7 +20,8 @@ static const char *const MEMORY_REGION_NAMES[] = {
     "RESERVED0",       "RESERVED1",       "RESERVED2",       "RESERVED3",
 #endif
     "UNPRIV_FLASH",    "UNPRIV_RO_BSS",   "UNPRIV_RO_DATA",  "ISR_STACK_GUARD",
-    "Task Specific 1", "Task Specific 2", "Task Specific 3", "Task Specific 4"};
+    "Task Specific 1", "Task Specific 2", "Task Specific 3", "Task Specific 4"
+};
 
 static const char *prv_permissions_str(MpuPermissions p) {
   switch (p) {

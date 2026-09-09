@@ -76,10 +76,12 @@ static bool prv_decode_packed_measurement_data(pb_istream_t *stream, const pb_fi
 static bool prv_decode_measurements(pb_istream_t *stream, const pb_field_t *field, void **arg) {
   PLogMeasurementsDecoderArg *decoder_info = *(PLogMeasurementsDecoderArg **)arg;
 
-  pebble_pipeline_Measurement msg = {.data = {
-                                         .funcs.decode = prv_decode_packed_measurement_data,
-                                         .arg = decoder_info,
-                                     }};
+  pebble_pipeline_Measurement msg = {
+      .data = {
+          .funcs.decode = prv_decode_packed_measurement_data,
+          .arg = decoder_info,
+      }
+  };
 
   if (!pb_decode(stream, pebble_pipeline_Measurement_fields, &msg)) {
     return false;
@@ -115,11 +117,10 @@ static bool prv_decode_measurement_set(pb_istream_t *stream, const pb_field_t *f
               .funcs.decode = prv_decode_types,
               .arg = decoder_info->types_decoder_arg,
           },
-      .measurements =
-          {
-              .funcs.decode = prv_decode_measurements,
-              .arg = decoder_info->measurements_decoder_arg,
-          },
+      .measurements = {
+          .funcs.decode = prv_decode_measurements,
+          .arg = decoder_info->measurements_decoder_arg,
+      },
   };
 
   bool success = pb_decode(stream, pebble_pipeline_MeasurementSet_fields, &mset);
@@ -148,11 +149,10 @@ static bool prv_decode_events(pb_istream_t *stream, const pb_field_t *field, voi
 
   bool success;
   pebble_pipeline_Event event = {
-      .uuid =
-          {
-              .funcs.decode = prv_decode_uuid,
-              .arg = &decoder_info->event_uuids[event_idx],
-          },
+      .uuid = {
+          .funcs.decode = prv_decode_uuid,
+          .arg = &decoder_info->event_uuids[event_idx],
+      },
   };
 
   success = pb_decode(stream, pebble_pipeline_Event_fields, &event);
@@ -269,7 +269,8 @@ bool protobuf_log_private_mset_decode(
       .measurement_sets = {
           .funcs.decode = prv_decode_measurement_set,
           .arg = &mset_decoder_arg,
-      }};
+      }
+  };
 
   bool success = pb_decode(&stream, pebble_pipeline_Payload_fields, &payload);
   *payload_send_time = payload.send_time_utc;
@@ -330,7 +331,8 @@ bool protobuf_log_private_events_decode(
                           },
                   },
           },
-      .events = {.funcs.decode = prv_decode_events, .arg = &event_arg}};
+      .events = {.funcs.decode = prv_decode_events, .arg = &event_arg}
+  };
 
   bool success = pb_decode(&stream, pebble_pipeline_Payload_fields, &payload);
   *payload_send_time = payload.send_time_utc;

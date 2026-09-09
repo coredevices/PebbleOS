@@ -34,11 +34,10 @@ static const GBitmap s_music_launcher_icon_bitmap = {
     .addr = (void *)&s_music_launcher_icon_pixels,
     .row_size_bytes = 4,
     .info_flags = 0x1000,
-    .bounds =
-        {
-            .origin = {.x = 0, .y = 0},
-            .size = {.w = 24, .h = 27},
-        },
+    .bounds = {
+        .origin = {.x = 0, .y = 0},
+        .size = {.w = 24, .h = 27},
+    },
 };
 
 typedef struct {
@@ -222,8 +221,9 @@ static void s_main(void) {
 }
 
 const PebbleProcessMd *menu_app_get_info() {
-  static const PebbleProcessMdSystem s_app_info = {.common.main_func = &s_main,
-                                                   .name = "MenuLayer Demo"};
+  static const PebbleProcessMdSystem s_app_info = {
+      .common.main_func = &s_main, .name = "MenuLayer Demo"
+  };
   return (const PebbleProcessMd *)&s_app_info;
 }
 

@@ -41,11 +41,10 @@ static void prv_tap_msg_callback(const uint8_t *data, uint32_t len) {
   PBL_LOG_DBG("Got tap msg: axis: %d, direction: %d", hdr->axis, hdr->direction);
   PebbleEvent e = {
       .type = PEBBLE_ACCEL_SHAKE_EVENT,
-      .accel_tap =
-          {
-              .axis = hdr->axis,
-              .direction = hdr->direction,
-          },
+      .accel_tap = {
+          .axis = hdr->axis,
+          .direction = hdr->direction,
+      },
   };
 
   event_put(&e);
@@ -81,9 +80,12 @@ static void prv_compass_msg_callback(const uint8_t *data, uint32_t len) {
 
   PBL_LOG_DBG("Got compass msg: magnetic_heading: %" PRId32 ", calib_status:%u",
               ntohl(hdr->magnetic_heading), hdr->calib_status);
-  PebbleEvent e = {.type = PEBBLE_COMPASS_DATA_EVENT,
-                   .compass_data = {.magnetic_heading = ntohl(hdr->magnetic_heading),
-                                    .calib_status = hdr->calib_status}};
+  PebbleEvent e = {
+      .type = PEBBLE_COMPASS_DATA_EVENT,
+      .compass_data = {
+          .magnetic_heading = ntohl(hdr->magnetic_heading), .calib_status = hdr->calib_status
+      }
+  };
 
   event_put(&e);
 }
@@ -320,8 +322,10 @@ static bool prv_uart_irq_handler(UARTDevice *dev, uint8_t byte, const UARTRXErro
       (byte == QEMU_FOOTER_LSB && s_qemu_state.prev_byte == QEMU_FOOTER_MSB)) {
     if (!s_qemu_state.callback_pending) {
       s_qemu_state.callback_pending = true;
-      PebbleEvent e = {.type = PEBBLE_CALLBACK_EVENT,
-                       .callback = {.callback = prv_process_receive_buffer, .data = NULL}};
+      PebbleEvent e = {
+          .type = PEBBLE_CALLBACK_EVENT,
+          .callback = {.callback = prv_process_receive_buffer, .data = NULL}
+      };
       should_context_switch = event_put_isr(&e);
     }
   }
@@ -352,7 +356,8 @@ void qemu_serial_send(QemuProtocol protocol, const uint8_t *data, uint32_t len) 
 
   // Send the header
   QemuCommChannelHdr hdr = (QemuCommChannelHdr){
-      .signature = htons(QEMU_HEADER_SIGNATURE), .protocol = htons(protocol), .len = htons(len)};
+      .signature = htons(QEMU_HEADER_SIGNATURE), .protocol = htons(protocol), .len = htons(len)
+  };
   prv_send((uint8_t *)&hdr, sizeof(hdr));
 
   // Send the data

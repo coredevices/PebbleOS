@@ -1047,7 +1047,8 @@ void animation_private_state_init(AnimationState *state) {
       // will collide but it is not required that each task have globally unique handles
       .next_handle = pebble_task_get_current() * 100000000,
       .last_delay_ms = ANIMATION_RENDER_FRAME_INTERVAL_MS,
-      .last_frame_time_ms = prv_get_ms_since_system_start()};
+      .last_frame_time_ms = prv_get_ms_since_system_start()
+  };
 
   *state = (AnimationState){
       .signature = ANIMATION_STATE_3_X_SIGNATURE,
@@ -1082,11 +1083,13 @@ AnimationPrivate *animation_private_animation_find(Animation *handle) {
 Animation *animation_private_animation_init(AnimationPrivate *animation) {
   AnimationState *state = prv_animation_state_get(PebbleTask_Current);
 
-  *animation = (AnimationPrivate){.handle = (Animation *)(uintptr_t)(++state->aux->next_handle),
-                                  .duration_ms = ANIMATION_DEFAULT_DURATION_MS,
-                                  .play_count = 1,
-                                  .curve = AnimationCurveDefault,
-                                  .auto_destroy = true};
+  *animation = (AnimationPrivate){
+      .handle = (Animation *)(uintptr_t)(++state->aux->next_handle),
+      .duration_ms = ANIMATION_DEFAULT_DURATION_MS,
+      .play_count = 1,
+      .curve = AnimationCurveDefault,
+      .auto_destroy = true
+  };
   PBL_ASSERTN(animation->handle);
 
   state->unscheduled_head = list_insert_before(state->unscheduled_head, &animation->list_node);

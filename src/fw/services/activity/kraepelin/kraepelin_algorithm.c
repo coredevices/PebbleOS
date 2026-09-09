@@ -464,16 +464,18 @@ static uint32_t prv_pim_filter(KAlgState *state, int16_t *d, int16_t dlen, int16
   // We use a butterworth second order digital filter with a bandpass
   // design of 0.25 to 1.75 hz
   static const Fixed_S64_32 cb[KALG_BUTTERWORTH_NUM_COEFFICIENTS] = {
-      {0x000000000721d150LL},   //  0.027859766117136
-      {0x0000000000000000LL},   //  0.0
-      {0xfffffffff1bc5d60LL},   // -0.055719532234272
-      {0x0000000000000000LL},   //  0.0
-      {0x000000000721d150LL}};  //  0.027859766117136
+      {0x000000000721d150LL},  //  0.027859766117136
+      {0x0000000000000000LL},  //  0.0
+      {0xfffffffff1bc5d60LL},  // -0.055719532234272
+      {0x0000000000000000LL},  //  0.0
+      {0x000000000721d150LL}
+  };  //  0.027859766117136
   static const Fixed_S64_32 ca[KALG_BUTTERWORTH_NUM_COEFFICIENTS - 1] = {
-      {0xfffffffc92b0910cLL},   // -3.426993307709624
-      {0x0000000473f9a693LL},   //  4.453028117259779
-      {0xfffffffd633c7d23LL},   // -2.612358264068663
-      {0x0000000096405b5cLL}};  //  0.586919508061190
+      {0xfffffffc92b0910cLL},  // -3.426993307709624
+      {0x0000000473f9a693LL},  //  4.453028117259779
+      {0xfffffffd633c7d23LL},  // -2.612358264068663
+      {0x0000000096405b5cLL}
+  };  //  0.586919508061190
 
   int32_t pim = 0;
   for (int16_t i = 0; i < dlen; i++) {

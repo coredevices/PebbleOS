@@ -29,19 +29,18 @@ void ble_hrm_push_reminder_popup(void) {
 
   TimelineItemActionGroup action_group = {
       .num_actions = 2,
-      .actions =
-          (TimelineItemAction[]){
-              {
-                  .id = 0,
-                  .type = TimelineItemActionTypeDismiss,
-                  .attr_list = dismiss_action_attr_list,
-              },
-              {
-                  .id = 1,
-                  .type = TimelineItemActionTypeBLEHRMStopSharing,
-                  .attr_list = stop_action_attr_list,
-              },
+      .actions = (TimelineItemAction[]){
+          {
+              .id = 0,
+              .type = TimelineItemActionTypeDismiss,
+              .attr_list = dismiss_action_attr_list,
           },
+          {
+              .id = 1,
+              .type = TimelineItemActionTypeBLEHRMStopSharing,
+              .attr_list = stop_action_attr_list,
+          },
+      },
   };
 
   TimelineItem *item =

@@ -13,10 +13,9 @@ static bool s_event_ongoing = false;
 static void prv_put_calendar_event(void) {
   PebbleEvent event = {
       .type = PEBBLE_CALENDAR_EVENT,
-      .calendar =
-          {
-              .is_event_ongoing = s_event_ongoing,
-          },
+      .calendar = {
+          .is_event_ongoing = s_event_ongoing,
+      },
   };
   event_put(&event);
 }

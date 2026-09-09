@@ -159,9 +159,11 @@ void render_steps(TextLayoutExtended *layout, RenderMoveMode mode, int delta, in
       }
 
       graphics_fill_rect(&ctx, &box);
-      graphics_draw_rect(&ctx, &(GRect){.origin = GPoint(-ctx.draw_state.drawing_box.origin.x,
-                                                         -ctx.draw_state.drawing_box.origin.y),
-                                        .size = ctx.draw_state.clip_box.size});
+      graphics_draw_rect(&ctx, &(GRect){
+                                   .origin = GPoint(-ctx.draw_state.drawing_box.origin.x,
+                                                    -ctx.draw_state.drawing_box.origin.y),
+                                   .size = ctx.draw_state.clip_box.size
+                               });
 
       char *text = texts ? texts[text_idx++] : s_text;
       graphics_draw_text(&ctx, text, &s_font_info, box, GTextOverflowModeTrailingEllipsis,
@@ -172,11 +174,10 @@ void render_steps(TextLayoutExtended *layout, RenderMoveMode mode, int delta, in
 
 void test_graphics_draw_text_flow__flow_no_paging(void) {
   TextLayoutExtended layout = {
-      .flow_data =
-          {
-              .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_round},
-              .perimeter.inset = 8,
-          },
+      .flow_data = {
+          .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_round},
+          .perimeter.inset = 8,
+      },
   };
   render_steps(&layout, RenderMoveTextBox, DELTA, DISP_ROWS, NULL);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
@@ -184,11 +185,10 @@ void test_graphics_draw_text_flow__flow_no_paging(void) {
 
 void test_graphics_draw_text_flow__flow_no_paging_draw_box(void) {
   TextLayoutExtended layout = {
-      .flow_data =
-          {
-              .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_round},
-              .perimeter.inset = 8,
-          },
+      .flow_data = {
+          .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_round},
+          .perimeter.inset = 8,
+      },
   };
   render_steps(&layout, RenderMoveDrawBox, DELTA, DISP_ROWS, NULL);
   // should result in the very same output as if you did a placement via text box
@@ -197,14 +197,13 @@ void test_graphics_draw_text_flow__flow_no_paging_draw_box(void) {
 
 void test_graphics_draw_text_flow__with_origin_zero(void) {
   TextLayoutExtended layout = {
-      .flow_data =
-          {
-              .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_round},
-              .perimeter.inset = 8,
-              .paging.page_on_screen.size_h =
-                  DISP_ROWS,  // setting a page height != enables positioning
-              .paging.origin_on_screen = {0, 0},
-          },
+      .flow_data = {
+          .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_round},
+          .perimeter.inset = 8,
+          .paging.page_on_screen.size_h =
+              DISP_ROWS,  // setting a page height != enables positioning
+          .paging.origin_on_screen = {0, 0},
+      },
   };
   render_steps(&layout, RenderMoveTextBox, DELTA, DISP_ROWS, NULL);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
@@ -212,14 +211,13 @@ void test_graphics_draw_text_flow__with_origin_zero(void) {
 
 void test_graphics_draw_text_flow__with_origin_non_zero(void) {
   TextLayoutExtended layout = {
-      .flow_data =
-          {
-              .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_round},
-              .perimeter.inset = 8,
-              .paging.page_on_screen.size_h =
-                  DISP_ROWS,  // setting a page height != enables positioning
-              .paging.origin_on_screen = {DELTA, 2 * DELTA},
-          },
+      .flow_data = {
+          .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_round},
+          .perimeter.inset = 8,
+          .paging.page_on_screen.size_h =
+              DISP_ROWS,  // setting a page height != enables positioning
+          .paging.origin_on_screen = {DELTA, 2 * DELTA},
+      },
   };
   render_steps(&layout, RenderMoveTextBox, DELTA, DISP_ROWS, NULL);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
@@ -228,14 +226,13 @@ void test_graphics_draw_text_flow__with_origin_non_zero(void) {
 void test_graphics_draw_text_flow__with_paging(void) {
   prv_prepare_fb_steps(GSize(DISP_COLS, 2 * DISP_ROWS));
   TextLayoutExtended layout = {
-      .flow_data =
-          {
-              .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_round},
-              .perimeter.inset = 8,
-              .paging.page_on_screen = {.origin_y = 25,
-                                        .size_h =
-                                            100},  // setting a page height != enables positioning
-          },
+      .flow_data = {
+          .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_round},
+          .perimeter.inset = 8,
+          .paging.page_on_screen = {
+              .origin_y = 25, .size_h = 100
+          },  // setting a page height != enables positioning
+      },
   };
   render_steps(&layout, RenderMoveTextBox, DELTA, 1000, NULL);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
@@ -243,14 +240,13 @@ void test_graphics_draw_text_flow__with_paging(void) {
 
 void test_graphics_draw_text_flow__avoid_repeat_text_to_avoid_orphans(void) {
   TextLayoutExtended layout = {
-      .flow_data =
-          {
-              .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_round},
-              .perimeter.inset = 8,
-              .paging.page_on_screen = {.origin_y = 25,
-                                        .size_h =
-                                            100},  // setting a page height != enables positioning
-          },
+      .flow_data = {
+          .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_round},
+          .perimeter.inset = 8,
+          .paging.page_on_screen = {
+              .origin_y = 25, .size_h = 100
+          },  // setting a page height != enables positioning
+      },
   };
 
   char first_page_one_line[] = "A B C D E F G H I";
@@ -326,13 +322,12 @@ void test_graphics_draw_text_flow__draw_text_doom(void) {
   // text and configuration we see in text_flow demo app
   cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_24_BOLD, 0, &s_font_info));
   TextLayoutExtended layout = {
-      .flow_data =
-          {
-              .perimeter.impl = &(GPerimeter){.callback = prv_perimeter_for_display_round},
-              .perimeter.inset = 8,
-              .paging.page_on_screen = {.origin_y = 48, .size_h = 85},
-              .paging.origin_on_screen.y = 412,
-          },
+      .flow_data = {
+          .perimeter.impl = &(GPerimeter){.callback = prv_perimeter_for_display_round},
+          .perimeter.inset = 8,
+          .paging.page_on_screen = {.origin_y = 48, .size_h = 85},
+          .paging.origin_on_screen.y = 412,
+      },
   };
   char text[] =
       "Dib: You're just jealous...\nZim: This has nothing to do with jelly!\n"
@@ -367,13 +362,12 @@ void test_graphics_draw_text_flow__max_used_size_draw_text_doom(void) {
   cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_24_BOLD, 0, &s_font_info));
 
   TextLayoutExtended layout = {
-      .flow_data =
-          {
-              .perimeter.impl = &(GPerimeter){.callback = prv_perimeter_for_display_round},
-              .perimeter.inset = 8,
-              .paging.page_on_screen = {.origin_y = 48, .size_h = 85},
-              .paging.origin_on_screen.y = 412,
-          },
+      .flow_data = {
+          .perimeter.impl = &(GPerimeter){.callback = prv_perimeter_for_display_round},
+          .perimeter.inset = 8,
+          .paging.page_on_screen = {.origin_y = 48, .size_h = 85},
+          .paging.origin_on_screen.y = 412,
+      },
   };
   void *layout_ref = (void *)&layout;
 
@@ -416,10 +410,9 @@ void test_graphics_draw_text_flow__no_infinite_loop(void) {
   // compiled out there; clar still discovers the test because it scans textually.
 #if PBL_RECT
   TextLayoutExtended layout = {
-      .flow_data =
-          {
-              .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_rect},
-          },
+      .flow_data = {
+          .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_rect},
+      },
   };
   char text[] = "Prevent orphans for tall-enough pages.";
   const int16_t line_height = 22;
@@ -457,17 +450,18 @@ void test_graphics_draw_text_flow__no_infinite_loop2(void) {
   // the following values are those we measured in GDB when it entered the infinite loop
   cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_24_BOLD, 0, &s_font_info));
   TextLayoutExtended layout = {
-      .flow_data = {.perimeter.impl =
-                        &(GPerimeter){
-                            .callback = prv_perimeter_for_display_round,
-                        },
-                    .perimeter.inset = 8,
-                    .paging =
-                        {
-                            .origin_on_screen = GPoint(12, 83),
-                            .page_on_screen.origin_y = 24,
-                            .page_on_screen.size_h = 140,
-                        }},
+      .flow_data = {
+          .perimeter.impl =
+              &(GPerimeter){
+                  .callback = prv_perimeter_for_display_round,
+              },
+          .perimeter.inset = 8,
+          .paging = {
+              .origin_on_screen = GPoint(12, 83),
+              .page_on_screen.origin_y = 24,
+              .page_on_screen.size_h = 140,
+          }
+      },
   };
   char text[] = "Late again? Can you be on time ever? Seriously? Dude!!!";
   prv_prepare_fb_steps_xy(GSize(180, 360), 1, 1);

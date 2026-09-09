@@ -199,10 +199,9 @@ static void prv_compositor_flush(void) {
 static void prv_send_did_focus_event(bool in_focus) {
   PebbleEvent event = {
       .type = PEBBLE_APP_DID_CHANGE_FOCUS_EVENT,
-      .app_focus =
-          {
-              .in_focus = in_focus,
-          },
+      .app_focus = {
+          .in_focus = in_focus,
+      },
   };
   event_put(&event);
 }

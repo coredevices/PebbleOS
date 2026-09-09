@@ -287,10 +287,9 @@ static void prv_charge_status_inform(BatteryChargeStatus chg_status) {
 static void prv_battery_state_put_change_event(PreciseBatteryChargeState state) {
   PebbleEvent e = {
       .type = PEBBLE_BATTERY_STATE_CHANGE_EVENT,
-      .battery_state =
-          {
-              .new_state = state,
-          },
+      .battery_state = {
+          .new_state = state,
+      },
   };
   event_put(&e);
 }
@@ -473,7 +472,8 @@ void battery_state_init(void) {
   ret = nrf_fuel_gauge_ext_state_update(
       NRF_FUEL_GAUGE_EXT_STATE_INFO_CHARGE_CURRENT_LIMIT,
       &(union nrf_fuel_gauge_ext_state_info_data){
-          .charge_current_limit = (float)NPM1300_CONFIG.chg_current_ma / 1000.0f});
+          .charge_current_limit = (float)NPM1300_CONFIG.chg_current_ma / 1000.0f
+      });
   PBL_ASSERTN(ret == 0);
 
   ret = nrf_fuel_gauge_ext_state_update(
@@ -481,7 +481,8 @@ void battery_state_init(void) {
       &(union nrf_fuel_gauge_ext_state_info_data){
           .charge_term_current =
               (float)(NPM1300_CONFIG.chg_current_ma * NPM1300_CONFIG.term_current_pct / 100U) /
-              1000.0f});
+              1000.0f
+      });
   PBL_ASSERTN(ret == 0);
 
   runtime_parameters.a = NAN;

@@ -38,11 +38,13 @@ typedef enum {
   NumTextIdx
 } TextIdx;
 
-const int KEY_TO_TEXT_IDX[] = {[GOLF_FRONT_KEY] = TextFront,
-                               [GOLF_MID_KEY] = TextMid,
-                               [GOLF_BACK_KEY] = TextBack,
-                               [GOLF_HOLE_KEY] = TextHole,
-                               [GOLF_PAR_KEY] = TextPar};
+const int KEY_TO_TEXT_IDX[] = {
+    [GOLF_FRONT_KEY] = TextFront,
+    [GOLF_MID_KEY] = TextMid,
+    [GOLF_BACK_KEY] = TextBack,
+    [GOLF_HOLE_KEY] = TextHole,
+    [GOLF_PAR_KEY] = TextPar
+};
 
 typedef struct {
   Window *window;
@@ -363,8 +365,10 @@ static void handle_init(void) {
   // overall reduce the sniff-mode latency at the expense of some power...
   app_comm_set_sniff_interval(SNIFF_INTERVAL_REDUCED);
 
-  ConnectionHandlers handlers = {.pebble_app_connection_handler = NULL,
-                                 .pebblekit_connection_handler = bluetooth_status_callback};
+  ConnectionHandlers handlers = {
+      .pebble_app_connection_handler = NULL,
+      .pebblekit_connection_handler = bluetooth_status_callback
+  };
   connection_service_subscribe(handlers);
 }
 

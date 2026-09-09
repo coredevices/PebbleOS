@@ -280,7 +280,8 @@ static void prv_init(void) {
       TupletCString(SPORTS_TIME_KEY, "00:00"),   TupletInteger(SPORTS_UNITS_KEY, is_metric),
       TupletInteger(SPORTS_LABEL_KEY, is_pace),  TupletInteger(SPORTS_ACTIVITY_STATE_KEY, state),
       TupletInteger(SPORTS_HRM_KEY, 0),          TupletCString(SPORTS_CUSTOM_LABEL_KEY, ""),
-      TupletCString(SPORTS_CUSTOM_VALUE_KEY, "")};
+      TupletCString(SPORTS_CUSTOM_VALUE_KEY, "")
+  };
   app_sync_init(&data->sync, data->sync_buffer, sizeof(data->sync_buffer), initial_values,
                 ARRAY_LENGTH(initial_values), prv_sync_tuple_changed_callback,
                 prv_sync_error_callback, data);
@@ -336,8 +337,9 @@ const PebbleProcessMd *sports_app_get_info(void) {
           {
               .main_func = &prv_main,
               .visibility = ProcessVisibilityShownOnCommunication,
-              .uuid = {0x4d, 0xab, 0x81, 0xa6, 0xd2, 0xfc, 0x45, 0x8a, 0x99, 0x2c, 0x7a, 0x1f, 0x3b,
-                       0x96, 0xa9, 0x70},
+              .uuid =
+                  {0x4d, 0xab, 0x81, 0xa6, 0xd2, 0xfc, 0x45, 0x8a, 0x99, 0x2c, 0x7a, 0x1f, 0x3b,
+                   0x96, 0xa9, 0x70},
           },
       .name = i18n_noop("Sports"),
   };

@@ -24,33 +24,37 @@ typedef struct VoltagePoint {
 #define BATTERY_CRITICAL_VOLTAGE_CHARGING 3550
 #define BATTERY_CRITICAL_VOLTAGE_DISCHARGING 3300
 // Battery Tables for Silk
-static VoltagePoint discharge_curve[] = {{0, BATTERY_CRITICAL_VOLTAGE_DISCHARGING},
-                                         {2, 3490},
-                                         {5, 3615},
-                                         {10, 3655},
-                                         {20, 3700},
-                                         {30, 3735},
-                                         {40, 3760},
-                                         {50, 3800},
-                                         {60, 3855},
-                                         {70, 3935},
-                                         {80, 4025},
-                                         {90, 4120},
-                                         {100, 4230}};
+static VoltagePoint discharge_curve[] = {
+    {0, BATTERY_CRITICAL_VOLTAGE_DISCHARGING},
+    {2, 3490},
+    {5, 3615},
+    {10, 3655},
+    {20, 3700},
+    {30, 3735},
+    {40, 3760},
+    {50, 3800},
+    {60, 3855},
+    {70, 3935},
+    {80, 4025},
+    {90, 4120},
+    {100, 4230}
+};
 
-static const VoltagePoint charge_curve[] = {{0, BATTERY_CRITICAL_VOLTAGE_CHARGING},
-                                            {2, 3570},
-                                            {5, 3600},
-                                            {10, 3645},
-                                            {20, 3730},
-                                            {30, 3800},
-                                            {40, 3860},
-                                            {50, 3915},
-                                            {60, 3970},
-                                            {70, 4030},
-                                            {80, 4095},
-                                            {90, 4175},
-                                            {100, 4260}};
+static const VoltagePoint charge_curve[] = {
+    {0, BATTERY_CRITICAL_VOLTAGE_CHARGING},
+    {2, 3570},
+    {5, 3600},
+    {10, 3645},
+    {20, 3730},
+    {30, 3800},
+    {40, 3860},
+    {50, 3915},
+    {60, 3970},
+    {70, 4030},
+    {80, 4095},
+    {90, 4175},
+    {100, 4260}
+};
 
 #else
 #error "No battery curve for platform!"

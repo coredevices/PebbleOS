@@ -165,13 +165,12 @@ static void prv_time_picker_window_appear(Window *window) {
       PBL_IF_RECT_ELSE(i18n_noop("Wake up between"), i18n_noop("Wake up interval"));
   const TimeSelectionWindowConfig config = {
       .label = i18n_get(label, data),
-      .range =
-          {
-              .update = true,
-              .text = is_smart ? i18n_get(range_text, data) : NULL,
-              .duration_m = SMART_ALARM_RANGE_S / SECONDS_PER_MINUTE,
-              .enabled = is_smart,
-          },
+      .range = {
+          .update = true,
+          .text = is_smart ? i18n_get(range_text, data) : NULL,
+          .duration_m = SMART_ALARM_RANGE_S / SECONDS_PER_MINUTE,
+          .enabled = is_smart,
+      },
   };
   time_selection_window_configure(&data->time_picker_window, &config);
   data->time_picker_window.selection_layer.selected_cell_idx = 0;
@@ -203,12 +202,11 @@ static void prv_time_picker_complete(TimeSelectionWindowData *time_picker_window
 static void prv_setup_time_picker_window(AlarmEditorData *data) {
   const TimeSelectionWindowConfig config = {
       .color = ALARMS_APP_HIGHLIGHT_COLOR,
-      .callback =
-          {
-              .update = true,
-              .complete = prv_time_picker_complete,
-              .context = data,
-          },
+      .callback = {
+          .update = true,
+          .complete = prv_time_picker_complete,
+          .context = data,
+      },
   };
   time_selection_window_init(&data->time_picker_window, &config);
   window_set_user_data(&data->time_picker_window.window, data);

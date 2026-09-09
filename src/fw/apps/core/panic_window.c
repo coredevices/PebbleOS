@@ -63,8 +63,9 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
 }
 
 static void prv_panic_reset_callback(void *data) {
-  RebootReason reason = {.code = RebootReasonCode_LauncherPanic,
-                         .extra = {.value = launcher_panic_get_current_error()}};
+  RebootReason reason = {
+      .code = RebootReasonCode_LauncherPanic, .extra = {.value = launcher_panic_get_current_error()}
+  };
   reboot_reason_set(&reason);
 
   system_reset();
@@ -113,8 +114,9 @@ const PebbleProcessMd *panic_app_get_app_info() {
               .main_func = s_main,
               .visibility = ProcessVisibilityHidden,
               // UUID: 130fb6d7-da9e-485a-87ca-a5ca4bf21912
-              .uuid = {0x13, 0x0f, 0xb6, 0xd7, 0xda, 0x9e, 0x48, 0x5a, 0x87, 0xca, 0xa5, 0xca, 0x4b,
-                       0xf2, 0x19, 0x12},
+              .uuid =
+                  {0x13, 0x0f, 0xb6, 0xd7, 0xda, 0x9e, 0x48, 0x5a, 0x87, 0xca, 0xa5, 0xca, 0x4b,
+                   0xf2, 0x19, 0x12},
           },
       .name = "Panic App",
       .run_level = ProcessAppRunLevelCritical,

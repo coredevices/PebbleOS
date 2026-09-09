@@ -238,9 +238,10 @@ void pbl_log_hashed_vargs(const bool async, const uint32_t core_number,
    * Duplicate _VERBOSE -- let's have a reasonable entry for every value should something go
    * wrong on the packing end.
    */
-  const uint8_t level_map[8] = {
-      LOG_LEVEL_ALWAYS, LOG_LEVEL_ERROR,         LOG_LEVEL_WARNING,       LOG_LEVEL_INFO,
-      LOG_LEVEL_DEBUG,  LOG_LEVEL_DEBUG_VERBOSE, LOG_LEVEL_DEBUG_VERBOSE, LOG_LEVEL_DEBUG_VERBOSE};
+  const uint8_t level_map[8] = {LOG_LEVEL_ALWAYS,        LOG_LEVEL_ERROR,
+                                LOG_LEVEL_WARNING,       LOG_LEVEL_INFO,
+                                LOG_LEVEL_DEBUG,         LOG_LEVEL_DEBUG_VERBOSE,
+                                LOG_LEVEL_DEBUG_VERBOSE, LOG_LEVEL_DEBUG_VERBOSE};
   msg->log_level = level_map[level];
 
   /*

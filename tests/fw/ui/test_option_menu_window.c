@@ -134,15 +134,18 @@ void prv_create_menu_and_render_long_title(bool icons_enabled, const char *title
       .content_type =
           special_height ? OptionMenuContentType_DoubleLine : OptionMenuContentType_Default,
       .num_items = 3,
-      .items = (MenuItemConfig[]){{
-                                      .title = "Allow All Notifications",
-                                  },
-                                  {
-                                      .title = "Allow Phone Calls Only",
-                                  },
-                                  {
-                                      .title = "Mute All Notifications",
-                                  }},
+      .items =
+          (MenuItemConfig[]){
+              {
+                  .title = "Allow All Notifications",
+              },
+              {
+                  .title = "Allow Phone Calls Only",
+              },
+              {
+                  .title = "Mute All Notifications",
+              }
+          },
       .icons_enabled = icons_enabled,
   });
 }
@@ -178,15 +181,18 @@ void prv_create_menu_and_render_short_title(bool icons_enabled, const char *titl
       .content_type =
           special_height ? OptionMenuContentType_SingleLine : OptionMenuContentType_Default,
       .num_items = 3,
-      .items = (MenuItemConfig[]){{
-                                      .title = "Smaller",
-                                  },
-                                  {
-                                      .title = "Default",
-                                  },
-                                  {
-                                      .title = "Larger",
-                                  }},
+      .items =
+          (MenuItemConfig[]){
+              {
+                  .title = "Smaller",
+              },
+              {
+                  .title = "Default",
+              },
+              {
+                  .title = "Larger",
+              }
+          },
       .icons_enabled = icons_enabled,
   });
 }

@@ -196,8 +196,9 @@ static void prv_run_accel_test(int *sample_arr, int num_items) {
 // enumerate through all possible sampling rate combinations and confirm
 // that the correct frequency is selected
 void test_accel_manager__subscription_sampling_rates(void) {
-  int sample_rates[] = {ACCEL_SAMPLING_10HZ, ACCEL_SAMPLING_25HZ, ACCEL_SAMPLING_50HZ,
-                        ACCEL_SAMPLING_100HZ};
+  int sample_rates[] = {
+      ACCEL_SAMPLING_10HZ, ACCEL_SAMPLING_25HZ, ACCEL_SAMPLING_50HZ, ACCEL_SAMPLING_100HZ
+  };
   prv_validate_sample_rates(sample_rates, ARRAY_LENGTH(sample_rates));
 
   int poss_rates = ARRAY_LENGTH(sample_rates);

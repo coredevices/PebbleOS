@@ -123,7 +123,8 @@ void sys_msg_protocol_msg_callback(CommSession *session, const uint8_t *data, si
                                                 : PebbleSystemMessageFirmwareUpdateStartLegacy,
               .bytes_transferred = bytes_transferred,
               .total_transfer_size = total_size,
-          }};
+          }
+      };
       event_put(&e);
       break;
     }

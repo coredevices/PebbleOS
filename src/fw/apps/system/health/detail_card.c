@@ -204,13 +204,12 @@ static void prv_draw_progress_bar_in_zone(GContext *ctx, const GRect *zone_rect,
           .type = HealthProgressSegmentType_Horizontal,
           .amount_of_total = HEALTH_PROGRESS_BAR_MAX_VALUE,
           .mark_width = 124,  // Arbitrarily chosen through trial and error
-          .points =
-              {
-                  {progress_bar_x, progress_bar_y + progress_bar_height},
-                  {progress_bar_x + progress_bar_width, progress_bar_y + progress_bar_height},
-                  {progress_bar_x + progress_bar_width, progress_bar_y},
-                  {progress_bar_x, progress_bar_y},
-              },
+          .points = {
+              {progress_bar_x, progress_bar_y + progress_bar_height},
+              {progress_bar_x + progress_bar_width, progress_bar_y + progress_bar_height},
+              {progress_bar_x + progress_bar_width, progress_bar_y},
+              {progress_bar_x, progress_bar_y},
+          },
       },
   };
 
@@ -315,13 +314,12 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIn
             .type = HealthProgressSegmentType_Horizontal,
             .amount_of_total = HEALTH_PROGRESS_BAR_MAX_VALUE,
             .mark_width = 100,  // Arbitrarily chosen through trial and error
-            .points =
-                {
-                    {cell_bounds.origin.x, cell_bounds.size.h},
-                    {cell_bounds.size.w, cell_bounds.size.h},
-                    {cell_bounds.size.w, cell_bounds.origin.y},
-                    {cell_bounds.origin.x, cell_bounds.origin.y},
-                },
+            .points = {
+                {cell_bounds.origin.x, cell_bounds.size.h},
+                {cell_bounds.size.w, cell_bounds.size.h},
+                {cell_bounds.size.w, cell_bounds.origin.y},
+                {cell_bounds.origin.x, cell_bounds.origin.y},
+            },
         },
     };
 

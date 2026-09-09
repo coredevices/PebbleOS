@@ -173,11 +173,13 @@ NORETURN trigger_oom_fault(size_t bytes, uint32_t lr, Heap *heap_ptr) {
   }
 
   // Kernel-heap OOM (or OOM on a kernel task): unrecoverable, reboot.
-  RebootReason reason = {.code = RebootReasonCode_OutOfMemory,
-                         .heap_data = {
-                             .heap_alloc_lr = lr,
-                             .heap_ptr = (uint32_t)heap_ptr,
-                         }};
+  RebootReason reason = {
+      .code = RebootReasonCode_OutOfMemory,
+      .heap_data = {
+          .heap_alloc_lr = lr,
+          .heap_ptr = (uint32_t)heap_ptr,
+      }
+  };
   reboot_reason_set(&reason);
   reset_due_to_software_failure();
 }

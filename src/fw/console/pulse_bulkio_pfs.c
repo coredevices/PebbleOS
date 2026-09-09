@@ -88,11 +88,13 @@ static status_t pfs_domain_close(void *context) {
   return pfs_close(fd);
 }
 
-PulseBulkIODomainHandler pulse_bulkio_domain_pfs = {.id = PulseBulkIODomainType_PFS,
-                                                    .open_proc = pfs_domain_open,
-                                                    .read_proc = pfs_domain_read,
-                                                    .write_proc = pfs_domain_write,
-                                                    .close_proc = pfs_domain_close,
-                                                    .stat_proc = pfs_domain_stat,
-                                                    .erase_proc = pfs_domain_erase};
+PulseBulkIODomainHandler pulse_bulkio_domain_pfs = {
+    .id = PulseBulkIODomainType_PFS,
+    .open_proc = pfs_domain_open,
+    .read_proc = pfs_domain_read,
+    .write_proc = pfs_domain_write,
+    .close_proc = pfs_domain_close,
+    .stat_proc = pfs_domain_stat,
+    .erase_proc = pfs_domain_erase
+};
 #endif

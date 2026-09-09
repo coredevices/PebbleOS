@@ -213,15 +213,13 @@ void touch_set_system_hold(bool held) {
 static void prv_put_touch_event(TouchEventType type, int16_t x, int16_t y) {
   PebbleEvent e = {
       .type = PEBBLE_TOUCH_EVENT,
-      .touch =
-          {
-              .event =
-                  {
-                      .type = type,
-                      .x = x,
-                      .y = y,
-                  },
+      .touch = {
+          .event = {
+              .type = type,
+              .x = x,
+              .y = y,
           },
+      },
   };
   event_put(&e);
 }
@@ -229,15 +227,13 @@ static void prv_put_touch_event(TouchEventType type, int16_t x, int16_t y) {
 static void prv_put_gesture_event(GestureEventType gesture, int16_t x, int16_t y) {
   PebbleEvent e = {
       .type = PEBBLE_GESTURE_EVENT,
-      .gesture =
-          {
-              .event =
-                  {
-                      .type = gesture,
-                      .x = x,
-                      .y = y,
-                  },
+      .gesture = {
+          .event = {
+              .type = gesture,
+              .x = x,
+              .y = y,
           },
+      },
   };
   event_put(&e);
 }

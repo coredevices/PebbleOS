@@ -61,33 +61,36 @@
 ///////////////////////////////////////////////////////////
 static PebbleProcessMdSystem s_launch_app = {
     .name = "Launch App",
-    .common =
-        {
-            // UUID: 7bbff9bc-b762-4219-9003-4086675d625d
-            .uuid = {0x7b, 0xbf, 0xf9, 0xbc, 0xb7, 0x62, 0x42, 0x19, 0x90, 0x03, 0x40, 0x86, 0x67,
-                     0x5d, 0x62, 0x5d},
+    .common = {
+        // UUID: 7bbff9bc-b762-4219-9003-4086675d625d
+        .uuid = {
+            0x7b, 0xbf, 0xf9, 0xbc, 0xb7, 0x62, 0x42, 0x19, 0x90, 0x03, 0x40, 0x86, 0x67, 0x5d,
+            0x62, 0x5d
         },
+    },
 };
 
 static PebbleProcessMdSystem s_root_app = {
     .name = "Root App",
-    .common =
-        {
-            // UUID: 3fca66e2-8c66-46c6-8011-330fccc9baa9
-            .uuid = {0x3f, 0xca, 0x66, 0xe2, 0x8c, 0x66, 0x46, 0xc6, 0x80, 0x11, 0x33, 0x0f, 0xcc,
-                     0xc9, 0xba, 0xa9},
+    .common = {
+        // UUID: 3fca66e2-8c66-46c6-8011-330fccc9baa9
+        .uuid = {
+            0x3f, 0xca, 0x66, 0xe2, 0x8c, 0x66, 0x46, 0xc6, 0x80, 0x11, 0x33, 0x0f, 0xcc, 0xc9,
+            0xba, 0xa9
         },
+    },
 };
 
 static PebbleProcessMdSystem s_third_party_app = {
     .name = "Third Party App",
-    .common =
-        {
-            .is_unprivileged = true,
-            // UUID: 04c52401-4dbe-408b-b73a-0e80ef09af74
-            .uuid = {0x04, 0xc5, 0x24, 0x01, 0x4d, 0xbe, 0x40, 0x8b, 0xb7, 0x3a, 0x0e, 0x80, 0xef,
-                     0x09, 0xaf, 0x74},
+    .common = {
+        .is_unprivileged = true,
+        // UUID: 04c52401-4dbe-408b-b73a-0e80ef09af74
+        .uuid = {
+            0x04, 0xc5, 0x24, 0x01, 0x4d, 0xbe, 0x40, 0x8b, 0xb7, 0x3a, 0x0e, 0x80, 0xef, 0x09,
+            0xaf, 0x74
         },
+    },
 };
 
 static PebbleProcessMdFlash s_borked_app = {
@@ -97,11 +100,14 @@ static PebbleProcessMdFlash s_borked_app = {
             .is_unprivileged = true,
             .process_storage = ProcessStorageFlash,
             // UUID: 25a9e7ff-de9e-4dda-b745-afdd75aaa53b
-            .uuid = {0x25, 0xa9, 0xe7, 0xff, 0xde, 0x9e, 0x4d, 0xda, 0xb7, 0x45, 0xaf, 0xdd, 0x75,
-                     0xaa, 0xa5, 0x3b},
+            .uuid =
+                {0x25, 0xa9, 0xe7, 0xff, 0xde, 0x9e, 0x4d, 0xda, 0xb7, 0x45, 0xaf, 0xdd, 0x75, 0xaa,
+                 0xa5, 0x3b},
         },
-    .sdk_version = {.major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR,
-                    .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR},
+    .sdk_version = {
+        .major = PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR,
+        .minor = PROCESS_INFO_CURRENT_SDK_VERSION_MINOR
+    },
 };
 
 static PebbleEvent s_last_to_app_event;

@@ -228,16 +228,13 @@ static void prv_put_sharing_state_updated_event(int subscription_count) {
   // - present a "Sharing HRM" icon in the Settings app glance.
   PebbleEvent e = {
       .type = PEBBLE_BLE_HRM_SHARING_STATE_UPDATED_EVENT,
-      .bluetooth =
-          {
-              .le =
-                  {
-                      .hrm_sharing_state =
-                          {
-                              .subscription_count = subscription_count,
-                          },
-                  },
+      .bluetooth = {
+          .le = {
+              .hrm_sharing_state = {
+                  .subscription_count = subscription_count,
+              },
           },
+      },
   };
   event_put(&e);
 }

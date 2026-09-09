@@ -271,11 +271,10 @@ static void prv_property_animation_grect_update(Animation *animation,
 
 static const PropertyAnimationImplementation s_frame_layer_implementation = {
     .base.update = prv_property_animation_grect_update,
-    .accessors =
-        {
-            .setter.grect = (const GRectSetter)layer_set_frame_by_value,
-            .getter.grect = (const GRectGetter)layer_get_frame_by_value,
-        },
+    .accessors = {
+        .setter.grect = (const GRectSetter)layer_set_frame_by_value,
+        .getter.grect = (const GRectGetter)layer_get_frame_by_value,
+    },
 };
 
 //! Overrides the stub in stubs_animation.c to provide the proper plumbing for scrolling

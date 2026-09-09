@@ -56,15 +56,14 @@ uint16_t gaps_get_starting_att_handle(void) {
 
 static BTDeviceInternal prv_dummy_device(uint8_t octet) {
   BTDeviceAddress address = {
-      .octets =
-          {
-              [0] = octet,
-              [1] = octet,
-              [2] = octet,
-              [3] = octet,
-              [4] = octet,
-              [5] = octet,
-          },
+      .octets = {
+          [0] = octet,
+          [1] = octet,
+          [2] = octet,
+          [3] = octet,
+          [4] = octet,
+          [5] = octet,
+      },
   };
   BTDevice device = bt_device_init_with_address(address, true /* is_random */);
   return *(BTDeviceInternal *)(&device);

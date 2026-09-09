@@ -284,7 +284,8 @@ static void s_main(void) {
 
 // =================================================================================
 const PebbleProcessMd *test_core_dump_app_get_info() {
-  static const PebbleProcessMdSystem s_app_info = {.common.main_func = &s_main,
-                                                   .name = "Core Dump Test"};
+  static const PebbleProcessMdSystem s_app_info = {
+      .common.main_func = &s_main, .name = "Core Dump Test"
+  };
   return (const PebbleProcessMd *)&s_app_info;
 }

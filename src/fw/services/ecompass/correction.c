@@ -197,9 +197,10 @@ cleanup:
 // defined above and populated by add_raw_mag_sample
 
 static bool pt_to_pt_dist_under_thresh(int idx_a, int idx_b, int32_t thresh) {
-  int32_t v_ab[3] = {s_samples[idx_b][0] - s_samples[idx_a][0],
-                     s_samples[idx_b][1] - s_samples[idx_a][1],
-                     s_samples[idx_b][2] - s_samples[idx_a][2]};
+  int32_t v_ab[3] = {
+      s_samples[idx_b][0] - s_samples[idx_a][0], s_samples[idx_b][1] - s_samples[idx_a][1],
+      s_samples[idx_b][2] - s_samples[idx_a][2]
+  };
 
   int32_t dist_sq = v_ab[0] * v_ab[0] + v_ab[1] * v_ab[1] + v_ab[2] * v_ab[2];
 
@@ -208,16 +209,21 @@ static bool pt_to_pt_dist_under_thresh(int idx_a, int idx_b, int32_t thresh) {
 
 static bool pt_to_line_dist_under_thresh(int idx_line_a, int idx_line_b, int idx_pt,
                                          int32_t thresh) {
-  int32_t s[3] = {s_samples[idx_line_b][0] - s_samples[idx_line_a][0],
-                  s_samples[idx_line_b][1] - s_samples[idx_line_a][1],
-                  s_samples[idx_line_b][2] - s_samples[idx_line_a][2]};
+  int32_t s[3] = {
+      s_samples[idx_line_b][0] - s_samples[idx_line_a][0],
+      s_samples[idx_line_b][1] - s_samples[idx_line_a][1],
+      s_samples[idx_line_b][2] - s_samples[idx_line_a][2]
+  };
 
-  int32_t m1[3] = {s_samples[idx_line_a][0] - s_samples[idx_pt][0],
-                   s_samples[idx_line_a][1] - s_samples[idx_pt][1],
-                   s_samples[idx_line_a][2] - s_samples[idx_pt][2]};
+  int32_t m1[3] = {
+      s_samples[idx_line_a][0] - s_samples[idx_pt][0],
+      s_samples[idx_line_a][1] - s_samples[idx_pt][1],
+      s_samples[idx_line_a][2] - s_samples[idx_pt][2]
+  };
 
-  int32_t m1xs[3] = {m1[1] * s[2] - m1[2] * s[1], -(m1[0] * s[2] - m1[2] * s[0]),
-                     m1[0] * s[1] - m1[1] * s[0]};
+  int32_t m1xs[3] = {
+      m1[1] * s[2] - m1[2] * s[1], -(m1[0] * s[2] - m1[2] * s[0]), m1[0] * s[1] - m1[1] * s[0]
+  };
 
   int64_t dist_sq =
       ((int64_t)m1xs[0] * m1xs[0] + (int64_t)m1xs[1] * m1xs[1] + (int64_t)m1xs[2] * m1xs[2]) /

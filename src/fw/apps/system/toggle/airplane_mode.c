@@ -26,11 +26,10 @@ static const ActionToggleImpl s_airplane_mode_action_toggle_impl = {
     .prompt_disable_message = i18n_noop("Turn Off Airplane Mode?"),
     .result_enable_message = i18n_noop("Airplane\nMode On"),
     .result_disable_message = i18n_noop("Airplane\nMode Off"),
-    .callbacks =
-        {
-            .get_state = prv_get_state,
-            .set_state = prv_set_state,
-        },
+    .callbacks = {
+        .get_state = prv_get_state,
+        .set_state = prv_set_state,
+    },
 };
 
 static void prv_main(void) {

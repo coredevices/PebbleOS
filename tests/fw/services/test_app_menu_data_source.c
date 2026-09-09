@@ -95,8 +95,9 @@ const FileResourceData g_file_resource_stores[] = {};
 // background counter
 static const AppDBEntry bg_counter_app = {
     .name = BG_COUNTER_APP_NAME,
-    .uuid = {0x1e, 0xb1, 0xd3, 0x9b, 0x56, 0x98, 0x48, 0x44, 0xb3, 0x94, 0x1f, 0x87, 0xb6, 0xbe,
-             0xae, 0x67},
+    .uuid =
+        {0x1e, 0xb1, 0xd3, 0x9b, 0x56, 0x98, 0x48, 0x44, 0xb3, 0x94, 0x1f, 0x87, 0xb6, 0xbe, 0xae,
+         0x67},
     .info_flags = PROCESS_INFO_HAS_WORKER | PROCESS_INFO_STANDARD_APP,
     .icon_resource_id = 0,
     .app_version =
@@ -116,8 +117,9 @@ static const AppDBEntry bg_counter_app = {
 // menu layer
 static const AppDBEntry menu_layer_app = {
     .name = MENU_LAYER_APP_NAME,
-    .uuid = {0xb8, 0x26, 0x2e, 0x08, 0x57, 0xe9, 0x4e, 0x58, 0x88, 0x02, 0x45, 0xfd, 0xfe, 0xe0,
-             0xac, 0x77},
+    .uuid =
+        {0xb8, 0x26, 0x2e, 0x08, 0x57, 0xe9, 0x4e, 0x58, 0x88, 0x02, 0x45, 0xfd, 0xfe, 0xe0, 0xac,
+         0x77},
     .info_flags = PROCESS_INFO_STANDARD_APP,
     .icon_resource_id = 0,
     .app_version =
@@ -137,8 +139,9 @@ static const AppDBEntry menu_layer_app = {
 // big time
 static const AppDBEntry big_time_app = {
     .name = BIG_TIME_APP_NAME,
-    .uuid = {0xaf, 0xcc, 0x68, 0x76, 0x8f, 0x84, 0x44, 0xe0, 0xbb, 0x8b, 0x02, 0x3f, 0xfb, 0x2d,
-             0x7c, 0x2c},
+    .uuid =
+        {0xaf, 0xcc, 0x68, 0x76, 0x8f, 0x84, 0x44, 0xe0, 0xbb, 0x8b, 0x02, 0x3f, 0xfb, 0x2d, 0x7c,
+         0x2c},
     .info_flags = PROCESS_INFO_WATCH_FACE,
     .icon_resource_id = 0,
     .app_version =
@@ -270,9 +273,10 @@ void test_app_menu_data_source__pass_init(void) {
 
 void test_app_menu_data_source__check_default_order_apps(void) {
   // settings has to be at the beginning. The app_menu_data_source module enforces it
-  static const AppInstallId app_default_order[] = {
-      APP_ID_SETTINGS,   APP_ID_MUSIC,   APP_ID_NOTIFICATIONS, APP_ID_ALARMS,
-      APP_ID_WATCHFACES, APP_ID_WORKOUT, BG_COUNTER_APP_ID,    MENU_LAYER_APP_ID};
+  static const AppInstallId app_default_order[] = {APP_ID_SETTINGS,      APP_ID_MUSIC,
+                                                   APP_ID_NOTIFICATIONS, APP_ID_ALARMS,
+                                                   APP_ID_WATCHFACES,    APP_ID_WORKOUT,
+                                                   BG_COUNTER_APP_ID,    MENU_LAYER_APP_ID};
   app_menu_data_source_init(&data_source,
                             &(AppMenuDataSourceCallbacks){
                                 .changed = prv_menu_layer_reload_data,
@@ -297,9 +301,10 @@ static uint16_t prv_reverse_index(AppMenuDataSource *data_source, uint16_t origi
 
 void test_app_menu_data_source__transform_index(void) {
   // settings has to be at the beginning. The app_menu_data_source module enforces it
-  static const AppInstallId app_default_order[] = {
-      APP_ID_SETTINGS,   APP_ID_MUSIC,   APP_ID_NOTIFICATIONS, APP_ID_ALARMS,
-      APP_ID_WATCHFACES, APP_ID_WORKOUT, BG_COUNTER_APP_ID,    MENU_LAYER_APP_ID};
+  static const AppInstallId app_default_order[] = {APP_ID_SETTINGS,      APP_ID_MUSIC,
+                                                   APP_ID_NOTIFICATIONS, APP_ID_ALARMS,
+                                                   APP_ID_WATCHFACES,    APP_ID_WORKOUT,
+                                                   BG_COUNTER_APP_ID,    MENU_LAYER_APP_ID};
   app_menu_data_source_init(&data_source,
                             &(AppMenuDataSourceCallbacks){
                                 .changed = prv_menu_layer_reload_data,
@@ -593,36 +598,38 @@ int prv_app_node_comparator(void *app_node_ref, void *new_node_ref);
 
 void test_app_menu_data_source__app_node_comparator_equality_cases(void) {
   // Test handling of storage and record equality cases
-  AppMenuNode app_menu_nodes[] = {{
-                                      .install_id = APP_ID_ALARMS,
-                                      .storage_order = 0,
-                                      .record_order = 3,
-                                  },
-                                  {
-                                      .install_id = APP_ID_TICTOC,
-                                      .storage_order = 0,
-                                      .record_order = 3,
-                                  },
-                                  {
-                                      .install_id = APP_ID_NOTIFICATIONS,
-                                      .storage_order = 1,
-                                      .record_order = 0,
-                                  },
-                                  {
-                                      .install_id = APP_ID_SETTINGS,
-                                      .storage_order = 2,
-                                      .record_order = 1,
-                                  },
-                                  {
-                                      .install_id = APP_ID_WATCHFACES,
-                                      .storage_order = 0,
-                                      .record_order = 4,
-                                  },
-                                  {
-                                      .install_id = APP_ID_WORKOUT,
-                                      .storage_order = 0,
-                                      .record_order = 5,
-                                  }};
+  AppMenuNode app_menu_nodes[] = {
+      {
+          .install_id = APP_ID_ALARMS,
+          .storage_order = 0,
+          .record_order = 3,
+      },
+      {
+          .install_id = APP_ID_TICTOC,
+          .storage_order = 0,
+          .record_order = 3,
+      },
+      {
+          .install_id = APP_ID_NOTIFICATIONS,
+          .storage_order = 1,
+          .record_order = 0,
+      },
+      {
+          .install_id = APP_ID_SETTINGS,
+          .storage_order = 2,
+          .record_order = 1,
+      },
+      {
+          .install_id = APP_ID_WATCHFACES,
+          .storage_order = 0,
+          .record_order = 4,
+      },
+      {
+          .install_id = APP_ID_WORKOUT,
+          .storage_order = 0,
+          .record_order = 5,
+      }
+  };
 
   AppInstallId desired_order[] = {
       APP_ID_NOTIFICATIONS, APP_ID_SETTINGS,   APP_ID_TICTOC,

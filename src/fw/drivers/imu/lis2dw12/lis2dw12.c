@@ -235,12 +235,14 @@ static void prv_lis2dw12_process_samples(uint8_t num_samples, uint64_t timestamp
       .stride = LIS2DW12_SAMPLE_SIZE_BYTES,
       .axis =
           {
-              [AXIS_X] = {.offset = LIS2DW12->axis_map[AXIS_X] * 2U,
-                          .sign = (int8_t)(LIS2DW12->axis_dir[AXIS_X] * rotate)},
-              [AXIS_Y] = {.offset = LIS2DW12->axis_map[AXIS_Y] * 2U,
-                          .sign = (int8_t)(LIS2DW12->axis_dir[AXIS_Y] * rotate)},
-              [AXIS_Z] = {.offset = LIS2DW12->axis_map[AXIS_Z] * 2U,
-                          .sign = LIS2DW12->axis_dir[AXIS_Z]},
+              [AXIS_X] =
+                  {.offset = LIS2DW12->axis_map[AXIS_X] * 2U,
+                   .sign = (int8_t)(LIS2DW12->axis_dir[AXIS_X] * rotate)},
+              [AXIS_Y] =
+                  {.offset = LIS2DW12->axis_map[AXIS_Y] * 2U,
+                   .sign = (int8_t)(LIS2DW12->axis_dir[AXIS_Y] * rotate)},
+              [AXIS_Z] =
+                  {.offset = LIS2DW12->axis_map[AXIS_Z] * 2U, .sign = LIS2DW12->axis_dir[AXIS_Z]},
           },
       .scale_num = CONFIG_ACCEL_LIS2DW12_SCALE_MG,
       .scale_den = LIS2DW12_S12_SCALE_RANGE << 4U,

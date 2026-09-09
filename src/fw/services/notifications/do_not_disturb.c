@@ -51,10 +51,12 @@ static void prv_update_active_time(bool is_active) {
 }
 
 static void prv_put_dnd_event(bool is_active) {
-  PebbleEvent e = (PebbleEvent){.type = PEBBLE_DO_NOT_DISTURB_EVENT,
-                                .do_not_disturb = {
-                                    .is_active = is_active,
-                                }};
+  PebbleEvent e = (PebbleEvent){
+      .type = PEBBLE_DO_NOT_DISTURB_EVENT,
+      .do_not_disturb = {
+          .is_active = is_active,
+      }
+  };
 
   event_put(&e);
 }

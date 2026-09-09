@@ -206,8 +206,10 @@ void test_app_run_state__protocol_msg_callback(void) {
   cl_assert_equal_i(s_launcher_deprecated_messages, 0);
   cl_assert_equal_i(s_app_run_state_messages, 0);
 
-  AppRunStateCommand commands[] = {APP_RUN_STATE_INVALID_COMMAND, APP_RUN_STATE_RUN_COMMAND,
-                                   APP_RUN_STATE_STOP_COMMAND, APP_RUN_STATE_STATUS_COMMAND};
+  AppRunStateCommand commands[] = {
+      APP_RUN_STATE_INVALID_COMMAND, APP_RUN_STATE_RUN_COMMAND, APP_RUN_STATE_STOP_COMMAND,
+      APP_RUN_STATE_STATUS_COMMAND
+  };
 
   AppState expected[] = {RUNNING, RUNNING, NOT_RUNNING, RUNNING};
 

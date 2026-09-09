@@ -15,10 +15,12 @@
 #endif
 
 static GRect get_glyph_rect(const GlyphData *glyph) {
-  GRect r = {.size.w = glyph->header.width_px,
-             .size.h = glyph->header.height_px,
-             .origin.x = glyph->header.left_offset_px,
-             .origin.y = glyph->header.top_offset_px};
+  GRect r = {
+      .size.w = glyph->header.width_px,
+      .size.h = glyph->header.height_px,
+      .origin.x = glyph->header.left_offset_px,
+      .origin.y = glyph->header.top_offset_px
+  };
 
   return r;
 }
@@ -69,9 +71,12 @@ void render_glyph(GContext *const ctx, const uint32_t codepoint, FontInfo *const
   glyph_metrics.origin.y += baseline_adjust;
 
   // Calculate the box that we intend to draw to the screen, in screen coordinates
-  GRect glyph_target = {.origin = {.x = cursor.origin.x + glyph_metrics.origin.x,
-                                   .y = cursor.origin.y + glyph_metrics.origin.y},
-                        .size = {.w = glyph_metrics.size.w, .h = glyph_metrics.size.h}};
+  GRect glyph_target = {
+      .origin =
+          {.x = cursor.origin.x + glyph_metrics.origin.x,
+           .y = cursor.origin.y + glyph_metrics.origin.y},
+      .size = {.w = glyph_metrics.size.w, .h = glyph_metrics.size.h}
+  };
 
   // The destination bitmap's x-coordinate and row advance. Used in the loop below.
   GBitmap *dest_bitmap = graphics_context_get_bitmap(ctx);

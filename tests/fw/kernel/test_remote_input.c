@@ -46,11 +46,10 @@ static void prv_put_comm_session_event(bool is_open, bool is_system) {
   cl_assert(s_comm_session_subscription != NULL);
   PebbleEvent event = {
       .type = PEBBLE_COMM_SESSION_EVENT,
-      .bluetooth.comm_session_event =
-          {
-              .is_open = is_open,
-              .is_system = is_system,
-          },
+      .bluetooth.comm_session_event = {
+          .is_open = is_open,
+          .is_system = is_system,
+      },
   };
   s_comm_session_subscription->handler(&event, s_comm_session_subscription->context);
 }

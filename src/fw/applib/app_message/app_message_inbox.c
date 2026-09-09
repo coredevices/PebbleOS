@@ -38,11 +38,10 @@ void app_message_inbox_close(AppMessageCtxInbox *inbox) {
 void app_message_inbox_send_ack_nack_reply(CommSession *session, const uint8_t transaction_id,
                                            AppMessageCmd cmd) {
   const AppMessageAck nack_message = (const AppMessageAck){
-      .header =
-          {
-              .command = cmd,
-              .transaction_id = transaction_id,
-          },
+      .header = {
+          .command = cmd,
+          .transaction_id = transaction_id,
+      },
   };
   // Just use a syscall to enqueue the message using kernel heap.
   // We could use app_outbox, but then we'd need to allocate the message on the app heap and I'm

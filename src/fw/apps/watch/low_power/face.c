@@ -146,12 +146,14 @@ const PebbleProcessMd *low_power_face_get_app_info() {
       .common =
           {
               // UUID: e9475244-5bbe-4e0f-a637-a218af4c3110
-              .uuid = {0xe9, 0x47, 0x52, 0x44, 0x5b, 0xbe, 0x4e, 0x0f, 0xa6, 0x37, 0xa2, 0x18, 0xaf,
-                       0x4c, 0x31, 0x10},
+              .uuid =
+                  {0xe9, 0x47, 0x52, 0x44, 0x5b, 0xbe, 0x4e, 0x0f, 0xa6, 0x37, 0xa2, 0x18, 0xaf,
+                   0x4c, 0x31, 0x10},
               .main_func = low_power_main,
               .process_type = ProcessTypeWatchface,
               .visibility = ProcessVisibilityHidden,
           },
-      .name = "Watch Only"};
+      .name = "Watch Only"
+  };
   return (const PebbleProcessMd *)&s_app_md;
 }

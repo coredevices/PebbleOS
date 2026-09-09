@@ -418,14 +418,13 @@ GTextNodeVertical *layout_create_metrics_node(const LayoutLayer *layout_ref) {
     const LayoutNodeConstructorConfig metric_config = {
         .extent.node.type = LayoutNodeType_Constructor,
         .constructor = prv_metric_constructor,
-        .context =
-            &(MetricContext){
-                .index = i,
-                .name = name,
-                .value = value,
-                .icon_info = &icon_res_info,
-                .icon_layer = i == 0 ? &layout->icon_layer : layout->metric_icon_layers[i - 1],
-            },
+        .context = &(MetricContext){
+            .index = i,
+            .name = name,
+            .value = value,
+            .icon_info = &icon_res_info,
+            .icon_layer = i == 0 ? &layout->icon_layer : layout->metric_icon_layers[i - 1],
+        },
     };
 
     GTextNodeText *metric_node = (GTextNodeText *)layout_create_text_node_from_config(

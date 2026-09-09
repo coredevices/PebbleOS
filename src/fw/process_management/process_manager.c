@@ -122,11 +122,10 @@ void process_manager_init(void) {
 void process_manager_put_kill_process_event(PebbleTask task, bool gracefully) {
   PebbleEvent event = {
       .type = PEBBLE_PROCESS_KILL_EVENT,
-      .kill =
-          {
-              .gracefully = gracefully,
-              .task = task,
-          },
+      .kill = {
+          .gracefully = gracefully,
+          .task = task,
+      },
   };
 
   // When we have decided to exit the app,
@@ -278,12 +277,11 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
 
       PebbleEvent e = {
           .type = PEBBLE_APP_FETCH_REQUEST_EVENT,
-          .app_fetch_request =
-              {
-                  .id = id,
-                  .with_ui = true,
-                  .fetch_args = fetch_args,
-              },
+          .app_fetch_request = {
+              .id = id,
+              .with_ui = true,
+              .fetch_args = fetch_args,
+          },
       };
       event_put(&e);
       return;
@@ -641,11 +639,10 @@ void process_manager_send_callback_event_to_process(PebbleTask task, void (*call
   PBL_ASSERTN(callback != NULL);
   PebbleEvent event = {
       .type = PEBBLE_CALLBACK_EVENT,
-      .callback =
-          {
-              .callback = callback,
-              .data = data,
-          },
+      .callback = {
+          .callback = callback,
+          .data = data,
+      },
   };
   process_manager_send_event_to_process(task, &event);
 }

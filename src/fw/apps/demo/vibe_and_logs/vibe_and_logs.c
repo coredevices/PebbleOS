@@ -58,8 +58,9 @@ static void s_main(void) {
 }
 
 const PebbleProcessMd *vibe_and_logs_get_app_info() {
-  static const PebbleProcessMdSystem s_trigger_alarm = {.common.main_func = s_main,
-                                                        .name = "VibeAndLogs"};
+  static const PebbleProcessMdSystem s_trigger_alarm = {
+      .common.main_func = s_main, .name = "VibeAndLogs"
+  };
 
   return (const PebbleProcessMd *)&s_trigger_alarm;
 }

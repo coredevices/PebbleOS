@@ -463,12 +463,14 @@ bool app_install_do_callbacks(InstallEventType event_type, AppInstallId install_
     return false;
   }
 
-  s_install_callback_data = (InstallCallbackData){.callback_in_progress = true,
-                                                  .install_id = install_id,
-                                                  .uuid = uuid,
-                                                  .install_type = event_type,
-                                                  .done_callback = done_callback,
-                                                  .callback_data = callback_data};
+  s_install_callback_data = (InstallCallbackData){
+      .callback_in_progress = true,
+      .install_id = install_id,
+      .uuid = uuid,
+      .install_type = event_type,
+      .done_callback = done_callback,
+      .callback_data = callback_data
+  };
 
   launcher_task_add_callback(app_install_launcher_task_callback, NULL);
 
@@ -621,9 +623,10 @@ static GColor prv_valid_color_from_uuid(GColor color, Uuid *uuid) {
   }
 
   // if color isn't provided, build hash over uuid and pick from selected fall-back colors
-  GColor fall_back_colors[] = {GColorFromHEX(0x0000aa), GColorFromHEX(0x005500),
-                               GColorFromHEX(0x550055), GColorFromHEX(0xff0055),
-                               GColorFromHEX(0xaa0000)};
+  GColor fall_back_colors[] = {
+      GColorFromHEX(0x0000aa), GColorFromHEX(0x005500), GColorFromHEX(0x550055),
+      GColorFromHEX(0xff0055), GColorFromHEX(0xaa0000)
+  };
   uint8_t uuid_byte_sum = 0;
   for (uint8_t *b = &uuid->byte0; b <= &uuid->byte15; b++) {
     uuid_byte_sum += *b;

@@ -55,10 +55,9 @@ void battery_state_service_unsubscribe(void) {
 
 void battery_state_service_state_init(BatteryStateServiceState *state) {
   *state = (BatteryStateServiceState){
-      .bss_info =
-          {
-              .type = PEBBLE_BATTERY_STATE_CHANGE_EVENT,
-              .handler = &do_handle,
-          },
+      .bss_info = {
+          .type = PEBBLE_BATTERY_STATE_CHANGE_EVENT,
+          .handler = &do_handle,
+      },
   };
 }

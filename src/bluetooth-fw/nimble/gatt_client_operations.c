@@ -32,11 +32,13 @@ static int prv_gatt_write_event_cb(uint16_t conn_handle, const struct ble_gatt_e
                 error->status);
   }
 
-  GattClientOpWriteResponse resp = {.hdr = {
-                                        .type = GattClientOpResponseWrite,
-                                        .error_code = prv_gatt_error_code(error->status),
-                                        .context = arg,
-                                    }};
+  GattClientOpWriteResponse resp = {
+      .hdr = {
+          .type = GattClientOpResponseWrite,
+          .error_code = prv_gatt_error_code(error->status),
+          .context = arg,
+      }
+  };
   bt_driver_cb_gatt_client_operations_handle_response(&resp.hdr);
   return 0;
 }

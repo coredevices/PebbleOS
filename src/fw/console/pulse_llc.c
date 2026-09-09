@@ -72,11 +72,13 @@ void pulse_llc_send_link_opened_msg(void) {
   } Response;
 
   Response *response = pulse_best_effort_send_begin(PULSE_PROTOCOL_LLC);
-  *response = (Response){.type = LLC_OUTMSG_LINK_OPENED,
-                         .pulse_version = 1,
-                         .mtu = PULSE_MAX_SEND_SIZE + PULSE_MIN_FRAME_LENGTH,
-                         .mru = PULSE_MAX_RECEIVE_UNIT,
-                         .timeout = PULSE_KEEPALIVE_TIMEOUT_DECISECONDS};
+  *response = (Response){
+      .type = LLC_OUTMSG_LINK_OPENED,
+      .pulse_version = 1,
+      .mtu = PULSE_MAX_SEND_SIZE + PULSE_MIN_FRAME_LENGTH,
+      .mru = PULSE_MAX_RECEIVE_UNIT,
+      .timeout = PULSE_KEEPALIVE_TIMEOUT_DECISECONDS
+  };
 
   pulse_best_effort_send(response, sizeof(Response));
 }

@@ -125,16 +125,13 @@ void bt_driver_cb_gatt_handle_buffer_empty(const GattDeviceBufferEmptyEvent *eve
     PebbleEvent e = {
         .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
         .task_mask = task_mask,
-        .bluetooth =
-            {
-                .le =
-                    {
-                        .gatt_client =
-                            {
-                                .subtype = PebbleBLEGATTClientEventTypeBufferEmpty,
-                            },
-                    },
+        .bluetooth = {
+            .le = {
+                .gatt_client = {
+                    .subtype = PebbleBLEGATTClientEventTypeBufferEmpty,
+                },
             },
+        },
     };
     event_put(&e);
   }

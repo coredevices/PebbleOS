@@ -45,7 +45,8 @@ static void prv_reset(Recognizer *recognizer);
 static bool prv_cancel(Recognizer *recognizer);
 
 static const RecognizerImpl s_tap_recognizer_impl = {
-    .handle_touch_event = prv_handle_touch_event, .reset = prv_reset, .cancel = prv_cancel};
+    .handle_touch_event = prv_handle_touch_event, .reset = prv_reset, .cancel = prv_cancel
+};
 
 static bool prv_moved_too_far(const TapRecognizerData *data, const TouchEvent *touch_event) {
   const int16_t dx = ABS(touch_event->x - data->state.touch_down_point.x);
@@ -104,12 +105,11 @@ static bool prv_cancel(Recognizer *recognizer) {
 
 Recognizer *tap_recognizer_create(RecognizerEventCb event_cb, void *user_data) {
   TapRecognizerData data = {
-      .config =
-          {
-              .taps_required = 1,
-              .fingers_required = 1,
-              .movement_threshold = GPoint(TAP_MOVEMENT_THRESHOLD_PX, TAP_MOVEMENT_THRESHOLD_PX),
-          },
+      .config = {
+          .taps_required = 1,
+          .fingers_required = 1,
+          .movement_threshold = GPoint(TAP_MOVEMENT_THRESHOLD_PX, TAP_MOVEMENT_THRESHOLD_PX),
+      },
   };
 
   return recognizer_create_with_data(&s_tap_recognizer_impl, &data, sizeof(data), event_cb,
@@ -120,12 +120,11 @@ Recognizer *tap_recognizer_init_static(void *storage, RecognizerEventCb event_cb
   _Static_assert(RECOGNIZER_INSTANCE_SIZE + sizeof(TapRecognizerData) <= TAP_RECOGNIZER_STATIC_SIZE,
                  "TAP_RECOGNIZER_STATIC_SIZE too small for a static tap recognizer");
   TapRecognizerData data = {
-      .config =
-          {
-              .taps_required = 1,
-              .fingers_required = 1,
-              .movement_threshold = GPoint(TAP_MOVEMENT_THRESHOLD_PX, TAP_MOVEMENT_THRESHOLD_PX),
-          },
+      .config = {
+          .taps_required = 1,
+          .fingers_required = 1,
+          .movement_threshold = GPoint(TAP_MOVEMENT_THRESHOLD_PX, TAP_MOVEMENT_THRESHOLD_PX),
+      },
   };
 
   return recognizer_init_static_with_data(storage, &s_tap_recognizer_impl, &data, sizeof(data),

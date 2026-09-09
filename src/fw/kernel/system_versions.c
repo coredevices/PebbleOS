@@ -174,8 +174,8 @@ void command_version_info(void) {
   prompt_send_response("MANUFACTURING FW");
 #endif
 
-  bool (*fun_ptr[2])(FirmwareMetadata *) = {version_copy_running_fw_metadata,
-                                            version_copy_recovery_fw_metadata};
+  bool (*fun_ptr[2])(
+      FirmwareMetadata *) = {version_copy_running_fw_metadata, version_copy_recovery_fw_metadata};
   const char *label[2] = {"Running", "Recovery"};
 
   FirmwareMetadata fw_metadata;

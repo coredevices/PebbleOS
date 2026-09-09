@@ -452,7 +452,8 @@ void graphics_context_init(GContext *context, FrameBuffer *framebuffer,
       .dest_bitmap = framebuffer_get_as_bitmap(framebuffer, &framebuffer->size),
       .parent_framebuffer = framebuffer,
       .parent_framebuffer_vertical_offset = 0,
-      .lock = false};
+      .lock = false
+  };
 
   // init the font cache
   FontCache *font_cache = &context->font_cache;

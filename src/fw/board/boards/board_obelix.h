@@ -44,22 +44,21 @@ static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
 };
 
 static const BoardConfigMag BOARD_CONFIG_MAG = {
-    .mag_config =
-        {
+    .mag_config = {
 #ifdef CONFIG_IS_BIGBOARD
-            .axes_offsets[AXIS_X] = 1,
-            .axes_offsets[AXIS_Y] = 0,
-            .axes_offsets[AXIS_Z] = 2,
-            .axes_inverts[AXIS_X] = true,
-            .axes_inverts[AXIS_Y] = false,
-            .axes_inverts[AXIS_Z] = false,
+        .axes_offsets[AXIS_X] = 1,
+        .axes_offsets[AXIS_Y] = 0,
+        .axes_offsets[AXIS_Z] = 2,
+        .axes_inverts[AXIS_X] = true,
+        .axes_inverts[AXIS_Y] = false,
+        .axes_inverts[AXIS_Z] = false,
 #else
-            .axes_offsets[AXIS_X] = 1,
-            .axes_offsets[AXIS_Y] = 0,
-            .axes_offsets[AXIS_Z] = 2,
-            .axes_inverts[AXIS_X] = false,
-            .axes_inverts[AXIS_Y] = true,
-            .axes_inverts[AXIS_Z] = false,
+        .axes_offsets[AXIS_X] = 1,
+        .axes_offsets[AXIS_Y] = 0,
+        .axes_offsets[AXIS_Z] = 2,
+        .axes_inverts[AXIS_X] = false,
+        .axes_inverts[AXIS_Y] = true,
+        .axes_inverts[AXIS_Z] = false,
 #endif
-        },
+    },
 };

@@ -44,7 +44,8 @@ static void prv_update_handler(Animation *animation, const uint32_t distance) {
 
 // --------------------------------------------------------------------------------------
 static const AnimationImplementation s_custom_implementation = {
-    .setup = prv_setup_handler, .update = prv_update_handler, .teardown = prv_teardown_handler};
+    .setup = prv_setup_handler, .update = prv_update_handler, .teardown = prv_teardown_handler
+};
 
 // --------------------------------------------------------------------------------------
 static Animation *prv_create_custom_animation(void) {

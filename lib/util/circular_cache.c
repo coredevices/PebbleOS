@@ -14,11 +14,13 @@ void circular_cache_init(CircularCache *c, uint8_t *buffer, size_t item_size, in
   UTIL_ASSERT(item_size);
   UTIL_ASSERT(compare_cb);
 
-  *c = (CircularCache){.cache = buffer,
-                       .next_erased_item_idx = 0,
-                       .item_size = item_size,
-                       .total_items = total_items,
-                       .compare_cb = compare_cb};
+  *c = (CircularCache){
+      .cache = buffer,
+      .next_erased_item_idx = 0,
+      .item_size = item_size,
+      .total_items = total_items,
+      .compare_cb = compare_cb
+  };
 }
 
 void circular_cache_set_item_destructor(CircularCache *c, CircularCacheItemDestructor destructor) {

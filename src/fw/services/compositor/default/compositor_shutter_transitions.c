@@ -29,27 +29,25 @@ static CompositorShutterTransitionData s_data;
 
 static GPathInfo s_path_wedge = {
     .num_points = PATH_WEDGE_POINTS,
-    .points =
-        (GPoint[PATH_WEDGE_POINTS]){
-            // These are just placeholders to allocate the needed space.
-            // They will be set to the proper values during the animation.
-            {0, 0},
-            {0, 0},
-            {0, 0},
-        },
+    .points = (GPoint[PATH_WEDGE_POINTS]){
+        // These are just placeholders to allocate the needed space.
+        // They will be set to the proper values during the animation.
+        {0, 0},
+        {0, 0},
+        {0, 0},
+    },
 };
 
 static GPathInfo s_path_quad = {
     .num_points = PATH_QUAD_POINTS,
-    .points =
-        (GPoint[PATH_QUAD_POINTS]){
-            // These are just placeholders to allocate the needed space.
-            // They will be set to the proper values during the animation.
-            {0, 0},
-            {0, 0},
-            {0, 0},
-            {0, 0},
-        },
+    .points = (GPoint[PATH_QUAD_POINTS]){
+        // These are just placeholders to allocate the needed space.
+        // They will be set to the proper values during the animation.
+        {0, 0},
+        {0, 0},
+        {0, 0},
+        {0, 0},
+    },
 };
 
 typedef struct PathInterpDefinition {
@@ -152,38 +150,36 @@ static const PathDefinition s_path_defs[4] = {
                 },
         },
     // We don't have one for Left because the shutter will not be drawn on it.
-    [CompositorTransitionDirectionRight] =
-        {
-            .wedge_verts =
+    [CompositorTransitionDirectionRight] = {
+        .wedge_verts =
+            {
+                // TL: 0,0 -> 50,0 (0.35)
                 {
-                    // TL: 0,0 -> 50,0 (0.35)
-                    {
-                        {0, 0},
-                        {DISP_COLS * 0.35, 0},
-                    },
-                    // ML: 0,50 (0.3) -> 0,117 (0.7)
-                    {
-                        {0, DISP_ROWS * 0.3},
-                        {0, DISP_ROWS * 0.7},
-                    },
-                    PATH_INTERP_DEF_TL_CORNER,
+                    {0, 0},
+                    {DISP_COLS * 0.35, 0},
                 },
-            .quad_verts =
+                // ML: 0,50 (0.3) -> 0,117 (0.7)
                 {
-                    // BR: M,M -> 93,M (0.65)
-                    {
-                        {DISP_COLS, DISP_ROWS},
-                        {DISP_COLS * 0.65, DISP_ROWS},
-                    },
-                    // TR: M,0 -> 119,0 (0.83)
-                    {
-                        {DISP_COLS, 0},
-                        {DISP_COLS * 0.83, 0},
-                    },
-                    PATH_INTERP_DEF_TR_CORNER,
-                    PATH_INTERP_DEF_BR_CORNER,
+                    {0, DISP_ROWS * 0.3},
+                    {0, DISP_ROWS * 0.7},
                 },
+                PATH_INTERP_DEF_TL_CORNER,
+            },
+        .quad_verts = {
+            // BR: M,M -> 93,M (0.65)
+            {
+                {DISP_COLS, DISP_ROWS},
+                {DISP_COLS * 0.65, DISP_ROWS},
+            },
+            // TR: M,0 -> 119,0 (0.83)
+            {
+                {DISP_COLS, 0},
+                {DISP_COLS * 0.83, 0},
+            },
+            PATH_INTERP_DEF_TR_CORNER,
+            PATH_INTERP_DEF_BR_CORNER,
         },
+    },
 };
 
 // Creates a gpoint from a PathInterpDefinition and animation progress.

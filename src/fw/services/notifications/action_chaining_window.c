@@ -92,12 +92,12 @@ static void prv_chaining_window_unload(Window *window) {
 static void prv_chaining_window_load(Window *window) {
   ChainingWindowData *data = window_get_user_data(window);
 
-  const GRect bounds =
-      grect_inset(data->window.layer.bounds, (GEdgeInsets){.top = STATUS_BAR_LAYER_HEIGHT,
+  const GRect bounds = grect_inset(data->window.layer.bounds, (GEdgeInsets){
+                                                                  .top = STATUS_BAR_LAYER_HEIGHT,
 #if PBL_ROUND
-                                                           .bottom = STATUS_BAR_LAYER_HEIGHT
+                                                                  .bottom = STATUS_BAR_LAYER_HEIGHT
 #endif
-                                             });
+                                                              });
   menu_layer_init(&data->menu_layer, &bounds);
   menu_layer_set_callbacks(&data->menu_layer, data,
                            &(MenuLayerCallbacks){

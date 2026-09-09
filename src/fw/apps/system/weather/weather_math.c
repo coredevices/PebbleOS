@@ -347,8 +347,9 @@ void weather_draw_lava_ring(GContext *ctx, GPoint center, int outer_r, GColor gl
 
   // (The faded Celeste outer halo ring was removed by design —
   // the temp keeps just the solid condition-colored ring + sparks/beads.)
-  GRect ring_rect = {GPoint(center.x - outer_r, center.y - outer_r),
-                     GSize(outer_r * 2, outer_r * 2)};
+  GRect ring_rect = {
+      GPoint(center.x - outer_r, center.y - outer_r), GSize(outer_r * 2, outer_r * 2)
+  };
   graphics_context_set_fill_color(ctx, glow_color);
   prv_fill_wrapped_radial(ctx, ring_rect, 2, phase, span);
   prv_fill_wrapped_radial(ctx, ring_rect, 2, neg, span);

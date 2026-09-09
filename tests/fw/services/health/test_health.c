@@ -704,12 +704,13 @@ void test_health__metric_hr_averaged_accessible(void) {
        .in = {HealthMetricHeartRateBPM, now + 10, now + 20, HealthServiceTimeScopeOnce},
        .out = {HealthServiceAccessibilityMaskNotAvailable}},
       {.desc = "Time range that goes further back into history than BPM supports",
-       .in = {HealthMetricHeartRateBPM, now - 3 * SECONDS_PER_HOUR, now,
-              HealthServiceTimeScopeOnce},
+       .in =
+           {HealthMetricHeartRateBPM, now - 3 * SECONDS_PER_HOUR, now, HealthServiceTimeScopeOnce},
        .out = {HealthServiceAccessibilityMaskNotSupported}},
       {.desc = "Time range that goes further back into history than BPM supports",
-       .in = {HealthMetricHeartRateBPM, now - 3 * SECONDS_PER_HOUR, now - 1 * SECONDS_PER_HOUR,
-              HealthServiceTimeScopeOnce},
+       .in =
+           {HealthMetricHeartRateBPM, now - 3 * SECONDS_PER_HOUR, now - 1 * SECONDS_PER_HOUR,
+            HealthServiceTimeScopeOnce},
        .out = {HealthServiceAccessibilityMaskNotSupported}},
       {.desc = "HR Disabled. Return NoPermission",
        .in = {HealthMetricHeartRateBPM, now - 10, now, HealthServiceTimeScopeOnce, true},
@@ -749,36 +750,44 @@ void test_health__metric_hr_aggregate_averaged_accessible(void) {
 
   const TestInputOutput tests[] = {
       {.desc = "Valid time range with ScopeDaily and Sum. Should be NotSupported",
-       .in = {HealthMetricHeartRateBPM, now - 10, now, HealthAggregationSum,
-              HealthServiceTimeScopeDaily},
+       .in =
+           {HealthMetricHeartRateBPM, now - 10, now, HealthAggregationSum,
+            HealthServiceTimeScopeDaily},
        .out = {HealthServiceAccessibilityMaskNotSupported}},
       {.desc = "Valid time range with ScopeDaily and Avg. Not available because Daily",
-       .in = {HealthMetricHeartRateBPM, now - 10, now, HealthAggregationAvg,
-              HealthServiceTimeScopeDaily},
+       .in =
+           {HealthMetricHeartRateBPM, now - 10, now, HealthAggregationAvg,
+            HealthServiceTimeScopeDaily},
        .out = {HealthServiceAccessibilityMaskNotSupported}},
       {.desc = "Valid time range with ScopeOnce and Min. Available",
-       .in = {HealthMetricHeartRateBPM, now - 10, now, HealthAggregationMin,
-              HealthServiceTimeScopeOnce},
+       .in =
+           {HealthMetricHeartRateBPM, now - 10, now, HealthAggregationMin,
+            HealthServiceTimeScopeOnce},
        .out = {HealthServiceAccessibilityMaskAvailable}},
       {.desc = "Valid time range with ScopeOnce and Max. Available",
-       .in = {HealthMetricHeartRateBPM, now - 10, now, HealthAggregationMax,
-              HealthServiceTimeScopeOnce},
+       .in =
+           {HealthMetricHeartRateBPM, now - 10, now, HealthAggregationMax,
+            HealthServiceTimeScopeOnce},
        .out = {HealthServiceAccessibilityMaskAvailable}},
       {.desc = "Valid time range with ScopeDaily and Max. NotSupported",
-       .in = {HealthMetricHeartRateBPM, now - 10, now, HealthAggregationMax,
-              HealthServiceTimeScopeDaily},
+       .in =
+           {HealthMetricHeartRateBPM, now - 10, now, HealthAggregationMax,
+            HealthServiceTimeScopeDaily},
        .out = {HealthServiceAccessibilityMaskNotSupported}},
       {.desc = "Invalid time range with ScopeOnce and Max. NotSupported",
-       .in = {HealthMetricHeartRateBPM, now - 3 * SECONDS_PER_HOUR, now - 2 * SECONDS_PER_HOUR,
-              HealthAggregationMax, HealthServiceTimeScopeOnce},
+       .in =
+           {HealthMetricHeartRateBPM, now - 3 * SECONDS_PER_HOUR, now - 2 * SECONDS_PER_HOUR,
+            HealthAggregationMax, HealthServiceTimeScopeOnce},
        .out = {HealthServiceAccessibilityMaskNotSupported}},
       {.desc = "HR Disabled. Return NoPermission",
-       .in = {HealthMetricHeartRateBPM, now - 10, now, HealthAggregationMax,
-              HealthServiceTimeScopeOnce, true},
+       .in =
+           {HealthMetricHeartRateBPM, now - 10, now, HealthAggregationMax,
+            HealthServiceTimeScopeOnce, true},
        .out = {HealthServiceAccessibilityMaskNoPermission}},
       {.desc = "Time range that goes further back into history than BPM supports",
-       .in = {HealthMetricHeartRateBPM, now - 3 * SECONDS_PER_HOUR, now - 1 * SECONDS_PER_HOUR,
-              HealthAggregationAvg, HealthServiceTimeScopeOnce},
+       .in =
+           {HealthMetricHeartRateBPM, now - 3 * SECONDS_PER_HOUR, now - 1 * SECONDS_PER_HOUR,
+            HealthAggregationAvg, HealthServiceTimeScopeOnce},
        .out = {HealthServiceAccessibilityMaskNotSupported}},
   };
 
@@ -1003,34 +1012,39 @@ void test_health__session_compare(void) {
                                      HealthIterationDirectionFuture));
 
   // a starts earlier
-  cl_assert(0 > prv_session_compare(&(ActivitySession){.start_utc = now, .length_min = 10},
-                                    &(ActivitySession){.start_utc = now + (2 * SECONDS_PER_MINUTE),
-                                                       .length_min = 5},
-                                    HealthIterationDirectionFuture));
+  cl_assert(0 >
+            prv_session_compare(
+                &(ActivitySession){.start_utc = now, .length_min = 10},
+                &(ActivitySession){.start_utc = now + (2 * SECONDS_PER_MINUTE), .length_min = 5},
+                HealthIterationDirectionFuture));
 
   // b starts earlier
-  cl_assert(0 < prv_session_compare(&(ActivitySession){.start_utc = now, .length_min = 10},
-                                    &(ActivitySession){.start_utc = now - (2 * SECONDS_PER_MINUTE),
-                                                       .length_min = 5},
-                                    HealthIterationDirectionFuture));
+  cl_assert(0 <
+            prv_session_compare(
+                &(ActivitySession){.start_utc = now, .length_min = 10},
+                &(ActivitySession){.start_utc = now - (2 * SECONDS_PER_MINUTE), .length_min = 5},
+                HealthIterationDirectionFuture));
 
   // both end at the same time
-  cl_assert(0 == prv_session_compare(&(ActivitySession){.start_utc = now, .length_min = 10},
-                                     &(ActivitySession){.start_utc = now + (5 * SECONDS_PER_MINUTE),
-                                                        .length_min = 5},
-                                     HealthIterationDirectionPast));
+  cl_assert(0 ==
+            prv_session_compare(
+                &(ActivitySession){.start_utc = now, .length_min = 10},
+                &(ActivitySession){.start_utc = now + (5 * SECONDS_PER_MINUTE), .length_min = 5},
+                HealthIterationDirectionPast));
 
   // a ends later
-  cl_assert(0 > prv_session_compare(&(ActivitySession){.start_utc = now, .length_min = 10},
-                                    &(ActivitySession){.start_utc = now + (2 * SECONDS_PER_MINUTE),
-                                                       .length_min = 5},
-                                    HealthIterationDirectionPast));
+  cl_assert(0 >
+            prv_session_compare(
+                &(ActivitySession){.start_utc = now, .length_min = 10},
+                &(ActivitySession){.start_utc = now + (2 * SECONDS_PER_MINUTE), .length_min = 5},
+                HealthIterationDirectionPast));
 
   // b ends later
-  cl_assert(0 < prv_session_compare(&(ActivitySession){.start_utc = now, .length_min = 5},
-                                    &(ActivitySession){.start_utc = now + (2 * SECONDS_PER_MINUTE),
-                                                       .length_min = 5},
-                                    HealthIterationDirectionPast));
+  cl_assert(0 <
+            prv_session_compare(
+                &(ActivitySession){.start_utc = now, .length_min = 5},
+                &(ActivitySession){.start_utc = now + (2 * SECONDS_PER_MINUTE), .length_min = 5},
+                HealthIterationDirectionPast));
 }
 
 void test_health__get_minute_history_edge_case_args(void) {
@@ -1060,11 +1074,10 @@ void test_health__get_minute_history_edge_case_args(void) {
 
   // empty end works just fine
   s_sys_activity_get_minute_history_values = (sys_activity_get_minute_history_values){
-      .out[0] =
-          {
-              .num_records = 2,
-              .result = true,
-          },
+      .out[0] = {
+          .num_records = 2,
+          .result = true,
+      },
   };
   written = health_service_get_minute_history(data, ARRAY_LENGTH(data), &time_start, NULL);
   cl_assert_equal_i(2, written);
@@ -1076,18 +1089,16 @@ void test_health__get_minute_history(void) {
   HealthMinuteData data[5] = {};
   uint32_t written;
   s_sys_activity_get_minute_history_values = (sys_activity_get_minute_history_values){
-      .out[0] =
-          {
-              .num_records = 3,
-              .result = true,
-              .utc_start = now - 10 * SECONDS_PER_MINUTE,
-              .records =
-                  {
-                      {.is_invalid = false, .steps = 1},
-                      {.is_invalid = true, .steps = 2},
-                      {.is_invalid = false, .steps = 3},
-                  },
+      .out[0] = {
+          .num_records = 3,
+          .result = true,
+          .utc_start = now - 10 * SECONDS_PER_MINUTE,
+          .records = {
+              {.is_invalid = false, .steps = 1},
+              {.is_invalid = true, .steps = 2},
+              {.is_invalid = false, .steps = 3},
           },
+      },
   };
 
   // pass time that's not exactly on a boundary
@@ -1629,12 +1640,11 @@ void test_health__heart_rate_scope_once(void) {
               .result = true,
               .utc_start = time_start,
           },
-      .out[1] =
-          {
-              .num_records = num_minutes_per_call,
-              .result = true,
-              .utc_start = time_start,
-          },
+      .out[1] = {
+          .num_records = num_minutes_per_call,
+          .result = true,
+          .utc_start = time_start,
+      },
   };
   int32_t min_value = INT32_MAX;
   int32_t max_value = INT32_MIN;

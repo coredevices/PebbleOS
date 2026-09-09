@@ -82,84 +82,94 @@ static HealthProgressSegment s_activity_summary_progress_segments[] = {
     {
         // This is an endcap for BW (is a no-op on color)
         .type = HealthProgressSegmentType_Corner,
-        .points = {{46 + X_ADJ, 81 + Y_ADJ},
-                   {58 + X_ADJ, 81 + Y_ADJ},
-                   {46 + X_ADJ, 81 + Y_ADJ},
-                   {58 + X_ADJ, 81 + Y_ADJ}},
+        .points =
+            {{46 + X_ADJ, 81 + Y_ADJ},
+             {58 + X_ADJ, 81 + Y_ADJ},
+             {46 + X_ADJ, 81 + Y_ADJ},
+             {58 + X_ADJ, 81 + Y_ADJ}},
     },
     {
         // Left side bottom
         .type = HealthProgressSegmentType_Vertical,
         .amount_of_total = AMOUNT_PER_SEGMENT,
         .mark_width = DEFAULT_MARK_WIDTH,
-        .points = {{46 + X_ADJ, 81 + Y_ADJ},
-                   {58 + X_ADJ, 81 + Y_ADJ},
-                   {41 + X_ADJ, 51 + Y_ADJ},
-                   {29 + X_ADJ, 51 + Y_ADJ}},
+        .points =
+            {{46 + X_ADJ, 81 + Y_ADJ},
+             {58 + X_ADJ, 81 + Y_ADJ},
+             {41 + X_ADJ, 51 + Y_ADJ},
+             {29 + X_ADJ, 51 + Y_ADJ}},
     },
     {
         // Left side top
         .type = HealthProgressSegmentType_Vertical,
         .amount_of_total = AMOUNT_PER_SEGMENT,
         .mark_width = DEFAULT_MARK_WIDTH,
-        .points = {{29 + X_ADJ, 51 + Y_ADJ},
-                   {41 + X_ADJ, 51 + Y_ADJ},
-                   {57 + X_ADJ, 24 + Y_ADJ},
-                   {45 + X_ADJ, 24 + Y_ADJ}},
+        .points =
+            {{29 + X_ADJ, 51 + Y_ADJ},
+             {41 + X_ADJ, 51 + Y_ADJ},
+             {57 + X_ADJ, 24 + Y_ADJ},
+             {45 + X_ADJ, 24 + Y_ADJ}},
     },
     {
         // Top left corner
         .type = HealthProgressSegmentType_Corner,
-        .points = {{57 + X_ADJ, 24 + Y_ADJ},
-                   {45 + X_ADJ, 24 + Y_ADJ},
-                   {51 + X_ADJ, 15 + Y_ADJ},
-                   {57 + X_ADJ, 15 + Y_ADJ}},
+        .points =
+            {{57 + X_ADJ, 24 + Y_ADJ},
+             {45 + X_ADJ, 24 + Y_ADJ},
+             {51 + X_ADJ, 15 + Y_ADJ},
+             {57 + X_ADJ, 15 + Y_ADJ}},
     },
     {
         // Center top
         .type = HealthProgressSegmentType_Horizontal,
         .amount_of_total = AMOUNT_PER_SEGMENT,
         .mark_width = DEFAULT_MARK_WIDTH * 2,
-        .points = {{55 + X_ADJ, 24 + Y_ADJ},
-                   {89 + X_ADJ, 24 + Y_ADJ},
-                   {89 + X_ADJ, 15 + Y_ADJ},
-                   {55 + X_ADJ, 15 + Y_ADJ}},
+        .points =
+            {{55 + X_ADJ, 24 + Y_ADJ},
+             {89 + X_ADJ, 24 + Y_ADJ},
+             {89 + X_ADJ, 15 + Y_ADJ},
+             {55 + X_ADJ, 15 + Y_ADJ}},
     },
     {
         // Top right corner
         .type = HealthProgressSegmentType_Corner,
-        .points = {{87 + X_ADJ, 24 + Y_ADJ},
-                   {87 + X_ADJ, 15 + Y_ADJ},
-                   {93 + X_ADJ, 15 + Y_ADJ},
-                   {99 + X_ADJ, 24 + Y_ADJ}},
+        .points =
+            {{87 + X_ADJ, 24 + Y_ADJ},
+             {87 + X_ADJ, 15 + Y_ADJ},
+             {93 + X_ADJ, 15 + Y_ADJ},
+             {99 + X_ADJ, 24 + Y_ADJ}},
     },
     {
         // Right side top
         .type = HealthProgressSegmentType_Vertical,
         .amount_of_total = AMOUNT_PER_SEGMENT,
         .mark_width = DEFAULT_MARK_WIDTH,
-        .points = {{87 + X_ADJ, 24 + Y_ADJ},
-                   {99 + X_ADJ, 24 + Y_ADJ},
-                   {115 + X_ADJ, 51 + Y_ADJ},
-                   {103 + X_ADJ, 51 + Y_ADJ}},
+        .points =
+            {{87 + X_ADJ, 24 + Y_ADJ},
+             {99 + X_ADJ, 24 + Y_ADJ},
+             {115 + X_ADJ, 51 + Y_ADJ},
+             {103 + X_ADJ, 51 + Y_ADJ}},
     },
     {
         // Right side bottom
         .type = HealthProgressSegmentType_Vertical,
         .amount_of_total = AMOUNT_PER_SEGMENT,
         .mark_width = DEFAULT_MARK_WIDTH,
-        .points = {{103 + X_ADJ, 51 + Y_ADJ},
-                   {115 + X_ADJ, 51 + Y_ADJ},
-                   {98 + X_ADJ, 81 + Y_ADJ},
-                   {86 + X_ADJ, 81 + Y_ADJ}},
+        .points =
+            {{103 + X_ADJ, 51 + Y_ADJ},
+             {115 + X_ADJ, 51 + Y_ADJ},
+             {98 + X_ADJ, 81 + Y_ADJ},
+             {86 + X_ADJ, 81 + Y_ADJ}},
     },
     {
         // This is an endcap for BW (is a no-op on color)
         .type = HealthProgressSegmentType_Corner,
-        .points = {{98 + X_ADJ, 81 + Y_ADJ},
-                   {86 + X_ADJ, 81 + Y_ADJ},
-                   {98 + X_ADJ, 81 + Y_ADJ},
-                   {86 + X_ADJ, 81 + Y_ADJ}},
+        .points = {
+            {98 + X_ADJ, 81 + Y_ADJ},
+            {86 + X_ADJ, 81 + Y_ADJ},
+            {98 + X_ADJ, 81 + Y_ADJ},
+            {86 + X_ADJ, 81 + Y_ADJ}
+        },
     },
 };
 #endif

@@ -183,14 +183,17 @@ static const struct {
   const char *name;
   VibeScoreId paired_vibe;
 } s_tones[ALARM_TONE_COUNT] = {
-    [AlarmTone_Reveille] = {s_reveille, sizeof(s_reveille) / sizeof(s_reveille[0]),
-                            i18n_noop("Reveille"), VibeScoreId_Reveille},
-    [AlarmTone_Beacon] = {s_beacon, sizeof(s_beacon) / sizeof(s_beacon[0]), i18n_noop("Beacon"),
-                          VibeScoreId_Invalid},
-    [AlarmTone_Bell] = {s_bell, sizeof(s_bell) / sizeof(s_bell[0]), i18n_noop("Bell"),
-                        VibeScoreId_Invalid},
-    [AlarmTone_Chime] = {s_chime, sizeof(s_chime) / sizeof(s_chime[0]), i18n_noop("Chime"),
-                         VibeScoreId_Invalid},
+    [AlarmTone_Reveille] =
+        {s_reveille, sizeof(s_reveille) / sizeof(s_reveille[0]), i18n_noop("Reveille"),
+         VibeScoreId_Reveille},
+    [AlarmTone_Beacon] =
+        {s_beacon, sizeof(s_beacon) / sizeof(s_beacon[0]), i18n_noop("Beacon"),
+         VibeScoreId_Invalid},
+    [AlarmTone_Bell] =
+        {s_bell, sizeof(s_bell) / sizeof(s_bell[0]), i18n_noop("Bell"), VibeScoreId_Invalid},
+    [AlarmTone_Chime] = {
+        s_chime, sizeof(s_chime) / sizeof(s_chime[0]), i18n_noop("Chime"), VibeScoreId_Invalid
+    },
 };
 
 _Static_assert(AlarmTone_Chime + 1 == ALARM_TONE_COUNT,

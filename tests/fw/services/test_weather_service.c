@@ -101,7 +101,8 @@ static const WeatherLocationForecast s_forecasts[] = {
      .current_weather_phrase = TEST_WEATHER_DB_SHORT_PHRASE_HEAVY_RAIN,
      .tomorrow_high = 70,
      .tomorrow_low = 60,
-     .tomorrow_weather_type = WeatherType_PartlyCloudy}};
+     .tomorrow_weather_type = WeatherType_PartlyCloudy}
+};
 
 static void prv_assert_forecast_equal(const WeatherLocationForecast *to_check,
                                       const WeatherLocationForecast *original) {
@@ -144,13 +145,15 @@ void test_weather_service__get_default_location_forecast_from_weather_db_update(
   const int default_location_index = 0;
   const WeatherDBKey *default_location_key = weather_shared_data_get_key(default_location_index);
 
-  PebbleEvent insert_event = (PebbleEvent){.type = PEBBLE_BLOBDB_EVENT,
-                                           .blob_db = {
-                                               .db_id = BlobDBIdWeather,
-                                               .type = BlobDBEventTypeInsert,
-                                               .key = (uint8_t *)default_location_key,
-                                               .key_len = sizeof(WeatherDBKey),
-                                           }};
+  PebbleEvent insert_event = (PebbleEvent){
+      .type = PEBBLE_BLOBDB_EVENT,
+      .blob_db = {
+          .db_id = BlobDBIdWeather,
+          .type = BlobDBEventTypeInsert,
+          .key = (uint8_t *)default_location_key,
+          .key_len = sizeof(WeatherDBKey),
+      }
+  };
 
   s_event_info->handler(&insert_event, s_event_info->context);
   forecast = weather_service_create_default_forecast();
@@ -160,13 +163,15 @@ void test_weather_service__get_default_location_forecast_from_weather_db_update(
   weather_service_destroy_default_forecast(forecast);
 
   weather_db_flush();
-  PebbleEvent flush_event = (PebbleEvent){.type = PEBBLE_BLOBDB_EVENT,
-                                          .blob_db = {
-                                              .db_id = BlobDBIdWeather,
-                                              .type = BlobDBEventTypeFlush,
-                                              .key = NULL,
-                                              .key_len = 0,
-                                          }};
+  PebbleEvent flush_event = (PebbleEvent){
+      .type = PEBBLE_BLOBDB_EVENT,
+      .blob_db = {
+          .db_id = BlobDBIdWeather,
+          .type = BlobDBEventTypeFlush,
+          .key = NULL,
+          .key_len = 0,
+      }
+  };
 
   s_event_info->handler(&flush_event, s_event_info->context);
   forecast = weather_service_create_default_forecast();
@@ -181,13 +186,15 @@ void test_weather_service__get_default_location_forecast_from_watch_app_prefs_db
   const int default_location_index = 0;
   const WeatherDBKey *default_location_key = weather_shared_data_get_key(0);
 
-  PebbleEvent insert_event = (PebbleEvent){.type = PEBBLE_BLOBDB_EVENT,
-                                           .blob_db = {
-                                               .db_id = BlobDBIdWatchAppPrefs,
-                                               .type = BlobDBEventTypeInsert,
-                                               .key = (uint8_t *)PREF_KEY_WEATHER_APP,
-                                               .key_len = sizeof(PREF_KEY_WEATHER_APP),
-                                           }};
+  PebbleEvent insert_event = (PebbleEvent){
+      .type = PEBBLE_BLOBDB_EVENT,
+      .blob_db = {
+          .db_id = BlobDBIdWatchAppPrefs,
+          .type = BlobDBEventTypeInsert,
+          .key = (uint8_t *)PREF_KEY_WEATHER_APP,
+          .key_len = sizeof(PREF_KEY_WEATHER_APP),
+      }
+  };
 
   s_event_info->handler(&insert_event, s_event_info->context);
   forecast = weather_service_create_default_forecast();

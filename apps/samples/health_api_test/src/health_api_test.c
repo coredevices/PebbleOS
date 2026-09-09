@@ -1022,56 +1022,59 @@ static void debug_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
 
-  static SimpleMenuItem menu_items[] = {{
-                                            .title = "Step History",
-                                            .callback = prv_debug_cmd_step_history,
-                                        },
-                                        {
-                                            .title = "Active Minutes History",
-                                            .callback = prv_debug_cmd_active_time_history,
-                                        },
-                                        {
-                                            .title = "Distance(m) History",
-                                            .callback = prv_debug_cmd_distance_history,
-                                        },
-                                        {
-                                            .title = "Sleep History",
-                                            .callback = prv_debug_cmd_sleep_history,
-                                        },
-                                        {
-                                            .title = "Sleep Sessions",
-                                            .callback = prv_debug_cmd_sleep_sessions,
-                                        },
-                                        {
-                                            .title = "Read Minute data",
-                                            .callback = prv_debug_cmd_minute_data,
-                                        },
-                                        {
-                                            .title = "Daily step avg",
-                                            .callback = prv_debug_cmd_daily_step_avg,
-                                        },
-                                        {
-                                            .title = "Intraday step avg",
-                                            .callback = prv_debug_cmd_intraday_step_avg,
-                                        },
-                                        {
-                                            .title = "Daily active sec. avg",
-                                            .callback = prv_debug_cmd_daily_active_seconds_avg,
-                                        },
-                                        {
-                                            .title = "Intraday active sec. avg",
-                                            .callback = prv_debug_cmd_intraday_active_seconds_avg,
-                                        },
-                                        {
-                                            .title = "Heart Rate Stats",
-                                            .callback = prv_debug_cmd_heart_rate_stats,
-                                        },
-                                        {
-                                            .title = "Heart Rate API",
-                                            .callback = prv_debug_cmd_heart_rate_api,
-                                        }};
+  static SimpleMenuItem menu_items[] = {
+      {
+          .title = "Step History",
+          .callback = prv_debug_cmd_step_history,
+      },
+      {
+          .title = "Active Minutes History",
+          .callback = prv_debug_cmd_active_time_history,
+      },
+      {
+          .title = "Distance(m) History",
+          .callback = prv_debug_cmd_distance_history,
+      },
+      {
+          .title = "Sleep History",
+          .callback = prv_debug_cmd_sleep_history,
+      },
+      {
+          .title = "Sleep Sessions",
+          .callback = prv_debug_cmd_sleep_sessions,
+      },
+      {
+          .title = "Read Minute data",
+          .callback = prv_debug_cmd_minute_data,
+      },
+      {
+          .title = "Daily step avg",
+          .callback = prv_debug_cmd_daily_step_avg,
+      },
+      {
+          .title = "Intraday step avg",
+          .callback = prv_debug_cmd_intraday_step_avg,
+      },
+      {
+          .title = "Daily active sec. avg",
+          .callback = prv_debug_cmd_daily_active_seconds_avg,
+      },
+      {
+          .title = "Intraday active sec. avg",
+          .callback = prv_debug_cmd_intraday_active_seconds_avg,
+      },
+      {
+          .title = "Heart Rate Stats",
+          .callback = prv_debug_cmd_heart_rate_stats,
+      },
+      {
+          .title = "Heart Rate API",
+          .callback = prv_debug_cmd_heart_rate_api,
+      }
+  };
   static const SimpleMenuSection sections[] = {
-      {.items = menu_items, .num_items = ARRAY_LENGTH(menu_items)}};
+      {.items = menu_items, .num_items = ARRAY_LENGTH(menu_items)}
+  };
 
   data->debug_card.menu_items = menu_items;
   data->debug_card.menu_layer =

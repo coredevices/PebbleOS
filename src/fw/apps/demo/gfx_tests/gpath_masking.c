@@ -12,8 +12,9 @@ GfxTest g_gfx_test_gpath_masking = {
     .test_proc = prv_test,
 };
 
-static const GPathInfo s_triangle_mask = {.num_points = 3,
-                                          .points = (GPoint[]){{0, 0}, {50, 50}, {50, -50}}};
+static const GPathInfo s_triangle_mask = {
+    .num_points = 3, .points = (GPoint[]){{0, 0}, {50, 50}, {50, -50}}
+};
 
 static void prv_test(Layer *layer, GContext *ctx) {
   GRect bounds = layer->bounds;

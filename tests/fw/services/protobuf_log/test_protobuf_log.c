@@ -45,7 +45,8 @@ static const struct tm s_init_time_tm = {
     .tm_hour = 17,
     .tm_mday = 1,
     .tm_mon = 0,
-    .tm_year = 115};
+    .tm_year = 115
+};
 
 // Logged items
 #define TEST_PL_DLS_SESSION_ID 1
@@ -177,15 +178,14 @@ static TestPLParsedMsg *prv_parse_encoded_mset_payload(void *buffer) {
   memset(&s_values, 0, sizeof(s_values));
 
   s_parsed_msg = (TestPLParsedMsg){
-      .msrmt =
-          {
-              .num_types = ARRAY_LENGTH(s_types),
-              .types = s_types,
-              .num_samples = ARRAY_LENGTH(s_offsets),
-              .offset_sec = s_offsets,
-              .num_values = ARRAY_LENGTH(s_values),
-              .values = s_values,
-          },
+      .msrmt = {
+          .num_types = ARRAY_LENGTH(s_types),
+          .types = s_types,
+          .num_samples = ARRAY_LENGTH(s_offsets),
+          .offset_sec = s_offsets,
+          .num_values = ARRAY_LENGTH(s_values),
+          .values = s_values,
+      },
   };
 
   // Get the message size and pointer to encoded data
@@ -243,14 +243,13 @@ static TestPLParsedMsg *prv_parse_encoded_event_payload(void *buffer) {
   static ActivitySession event_sessions[10];
 
   s_parsed_msg = (TestPLParsedMsg){
-      .events =
-          {
-              .num_events = ARRAY_LENGTH(events),
-              .events = events,
-              .uuids = event_uuids,
-              .num_sessions = ARRAY_LENGTH(event_sessions),
-              .sessions = event_sessions,
-          },
+      .events = {
+          .num_events = ARRAY_LENGTH(events),
+          .events = events,
+          .uuids = event_uuids,
+          .num_sessions = ARRAY_LENGTH(event_sessions),
+          .sessions = event_sessions,
+      },
   };
 
   // Get the message size and pointer to encoded data
@@ -371,11 +370,13 @@ static ProtobufLogRef prv_log_create_measurement(TestPLParsedMsg *input, bool us
     transport_cb = NULL;
   }
 
-  ProtobufLogConfig log_config = {.type = ProtobufLogType_Measurements,
-                                  .measurements = {
-                                      .num_types = input->msrmt.num_types,
-                                      .types = input->msrmt.types,
-                                  }};
+  ProtobufLogConfig log_config = {
+      .type = ProtobufLogType_Measurements,
+      .measurements = {
+          .num_types = input->msrmt.num_types,
+          .types = input->msrmt.types,
+      }
+  };
 
   ProtobufLogRef session_ref = protobuf_log_create(&log_config, transport_cb, 0);
   cl_assert(session_ref != NULL);
@@ -468,24 +469,24 @@ void test_protobuf_log__cleanup(void) {
 void test_protobuf_log__measurements_simple(void) {
   // A simple message with 2 types, 2 samples
   {
-    ProtobufLogMeasurementType types[] = {ProtobufLogMeasurementType_Steps,
-                                          ProtobufLogMeasurementType_BPM};
+    ProtobufLogMeasurementType types[] = {
+        ProtobufLogMeasurementType_Steps, ProtobufLogMeasurementType_BPM
+    };
     uint32_t offset_sec[] = {1, 2};
     uint32_t values[] = {0x11, 0x22, 0x33, 0x44};
 
     TestPLParsedMsg input = {
         .type = ProtobufLogType_Measurements,
-        .msrmt =
-            {
-                .time_utc = rtc_get_time(),
-                .utc_to_local = time_util_utc_to_local_offset(),
-                .num_types = ARRAY_LENGTH(types),
-                .types = types,
-                .num_samples = ARRAY_LENGTH(offset_sec),
-                .offset_sec = offset_sec,
-                .num_values = ARRAY_LENGTH(values),
-                .values = values,
-            },
+        .msrmt = {
+            .time_utc = rtc_get_time(),
+            .utc_to_local = time_util_utc_to_local_offset(),
+            .num_types = ARRAY_LENGTH(types),
+            .types = types,
+            .num_samples = ARRAY_LENGTH(offset_sec),
+            .offset_sec = offset_sec,
+            .num_values = ARRAY_LENGTH(values),
+            .values = values,
+        },
     };
     ProtobufLogRef ref = prv_test_encode_measurements(&input, false /*use_data_logging*/);
     prv_test_decode_payload(&input, false /*use_data_logging*/, ref);
@@ -499,17 +500,16 @@ void test_protobuf_log__measurements_simple(void) {
 
     TestPLParsedMsg input = {
         .type = ProtobufLogType_Measurements,
-        .msrmt =
-            {
-                .time_utc = rtc_get_time(),
-                .utc_to_local = time_util_utc_to_local_offset(),
-                .num_types = ARRAY_LENGTH(types),
-                .types = types,
-                .num_samples = ARRAY_LENGTH(offset_sec),
-                .offset_sec = offset_sec,
-                .num_values = ARRAY_LENGTH(values),
-                .values = values,
-            },
+        .msrmt = {
+            .time_utc = rtc_get_time(),
+            .utc_to_local = time_util_utc_to_local_offset(),
+            .num_types = ARRAY_LENGTH(types),
+            .types = types,
+            .num_samples = ARRAY_LENGTH(offset_sec),
+            .offset_sec = offset_sec,
+            .num_values = ARRAY_LENGTH(values),
+            .values = values,
+        },
     };
     ProtobufLogRef ref = prv_test_encode_measurements(&input, false /*use_data_logging*/);
     prv_test_decode_payload(&input, false /*use_data_logging*/, ref);
@@ -519,22 +519,25 @@ void test_protobuf_log__measurements_simple(void) {
   {
     ProtobufLogMeasurementType types[] = {
         ProtobufLogMeasurementType_Steps, ProtobufLogMeasurementType_BPM,
-        ProtobufLogMeasurementType_VMC, ProtobufLogMeasurementType_DistanceCM};
+        ProtobufLogMeasurementType_VMC, ProtobufLogMeasurementType_DistanceCM
+    };
     uint32_t offset_sec[] = {1, 2, 3};
     uint32_t values[] = {0x11,   0x22,   0x33,     0x44,     0x1111,   0x2222,
                          0x3333, 0x4444, 0x111111, 0x222222, 0x333333, 0x444444};
 
-    TestPLParsedMsg input = {.type = ProtobufLogType_Measurements,
-                             .msrmt = {
-                                 .time_utc = rtc_get_time(),
-                                 .utc_to_local = time_util_utc_to_local_offset(),
-                                 .num_types = ARRAY_LENGTH(types),
-                                 .types = types,
-                                 .num_samples = ARRAY_LENGTH(offset_sec),
-                                 .offset_sec = offset_sec,
-                                 .num_values = ARRAY_LENGTH(values),
-                                 .values = values,
-                             }};
+    TestPLParsedMsg input = {
+        .type = ProtobufLogType_Measurements,
+        .msrmt = {
+            .time_utc = rtc_get_time(),
+            .utc_to_local = time_util_utc_to_local_offset(),
+            .num_types = ARRAY_LENGTH(types),
+            .types = types,
+            .num_samples = ARRAY_LENGTH(offset_sec),
+            .offset_sec = offset_sec,
+            .num_values = ARRAY_LENGTH(values),
+            .values = values,
+        }
+    };
     ProtobufLogRef ref = prv_test_encode_measurements(&input, false /*use_data_logging*/);
     prv_test_decode_payload(&input, false /*use_data_logging*/, ref);
   }
@@ -543,33 +546,35 @@ void test_protobuf_log__measurements_simple(void) {
 // ---------------------------------------------------------------------------------------------
 // Try doing multiple flushes from the same session
 void test_protobuf_log__measurements_multiple(void) {
-  ProtobufLogMeasurementType types[] = {ProtobufLogMeasurementType_Steps,
-                                        ProtobufLogMeasurementType_BPM};
+  ProtobufLogMeasurementType types[] = {
+      ProtobufLogMeasurementType_Steps, ProtobufLogMeasurementType_BPM
+  };
   uint32_t offset_sec[] = {1, 2};
   uint32_t values[] = {0x11, 0x22, 0x33, 0x44};
 
   TestPLParsedMsg input = {
       .type = ProtobufLogType_Measurements,
-      .msrmt =
-          {
-              .time_utc = rtc_get_time(),
-              .utc_to_local = time_util_utc_to_local_offset(),
-              .num_types = ARRAY_LENGTH(types),
-              .types = types,
-              .num_samples = ARRAY_LENGTH(offset_sec),
-              .offset_sec = offset_sec,
-              .num_values = ARRAY_LENGTH(values),
-              .values = values,
-          },
+      .msrmt = {
+          .time_utc = rtc_get_time(),
+          .utc_to_local = time_util_utc_to_local_offset(),
+          .num_types = ARRAY_LENGTH(types),
+          .types = types,
+          .num_samples = ARRAY_LENGTH(offset_sec),
+          .offset_sec = offset_sec,
+          .num_values = ARRAY_LENGTH(values),
+          .values = values,
+      },
   };
   prv_common_payload_initialize(&input);
 
   // Create a session
-  ProtobufLogConfig log_config = {.type = ProtobufLogType_Measurements,
-                                  .measurements = {
-                                      .num_types = input.msrmt.num_types,
-                                      .types = input.msrmt.types,
-                                  }};
+  ProtobufLogConfig log_config = {
+      .type = ProtobufLogType_Measurements,
+      .measurements = {
+          .num_types = input.msrmt.num_types,
+          .types = input.msrmt.types,
+      }
+  };
 
   ProtobufLogRef session_ref = protobuf_log_create(&log_config, prv_protobuf_log_transport, 0);
   cl_assert(session_ref != NULL);
@@ -595,17 +600,19 @@ void test_protobuf_log__measurements_multiple(void) {
   uint32_t offset_sec_b[] = {2, 4, 6};
   uint32_t values_b[] = {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0x6666};
 
-  input = (TestPLParsedMsg){.type = ProtobufLogType_Measurements,
-                            .msrmt = {
-                                .time_utc = rtc_get_time(),
-                                .utc_to_local = time_util_utc_to_local_offset(),
-                                .num_types = ARRAY_LENGTH(types),
-                                .types = types,
-                                .num_samples = ARRAY_LENGTH(offset_sec_b),
-                                .offset_sec = offset_sec_b,
-                                .num_values = ARRAY_LENGTH(values_b),
-                                .values = values_b,
-                            }};
+  input = (TestPLParsedMsg){
+      .type = ProtobufLogType_Measurements,
+      .msrmt = {
+          .time_utc = rtc_get_time(),
+          .utc_to_local = time_util_utc_to_local_offset(),
+          .num_types = ARRAY_LENGTH(types),
+          .types = types,
+          .num_samples = ARRAY_LENGTH(offset_sec_b),
+          .offset_sec = offset_sec_b,
+          .num_values = ARRAY_LENGTH(values_b),
+          .values = values_b,
+      }
+  };
   prv_common_payload_initialize(&input);
 
   for (unsigned i = 0; i < input.msrmt.num_samples; i++) {
@@ -627,8 +634,9 @@ void test_protobuf_log__measurements_multiple(void) {
 // ---------------------------------------------------------------------------------------------
 // Test the automatic flush functionality
 void test_protobuf_log__measurements_auto_flush(void) {
-  ProtobufLogMeasurementType types[] = {ProtobufLogMeasurementType_Steps,
-                                        ProtobufLogMeasurementType_BPM};
+  ProtobufLogMeasurementType types[] = {
+      ProtobufLogMeasurementType_Steps, ProtobufLogMeasurementType_BPM
+  };
   const int num_samples = 50;
   const int num_values_per_sample = ARRAY_LENGTH(types);
   uint32_t offset_sec[num_samples];
@@ -644,11 +652,13 @@ void test_protobuf_log__measurements_auto_flush(void) {
   // Create a session with an artificially small buffer size which will cause it to flush
   // automatically
   time_t start_time = rtc_get_time();
-  ProtobufLogConfig log_config = {.type = ProtobufLogType_Measurements,
-                                  .measurements = {
-                                      .num_types = num_values_per_sample,
-                                      .types = types,
-                                  }};
+  ProtobufLogConfig log_config = {
+      .type = ProtobufLogType_Measurements,
+      .measurements = {
+          .num_types = num_values_per_sample,
+          .types = types,
+      }
+  };
 
   ProtobufLogRef session_ref = protobuf_log_create(&log_config, prv_protobuf_log_transport, 110);
   cl_assert(session_ref != NULL);
@@ -696,22 +706,25 @@ void test_protobuf_log__measurements_auto_flush(void) {
 // ---------------------------------------------------------------------------------------------
 // Test using the data logging transport
 void test_protobuf_log__measurements_with_data_logging(void) {
-  ProtobufLogMeasurementType types[] = {ProtobufLogMeasurementType_Steps,
-                                        ProtobufLogMeasurementType_BPM};
+  ProtobufLogMeasurementType types[] = {
+      ProtobufLogMeasurementType_Steps, ProtobufLogMeasurementType_BPM
+  };
   uint32_t offset_sec[] = {1, 2};
   uint32_t values[] = {0x11, 0x22, 0x33, 0x44};
 
-  TestPLParsedMsg input = {.type = ProtobufLogType_Measurements,
-                           .msrmt = {
-                               .time_utc = rtc_get_time(),
-                               .utc_to_local = time_util_utc_to_local_offset(),
-                               .num_types = ARRAY_LENGTH(types),
-                               .types = types,
-                               .num_samples = ARRAY_LENGTH(offset_sec),
-                               .offset_sec = offset_sec,
-                               .num_values = ARRAY_LENGTH(values),
-                               .values = values,
-                           }};
+  TestPLParsedMsg input = {
+      .type = ProtobufLogType_Measurements,
+      .msrmt = {
+          .time_utc = rtc_get_time(),
+          .utc_to_local = time_util_utc_to_local_offset(),
+          .num_types = ARRAY_LENGTH(types),
+          .types = types,
+          .num_samples = ARRAY_LENGTH(offset_sec),
+          .offset_sec = offset_sec,
+          .num_values = ARRAY_LENGTH(values),
+          .values = values,
+      }
+  };
   ProtobufLogRef ref = prv_test_encode_measurements(&input, false /*use_data_logging*/);
   prv_test_decode_payload(&input, false /*use_data_logging*/, ref);
 }
@@ -719,23 +732,26 @@ void test_protobuf_log__measurements_with_data_logging(void) {
 // ---------------------------------------------------------------------------------------------
 // Test using the data logging transport
 void test_protobuf_log__hr_samples(void) {
-  ProtobufLogMeasurementType types[] = {ProtobufLogMeasurementType_BPM,
-                                        ProtobufLogMeasurementType_HRQuality};
+  ProtobufLogMeasurementType types[] = {
+      ProtobufLogMeasurementType_BPM, ProtobufLogMeasurementType_HRQuality
+  };
 
   uint32_t offset_sec[] = {1, 2};
   uint32_t values[] = {0x11, HRMQuality_Acceptable, 0x33, HRMQuality_Excellent};
 
-  TestPLParsedMsg input = {.type = ProtobufLogType_Measurements,
-                           .msrmt = {
-                               .time_utc = rtc_get_time(),
-                               .utc_to_local = time_util_utc_to_local_offset(),
-                               .num_types = 2,
-                               .types = types,
-                               .num_samples = ARRAY_LENGTH(offset_sec),
-                               .offset_sec = offset_sec,
-                               .num_values = ARRAY_LENGTH(values),
-                               .values = values,
-                           }};
+  TestPLParsedMsg input = {
+      .type = ProtobufLogType_Measurements,
+      .msrmt = {
+          .time_utc = rtc_get_time(),
+          .utc_to_local = time_util_utc_to_local_offset(),
+          .num_types = 2,
+          .types = types,
+          .num_samples = ARRAY_LENGTH(offset_sec),
+          .offset_sec = offset_sec,
+          .num_values = ARRAY_LENGTH(values),
+          .values = values,
+      }
+  };
 
   prv_common_payload_initialize(&input);
 
@@ -766,24 +782,28 @@ void test_protobuf_log__hr_samples(void) {
 // ---------------------------------------------------------------------------------------------
 // Test using the data logging transport
 void test_protobuf_log__events_basic(void) {
-  pebble_pipeline_Event events[] = {{
-                                        .type = pebble_pipeline_Event_Type_UnknownEvent,
-                                        .duration = 17,
-                                        .has_duration = true,
-                                        .time_utc = rtc_get_time() - 3000,
-                                    },
-                                    {
-                                        .type = pebble_pipeline_Event_Type_UnknownEvent,
-                                        .duration = 34,
-                                        .has_duration = true,
-                                        .time_utc = rtc_get_time() - 2000,
-                                    }};
+  pebble_pipeline_Event events[] = {
+      {
+          .type = pebble_pipeline_Event_Type_UnknownEvent,
+          .duration = 17,
+          .has_duration = true,
+          .time_utc = rtc_get_time() - 3000,
+      },
+      {
+          .type = pebble_pipeline_Event_Type_UnknownEvent,
+          .duration = 34,
+          .has_duration = true,
+          .time_utc = rtc_get_time() - 2000,
+      }
+  };
 
-  TestPLParsedMsg input = {.type = ProtobufLogType_Events,
-                           .events = {
-                               .num_events = ARRAY_LENGTH(events),
-                               .events = events,
-                           }};
+  TestPLParsedMsg input = {
+      .type = ProtobufLogType_Events,
+      .events = {
+          .num_events = ARRAY_LENGTH(events),
+          .events = events,
+      }
+  };
 
   prv_common_payload_initialize(&input);
 

@@ -178,17 +178,14 @@ static void prv_send_event(PebbleBLEGATTClientServiceEventInfo *info) {
   PebbleEvent e = (const PebbleEvent){
       .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
       .task_mask = 0,
-      .bluetooth =
-          {
-              .le =
-                  {
-                      .gatt_client_service =
-                          {
-                              .info = info,
-                              .subtype = PebbleBLEGATTClientEventTypeServiceChange,
-                          },
-                  },
+      .bluetooth = {
+          .le = {
+              .gatt_client_service = {
+                  .info = info,
+                  .subtype = PebbleBLEGATTClientEventTypeServiceChange,
+              },
           },
+      },
   };
   // TODO: send only to tasks that are connected virtually
   event_put(&e);
@@ -209,7 +206,8 @@ static void prv_send_services_added_event(const GAPLEConnection *connection, BTE
   PebbleBLEGATTClientServiceEventInfo *info = kernel_zalloc_check(space_needed);
 
   *info = (PebbleBLEGATTClientServiceEventInfo){
-      .type = PebbleServicesAdded, .device = connection->device, .status = status};
+      .type = PebbleServicesAdded, .device = connection->device, .status = status
+  };
 
   info->services_added_data.num_services_added =
       gatt_client_copy_service_refs_by_discovery_generation(
@@ -225,7 +223,8 @@ static void prv_send_services_invalidate_all_event(const GAPLEConnection *connec
       kernel_zalloc_check(sizeof(PebbleBLEGATTClientServiceEventInfo));
 
   *info = (PebbleBLEGATTClientServiceEventInfo){
-      .type = PebbleServicesInvalidateAll, .device = connection->device, .status = status};
+      .type = PebbleServicesInvalidateAll, .device = connection->device, .status = status
+  };
 
   prv_send_event(info);
 }
@@ -252,7 +251,8 @@ void gatt_client_discovery_handle_service_range_change(GAPLEConnection *connecti
 
   PebbleBLEGATTClientServiceEventInfo *info = kernel_zalloc_check(memory_needed);
   *info = (PebbleBLEGATTClientServiceEventInfo){
-      .type = PebbleServicesRemoved, .device = connection->device, .status = BTErrnoOK};
+      .type = PebbleServicesRemoved, .device = connection->device, .status = BTErrnoOK
+  };
 
   info->services_removed_data.num_services_removed = 1;
 

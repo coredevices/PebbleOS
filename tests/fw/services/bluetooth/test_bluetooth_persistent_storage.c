@@ -166,8 +166,9 @@ void test_bluetooth_persistent_storage__ble_address_pinning(void) {
   SMPairingInfo pairing_1 = (SMPairingInfo){
       .irk =
           (SMIdentityResolvingKey){
-              .data = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d,
-                       0x0e, 0x0f, 0x00},
+              .data =
+                  {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d,
+                   0x0e, 0x0f, 0x00},
           },
       .identity =
           (BTDeviceInternal){
@@ -215,8 +216,9 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
   pairing_1 = (SMPairingInfo){
       .irk =
           (SMIdentityResolvingKey){
-              .data = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d,
-                       0x0e, 0x0f, 0x00},
+              .data =
+                  {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d,
+                   0x0e, 0x0f, 0x00},
           },
       .identity =
           (BTDeviceInternal){
@@ -722,8 +724,11 @@ void test_bluetooth_persistent_storage__delete_all(void) {
   // Add some pairings
   // BLE pairing 1
   SMPairingInfo pairing_1 = (SMPairingInfo){
-      .irk = (SMIdentityResolvingKey){{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a,
-                                       0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00}},
+      .irk =
+          (SMIdentityResolvingKey){
+              {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
+               0x0f, 0x00}
+          },
       .identity =
           (BTDeviceInternal){
               .address = (BTDeviceAddress){{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}},
@@ -738,8 +743,11 @@ void test_bluetooth_persistent_storage__delete_all(void) {
 
   // BLE pairing 2
   SMPairingInfo pairing_2 = (SMPairingInfo){
-      .irk = (SMIdentityResolvingKey){{0x02, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x02, 0x0a,
-                                       0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00}},
+      .irk =
+          (SMIdentityResolvingKey){
+              {0x02, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x02, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
+               0x0f, 0x00}
+          },
       .identity =
           (BTDeviceInternal){
               .address = (BTDeviceAddress){{0x22, 0x12, 0x13, 0x14, 0x15, 0x16}},
@@ -841,25 +849,26 @@ void test_bluetooth_persistent_storage__ble_serialized_data(void) {
               .rand = 0x18435390471cf644,
               .ediv = 0xe7f3,
           },
-      .irk = {.data =
-                  {
-                      0xd1,
-                      0x6d,
-                      0x89,
-                      0x95,
-                      0x83,
-                      0xaa,
-                      0x5e,
-                      0x7f,
-                      0xff,
-                      0x39,
-                      0xb3,
-                      0x47,
-                      0x36,
-                      0xe4,
-                      0x37,
-                      0x7e,
-                  }},
+      .irk =
+          {.data =
+               {
+                   0xd1,
+                   0x6d,
+                   0x89,
+                   0x95,
+                   0x83,
+                   0xaa,
+                   0x5e,
+                   0x7f,
+                   0xff,
+                   0x39,
+                   0xb3,
+                   0x47,
+                   0x36,
+                   0xe4,
+                   0x37,
+                   0x7e,
+               }},
       .identity = {{
           {
               .address = {.octets = {0x5, 0x1b, 0x85, 0xe3, 0xb8, 0x98}},
