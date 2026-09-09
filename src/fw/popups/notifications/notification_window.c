@@ -1151,6 +1151,10 @@ static void prv_window_unload(Window *window) {
 
   swap_layer_deinit(&data->swap_layer);
   notification_image_clear();
+#if NOTIFICATION_IMAGE_SUPPORTED
+  // The card is gone, so let the imaging service reuse the flash slot its image was in.
+  imaging_release(ImagingImageTypeNotification);
+#endif
   status_bar_layer_deinit(&data->status_layer);
   notifications_presented_list_deinit(prv_handle_presented_notif_deinit, NULL);
   gbitmap_deinit(&data->dnd_icon);
@@ -1195,8 +1199,11 @@ static void prv_maybe_request_notification_image(LayoutLayer *layout, TimelineIt
       !notification_image_claim(&item->header.id, &token)) {
     return;
   }
-  imaging_request_notification_image(token, ImagingFormat4BitPalette, size.w, size.h,
-                                     &item->header.id);
+  if (!imaging_request_notification_image(token, ImagingFormat4BitPalette, size.w, size.h,
+                                          &item->header.id)) {
+    // Nothing is coming, so resolve the slot rather than leave the card on its placeholder.
+    notification_image_store(token, NULL);
+  }
 }
 #endif
 

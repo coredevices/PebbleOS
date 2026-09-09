@@ -21,7 +21,10 @@ static bool s_pending;  //!< Waiting on a response for s_token.
 
 static void prv_free(GBitmap *bitmap) {
   if (bitmap) {
-    kernel_free(bitmap->addr);
+    // Flash-slot-backed pixels (see services/imaging) are not heap memory.
+    if (bitmap->info.is_bitmap_heap_allocated) {
+      kernel_free(bitmap->addr);
+    }
     kernel_free(bitmap->palette);
     kernel_free(bitmap);
   }

@@ -15,7 +15,11 @@
 ///////////////////////////////////////////////////////////
 
 #include "fake_session.h"
+#include "fake_spi_flash.h"
 #include "fake_system_task.h"
+
+#include "flash_region/flash_region.h"
+#include <pbl/drivers/flash.h>
 
 #include "stubs_bt_lock.h"
 #include "stubs_hexdump.h"
@@ -43,6 +47,43 @@ uint16_t gbitmap_format_get_row_size_bytes(int16_t width, GBitmapFormat format) 
   }
 }
 
+// The slot erase completes synchronously against the fake flash, so by the time a request returns
+// the slot is ready and the transfer takes the flash path. Tests that want the heap fallback
+// receive a response without a matching request first (no slot reserved).
+//
+// Set s_defer_erase to model real hardware's async erase: the erase is performed but its completion
+// callback is withheld until prv_fire_deferred_erase(), so a response can arrive while the slot is
+// still "erasing" (the race that used to orphan a slot).
+static bool s_defer_erase;
+#define MAX_DEFERRED_ERASES (4)
+static FlashOperationCompleteCb s_deferred_cb[MAX_DEFERRED_ERASES];
+static void *s_deferred_ctx[MAX_DEFERRED_ERASES];
+static int s_deferred_count;
+
+void flash_erase_optimal_range(uint32_t min_start, uint32_t max_start, uint32_t min_end,
+                               uint32_t max_end, FlashOperationCompleteCb on_complete,
+                               void *context) {
+  for (uint32_t addr = min_start; addr < max_end; addr += SUBSECTOR_SIZE_BYTES) {
+    flash_erase_subsector_blocking(addr);
+  }
+  if (s_defer_erase) {
+    cl_assert(s_deferred_count < MAX_DEFERRED_ERASES);
+    s_deferred_cb[s_deferred_count] = on_complete;
+    s_deferred_ctx[s_deferred_count] = context;
+    s_deferred_count++;
+  } else {
+    on_complete(context, S_SUCCESS);
+  }
+}
+
+static void prv_fire_deferred_erases(void) {
+  const int n = s_deferred_count;
+  s_deferred_count = 0;
+  for (int i = 0; i < n; ++i) {
+    s_deferred_cb[i](s_deferred_ctx[i], S_SUCCESS);
+  }
+}
+
 // Delivery capture
 ///////////////////////////////////////////////////////////
 
@@ -52,7 +93,9 @@ static GBitmap *s_last_bitmap;
 
 static void prv_free_last_bitmap(void) {
   if (s_last_bitmap) {
-    kernel_free(s_last_bitmap->addr);
+    if (s_last_bitmap->info.is_bitmap_heap_allocated) {
+      kernel_free(s_last_bitmap->addr);
+    }
     kernel_free(s_last_bitmap->palette);
     kernel_free(s_last_bitmap);
     s_last_bitmap = NULL;
@@ -135,7 +178,13 @@ static void prv_receive_valid_image(uint8_t token) {
 
 static Transport *s_transport;
 
+// The two image slots live in the IMAGING flash region; back it with fake flash. The two slots are
+// non-contiguous (carved from separate RSVD areas), so init a window spanning both.
 void test_imaging__initialize(void) {
+  s_defer_erase = false;
+  s_deferred_count = 0;
+  fake_spi_flash_init(FLASH_REGION_IMAGING_0_BEGIN,
+                      FLASH_REGION_IMAGING_1_END - FLASH_REGION_IMAGING_0_BEGIN);
   fake_comm_session_init();
   s_transport = fake_transport_create(TransportDestinationSystem, NULL, NULL);
   fake_transport_set_connected(s_transport, true);
@@ -145,17 +194,21 @@ void test_imaging__initialize(void) {
   s_notif_deliveries = 0;
   s_last_token = 0;
   s_last_bitmap = NULL;
-  // Reset any latched state left over from a previous test
+  // The slot pool is static and persists across tests: abandon any in-flight load (session close)
+  // and release both types' held slots so every test starts with an empty pool.
   const PebbleCommSessionEvent closed_event = {
     .is_open = false,
     .is_system = true,
   };
   imaging_handle_comm_session_event(&closed_event);
+  imaging_release(ImagingImageTypeAlbumArt);
+  imaging_release(ImagingImageTypeNotification);
 }
 
 void test_imaging__cleanup(void) {
   prv_free_last_bitmap();
   fake_comm_session_cleanup();
+  fake_spi_flash_cleanup();
 }
 
 void test_imaging__single_chunk_image(void) {
@@ -350,6 +403,157 @@ void test_imaging__notification_request_payload_format(void) {
     0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10,
   };
   fake_transport_assert_sent(s_transport, 0, 0x35, expected, sizeof(expected));
+}
+
+static const Uuid s_notif_id = UuidMake(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+
+//! The well-formed 4x2 image, typed as a notification image.
+static void prv_receive_valid_notification_image(uint8_t token) {
+  uint8_t buf[64];
+  prv_receive(buf, prv_build_response(
+      buf, token,
+      prv_typed(ImagingImageTypeNotification,
+                ImagingResponseFlagFirst | ImagingResponseFlagLast),
+      0, sizeof(s_pixels), 4, 2, ImagingFormat4BitPalette,
+      s_palette, sizeof(s_palette), s_pixels, sizeof(s_pixels)));
+}
+
+//! True if `addr` points inside either fake-flash imaging slot.
+static bool prv_addr_in_slots(const void *addr) {
+  const uint8_t *p = addr;
+  return (p >= flash_memory_mapped_address(FLASH_REGION_IMAGING_0_BEGIN) &&
+          p < flash_memory_mapped_address(FLASH_REGION_IMAGING_0_END - 1)) ||
+         (p >= flash_memory_mapped_address(FLASH_REGION_IMAGING_1_BEGIN) &&
+          p < flash_memory_mapped_address(FLASH_REGION_IMAGING_1_END - 1));
+}
+
+void test_imaging__notification_image_stored_in_slot(void) {
+  cl_assert(imaging_request_notification_image(9, ImagingFormat4BitPalette, 180, 136,
+                                              &s_notif_id));
+  prv_receive_valid_notification_image(9);
+  cl_assert_equal_i(s_notif_deliveries, 1);
+  cl_assert(s_last_bitmap != NULL);
+  cl_assert(!s_last_bitmap->info.is_bitmap_heap_allocated);
+  cl_assert(prv_addr_in_slots(s_last_bitmap->addr));
+  cl_assert(memcmp(s_last_bitmap->addr, s_pixels, sizeof(s_pixels)) == 0);
+  cl_assert_equal_i(((GColor *)s_last_bitmap->palette)[1].argb, s_palette[1]);
+}
+
+void test_imaging__heap_fallback_without_reservation(void) {
+  // No request first, so no slot was reserved: buffered on the heap.
+  prv_receive_valid_notification_image(9);
+  cl_assert_equal_i(s_notif_deliveries, 1);
+  cl_assert(s_last_bitmap != NULL);
+  cl_assert(s_last_bitmap->info.is_bitmap_heap_allocated);
+  cl_assert(memcmp(s_last_bitmap->addr, s_pixels, sizeof(s_pixels)) == 0);
+}
+
+void test_imaging__two_consumers_hold_slots_at_once(void) {
+  // Album art takes one slot...
+  cl_assert(imaging_request_album_art(7, ImagingFormat4BitPalette, 166, 166, "Song", "Band"));
+  prv_receive_valid_image(7);
+  cl_assert_equal_i(s_deliveries, 1);
+  cl_assert(!s_last_bitmap->info.is_bitmap_heap_allocated);
+  const void *art_addr = s_last_bitmap->addr;
+
+  // ...a notification image takes the other, concurrently, in a different slot.
+  cl_assert(imaging_request_notification_image(9, ImagingFormat4BitPalette, 180, 136,
+                                              &s_notif_id));
+  prv_receive_valid_notification_image(9);
+  cl_assert_equal_i(s_notif_deliveries, 1);
+  cl_assert(!s_last_bitmap->info.is_bitmap_heap_allocated);
+  cl_assert(prv_addr_in_slots(s_last_bitmap->addr));
+  cl_assert(s_last_bitmap->addr != art_addr);
+}
+
+void test_imaging__replacing_own_image_stays_flash_backed(void) {
+  // Only notifications active: one slot free. First image loads.
+  cl_assert(imaging_request_notification_image(9, ImagingFormat4BitPalette, 180, 136,
+                                              &s_notif_id));
+  prv_receive_valid_notification_image(9);
+  cl_assert_equal_i(s_notif_deliveries, 1);
+
+  // A new notification replaces it. With a free slot it loads flicker-free into the other slot;
+  // either way it stays flash-backed and delivers.
+  const Uuid other = UuidMake(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+  cl_assert(imaging_request_notification_image(10, ImagingFormat4BitPalette, 180, 136, &other));
+  prv_receive_valid_notification_image(10);
+  cl_assert_equal_i(s_notif_deliveries, 2);
+  cl_assert(!s_last_bitmap->info.is_bitmap_heap_allocated);
+  cl_assert(prv_addr_in_slots(s_last_bitmap->addr));
+
+  // After releasing, the slots are all reusable again.
+  imaging_release(ImagingImageTypeNotification);
+  cl_assert(imaging_request_notification_image(11, ImagingFormat4BitPalette, 180, 136,
+                                              &s_notif_id));
+  prv_receive_valid_notification_image(11);
+  cl_assert_equal_i(s_notif_deliveries, 3);
+  cl_assert(!s_last_bitmap->info.is_bitmap_heap_allocated);
+}
+
+void test_imaging__superseded_transfer_is_abandoned(void) {
+  cl_assert(imaging_request_notification_image(9, ImagingFormat4BitPalette, 180, 136,
+                                              &s_notif_id));
+  // Transfer 9 starts streaming into its slot...
+  uint8_t buf[64];
+  size_t len = prv_build_response(
+      buf, 9, prv_typed(ImagingImageTypeNotification, ImagingResponseFlagFirst), 0, 2,
+      4, 2, ImagingFormat4BitPalette, s_palette, sizeof(s_palette), s_pixels, 2);
+  prv_receive(buf, len);
+  // ...but album art (a different consumer) fetches and completes into the other slot.
+  cl_assert(imaging_request_album_art(7, ImagingFormat4BitPalette, 166, 166, "Song", "Band"));
+  prv_receive_valid_image(7);
+  cl_assert_equal_i(s_deliveries, 1);
+  cl_assert(!s_last_bitmap->info.is_bitmap_heap_allocated);
+  // The abandoned notification transfer resets s_rx; its stale last chunk delivers nothing.
+  cl_assert_equal_i(s_notif_deliveries, 0);
+}
+
+void test_imaging__no_image_frees_the_reserved_slot(void) {
+  // Reserve a slot, then the phone reports no image: the slot must be freed, not leaked.
+  cl_assert(imaging_request_notification_image(9, ImagingFormat4BitPalette, 180, 136,
+                                              &s_notif_id));
+  uint8_t buf[32];
+  prv_receive(buf, prv_build_response(
+      buf, 9, prv_typed(ImagingImageTypeNotification, ImagingResponseFlagNoImage),
+      0, 0, 0, 0, 0, NULL, 0, NULL, 0));
+  cl_assert_equal_i(s_notif_deliveries, 1);
+  cl_assert(s_last_bitmap == NULL);
+
+  // Both slots are free again, so two fresh images both land in flash (not the heap).
+  cl_assert(imaging_request_album_art(7, ImagingFormat4BitPalette, 166, 166, "Song", "Band"));
+  prv_receive_valid_image(7);
+  cl_assert(!s_last_bitmap->info.is_bitmap_heap_allocated);
+  cl_assert(imaging_request_notification_image(10, ImagingFormat4BitPalette, 180, 136,
+                                              &s_notif_id));
+  prv_receive_valid_notification_image(10);
+  cl_assert(!s_last_bitmap->info.is_bitmap_heap_allocated);
+}
+
+void test_imaging__erase_race_does_not_orphan_slots(void) {
+  // Model real hardware: the erase is async, so a fast response can arrive before the slot is
+  // erased. Both slots race and both images fall back to the heap.
+  s_defer_erase = true;
+  cl_assert(imaging_request_notification_image(9, ImagingFormat4BitPalette, 180, 136,
+                                              &s_notif_id));
+  prv_receive_valid_notification_image(9);
+  cl_assert(s_last_bitmap->info.is_bitmap_heap_allocated);
+  cl_assert(imaging_request_album_art(7, ImagingFormat4BitPalette, 166, 166, "Song", "Band"));
+  prv_receive_valid_image(7);
+  cl_assert(s_last_bitmap->info.is_bitmap_heap_allocated);
+
+  // Both erases now complete. The dropped reservations must return to Idle, not become orphaned
+  // Ready slots that no response will ever claim (which would force every later image to the heap).
+  prv_fire_deferred_erases();
+
+  // With the erase synchronous again, a fresh image must land in a flash slot — proving the two
+  // slots were reclaimed rather than leaked.
+  s_defer_erase = false;
+  cl_assert(imaging_request_notification_image(11, ImagingFormat4BitPalette, 180, 136,
+                                              &s_notif_id));
+  prv_receive_valid_notification_image(11);
+  cl_assert(!s_last_bitmap->info.is_bitmap_heap_allocated);
+  cl_assert(prv_addr_in_slots(s_last_bitmap->addr));
 }
 
 void test_imaging__response_routed_by_type(void) {

@@ -97,7 +97,10 @@ pbl_clar_test(test_music_endpoint
 pbl_clar_test(test_imaging
   SOURCES
     tests/fakes/fake_session.c
+    tests/fakes/fake_spi_flash.c
     src/fw/services/imaging/imaging.c
+  PLATFORMS obelix
+  DEFINES DUMA_DISABLED
 )
 
 pbl_clar_test(test_compass_cal
