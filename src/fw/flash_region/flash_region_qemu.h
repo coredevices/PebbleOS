@@ -25,9 +25,11 @@
   MACRO(SAFE_FIRMWARE,           0x0090000 /*   576K */, arg) /* 0x10A20000 - 0x10AAFFFF */ \
   MACRO(FILESYSTEM,              0x1490000 /* 21056K */, arg) /* 0x10AB0000 - 0x11F3FFFF */ \
   MACRO(CD,                      0x0080000 /*   512K */, arg) /* 0x11F40000 - 0x11FBFFFF */ \
-  MACRO(RSVD1,                   0x000F000 /*    60K */, arg) /* 0x11FC0000 - 0x11FCEFFF */ \
+  MACRO(IMAGING_0,               0x000A000 /*    40K */, arg) /* 0x11FC0000 - 0x11FC9FFF */ \
+  MACRO(RSVD1,                   0x0005000 /*    20K */, arg) /* 0x11FCA000 - 0x11FCEFFF */ \
   MACRO(DEBUG_DB,                0x0020000 /*   128K */, arg) /* 0x11FCF000 - 0x11FEEFFF */ \
-  MACRO(RSVD2,                   0x000C000 /*    48K */, arg) /* 0x11FEF000 - 0x11FFAFFF */ \
+  MACRO(IMAGING_1,               0x000A000 /*    40K */, arg) /* 0x11FEF000 - 0x11FF8FFF */ \
+  MACRO(RSVD2,                   0x0002000 /*     8K */, arg) /* 0x11FF9000 - 0x11FFAFFF */ \
   MACRO(MFG_RESULTS,             0x0001000 /*     4K */, arg) /* 0x11FFB000 - 0x11FFBFFF */ \
   MACRO(MFG_BATTERY_STATE,       0x0001000 /*     4K */, arg) /* 0x11FFC000 - 0x11FFCFFF */ \
   MACRO(TZINFO,                  0x0001000 /*     4K */, arg) /* 0x11FFD000 - 0x11FFDFFF */ \
@@ -65,6 +67,14 @@
 #define FLASH_FILESYSTEM_BLOCK_SIZE SUBSECTOR_SIZE_BYTES
 
 // CD region is defined by flash_region.h based on CONFIG_PBLBOOT
+
+// Two fixed slots for phone-supplied images (see services/imaging): each holds one decoded
+// bitmap, written as it streams in and rendered directly through the memory-mapped flash
+// window. Two slots so any two image consumers can display at once.
+#define FLASH_REGION_IMAGING_0_BEGIN FLASH_REGION_START_ADDR(IMAGING_0)
+#define FLASH_REGION_IMAGING_0_END FLASH_REGION_END_ADDR(IMAGING_0)
+#define FLASH_REGION_IMAGING_1_BEGIN FLASH_REGION_START_ADDR(IMAGING_1)
+#define FLASH_REGION_IMAGING_1_END FLASH_REGION_END_ADDR(IMAGING_1)
 
 #define FLASH_REGION_DEBUG_DB_BEGIN FLASH_REGION_START_ADDR(DEBUG_DB)
 #define FLASH_REGION_DEBUG_DB_END FLASH_REGION_END_ADDR(DEBUG_DB)
