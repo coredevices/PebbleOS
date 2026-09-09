@@ -47,9 +47,6 @@
 #include "pbl/util/math.h"
 
 // FreeRTOS stuff
-#include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -72,8 +69,9 @@ extern char __stack_guard_size__[];
 //! Used by the "pebble gdb" command to locate the loaded app in memory.
 void * volatile g_app_load_address;
 
-static const int MAX_TO_APP_EVENTS = 32;
-static QueueHandle_t s_to_app_event_queue;
+#define MAX_TO_APP_EVENTS 32
+static PBL_MSGQ_DEFINE(s_to_app_event_queue, sizeof(PebbleEvent), MAX_TO_APP_EVENTS);
+static bool s_initialized;
 static ProcessContext s_app_task_context;
 static ProcessAppRunLevel s_minimum_run_level;
 
@@ -92,14 +90,13 @@ static NextApp s_next_app;
 
 // ---------------------------------------------------------------------------------------------
 void app_manager_init(void) {
-  s_to_app_event_queue = xQueueCreate(MAX_TO_APP_EVENTS, sizeof(PebbleEvent));
-
+  s_initialized = true;
   s_app_task_context = (ProcessContext) { 0 };
 }
 
 // ---------------------------------------------------------------------------------------------
 bool app_manager_is_initialized(void) {
-  return s_to_app_event_queue != NULL;
+  return s_initialized;
 }
 
 static bool s_first_app_launched = false;
@@ -269,7 +266,7 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
   // to clobber actual data. And syscalls assume that the stack is always at the
   // top of APP_RAM; violating this assumption will result in syscalls sometimes
   // failing when the app hasn't done anything wrong.
-  portSTACK_TYPE *stack = memory_segment_split(&app_segment, NULL, stack_size);
+  void *stack = memory_segment_split(&app_segment, NULL, stack_size);
   PBL_ASSERTN(stack);
   s_app_task_context.load_start = app_segment.start;
   g_app_load_address = app_segment.start;
@@ -336,21 +333,22 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
   app_manager_set_minimum_run_level(process_metadata_get_run_level(app_md));
 
   // Use the static app event queue:
-  s_app_task_context.to_process_event_queue = s_to_app_event_queue;
+  s_app_task_context.to_process_event_queue = &s_to_app_event_queue;
 
   // Init services required for this process before it starts to execute
   process_manager_process_setup(PebbleTask_App);
 
-  char task_name[configMAX_TASK_NAME_LEN];
+  char task_name[PBL_THREAD_NAME_LEN];
   snprintf(task_name, sizeof(task_name), "App <%s>", process_metadata_get_name(s_app_task_context.app_md));
 
-  TaskParameters_t task_params = {
-    .pvTaskCode = prv_app_task_main,
-    .pcName = task_name,
-    .usStackDepth = stack_size / sizeof(portSTACK_TYPE),
-    .pvParameters = entry_point,
-    .uxPriority = APP_TASK_PRIORITY | portPRIVILEGE_BIT,
-    .puxStackBuffer = stack,
+  struct pbl_thread_attr attr = {
+    .name = task_name,
+    .entry = prv_app_task_main,
+    .arg = entry_point,
+    .prio = APP_TASK_PRIORITY,
+    .privileged = true,
+    .stack = stack,
+    .stack_size = stack_size,
   };
 
   PBL_LOG_DBG("Starting %s", task_name);
@@ -360,7 +358,7 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
       (app_md->process_storage == ProcessStorageFlash) ?
           process_metadata_get_code_bank_num(app_md) : SYSTEM_APP_BANK_ID);
 
-  pebble_task_create(PebbleTask_App, &task_params, &s_app_task_context.task_handle);
+  s_app_task_context.task_handle = pebble_task_create(PebbleTask_App, &attr);
 
   // Always notify the phone that the application is running
   app_run_state_send_update(&app_md->uuid, RUNNING);
@@ -516,7 +514,7 @@ static void prv_app_show_crash_ui(AppInstallId install_id) {
 //! Switch to the app stored in the s_next_app global. The gracefully flag tells us whether to attempt a graceful
 //! exit or not.
 //!
-//! For a graceful exit, if the app has not alreeady finished it's de-init, we post a de_init event to the app, set
+//! For a graceful exit, if the app has not already finished it's de-init, we post a de_init event to the app, set
 //! a 3 second timer, and return immediately to the caller. If/when the app finally finishes deinit, it will post a
 //! PEBBLE_PROCESS_KILL_EVENT (graceful=true), which results in this method being again with graceful=true. We will then
 //! see that the de_init already finished in that second invocation.
@@ -593,7 +591,6 @@ static bool prv_app_switch(bool gracefully) {
 
   return true;
 }
-
 
 // ---------------------------------------------------------------------------------------------
 void app_manager_start_first_app(void) {
@@ -854,7 +851,6 @@ bool app_manager_is_app_supported(const PebbleProcessMd *md) {
   return prv_get_app_segment_size(md) > 0;
 }
 
-
 // Commands
 ///////////////////////////////////////////////////////////
 
@@ -874,7 +870,6 @@ void command_get_active_app_metadata(void) {
     prompt_send_response("metadata lookup failed: no app running");
   }
 }
-
 
 // -------------------------------------------------------------------------------------------
 /*!

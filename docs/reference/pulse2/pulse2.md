@@ -28,7 +28,7 @@ retransmissions into the application protocols in an ad-hoc manner,
 poorly. This has made the design and implementation of prompt and file
 transfer protocols more complex than necessary, and no attempt has yet
 been made to tunnel Pebble Protocol over PULSE. It's the [waterbed
-theory](http://wiki.c2.com/?WaterbedTheory) at work.
+theory](https://wiki.c2.com/?WaterbedTheory) at work.
 
 Adding support for reliable, ordered delivery of datagrams will allow
 for any application to make use of reliable service simply by requesting
@@ -66,7 +66,7 @@ Link Layer
 ----------
 
 The link layer, in a nutshell, is PPP with custom framing. The entirety
-of [RFC 1661](https://tools.ietf.org/html/rfc1661) is normative, except
+of [RFC 1661](https://datatracker.ietf.org/doc/html/rfc1661) is normative, except
 as noted in this document.
 
 ### Encapsulation
@@ -102,12 +102,12 @@ Flag sequences constitute and empty frame, which is silently discarded.
 The Protocol field is used as prescribed by RFC 1661, Section 2. PPP
 assigned protocol numbers and their respective assigned protocols should
 be used wherever it makes sense. Custom protocols must not be assigned
-protocol numbers which overlap any [existing PPP assigned protocol](http://www.iana.org/assignments/ppp-numbers/ppp-numbers.xhtml).
+protocol numbers which overlap any [existing PPP assigned protocol](https://www.iana.org/assignments/ppp-numbers).
 
 #### Frame Check Sequence field
 
 The Frame Check Sequence is transmitted least significant octet first.
-The check sequence is calculated using the [CRC-32](http://reveng.sourceforge.net/crc-catalogue/all.htm#crc.cat.crc-32)
+The check sequence is calculated using the [CRC-32](https://reveng.sourceforge.net/crc-catalogue/all.htm#crc.cat.crc-32)
 checksum. The parameters of the CRC algorithm are:
 
     width=32 poly=0x04c11db7 init=0xffffffff refin=true refout=true
@@ -404,14 +404,14 @@ Useful Links
   which includes a draft of this documentation along with a lot of
   notes about the design decisions.
 - [Python implementation of PULSEv2](https://github.com/coredevices/PebbleOS/tree/main/tools/libs/pulse2)
-- [RFC 1661 - The Point to Point Protocol (PPP)](https://tools.ietf.org/html/rfc1661)
-- [RFC 1662 - PPP in HDLC-like Framing](https://tools.ietf.org/html/rfc1662)
-- [RFC 1663 - PPP Reliable Transmission](https://tools.ietf.org/html/rfc1663)
-- [RFC 1570 - PPP LCP Extensions](https://tools.ietf.org/html/rfc1570)
-- [RFC 2153 - PPP Vendor Extensions](https://tools.ietf.org/html/rfc2153)
-- [RFC 3772 - Point-to-Point Protocol (PPP) Vendor Protocol](https://tools.ietf.org/html/rfc3772)
-- [PPP Consistent Overhead Byte Stuffing (COBS)](https://tools.ietf.org/html/draft-ietf-pppext-cobs)
+- [RFC 1661 - The Point to Point Protocol (PPP)](https://datatracker.ietf.org/doc/html/rfc1661)
+- [RFC 1662 - PPP in HDLC-like Framing](https://datatracker.ietf.org/doc/html/rfc1662)
+- [RFC 1663 - PPP Reliable Transmission](https://datatracker.ietf.org/doc/html/rfc1663)
+- [RFC 1570 - PPP LCP Extensions](https://datatracker.ietf.org/doc/html/rfc1570)
+- [RFC 2153 - PPP Vendor Extensions](https://datatracker.ietf.org/doc/html/rfc2153)
+- [RFC 3772 - Point-to-Point Protocol (PPP) Vendor Protocol](https://datatracker.ietf.org/doc/html/rfc3772)
+- [PPP Consistent Overhead Byte Stuffing (COBS)](https://datatracker.ietf.org/doc/html/draft-ietf-pppext-cobs)
 - [ITU-T Recommendation X.25](https://www.itu.int/rec/T-REC-X.25-199610-I/en)
-- [Digital Data Communications Message Protocol](http://www.ibiblio.org/pub/historic-linux/early-ports/Mips/doc/DEC/ddcmp-4.1.txt)
+- [Digital Data Communications Message Protocol](https://www.ibiblio.org/pub/historic-linux/early-ports/Mips/doc/DEC/ddcmp-4.1.txt)
 
 <!-- vim: set tw=72: -->

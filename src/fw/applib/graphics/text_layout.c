@@ -401,13 +401,13 @@ static bool prv_line_iter_is_vertical_overflow(const LineIterState* const line_i
   // if we're not rendering the first line.
   //    - This, because the user does not expect to see more text drawn below, after the '...'.
   //    - The first-line exception means that text, and therefore the telltale
-  //      ellipsis, will always be visisble.
+  //      ellipsis, will always be visible.
   if ((text_box_params->overflow_mode == GTextOverflowModeTrailingEllipsis ||
        text_box_params->overflow_mode == GTextOverflowModeFill) &&
       line_iter_state->current->origin.y != text_box_params->box.origin.y) {
     // We're in a truncation mode AND not on the first line.
     // So, include the full height of the current line in next_line_y_extent, so text will stop
-    // being layed out immediately after it exceeds the height of the container.
+    // being laid out immediately after it exceeds the height of the container.
     next_line_y_extent = line_iter_state->current->origin.y + prv_get_line_height(text_box_params);
   } else {
     // We're either in a non-truncating mode, or on the first line of a truncating mode.
@@ -530,7 +530,7 @@ bool char_iter_prev(IteratorState state) {
 //! Trim given codepoint from the start of the word
 //! Used to remove whitespace and newlines
 //! @return is_trimmed
-bool word_trim_preceeding_codepoint(GContext* ctx, Word* word, const Codepoint codepoint,
+bool word_trim_preceding_codepoint(GContext* ctx, Word* word, const Codepoint codepoint,
                                     const TextBoxParams* const text_box_params) {
   Iterator char_iter;
   CharIterState char_iter_state;
@@ -572,8 +572,8 @@ bool word_trim_preceeding_codepoint(GContext* ctx, Word* word, const Codepoint c
 }
 
 // [INTL] whitespace is more than just the space character.
-void word_trim_preceeding_whitespace(GContext* ctx, Word* word, const TextBoxParams* const text_box_params) {
-  while (word_trim_preceeding_codepoint(ctx, word, SPACE_CODEPOINT, text_box_params));
+void word_trim_preceding_whitespace(GContext* ctx, Word* word, const TextBoxParams* const text_box_params) {
+  while (word_trim_preceding_codepoint(ctx, word, SPACE_CODEPOINT, text_box_params));
 }
 
 ////////////////////////////////////////////////////////////
@@ -1312,11 +1312,11 @@ static inline void prv_walk_lines_down(Iterator* const line_iter, TextLayout* co
     const Word word_before_rendering = *current_word_ref;
     const OrphanLineState orphan_state = prv_capture_orphan_state(line);
 
-    // When repeating text to prevent orhpans we could run into the situation where repeating text
+    // When repeating text to prevent orphans we could run into the situation where repeating text
     // pushes down the remaining text far enough so it ends up on yet another page. This would
     // enter an infinite loop.
     // To avoid that, we only apply this strategy, when it's "safe" to do so (in theory, there's
-    // still the propability to run into this scenario if the perimeter isn't vertically symmetric).
+    // still the probability to run into this scenario if the perimeter isn't vertically symmetric).
     // The chosen number should be large enough for the previous line, the orphan line plus some
     // buffer.
     const int num_safe_lines = 3;
@@ -1344,7 +1344,7 @@ render_line: {} // this {} is just an empty statement that both C and our linter
         if (is_orphan) {
           *current_word_ref = prev_line_word;
           prv_apply_orphan_state(&orphan_state, line);
-          avoiding_orphans = false; // prevent infinte loops
+          avoiding_orphans = false; // prevent infinite loops
           goto render_line;
         }
       }
@@ -1399,7 +1399,7 @@ bool line_add_word(GContext* ctx, Line* line, Word* word, const TextBoxParams* c
   if (is_newline_first_codepoint) {
     // This trims off leading \n's from word. If we reach the end of the text while doing this, it sets
     //  word->start to NULL. 
-    word_trim_preceeding_codepoint(ctx, word, NEWLINE_CODEPOINT, text_box_params);
+    word_trim_preceding_codepoint(ctx, word, NEWLINE_CODEPOINT, text_box_params);
     if (text_box_params->overflow_mode != GTextOverflowModeFill) {
       return false;
     }
@@ -1445,7 +1445,7 @@ bool line_add_word(GContext* ctx, Line* line, Word* word, const TextBoxParams* c
   }
 
   // Word-wrap
-  word_trim_preceeding_whitespace(ctx, word, text_box_params);
+  word_trim_preceding_whitespace(ctx, word, text_box_params);
   return false;
 }
 

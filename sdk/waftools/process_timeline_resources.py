@@ -260,6 +260,8 @@ def process_timeline_resources(task_gen):
         "timeline_reso", src=None, tgt=timeline_resource_table
     )
     timeline_reso_task.published_media = published_media
+    timeline_reso_task.vars = getattr(task_gen, "vars", [])
 
     layouts_json_task = task_gen.create_task("layouts_json", src=None, tgt=layouts_json)
     layouts_json_task.published_media = published_media
+    layouts_json_task.vars = getattr(task_gen, "vars", [])

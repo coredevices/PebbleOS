@@ -3,7 +3,6 @@
 
 #include "gh3x2x_tuning_service.h"
 
-#include <FreeRTOS.h>
 #include <bluetooth/init.h>
 #include <comm/bt_lock.h>
 #include <host/ble_hs.h>
@@ -11,8 +10,9 @@
 #include <host/util/util.h>
 #include <kernel/pebble_tasks.h>
 #include <nimble/nimble_port.h>
-#include <pbl/os/tick.h>
-#include <semphr.h>
+#include "pbl/kernel/types.h"
+#include "pbl/kernel/sem.h"
+#include "pbl/kernel/thread.h"
 #include <services/dis/ble_svc_dis.h>
 #include <services/bas/ble_svc_bas.h>
 #include <services/gap/ble_svc_gap.h>
@@ -32,11 +32,13 @@ extern void nimble_discover_init(void);
 extern void nimble_gattc_op_queue_init(void);
 
 #if NIMBLE_CFG_CONTROLLER
-static TaskHandle_t s_ll_task_handle;
+static struct pbl_thread *s_ll_task_handle;
+PBL_THREAD_STACK_DEFINE(s_ll_task_stack, 1384);
 #endif
-static TaskHandle_t s_host_task_handle;
-static SemaphoreHandle_t s_host_started;
-static SemaphoreHandle_t s_host_stopped;
+static struct pbl_thread *s_host_task_handle;
+PBL_THREAD_STACK_DEFINE(s_host_task_stack, 5000);
+static PBL_SEM_DEFINE(s_host_started, 0, 1);
+static PBL_SEM_DEFINE(s_host_stopped, 0, 1);
 static DisInfo s_dis_info;
 static struct ble_hs_stop_listener s_listener;
 
@@ -53,7 +55,7 @@ static DriverState s_driver_state = DriverStateStopped;
 
 static void prv_sync_cb(void) {
   PBL_LOG_DBG("NimBLE host synchronized");
-  xSemaphoreGive(s_host_started);
+  pbl_sem_give(&s_host_started);
   bt_driver_handle_host_resynced();
 }
 
@@ -75,14 +77,11 @@ static void prv_host_task_main(void *unused) {
   nimble_port_run();
 }
 
-static void prv_ble_hs_stop_cb(int status, void *arg) { xSemaphoreGive(s_host_stopped); }
+static void prv_ble_hs_stop_cb(int status, void *arg) { pbl_sem_give(&s_host_stopped); }
 
 // ----------------------------------------------------------------------------------------
 void bt_driver_init(void) {
   bt_lock_init();
-
-  s_host_started = xSemaphoreCreateBinary();
-  s_host_stopped = xSemaphoreCreateBinary();
 
   nimble_discover_init();
   nimble_gattc_op_queue_init();
@@ -90,34 +89,36 @@ void bt_driver_init(void) {
   nimble_port_init();
   nimble_store_init();
 
-  TaskParameters_t host_task_params = {
-      .pvTaskCode = prv_host_task_main,
-      .pcName = "NimbleHost",
-      .usStackDepth = 5000 / sizeof(StackType_t),
-      .uxPriority = (configMAX_PRIORITIES - 2) | portPRIVILEGE_BIT,
-      .puxStackBuffer = NULL,
+  struct pbl_thread_attr host_attr = {
+      .name = "NimbleHost",
+      .entry = prv_host_task_main,
+      .prio = PBL_PRIO_MAX - 1,
+      .privileged = true,
+      .stack = s_host_task_stack,
+      .stack_size = sizeof(s_host_task_stack),
   };
 
-  pebble_task_create(PebbleTask_BTHost, &host_task_params, &s_host_task_handle);
+  s_host_task_handle = pebble_task_create(PebbleTask_BTHost, &host_attr);
   PBL_ASSERTN(s_host_task_handle);
 
 #if NIMBLE_CFG_CONTROLLER
-  TaskParameters_t ll_task_params = {
-      .pvTaskCode = nimble_port_ll_task_func,
-      .pcName = "NimbleLL",
-      .usStackDepth = (configMINIMAL_STACK_SIZE + 600) / sizeof(StackType_t),
-      .uxPriority = (configMAX_PRIORITIES - 1) | portPRIVILEGE_BIT,
-      .puxStackBuffer = NULL,
+  struct pbl_thread_attr ll_attr = {
+      .name = "NimbleLL",
+      .entry = nimble_port_ll_task_func,
+      .prio = PBL_PRIO_MAX,
+      .privileged = true,
+      .stack = s_ll_task_stack,
+      .stack_size = sizeof(s_ll_task_stack),
   };
 
-  pebble_task_create(PebbleTask_BTController, &ll_task_params, &s_ll_task_handle);
+  s_ll_task_handle = pebble_task_create(PebbleTask_BTController, &ll_attr);
   PBL_ASSERTN(s_ll_task_handle);
 #endif
 }
 
 bool bt_driver_start(BTDriverConfig *config) {
   int rc;
-  BaseType_t f_rc;
+  bool f_rc;
 
   if (s_driver_state == DriverStateStarted) {
     PBL_LOG_WRN("Driver already started; skipping start");
@@ -133,7 +134,7 @@ bool bt_driver_start(BTDriverConfig *config) {
   s_driver_state = DriverStateStarting;
   // Drain a stale host_started signal (e.g. from an autonomous host re-sync)
   // so we wait for *this* start to sync.
-  (void)xSemaphoreTake(s_host_started, 0);
+  (void)(pbl_sem_take(&s_host_started, PBL_NO_WAIT) == 0);
 
   s_dis_info = config->dis_info;
   ble_svc_dis_model_number_set(s_dis_info.model_number);
@@ -154,8 +155,8 @@ bool bt_driver_start(BTDriverConfig *config) {
 #endif
 
   ble_hs_sched_start();
-  f_rc = xSemaphoreTake(s_host_started, milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms));
-  if (f_rc != pdTRUE) {
+  f_rc = (pbl_sem_take(&s_host_started, PBL_MSEC(s_bt_stack_start_stop_timeout_ms)) == 0);
+  if (!f_rc) {
     // core_dump wakes the LCPU itself, so its RAM is captured here too.
     PBL_CROAK("NimBLE host start timed out");
   }
@@ -171,7 +172,7 @@ bool bt_driver_start(BTDriverConfig *config) {
 
 err:
   s_driver_state = DriverStateStopping;
-  (void)xSemaphoreTake(s_host_stopped, 0);
+  (void)(pbl_sem_take(&s_host_stopped, PBL_NO_WAIT) == 0);
   rc = ble_hs_stop(&s_listener, prv_ble_hs_stop_cb, NULL);
   if (rc == BLE_HS_EALREADY) {
     s_driver_state = DriverStateStopped;
@@ -181,8 +182,8 @@ err:
     return false;
   }
 
-  f_rc = xSemaphoreTake(s_host_stopped, milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms));
-  PBL_ASSERT(f_rc == pdTRUE, "NimBLE host stop timed out after start failure");
+  f_rc = (pbl_sem_take(&s_host_stopped, PBL_MSEC(s_bt_stack_start_stop_timeout_ms)) == 0);
+  PBL_ASSERT(f_rc, "NimBLE host stop timed out after start failure");
 
   s_driver_state = DriverStateStopped;
   (void)ble_gatts_reset();
@@ -191,13 +192,13 @@ err:
 }
 
 void bt_driver_stop(void) {
-  BaseType_t f_rc;
+  bool f_rc;
 
   s_driver_state = DriverStateStopping;
-  (void)xSemaphoreTake(s_host_stopped, 0);
+  (void)(pbl_sem_take(&s_host_stopped, PBL_NO_WAIT) == 0);
   ble_hs_stop(&s_listener, prv_ble_hs_stop_cb, NULL);
-  f_rc = xSemaphoreTake(s_host_stopped, milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms));
-  PBL_ASSERT(f_rc == pdTRUE, "NimBLE host stop timed out");
+  f_rc = (pbl_sem_take(&s_host_stopped, PBL_MSEC(s_bt_stack_start_stop_timeout_ms)) == 0);
+  PBL_ASSERT(f_rc, "NimBLE host stop timed out");
   s_driver_state = DriverStateStopped;
 
   ble_gatts_reset();

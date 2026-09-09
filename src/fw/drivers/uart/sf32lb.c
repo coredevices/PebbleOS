@@ -4,6 +4,7 @@
 #include <pbl/drivers/uart/sf32lb.h>
 
 #include <pbl/drivers/uart.h>
+#include "pbl/mcu/cache.h"
 #include "pbl/soc/sf32lb/sleep.h"
 #include "system/passert.h"
 
@@ -162,7 +163,6 @@ void uart_set_tx_interrupt_enabled(UARTDevice *dev, bool enabled) {
 
 void uart_irq_handler(UARTDevice *dev) {
   PBL_ASSERTN(dev->state->initialized);
-  bool should_context_switch = false;
   uint32_t idx;
 
   if (dev->state->rx_irq_handler && dev->state->rx_int_enabled) {
@@ -175,6 +175,7 @@ void uart_irq_handler(UARTDevice *dev) {
         (__HAL_UART_GET_IT_SOURCE(&dev->state->huart, UART_IT_IDLE) != RESET)) {
       // process bytes from the DMA buffer
       const uint32_t dma_length = dev->state->rx_dma_length;
+      dcache_invalidate(dev->state->rx_dma_buffer, dma_length);
       const uint32_t recv_total_index = dma_length - __HAL_DMA_GET_COUNTER(&dev->state->hdma);
       int32_t recv_len = recv_total_index - dev->state->rx_dma_index;
       if (recv_len < 0) {
@@ -185,9 +186,7 @@ void uart_irq_handler(UARTDevice *dev) {
       for (int32_t i = 0; i < recv_len; i++) {
         uint8_t data;
         data = dev->state->rx_dma_buffer[idx];
-        if (dev->state->rx_irq_handler(dev, data, &err_flags)) {
-          should_context_switch = true;
-        }
+        dev->state->rx_irq_handler(dev, data, &err_flags);
         idx++;
         if (idx >= dma_length) {
           idx = 0;
@@ -204,18 +203,13 @@ void uart_irq_handler(UARTDevice *dev) {
       // read the data register regardless to clear the error flags
       const uint8_t data = uart_read_byte(dev);
       if (has_byte) {
-        if (dev->state->rx_irq_handler(dev, data, &err_flags)) {
-          should_context_switch = true;
-        }
+        dev->state->rx_irq_handler(dev, data, &err_flags);
       }
     }
   }
   if (dev->state->tx_irq_handler && dev->state->tx_int_enabled && uart_is_tx_ready(dev)) {
-    if (dev->state->tx_irq_handler(dev)) {
-      should_context_switch = true;
-    }
+    dev->state->tx_irq_handler(dev);
   }
-  portEND_SWITCHING_ISR(should_context_switch);
 }
 
 void uart_clear_all_interrupt_flags(UARTDevice *dev) {
@@ -238,11 +232,11 @@ void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart) {
   size_t recv_len;
   size_t recv_total_index;
   uint32_t idx;
-  bool should_context_switch = false;
 
   UARTDeviceState *state = container_of(huart, UARTDeviceState, huart);
   UARTDevice *dev = (UARTDevice *)state->dev;
 
+  dcache_invalidate(state->rx_dma_buffer, state->rx_dma_length);
   recv_total_index = state->rx_dma_length - __HAL_DMA_GET_COUNTER(&state->hdma);
   if (recv_total_index < state->rx_dma_index)
     recv_len = state->rx_dma_length + recv_total_index - state->rx_dma_index;
@@ -255,16 +249,13 @@ void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart) {
     for (size_t i = 0; i < recv_len; i++) {
       uint8_t data;
       data = state->rx_dma_buffer[idx];
-      if (state->rx_irq_handler(dev, data, NULL)) {
-        should_context_switch = true;
-      }
+      state->rx_irq_handler(dev, data, NULL);
       idx++;
       if (idx >= state->rx_dma_length) {
           idx = 0;
       }
     }
   }
-  portEND_SWITCHING_ISR(should_context_switch);
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
@@ -278,13 +269,12 @@ void uart_dma_irq_handler(UARTDevice *dev) {
   HAL_DMA_IRQHandler(&dev->state->hdma);
 }
 
-// FIXME(SF32LB52): the IRQ paths above read `rx_dma_buffer[idx]` straight
-// without invalidating D-cache, so the CPU could pick up stale pre-DMA bytes.
-// There is no active SF32LB52 caller today (dbgserial_set_rx_dma_enabled is a
-// no-op for CONFIG_SOC_SF32LB52), so this hasn't been wired up. Before
-// enabling, the buffer needs to be cache-line aligned/sized and the callbacks
-// must dcache_invalidate the freshly-DMA'd range.
 void uart_start_rx_dma(UARTDevice *dev, void *buffer, uint32_t length) {
+  // The DMA buffer is invalidated whole from the IRQ paths, so it must not
+  // share cache lines with anything else.
+  const uintptr_t line_mask = dcache_line_size() - 1;
+  PBL_ASSERTN(((uintptr_t)buffer & line_mask) == 0 && (length & line_mask) == 0);
+  dcache_flush_invalidate(buffer, length);
   dev->state->rx_dma_buffer = buffer;
   dev->state->rx_dma_length = length;
   dev->state->rx_dma_index = 0;

@@ -26,7 +26,7 @@ typedef struct UARTRXErrorFlags {
 //! The type of function which can be called from within the UART ISR (@see
 //! uart_set_*_interrupt_handler)
 //! @return Whether or not the ISR should context switch at the end instead of resuming the previous
-//! task (@see portEND_SWITCHING_ISR)
+//! task (the kernel requests it)
 typedef bool (*UARTRXInterruptHandler)(UARTDevice *dev, uint8_t data,
                                        const UARTRXErrorFlags *err_flags);
 typedef bool (*UARTTXInterruptHandler)(UARTDevice *dev);
@@ -54,7 +54,7 @@ void uart_set_baud_rate(UARTDevice *dev, uint32_t baud_rate);
 //! @note This cannot be set at the same time as a raw interrupt handler
 void uart_set_rx_interrupt_handler(UARTDevice *dev, UARTRXInterruptHandler irq_handler);
 
-//! Sets a transmit IRQ handler for the device which is called whenenver we send a byte (within an
+//! Sets a transmit IRQ handler for the device which is called whenever we send a byte (within an
 //! ISR)
 //! @note This cannot be set at the same time as a raw interrupt handler
 void uart_set_tx_interrupt_handler(UARTDevice *dev, UARTTXInterruptHandler irq_handler);

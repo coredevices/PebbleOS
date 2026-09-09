@@ -162,8 +162,8 @@ void test_workout_active__cleanup(void) {
 //////////////////////
 
 static void prv_create_window_and_render(WorkoutActiveWindow *active_window,
-                                         int seconday_metric_idx) {
-  for (int i = 0; i < seconday_metric_idx; i++) {
+                                         int secondary_metric_idx) {
+  for (int i = 0; i < secondary_metric_idx; i++) {
     prv_cycle_scrollable_metrics(active_window);
   }
 
@@ -367,7 +367,7 @@ void test_workout_active__sports_pace(void) {
   WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Pace,
                                             WorkoutMetricType_Hr};
 
-  WorkoutActiveWindow *active_window = workout_active_create_tripple_layout(
+  WorkoutActiveWindow *active_window = workout_active_create_triple_layout(
       top_metric, middle_metric, ARRAY_LENGTH(scrollable_metrics), scrollable_metrics,
       &s_sports_data, &s_sports_controller);
   prv_create_window_and_render(active_window, 0);
@@ -387,7 +387,7 @@ void test_workout_active__sports_pace_long_values(void) {
   WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Pace,
                                             WorkoutMetricType_Hr};
 
-  WorkoutActiveWindow *active_window = workout_active_create_tripple_layout(
+  WorkoutActiveWindow *active_window = workout_active_create_triple_layout(
       top_metric, middle_metric, ARRAY_LENGTH(scrollable_metrics), scrollable_metrics,
       &s_sports_data, &s_sports_controller);
   prv_create_window_and_render(active_window, 0);
@@ -407,7 +407,7 @@ void test_workout_active__sports_speed(void) {
   WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Speed,
                                             WorkoutMetricType_Hr};
 
-  WorkoutActiveWindow *active_window = workout_active_create_tripple_layout(
+  WorkoutActiveWindow *active_window = workout_active_create_triple_layout(
       top_metric, middle_metric, ARRAY_LENGTH(scrollable_metrics), scrollable_metrics,
       &s_sports_data, &s_sports_controller);
   prv_create_window_and_render(active_window, 0);
@@ -428,7 +428,7 @@ void test_workout_active__sports_no_hrm(void) {
   WorkoutMetricType middle_metric = WorkoutMetricType_Distance;
   WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Pace};
 
-  WorkoutActiveWindow *active_window = workout_active_create_tripple_layout(
+  WorkoutActiveWindow *active_window = workout_active_create_triple_layout(
       top_metric, middle_metric, ARRAY_LENGTH(scrollable_metrics), scrollable_metrics,
       &s_sports_data, &s_sports_controller);
   prv_create_window_and_render(active_window, 0);
@@ -448,7 +448,7 @@ void test_workout_active__sports_hr_z0(void) {
   WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Pace,
                                             WorkoutMetricType_Hr};
 
-  WorkoutActiveWindow *active_window = workout_active_create_tripple_layout(
+  WorkoutActiveWindow *active_window = workout_active_create_triple_layout(
       top_metric, middle_metric, ARRAY_LENGTH(scrollable_metrics), scrollable_metrics,
       &s_sports_data, &s_sports_controller);
   prv_create_window_and_render(active_window, 1);
@@ -468,7 +468,7 @@ void test_workout_active__sports_hr_z1(void) {
   WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Pace,
                                             WorkoutMetricType_Hr};
 
-  WorkoutActiveWindow *active_window = workout_active_create_tripple_layout(
+  WorkoutActiveWindow *active_window = workout_active_create_triple_layout(
       top_metric, middle_metric, ARRAY_LENGTH(scrollable_metrics), scrollable_metrics,
       &s_sports_data, &s_sports_controller);
   prv_create_window_and_render(active_window, 1);
@@ -488,7 +488,7 @@ void test_workout_active__sports_hr_z2(void) {
   WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Pace,
                                             WorkoutMetricType_Hr};
 
-  WorkoutActiveWindow *active_window = workout_active_create_tripple_layout(
+  WorkoutActiveWindow *active_window = workout_active_create_triple_layout(
       top_metric, middle_metric, ARRAY_LENGTH(scrollable_metrics), scrollable_metrics,
       &s_sports_data, &s_sports_controller);
   prv_create_window_and_render(active_window, 1);
@@ -508,7 +508,7 @@ void test_workout_active__sports_hr_z3(void) {
   WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Pace,
                                             WorkoutMetricType_Hr};
 
-  WorkoutActiveWindow *active_window = workout_active_create_tripple_layout(
+  WorkoutActiveWindow *active_window = workout_active_create_triple_layout(
       top_metric, middle_metric, ARRAY_LENGTH(scrollable_metrics), scrollable_metrics,
       &s_sports_data, &s_sports_controller);
   prv_create_window_and_render(active_window, 1);
@@ -530,7 +530,7 @@ void test_workout_active__sports_custom_field(void) {
   WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Pace,
                                             WorkoutMetricType_Custom};
 
-  WorkoutActiveWindow *active_window = workout_active_create_tripple_layout(
+  WorkoutActiveWindow *active_window = workout_active_create_triple_layout(
       top_metric, middle_metric, ARRAY_LENGTH(scrollable_metrics), scrollable_metrics,
       &s_sports_data, &s_sports_controller);
   prv_create_window_and_render(active_window, 1);
@@ -552,7 +552,7 @@ void test_workout_active__sports_custom_long_values(void) {
   WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Pace,
                                             WorkoutMetricType_Custom};
 
-  WorkoutActiveWindow *active_window = workout_active_create_tripple_layout(
+  WorkoutActiveWindow *active_window = workout_active_create_triple_layout(
       top_metric, middle_metric, ARRAY_LENGTH(scrollable_metrics), scrollable_metrics,
       &s_sports_data, &s_sports_controller);
   prv_create_window_and_render(active_window, 1);
@@ -574,7 +574,7 @@ void test_workout_active__sports_custom_hanging_label(void) {
   WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Pace,
                                             WorkoutMetricType_Custom};
 
-  WorkoutActiveWindow *active_window = workout_active_create_tripple_layout(
+  WorkoutActiveWindow *active_window = workout_active_create_triple_layout(
       top_metric, middle_metric, ARRAY_LENGTH(scrollable_metrics), scrollable_metrics,
       &s_sports_data, &s_sports_controller);
   prv_create_window_and_render(active_window, 1);

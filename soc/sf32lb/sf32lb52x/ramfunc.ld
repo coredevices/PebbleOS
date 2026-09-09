@@ -35,9 +35,9 @@
         *.o*                (.text.rt_memset)
         *rt_memclr*.*.o*      (.text*)
 
-        *freertos.*.o* (.text* .rodata*)
+        *idle.*.o* (.text* .rodata*)
 
         . = ALIGN(4);
         __ramfunc_end = .;
-    } >KERNEL_RAM AT>FLASH
+    } >RAM AT>FLASH
     __ramfunc_load_start = LOADADDR(.ramfunc);

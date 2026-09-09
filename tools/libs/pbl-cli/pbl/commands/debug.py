@@ -42,12 +42,13 @@ class Debug(PblCommand):
 
         proc = pexpect.spawn(cmd, logfile=sys.stdout, encoding="utf-8")
         proc.expect(["Connected to target", pexpect.TIMEOUT], timeout=10)
-        self._gdb(build.elf, GDB_PROXY_PORT)
+        self._gdb(build, GDB_PROXY_PORT)
 
-    def _gdb(self, elf, port):
+    def _gdb(self, build, port):
         from tools.gdb_driver import find_gdb_path
 
-        gdb = find_gdb_path()
+        elf = build.elf
+        gdb = build.tool("gdb") or find_gdb_path()
         if gdb is None:
             self.die("pebble-gdb not found")
         os.system(f'{gdb} {elf} --ex="target remote :{port}"')

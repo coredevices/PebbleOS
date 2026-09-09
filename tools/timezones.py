@@ -240,6 +240,18 @@ def dstrules_parse(tzfile):
     return dstrule_list
 
 
+# Zones whose DST rules the fixed-size rule format cannot represent, e.g. the 30 minute shift on
+# Lord Howe Island or the Ramadan-dependent changes in Morocco. Troll is a station, not a city:
+# http://mm.icann.org/pipermail/tz/2014-February/020605.html
+EXCLUDED_ZONES = (
+    "Antarctica/Troll",
+    "Africa/Cairo",
+    "Africa/Casablanca",
+    "Africa/El_Aaiun",
+    "Australia/Lord_Howe",
+)
+
+
 def build_zoneinfo_list(tzfile):
     """
     Top level wrapper, searches the raw zoneinfo file
@@ -282,10 +294,7 @@ def build_zoneinfo_list(tzfile):
 
                     full_region = continent + "/" + region
 
-                    # Don't include Troll, Antarctica as their DST is 2 hours and overlapping rules
-                    # not even a city, actually just a station :
-                    # http://mm.icann.org/pipermail/tz/2014-February/020605.html
-                    if full_region == "Antarctica/Troll" or full_region == "Africa/Cairo" or full_region == "Africa/Casablanca" or full_region == "Africa/El_Aaiun" or full_region == "Australia/Lord_Howe":
+                    if full_region in EXCLUDED_ZONES:
                         region = ""
 
             # Now look to see if we've found the final line of the block
@@ -295,9 +304,9 @@ def build_zoneinfo_list(tzfile):
                 r"(?P<offset>[-0-9:]+)\s+"
                 # The name of the dstrule, such as US, or - if no DST
                 r"(?P<dst_name>[-A-Za-z]+)\s+"
-                # The short name of the timezone, like E%sT (EST or EDT), %z or VET
+                # The short name of the timezone, like E%sT (EST or EDT), %z, VET or ChST
                 # Or a GMT offset like +06
-                r"(?P<tz_abbr>([A-Z%sz\/]+)|\+\d+)"
+                r"(?P<tz_abbr>([A-Za-z%\/]+)|\+\d+)"
                 # Trailing spaces and comments, no year or dates allowed
                 r"(\s+\#.*)?$",
                 line,
@@ -391,14 +400,25 @@ def zoneinfo_to_bin(zoneinfo_list, dstrule_list, zonelink_list, output_bin):
     # 1 byte + 15 bytes + 2 bytes + 5 bytes + 1 byte = 24 bytes
     # Continent_index City gmt_offset_minutes tz_abbr dst_id
 
+    region_id_list = ["/".join(line.split(" ")[:2]) for line in zoneinfo_list]
+
+    links = []
+    for line in zonelink_list:
+        target, linkname = line.split(" ")
+        if target in EXCLUDED_ZONES:
+            continue
+        try:
+            links.append((region_id_list.index(target), linkname))
+        except ValueError as e:
+            print("Couldn't find region, skipping:", e)
+
     # Unsigned short - count of entries
     output_bin.write(struct.pack("<H", len(zoneinfo_list)))
     # Unsigned short - count of DST rules
     output_bin.write(struct.pack("<H", len(dstzone_dict.values())))
     # Unsigned short - count of links
-    output_bin.write(struct.pack("<H", len(zonelink_list)))
+    output_bin.write(struct.pack("<H", len(links)))
 
-    region_id_list = []
     # write all the timezones to file
     for line in zoneinfo_list:
         continent, region, gmt_offset_minutes, tz_abbr, dst_zone = line.split(" ")
@@ -406,7 +426,6 @@ def zoneinfo_to_bin(zoneinfo_list, dstrule_list, zonelink_list, output_bin):
         # output the timezone continent index
         continent_index = tz_continent_dict[continent]
         output_bin.write(struct.pack("B", continent_index))
-        region_id_list.append(continent + "/" + region)
 
         # fixup and output the timezone region name
         output_bin.write(
@@ -476,13 +495,7 @@ def zoneinfo_to_bin(zoneinfo_list, dstrule_list, zonelink_list, output_bin):
         output_bin.write(bytearray(DST_RULE_PAIR_BYTES - bytes_written))
 
     # write all the timezone links to file
-    for line in zonelink_list:
-        target, linkname = line.split(" ")
-        try:
-            region_id = region_id_list.index(target)
-        except ValueError as e:
-            print("Couldn't find region, skipping:", e)
-            continue
+    for region_id, linkname in links:
         output_bin.write(struct.pack("<H", region_id))
         output_bin.write(linkname.ljust(TIMEZONE_LINK_NAME_LENGTH, "\0").encode("utf8"))
 

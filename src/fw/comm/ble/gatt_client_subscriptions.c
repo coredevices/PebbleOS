@@ -21,11 +21,10 @@
 #include "pbl/util/circular_buffer.h"
 #include "pbl/util/likely.h"
 
-#include <pbl/os/mutex.h>
-#include <pbl/os/tick.h>
+#include "pbl/kernel/mutex.h"
+#include "pbl/kernel/types.h"
 
-#include "FreeRTOS.h"
-#include "semphr.h"
+#include "pbl/kernel/sem.h"
 
 // TODO:
 // - Intercept "manual" CCCD writes from the app, error for now? or translate to
@@ -35,8 +34,8 @@
 // -------------------------------------------------------------------------------------------------
 // Static variables
 
-static PebbleRecursiveMutex *s_gatt_client_subscriptions_mutex;
-static SemaphoreHandle_t s_gatt_client_subscriptions_semphr;
+static PBL_MUTEX_DEFINE(s_gatt_client_subscriptions_mutex);
+static PBL_SEM_DEFINE(s_gatt_client_subscriptions_semphr, 0, 1);
 
 //! s_gatt_client_subscriptions_mutex must be taken when accessing these static variables below!
 
@@ -89,11 +88,11 @@ static void prv_remove_subscription(GAPLEConnection *connection,
 
 //! bt_lock() may only (optionally) be taken *before* prv_lock(), otherwise we'll deadlock.
 static void prv_lock(void) {
-  mutex_lock_recursive(s_gatt_client_subscriptions_mutex);
+  pbl_mutex_lock(&s_gatt_client_subscriptions_mutex, PBL_FOREVER);
 }
 
 static void prv_unlock(void) {
-  mutex_unlock_recursive(s_gatt_client_subscriptions_mutex);
+  pbl_mutex_unlock(&s_gatt_client_subscriptions_mutex);
 }
 
 static void prv_send_notification_event(PebbleTaskBitset task_mask) {
@@ -143,7 +142,7 @@ static bool prv_retain_buffer(GAPLEClient client);
 static bool prv_wait_until_write_space_available(const CircularBuffer *buffer,
                                                  size_t required_length, uint32_t timeout_ms) {
   bool did_stall = false;
-  const RtcTicks timeout_end_ticks = rtc_get_ticks() + milliseconds_to_ticks(timeout_ms);
+  const RtcTicks timeout_end_ticks = rtc_get_ticks() + pbl_ms_to_ticks(timeout_ms);
   while (true) {
     prv_lock();
     // bt_lock() is held when this function is called. Unsubscribing also requires taking bt_lock(),
@@ -154,7 +153,7 @@ static bool prv_wait_until_write_space_available(const CircularBuffer *buffer,
     if (LIKELY(write_space >= required_length)) {
       if (UNLIKELY(did_stall)) {
         PBL_LOG_DBG("GATT notification stalled for %d ms...",
-                (int)(timeout_ms - ticks_to_milliseconds(timeout_end_ticks - rtc_get_ticks())));
+                (int)(timeout_ms - pbl_ticks_to_ms(timeout_end_ticks - rtc_get_ticks())));
       }
       return true;
     }
@@ -166,7 +165,7 @@ static bool prv_wait_until_write_space_available(const CircularBuffer *buffer,
     }
     // Wait until space is freed up:
     const uint32_t timeout_ticks = (timeout_end_ticks - now_ticks);
-    if (pdFALSE == xSemaphoreTake(s_gatt_client_subscriptions_semphr, timeout_ticks)) {
+    if (pbl_sem_take(&s_gatt_client_subscriptions_semphr, PBL_TICKS(timeout_ticks)) != 0) {
       // Timeout expired while waiting for the semaphore.
       return false;
     }
@@ -426,7 +425,7 @@ unlock:
   // prv_wait_until_write_space_available() "poll" once whether there's enough space. We could be
   // smarter about this and add additional book-keeping so the semaphore is only given if enough
   // bytes have been freed up in the buffer of interest.
-  xSemaphoreGive(s_gatt_client_subscriptions_semphr);
+  pbl_sem_give(&s_gatt_client_subscriptions_semphr);
   return next_header.value_length;
 }
 
@@ -791,9 +790,6 @@ void gatt_client_subscription_cleanup_by_att_handle_range(
 }
 
 void gatt_client_subscription_boot(void) {
-  s_gatt_client_subscriptions_mutex = mutex_create_recursive();
-  s_gatt_client_subscriptions_semphr = xSemaphoreCreateBinary();
-  PBL_ASSERTN(s_gatt_client_subscriptions_semphr);
 }
 
 #if UNITTEST
@@ -804,14 +800,11 @@ T_STATIC bool gatt_client_get_event_pending_state(GAPLEClient client) {
 #endif
 
 //! Only for unit tests
-SemaphoreHandle_t gatt_client_subscription_get_semaphore(void) {
-  return s_gatt_client_subscriptions_semphr;
+struct pbl_sem * gatt_client_subscription_get_semaphore(void) {
+  return &s_gatt_client_subscriptions_semphr;
 }
 
 //! Only for unit tests
 void gatt_client_subscription_cleanup(void) {
-  mutex_destroy((PebbleMutex *)s_gatt_client_subscriptions_mutex);
-  s_gatt_client_subscriptions_mutex = NULL;
-  vSemaphoreDelete(s_gatt_client_subscriptions_semphr);
-  s_gatt_client_subscriptions_semphr = NULL;
+  pbl_sem_reset(&s_gatt_client_subscriptions_semphr);
 }

@@ -960,12 +960,12 @@ WorkoutActiveWindow *workout_active_create_double_layout(WorkoutMetricType top_m
   return active_window;
 }
 
-WorkoutActiveWindow *workout_active_create_tripple_layout(WorkoutMetricType top_metric,
-                                                          WorkoutMetricType middle_metric,
-                                                          int num_scrollable_metrics,
-                                                          WorkoutMetricType *scrollable_metrics,
-                                                          void *workout_data,
-                                                          WorkoutController *workout_controller) {
+WorkoutActiveWindow *workout_active_create_triple_layout(WorkoutMetricType top_metric,
+                                                         WorkoutMetricType middle_metric,
+                                                         int num_scrollable_metrics,
+                                                         WorkoutMetricType *scrollable_metrics,
+                                                         void *workout_data,
+                                                         WorkoutController *workout_controller) {
   if (top_metric == WorkoutMetricType_None || middle_metric == WorkoutMetricType_None ||
       (num_scrollable_metrics != 0 && !scrollable_metrics)) {
     PBL_LOG_ERR("Invalid argument(s)");

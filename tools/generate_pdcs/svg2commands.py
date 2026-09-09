@@ -427,6 +427,9 @@ def overwrite_inherited(element, inherited_values):
     return inherited_values
 
 
+NON_RENDERED_ELEMENTS = ("defs", "metadata", "title", "desc")
+
+
 def get_commands(
     translate,
     group,
@@ -448,6 +451,9 @@ def get_commands(
         try:
             tag = child.tag[len(xmlns) :]
         except IndexError:
+            continue
+
+        if tag in NON_RENDERED_ELEMENTS:
             continue
 
         # traverse tree of nested layers or groups

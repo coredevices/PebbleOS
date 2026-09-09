@@ -42,19 +42,11 @@ if(sdk_version_major EQUAL 5 AND sdk_version_minor GREATER 19)
   # Newer toolchains default time_t to 64-bit; apps expect 32-bit.
   list(APPEND sdk_flags -D_TIME_H_ -Dtime_t=long)
 endif()
+# Unlike third-party apps, in-tree apps get no warning exemptions.
 list(APPEND sdk_flags
   -Wall
   -Wextra
   -Werror
-  -Wno-unused-parameter
-  -Wno-error=unused-function
-  -Wno-error=unused-variable
-  -Wno-error=builtin-declaration-mismatch
-  -Wno-error=format-truncation
-  -Wno-error=expansion-to-defined
-  -Wno-error=zero-length-bounds
-  -Wno-error=cast-function-type
-  -Wno-error=unused-value
   "SHELL:-include ${PBL_AUTOCONF_H}"
 )
 

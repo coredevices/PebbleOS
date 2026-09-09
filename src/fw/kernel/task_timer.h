@@ -3,13 +3,10 @@
 
 #pragma once
 
-#include "pbl/os/mutex.h"
+#include "pbl/kernel/mutex.h"
 
 #include <stdbool.h>
 #include <stdint.h>
-
-#include "FreeRTOS.h"
-#include "semphr.h"
 
 //! task_timer.h
 //!
@@ -40,7 +37,6 @@ typedef void (*TaskTimerCallback)(void *data);
 #define TIMER_START_FLAG_FAIL_IF_EXECUTING  0x02
 #define TIMER_START_FLAG_FAIL_IF_SCHEDULED  0x04
 
-
 //! Creates a new timer object. This timer will start out in the stopped state.
 //! @return the non-zero timer id or TIMER_INVALID_ID if OOM
 TaskTimerID task_timer_create(TaskTimerManager *manager);
@@ -53,7 +49,7 @@ TaskTimerID task_timer_create(TaskTimerManager *manager);
 //! @param[in] cb pointer to the user's callback procedure
 //! @param[in] cb_data reference data for the callback
 //! @param[in] flags one or more TIMER_START_FLAG_.* flags
-//! @return True if succesful, false if timer was not rescheduled. Note that it will never return
+//! @return True if successful, false if timer was not rescheduled. Note that it will never return
 //!     false if none of the FAIL_IF_* flags are set.
 bool task_timer_start(TaskTimerManager *manager, TaskTimerID timer, uint32_t timeout_ms,
                       TaskTimerCallback cb, void *cb_data, uint32_t flags);

@@ -58,15 +58,13 @@ set(PBL_TEST_INCLUDES_TAIL
   tests/test_includes
   tests
   include
+  kernel/arch/posix/include
   subsys
   src/core
   src/fw
   src/boot
   src/fw/applib/vendor/tinflate
   src/fw/applib/vendor/uPNG
-  third_party/freertos
-  third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include
-  third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3
   third_party/nanopb/nanopb
   third_party/tinymt/TinyMT/tinymt
 )

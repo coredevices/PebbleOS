@@ -14,7 +14,6 @@
 
 // Stubs
 ///////////////////////////////////////////////////////////
-#include "stubs_queue.h"
 #include "stubs_fonts.h"
 #include "stubs_events.h"
 #include "stubs_print.h"
@@ -27,9 +26,6 @@
 #include "stubs_logging.h"
 #include "stubs_mutex.h"
 #include "stubs_rtc.h"
-
-void vTaskDelay(uint32_t ticks) {
-}
 
 // the time that the backlight remains on but there is zero user interaction
 extern const uint32_t INACTIVE_LIGHT_TIMEOUT_MS;

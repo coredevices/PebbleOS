@@ -21,7 +21,7 @@
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/ui/modals/modal_manager.h"
-#include "pbl/os/mutex.h"
+#include "pbl/kernel/mutex.h"
 #include "process_management/process_manager.h"
 #include "process_state/app_state/app_state.h"
 #include "resource/resource_ids.auto.h"
@@ -73,7 +73,7 @@ static const unsigned int QUICK_DND_HOLD_MS = 800;
 T_STATIC NotificationWindowData s_notification_window_data;
 
 T_STATIC bool s_in_use = false;
-PebbleMutex *s_notification_window_mutex;
+struct pbl_mutex s_notification_window_mutex;
 
 static bool prv_should_provide_action_menu_for_item(NotificationWindowData *data,
                                                     const TimelineItem *item);
@@ -684,7 +684,7 @@ static bool prv_should_show_action_in_action_menu(NotificationWindowData *data,
     } else {
       // If we are in the notifications app, only show non ANCS actions. Pre iOS9 we can't really
       // know if the notification is still in the notification center or not, so we play it safe
-      // and only show non ACNS actions. Once iOS9 is more widespread we can look at updating this
+      // and only show non ANCS actions. Once iOS9 is more widespread we can look at updating this
       return !timeline_item_action_is_ancs(action);
     }
   } else { // Android
@@ -1305,7 +1305,7 @@ static void prv_init_notification_window(bool is_modal) {
   // init_notification_window() can be called from KernelMain when displaying an incoming
   // notification and also from the notifications.c application task. Grab a mutex here so
   // that we don't ever get two instances of it at a time.
-  mutex_lock(s_notification_window_mutex);
+  pbl_mutex_lock(&s_notification_window_mutex, PBL_FOREVER);
   if (s_in_use) {
     goto fail;
   }
@@ -1404,7 +1404,7 @@ static void prv_init_notification_window(bool is_modal) {
   notifications_presented_list_init();
 
 fail:
-  mutex_unlock(s_notification_window_mutex);
+  pbl_mutex_unlock(&s_notification_window_mutex);
 }
 
 void notification_window_init(bool is_modal) {
@@ -1435,7 +1435,7 @@ void notification_window_add_notification_by_id(Uuid *id) {
   prv_notification_window_add_notification(id, NotificationMobile);
 }
 
-//! The animate mode slides the notificaiton in from the top as if it was a new notification.
+//! The animate mode slides the notification in from the top as if it was a new notification.
 void notification_window_focus_notification(Uuid *id, bool animated) {
   NotificationWindowData *data = &s_notification_window_data;
 
@@ -1468,7 +1468,7 @@ void notification_window_focus_notification(Uuid *id, bool animated) {
 }
 
 void notification_window_service_init(void) {
-  s_notification_window_mutex = mutex_create();
+  pbl_mutex_init(&s_notification_window_mutex);
   s_notification_window_data.pop_timer_id = EVENTED_TIMER_INVALID_ID;
   // Unconditional: prv_window_unload clears the slot on every platform, so the lock has to exist
   // even where images are never fetched.
@@ -1480,7 +1480,7 @@ void notification_window_service_init(void) {
 
 
 //////////////////
-// Event Handers
+// Event Handlers
 //////////////////
 
 static void prv_handle_action_result(PebbleSysNotificationActionResult *action_result) {
@@ -1608,7 +1608,7 @@ static void prv_handle_notification_added_common(Uuid *id, NotificationType type
       const bool should_animate = !do_not_disturb_is_active();
       notification_window_focus_notification(id, should_animate);
     } else {
-      // If we are inserting into the middle of this list, just reaload the swap layer so the
+      // If we are inserting into the middle of this list, just reload the swap layer so the
       // number of notifications displayed is correct
       prv_reload_swap_layer(data);
     }

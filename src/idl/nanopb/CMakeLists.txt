@@ -17,7 +17,7 @@ foreach(proto ${protos})
   file(GLOB options CONFIGURE_DEPENDS ${name}.options)
   add_custom_command(
     OUTPUT ${generated_c} ${generated_h}
-    COMMAND ${NANOPB_GENERATOR} -I ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND ${NANOPB_GENERATOR} -q -I ${CMAKE_CURRENT_SOURCE_DIR}
             -D ${CMAKE_CURRENT_BINARY_DIR} ${proto}
     # A schema may import any of its neighbours.
     DEPENDS ${protos} ${options}

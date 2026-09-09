@@ -82,7 +82,19 @@ def _load_map(path):
         return json.load(f)
 
 
-def get_resources_dict(bld, variant):
+def _load_config(path):
+    """The Kconfig symbols the build has enabled."""
+    if not path:
+        return set()
+    with open(path) as f:
+        return {
+            line.split("=", 1)[0]
+            for line in (raw.strip() for raw in f)
+            if line.endswith("=y")
+        }
+
+
+def get_resources_dict(bld, variant, config=frozenset()):
     """Merge common/base with the variant and platform overrides."""
     resource_nodes = []
     override_dicts = []
@@ -116,6 +128,11 @@ def get_resources_dict(bld, variant):
     for override in override_dicts:
         for item in override["media"]:
             update_common_media_item(item)
+
+    resources_dict["media"] = [
+        item for item in resources_dict["media"]
+        if "config" not in item or item["config"] in config
+    ]
 
     # "files" and "timeline" cannot exist in the common resource map.
     for key in ("files", "timeline"):
@@ -160,7 +177,9 @@ def reso_output(definition, builddir):
 def cmd_manifest(args):
     load_generators()
     bld = make_bld(args)
-    resource_nodes, resources_dict = get_resources_dict(bld, args.variant)
+    resource_nodes, resources_dict = get_resources_dict(
+        bld, args.variant, _load_config(args.config)
+    )
 
     definitions = []
     for item in resources_dict["media"]:
@@ -392,6 +411,7 @@ def main():
     p.add_argument("--platform", required=True)
     p.add_argument("--board-name", required=True)
     p.add_argument("--variant", required=True)
+    p.add_argument("--config")
     p.add_argument("--dynamic", nargs="*", default=[])
     p.add_argument("--output", required=True)
     p.add_argument("--cmake-output", required=True)

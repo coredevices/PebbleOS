@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "pbl/kernel/irq.h"
 #include "applib/app.h"
 #include "applib/ui/ui.h"
 #include "kernel/core_dump.h"
@@ -14,7 +15,6 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 
-#include "FreeRTOSConfig.h"
 
 
 #define NUM_MENU_ITEMS 13
@@ -106,7 +106,7 @@ static void menu_select_callback(int index, void *ctx) {
     NVIC_InitTypeDef NVIC_InitStructure;
     NVIC_InitStructure.NVIC_IRQChannel = OTG_FS_WKUP_IRQn;
     // Lower values are higher priority - make this same or lower priority than a FreeRTOS ISR
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = (configMAX_SYSCALL_INTERRUPT_PRIORITY >> 4);
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = (PBL_IRQ_PRIO_MAX_SYSCALL >> 4);
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
@@ -122,7 +122,7 @@ static void menu_select_callback(int index, void *ctx) {
     NVIC_InitTypeDef NVIC_InitStructure;
     NVIC_InitStructure.NVIC_IRQChannel = OTG_FS_WKUP_IRQn;
     // Lower values are higher priority - make this higher priority than a FreeRTOS ISR
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = (configMAX_SYSCALL_INTERRUPT_PRIORITY >> 4) - 1;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = (PBL_IRQ_PRIO_MAX_SYSCALL >> 4) - 1;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
@@ -157,7 +157,7 @@ static void menu_select_callback(int index, void *ctx) {
     NVIC_InitTypeDef NVIC_InitStructure;
     NVIC_InitStructure.NVIC_IRQChannel = OTG_FS_WKUP_IRQn;
     // Lower values are higher priority - make this same or lower priority than a FreeRTOS ISR
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = (configMAX_SYSCALL_INTERRUPT_PRIORITY >> 4);
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = (PBL_IRQ_PRIO_MAX_SYSCALL >> 4);
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);

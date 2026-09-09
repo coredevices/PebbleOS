@@ -6,6 +6,8 @@
 
 #include "golf_resources.h"
 
+#define UNUSED __attribute__((unused))
+
 //! TODO: Fixme once i18n support is available for 3rd party apps
 #define i18n_get(a, b) a
 #define i18n_free_all(data)
@@ -86,13 +88,13 @@ static void bluetooth_status_callback(bool connected) {
 }
 
 static void sync_error_callback(DictionaryResult dict_error, AppMessageResult app_message_error,
-                                void *context) {
+                                UNUSED void *context) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Golf sync error! dict: %u, app msg: %u", dict_error,
           app_message_error);
 }
 
 static void sync_tuple_changed_callback(const uint32_t key, const Tuple *new_tuple,
-                                        const Tuple *old_tuple, void *context) {
+                                        UNUSED const Tuple *old_tuple, void *context) {
   AppData *data = context;
   TextLayer **text = &data->text_layers[0];
   switch (key) {
@@ -122,26 +124,26 @@ static void send_golf_cmd(uint8_t cmd) {
   app_message_outbox_send();
 }
 
-static void up_click_handler(ClickRecognizerRef recognizer, AppData *data) {
+static void up_click_handler(UNUSED ClickRecognizerRef recognizer, UNUSED AppData *data) {
   send_golf_cmd(CMD_PREV);
 }
 
-static void down_click_handler(ClickRecognizerRef recognizer, AppData *data) {
+static void down_click_handler(UNUSED ClickRecognizerRef recognizer, UNUSED AppData *data) {
   send_golf_cmd(CMD_NEXT);
 }
 
-static void select_click_handler(ClickRecognizerRef recognizer, AppData *data) {
+static void select_click_handler(UNUSED ClickRecognizerRef recognizer, UNUSED AppData *data) {
   send_golf_cmd(CMD_SELECT);
 }
 
-static void config_provider(AppData *data) {
+static void config_provider(UNUSED AppData *data) {
   window_single_click_subscribe(BUTTON_ID_UP, (ClickHandler) up_click_handler);
   window_single_click_subscribe(BUTTON_ID_DOWN, (ClickHandler) down_click_handler);
   window_single_click_subscribe(BUTTON_ID_SELECT, (ClickHandler) select_click_handler);
 }
 
 static void window_unload(Window *window) {
-  AppData *data = &s_data;
+  AppData *data = window_get_user_data(window);
   app_sync_deinit(&data->sync);
 }
 
@@ -161,7 +163,7 @@ static void draw_dotted_line(GContext *ctx, GPoint p0, uint16_t length, bool is_
 }
 
 static void background_update_proc(Layer *layer, GContext *ctx) {
-  GRect bounds = layer_get_bounds(layer);
+  UNUSED const GRect bounds = layer_get_bounds(layer);
 
   // Draw lines to contain 'hole' and 'par' sections.
   // Magic numbers measured from design spec

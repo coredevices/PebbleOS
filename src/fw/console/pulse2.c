@@ -3,6 +3,8 @@
 
 #ifdef CONFIG_PULSE_EVERYWHERE
 
+#include "pbl/kernel/irq.h"
+#include "pbl/kernel/sched.h"
 #include "pulse.h"
 #include "pulse2_reliable_retransmit_timer.h"
 #include "pulse2_transport_impl.h"
@@ -18,7 +20,7 @@
 #include "kernel/pbl_malloc.h"
 #include "kernel/pebble_tasks.h"
 #include "pbl/mcu/interrupts.h"
-#include "pbl/os/mutex.h"
+#include "pbl/kernel/mutex.h"
 #include "pbl/services/regular_timer.h"
 #include "system/passert.h"
 #include "pbl/util/attributes.h"
@@ -28,10 +30,9 @@
 #include "util/net.h"
 #include "pbl/util/size.h"
 
-#include "FreeRTOS.h"
-#include "semphr.h"
-#include "queue.h"
-#include "task.h"
+#include "pbl/kernel/msgq.h"
+#include "pbl/kernel/thread.h"
+#include "pbl/kernel/sem.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -45,7 +46,6 @@
 
 #define FRAME_DELIMITER '\x55'
 #define LINK_HEADER_LEN sizeof(net16)
-
 
 // Link Control Protocol
 // =====================
@@ -136,7 +136,6 @@ static void prv_lcp_on_packet(void *packet, size_t length) {
   ppp_control_protocol_handle_incoming_packet(PULSE2_LCP, packet, length);
 }
 
-
 // Data link layer
 // ===============
 
@@ -146,20 +145,21 @@ static void prv_lcp_on_packet(void *packet, size_t length) {
 // This task handles both the processing of bytes received over dbgserial and
 // running the reliable transport receive expiry timer.
 
-static TaskHandle_t s_pulse_task_handle;
-static QueueHandle_t s_pulse_task_queue;
+static struct pbl_thread *s_pulse_task_handle;
+PBL_THREAD_STACK_DEFINE(s_pulse_task_stack, 1024);
+static PBL_MSGQ_DEFINE(s_pulse_task_queue, sizeof(uint8_t), RX_QUEUE_SIZE);
 // Wake up the PULSE task to process the receive queue or start the timer.
-static SemaphoreHandle_t s_pulse_task_service_semaphore;
+static PBL_SEM_DEFINE(s_pulse_task_service_semaphore, 0, 1);
 static volatile bool s_pulse_task_idle = true;
 
 static uint8_t s_current_rx_frame[RX_MAX_FRAME_SIZE];
 
-static PebbleMutex *s_tx_buffer_mutex;
+static PBL_MUTEX_DEFINE(s_tx_buffer_mutex);
 static char s_tx_buffer[MAX_SIZE_AFTER_COBS_ENCODING(
         FRAME_MAX_SEND_SIZE + PULSE_MIN_FRAME_LENGTH) + COBS_OVERHEAD(FRAME_MAX_SEND_SIZE)];
 
 // Lock for exclusive access to the reliable timer state.
-static PebbleMutex *s_reliable_timer_state_lock;
+static PBL_MUTEX_DEFINE(s_reliable_timer_state_lock);
 // Ticks since boot for timer expiry if timer is pending, or 0 if not pending.
 static volatile RtcTicks s_reliable_timer_expiry_time_tick;
 static volatile uint8_t s_reliable_timer_sequence_number;
@@ -199,26 +199,26 @@ static void prv_process_received_frame(size_t frame_length) {
 
 void pulse2_reliable_retransmit_timer_start(unsigned int timeout_ms,
                                             uint8_t sequence_number) {
-  mutex_lock(s_reliable_timer_state_lock);
+  pbl_mutex_lock(&s_reliable_timer_state_lock, PBL_FOREVER);
   RtcTicks timeout_ticks = timeout_ms * RTC_TICKS_HZ / 1000;
   s_reliable_timer_expiry_time_tick = rtc_get_ticks() + timeout_ticks;
   s_reliable_timer_sequence_number = sequence_number;
   // Wake up the PULSE task to get it to notice the newly-started timer.
-  xSemaphoreGive(s_pulse_task_service_semaphore);
-  mutex_unlock(s_reliable_timer_state_lock);
+  pbl_sem_give(&s_pulse_task_service_semaphore);
+  pbl_mutex_unlock(&s_reliable_timer_state_lock);
 }
 
 void pulse2_reliable_retransmit_timer_cancel(void) {
-  mutex_lock(s_reliable_timer_state_lock);
+  pbl_mutex_lock(&s_reliable_timer_state_lock, PBL_FOREVER);
   s_reliable_timer_expiry_time_tick = 0;
   // No need to wake up the PULSE task. It will notice that the timer was
   // cancelled when it wakes up to service the timer.
-  mutex_unlock(s_reliable_timer_state_lock);
+  pbl_mutex_unlock(&s_reliable_timer_state_lock);
 }
 
 // Check the state of the timer.
 //
-// If there is no timer running, portMAX_DELAY is returned.
+// If there is no timer running, PBL_TICK_FOREVER is returned.
 //
 // If there is a timer running but it has not expired yet, the number of ticks
 // (not milliseconds) remaining before the timer expires is returned.
@@ -226,10 +226,10 @@ void pulse2_reliable_retransmit_timer_cancel(void) {
 // If there is a timer running that has expired, the timer state is cleared so
 // that subsequent calls do not expire the same timer twice, sequence_number is
 // filled with the sequence number of the expired timer, and 0 is returned.
-static TickType_t prv_poll_timer(uint8_t *const sequence_number) {
-  mutex_lock(s_reliable_timer_state_lock);
+static pbl_tick_t prv_poll_timer(uint8_t *const sequence_number) {
+  pbl_mutex_lock(&s_reliable_timer_state_lock, PBL_FOREVER);
   RtcTicks timer_expiry_tick = s_reliable_timer_expiry_time_tick;
-  TickType_t timeout = portMAX_DELAY;
+  pbl_tick_t timeout = PBL_TICK_FOREVER;
   if (timer_expiry_tick) {  // A timer is pending
     RtcTicks now = rtc_get_ticks();
     if (now >= timer_expiry_tick) {  // Timer has expired
@@ -238,12 +238,12 @@ static TickType_t prv_poll_timer(uint8_t *const sequence_number) {
       timeout = 0;
       *sequence_number = s_reliable_timer_sequence_number;
     } else {
-      _Static_assert(pdMS_TO_TICKS(1000) == RTC_TICKS_HZ,
+      _Static_assert(1000 * RTC_TICKS_HZ / 1000 == RTC_TICKS_HZ,
                      "RtcTicks uses different units than FreeRTOS ticks");
       timeout = timer_expiry_tick - now;
     }
   }
-  mutex_unlock(s_reliable_timer_state_lock);
+  pbl_mutex_unlock(&s_reliable_timer_state_lock);
   return timeout;
 }
 
@@ -252,7 +252,7 @@ static void prv_pulse_task_feed_watchdog(void) {
 }
 
 static void prv_pulse_task_idle_timer_callback(void* data) {
-  if (s_pulse_task_idle && uxQueueMessagesWaiting(s_pulse_task_queue) == 0) {
+  if (s_pulse_task_idle && pbl_msgq_num_used(&s_pulse_task_queue) == 0) {
     prv_pulse_task_feed_watchdog();
   }
 }
@@ -271,11 +271,11 @@ static void prv_pulse_task_main(void *unused) {
 
   while (true) {
     uint8_t timer_sequence_number;
-    TickType_t timeout = prv_poll_timer(&timer_sequence_number);
+    pbl_tick_t timeout = prv_poll_timer(&timer_sequence_number);
 
-    if (timeout && uxQueueMessagesWaiting(s_pulse_task_queue) == 0) {
+    if (timeout && pbl_msgq_num_used(&s_pulse_task_queue) == 0) {
       s_pulse_task_idle = true;
-      xSemaphoreTake(s_pulse_task_service_semaphore, timeout);
+      pbl_sem_take(&s_pulse_task_service_semaphore, PBL_TICKS(timeout));
       s_pulse_task_idle = false;
 
       // Read the timer state again in case it changed while we were waiting.
@@ -286,7 +286,7 @@ static void prv_pulse_task_main(void *unused) {
     // We don't want to risk the queue filling up while the timer
     // handler is running.
     char c;
-    while (xQueueReceive(s_pulse_task_queue, &c, 0) == pdTRUE) {
+    while (pbl_msgq_get(&s_pulse_task_queue, &c, PBL_NO_WAIT) == 0) {
       if (UNLIKELY(c == FRAME_DELIMITER)) {
         size_t decoded_length = cobs_streaming_decode_finish(&frame_decode_ctx);
         prv_process_received_frame(decoded_length);
@@ -332,24 +332,19 @@ void pulse_early_init(void) {
 }
 
 void pulse_init(void) {
-  s_tx_buffer_mutex = mutex_create();
-  PBL_ASSERTN(s_tx_buffer_mutex != INVALID_MUTEX_HANDLE);
 }
 
 void pulse_start(void) {
-  s_pulse_task_queue = xQueueCreate(RX_QUEUE_SIZE, sizeof(uint8_t));
-  s_pulse_task_service_semaphore = xSemaphoreCreateBinary();
-  s_reliable_timer_state_lock = mutex_create();
-
-  TaskParameters_t task_params = {
-    .pvTaskCode = prv_pulse_task_main,
-    .pcName = "PULSE",
-    .usStackDepth = 1024 / sizeof( StackType_t ),
-    .uxPriority = (tskIDLE_PRIORITY + 3) | portPRIVILEGE_BIT,
-    .puxStackBuffer = NULL,
+  struct pbl_thread_attr attr = {
+    .name = "PULSE",
+    .entry = prv_pulse_task_main,
+    .prio = PBL_PRIO_IDLE + 3,
+    .privileged = true,
+    .stack = s_pulse_task_stack,
+    .stack_size = sizeof(s_pulse_task_stack),
   };
 
-  pebble_task_create(PebbleTask_PULSE, &task_params, &s_pulse_task_handle);
+  s_pulse_task_handle = pebble_task_create(PebbleTask_PULSE, &attr);
 
   // FIXME: the initializers could be run more than once if pulse_start is
   // called more than one time. These initializers can't be run during
@@ -383,22 +378,19 @@ static void prv_assert_tx_buffer(void *buf) {
 }
 
 void pulse_handle_character(char c, bool *should_context_switch) {
-  // FromISR calls only write pdTRUE when a higher-priority task is woken; they never
-  // write pdFALSE, so tmp must start as pdFALSE to avoid a spurious context switch.
-  portBASE_TYPE tmp = pdFALSE;
-  xQueueSendToBackFromISR(s_pulse_task_queue, &c, &tmp);
-  xSemaphoreGiveFromISR(s_pulse_task_service_semaphore, &tmp);
-  *should_context_switch = (tmp == pdTRUE);
+  pbl_msgq_put(&s_pulse_task_queue, &c, PBL_NO_WAIT);
+  pbl_sem_give(&s_pulse_task_service_semaphore);
+  *should_context_switch = false;
 }
 
 static bool prv_safe_to_touch_mutex(void) {
-  return !(portIN_CRITICAL() || mcu_state_is_isr() ||
-           xTaskGetSchedulerState() != taskSCHEDULER_RUNNING);
+  return !(pbl_irq_is_locked() || mcu_state_is_isr() ||
+           !pbl_kernel_is_running());
 }
 
 void *pulse_link_send_begin(const uint16_t protocol) {
   if (prv_safe_to_touch_mutex()) {
-    mutex_lock(s_tx_buffer_mutex);
+    pbl_mutex_lock(&s_tx_buffer_mutex, PBL_FOREVER);
   }
 
   net16 header = hton16(protocol);
@@ -433,13 +425,13 @@ void pulse_link_send(void *buf, const size_t payload_length) {
   dbgserial_putchar_lazy(FRAME_DELIMITER);
 
   if (prv_safe_to_touch_mutex()) {
-    mutex_unlock(s_tx_buffer_mutex);
+    pbl_mutex_unlock(&s_tx_buffer_mutex);
   }
 }
 
 void pulse_link_send_cancel(void *buf) {
   prv_assert_tx_buffer(buf);
-  mutex_unlock(s_tx_buffer_mutex);
+  pbl_mutex_unlock(&s_tx_buffer_mutex);
 }
 
 size_t pulse_link_max_send_size(void) {

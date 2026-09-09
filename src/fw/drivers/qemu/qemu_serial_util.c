@@ -17,7 +17,7 @@ void qemu_serial_private_init_state(QemuSerialGlobals *state)
 {
 
   // Create our mutex
-  state->qemu_comm_lock = mutex_create();
+  pbl_mutex_init(&state->qemu_comm_lock);
   state->initialized = true;
 
   // Allocate buffer for received characters from the ISR
@@ -34,7 +34,7 @@ void qemu_serial_private_init_state(QemuSerialGlobals *state)
 
 
 // -----------------------------------------------------------------------------------------
-// Helper function triggred by our ISR handler when we detect a high water mark on our receive
+// Helper function triggered by our ISR handler when we detect a high water mark on our receive
 // buffer or a footer signature.
 //
 // Parses the ISR's circular buffer and collects assembled message into a message buffer. If

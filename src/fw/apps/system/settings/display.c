@@ -39,6 +39,7 @@ typedef struct SettingsBacklightData {
 static const char *s_language_labels[] = {
   [ShellLanguageInstalledPack] = i18n_noop("Custom"),
   [ShellLanguageEnglish] = "English",
+#ifdef CONFIG_SERVICE_I18N_BUILTIN_LANGUAGES
   [ShellLanguageCatalan] = "Català",
   [ShellLanguageGerman] = "Deutsch",
   [ShellLanguageSpanish] = "Español",
@@ -47,6 +48,7 @@ static const char *s_language_labels[] = {
   [ShellLanguageDutch] = "Nederlands",
   [ShellLanguagePortuguese] = "Português",
   [ShellLanguagePolish] = "Polski",
+#endif
 };
 
 static void prv_language_menu_select(OptionMenu *option_menu, int selection, void *context) {

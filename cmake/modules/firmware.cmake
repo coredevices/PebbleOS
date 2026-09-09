@@ -42,7 +42,8 @@ function(pbl_link_firmware)
   target_link_options(pebbleos PRIVATE
     ${map_options}
     -Wl,--gc-sections
-    -Wl,--undefined=uxTopUsedPriority
+    # The QEMU gdb proxy reads this to walk the thread list.
+    -Wl,--undefined=pbl_kernel_debug_layout
     -Wl,--build-id=sha1
     -Wl,--sort-section=alignment
     -Wl,--print-memory-usage
@@ -123,6 +124,20 @@ function(pbl_link_firmware)
 
   if(PBL_PBPACK)
     list(APPEND artifacts ${PBL_PBPACK} ${PBL_LAYOUTS})
+    # Reported after the link so that it lands next to the linker's memory
+    # usage table. The stamp only exists to order and re-trigger the step.
+    set(sizes_stamp ${PROJECT_BINARY_DIR}/pebbleos.sizes)
+    add_custom_command(
+      OUTPUT ${sizes_stamp}
+      COMMAND ${PBL_TOOLCHAIN_ENV} ${PYTHON_EXECUTABLE} ${PBL_FIRMWARE_PY} size-resources
+              --config ${PBL_DOTCONFIG} --pbpack ${PBL_PBPACK}
+      COMMAND ${CMAKE_COMMAND} -E touch ${sizes_stamp}
+      DEPENDS pebbleos ${PBL_PBPACK} ${PBL_FIRMWARE_PY}
+      WORKING_DIRECTORY ${PBL_BASE}
+      COMMENT "Checking resource size"
+      VERBATIM
+    )
+    list(APPEND artifacts ${sizes_stamp})
   endif()
   add_custom_target(pbl_firmware ALL DEPENDS ${artifacts})
 

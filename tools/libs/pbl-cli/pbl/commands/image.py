@@ -30,7 +30,7 @@ class _ImageCommand(PblCommand):
             return "sftool_flash_imaging"
         if build.config.CONFIG_PULSE_EVERYWHERE or args.force_pulse:
             return "pulse_flash_imaging"
-        return "pulse_legacy_flash_imaging"
+        return "pulse_flash_imaging"
 
     def _image(self, build, args, path):
         if not args.tty:

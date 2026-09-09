@@ -5,6 +5,7 @@
 // This is derived from the freertos port provided by NimBLE
 // and modified to suit Pebble OS (timers, mutexes).
 
+#include "pbl/kernel/irq.h"
 #include <assert.h>
 #include <stddef.h>
 #include <string.h>
@@ -12,107 +13,68 @@
 #include "pbl/mcu/interrupts.h"
 #include "nimble/nimble_npl.h"
 #include "nimble/nimble_port.h"
-#include "pbl/os/mutex.h"
-#include "pbl/os/tick.h"
+#include "pbl/kernel/mutex.h"
+#include "pbl/kernel/types.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 
 struct ble_npl_event *npl_pebble_eventq_get(struct ble_npl_eventq *evq, ble_npl_time_t tmo) {
   struct ble_npl_event *ev = NULL;
-  BaseType_t woken;
-  BaseType_t ret;
 
   if (mcu_state_is_isr()) {
     assert(tmo == 0);
-    ret = xQueueReceiveFromISR(evq->q, &ev, &woken);
-    portYIELD_FROM_ISR(woken);
-  } else {
-    ret = xQueueReceive(evq->q, &ev, tmo);
-  }
-  assert(ret == pdPASS || ret == errQUEUE_EMPTY);
-
-  if (ev) {
-    ev->queued = false;
   }
 
+  if (pbl_msgq_get(&evq->q, &ev, PBL_TICKS(tmo)) != 0) {
+    return NULL;
+  }
+
+  ev->queued = false;
   return ev;
 }
 
 void npl_pebble_eventq_put(struct ble_npl_eventq *evq, struct ble_npl_event *ev) {
-  BaseType_t woken;
-  BaseType_t ret;
-
   if (ev->queued) {
     return;
   }
 
   ev->queued = true;
 
-  if (mcu_state_is_isr()) {
-    ret = xQueueSendToBackFromISR(evq->q, &ev, &woken);
-    portYIELD_FROM_ISR(woken);
-  } else {
-    ret = xQueueSendToBack(evq->q, &ev, vPortInCritical() ? 0U : portMAX_DELAY);
-  }
-
-  assert(ret == pdPASS);
+  const bool no_wait = mcu_state_is_isr() || pbl_irq_is_locked();
+  int rc = pbl_msgq_put(&evq->q, &ev, no_wait ? PBL_NO_WAIT : PBL_FOREVER);
+  assert(rc == 0);
 }
 
 void npl_pebble_eventq_remove(struct ble_npl_eventq *evq, struct ble_npl_event *ev) {
   struct ble_npl_event *tmp_ev;
-  BaseType_t ret;
-  int i;
-  int count;
-  BaseType_t woken, woken2;
 
   if (!ev->queued) {
     return;
   }
 
-  /*
-   * XXX We cannot extract element from inside FreeRTOS queue so as a quick
-   * workaround we'll just remove all elements and add them back except the
-   * one we need to remove. This is silly, but works for now - we probably
-   * better use counting semaphore with os_queue to handle this in future.
-   */
+  // The queue cannot remove an arbitrary element, so drain it and put back
+  // everything but the one being removed.
+  const bool in_isr = mcu_state_is_isr();
+  if (!in_isr) {
+    pbl_irq_lock();
+  }
 
-  if (mcu_state_is_isr()) {
-    woken = pdFALSE;
+  uint32_t count = pbl_msgq_num_used(&evq->q);
+  for (uint32_t i = 0; i < count; i++) {
+    int rc = pbl_msgq_get(&evq->q, &tmp_ev, PBL_NO_WAIT);
+    assert(rc == 0);
 
-    count = uxQueueMessagesWaitingFromISR(evq->q);
-    for (i = 0; i < count; i++) {
-      ret = xQueueReceiveFromISR(evq->q, &tmp_ev, &woken2);
-      assert(ret == pdPASS);
-      woken |= woken2;
-
-      if (tmp_ev == ev) {
-        continue;
-      }
-
-      ret = xQueueSendToBackFromISR(evq->q, &tmp_ev, &woken2);
-      assert(ret == pdPASS);
-      woken |= woken2;
+    if (tmp_ev == ev) {
+      continue;
     }
 
-    portYIELD_FROM_ISR(woken);
-  } else {
-    vPortEnterCritical();
+    rc = pbl_msgq_put(&evq->q, &tmp_ev, PBL_NO_WAIT);
+    assert(rc == 0);
+  }
 
-    count = uxQueueMessagesWaiting(evq->q);
-    for (i = 0; i < count; i++) {
-      ret = xQueueReceive(evq->q, &tmp_ev, 0);
-      assert(ret == pdPASS);
-
-      if (tmp_ev == ev) {
-        continue;
-      }
-
-      ret = xQueueSendToBack(evq->q, &tmp_ev, 0);
-      assert(ret == pdPASS);
-    }
-
-    vPortExitCritical();
+  if (!in_isr) {
+    pbl_irq_unlock();
   }
 
   ev->queued = 0;
@@ -123,8 +85,7 @@ ble_npl_error_t npl_pebble_mutex_init(struct ble_npl_mutex *mu) {
     return BLE_NPL_INVALID_PARAM;
   }
 
-  mu->handle = mutex_create_recursive();
-  assert(mu->handle);
+  pbl_mutex_init(&mu->handle);
 
   return BLE_NPL_OK;
 }
@@ -134,15 +95,11 @@ ble_npl_error_t npl_pebble_mutex_pend(struct ble_npl_mutex *mu, ble_npl_time_t t
     return BLE_NPL_INVALID_PARAM;
   }
 
-  assert(mu->handle);
-
   if (mcu_state_is_isr()) {
     WTF;
   }
 
-  uint32_t ms;
-  ble_npl_time_ticks_to_ms(timeout, &ms);
-  return mutex_lock_recursive_with_timeout(mu->handle, ms) ? BLE_NPL_OK : BLE_NPL_TIMEOUT;
+  return (pbl_mutex_lock(&mu->handle, PBL_TICKS(timeout)) == 0) ? BLE_NPL_OK : BLE_NPL_TIMEOUT;
 }
 
 ble_npl_error_t npl_pebble_mutex_release(struct ble_npl_mutex *mu) {
@@ -150,9 +107,7 @@ ble_npl_error_t npl_pebble_mutex_release(struct ble_npl_mutex *mu) {
     return BLE_NPL_INVALID_PARAM;
   }
 
-  assert(mu->handle);
-
-  mutex_unlock_recursive(mu->handle);
+  pbl_mutex_unlock(&mu->handle);
 
   return BLE_NPL_OK;
 }
@@ -162,51 +117,28 @@ ble_npl_error_t npl_pebble_sem_init(struct ble_npl_sem *sem, uint16_t tokens) {
     return BLE_NPL_INVALID_PARAM;
   }
 
-  sem->handle = xSemaphoreCreateCounting(128, tokens);
-  assert(sem->handle);
-
+  pbl_sem_init(&sem->handle, tokens, 128);
   return BLE_NPL_OK;
 }
 
 ble_npl_error_t npl_pebble_sem_pend(struct ble_npl_sem *sem, ble_npl_time_t timeout) {
-  BaseType_t woken;
-  BaseType_t ret;
-
   if (!sem) {
     return BLE_NPL_INVALID_PARAM;
   }
-
-  assert(sem->handle);
 
   if (mcu_state_is_isr()) {
     assert(timeout == 0);
-    ret = xSemaphoreTakeFromISR(sem->handle, &woken);
-    portYIELD_FROM_ISR(woken);
-  } else {
-    ret = xSemaphoreTake(sem->handle, timeout);
   }
 
-  return ret == pdPASS ? BLE_NPL_OK : BLE_NPL_TIMEOUT;
+  return pbl_sem_take(&sem->handle, PBL_TICKS(timeout)) == 0 ? BLE_NPL_OK : BLE_NPL_TIMEOUT;
 }
 
 ble_npl_error_t npl_pebble_sem_release(struct ble_npl_sem *sem) {
-  BaseType_t ret;
-  BaseType_t woken;
-
   if (!sem) {
     return BLE_NPL_INVALID_PARAM;
   }
 
-  assert(sem->handle);
-
-  if (mcu_state_is_isr()) {
-    ret = xSemaphoreGiveFromISR(sem->handle, &woken);
-    portYIELD_FROM_ISR(woken);
-  } else {
-    ret = xSemaphoreGive(sem->handle);
-  }
-
-  assert(ret == pdPASS);
+  pbl_sem_give(&sem->handle);
   return BLE_NPL_OK;
 }
 
@@ -253,7 +185,7 @@ static void npl_pebble_callout_do_update(struct ble_npl_callout *co) {
   }
 
   new_timer_stop(co->handle);
-  PBL_ASSERTN(new_timer_start(co->handle, ticks_to_milliseconds(rem_ticks), os_callout_timer_cb, co, 0));
+  PBL_ASSERTN(new_timer_start(co->handle, pbl_ticks_to_ms(rem_ticks), os_callout_timer_cb, co, 0));
 
   co->update_pending = false;
 }
@@ -333,7 +265,7 @@ ble_npl_time_t npl_pebble_callout_remaining_ticks(struct ble_npl_callout *co, bl
 ble_npl_error_t npl_pebble_time_ms_to_ticks(uint32_t ms, ble_npl_time_t *out_ticks) {
   uint64_t ticks;
 
-  ticks = milliseconds_to_ticks(ms);
+  ticks = pbl_ms_to_ticks(ms);
   if (ticks > UINT32_MAX) {
     return BLE_NPL_EINVAL;
   }
@@ -346,7 +278,7 @@ ble_npl_error_t npl_pebble_time_ms_to_ticks(uint32_t ms, ble_npl_time_t *out_tic
 ble_npl_error_t npl_pebble_time_ticks_to_ms(ble_npl_time_t ticks, uint32_t *out_ms) {
   uint64_t ms;
 
-  ms = ticks_to_milliseconds(ticks);
+  ms = pbl_ticks_to_ms(ticks);
   if (ms > UINT32_MAX) {
     return BLE_NPL_EINVAL;
   }
