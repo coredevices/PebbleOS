@@ -13,6 +13,10 @@ const PebbleProcessMd *PBL_WEAK sys_process_manager_get_current_process_md(void)
   return NULL;
 }
 
+ProcessAppSDKType PBL_WEAK sys_process_manager_get_current_process_sdk_type(void) {
+  return ProcessAppSDKType_System;
+}
+
 bool PBL_WEAK sys_process_manager_get_current_process_uuid(Uuid *uuid_out) {
   return false;
 }
