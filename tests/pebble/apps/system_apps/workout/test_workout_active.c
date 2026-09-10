@@ -169,6 +169,7 @@ void test_workout_active__initialize(void) {
   s_hrm_is_present = s_has_hrm;
   workout_service_pause_workout(false);
   workout_service_stop_workout();
+  display_orientation_set_left(false);
 
   s_workout_data = (WorkoutData){};
   s_sports_data = (SportsData){};
@@ -1018,4 +1019,22 @@ void test_workout_active__workout_render_heart_plot_no_data(void) {
       ActivitySessionType_Run, &s_workout_data, &s_workout_controller);
   prv_render_history(window);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_workout_active__left_hand_metrics_use_parent_coordinates(void) {
+#if PBL_RECT
+  display_orientation_set_left(true);
+  WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Pace, WorkoutMetricType_Hr};
+  WorkoutActiveWindow *active_window = workout_active_create_triple_layout(
+      WorkoutMetricType_Duration, WorkoutMetricType_Distance, ARRAY_LENGTH(scrollable_metrics),
+      scrollable_metrics, &s_sports_data, &s_sports_controller);
+  Window *window = (Window *)active_window;
+  Layer *base = window->layer.first_child;
+  cl_assert_equal_i(base->frame.origin.x, ACTION_BAR_WIDTH);
+  cl_assert(base->first_child != nullptr);
+  for (Layer *metric = base->first_child; metric; metric = metric->next_sibling) {
+    cl_assert_equal_i(metric->frame.origin.x, 0);
+    cl_assert_equal_i(metric->frame.size.w, base->bounds.size.w);
+  }
+#endif
 }
