@@ -1856,7 +1856,7 @@ static void prv_create_window_common(WorkoutActiveWindow *active_window, void *w
       active_window->layout == WorkoutLayout_Dashboard ? 0 : STATUS_BAR_LAYER_HEIGHT;
   layer_init(&active_window->base_layer, &base_layer_bounds);
   layer_add_child(&window->layer, &active_window->base_layer);
-  base_layer_bounds.origin.y = 0;
+  base_layer_bounds.origin = GPointZero;
 
   if (active_window->layout == WorkoutLayout_Dashboard) {
     layer_set_update_proc(&active_window->base_layer, prv_dashboard_update_proc);
