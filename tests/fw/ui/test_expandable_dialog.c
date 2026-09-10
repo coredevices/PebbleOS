@@ -104,6 +104,7 @@ uint16_t time_ms(time_t *tloc, uint16_t *out_ms) {
 static FrameBuffer *fb = NULL;
 
 void test_expandable_dialog__initialize(void) {
+  display_orientation_set_left(false);
   fb = malloc(sizeof(FrameBuffer));
   framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
   // Must use System init mode to enable orphan avoidance algorithm
@@ -198,4 +199,16 @@ void test_expandable_dialog__without_status_bar_retains_icon_margin(void) {
   cl_assert_equal_i(dialog->icon_layer.layer.frame.origin.y, 16 + PBL_IF_RECT_ELSE(0, 5));
   cl_assert_equal_i(dialog->text_layer.layer.frame.origin.y,
                     16 + dialog->icon_layer.layer.frame.size.h);
+}
+
+void test_expandable_dialog__left_hand_status_bar_remains_centered(void) {
+  display_orientation_set_left(true);
+  ExpandableDialog *expandable_dialog = expandable_dialog_create_with_params(
+      "Left hand", RESOURCE_ID_QUICK_DISMISS, "Confirm this action.", GColorBlack, GColorWhite,
+      NULL, RESOURCE_ID_ACTION_BAR_ICON_CHECK, NULL);
+  Dialog *dialog = expandable_dialog_get_dialog(expandable_dialog);
+  dialog_show_status_bar_layer(dialog, true);
+  prv_push_and_render_expandable_dialog(expandable_dialog, 0);
+  cl_assert_equal_i(dialog->status_layer.layer.frame.origin.x, 0);
+  cl_assert_equal_i(dialog->status_layer.layer.frame.size.w, DISP_COLS);
 }

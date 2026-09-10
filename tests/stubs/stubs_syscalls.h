@@ -59,6 +59,8 @@ AppInstallId PBL_WEAK sys_process_manager_get_current_process_id(void) {
 void PBL_WEAK sys_get_app_uuid(Uuid *uuid) {
 }
 
+static bool s_action_bar_on_right = true;
+
 bool WEAK action_bar_layer_is_on_right(void) {
-  return true;
+  return s_action_bar_on_right;
 }
