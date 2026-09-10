@@ -7,7 +7,7 @@
 #include "workout.h"
 
 #include "applib/app.h"
-#include "applib/ui/action_bar_layer_private.h"
+#include "applib/ui/action_bar_layer.h"
 #include "applib/ui/action_menu_window.h"
 #include "applib/ui/ui.h"
 #include "applib/ui/window_manager.h"

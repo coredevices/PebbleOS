@@ -174,7 +174,8 @@ typedef enum {
 // sdk.major:0x5 .minor:0x6a -- Add HRV sampling API (health_service_set_hrv_sample_period) (rev 109)
 
 #define PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR 0x5
-#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x6a
+// sdk.major:0x5 .minor:0x6b -- Export action bar left-hand orientation helpers to apps (rev 110)
+#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x6b
 
 // The first SDK to ship with 2.x APIs
 #define PROCESS_INFO_FIRST_2X_SDK_VERSION_MAJOR 0x4
