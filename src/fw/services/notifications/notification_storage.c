@@ -732,8 +732,6 @@ void notification_storage_iterate_items_after(
     bool (*iter_callback)(void *data, const CommonTimelineItemHeader *header,
                           const TimelineItem *item),
     void *data) {
-  PBL_ASSERTN(s_notif_storage_mutex != NULL);
-
   if (iter_callback == NULL) {
     return;
   }

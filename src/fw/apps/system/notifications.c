@@ -4,6 +4,7 @@
 #include "notifications.h"
 #include "notifications_history.h"
 
+#include <stdio.h>
 #include <time.h>
 
 #include "applib/app.h"
