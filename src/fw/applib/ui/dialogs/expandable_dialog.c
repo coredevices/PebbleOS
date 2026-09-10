@@ -7,7 +7,7 @@
 #include "applib/fonts/fonts.h"
 #include "applib/graphics/gtypes.h"
 #include "applib/graphics/text.h"
-#include "applib/ui/action_bar_layer_private.h"
+#include "applib/ui/action_bar_layer.h"
 #include "applib/ui/dialogs/dialog_private.h"
 #include "applib/ui/layer.h"
 #include "applib/ui/text_layer.h"
