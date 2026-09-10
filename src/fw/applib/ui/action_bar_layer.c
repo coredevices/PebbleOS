@@ -17,7 +17,7 @@
 #include "pbl/util/trig.h"
 
 #ifdef CONFIG_ORIENTATION_MANAGER
-#include "shell/prefs.h"
+#include "shell/prefs_syscalls.h"
 #include "syscall/syscall.h"
 #endif
 
@@ -45,18 +45,21 @@ static bool prv_current_ui_follows_orientation(void) {
   if (task != PebbleTask_App && task != PebbleTask_Worker) {
     return true;
   }
-  const PebbleProcessMd *md = sys_process_manager_get_current_process_md();
-  return md && process_metadata_get_app_sdk_type(md) == ProcessAppSDKType_System;
+  return sys_process_manager_get_current_process_sdk_type() == ProcessAppSDKType_System;
 }
 #endif
 
 bool action_bar_layer_is_on_right(void) {
 #ifdef CONFIG_ORIENTATION_MANAGER
-  if (display_orientation_is_left() && prv_current_ui_follows_orientation()) {
+  if (sys_display_orientation_is_left() && prv_current_ui_follows_orientation()) {
     return false;
   }
 #endif
   return true;
+}
+
+static bool prv_bar_is_on_right(const ActionBarLayer *action_bar) {
+  return action_bar->window ? !action_bar->on_left : action_bar_layer_is_on_right();
 }
 
 int16_t action_bar_layer_get_content_origin_x(void) {
@@ -196,7 +199,7 @@ static GPoint prv_get_button_press_offset(ActionBarLayer *action_bar, uint8_t bu
       GPoint(0, animation_offset),
   };
   // MoveLeft is "toward content" when the bar is on the right; flip when it is on the left.
-  if (!action_bar_layer_is_on_right()) {
+  if (!prv_bar_is_on_right(action_bar)) {
     offset[ActionBarLayerIconPressAnimationMoveLeft].x = animation_offset;
     offset[ActionBarLayerIconPressAnimationMoveRight].x = -animation_offset;
   }
@@ -214,7 +217,7 @@ void prv_draw_background_round(ActionBarLayer *action_bar, GContext *ctx, GColor
   GRect action_bar_circle_frame = (GRect) {
       .size = GSize(action_bar_circle_diameter, action_bar_circle_diameter)
   };
-  const GAlign align = action_bar_layer_is_on_right() ? GAlignLeft : GAlignRight;
+  const GAlign align = prv_bar_is_on_right(action_bar) ? GAlignLeft : GAlignRight;
   grect_align(&action_bar_circle_frame, &action_bar->layer.bounds, align, false /* clips */);
   graphics_fill_oval(ctx, action_bar_circle_frame, GOvalScaleModeFitCircle);
 }
@@ -270,7 +273,7 @@ void action_bar_update_proc(ActionBarLayer *action_bar, GContext* ctx) {
       grect_align(&icon_rect, &rect, GAlignCenter, clip);
 #if PBL_ROUND
       // Offset needed because the curvature of the action bar makes the icons look off-center
-      const int32_t icon_horizontal_offset = action_bar_layer_is_on_right() ? -2 : 2;
+      const int32_t icon_horizontal_offset = prv_bar_is_on_right(action_bar) ? -2 : 2;
       icon_rect.origin.x += icon_horizontal_offset;
 #endif
       icon_rect.origin.x += offset.x;
@@ -452,7 +455,8 @@ void action_bar_layer_add_to_window(ActionBarLayer *action_bar, struct Window *w
   const int16_t width = prv_width();
   GRect rect = GRect(0, 0, width, window_bounds->size.h);
   layer_set_bounds(&action_bar->layer, &rect);
-  rect.origin.x = action_bar_layer_is_on_right() ? (window_bounds->size.w - width) : 0;
+  action_bar->on_left = !action_bar_layer_is_on_right();
+  rect.origin.x = action_bar->on_left ? 0 : (window_bounds->size.w - width);
   layer_set_frame(&action_bar->layer, &rect);
   layer_add_child(&window->layer, &action_bar->layer);
 

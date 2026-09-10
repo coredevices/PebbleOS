@@ -17,6 +17,7 @@ pbl_clar_test(test_action_bar_layer
     tests/fakes/fake_gbitmap_png.c
     src/fw/applib/ui/layer.c
     src/fw/applib/ui/action_bar_layer.c
+  PLATFORMS obelix gabbro
   DEFINES CONFIG_ORIENTATION_MANAGER
 )
 
