@@ -118,7 +118,7 @@ static void prv_expandable_dialog_load(Window *window) {
   uint16_t action_bar_offset = show_action_bar * ACTION_BAR_WIDTH;
   uint16_t content_x_start = (show_action_bar && !action_bar_on_right) ? action_bar_offset : 0;
 
-  uint16_t x = content_x_start;
+  uint16_t x = PBL_IF_RECT_ELSE(content_x_start, 0);
   uint16_t y = 0;
   uint16_t w = PBL_IF_RECT_ELSE(frame.size.w - action_bar_offset, frame.size.w);
   uint16_t h = STATUS_BAR_LAYER_HEIGHT;
