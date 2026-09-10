@@ -756,7 +756,7 @@ pbl_clar_test(test_expandable_dialog
     src/fw/applib/ui/window.c
     tests/fakes/fake_fonts.c
   PLATFORMS gabbro
-  DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
+  DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1 CONFIG_ORIENTATION_MANAGER
   OVERRIDES dummy_board
   TEST_IMAGES
 )

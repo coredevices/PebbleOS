@@ -206,7 +206,7 @@ pbl_clar_test(test_workout_active
     src/fw/apps/system/workout/dialog.c
     src/fw/apps/system/workout/active.c
   PLATFORMS obelix gabbro
-  DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
+  DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1 CONFIG_ORIENTATION_MANAGER
   OVERRIDES dummy_board
   TEST_IMAGES
 )
