@@ -710,7 +710,7 @@ static void prv_hide_action_bar(void) {
 
   const GRect window_bounds = s_phone_ui_data->window.layer.bounds;
   const int16_t bar_width = PBL_IF_RECT_ELSE(ACTION_BAR_WIDTH, 0);
-  const bool bar_on_right = action_bar_layer_is_on_right();
+  const bool bar_on_right = !s_phone_ui_data->action_bar.on_left;
   GRect offscreen = GRect(bar_on_right ? window_bounds.size.w : -bar_width, 0,
                           bar_width, window_bounds.size.h);
   Animation *action_bar_animation = property_animation_get_animation(
@@ -738,11 +738,13 @@ static void prv_hide_action_bar(void) {
   s_phone_ui_data->action_bar_animation = combined;
   animation_schedule(combined);
 #if PBL_ROUND
-  // Extend the bounds to center the call text when the action bar is removed
-  if (!bar_on_right) {
-    s_phone_ui_data->caller_id_text_layer.layer.bounds.origin.x -= TEXT_RIGHTSIDE_PADDING;
-    s_phone_ui_data->call_status_text_layer.layer.bounds.origin.x -= TEXT_RIGHTSIDE_PADDING;
-  }
+  // Restore the full text frame when the action bar is removed.
+  s_phone_ui_data->caller_id_text_layer.layer.frame.origin.x = TEXT_MARGIN_WIDTH;
+  s_phone_ui_data->call_status_text_layer.layer.frame.origin.x = TEXT_MARGIN_WIDTH;
+  s_phone_ui_data->caller_id_text_layer.layer.frame.size.w =
+      window_bounds.size.w - 2 * TEXT_MARGIN_WIDTH;
+  s_phone_ui_data->call_status_text_layer.layer.frame.size.w =
+      window_bounds.size.w - 2 * TEXT_MARGIN_WIDTH;
   s_phone_ui_data->caller_id_text_layer.layer.bounds.size.w += TEXT_RIGHTSIDE_PADDING;
   text_layer_set_text_alignment(&s_phone_ui_data->caller_id_text_layer, GTextAlignmentCenter);
   s_phone_ui_data->call_status_text_layer.layer.bounds.size.w += TEXT_RIGHTSIDE_PADDING;
@@ -1050,12 +1052,10 @@ static void prv_phone_ui_init(void) {
   const GTextAlignment phone_text_alignment = PBL_IF_RECT_ELSE(
       GTextAlignmentCenter,
       action_bar_on_right ? GTextAlignmentRight : GTextAlignmentLeft);
-  // On rectangular displays the action bar shifts the text frame to the content side; on round
-  // displays the frame stays symmetric and the text bounds are inset on the bar side instead.
-  const int16_t text_frame_x = PBL_IF_RECT_ELSE(TEXT_MARGIN_WIDTH + content_x, TEXT_MARGIN_WIDTH);
-  const int16_t text_frame_w = PBL_IF_RECT_ELSE(width - content_x, width);
-  const int16_t text_bounds_x =
+  PBL_UNUSED const int16_t round_text_inset =
       PBL_IF_ROUND_ELSE(action_bar_on_right ? 0 : TEXT_RIGHTSIDE_PADDING, 0);
+  const int16_t text_frame_x = TEXT_MARGIN_WIDTH + PBL_IF_RECT_ELSE(content_x, round_text_inset);
+  const int16_t text_frame_w = width - PBL_IF_RECT_ELSE(content_x, round_text_inset);
   const int16_t text_bounds_w =
       PBL_IF_RECT_ELSE(width - content_x - (action_bar_on_right ? TEXT_RIGHTSIDE_PADDING : 0),
                        width - TEXT_RIGHTSIDE_PADDING);
@@ -1072,7 +1072,6 @@ static void prv_phone_ui_init(void) {
   layer_add_child(&s_phone_ui_data->core_ui_container,
                   &s_phone_ui_data->caller_id_text_layer.layer);
   // Shrink the bounds but not the frame size to allow for centering when action bar removed
-  s_phone_ui_data->caller_id_text_layer.layer.bounds.origin.x = text_bounds_x;
   s_phone_ui_data->caller_id_text_layer.layer.bounds.size.w = text_bounds_w;
 
   // Status text
@@ -1089,7 +1088,6 @@ static void prv_phone_ui_init(void) {
   layer_add_child(&s_phone_ui_data->core_ui_container,
                   &s_phone_ui_data->call_status_text_layer.layer);
   // Shrink the bounds but not the frame size to allow for centering when action bar removed
-  s_phone_ui_data->call_status_text_layer.layer.bounds.origin.x = text_bounds_x;
   s_phone_ui_data->call_status_text_layer.layer.bounds.size.w = text_bounds_w;
 
   // Action bar

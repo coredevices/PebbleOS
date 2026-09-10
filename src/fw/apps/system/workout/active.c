@@ -823,7 +823,7 @@ static void prv_create_window_common(WorkoutActiveWindow *active_window,
   base_layer_bounds.origin.y = STATUS_BAR_LAYER_HEIGHT;
   layer_init(&active_window->base_layer, &base_layer_bounds);
   layer_add_child(&window->layer, &active_window->base_layer);
-  base_layer_bounds.origin.y = 0;
+  base_layer_bounds.origin = GPointZero;
 
   if (active_window->layout == WorkoutLayout_SingleMetric) {
     // Only 1 metric to show. It can have the whole screen

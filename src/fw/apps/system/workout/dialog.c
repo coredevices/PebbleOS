@@ -49,7 +49,7 @@ static void prv_workout_dialog_load(Window *window) {
   uint16_t subtext_top_margin_px = text_top_margin_px + single_line_text_height_px;
   uint16_t icon_top_margin_px = PBL_IF_RECT_ELSE(18, 22);
   uint16_t text_height;
-  uint16_t x = content_x_start;
+  uint16_t x = PBL_IF_RECT_ELSE(content_x_start, 0);
   uint16_t y = 0;
   uint16_t w = PBL_IF_RECT_ELSE(bounds->size.w - action_bar_width, bounds->size.w);
   uint16_t h = STATUS_BAR_LAYER_HEIGHT;

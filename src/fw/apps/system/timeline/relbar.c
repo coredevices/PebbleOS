@@ -397,8 +397,9 @@ static void prv_draw_rel_bar_overlap(TimelineLayer *timeline_layer, GContext* ct
   GPoint line2_start;
 
   // Draw down
-  line1_start.x = prv_overlap_line_x(&layer_bounds) - REL_BAR_OVERLAP_NUDGE_X -
-                  REL_BAR_OVERLAP_SIDE_MARGIN;
+  const int16_t direction = timeline_layer_sidebar_is_on_right() ? 1 : -1;
+  line1_start.x = prv_overlap_line_x(&layer_bounds) -
+                  direction * (REL_BAR_OVERLAP_NUDGE_X + REL_BAR_OVERLAP_SIDE_MARGIN);
   line1_start.y = grect_get_max_y(&first_icon_frame) + REL_BAR_VERT_MARGIN -
                   y_offset + REL_BAR_LINE_WIDTH;
 
@@ -412,9 +413,7 @@ static void prv_draw_rel_bar_overlap(TimelineLayer *timeline_layer, GContext* ct
   graphics_fill_rect(ctx, &notch);
 
   // Draw up
-  line2_start.x = line1_start.x + (timeline_layer_sidebar_is_on_right()
-                                       ? REL_BAR_OVERLAP_LINE2_HORIZ_OFFSET
-                                       : -REL_BAR_OVERLAP_LINE2_HORIZ_OFFSET);
+  line2_start.x = line1_start.x + direction * REL_BAR_OVERLAP_LINE2_HORIZ_OFFSET;
   line2_start.y = second_icon_frame.origin.y - REL_BAR_VERT_MARGIN - y_offset -
                   REL_BAR_LINE_WIDTH;
   graphics_fill_rect(ctx, &GRect(line2_start.x, line2_start.y,

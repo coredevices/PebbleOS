@@ -37,7 +37,7 @@ static void prv_actionable_dialog_load(Window *window) {
   const int max_text_line_height_px = 2 * fonts_get_font_height(dialog_text_font) + 8;
   const uint16_t icon_text_spacing_px = 4;
 
-  uint16_t x = content_x_start;
+  uint16_t x = PBL_IF_RECT_ELSE(content_x_start, 0);
   uint16_t y = 0;
   uint16_t w = PBL_IF_RECT_ELSE(bounds->size.w - ACTION_BAR_WIDTH, bounds->size.w);
   uint16_t h = STATUS_BAR_LAYER_HEIGHT;

@@ -212,8 +212,11 @@ static GRect prv_time_rect(void) {
 
 static GRect prv_cassette_rect(void) {
   const MusicAppSizeConfig *config = prv_config();
-  const int16_t cassette_x = action_bar_layer_get_content_origin_x() + config->horizontal_margin +
-      PBL_IF_RECT_ELSE(0, prv_content_width() - config->cassette_rect.size.w);
+  const int16_t cassette_x =
+      config->horizontal_margin +
+      PBL_IF_RECT_ELSE(0, action_bar_layer_is_on_right()
+                              ? prv_content_width() - config->cassette_rect.size.w
+                              : 0);
   return GRect(cassette_x, config->cassette_rect.origin.y,
                config->cassette_rect.size.w, config->cassette_rect.size.h);
 }
@@ -1003,7 +1006,8 @@ static GRect prv_album_art_rect(void) {
   // Rect: a square band from the top down to just above the times row. Round: the cover fills the
   // whole display (it is already fetched at the full width) and the circle masks it.
   const int16_t art_h = PBL_IF_RECT_ELSE(prv_config()->time_field.origin_y - 2, DISP_ROWS);
-  return GRect(0, 0, prv_art_width(), art_h);
+  return GRect(PBL_IF_RECT_ELSE(action_bar_layer_get_content_origin_x(), 0), 0, prv_art_width(),
+               art_h);
 }
 
 // In album-art mode the track title moves down beside the tape (to the tape's right on rect
@@ -1015,8 +1019,9 @@ static GRect prv_art_title_rect(void) {
   const MusicAppSizeConfig *config = prv_config();
   const GRect tape = prv_cassette_rect();
   // Clear the tape frame plus a gap: the widest state icon (volume) fills the whole frame.
-  const int16_t x = tape.origin.x + tape.size.w + 2;
-  const int16_t right = DISP_COLS - ACTION_BAR_WIDTH - 7;
+  const int16_t content_x = action_bar_layer_get_content_origin_x();
+  const int16_t x = content_x + tape.origin.x + tape.size.w + 2;
+  const int16_t right = content_x + DISP_COLS - ACTION_BAR_WIDTH - 7;
   // Single line, vertically centred in the band between the progress bar and the bottom of screen,
   // nudged up slightly since the glyph sits a touch low within the line box.
   const int16_t bar_bottom = config->track_field.origin_y + config->track_field.size_h;
@@ -1042,7 +1047,7 @@ static GRect prv_art_artist_rect(void) {
 #if PBL_RECT
   const int16_t content_w = DISP_COLS - ACTION_BAR_WIDTH;
   const int16_t art_bottom = prv_config()->time_field.origin_y - 2;
-  return GRect(0, art_bottom - 26, content_w, 26);
+  return GRect(action_bar_layer_get_content_origin_x(), art_bottom - 26, content_w, 26);
 #else
   return GRect(ART_ROUND_TEXT_MARGIN, ART_ROUND_ARTIST_Y,
                DISP_COLS - 2 * ART_ROUND_TEXT_MARGIN, 24);
@@ -1132,6 +1137,15 @@ static void prv_fill_bezel_arc(GContext *ctx, const GRect *bounds, int32_t from_
                                int32_t to_deg) {
   if (to_deg <= from_deg) {
     return;
+  }
+  if (!action_bar_layer_is_on_right()) {
+    const int32_t mirrored_from = 360 - to_deg;
+    to_deg = 360 - from_deg;
+    from_deg = mirrored_from;
+    if (from_deg < 0) {
+      from_deg += 360;
+      to_deg += 360;
+    }
   }
   if (to_deg <= 360) {
     graphics_fill_radial(ctx, *bounds, GOvalScaleModeFitCircle, ART_ROUND_RING_THICKNESS,
@@ -1685,4 +1699,3 @@ const PebbleProcessMd* music_app_get_info(void) {
   };
   return (const PebbleProcessMd*) &s_app_info;
 }
-
