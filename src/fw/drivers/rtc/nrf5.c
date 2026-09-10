@@ -371,7 +371,8 @@ static void prv_rtc_resync_timer_callback() {
 
 void rtc_init_timers(void) {
   static RegularTimerInfo rtc_sync_timer = {
-      .list_node = {0, 0}, .cb = prv_rtc_resync_timer_callback
+      .list_node = {0, 0},
+      .cb = prv_rtc_resync_timer_callback
   };
   regular_timer_add_minutes_callback(&rtc_sync_timer);
 }

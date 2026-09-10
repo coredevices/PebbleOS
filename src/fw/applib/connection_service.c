@@ -70,7 +70,8 @@ void connection_service_state_init(ConnectionServiceState *state) {
 
 void bluetooth_connection_service_subscribe(ConnectionHandler handler) {
   ConnectionHandlers conn_handlers = {
-      .pebble_app_connection_handler = handler, .pebblekit_connection_handler = NULL
+      .pebble_app_connection_handler = handler,
+      .pebblekit_connection_handler = NULL
   };
   connection_service_subscribe(conn_handlers);
 }

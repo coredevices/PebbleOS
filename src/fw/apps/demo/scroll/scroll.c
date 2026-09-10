@@ -119,7 +119,8 @@ static void s_main(void) {
 
 const PebbleProcessMd *scroll_app_get_info() {
   static const PebbleProcessMdSystem s_scroll_app_info = {
-      .common.main_func = &s_main, .name = "Scroller"
+      .common.main_func = &s_main,
+      .name = "Scroller"
   };
   return (const PebbleProcessMd *)&s_scroll_app_info;
 }

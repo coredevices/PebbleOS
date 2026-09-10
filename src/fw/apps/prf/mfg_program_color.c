@@ -306,7 +306,8 @@ static void prv_handle_init(void) {
   // Create up arrow (pointing up)
   static GPoint UP_ARROW_POINTS[] = {{0, 10}, {7, 0}, {14, 10}};
   static const GPathInfo UP_ARROW_PATH_INFO = {
-      .num_points = ARRAY_LENGTH(UP_ARROW_POINTS), .points = UP_ARROW_POINTS
+      .num_points = ARRAY_LENGTH(UP_ARROW_POINTS),
+      .points = UP_ARROW_POINTS
   };
   PathLayer *up_arrow = &data->up_arrow;
   path_layer_init(up_arrow, &UP_ARROW_PATH_INFO);
@@ -342,7 +343,8 @@ static void prv_handle_init(void) {
   // Create down arrow (pointing down)
   static GPoint DOWN_ARROW_POINTS[] = {{0, 0}, {7, 10}, {14, 0}};
   static const GPathInfo DOWN_ARROW_PATH_INFO = {
-      .num_points = ARRAY_LENGTH(DOWN_ARROW_POINTS), .points = DOWN_ARROW_POINTS
+      .num_points = ARRAY_LENGTH(DOWN_ARROW_POINTS),
+      .points = DOWN_ARROW_POINTS
   };
   PathLayer *down_arrow = &data->down_arrow;
   path_layer_init(down_arrow, &DOWN_ARROW_PATH_INFO);

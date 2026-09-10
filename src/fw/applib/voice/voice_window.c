@@ -1253,7 +1253,9 @@ static void prv_mic_window_load(Window *window) {
   }
 
   data->voice_event_sub = (EventServiceInfo){
-      .type = PEBBLE_VOICE_SERVICE_EVENT, .handler = prv_voice_event_handler, .context = data
+      .type = PEBBLE_VOICE_SERVICE_EVENT,
+      .handler = prv_voice_event_handler,
+      .context = data
   };
   event_service_client_subscribe(&data->voice_event_sub);
 

@@ -146,7 +146,8 @@ static void s_main(void) {
 // =================================================================================
 const PebbleProcessMd *test_bluetooth_app_get_info() {
   static const PebbleProcessMdSystem s_app_info = {
-      .common.main_func = &s_main, .name = "Bluetooth Test"
+      .common.main_func = &s_main,
+      .name = "Bluetooth Test"
   };
   return (const PebbleProcessMd *)&s_app_info;
 }

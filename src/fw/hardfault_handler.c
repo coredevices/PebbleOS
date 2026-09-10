@@ -94,9 +94,8 @@ void fault_handler_dump_cfsr(char buffer[80]) {
 
   // Memory Management Fault Status Register
   const uint8_t mmfsr = cfsr & 0xff;
-  static const IndexToName mmfsr_mappings[] = {
-      {4, "MSTKERR"}, {3, "MUNSTKERR"}, {1, "DACCVIOL"}, {0, "IACCVIOL"}
-  };
+  static const IndexToName mmfsr_mappings[] =
+      {{4, "MSTKERR"}, {3, "MUNSTKERR"}, {1, "DACCVIOL"}, {0, "IACCVIOL"}};
   if (mmfsr != 0) {
     PBL_LOG_FROM_FAULT_HANDLER("  Memory Management Fault Status Register:");
 

@@ -63,7 +63,8 @@ static void s_main(void) {
 
 const PebbleProcessMd *fs_resources_app_get_info() {
   static const PebbleProcessMdSystem s_fs_resources_app_info = {
-      .common.main_func = s_main, .name = "FS Resources"
+      .common.main_func = s_main,
+      .name = "FS Resources"
   };
   return (const PebbleProcessMd *)&s_fs_resources_app_info;
 }

@@ -40,7 +40,10 @@ void pwm_init(const PwmConfig *pwm, uint32_t resolution, uint32_t frequency) {
   pwm->state->enabled = 0;
   pwm->state->value = 0;
   pwm->state->seq = (nrf_pwm_sequence_t){
-      .values = {.p_common = &pwm->state->value}, .length = 1, .repeats = 0, .end_delay = 0
+      .values = {.p_common = &pwm->state->value},
+      .length = 1,
+      .repeats = 0,
+      .end_delay = 0
   };
   pwm->state->resolution = resolution;
 }

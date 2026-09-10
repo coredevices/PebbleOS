@@ -101,7 +101,8 @@ void wakeup_dispatcher_system_task(void *data) {
       data->common.args = &data->wakeup;
 
       PebbleEvent event = {
-          .type = PEBBLE_APP_LAUNCH_EVENT, .launch_app = {.id = app_id, .data = data}
+          .type = PEBBLE_APP_LAUNCH_EVENT,
+          .launch_app = {.id = app_id, .data = data}
       };
 
       event_put(&event);
@@ -473,7 +474,8 @@ static StatusCode prv_wakeup_settings_add_entry(WakeupId wakeup_id, WakeupEntry 
       // Check if current app already has MAX_WAKEUP_EVENTS_PER_APP scheduled
       // or if the minute event window is already occupied
       struct prv_check_app_and_wakeup_event_s check = {
-          .wakeup_count = 0, .wakeup_timestamp = entry.timestamp
+          .wakeup_count = 0,
+          .wakeup_timestamp = entry.timestamp
       };
       settings_file_each(&wakeup_settings, prv_check_count_and_availability_callback, &check);
 

@@ -359,9 +359,11 @@ typedef struct Tuplet {
 //! @param _key The key
 //! @param _data Pointer to the bytes
 //! @param _length Length of the buffer
-#define TupletBytes(_key, _data, _length)                                                \
-  ((const Tuplet){                                                                       \
-      .type = TUPLE_BYTE_ARRAY, .key = _key, .bytes = {.data = _data, .length = _length} \
+#define TupletBytes(_key, _data, _length)         \
+  ((const Tuplet){                                \
+      .type = TUPLE_BYTE_ARRAY,                   \
+      .key = _key,                                \
+      .bytes = {.data = _data, .length = _length} \
   })
 
 //! Macro to create a Tuplet with a c-string value

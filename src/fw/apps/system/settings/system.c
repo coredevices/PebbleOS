@@ -253,7 +253,8 @@ static void prv_information_window_load(Window *window) {
   MenuLayer *menu_layer = &data->menu_layer;
   GRect bounds = data->window.layer.bounds;
   const GEdgeInsets menu_layer_insets = (GEdgeInsets){
-      .top = STATUS_BAR_LAYER_HEIGHT, .bottom = PBL_IF_RECT_ELSE(0, STATUS_BAR_LAYER_HEIGHT)
+      .top = STATUS_BAR_LAYER_HEIGHT,
+      .bottom = PBL_IF_RECT_ELSE(0, STATUS_BAR_LAYER_HEIGHT)
   };
   bounds = grect_inset(bounds, menu_layer_insets);
   menu_layer_init(menu_layer, &bounds);
@@ -590,7 +591,8 @@ static void prv_debugging_window_load(Window *window) {
   MenuLayer *menu_layer = &data->menu_layer;
   GRect bounds = data->window.layer.bounds;
   const GEdgeInsets menu_layer_insets = (GEdgeInsets){
-      .top = STATUS_BAR_LAYER_HEIGHT, .bottom = PBL_IF_RECT_ELSE(0, STATUS_BAR_LAYER_HEIGHT)
+      .top = STATUS_BAR_LAYER_HEIGHT,
+      .bottom = PBL_IF_RECT_ELSE(0, STATUS_BAR_LAYER_HEIGHT)
   };
   bounds = grect_inset(bounds, menu_layer_insets);
   menu_layer_init(menu_layer, &bounds);
@@ -1106,7 +1108,8 @@ static void prv_certification_window_load(Window *window) {
   MenuLayer *menu_layer = &data->menu_layer;
   GRect bounds = data->window.layer.bounds;
   const GEdgeInsets menu_layer_insets = (GEdgeInsets){
-      .top = STATUS_BAR_LAYER_HEIGHT, .bottom = PBL_IF_RECT_ELSE(0, STATUS_BAR_LAYER_HEIGHT)
+      .top = STATUS_BAR_LAYER_HEIGHT,
+      .bottom = PBL_IF_RECT_ELSE(0, STATUS_BAR_LAYER_HEIGHT)
   };
   bounds = grect_inset(bounds, menu_layer_insets);
   menu_layer_init(menu_layer, &bounds);

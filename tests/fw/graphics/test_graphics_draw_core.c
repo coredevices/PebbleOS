@@ -94,7 +94,8 @@ static void prv_draw_hline_test_pattern(GContext *ctx, HLinePatternDrawFunction 
       (GRect){.origin = GPoint(top_rects_x_offset, 0), .size = top_rects_size};
   prv_draw_hlines_in_rect(ctx, draw_func, &top_left_rect, top_rects_color);
   const GRect top_right_rect = (GRect){
-      .origin = GPoint((bitmap_bounds_size->w / 2) + top_rects_x_offset, 0), .size = top_rects_size
+      .origin = GPoint((bitmap_bounds_size->w / 2) + top_rects_x_offset, 0),
+      .size = top_rects_size
   };
   prv_draw_hlines_in_rect(ctx, draw_func, &top_right_rect, top_rects_color);
 }

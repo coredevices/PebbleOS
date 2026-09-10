@@ -431,7 +431,8 @@ static void s_main(void) {
 
 const PebbleProcessMd *pebble_colors_get_app_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-      .common.main_func = s_main, .name = "Pebble Colors"
+      .common.main_func = s_main,
+      .name = "Pebble Colors"
   };
   return (const PebbleProcessMd *)&s_app_info;
 }

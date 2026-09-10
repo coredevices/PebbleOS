@@ -95,7 +95,8 @@ static void init_arrow_layer_for_button(AppData *data, ButtonId id) {
                                        {14, 24}, {14, 17}, {0, 17}};
 
   static const GPathInfo ARROW_PATH_INFO = {
-      .num_points = ARRAY_LENGTH(ARROW_PATH_POINTS), .points = ARROW_PATH_POINTS
+      .num_points = ARRAY_LENGTH(ARROW_PATH_POINTS),
+      .points = ARROW_PATH_POINTS
   };
 
 // Original arrow dimensions

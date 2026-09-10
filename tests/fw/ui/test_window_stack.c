@@ -287,11 +287,11 @@ static void prv_push_window_unload(Window *window) {
   prv_window_unload(window);
 
   Window *new_window = window_create();
-  window_set_window_handlers(
-      new_window,
-      &(WindowHandlers){
-          .load = prv_window_load, .unload = prv_window_unload, .appear = prv_window_appear
-      });
+  window_set_window_handlers(new_window, &(WindowHandlers){
+                                             .load = prv_window_load,
+                                             .unload = prv_window_unload,
+                                             .appear = prv_window_appear
+                                         });
 
   cl_check(stack);
   cl_check(new_window);

@@ -207,7 +207,8 @@ static void s_main() {
 
 const PebbleProcessMd *persist_app_get_info() {
   static const PebbleProcessMdSystem s_app_info = {
-      .common.main_func = &s_main, .name = "Persist Demo"
+      .common.main_func = &s_main,
+      .name = "Persist Demo"
   };
   return (const PebbleProcessMd *)&s_app_info;
 }

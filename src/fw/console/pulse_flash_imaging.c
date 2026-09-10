@@ -203,7 +203,10 @@ static void prv_handle_crc(Command *cmd, size_t length) {
 
   CrcAck *ack = pulse_best_effort_send_begin(PULSE_PROTOCOL_FLASH_IMAGING);
   *ack = (CrcAck){
-      .opcode = IMAGING_RESP_CRC, .address = cmd->crc.address, .length = cmd->crc.length, .crc = crc
+      .opcode = IMAGING_RESP_CRC,
+      .address = cmd->crc.address,
+      .length = cmd->crc.length,
+      .crc = crc
   };
   pulse_best_effort_send(ack, sizeof(CrcAck));
 }

@@ -71,7 +71,8 @@ static NOINLINE void event_loop_upkeep(void) {
     PBL_LOG_DBG("No more windows, killing current app");
 
     PebbleEvent event = {
-        .type = PEBBLE_PROCESS_KILL_EVENT, .kill = {.gracefully = true, .task = PebbleTask_App}
+        .type = PEBBLE_PROCESS_KILL_EVENT,
+        .kill = {.gracefully = true, .task = PebbleTask_App}
     };
     sys_send_pebble_event_to_kernel(&event);
     return;

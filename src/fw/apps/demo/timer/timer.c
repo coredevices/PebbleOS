@@ -65,7 +65,8 @@ static void s_main(void) {
 
 const PebbleProcessMd *timer_app_get_info() {
   static const PebbleProcessMdSystem s_app_info = {
-      .common.main_func = &s_main, .name = "Timer Cancel Test"
+      .common.main_func = &s_main,
+      .name = "Timer Cancel Test"
   };
   return (const PebbleProcessMd *)&s_app_info;
 }

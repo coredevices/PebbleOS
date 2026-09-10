@@ -71,7 +71,8 @@ static void prv_app_fetch_launch_app(AppFetchUIData *data) {
   // fetch request.
   PebbleLaunchAppEventExtended *ext = kernel_malloc_check(sizeof(PebbleLaunchAppEventExtended));
   *ext = (PebbleLaunchAppEventExtended){
-      .common = data->next_app_args.common, .wakeup = data->next_app_args.wakeup_info
+      .common = data->next_app_args.common,
+      .wakeup = data->next_app_args.wakeup_info
   };
   ext->common.transition = compositor_dot_transition_app_fetch_get();
   if ((data->next_app_args.common.reason == APP_LAUNCH_WAKEUP) &&
@@ -80,7 +81,8 @@ static void prv_app_fetch_launch_app(AppFetchUIData *data) {
   }
 
   PebbleEvent launch_event = {
-      .type = PEBBLE_APP_LAUNCH_EVENT, .launch_app = {.id = data->next_app_args.app_id, .data = ext}
+      .type = PEBBLE_APP_LAUNCH_EVENT,
+      .launch_app = {.id = data->next_app_args.app_id, .data = ext}
   };
 
   event_put(&launch_event);
@@ -107,7 +109,8 @@ static void prv_set_progress_failure(AppFetchUIData *data) {
       message = i18n_get("Not connected", data);
       // Subscribe to the BT remote app connect event
       data->connect_event_info = (EventServiceInfo){
-          .type = PEBBLE_COMM_SESSION_EVENT, .handler = prv_remote_comm_session_event_handler
+          .type = PEBBLE_COMM_SESSION_EVENT,
+          .handler = prv_remote_comm_session_event_handler
       };
       event_service_client_subscribe(&data->connect_event_info);
       break;

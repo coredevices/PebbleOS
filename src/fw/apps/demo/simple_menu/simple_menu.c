@@ -82,7 +82,8 @@ static void s_main(void) {
 
 const PebbleProcessMd *simple_menu_app_get_info() {
   static const PebbleProcessMdSystem s_app_info = {
-      .common.main_func = &s_main, .name = "SimpleMenuLayer Demo"
+      .common.main_func = &s_main,
+      .name = "SimpleMenuLayer Demo"
   };
   return (const PebbleProcessMd *)&s_app_info;
 }

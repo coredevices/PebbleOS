@@ -901,7 +901,8 @@ static void s_main(void) {
 // -------------------------------------------------------------------------------
 const PebbleProcessMd *activity_test_get_app_info(void) {
   static const PebbleProcessMdSystem s_activity_test_app_info = {
-      .common.main_func = &s_main, .name = "ActivityTest"
+      .common.main_func = &s_main,
+      .name = "ActivityTest"
   };
   return (const PebbleProcessMd *)&s_activity_test_app_info;
 }

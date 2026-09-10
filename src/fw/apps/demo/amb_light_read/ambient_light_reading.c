@@ -71,7 +71,8 @@ static void s_main(void) {
 
 const PebbleProcessMd *ambient_light_reading_get_info() {
   static const PebbleProcessMdSystem s_ambient_light_info = {
-      .common.main_func = s_main, .name = "Amb Reading"
+      .common.main_func = s_main,
+      .name = "Amb Reading"
   };
   return (const PebbleProcessMd *)&s_ambient_light_info;
 }

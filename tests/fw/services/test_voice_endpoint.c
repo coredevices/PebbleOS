@@ -209,7 +209,10 @@ void test_voice_endpoint__send_session_setup(void) {
   fake_transport_set_sent_cb(s_transport, prv_test_session_setup_msg);
 
   AudioTransferInfoSpeex transfer_info = (AudioTransferInfoSpeex){
-      .sample_rate = 16000, .bit_rate = 12800, .frame_size = 320, .bitstream_version = 4
+      .sample_rate = 16000,
+      .bit_rate = 12800,
+      .frame_size = 320,
+      .bitstream_version = 4
   };
   strncat(transfer_info.version, "1.2rc1", sizeof(transfer_info.version));
 
@@ -238,7 +241,10 @@ void test_voice_endpoint__send_session_setup_app_initiated(void) {
   fake_transport_set_sent_cb(s_transport, prv_test_session_setup_msg);
 
   AudioTransferInfoSpeex transfer_info = (AudioTransferInfoSpeex){
-      .sample_rate = 16000, .bit_rate = 12800, .frame_size = 320, .bitstream_version = 4
+      .sample_rate = 16000,
+      .bit_rate = 12800,
+      .frame_size = 320,
+      .bitstream_version = 4
   };
   strncat(transfer_info.version, "1.2rc1", sizeof(transfer_info.version));
 

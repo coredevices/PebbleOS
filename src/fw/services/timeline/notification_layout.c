@@ -462,7 +462,9 @@ static void prv_card_init(NotificationLayout *layout, AttributeList *attributes,
   const uint32_t timeline_res_id =
       attribute_get_uint32(attributes, AttributeIdIconTiny, fallback_icon_id);
   const TimelineResourceInfo timeline_res = {
-      .res_id = timeline_res_id, .app_id = app_id, .fallback_id = fallback_icon_id
+      .res_id = timeline_res_id,
+      .app_id = app_id,
+      .fallback_id = fallback_icon_id
   };
   timeline_resources_get_id(&timeline_res, TimelineResourceSizeTiny, &layout->icon_res_info);
 

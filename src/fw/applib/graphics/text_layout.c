@@ -1296,7 +1296,8 @@ static inline void prv_walk_lines_down(Iterator *const line_iter, TextLayout *co
     // If we are restricting the perimeter of the draw box, restrict per line region here
     if (uses_perimeter) {
       GRangeHorizontal text_horizontal_range = {
-          .origin_x = line_in_perimeter_space.x, .size_w = line->max_width_px
+          .origin_x = line_in_perimeter_space.x,
+          .size_w = line->max_width_px
       };
       const GRangeVertical vertical_range = {
           .origin_y = line_in_perimeter_space.y + TEXT_LINE_CAP_LINE(line),

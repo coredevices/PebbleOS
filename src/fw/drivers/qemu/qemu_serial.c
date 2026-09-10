@@ -83,7 +83,8 @@ static void prv_compass_msg_callback(const uint8_t *data, uint32_t len) {
   PebbleEvent e = {
       .type = PEBBLE_COMPASS_DATA_EVENT,
       .compass_data = {
-          .magnetic_heading = ntohl(hdr->magnetic_heading), .calib_status = hdr->calib_status
+          .magnetic_heading = ntohl(hdr->magnetic_heading),
+          .calib_status = hdr->calib_status
       }
   };
 
@@ -356,7 +357,9 @@ void qemu_serial_send(QemuProtocol protocol, const uint8_t *data, uint32_t len) 
 
   // Send the header
   QemuCommChannelHdr hdr = (QemuCommChannelHdr){
-      .signature = htons(QEMU_HEADER_SIGNATURE), .protocol = htons(protocol), .len = htons(len)
+      .signature = htons(QEMU_HEADER_SIGNATURE),
+      .protocol = htons(protocol),
+      .len = htons(len)
   };
   prv_send((uint8_t *)&hdr, sizeof(hdr));
 

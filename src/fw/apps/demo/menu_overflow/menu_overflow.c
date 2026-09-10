@@ -99,7 +99,8 @@ static void s_main(void) {
 
 const PebbleProcessMd *menu_overflow_app_get_info() {
   static const PebbleProcessMdSystem s_app_info = {
-      .common.main_func = &s_main, .name = "Menu Overflow"
+      .common.main_func = &s_main,
+      .name = "Menu Overflow"
   };
   return (const PebbleProcessMd *)&s_app_info;
 }

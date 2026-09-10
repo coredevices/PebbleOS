@@ -15,7 +15,9 @@ static void s_exit_app_main(void) {
 
 const PebbleProcessMd *exit_app_get_app_info(void) {
   static const PebbleProcessMdSystem s_exit_app_info = {
-      .common.main_func = s_exit_app_main, .common.is_unprivileged = true, .name = "Exit Test"
+      .common.main_func = s_exit_app_main,
+      .common.is_unprivileged = true,
+      .name = "Exit Test"
   };
   return (const PebbleProcessMd *)&s_exit_app_info;
 }

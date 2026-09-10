@@ -45,7 +45,8 @@ static void s_main(void) {
 
 const PebbleProcessMd *light_config_get_info() {
   static const PebbleProcessMdSystem s_accel_config_info = {
-      .common.main_func = s_main, .name = "Light Config"
+      .common.main_func = s_main,
+      .name = "Light Config"
   };
   return (const PebbleProcessMd *)&s_accel_config_info;
 }

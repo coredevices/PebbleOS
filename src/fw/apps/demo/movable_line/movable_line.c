@@ -264,7 +264,8 @@ static void s_main(void) {
 
 const PebbleProcessMd *movable_line_get_app_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-      .common.main_func = s_main, .name = "Movable Line"
+      .common.main_func = s_main,
+      .name = "Movable Line"
   };
   return (const PebbleProcessMd *)&s_app_info;
 }

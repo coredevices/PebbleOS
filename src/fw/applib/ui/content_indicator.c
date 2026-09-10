@@ -255,7 +255,9 @@ void content_indicator_draw_arrow(GContext *ctx, const GRect *frame,
   const GPathInfo arrow_up_path_info = {
       .num_points = 3,
       .points = (GPoint[]){
-          {0, arrow_height}, {(arrow_height + 1), 0}, {((arrow_height * 2) + 1), arrow_height}
+          {0, arrow_height},
+          {(arrow_height + 1), 0},
+          {((arrow_height * 2) + 1), arrow_height}
       }
   };
   const GPathInfo arrow_down_path_info = {

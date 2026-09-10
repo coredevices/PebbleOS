@@ -41,7 +41,8 @@ void event_put(PebbleEvent *event) {
   s_event_count++;
 
   s_cached_event = (PebbleEvent){
-      .type = event->type, .bluetooth.comm_session_event = event->bluetooth.comm_session_event
+      .type = event->type,
+      .bluetooth.comm_session_event = event->bluetooth.comm_session_event
   };
 }
 

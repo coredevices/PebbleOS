@@ -527,7 +527,8 @@ T_STATIC LayoutLayer *prv_get_layout_handler(SwapLayer *swap_layer, int8_t rel_p
 
   const LayoutId layout_id = (type == NotificationMobile) ? LayoutIdNotification : LayoutIdReminder;
   NotificationLayoutInfo layout_info = (NotificationLayoutInfo){
-      .item = item, .show_notification_timestamp = !prv_should_pop_due_to_inactivity()
+      .item = item,
+      .show_notification_timestamp = !prv_should_pop_due_to_inactivity()
   };
   const LayoutLayerConfig config = {
       .frame = &data->window.layer.bounds,
@@ -1281,7 +1282,9 @@ static void prv_init_notification_window(bool is_modal) {
   data->peek_animation = NULL;
   data->peek_layer = NULL;
   data->peek_icon_info = (TimelineResourceInfo){
-      .res_id = TIMELINE_RESOURCE_INVALID, .app_id = NULL, .fallback_id = TIMELINE_RESOURCE_INVALID
+      .res_id = TIMELINE_RESOURCE_INVALID,
+      .app_id = NULL,
+      .fallback_id = TIMELINE_RESOURCE_INVALID
   };
   data->action_menu = NULL;
   data->dnd_icon_visible = false;

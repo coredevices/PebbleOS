@@ -175,7 +175,9 @@ static NOINLINE LoadedNotificationNode *prv_loaded_notification_list_load_item(
   }
 
   TimelineResourceInfo timeline_res = {
-      .res_id = timeline_res_id, .app_id = &pin.header.parent_id, .fallback_id = NOTIF_FALLBACK_ICON
+      .res_id = timeline_res_id,
+      .app_id = &pin.header.parent_id,
+      .fallback_id = NOTIF_FALLBACK_ICON
   };
   AppResourceInfo icon_res_info;
   timeline_resources_get_id(&timeline_res, TimelineResourceSizeTiny, &icon_res_info);

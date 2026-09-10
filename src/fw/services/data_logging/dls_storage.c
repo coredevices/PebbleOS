@@ -260,7 +260,9 @@ static bool prv_open_file(DataLoggingSessionStorage *storage, uint8_t op_flags, 
 
   // Init the storage struct
   *storage = (DataLoggingSessionStorage){
-      .fd = fd, .write_offset = sizeof(hdr), .read_offset = sizeof(hdr)
+      .fd = fd,
+      .write_offset = sizeof(hdr),
+      .read_offset = sizeof(hdr)
   };
 
   PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING,
@@ -867,7 +869,9 @@ void dls_storage_rebuild(void) {
     }
     session->comm.session_id = hdr.comm_session_id;
     session->storage = (DataLoggingSessionStorage){
-        .fd = DLS_INVALID_FILE, .write_offset = sizeof(hdr), .read_offset = sizeof(hdr)
+        .fd = DLS_INVALID_FILE,
+        .write_offset = sizeof(hdr),
+        .read_offset = sizeof(hdr)
     };
 
     // Make sure the filename is what we expect

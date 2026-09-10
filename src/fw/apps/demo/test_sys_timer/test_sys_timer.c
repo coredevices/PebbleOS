@@ -416,7 +416,8 @@ static void s_main(void) {
 // =================================================================================
 const PebbleProcessMd *test_sys_timer_app_get_info() {
   static const PebbleProcessMdSystem s_app_info = {
-      .common.main_func = &s_main, .name = "System Timer Test"
+      .common.main_func = &s_main,
+      .name = "System Timer Test"
   };
   return (const PebbleProcessMd *)&s_app_info;
 }

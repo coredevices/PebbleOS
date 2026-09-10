@@ -217,7 +217,8 @@ static void s_main(void) {
 
 const PebbleProcessMd *text_clipping_app_get_info() {
   static const PebbleProcessMdSystem text_spacing_info = {
-      .common.main_func = &s_main, .name = "Text Clipping"
+      .common.main_func = &s_main,
+      .name = "Text Clipping"
   };
   return (const PebbleProcessMd *)&text_spacing_info;
 }

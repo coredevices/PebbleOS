@@ -139,7 +139,8 @@ static void prv_initialize_completion_status(PebbleSystemMessageEvent *event) {
   s_current_completion_status.use_legacy_mode = false;
   FwUpdateCompletionStatus *status = &s_current_completion_status.status;
   *status = (FwUpdateCompletionStatus){
-      .bytes_transferred = event->bytes_transferred, .total_size = event->total_transfer_size
+      .bytes_transferred = event->bytes_transferred,
+      .total_size = event->total_transfer_size
   };
 }
 

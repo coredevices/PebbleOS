@@ -241,7 +241,9 @@ static Window *prv_init(void) {
   prv_reload_menu_data(data);
 
   data->worker_launch_info = (EventServiceInfo){
-      .type = PEBBLE_WORKER_LAUNCH_EVENT, .handler = prv_worker_launch_handler, .context = data
+      .type = PEBBLE_WORKER_LAUNCH_EVENT,
+      .handler = prv_worker_launch_handler,
+      .context = data
   };
   event_service_client_subscribe(&data->worker_launch_info);
 

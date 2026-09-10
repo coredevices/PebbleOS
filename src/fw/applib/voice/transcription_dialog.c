@@ -250,12 +250,12 @@ void transcription_dialog_init(TranscriptionDialog *transcription_dialog) {
                                       prv_transcription_dialog_select_handler);
 
   Dialog *dialog = expandable_dialog_get_dialog((ExpandableDialog *)transcription_dialog);
-  dialog_set_callbacks(
-      dialog,
-      &(DialogCallbacks){
-          .unload = prv_transcription_dialog_unload, .load = prv_transcription_dialog_load
-      },
-      transcription_dialog);
+  dialog_set_callbacks(dialog,
+                       &(DialogCallbacks){
+                           .unload = prv_transcription_dialog_unload,
+                           .load = prv_transcription_dialog_load
+                       },
+                       transcription_dialog);
   dialog_show_status_bar_layer(dialog, true /* show status bar */);
   dialog_set_timeout(dialog, DIALOG_TIMEOUT_INFINITE);
 

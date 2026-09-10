@@ -46,7 +46,8 @@ static void s_main(void) {
 
 const PebbleProcessMd *trigger_alarm_get_app_info() {
   static const PebbleProcessMdSystem s_trigger_alarm = {
-      .common.main_func = s_main, .name = "Trigger Alarm"
+      .common.main_func = s_main,
+      .name = "Trigger Alarm"
   };
 
   return (const PebbleProcessMd *)&s_trigger_alarm;

@@ -238,7 +238,9 @@ static KinoReel *prv_create_kino_reel_with_timeline_resource(TimelineLayout *tim
                                                              TimelineResourceId fallback_resource,
                                                              const Uuid *app_id) {
   timeline_layout->icon_info = (TimelineResourceInfo){
-      .res_id = resource, .app_id = app_id, .fallback_id = fallback_resource
+      .res_id = resource,
+      .app_id = app_id,
+      .fallback_id = fallback_resource
   };
   AppResourceInfo *res_info = &timeline_layout->icon_res_info;
   timeline_resources_get_id(&timeline_layout->icon_info, icon_res_size, res_info);
@@ -652,7 +654,8 @@ static void prv_render_view(TimelineLayout *layout, GContext *ctx, bool render, 
   graphics_context_set_text_color(
       ctx, (is_card ? layout_get_colors((LayoutLayer *)layout)->primary_color : GColorBlack));
   static const GRect page_frame_on_screen = {
-      {0, STATUS_BAR_LAYER_HEIGHT}, {DISP_COLS, DISP_ROWS - STATUS_BAR_LAYER_HEIGHT}
+      {0, STATUS_BAR_LAYER_HEIGHT},
+      {DISP_COLS, DISP_ROWS - STATUS_BAR_LAYER_HEIGHT}
   };
   const GTextNodeDrawConfig config = {
       .page_frame = is_peek ? &GRectZero : &page_frame_on_screen,

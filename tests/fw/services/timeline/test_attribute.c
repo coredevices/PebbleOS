@@ -90,10 +90,12 @@ static void prv_check_attribute_list_serialize(AttributeList *attr_list_to_seria
 
 void test_attribute__serialize_attr_list(void) {
   AttributeList attr_list1 = {
-      .num_attributes = ARRAY_LENGTH(action1_attributes), .attributes = action1_attributes
+      .num_attributes = ARRAY_LENGTH(action1_attributes),
+      .attributes = action1_attributes
   };
   AttributeList attr_list2 = {
-      .num_attributes = ARRAY_LENGTH(action2_attributes), .attributes = action2_attributes
+      .num_attributes = ARRAY_LENGTH(action2_attributes),
+      .attributes = action2_attributes
   };
   AttributeList attr_list3 = {.num_attributes = ARRAY_LENGTH(attributes), .attributes = attributes};
 

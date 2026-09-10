@@ -229,9 +229,8 @@ void test_graphics_draw_text_flow__with_paging(void) {
       .flow_data = {
           .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_round},
           .perimeter.inset = 8,
-          .paging.page_on_screen = {
-              .origin_y = 25, .size_h = 100
-          },  // setting a page height != enables positioning
+          .paging.page_on_screen =
+              {.origin_y = 25, .size_h = 100},  // setting a page height != enables positioning
       },
   };
   render_steps(&layout, RenderMoveTextBox, DELTA, 1000, NULL);
@@ -243,9 +242,8 @@ void test_graphics_draw_text_flow__avoid_repeat_text_to_avoid_orphans(void) {
       .flow_data = {
           .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_round},
           .perimeter.inset = 8,
-          .paging.page_on_screen = {
-              .origin_y = 25, .size_h = 100
-          },  // setting a page height != enables positioning
+          .paging.page_on_screen =
+              {.origin_y = 25, .size_h = 100},  // setting a page height != enables positioning
       },
   };
 

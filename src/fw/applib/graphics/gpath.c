@@ -107,10 +107,10 @@ static void prv_gpath_draw_filled_cb(GContext *ctx, int16_t y, Fixed_S16_3 x_ran
     return;
   }
 #endif
-  graphics_fill_rect(
-      ctx, &(GRect){
-               {x_range_begin.integer + 1, y}, {x_range_end.integer - x_range_begin.integer - 1, 1}
-           });
+  graphics_fill_rect(ctx, &(GRect){
+                              {x_range_begin.integer + 1, y},
+                              {x_range_end.integer - x_range_begin.integer - 1, 1}
+                          });
 }
 
 void gpath_draw_filled(GContext *ctx, GPath *path) {

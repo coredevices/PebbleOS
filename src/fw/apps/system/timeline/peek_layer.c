@@ -75,11 +75,11 @@ static void prv_layout_text(PeekLayer *peek_layer) {
   layer_set_frame((Layer *)&peek_layer->number.text_layer,
                   &(GRect){{cursor.x, cursor.y + NUMBER_OFFSET_Y}, number_size});
   cursor.x += number_size.w;
-  layer_set_frame(
-      (Layer *)&peek_layer->title.text_layer,
-      &(GRect){
-          {cursor.x, cursor.y + TEXT_OFFSET_Y}, {title_size.w, title_size.h + font_height_fuzz}
-      });
+  layer_set_frame((Layer *)&peek_layer->title.text_layer,
+                  &(GRect){
+                      {cursor.x, cursor.y + TEXT_OFFSET_Y},
+                      {title_size.w, title_size.h + font_height_fuzz}
+                  });
 }
 
 //////////////////////

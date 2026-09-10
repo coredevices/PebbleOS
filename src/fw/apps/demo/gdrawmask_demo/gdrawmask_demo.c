@@ -151,7 +151,8 @@ static void s_main(void) {
 
 const PebbleProcessMd *gdrawmask_demo_get_app_info() {
   static const PebbleProcessMdSystem gdrawmask_demo_app_info = {
-      .common.main_func = s_main, .name = "GDrawMask Demo"
+      .common.main_func = s_main,
+      .name = "GDrawMask Demo"
   };
   return (const PebbleProcessMd *)&gdrawmask_demo_app_info;
 }

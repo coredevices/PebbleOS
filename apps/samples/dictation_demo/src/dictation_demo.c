@@ -64,7 +64,8 @@ static void prv_window_load(Window *window) {
   GRect bounds = layer_get_bounds(window_layer);
 
   app_data->result_text = text_layer_create((GRect){
-      .origin = {.x = 10, .y = 10}, .size = {.w = bounds.size.w - 20, .h = bounds.size.h - 20}
+      .origin = {.x = 10, .y = 10},
+      .size = {.w = bounds.size.w - 20, .h = bounds.size.h - 20}
   });
 
   text_layer_set_text(app_data->result_text, "Press SELECT to start");

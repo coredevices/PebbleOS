@@ -51,7 +51,8 @@ static void s_main(void) {
 
 const PebbleProcessMd *app_heap_demo_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_heap_demo_app_info = {
-      .common.main_func = &s_main, .name = "AppHeap"
+      .common.main_func = &s_main,
+      .name = "AppHeap"
   };
   return (const PebbleProcessMd *)&s_app_heap_demo_app_info;
 }
