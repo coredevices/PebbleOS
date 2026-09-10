@@ -10,14 +10,12 @@
 #include <pbl/drivers/rtc.h>
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
-#include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/regular_timer.h"
 #include "pbl/services/system_task.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/list.h"
 #include "pbl/util/math.h"
-#include "util/rand.h"
 
 #include <stdlib.h>
 
@@ -277,7 +275,7 @@ void conn_mgr_set_ble_conn_response_time_ext(
     uint16_t max_period_secs, ResponsivenessGrantedHandler granted_handler) {
   ConnectionMgrInfo *conn_mgr_info;
   if (!hdl || !((conn_mgr_info = hdl->conn_mgr_info))) {
-    PBL_LOG_ERR("GAP Handle not properly intialized");
+    PBL_LOG_ERR("GAP Handle not properly initialized");
     return;
   }
 

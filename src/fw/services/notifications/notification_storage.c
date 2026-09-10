@@ -7,10 +7,9 @@
 #include "pbl/util/uuid.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/system_task.h"
 #include <pbl/logging/logging.h>
 #include <pbl/logging/logging.h>
-#include "pbl/os/mutex.h"
+#include "pbl/kernel/mutex.h"
 #include "system/passert.h"
 #include "pbl/util/iterator.h"
 
@@ -28,7 +27,7 @@ typedef struct NotificationIterState {
 
 static const char *FILENAME = "notifstr";     //The filename should not be changed
 
-static PebbleRecursiveMutex *s_notif_storage_mutex = NULL;
+static PBL_MUTEX_DEFINE(s_notif_storage_mutex);
 
 static uint32_t s_write_offset;
 
@@ -38,8 +37,6 @@ static bool prv_get_notification(TimelineItem *notification,
 static void prv_set_header_status(SerializedTimelineItemHeader *header, uint8_t status, int fd);
 
 void notification_storage_init(void) {
-  PBL_ASSERTN(s_notif_storage_mutex == NULL);
-
   //Clear notifications storage on reset
   pfs_remove(FILENAME);
   // Create a new file and close it (removes delay when receiving first notification after boot)
@@ -50,15 +47,14 @@ void notification_storage_init(void) {
     pfs_close(fd);
   }
   s_write_offset = 0;
-  s_notif_storage_mutex = mutex_create_recursive();
 }
 
 void notification_storage_lock(void) {
-  mutex_lock_recursive(s_notif_storage_mutex);
+  pbl_mutex_lock(&s_notif_storage_mutex, PBL_FOREVER);
 }
 
 void notification_storage_unlock(void) {
-  mutex_unlock_recursive(s_notif_storage_mutex);
+  pbl_mutex_unlock(&s_notif_storage_mutex);
 }
 
 static int prv_file_open(uint8_t op_flags) {
@@ -262,7 +258,6 @@ cleanup:
 }
 
 void notification_storage_store(TimelineItem* notification) {
-  PBL_ASSERTN(s_notif_storage_mutex != NULL);
   PBL_ASSERTN(notification != NULL);
 
   SerializedTimelineItemHeader header = { .common.id = UUID_INVALID };
@@ -298,7 +293,7 @@ void notification_storage_store(TimelineItem* notification) {
   return;
 
 reset_storage:
-  mutex_unlock_recursive(s_notif_storage_mutex);
+  pbl_mutex_unlock(&s_notif_storage_mutex);
   notification_storage_reset_and_init();
 }
 
@@ -410,7 +405,7 @@ size_t notification_storage_get_len(const Uuid *uuid) {
 }
 
 bool notification_storage_get(const Uuid *id, TimelineItem *item_out) {
-  PBL_ASSERTN(item_out && (s_notif_storage_mutex != NULL));
+  PBL_ASSERTN(item_out);
 
   int fd = prv_file_open(OP_FLAG_READ);
   if (fd < 0) {
@@ -520,7 +515,6 @@ bool notification_storage_get_status(const Uuid *id, uint8_t *status) {
 }
 
 void notification_storage_set_status(const Uuid *id, uint8_t status) {
-  PBL_ASSERTN(s_notif_storage_mutex != NULL);
 
   SerializedTimelineItemHeader header = { .common.id = UUID_INVALID };
 
@@ -541,7 +535,6 @@ void notification_storage_remove(const Uuid *id) {
 }
 
 bool notification_storage_find_ancs_notification_id(uint32_t ancs_uid, Uuid *uuid_out) {
-  PBL_ASSERTN(s_notif_storage_mutex != NULL);
 
   int fd = prv_file_open(OP_FLAG_READ);
   if (fd < 0) {
@@ -600,7 +593,7 @@ static bool prv_compare_ancs_notifications(TimelineItem *notification, const uin
 bool notification_storage_find_ancs_notification_by_timestamp(
     TimelineItem *notification, CommonTimelineItemHeader *header_out) {
 
-  PBL_ASSERTN(s_notif_storage_mutex && notification && header_out);
+  PBL_ASSERTN(notification && header_out);
 
   int fd = prv_file_open(OP_FLAG_READ);
   if (fd < 0) {
@@ -646,7 +639,6 @@ bool notification_storage_find_ancs_notification_by_timestamp(
 void notification_storage_rewrite(void (*iter_callback)(TimelineItem *notification,
     SerializedTimelineItemHeader *header, void *data), void *data) {
 
-  PBL_ASSERTN(s_notif_storage_mutex != NULL);
 
   if (iter_callback == NULL) {
     return;
@@ -691,7 +683,7 @@ void notification_storage_rewrite(void (*iter_callback)(TimelineItem *notificati
   // Close the old file
   prv_file_close(fd);
 
-  // We have to close and reopend the new file pointed to by the file descriptor, so
+  // We have to close and reopened the new file pointed to by the file descriptor, so
   // that it's temp flag is cleared.
   pfs_close(new_fd);
   new_fd = prv_file_open(OP_FLAG_READ | OP_FLAG_WRITE);
@@ -702,7 +694,6 @@ void notification_storage_rewrite(void (*iter_callback)(TimelineItem *notificati
 void notification_storage_iterate(bool (*iter_callback)(void *data,
     SerializedTimelineItemHeader *header), void *data) {
 
-  PBL_ASSERTN(s_notif_storage_mutex != NULL);
 
   if (iter_callback == NULL) {
     return;
@@ -746,10 +737,6 @@ void notification_storage_reset_and_init(void) {
 // Added for use by unit tests. Do not call from firmware
 #if UNITTEST
 void notification_storage_reset(void) {
-  if (s_notif_storage_mutex != NULL) {
-    mutex_destroy((PebbleMutex *) s_notif_storage_mutex);
-    s_notif_storage_mutex = NULL;
-  }
   notification_storage_init();
 }
 #endif

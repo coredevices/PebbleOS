@@ -123,7 +123,11 @@ def parse_path(
         points = [(line.start.real, line.start.imag) for line in non_move]
         move_commands_only = len(non_move) == 0
         if not points or move_commands_only:
-            print("No points in parsed path")
+            # A path that only moves draws nothing. Stray anchor points are a
+            # common export artefact -- a hundred of them across the icon set
+            # -- and skipping them loses no ink, so say so only when asked.
+            if verbose:
+                print(f"No points in parsed path: {d}")
             return None
 
         path_open = path[-1].end != path[0].start
@@ -423,6 +427,9 @@ def overwrite_inherited(element, inherited_values):
     return inherited_values
 
 
+NON_RENDERED_ELEMENTS = ("defs", "metadata", "title", "desc")
+
+
 def get_commands(
     translate,
     group,
@@ -444,6 +451,9 @@ def get_commands(
         try:
             tag = child.tag[len(xmlns) :]
         except IndexError:
+            continue
+
+        if tag in NON_RENDERED_ELEMENTS:
             continue
 
         # traverse tree of nested layers or groups

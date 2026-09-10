@@ -4,7 +4,7 @@
 #include "pbl/services/put_bytes/put_bytes.h"
 
 #include "pbl/services/comm_session/session_receive_router.h"
-#include "pbl/os/tick.h"
+#include "pbl/kernel/types.h"
 #include "system/bootbits.h"
 #include "system/firmware_storage.h"
 #include <pbl/logging/logging.h>
@@ -13,8 +13,7 @@
 
 #include <bluetooth/conn_event_stats.h>
 
-#include "FreeRTOS.h"
-#include "semphr.h"
+#include "pbl/kernel/sem.h"
 
 #include "clar.h"
 
@@ -24,14 +23,14 @@
 #include "fake_pbl_malloc.h"
 #include "fake_new_timer.h"
 #include "fake_put_bytes_storage_mem.h"
-#include "fake_queue.h"
+#include "fake_sem.h"
 #include "fake_rtc.h"
 #include "fake_session.h"
 #include "fake_spi_flash.h"
 #include "fake_system_task.h"
 
 #include "stubs_bt_lock.h"
-#include "stubs_freertos.h"
+#include "stubs_irq.h"
 #include "stubs_hexdump.h"
 #include "stubs_logging.h"
 #include "stubs_mutex.h"
@@ -42,7 +41,7 @@
 #include "stubs_task_watchdog.h"
 #include "stubs_tick.h"
 
-extern SemaphoreHandle_t put_bytes_get_semaphore(void);
+extern struct pbl_sem * put_bytes_get_semaphore(void);
 extern TimerID put_bytes_get_timer_id(void);
 extern uint32_t put_bytes_get_index(void);
 extern uint8_t prv_put_bytes_get_max_batched_pb_ops(void);
@@ -371,8 +370,8 @@ void test_put_bytes__cleanup(void) {
 // Misc
 
 
-static TickType_t prv_taking_too_long_yield_cb(QueueHandle_t queue) {
-  return milliseconds_to_ticks(1000);
+static pbl_tick_t prv_taking_too_long_yield_cb(struct pbl_sem *queue) {
+  return pbl_ms_to_ticks(1000);
 }
 
 void test_put_bytes__lock_contention_upon_prepare_message(void) {
@@ -380,22 +379,22 @@ void test_put_bytes__lock_contention_upon_prepare_message(void) {
   // expect to receive a Nack:
 
   // Take and hold for a long time:
-  xSemaphoreTake(put_bytes_get_semaphore(), portMAX_DELAY);
-  fake_queue_set_yield_callback(put_bytes_get_semaphore(), prv_taking_too_long_yield_cb);
+  pbl_sem_take(put_bytes_get_semaphore(), PBL_FOREVER);
+  fake_sem_set_yield_callback(put_bytes_get_semaphore(), prv_taking_too_long_yield_cb);
 
   prv_receive_init(4, ObjectFirmware);
 
   // Release it:
-  xSemaphoreGive(put_bytes_get_semaphore());
-  fake_queue_set_yield_callback(put_bytes_get_semaphore(), NULL);
+  pbl_sem_give(put_bytes_get_semaphore());
+  fake_sem_set_yield_callback(put_bytes_get_semaphore(), NULL);
 
   assert_nack_count(1);
 }
 
 static void prv_hold_lock_before_write(void) {
   // Take and hold for a long time:
-  xSemaphoreTake(put_bytes_get_semaphore(), portMAX_DELAY);
-  fake_queue_set_yield_callback(put_bytes_get_semaphore(), prv_taking_too_long_yield_cb);
+  pbl_sem_take(put_bytes_get_semaphore(), PBL_FOREVER);
+  fake_sem_set_yield_callback(put_bytes_get_semaphore(), prv_taking_too_long_yield_cb);
 }
 
 void test_put_bytes__lock_contention_upon_write_message(void) {
@@ -407,8 +406,8 @@ void test_put_bytes__lock_contention_upon_write_message(void) {
   prv_receive_init(4, ObjectFirmware);
 
   // Release it:
-  xSemaphoreGive(put_bytes_get_semaphore());
-  fake_queue_set_yield_callback(put_bytes_get_semaphore(), NULL);
+  pbl_sem_give(put_bytes_get_semaphore());
+  fake_sem_set_yield_callback(put_bytes_get_semaphore(), NULL);
 
   assert_nack_count(1);
 }

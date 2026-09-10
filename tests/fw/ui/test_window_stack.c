@@ -17,13 +17,14 @@
 // Stubs
 ////////////////////////////////////
 
+#include "stubs_sem.h"
 #include "stubs_accel_service.h"
 #include "stubs_app_state.h"
 #include "stubs_app_timer.h"
 #include "stubs_ble_app_support.h"
 #include "stubs_event_service_client.h"
 #include "stubs_fonts.h"
-#include "stubs_freertos.h"
+#include "stubs_irq.h"
 #include "stubs_gbitmap.h"
 #include "stubs_graphics.h"
 #include "stubs_graphics_context.h"
@@ -36,7 +37,6 @@
 #include "stubs_print.h"
 #include "stubs_process_manager.h"
 #include "stubs_prompt.h"
-#include "stubs_queue.h"
 #include "stubs_resources.h"
 #include "stubs_syscalls.h"
 #include "stubs_unobstructed_area.h"
@@ -520,7 +520,7 @@ void test_window_stack__insert_next(void) {
 
 // Description:
 // During the push of a window, we push another window in the load handler of
-// the window being pushed.  This causes the loading window to disappaer from
+// the window being pushed.  This causes the loading window to disappear from
 // the screen (before it even appeared) and become subverted by the new window.
 void test_window_stack__push_during_window_load(void) {
   Window *window = window_create();

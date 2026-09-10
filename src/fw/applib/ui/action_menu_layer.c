@@ -11,15 +11,11 @@
 #include "applib/ui/animation.h"
 #include "applib/ui/menu_layer.h"
 #include "applib/ui/property_animation.h"
-#include "applib/ui/window_private.h"
-#include "kernel/pbl_malloc.h"
 #include "kernel/ui/kernel_ui.h"
 #include "resource/resource_ids.auto.h"
 #include "shell/system_theme.h"
 #include "system/passert.h"
 #include "pbl/util/math.h"
-
-#include <string.h>
 
 #define INDICATOR "»"
 
@@ -606,7 +602,7 @@ static void prv_draw_separator_cb(GContext *ctx, const Layer *cell_layer,
         system_theme_get_default_content_size_for_runtime_platform();
     const ActionMenuSeparatorConfig *config = &s_separator_configs[runtime_platform_default_size];
 
-    // If this index is the seperator index, we want to draw the separator line
+    // If this index is the separator index, we want to draw the separator line
     // in the vertical center of the separator
     const int16_t nudge_down = PBL_IF_RECT_ELSE(3, 0);
 

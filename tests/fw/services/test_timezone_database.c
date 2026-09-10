@@ -30,13 +30,12 @@ void test_timezone_database__get_region_count(void) {
   // Note this test will break every time we update the timezone database and that's ok. Just
   // make sure the new number is sane and update the expected number. The count is derived from
   // the number of Zone entries in resources/normal/base/tzdata/timezones_olson.txt after the
-  // generator's filtering (build_zoneinfo_list); it dropped to 308 as the bundled tzdata has been
-  // updated since the original 336.
-  cl_assert_equal_i(timezone_database_get_region_count(), 308);
+  // generator's filtering (build_zoneinfo_list).
+  cl_assert_equal_i(timezone_database_get_region_count(), 309);
 }
 
 void test_timezone_database__find_region_by_name_simple(void) {
-  // Unforunately we don't really care what the resulting region ids are, we should
+  // Unfortunately we don't really care what the resulting region ids are, we should
   // just make sure the ones that exist are there and they're unique from each other.
 
   const int america_new_york_region = FIND_REGION("America/New_York");

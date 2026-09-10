@@ -7,8 +7,7 @@
 
 #include "system/passert.h"
 
-#include "FreeRTOS.h"
-#include "semphr.h"
+#include "pbl/kernel/sem.h"
 
 #include <nrfx.h>
 
@@ -27,8 +26,7 @@ static void prv_twim_evt_handler(nrfx_twim_evt_t const *evt, void *ctx) {
   I2CBus *bus = (I2CBus *) ctx;
   bool success = evt->type == NRFX_TWIM_EVT_DONE;
   I2CTransferEvent event = success ? I2CTransferEvent_TransferComplete : I2CTransferEvent_Error;
-  bool should_csw = i2c_handle_transfer_event(bus, event);
-  portEND_SWITCHING_ISR(should_csw);
+  i2c_handle_transfer_event(bus, event);
 }
 
 static void prv_twim_init(I2CBus *bus) {
@@ -87,7 +85,7 @@ void i2c_hal_start_transfer(I2CBus *bus) {
       if (transfer->size + 1U > I2C_REG_WRITE_BUF_SIZE) {
         // Payload does not fit the combined-write buffer; fail the transfer.
         bus->state->transfer_event = I2CTransferEvent_Error;
-        xSemaphoreGive(bus->state->event_semaphore);
+        pbl_sem_give(&bus->state->event_semaphore);
         return;
       }
       uint8_t *wbuf = s_reg_write_buf[bus->hal->twim.drv_inst_idx];

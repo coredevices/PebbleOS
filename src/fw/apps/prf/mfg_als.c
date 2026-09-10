@@ -7,7 +7,6 @@
 #include "applib/app.h"
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/text_layer.h"
-#include "applib/ui/window_private.h"
 #include "apps/prf/mfg_test_result.h"
 #include <pbl/drivers/rtc.h>
 #include "kernel/pbl_malloc.h"
@@ -25,8 +24,8 @@
 #define ALS_MIN_VALUE 600
 #define ALS_MAX_VALUE 1500
 #elif defined(CONFIG_BOARD_GETAFIX)
-#define ALS_MIN_VALUE 8500
-#define ALS_MAX_VALUE 11500
+#define ALS_MIN_VALUE 8000
+#define ALS_MAX_VALUE 12000
 #else
 #define ALS_MIN_VALUE 0
 #define ALS_MAX_VALUE 65535

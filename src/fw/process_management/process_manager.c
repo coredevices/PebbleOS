@@ -17,15 +17,13 @@
 
 #include "pebble_process_md.h"
 #include "kernel/pebble_tasks.h"
-#include "pbl/os/tick.h"
+#include "pbl/kernel/types.h"
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/animation_service.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/evented_timer.h"
 #include "pbl/services/event_service.h"
 #include "pbl/services/hrm/hrm_manager.h"
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/system_task.h"
 #include "pbl/services/app_cache.h"
 #include "pbl/services/blob_db/app_db.h"
 #include "pbl/services/data_logging/data_logging_service.h"
@@ -45,13 +43,9 @@
 
 #include "apps/system/app_fetch_ui.h"
 
-#include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
-
+#include "pbl/kernel/debug.h"
 
 static TimerID s_deinit_timer_id = TIMER_INVALID_ID;
-
 
 // -------------------------------------------------------------------------------------------
 static ProcessContext *prv_get_context_for_task(PebbleTask task) {
@@ -63,12 +57,10 @@ static ProcessContext *prv_get_context_for_task(PebbleTask task) {
   }
 }
 
-
 // -------------------------------------------------------------------------------------------
 static ProcessContext *prv_get_context(void) {
   return prv_get_context_for_task(pebble_task_get_current());
 }
-
 
 // --------------------------------------------------------------------------------------------------
 // This timer callback gets called if the process doesn't finish it's deinit within the required timeout (currently
@@ -80,22 +72,21 @@ static void prv_graceful_close_timer_callback(void* data) {
   process_manager_put_kill_process_event(task, false /*gracefully*/);
 }
 
-
 // ---------------------------------------------------------------------------------------------
 static bool prv_force_stop_task_if_unprivileged(ProcessContext *context) {
-  vTaskSuspend((TaskHandle_t) context->task_handle);
+  pbl_thread_suspend(context->task_handle);
 
-  uint32_t control_reg = ulTaskDebugGetStackedControl((TaskHandle_t) context->task_handle);
-  if ((control_reg & 0x1) == 0) {
+  struct pbl_thread_saved_regs regs;
+  pbl_thread_saved_regs(context->task_handle, &regs);
+  if ((regs.control & 0x1) == 0) {
     // We're priviledged, it's not safe to just kill the app task.
-    vTaskResume((TaskHandle_t) context->task_handle);
+    pbl_thread_resume(context->task_handle);
     return false;
   }
 
   context->safe_to_kill = true;
   return true;
 }
-
 
 // --------------------------------------------------------------------------------------------------
 static void prv_force_close_timer_callback(void* data) {
@@ -108,7 +99,6 @@ static void prv_force_close_timer_callback(void* data) {
   process_manager_put_kill_process_event(task, false /*graceful*/);
 }
 
-
 // ---------------------------------------------------------------------------------------------
 EXTERNALLY_VISIBLE void process_manager_handle_syscall_exit(void) {
   PebbleTask task = pebble_task_get_current();
@@ -119,16 +109,14 @@ EXTERNALLY_VISIBLE void process_manager_handle_syscall_exit(void) {
     context->safe_to_kill = true;
     process_manager_put_kill_process_event(task, false);
 
-    vTaskSuspend(xTaskGetCurrentTaskHandle());
+    pbl_thread_suspend(NULL);
   }
 }
-
 
 // ---------------------------------------------------------------------------------------------
 void process_manager_init(void) {
   s_deinit_timer_id = new_timer_create();
 }
-
 
 // -----------------------------------------------------------------------------------------------------------
 void process_manager_put_kill_process_event(PebbleTask task, bool gracefully) {
@@ -155,7 +143,6 @@ void process_manager_put_kill_process_event(PebbleTask task, bool gracefully) {
 
   event_put_from_process(task, &event);
 }
-
 
 // ---------------------------------------------------------------------------------------------
 //! Init the context variables for a task.
@@ -388,7 +375,7 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
 //! this time it will see the safe to kill is set and return true
 //!
 //! If the task does not exit by itself before the timer expires, then the timer will post another KILL event
-//! with graceful set to false. This will result in this method being alled again with gracefully = false. When
+//! with graceful set to false. This will result in this method being called again with gracefully = false. When
 //! we see this, we just try and make sure the app is not stuck in privilege code. If it's not, we return true
 //! and allow the caller to kill the task.
 //!
@@ -516,7 +503,7 @@ NORETURN process_manager_task_exit(void) {
   process_manager_put_kill_process_event(task, true);
 
   // Better to die in our sleep ...
-  vTaskSuspend(NULL /* self */);
+  pbl_thread_suspend(NULL /* self */);
 
   // We don't expect someone to resume us.
   PBL_CROAK("");
@@ -529,7 +516,6 @@ const void *process_manager_get_current_process_args(void) {
   return prv_get_context()->args;
 }
 
-
 // ---------------------------------------------------------------------------------------------
 // Setup the system services required for this process. Called by app_manager and worker_manager
 // right before we launch the task for the new process.
@@ -538,9 +524,8 @@ void process_manager_process_setup(PebbleTask task) {
   persist_service_client_open(&context->app_md->uuid);
 }
 
-
 // ---------------------------------------------------------------------------------------------
-//! Kills the process, giving it no chance to clean things up or exit gracefully. The proces must already be in a
+//! Kills the process, giving it no chance to clean things up or exit gracefully. The process must already be in a
 //! state where it's safe to exit, so the caller must call process_manager_make_process_safe_to_kill() first and only
 //! call this method if process_manager_make_process_safe_to_kill() returns true;
 void process_manager_process_cleanup(PebbleTask task) {
@@ -551,7 +536,7 @@ void process_manager_process_cleanup(PebbleTask task) {
 
   PBL_LOG_DBG("%s is getting cleaned up", pebble_task_get_name(task));
 
-  // Shutdown services that may be running. Do this before we destory the task and clear the queue
+  // Shutdown services that may be running. Do this before we destroy the task and clear the queue
   // just in case other services are still in flight.
   accel_service_cleanup_task_session(task);
   animation_service_cleanup(task);
@@ -580,7 +565,7 @@ void process_manager_process_cleanup(PebbleTask task) {
   new_timer_stop(s_deinit_timer_id);
 
   if (context->task_handle) {
-    vTaskDelete(context->task_handle);
+    pbl_thread_abort(context->task_handle);
     context->task_handle = NULL;
   }
 
@@ -591,14 +576,11 @@ void process_manager_process_cleanup(PebbleTask task) {
   context->app_md = 0;
   context->install_id = INSTALL_ID_INVALID;
 
-  if (context->to_process_event_queue &&
-      pdFAIL == event_queue_cleanup_and_reset(context->to_process_event_queue)) {
-    PBL_LOG_ERR("The to processs queue could not be reset!");
+  if (context->to_process_event_queue) {
+    event_queue_cleanup_and_reset(context->to_process_event_queue);
   }
   context->to_process_event_queue = NULL;
 }
-
-
 
 // -----------------------------------------------------------------------------------------------------------
 void process_manager_close_process(PebbleTask task, bool gracefully) {
@@ -614,7 +596,6 @@ void process_manager_close_process(PebbleTask task, bool gracefully) {
   }
 }
 
-
 // ----------------------------------------------------------------------------------------------
 bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent* e) {
   ProcessContext *context = prv_get_context_for_task(task);
@@ -625,7 +606,7 @@ bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent* e) {
   }
 
   // Put on app's own queue:
-  if (!xQueueSend(context->to_process_event_queue, e, milliseconds_to_ticks(1000))) {
+  if (pbl_msgq_put(context->to_process_event_queue, e, PBL_MSEC(1000)) != 0) {
     PBL_LOG_ERR("Failed to send event %u to app! Closing it!", e->type);
     // We could be called from a timer task callback, so post a kill event rather than call
     //  process_manager_close_process directly.
@@ -636,7 +617,6 @@ bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent* e) {
   return true;
 }
 
-
 // ----------------------------------------------------------------------------------------------
 uint32_t process_manager_process_events_waiting(PebbleTask task) {
   ProcessContext *context = prv_get_context_for_task(task);
@@ -646,9 +626,8 @@ uint32_t process_manager_process_events_waiting(PebbleTask task) {
     return 0;
   }
 
-  return uxQueueMessagesWaiting(context->to_process_event_queue);
+  return pbl_msgq_num_used(context->to_process_event_queue);
 }
-
 
 // ----------------------------------------------------------------------------------------------
 void process_manager_send_callback_event_to_process(PebbleTask task, void (*callback)(void *data), void *data) {
@@ -674,7 +653,6 @@ void *process_manager_address_to_offset(PebbleTask task, void *system_address) {
   // Not in app space:
   return system_address;
 }
-
 
 // ----------------------------------------------------------------------------------------------
 
@@ -708,7 +686,7 @@ DEFINE_SYSCALL(void, sys_get_pebble_event, PebbleEvent *event) {
     syscall_assert_userspace_buffer(event, sizeof(*event));
   }
 
-  xQueueReceive(prv_get_context()->to_process_event_queue, event, portMAX_DELAY);
+  pbl_msgq_get(prv_get_context()->to_process_event_queue, event, PBL_FOREVER);
 }
 
 // -------------------------------------------------------------------------------------------

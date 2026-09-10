@@ -6,8 +6,8 @@ these pages summarize and point, they do not duplicate.
 
 ## Layering
 
-PebbleOS is a FreeRTOS-based firmware (kernel vendored as a submodule under
-`third_party/freertos`). The main source layers, as described on the
+PebbleOS runs on its own [kernel API](kernel.md) (`include/pbl/kernel`,
+implemented under `kernel/`). The main source layers, as described on the
 <a href="../apidoc/index.html">API reference</a> main page:
 
 - `src/fw/applib` — application framework and UI, the API surface exposed to
@@ -26,7 +26,7 @@ communication).
 
 ## Task model
 
-The firmware runs a fixed set of FreeRTOS tasks, enumerated in
+The firmware runs a fixed set of kernel threads, enumerated in
 `src/fw/kernel/pebble_tasks.h`: KernelMain, KernelBackground, Worker, App,
 the Bluetooth tasks (host, controller, HCI), NewTimers and
 [PULSE](../reference/pulse2/pulse2.md). `main()`
@@ -41,7 +41,7 @@ launch, coordinated through boot bits (see `BOOT_BIT_*` usage in
 
 Normal firmware and PRF (Pebble Recovery Firmware — the minimal fallback
 image used to reinstall the main firmware) are separate compile-time
-variants: `./pbl configure --variant=prf` (see
+variants: `pbl configure --variant=prf` (see
 [build options](../development/options.md)) applies `src/fw/prj_prf.conf` on
 top of the base config, disabling the JS engine and marking the image as
 recovery firmware.
@@ -119,4 +119,6 @@ Longer design documents live as their own pages:
 ```{toctree}
 :maxdepth: 1
 activity/index.md
+kernel.md
+kernel_internals.md
 ```

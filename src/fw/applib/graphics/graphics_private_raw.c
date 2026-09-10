@@ -1,14 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "bitblt_private.h"
 #include "graphics.h"
 #include "graphics_private.h"
 #include "graphics_private_raw.h"
 #include "gtypes.h"
 #include "system/passert.h"
 #include "util/bitset.h"
-#include "util/graphics.h"
 #include "pbl/util/math.h"
 
 ALWAYS_INLINE void graphics_private_raw_blend_color_factor(const GContext *ctx, GColor *dst_color,
@@ -165,7 +163,7 @@ T_STATIC void prv_assign_vertical_line_raw(GContext *ctx, int16_t x, Fixed_S16_3
 }
 
 // This function draws horizontal line with blending, given values have to be clipped and adjusted
-//   clip_box and draw_box respecively.
+//   clip_box and draw_box respectively.
 T_STATIC void prv_blend_horizontal_line_raw(GContext *ctx, int16_t y, int16_t x1, int16_t x2,
                                             GColor color) {
   PBL_ASSERTN(ctx);
@@ -189,7 +187,7 @@ T_STATIC void prv_blend_horizontal_line_raw(GContext *ctx, int16_t y, int16_t x1
 }
 
 // This function draws vertical line with blending, given values have to be clipped and adjusted
-//   clip_box and draw_box respecively.
+//   clip_box and draw_box respectively.
 T_STATIC void prv_blend_vertical_line_raw(GContext *ctx, int16_t x, int16_t y1, int16_t y2,
                                           GColor color) {
   PBL_ASSERTN(ctx);

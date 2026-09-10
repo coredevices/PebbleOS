@@ -4,7 +4,7 @@
 //! This file displays the main Quick Launch menu that is found in our settings menu
 //! It allows the feature to be enabled or for an app to be set
 //! The list of apps that the user can choose from is found in settings_quick_launch_app_menu.c
-//! This file is also responsible for saving / storing the uuid of each quichlaunch app as well as
+//! This file is also responsible for saving / storing the uuid of each quicklaunch app as well as
 //! whether or not the quicklaunch app is enabled.
 
 #include "menu.h"
@@ -13,7 +13,6 @@
 #include "quick_launch_setup_menu.h"
 #include "window.h"
 
-#include "applib/app.h"
 #include "applib/app_launch_button.h"
 #include "applib/app_launch_reason.h"
 #include "applib/ui/window_stack.h"
@@ -23,7 +22,6 @@
 #include "pbl/services/i18n/i18n.h"
 #include "shell/normal/quick_launch.h"
 #include "system/passert.h"
-#include "system/status_codes.h"
 
 #define NUM_ROWS (NUM_BUTTONS + 2)  // 4 hold buttons + 2 tap buttons (up and down)
 

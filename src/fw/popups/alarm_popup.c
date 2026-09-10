@@ -7,7 +7,6 @@
 #include "applib/ui/dialogs/simple_dialog.h"
 #include "applib/ui/dialogs/actionable_dialog.h"
 #include "applib/ui/vibes.h"
-#include "applib/ui/window_stack.h"
 #include "kernel/event_loop.h"
 #include "kernel/low_power.h"
 #include "kernel/pbl_malloc.h"
@@ -22,7 +21,6 @@
 #include "util/time/time.h"
 
 #include <stdio.h>
-#include <string.h>
 
 #include "pbl/services/vibes/vibe_client.h"
 #include "pbl/services/vibes/vibe_score.h"
@@ -317,6 +315,7 @@ static void prv_cleanup_alarm_popup(void *callback_context) {
 #ifdef CONFIG_SPEAKER
     prv_stop_sound();
 #endif
+    light_enable(false);
     // The action bar owns a redraw timer armed on button press; it must be
     // cancelled before the layer's memory goes away. actionable_dialog leaves
     // custom action bars to their owner.
@@ -386,5 +385,5 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
   }
 #endif
 
-  light_enable_interaction();
+  light_enable(true);
 }

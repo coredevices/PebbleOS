@@ -13,13 +13,11 @@
 #include "pbl/services/data_logging/data_logging_service.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/settings/settings_file.h"
-#include "syscall/syscall.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "util/base64.h"
 #include "pbl/util/math.h"
 #include "util/shared_circular_buffer.h"
-#include "pbl/util/size.h"
 #include "util/time/time.h"
 #include "util/units.h"
 
@@ -44,7 +42,7 @@ PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 // ---------------------------------------------------------------------------------------------
 // Globals
 typedef struct {
-  PebbleRecursiveMutex *mutex;
+  struct pbl_mutex mutex;
 
   KAlgState *k_state;  // Pointer to Kraepelin state variables
 
@@ -96,12 +94,12 @@ static bool prv_lock(void) {
     WTF;
 #endif
   }
-  mutex_lock_recursive(s_alg_state->mutex);
+  pbl_mutex_lock(&s_alg_state->mutex, PBL_FOREVER);
   return true;
 }
 
 static void prv_unlock(void) {
-  mutex_unlock_recursive(s_alg_state->mutex);
+  pbl_mutex_unlock(&s_alg_state->mutex);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -575,7 +573,7 @@ static bool NOINLINE prv_prepare_minute_data(uint16_t uncertain_m, time_t sleep_
 
     // See if we need to zero out steps in this record. We check that the start of the minute
     // is within the sleep bounds. The WITHIN macro returns true if the test value is
-    // <= end_value, so we need to subract one minute from the end to see if the start of this
+    // <= end_value, so we need to subtract one minute from the end to see if the start of this
     // test minute is entirely within the sleep range.
     bool was_sleeping =  WITHIN(cbuf_record->utc_sec, sleep_start_utc,
                                 sleep_end_utc - SECONDS_PER_MINUTE);
@@ -738,7 +736,7 @@ void activity_algorithm_post_process_sleep_sessions(uint16_t num_input_sessions,
     const time_t end_utc = session->start_utc + (session->length_min * SECONDS_PER_MINUTE);
     const unsigned end_minute = time_util_get_minute_of_day(end_utc);
 
-    ACTIVITY_LOG_DEBUG("procesing activity %d, start_min: %u, len: %"PRIu16"",
+    ACTIVITY_LOG_DEBUG("processing activity %d, start_min: %u, len: %"PRIu16"",
                        (int)session->type, start_minute, session->length_min);
 
     // Skip if not a sleep session
@@ -818,9 +816,9 @@ bool activity_algorithm_init(AccelSamplingRate *sampling_rate) {
 
   // Init globals
   *s_alg_state = (AlgState) {
-    .mutex = mutex_create_recursive(),
     .k_state = k_state,
   };
+  pbl_mutex_init(&s_alg_state->mutex);
   shared_circular_buffer_init(&s_alg_state->minute_data_cbuf,
                               (uint8_t *)s_alg_state->minute_data_storage,
                               sizeof(s_alg_state->minute_data_storage));
@@ -874,7 +872,7 @@ bool activity_algorithm_deinit(void) {
   PBL_ASSERTN(s_alg_state);
   PBL_ASSERTN(s_alg_state->k_state);
 
-  mutex_destroy((PebbleMutex *)s_alg_state->mutex);
+  pbl_mutex_deinit(&s_alg_state->mutex);
   kalg_deinit(s_alg_state->k_state);
   kernel_free(s_alg_state->k_state);
 
@@ -1354,7 +1352,7 @@ bool activity_algorithm_test_fill_minute_file(void) {
   AlgMinuteFileRecord record = { };
   prv_init_minute_record(&record.hdr, utc_sec, true /*for_file*/);
 
-  // Delete old file so this doesn't take forver, in case it's already got a lot of data in it
+  // Delete old file so this doesn't take forever, in case it's already got a lot of data in it
   pfs_remove(ALG_MINUTE_DATA_FILE_NAME);
   s_alg_state->num_minute_records = 0;
 

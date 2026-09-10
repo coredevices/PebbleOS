@@ -5,13 +5,11 @@
 #include <pbl/drivers/qemu/qemu_serial.h>
 #include <pbl/drivers/qemu/qemu_settings.h>
 
-#include "system/passert.h"
 #include "pbl/services/battery/battery_state.h"
 #include "pbl/services/battery/battery_curve.h"
 #include <pbl/logging/logging.h>
 
 #include "pbl/util/math.h"
-#include "util/net.h"
 
 static uint16_t s_battery_mv = 4000;
 static bool s_usb_connected;
@@ -58,7 +56,7 @@ uint8_t qemu_battery_get_percent(void) {
   return s_percent;
 }
 
-void qemu_battery_msg_callack(const uint8_t *data, uint32_t len) {
+void qemu_battery_msg_callback(const uint8_t *data, uint32_t len) {
   QemuProtocolBatteryHeader *hdr = (QemuProtocolBatteryHeader *)data;
   if (len != sizeof(*hdr)) {
     PBL_LOG_ERR("Invalid packet length");

@@ -7,16 +7,12 @@
 
 #include "applib/app.h"
 #include "applib/ui/dialogs/expandable_dialog.h"
-#include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
-#include "kernel/ui/modals/modal_manager.h"
 #include "popups/health_tracking_ui.h"
 #include "process_state/app_state/app_state.h"
 #include "pbl/services/activity/activity.h"
-#include "pbl/services/activity/activity_private.h"
 #include "pbl/services/timeline/timeline.h"
 #include "resource/resource_ids.auto.h"
-#include <pbl/logging/logging.h>
 
 // Health app versions
 // 0: Invalid (app was never opened)
@@ -93,7 +89,7 @@ static void prv_show_insights_onboarding_dialog(void) {
 }
 
 //! Initialize application
-static void prv_finish_initilization_cb(bool in_focus) {
+static void prv_finish_initialization_cb(bool in_focus) {
   if (in_focus) {
     HealthAppData *health_app_data = app_state_get_user_data();
 
@@ -150,7 +146,7 @@ static void prv_initialize(void) {
 
   // Finish up initializing the app a bit later. This helps reduce lag when opening the app
   app_focus_service_subscribe_handlers((AppFocusHandlers){
-    .did_focus = prv_finish_initilization_cb,
+    .did_focus = prv_finish_initialization_cb,
   });
 }
 

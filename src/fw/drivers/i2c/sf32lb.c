@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "pbl/kernel/irq.h"
 #include <pbl/drivers/i2c/sf32lb.h>
 #include <pbl/drivers/i2c/definitions.h>
 #include <pbl/drivers/i2c/hal.h>
@@ -8,10 +9,7 @@
 #include "pbl/soc/sf32lb/sleep.h"
 #include "system/passert.h"
 
-#include "FreeRTOS.h"
-#include "semphr.h"
-
-#include "bf0_hal.h"
+#include "pbl/kernel/sem.h"
 
 // Block deep sleep while a transfer is in flight. The flag keeps the release
 // exactly-once across the IRQ, kickoff-failure and abort paths.
@@ -22,10 +20,10 @@ static void prv_deepsleep_block(I2CBus *bus) {
 
 static void prv_deepsleep_allow(I2CBus *bus) {
   I2CBusHalState *state = bus->hal->state;
-  portENTER_CRITICAL();
+  pbl_irq_lock();
   bool blocked = state->deepsleep_blocked;
   state->deepsleep_blocked = false;
-  portEXIT_CRITICAL();
+  pbl_irq_unlock();
   if (blocked) {
     soc_sf32lb_sleep_release(SOC_SF32LB_DEEPSLEEP);
   }
@@ -36,7 +34,6 @@ void i2c_irq_handler(I2CBus *bus) {
   I2C_HandleTypeDef *hdl = &hal->state->hdl;
   HAL_I2C_StateTypeDef state;
   I2CTransferEvent event;
-  portBASE_TYPE woken;
 
   if (hdl->XferISR == NULL) {
     return;
@@ -55,8 +52,7 @@ void i2c_irq_handler(I2CBus *bus) {
 
   prv_deepsleep_allow(bus);
 
-  woken = i2c_handle_transfer_event(bus, event);
-  portEND_SWITCHING_ISR(woken);
+  i2c_handle_transfer_event(bus, event);
 }
 
 void i2c_hal_init_transfer(I2CBus *bus) {
@@ -100,7 +96,7 @@ void i2c_hal_start_transfer(I2CBus *bus) {
     HAL_I2C_Reset(hdl);
     prv_deepsleep_allow(bus);
     bus->state->transfer_event = I2CTransferEvent_Error;
-    xSemaphoreGive(bus->state->event_semaphore);
+    pbl_sem_give(&bus->state->event_semaphore);
   }
 }
 

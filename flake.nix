@@ -86,12 +86,13 @@
         in
         {
           default = pkgs.mkShellNoCC {
-            hardeningDisable = [ "fortify" ]; # waf expects unoptimized builds
+            hardeningDisable = [ "fortify" ]; # the firmware is built unoptimized
             nativeBuildInputs = with pkgs; [
               pkg-config
             ];
             buildInputs = with pkgs; [
               pebbleos-sdk
+              cmake
               gettext
               git
               librsvg
@@ -138,13 +139,21 @@
               if [ ! -d "$VENV_DIR" ]; then
                 echo "Creating virtual environment..."
                 python -m venv "$VENV_DIR"
-                source "$VENV_DIR/bin/activate"
-                if [ -f "requirements.txt" ]; then
+              fi
+              source "$VENV_DIR/bin/activate"
+
+              # Refresh existing environments when project dependencies change.
+              if [ -f "requirements.txt" ]; then
+                requirements_hash=$(${pkgs.coreutils}/bin/sha256sum requirements.txt)
+                requirements_stamp="$VENV_DIR/.requirements.sha256"
+                if [ "$requirements_hash" != "$(cat "$requirements_stamp" 2>/dev/null)" ]; then
                   echo "Installing Python dependencies..."
-                  pip install -r requirements.txt
+                  if python -m pip install -r requirements.txt; then
+                    printf '%s\n' "$requirements_hash" > "$requirements_stamp"
+                  else
+                    return 1
+                  fi
                 fi
-              else
-                source "$VENV_DIR/bin/activate"
               fi
               
               echo "Python virtual environment activated."

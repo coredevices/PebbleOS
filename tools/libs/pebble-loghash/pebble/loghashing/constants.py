@@ -34,6 +34,9 @@ NEWLOG_HASHED_INFO_REGEX = (
 )
 POINTER_FORMAT_TAG_REGEX = r"(?P<format>%-?[0-9]*)p"
 HEX_FORMAT_SPECIFIER_REGEX = r"%[- +#0]*\d*(\.\d+)?(hh|h|l|ll|j|z|t|L)?(x|X)"
+LENGTH_MODIFIER_REGEX = (
+    r"(?P<format>%[- +#0]*\d*(?:\.\d+)?)(?:hh|h|ll|l|j|z|t|L)(?=[diouxXc])"
+)
 
 # re patterns
 STR_LITERAL_PATTERN = re.compile(STR_LITERAL_REGEX)
@@ -50,6 +53,7 @@ NEWLOG_LINE_SUPPORT_PATTERN = re.compile(NEWLOG_LINE_SUPPORT_REGEX)
 NEWLOG_HASHED_INFO_PATTERN = re.compile(NEWLOG_HASHED_INFO_REGEX)
 POINTER_FORMAT_TAG_PATTERN = re.compile(POINTER_FORMAT_TAG_REGEX)
 HEX_FORMAT_SPECIFIER_PATTERN = re.compile(HEX_FORMAT_SPECIFIER_REGEX)
+LENGTH_MODIFIER_PATTERN = re.compile(LENGTH_MODIFIER_REGEX)
 
 # Output file lines
 FORMAT_IDENTIFIER_STRING_FMT = 'char *format_string_{} = "{}";\n'

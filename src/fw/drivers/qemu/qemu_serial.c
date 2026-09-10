@@ -5,10 +5,8 @@
 #include <pbl/drivers/qemu/qemu_battery.h>
 #include <pbl/drivers/qemu/qemu_serial.h>
 #include <pbl/drivers/qemu/qemu_serial_private.h>
-#include <pbl/drivers/qemu/qemu_settings.h>
 #include <pbl/drivers/uart.h>
 #include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
 #include "popups/timeline/peek.h"
 #include "process_management/app_manager.h"
 #include "shell/system_theme.h"
@@ -16,22 +14,15 @@
 #include "pbl/services/activity/activity_private.h"
 #include "pbl/services/clock.h"
 #include "pbl/services/hrm/hrm_manager.h"
-#include "pbl/services/system_task.h"
 #include "system/hexdump.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/likely.h"
 #include "util/net.h"
 #include "pbl/util/size.h"
 
-#include "FreeRTOS.h"
-
 #include <bluetooth/qemu_transport.h>
 
-#include <stdarg.h>
 #include <stdbool.h>
-#include <stdio.h>
-
 
 static bool prv_uart_irq_handler(UARTDevice *dev, uint8_t byte, const UARTRXErrorFlags *err_flags);
 
@@ -217,8 +208,8 @@ static const QemuMessageHandler s_qemu_endpoints[] = {
   { QemuProtocol_Tap, prv_tap_msg_callback },
   { QemuProtocol_BluetoothConnection, prv_bluetooth_connection_msg_callback },
   { QemuProtocol_Compass, prv_compass_msg_callback },
-  { QemuProtocol_Battery, qemu_battery_msg_callack },
-  { QemuProtocol_Accel, qemu_accel_msg_callack },
+  { QemuProtocol_Battery, qemu_battery_msg_callback },
+  { QemuProtocol_Accel, qemu_accel_msg_callback },
   { QemuProtocol_TimeFormat, prv_time_format_msg_callback },
   { QemuProtocol_TimelinePeek, prv_timeline_peek_msg_callback },
   { QemuProtocol_ContentSize, prv_content_size_msg_callback },
@@ -262,7 +253,7 @@ void qemu_serial_init(void) {
 
 
 // -----------------------------------------------------------------------------------------
-// KernelMain callback triggred by our ISR handler when we detect a high water mark on our
+// KernelMain callback triggered by our ISR handler when we detect a high water mark on our
 //  receive buffer or a footer signature
 static void prv_process_receive_buffer(void *context) {
   uint32_t msg_bytes;
@@ -369,7 +360,7 @@ void qemu_serial_send(QemuProtocol protocol, const uint8_t *data, uint32_t len) 
     return;
   }
 
-  mutex_lock(s_qemu_state.qemu_comm_lock);
+  pbl_mutex_lock(&s_qemu_state.qemu_comm_lock, PBL_FOREVER);
 
   // Send the header
   QemuCommChannelHdr hdr = (QemuCommChannelHdr) {
@@ -388,5 +379,5 @@ void qemu_serial_send(QemuProtocol protocol, const uint8_t *data, uint32_t len) 
   };
   prv_send((uint8_t *)&footer, sizeof(footer));
 
-  mutex_unlock(s_qemu_state.qemu_comm_lock);
+  pbl_mutex_unlock(&s_qemu_state.qemu_comm_lock);
 }

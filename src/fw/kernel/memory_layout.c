@@ -4,7 +4,6 @@
 #include "memory_layout.h"
 
 #include "logging/logging_private.h"
-#include "system/passert.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
 #include "pbl/util/string.h"
@@ -210,7 +209,7 @@ void memory_layout_setup_mpu(void) {
 #endif
 
   // RAM parts
-  // The background memory map only allows privileged access. We need to add aditional regions to
+  // The background memory map only allows privileged access. We need to add additional regions to
   // enable access to unprivileged code.
 
   mpu_set_region(&s_readonly_bss_region);

@@ -9,10 +9,8 @@
 #include "applib/pbl_std/pbl_std.h"
 #include "event_service_client.h"
 #include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
 #include "process_state/worker_state/worker_state.h"
-#include "pbl/services/event_service.h"
 #include "pbl/services/hrm/hrm_manager.h"
 #include "pbl/services/activity/activity.h"
 #include "shell/prefs_syscalls.h"
@@ -176,7 +174,7 @@ static bool prv_metric_aggregation_implemented(HealthMetric metric, time_t time_
             return true;
           }
         }
-        /* FALLTHRU */
+        /* FALLTHROUGH */
         case HealthAggregationMax:
         case HealthAggregationMin: {
           // Only supported using minute data (short time range, no scope) because

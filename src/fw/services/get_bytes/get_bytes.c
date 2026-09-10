@@ -6,23 +6,17 @@
 #include "comm/bluetooth_analytics.h"
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/rtc.h>
-#include "flash_region/flash_region.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/comm_session/session_send_buffer.h"
 #include "pbl/services/get_bytes/get_bytes_storage.h"
 #include "pbl/services/system_task.h"
-#include "pbl/services/filesystem/pfs.h"
-#include "system/hexdump.h"
 #include <pbl/logging/logging.h>
 #include "pbl/util/math.h"
 #include "util/net.h"
 
-#include <bluetooth/analytics.h>
 #include <bluetooth/conn_event_stats.h>
-#include <pbl/os/tick.h>
-
-#include "portmacro.h"
+#include "pbl/kernel/types.h"
 
 #include <inttypes.h>
 #include <stdbool.h>
@@ -38,7 +32,7 @@ typedef struct {
   uint32_t num_bytes;
   bool sent_header;
   GetBytesStorage storage;
-  TickType_t start_ticks;
+  pbl_tick_t start_ticks;
   SlaveConnEventStats conn_event_stats;
 } GetBytesState;
 
@@ -90,7 +84,7 @@ static bool prv_protocol_send_err_response(CommSession *session, int8_t transact
 }
 
 static void prv_gather_and_record_stats(GetBytesState *state) {
-  uint32_t elapsed_time_ms = ticks_to_milliseconds(rtc_get_ticks() - state->start_ticks);
+  uint32_t elapsed_time_ms = pbl_ticks_to_ms(rtc_get_ticks() - state->start_ticks);
   uint32_t bytes_per_sec = ((state->num_bytes * MS_PER_SECOND) / elapsed_time_ms);
   PBL_LOG_DBG("GET_BYTES: Done sending data. Pushed %"PRIu32" bytes/sec",
           bytes_per_sec);
@@ -209,7 +203,7 @@ bool prv_setup_state_for_command(GetBytesCmd cmd, GetBytesState *state,
   switch (cmd) {
     case GET_BYTES_CMD_GET_NEW_COREDUMP:
       info.only_get_new_coredump = true;
-      /* FALLTHRU */
+      /* FALLTHROUGH */
     case GET_BYTES_CMD_GET_COREDUMP:
       state->object_type = GetBytesObjectCoredump;
       return gb_storage_setup(&state->storage, state->object_type, &info);

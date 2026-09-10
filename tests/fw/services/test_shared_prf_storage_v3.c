@@ -9,7 +9,7 @@
 
 #include <bluetooth/sm_types.h>
 #include <pbl/btutil/sm_util.h>
-#include <pbl/os/mutex.h>
+#include "pbl/kernel/mutex.h"
 
 #include <string.h>
 
@@ -39,16 +39,16 @@ extern void shared_prf_storage_set_valid_page_number(uint32_t page_num);
 // Stubs
 //////////////////////////////////////////////////////////
 static bool s_mutex_locked;
-PebbleMutex * mutex_create(void) {
-  return NULL;
+void pbl_mutex_init(struct pbl_mutex *m) {
 }
 
-void mutex_lock(PebbleMutex * handle) {
+int pbl_mutex_lock_lr(struct pbl_mutex *m, pbl_timeout_t timeout, uintptr_t lr) {
   cl_assert_equal_b(s_mutex_locked, false);
   s_mutex_locked = true;
+  return 0;
 }
 
-void mutex_unlock(PebbleMutex * handle) {
+void pbl_mutex_unlock(struct pbl_mutex *m) {
   cl_assert_equal_b(s_mutex_locked, true);
   s_mutex_locked = false;
 }
@@ -411,7 +411,7 @@ void test_shared_prf_storage_v3__write_in_loop_getting_started_confirm_data_stil
 }
 
 // Sets the getting started field, then corrupts the getting_started crc
-void test_shared_prf_storage_v3__handle_currupt_field_same(void) {
+void test_shared_prf_storage_v3__handle_corrupt_field_same(void) {
   bool GETTING_STARTED_COMPLETE = true;
   shared_prf_storage_set_getting_started_complete(GETTING_STARTED_COMPLETE);
   cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 0);
@@ -457,7 +457,7 @@ void test_shared_prf_storage_v3__handle_currupt_field_same(void) {
 
 // Sets the getting started field, then corrupts the ble_pairing_data crc
 // This tests that when setting a value, all fields in the struct must be valid.
-void test_shared_prf_storage_v3__handle_currupt_field_during_setting(void) {
+void test_shared_prf_storage_v3__handle_corrupt_field_during_setting(void) {
   bool GETTING_STARTED_COMPLETE = true;
   shared_prf_storage_set_getting_started_complete(GETTING_STARTED_COMPLETE);
   cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 0);

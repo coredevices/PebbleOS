@@ -3,7 +3,6 @@
 
 #include "card_view.h"
 
-#include "health.h"
 #include "activity_summary_card.h"
 #include "sleep_summary_card.h"
 #include "hr_summary_card.h"
@@ -16,7 +15,6 @@
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/activity/activity_private.h"
 #include "pbl/services/timeline/health_layout.h"
-#include <pbl/logging/logging.h>
 #include "util/time/time.h"
 
 #define BACK_TO_WATCHFACE (-1)
@@ -93,7 +91,7 @@ static int prv_get_next_card_idx(Card current, bool up) {
   if (next == Card_HrSummary && !activity_is_hrm_present()) {
     next = next + direction;
   }
-  // if heart rate is diabled, change the order of cards to Activiy <-> Sleep <-> HR
+  // if heart rate is diabled, change the order of cards to Activity <-> Sleep <-> HR
   else if (activity_is_hrm_present() && !activity_prefs_heart_rate_is_enabled()) {
     if (current == Card_ActivitySummary) {
       next = up ? Card_SleepSummary : BACK_TO_WATCHFACE;

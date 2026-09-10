@@ -37,7 +37,6 @@
 #include "stubs_passert.h"
 #include "stubs_pebble_tasks.h"
 #include "stubs_prompt.h"
-#include "stubs_queue.h"
 #include "stubs_rand_ptr.h"
 #include "stubs_regular_timer.h"
 #include "stubs_sleep.h"
@@ -102,7 +101,7 @@ static int s_current_day = 0;
 static const int s_thursday = 1426118400;
 // Friday March 13, 2015, 00:00 UTC
 static const int s_friday = 1426204800;
-// Saturaday March 14, 2015, 00:00 UTC
+// Saturday March 14, 2015, 00:00 UTC
 static const int s_saturday = 1426291200;
 // Sunday March 15, 2015, 00:00 UTC
 static const int s_sunday = 1426377600;

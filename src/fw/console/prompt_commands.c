@@ -22,10 +22,8 @@
 #include "kernel/util/delay.h"
 #include "kernel/util/factory_reset.h"
 #include "kernel/util/sleep.h"
-#include "process_management/app_manager.h"
 #include "process_management/worker_manager.h"
 #include "prompt.h"
-#include "resource/resource_storage_flash.h"
 #include "pbl/services/compositor/compositor.h"
 #include "pbl/services/system_task.h"
 #include "pbl/services/filesystem/pfs.h"
@@ -318,7 +316,6 @@ void command_flash_validate(void) {
   prompt_send_response("OK");
 }
 
-
 //! Some flash chips have an accelerated method of checking for erased sectors. This is a sanity
 //! check against that method. It reads the bytes in raw form and makes sure it is really erased.
 static bool prv_is_really_erased(uint32_t addr, bool is_subsector) {
@@ -554,7 +551,6 @@ bailout:
   }
 }
 
-
 void command_flash_stress(const char *n) {
   int count = atoi(n);
   // WARNING!! Running this test can shorten the life of your flash chip because it violates the
@@ -614,7 +610,6 @@ void command_flash_benchmark() {
   s_flash_benchmark(512);
   s_flash_benchmark(1024);
 }
-
 
 void command_reset() {
   prompt_command_finish();
@@ -1063,7 +1058,6 @@ static GAPLEConnection *prv_get_le_connection_and_print_info(void) {
                              BT_DEVICE_ADDRESS_XPLODE(conn->device.address));
   }
 
-
   return conn;
 }
 
@@ -1144,8 +1138,6 @@ void command_ble_logging_get_level(void) {
 // for task_watchdog_bit_set_all
 #include <pbl/drivers/task_watchdog.h>
 // For taskYIELD()
-#include "FreeRTOS.h"
-#include "task.h"
 
 // Average this many iterations of the text test for getting useful perf numbers.
 #define PERFTEST_TEXT_ITERATIONS 5

@@ -71,7 +71,7 @@ void expanded_view_format_glance(const WeatherLocationForecast *today, int16_t l
 // The card and the forecast's hero icon-fly both call this so the two are pixel-identical.
 void expanded_view_draw_glance_content(GContext *ctx, int W, int tdx, const char *status,
                                        const char *sunset, const char *temp, int uv, int precip,
-                                       int wind);
+                                       int wind, const void *owner);
 
 // Format "Last updated H:MM" from the forecast's time_updated_utc, exactly as the card shows it.
 void expanded_view_format_updated(const WeatherLocationForecast *today, char *out, size_t out_sz);

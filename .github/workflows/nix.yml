@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, '*-branch']
 
 jobs:
   changes-nix:
@@ -68,10 +68,10 @@ jobs:
           '
 
       - name: Configure
-        run: nix develop --command ./waf configure --board asterix
+        run: nix develop --command pbl configure --board asterix
 
       - name: Build
-        run: nix develop --command ./waf build
+        run: nix develop --command pbl build
 
   nix-status:
     needs: [changes-nix, nix-shell]

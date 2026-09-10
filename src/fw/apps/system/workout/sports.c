@@ -4,7 +4,6 @@
 #include "applib/app.h"
 #include "applib/app_comm.h"
 #include "applib/app_sync/app_sync.h"
-#include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
 #include "pbl/services/activity/activity_algorithm.h"
@@ -17,7 +16,6 @@
 #include "controller.h"
 #include "metrics.h"
 
-#include <limits.h>
 #include <stdio.h>
 
 
@@ -320,12 +318,12 @@ static void prv_init(void) {
     .get_custom_metric_label_string = prv_get_custom_metric_label_string,
   };
 
-  data->active_window = workout_active_create_tripple_layout(WorkoutMetricType_Duration,
-                                                             WorkoutMetricType_Distance,
-                                                             0,
-                                                             NULL,
-                                                             NULL,
-                                                             &data->workout_controller);
+  data->active_window = workout_active_create_triple_layout(WorkoutMetricType_Duration,
+                                                            WorkoutMetricType_Distance,
+                                                            0,
+                                                            NULL,
+                                                            NULL,
+                                                            &data->workout_controller);
   data->pace_speed_metric = DEFAULT_PACE_SPEED_METRIC;
   prv_update_scrollable_metrics(data);
   workout_active_window_push(data->active_window);

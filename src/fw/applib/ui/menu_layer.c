@@ -5,27 +5,20 @@
 #include "menu_layer_private.h"
 
 #include "applib/applib_malloc.auto.h"
-#include "applib/preferred_content_size.h"
 #include "applib/graphics/graphics.h"
-#include "applib/graphics/text.h"
 #include "pbl/util/trig.h"
-#include "applib/fonts/fonts.h"
 #include "applib/ui/animation_timing.h"
 #include "applib/ui/click.h"
 #include "applib/ui/window.h"
-#include "applib/pbl_std/pbl_std.h"
 #include "applib/legacy2/ui/menu_layer_legacy2.h"
 #include "kernel/pbl_malloc.h"
 #include "process_management/process_manager.h"
-#include "shell/system_theme.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/attributes.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
 #include "vibes.h"
-
-#include <string.h>
 
 #ifdef CONFIG_TOUCH
 #include "applib/ui/recognizer/touch_nav.h"
@@ -719,7 +712,7 @@ static void prv_menu_layer_walk_downward_from_iterator(MenuIterator *it) {
       it->cursor.sep = prv_menu_layer_get_separator_height(it->menu_layer, &it->cursor.index);
       it->cursor.y = it->cell_bottom_y; // Bottom of previous cell is y of the next cell
 
-      // Don't leave space for the seperator for the (non-existent) row after the last row.
+      // Don't leave space for the separator for the (non-existent) row after the last row.
       // This doesn't impact cell drawing in this loop (this condition will only trip on the last run).
       // But, other parts of the system rely on the cursor being set properly at the end of this iteration.
       if (it->cursor.index.row < num_rows_in_section - 1 || it->cursor.index.section < num_sections - 1) {
@@ -797,7 +790,7 @@ static void prv_menu_layer_walk_upward_from_iterator(MenuIterator *it) {
         const int16_t total_height = it->cursor.h + it->cursor.sep;
         if (total_height > it->cursor.y) {
           // If the total height is greater than the cursor y, don't
-          // add in space to accodomate the separator as the downwards callback
+          // add in space to accommodate the separator as the downwards callback
           // will add it for us.
           it->cursor.y -= it->cursor.h;
         } else {
@@ -1408,7 +1401,7 @@ void prv_center_focus_animation_update_in_and_out(Animation *animation,
 
 void prv_center_focus_animation_update_out_only(Animation *animation,
                                                 const AnimationProgress progress) {
-  // anwalys only render the bounce back
+  // always only render the bounce back
   prv_center_focus_animation_update_impl(animation, true, progress);
 }
 
@@ -2022,7 +2015,7 @@ static void prv_menu_touch_settle_to_center(MenuLayer *menu_layer, bool animated
 
 //! While a touch gesture (pan, coast, or the settle that follows) drives a carousel, the
 //! selection highlight is pinned to the viewport centre: rows slide through the fixed box, the
-//! way button steps look, instead of the box travelling with the selected row and jumping at
+//! way button steps look, instead of the box traveling with the selected row and jumping at
 //! every crossing. The pin releases itself lazily: the moment the pinned frame coincides with
 //! the settled selection's own frame (the row reached the centre), the highlight is back in its
 //! normal selection-owned state.
@@ -2294,7 +2287,7 @@ void menu_layer_touch_handle_tap(MenuLayer *menu_layer, GPoint point_on_screen) 
 }
 
 // Emit BACK through the bridge ops, mirroring the Tier-2 bridge: pop the window when it has no back
-// handler, otherwise synthesise the button. Guarded against a mid-transition drop.
+// handler, otherwise synthesize the button. Guarded against a mid-transition drop.
 static void prv_menu_touch_emit_back(void) {
   const TouchNavState *state = prv_task_touch_nav_state();
   if (!state || !state->ops) {
@@ -2401,7 +2394,7 @@ static void prv_menu_touch_nav_register(MenuLayer *menu_layer) {
   }
 
   // Register the menu as a migrated Tier-1 widget: the unified widget set drives it through
-  // s_menu_touch_nav_ops. The registry add dedups by address and re-applies the ops/layer, so a
+  // s_menu_touch_nav_ops. The registry add dedupes by address and re-applies the ops/layer, so a
   // repeated init on the same menu (no intervening deinit) keeps routing to and driving it.
   Layer *layer = menu_layer_get_layer(menu_layer);
   touch_nav_registry_add(state, TouchNavWidgetType_Menu,

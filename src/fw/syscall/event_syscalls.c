@@ -2,12 +2,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "kernel/kernel_applib_state.h"
-#include "kernel/memory_layout.h"
 #include "process_management/app_manager.h"
 #include "process_management/worker_manager.h"
 #include "process_state/app_state/app_state.h"
 #include "process_state/worker_state/worker_state.h"
-#include "pbl/services/compositor/compositor.h"
 #include "pbl/services/event_service.h"
 #include "syscall/syscall_internal.h"
 #include <pbl/logging/logging.h>
@@ -109,7 +107,7 @@ DEFINE_SYSCALL(void, sys_event_service_client_subscribe, EventServiceInfo *handl
   PebbleTask task = pebble_task_get_current();
 
   // Get info
-  QueueHandle_t *event_queue;
+  struct pbl_msgq *event_queue;
   if (task == PebbleTask_App) {
     event_queue = app_manager_get_task_context()->to_process_event_queue;
   } else if (task == PebbleTask_Worker) {

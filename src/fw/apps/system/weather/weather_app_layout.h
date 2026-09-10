@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include "pebble_compat.h"
 #include <stdint.h>
 #include "weather_types.h"
 
@@ -82,13 +81,13 @@ typedef struct WeatherAppLayout {
   } fin_anim;
   struct {
     // Pre-formatted strings snapshot of the OUTGOING text (captured before forecast pointer updates)
-    char top_label[16];
+    char top_label[24];
     char top_temp[15];
     char top_highlow[15];
     char top_uv[12];       // UV bar numeral
-    char top_phrase[20];   // condition line
-    char top_desc[72];     // forecast description (warning/wind/precip)
-    char bot_label[16];
+    char top_phrase[32];   // condition line
+    char top_desc[128];    // forecast description (warning/wind/precip)
+    char bot_label[24];
     char bot_highlow[15];
     bool bot_valid;
     AnimationProgress progress;

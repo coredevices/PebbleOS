@@ -6,16 +6,12 @@
 #include "board/board.h"
 #include <pbl/drivers/button.h>
 #include <pbl/drivers/exti.h>
-#include <pbl/drivers/gpio.h>
 #include "kernel/events.h"
 #include "system/bootbits.h"
 #include "system/reset.h"
 #include "util/bitset.h"
-#include "kernel/util/sleep.h"
 
 #include <nrfx.h>
-
-#include "projdefs.h"
 
 // We want TIM4 to run at 32KHz
 static const uint32_t TIMER_FREQUENCY_HZ = 31250;
@@ -104,7 +100,6 @@ void debounced_button_init(void) {
   }
 }
 
-
 // Interrupt Service Routines
 ///////////////////////////////////////////////////////////
 static void prv_timer_handler(nrf_timer_event_t evt, void *ctx) {
@@ -114,8 +109,6 @@ static void prv_timer_handler(nrf_timer_event_t evt, void *ctx) {
   // A bitset of the current states of the buttons after the debouncing is done.
   static uint32_t s_debounced_button_state = 0;
 
-  // Should we tell the scheduler to attempt to context switch after this function has completed?
-  bool should_context_switch = pdFALSE;
   // Should we power down this interrupt timer once we're done here or should we leave it on?
   bool can_power_down_tim4 = true;
 
@@ -153,7 +146,7 @@ static void prv_timer_handler(nrf_timer_event_t evt, void *ctx) {
         .type = (is_pressed) ? PEBBLE_BUTTON_DOWN_EVENT : PEBBLE_BUTTON_UP_EVENT,
         .button.button_id = i
       };
-      should_context_switch = event_put_isr(&e);
+      event_put_isr(&e);
     }
   }
 
@@ -188,14 +181,12 @@ static void prv_timer_handler(nrf_timer_event_t evt, void *ctx) {
   }
 #endif
 
-
   if (can_power_down_tim4) {
     __disable_irq();
     disable_button_timer();
     __enable_irq();
   }
 
-  portEND_SWITCHING_ISR(should_context_switch);
 }
 
 // Serial commands

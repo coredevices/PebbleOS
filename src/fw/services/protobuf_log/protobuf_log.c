@@ -9,16 +9,14 @@
 #include <pbl/drivers/rtc.h>
 #include "kernel/pbl_malloc.h"
 #include "mfg/mfg_serials.h"
-#include "pbl/os/mutex.h"
+#include "pbl/kernel/mutex.h"
 #include "pb.h"
-#include "pb_decode.h"
 #include "pb_encode.h"
 #include "pbl/services/data_logging/data_logging_service.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "system/version.h"
 #include "pbl/util/math.h"
-#include "pbl/util/size.h"
 #include "util/time/time.h"
 
 #include "pbl/util/uuid.h"
@@ -26,7 +24,6 @@
 #include <string.h>
 
 // These headers auto-generated from the measurements.proto
-#include "nanopb/common.pb.h"
 #include "nanopb/event.pb.h"
 #include "nanopb/measurements.pb.h"
 #include "nanopb/payload.pb.h"
@@ -40,7 +37,7 @@ PBL_LOG_MODULE_DEFINE(service_protobuf_log, CONFIG_SERVICE_PROTOBUF_LOG_LOG_LEVE
 
 // Our globals
 typedef struct PLogState {
-  PebbleMutex *mutex;
+  struct pbl_mutex mutex;
   DataLoggingSession *dls_session;
 } PLogState;
 static PLogState s_plog_state;
@@ -73,7 +70,7 @@ static DataLoggingSession *prv_get_dls_session(void) {
 static bool prv_dls_transport(uint8_t *buffer, size_t buf_size) {
   bool success = false;
 
-  mutex_lock(s_plog_state.mutex);
+  pbl_mutex_lock(&s_plog_state.mutex, PBL_FOREVER);
   {
     DataLoggingSession *dls_session = prv_get_dls_session();
     if (!dls_session) {
@@ -91,7 +88,7 @@ static bool prv_dls_transport(uint8_t *buffer, size_t buf_size) {
     }
   }
 unlock:
-  mutex_unlock(s_plog_state.mutex);
+  pbl_mutex_unlock(&s_plog_state.mutex);
   return success;
 }
 
@@ -186,7 +183,7 @@ static void prv_session_free(PLogSession *session) {
 
 
 bool protobuf_log_init(void) {
-  s_plog_state.mutex = mutex_create();
+  pbl_mutex_init(&s_plog_state.mutex);
   return true;
 }
 

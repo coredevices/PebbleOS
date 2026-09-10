@@ -5,7 +5,6 @@
 
 #include "applib/applib_malloc.auto.h"
 #include "applib/fonts/fonts.h"
-#include "applib/ui/bitmap_layer.h"
 #include "applib/ui/dialogs/dialog.h"
 #include "applib/ui/dialogs/dialog_private.h"
 #include "applib/ui/layer.h"
@@ -13,9 +12,6 @@
 #include "applib/ui/window.h"
 #include "kernel/ui/kernel_ui.h"
 #include "system/passert.h"
-
-#include <limits.h>
-#include <string.h>
 
 #if defined(CONFIG_RECOVERY_FW) || defined(UNITTEST)
 #define SIMPLE_DIALOG_ANIMATED false
@@ -173,7 +169,7 @@ static void prv_click_handler(ClickRecognizerRef recognizer, void *context) {
 }
 
 static void prv_config_provider(void *context) {
-  // Simple dialogs are dimissed when any button is pushed.
+  // Simple dialogs are dismissed when any button is pushed.
   window_single_click_subscribe(BUTTON_ID_SELECT, prv_click_handler);
   window_single_click_subscribe(BUTTON_ID_UP, prv_click_handler);
   window_single_click_subscribe(BUTTON_ID_DOWN, prv_click_handler);

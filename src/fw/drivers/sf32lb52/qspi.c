@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "pbl/kernel/irq.h"
 #include "board/board.h"
 #include <pbl/drivers/flash/flash_impl.h>
 #include <pbl/drivers/flash/qspi_flash.h>
@@ -10,7 +11,6 @@
 #include "pbl/mcu/cache.h"
 #include "system/passert.h"
 #include "system/status_codes.h"
-#include "pbl/util/math.h"
 
 #define SEC_ADDR_TO_IDX(addr) (((addr) >> 12U) - 1U)
 
@@ -54,10 +54,10 @@ static int prv_erase_nor(QSPIFlash *dev, uint32_t addr, uint32_t size) {
   }
 
   while (remain > 0) {
-    portENTER_CRITICAL();
+    pbl_irq_lock();
     if ((taddr & (SECTOR_SIZE_BYTES - 1)) == 0 && remain >= SECTOR_SIZE_BYTES) {
       res = HAL_QSPIEX_BLK64_ERASE(hflash, taddr);
-      portEXIT_CRITICAL();
+      pbl_irq_unlock();
       if (res != 0) {
         res = -1;
         goto end;
@@ -66,7 +66,7 @@ static int prv_erase_nor(QSPIFlash *dev, uint32_t addr, uint32_t size) {
       taddr += SECTOR_SIZE_BYTES;
     } else {
       res = HAL_QSPIEX_SECT_ERASE(hflash, taddr);
-      portEXIT_CRITICAL();
+      pbl_irq_unlock();
       if (res != 0) {
         res = -1;
         goto end;
@@ -124,9 +124,9 @@ static int prv_write_nor(QSPIFlash *dev, uint32_t addr, uint8_t *buf, uint32_t s
       fill = size;
     }
 
-    portENTER_CRITICAL();
+    pbl_irq_lock();
     res = HAL_QSPIEX_WRITE_PAGE(hflash, taddr, tbuf, fill);
-    portEXIT_CRITICAL();
+    pbl_irq_unlock();
     if ((uint32_t)res != fill) {
       res = -1;
       goto end;
@@ -139,9 +139,9 @@ static int prv_write_nor(QSPIFlash *dev, uint32_t addr, uint8_t *buf, uint32_t s
 
   while (remain > 0) {
     fill = remain > PAGE_SIZE_BYTES ? PAGE_SIZE_BYTES : remain;
-    portENTER_CRITICAL();
+    pbl_irq_lock();
     res = HAL_QSPIEX_WRITE_PAGE(hflash, taddr, tbuf, fill);
-    portEXIT_CRITICAL();
+    pbl_irq_unlock();
     if ((uint32_t)res != fill) {
       res = -1;
       goto end;
@@ -298,9 +298,9 @@ status_t qspi_flash_read_security_register(QSPIFlash *dev, uint32_t addr, uint8_
   uint32_t offset = addr % 4;
   uint32_t base_addr = addr - offset;
 
-  portENTER_CRITICAL();
+  pbl_irq_lock();
   res = HAL_QSPI_READ_OTP(hflash, base_addr, values, 4);
-  portEXIT_CRITICAL();
+  pbl_irq_unlock();
 
   if (res != 4) {
     return E_ERROR;
@@ -316,9 +316,9 @@ status_t qspi_flash_security_register_is_locked(QSPIFlash *dev, uint32_t addr, b
   uint8_t opt_val = 0;
 
   /* OPT operation are synchronous, one match means all matched. */
-  portENTER_CRITICAL();
+  pbl_irq_lock();
   opt_val = HAL_QSPI_GET_OTP_LB(hflash);
-  portEXIT_CRITICAL();
+  pbl_irq_unlock();
 
   if (opt_val == 0xff) {
     return E_ERROR;
@@ -343,9 +343,9 @@ status_t qspi_flash_erase_security_register(QSPIFlash *dev, uint32_t addr) {
     return res;
   }
 
-  portENTER_CRITICAL();
+  pbl_irq_lock();
   res = HAL_QSPI_ERASE_OTP(hflash, addr);
-  portEXIT_CRITICAL();
+  pbl_irq_unlock();
 
   if (res != 0) {
     return E_ERROR;
@@ -368,9 +368,9 @@ status_t qspi_flash_write_security_register(QSPIFlash *dev, uint32_t addr, uint8
   dcache_align(&flush_addr, &flush_size);
   dcache_flush((const void *)flush_addr, flush_size);
 
-  portENTER_CRITICAL();
+  pbl_irq_lock();
   res = HAL_QSPI_WRITE_OTP(hflash, addr, &val, 1);
-  portEXIT_CRITICAL();
+  pbl_irq_unlock();
 
   if (res != 1) {
     return E_ERROR;
@@ -388,9 +388,9 @@ status_t qspi_flash_lock_security_register(QSPIFlash *dev, uint32_t addr) {
   FLASH_HandleTypeDef *hflash = &dev->qspi->state->ctx.handle;
   int res;
 
-  portENTER_CRITICAL();
+  pbl_irq_lock();
   res = HAL_QSPI_LOCK_OTP(hflash, addr);
-  portEXIT_CRITICAL();
+  pbl_irq_unlock();
 
   if (res != 0) {
     return E_ERROR;

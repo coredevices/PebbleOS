@@ -3,13 +3,10 @@
 
 #pragma once
 
-#include <inttypes.h>
 #include <stdint.h>
 
 #include "pbl/util/attributes.h"
 #include "pebbleos/core_dump_structs.h"
-
-#include "portmacro.h"
 
 // Size of RAM
 // TODO: Do we have an equate for the total size of RAM somewhere else?
@@ -75,7 +72,7 @@ typedef struct {
   uint32_t    unformatted;          // set of 1 bit flags, bit n set means region n is still unformatted
 } CoreDumpFlashHeader;
 
-// This comes first in the front of each possibe flash region. It is NOT returned as part of the core dump
+// This comes first in the front of each possible flash region. It is NOT returned as part of the core dump
 // image.
 typedef struct {
   uint32_t    magic;                // set to CORE_DUMP_FLASH_HDR_MAGIC

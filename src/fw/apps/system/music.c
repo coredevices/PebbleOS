@@ -22,11 +22,8 @@
 #include "pbl/services/vibes/vibe_score.h"
 #include "shell/prefs.h"
 #include "shell/system_theme.h"
-#include "process_management/app_manager.h"
 #include "process_state/app_state/app_state.h"
 #include "resource/resource_ids.auto.h"
-#include <pbl/logging/logging.h>
-#include "system/passert.h"
 #include "pbl/util/math.h"
 #include "pbl/util/trig.h"
 
@@ -448,7 +445,7 @@ static void prv_flip_animated_text(Animation *animation, bool finished, void *co
   data->length_text_layer.layer.bounds.origin.y = -TIME_BOUNDS_OFFSET;
 }
 
-static inline bool prv_should_animate_casssette(void) {
+static inline bool prv_should_animate_cassette(void) {
   return music_get_playback_state() != MusicPlayStatePaused;
 }
 
@@ -473,7 +470,7 @@ static Animation *prv_create_cassette_animation(MusicAppData *data) {
   animation_set_curve(cassette_bounceback, AnimationCurveEaseOut);
   Animation *sequence = animation_sequence_create(cassette_left, cassette_right,
                                                   cassette_bounceback, NULL);
-  if (!prv_should_animate_casssette()) {
+  if (!prv_should_animate_cassette()) {
     animation_set_play_count(sequence, 0);
   }
   return sequence;

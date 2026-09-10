@@ -6,7 +6,6 @@
 #include "pbl/services/data_logging/dls_list.h"
 #include "pbl/services/data_logging/dls_storage.h"
 
-#include "pbl/services/analytics/analytics.h"
 #include "pbl/services/comm_session/protocol.h"
 #include "pbl/services/comm_session/session_send_buffer.h"
 #include "pbl/services/system_task.h"
@@ -20,9 +19,6 @@
 #include "pbl/util/math.h"
 
 #include <inttypes.h>
-
-#include "FreeRTOS.h"
-#include "timers.h"
 
 PBL_LOG_MODULE_DECLARE(service_data_logging, CONFIG_SERVICE_DATA_LOGGING_LOG_LEVEL);
 
@@ -39,7 +35,7 @@ typedef struct {
 } DataLoggingReopenEntry;
 
 static struct {
-  PebbleMutex * mutex;
+  struct pbl_mutex mutex;
   TimerID ack_timer;
   bool report_in_progress;
 } s_endpoint_data;
@@ -148,11 +144,11 @@ static void check_ack_timeout(void) {
 static void ack_timer_cb(void *cb_data) {
   dls_list_lock();
 
-  mutex_lock(s_endpoint_data.mutex);
+  pbl_mutex_lock(&s_endpoint_data.mutex, PBL_FOREVER);
 
   check_ack_timeout();
 
-  mutex_unlock(s_endpoint_data.mutex);
+  pbl_mutex_unlock(&s_endpoint_data.mutex);
 
   dls_list_unlock();
 }
@@ -276,9 +272,9 @@ bool dls_endpoint_send_data(DataLoggingSession *logging_session, const uint8_t *
     return false;
   }
 
-  mutex_lock(s_endpoint_data.mutex);
+  pbl_mutex_lock(&s_endpoint_data.mutex, PBL_FOREVER);
   if (logging_session->comm.state != DataLoggingSessionCommStateIdle) {
-    mutex_unlock(s_endpoint_data.mutex);
+    pbl_mutex_unlock(&s_endpoint_data.mutex);
     // logging_session is waiting for an ack, we'll send next time around
     // don't return a failure, this is pretty innocuous.
     return true;
@@ -289,7 +285,7 @@ bool dls_endpoint_send_data(DataLoggingSession *logging_session, const uint8_t *
   SendBuffer *sb = comm_session_send_buffer_begin_write(session, ENDPOINT_ID_DATA_LOGGING,
                                                         total_length, timeout_ms);
   if (!sb) {
-    mutex_unlock(s_endpoint_data.mutex);
+    pbl_mutex_unlock(&s_endpoint_data.mutex);
     return false;
   }
 
@@ -310,7 +306,7 @@ bool dls_endpoint_send_data(DataLoggingSession *logging_session, const uint8_t *
 
   update_session_state(logging_session, DataLoggingSessionCommStateSending, true /*reschedule*/);
 
-  mutex_unlock(s_endpoint_data.mutex);
+  pbl_mutex_unlock(&s_endpoint_data.mutex);
 
   return true;
 }
@@ -322,7 +318,7 @@ static void prv_dls_endpoint_handle_ack(uint8_t session_id) {
     return;
   }
 
-  mutex_lock(s_endpoint_data.mutex);
+  pbl_mutex_lock(&s_endpoint_data.mutex, PBL_FOREVER);
 
   PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Received ACK for id: %"PRIu8" state: %u", session->comm.session_id, session->comm.state);
 
@@ -332,14 +328,14 @@ static void prv_dls_endpoint_handle_ack(uint8_t session_id) {
       break;
     case DataLoggingSessionCommStateOpening:
       update_session_state(session, DataLoggingSessionCommStateIdle, true /*reschedule*/);
-      mutex_unlock(s_endpoint_data.mutex);
+      pbl_mutex_unlock(&s_endpoint_data.mutex);
       dls_private_send_session(session, true);
       return;
     case DataLoggingSessionCommStateSending:
       session->comm.nack_count = 0;
       update_session_state(session, DataLoggingSessionCommStateIdle, true /*reschedule*/);
 
-      mutex_unlock(s_endpoint_data.mutex);
+      pbl_mutex_unlock(&s_endpoint_data.mutex);
 
       // unlock for time consuming activities
       dls_storage_consume(session, session->comm.num_bytes_pending);
@@ -350,7 +346,7 @@ static void prv_dls_endpoint_handle_ack(uint8_t session_id) {
       return;
   }
 
-  mutex_unlock(s_endpoint_data.mutex);
+  pbl_mutex_unlock(&s_endpoint_data.mutex);
 }
 
 static void prv_dls_endpoint_handle_nack(uint8_t session_id) {
@@ -362,7 +358,7 @@ static void prv_dls_endpoint_handle_nack(uint8_t session_id) {
     return;
   }
 
-  mutex_lock(s_endpoint_data.mutex);
+  pbl_mutex_lock(&s_endpoint_data.mutex, PBL_FOREVER);
   switch (logging_session->comm.state) {
     case DataLoggingSessionCommStateIdle:
     case DataLoggingSessionCommStateOpening:
@@ -388,7 +384,7 @@ static void prv_dls_endpoint_handle_nack(uint8_t session_id) {
 
   update_session_state(logging_session, DataLoggingSessionCommStateIdle, true /*reschedule*/);
 
-  mutex_unlock(s_endpoint_data.mutex);
+  pbl_mutex_unlock(&s_endpoint_data.mutex);
 
   // reopen the session that was NACK'ed
   if (s_unexpected_nacks < MAX_UNEXPECTED_NACK_COUNT) {
@@ -443,7 +439,7 @@ static void prv_reopen_next_session_system_task_cb(void* data) {
   }
 }
 
-//! For use with dls_list_for_each_session. Appends this session to our list of sesions we need to open.
+//! For use with dls_list_for_each_session. Appends this session to our list of sessions we need to open.
 //! On entry, 'data' points to the variable holding the head of the list.
 static bool dls_endpoint_add_reopen_sessions_cb(DataLoggingSession *session, void *data) {
   DataLoggingReopenEntry **head_ptr = (DataLoggingReopenEntry **)data;
@@ -491,7 +487,6 @@ static void prv_empty_session(uint8_t session_id) {
     dls_private_send_session(logging_session, true /*empty_all_data*/);
   }
 }
-
 
 //! data_logging_protocol_msg_callback runs on Bluetooth task. Keep it quick.
 void data_logging_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length) {
@@ -552,7 +547,7 @@ void data_logging_protocol_msg_callback(CommSession *session, const uint8_t *dat
 }
 
 void dls_endpoint_init(void) {
-  s_endpoint_data.mutex = mutex_create();
+  pbl_mutex_init(&s_endpoint_data.mutex);
   s_endpoint_data.ack_timer = new_timer_create();
 }
 
@@ -562,7 +557,7 @@ static bool prv_handle_disconnect_cb(DataLoggingSession *session, void *data) {
 }
 
 void dls_private_handle_disconnect(void *data) {
-  mutex_lock(s_endpoint_data.mutex);
+  pbl_mutex_lock(&s_endpoint_data.mutex, PBL_FOREVER);
   dls_list_for_each_session(prv_handle_disconnect_cb, 0);
-  mutex_unlock(s_endpoint_data.mutex);
+  pbl_mutex_unlock(&s_endpoint_data.mutex);
 }

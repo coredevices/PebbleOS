@@ -6,18 +6,14 @@
 
 #include "comm/ble/gap_le_connect.h"
 #include "comm/ble/gap_le_connection.h"
-#include "comm/ble/gap_le_slave_reconnect.h"
 #include "comm/ble/kernel_le_client/kernel_le_client.h"
-#include "comm/bt_lock.h"
 #include "console/prompt.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
-#include "pbl/os/mutex.h"
-#include "pbl/services/analytics/analytics.h"
+#include "pbl/kernel/mutex.h"
 #include "pbl/services/bluetooth/pairability.h"
 #include "pbl/services/bluetooth/local_addr.h"
 #include "pbl/services/shared_prf_storage/shared_prf_storage.h"
-#include "pbl/services/system_task.h"
 #include "pbl/services/settings/settings_file.h"
 #include "system/hexdump.h"
 #include <pbl/logging/logging.h>
@@ -88,7 +84,7 @@ typedef struct PACKED {
 #define BT_PERSISTENT_STORAGE_FILE_SIZE (4096)
 
 //! All of the actual pairings use a BTBondingID as a key. This is because with BLE pairings an
-//! address is not alwaywas available, and it made it easier to have BT Classic and BLE pairings
+//! address is not alway available, and it made it easier to have BT Classic and BLE pairings
 //! use the same type of key. When adding pairings there is no BTBondingID so a free key has to
 //! be found by iterating over all possible keys.
 
@@ -111,18 +107,18 @@ static const char BLE_PINNED_ADDRESS_KEY[] = "BLE_PINNED_ADDRESS";
 
 static uint8_t s_bt_persistent_storage_updates = 0;
 
-static PebbleMutex *s_db_mutex = NULL;
+static PBL_MUTEX_DEFINE(s_db_mutex);
 
 //! Cache of the last connected system session capabilities. Updated in flash when we get new flags
 //! @note prv_lock() must be held when accessing this variable.
 static PebbleProtocolCapabilities s_cached_system_capabilities;
 
 static void prv_lock(void) {
-  mutex_lock(s_db_mutex);
+  pbl_mutex_lock(&s_db_mutex, PBL_FOREVER);
 }
 
 static void prv_unlock(void) {
-  mutex_unlock(s_db_mutex);
+  pbl_mutex_unlock(&s_db_mutex);
 }
 
 static bool prv_bt_persistent_storage_get_ble_smpairinginfo_by_id(
@@ -802,7 +798,7 @@ bool bt_persistent_storage_update_ble_device_name(BTBondingID bonding, const cha
   GapBondingFileSetStatus status;
   status = prv_file_set(&bonding, sizeof(bonding), &data, sizeof(data));
 
-  // If this is the gateway, update SPRF so our pairing info betwen PRF and normal
+  // If this is the gateway, update SPRF so our pairing info between PRF and normal
   // FW is in sync
   if (data.ble_data.is_gateway && (status == GapBondingFileSetUpdated)) {
     prv_update_bondings(bonding, BtPersistBondingTypeBLE);
@@ -1468,7 +1464,6 @@ void bt_persistent_storage_set_cached_system_capabilities(
 void bt_persistent_storage_init(void) {
   // Note: this gets called well before the BT stack is initialized, make sure there is no code
   // that tries to use the BT stack in this path.
-  s_db_mutex = mutex_create();
 
   prv_load_data_from_prf();
 

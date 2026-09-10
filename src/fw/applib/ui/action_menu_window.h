@@ -5,7 +5,6 @@
 
 #include "applib/ui/window.h"
 #include "applib/ui/window_stack.h"
-#include "pbl/services/timeline/item.h"
 
 //! @file action_menu_window.h
 //! @addtogroup UI
@@ -55,7 +54,7 @@ typedef void (*ActionMenuWillCloseCb)(ActionMenu *menu,
 //! Configuration struct for the ActionMenu
 typedef struct {
   const ActionMenuLevel *root_level; //!< the root level of the ActionMenu
-  void *context; //!< a context pointer which will be accessbile when actions are performed
+  void *context; //!< a context pointer which will be accessible when actions are performed
   struct {
     GColor background; //!< the color of the left column of the ActionMenu
     GColor foreground; //!< the color of the individual "crumbs" that indicate menu depth

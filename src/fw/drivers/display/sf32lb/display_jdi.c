@@ -4,24 +4,19 @@
 #include <pbl/drivers/display/sf32lb/display_jdi.h>
 
 #include "board/board.h"
-#include "board/display.h"
 #include <pbl/drivers/display/display.h>
 #include <pbl/drivers/gpio.h>
 #include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
 #include "kernel/util/delay.h"
 #include "pbl/soc/sf32lb/sleep.h"
 #include <pbl/drivers/rtc.h>
 #include "pbl/mcu/cache.h"
-#include "pbl/os/mutex.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 
-#include "FreeRTOS.h"
-#include "semphr.h"
+#include "pbl/kernel/sem.h"
 
-#include "bf0_hal.h"
 #include "bf0_hal_lcdc.h"
 #include "bf0_hal_lptim.h"
 #include "bf0_hal_rtc.h"
@@ -52,7 +47,7 @@ static uint16_t s_update_y1;
 static bool s_initialized;
 static bool s_updating;
 static UpdateCompleteCallback s_uccb;
-static SemaphoreHandle_t s_sem;
+static PBL_SEM_DEFINE(s_sem, 0, 1);
 static TimerID s_silent_loss_timer = TIMER_INVALID_ID;
 // Set from HAL_LCDC_SendLayerDataCpltCbk (ISR). The silent-loss handler checks
 // this to distinguish "EOF truly never fired" (real bug → crash) from "EOF
@@ -295,8 +290,6 @@ void display_jdi_irq_handler(DisplayJDIDevice *disp) {
 }
 
 void HAL_LCDC_SendLayerDataCpltCbk(LCDC_HandleTypeDef *lcdc) {
-  portBASE_TYPE woken = pdFALSE;
-
   // Tell the IRQ logger the HAL reached the completion path for this interrupt.
   s_lcdc_eof_cb_fired = true;
 
@@ -306,7 +299,6 @@ void HAL_LCDC_SendLayerDataCpltCbk(LCDC_HandleTypeDef *lcdc) {
     // Simulate the lost-completion failure mode: leave s_eof_observed false
     // and don't post the terminate event. The silent-loss timer should fire
     // ~DISPLAY_SILENT_LOSS_TIMEOUT_MS later and PBL_CROAK.
-    portEND_SWITCHING_ISR(woken);
     return;
   }
 #endif
@@ -325,12 +317,11 @@ void HAL_LCDC_SendLayerDataCpltCbk(LCDC_HandleTypeDef *lcdc) {
             },
     };
 
-    woken = event_put_isr(&e) ? pdTRUE : pdFALSE;
+    event_put_isr(&e);
   } else {
-    xSemaphoreGiveFromISR(s_sem, &woken);
+    pbl_sem_give(&s_sem);
   }
 
-  portEND_SWITCHING_ISR(woken);
 }
 
 void display_init(void) {
@@ -368,8 +359,6 @@ void display_init(void) {
 
   HAL_NVIC_SetPriority(DISPLAY->irqn, DISPLAY->irq_priority, 0);
   HAL_NVIC_EnableIRQ(DISPLAY->irqn);
-
-  s_sem = xSemaphoreCreateBinary();
 
   prv_display_on();
 
@@ -495,7 +484,7 @@ void display_update_boot_frame(uint8_t *framebuffer) {
   soc_sf32lb_sleep_block(SOC_SF32LB_DEEPWFI);
   HAL_StatusTypeDef status = prv_display_update_start();
   if (status == HAL_OK) {
-    xSemaphoreTake(s_sem, portMAX_DELAY);
+    pbl_sem_take(&s_sem, PBL_FOREVER);
   } else {
     // Without this guard a failed kickoff would block boot forever on s_sem,
     // since the EOF IRQ that gives the semaphore never fires.

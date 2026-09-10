@@ -1,19 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "pbl/drivers/rtc.h"
 #include "task_timer.h"
 #include "task_timer_manager.h"
 
 #include "kernel/pebble_tasks.h"
-#include "pbl/os/mutex.h"
-#include "pbl/os/tick.h"
+#include "pbl/kernel/mutex.h"
+#include "pbl/kernel/types.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/list.h"
 
-#include "FreeRTOS.h"
-#include "queue.h"
-#include "semphr.h"
+#include "pbl/kernel/sem.h"
 
 
 // Structure of a timer
@@ -50,37 +49,38 @@ typedef struct TaskTimer {
 // above the observed peak.
 static TaskTimer s_task_timer_pool[CONFIG_TASK_TIMER_POOL_SIZE];
 static TaskTimer *s_task_timer_pool_free_head;
-static PebbleMutex *s_task_timer_pool_mutex;
+static PBL_MUTEX_DEFINE(s_task_timer_pool_mutex);
+static bool s_task_timer_pool_initialized;
 
 static void prv_pool_init(void) {
-  if (s_task_timer_pool_mutex) {
+  if (s_task_timer_pool_initialized) {
     return;
   }
+  s_task_timer_pool_initialized = true;
   for (size_t i = 0; i < CONFIG_TASK_TIMER_POOL_SIZE - 1; i++) {
     s_task_timer_pool[i].list_node.next = &s_task_timer_pool[i + 1].list_node;
   }
   s_task_timer_pool[CONFIG_TASK_TIMER_POOL_SIZE - 1].list_node.next = NULL;
   s_task_timer_pool_free_head = &s_task_timer_pool[0];
-  s_task_timer_pool_mutex = mutex_create();
 }
 
 static TaskTimer *prv_timer_alloc(void) {
   TaskTimer *timer = NULL;
-  mutex_lock(s_task_timer_pool_mutex);
+  pbl_mutex_lock(&s_task_timer_pool_mutex, PBL_FOREVER);
   if (s_task_timer_pool_free_head) {
     timer = s_task_timer_pool_free_head;
     s_task_timer_pool_free_head = (TaskTimer *)timer->list_node.next;
   }
-  mutex_unlock(s_task_timer_pool_mutex);
+  pbl_mutex_unlock(&s_task_timer_pool_mutex);
   PBL_ASSERTN(timer);
   return timer;
 }
 
 static void prv_timer_free(TaskTimer *timer) {
-  mutex_lock(s_task_timer_pool_mutex);
+  pbl_mutex_lock(&s_task_timer_pool_mutex, PBL_FOREVER);
   timer->list_node.next = (ListNode *)s_task_timer_pool_free_head;
   s_task_timer_pool_free_head = timer;
-  mutex_unlock(s_task_timer_pool_mutex);
+  pbl_mutex_unlock(&s_task_timer_pool_mutex);
 }
 
 // ------------------------------------------------------------------------------------
@@ -128,7 +128,7 @@ TaskTimerID task_timer_create(TaskTimerManager *manager) {
 
   // Grab lock on timer structures, create a unique ID for this timer and put it into our idle
   // timers list
-  mutex_lock(manager->mutex);
+  pbl_mutex_lock(&manager->mutex, PBL_FOREVER);
   *timer = (TaskTimer) {
     .id = manager->next_id++,
   };
@@ -138,7 +138,7 @@ TaskTimerID task_timer_create(TaskTimerManager *manager) {
   PBL_ASSERTN(timer->id != TASK_TIMER_INVALID_ID);
 
   manager->idle_timers = list_insert_before(manager->idle_timers, &timer->list_node);
-  mutex_unlock(manager->mutex);
+  pbl_mutex_unlock(&manager->mutex);
 
   return timer->id;
 }
@@ -148,11 +148,11 @@ TaskTimerID task_timer_create(TaskTimerManager *manager) {
 // Schedule a timer to run.
 bool task_timer_start(TaskTimerManager *manager, TaskTimerID timer_id,
                       uint32_t timeout_ms, TaskTimerCallback cb, void *cb_data, uint32_t flags) {
-  TickType_t timeout_ticks = milliseconds_to_ticks(timeout_ms);
+  pbl_tick_t timeout_ticks = pbl_ms_to_ticks(timeout_ms);
   RtcTicks current_time = rtc_get_ticks();
 
   // Grab lock on timer structures
-  mutex_lock(manager->mutex);
+  pbl_mutex_lock(&manager->mutex, PBL_FOREVER);
 
   // Find this timer
   TaskTimer* timer = prv_find_timer(manager, timer_id);
@@ -161,13 +161,13 @@ bool task_timer_start(TaskTimerManager *manager, TaskTimerID timer_id,
   // If this timer is currently executing it's callback, return false if
   // TIMER_START_FLAG_FAIL_IF_EXECUTING is on
   if (timer->executing && (flags & TIMER_START_FLAG_FAIL_IF_EXECUTING)) {
-    mutex_unlock(manager->mutex);
+    pbl_mutex_unlock(&manager->mutex);
     return false;
   }
 
   // If the TIMER_START_FLAG_FAIL_IF_SCHEDULED flag is on, make sure timer is not already scheduled
   if ((flags & TIMER_START_FLAG_FAIL_IF_SCHEDULED) && timer->expire_time) {
-    mutex_unlock(manager->mutex);
+    pbl_mutex_unlock(&manager->mutex);
     return false;
   }
 
@@ -193,9 +193,9 @@ bool task_timer_start(TaskTimerManager *manager, TaskTimerID timer_id,
 
   // Wake up our service task if this is the new head so that it can recompute its wait timeout
   if (manager->running_timers == &timer->list_node) {
-    xSemaphoreGive(manager->semaphore);
+    pbl_sem_give(manager->semaphore);
   }
-  mutex_unlock(manager->mutex);
+  pbl_mutex_unlock(&manager->mutex);
   return true;
 }
 
@@ -203,7 +203,7 @@ bool task_timer_start(TaskTimerManager *manager, TaskTimerID timer_id,
 // --------------------------------------------------------------------------------
 // Return scheduled status
 bool task_timer_scheduled(TaskTimerManager *manager, TaskTimerID timer_id, uint32_t *expire_ms_p) {
-  mutex_lock(manager->mutex);
+  pbl_mutex_lock(&manager->mutex, PBL_FOREVER);
 
   // Find this timer in our list
   TaskTimer* timer = prv_find_timer(manager, timer_id);
@@ -216,13 +216,13 @@ bool task_timer_scheduled(TaskTimerManager *manager, TaskTimerID timer_id, uint3
   if (expire_ms_p != NULL && retval) {
     RtcTicks current_ticks = rtc_get_ticks();
     if (timer->expire_time > current_ticks) {
-      *expire_ms_p = ((timer->expire_time - current_ticks) * 1000)  / configTICK_RATE_HZ;
+      *expire_ms_p = ((timer->expire_time - current_ticks) * 1000)  / PBL_TICK_HZ;
     } else {
       *expire_ms_p = 0;
     }
   }
 
-  mutex_unlock(manager->mutex);
+  pbl_mutex_unlock(&manager->mutex);
   return retval;
 }
 
@@ -230,7 +230,7 @@ bool task_timer_scheduled(TaskTimerManager *manager, TaskTimerID timer_id, uint3
 // --------------------------------------------------------------------------------
 // Stop a timer. If the timer callback is currently executing, return false, else return true.
 bool task_timer_stop(TaskTimerManager *manager, TaskTimerID timer_id) {
-  mutex_lock(manager->mutex);
+  pbl_mutex_lock(&manager->mutex, PBL_FOREVER);
 
   // Find this timer in our list
   TaskTimer* timer = prv_find_timer(manager, timer_id);
@@ -248,7 +248,7 @@ bool task_timer_stop(TaskTimerManager *manager, TaskTimerID timer_id) {
   timer->repeating = false;
   timer->expire_time = 0;
 
-  mutex_unlock(manager->mutex);
+  pbl_mutex_unlock(&manager->mutex);
   return (!timer->executing);
 }
 
@@ -256,14 +256,14 @@ bool task_timer_stop(TaskTimerManager *manager, TaskTimerID timer_id) {
 // --------------------------------------------------------------------------------
 // Delete a timer
 void task_timer_delete(TaskTimerManager *manager, TaskTimerID timer_id) {
-  mutex_lock(manager->mutex);
+  pbl_mutex_lock(&manager->mutex, PBL_FOREVER);
 
   // Find this timer in our list
   TaskTimer* timer = prv_find_timer(manager, timer_id);
 
   // If it's already marked for deletion return
   if (timer->defer_delete) {
-    mutex_unlock(manager->mutex);
+    pbl_mutex_unlock(&manager->mutex);
     return;
   }
 
@@ -280,24 +280,24 @@ void task_timer_delete(TaskTimerManager *manager, TaskTimerID timer_id) {
   // to task_timer_manager_execute_expired_timers service loop will take care of this for us.
   if (timer->executing) {
     timer->defer_delete = true;
-    mutex_unlock(manager->mutex);
+    pbl_mutex_unlock(&manager->mutex);
   } else {
     PBL_ASSERTN(list_contains(manager->idle_timers, &timer->list_node));
     list_remove(&timer->list_node, &manager->idle_timers /* &head */, NULL /* &tail */);
-    mutex_unlock(manager->mutex);
+    pbl_mutex_unlock(&manager->mutex);
     prv_timer_free(timer);
   }
 }
 
 
-void task_timer_manager_init(TaskTimerManager *manager, SemaphoreHandle_t semaphore) {
+void task_timer_manager_init(TaskTimerManager *manager, struct pbl_sem *semaphore) {
   prv_pool_init();
   *manager = (TaskTimerManager) {
-    .mutex = mutex_create(),
     // Initialize next id to be a number that's theoretically unique per-task
     .next_id = (pebble_task_get_current() << 28) + 1,
     .semaphore = semaphore
   };
+  pbl_mutex_init(&manager->mutex);
 
   // The above shift assumes next_id is a 32-bit int and there are fewer than 16 tasks.
   _Static_assert(sizeof(((TaskTimerManager*)0)->next_id) == 4, "next_id is not the right width");
@@ -305,15 +305,15 @@ void task_timer_manager_init(TaskTimerManager *manager, SemaphoreHandle_t semaph
 }
 
 
-TickType_t task_timer_manager_execute_expired_timers(TaskTimerManager *manager) {
+pbl_tick_t task_timer_manager_execute_expired_timers(TaskTimerManager *manager) {
   while (1) {
-    TickType_t ticks_to_wait = 0;
+    pbl_tick_t ticks_to_wait = 0;
     RtcTicks next_expiry_time = 0;
 
     // -------------------------------------------------------------------------------------
     // If a timer is ready to run, set time_to_wait to 0 and put the timer into 'next_timer'.
     // If no timer is ready yet, then ticks_to_wait will be > 0.
-    mutex_lock(manager->mutex);
+    pbl_mutex_lock(&manager->mutex, PBL_FOREVER);
 
     TaskTimer *next_timer = (TaskTimer*) manager->running_timers;
     if (next_timer != NULL) {
@@ -344,10 +344,10 @@ TickType_t task_timer_manager_execute_expired_timers(TaskTimerManager *manager) 
       }
     } else {
       // No timers running
-      ticks_to_wait = portMAX_DELAY;
+      ticks_to_wait = PBL_TICK_FOREVER;
     }
 
-    mutex_unlock(manager->mutex);
+    pbl_mutex_unlock(&manager->mutex);
 
     if (ticks_to_wait) {
       return ticks_to_wait;
@@ -359,7 +359,7 @@ TickType_t task_timer_manager_execute_expired_timers(TaskTimerManager *manager) 
     manager->current_cb = NULL;
 
     // Update state after the callback
-    mutex_lock(manager->mutex);
+    pbl_mutex_lock(&manager->mutex, PBL_FOREVER);
     next_timer->executing = false;
 
     // Re-insert into timers list now if it's a repeating timer and wasn't re-scheduled by the
@@ -375,12 +375,12 @@ TickType_t task_timer_manager_execute_expired_timers(TaskTimerManager *manager) 
     if (next_timer->defer_delete) {
       PBL_ASSERTN(list_contains(manager->idle_timers, &next_timer->list_node));
       list_remove(&next_timer->list_node, &manager->idle_timers /* &head */, NULL /* &tail */);
-      mutex_unlock(manager->mutex);
+      pbl_mutex_unlock(&manager->mutex);
 
       prv_timer_free(next_timer);
 
     } else {
-      mutex_unlock(manager->mutex);
+      pbl_mutex_unlock(&manager->mutex);
     }
   }
 }

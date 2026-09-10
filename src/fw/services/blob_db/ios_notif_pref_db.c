@@ -8,7 +8,7 @@
 
 #include "console/prompt.h"
 #include "kernel/pbl_malloc.h"
-#include "pbl/os/mutex.h"
+#include "pbl/kernel/mutex.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/settings/settings_file.h"
 #include "pbl/services/timeline/attributes_actions.h"
@@ -16,8 +16,6 @@
 #include "system/passert.h"
 #include "pbl/util/attributes.h"
 #include "util/units.h"
-
-#include <stdio.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -32,15 +30,15 @@ typedef struct PACKED {
   uint8_t data[]; // Serialized attributes followed by serialized actions
 } SerializedNotifPrefs;
 
-static PebbleMutex *s_mutex;
+static PBL_MUTEX_DEFINE(s_mutex);
 
 static status_t prv_file_open_and_lock(SettingsFile *file) {
-  mutex_lock(s_mutex);
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
   status_t rv = settings_file_open_growable(file, iOS_NOTIF_PREF_DB_FILE_NAME,
                                             iOS_NOTIF_PREF_MAX_SIZE, KiBYTES(4));
   if (rv != S_SUCCESS) {
-    mutex_unlock(s_mutex);
+    pbl_mutex_unlock(&s_mutex);
   }
 
   return rv;
@@ -48,7 +46,7 @@ static status_t prv_file_open_and_lock(SettingsFile *file) {
 
 static void prv_file_close_and_unlock(SettingsFile *file) {
   settings_file_close(file);
-  mutex_unlock(s_mutex);
+  pbl_mutex_unlock(&s_mutex);
 }
 
 //! Assumes the file is opened and locked
@@ -73,7 +71,7 @@ static status_t prv_read_serialized_prefs(SettingsFile *file, const void *key, s
 }
 
 //! Returns the length of the data
-//! When done with the prefs, call prv_free_serialzed_prefs()
+//! When done with the prefs, call prv_free_serialized_prefs()
 static int prv_get_serialized_prefs(SettingsFile *file, const uint8_t *app_id, int key_len,
                                     SerializedNotifPrefs **prefs_out) {
   const unsigned prefs_len = settings_file_get_len(file, app_id, key_len);
@@ -95,7 +93,7 @@ static int prv_get_serialized_prefs(SettingsFile *file, const uint8_t *app_id, i
   return (prefs_len - sizeof(SerializedNotifPrefs));
 }
 
-static void prv_free_serialzed_prefs(SerializedNotifPrefs *prefs) {
+static void prv_free_serialized_prefs(SerializedNotifPrefs *prefs) {
   kernel_free(prefs);
 }
 
@@ -138,7 +136,7 @@ iOSNotifPrefs* ios_notif_pref_db_get_prefs(const uint8_t *app_id, int key_len) {
     strncpy(buffer, (const char *)app_id, key_len);
     buffer[key_len] = '\0';
     PBL_LOG_ERR("Could not parse serial data for <%s>", buffer);
-    prv_free_serialzed_prefs(serialized_prefs);
+    prv_free_serialized_prefs(serialized_prefs);
     return NULL;
   }
 
@@ -167,12 +165,12 @@ iOSNotifPrefs* ios_notif_pref_db_get_prefs(const uint8_t *app_id, int key_len) {
     strncpy(buffer, (const char *)app_id, key_len);
     buffer[key_len] = '\0';
     PBL_LOG_ERR("Could not deserialize data for <%s>", buffer);
-    prv_free_serialzed_prefs(serialized_prefs);
+    prv_free_serialized_prefs(serialized_prefs);
     kernel_free(notif_prefs);
     return NULL;
   }
 
-  prv_free_serialzed_prefs(serialized_prefs);
+  prv_free_serialized_prefs(serialized_prefs);
   return notif_prefs;
 }
 
@@ -214,8 +212,6 @@ status_t ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, Attrib
 }
 
 void ios_notif_pref_db_init(void) {
-  s_mutex = mutex_create();
-  PBL_ASSERTN(s_mutex != NULL);
 }
 
 status_t ios_notif_pref_db_insert(const uint8_t *key, int key_len,
@@ -298,9 +294,9 @@ status_t ios_notif_pref_db_delete(const uint8_t *key, int key_len) {
 }
 
 status_t ios_notif_pref_db_flush(void) {
-  mutex_lock(s_mutex);
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   status_t rv = pfs_remove(iOS_NOTIF_PREF_DB_FILE_NAME);
-  mutex_unlock(s_mutex);
+  pbl_mutex_unlock(&s_mutex);
   return rv;
 }
 
@@ -374,7 +370,7 @@ uint32_t ios_notif_pref_db_get_flags(const uint8_t *app_id, int key_len) {
   SerializedNotifPrefs *prefs = NULL;
   prv_get_serialized_prefs(&file, app_id, key_len, &prefs);
   uint32_t flags = prefs->flags;
-  prv_free_serialzed_prefs(prefs);
+  prv_free_serialized_prefs(prefs);
   prv_file_close_and_unlock(&file);
   return flags;
 }
@@ -403,7 +399,7 @@ static bool prv_print_notif_pref_db(SettingsFile *file, SettingsRecordInfo *info
 
   // TODO: Print the attributes and actions
 
-  prv_free_serialzed_prefs(serialized_prefs);
+  prv_free_serialized_prefs(serialized_prefs);
   prompt_send_response("");
   return true;
 }

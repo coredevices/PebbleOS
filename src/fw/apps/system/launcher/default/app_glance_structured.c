@@ -17,7 +17,6 @@
 #include "pbl/util/attributes.h"
 #include "pbl/util/string.h"
 #include "pbl/util/struct.h"
-#include "board/display.h"
 
 // Use display height to determine icon margins: larger displays use more margin
 #if PBL_DISPLAY_HEIGHT >= 200
@@ -62,7 +61,7 @@ typedef struct GenericGlanceIconBitmapProcessor {
   GColor desired_tint_color;
 } GenericGlanceIconBitmapProcessor;
 
-static void prv_strucutred_glance_icon_bitmap_processor_pre_func(
+static void prv_structured_glance_icon_bitmap_processor_pre_func(
     GBitmapProcessor *processor, GContext *ctx, PBL_UNUSED const GBitmap **bitmap_to_use,
     PBL_UNUSED GRect *global_grect_to_use) {
   GenericGlanceIconBitmapProcessor *processor_with_data =
@@ -111,7 +110,7 @@ void launcher_app_glance_structured_draw_icon(LauncherAppGlanceStructured *struc
 
   GenericGlanceIconBitmapProcessor structured_glance_icon_bitmap_processor = {
     .bitmap_processor = {
-      .pre = prv_strucutred_glance_icon_bitmap_processor_pre_func,
+      .pre = prv_structured_glance_icon_bitmap_processor_pre_func,
       .post = prv_structured_glance_icon_bitmap_processor_post_func,
     },
     .desired_tint_color = desired_tint_color,
@@ -120,7 +119,7 @@ void launcher_app_glance_structured_draw_icon(LauncherAppGlanceStructured *struc
   GColor8 luminance_tint_lookup_table[GCOLOR8_COMPONENT_NUM_VALUES] = {};
   gcolor_tint_luminance_lookup_table_init(desired_tint_color, luminance_tint_lookup_table);
 
-  GenericGlanceIconDrawCommandProcessor strucutred_glance_icon_draw_command_processor = {
+  GenericGlanceIconDrawCommandProcessor structured_glance_icon_draw_command_processor = {
     .draw_command_processor.command =
         prv_structured_glance_icon_draw_command_processor_process_command,
     .luminance_tint_lookup_table = luminance_tint_lookup_table,
@@ -129,7 +128,7 @@ void launcher_app_glance_structured_draw_icon(LauncherAppGlanceStructured *struc
   KinoReelProcessor structured_glance_icon_processor = {
     .bitmap_processor = &structured_glance_icon_bitmap_processor.bitmap_processor,
     .draw_command_processor =
-        &strucutred_glance_icon_draw_command_processor.draw_command_processor,
+        &structured_glance_icon_draw_command_processor.draw_command_processor,
   };
 
   // Draw the glance's icon, luminance tinting its colors according to the glance's highlight

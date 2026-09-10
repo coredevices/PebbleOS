@@ -1,13 +1,11 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <cmsis_core.h>
 #include <pbl/drivers/speaker/qemu/audio.h>
 
 #include "services/system_task.h"
 
-#include "FreeRTOS.h"
-
-#include <cmsis_core.h>
 #include <stdint.h>
 
 // QEMU audio device register offsets (must match pebble-audio QEMU device)
@@ -94,6 +92,5 @@ void qemu_audio_irq_handler(AudioDevice *dev) {
     system_task_add_callback_from_isr_droppable(prv_audio_system_task_cb,
                                                 (void *)dev->state,
                                                 &should_context_switch);
-    portEND_SWITCHING_ISR(should_context_switch);
   }
 }

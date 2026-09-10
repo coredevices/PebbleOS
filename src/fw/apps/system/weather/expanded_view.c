@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "expanded_view.h"
+#include "pbl/services/i18n/i18n.h"
 #include "weather_types.h"
 #include "weather_math.h"
 #include "weather_app_layout.h"   // the shared UV bar (round)
@@ -12,7 +13,6 @@
 #include "applib/graphics/gdraw_command_transforms.h"
 #include "applib/ui/animation.h"
 #include "applib/ui/animation_interpolate.h"
-#include "applib/ui/app_window_stack.h"
 #include "applib/ui/property_animation.h"
 #include "util/time/time.h"
 #include <stdint.h>
@@ -41,7 +41,7 @@ typedef struct {
   int16_t  lon_e2;
   int16_t  utc_off_min;            // location tz, minutes east of UTC; INT16_MIN = watch tz
   char     time_str[10];           // status bar time
-  char     sunset_str[20];         // "Sunset 9:30 PM"
+  char     sunset_str[40];         // "Sunset 9:30 PM"
   char     temp_str[16];           // "23/14°"
   // Content entrance: the card content slides in from the left + bounces (Timeline card entrance).
   AnimationProgress text_p;
@@ -50,7 +50,7 @@ typedef struct {
   ExpandedViewEntrance entrance;            // how the card animates in on first appear (latched off after)
   // Status bar: show "Last updated ..." for 2s, then swap it out to the right while the time swoops
   // in from the left.
-  char              updated_str[24];        // "Last updated 8:23 PM"
+  char              updated_str[40];        // "Last updated 8:23 PM"
   bool              show_updated;           // true until the swap completes
   bool              swap_active;            // the last-updated -> time slide is playing
   AnimationProgress swap_p;
@@ -137,28 +137,38 @@ static int prv_sunset_minutes(int16_t lat_e2, int16_t lon_e2, int16_t utc_off_mi
   return sunset_min;
 }
 
-static void prv_fmt_hhmm(char *out, size_t n, int h24, int mm, const char *prefix) {
+static void prv_fmt_hhmm(char *out, size_t n, int h24, int mm) {
   if (clock_is_24h_style()) {
-    snprintf(out, n, "%s%d:%02d", prefix, h24, mm);
+    snprintf(out, n, "%d:%02d", h24, mm);
   } else {
     int h12 = h24 % 12; if (h12 == 0) h12 = 12;
-    snprintf(out, n, "%s%d:%02d %s", prefix, h12, mm, h24 < 12 ? "AM" : "PM");
+    char ampm[8];
+    i18n_get_with_buffer(h24 < 12 ? i18n_noop("AM") : i18n_noop("PM"), ampm, sizeof(ampm));
+    snprintf(out, n, "%d:%02d %s", h12, mm, ampm);
   }
+}
+
+// "<label> 9:30 PM", with the label's translation deciding where the time goes.
+static void prv_fmt_labelled_time(char *out, size_t n, const char *fmt, int h24, int mm) {
+  char hhmm[16];
+  char localized_fmt[40];
+  prv_fmt_hhmm(hhmm, sizeof(hhmm), h24, mm);
+  i18n_get_with_buffer(fmt, localized_fmt, sizeof(localized_fmt));
+  snprintf(out, n, localized_fmt, hhmm);
 }
 
 static void prv_build_sunset(char *out, size_t n, int16_t lat_e2, int16_t lon_e2,
                              int16_t utc_off_min) {
   int m = prv_sunset_minutes(lat_e2, lon_e2, utc_off_min);
-  if (m < 0) { snprintf(out, n, "Sunset --:--"); return; }
-  prv_fmt_hhmm(out, n, (m / 60) % 24, m % 60, "Sunset ");
+  if (m < 0) { i18n_get_with_buffer(i18n_noop("Sunset --:--"), out, n); return; }
+  prv_fmt_labelled_time(out, n, i18n_noop("Sunset %s"), (m / 60) % 24, m % 60);
 }
 
 static void prv_build_time(char *out, size_t n) {
   time_t now = rtc_get_time();
   struct tm *lt = localtime(&now);
   if (!lt) { snprintf(out, n, "--:--"); return; }
-  int h = lt->tm_hour, mm = lt->tm_min;
-  prv_fmt_hhmm(out, n, h, mm, "");
+  prv_fmt_hhmm(out, n, lt->tm_hour, lt->tm_min);
 }
 
 // Round's status bar is a chord, not a full-width strip, so the rect wording overruns it
@@ -166,15 +176,14 @@ static void prv_build_time(char *out, size_t n) {
 #define EV_STATUS_Y    0
 #define EV_STATUS_FONT FONT_KEY_GOTHIC_18_BOLD
 
-#define EV_UPDATED_PREFIX  "Last updated "
-#define EV_UPDATED_UNKNOWN "Last updated --:--"
-
 void expanded_view_format_updated(const WeatherLocationForecast *f, char *out, size_t n) {
-  if (!f || f->time_updated_utc <= 0) { snprintf(out, n, EV_UPDATED_UNKNOWN); return; }
-  time_t t = f->time_updated_utc;
-  struct tm *lt = localtime(&t);
-  if (!lt) { snprintf(out, n, EV_UPDATED_UNKNOWN); return; }
-  prv_fmt_hhmm(out, n, lt->tm_hour, lt->tm_min, EV_UPDATED_PREFIX);
+  struct tm *lt = NULL;
+  if (f && f->time_updated_utc > 0) {
+    time_t t = f->time_updated_utc;
+    lt = localtime(&t);
+  }
+  if (!lt) { i18n_get_with_buffer(i18n_noop("Last updated --:--"), out, n); return; }
+  prv_fmt_labelled_time(out, n, i18n_noop("Last updated %s"), lt->tm_hour, lt->tm_min);
 }
 
 void expanded_view_format_glance(const WeatherLocationForecast *f, int16_t lat_e2, int16_t lon_e2,
@@ -347,10 +356,11 @@ static void prv_draw_gauge(GContext *ctx, int cx, int cy, int r, const char *lab
 // optical lift (measured from the live screen — the pill comment says 14_BOLD but round's
 // day_font resolves to 18_BOLD; the label caps measure 11px). One difference: this one
 // carries the value inline — "PRECIPITATION: 20%".
-static void prv_draw_precip_pill(GContext *ctx, int W, int tdx, int precip) {
-  char label[28];
-  if (precip < 0) snprintf(label, sizeof(label), "PRECIPITATION: --");
-  else            snprintf(label, sizeof(label), "PRECIPITATION: %d%%", precip);
+static void prv_draw_precip_pill(GContext *ctx, int W, int tdx, int precip,
+                                 const void *owner) {
+  char label[40];
+  if (precip < 0) snprintf(label, sizeof(label), "%s", i18n_get("PRECIPITATION: --", owner));
+  else            snprintf(label, sizeof(label), i18n_get("PRECIPITATION: %d%%", owner), precip);
   const int inset = 18 + (W - 144) / 2 / 5;
   const GRect pill = GRect(inset + tdx, EV_PRECIP_PILL_Y, W - 2 * inset, EV_PRECIP_PILL_H);
   graphics_context_set_fill_color(ctx, GColorPictonBlue);
@@ -368,7 +378,7 @@ static void prv_draw_precip_pill(GContext *ctx, int W, int tdx, int precip) {
 
 void expanded_view_draw_glance_content(GContext *ctx, int W, int tdx, const char *status,
                                        const char *sunset, const char *temp, int uv, int precip,
-                                       int wind) {
+                                       int wind, const void *owner) {
   graphics_context_set_text_color(ctx, GColorBlack);
   // Status bar (top) — the time or "Last updated ..."; NULL while the card draws the swap itself.
   if (status) {
@@ -427,7 +437,7 @@ void expanded_view_draw_glance_content(GContext *ctx, int W, int tdx, const char
   {
     (void)wind;   // wind was dropped from this screen by design;
                   // the plumbing stays for whatever wants it next.
-    prv_draw_precip_pill(ctx, W, tdx, precip);
+    prv_draw_precip_pill(ctx, W, tdx, precip, owner);
     // tall from origin.y+1, so -12 left it measurably 1px low (audit finding).
 
   }
@@ -436,18 +446,18 @@ void expanded_view_draw_glance_content(GContext *ctx, int W, int tdx, const char
     snprintf(uvbuf, sizeof(uvbuf), "%d", uv);
     weather_app_layout_draw_uv_bar(ctx, GPoint(W / 2 + tdx, PBL_DISPLAY_HEIGHT / 2),
                                    EV_UV_BAR_Y, uv, uvbuf, WeatherUvBarCompact,
-                                   "CURRENT UV");
+                                   i18n_get("CURRENT UV", owner));
   }
 #else
   if (EV_SMALL_RECT) {
     // 144x168: the r=25 dials cannot fit under the temp — one text row
     // carries both readouts instead.
-    char meters[40];
-    char uv_part[16], rain_part[20];
-    if (uv >= 0) snprintf(uv_part, sizeof(uv_part), "UV %d", uv);
-    else         snprintf(uv_part, sizeof(uv_part), "UV --");
-    if (precip >= 0) snprintf(rain_part, sizeof(rain_part), "RAIN %d%%", precip);
-    else             snprintf(rain_part, sizeof(rain_part), "RAIN --");
+    char meters[56];
+    char uv_part[24], rain_part[28];
+    if (uv >= 0) snprintf(uv_part, sizeof(uv_part), i18n_get("UV %d", owner), uv);
+    else         snprintf(uv_part, sizeof(uv_part), "%s", i18n_get("UV --", owner));
+    if (precip >= 0) snprintf(rain_part, sizeof(rain_part), i18n_get("RAIN %d%%", owner), precip);
+    else             snprintf(rain_part, sizeof(rain_part), "%s", i18n_get("RAIN --", owner));
     snprintf(meters, sizeof(meters), "%s   %s", uv_part, rain_part);
     graphics_context_set_text_color(ctx, GColorBlack);
     graphics_draw_text(ctx, meters, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
@@ -455,9 +465,9 @@ void expanded_view_draw_glance_content(GContext *ctx, int W, int tdx, const char
                        GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
   } else {
     prv_draw_gauge(ctx, W / 4 + EV_GAUGE_INSET + tdx,     EV_GAUGE_CY, EV_GAUGE_R,
-                   "UV",   uv,     11,  "",  uv < 0, prv_uv_severity_color(uv));
+                   i18n_get("UV", owner), uv, 11, "", uv < 0, prv_uv_severity_color(uv));
     prv_draw_gauge(ctx, 3 * W / 4 - EV_GAUGE_INSET + tdx, EV_GAUGE_CY, EV_GAUGE_R,
-                   "RAIN", precip, 100, "%", precip < 0, GColorVividCerulean);
+                   i18n_get("RAIN", owner), precip, 100, "%", precip < 0, GColorVividCerulean);
   }
 #endif
 }
@@ -483,7 +493,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
     // Body without the status bar; the last-updated -> time swap is drawn on top: both slide RIGHT,
     // "Last updated" exiting off the right while the time swoops in from the left, trailing it.
     expanded_view_draw_glance_content(ctx, W, tdx, NULL, s_ev->sunset_str, s_ev->temp_str,
-                                      s_ev->uv, s_ev->precip, s_ev->wind);
+                                      s_ev->uv, s_ev->precip, s_ev->wind, s_ev);
     char time_str[10];
     prv_build_time(time_str, sizeof(time_str));
     const int sx = (int)interpolate_moook_soft(s_ev->swap_p, 0, W, 3);
@@ -498,7 +508,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
     const char *status = s_ev->updated_str;
     if (!s_ev->show_updated) { prv_build_time(time_str, sizeof(time_str)); status = time_str; }
     expanded_view_draw_glance_content(ctx, W, tdx, status, s_ev->sunset_str, s_ev->temp_str,
-                                      s_ev->uv, s_ev->precip, s_ev->wind);
+                                      s_ev->uv, s_ev->precip, s_ev->wind, s_ev);
   }
 
   // SELECT marker: black half-circle nub on the centre-right edge — the same radius-13 oval the
@@ -763,7 +773,7 @@ static void prv_window_unload(Window *window) {
     if (s_ev->canvas) { layer_destroy(s_ev->canvas); s_ev->canvas = NULL; }
   }
   window_destroy(window);
-  if (s_ev) { free(s_ev); s_ev = NULL; }
+  if (s_ev) { i18n_free_all(s_ev); free(s_ev); s_ev = NULL; }
 }
 
 // ---- Public API -----------------------------------------------------------

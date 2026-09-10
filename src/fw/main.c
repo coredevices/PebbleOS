@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <stdio.h>
-#include <setjmp.h>
 
 #include "debug/power_tracking.h"
 
@@ -12,7 +11,6 @@
 #include "console/dbgserial_input.h"
 #include "console/pulse.h"
 
-#include <pbl/drivers/clocksource.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/debounced_button.h>
@@ -22,7 +20,6 @@
 #include <pbl/drivers/backlight.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/display/display.h>
-#include <pbl/drivers/gpio.h>
 #include <pbl/drivers/hrm.h>
 #include <pbl/drivers/mag.h>
 #include <pbl/drivers/mic.h>
@@ -41,12 +38,10 @@
 #include "resource/system_resource.h"
 
 #include "kernel/util/task_init.h"
-#include "kernel/util/sleep.h"
 #include "kernel/events.h"
 #include "kernel/kernel_heap.h"
 #include "kernel/fault_handling.h"
 #include "kernel/memory_layout.h"
-#include "kernel/panic.h"
 #include "logging/pulse_logging.h"
 #include "pbl/services/services.h"
 #include "pbl/services/boot_splash.h"
@@ -67,36 +62,21 @@
 
 #include "kernel/event_loop.h"
 
-#include "applib/fonts/fonts.h"
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/text.h"
-#include "applib/ui/ui.h"
-#include "applib/ui/window_stack_private.h"
-
 #include "console/serial_console.h"
 #include "system/bootbits.h"
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "system/reset.h"
-
-#include "syscall/syscall_internal.h"
 
 #include "debug/debug.h"
 
-#include "FreeRTOS.h"
-#include "task.h"
+#include "pbl/kernel/sched.h"
+#include "pbl/kernel/thread.h"
 
 #include "mfg/mfg_info.h"
 #include "mfg/mfg_serials.h"
 
 #include <bluetooth/init.h>
 
-#include <string.h>
-
 void soc_early_init(void);
-
-/* here is as good as anywhere else ... */
-const int __attribute__((used)) uxTopUsedPriority = configMAX_PRIORITIES - 1;
 
 static TimerID s_lowpower_timer = TIMER_INVALID_ID;
 #ifndef CONFIG_MFG
@@ -150,22 +130,18 @@ int main(void) {
   extern uint32_t __kernel_main_stack_start__[];
   extern uint32_t __kernel_main_stack_size__[];
   extern uint32_t __stack_guard_size__[];
-  const uint32_t kernel_main_stack_words = ( (uint32_t)__kernel_main_stack_size__
-                            - (uint32_t) __stack_guard_size__ ) / sizeof(portSTACK_TYPE);
-
-  TaskParameters_t task_params = {
-    .pvTaskCode = main_task,
-    .pcName = "KernelMain",
-    .usStackDepth = kernel_main_stack_words,
-    .uxPriority = (tskIDLE_PRIORITY + 3) | portPRIVILEGE_BIT,
-    .puxStackBuffer = (void*)(uintptr_t)((uint32_t)__kernel_main_stack_start__
-                                          + (uint32_t)__stack_guard_size__)
+  struct pbl_thread_attr attr = {
+    .name = "KernelMain",
+    .entry = main_task,
+    .prio = PBL_PRIO_IDLE + 3,
+    .privileged = true,
+    .stack = (void *)((uintptr_t)__kernel_main_stack_start__ + (uintptr_t)__stack_guard_size__),
+    .stack_size = (uintptr_t)__kernel_main_stack_size__ - (uintptr_t)__stack_guard_size__,
   };
 
-  pebble_task_create(PebbleTask_KernelMain, &task_params, NULL);
+  pebble_task_create(PebbleTask_KernelMain, &attr);
 
-  vTaskStartScheduler();
-  for(;;);
+  pbl_kernel_start();
 }
 
 static void watchdog_timer_callback(void* data) {

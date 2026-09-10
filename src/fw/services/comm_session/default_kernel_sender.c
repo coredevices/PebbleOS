@@ -4,7 +4,6 @@
 #include "comm/bt_lock.h"
 #include <pbl/drivers/rtc.h>
 #include "kernel/pbl_malloc.h"
-#include "pbl/services/analytics/analytics.h"
 #include "pbl/services/comm_session/protocol.h"
 #include "pbl/services/comm_session/session_send_buffer.h"
 #include "pbl/services/comm_session/session_send_queue.h"
@@ -14,8 +13,7 @@
 #include "pbl/util/math.h"
 #include "util/net.h"
 
-#include "FreeRTOS.h"
-#include "semphr.h"
+#include "pbl/kernel/sem.h"
 
 PBL_LOG_MODULE_DECLARE(service_comm_session, CONFIG_SERVICE_COMM_SESSION_LOG_LEVEL);
 
@@ -69,7 +67,7 @@ typedef struct SendBuffer {
 //! comm_session_send_buffer_begin_write() in case there is not enough space left.
 //! @note This semaphore *must never* be taken when bt_lock() is held or deadlock will happen!
 //! Giving the semaphore when bt_lock() is held is fine though.
-static SemaphoreHandle_t s_default_kernel_sender_write_semaphore;
+static PBL_SEM_DEFINE(s_default_kernel_sender_write_semaphore, 0, 1);
 
 //! Total number of bytes worth of Pebble Protocol messages (incl. header) allocated by this module.
 //! This excludes sizeof(SendBuffer), see comment with DEFAULT_KERNEL_SENDER_MAX_BYTES_ALLOCATED.
@@ -84,9 +82,7 @@ extern void comm_session_send_next_immediately(CommSession *session);
 // -------------------------------------------------------------------------------------------------
 //! To be called once at boot
 void comm_default_kernel_sender_init(void) {
-  s_default_kernel_sender_write_semaphore = xSemaphoreCreateBinary();
 }
-
 
 // -------------------------------------------------------------------------------------------------
 // Helpers
@@ -130,7 +126,7 @@ static void prv_destroy_send_buffer(SendBuffer *sb) {
   s_default_kernel_sender_bytes_allocated -= (sizeof(PebbleProtocolHeader)
                                               + sb->payload_buffer_length);
   kernel_free(sb);
-  xSemaphoreGive(s_default_kernel_sender_write_semaphore);
+  pbl_sem_give(&s_default_kernel_sender_write_semaphore);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -243,8 +239,7 @@ SendBuffer * comm_session_send_buffer_begin_write(CommSession *session, uint16_t
         comm_session_send_next_immediately(session);
       } else {
         // Wait for the sending process to free up some space in the send buffer:
-        is_timeout = (xSemaphoreTake(s_default_kernel_sender_write_semaphore,
-                                     remaining_ms) == pdFALSE);
+        is_timeout = ((pbl_sem_take(&s_default_kernel_sender_write_semaphore, PBL_TICKS(remaining_ms)) != 0));
       }
     }
 
@@ -278,11 +273,10 @@ void comm_session_send_buffer_end_write(SendBuffer *sb) {
 // -------------------------------------------------------------------------------------------------
 // Interfaces for testing
 
-SemaphoreHandle_t comm_session_send_buffer_write_semaphore(void) {
-  return s_default_kernel_sender_write_semaphore;
+struct pbl_sem * comm_session_send_buffer_write_semaphore(void) {
+  return &s_default_kernel_sender_write_semaphore;
 }
 
 void comm_default_kernel_sender_deinit(void) {
-  vSemaphoreDelete(s_default_kernel_sender_write_semaphore);
-  s_default_kernel_sender_write_semaphore = NULL;
+  pbl_sem_reset(&s_default_kernel_sender_write_semaphore);
 }

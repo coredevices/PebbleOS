@@ -11,13 +11,8 @@
 #include "applib/ui/shadows.h"
 #include "applib/ui/window.h"
 #include "process_management/app_manager.h"
-#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/math.h"
-
-#include "animation_timing.h"
-
-#include <string.h>
 
 #ifdef CONFIG_TOUCH
 #include "applib/ui/recognizer/touch_nav.h"
@@ -323,7 +318,7 @@ static void prv_scroll_touch_nav_register(ScrollLayer *scroll_layer) {
   }
 
   // Register the scroll layer as a migrated Tier-1 widget: the unified widget set drives it through
-  // s_scroll_touch_nav_ops. The registry add dedups by address and re-applies the ops/layer, so a
+  // s_scroll_touch_nav_ops. The registry add dedupes by address and re-applies the ops/layer, so a
   // repeated init on the same scroll layer (no intervening deinit) keeps routing to and driving it.
   touch_nav_registry_add(state, TouchNavWidgetType_Scroll,
                          (TouchNavWidgetNode *)&scroll_layer->touch_nav_node, &scroll_layer->layer,

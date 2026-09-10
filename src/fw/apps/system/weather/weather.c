@@ -14,6 +14,8 @@
 //! subscription.
 
 #include "weather.h"
+
+#include "pbl/services/i18n/i18n.h"
 #include "clock_face.h"
 #include "warning_dialog.h"
 #include "weather_report.h"
@@ -42,8 +44,9 @@ typedef struct WeatherAppData {
   WeatherLocationForecast days[WX_MAX_DAYS];
   char location_buf[64];
   char phrase_buf0[32];               // day 0: the record's real short_phrase
-  char phrase_buf[WX_MAX_DAYS][15];   // days 1+: derived ("Partly Cloudy" max); row 0 unused (day 0 = phrase_buf0), kept for index parity with days[]
-  char label_buf[WX_MAX_DAYS][10];    // "Wednesday" is the widest
+  char current_now_buf[32];           // day 0: current-hour phrase, translated
+  char phrase_buf[WX_MAX_DAYS][32];   // days 1+: derived from the type; row 0 unused (day 0 = phrase_buf0), kept for index parity with days[]
+  char label_buf[WX_MAX_DAYS][24];    // "Today", "Tomorrow" or a weekday name
 
   // Today's hourly series (v4; clock dial glyphs + Select temperature reveal).
   // The v4 record carries hourly for TODAY only, so this applies to day 0.
@@ -90,17 +93,26 @@ static void prv_sync_glance_strings(WeatherAppData *data);
 // get a derived phrase; day 0 keeps the record's real short_phrase.
 static const char *prv_phrase_for_type(uint8_t type) {
   switch ((WeatherType)type) {
-    case WeatherType_Sun:          return "Sunny";
-    case WeatherType_PartlyCloudy: return "Partly Cloudy";
-    case WeatherType_CloudyDay:    return "Cloudy";
-    case WeatherType_LightRain:    return "Light Rain";
-    case WeatherType_HeavyRain:    return "Rain";
-    case WeatherType_LightSnow:    return "Light Snow";
-    case WeatherType_HeavySnow:    return "Snow";
-    case WeatherType_RainAndSnow:  return "Rain & Snow";
+    case WeatherType_Sun:          return i18n_noop("Sunny");
+    case WeatherType_PartlyCloudy: return i18n_noop("Partly Cloudy");
+    case WeatherType_CloudyDay:    return i18n_noop("Cloudy");
+    case WeatherType_LightRain:    return i18n_noop("Light Rain");
+    case WeatherType_HeavyRain:    return i18n_noop("Rain");
+    case WeatherType_LightSnow:    return i18n_noop("Light Snow");
+    case WeatherType_HeavySnow:    return i18n_noop("Snow");
+    case WeatherType_RainAndSnow:  return i18n_noop("Rain & Snow");
     case WeatherType_Generic:
     case WeatherType_Unknown:
-    default:                       return "";
+    default:                       return NULL;
+  }
+}
+
+static void prv_fill_phrase(uint8_t type, char *buf, size_t bufsize) {
+  const char *phrase = prv_phrase_for_type(type);
+  if (phrase) {
+    i18n_get_with_buffer(phrase, buf, bufsize);
+  } else {
+    buf[0] = '\0';
   }
 }
 
@@ -111,18 +123,19 @@ static void prv_day_label(int day_offset, char *buf, size_t bufsize) {
     return;
   }
   if (day_offset == 0) {
-    strncpy(buf, "Today", bufsize - 1);
+    i18n_get_with_buffer(i18n_noop("Today"), buf, bufsize);
   } else if (day_offset == 1) {
-    strncpy(buf, "Tomorrow", bufsize - 1);
+    i18n_get_with_buffer(i18n_noop("Tomorrow"), buf, bufsize);
   } else {
-    static const char *const kWday[7] = {"Sunday", "Monday", "Tuesday", "Wednesday",
-                                         "Thursday", "Friday", "Saturday"};
+    static const char *const kWday[7] = {
+      i18n_noop("Sunday"), i18n_noop("Monday"), i18n_noop("Tuesday"), i18n_noop("Wednesday"),
+      i18n_noop("Thursday"), i18n_noop("Friday"), i18n_noop("Saturday"),
+    };
     time_t t = rtc_get_time() + (time_t)day_offset * SECONDS_PER_DAY;
     struct tm *lt = localtime(&t);  // compat maps to pbl_override_localtime
     int w = (lt && lt->tm_wday >= 0 && lt->tm_wday < 7) ? lt->tm_wday : 0;
-    strncpy(buf, kWday[w], bufsize - 1);
+    i18n_get_with_buffer(kWday[w], buf, bufsize);
   }
-  buf[bufsize - 1] = '\0';
 }
 
 // The LOCATION's local hour (a saved city's "now" must follow that city's clock, via
@@ -175,7 +188,14 @@ static void prv_fill_days_from_ds(WeatherAppData *data, const WxDsForecast *ds) 
   data->utc_offset_min = ds->utc_offset_min;
 
   // Day 0 = today (full current metrics; v4 fills UV/precip/wind, else -1).
-  snprintf(data->phrase_buf0, sizeof(data->phrase_buf0), "%s", ds->short_phrase);
+  // Prefer a translated phrase derived from the type (like the other days); the
+  // record's own phrase is phone text and only used when the type has no name.
+  const char *phrase0 = prv_phrase_for_type(ds->current_weather_type);
+  if (phrase0) {
+    i18n_get_with_buffer(phrase0, data->phrase_buf0, sizeof(data->phrase_buf0));
+  } else {
+    snprintf(data->phrase_buf0, sizeof(data->phrase_buf0), "%s", ds->short_phrase);
+  }
   prv_day_label(0, data->label_buf[0], sizeof(data->label_buf[0]));
   // CURRENT-hour UV. The record's today_uv is the day's figure (peak), so a live value can
   // only come from the minor-4 hourly block; without it we fall back to the day's figure so
@@ -219,8 +239,14 @@ static void prv_fill_days_from_ds(WeatherAppData *data, const WxDsForecast *ds) 
         ds->hourly_type[hour] <= WeatherType_RainAndSnow) {
       data->days[0].current_type_now   = (WeatherType)ds->hourly_type[hour];
       data->days[0].current_temp_now   = ds->hourly_temp[hour];
-      // The hourly block has no phrase; derive one from the type. Static string — safe.
-      data->days[0].current_phrase_now = (char *)prv_phrase_for_type(ds->hourly_type[hour]);
+      // The hourly block has no phrase; derive and translate one from the type.
+      // Leave the record's own phrase in place when the type has no name.
+      const char *hourly_phrase = prv_phrase_for_type(ds->hourly_type[hour]);
+      if (hourly_phrase) {
+        i18n_get_with_buffer(hourly_phrase, data->current_now_buf,
+                             sizeof(data->current_now_buf));
+        data->days[0].current_phrase_now = data->current_now_buf;
+      }
     }
   }
   data->days_received = 1;
@@ -234,8 +260,7 @@ static void prv_fill_days_from_ds(WeatherAppData *data, const WxDsForecast *ds) 
     }
     for (size_t i = 1; i < nd; i++) {
       prv_day_label((int)i, data->label_buf[i], sizeof(data->label_buf[i]));
-      snprintf(data->phrase_buf[i], sizeof(data->phrase_buf[i]), "%s",
-               prv_phrase_for_type(ds->daily[i].type));
+      prv_fill_phrase(ds->daily[i].type, data->phrase_buf[i], sizeof(data->phrase_buf[i]));
       data->days[i] = (WeatherLocationForecast) {
         .location_name = data->location_buf,
         .is_current_location = ds->is_current_location,
@@ -265,8 +290,8 @@ static void prv_fill_days_from_ds(WeatherAppData *data, const WxDsForecast *ds) 
                                (ds->tomorrow_low != WX_DS_UNKNOWN_TEMP);
     if (have_tomorrow) {
       prv_day_label(1, data->label_buf[1], sizeof(data->label_buf[1]));
-      snprintf(data->phrase_buf[1], sizeof(data->phrase_buf[1]), "%s",
-               prv_phrase_for_type(ds->tomorrow_weather_type));
+      prv_fill_phrase(ds->tomorrow_weather_type, data->phrase_buf[1],
+                      sizeof(data->phrase_buf[1]));
       data->days[1] = (WeatherLocationForecast) {
         .location_name = data->location_buf,
         .is_current_location = ds->is_current_location,
@@ -297,7 +322,7 @@ static void prv_fill_days_from_ds(WeatherAppData *data, const WxDsForecast *ds) 
 // hero icon-fly can animate the identical text in, synced to the icon landing.
 static void prv_sync_glance_strings(WeatherAppData *data) {
   const WeatherLocationForecast *today = data->days_received >= 1 ? &data->days[0] : NULL;
-  char sunset[20], temp[16], loc[64];
+  char sunset[40], temp[16], loc[64];
   expanded_view_format_glance(today, data->latitude_e2, data->longitude_e2,
                               data->utc_offset_min,
                               sunset, sizeof(sunset), temp, sizeof(temp), loc, sizeof(loc));

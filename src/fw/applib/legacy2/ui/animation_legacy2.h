@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "pbl/util/list.h"
-#include <pbl/drivers/rtc.h>
 #include "applib/ui/animation.h"
 
 //! @file animation.h
@@ -32,7 +31,7 @@ struct AnimationLegacy2Implementation;
 struct AnimationLegacy2Handlers;
 
 
-//! Creates a new AnimationLegacy2 on the heap and initalizes it with the default values.
+//! Creates a new AnimationLegacy2 on the heap and initializes it with the default values.
 //!
 //! * Duration: 250ms,
 //! * Curve: \ref AnimationCurveEaseInOut (ease-in-out),

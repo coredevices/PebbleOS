@@ -7,10 +7,7 @@
 #include "workout.h"
 
 #include "applib/app.h"
-#include "board/display.h"
-#include "applib/ui/action_menu_hierarchy.h"
 #include "applib/ui/action_menu_window.h"
-#include "applib/ui/kino/kino_layer.h"
 #include "applib/ui/ui.h"
 #include "applib/ui/window_manager.h"
 #include "apps/system/timeline/text_node.h"
@@ -963,12 +960,12 @@ WorkoutActiveWindow *workout_active_create_double_layout(WorkoutMetricType top_m
   return active_window;
 }
 
-WorkoutActiveWindow *workout_active_create_tripple_layout(WorkoutMetricType top_metric,
-                                                          WorkoutMetricType middle_metric,
-                                                          int num_scrollable_metrics,
-                                                          WorkoutMetricType *scrollable_metrics,
-                                                          void *workout_data,
-                                                          WorkoutController *workout_controller) {
+WorkoutActiveWindow *workout_active_create_triple_layout(WorkoutMetricType top_metric,
+                                                         WorkoutMetricType middle_metric,
+                                                         int num_scrollable_metrics,
+                                                         WorkoutMetricType *scrollable_metrics,
+                                                         void *workout_data,
+                                                         WorkoutController *workout_controller) {
   if (top_metric == WorkoutMetricType_None || middle_metric == WorkoutMetricType_None ||
       (num_scrollable_metrics != 0 && !scrollable_metrics)) {
     PBL_LOG_ERR("Invalid argument(s)");

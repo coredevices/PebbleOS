@@ -189,7 +189,7 @@ static bool prv_apply_relocations(const PebbleProcessInfo *info,
 }
 
 // ---------------------------------------------------------------------------------------------
-static bool prv_intialize_sdk_process(PebbleTask task, const PebbleProcessInfo *info,
+static bool prv_initialize_sdk_process(PebbleTask task, const PebbleProcessInfo *info,
                                       MemorySegment *destination) {
   if (!prv_verify_loaded_header(info, destination->start)) {
     return false;
@@ -251,7 +251,7 @@ static bool prv_load_from_flash(const PebbleProcessMd *app_md, PebbleTask task,
   }
   pfs_close(fd);
 
-  return prv_intialize_sdk_process(task, &info, destination);
+  return prv_initialize_sdk_process(task, &info, destination);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -276,7 +276,7 @@ static bool prv_load_from_resource(const PebbleProcessMdResource *app_md,
         destination->start, load_size) == load_size);
 
   // Process the relocation entries
-  return prv_intialize_sdk_process(task, &info, destination);
+  return prv_initialize_sdk_process(task, &info, destination);
 }
 
 void * process_loader_load(const PebbleProcessMd *app_md, PebbleTask task,

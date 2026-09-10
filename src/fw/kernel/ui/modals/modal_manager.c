@@ -15,10 +15,7 @@
 #include "applib/ui/window_stack.h"
 #include "applib/ui/window_stack_animation.h"
 #include "applib/ui/window_stack_private.h"
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/graphics_private.h"
 #include "console/prompt.h"
-#include "kernel/panic.h"
 #include "kernel/events.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
@@ -28,11 +25,8 @@
 #include "shell/normal/watchface.h"
 #include "system/passert.h"
 #include "system/profiler.h"
-#include "pbl/util/list.h"
-#include "pbl/util/size.h"
 
-#include "FreeRTOS.h"
-#include "semphr.h"
+#include "pbl/kernel/sem.h"
 
 typedef struct ModalContext {
   WindowStack window_stack;
@@ -551,7 +545,6 @@ static void prv_update_modal_stacks(UpdateContext *context) {
   prv_each_modal_stack(prv_update_modal_stack_callback, context);
 }
 
-
 ModalProperty modal_manager_get_properties(void) {
   return modal_manager_get_enabled() ? s_current_modal_properties : ModalPropertyDefault;
 }
@@ -643,7 +636,7 @@ void modal_window_push(Window *window, ModalPriority priority, bool animated) {
 ////////////////////////////
 
 typedef struct WindowStackInfoContext {
-  SemaphoreHandle_t interlock;
+  struct pbl_sem interlock;
   WindowStackDump *dumps[NumModalPriorities];
   size_t counts[NumModalPriorities];
   bool disabled;
@@ -662,21 +655,16 @@ static void prv_modal_window_stack_info_cb(void *ctx) {
   } else {
     info->disabled = true;
   }
-  xSemaphoreGive(info->interlock);
+  pbl_sem_give(&info->interlock);
 }
 
 void command_modal_stack_info(void) {
-  WindowStackInfoContext info = {
-    .interlock = xSemaphoreCreateBinary(),
-  };
-  if (!info.interlock) {
-    prompt_send_response("Couldn't allocate semaphore for modal stack");
-    return;
-  }
+  WindowStackInfoContext info = { 0 };
+  pbl_sem_init(&info.interlock, 0, 1);
 
   launcher_task_add_callback(prv_modal_window_stack_info_cb, &info);
-  xSemaphoreTake(info.interlock, portMAX_DELAY);
-  vSemaphoreDelete(info.interlock);
+  pbl_sem_take(&info.interlock, PBL_FOREVER);
+  pbl_sem_deinit(&info.interlock);
 
   prompt_send_response("Modal Stack, top to bottom:");
 

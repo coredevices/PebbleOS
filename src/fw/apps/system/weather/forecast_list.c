@@ -2,12 +2,11 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "forecast_list.h"
-#include "weather.h"
+#include "pbl/services/i18n/i18n.h"
 #include "expanded_view.h"
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/status_bar_layer.h"   // status-bar height/offset constants (top time)
 #include "weather_math.h"
-#include "resource_ids.pin.h"
 #include "pbl/services/clock.h"            // clock_copy_time_string — notification-style top time
 #include "applib/graphics/gdraw_command_transforms.h"
 #include "applib/graphics/gdraw_command.h"
@@ -64,7 +63,7 @@ typedef struct {
   GFont    day_font;
   GFont    condition_font;
   GFont    loc_font;
-  char     condition_str[MAX_ROWS][24];  // pre-formatted condition strings
+  char     condition_str[MAX_ROWS][32];  // pre-formatted condition strings
   int      row_height;  // computed at load: (screen_h - LOCATION_BAR_H) / ROWS_VISIBLE
 #ifdef CONFIG_TOUCH
   GDrawCommandImage *pdc_icons[MAX_ROWS];  // official PebbleOS weather PDC icons (round 5-day)
@@ -103,7 +102,7 @@ typedef struct {
   GDrawCommandImage *fly_pdc;              // LARGE weather PDC (writable clone), owned
   GPointIndexLookup *fly_lookup;           // delay-by-distance lookup — deterministic for the
                                            // whole fly, built once on its first frame, owned
-  char               fly_sunset[20];        // card glance data, slid in from the left during the fly
+  char               fly_sunset[40];        // card glance data, slid in from the left during the fly
   char               fly_temp[16];          // (synced to the icon landing) so the card can then
   int                fly_uv;                // appear static — see forecast_list_set_glance
   int                fly_precip;
@@ -360,7 +359,7 @@ static void prv_scroll_to(int target) {
 
 // Shared animation boilerplate: create + duration + curve + impl + optional stopped
 // handler + schedule. Every moook here runs a manual curve in its update proc, so
-// the wrapper just parameterizes the pieces that differ. (Shared region: used by
+// the wrapper just parametrizes the pieces that differ. (Shared region: used by
 // both the rect-only squash block below and the round+rect transitions further down.)
 static Animation *prv_start_anim(uint32_t dur_ms, AnimationCurve curve,
                                  const AnimationImplementation *impl,
@@ -1184,7 +1183,8 @@ static void prv_draw_report_caption(GContext *ctx, int dx, bool settled) {
   }
   const GRect mb = layer_get_bounds(s_list->canvas);
   graphics_context_set_text_color(ctx, GColorBlack);
-  graphics_draw_text(ctx, "WEATHER REPORT", fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
+  graphics_draw_text(ctx, i18n_get("WEATHER REPORT", s_list),
+                     fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
                      GRect(dx, R5_SCREEN_CY + 46 + dy, mb.size.w, 24),
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
 }
@@ -1369,7 +1369,7 @@ static void prv_draw_flying_content(GContext *ctx) {
   const int tdx = (int)prv_moook_soft3(local, -W, 0);
   // This preview must match what the card will REST on, or the status line visibly changes
   // in the first frames after the hand-off.
-  char updated[24] = "";
+  char updated[40] = "";
 #if PBL_ROUND
   clock_copy_time_string(updated, sizeof(updated));   // round's card shows the time only
 #else
@@ -1378,7 +1378,8 @@ static void prv_draw_flying_content(GContext *ctx) {
   }
 #endif
   expanded_view_draw_glance_content(ctx, W, tdx, updated, s_list->fly_sunset, s_list->fly_temp,
-                                    s_list->fly_uv, s_list->fly_precip, s_list->fly_wind);
+                                    s_list->fly_uv, s_list->fly_precip, s_list->fly_wind,
+                                    s_list);
 }
 
 // The disc behind each 5-day icon must stretch across the SAME travel as its icon: a capsule whose
@@ -1474,7 +1475,8 @@ static void prv_draw_bottom_stats(GContext *ctx, const WeatherLocationForecast *
   // scrolled column's air splits evenly — solved for disc->graph = graph->pill =
   // %-row->dot (~10-11px each; the graph auto-centres in its band, so the split
   // holds for any temp spread).
-  prv_draw_stat_pill(ctx, "PRECIPITATION", 145 + slide + R5_BAND_DY, W, GColorPictonBlue);
+  prv_draw_stat_pill(ctx, i18n_get("PRECIPITATION", s_list), 145 + slide + R5_BAND_DY, W,
+                     GColorPictonBlue);
   prv_draw_stat_row (ctx, fan, n, col_x,   164 + slide + R5_BAND_DY + R5_BAND_ROW_GAP);
   if (!s_list->clock_fx) {
     // Timeline's day-separator peek dot (the one that unwinds into "Tomorrow"/"Tuesday"): a 12px
@@ -2184,7 +2186,7 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
       GRect(W - R5_TODAY_X - 120, R5_TODAY_Y - 2 - hs, 120, 44),   // -2: LECO parks low
       GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
 #endif
-  char cond[24];
+  char cond[32];
   snprintf(cond, sizeof(cond), "%s",
            (today->current_weather_phrase && today->current_weather_phrase[0])
                ? today->current_weather_phrase : "--");
@@ -3481,6 +3483,7 @@ static void prv_window_unload(Window *window) {
   s_list->canvas = NULL;
 
   window_destroy(window);
+  i18n_free_all(s_list);
   free(s_list);
   s_list = NULL;
 }

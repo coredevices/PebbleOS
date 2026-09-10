@@ -1,7 +1,6 @@
 #pragma once
 #include <stdint.h>
 #include <stdbool.h>
-#include "applib/accel_service.h"
 #include "util/time/time.h"
 
 
@@ -40,7 +39,7 @@ typedef enum {
   // A restful period, these will always be inside of a ActivityType_Sleep session
   KAlgActivityType_RestfulSleep,
 
-  // A "sigificant" length walk
+  // A "significant" length walk
   KAlgActivityType_Walk,
 
   // A run

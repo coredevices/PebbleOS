@@ -1,13 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "pbl/kernel/irq.h"
+#include "pbl/kernel/sched.h"
 #include "pulse_logging.h"
 
 #include "kernel/pebble_tasks.h"
 #include "logging_private.h"
 #include "kernel/util/stack_info.h"
 
-#include "console/console_internal.h"
 #include "console/prompt.h"
 #include "console/serial_console.h"
 #include "debug/advanced_logging.h"
@@ -17,12 +18,8 @@
 #include "pbl/mcu/interrupts.h"
 #include "pbl/mcu/privilege.h"
 
-#include "pbl/util/math.h"
 #include "util/net.h"
 #include "pbl/util/string.h"
-
-#include "FreeRTOS.h"
-#include "task.h"
 
 #include <ctype.h>
 #include <stdio.h>
@@ -144,8 +141,8 @@ void kernel_pbl_log_flash(LogBinaryMessage *log_message, bool async) {
 void kernel_pbl_log(LogBinaryMessage* log_message, bool async) {
   kernel_pbl_log_serial(log_message, async);
 
-  if (!portIN_CRITICAL() && !mcu_state_is_isr() &&
-      xTaskGetSchedulerState() != taskSCHEDULER_SUSPENDED) {
+  if (!pbl_irq_is_locked() && !mcu_state_is_isr() &&
+      !pbl_sched_is_locked()) {
     kernel_pbl_log_flash(log_message, async);
   }
 }

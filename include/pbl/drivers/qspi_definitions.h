@@ -3,9 +3,9 @@
 
 #pragma once
 
+#include "pbl/kernel/sem.h"
 #include "board/board.h"
 
-#include "freertos_types.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -19,7 +19,7 @@
 
 typedef struct QSPIPortState {
 #ifdef CONFIG_SOC_NRF52
-  SemaphoreHandle_t sem;
+  struct pbl_sem sem;
   bool initialized;
 #elif defined(CONFIG_SOC_SF32LB52)
   QSPI_FLASH_CTX_T ctx;
@@ -30,7 +30,7 @@ typedef struct QSPIPortState {
   uint32_t t_exit_deep_us;
   bool initialized;
 #else
-  SemaphoreHandle_t dma_semaphore;
+  struct pbl_sem dma_semaphore;
   int use_count;
 #endif
 } QSPIPortState;
