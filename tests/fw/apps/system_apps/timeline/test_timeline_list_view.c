@@ -16,8 +16,11 @@ typedef struct TimelineTestData {
 } TimelineTestData;
 
 TimelineTestData s_data;
+static bool s_relationship_only;
 
 void test_timeline_list_view__initialize(void) {
+  s_action_bar_on_right = true;
+  s_relationship_only = false;
   fake_app_state_init();
   load_system_resources_fixture();
 
@@ -115,6 +118,21 @@ static void prv_create_list_view_and_render(ListViewConfig *config) {
 
   window_set_on_screen(&window, true, true);
   window_render(&window, fake_graphics_context_get_context());
+
+  if (s_relationship_only) {
+    FrameBuffer *fb = fake_graphics_context_get_framebuffer();
+    GContext *ctx = fake_graphics_context_get_context();
+    framebuffer_clear(fb);
+    graphics_context_init(ctx, fb, GContextInitializationMode_App);
+    cl_assert_equal_i(timeline_layer.relbar_layer.curr_rel_bar.rel_bar_type,
+                      RelationshipBarTypeOverlap);
+    timeline_layer.relbar_layer.curr_rel_bar.anim_offset = 20;
+    Layer *relbar = &timeline_layer.relbar_layer.layer;
+    layer_set_hidden(relbar, false);
+    graphics_context_set_fill_color(ctx, GColorBlack);
+    graphics_fill_rect(ctx, &ctx->dest_bitmap.bounds);
+    relbar->update_proc(relbar, ctx);
+  }
 
   timeline_layer_deinit(&timeline_layer);
   timeline_model_deinit();
@@ -280,4 +298,44 @@ void test_timeline_list_view__all_day_future(void) {
 void test_timeline_list_view__all_day_past(void) {
   prv_create_and_render_all_day(true /* past */);
   FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
+}
+
+#if PBL_RECT
+static uint8_t prv_pixel(const GBitmap *bitmap, int x, int y) {
+  GBitmapDataRowInfo row = gbitmap_get_data_row_info(bitmap, y);
+  if (x < row.min_x || x > row.max_x) {
+    return 0;
+  }
+  return prv_raw_image_get_value_for_format(row.data, x, 0, bitmap->row_size_bytes,
+                                            gbitmap_get_bits_per_pixel(gbitmap_get_format(bitmap)),
+                                            gbitmap_get_format(bitmap));
+}
+
+#endif
+
+void test_timeline_list_view__left_hand_overlap_bars_mirror_right_hand(void) {
+#if PBL_RECT
+  s_relationship_only = true;
+  prv_create_and_render_title_and_subtitle(false, MINUTES_PER_HOUR);
+  GBitmap *bitmap = &fake_graphics_context_get_context()->dest_bitmap;
+  uint8_t *right = malloc(DISP_COLS * DISP_ROWS);
+  cl_assert(right != NULL);
+  for (int y = 0; y < DISP_ROWS; y++) {
+    for (int x = 0; x < DISP_COLS; x++) {
+      right[y * DISP_COLS + x] = prv_pixel(bitmap, x, y);
+    }
+  }
+  s_action_bar_on_right = false;
+  prv_create_and_render_title_and_subtitle(false, MINUTES_PER_HOUR);
+  int changed_pixels = 0;
+  for (int y = 0; y < DISP_ROWS; y++) {
+    for (int x = 0; x < DISP_COLS; x++) {
+      const uint8_t expected = right[y * DISP_COLS + DISP_COLS - 1 - x];
+      cl_assert_equal_i(prv_pixel(bitmap, x, y), expected);
+      changed_pixels += expected != right[0];
+    }
+  }
+  cl_assert(changed_pixels > 0);
+  free(right);
+#endif
 }

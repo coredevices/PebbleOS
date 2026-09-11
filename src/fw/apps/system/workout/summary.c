@@ -6,6 +6,7 @@
 #include "selection.h"
 #include "utils.h"
 
+#include "applib/ui/action_bar_layer.h"
 #include "applib/ui/action_menu_window.h"
 #include "applib/ui/kino/kino_layer.h"
 #include "applib/ui/ui.h"
@@ -139,8 +140,7 @@ WorkoutSummaryWindow *workout_summary_window_create(ActivitySessionType activity
     .unload = prv_window_unload_handler,
   });
 
-  GRect layer_bounds = window->layer.bounds;
-  layer_bounds.size.w -= ACTION_BAR_WIDTH;
+  GRect layer_bounds = action_bar_layer_inset_bounds(window->layer.bounds);
 
   layer_init(&summary_window->base_layer, &layer_bounds);
   layer_set_update_proc(&summary_window->base_layer, prv_base_layer_update_proc);
@@ -152,8 +152,7 @@ WorkoutSummaryWindow *workout_summary_window_create(ActivitySessionType activity
   layer_add_child(&window->layer, status_bar_layer_get_layer(status_layer));
 
 #if PBL_RECT
-  GRect status_layer_bounds = window->layer.bounds;
-  status_layer_bounds.size.w -= ACTION_BAR_WIDTH;
+  GRect status_layer_bounds = action_bar_layer_inset_bounds(window->layer.bounds);
   layer_set_frame(&status_layer->layer, &status_layer_bounds);
 #endif
 
