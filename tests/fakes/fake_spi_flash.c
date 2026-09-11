@@ -125,6 +125,13 @@ void fake_spi_flash_force_future_failure(int after_n_bytes, jmp_buf *retire_to) 
   s_state.jmp_on_failure = retire_to;
 }
 
+const void *flash_memory_mapped_address(uint32_t flash_addr) {
+  cl_assert(s_state.storage);
+  cl_assert(flash_addr >= s_state.offset);
+  cl_assert(flash_addr < s_state.offset + s_state.length);
+  return s_state.storage + (flash_addr - s_state.offset);
+}
+
 void flash_read_bytes(uint8_t* buffer, uint32_t start_addr, uint32_t buffer_size) {
   cl_assert(start_addr >= s_state.offset);
   cl_assert(start_addr + buffer_size <= s_state.offset + s_state.length);

@@ -57,6 +57,13 @@ void flash_read_bytes(uint8_t* buffer, uint32_t start_addr, uint32_t buffer_size
  */
 void flash_write_bytes(const uint8_t* buffer, uint32_t start_addr, uint32_t buffer_size);
 
+/**
+ * The CPU-addressable pointer for a flash address. Only exists on platforms whose flash is
+ * permanently memory-mapped (region addresses include the XIP base, FLASH_REGION_BASE_ADDRESS),
+ * where flash bytes can be read directly instead of copied out with flash_read_bytes.
+ */
+const void *flash_memory_mapped_address(uint32_t flash_addr);
+
 typedef void (*FlashOperationCompleteCb)(void *context, status_t result);
 
 /**
